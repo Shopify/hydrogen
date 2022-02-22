@@ -3,7 +3,7 @@
   "publishConfig": {
     "access": "restricted"
   },
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "Oxygen miniflare plugin",
   "main": "index.js",
   "repository": "https://github.com/Shopify/mini-oxygen.git",
