@@ -1,0 +1,13 @@
+containers:
+  default:
+    build:
+      from: ubuntu-latest
+      type: ci
+
+# Documentation: https://shopify-build.docs.shopify.io/jobs/publish_package/
+steps:
+  - label: Publish to Cloudsmith
+    timeout: 10m
+    run:
+      - publish:
+          type: npm
