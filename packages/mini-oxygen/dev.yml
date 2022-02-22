@@ -1,0 +1,17 @@
+name: mini-oxygen
+
+up:
+  - node:
+      version: v16.12.0
+      yarn: 1.22.5
+
+commands:
+  bump-version-major:
+    run: yarn version --new-version major
+    desc: bump the version number (major)
+  bump-version-minor:
+    run: yarn version --new-version minor
+    desc: bump the version number (minor)
+  bump-version-patch:
+    run: yarn version --new-version patch
+    desc: bump the version number (patch)
