@@ -5,7 +5,26 @@
   },
   "version": "0.0.2",
   "description": "Oxygen miniflare plugin",
-  "main": "./src/index.js",
+  "main": "./src/index.ts",
   "repository": "https://github.com/Shopify/mini-oxygen.git",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "16"
+  },
+  "dependencies": {
+    "@miniflare/cache": "^2.3.0",
+    "@miniflare/core": "^2.3.0",
+    "@miniflare/runner-vm": "^2.3.0",
+    "@miniflare/shared": "^2.3.0",
+    "@miniflare/storage-memory": "^2.3.0",
+    "@types/connect": "^3.4.35",
+    "@types/mime": "^2.0.3",
+    "connect": "^3.7.0",
+    "mime": "^3.0.0",
+    "ts-node": "^10.6.0",
+    "typescript": "^4.6.2"
+  },
+  "scripts": {
+    "preview": "npx ts-node -e \"import p from './src'; p({})\""
+  }
 }
