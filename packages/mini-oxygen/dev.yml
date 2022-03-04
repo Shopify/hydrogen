@@ -2,7 +2,7 @@ name: mini-oxygen
 
 up:
   - node:
-      version: v16.12.0
+      version: v16.13.0
       yarn: 1.22.5
 
 commands:
