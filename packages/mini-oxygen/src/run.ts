@@ -2,8 +2,7 @@
 
 import {existsSync, readFileSync} from 'fs';
 import {join} from 'path';
-import {preview} from './preview';
-import {configFileName, MiniOxygenPreviewOptions} from "./preview";
+import {configFileName, MiniOxygenPreviewOptions, preview} from "./preview";
 
 const cwd = process.cwd()
 let configOptions = {};

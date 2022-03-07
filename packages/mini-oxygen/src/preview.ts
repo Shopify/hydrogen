@@ -11,6 +11,7 @@ export type MiniOxygenPreviewOptions = Partial<{
     assetsDir: string,
     buildCommand: string,
     buildWatchPaths: string[],
+    autoReload: boolean,
 }>
 
 export const configFileName = 'mini-oxygen.config.json';
@@ -22,7 +23,8 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
       workerFile = 'dist/worker/index.js',
       assetsDir = 'dist/client',
       buildWatchPaths = ['./src'],
-      buildCommand = 'yarn build'
+      buildCommand = 'yarn build',
+      autoReload = true,
   } = opts;
   const root = process.cwd();
 
@@ -45,7 +47,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     {}
   );
 
-  const app = await mf.createServer({assetsDir});
+  const app = await mf.createServer({assetsDir, autoReload});
 
   app.listen(port, () => {
     ui.say(

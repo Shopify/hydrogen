@@ -6,6 +6,7 @@ const tpl = `{
     "assetsDir": "dist/client",
     "buildWatchPaths": ["./src"],
     "buildCommand": "yarn build",
+    "autoReload": true,
     "globals": {}
 }
 `;
