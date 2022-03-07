@@ -16,7 +16,6 @@ export type MiniOxygenPreviewOptions = Partial<{
 export const configFileName = 'mini-oxygen.config.json';
 
 export async function preview(opts: MiniOxygenPreviewOptions) {
-  // We should get these from a config file, along with env variables
   const {
       ui = { say: (m: string) => console.log(m) },
       port = 3000,

@@ -5,7 +5,8 @@ const tpl = `{
     "workerFile": "dist/worker/index.js",
     "assetsDir": "dist/client",
     "buildWatchPaths": ["./src"],
-    "buildCommand": "yarn build"
+    "buildCommand": "yarn build",
+    "globals": {}
 }
 `;
 
