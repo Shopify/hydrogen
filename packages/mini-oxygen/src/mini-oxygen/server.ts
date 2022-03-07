@@ -71,7 +71,7 @@ function createRequestMiddleware(mf: MiniOxygen): NextHandleFunction {
 
       res.end();
     } catch (e: any) {
-      res.writeHead(500, {'Content-Type': 'text/plain; charset=UTF-8'});
+      res.writeHead(status, {'Content-Type': 'text/plain; charset=UTF-8'});
       res.end(e.stack, 'utf8');
     }
 
