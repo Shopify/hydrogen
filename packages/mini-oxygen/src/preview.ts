@@ -2,7 +2,7 @@ import {MiniOxygen} from './mini-oxygen/core';
 import * as path from 'path';
 import * as fs from 'fs';
 
-type MiniOxygenPreviewOptions = Partial<{
+export type MiniOxygenPreviewOptions = Partial<{
     ui: {
         say(message: string): unknown
     },
@@ -12,6 +12,8 @@ type MiniOxygenPreviewOptions = Partial<{
     buildCommand: string,
     buildWatchPaths: string[],
 }>
+
+export const configFileName = 'mini-oxygen.config.json';
 
 export async function preview(opts: MiniOxygenPreviewOptions) {
   // We should get these from a config file, along with env variables
