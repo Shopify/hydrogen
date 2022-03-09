@@ -1,5 +1,3 @@
-#!/usr/bin/env npx ts-node
-
 import {existsSync, readFileSync} from 'fs';
 import {join} from 'path';
 import {configFileName, MiniOxygenPreviewOptions, preview} from "./preview";

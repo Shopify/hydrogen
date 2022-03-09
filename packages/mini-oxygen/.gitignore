@@ -1,2 +1,3 @@
-hydrogen-app/
-node_modules/
+hydrogen-app
+node_modules
+dist

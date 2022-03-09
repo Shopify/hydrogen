@@ -9,7 +9,7 @@
     "module": "commonjs",
     "moduleResolution": "node",
     "lib": ["ESNext", "DOM"],
-    "types": ["jest", "node"],
+    "types": ["node"],
     "strict": true,
     "esModuleInterop": true
   },
