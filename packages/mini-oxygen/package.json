@@ -14,7 +14,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "yarn build --preserveWatchOutput -w",
-    "build": "tsc -p . && chmod +x dist/bootstrap.js dist/run.js"
+    "build": "tsc -p . && chmod +x dist/bootstrap.js dist/run.js dist/gen-config.js"
   },
   "dependencies": {
     "@miniflare/cache": "^2.3.0",
