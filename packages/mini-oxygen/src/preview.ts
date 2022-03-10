@@ -3,8 +3,8 @@ import * as path from 'path';
 import * as fs from 'fs';
 
 class WorkerNotFoundError extends Error {
-  name = 'WokerNotFoundError';
-  message = 'A worker file is required for this command. Try building your project or check your mini-oxygen config file to ensure the path is correct.'
+  name = 'WorkerNotFoundError';
+  message = 'A worker file is required for this command. Try building your project or check your mini-oxygen config file to ensure a workerFile is specified and the path is correct.'
 }
 
 export type MiniOxygenPreviewOptions = Partial<{
@@ -28,8 +28,8 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
   const {
     ui = { say: (m: string) => console.log(m) },
     port = 3000,
-    workerFile = 'worker.mjs',
-    assetsDir = 'public',
+    workerFile,
+    assetsDir,
     watch = false,
     buildWatchPaths,
     buildCommand,
@@ -39,9 +39,10 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
   } = opts;
   const root = process.cwd();
 
-  if (!fs.existsSync(workerFile)) {
+  if (!workerFile || !fs.existsSync(workerFile)) {
     throw new WorkerNotFoundError()
   }
+
   const mf = new MiniOxygen(
     {
       buildCommand,
@@ -53,7 +54,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     env,
   );
 
-  const app = await mf.createServer({ assetsDir: path.resolve(root, assetsDir), autoReload });
+  const app = await mf.createServer({ assetsDir: assetsDir ? path.resolve(root, assetsDir) : undefined, autoReload });
 
   app.listen(port, () => {
     ui.say(

@@ -10,8 +10,8 @@ import type {NextHandleFunction} from 'connect';
 import type {MiniOxygen} from './core';
 
 export interface MiniOxygenServerOptions {
-  assetsDir: string;
-  autoReload: boolean;
+  assetsDir?: string;
+  autoReload?: boolean;
 }
 
 const SSEUrl = '/events';
@@ -137,11 +137,13 @@ function createRequestMiddleware(mf: MiniOxygen, autoReload: boolean): NextHandl
 
 export async function createServer(
   mf: MiniOxygen,
-  {assetsDir, autoReload}: MiniOxygenServerOptions
+  {assetsDir, autoReload = false}: MiniOxygenServerOptions
 ) {
   const app = connect();
 
-  app.use(createAssetMiddleware({assetsDir}));
+  if (assetsDir) {
+    app.use(createAssetMiddleware({assetsDir}));
+  }
   
   if (autoReload) {
     app.use(SSEUrl, createAutoReloadMiddleware(mf));
