@@ -7,7 +7,7 @@ const tpl = `{
     "buildCommand": "yarn build",
     "autoReload": true,
     "buildWatchPaths": ["./src"],
-    "module": true,
+    "modules": true,
     "env": {}
 }
 `;
