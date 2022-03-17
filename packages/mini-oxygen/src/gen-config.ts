@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-
 const tpl = `{
     "port": 3000,
     "workerFile": "dist/worker/index.js",
@@ -13,4 +12,5 @@ const tpl = `{
 }
 `;
 
+// eslint-disable-next-line no-console
 console.log(tpl);

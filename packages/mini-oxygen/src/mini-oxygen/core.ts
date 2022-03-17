@@ -24,7 +24,7 @@ export type MiniOxygenType = typeof PLUGINS;
 export class MiniOxygen extends MiniflareCore<MiniOxygenType> {
   constructor(
     options: MiniflareCoreOptions<MiniOxygenType>,
-    env: Record<string, unknown>
+    env: {[key: string]: unknown},
   ) {
     const storageFactory = new StorageFactory();
 
@@ -38,7 +38,7 @@ export class MiniOxygen extends MiniflareCore<MiniOxygenType> {
       {
         bindings: env,
         ...options,
-      }
+      },
     );
   }
 

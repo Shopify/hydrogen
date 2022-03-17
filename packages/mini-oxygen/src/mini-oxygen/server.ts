@@ -2,11 +2,12 @@ import path from 'path';
 import http from 'http';
 import type {IncomingMessage} from 'http';
 import fs from 'fs';
+
 import mime from 'mime';
-import {URL} from 'url';
 import {Request} from '@miniflare/core';
 import connect from 'connect';
 import type {NextHandleFunction} from 'connect';
+
 import type {MiniOxygen} from './core';
 
 export interface MiniOxygenServerOptions {
@@ -50,36 +51,43 @@ function createAssetMiddleware({
 }
 
 function writeSSE(res: http.ServerResponse, data: string) {
-  const id = (new Date()).toLocaleTimeString();
-  res.write(`id: ${id}` + '\n');
-  res.write(`data: ${data}` + '\n\n');
+  const id = new Date().toLocaleTimeString();
+  res.write(`id: ${id}\n`);
+  res.write(`data: ${data}\n\n`);
 }
 
 function createAutoReloadMiddleware(mf: MiniOxygen): NextHandleFunction {
-  return async (req, res) => {
-    if (req.headers.accept && req.headers.accept == 'text/event-stream') {
+  return (req, res) => {
+    if (req.headers.accept && req.headers.accept === 'text/event-stream') {
       mf.addEventListener('reload', () => writeSSE(res, 'reload'));
 
       res.writeHead(200, {
-        'Content-Type' : 'text/event-stream',
-        'Cache-Control' : 'no-cache',
-        'Connection' : 'keep-alive'
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        'Content-Type': 'text/event-stream',
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        'Cache-Control': 'no-cache',
+        Connection: 'keep-alive',
       });
-    
+
       return writeSSE(res, 'connected');
     } else {
-      res.writeHead(400).end("Bad Request");
+      res.writeHead(400).end('Bad Request');
     }
-  }
+  };
 }
 
-function createRequestMiddleware(mf: MiniOxygen, autoReload: boolean): NextHandleFunction {
+function createRequestMiddleware(
+  mf: MiniOxygen,
+  autoReload: boolean,
+): NextHandleFunction {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async (req, res) => {
     let response;
     let status = 500;
     const headers: http.OutgoingHttpHeaders = {};
 
-    const reqHeaders: Record<string, string> = {};
+    const reqHeaders: {[key: string]: string} = {};
+    // eslint-disable-next-line guard-for-in
     for (const key in req.headers) {
       const val = req.headers[key];
       if (Array.isArray(val)) {
@@ -97,6 +105,7 @@ function createRequestMiddleware(mf: MiniOxygen, autoReload: boolean): NextHandl
       response = await mf.dispatchFetch(request);
       status = response.status;
 
+      // eslint-disable-next-line guard-for-in
       for (const key in req.headers) {
         const val = req.headers[key];
         if (Array.isArray(val)) {
@@ -109,7 +118,8 @@ function createRequestMiddleware(mf: MiniOxygen, autoReload: boolean): NextHandl
       if (autoReload) {
         const contentLength = response.headers.get('content-length');
         if (contentLength) {
-          headers['content-length'] = parseInt(contentLength, 10) + autoReloadScriptLength;
+          headers['content-length'] =
+            parseInt(contentLength, 10) + autoReloadScriptLength;
         }
       }
 
@@ -117,7 +127,7 @@ function createRequestMiddleware(mf: MiniOxygen, autoReload: boolean): NextHandl
 
       if (response.body) {
         for await (const chunk of response.body) {
-          if (chunk) res.write(chunk);
+          res.write(chunk);
         }
 
         if (autoReload) {
@@ -126,25 +136,26 @@ function createRequestMiddleware(mf: MiniOxygen, autoReload: boolean): NextHandl
       }
 
       res.end();
-    } catch (e: any) {
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
       res.writeHead(status, {'Content-Type': 'text/plain; charset=UTF-8'});
-      res.end(e.stack, 'utf8');
+      res.end(err.stack, 'utf8');
     }
 
     return response;
   };
 }
 
-export async function createServer(
+export function createServer(
   mf: MiniOxygen,
-  {assetsDir, autoReload = false}: MiniOxygenServerOptions
+  {assetsDir, autoReload = false}: MiniOxygenServerOptions,
 ) {
   const app = connect();
 
   if (assetsDir) {
     app.use(createAssetMiddleware({assetsDir}));
   }
-  
+
   if (autoReload) {
     app.use(SSEUrl, createAutoReloadMiddleware(mf));
   }

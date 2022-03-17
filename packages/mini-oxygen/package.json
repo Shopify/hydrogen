@@ -7,15 +7,22 @@
   "publishConfig": {
     "access": "restricted"
   },
+  "engines": {
+    "node": ">16.0.0"
+  },
   "version": "0.0.2",
   "description": "Oxygen miniflare plugin",
-  "main": "./src/index.ts",
+  "main": "./dist/index.js",
   "repository": "https://github.com/Shopify/mini-oxygen.git",
   "license": "MIT",
   "scripts": {
     "dev": "yarn build --preserveWatchOutput -w",
-    "build": "tsc -p . && chmod +x dist/bootstrap.js dist/run.js dist/gen-config.js"
+    "build": "tsc -p . && chmod +x dist/bootstrap.js dist/run.js dist/gen-config.js",
+    "lint": "eslint --ext .js,.ts --max-warnings 0 src",
+    "lint:format": "yarn run lint --fix",
+    "type-check": "yarn tsc --noEmit"
   },
+  "prettier": "@shopify/prettier-config",
   "dependencies": {
     "@miniflare/cache": "^2.3.0",
     "@miniflare/core": "^2.3.0",
@@ -27,12 +34,19 @@
     "connect": "^3.7.0",
     "mime": "^3.0.0",
     "semiver": "^1.1.0",
-    "ts-node": "^10.6.0",
     "typescript": "^4.6.2"
   },
   "devDependencies": {
     "@miniflare/web-sockets": "2.3.0",
     "@types/node": "16",
-    "@types/ws": "^8.5.2"
+    "@types/ws": "^8.5.2",
+    "@shopify/eslint-plugin": "^41.2.0",
+    "@shopify/prettier-config": "^1.1.2",
+    "@typescript-eslint/eslint-plugin": "^5.14.0",
+    "@typescript-eslint/parser": "^5.14.0",
+    "eslint": "^8.10.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "prettier": "^2.5.1"
   }
 }
