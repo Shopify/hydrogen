@@ -1,0 +1,22 @@
+containers:
+  default:
+    build:
+      from: ubuntu-latest
+      type: ci
+
+steps:
+  - label: Lint
+    cache:
+      - node_modules
+    timeout: 5m
+    run:
+    - yarn
+    - yarn lint
+
+  - label: Type Check
+    cache:
+      - node_modules
+    timeout: 5m
+    run:
+    - yarn
+    - yarn type-check
