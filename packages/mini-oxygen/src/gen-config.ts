@@ -1,16 +1,122 @@
-#!/usr/bin/env node
-const tpl = `{
-    "port": 3000,
-    "workerFile": "dist/worker/index.js",
-    "assetsDir": "dist/client",
-    "watch": true,
-    "buildCommand": "yarn build",
-    "autoReload": true,
-    "buildWatchPaths": ["./src"],
-    "modules": true,
-    "env": {}
-}
-`;
+#!/usr/bin/env node --no-warnings
+/* eslint-disable no-console */
+import {writeFileSync, existsSync} from 'fs';
+import {resolve} from 'path';
 
-// eslint-disable-next-line no-console
-console.log(tpl);
+import inquirer from 'inquirer';
+
+import {MiniOxygenPreviewOptions, configFileName} from './preview';
+
+const DEFAULTS: Required<Omit<MiniOxygenPreviewOptions, 'ui'>> = {
+  port: 3000,
+  workerFile: 'dist/worker/index.js',
+  assetsDir: 'dist/client',
+  buildCommand: 'yarn build',
+  watch: true,
+  buildWatchPaths: ['./src'],
+  autoReload: true,
+  modules: true,
+  env: {},
+};
+
+inquirer
+  .prompt([
+    {
+      name: 'port',
+      type: 'number',
+      message: 'TCP port to use for development server',
+      default: DEFAULTS.port,
+    },
+    {
+      name: 'workerFile',
+      message: 'Relative path to the worker file',
+      default: DEFAULTS.workerFile,
+      validate: (input) => {
+        return existsSync(resolve(input))
+          ? true
+          : `No file found at ${resolve(
+              input,
+            )}. You may need to build your project first.`;
+      },
+    },
+    {
+      name: 'assetsDir',
+      message:
+        'Relative path to the where public assets are located for your project',
+      default: DEFAULTS.assetsDir,
+      validate: (input: string) => {
+        return existsSync(resolve(input))
+          ? true
+          : `No directory found at ${resolve(
+              input,
+            )}. You may need to build your project first.`;
+      },
+    },
+    {
+      name: 'buildCommand',
+      message: 'Command to run that will trigger the build for your project',
+      default: DEFAULTS.buildCommand,
+    },
+    {
+      name: 'watch',
+      type: 'confirm',
+      message: 'Watch for source file changes?',
+      default: DEFAULTS.watch,
+    },
+    {
+      name: 'buildWatchPaths',
+      message:
+        'Any paths that should trigger the build command when changed. Separate multiple with a ,',
+      default: DEFAULTS.buildWatchPaths,
+      when: (answers: {[key: string]: any}) => answers.watch === true,
+      filter: (input: string) => {
+        if (Array.isArray(input)) return input;
+
+        // Need to change input string into an array of file paths
+        return input.split(',').map((filePath: string) => filePath.trim());
+      },
+    },
+    {
+      name: 'autoReload',
+      type: 'confirm',
+      message: 'Auto refresh browser after changes?',
+      default: DEFAULTS.autoReload,
+      when: (answers: {[key: string]: any}) => answers.watch === true,
+    },
+    {
+      name: 'modules',
+      type: 'confirm',
+      message: 'Does your worker file use ES module syntax?',
+      default: DEFAULTS.modules,
+    },
+  ])
+  .then((answers) => {
+    const filePathFull = resolve(configFileName);
+    writeFileSync(
+      configFileName,
+      JSON.stringify({...answers, env: DEFAULTS.env}, null, 2),
+      'utf-8',
+    );
+    console.log(
+      `✅ Successfully generated config file at ${filePathFull}\n🔑 You may add environment variables for your worker by editing this file`,
+    );
+  })
+  .catch((error) => {
+    if (error.isTtyError) {
+      console.log(
+        `Cannot launch config file assistant in current environment. Please manually add a ${configFileName} file in the root of your project in the following format\n${JSON.stringify(
+          DEFAULTS,
+          null,
+          2,
+        )}`,
+      );
+    } else {
+      console.log(
+        `Failed to complete config file assistant. Please re-run the command or manually add a ${configFileName} file in the root of your project in the following format\n${JSON.stringify(
+          DEFAULTS,
+          null,
+          2,
+        )}`,
+      );
+    }
+  });
