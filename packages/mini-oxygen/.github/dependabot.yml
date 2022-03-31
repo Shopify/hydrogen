@@ -5,7 +5,7 @@ registries:
     url: https://npm.shopify.io/node
     token: ${{secrets.NPM_REGISTRY_NPM_SHOPIFY_IO_NODE_TOKEN}}
 updates:
-  - package-ecosystem: "gomod"
+  - package-ecosystem: "npm"
     open-pull-requests-limit: 100
     directory: "/"
     registries: "*"
