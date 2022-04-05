@@ -1,3 +1,4 @@
 deploy:
   override:
-    - buildkite-trigger mini-oxygen-publish-package
+    - yarn build
+    - npm publish --tag latest

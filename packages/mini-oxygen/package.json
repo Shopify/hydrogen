@@ -6,7 +6,8 @@
     "oxygen-gen-config": "./dist/gen-config.js"
   },
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org"
   },
   "engines": {
     "node": ">16.7.0"
