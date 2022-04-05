@@ -10,7 +10,7 @@
   "engines": {
     "node": ">16.0.0"
   },
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -21,9 +21,11 @@
     "build": "tsc -p . && chmod +x dist/bootstrap.js dist/run.js dist/gen-config.js",
     "lint": "eslint --ext .js,.ts --max-warnings 0 src",
     "lint:format": "yarn run lint --fix",
-    "type-check": "yarn tsc --noEmit",
-    "prepublish": "yarn run build"
+    "type-check": "yarn tsc --noEmit"
   },
+  "files": [
+    "dist/**"
+  ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
     "@miniflare/cache": "^2.3.0",

@@ -9,5 +9,7 @@ steps:
   - label: Publish package
     timeout: 10m
     run:
+      - yarn: ~
+      - yarn build
       - publish:
           type: npm
