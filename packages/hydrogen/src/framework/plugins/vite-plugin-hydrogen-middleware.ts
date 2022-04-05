@@ -7,6 +7,8 @@ import type {HydrogenVitePluginOptions, ShopifyConfig} from '../../types';
 import {InMemoryCache} from '../cache/in-memory';
 
 export const HYDROGEN_DEFAULT_SERVER_ENTRY = '/src/App.server';
+export const HYDROGEN_DEFAULT_LEGACY_ENTRY = '/src/App';
+export const HYDROGEN_VIRTUAL_SERVER_ENTRY = '@shopify/hydrogen/server';
 
 export default (
   shopifyConfig: ShopifyConfig,
@@ -48,10 +50,7 @@ export default (
             shopifyConfig,
             indexTemplate: getIndexTemplate,
             getServerEntrypoint: () =>
-              server.ssrLoadModule(
-                process.env.HYDROGEN_SERVER_ENTRY ||
-                  HYDROGEN_DEFAULT_SERVER_ENTRY
-              ),
+              server.ssrLoadModule(HYDROGEN_VIRTUAL_SERVER_ENTRY),
             devServer: server,
             cache: pluginOptions?.devCache
               ? (new InMemoryCache() as unknown as Cache)

@@ -11,11 +11,13 @@ import type {
 
 type CommonOptions = {
   App: any;
-  routes?: ImportGlobEagerOutput;
+  routes: ImportGlobEagerOutput;
   request: ServerComponentRequest;
   componentResponse: ServerComponentResponse;
   log: Logger;
   dev?: boolean;
+  hydrogenConfig: any;
+  shopifyConfig: ShopifyConfig;
 };
 
 export type RendererOptions = CommonOptions & {
@@ -50,8 +52,14 @@ export type ImportGlobEagerOutput = Record<
   Record<'default' | 'api', any>
 >;
 
+export type ImportGlobOutput = Record<
+  string,
+  () => Promise<Record<'default' | 'api', any>>
+>;
+
 export type ServerHandlerConfig = {
-  routes?: ImportGlobEagerOutput;
+  routes: ImportGlobEagerOutput;
+  hydrogenConfig?: any;
   shopifyConfig: ShopifyConfig;
 };
 
@@ -118,3 +126,11 @@ export interface HydrogenVitePluginOptions {
 }
 
 export type PreloadOptions = boolean | string;
+
+declare global {
+  interface Window {
+    __hydrogenConfig: Record<string, any>;
+    __hydrogenRoutes: Record<string, any>;
+    __hydrogenRouteData: any;
+  }
+}

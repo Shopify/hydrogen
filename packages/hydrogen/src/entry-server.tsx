@@ -14,6 +14,8 @@ import type {
   HydratorOptions,
   ImportGlobEagerOutput,
   ServerHandlerConfig,
+  ImportGlobOutput,
+  ShopifyConfig,
 } from './types';
 import {Html, applyHtmlHead} from './framework/Hydration/Html';
 import {ServerComponentResponse} from './framework/Hydration/ServerComponentResponse.server';
@@ -28,6 +30,7 @@ import {
   getApiRouteFromURL,
   renderApiRoute,
   getApiRoutes,
+  queryShopBuilder,
 } from './utilities/apiRoutes';
 import {ServerStateProvider} from './foundation/ServerStateProvider';
 import {isBotUA} from './utilities/bot-ua';
@@ -41,9 +44,15 @@ import {
   isStreamingSupported,
   bufferReadableStream,
 } from './streaming.server';
-import {RSC_PATHNAME} from './constants';
+import {DATA_LOADER_PATHNAME, RSC_PATHNAME} from './constants';
 import {stripScriptsFromTemplate} from './utilities/template';
 import {RenderType} from './utilities/log/log';
+import {
+  findRoute,
+  LegacyRouter,
+  createLazyPageRoutes,
+} from './foundation/Router/LegacyRouter';
+import {BrowserRouter} from './foundation/Router/BrowserRouter.client';
 
 declare global {
   // This is provided by a Vite plugin
@@ -76,7 +85,7 @@ export interface RequestHandler {
 
 export const renderHydrogen = (
   App: any,
-  {shopifyConfig, routes}: ServerHandlerConfig
+  {hydrogenConfig = {}, shopifyConfig, routes}: ServerHandlerConfig
 ) => {
   const handleRequest: RequestHandler = async function (
     rawRequest,
@@ -105,6 +114,7 @@ export const renderHydrogen = (
     setConfig({dev});
 
     const isReactHydrationRequest = url.pathname === RSC_PATHNAME;
+    const isLegacyDataLoaderRequest = url.pathname === DATA_LOADER_PATHNAME;
 
     let template =
       typeof indexTemplate === 'function'
@@ -143,7 +153,21 @@ export const renderHydrogen = (
       isStreamable,
       componentResponse,
       response: streamableResponse,
+      hydrogenConfig,
+      shopifyConfig,
     };
+
+    if (!hydrogenConfig?.experimental?.serverComponents) {
+      if (isLegacyDataLoaderRequest) {
+        return renderLegacyDataLoader(url, params);
+      }
+
+      if (isStreamable) {
+        return streamLegacy(url, params);
+      }
+
+      return renderLegacy(url, params);
+    }
 
     if (isReactHydrationRequest) {
       return hydrate(url, params);
@@ -169,6 +193,196 @@ function getApiRoute(url: URL, {routes}: {routes: ImportGlobEagerOutput}) {
   return getApiRouteFromURL(url, apiRoutes);
 }
 
+async function renderLegacy(
+  url: URL,
+  {
+    App,
+    routes,
+    request,
+    componentResponse,
+    log,
+    template,
+    nonce,
+    dev,
+    shopifyConfig,
+  }: RendererOptions
+) {
+  const state = {pathname: url.pathname, search: url.search};
+
+  const {noScriptTemplate} = stripScriptsFromTemplate(template);
+
+  const {AppSSR} = await buildAppLegacySSR(
+    {
+      App,
+      state,
+      request,
+      response: componentResponse,
+      log,
+      // @ts-expect-error TODO: Update all other render methods to use glob instead of eager
+      routes,
+      shopifyConfig,
+    },
+    {template: noScriptTemplate}
+  );
+
+  function onErrorShell(error: Error) {
+    log.error(error);
+    componentResponse.writeHead({status: 500});
+    return template;
+  }
+
+  let html = await renderToBufferedString(AppSSR, {log, nonce}).catch(
+    onErrorShell
+  );
+  html = applyHtmlHead(html, request.ctx.head, template);
+
+  const headers = {} as Record<string, any>;
+  headers[CONTENT_TYPE] = HTML_CONTENT_TYPE;
+
+  return new Response(html, {status: 200, headers});
+}
+
+async function streamLegacy(
+  url: URL,
+  {
+    App,
+    routes,
+    request,
+    response,
+    componentResponse,
+    log,
+    template,
+    nonce,
+    dev,
+    shopifyConfig,
+  }: StreamerOptions
+) {
+  const state = {pathname: url.pathname, search: url.search};
+  log.trace('stream start');
+
+  const {noScriptTemplate, bootstrapScripts, bootstrapModules} =
+    stripScriptsFromTemplate(template);
+
+  const {AppSSR} = await buildAppLegacySSR(
+    {
+      App,
+      state,
+      request,
+      response: componentResponse,
+      log,
+      // @ts-expect-error TODO: Update all other render methods to use glob instead of eager
+      routes,
+      shopifyConfig,
+    },
+    {template: noScriptTemplate}
+  );
+
+  let didError: Error | undefined;
+
+  if (__WORKER__) {
+    // todo: implement
+    return new Response('TODO: Implement Worker response');
+  } else if (response) {
+    const {pipe} = ssrRenderToPipeableStream(AppSSR, {
+      nonce,
+      bootstrapScripts,
+      bootstrapModules,
+      onShellReady() {
+        log.trace('node ready to stream');
+
+        writeHeadToServerResponse(response, componentResponse, log, didError);
+
+        if (isRedirect(response)) {
+          // Return redirects early without further rendering/streaming
+          return response.end();
+        }
+
+        startWritingHtmlToServerResponse(response, dev ? didError : undefined);
+
+        setTimeout(() => {
+          log.trace('node pipe response');
+          pipe(response);
+        }, 0);
+      },
+      async onAllReady() {
+        log.trace('node complete stream');
+
+        postRequestTasks(
+          'str',
+          response.statusCode,
+          request,
+          componentResponse
+        );
+        return;
+      },
+      onShellError(error: any) {
+        log.error(error);
+
+        if (!response.writableEnded) {
+          writeHeadToServerResponse(response, componentResponse, log, error);
+          startWritingHtmlToServerResponse(response, dev ? error : undefined);
+
+          response.write(template);
+          response.end();
+        }
+      },
+      onError(error: any) {
+        didError = error;
+
+        if (dev && response.headersSent) {
+          // Calling write would flush headers automatically.
+          // Delay this error until headers are properly sent.
+          response.write(getErrorMarkup(error));
+        }
+
+        log.error(error);
+      },
+    });
+  }
+}
+
+async function renderLegacyDataLoader(
+  url: URL,
+  {
+    routes,
+    shopifyConfig,
+  }: {routes: ImportGlobEagerOutput; shopifyConfig: ShopifyConfig}
+) {
+  const pathname = url.searchParams.get('pathname');
+
+  const {foundRoute, foundRouteDetails} = findRoute(
+    pathname!,
+    // @ts-ignore
+    createLazyPageRoutes(routes, '*', './routes')
+  );
+  const component = await foundRoute.component();
+  const initialParams = foundRouteDetails.params;
+  const initialDataResponse =
+    component.data &&
+    (await component.data({
+      params: initialParams,
+      queryShop: queryShopBuilder(shopifyConfig),
+    }));
+
+  if (!initialDataResponse) {
+    return new Response('', {status: 204});
+  }
+
+  if (initialDataResponse instanceof Response) {
+    return initialDataResponse;
+  }
+
+  if (typeof initialDataResponse === 'object') {
+    return new Response(JSON.stringify(initialDataResponse), {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+  }
+
+  return new Response(initialDataResponse);
+}
+
 /**
  * The render function is responsible for turning the provided `App` into an HTML string,
  * and returning any initial state that needs to be hydrated into the client version of the app.
@@ -185,6 +399,7 @@ async function render(
     template,
     nonce,
     dev,
+    hydrogenConfig,
   }: RendererOptions
 ) {
   const state = {pathname: url.pathname, search: url.search};
@@ -197,6 +412,7 @@ async function render(
       response: componentResponse,
       routes,
       log,
+      hydrogenConfig,
     },
     {template}
   );
@@ -268,6 +484,7 @@ async function stream(
     template,
     nonce,
     dev,
+    hydrogenConfig,
   }: StreamerOptions
 ) {
   const state = {pathname: url.pathname, search: url.search};
@@ -284,6 +501,7 @@ async function stream(
       response: componentResponse,
       log,
       routes,
+      hydrogenConfig,
     },
     {template: noScriptTemplate}
   );
@@ -621,7 +839,18 @@ type BuildAppOptions = {
   request: ServerComponentRequest;
   response: ServerComponentResponse;
   log: Logger;
-  routes?: ImportGlobEagerOutput;
+  routes: ImportGlobEagerOutput;
+  hydrogenConfig: any;
+};
+
+type BuildLegacyAppOptions = {
+  App: React.JSXElementConstructor<any>;
+  state?: object | null;
+  request: ServerComponentRequest;
+  response: ServerComponentResponse;
+  log: Logger;
+  routes: ImportGlobOutput;
+  shopifyConfig: ShopifyConfig;
 };
 
 function buildAppRSC({
@@ -631,7 +860,7 @@ function buildAppRSC({
   response,
   log,
   routes,
-}: BuildAppOptions) {
+}: Omit<BuildAppOptions, 'hydrogenConfig'>) {
   const hydrogenServerProps = {request, response, log};
   const serverProps = {...state, ...hydrogenServerProps, routes};
 
@@ -649,7 +878,7 @@ function buildAppRSC({
 }
 
 function buildAppSSR(
-  {App, state, request, response, log, routes}: BuildAppOptions,
+  {App, state, request, response, log, routes, hydrogenConfig}: BuildAppOptions,
   htmlOptions: Omit<Parameters<typeof Html>[0], 'children'> & {}
 ) {
   const {AppRSC} = buildAppRSC({
@@ -668,7 +897,10 @@ function buildAppSSR(
   const RscConsumer = () => rscResponse.readRoot();
 
   const AppSSR = (
-    <Html {...htmlOptions}>
+    <Html
+      {...htmlOptions}
+      clientConfig={buildHydrogenConfigForClient(hydrogenConfig)}
+    >
       <ServerRequestProvider request={request} isRSC={false}>
         <ServerStateProvider
           serverState={state as any}
@@ -685,6 +917,72 @@ function buildAppSSR(
   );
 
   return {AppSSR, rscReadable: rscReadableForFlight};
+}
+
+async function buildAppLegacySSR(
+  {App, state, request, log, routes, shopifyConfig}: BuildLegacyAppOptions,
+  htmlOptions: Omit<Parameters<typeof Html>[0], 'children'> & {}
+) {
+  const serverProps = {
+    ...state,
+    request,
+    log,
+    routes,
+  };
+
+  request.ctx.router.serverProps = serverProps;
+
+  const {foundRoute, foundRouteDetails} = findRoute(
+    // @ts-ignore
+    state!.pathname,
+    createLazyPageRoutes(routes, '*', './routes')
+  );
+  const component = await foundRoute.component();
+  const initialComponent = component.default;
+  const initialParams = foundRouteDetails.params;
+  const initialDataResponse =
+    component.data &&
+    (await component.data({
+      params: initialParams,
+      queryShop: queryShopBuilder(shopifyConfig),
+    }));
+  let initialData;
+
+  if (initialDataResponse) {
+    if (initialDataResponse instanceof Response) {
+      if (
+        initialDataResponse.headers.get('content-type') === 'application/json'
+      ) {
+        initialData = await initialDataResponse.json();
+      } else {
+        initialData = await initialDataResponse.text();
+      }
+    } else {
+      initialData = initialDataResponse;
+    }
+  }
+
+  const AppSSR = (
+    <Html
+      {...htmlOptions}
+      // TODO: Pass from hydrogen.config.js
+      clientConfig={{experimental: {serverComponents: false}}}
+    >
+      <ServerRequestProvider request={request} isRSC={false}>
+        <App>
+          <BrowserRouter>
+            <LegacyRouter
+              initialComponent={initialComponent}
+              initialParams={initialParams}
+              initialData={initialData}
+            />
+          </BrowserRouter>
+        </App>
+      </ServerRequestProvider>
+    </Html>
+  );
+
+  return {AppSSR};
 }
 
 function PreloadQueries({
@@ -867,4 +1165,14 @@ function postRequestTasks(
   logCacheControlHeaders(type, request, componentResponse);
   logQueryTimings(type, request);
   request.savePreloadQueries();
+}
+
+/**
+ * Build a serializable client version of hydrogen config.
+ * Use an allowlist to exclude plugins, functions, etc.
+ */
+function buildHydrogenConfigForClient(hydrogenConfig: any) {
+  return {
+    experimental: hydrogenConfig?.experimental,
+  };
 }

@@ -1,7 +1,8 @@
 import type {HydrogenVitePluginOptions, ShopifyConfig} from '../types';
-import hydrogenConfig from './plugins/vite-plugin-hydrogen-config';
+import hydrogenConfigPlugin from './plugins/vite-plugin-hydrogen-config';
 import type {Plugin} from 'vite';
 import hydrogenMiddleware, {
+  HYDROGEN_DEFAULT_LEGACY_ENTRY,
   HYDROGEN_DEFAULT_SERVER_ENTRY,
 } from './plugins/vite-plugin-hydrogen-middleware';
 import hydrogenClientMiddleware from './plugins/vite-plugin-hydrogen-client-middleware';
@@ -15,19 +16,22 @@ import inspect from 'vite-plugin-inspect';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 import cssModulesRsc from './plugins/vite-plugin-css-modules-rsc';
+import entryServerAutoImport from './plugins/vite-plugin-entry-server-auto-import';
 
 export default (
+  hydrogenConfig: any,
   shopifyConfig: ShopifyConfig,
   pluginOptions: HydrogenVitePluginOptions = {}
 ) => {
   return [
     process.env.VITE_INSPECT && inspect(),
 
-    hydrogenConfig(),
+    hydrogenConfigPlugin(),
     hydrogenClientMiddleware(),
     hydrogenMiddleware(shopifyConfig, pluginOptions),
     react(),
-    hydrationAutoImport(),
+    entryServerAutoImport(hydrogenConfig),
+    hydrationAutoImport(hydrogenConfig),
     ssrInterop(),
     cssModulesRsc(),
     rsc({
@@ -40,7 +44,9 @@ export default (
         // Always allow the entry server (e.g. App.server.jsx) to be imported
         // in other files such as worker.js or server.js.
         const entryServer =
-          process.env.HYDROGEN_SERVER_ENTRY || HYDROGEN_DEFAULT_SERVER_ENTRY;
+          process.env.HYDROGEN_SERVER_ENTRY ||
+          HYDROGEN_DEFAULT_SERVER_ENTRY ||
+          HYDROGEN_DEFAULT_LEGACY_ENTRY;
 
         return (
           source.includes(entryServer) ||
