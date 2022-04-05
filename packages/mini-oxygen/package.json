@@ -1,5 +1,6 @@
 {
   "name": "@shopify/mini-oxygen",
+  "author": "Shopify Inc.",
   "bin": {
     "oxygen-preview": "./dist/bootstrap.js",
     "oxygen-gen-config": "./dist/gen-config.js"
@@ -8,9 +9,9 @@
     "access": "public"
   },
   "engines": {
-    "node": ">16.0.0"
+    "node": ">16.7.0"
   },
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
