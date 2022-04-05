@@ -6,7 +6,7 @@ containers:
 
 # Documentation: https://shopify-build.docs.shopify.io/jobs/publish_package/
 steps:
-  - label: Publish to Cloudsmith
+  - label: Publish package
     timeout: 10m
     run:
       - publish:
