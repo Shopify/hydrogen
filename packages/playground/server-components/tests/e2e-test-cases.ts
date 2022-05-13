@@ -210,7 +210,8 @@ export default async function testCases({
       className
     );
 
-    // Style tag is present in DOM
+    // Style tag is present in DOM, and it's unique
+    expect(await page.$$('style[data-module]')).toHaveLength(1);
     expect(await page.textContent('style')).toEqual(
       `.${className} {\n  color: red;\n}\n`
     );
