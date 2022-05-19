@@ -115,7 +115,10 @@ function createRequestMiddleware(
         }
       }
 
-      if (autoReload) {
+      const shouldAutoreload =
+        autoReload && response.headers.get('content-type') === 'text/html';
+
+      if (shouldAutoreload) {
         const contentLength = response.headers.get('content-length');
         if (contentLength) {
           headers['content-length'] =
@@ -130,7 +133,7 @@ function createRequestMiddleware(
           res.write(chunk);
         }
 
-        if (autoReload) {
+        if (shouldAutoreload) {
           res.write(autoReloadScript);
         }
       }
