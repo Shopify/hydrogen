@@ -13,6 +13,10 @@ import {useServerResponse} from './framework/Hydration/rsc';
 import {ServerPropsProvider} from './foundation/ServerPropsProvider';
 import type {DevServerMessage} from './utilities/devtools';
 import type {LocationServerProps} from './foundation/ServerPropsProvider/ServerPropsProvider';
+import {RSC_PATHNAME} from './constants';
+// @ts-expect-error Missing types for vendored plugin
+import {createFromFetch} from '@shopify/hydrogen/vendor/react-server-dom-vite';
+import {RefreshContext} from './foundation/RefreshContext';
 
 const DevTools = React.lazy(() => import('./components/DevTools.client'));
 
@@ -73,24 +77,43 @@ const renderHydrogen: ClientHandler = async (ClientWrapper, config) => {
 
 export default renderHydrogen;
 
+const cache = new Map();
+
 function Content({
   clientWrapper: ClientWrapper = ({children}: {children: JSX.Element}) =>
     children,
 }: {
   clientWrapper: ElementType;
 }) {
+  const [, dispatch] = useState({});
+  const rerender = () => dispatch({});
+  const startTransition = (React as any).startTransition;
   const [serverProps, setServerProps] = useState<LocationServerProps>({
     pathname: window.location.pathname,
     search: window.location.search,
   });
-  const response = useServerResponse(serverProps);
+
+  let response = useServerResponse(serverProps, cache);
+
+  function refreshCache() {
+    startTransition(() => {
+      const key = JSON.stringify(serverProps);
+      response = createFromFetch(
+        fetch(`${RSC_PATHNAME}?state=` + encodeURIComponent(key))
+      );
+      cache.set(key, response);
+      rerender();
+    });
+  }
 
   return (
     <ServerPropsProvider
       initialServerProps={serverProps}
       setServerPropsForRsc={setServerProps}
     >
-      <ClientWrapper>{response.readRoot()}</ClientWrapper>
+      <RefreshContext.Provider value={refreshCache}>
+        <ClientWrapper>{response.readRoot()}</ClientWrapper>
+      </RefreshContext.Provider>
     </ServerPropsProvider>
   );
 }
