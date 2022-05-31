@@ -105,14 +105,12 @@ function createRequestMiddleware(
       response = await mf.dispatchFetch(request);
       status = response.status;
 
-      // eslint-disable-next-line guard-for-in
-      for (const key in req.headers) {
-        const val = req.headers[key];
-        if (Array.isArray(val)) {
-          headers[key] = val.join(',');
-        } else if (val !== undefined) {
-          headers[key] = val;
-        }
+      for (const key of response.headers.keys()) {
+        const val =
+          key.toLowerCase() === 'set-cookie'
+            ? (response.headers as any).getAll(key)
+            : response.headers.get(key);
+        headers[key] = val;
       }
 
       const shouldAutoreload =
