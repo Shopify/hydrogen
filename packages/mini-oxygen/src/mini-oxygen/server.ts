@@ -7,6 +7,7 @@ import mime from 'mime';
 import {Request} from '@miniflare/core';
 import connect from 'connect';
 import type {NextHandleFunction} from 'connect';
+import bodyParser from 'body-parser';
 
 import type {MiniOxygen} from './core';
 
@@ -99,6 +100,10 @@ function createRequestMiddleware(
     const request = new Request(urlFromRequest(req), {
       method: req.method,
       headers: reqHeaders,
+      body:
+        req.method !== 'GET' && req.method !== 'HEAD'
+          ? (req as any).body
+          : null,
     });
 
     try {
@@ -161,6 +166,7 @@ export function createServer(
     app.use(SSEUrl, createAutoReloadMiddleware(mf));
   }
 
+  app.use(bodyParser.raw({type: '*/*'}));
   app.use(createRequestMiddleware(mf, autoReload));
 
   const server = http.createServer(app);
