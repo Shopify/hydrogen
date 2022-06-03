@@ -14,6 +14,7 @@ import type {MiniOxygen} from './core';
 export interface MiniOxygenServerOptions {
   assetsDir?: string;
   autoReload?: boolean;
+  publicPath?: string;
 }
 
 const SSEUrl = '/events';
@@ -29,15 +30,41 @@ const autoReloadScriptLength = Buffer.byteLength(autoReloadScript);
 
 function createAssetMiddleware({
   assetsDir,
-}: {
-  assetsDir: string;
-}): NextHandleFunction {
+  publicPath,
+}: Pick<MiniOxygenServerOptions, 'assetsDir' | 'publicPath'>): NextHandleFunction {
   return (req, res, next) => {
-    const url = new URL(req.url || '/', `http://${req.headers.host}`);
-    const pathname = url.pathname.substring(1);
-    const filePath = path.join(assetsDir, pathname);
+    if (assetsDir === undefined) {
+      return next();
+    }
 
-    if (pathname !== '' && fs.existsSync(filePath)) {
+    const url = new URL(req.url || '/', `http://${req.headers.host}`);
+    let filePath: string;
+
+    if (publicPath === undefined || publicPath === '') {
+      const pathname = url.pathname.substring(1);
+      if (pathname === '') {
+        return next();
+      }
+
+      filePath = path.join(assetsDir, pathname);
+    } else {
+      let pathname = url.pathname;
+      // Potential issue here: a false positive if publicPath
+      // matches as a substring. Example:
+      // publicPath === "/build"
+      // pathname === "/buildnext/a.js"
+      // However, we cannot always append a trailing slash to
+      // publicPath since it may contain query params, e.g.
+      // publicPath === "?assetName="
+      if (pathname.startsWith(publicPath)) {
+        pathname = pathname.substring(publicPath.length)
+        filePath = path.join(assetsDir, pathname);
+      } else {
+        return next();
+      }
+    }
+
+    if (fs.existsSync(filePath)) {
       const rs = fs.createReadStream(filePath);
       const {size} = fs.statSync(filePath);
 
@@ -154,12 +181,12 @@ function createRequestMiddleware(
 
 export function createServer(
   mf: MiniOxygen,
-  {assetsDir, autoReload = false}: MiniOxygenServerOptions,
+  {assetsDir, publicPath, autoReload = false}: MiniOxygenServerOptions,
 ) {
   const app = connect();
 
   if (assetsDir) {
-    app.use(createAssetMiddleware({assetsDir}));
+    app.use(createAssetMiddleware({assetsDir, publicPath}));
   }
 
   if (autoReload) {

@@ -16,6 +16,7 @@ export type MiniOxygenPreviewOptions = Partial<{
   port: number;
   workerFile: string;
   assetsDir: string;
+  publicPath: string;
   watch: boolean;
   modules: boolean;
   buildCommand: string;
@@ -33,6 +34,7 @@ export function preview(opts: MiniOxygenPreviewOptions) {
     port = 3000,
     workerFile,
     assetsDir,
+    publicPath,
     watch = false,
     buildWatchPaths,
     buildCommand,
@@ -59,6 +61,7 @@ export function preview(opts: MiniOxygenPreviewOptions) {
 
   const app = mf.createServer({
     assetsDir: assetsDir ? path.resolve(root, assetsDir) : undefined,
+    publicPath,
     autoReload,
   });
 

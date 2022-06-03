@@ -11,6 +11,7 @@ const DEFAULTS: Required<Omit<MiniOxygenPreviewOptions, 'ui'>> = {
   port: 3000,
   workerFile: 'dist/worker/index.js',
   assetsDir: 'dist/client',
+  publicPath: '',
   buildCommand: 'yarn build',
   watch: true,
   buildWatchPaths: ['./src'],
@@ -51,6 +52,12 @@ inquirer
               input,
             )}. You may need to build your project first.`;
       },
+    },
+    {
+      name: 'publicPath',
+      message:
+        'URL or pathname that prefixes the public assets file names',
+      default: DEFAULTS.publicPath,
     },
     {
       name: 'buildCommand',
