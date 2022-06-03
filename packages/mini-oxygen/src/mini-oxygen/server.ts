@@ -31,7 +31,10 @@ const autoReloadScriptLength = Buffer.byteLength(autoReloadScript);
 function createAssetMiddleware({
   assetsDir,
   publicPath,
-}: Pick<MiniOxygenServerOptions, 'assetsDir' | 'publicPath'>): NextHandleFunction {
+}: Pick<
+  MiniOxygenServerOptions,
+  'assetsDir' | 'publicPath'
+>): NextHandleFunction {
   return (req, res, next) => {
     if (assetsDir === undefined) {
       return next();
@@ -57,7 +60,7 @@ function createAssetMiddleware({
       // publicPath since it may contain query params, e.g.
       // publicPath === "?assetName="
       if (pathname.startsWith(publicPath)) {
-        pathname = pathname.substring(publicPath.length)
+        pathname = pathname.substring(publicPath.length);
         filePath = path.join(assetsDir, pathname);
       } else {
         return next();

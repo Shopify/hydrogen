@@ -55,8 +55,7 @@ inquirer
     },
     {
       name: 'publicPath',
-      message:
-        'URL or pathname that prefixes the public assets file names',
+      message: 'URL or pathname that prefixes the public assets file names',
       default: DEFAULTS.publicPath,
     },
     {
