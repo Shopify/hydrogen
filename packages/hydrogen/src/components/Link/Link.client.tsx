@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {useRouter} from '../../foundation/Router/BrowserRouter.client';
 import {createPath} from 'history';
 import {useNavigate} from '../../foundation/useNavigate/useNavigate';
@@ -27,7 +27,7 @@ export interface LinkProps
  * For more information, refer to the [`<a>` element documentation](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/a#attributes).
  */
 export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
-  function Link(props, ref) {
+  function Link(props, forwardedRef) {
     const navigate = useNavigate();
     const {location} = useRouter();
     const [_, startTransition] = (React as any).useTransition();
@@ -84,27 +84,32 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       ]
     );
 
-    const signalPrefetchIntent = () => {
-      /**
-       * startTransition to yield to more important updates
-       */
+    const [setIntersectionRef, isVisible] = useIntersection({
+      rootMargin: '200px',
+    });
+
+    const setRef = useCallback(
+      (node: HTMLAnchorElement) => {
+        setIntersectionRef(node);
+
+        if (forwardedRef) {
+          if (typeof forwardedRef === 'function') {
+            forwardedRef(node);
+          } else if (typeof forwardedRef === 'object') {
+            forwardedRef.current = node;
+          }
+        }
+      },
+      [forwardedRef, setIntersectionRef]
+    );
+
+    useEffect(() => {
       startTransition(() => {
-        if (prefetch) {
+        if (isVisible && prefetch) {
           setMaybePrefetch(true);
         }
       });
-    };
-
-    const cancelPrefetchIntent = () => {
-      /**
-       * startTransition to yield to more important updates
-       */
-      startTransition(() => {
-        if (prefetch) {
-          setMaybePrefetch(false);
-        }
-      });
-    };
+    }, [prefetch, startTransition, isVisible]);
 
     /**
      * Wrapping `maybePrefetch` inside useEffect allows the user to quickly graze over
@@ -122,21 +127,6 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
       }
     }, [maybePrefetch]);
 
-    const onMouseEnter = composeEventHandlers(
-      props.onMouseEnter,
-      signalPrefetchIntent
-    );
-    const onMouseLeave = composeEventHandlers(
-      props.onMouseLeave,
-      cancelPrefetchIntent
-    );
-    const onFocus = composeEventHandlers(props.onFocus, signalPrefetchIntent);
-    const onBlur = composeEventHandlers(props.onBlur, cancelPrefetchIntent);
-    const onTouchStart = composeEventHandlers(
-      props.onTouchStart,
-      signalPrefetchIntent
-    );
-
     return (
       <>
         <a
@@ -148,13 +138,8 @@ export const Link = React.forwardRef<HTMLAnchorElement, LinkProps>(
             'prefetch',
             'scroll',
           ])}
-          ref={ref}
+          ref={setRef}
           onClick={internalClick}
-          onMouseEnter={onMouseEnter}
-          onMouseLeave={onMouseLeave}
-          onFocus={onFocus}
-          onBlur={onBlur}
-          onTouchStart={onTouchStart}
           href={props.to}
         >
           {props.children}
@@ -187,23 +172,6 @@ function Prefetch({pathname}: {pathname: string}) {
   return <link rel="prefetch" as="fetch" href={href} />;
 }
 
-/**
- * Credit: Remix's <Link> component.
- */
-export function composeEventHandlers<
-  EventType extends React.SyntheticEvent | Event
->(
-  theirHandler: ((event: EventType) => any) | undefined,
-  ourHandler: (event: EventType) => any
-): (event: EventType) => any {
-  return (event) => {
-    theirHandler?.(event);
-    if (!event.defaultPrevented) {
-      ourHandler(event);
-    }
-  };
-}
-
 function isModifiedEvent(event: React.MouseEvent) {
   return !!(event.metaKey || event.altKey || event.ctrlKey || event.shiftKey);
 }
@@ -216,4 +184,113 @@ function without(obj: Record<string, any>, props: Array<string>) {
     }
   }
   return newObj;
+}
+
+const hasIntersectionObserver = typeof IntersectionObserver !== 'undefined';
+
+interface Identifier {
+  rootMargin: string;
+}
+
+interface Observer {
+  id: ObserverOptions;
+  observer: IntersectionObserver;
+  elements: Map<Element, ObserveCallback>;
+}
+
+interface ObserverOptions {
+  rootMargin: string;
+}
+
+type ObserveCallback = (isVisible: boolean) => void;
+
+const observers: Map<Identifier, Observer> = new Map();
+
+/**
+ * Inspired by Next.js's hook of the same name:
+ * @see https://github.com/vercel/next.js/blob/0613f76f3862f49df46949d103e85514b566ede8/packages/next/client/use-intersection.tsx
+ */
+function useIntersection<T extends Element>(
+  options: ObserverOptions
+): [(element: T | null) => void, boolean] {
+  const isDisabled = !hasIntersectionObserver;
+  const unobserve = useRef<Function>();
+  const [visible, setVisible] = useState(false);
+
+  /**
+   * Using the functional version of React refs which is called when the element changes,
+   * is mounted, and is unmounted.
+   */
+  const setRef = useCallback(
+    (node: T | null) => {
+      if (unobserve.current) {
+        unobserve.current();
+        unobserve.current = undefined;
+      }
+
+      if (isDisabled || visible) return;
+
+      if (node) {
+        unobserve.current = observe(
+          node,
+          (isVisible) => isVisible && setVisible(isVisible),
+          options
+        );
+      }
+    },
+    [isDisabled, options, visible]
+  );
+
+  return [setRef, visible];
+}
+
+function observe(
+  element: Element,
+  callback: ObserveCallback,
+  options: ObserverOptions
+) {
+  const {observer, elements, id} = getOrCreateObserver(options);
+  elements.set(element, callback);
+  observer.observe(element);
+
+  return function unobserve(): void {
+    elements.delete(element);
+    observer.unobserve(element);
+
+    if (elements.size === 0) {
+      observer.disconnect();
+      observers.delete(id);
+    }
+  };
+}
+
+function getOrCreateObserver(options: ObserverOptions) {
+  let instance = observers.get(options);
+
+  if (instance) return instance;
+
+  const elements = new Map<Element, ObserveCallback>();
+  const observer = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        const callback = elements.get(entry.target);
+        const isVisible = entry.isIntersecting || entry.intersectionRatio > 0;
+
+        if (callback && isVisible) {
+          callback(isVisible);
+        }
+      }
+    }
+  }, options);
+
+  observers.set(
+    options,
+    (instance = {
+      id: options,
+      elements,
+      observer,
+    })
+  );
+
+  return instance;
 }
