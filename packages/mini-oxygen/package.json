@@ -30,11 +30,11 @@
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@miniflare/cache": "^2.4.0",
-    "@miniflare/core": "^2.4.0",
-    "@miniflare/runner-vm": "^2.4.0",
-    "@miniflare/shared": "^2.4.0",
-    "@miniflare/storage-memory": "^2.4.0",
+    "@miniflare/cache": "^2.5.1",
+    "@miniflare/core": "^2.5.1",
+    "@miniflare/runner-vm": "^2.5.1",
+    "@miniflare/shared": "^2.5.1",
+    "@miniflare/storage-memory": "^2.5.1",
     "@types/connect": "^3.4.35",
     "@types/mime": "^2.0.3",
     "connect": "^3.7.0",
@@ -45,7 +45,7 @@
     "body-parser": "1.20.0"
   },
   "devDependencies": {
-    "@miniflare/web-sockets": "2.4.0",
+    "@miniflare/web-sockets": "2.5.1",
     "@shopify/eslint-plugin": "^41.2.0",
     "@shopify/prettier-config": "^1.1.2",
     "@types/inquirer": "^8.2.1",
