@@ -46,17 +46,20 @@
  */
 
 import {paramCase} from 'change-case';
+import {exec} from 'child_process';
 import {resolve, dirname, join, extname} from 'path';
 import {createServer as createNodeServer} from 'http';
 import type {Server as NodeServer} from 'http';
-import {readFile, mkdirp, writeFile, pathExists} from 'fs-extra';
-import {it as vitestIt, TestContext} from 'vitest';
 import {
-  build,
-  createServer as createViteServer,
-  InlineConfig,
-  UserConfig,
-} from 'vite';
+  readFile,
+  mkdirp,
+  writeFile,
+  pathExists,
+  emptyDir,
+  remove,
+} from 'fs-extra';
+import {it as vitestIt, TestContext} from 'vitest';
+import {build, createServer as createViteServer, InlineConfig} from 'vite';
 import type {ViteDevServer} from 'vite';
 import {chromium} from 'playwright';
 import type {Browser} from 'playwright';
@@ -69,16 +72,32 @@ interface Context {
   instance: SandboxInstance;
 }
 
+interface Options {
+  debug?: boolean;
+}
+
 export {expect} from 'vitest';
-export function it(name: string, test: (TestContext) => void) {
+export function it(
+  name: string,
+  test: (TestContext) => void,
+  options: Options = {}
+) {
   vitestIt(name, async (context: TestContext) => {
-    await withFixture(context.meta.name, async ({fs, instance}) => {
-      await test({fs, instance, ...context});
-    });
+    await withFixture(
+      context.meta.name,
+      async ({fs, instance}) => {
+        await test({fs, instance, ...context});
+      },
+      options
+    );
   });
 }
 
-async function withFixture(name: string, runner: (context: Context) => void) {
+async function withFixture(
+  name: string,
+  runner: (context: Context) => void,
+  options: Options = {}
+) {
   const directory = join(__dirname, paramCase(name));
 
   const fs = await createFileSystem(directory);
@@ -90,13 +109,17 @@ async function withFixture(name: string, runner: (context: Context) => void) {
       instance,
     });
   } catch (error) {
-    await instance.destroy();
-    await fs.cleanup();
+    if (!options.debug) {
+      await instance.destroy();
+      await fs.cleanup();
+    }
 
     throw error;
   } finally {
-    await instance.destroy();
-    await fs.cleanup();
+    if (!options.debug) {
+      await instance.destroy();
+      await fs.cleanup();
+    }
   }
 }
 
@@ -112,12 +135,20 @@ async function createFileSystem(directory: string) {
         private: true,
         devDependencies: {
           vite: 'latest',
+          typescript: '^4.7.2',
+        },
+        dependencies: {
+          '@shopify/hydrogen': 'latest',
+          react: '^18.2.0',
+          'react-dom': '^18.2.0',
         },
       },
       null,
       2
     )
   );
+  await mkdirp(join(directory, 'public'));
+  await mkdirp(join(directory, 'src'));
 
   return new SandboxFileSystem(directory);
 }
@@ -155,8 +186,8 @@ class SandboxFileSystem {
   }
 
   async cleanup() {
-    // await emptyDir(this.root);
-    // await remove(this.root);
+    await emptyDir(this.root);
+    await remove(this.root);
   }
 
   async format(path, content) {
@@ -191,18 +222,44 @@ class SandboxFileSystem {
 
 // Instance
 async function createInstance(root: string) {
-  return new SandboxInstance(root);
+  const instance = new SandboxInstance(root);
+
+  await exec('yarn', {
+    cwd: root,
+    env: {...process.env},
+  });
+
+  return instance;
 }
 
+interface SandboxInstanceOptions {
+  debug?: boolean;
+}
 class SandboxInstance {
+  debug: boolean;
   browser: Browser;
   devServer: ViteDevServer;
   startServer: NodeServer;
 
-  constructor(public readonly root: string) {}
+  constructor(
+    public readonly root: string,
+    options: SandboxInstanceOptions = {}
+  ) {
+    this.debug = options.debug;
+  }
 
   url() {
-    return `http://localhost:${this.server.config.server.port}`;
+    if (this.devServer) {
+      const port = this.devServer.config.server.port;
+      return `http://localhost:${port}`;
+    }
+
+    if (this.startServer) {
+      const address = this.startServer.address();
+      const port = typeof address === 'string' ? address : address.port;
+
+      return `http://localhost:${port}`;
+    }
   }
 
   async config(): Promise<InlineConfig> {
@@ -250,7 +307,7 @@ class SandboxInstance {
     await this.devServer.listen();
 
     this.browser = await chromium.launch({
-      headless: !process.env.VITE_DEBUG_SERVE,
+      headless: this.debug,
 
       args: process.env.CI
         ? ['--no-sandbox', '--disable-setuid-sandbox']
@@ -267,3 +324,105 @@ class SandboxInstance {
     await this.startServer?.close();
   }
 }
+
+export const template = {
+  'index.html': ({title}) => `
+    <!DOCTYPE html>
+    <html lang="en">
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>${title}</title>
+        <link rel="stylesheet" href="/src/index.css" />
+      </head>
+      <body>
+        <div id="root"></div>
+        <script type="module" src="/@shopify/hydrogen/entry-client"></script>
+      </body>
+    </html>
+  `,
+
+  'vite.config.ts': () => `
+    import {defineConfig} from 'vite';
+    import hydrogen from '@shopify/hydrogen/plugin';
+    
+    export default defineConfig({
+      plugins: [hydrogen()],
+    });  
+  `,
+
+  'vite.config.js': () => `
+    const hydrogen = require('@shopify/hydrogen/plugin.cjs');
+
+    /**
+     * @type {import('vite').UserConfig}
+     */
+    module.exports = {
+      plugins: [
+        hydrogen(),
+      ],
+    };
+  `,
+
+  'tsconfig.json': () =>
+    JSON.stringify(
+      {
+        compilerOptions: {
+          outDir: 'dist',
+          target: 'es2020',
+          module: 'esnext',
+          moduleResolution: 'node16',
+          strict: true,
+          noUnusedLocals: true,
+          noUnusedParameters: true,
+          experimentalDecorators: true,
+          lib: ['dom', 'dom.iterable', 'scripthost', 'es2020'],
+          allowJs: true,
+          checkJs: true,
+          jsx: 'react',
+          types: ['vite/client'],
+          esModuleInterop: true,
+          isolatedModules: true,
+          resolveJsonModule: true,
+          skipLibCheck: true,
+        },
+        exclude: ['node_modules', 'dist'],
+        include: ['**/*.ts', '**/*.tsx'],
+      },
+      null,
+      2
+    ),
+
+  'hydrogen.config.js': () => `
+    import {defineConfig} from '@shopify/hydrogen/config';
+
+    export default defineConfig({
+      shopify: {
+        storeDomain: 'hydrogen-preview.myshopify.com',
+        storefrontToken: '3b580e70970c4528da70c98e097c2fa0',
+        storefrontApiVersion: '2022-07',
+      },
+    });
+  `,
+
+  'App.Server.jsx': () => `
+    import React from 'react';
+    import renderHydrogen from '@shopify/hydrogen/entry-server';
+    import {Router, FileRoutes, ShopifyProvider} from '@shopify/hydrogen';
+    import {Suspense} from 'react';
+
+    function App() {
+      return (
+        <Suspense fallback={null}>
+          <ShopifyProvider>
+            <Router>
+              <FileRoutes />
+            </Router>
+          </ShopifyProvider>
+        </Suspense>
+      );
+    }
+
+    export default renderHydrogen(App);
+  `,
+};
