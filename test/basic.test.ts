@@ -19,11 +19,13 @@ it(
     );
     await fs.write('src/index.css', '');
 
-    const page = await instance.dev();
+    const page = await instance.start({target: ['worker']});
+    // const page = await instance.dev();
 
-    await page.goto(instance.url());
-    const text = page.locator('.text-hfello-world');
-    await expect(text).toBeDefined();
+    await page.navigate(instance.url());
+    const text = await page.text('.text-hello-world');
+
+    expect(text).toBe('Hello Worldff');
   },
   {debug: true}
 );
