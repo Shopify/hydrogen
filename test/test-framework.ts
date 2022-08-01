@@ -1,6 +1,25 @@
 /**
  * Hydrogen integration tests for the framework
  *
+ * ## From Josh - Overhaul our framework E2E tests (From Josh)
+ * https://docs.google.com/document/d/1H7Bm99WltYmwa_ldzPoOTlF5siCOE6To5Pv5mIqtyFw/edit#heading=h.7sfotk7ekvvz
+ *
+ * Our framework e2e tests live in a weird place, packages/playground/*. We
+ * should hoist these out of the packages folder and refactor them.
+ *
+ * We should create an isolated Hydrogen app for each individual test rather
+ * than sharing the same set of routes for all tests.
+ *
+ * Remix has done this really elegantly here:
+ * https://github.com/remix-run/remix/tree/main/integration I would love to
+ * model our new e2e tests after them. Matthew Seccafien has started exploring
+ * this but I don’t think we have any code yet.
+ *
+ * If we follow the Remix approach, it’s important that there is an option to
+ * persist a given test’s template for a given time period so it can be
+ * inspected by a human to see what’s going on e.g. in the browser or the
+ * network tab to debug issues.
+ *
  * ## How do we currently do things?
  *
  * 1. We keep all integration tests in the packages/playground directory and
@@ -58,7 +77,12 @@ import {
   emptyDir,
   remove,
 } from 'fs-extra';
-import {it as vitestIt, TestContext} from 'vitest';
+import {
+  it as vitestIt,
+  describe as vitestDescribe,
+  beforeAll,
+  TestContext,
+} from 'vitest';
 import {
   build,
   createServer as createViteServer,
@@ -67,27 +91,29 @@ import {
 } from 'vite';
 import type {ViteDevServer} from 'vite';
 import {chromium} from 'playwright';
-import type {Browser} from 'playwright';
+import type {Browser, Page} from 'playwright';
 import {format as prettierFormat} from 'prettier';
 import getPort from 'get-port';
-import sirv from 'sirv';
+// import sirv from 'sirv';
 // TODO: Use Mini-Oxygen
-import {Miniflare} from 'miniflare';
+// import {Miniflare} from 'miniflare';
 
 interface Context {
   fs: SandboxFileSystem;
   instance: SandboxInstance;
 }
 
-interface Options {
+interface SandboxOptions {
   debug?: boolean;
 }
 
 export {expect} from 'vitest';
+export {describe} from 'vitest';
+
 export function it(
   name: string,
   test: (TestContext) => void,
-  options: Options = {}
+  options: SandboxOptions = {}
 ) {
   vitestIt(name, async (context: TestContext) => {
     await withFixture(
@@ -103,7 +129,7 @@ export function it(
 async function withFixture(
   name: string,
   runner: (context: Context) => void,
-  options: Options = {}
+  options: SandboxOptions = {}
 ) {
   const directory = join(__dirname, paramCase(name));
 
@@ -131,7 +157,7 @@ async function withFixture(
 }
 
 // FileSystem
-async function createFileSystem(directory: string) {
+export async function createFileSystem(directory: string) {
   await mkdirp(directory);
   await writeFile(join(directory, '.gitignore'), '*');
   await writeFile(
@@ -167,8 +193,11 @@ async function createFileSystem(directory: string) {
   return new SandboxFileSystem(directory);
 }
 
-class SandboxFileSystem {
-  constructor(public readonly root: string) {}
+export class SandboxFileSystem {
+  debug?: boolean;
+  constructor(public readonly root: string, options: SandboxOptions = {}) {
+    this.debug = options.debug;
+  }
 
   private resolvePath(...parts: string[]) {
     return resolve(this.root, ...parts);
@@ -187,7 +216,9 @@ class SandboxFileSystem {
     await writeFile(filePath, formattedContent, {encoding: 'utf8'});
   }
 
-  async edit(file: string) {}
+  async edit(file: string) {
+    // TODO move our utility for this over to the sandbox instance
+  }
 
   async read(file: string) {
     const filePath = this.resolvePath(file);
@@ -205,6 +236,10 @@ class SandboxFileSystem {
   }
 
   async format(path, content) {
+    if (!this.debug) {
+      return content;
+    }
+
     const ext = extname(path);
     const prettierConfig = {
       arrowParens: 'always' as const,
@@ -232,17 +267,109 @@ class SandboxFileSystem {
 
     return formattedContent;
   }
+
+  // async build({target}: {target: 'node' | 'worker'}) {
+  //   // TODO: can we build with the Vite API directly
+  //   // const output = await build(await this.config());
+  //   if (target === 'node') {
+  //     execSync('yarn build:server', {
+  //       cwd: this.root,
+  //       env: {...process.env},
+  //     });
+  //   }
+  //   if (target === 'worker') {
+  //     execSync(
+  //       'shopify hydrogen build --entry ../../packages/playground/test-utils/worker-entry',
+  //       {
+  //         cwd: this.root,
+  //         env: {...process.env},
+  //       }
+  //     );
+  //   }
+  // }
+
+  // async start({target}: {target: ('node' | 'worker')[]}) {
+  //   const currentTarget = target.pop();
+
+  //   if (!currentTarget) {
+  //     return;
+  //   }
+
+  //   await this.install();
+  //   await this.build({target: currentTarget});
+
+  //   if (currentTarget === 'node') {
+  //     const serve = sirv(resolve(this.root, 'dist'));
+  //     const {createServer: createNodeServer} = await import(
+  //       join(this.root, 'dist', 'node')
+  //     );
+
+  //     const env = await this.loadEnv();
+
+  //     Object.assign(process.env, env);
+
+  //     const {app} = await createNodeServer(serve);
+
+  //     const port = await getPort();
+
+  //     await this.start({target});
+
+  //     return new Promise((resolve, reject) => {
+  //       this.startServer = app.listen(port, () => {
+  //         const browser = createSandboxBrowser({debug: this.debug});
+
+  //         resolve(browser);
+  //       });
+  //     });
+  //   }
+
+  //   if (currentTarget === 'worker') {
+  //     // TODO use Mini Oxygen
+  //     const mf = new Miniflare({
+  //       scriptPath: resolve(this.root, 'dist/worker/index.js'),
+  //       sitePath: resolve(this.root, 'dist/client'),
+  //       bindings: await this.loadEnv(),
+  //     });
+
+  //     const app = mf.createServer();
+
+  //     const port = await getPort();
+
+  //     return new Promise((resolve, reject) => {
+  //       this.startServer = app.listen(port, () => {
+  //         const browser = createBrowser({debug: this.debug});
+
+  //         resolve(browser);
+  //       });
+  //     });
+  //   }
+  // }
+
+  // public async loadEnv() {
+  //   const env = await loadEnv('production', this.root, '');
+
+  //   Object.keys(env).forEach((key) => {
+  //     if (['VITE_', 'PUBLIC_'].some((prefix) => key.startsWith(prefix))) {
+  //       delete env[key];
+  //     }
+  //   });
+
+  //   return env;
+  // }
+
+  // async install() {
+  //   execSync('yarn', {
+  //     cwd: this.root,
+  //     env: {...process.env},
+  //   });
+  // }
 }
 
 // Instance
-async function createInstance(root: string, options?: SandboxInstanceOptions) {
+export async function createInstance(root: string, options?: SandboxOptions) {
   const instance = new SandboxInstance(root, options);
 
   return instance;
-}
-
-interface SandboxInstanceOptions {
-  debug?: boolean;
 }
 
 class SandboxInstance {
@@ -251,10 +378,7 @@ class SandboxInstance {
   devServer: ViteDevServer;
   startServer: NodeServer;
 
-  constructor(
-    public readonly root: string,
-    options: SandboxInstanceOptions = {}
-  ) {
+  constructor(public readonly root: string, options: SandboxOptions = {}) {
     this.debug = options.debug;
   }
 
@@ -263,8 +387,6 @@ class SandboxInstance {
       const port = this.devServer.config.server.port;
       return `http://localhost:${port}`;
     }
-
-    console.log(this.startServer);
 
     if (this.startServer) {
       const address = this.startServer.address();
@@ -292,97 +414,10 @@ class SandboxInstance {
     };
   }
 
-  async build() {
-    // const output = await build(await this.config());
-    execSync('yarn build:server', {
-      cwd: this.root,
-      env: {...process.env},
-    });
-  }
-
-  async start({target}: {target: ('node' | 'worker')[]}) {
-    const currentTarget = target.pop();
-
-    if (!currentTarget) {
-      return;
-    }
-
-    await this.install();
-    await this.build();
-
-    if (currentTarget === 'node') {
-      const serve = sirv(resolve(this.root, 'dist'));
-      const {createServer: createNodeServer} = await import(
-        join(this.root, 'dist', 'node')
-      );
-
-      const env = await this.loadEnv();
-
-      Object.assign(process.env, env);
-
-      const {app} = await createNodeServer(serve);
-
-      const port = await getPort();
-
-      await this.start({target});
-
-      return new Promise((resolve, reject) => {
-        this.startServer = app.listen(port, () => {
-          const browser = createSandboxBrowser({debug: this.debug});
-
-          resolve(browser);
-        });
-      });
-    }
-
-    if (currentTarget === 'worker') {
-      const mf = new Miniflare({
-        scriptPath: resolve(this.root, 'dist/worker/index.js'),
-        sitePath: resolve(this.root, 'dist/client'),
-        bindings: await this.loadEnv(),
-      });
-
-      const app = mf.createServer();
-
-      const port = await getPort();
-
-      return new Promise((resolve, reject) => {
-        this.startServer = app.listen(port, () => {
-          const browser = createSandboxBrowser({debug: this.debug});
-
-          resolve(browser);
-        });
-      });
-    }
-  }
-
   async dev() {
     this.devServer = await createViteServer(await this.config());
 
     await this.devServer.listen();
-
-    const browser = createSandboxBrowser({debug: this.debug});
-
-    return browser;
-  }
-
-  public async loadEnv() {
-    const env = await loadEnv('production', this.root, '');
-
-    Object.keys(env).forEach((key) => {
-      if (['VITE_', 'PUBLIC_'].some((prefix) => key.startsWith(prefix))) {
-        delete env[key];
-      }
-    });
-
-    return env;
-  }
-
-  async install() {
-    execSync('yarn', {
-      cwd: this.root,
-      env: {...process.env},
-    });
   }
 
   async destroy() {
@@ -392,143 +427,50 @@ class SandboxInstance {
   }
 }
 
-async function createSandboxBrowser({debug}: SandboxInstanceOptions = {}) {
-  const browser = await chromium.launch({
-    headless: !debug,
+export async function createBrowser(options: SandboxOptions = {}) {
+  const browser = new SandboxBrowser(options);
 
-    args: process.env.CI
-      ? ['--no-sandbox', '--disable-setuid-sandbox']
-      : undefined,
-  });
-
-  const page = await browser.newPage();
-
-  return {
-    navigate: async (url: string) => {
-      await page.goto(url);
-    },
-
-    text: async (selector: string) => {
-      await page.waitForSelector(selector);
-
-      const text = await page.evaluate(
-        (querySelector) => document.querySelector(querySelector).textContent,
-        selector
-      );
-
-      return text;
-    },
-  };
+  return browser;
 }
 
-export const template = {
-  'index.html': ({title}) => `
-    <!DOCTYPE html>
-    <html lang="en">
-      <head>
-        <meta charset="UTF-8" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>${title}</title>
-        <link rel="stylesheet" href="/src/index.css" />
-      </head>
-      <body>
-        <div id="root"></div>
-        <script type="module" src="/@shopify/hydrogen/entry-client"></script>
-      </body>
-    </html>
-  `,
+class SandboxBrowser {
+  page: Page;
+  chrome: Browser;
+  debug?: boolean;
 
-  'vite.config.ts': () => `
-    import {defineConfig} from 'vite';
-    import hydrogen from '@shopify/hydrogen/plugin';
-    
-    export default defineConfig({
-      plugins: [hydrogen()],
-    });  
-  `,
+  constructor(public readonly options: SandboxOptions = {}) {
+    this.debug = options.debug;
+  }
 
-  'vite.config.js': () =>
-    // `
-    //   const hydrogen = require('@shopify/hydrogen/plugin.cjs');
+  async open() {
+    this.chrome = await chromium.launch({
+      headless: !this.debug,
+      slowMo: 200,
 
-    //   /**
-    //    * @type {import('vite').UserConfig}
-    //    */
-    //   module.exports = {
-    //     plugins: [
-    //       hydrogen(),
-    //     ],
-    //   };
-    //   `
-    `
-    import {defineConfig} from 'vite';
-    import hydrogen from '@shopify/hydrogen/plugin';
-
-    export default defineConfig({
-      plugins: [hydrogen()],
+      args: process.env.CI
+        ? ['--no-sandbox', '--disable-setuid-sandbox']
+        : undefined,
     });
 
-  `,
+    this.page = await this.chrome.newPage();
+  }
 
-  'tsconfig.json': () =>
-    JSON.stringify(
-      {
-        compilerOptions: {
-          outDir: 'dist',
-          target: 'es2020',
-          module: 'esnext',
-          moduleResolution: 'node16',
-          strict: true,
-          noUnusedLocals: true,
-          noUnusedParameters: true,
-          experimentalDecorators: true,
-          lib: ['dom', 'dom.iterable', 'scripthost', 'es2020'],
-          allowJs: true,
-          checkJs: true,
-          jsx: 'react',
-          types: ['vite/client'],
-          esModuleInterop: true,
-          isolatedModules: true,
-          resolveJsonModule: true,
-          skipLibCheck: true,
-        },
-        exclude: ['node_modules', 'dist'],
-        include: ['**/*.ts', '**/*.tsx'],
-      },
-      null,
-      2
-    ),
+  async navigate(url: string) {
+    await this.page.goto(url);
+  }
 
-  'hydrogen.config.js': () => `
-    import {defineConfig} from '@shopify/hydrogen/config';
+  async text(selector: string) {
+    await this.page.waitForSelector(selector);
 
-    export default defineConfig({
-      shopify: {
-        storeDomain: 'hydrogen-preview.myshopify.com',
-        storefrontToken: '3b580e70970c4528da70c98e097c2fa0',
-        storefrontApiVersion: '2022-07',
-      },
-    });
-  `,
+    const text = await this.page.evaluate(
+      (querySelector) => document.querySelector(querySelector).textContent,
+      selector
+    );
 
-  'App.Server.jsx': () => `
-    import React from 'react';
-    import renderHydrogen from '@shopify/hydrogen/entry-server';
-    import {Router, FileRoutes, ShopifyProvider} from '@shopify/hydrogen';
-    import {Suspense} from 'react';
+    return text;
+  }
 
-    function App() {
-      return (
-        <Suspense fallback={null}>
-          <ShopifyProvider>
-            <Router>
-              <FileRoutes />
-            </Router>
-          </ShopifyProvider>
-        </Suspense>
-      );
-    }
-
-    export default renderHydrogen(App);
-  `,
-};
+  async close() {
+    this.chrome.close();
+  }
+}
