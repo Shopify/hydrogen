@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.2.1
+
+### Patch Changes
+
+- The Typescript types for the `<Image/>` component are now available to import directly from Hydrogen. ([#1913](https://github.com/Shopify/hydrogen/pull/1913)) by [@frehner](https://github.com/frehner)
+
+  ```ts
+  import {
+    type ShopifyImageProps,
+    type ExternalImageProps,
+  } from '@shopify/hydrogen';
+  ```
+
 ## 1.2.0
 
 ### Minor Changes
@@ -120,7 +133,7 @@ If your Store is based on the "Demo Store" tempate, and you are using the `test:
   } from '@shopify/hydrogen/platforms';
 
   // Platform entry handler
-  export default function (request) {
+  export default function(request) {
     if (isAsset(new URL(request.url).pathname)) {
       return platformAssetHandler(request);
     }
