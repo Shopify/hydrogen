@@ -36,7 +36,7 @@
     "@miniflare/shared": "^2.5.1",
     "@miniflare/storage-memory": "^2.5.1",
     "@types/connect": "^3.4.35",
-    "@types/mime": "^2.0.3",
+    "@types/mime": "^3.0.1",
     "body-parser": "1.20.0",
     "connect": "^3.7.0",
     "inquirer": "^9.0.0",
