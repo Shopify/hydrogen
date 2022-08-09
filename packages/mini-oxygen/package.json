@@ -49,7 +49,7 @@
     "@shopify/eslint-plugin": "^41.2.0",
     "@shopify/prettier-config": "^1.1.2",
     "@types/body-parser": "1.19.2",
-    "@types/inquirer": "^8.2.1",
+    "@types/inquirer": "^9.0.0",
     "@types/node": "18",
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
