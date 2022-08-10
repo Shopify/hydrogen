@@ -1,0 +1,38 @@
+name: Conditionally add issues to project boards
+
+on:
+  issues:
+    types: [opened, labeled]
+
+jobs:
+  # add everything to Runtime team board
+  # incorrect additions will be manually triaged
+  team-board:
+    name: add-to-team-board
+    runs-on: self-hosted
+    steps:
+      - uses: actions/add-to-project@v0.3.0
+        with:
+          project-url: https://github.com/orgs/Shopify/projects/4554
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+  # add maintenance and security items on shared board for ATC/on-call visibility
+  shared-oxygen-board:
+    name: add-to-shared-oxygen-board
+    runs-on: self-hosted
+    steps:
+      - uses: actions/add-to-project@v0.3.0
+        with:
+          project-url: https://github.com/orgs/Shopify/projects/4579
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          labeled: maintenance, security
+          label-operator: OR
+  # add epics to overarching Oxygen board
+  oxygen-board:
+    name: add-to-oxygen-board
+    runs-on: self-hosted
+    steps:
+      - uses: actions/add-to-project@v0.3.0
+        with:
+          project-url: https://github.com/orgs/Shopify/projects/4534
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          labeled: epic
