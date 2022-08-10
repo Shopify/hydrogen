@@ -1,0 +1,16 @@
+name: Conditionally add PRs to project boards
+
+on:
+  pull_request:
+    types: [labeled]
+    branches: [main]
+jobs:
+  dependabot:
+    name: add-dependabot-to-board
+    runs-on: self-hosted
+    steps:
+      - uses: actions/add-to-project@v0.3.0
+        with:
+          project-url: https://github.com/orgs/Shopify/projects/4579
+          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          labeled: dependencies
