@@ -1,13 +1,27 @@
 import {join, resolve} from 'path';
 
-import {writeFile, ensureDir} from 'fs-extra';
+import {writeFile, ensureDir, remove} from 'fs-extra';
+import getPort from 'get-port';
 
 export interface Fixture {
   destroy(): Promise<void>;
+  port: number;
+  paths: {
+    root: string;
+    config: string;
+    assets: string;
+    workerFile: string;
+  };
 }
 
 export async function createFixture(name: string): Promise<Fixture> {
   const directory = resolve(__dirname, 'fixtures', name);
+  const paths = {
+    root: directory,
+    config: join(directory, 'mini-oxygen.config.json'),
+    workerFile: join(directory, 'worker.mjs'),
+    assets: join(directory, 'assets'),
+  };
 
   function write(fileName: string, content: string) {
     return writeFile(join(directory, fileName), content);
@@ -67,6 +81,10 @@ export default {
   );
 
   return {
-    destroy: async () => {},
+    paths,
+    port: await getPort(),
+    destroy: async () => {
+      await remove(directory);
+    },
   };
 }

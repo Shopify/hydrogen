@@ -1,16 +1,34 @@
-import {it, describe, beforeEach, afterEach} from 'vitest';
+import {it, vi, describe, beforeEach, expect, afterEach} from 'vitest';
+
+import {preview, MiniOxygenPreviewOptions} from '../preview';
 
 import {createFixture, Fixture} from './utils';
 
-describe('e2e', () => {
+describe('preview()', () => {
   let fixture: Fixture;
+  const defaultOptions: MiniOxygenPreviewOptions = {
+    log: vi.fn(),
+  };
 
   beforeEach(async () => {
-    fixture = await createFixture('e2e');
+    fixture = await createFixture('basic-fixture');
   });
+
   afterEach(async () => {
     await fixture.destroy();
   });
 
-  it('runs inside of an hydrogen app', async () => {});
+  it('displays a message when the server is running', () => {
+    const mockLogger = vi.fn();
+    preview({
+      ...defaultOptions,
+      log: mockLogger,
+      port: fixture.port,
+      workerFile: fixture.paths.workerFile,
+    });
+
+    expect(mockLogger).toHaveBeenCalledWith(
+      `\nStarted miniOxygen server. Listening at http://localhost:${fixture.port}\n`,
+    );
+  });
 });

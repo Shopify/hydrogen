@@ -10,9 +10,7 @@ class WorkerNotFoundError extends Error {
 }
 
 export type MiniOxygenPreviewOptions = Partial<{
-  ui: {
-    say(message: string): unknown;
-  };
+  log(message: string): unknown;
   port: number;
   workerFile: string;
   assetsDir: string;
@@ -30,7 +28,7 @@ export const configFileName = 'mini-oxygen.config.json';
 export function preview(opts: MiniOxygenPreviewOptions) {
   const {
     // eslint-disable-next-line no-console
-    ui = {say: (message: string) => console.log(message)},
+    log = (message: string) => console.log(message),
     port = 3000,
     workerFile,
     assetsDir,
@@ -66,8 +64,6 @@ export function preview(opts: MiniOxygenPreviewOptions) {
   });
 
   app.listen(port, () => {
-    ui.say(
-      `\nStarted miniOxygen server. Listening at http://localhost:${port}\n`,
-    );
+    log(`\nStarted miniOxygen server. Listening at http://localhost:${port}\n`);
   });
 }
