@@ -18,9 +18,9 @@ describe('preview()', () => {
     await fixture.destroy();
   });
 
-  it('displays a message when the server is running', () => {
+  it('displays a message when the server is running', async () => {
     const mockLogger = vi.fn();
-    preview({
+    await preview({
       ...defaultOptions,
       log: mockLogger,
       port: fixture.port,

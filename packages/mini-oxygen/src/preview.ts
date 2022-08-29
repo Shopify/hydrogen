@@ -25,7 +25,7 @@ export type MiniOxygenPreviewOptions = Partial<{
 
 export const configFileName = 'mini-oxygen.config.json';
 
-export function preview(opts: MiniOxygenPreviewOptions) {
+export async function preview(opts: MiniOxygenPreviewOptions) {
   const {
     // eslint-disable-next-line no-console
     log = (message: string) => console.log(message),
@@ -63,7 +63,8 @@ export function preview(opts: MiniOxygenPreviewOptions) {
     autoReload,
   });
 
-  app.listen(port, () => {
+  await new Promise<void>(res => app.listen(port, () => {
     log(`\nStarted miniOxygen server. Listening at http://localhost:${port}\n`);
-  });
+    res();
+  }));
 }
