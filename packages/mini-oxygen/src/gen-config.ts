@@ -1,4 +1,7 @@
 #!/usr/bin/env node --no-warnings
+/* eslint-disable no-new-func */
+/* eslint-disable promise/no-nesting */
+/* eslint-disable promise/catch-or-return */
 /* eslint-disable no-console */
 import {writeFileSync, existsSync} from 'fs';
 import {resolve} from 'path';

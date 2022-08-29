@@ -63,8 +63,13 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     autoReload,
   });
 
-  await new Promise<void>(res => app.listen(port, () => {
-    log(`\nStarted miniOxygen server. Listening at http://localhost:${port}\n`);
-    res();
-  }));
+  // eslint-disable-next-line promise/param-names
+  await new Promise<void>((res) =>
+    app.listen(port, () => {
+      log(
+        `\nStarted miniOxygen server. Listening at http://localhost:${port}\n`,
+      );
+      res();
+    }),
+  );
 }
