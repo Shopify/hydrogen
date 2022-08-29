@@ -48,6 +48,7 @@
     "vitest": "^0.22.1"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.24.3",
     "@miniflare/web-sockets": "2.7.1",
     "@shopify/eslint-plugin": "^42.0.1",
     "@shopify/prettier-config": "^1.1.2",
