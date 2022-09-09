@@ -1,13 +1,14 @@
 name: Conditionally add PRs to project boards
 
 on:
-  pull_request:
+  pull_request_target:
     types: [labeled]
     branches: [main]
 jobs:
   dependabot:
     name: add-dependabot-to-board
     runs-on: shopify-ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
     steps:
       - uses: actions/add-to-project@v0.3.0
         with:
