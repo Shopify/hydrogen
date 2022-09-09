@@ -14,7 +14,7 @@ jobs:
       - uses: actions/add-to-project@v0.3.0
         with:
           project-url: https://github.com/orgs/Shopify/projects/4554
-          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
   # add maintenance and security items on shared board for ATC/on-call visibility
   shared-oxygen-board:
     name: add-to-shared-oxygen-board
@@ -23,7 +23,7 @@ jobs:
       - uses: actions/add-to-project@v0.3.0
         with:
           project-url: https://github.com/orgs/Shopify/projects/4579
-          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           labeled: maintenance, security
           label-operator: OR
   # add epics to overarching Oxygen board
@@ -34,5 +34,5 @@ jobs:
       - uses: actions/add-to-project@v0.3.0
         with:
           project-url: https://github.com/orgs/Shopify/projects/4534
-          github-token: ${{ secrets.ADD_TO_PROJECT_PAT }}
+          github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           labeled: epic
