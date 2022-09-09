@@ -7,7 +7,7 @@ on:
 jobs:
   dependabot:
     name: add-dependabot-to-board
-    runs-on: self-hosted
+    runs-on: shopify-ubuntu-latest
     steps:
       - uses: actions/add-to-project@v0.3.0
         with:

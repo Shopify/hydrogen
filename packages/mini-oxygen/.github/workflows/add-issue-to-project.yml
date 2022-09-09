@@ -9,7 +9,7 @@ jobs:
   # incorrect additions will be manually triaged
   team-board:
     name: add-to-team-board
-    runs-on: self-hosted
+    runs-on: shopify-ubuntu-latest
     steps:
       - uses: actions/add-to-project@v0.3.0
         with:
@@ -18,7 +18,7 @@ jobs:
   # add maintenance and security items on shared board for ATC/on-call visibility
   shared-oxygen-board:
     name: add-to-shared-oxygen-board
-    runs-on: self-hosted
+    runs-on: shopify-ubuntu-latest
     steps:
       - uses: actions/add-to-project@v0.3.0
         with:
@@ -29,7 +29,7 @@ jobs:
   # add epics to overarching Oxygen board
   oxygen-board:
     name: add-to-oxygen-board
-    runs-on: self-hosted
+    runs-on: shopify-ubuntu-latest
     steps:
       - uses: actions/add-to-project@v0.3.0
         with:
