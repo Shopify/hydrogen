@@ -53,6 +53,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
       watch,
       modules,
       buildWatchPaths,
+      compatibilityFlags: ['streams_enable_constructors'],
     },
     env,
   );
