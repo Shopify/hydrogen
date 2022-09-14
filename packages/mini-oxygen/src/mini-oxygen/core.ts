@@ -8,6 +8,7 @@ import {
 import {CachePlugin} from '@miniflare/cache';
 import {VMScriptRunner} from '@miniflare/runner-vm';
 import {Log, LogLevel} from '@miniflare/shared';
+import {QueueBroker} from '@miniflare/queues';
 
 import {createServer, MiniOxygenServerOptions} from './server';
 import {StorageFactory} from './storage';
@@ -34,6 +35,7 @@ export class MiniOxygen extends MiniflareCore<MiniOxygenType> {
         log: new Log(LogLevel.VERBOSE),
         storageFactory,
         scriptRunner: new VMScriptRunner(),
+        queueBroker: new QueueBroker(),
       },
       {
         bindings: env,
