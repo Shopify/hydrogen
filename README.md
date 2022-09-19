@@ -10,6 +10,7 @@ Related: https://docs.google.com/document/d/1iEerwYgs30rVDJi5JbfxCJf2K-boAwGOODm
 
 
 ## Principles:
+- Start with the unknowns, and areas where we think patterns may be different. Copy/pasting markup is easy and can be done at the end.
 - Do not over engineer; our demo store is used as a quick reference for Developers. DRYing up code in a way that makes the trail hard to follow for unfamiliar developers is an anti-pattern.
 - Keep as close to existing Demo Store as possible, without breaking Remix best practices
 
