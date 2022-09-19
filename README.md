@@ -2,7 +2,7 @@
 
 [Hydrogen 2.0 Gameplan Doc](https://docs.google.com/document/d/1iEerwYgs30rVDJi5JbfxCJf2K-boAwGOODmDFCNQDmY/edit#)
 
-[Github Project for Demo Store](https://github.com/orgs/Shopify/projects/5093)
+[Github Project for Demo Store](https://github.com/orgs/Shopify/projects/5093/views/2)
 
 ## Milestones:
 
