@@ -6,17 +6,23 @@ import {
   useProduct,
 } from "@shopify/hydrogen-ui-alpha";
 // TODO: Where is this?
-import type { OptionWithValues } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import {
   Heading,
   IconClose,
   ProductGallery,
   ProductOptions,
+  ProductSwimlane,
   Section,
   Text,
 } from "~/components";
 import { getExcerpt } from "~/lib/utils";
+
+// TODO: Import from storefront-api-types if/when it's available.
+interface OptionWithValues {
+  name: string;
+  values: string[];
+}
 
 export default function Product() {
   const { productHandle } = useParams();
@@ -33,9 +39,11 @@ export default function Product() {
   const { shippingPolicy, refundPolicy } = {
     shippingPolicy: {
       body: "This is a shipping policy",
+      handle: "shipping-policy",
     },
     refundPolicy: {
       body: "This is a refund policy",
+      handle: "refund-policy",
     },
   };
 
@@ -84,9 +92,10 @@ export default function Product() {
           </div>
         </div>
       </Section>
-      {/* <Suspense>
-          <ProductSwimlane title="Related Products" data={id} />
-        </Suspense> */}
+      <Suspense>
+        {/* TODO: Await data using dataLoader */}
+        <ProductSwimlane title="Related Products" data={[product]} />
+      </Suspense>
     </ProductProvider>
   );
 }
@@ -100,9 +109,9 @@ export function ProductForm() {
     useProduct();
 
   const isOutOfStock = !selectedVariant?.availableForSale || false;
-  const isOnSale =
-    selectedVariant?.priceV2?.amount <
-      selectedVariant?.compareAtPriceV2?.amount || false;
+  // const isOnSale =
+  //   selectedVariant?.priceV2?.amount <
+  //     selectedVariant?.compareAtPriceV2?.amount || false;
 
   useEffect(() => {
     if (params || !search) return;

@@ -1,6 +1,7 @@
 import type {
   MenuItem,
   Menu,
+  MoneyV2,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 
 // @ts-expect-error types not available
@@ -45,4 +46,18 @@ export function getExcerpt(text: string) {
   const regex = /<p.*>(.*?)<\/p>/;
   const match = regex.exec(text);
   return match?.length ? match[0] : text;
+}
+
+export function isNewArrival(date: string, daysOld = 30) {
+  return (
+    new Date(date).valueOf() >
+    new Date().setDate(new Date().getDate() - daysOld).valueOf()
+  );
+}
+
+export function isDiscounted(price: MoneyV2, compareAtPrice: MoneyV2) {
+  if (compareAtPrice?.amount > price?.amount) {
+    return true;
+  }
+  return false;
 }
