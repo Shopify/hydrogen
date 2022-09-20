@@ -1,6 +1,7 @@
 import { Disclosure } from "@headlessui/react";
 import type { LoaderFunction } from "@remix-run/cloudflare";
-import { Link, useLoaderData, useLocation } from "@remix-run/react";
+import { json } from "@remix-run/cloudflare";
+import { Link, useLoaderData, useLocation, Await } from "@remix-run/react";
 import {
   ProductProvider,
   ShopPayButton,
@@ -23,14 +24,12 @@ import invariant from "tiny-invariant";
 
 export const loader: LoaderFunction = async ({ params }) => {
   const { productHandle } = params;
-  invariant(productHandle, "Product handle is required");
+  invariant(productHandle, "Missing productHandle param, check route filename");
 
-  const product = await getProductData(productHandle);
+  const { shop, product } = await getProductData(productHandle);
+  const { recommended } = await getRecommendedProducts(product.id);
 
-  return {
-    product,
-    recommended: await getRecommendedProducts(product.product.id),
-  };
+  return json({ product, shop, recommended });
 };
 
 // TODO: Import from storefront-api-types if/when it's available.
@@ -40,12 +39,17 @@ interface OptionWithValues {
 }
 
 export default function Product() {
-  const { product, shop } = useLoaderData<typeof loader>().product;
+  const { product, shop, recommended } = useLoaderData<typeof loader>();
   const { media, title, vendor, descriptionHtml } = product;
   const { shippingPolicy, refundPolicy } = shop;
 
   return (
     <ProductProvider data={product}>
+      {/* TODO: move this back down below */}
+      <Suspense fallback={<RecommendedSkeleton />}>
+        <ProductSwimlane title="Related Products" data={recommended} />
+      </Suspense>
+
       <Section padding="x" className="px-0">
         <div className="grid items-start md:gap-6 lg:gap-20 md:grid-cols-2 lg:grid-cols-3">
           <ProductGallery
@@ -89,13 +93,6 @@ export default function Product() {
           </div>
         </div>
       </Section>
-      <Suspense>
-        {/* TODO: Await data using dataLoader */}
-        <ProductSwimlane
-          title="Related Products"
-          data={useLoaderData<typeof loader>().recommended.recommended}
-        />
-      </Suspense>
     </ProductProvider>
   );
 }
@@ -124,18 +121,18 @@ export function ProductForm() {
       const currentValue = params.get(name.toLowerCase()) || null;
       if (currentValue) {
         const matchedValue = values.filter(
-          (value) => encodeURIComponent(value.toLowerCase()) === currentValue
+          value => encodeURIComponent(value.toLowerCase()) === currentValue,
         );
         setSelectedOption(name, matchedValue[0]);
       } else {
         params.set(
           encodeURIComponent(name.toLowerCase()),
-          encodeURIComponent(selectedOptions![name]!.toLowerCase())
+          encodeURIComponent(selectedOptions![name]!.toLowerCase()),
         ),
           window.history.replaceState(
             null,
             "",
-            `${pathname}?${params.toString()}`
+            `${pathname}?${params.toString()}`,
           );
       }
     });
@@ -147,17 +144,17 @@ export function ProductForm() {
       if (!params) return;
       params.set(
         encodeURIComponent(name.toLowerCase()),
-        encodeURIComponent(value.toLowerCase())
+        encodeURIComponent(value.toLowerCase()),
       );
       if (typeof window !== "undefined") {
         window.history.replaceState(
           null,
           "",
-          `${pathname}?${params.toString()}`
+          `${pathname}?${params.toString()}`,
         );
       }
     },
-    [setSelectedOption, params, pathname]
+    [setSelectedOption, params, pathname],
   );
 
   return (
@@ -278,5 +275,13 @@ function ProductDetail({
         </>
       )}
     </Disclosure>
+  );
+}
+
+function RecommendedSkeleton() {
+  return (
+    <div className="h-[563px] m-4 bg-gray-300 animate-pulse flex justify-center items-center">
+      Spin spin!
+    </div>
   );
 }

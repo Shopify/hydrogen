@@ -309,5 +309,7 @@ export async function getRecommendedProducts(productId: string, count = 12) {
     },
   });
 
+  // force a slow load of this
+  await new Promise(res => setTimeout(res, 2000));
   return { recommended, additional };
 }
