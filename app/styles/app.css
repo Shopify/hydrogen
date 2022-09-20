@@ -1238,6 +1238,9 @@ video {
   .-m-4 {
     margin: -1rem;
 }
+  .m-4 {
+    margin: 1rem;
+}
   .-mb-px {
     margin-bottom: -1px;
 }
@@ -1258,6 +1261,9 @@ video {
 }
   .aspect-square {
     aspect-ratio: 1 / 1;
+}
+  .aspect-\[4\/5\] {
+    aspect-ratio: 4/5;
 }
   .h-screen-dynamic {
     height: 100vh;
@@ -1316,6 +1322,9 @@ video {
 }
   .w-mobileGallery {
     width: calc(100vw - 3rem);
+}
+  .w-80 {
+    width: 20rem;
 }
   .min-w-\[0\.75rem\] {
     min-width: 0.75rem;
@@ -1387,6 +1396,9 @@ video {
 }
   .cursor-pointer {
     cursor: pointer;
+}
+  .snap-start {
+    scroll-snap-align: start;
 }
   .snap-center {
     scroll-snap-align: center;
@@ -1468,8 +1480,14 @@ video {
   .overflow-y-scroll {
     overflow-y: scroll;
 }
+  .text-ellipsis {
+    text-overflow: ellipsis;
+}
   .whitespace-normal {
     white-space: normal;
+}
+  .whitespace-nowrap {
+    white-space: nowrap;
 }
   .whitespace-pre-wrap {
     white-space: pre-wrap;
@@ -1574,6 +1592,10 @@ video {
     background-color: rgba(20, 20, 20, 0.1);
     background-color: rgb(var(--color-primary) / 0.1);
 }
+  .bg-primary\/5 {
+    background-color: rgba(20, 20, 20, 0.05);
+    background-color: rgb(var(--color-primary) / 0.05);
+}
   .bg-opacity-25 {
     --tw-bg-opacity: 0.25;
 }
@@ -1661,6 +1683,9 @@ video {
 }
   .text-center {
     text-align: center;
+}
+  .text-right {
+    text-align: right;
 }
   .align-middle {
     vertical-align: middle;
@@ -2462,6 +2487,10 @@ video {
     .md\:cursor-default {
         cursor: default;
     }
+    .md\:scroll-px-8 {
+        scroll-padding-left: 2rem;
+        scroll-padding-right: 2rem;
+    }
     .md\:grid-flow-row {
         grid-auto-flow: row;
     }
@@ -2534,6 +2563,9 @@ video {
         padding-top: 3rem;
         padding-top: var(--height-nav);
     }
+    .md\:pb-8 {
+        padding-bottom: 2rem;
+    }
     .md\:leading-\[4rem\] {
         line-height: 4rem;
     }
@@ -2547,6 +2579,10 @@ video {
     }
     .lg\:hidden {
         display: none;
+    }
+    .lg\:scroll-px-12 {
+        scroll-padding-left: 3rem;
+        scroll-padding-right: 3rem;
     }
     .lg\:grid-cols-3 {
         grid-template-columns: repeat(3, minmax(0, 1fr));
