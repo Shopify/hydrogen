@@ -7,7 +7,7 @@
     "deploy": "wrangler publish",
     "dev": "run-p \"dev:*\"",
     "dev:remix": "remix watch",
-    "dev:css": "npx tailwindcss -i ./styles/app.css -o ./app/app.css",
+    "dev:css": "npx tailwindcss -i ./styles/app.css -o ./app/styles/app.css",
     "dev:miniflare": "cross-env NODE_ENV=development miniflare ./build/index.js --watch",
     "start": "cross-env NODE_ENV=production miniflare ./build/index.js"
   },
