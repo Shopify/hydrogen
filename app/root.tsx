@@ -1,4 +1,8 @@
-import type { LinksFunction, MetaFunction } from "@remix-run/cloudflare";
+import type {
+  LinksFunction,
+  LoaderFunction,
+  MetaFunction,
+} from "@remix-run/cloudflare";
 import {
   Links,
   LiveReload,
@@ -6,8 +10,10 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLoaderData,
 } from "@remix-run/react";
 import { Layout } from "~/components";
+import { getLayoutData } from "~/data";
 
 import styles from "./styles/app.css";
 
@@ -32,7 +38,13 @@ export const meta: MetaFunction = () => ({
   viewport: "width=device-width,initial-scale=1",
 });
 
+export const loader: LoaderFunction = async function loader() {
+  return getLayoutData();
+};
+
 export default function App() {
+  const layoutData = useLoaderData<typeof loader>();
+
   return (
     <html lang="en">
       <head>
@@ -40,7 +52,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout>
+        <Layout data={layoutData}>
           <Outlet />
         </Layout>
         <ScrollRestoration />
