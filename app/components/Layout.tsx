@@ -10,9 +10,12 @@ import {
   IconSearch,
   Heading,
   IconMenu,
+  IconCaret,
+  Section,
 } from "~/components";
 import { Link } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
+import { Disclosure } from "@headlessui/react";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const MENU = {
@@ -32,14 +35,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             Skip to content
           </a>
         </div>
-        <Header title={"Replace Me"} menu={MENU} />
+        <Header title="Shop Name" menu={MENU} />
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
       </div>
-      {/* <Suspense fallback={<Footer />}>
-        <FooterWithMenu />
-      </Suspense> */}
+      <Footer menu={MENU} />
     </>
   );
 }
@@ -47,9 +48,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
 function Header({ title, menu }: { title: string; menu: EnhancedMenu }) {
   const { pathname } = useLocation();
 
-  // TODO: Support locales like in Hydrogen
+  // TODO: Ensure locale support like in Hydrogen
   const isHome = pathname === "/";
-  const countryCode = undefined;
+  const localeMatch = /^\/([a-z]{2})(\/|$)/i.exec(pathname);
+  const countryCode = localeMatch ? localeMatch[1] : null;
 
   const {
     isOpen: isCartOpen,
@@ -82,6 +84,47 @@ function Header({ title, menu }: { title: string; menu: EnhancedMenu }) {
         openMenu={openMenu}
       />
     </>
+  );
+}
+
+function Footer({ menu }: { menu?: EnhancedMenu }) {
+  const { pathname } = useLocation();
+
+  // TODO: Ensure locale support like in Hydrogen
+  const localeMatch = /^\/([a-z]{2})(\/|$)/i.exec(pathname);
+  const countryCode = localeMatch ? localeMatch[1] : null;
+
+  const isHome = pathname === `/${countryCode ? countryCode + "/" : ""}`;
+  const itemsCount = menu
+    ? menu?.items?.length + 1 > 4
+      ? 4
+      : menu?.items?.length + 1
+    : [];
+
+  return (
+    <Section
+      divider={isHome ? "none" : "top"}
+      as="footer"
+      role="contentinfo"
+      className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12
+        border-b md:gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-${itemsCount}
+        bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
+    >
+      <FooterMenu menu={menu} />
+      <section className="grid gap-4 w-full md:max-w-[335px] md:ml-auto">
+        <Heading size="lead" className="cursor-default" as="h3">
+          Country
+        </Heading>
+        {/* TODO: Add country selector */}
+        {/* <CountrySelector /> */}
+      </section>
+      <div
+        className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
+      >
+        &copy; {new Date().getFullYear()} / Shopify, Inc. Hydrogen is an MIT
+        Licensed Open Source project. This website is carbon&nbsp;neutral.
+      </div>
+    </Section>
   );
 }
 
@@ -307,5 +350,58 @@ function CartBadge({ dark }: { dark: boolean }) {
     >
       <span>{totalQuantity}</span>
     </div>
+  );
+}
+
+function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
+  const styles = {
+    section: "grid gap-4",
+    nav: "grid gap-2 pb-6",
+  };
+
+  return (
+    <>
+      {(menu?.items || []).map((item: EnhancedMenuItem) => (
+        <section key={item.id} className={styles.section}>
+          <Disclosure>
+            {({ open }) => (
+              <>
+                <Disclosure.Button className="text-left md:cursor-default">
+                  <Heading className="flex justify-between" size="lead" as="h3">
+                    {item.title}
+                    {item?.items?.length > 0 && (
+                      <span className="md:hidden">
+                        <IconCaret direction={open ? "up" : "down"} />
+                      </span>
+                    )}
+                  </Heading>
+                </Disclosure.Button>
+                {item?.items?.length > 0 && (
+                  <div
+                    className={`${
+                      open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
+                    } overflow-hidden transition-all duration-300`}
+                  >
+                    <Disclosure.Panel static>
+                      <nav className={styles.nav}>
+                        {item.items.map((subItem) => (
+                          <Link
+                            key={subItem.id}
+                            to={subItem.to}
+                            target={subItem.target}
+                          >
+                            {subItem.title}
+                          </Link>
+                        ))}
+                      </nav>
+                    </Disclosure.Panel>
+                  </div>
+                )}
+              </>
+            )}
+          </Disclosure>
+        </section>
+      ))}{" "}
+    </>
   );
 }
