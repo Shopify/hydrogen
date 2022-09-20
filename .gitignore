@@ -6,3 +6,4 @@ node_modules
 /public/build
 /.mf
 .env
+/app/styles/app.css
