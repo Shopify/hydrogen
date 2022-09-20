@@ -5,10 +5,10 @@
     "build": "npm run build:css && remix build",
     "build:css": "postcss styles --base styles --dir app/styles --env production",
     "deploy": "wrangler publish",
-    "dev": "run-p \"dev:*\"",
     "dev:remix": "remix watch",
-    "dev:css": "npx tailwindcss -i ./styles/app.css -o ./app/styles/app.css",
+    "dev:css": "postcss styles --base styles --dir app/styles -w",
     "dev:miniflare": "cross-env NODE_ENV=development miniflare ./build/index.js --watch",
+    "dev": "remix build && run-p \"dev:*\"",
     "start": "cross-env NODE_ENV=production miniflare ./build/index.js"
   },
   "dependencies": {
@@ -19,9 +19,11 @@
     "@shopify/hydrogen-ui-alpha": "^2022.7.4",
     "clsx": "^1.2.1",
     "cross-env": "^7.0.3",
+    "graphql-tag": "^2.12.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-use": "^17.4.0",
+    "tiny-invariant": "^1.2.0",
     "typographic-base": "^1.0.4"
   },
   "devDependencies": {
@@ -33,8 +35,6 @@
     "@types/react": "^18.0.20",
     "@types/react-dom": "^18.0.6",
     "eslint": "^8.20.0",
-    "graphql": "^16.6.0",
-    "graphql-config": "^4.3.5",
     "miniflare": "^2.6.0",
     "npm-run-all": "^4.1.5",
     "postcss": "^8.4.16",

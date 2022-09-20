@@ -17,16 +17,13 @@ import { Link } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 
-export function Layout({ children }: { children: React.ReactNode }) {
-  const MENU = {
-    items: [
-      {
-        to: "/",
-        id: "foo",
-      } as EnhancedMenuItem,
-    ],
-  } as EnhancedMenu;
-
+export function Layout({
+  children,
+  data,
+}: {
+  children: React.ReactNode;
+  data: any;
+}) {
   return (
     <>
       <div className="flex flex-col min-h-screen">
@@ -35,12 +32,12 @@ export function Layout({ children }: { children: React.ReactNode }) {
             Skip to content
           </a>
         </div>
-        <Header title="Shop Name" menu={MENU} />
+        <Header title={data.shop.name} menu={data.headerMenu} />
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
       </div>
-      <Footer menu={MENU} />
+      {/* <Footer menu={data.footerMenu} /> */}
     </>
   );
 }
