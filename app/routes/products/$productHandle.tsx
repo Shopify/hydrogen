@@ -1,5 +1,6 @@
 import { Disclosure } from "@headlessui/react";
-import { Link, useLocation, useParams } from "@remix-run/react";
+import type { LoaderFunction } from "@remix-run/cloudflare";
+import { Link, useLoaderData, useLocation } from "@remix-run/react";
 import {
   ProductProvider,
   ShopPayButton,
@@ -16,7 +17,21 @@ import {
   Section,
   Text,
 } from "~/components";
+import { getProductData, getRecommendedProducts } from "~/data";
 import { getExcerpt } from "~/lib/utils";
+import invariant from "tiny-invariant";
+
+export const loader: LoaderFunction = async ({ params }) => {
+  const { productHandle } = params;
+  invariant(productHandle, "Product handle is required");
+
+  const product = await getProductData(productHandle);
+
+  return {
+    product,
+    recommended: await getRecommendedProducts(product.product.id),
+  };
+};
 
 // TODO: Import from storefront-api-types if/when it's available.
 interface OptionWithValues {
@@ -25,27 +40,9 @@ interface OptionWithValues {
 }
 
 export default function Product() {
-  const { productHandle } = useParams();
-
-  // TODO: Fetch from loader data
-  const product = {
-    media: { nodes: [] },
-    title: productHandle,
-    vendor: "Shopify",
-    descriptionHtml: "This is a product",
-    id: "gid://shopify/Product/123",
-  };
-  const { media, title, vendor, descriptionHtml, id } = product;
-  const { shippingPolicy, refundPolicy } = {
-    shippingPolicy: {
-      body: "This is a shipping policy",
-      handle: "shipping-policy",
-    },
-    refundPolicy: {
-      body: "This is a refund policy",
-      handle: "refund-policy",
-    },
-  };
+  const { product, shop } = useLoaderData<typeof loader>().product;
+  const { media, title, vendor, descriptionHtml } = product;
+  const { shippingPolicy, refundPolicy } = shop;
 
   return (
     <ProductProvider data={product}>
@@ -94,7 +91,10 @@ export default function Product() {
       </Section>
       <Suspense>
         {/* TODO: Await data using dataLoader */}
-        <ProductSwimlane title="Related Products" data={[product]} />
+        <ProductSwimlane
+          title="Related Products"
+          data={useLoaderData<typeof loader>().recommended.recommended}
+        />
       </Suspense>
     </ProductProvider>
   );
