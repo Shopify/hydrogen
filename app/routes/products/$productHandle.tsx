@@ -3,10 +3,9 @@ import { defer, type LoaderArgs } from "@remix-run/cloudflare";
 import { Link, useLoaderData, Await, useSearchParams } from "@remix-run/react";
 import {
   Money,
-  ProductProvider,
   ShopPayButton,
 } from "@shopify/hydrogen-ui-alpha";
-import { Suspense, useCallback } from "react";
+import { Suspense, useCallback, useEffect } from "react";
 import {
   Button,
   Heading,
@@ -18,23 +17,38 @@ import {
   Skeleton,
   Text,
 } from "~/components";
-import { getProductData, getRecommendedProducts } from "~/data";
+import {
+  getProductData as _getProductData,
+  getPoliciesData as _getPoliciesData,
+  getRecommendedProducts as _getRecommendedProducts,
+  getSelectedVariantData as _getSelectedVariantData,
+} from "~/data";
 import { getExcerpt } from "~/lib/utils";
 import invariant from "tiny-invariant";
+import memoize from "memoizee";
+
+const getPoliciesData = memoize(_getPoliciesData);
+const getRecommendedProducts = memoize(_getRecommendedProducts);
+const getProductData = memoize(_getProductData);
+const getSelectedVariantData = memoize(_getSelectedVariantData);
 
 export const loader = async ({ params, request }: LoaderArgs) => {
   const { productHandle } = params;
   invariant(productHandle, "Missing productHandle param, check route filename");
 
-  const { shop, product } = await getProductData(
+  const shop = await getPoliciesData();
+  const product = await getProductData(productHandle);
+  const selectedVariant = await getSelectedVariantData(
     productHandle,
     new URL(request.url).searchParams
   );
+  const recommended = getRecommendedProducts(product.id);
 
   return defer({
     product,
+    selectedVariant,
     shop,
-    recommended: getRecommendedProducts(product.id),
+    recommended,
   });
 };
 
@@ -50,7 +64,7 @@ export default function Product() {
   const { shippingPolicy, refundPolicy } = shop;
 
   return (
-    <ProductProvider data={product}>
+    <>
       <Section padding="x" className="px-0">
         <div className="grid items-start md:gap-6 lg:gap-20 md:grid-cols-2 lg:grid-cols-3">
           <ProductGallery
@@ -102,22 +116,32 @@ export default function Product() {
           {(data) => <ProductSwimlane title="Related Products" data={data} />}
         </Await>
       </Suspense>
-    </ProductProvider>
+    </>
   );
 }
 
 export function ProductForm() {
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const { product } = useLoaderData<typeof loader>();
+  const { product, selectedVariant } = useLoaderData<typeof loader>();
   const options = product.options;
-
-  const isOutOfStock = !product.selectedVariant?.availableForSale || false;
+  const isOutOfStock = !selectedVariant?.availableForSale || false;
   const isOnSale =
     // @ts-ignore
-    product.selectedVariant?.priceV2?.amount <
+    selectedVariant?.priceV2?.amount <
       // @ts-ignore
-      product.selectedVariant?.compareAtPriceV2?.amount || false;
+      selectedVariant?.compareAtPriceV2?.amount || false;
+
+  // set initial search params
+  useEffect(() => {
+    if (searchParams.toString()) return;
+
+    const initialSearchParams = new URLSearchParams();
+    selectedVariant.selectedOptions.forEach((option) => {
+      initialSearchParams.set(option.name, option.value);
+    });
+
+    setSearchParams(initialSearchParams)
+  }, [searchParams.toString(), setSearchParams, selectedVariant])
 
   const handleChange = useCallback(
     (name: string, value: string) => {
@@ -170,13 +194,13 @@ export function ProductForm() {
               <span>Add to bag</span> <span>·</span>{" "}
               <Money
                 withoutTrailingZeros
-                data={product.selectedVariant?.priceV2!}
+                data={selectedVariant?.priceV2!}
                 as="span"
               />
               {isOnSale && (
                 <Money
                   withoutTrailingZeros
-                  data={product.selectedVariant?.compareAtPriceV2!}
+                  data={selectedVariant?.compareAtPriceV2!}
                   as="span"
                   className="opacity-50 strike"
                 />
@@ -185,7 +209,7 @@ export function ProductForm() {
           )}
         </Button>
         {!isOutOfStock && (
-          <ShopPayButton variantIds={[product.selectedVariant?.id!]} />
+          <ShopPayButton variantIds={[selectedVariant?.id!]} />
         )}
       </div>
     </form>
