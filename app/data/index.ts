@@ -9,7 +9,7 @@ import {
   getPublicTokenHeaders,
   getStorefrontApiUrl,
 } from "~/lib/shopify-client";
-import { parseMenu } from "~/lib/utils";
+import { EnhancedMenu, parseMenu } from "~/lib/utils";
 import invariant from "tiny-invariant";
 
 export async function getStorefrontData<T>({
@@ -41,17 +41,19 @@ export async function getStorefrontData<T>({
   return json.data;
 }
 
+export interface LayoutData {
+  headerMenu: EnhancedMenu;
+  footerMenu: EnhancedMenu;
+  shop: Shop;
+}
+
 export async function getLayoutData() {
   const languageCode = "EN";
 
   const HEADER_MENU_HANDLE = "main-menu";
   const FOOTER_MENU_HANDLE = "footer";
 
-  const data = await getStorefrontData<{
-    headerMenu: Menu;
-    footerMenu: Menu;
-    shop: Shop;
-  }>({
+  const data = await getStorefrontData<LayoutData>({
     query: LAYOUT_QUERY,
     variables: {
       language: languageCode,
@@ -125,7 +127,7 @@ export async function getProductData(handle: string) {
   const countryCode = "US";
 
   const { product, shop } = await getStorefrontData<{
-    product: any;
+    product: Product;
     shop: Shop;
   }>({
     query: PRODUCT_QUERY,

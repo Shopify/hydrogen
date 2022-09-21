@@ -15,12 +15,12 @@ import {
   ProductOptions,
   ProductSwimlane,
   Section,
+  Skeleton,
   Text,
 } from "~/components";
 import { getProductData, getRecommendedProducts } from "~/data";
 import { getExcerpt } from "~/lib/utils";
 import invariant from "tiny-invariant";
-import { Skeleton } from "~/components/Skeleton";
 
 export const loader: LoaderFunction = async ({ params }) => {
   const { productHandle } = params;

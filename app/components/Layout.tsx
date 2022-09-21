@@ -16,13 +16,14 @@ import {
 import { Link } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
+import type { LayoutData } from "~/data";
 
 export function Layout({
   children,
   data,
 }: {
   children: React.ReactNode;
-  data: any;
+  data: LayoutData;
 }) {
   return (
     <>
