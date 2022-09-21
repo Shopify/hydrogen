@@ -1,7 +1,8 @@
+import {json} from "@remix-run/cloudflare";
 import type {
   LinksFunction,
   LoaderFunction,
-  MetaFunction,
+  MetaFunction
 } from "@remix-run/cloudflare";
 import {
   Links,
@@ -13,9 +14,10 @@ import {
   useLoaderData,
 } from "@remix-run/react";
 import { Layout } from "~/components";
-import { getLayoutData } from "~/data";
-
+import { getLayoutData as _getLayoutData } from "~/data";
+import memoize from "memoizee";
 import styles from "./styles/app.css";
+const getLayoutData = memoize(_getLayoutData);
 
 export const links: LinksFunction = () => {
   return [
@@ -39,7 +41,11 @@ export const meta: MetaFunction = () => ({
 });
 
 export const loader: LoaderFunction = async function loader() {
-  return getLayoutData();
+  // TODO: maybe split queries and defer footer menu
+  const layoutData = await getLayoutData();
+  return json({
+    ...layoutData,
+  })
 };
 
 export default function App() {
