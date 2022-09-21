@@ -37,7 +37,7 @@ export function Layout({
           {children}
         </main>
       </div>
-      {/* <Footer menu={data.footerMenu} /> */}
+      <Footer menu={data.footerMenu} />
     </>
   );
 }
@@ -286,13 +286,18 @@ function DesktopHeader({
   return (
     <header role="banner" className={styles.container}>
       <div className="flex gap-12">
-        <Link className={`font-bold`} to="/">
+        <Link className={`font-bold`} to="/" prefetch="intent">
           {title}
         </Link>
         <nav className="flex gap-8">
           {/* Top level menu items */}
           {(menu?.items || []).map((item) => (
-            <Link key={item.id} to={item.to} target={item.target}>
+            <Link
+              key={item.id}
+              to={item.to}
+              target={item.target}
+              prefetch="intent"
+            >
               {item.title}
             </Link>
           ))}
@@ -386,6 +391,7 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
                             key={subItem.id}
                             to={subItem.to}
                             target={subItem.target}
+                            prefetch="intent"
                           >
                             {subItem.title}
                           </Link>
