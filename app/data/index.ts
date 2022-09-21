@@ -1,6 +1,8 @@
 import type { StorefrontApiResponseOk } from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
 import type {
   Menu,
+  Product,
+  ProductConnection,
   Shop,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
@@ -296,9 +298,9 @@ export async function getRecommendedProducts(productId: string, count = 12) {
   const languageCode = "EN";
   const countryCode = "US";
 
-  const { recommended, additional } = await getStorefrontData<{
-    recommended: any[];
-    additional: any[];
+  const products = await getStorefrontData<{
+    recommended: Product[];
+    additional: ProductConnection;
   }>({
     query: RECOMMENDED_PRODUCTS_QUERY,
     variables: {
@@ -309,7 +311,18 @@ export async function getRecommendedProducts(productId: string, count = 12) {
     },
   });
 
-  // force a slow load of this
-  await new Promise(res => setTimeout(res, 2000));
-  return { recommended, additional };
+  const mergedProducts = products.recommended
+    .concat(products.additional.nodes)
+    .filter(
+      (value, index, array) =>
+        array.findIndex((value2) => value2.id === value.id) === index
+    );
+
+  const originalProduct = mergedProducts
+    .map((item) => item.id)
+    .indexOf(productId);
+
+  mergedProducts.splice(originalProduct, 1);
+
+  return mergedProducts;
 }

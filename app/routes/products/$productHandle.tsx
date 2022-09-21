@@ -1,6 +1,5 @@
 import { Disclosure } from "@headlessui/react";
-import type { LoaderFunction } from "@remix-run/cloudflare";
-import { json } from "@remix-run/cloudflare";
+import { defer, type LoaderFunction } from "@remix-run/cloudflare";
 import { Link, useLoaderData, useLocation, Await } from "@remix-run/react";
 import {
   ProductProvider,
@@ -21,15 +20,19 @@ import {
 import { getProductData, getRecommendedProducts } from "~/data";
 import { getExcerpt } from "~/lib/utils";
 import invariant from "tiny-invariant";
+import { Skeleton } from "~/components/Skeleton";
 
 export const loader: LoaderFunction = async ({ params }) => {
   const { productHandle } = params;
   invariant(productHandle, "Missing productHandle param, check route filename");
 
   const { shop, product } = await getProductData(productHandle);
-  const { recommended } = await getRecommendedProducts(product.id);
 
-  return json({ product, shop, recommended });
+  return defer({
+    product,
+    shop,
+    recommended: getRecommendedProducts(product.id),
+  });
 };
 
 // TODO: Import from storefront-api-types if/when it's available.
@@ -45,11 +48,6 @@ export default function Product() {
 
   return (
     <ProductProvider data={product}>
-      {/* TODO: move this back down below */}
-      <Suspense fallback={<RecommendedSkeleton />}>
-        <ProductSwimlane title="Related Products" data={recommended} />
-      </Suspense>
-
       <Section padding="x" className="px-0">
         <div className="grid items-start md:gap-6 lg:gap-20 md:grid-cols-2 lg:grid-cols-3">
           <ProductGallery
@@ -93,6 +91,14 @@ export default function Product() {
           </div>
         </div>
       </Section>
+      <Suspense fallback={<Skeleton className="h-32" />}>
+        <Await
+          errorElement="There was a problem loading related products"
+          resolve={recommended}
+        >
+          {(data) => <ProductSwimlane title="Related Products" data={data} />}
+        </Await>
+      </Suspense>
     </ProductProvider>
   );
 }
@@ -121,18 +127,18 @@ export function ProductForm() {
       const currentValue = params.get(name.toLowerCase()) || null;
       if (currentValue) {
         const matchedValue = values.filter(
-          value => encodeURIComponent(value.toLowerCase()) === currentValue,
+          (value) => encodeURIComponent(value.toLowerCase()) === currentValue
         );
         setSelectedOption(name, matchedValue[0]);
       } else {
         params.set(
           encodeURIComponent(name.toLowerCase()),
-          encodeURIComponent(selectedOptions![name]!.toLowerCase()),
+          encodeURIComponent(selectedOptions![name]!.toLowerCase())
         ),
           window.history.replaceState(
             null,
             "",
-            `${pathname}?${params.toString()}`,
+            `${pathname}?${params.toString()}`
           );
       }
     });
@@ -144,17 +150,17 @@ export function ProductForm() {
       if (!params) return;
       params.set(
         encodeURIComponent(name.toLowerCase()),
-        encodeURIComponent(value.toLowerCase()),
+        encodeURIComponent(value.toLowerCase())
       );
       if (typeof window !== "undefined") {
         window.history.replaceState(
           null,
           "",
-          `${pathname}?${params.toString()}`,
+          `${pathname}?${params.toString()}`
         );
       }
     },
-    [setSelectedOption, params, pathname],
+    [setSelectedOption, params, pathname]
   );
 
   return (
@@ -275,13 +281,5 @@ function ProductDetail({
         </>
       )}
     </Disclosure>
-  );
-}
-
-function RecommendedSkeleton() {
-  return (
-    <div className="h-[563px] m-4 bg-gray-300 animate-pulse flex justify-center items-center">
-      Spin spin!
-    </div>
   );
 }
