@@ -35,7 +35,7 @@ export default {
   async fetch(
     request: Request,
     env: Env,
-    ctx: ExecutionContext,
+    ctx: ExecutionContext
   ): Promise<Response> {
     try {
       return await getAssetFromKV(
@@ -49,7 +49,7 @@ export default {
           cacheControl,
           ASSET_NAMESPACE: env.__STATIC_CONTENT,
           ASSET_MANIFEST: assetManifest,
-        },
+        }
       );
     } catch (e) {
       if (e instanceof NotFoundError || e instanceof MethodNotAllowedError) {
