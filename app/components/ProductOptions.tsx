@@ -1,8 +1,7 @@
 import { useCallback, useState } from "react";
 import { Listbox } from "@headlessui/react";
-import { useProduct } from "@shopify/hydrogen-ui-alpha";
-
 import { Text, IconCheck, IconCaret } from "~/components";
+import { useSearchParams } from "@remix-run/react";
 
 export function ProductOptions({
   values,
@@ -29,12 +28,12 @@ function OptionsGrid({
   name: string;
   handleChange: (name: string, value: string) => void;
 }) {
-  const { selectedOptions } = useProduct();
+  const [selectedOptions] = useSearchParams();
 
   return (
     <>
       {values.map((value) => {
-        const checked = selectedOptions![name] === value;
+        const checked = selectedOptions.get(name) === value;
         const id = `option-${name}-${value}`;
 
         return (
@@ -73,7 +72,7 @@ function OptionsDropdown({
   handleChange: (name: string, value: string) => void;
 }) {
   const [listboxOpen, setListboxOpen] = useState(false);
-  const { selectedOptions } = useProduct();
+  const [selectedOptions] = useSearchParams();
 
   const updateSelectedOption = useCallback(
     (value: string) => {
@@ -94,7 +93,7 @@ function OptionsDropdown({
                   open ? "rounded-b md:rounded-t md:rounded-b-none" : "rounded"
                 }`}
               >
-                <span>{selectedOptions![name]}</span>
+                <span>{selectedOptions.get(name)}</span>
                 <IconCaret direction={open ? "up" : "down"} />
               </Listbox.Button>
 
@@ -106,7 +105,7 @@ function OptionsDropdown({
                 }`}
               >
                 {values.map((value) => {
-                  const isSelected = selectedOptions![name] === value;
+                  const isSelected = selectedOptions.get(name) === value;
                   const id = `option-${name}-${value}`;
 
                   return (
