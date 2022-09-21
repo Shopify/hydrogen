@@ -84,7 +84,7 @@ export function ProductGallery({
             {/* TODO: Replace with MediaFile when it's available */}
             {med.image && (
               <img
-                src={med.image.src}
+                src={med.image.url}
                 alt={med.image.altText}
                 className="w-full h-full aspect-square fadeIn object-cover"
               />
