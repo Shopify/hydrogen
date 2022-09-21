@@ -145,8 +145,6 @@ export async function getProductData(
     selectedOptions.push({ name, value });
   });
 
-  console.log(selectedOptions);
-
   const { product, shop } = await getStorefrontData<{
     product: Product & { selectedVariant?: ProductVariant };
     shop: Shop;
