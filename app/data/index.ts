@@ -1,15 +1,19 @@
-import type { StorefrontApiResponseOk } from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
 import type {
-  Menu,
+  StorefrontApiResponseError,
+  StorefrontApiResponseOk,
+} from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
+import type {
   Product,
   ProductConnection,
+  ProductVariant,
+  SelectedOptionInput,
   Shop,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
   getStorefrontApiUrl,
 } from "~/lib/shopify-client";
-import { EnhancedMenu, parseMenu } from "~/lib/utils";
+import { type EnhancedMenu, parseMenu } from "~/lib/utils";
 import invariant from "tiny-invariant";
 
 export async function getStorefrontData<T>({
@@ -32,9 +36,16 @@ export async function getStorefrontData<T>({
     method: "POST",
   });
 
-  // TODO: handle errors
+  if (!response.ok) {
+    // 400 or 500 level error
+    return (await response.text()) as StorefrontApiResponseError; // or apiResponse.json()
+  }
 
   const json: StorefrontApiResponseOk<T> = await response.json();
+
+  if (json.errors) {
+    console.log(json.errors);
+  }
 
   invariant(json && json.data, "No data returned from Shopify API");
 
@@ -121,19 +132,30 @@ const LAYOUT_QUERY = `#graphql
   }
 `;
 
-export async function getProductData(handle: string) {
+export async function getProductData(
+  handle: string,
+  searchParams: URLSearchParams
+) {
   // TODO: Figure out localization stuff
   const languageCode = "EN";
   const countryCode = "US";
 
+  let selectedOptions: SelectedOptionInput[] = [];
+  searchParams.forEach((value, name) => {
+    selectedOptions.push({ name, value });
+  });
+
+  console.log(selectedOptions);
+
   const { product, shop } = await getStorefrontData<{
-    product: Product;
+    product: Product & { selectedVariant?: ProductVariant };
     shop: Shop;
   }>({
     query: PRODUCT_QUERY,
     variables: {
       country: countryCode,
       language: languageCode,
+      selectedOptions,
       handle,
     },
   });
@@ -210,18 +232,59 @@ const PRODUCT_CARD_FRAGMENT = `#graphql
   }
 `;
 
+const PRODUCT_VARIANT_FRAGMENT = `#graphql
+  fragment ProductVariantFragment on ProductVariant {
+    id
+    availableForSale
+    selectedOptions {
+      name
+      value
+    }
+    image {
+      id
+      url
+      altText
+      width
+      height
+    }
+    priceV2 {
+      amount
+      currencyCode
+    }
+    compareAtPriceV2 {
+      amount
+      currencyCode
+    }
+    sku
+    title
+    unitPrice {
+      amount
+      currencyCode
+    }
+  }
+`;
+
 const PRODUCT_QUERY = `#graphql
   ${MEDIA_FRAGMENT}
+  ${PRODUCT_VARIANT_FRAGMENT}
   query Product(
     $country: CountryCode
     $language: LanguageCode
     $handle: String!
+    $selectedOptions: [SelectedOptionInput!]!
   ) @inContext(country: $country, language: $language) {
     product(handle: $handle) {
       id
       title
       vendor
       descriptionHtml
+      options {
+        name
+        values
+      }
+      selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
+        ...ProductVariantFragment
+      }
       media(first: 7) {
         nodes {
           ...Media
@@ -229,33 +292,7 @@ const PRODUCT_QUERY = `#graphql
       }
       variants(first: 100) {
         nodes {
-          id
-          availableForSale
-          selectedOptions {
-            name
-            value
-          }
-          image {
-            id
-            url
-            altText
-            width
-            height
-          }
-          priceV2 {
-            amount
-            currencyCode
-          }
-          compareAtPriceV2 {
-            amount
-            currencyCode
-          }
-          sku
-          title
-          unitPrice {
-            amount
-            currencyCode
-          }
+          ...ProductVariantFragment
         }
       }
       seo {

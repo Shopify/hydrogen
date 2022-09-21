@@ -1,14 +1,14 @@
 import { Disclosure } from "@headlessui/react";
-import { defer, type LoaderFunction } from "@remix-run/cloudflare";
-import { Link, useLoaderData, useLocation, Await } from "@remix-run/react";
+import { defer, type LoaderArgs } from "@remix-run/cloudflare";
+import { Link, useLoaderData, Await, useSearchParams } from "@remix-run/react";
 import {
+  Money,
   ProductProvider,
   ShopPayButton,
-  useProduct,
 } from "@shopify/hydrogen-ui-alpha";
-// TODO: Where is this?
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback } from "react";
 import {
+  Button,
   Heading,
   IconClose,
   ProductGallery,
@@ -22,11 +22,14 @@ import { getProductData, getRecommendedProducts } from "~/data";
 import { getExcerpt } from "~/lib/utils";
 import invariant from "tiny-invariant";
 
-export const loader: LoaderFunction = async ({ params }) => {
+export const loader = async ({ params, request }: LoaderArgs) => {
   const { productHandle } = params;
   invariant(productHandle, "Missing productHandle param, check route filename");
 
-  const { shop, product } = await getProductData(productHandle);
+  const { shop, product } = await getProductData(
+    productHandle,
+    new URL(request.url).searchParams
+  );
 
   return defer({
     product,
@@ -103,64 +106,26 @@ export default function Product() {
   );
 }
 
-// TODO: Rewrite this to use Remix Form API
 export function ProductForm() {
-  const { pathname, search } = useLocation();
-  const [params, setParams] = useState(new URLSearchParams(search));
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const { options, setSelectedOption, selectedOptions, selectedVariant } =
-    useProduct();
+  const { product } = useLoaderData<typeof loader>();
+  const options = product.options;
 
-  const isOutOfStock = !selectedVariant?.availableForSale || false;
-  // const isOnSale =
-  //   selectedVariant?.priceV2?.amount <
-  //     selectedVariant?.compareAtPriceV2?.amount || false;
-
-  useEffect(() => {
-    if (params || !search) return;
-    setParams(new URLSearchParams(search));
-  }, [params, search]);
-
-  useEffect(() => {
-    (options as OptionWithValues[]).map(({ name, values }) => {
-      if (!params) return;
-      const currentValue = params.get(name.toLowerCase()) || null;
-      if (currentValue) {
-        const matchedValue = values.filter(
-          (value) => encodeURIComponent(value.toLowerCase()) === currentValue
-        );
-        setSelectedOption(name, matchedValue[0]);
-      } else {
-        params.set(
-          encodeURIComponent(name.toLowerCase()),
-          encodeURIComponent(selectedOptions![name]!.toLowerCase())
-        ),
-          window.history.replaceState(
-            null,
-            "",
-            `${pathname}?${params.toString()}`
-          );
-      }
-    });
-  }, []);
+  const isOutOfStock = !product.selectedVariant?.availableForSale || false;
+  const isOnSale =
+    // @ts-ignore
+    product.selectedVariant?.priceV2?.amount <
+      // @ts-ignore
+      product.selectedVariant?.compareAtPriceV2?.amount || false;
 
   const handleChange = useCallback(
     (name: string, value: string) => {
-      setSelectedOption(name, value);
-      if (!params) return;
-      params.set(
-        encodeURIComponent(name.toLowerCase()),
-        encodeURIComponent(value.toLowerCase())
-      );
-      if (typeof window !== "undefined") {
-        window.history.replaceState(
-          null,
-          "",
-          `${pathname}?${params.toString()}`
-        );
-      }
+      const newParams = new URLSearchParams(searchParams);
+      newParams.set(name, value);
+      setSearchParams(newParams);
     },
-    [setSelectedOption, params, pathname]
+    [searchParams, setSearchParams]
   );
 
   return (
@@ -192,45 +157,36 @@ export function ProductForm() {
         </div>
       }
       <div className="grid items-stretch gap-4">
-        {/* TODO: Build add to cart features using Remix Form API, probably */}
-        {/* <AddToCartButton
-          variantId={selectedVariant?.id}
-          quantity={1}
-          accessibleAddingToCartLabel="Adding item to your cart"
+        <Button
+          width="full"
+          variant={isOutOfStock ? "secondary" : "primary"}
           disabled={isOutOfStock}
-          type="button"
+          as="button"
         >
-          <Button
-            width="full"
-            variant={isOutOfStock ? "secondary" : "primary"}
-            as="span"
-          >
-            {isOutOfStock ? (
-              <Text>Sold out</Text>
-            ) : (
-              <Text
+          {isOutOfStock ? (
+            <Text>Sold out</Text>
+          ) : (
+            <Text as="span" className="flex items-center justify-center gap-2">
+              <span>Add to bag</span> <span>·</span>{" "}
+              <Money
+                withoutTrailingZeros
+                data={product.selectedVariant?.priceV2!}
                 as="span"
-                className="flex items-center justify-center gap-2"
-              >
-                <span>Add to bag</span> <span>·</span>{" "}
+              />
+              {isOnSale && (
                 <Money
                   withoutTrailingZeros
-                  data={selectedVariant.priceV2!}
+                  data={product.selectedVariant?.compareAtPriceV2!}
                   as="span"
+                  className="opacity-50 strike"
                 />
-                {isOnSale && (
-                  <Money
-                    withoutTrailingZeros
-                    data={selectedVariant.compareAtPriceV2!}
-                    as="span"
-                    className="opacity-50 strike"
-                  />
-                )}
-              </Text>
-            )}
-          </Button>
-        </AddToCartButton> */}
-        {!isOutOfStock && <ShopPayButton variantIds={[selectedVariant.id!]} />}
+              )}
+            </Text>
+          )}
+        </Button>
+        {!isOutOfStock && (
+          <ShopPayButton variantIds={[product.selectedVariant?.id!]} />
+        )}
       </div>
     </form>
   );
