@@ -16,6 +16,8 @@ import {
 import { type EnhancedMenu, parseMenu } from "~/lib/utils";
 import invariant from "tiny-invariant";
 
+
+
 export async function getStorefrontData<T>({
   query,
   variables,
@@ -63,6 +65,8 @@ export async function getLayoutData() {
 
   const HEADER_MENU_HANDLE = "main-menu";
   const FOOTER_MENU_HANDLE = "footer";
+
+  console.log('📐 fetching layout ———————————————————————————————————')
 
   const data = await getStorefrontData<LayoutData>({
     query: LAYOUT_QUERY,
@@ -134,6 +138,31 @@ const LAYOUT_QUERY = `#graphql
 
 export async function getProductData(
   handle: string,
+) {
+  // TODO: Figure out localization stuff
+  const languageCode = "EN";
+  const countryCode = "US";
+  console.log('🎒 fetching product ———————————————————————————————————')
+  const { product } = await getStorefrontData<{
+    product: Product & { selectedVariant?: ProductVariant };
+  }>({
+    query: PRODUCT_QUERY,
+    variables: {
+      country: countryCode,
+      language: languageCode,
+      handle,
+    },
+  });
+
+  if (!product) {
+    throw new Response("Uh ohhhhh", { status: 404 });
+  }
+
+  return product;
+}
+
+export async function getSelectedVariantData(
+  handle: string,
   searchParams: URLSearchParams
 ) {
   // TODO: Figure out localization stuff
@@ -145,11 +174,11 @@ export async function getProductData(
     selectedOptions.push({ name, value });
   });
 
-  const { product, shop } = await getStorefrontData<{
+  console.log('🎯 fetching selectedVariant ———————————————————————————————————')
+  const { product } = await getStorefrontData<{
     product: Product & { selectedVariant?: ProductVariant };
-    shop: Shop;
   }>({
-    query: PRODUCT_QUERY,
+    query: SELECTED_VARIANT_QUERY,
     variables: {
       country: countryCode,
       language: languageCode,
@@ -162,7 +191,32 @@ export async function getProductData(
     throw new Response("Uh ohhhhh", { status: 404 });
   }
 
-  return { product, shop };
+  const selectedVariant = product?.selectedVariant || product.variants.edges[0].node || null
+
+  return selectedVariant;
+}
+
+export async function getPoliciesData() {
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  console.log('📄 fetching shop policies ———————————————————————————————————')
+
+  const { shop } = await getStorefrontData<{
+    shop: Shop;
+  }>({
+    query: POLICIES_QUERY,
+    variables: {
+      country: countryCode,
+      language: languageCode,
+    },
+  });
+
+  if (!shop) {
+    throw new Response("Uh ohhhhh", { status: 404 });
+  }
+
+  return shop;
 }
 
 const MEDIA_FRAGMENT = `#graphql
@@ -264,12 +318,10 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
 
 const PRODUCT_QUERY = `#graphql
   ${MEDIA_FRAGMENT}
-  ${PRODUCT_VARIANT_FRAGMENT}
   query Product(
     $country: CountryCode
     $language: LanguageCode
     $handle: String!
-    $selectedOptions: [SelectedOptionInput!]!
   ) @inContext(country: $country, language: $language) {
     product(handle: $handle) {
       id
@@ -280,24 +332,52 @@ const PRODUCT_QUERY = `#graphql
         name
         values
       }
-      selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
-        ...ProductVariantFragment
-      }
       media(first: 7) {
         nodes {
           ...Media
         }
       }
-      variants(first: 100) {
-        nodes {
-          ...ProductVariantFragment
-        }
-      }
+      # variants(first: 100) {
+      #   nodes {
+      #     ...ProductVariantFragment
+      #   }
+      # }
       seo {
         description
         title
       }
     }
+  }
+`;
+
+const SELECTED_VARIANT_QUERY = `#graphql
+  ${PRODUCT_VARIANT_FRAGMENT}
+  query Product(
+    $country: CountryCode
+    $language: LanguageCode
+    $handle: String!
+    $selectedOptions: [SelectedOptionInput!]!
+  ) @inContext(country: $country, language: $language) {
+    product(handle: $handle) {
+      selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
+        ...ProductVariantFragment
+      }
+      variants(first: 1) {
+        edges {
+          node {
+            ...ProductVariantFragment
+          }
+        }
+      }
+    }
+  }
+`;
+
+const POLICIES_QUERY = `#graphql
+query Policies(
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     shop {
       shippingPolicy {
         body
@@ -310,6 +390,7 @@ const PRODUCT_QUERY = `#graphql
     }
   }
 `;
+
 
 const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   ${PRODUCT_CARD_FRAGMENT}
@@ -334,6 +415,7 @@ export async function getRecommendedProducts(productId: string, count = 12) {
   // TODO: You know what to do
   const languageCode = "EN";
   const countryCode = "US";
+  console.log('✅ fetching recommended  ———————————————————————————————————')
 
   const products = await getStorefrontData<{
     recommended: Product[];
