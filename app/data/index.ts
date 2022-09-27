@@ -455,7 +455,7 @@ const COLLECTION_QUERY = `#graphql
 
 export async function getCollection({
   handle,
-  paginationSize = 8,
+  paginationSize = 48,
   cursor,
 }: {
   handle: string;
