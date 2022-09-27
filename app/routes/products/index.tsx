@@ -1,8 +1,7 @@
-import type { LoaderArgs } from "@remix-run/cloudflare";
+import type { LoaderArgs, MetaFunction } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import { PageHeader, Section, ProductGrid } from "~/components";
-import {} from "~/components/ProductGrid";
 import { getAllProducts } from "~/data";
 
 export async function loader({ request }: LoaderArgs) {
@@ -11,6 +10,13 @@ export async function loader({ request }: LoaderArgs) {
 
   return products;
 }
+
+export const meta: MetaFunction = () => {
+  return {
+    title: "All Products",
+    description: "All Products",
+  };
+};
 
 export default function AllProducts() {
   const products = useLoaderData<typeof loader>();
