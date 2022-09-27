@@ -44,6 +44,7 @@ export function ProductGrid({
             variant="secondary"
             to={`${url}?cursor=${endCursor}`}
             width="full"
+            prefetch="intent"
           >
             Load more products
           </Button>
