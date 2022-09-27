@@ -1,4 +1,4 @@
-import { json } from "@remix-run/cloudflare";
+import { json, type MetaFunction } from "@remix-run/cloudflare";
 import { Link, useLoaderData } from "@remix-run/react";
 import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import { Grid, Heading, PageHeader, Section } from "~/components";
@@ -9,6 +9,12 @@ export const loader = async () => {
   const collections = await getCollections();
 
   return json({ collections });
+};
+
+export const meta: MetaFunction = () => {
+  return {
+    title: "All Collections",
+  };
 };
 
 export default function Collections() {
