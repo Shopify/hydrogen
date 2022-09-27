@@ -485,3 +485,50 @@ export async function getCollection({
 
   return data.collection;
 }
+
+const ALL_PRODUCTS_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query AllProducts(
+    $country: CountryCode
+    $language: LanguageCode
+    $pageBy: Int!
+    $cursor: String
+  ) @inContext(country: $country, language: $language) {
+    products(first: $pageBy, after: $cursor) {
+      nodes {
+        ...ProductCard
+      }
+      pageInfo {
+        hasNextPage
+        startCursor
+        endCursor
+      }
+    }
+  }
+`;
+
+export async function getAllProducts({
+  paginationSize = 48,
+  cursor,
+}: {
+  paginationSize?: number;
+  cursor?: string;
+}) {
+  // TODO: You know what to do
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{
+    products: ProductConnection;
+  }>({
+    query: ALL_PRODUCTS_QUERY,
+    variables: {
+      cursor,
+      language: languageCode,
+      country: countryCode,
+      pageBy: paginationSize,
+    },
+  });
+
+  return data.products;
+}
