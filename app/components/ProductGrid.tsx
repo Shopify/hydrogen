@@ -1,7 +1,11 @@
 import { Button, Grid, ProductCard } from "~/components";
 import { getImageLoadingPriority } from "~/lib/const";
-import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Link } from "@remix-run/react";
+import type {
+  Collection,
+  Product,
+} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import { Link, useFetcher } from "@remix-run/react";
+import { useEffect, useState } from "react";
 
 export function ProductGrid({
   url,
@@ -11,8 +15,28 @@ export function ProductGrid({
   collection: Collection;
 }) {
   const initialProducts = collection?.products?.nodes || [];
-  const { hasNextPage, endCursor } = collection?.products?.pageInfo ?? {};
-  const products = initialProducts;
+  const [nextPage, setNextPage] = useState(
+    collection?.products?.pageInfo?.hasNextPage
+  );
+  const [endCursor, setEndCursor] = useState(
+    collection?.products?.pageInfo?.endCursor
+  );
+  const [products, setProducts] = useState(initialProducts);
+  const fetcher = useFetcher();
+
+  function fetchMoreProducts() {
+    fetcher.load(`${url}?index&cursor=${endCursor}`);
+  }
+
+  useEffect(() => {
+    if (!fetcher.data) return;
+
+    const { collection } = fetcher.data;
+    setProducts((prev: Product[]) => [...prev, ...collection.products.nodes]);
+    setNextPage(collection.products.pageInfo.hasNextPage);
+    setEndCursor(collection.products.pageInfo.endCursor);
+  }, [fetcher.data]);
+
   const haveProducts = initialProducts.length > 0;
 
   if (!haveProducts) {
@@ -38,15 +62,16 @@ export function ProductGrid({
         ))}
       </Grid>
 
-      {hasNextPage && (
+      {nextPage && (
         <div className="flex items-center justify-center mt-6">
           <Button
+            disabled={fetcher.state !== "idle"}
             variant="secondary"
-            to={`${url}?cursor=${endCursor}`}
+            onClick={fetchMoreProducts}
             width="full"
             prefetch="intent"
           >
-            Load more products
+            {fetcher.state !== "idle" ? "Loading..." : "Load more products"}
           </Button>
         </div>
       )}
