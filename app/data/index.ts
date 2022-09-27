@@ -3,6 +3,8 @@ import type {
   StorefrontApiResponseOk,
 } from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
 import type {
+  Collection,
+  CollectionConnection,
   Product,
   ProductConnection,
   ProductVariant,
@@ -362,4 +364,124 @@ export async function getRecommendedProducts(productId: string, count = 12) {
   mergedProducts.splice(originalProduct, 1);
 
   return mergedProducts;
+}
+
+const COLLECTIONS_QUERY = `#graphql
+  query Collections(
+    $country: CountryCode
+    $language: LanguageCode
+    $pageBy: Int!
+  ) @inContext(country: $country, language: $language) {
+    collections(first: $pageBy) {
+      nodes {
+        id
+        title
+        description
+        handle
+        seo {
+          description
+          title
+        }
+        image {
+          id
+          url
+          width
+          height
+          altText
+        }
+      }
+    }
+  }
+`;
+
+export async function getCollections(
+  { paginationSize } = { paginationSize: 8 }
+) {
+  // TODO: You know what to do
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{
+    collections: CollectionConnection;
+  }>({
+    query: COLLECTIONS_QUERY,
+    variables: {
+      pageBy: paginationSize,
+      country: countryCode,
+      language: languageCode,
+    },
+  });
+
+  return data.collections.nodes;
+}
+
+const COLLECTION_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query CollectionDetails(
+    $handle: String!
+    $country: CountryCode
+    $language: LanguageCode
+    $pageBy: Int!
+    $cursor: String
+  ) @inContext(country: $country, language: $language) {
+    collection(handle: $handle) {
+      id
+      handle
+      title
+      description
+      seo {
+        description
+        title
+      }
+      image {
+        id
+        url
+        width
+        height
+        altText
+      }
+      products(first: $pageBy, after: $cursor) {
+        nodes {
+          ...ProductCard
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+`;
+
+export async function getCollection({
+  handle,
+  paginationSize = 48,
+  cursor,
+}: {
+  handle: string;
+  paginationSize?: number;
+  cursor?: string;
+}) {
+  // TODO: You know what to do
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{
+    collection: Collection;
+  }>({
+    query: COLLECTION_QUERY,
+    variables: {
+      handle,
+      cursor,
+      language: languageCode,
+      country: countryCode,
+      pageBy: paginationSize,
+    },
+  });
+
+  if (!data.collection) {
+    throw new Response("Collection not found", { status: 404 });
+  }
+
+  return data.collection;
 }
