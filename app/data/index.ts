@@ -3,6 +3,7 @@ import type {
   StorefrontApiResponseOk,
 } from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
 import type {
+  CollectionConnection,
   Product,
   ProductConnection,
   ProductVariant,
@@ -362,4 +363,53 @@ export async function getRecommendedProducts(productId: string, count = 12) {
   mergedProducts.splice(originalProduct, 1);
 
   return mergedProducts;
+}
+
+const COLLECTIONS_QUERY = `#graphql
+  query Collections(
+    $country: CountryCode
+    $language: LanguageCode
+    $pageBy: Int!
+  ) @inContext(country: $country, language: $language) {
+    collections(first: $pageBy) {
+      nodes {
+        id
+        title
+        description
+        handle
+        seo {
+          description
+          title
+        }
+        image {
+          id
+          url
+          width
+          height
+          altText
+        }
+      }
+    }
+  }
+`;
+
+export async function getCollections(
+  { paginationSize } = { paginationSize: 8 }
+) {
+  // TODO: You know what to do
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{
+    collections: CollectionConnection;
+  }>({
+    query: COLLECTIONS_QUERY,
+    variables: {
+      pageBy: paginationSize,
+      country: countryCode,
+      language: languageCode,
+    },
+  });
+
+  return data.collections.nodes;
 }
