@@ -362,6 +362,22 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
     nav: "grid gap-2 pb-6",
   };
 
+  const FooterLink = ({ item }: { item: EnhancedMenuItem }) => {
+    if (item.to.startsWith("http")) {
+      return (
+        <a href={item.to} target={item.target} rel="noopener noreferrer">
+          {item.title}
+        </a>
+      );
+    }
+
+    return (
+      <Link to={item.to} target={item.target} prefetch="intent">
+        {item.title}
+      </Link>
+    );
+  };
+
   return (
     <>
       {(menu?.items || []).map((item: EnhancedMenuItem) => (
@@ -388,14 +404,7 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
                     <Disclosure.Panel static>
                       <nav className={styles.nav}>
                         {item.items.map((subItem) => (
-                          <Link
-                            key={subItem.id}
-                            to={subItem.to}
-                            target={subItem.target}
-                            prefetch="intent"
-                          >
-                            {subItem.title}
-                          </Link>
+                          <FooterLink key={subItem.id} item={subItem} />
                         ))}
                       </nav>
                     </Disclosure.Panel>
