@@ -3,6 +3,7 @@ import type {
   StorefrontApiResponseOk,
 } from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
 import type {
+  Collection,
   CollectionConnection,
   Product,
   ProductConnection,
@@ -412,4 +413,76 @@ export async function getCollections(
   });
 
   return data.collections.nodes;
+}
+
+const COLLECTION_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query CollectionDetails(
+    $handle: String!
+    $country: CountryCode
+    $language: LanguageCode
+    $pageBy: Int!
+    $cursor: String
+  ) @inContext(country: $country, language: $language) {
+    collection(handle: $handle) {
+      id
+      handle
+      title
+      description
+      seo {
+        description
+        title
+      }
+      image {
+        id
+        url
+        width
+        height
+        altText
+      }
+      products(first: $pageBy, after: $cursor) {
+        nodes {
+          ...ProductCard
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+`;
+
+export async function getCollection({
+  handle,
+  paginationSize = 8,
+  cursor,
+}: {
+  handle: string;
+  paginationSize?: number;
+  cursor?: string;
+}) {
+  console.log({ cursor });
+  // TODO: You know what to do
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{
+    collection: Collection;
+  }>({
+    query: COLLECTION_QUERY,
+    variables: {
+      handle,
+      cursor,
+      language: languageCode,
+      country: countryCode,
+      pageBy: paginationSize,
+    },
+  });
+
+  if (!data.collection) {
+    throw new Response("Collection not found", { status: 404 });
+  }
+
+  return data.collection;
 }
