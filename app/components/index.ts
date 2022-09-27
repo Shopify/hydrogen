@@ -6,6 +6,7 @@ export { ProductGallery } from "./ProductGallery";
 export { ProductOptions } from "./ProductOptions";
 export { ProductCard } from "./ProductCard";
 export { ProductSwimlane } from "./ProductSwimlane";
+export { ProductGrid } from "./ProductGrid";
 export { Skeleton } from "./Skeleton";
 export { Button } from "./Button";
 export { Grid } from "./Grid";
