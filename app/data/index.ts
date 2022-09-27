@@ -462,7 +462,6 @@ export async function getCollection({
   paginationSize?: number;
   cursor?: string;
 }) {
-  console.log({ cursor });
   // TODO: You know what to do
   const languageCode = "EN";
   const countryCode = "US";
