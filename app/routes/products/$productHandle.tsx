@@ -1,5 +1,5 @@
 import { Disclosure, Listbox } from "@headlessui/react";
-import { defer, type LoaderArgs } from "@remix-run/cloudflare";
+import { ActionFunction, defer, type LoaderArgs } from "@remix-run/cloudflare";
 import {
   Link,
   useLoaderData,
@@ -9,11 +9,7 @@ import {
   useLocation,
   useTransition,
 } from "@remix-run/react";
-import {
-  Money,
-  ProductProvider,
-  ShopPayButton,
-} from "@shopify/hydrogen-ui-alpha";
+import { Money, ShopPayButton } from "@shopify/hydrogen-ui-alpha";
 import { Suspense, type SyntheticEvent } from "react";
 import {
   Button,
@@ -22,7 +18,6 @@ import {
   IconCheck,
   IconClose,
   ProductGallery,
-  ProductOptions,
   ProductSwimlane,
   Section,
   Skeleton,
@@ -49,11 +44,18 @@ export const loader = async ({ params, request }: LoaderArgs) => {
   });
 };
 
-// TODO: Import from storefront-api-types if/when it's available.
-interface OptionWithValues {
-  name: string;
-  values: string[];
-}
+export const action: ActionFunction = async ({ request }) => {
+  const body = await request.text();
+  const formData = new URLSearchParams(body);
+
+  const variantId = formData.get("variantId");
+
+  // TODO: Interact with cart!
+
+  console.log({ variantId });
+
+  return null;
+};
 
 export default function Product() {
   const { product, shop, recommended } = useLoaderData<typeof loader>();
@@ -61,7 +63,7 @@ export default function Product() {
   const { shippingPolicy, refundPolicy } = shop;
 
   return (
-    <ProductProvider data={product}>
+    <>
       <Section padding="x" className="px-0">
         <div className="grid items-start md:gap-6 lg:gap-20 md:grid-cols-2 lg:grid-cols-3">
           <ProductGallery
@@ -113,7 +115,7 @@ export default function Product() {
           {(data) => <ProductSwimlane title="Related Products" data={data} />}
         </Await>
       </Suspense>
-    </ProductProvider>
+    </>
   );
 }
 
@@ -127,7 +129,6 @@ export function ProductForm() {
   const location = useLocation();
 
   const { product } = useLoaderData<typeof loader>();
-  const options = product.options;
 
   const isOutOfStock = !product.selectedVariant?.availableForSale || false;
   const isOnSale =
@@ -252,71 +253,50 @@ export function ProductForm() {
               </Form>
             </div>
           ))}
+        <div className="grid items-stretch gap-4">
+          <Form replace method="post">
+            <input
+              type="hidden"
+              name="variantId"
+              defaultValue={product.selectedVariant?.id}
+            />
+            <Button
+              width="full"
+              variant={isOutOfStock ? "secondary" : "primary"}
+              disabled={isOutOfStock}
+              as="button"
+            >
+              {isOutOfStock ? (
+                <Text>Sold out</Text>
+              ) : (
+                <Text
+                  as="span"
+                  className="flex items-center justify-center gap-2"
+                >
+                  <span>Add to bag</span> <span>·</span>{" "}
+                  <Money
+                    withoutTrailingZeros
+                    data={product.selectedVariant?.priceV2!}
+                    as="span"
+                  />
+                  {isOnSale && (
+                    <Money
+                      withoutTrailingZeros
+                      data={product.selectedVariant?.compareAtPriceV2!}
+                      as="span"
+                      className="opacity-50 strike"
+                    />
+                  )}
+                </Text>
+              )}
+            </Button>
+          </Form>
+          {!isOutOfStock && (
+            <ShopPayButton variantIds={[product.selectedVariant?.id!]} />
+          )}
+        </div>
       </div>
     </div>
-  );
-
-  return (
-    <form className="grid gap-10">
-      {
-        <div className="grid gap-4">
-          {(options as OptionWithValues[]).map(({ name, values }) => {
-            if (values.length === 1) {
-              return null;
-            }
-            return (
-              <div
-                key={name}
-                className="flex flex-col flex-wrap mb-4 gap-y-2 last:mb-0"
-              >
-                <Heading as="legend" size="lead" className="min-w-[4rem]">
-                  {name}
-                </Heading>
-                <div className="flex flex-wrap items-baseline gap-4">
-                  <ProductOptions
-                    name={name}
-                    handleChange={handleChange}
-                    values={values}
-                  />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      }
-      <div className="grid items-stretch gap-4">
-        <Button
-          width="full"
-          variant={isOutOfStock ? "secondary" : "primary"}
-          disabled={isOutOfStock}
-          as="button"
-        >
-          {isOutOfStock ? (
-            <Text>Sold out</Text>
-          ) : (
-            <Text as="span" className="flex items-center justify-center gap-2">
-              <span>Add to bag</span> <span>·</span>{" "}
-              <Money
-                withoutTrailingZeros
-                data={product.selectedVariant?.priceV2!}
-                as="span"
-              />
-              {isOnSale && (
-                <Money
-                  withoutTrailingZeros
-                  data={product.selectedVariant?.compareAtPriceV2!}
-                  as="span"
-                  className="opacity-50 strike"
-                />
-              )}
-            </Text>
-          )}
-        </Button>
-        {!isOutOfStock && (
-          <ShopPayButton variantIds={[product.selectedVariant?.id!]} />
-        )}
-      </div>
-    </form>
   );
 }
 
