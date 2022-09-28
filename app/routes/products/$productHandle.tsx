@@ -1,5 +1,9 @@
 import { Disclosure, Listbox } from "@headlessui/react";
-import { ActionFunction, defer, type LoaderArgs } from "@remix-run/cloudflare";
+import {
+  type ActionFunction,
+  defer,
+  type LoaderArgs,
+} from "@remix-run/cloudflare";
 import {
   Link,
   useLoaderData,
@@ -162,21 +166,21 @@ export function ProductForm() {
                       {({ open }) => (
                         <>
                           <Listbox.Button
-                            className={`flex items-center justify-between w-full py-3 px-4 border border-primary ${
+                            className={clsx(
+                              "flex items-center justify-between w-full py-3 px-4 border border-primary",
                               open
                                 ? "rounded-b md:rounded-t md:rounded-b-none"
                                 : "rounded"
-                            }`}
+                            )}
                           >
                             <span>{searchParams.get(option.name)}</span>
                             <IconCaret direction={open ? "up" : "down"} />
                           </Listbox.Button>
                           <Listbox.Options
-                            className={`border-primary bg-contrast absolute bottom-12 z-30 grid
-                h-48 w-full overflow-y-scroll rounded-t border px-2 py-2 transition-[max-height]
-                duration-150 sm:bottom-auto md:rounded-b md:rounded-t-none md:border-t-0 md:border-b ${
-                  open ? "max-h-48" : "max-h-0"
-                }`}
+                            className={clsx(
+                              "border-primary bg-contrast absolute bottom-12 z-30 grid h-48 w-full overflow-y-scroll rounded-t border px-2 py-2 transition-[max-height] duration-150 sm:bottom-auto md:rounded-b md:rounded-t-none md:border-t-0 md:border-b",
+                              open ? "max-h-48" : "max-h-0"
+                            )}
                           >
                             {option.values.map((value) => (
                               <Listbox.Option
@@ -224,9 +228,10 @@ export function ProductForm() {
                             type="submit"
                             name={option.name}
                             value={value}
-                            className={`leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200 ${
+                            className={clsx(
+                              "leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200",
                               checked ? "border-primary/50" : "border-primary/0"
-                            }`}
+                            )}
                           >
                             {value}
                           </button>
@@ -319,9 +324,10 @@ function ProductDetail({
                 {title}
               </Text>
               <IconClose
-                className={`${
-                  open ? "" : "rotate-[45deg]"
-                } transition-transform transform-gpu duration-200`}
+                className={clsx(
+                  "transition-transform transform-gpu duration-200",
+                  !open && "rotate-[45deg]"
+                )}
               />
             </div>
           </Disclosure.Button>
