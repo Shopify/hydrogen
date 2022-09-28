@@ -1,8 +1,4 @@
 # built files
 **/dist/**
-packages/hydrogen/graphql.schema.json
-**/vendor
-packages/hydrogen-ui/storefront.schema.json
-packages/hydrogen-ui/coverage/**
-docs/
+packages/react/storefront.schema.json
 **/coverage/

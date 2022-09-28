@@ -1,0 +1,63 @@
+name: Changesets
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  changelog:
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'shopify'
+    name: Changelog PR or Release
+    outputs:
+      published: ${{ steps.changesets.outputs.published }}
+      latest: ${{ steps.flags.outputs.latest }}
+    steps:
+      - name: Flags
+        id: flags
+        run: |
+          # IMPORTANT: Update this variable whenever we move to a new major version:
+          latest_branch=main
+          echo "::set-output name=latest::${{ github.ref_name == 'main' }}"
+
+      - name: Checkout the code
+        uses: actions/checkout@v2
+        # This makes Actions fetch all Git history so that Changesets can generate changelogs with the correct commits
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: 16
+          cache: 'yarn'
+
+      - name: Install the packages
+        run: yarn install --frozen-lockfile --ignore-engines
+
+      - name: Create Release Pull Request or Publish (for latest release)
+        if: steps.flags.outputs.latest == 'true'
+        id: changesets
+        uses: changesets/action@v1
+        with:
+          version: yarn run version
+          publish: yarn changeset publish
+          commit: '[ci] release ${{ github.ref_name }}'
+          title: '[ci] release ${{ github.ref_name }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create Release Pull Request or Publish (for legacy patch release)
+        if: steps.flags.outputs.latest != 'true'
+        id: changesets_legacy
+        uses: changesets/action@v1
+        with:
+          version: yarn run version
+          publish: yarn changeset publish --tag legacy
+          commit: '[ci] release ${{ github.ref_name }}'
+          title: '[ci] release ${{ github.ref_name }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}

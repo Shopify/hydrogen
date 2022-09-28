@@ -5,17 +5,12 @@
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
     },
-    "lint": {
-      "outputs": []
-    },
     "dev": {
       "cache": false
     },
-    "test:ci": {
-      "outputs": []
-    },
-    "typecheck": {
-      "outputs": []
-    }
+    "//#lint": {},
+    "//#format:check": {},
+    "typecheck": {},
+    "test:ci": {}
   }
 }
