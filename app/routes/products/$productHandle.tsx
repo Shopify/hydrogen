@@ -10,11 +10,10 @@ import {
   Await,
   useSearchParams,
   Form,
-  useLocation,
   useTransition,
 } from "@remix-run/react";
 import { Money, ShopPayButton } from "@shopify/hydrogen-ui-alpha";
-import { Suspense, type SyntheticEvent } from "react";
+import { type ReactNode, Suspense, useMemo } from "react";
 import {
   Button,
   Heading,
@@ -126,20 +125,52 @@ export default function Product() {
 export function ProductForm() {
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
-  const searchParams =
-    transition.type === "loaderSubmission" && transition.submission?.formData
-      ? (transition.submission.formData as URLSearchParams)
+
+  /**
+   * We update `searchParams` with in-flight request data from `transition` (if available)
+   * to create an optimistic UI, e.g. check the product option before the
+   * request has completed.
+   */
+  const searchParams = useMemo(() => {
+    return transition.state === "loading" && transition.location
+      ? new URLSearchParams(transition.location.search)
       : currentSearchParams;
-  const location = useLocation();
+  }, [currentSearchParams, transition]);
 
   const { product } = useLoaderData<typeof loader>();
+  const firstVariant = product.variants.nodes[0];
 
-  const isOutOfStock = !product.selectedVariant?.availableForSale;
+  /**
+   * We're making an explicit choice here to display the product options
+   * UI with a default variant, rather than wait for the user to select
+   * options first. Developers are welcome to opt-out of this behavior.
+   * By default, the first variant's options are used.
+   */
+  const searchParamsWithDefaults = useMemo<URLSearchParams>(() => {
+    const clonedParams = new URLSearchParams(searchParams);
+
+    for (const { name, value } of firstVariant.selectedOptions) {
+      if (!searchParams.has(name)) {
+        clonedParams.set(name, value);
+      }
+    }
+
+    return clonedParams;
+  }, [searchParams, firstVariant.selectedOptions]);
+
+  /**
+   * Likewise, we're defaulting to the first variant for purposes
+   * of add to cart if there is none returned from the loader.
+   * A developer can opt out of this, too.
+   */
+  const selectedVariant = product.selectedVariant ?? firstVariant;
+
+  const isOutOfStock = !selectedVariant?.availableForSale;
   const isOnSale =
-    product.selectedVariant?.priceV2?.amount &&
-    product.selectedVariant?.compareAtPriceV2?.amount &&
-    product.selectedVariant?.priceV2?.amount <
-      product.selectedVariant?.compareAtPriceV2?.amount;
+    selectedVariant?.priceV2?.amount &&
+    selectedVariant?.compareAtPriceV2?.amount &&
+    selectedVariant?.priceV2?.amount <
+      selectedVariant?.compareAtPriceV2?.amount;
 
   return (
     <div className="grid gap-10">
@@ -154,24 +185,14 @@ export function ProductForm() {
               <Heading as="legend" size="lead" className="min-w-[4rem]">
                 {option.name}
               </Heading>
-              {/**
-               * We create a <Form> for just this particular option (e.g. Size).
-               * The act of selecting a new size will actually be a Form submission (GET).
-               * This re-runs the loader with the new arguments, which updates `product.selectedVariant`.
-               */}
-              <Form
-                replace
-                action={location.pathname}
-                className="flex flex-wrap items-baseline gap-4"
-                id={`form-${option.name}`}
-              >
+              <div className="flex flex-wrap items-baseline gap-4">
                 {/**
-                 * First, we render a bunch of <button> elements for each option value.
-                 * When the user clicks one of these buttons, it will submit the form
-                 * with the provided name/value pair on that button.
+                 * First, we render a bunch of <Link> elements for each option value.
+                 * When the user clicks one of these buttons, it will hit the loader
+                 * to get the new data.
                  *
                  * If there are more than 7 values, we render a dropdown.
-                 * Otherwise, we just render plain buttons.
+                 * Otherwise, we just render plain links.
                  */}
                 {option.values.length > 7 ? (
                   <div className="relative w-full">
@@ -186,7 +207,9 @@ export function ProductForm() {
                                 : "rounded"
                             )}
                           >
-                            <span>{searchParams.get(option.name)}</span>
+                            <span>
+                              {searchParamsWithDefaults.get(option.name)}
+                            </span>
                             <IconCaret direction={open ? "up" : "down"} />
                           </Listbox.Button>
                           <Listbox.Options
@@ -201,31 +224,29 @@ export function ProductForm() {
                                 value={value}
                               >
                                 {({ active }) => (
-                                  <button
-                                    type="submit"
-                                    name={option.name}
-                                    value={value}
+                                  <ProductOptionLink
+                                    optionName={option.name}
+                                    optionValue={value}
                                     className={clsx(
                                       "text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer",
                                       active && "bg-primary/10"
                                     )}
-                                    /**
-                                     * Annoyingly, we have to "re-click" the button in order for the
-                                     * submit behavior to work. This is because HeadlessUI intercepts
-                                     * the click event and prevents it from bubbling up to the <Form>.
-                                     */
-                                    onClick={(
-                                      e: SyntheticEvent<HTMLButtonElement>
-                                    ) => e.currentTarget.click()}
+                                    searchParams={searchParamsWithDefaults}
+                                    onClick={() =>
+                                      console.log(
+                                        "TODO: Close dropdown somehow"
+                                      )
+                                    }
                                   >
                                     {value}
-                                    {searchParams.get(option.name) ===
-                                      value && (
+                                    {searchParamsWithDefaults.get(
+                                      option.name
+                                    ) === value && (
                                       <span className="ml-2">
                                         <IconCheck />
                                       </span>
                                     )}
-                                  </button>
+                                  </ProductOptionLink>
                                 )}
                               </Listbox.Option>
                             ))}
@@ -237,67 +258,36 @@ export function ProductForm() {
                 ) : (
                   <>
                     {option.values.map((value) => {
-                      const checked = searchParams.get(option.name) === value;
+                      const checked =
+                        searchParamsWithDefaults.get(option.name) === value;
                       const id = `option-${option.name}-${value}`;
 
                       return (
                         <Text key={id}>
-                          <button
-                            type="submit"
-                            name={option.name}
-                            value={value}
+                          <ProductOptionLink
+                            optionName={option.name}
+                            optionValue={value}
+                            searchParams={searchParamsWithDefaults}
                             className={clsx(
                               "leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200",
                               checked ? "border-primary/50" : "border-primary/0"
                             )}
-                          >
-                            {value}
-                          </button>
+                          />
                         </Text>
                       );
                     })}
                   </>
                 )}
-                {/**
-                 * Then, inject all of the _other_ options as hidden inputs.
-                 * This allows us to GET the form without having to collect
-                 * all of the other current selections in some hacky way, like
-                 * appending them to the Form action or in the action itself.
-                 *
-                 * Don't forget to include the options which only have a single value,
-                 * which we do not display in the UI. These are critical to being able
-                 * to select a variant, as the SFAPI will not find a valid selected variant
-                 * without the single-value options.
-                 */}
-                {Array.from(searchParams.entries())
-                  .filter(([key]) => key !== option.name)
-                  .concat(
-                    product.options
-                      .filter(
-                        (option) =>
-                          option.values.length === 1 &&
-                          !searchParams.has(option.name)
-                      )
-                      .map((option) => [option.name, option.values[0]])
-                  )
-                  .map(([key, value]) => (
-                    <input
-                      type="hidden"
-                      name={key}
-                      defaultValue={value}
-                      key={key + value}
-                    />
-                  ))}
-              </Form>
+              </div>
             </div>
           ))}
         <div className="grid items-stretch gap-4">
-          {product.selectedVariant && (
+          {selectedVariant && (
             <Form replace method="post">
               <input
                 type="hidden"
                 name="variantId"
-                defaultValue={product.selectedVariant?.id}
+                defaultValue={selectedVariant?.id}
               />
               <Button
                 width="full"
@@ -315,13 +305,13 @@ export function ProductForm() {
                     <span>Add to bag</span> <span>·</span>{" "}
                     <Money
                       withoutTrailingZeros
-                      data={product.selectedVariant?.priceV2!}
+                      data={selectedVariant?.priceV2!}
                       as="span"
                     />
                     {isOnSale && (
                       <Money
                         withoutTrailingZeros
-                        data={product.selectedVariant?.compareAtPriceV2!}
+                        data={selectedVariant?.compareAtPriceV2!}
                         as="span"
                         className="opacity-50 strike"
                       />
@@ -332,11 +322,42 @@ export function ProductForm() {
             </Form>
           )}
           {!isOutOfStock && (
-            <ShopPayButton variantIds={[product.selectedVariant?.id!]} />
+            <ShopPayButton variantIds={[selectedVariant?.id!]} />
           )}
         </div>
       </div>
     </div>
+  );
+}
+
+function ProductOptionLink({
+  optionName,
+  optionValue,
+  searchParams,
+  children,
+  ...props
+}: {
+  optionName: string;
+  optionValue: string;
+  searchParams: URLSearchParams;
+  children?: ReactNode;
+  [key: string]: any;
+}) {
+  const clonedSearchParams = new URLSearchParams(searchParams);
+  clonedSearchParams.set(optionName, optionValue);
+
+  return (
+    <Link
+      {...props}
+      prefetch="intent"
+      replace
+      to={{
+        pathname: ".",
+        search: clonedSearchParams.toString(),
+      }}
+    >
+      {children ?? optionValue}
+    </Link>
   );
 }
 
