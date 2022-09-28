@@ -50,7 +50,7 @@ describe('<ShopifyProvider/>', () => {
 });
 
 export function getShopifyConfig(
-  config: PartialDeep<ShopifyContextValue> = {}
+  config: PartialDeep<ShopifyContextValue, {recurseIntoArrays: true}> = {}
 ) {
   return {
     country: {

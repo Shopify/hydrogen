@@ -3,10 +3,10 @@ import type {Metafield as MetafieldType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
 export function getRawMetafield(
-  metafield: PartialDeep<MetafieldType> & {
+  metafield: PartialDeep<MetafieldType, {recurseIntoArrays: true}> & {
     type?: MetafieldTypeOptions;
   } = {}
-): PartialDeep<MetafieldType> {
+): PartialDeep<MetafieldType, {recurseIntoArrays: true}> {
   const type: MetafieldTypeOptions =
     metafield.type == null
       ? faker.helpers.arrayElement(METAFIELD_TYPES)

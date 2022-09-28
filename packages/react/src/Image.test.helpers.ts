@@ -2,9 +2,10 @@ import {faker} from '@faker-js/faker';
 import type {Image as ImageType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
-export function getPreviewImage(
-  image: Partial<ImageType> = {}
-): PartialDeep<ImageType> & {
+export function getPreviewImage(image: Partial<ImageType> = {}): PartialDeep<
+  ImageType,
+  {recurseIntoArrays: true}
+> & {
   url: ImageType['url'];
 } {
   return {

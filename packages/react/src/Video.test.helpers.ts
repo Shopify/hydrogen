@@ -4,8 +4,8 @@ import type {PartialDeep} from 'type-fest';
 import {getPreviewImage} from './Image.test.helpers.js';
 
 export function getVideoData(
-  video: PartialDeep<VideoType> = {}
-): PartialDeep<VideoType> {
+  video: PartialDeep<VideoType, {recurseIntoArrays: true}> = {}
+): PartialDeep<VideoType, {recurseIntoArrays: true}> {
   return {
     id: video.id ?? faker.random.words(),
     mediaContentType: 'VIDEO',

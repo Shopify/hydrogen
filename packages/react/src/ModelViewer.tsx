@@ -10,17 +10,20 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
     interface IntrinsicElements {
-      'model-viewer': PartialDeep<ModelViewerElement>;
+      'model-viewer': PartialDeep<
+        ModelViewerElement,
+        {recurseIntoArrays: true}
+      >;
     }
   }
 }
 
 type ModelViewerProps = Omit<
-  PartialDeep<JSX.IntrinsicElements['model-viewer']>,
+  PartialDeep<JSX.IntrinsicElements['model-viewer'], {recurseIntoArrays: true}>,
   PropsWeControl
 > & {
   /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/latest/objects/model3d). */
-  data: PartialDeep<Model3d>;
+  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;
   /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */
   onError?: (event: Event) => void;
   /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */

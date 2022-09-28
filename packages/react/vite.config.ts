@@ -10,9 +10,9 @@ export default defineConfig(({mode}) => {
       build: {
         lib: {
           entry: resolve(__dirname, 'src/index.ts'),
-          name: 'hydrogenui',
+          name: 'hydrogenreact',
           fileName: () =>
-            `hydrogen-ui.${mode === 'umdbuilddev' ? 'dev' : 'prod'}.js`,
+            `hydrogen-react.${mode === 'umdbuilddev' ? 'dev' : 'prod'}.js`,
           formats: ['umd'],
         },
         sourcemap: true,
@@ -48,7 +48,7 @@ export default defineConfig(({mode}) => {
       outDir: `dist/${mode === 'devbuild' ? 'dev' : 'prod'}/`,
       lib: {
         entry: resolve(__dirname, 'src/index.ts'),
-        name: 'hydrogen-ui',
+        name: 'hydrogen-react',
         fileName: (format) => `[name].${format === 'cjs' ? 'c' : ''}js`,
         formats: ['es', 'cjs'],
       },

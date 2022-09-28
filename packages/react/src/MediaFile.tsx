@@ -8,7 +8,7 @@ import type {PartialDeep} from 'type-fest';
 
 interface MediaFileProps {
   /** An object with fields that correspond to the Storefront API's [Media object](https://shopify.dev/api/storefront/reference/products/media). */
-  data: PartialDeep<MediaEdgeType['node']>;
+  data: PartialDeep<MediaEdgeType['node'], {recurseIntoArrays: true}>;
   /** The options for the `Image`, `Video`, or `ExternalVideo` components. */
   mediaOptions?: {
     /** Props that will only apply when an `<Image />` is rendered */

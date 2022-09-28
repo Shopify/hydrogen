@@ -5,7 +5,10 @@ import {vi} from 'vitest';
 
 describe('flattenConnection', () => {
   it('flattens legacy edges', () => {
-    const connection: PartialDeep<ProductConnection> = {
+    const connection: PartialDeep<
+      ProductConnection,
+      {recurseIntoArrays: true}
+    > = {
       edges: [
         {
           node: {
@@ -35,7 +38,10 @@ describe('flattenConnection', () => {
   });
 
   it('flattens nodes', () => {
-    const connection: PartialDeep<ProductConnection> = {
+    const connection: PartialDeep<
+      ProductConnection,
+      {recurseIntoArrays: true}
+    > = {
       nodes: [
         {
           id: '1',

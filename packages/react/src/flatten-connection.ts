@@ -5,10 +5,10 @@ import type {PartialDeep} from 'type-fest';
  * The utility works with either `nodes` or `edges.node`.
  */
 export function flattenConnection<T>(
-  connection: PartialDeep<GraphQLConnection<T>>
-): PartialDeep<T>[] {
+  connection: PartialDeep<GraphQLConnection<T>, {recurseIntoArrays: true}>
+): PartialDeep<T, {recurseIntoArrays: true}>[] {
   if (connection.nodes) {
-    return connection.nodes as PartialDeep<T>[];
+    return connection.nodes as PartialDeep<T, {recurseIntoArrays: true}>[];
   }
 
   if (connection.edges) {

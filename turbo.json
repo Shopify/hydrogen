@@ -13,6 +13,9 @@
     },
     "test:ci": {
       "outputs": []
+    },
+    "typecheck": {
+      "outputs": []
     }
   }
 }

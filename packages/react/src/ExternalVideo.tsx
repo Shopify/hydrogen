@@ -6,7 +6,7 @@ interface BaseProps {
   /**
    * An object with fields that correspond to the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).
    */
-  data: PartialDeep<ExternalVideoType>;
+  data: PartialDeep<ExternalVideoType, {recurseIntoArrays: true}>;
   /** An object containing the options available for either
    * [YouTube](https://developers.google.com/youtube/player_parameters#Parameters) or
    * [Vimeo](https://vimeo.zendesk.com/hc/en-us/articles/360001494447-Using-Player-Parameters).

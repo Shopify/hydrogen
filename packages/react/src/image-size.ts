@@ -74,7 +74,7 @@ type HtmlImageProps = React.ImgHTMLAttributes<HTMLImageElement>;
 
 export type GetShopifyImageDimensionsProps = {
   data: Pick<
-    PartialDeep<ImageType>,
+    PartialDeep<ImageType, {recurseIntoArrays: true}>,
     'altText' | 'url' | 'id' | 'width' | 'height'
   >;
   loaderOptions?: ShopifyLoaderOptions;

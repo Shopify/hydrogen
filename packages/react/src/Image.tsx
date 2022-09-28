@@ -26,7 +26,7 @@ export type ShopifyImageProps = Omit<HtmlImageProps, 'src'> & {
    * [Image object](https://shopify.dev/api/storefront/reference/common-objects/image).
    * The `data` prop is required.
    */
-  data: PartialDeep<ImageType>;
+  data: PartialDeep<ImageType, {recurseIntoArrays: true}>;
   /** A custom function that generates the image URL. Parameters passed in
    * are `ShopifyLoaderParams`
    */

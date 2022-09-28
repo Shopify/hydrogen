@@ -16,7 +16,7 @@ import type {PartialDeep, JsonValue} from 'type-fest';
 
 interface BaseProps<ComponentGeneric extends ElementType> {
   /** An object with fields that correspond to the Storefront API's [Metafield object](https://shopify.dev/api/storefront/reference/common-objects/metafield). */
-  data: PartialDeep<MetafieldType> | null;
+  data: PartialDeep<MetafieldType, {recurseIntoArrays: true}> | null;
   /** An HTML tag or React component to be rendered as the base element wrapper. The default value varies depending on [metafield.type](https://shopify.dev/apps/metafields/types). */
   as?: ComponentGeneric;
 }
@@ -194,8 +194,8 @@ export function Metafield<ComponentGeneric extends ElementType>(
  */
 export function parseMetafield(
   /** A [Metafield](https://shopify.dev/api/storefront/reference/common-objects/Metafield) or null */
-  metafield: PartialDeep<MetafieldType> | null
-): PartialDeep<ParsedMetafield> | null {
+  metafield: PartialDeep<MetafieldType, {recurseIntoArrays: true}> | null
+): PartialDeep<ParsedMetafield, {recurseIntoArrays: true}> | null {
   if (!metafield) {
     if (__HYDROGEN_DEV__) {
       console.warn(
@@ -223,7 +223,7 @@ export function parseMetafield(
  * The `parseMetafieldValue` function parses a [Metafield](https://shopify.dev/api/storefront/reference/common-objects/metafield)'s `value` from a string into a sensible type corresponding to the [Metafield](https://shopify.dev/api/storefront/reference/common-objects/metafield)'s `type`.
  */
 export function parseMetafieldValue(
-  metafield: PartialDeep<MetafieldType> | null
+  metafield: PartialDeep<MetafieldType, {recurseIntoArrays: true}> | null
 ): ParsedMetafield['value'] {
   if (!metafield) {
     return null;
@@ -373,7 +373,10 @@ function convertToSupportedUnit(value: number, unit: string) {
   }
 }
 
-type ParsedMetafield = Omit<PartialDeep<MetafieldType>, 'value'> & {
+type ParsedMetafield = Omit<
+  PartialDeep<MetafieldType, {recurseIntoArrays: true}>,
+  'value'
+> & {
   value?: string | number | boolean | JsonValue | Date | Rating | Measurement;
 };
 

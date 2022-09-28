@@ -14,8 +14,8 @@ import {getPreviewImage} from './Image.test.helpers.js';
 import {getMedia} from './MediaFile.test.helpers.js';
 
 export function getProduct(
-  product: PartialDeep<ProductType> = {}
-): PartialDeep<ProductType> {
+  product: PartialDeep<ProductType, {recurseIntoArrays: true}> = {}
+): PartialDeep<ProductType, {recurseIntoArrays: true}> {
   return {
     id: product.id ?? faker.datatype.uuid(),
     handle: product.handle ?? faker.random.word(),
@@ -54,8 +54,8 @@ export function getProduct(
 }
 
 export function getVariant(
-  variant: PartialDeep<ProductVariant> = {}
-): PartialDeep<ProductVariant> {
+  variant: PartialDeep<ProductVariant, {recurseIntoArrays: true}> = {}
+): PartialDeep<ProductVariant, {recurseIntoArrays: true}> {
   return {
     id: variant.id ?? faker.random.words(),
     title: variant.title ?? faker.random.words(),
@@ -85,7 +85,10 @@ const priceV2: MoneyV2 = {
   currencyCode: 'CAD',
 };
 
-export const VARIANTS: PartialDeep<ProductVariantConnection> = {
+export const VARIANTS: PartialDeep<
+  ProductVariantConnection,
+  {recurseIntoArrays: true}
+> = {
   nodes: [
     {
       id: '1',
@@ -166,137 +169,143 @@ export const VARIANTS: PartialDeep<ProductVariantConnection> = {
   ],
 };
 
-export const SELLING_PLAN_GROUPS_CONNECTION: PartialDeep<SellingPlanGroupConnection> =
-  {
-    nodes: [
-      {
-        name: 'Subscribe & Save',
-        options: [
+export const SELLING_PLAN_GROUPS_CONNECTION: PartialDeep<
+  SellingPlanGroupConnection,
+  {recurseIntoArrays: true}
+> = {
+  nodes: [
+    {
+      name: 'Subscribe & Save',
+      options: [
+        {
+          name: 'Deliver every',
+          values: ['week', '2 weeks'],
+        },
+      ],
+      sellingPlans: {
+        pageInfo: {
+          hasNextPage: false,
+          hasPreviousPage: false,
+        },
+        nodes: [
           {
-            name: 'Deliver every',
-            values: ['week', '2 weeks'],
+            id: 'abc',
+            name: 'Deliver every week',
+            options: [
+              {
+                name: 'Deliver every',
+                value: 'week',
+              },
+            ],
+            priceAdjustments: [],
+            recurringDeliveries: false,
+          },
+          {
+            id: 'def',
+            name: 'Deliver every 2 weeks',
+            options: [
+              {
+                name: 'Deliver every',
+                value: '2 weeks',
+              },
+            ],
+            priceAdjustments: [],
+            recurringDeliveries: false,
           },
         ],
-        sellingPlans: {
-          pageInfo: {
-            hasNextPage: false,
-            hasPreviousPage: false,
+      },
+    },
+  ],
+};
+
+export const VARIANTS_WITH_SELLING_PLANS: PartialDeep<
+  ProductVariantConnection,
+  {recurseIntoArrays: true}
+> = {
+  nodes: (VARIANTS.nodes ?? []).map((edge) => {
+    const sellingPlanAllocations: PartialDeep<
+      SellingPlanAllocationConnection,
+      {recurseIntoArrays: true}
+    > = {
+      pageInfo: {
+        hasNextPage: false,
+        hasPreviousPage: false,
+      },
+      nodes: [
+        {
+          sellingPlan: {
+            id: 'abc',
+            name: 'Deliver every week',
+            options: [
+              {
+                name: 'Deliver every',
+                value: 'week',
+              },
+            ],
+            priceAdjustments: [],
+            recurringDeliveries: false,
           },
-          nodes: [
+          priceAdjustments: [
             {
-              id: 'abc',
-              name: 'Deliver every week',
-              options: [
-                {
-                  name: 'Deliver every',
-                  value: 'week',
-                },
-              ],
-              priceAdjustments: [],
-              recurringDeliveries: false,
-            },
-            {
-              id: 'def',
-              name: 'Deliver every 2 weeks',
-              options: [
-                {
-                  name: 'Deliver every',
-                  value: '2 weeks',
-                },
-              ],
-              priceAdjustments: [],
-              recurringDeliveries: false,
+              price: {
+                amount: '10',
+                currencyCode: 'USD',
+              },
+              compareAtPrice: {
+                amount: '10',
+                currencyCode: 'USD',
+              },
+              perDeliveryPrice: {
+                amount: '10',
+                currencyCode: 'USD',
+              },
+              unitPrice: {
+                amount: '10',
+                currencyCode: 'USD',
+              },
             },
           ],
         },
-      },
-    ],
-  };
-
-export const VARIANTS_WITH_SELLING_PLANS: PartialDeep<ProductVariantConnection> =
-  {
-    nodes: (VARIANTS.nodes ?? []).map((edge) => {
-      const sellingPlanAllocations: PartialDeep<SellingPlanAllocationConnection> =
         {
-          pageInfo: {
-            hasNextPage: false,
-            hasPreviousPage: false,
+          sellingPlan: {
+            id: 'def',
+            name: 'Deliver every 2 weeks',
+            options: [
+              {
+                name: 'Deliver every',
+                value: '2 weeks',
+              },
+            ],
+            priceAdjustments: [],
+            recurringDeliveries: false,
           },
-          nodes: [
+          priceAdjustments: [
             {
-              sellingPlan: {
-                id: 'abc',
-                name: 'Deliver every week',
-                options: [
-                  {
-                    name: 'Deliver every',
-                    value: 'week',
-                  },
-                ],
-                priceAdjustments: [],
-                recurringDeliveries: false,
+              price: {
+                amount: '9',
+                currencyCode: 'USD',
               },
-              priceAdjustments: [
-                {
-                  price: {
-                    amount: '10',
-                    currencyCode: 'USD',
-                  },
-                  compareAtPrice: {
-                    amount: '10',
-                    currencyCode: 'USD',
-                  },
-                  perDeliveryPrice: {
-                    amount: '10',
-                    currencyCode: 'USD',
-                  },
-                  unitPrice: {
-                    amount: '10',
-                    currencyCode: 'USD',
-                  },
-                },
-              ],
-            },
-            {
-              sellingPlan: {
-                id: 'def',
-                name: 'Deliver every 2 weeks',
-                options: [
-                  {
-                    name: 'Deliver every',
-                    value: '2 weeks',
-                  },
-                ],
-                priceAdjustments: [],
-                recurringDeliveries: false,
+              compareAtPrice: {
+                amount: '9',
+                currencyCode: 'USD',
               },
-              priceAdjustments: [
-                {
-                  price: {
-                    amount: '9',
-                    currencyCode: 'USD',
-                  },
-                  compareAtPrice: {
-                    amount: '9',
-                    currencyCode: 'USD',
-                  },
-                  perDeliveryPrice: {
-                    amount: '9',
-                    currencyCode: 'USD',
-                  },
-                  unitPrice: {
-                    amount: '9',
-                    currencyCode: 'USD',
-                  },
-                },
-              ],
+              perDeliveryPrice: {
+                amount: '9',
+                currencyCode: 'USD',
+              },
+              unitPrice: {
+                amount: '9',
+                currencyCode: 'USD',
+              },
             },
           ],
-        };
+        },
+      ],
+    };
 
-      return {
-        ...edge,
-        sellingPlanAllocations,
-      };
-    }),
-  };
+    return {
+      ...edge,
+      sellingPlanAllocations,
+    };
+  }),
+};

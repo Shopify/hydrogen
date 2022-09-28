@@ -5,7 +5,7 @@ import {getPreviewImage} from './Image.test.helpers.js';
 
 export function getExternalVideoData(
   externalVideo: Partial<ExternalVideoType> = {}
-): PartialDeep<ExternalVideoType> {
+): PartialDeep<ExternalVideoType, {recurseIntoArrays: true}> {
   return {
     id: externalVideo.id ?? faker.random.words(),
     mediaContentType: 'EXTERNAL_VIDEO',

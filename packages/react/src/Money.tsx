@@ -7,13 +7,13 @@ interface CustomProps<ComponentGeneric extends React.ElementType> {
   /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */
   as?: ComponentGeneric;
   /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */
-  data: PartialDeep<MoneyV2>;
+  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;
   /** Whether to remove the currency symbol from the output. */
   withoutCurrency?: boolean;
   /** Whether to remove trailing zeros (fractional money) from the output. */
   withoutTrailingZeros?: boolean;
   /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/latest/objects/unitpricemeasurement). */
-  measurement?: PartialDeep<UnitPriceMeasurement>;
+  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;
   /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */
   measurementSeparator?: ReactNode;
 }
@@ -75,7 +75,9 @@ export function Money<ComponentGeneric extends React.ElementType>({
 }
 
 // required in order to narrow the money object down and make TS happy
-function isMoney(maybeMoney: PartialDeep<MoneyV2>): maybeMoney is MoneyV2 {
+function isMoney(
+  maybeMoney: PartialDeep<MoneyV2, {recurseIntoArrays: true}>
+): maybeMoney is MoneyV2 {
   return (
     typeof maybeMoney.amount === 'string' &&
     !!maybeMoney.amount &&

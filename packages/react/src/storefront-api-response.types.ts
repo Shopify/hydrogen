@@ -38,7 +38,10 @@ export type StorefrontApiResponseOk<DataGeneric> = FormattedExecutionResult<
  * Refer to https://shopify.dev/api/storefront#status_and_error_codes for more information.
  */
 export type StorefrontApiResponseOkPartial<DataGeneric> =
-  FormattedExecutionResult<PartialDeep<DataGeneric>, StorefrontApiExtensions>;
+  FormattedExecutionResult<
+    PartialDeep<DataGeneric, {recurseIntoArrays: true}>,
+    StorefrontApiExtensions
+  >;
 
 /**
  * The 4xx and 5xx errors occur infrequently. They are often related to network communications, your account, or an issue with Shopify’s services.
