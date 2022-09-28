@@ -67,6 +67,9 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^7.5.0",
+    "@graphql-codegen/cli": "^2.12.0",
+    "@graphql-codegen/introspection": "2.1.1",
+    "@graphql-codegen/typescript": "^2.7.3",
     "@ladle/react": "^2.4.3",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",

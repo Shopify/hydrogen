@@ -1,1 +1,1 @@
-schema: 'packages/hydrogen-ui/graphql.schema.json'
+schema: 'packages/react/storefront.schema.json'
