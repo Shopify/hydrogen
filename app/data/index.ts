@@ -290,7 +290,7 @@ const PRODUCT_QUERY = `#graphql
           ...Media
         }
       }
-      variants(first: 100) {
+      variants(first: 1) {
         nodes {
           ...ProductVariantFragment
         }
