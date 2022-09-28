@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "useDefineForClassFields": true,
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": false,
+    "skipLibCheck": true,
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "NodeNext",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationDir": "./dist/types",
+    "jsx": "react-jsx",
+    "typeRoots": ["globals.d.ts"],
+    "types": ["jest"],
+    "paths": {
+      "test-utils": ["./utils/test-utils"]
+    }
+  },
+  "include": ["src/**/*", "globals.d.ts", "vitest.setup.ts"],
+  "exclude": [
+    // exclude stories until https://github.com/tajo/ladle/issues/267 is fixed
+    "src/**/*.stories.tsx"
+  ]
+}
