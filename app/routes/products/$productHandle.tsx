@@ -1,15 +1,25 @@
-import { Disclosure } from "@headlessui/react";
+import { Disclosure, Listbox } from "@headlessui/react";
 import { defer, type LoaderArgs } from "@remix-run/cloudflare";
-import { Link, useLoaderData, Await, useSearchParams } from "@remix-run/react";
+import {
+  Link,
+  useLoaderData,
+  Await,
+  useSearchParams,
+  Form,
+  useLocation,
+  useTransition,
+} from "@remix-run/react";
 import {
   Money,
   ProductProvider,
   ShopPayButton,
 } from "@shopify/hydrogen-ui-alpha";
-import { Suspense, useCallback } from "react";
+import { Suspense, type SyntheticEvent } from "react";
 import {
   Button,
   Heading,
+  IconCaret,
+  IconCheck,
   IconClose,
   ProductGallery,
   ProductOptions,
@@ -21,6 +31,7 @@ import {
 import { getProductData, getRecommendedProducts } from "~/data";
 import { getExcerpt } from "~/lib/utils";
 import invariant from "tiny-invariant";
+import clsx from "clsx";
 
 export const loader = async ({ params, request }: LoaderArgs) => {
   const { productHandle } = params;
@@ -107,7 +118,13 @@ export default function Product() {
 }
 
 export function ProductForm() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [currentSearchParams] = useSearchParams();
+  const transition = useTransition();
+  const searchParams =
+    transition.type === "loaderSubmission" && transition.submission?.formData
+      ? (transition.submission.formData as URLSearchParams)
+      : currentSearchParams;
+  const location = useLocation();
 
   const { product } = useLoaderData<typeof loader>();
   const options = product.options;
@@ -119,13 +136,124 @@ export function ProductForm() {
       // @ts-ignore
       product.selectedVariant?.compareAtPriceV2?.amount || false;
 
-  const handleChange = useCallback(
-    (name: string, value: string) => {
-      const newParams = new URLSearchParams(searchParams);
-      newParams.set(name, value);
-      setSearchParams(newParams);
-    },
-    [searchParams, setSearchParams]
+  return (
+    <div className="grid gap-10">
+      <div className="grid gap-4">
+        {product.options
+          .filter((option) => option.values.length > 1)
+          .map((option) => (
+            <div
+              key={option.name}
+              className="flex flex-col flex-wrap mb-4 gap-y-2 last:mb-0"
+            >
+              <Heading as="legend" size="lead" className="min-w-[4rem]">
+                {option.name}
+              </Heading>
+              <Form
+                replace
+                action={location.pathname}
+                className="flex flex-wrap items-baseline gap-4"
+                id={`form-${option.name}`}
+              >
+                {option.values.length > 7 ? (
+                  <div className="relative w-full">
+                    <Listbox>
+                      {({ open }) => (
+                        <>
+                          <Listbox.Button
+                            className={`flex items-center justify-between w-full py-3 px-4 border border-primary ${
+                              open
+                                ? "rounded-b md:rounded-t md:rounded-b-none"
+                                : "rounded"
+                            }`}
+                          >
+                            <span>{searchParams.get(option.name)}</span>
+                            <IconCaret direction={open ? "up" : "down"} />
+                          </Listbox.Button>
+                          <Listbox.Options
+                            className={`border-primary bg-contrast absolute bottom-12 z-30 grid
+                h-48 w-full overflow-y-scroll rounded-t border px-2 py-2 transition-[max-height]
+                duration-150 sm:bottom-auto md:rounded-b md:rounded-t-none md:border-t-0 md:border-b ${
+                  open ? "max-h-48" : "max-h-0"
+                }`}
+                          >
+                            {option.values.map((value) => (
+                              <Listbox.Option
+                                key={`option-${option.name}-${value}`}
+                                value={value}
+                              >
+                                {({ active }) => (
+                                  <button
+                                    type="submit"
+                                    name={option.name}
+                                    value={value}
+                                    className={clsx(
+                                      "text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer",
+                                      active && "bg-primary/10"
+                                    )}
+                                    onClick={(
+                                      e: SyntheticEvent<HTMLButtonElement>
+                                    ) => e.currentTarget.click()}
+                                  >
+                                    {value}
+                                    {searchParams.get(option.name) ===
+                                      value && (
+                                      <span className="ml-2">
+                                        <IconCheck />
+                                      </span>
+                                    )}
+                                  </button>
+                                )}
+                              </Listbox.Option>
+                            ))}
+                          </Listbox.Options>
+                        </>
+                      )}
+                    </Listbox>
+                  </div>
+                ) : (
+                  <>
+                    {option.values.map((value) => {
+                      const checked = searchParams.get(option.name) === value;
+                      const id = `option-${option.name}-${value}`;
+
+                      return (
+                        <Text key={id}>
+                          <button
+                            type="submit"
+                            name={option.name}
+                            value={value}
+                            className={`leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200 ${
+                              checked ? "border-primary/50" : "border-primary/0"
+                            }`}
+                          >
+                            {value}
+                          </button>
+                        </Text>
+                      );
+                    })}
+                  </>
+                )}
+                {/**
+                 * Then, inject all of the _other_ options as hidden inputs.
+                 * This allows us to GET the form without having to collect
+                 * all of the other current selections in some hacky way, like
+                 * appending them to the Form action or in the action itself. */}
+                {Array.from(searchParams.entries())
+                  .filter(([key]) => key !== option.name)
+                  .map(([key, value]) => (
+                    <input
+                      type="hidden"
+                      name={key}
+                      defaultValue={value}
+                      key={key + value}
+                    />
+                  ))}
+              </Form>
+            </div>
+          ))}
+      </div>
+    </div>
   );
 
   return (
