@@ -134,12 +134,12 @@ export function ProductForm() {
 
   const { product } = useLoaderData<typeof loader>();
 
-  const isOutOfStock = !product.selectedVariant?.availableForSale || false;
+  const isOutOfStock = !product.selectedVariant?.availableForSale;
   const isOnSale =
-    // @ts-ignore
+    product.selectedVariant?.priceV2?.amount &&
+    product.selectedVariant?.compareAtPriceV2?.amount &&
     product.selectedVariant?.priceV2?.amount <
-      // @ts-ignore
-      product.selectedVariant?.compareAtPriceV2?.amount || false;
+      product.selectedVariant?.compareAtPriceV2?.amount;
 
   return (
     <div className="grid gap-10">
@@ -154,12 +154,25 @@ export function ProductForm() {
               <Heading as="legend" size="lead" className="min-w-[4rem]">
                 {option.name}
               </Heading>
+              {/**
+               * We create a <Form> for just this particular option (e.g. Size).
+               * The act of selecting a new size will actually be a Form submission (GET).
+               * This re-runs the loader with the new arguments, which updates `product.selectedVariant`.
+               */}
               <Form
                 replace
                 action={location.pathname}
                 className="flex flex-wrap items-baseline gap-4"
                 id={`form-${option.name}`}
               >
+                {/**
+                 * First, we render a bunch of <button> elements for each option value.
+                 * When the user clicks one of these buttons, it will submit the form
+                 * with the provided name/value pair on that button.
+                 *
+                 * If there are more than 7 values, we render a dropdown.
+                 * Otherwise, we just render plain buttons.
+                 */}
                 {option.values.length > 7 ? (
                   <div className="relative w-full">
                     <Listbox>
@@ -196,6 +209,11 @@ export function ProductForm() {
                                       "text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer",
                                       active && "bg-primary/10"
                                     )}
+                                    /**
+                                     * Annoyingly, we have to "re-click" the button in order for the
+                                     * submit behavior to work. This is because HeadlessUI intercepts
+                                     * the click event and prevents it from bubbling up to the <Form>.
+                                     */
                                     onClick={(
                                       e: SyntheticEvent<HTMLButtonElement>
                                     ) => e.currentTarget.click()}
@@ -244,9 +262,24 @@ export function ProductForm() {
                  * Then, inject all of the _other_ options as hidden inputs.
                  * This allows us to GET the form without having to collect
                  * all of the other current selections in some hacky way, like
-                 * appending them to the Form action or in the action itself. */}
+                 * appending them to the Form action or in the action itself.
+                 *
+                 * Don't forget to include the options which only have a single value,
+                 * which we do not display in the UI. These are critical to being able
+                 * to select a variant, as the SFAPI will not find a valid selected variant
+                 * without the single-value options.
+                 */}
                 {Array.from(searchParams.entries())
                   .filter(([key]) => key !== option.name)
+                  .concat(
+                    product.options
+                      .filter(
+                        (option) =>
+                          option.values.length === 1 &&
+                          !searchParams.has(option.name)
+                      )
+                      .map((option) => [option.name, option.values[0]])
+                  )
                   .map(([key, value]) => (
                     <input
                       type="hidden"
@@ -259,43 +292,45 @@ export function ProductForm() {
             </div>
           ))}
         <div className="grid items-stretch gap-4">
-          <Form replace method="post">
-            <input
-              type="hidden"
-              name="variantId"
-              defaultValue={product.selectedVariant?.id}
-            />
-            <Button
-              width="full"
-              variant={isOutOfStock ? "secondary" : "primary"}
-              disabled={isOutOfStock}
-              as="button"
-            >
-              {isOutOfStock ? (
-                <Text>Sold out</Text>
-              ) : (
-                <Text
-                  as="span"
-                  className="flex items-center justify-center gap-2"
-                >
-                  <span>Add to bag</span> <span>·</span>{" "}
-                  <Money
-                    withoutTrailingZeros
-                    data={product.selectedVariant?.priceV2!}
+          {product.selectedVariant && (
+            <Form replace method="post">
+              <input
+                type="hidden"
+                name="variantId"
+                defaultValue={product.selectedVariant?.id}
+              />
+              <Button
+                width="full"
+                variant={isOutOfStock ? "secondary" : "primary"}
+                disabled={isOutOfStock}
+                as="button"
+              >
+                {isOutOfStock ? (
+                  <Text>Sold out</Text>
+                ) : (
+                  <Text
                     as="span"
-                  />
-                  {isOnSale && (
+                    className="flex items-center justify-center gap-2"
+                  >
+                    <span>Add to bag</span> <span>·</span>{" "}
                     <Money
                       withoutTrailingZeros
-                      data={product.selectedVariant?.compareAtPriceV2!}
+                      data={product.selectedVariant?.priceV2!}
                       as="span"
-                      className="opacity-50 strike"
                     />
-                  )}
-                </Text>
-              )}
-            </Button>
-          </Form>
+                    {isOnSale && (
+                      <Money
+                        withoutTrailingZeros
+                        data={product.selectedVariant?.compareAtPriceV2!}
+                        as="span"
+                        className="opacity-50 strike"
+                      />
+                    )}
+                  </Text>
+                )}
+              </Button>
+            </Form>
+          )}
           {!isOutOfStock && (
             <ShopPayButton variantIds={[product.selectedVariant?.id!]} />
           )}
