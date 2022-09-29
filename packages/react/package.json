@@ -7,6 +7,9 @@
   "engines": {
     "node": ">=14"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "files": [
     "dist",
     "storefront.schema.json"
