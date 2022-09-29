@@ -65,14 +65,10 @@ export const action: ActionFunction = async ({ request, context, params }) => {
 
   invariant(variantId, "Missing variantId");
 
-  // TODO: Interact with cart!
-  console.log({ variantId });
-
   // 1. Grab the cart ID from the session
   const cartId = await session.get("cartId");
 
-  console.log({ cartId });
-
+  // We only need a Set-Cookie header if we're creating a new cart (aka adding cartId to the session)
   let headers = new Headers();
 
   // 2. If none exists, create a cart (SFAPI)
@@ -81,19 +77,14 @@ export const action: ActionFunction = async ({ request, context, params }) => {
       cart: { lines: [{ merchandiseId: variantId }] },
     });
 
-    console.log({ cart });
-
     session.set("cartId", cart.id);
-
     headers.set("Set-Cookie", await session.commit());
   } else {
     // 3. Else, update the cart with the variant ID (SFAPI)
-    const newCart = await addLineItem({
+    await addLineItem({
       cartId,
       lines: [{ merchandiseId: variantId }],
     });
-
-    console.log({ newCart });
   }
 
   // 4. Update the session with the cart ID (response headers)

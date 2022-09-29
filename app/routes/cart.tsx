@@ -22,8 +22,7 @@ export const action: ActionFunction = async ({ request, context }) => {
   invariant(lineId, "Missing lineId");
 
   const cartId = await session.get("cartId");
-
-  // TODO: What happens if there is no cart?
+  invariant(cartId, "Missing cartId");
 
   // TODO: Support redirect when JS is disabled
   // const redirect = formData.get("redirect");
