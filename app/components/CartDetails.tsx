@@ -1,7 +1,12 @@
 import { Suspense, useRef } from "react";
 import { useScroll } from "react-use";
 import { flattenConnection, Money } from "@shopify/hydrogen-ui-alpha";
-import { Link } from "@remix-run/react";
+import {
+  type FetcherWithComponents,
+  Link,
+  useFetcher,
+  useLocation,
+} from "@remix-run/react";
 
 import { Button, Heading, IconRemove, Skeleton, Text } from "~/components";
 import type {
@@ -9,6 +14,11 @@ import type {
   CartCost,
   CartLine,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+
+enum Action {
+  SetQuantity = "set-quantity",
+  RemoveLineItem = "remove-line-item",
+}
 
 export function CartDetails({
   layout,
@@ -43,7 +53,7 @@ export function CartDetails({
   };
 
   return (
-    <form className={container[layout]}>
+    <div className={container[layout]}>
       <section
         ref={scrollRef}
         aria-labelledby="cart-contents"
@@ -62,7 +72,7 @@ export function CartDetails({
         <OrderSummary cost={cart.cost} />
         <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
       </section>
-    </form>
+    </div>
   );
 }
 
@@ -105,8 +115,28 @@ function OrderSummary({ cost }: { cost: CartCost }) {
 
 function CartLineItem({ line }: { line: CartLine }) {
   const { id: lineId, quantity, merchandise } = line;
+  const fetcher = useFetcher();
+  const location = useLocation();
+  let optimisticQuantity = quantity;
+  let optimisticallyDeleting = false;
 
-  return (
+  if (fetcher.submission) {
+    switch (fetcher.submission.formData.get("intent")) {
+      case Action.SetQuantity: {
+        optimisticQuantity = Number(
+          fetcher.submission.formData.get("quantity")
+        );
+        break;
+      }
+
+      case Action.RemoveLineItem: {
+        optimisticallyDeleting = true;
+        break;
+      }
+    }
+  }
+
+  return optimisticallyDeleting ? null : (
     <li key={lineId} className="flex gap-4">
       <div className="flex-shrink">
         {merchandise.image && (
@@ -138,18 +168,28 @@ function CartLineItem({ line }: { line: CartLine }) {
 
           <div className="flex items-center gap-2">
             <div className="flex justify-start text-copy">
-              <CartLineQuantityAdjust lineId={lineId} quantity={quantity} />
+              <CartLineQuantityAdjust
+                fetcher={fetcher}
+                lineId={lineId}
+                quantity={optimisticQuantity}
+              />
             </div>
-            <button
-              type="button"
-              onClick={() => {
-                console.log("todo: remove line");
-              }}
-              className="flex items-center justify-center w-10 h-10 border rounded"
-            >
-              <span className="sr-only">Remove</span>
-              <IconRemove aria-hidden="true" />
-            </button>
+            <fetcher.Form method="post" action="/cart">
+              <input type="hidden" name="intent" value="remove-line-item" />
+              <input type="hidden" name="lineId" value={lineId} />
+              <input
+                type="hidden"
+                name="redirect"
+                value={location.pathname + location.search}
+              />
+              <button
+                type="submit"
+                className="flex items-center justify-center w-10 h-10 border rounded"
+              >
+                <span className="sr-only">Remove</span>
+                <IconRemove aria-hidden="true" />
+              </button>
+            </fetcher.Form>
           </div>
         </div>
         <Text>
@@ -163,32 +203,50 @@ function CartLineItem({ line }: { line: CartLine }) {
 function CartLineQuantityAdjust({
   lineId,
   quantity,
+  fetcher,
 }: {
   lineId: string;
   quantity: number;
+  fetcher: FetcherWithComponents<any>;
 }) {
+  const location = useLocation();
+
   return (
     <>
       <label htmlFor={`quantity-${lineId}`} className="sr-only">
         Quantity, {quantity}
       </label>
-      <div className="flex items-center border rounded">
-        {/* <CartLineQuantityAdjustButton
-          adjust="decrease"
+      <fetcher.Form
+        method="post"
+        action="/cart"
+        className="flex items-center border rounded"
+      >
+        <input type="hidden" name="intent" defaultValue="set-quantity" />
+        <input type="hidden" name="lineId" value={lineId} />
+        <input
+          type="hidden"
+          name="redirect"
+          value={location.pathname + location.search}
+        />
+        <button
+          name="quantity"
+          value={Math.max(0, quantity - 1).toFixed(0)}
           aria-label="Decrease quantity"
-          className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:cursor-wait"
+          disabled={quantity <= 1}
+          className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
         >
           &#8722;
-        </CartLineQuantityAdjustButton>
-        <CartLineQuantity as="div" className="px-2 text-center" />
-        <CartLineQuantityAdjustButton
-          adjust="increase"
+        </button>
+        <div className="px-2 text-center">{quantity}</div>
+        <button
+          name="quantity"
+          value={(quantity + 1).toFixed(0)}
           aria-label="Increase quantity"
-          className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:cursor-wait"
+          className="w-10 h-10 transition text-primary/50 hover:text-primary"
         >
           &#43;
-        </CartLineQuantityAdjustButton> */}
-      </div>
+        </button>
+      </fetcher.Form>
     </>
   );
 }
