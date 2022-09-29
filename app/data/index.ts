@@ -61,6 +61,7 @@ export interface LayoutData {
   headerMenu: EnhancedMenu;
   footerMenu: EnhancedMenu;
   shop: Shop;
+  cart?: Promise<Cart>;
 }
 
 export async function getLayoutData() {
@@ -553,7 +554,7 @@ fragment CartFragment on Cart {
     email
     phone
   }
-  lines(first: $numCartLines) {
+  lines(first: 100) {
     edges {
       node {
         id
@@ -640,7 +641,7 @@ fragment ImageFragment on Image {
 
 const CREATE_CART_MUTATION = `#graphql
 ${CART_FRAGMENT}
-mutation CartCreate($input: CartInput!, $numCartLines: Int = 250, $country: CountryCode = ZZ) @inContext(country: $country) {
+mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(country: $country) {
   cartCreate(input: $input) {
     cart {
       ...CartFragment
@@ -669,7 +670,7 @@ export async function createCart({ cart }: { cart: CartInput }) {
 }
 
 const ADD_LINE_ITEM_QUERY = `#graphql
-  mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ, $numCartLines: Int = 250) @inContext(country: $country) {
+  mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFragment
@@ -700,4 +701,29 @@ export async function addLineItem({
   });
 
   return data.cartLinesAdd.cart;
+}
+
+const CART_QUERY = `#graphql
+  query CartQuery($cartId: ID!, $country: CountryCode = ZZ) @inContext(country: $country) {
+    cart(id: $cartId) {
+      ...CartFragment
+    }
+  }
+
+  ${CART_FRAGMENT}
+`;
+
+export async function getCart({ cartId }: { cartId: string }) {
+  // TODO: Yes
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{ cart: Cart }>({
+    query: CART_QUERY,
+    variables: {
+      cartId,
+      country: countryCode,
+    },
+  });
+
+  return data.cart;
 }
