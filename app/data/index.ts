@@ -3,6 +3,9 @@ import type {
   StorefrontApiResponseOk,
 } from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
 import type {
+  Cart,
+  CartInput,
+  CartLineInput,
   Collection,
   CollectionConnection,
   Product,
@@ -531,4 +534,170 @@ export async function getAllProducts({
   });
 
   return data.products;
+}
+
+const CART_FRAGMENT = `#graphql
+fragment CartFragment on Cart {
+  id
+  checkoutUrl
+  totalQuantity
+  buyerIdentity {
+    countryCode
+    customer {
+      id
+      email
+      firstName
+      lastName
+      displayName
+    }
+    email
+    phone
+  }
+  lines(first: $numCartLines) {
+    edges {
+      node {
+        id
+        quantity
+        attributes {
+          key
+          value
+        }
+        cost {
+          totalAmount {
+            amount
+            currencyCode
+          }
+          compareAtAmountPerQuantity {
+            amount
+            currencyCode
+          }
+        }
+        merchandise {
+          ... on ProductVariant {
+            id
+            availableForSale
+            compareAtPriceV2 {
+              ...MoneyFragment
+            }
+            priceV2 {
+              ...MoneyFragment
+            }
+            requiresShipping
+            title
+            image {
+              ...ImageFragment
+            }
+            product {
+              handle
+              title
+              id
+            }
+            selectedOptions {
+              name
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+  cost {
+    subtotalAmount {
+      ...MoneyFragment
+    }
+    totalAmount {
+      ...MoneyFragment
+    }
+    totalDutyAmount {
+      ...MoneyFragment
+    }
+    totalTaxAmount {
+      ...MoneyFragment
+    }
+  }
+  note
+  attributes {
+    key
+    value
+  }
+  discountCodes {
+    code
+  }
+}
+
+fragment MoneyFragment on MoneyV2 {
+  currencyCode
+  amount
+}
+fragment ImageFragment on Image {
+  id
+  url
+  altText
+  width
+  height
+}
+`;
+
+const CREATE_CART_MUTATION = `#graphql
+${CART_FRAGMENT}
+mutation CartCreate($input: CartInput!, $numCartLines: Int = 250, $country: CountryCode = ZZ) @inContext(country: $country) {
+  cartCreate(input: $input) {
+    cart {
+      ...CartFragment
+    }
+  }
+}
+`;
+
+export async function createCart({ cart }: { cart: CartInput }) {
+  // TODO: You know what to do
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{
+    cartCreate: {
+      cart: Cart;
+    };
+  }>({
+    query: CREATE_CART_MUTATION,
+    variables: {
+      input: cart,
+      country: countryCode,
+    },
+  });
+
+  return data.cartCreate.cart;
+}
+
+const ADD_LINE_ITEM_QUERY = `#graphql
+  mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ, $numCartLines: Int = 250) @inContext(country: $country) {
+    cartLinesAdd(cartId: $cartId, lines: $lines) {
+      cart {
+        ...CartFragment
+      }
+    }
+  }
+
+  ${CART_FRAGMENT}
+`;
+
+export async function addLineItem({
+  cartId,
+  lines,
+}: {
+  cartId: string;
+  lines: CartLineInput[];
+}) {
+  // TODO: You know what to do
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{
+    cartLinesAdd: {
+      cart: Cart;
+    };
+  }>({
+    query: ADD_LINE_ITEM_QUERY,
+    variables: { cartId, lines, country: countryCode },
+  });
+
+  return data.cartLinesAdd.cart;
 }
