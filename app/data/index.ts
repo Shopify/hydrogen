@@ -3,6 +3,10 @@ import type {
   StorefrontApiResponseOk,
 } from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
 import type {
+  Cart,
+  CartInput,
+  CartLineInput,
+  CartLineUpdateInput,
   Collection,
   CollectionConnection,
   Product,
@@ -58,6 +62,7 @@ export interface LayoutData {
   headerMenu: EnhancedMenu;
   footerMenu: EnhancedMenu;
   shop: Shop;
+  cart?: Promise<Cart>;
 }
 
 export async function getLayoutData() {
@@ -527,6 +532,260 @@ export async function getAllProducts({
       language: languageCode,
       country: countryCode,
       pageBy: paginationSize,
+    },
+  });
+
+  return data.products;
+}
+
+const CART_FRAGMENT = `#graphql
+fragment CartFragment on Cart {
+  id
+  checkoutUrl
+  totalQuantity
+  buyerIdentity {
+    countryCode
+    customer {
+      id
+      email
+      firstName
+      lastName
+      displayName
+    }
+    email
+    phone
+  }
+  lines(first: 100) {
+    edges {
+      node {
+        id
+        quantity
+        attributes {
+          key
+          value
+        }
+        cost {
+          totalAmount {
+            amount
+            currencyCode
+          }
+          compareAtAmountPerQuantity {
+            amount
+            currencyCode
+          }
+        }
+        merchandise {
+          ... on ProductVariant {
+            id
+            availableForSale
+            compareAtPriceV2 {
+              ...MoneyFragment
+            }
+            priceV2 {
+              ...MoneyFragment
+            }
+            requiresShipping
+            title
+            image {
+              ...ImageFragment
+            }
+            product {
+              handle
+              title
+              id
+            }
+            selectedOptions {
+              name
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+  cost {
+    subtotalAmount {
+      ...MoneyFragment
+    }
+    totalAmount {
+      ...MoneyFragment
+    }
+    totalDutyAmount {
+      ...MoneyFragment
+    }
+    totalTaxAmount {
+      ...MoneyFragment
+    }
+  }
+  note
+  attributes {
+    key
+    value
+  }
+  discountCodes {
+    code
+  }
+}
+
+fragment MoneyFragment on MoneyV2 {
+  currencyCode
+  amount
+}
+fragment ImageFragment on Image {
+  id
+  url
+  altText
+  width
+  height
+}
+`;
+
+const CREATE_CART_MUTATION = `#graphql
+mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(country: $country) {
+  cartCreate(input: $input) {
+    cart {
+      id
+    }
+  }
+}
+`;
+
+export async function createCart({ cart }: { cart: CartInput }) {
+  // TODO: You know what to do
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{
+    cartCreate: {
+      cart: Cart;
+    };
+  }>({
+    query: CREATE_CART_MUTATION,
+    variables: {
+      input: cart,
+      country: countryCode,
+    },
+  });
+
+  return data.cartCreate.cart;
+}
+
+const ADD_LINE_ITEM_QUERY = `#graphql
+  mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
+    cartLinesAdd(cartId: $cartId, lines: $lines) {
+      cart {
+        id
+      }
+    }
+  }
+`;
+
+export async function addLineItem({
+  cartId,
+  lines,
+}: {
+  cartId: string;
+  lines: CartLineInput[];
+}) {
+  // TODO: You know what to do
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{
+    cartLinesAdd: {
+      cart: Cart;
+    };
+  }>({
+    query: ADD_LINE_ITEM_QUERY,
+    variables: { cartId, lines, country: countryCode },
+  });
+
+  return data.cartLinesAdd.cart;
+}
+
+const CART_QUERY = `#graphql
+  query CartQuery($cartId: ID!, $country: CountryCode = ZZ) @inContext(country: $country) {
+    cart(id: $cartId) {
+      ...CartFragment
+    }
+  }
+
+  ${CART_FRAGMENT}
+`;
+
+export async function getCart({ cartId }: { cartId: string }) {
+  // TODO: Yes
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{ cart: Cart }>({
+    query: CART_QUERY,
+    variables: {
+      cartId,
+      country: countryCode,
+    },
+  });
+
+  return data.cart;
+}
+
+const UPDATE_LINE_ITEM_QUERY = `#graphql
+  mutation CartLineUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
+    cartLinesUpdate(cartId: $cartId, lines: $lines) {
+      cart {
+        ...CartFragment
+      }
+    }
+  }
+
+  ${CART_FRAGMENT}
+`;
+
+export async function updateLineItem({
+  cartId,
+  lineItem,
+}: {
+  cartId: string;
+  lineItem: CartLineUpdateInput;
+}) {
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{ cartLinesUpdate: { cart: Cart } }>({
+    query: UPDATE_LINE_ITEM_QUERY,
+    variables: {
+      cartId,
+      lines: [lineItem],
+      country: countryCode,
+    },
+  });
+
+  return data.cartLinesUpdate.cart;
+}
+
+const TOP_PRODUCTS_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query topProducts(
+    $count: Int
+    $countryCode: CountryCode
+    $languageCode: LanguageCode
+  ) @inContext(country: $countryCode, language: $languageCode) {
+    products(first: $count, sortKey: BEST_SELLING) {
+      nodes {
+        ...ProductCard
+      }
+    }
+  }
+`;
+
+export async function getTopProducts({ count = 4 }: { count?: number } = {}) {
+  const countryCode = "US";
+  const languageCode = "EN";
+
+  const data = await getStorefrontData<{
+    products: ProductConnection;
+  }>({
+    query: TOP_PRODUCTS_QUERY,
+    variables: {
+      count,
+      countryCode,
+      languageCode,
     },
   });
 
