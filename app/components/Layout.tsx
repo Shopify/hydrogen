@@ -14,12 +14,12 @@ import {
   Section,
   CartDetails,
 } from "~/components";
-import { Await, Link } from "@remix-run/react";
+import { Await, Link, useFetcher } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
 import type { Cart } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Suspense } from "react";
+import { Suspense, useEffect } from "react";
 
 export function Layout({
   children,
@@ -155,6 +155,23 @@ function CartDrawer({
   onClose: () => void;
   cart?: Promise<Cart>;
 }) {
+  /**
+   * Whenever a component that uses a fetcher is _unmounted_, that fetcher is removed
+   * from the internal Remix cache. By defining the fetcher outside of the component,
+   * we persist it between mounting and unmounting.
+   */
+  const topProductsFetcher = useFetcher();
+
+  /**
+   * We load the top products, which are only shown as a fallback when the cart as empty.
+   * We need to do this here, otherwise we'll incur a network request every time the
+   * drawer is opened.
+   */
+  useEffect(() => {
+    topProductsFetcher.load("/cart");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
@@ -162,7 +179,12 @@ function CartDrawer({
           <Suspense fallback={<div>Loading...</div>}>
             <Await errorElement="Hey, the cart didn't load LOL" resolve={cart}>
               {(cart) => (
-                <CartDetails layout="drawer" onClose={onClose} cart={cart} />
+                <CartDetails
+                  fetcher={topProductsFetcher}
+                  layout="drawer"
+                  onClose={onClose}
+                  cart={cart}
+                />
               )}
             </Await>
           </Suspense>

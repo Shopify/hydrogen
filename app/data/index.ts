@@ -758,3 +758,36 @@ export async function updateLineItem({
 
   return data.cartLinesUpdate.cart;
 }
+
+const TOP_PRODUCTS_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query topProducts(
+    $count: Int
+    $countryCode: CountryCode
+    $languageCode: LanguageCode
+  ) @inContext(country: $countryCode, language: $languageCode) {
+    products(first: $count, sortKey: BEST_SELLING) {
+      nodes {
+        ...ProductCard
+      }
+    }
+  }
+`;
+
+export async function getTopProducts({ count = 4 }: { count?: number } = {}) {
+  const countryCode = "US";
+  const languageCode = "EN";
+
+  const data = await getStorefrontData<{
+    products: ProductConnection;
+  }>({
+    query: TOP_PRODUCTS_QUERY,
+    variables: {
+      count,
+      countryCode,
+      languageCode,
+    },
+  });
+
+  return data.products;
+}
