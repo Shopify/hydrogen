@@ -9,6 +9,6 @@ export { ProductGrid } from "./ProductGrid";
 export { Skeleton } from "./Skeleton";
 export { Button } from "./Button";
 export { Grid } from "./Grid";
-export { CartDetails } from "./CartDetails";
+export { CartDetails, CartEmpty } from "./CartDetails";
 // Sue me
 export * from "./Icon";

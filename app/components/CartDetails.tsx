@@ -37,14 +37,20 @@ export function CartDetails({
 }: {
   layout: "drawer" | "page";
   onClose?: () => void;
-  cart?: Cart;
+  cart: Cart;
   fetcher: FetcherWithComponents<any>;
 }) {
   const lines = flattenConnection(cart?.lines ?? {});
   const scrollRef = useRef(null);
   const { y } = useScroll(scrollRef);
+  const lineItemFetcher = useFetcher();
 
-  if (!cart || lines.length === 0) {
+  const optimisticallyDeletingLastLine =
+    lines.length === 1 &&
+    lineItemFetcher.submission &&
+    lineItemFetcher.submission.formData.get("intent") === Action.RemoveLineItem;
+
+  if (lines.length === 0 || optimisticallyDeletingLastLine) {
     return <CartEmpty fetcher={fetcher} onClose={onClose} layout={layout} />;
   }
 
@@ -72,7 +78,13 @@ export function CartDetails({
       >
         <ul className="grid gap-6 md:gap-10">
           {lines.map((line) => {
-            return <CartLineItem key={line.id} line={line as CartLine} />;
+            return (
+              <CartLineItem
+                fetcher={lineItemFetcher}
+                key={line.id}
+                line={line as CartLine}
+              />
+            );
           })}
         </ul>
       </section>
@@ -124,14 +136,23 @@ function OrderSummary({ cost }: { cost: CartCost }) {
   );
 }
 
-function CartLineItem({ line }: { line: CartLine }) {
+function CartLineItem({
+  line,
+  fetcher,
+}: {
+  line: CartLine;
+  fetcher: FetcherWithComponents<any>;
+}) {
   const { id: lineId, quantity, merchandise } = line;
-  const fetcher = useFetcher();
+
   const location = useLocation();
   let optimisticQuantity = quantity;
   let optimisticallyDeleting = false;
 
-  if (fetcher.submission) {
+  if (
+    fetcher.submission &&
+    fetcher.submission.formData.get("lineId") === lineId
+  ) {
     switch (fetcher.submission.formData.get("intent")) {
       case Action.SetQuantity: {
         optimisticQuantity = Number(
@@ -186,7 +207,11 @@ function CartLineItem({ line }: { line: CartLine }) {
               />
             </div>
             <fetcher.Form method="post" action="/cart">
-              <input type="hidden" name="intent" value="remove-line-item" />
+              <input
+                type="hidden"
+                name="intent"
+                value={Action.RemoveLineItem}
+              />
               <input type="hidden" name="lineId" value={lineId} />
               <input
                 type="hidden"
@@ -232,7 +257,7 @@ function CartLineQuantityAdjust({
         action="/cart"
         className="flex items-center border rounded"
       >
-        <input type="hidden" name="intent" defaultValue="set-quantity" />
+        <input type="hidden" name="intent" defaultValue={Action.SetQuantity} />
         <input type="hidden" name="lineId" value={lineId} />
         <input
           type="hidden"

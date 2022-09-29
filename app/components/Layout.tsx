@@ -13,6 +13,7 @@ import {
   IconCaret,
   Section,
   CartDetails,
+  CartEmpty,
 } from "~/components";
 import { Await, Link, useFetcher } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
@@ -175,7 +176,7 @@ function CartDrawer({
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
-        {cart && (
+        {cart ? (
           <Suspense fallback={<div>Loading...</div>}>
             <Await errorElement="Hey, the cart didn't load LOL" resolve={cart}>
               {(cart) => (
@@ -188,6 +189,12 @@ function CartDrawer({
               )}
             </Await>
           </Suspense>
+        ) : (
+          <CartEmpty
+            fetcher={topProductsFetcher}
+            onClose={onClose}
+            layout="drawer"
+          />
         )}
       </div>
     </Drawer>
