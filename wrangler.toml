@@ -15,3 +15,6 @@ main = "worker/index.ts"
 
 [build]
   command = "npm run build"
+
+[vars]
+  ENCRYPTION_KEY="foobar"

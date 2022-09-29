@@ -12,18 +12,24 @@ import {
   IconMenu,
   IconCaret,
   Section,
+  CartDetails,
 } from "~/components";
-import { Link } from "@remix-run/react";
+import { Await, Link, useFetcher } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
+import type { Cart } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import { Suspense, useEffect } from "react";
 
 export function Layout({
   children,
   data,
 }: {
   children: React.ReactNode;
-  data: LayoutData;
+  data: {
+    layout: LayoutData;
+    cart: Promise<Cart>;
+  };
 }) {
   return (
     <>
@@ -33,17 +39,29 @@ export function Layout({
             Skip to content
           </a>
         </div>
-        <Header title={data.shop.name} menu={data.headerMenu} />
+        <Header
+          title={data.layout.shop.name}
+          menu={data.layout.headerMenu}
+          cart={data.cart}
+        />
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
       </div>
-      <Footer menu={data.footerMenu} />
+      <Footer menu={data.layout.footerMenu} />
     </>
   );
 }
 
-function Header({ title, menu }: { title: string; menu: EnhancedMenu }) {
+function Header({
+  title,
+  menu,
+  cart,
+}: {
+  title: string;
+  menu: EnhancedMenu;
+  cart?: Promise<Cart>;
+}) {
   const { pathname } = useLocation();
 
   // TODO: Ensure locale support like in Hydrogen
@@ -65,7 +83,7 @@ function Header({ title, menu }: { title: string; menu: EnhancedMenu }) {
 
   return (
     <>
-      <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
+      <CartDrawer isOpen={isCartOpen} onClose={closeCart} cart={cart} />
       <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu!} />
       <DesktopHeader
         countryCode={countryCode}
@@ -73,6 +91,7 @@ function Header({ title, menu }: { title: string; menu: EnhancedMenu }) {
         title={title}
         menu={menu}
         openCart={openCart}
+        cart={cart}
       />
       <MobileHeader
         countryCode={countryCode}
@@ -80,6 +99,7 @@ function Header({ title, menu }: { title: string; menu: EnhancedMenu }) {
         title={title}
         openCart={openCart}
         openMenu={openMenu}
+        cart={cart}
       />
     </>
   );
@@ -129,15 +149,46 @@ function Footer({ menu }: { menu?: EnhancedMenu }) {
 function CartDrawer({
   isOpen,
   onClose,
+  cart,
 }: {
   isOpen: boolean;
   onClose: () => void;
+  cart?: Promise<Cart>;
 }) {
+  /**
+   * Whenever a component that uses a fetcher is _unmounted_, that fetcher is removed
+   * from the internal Remix cache. By defining the fetcher outside of the component,
+   * we persist it between mounting and unmounting.
+   */
+  const topProductsFetcher = useFetcher();
+
+  /**
+   * We load the top products, which are only shown as a fallback when the cart as empty.
+   * We need to do this here, otherwise we'll incur a network request every time the
+   * drawer is opened.
+   */
+  useEffect(() => {
+    topProductsFetcher.load("/cart");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
-        {/* TODO: Implement CartDetails */}
-        {/* <CartDetails layout="drawer" onClose={onClose} /> */}
+        {cart && (
+          <Suspense fallback={<div>Loading...</div>}>
+            <Await errorElement="Hey, the cart didn't load LOL" resolve={cart}>
+              {(cart) => (
+                <CartDetails
+                  fetcher={topProductsFetcher}
+                  layout="drawer"
+                  onClose={onClose}
+                  cart={cart}
+                />
+              )}
+            </Await>
+          </Suspense>
+        )}
       </div>
     </Drawer>
   );
@@ -188,12 +239,14 @@ function MobileHeader({
   isHome,
   openCart,
   openMenu,
+  cart,
 }: {
   countryCode?: string | null;
   title: string;
   isHome: boolean;
   openCart: () => void;
   openMenu: () => void;
+  cart?: Promise<Cart>;
 }) {
   const { y } = useWindowScroll();
 
@@ -250,7 +303,13 @@ function MobileHeader({
         </Link>
         <button onClick={openCart} className={styles.button}>
           <IconBag />
-          <CartBadge dark={isHome} />
+          {cart && (
+            <Suspense fallback={null}>
+              <Await resolve={cart}>
+                {(cart) => <CartBadge cart={cart} dark={isHome} />}
+              </Await>
+            </Suspense>
+          )}
         </button>
       </div>
     </header>
@@ -263,12 +322,14 @@ function DesktopHeader({
   menu,
   openCart,
   title,
+  cart,
 }: {
   countryCode?: string | null;
   isHome: boolean;
   openCart: () => void;
   menu?: EnhancedMenu;
   title: string;
+  cart?: Promise<Cart>;
 }) {
   const { y } = useWindowScroll();
 
@@ -329,16 +390,21 @@ function DesktopHeader({
         </Link>
         <button onClick={openCart} className={styles.button}>
           <IconBag />
-          <CartBadge dark={isHome} />
+          {cart && (
+            <Suspense fallback={null}>
+              <Await resolve={cart}>
+                {(cart) => <CartBadge cart={cart} dark={isHome} />}
+              </Await>
+            </Suspense>
+          )}
         </button>
       </div>
     </header>
   );
 }
 
-function CartBadge({ dark }: { dark: boolean }) {
-  // TODO: Implement useCart()
-  const { totalQuantity } = { totalQuantity: 0 };
+function CartBadge({ cart, dark }: { cart: Cart; dark: boolean }) {
+  const { totalQuantity } = cart;
 
   if (totalQuantity < 1) {
     return null;
