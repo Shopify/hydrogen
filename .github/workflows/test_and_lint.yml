@@ -28,19 +28,19 @@ jobs:
 
     steps:
       - name: Checkout the code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version-file: '.nvmrc'
           cache: 'yarn'
 
       - name: Install the packages
         run: yarn install --frozen-lockfile --ignore-engines
 
-      - name: Build the code
-        run: yarn build --force
-
       - name: Run CI checks
         run: yarn ci:checks
+
+      - name: Build the code
+        run: yarn build --force
