@@ -18,8 +18,8 @@ jobs:
         id: flags
         run: |
           # IMPORTANT: Update this variable whenever we move to a new major version:
-          latest_branch=main
-          echo "::set-output name=latest::${{ github.ref_name == 'main' }}"
+          latest_branch=2022-7
+          echo "::set-output name=latest::${{ github.ref_name == '2022-7' }}"
 
       - name: Checkout the code
         uses: actions/checkout@v3

@@ -37,7 +37,7 @@ jobs:
           cache: 'yarn'
 
       - name: Install the packages
-        run: yarn install --frozen-lockfile --ignore-engines
+        run: yarn install --frozen-lockfile
 
       - name: Run CI checks
         run: yarn ci:checks
