@@ -43,4 +43,4 @@ jobs:
         run: yarn ci:checks
 
       - name: Build the code
-        run: yarn build --force
+        run: yarn build
