@@ -1,7 +1,13 @@
-import { type ActionFunction, json } from "@remix-run/cloudflare";
+import { type ActionFunction, json, defer } from "@remix-run/cloudflare";
 import invariant from "tiny-invariant";
-import { updateLineItem } from "~/data";
+import { getTopProducts, updateLineItem } from "~/data";
 import { getSession } from "~/lib/session.server";
+
+export async function loader() {
+  return defer({
+    topProducts: getTopProducts(),
+  });
+}
 
 export const action: ActionFunction = async ({ request, context }) => {
   const [session, formData] = await Promise.all([

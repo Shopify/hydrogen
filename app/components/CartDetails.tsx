@@ -1,4 +1,4 @@
-import { Suspense, useRef } from "react";
+import { useRef } from "react";
 import { useScroll } from "react-use";
 import { flattenConnection, Money } from "@shopify/hydrogen-ui-alpha";
 import {
@@ -8,11 +8,20 @@ import {
   useLocation,
 } from "@remix-run/react";
 
-import { Button, Heading, IconRemove, Skeleton, Text } from "~/components";
+import {
+  Button,
+  Heading,
+  IconRemove,
+  ProductCard,
+  Skeleton,
+  Text,
+} from "~/components";
 import type {
   Cart,
   CartCost,
   CartLine,
+  Product,
+  ProductConnection,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 
 enum Action {
@@ -24,17 +33,19 @@ export function CartDetails({
   layout,
   onClose,
   cart,
+  fetcher,
 }: {
   layout: "drawer" | "page";
   onClose?: () => void;
   cart?: Cart;
+  fetcher: FetcherWithComponents<any>;
 }) {
   const lines = flattenConnection(cart?.lines ?? {});
   const scrollRef = useRef(null);
   const { y } = useScroll(scrollRef);
 
   if (!cart || lines.length === 0) {
-    return <CartEmpty onClose={onClose} layout={layout} />;
+    return <CartEmpty fetcher={fetcher} onClose={onClose} layout={layout} />;
   }
 
   const container = {
@@ -254,9 +265,11 @@ function CartLineQuantityAdjust({
 export function CartEmpty({
   onClose,
   layout = "drawer",
+  fetcher,
 }: {
   onClose?: () => void;
   layout?: "page" | "drawer";
+  fetcher: FetcherWithComponents<any>;
 }) {
   const scrollRef = useRef(null);
   const { y } = useScroll(scrollRef);
@@ -291,39 +304,43 @@ export function CartEmpty({
         <div
           className={`grid grid-cols-2 gap-x-6 gap-y-8 ${topProductsContainer[layout]}`}
         >
-          <Suspense fallback={<Loading />}>
-            <TopProducts onClose={onClose} />
-          </Suspense>
+          <TopProducts fetcher={fetcher} onClose={onClose} />
         </div>
       </section>
     </div>
   );
 }
 
-function TopProducts({ onClose }: { onClose?: () => void }) {
-  return <p>TODO: Return top products</p>;
-  // const response = fetchSync('/api/bestSellers');
+function TopProducts({
+  fetcher,
+  onClose,
+}: {
+  fetcher: FetcherWithComponents<any>;
+  onClose?: () => void;
+}) {
+  if (!fetcher.data) {
+    return <Loading />;
+  }
 
-  // if (!response.ok) {
-  //   console.error(
-  //     `Unable to load top products ${response.url} returned a ${response.status}`,
-  //   );
-  //   return null;
-  // }
+  const products = flattenConnection(
+    fetcher.data.topProducts as ProductConnection
+  );
 
-  // const products: Product[] = response.json();
+  if (products.length === 0) {
+    return <Text format>No products found.</Text>;
+  }
 
-  // if (products.length === 0) {
-  //   return <Text format>No products found.</Text>;
-  // }
-
-  // return (
-  //   <>
-  //     {products.map((product) => (
-  //       <ProductCard product={product} key={product.id} onClick={onClose} />
-  //     ))}
-  //   </>
-  // );
+  return (
+    <>
+      {products.map((product) => (
+        <ProductCard
+          product={product as Product}
+          key={product.id}
+          onClick={onClose}
+        />
+      ))}
+    </>
+  );
 }
 
 function Loading() {
