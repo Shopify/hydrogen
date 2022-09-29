@@ -6,6 +6,7 @@ import type {
   Cart,
   CartInput,
   CartLineInput,
+  CartLineUpdateInput,
   Collection,
   CollectionConnection,
   Product,
@@ -640,11 +641,10 @@ fragment ImageFragment on Image {
 `;
 
 const CREATE_CART_MUTATION = `#graphql
-${CART_FRAGMENT}
 mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(country: $country) {
   cartCreate(input: $input) {
     cart {
-      ...CartFragment
+      id
     }
   }
 }
@@ -673,12 +673,10 @@ const ADD_LINE_ITEM_QUERY = `#graphql
   mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
-        ...CartFragment
+        id
       }
     }
   }
-
-  ${CART_FRAGMENT}
 `;
 
 export async function addLineItem({
@@ -726,4 +724,37 @@ export async function getCart({ cartId }: { cartId: string }) {
   });
 
   return data.cart;
+}
+
+const UPDATE_LINE_ITEM_QUERY = `#graphql
+  mutation CartLineUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
+    cartLinesUpdate(cartId: $cartId, lines: $lines) {
+      cart {
+        ...CartFragment
+      }
+    }
+  }
+
+  ${CART_FRAGMENT}
+`;
+
+export async function updateLineItem({
+  cartId,
+  lineItem,
+}: {
+  cartId: string;
+  lineItem: CartLineUpdateInput;
+}) {
+  const countryCode = "US";
+
+  const data = await getStorefrontData<{ cartLinesUpdate: { cart: Cart } }>({
+    query: UPDATE_LINE_ITEM_QUERY,
+    variables: {
+      cartId,
+      lines: [lineItem],
+      country: countryCode,
+    },
+  });
+
+  return data.cartLinesUpdate.cart;
 }

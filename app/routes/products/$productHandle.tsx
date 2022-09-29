@@ -73,6 +73,8 @@ export const action: ActionFunction = async ({ request, context, params }) => {
 
   console.log({ cartId });
 
+  let headers = new Headers();
+
   // 2. If none exists, create a cart (SFAPI)
   if (!cartId) {
     const cart = await createCart({
@@ -82,6 +84,8 @@ export const action: ActionFunction = async ({ request, context, params }) => {
     console.log({ cart });
 
     session.set("cartId", cart.id);
+
+    headers.set("Set-Cookie", await session.commit());
   } else {
     // 3. Else, update the cart with the variant ID (SFAPI)
     const newCart = await addLineItem({
@@ -94,9 +98,7 @@ export const action: ActionFunction = async ({ request, context, params }) => {
 
   // 4. Update the session with the cart ID (response headers)
   return redirect(`/products/${params.productHandle}`, {
-    headers: {
-      "Set-Cookie": await session.commit(),
-    },
+    headers,
   });
 };
 
