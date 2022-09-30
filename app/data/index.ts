@@ -1161,7 +1161,7 @@ export async function getCustomer({
   /**
    * If the customer failed to load, we assume their access token is invalid.
    */
-  if (!data) {
+  if (!data || !data.customer) {
     throw logout(request, context);
   }
 
@@ -1196,8 +1196,6 @@ export async function updateCustomer({
       customer,
     },
   });
-
-  console.log(JSON.stringify({ customer, data }));
 
   const error = getApiErrorMessage(
     "customerUpdate",

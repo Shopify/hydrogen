@@ -12,7 +12,7 @@ import type {
 import clsx from "clsx";
 import invariant from "tiny-invariant";
 import { Button, Text } from "~/components";
-import { updateCustomer } from "~/data";
+import { getCustomer, updateCustomer } from "~/data";
 import { getSession } from "~/lib/session.server";
 import { getInputStyleClasses } from "~/lib/utils";
 
@@ -56,7 +56,14 @@ export const action: ActionFunction = async ({ request, context }) => {
     "You must be logged in to update your account details."
   );
 
-  if (formData.has("newPassword") && !formData.has("currentPassword")) {
+  // Double-check current user is logged in.
+  // Will throw a logout redirect if not.
+  await getCustomer({ customerAccessToken, request, context });
+
+  if (
+    formDataHas(formData, "newPassword") &&
+    !formDataHas(formData, "currentPassword")
+  ) {
     return badRequest({
       fieldErrors: {
         currentPassword:
@@ -186,6 +193,11 @@ export default function AccountDetailsEdit() {
           label="Current password"
           passwordError={actionData?.fieldErrors?.currentPassword}
         />
+        {actionData?.fieldErrors?.currentPassword && (
+          <Text size="fine" className="mt-1 text-red-500">
+            {actionData.fieldErrors.currentPassword} &nbsp;
+          </Text>
+        )}
         <Password
           name="newPassword"
           label="New password"
