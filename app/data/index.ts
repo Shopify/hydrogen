@@ -13,6 +13,8 @@ import type {
   ProductConnection,
   ProductVariant,
   SelectedOptionInput,
+  LanguageCode,
+  Blog,
   PageConnection,
   Shop,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
@@ -851,4 +853,101 @@ export async function getSitemap(variables: {
     query: SITEMAP_QUERY,
     variables,
   });
+}
+
+const BLOG_QUERY = `#graphql
+query Blog(
+  $language: LanguageCode
+  $blogHandle: String!
+  $pageBy: Int!
+  $cursor: String
+) @inContext(language: $language) {
+  blog(handle: $blogHandle) {
+    articles(first: $pageBy, after: $cursor) {
+      edges {
+        node {
+          author: authorV2 {
+            name
+          }
+          contentHtml
+          handle
+          id
+          image {
+            id
+            altText
+            url
+            width
+            height
+          }
+          publishedAt
+          title
+        }
+      }
+    }
+  }
+}
+`;
+
+export async function getBlog({
+  language,
+  paginationSize,
+  blogHandle,
+}: {
+  language: LanguageCode;
+  blogHandle: string;
+  paginationSize: number;
+}) {
+  const data = await getStorefrontData<{
+    blog: Blog;
+  }>({
+    query: BLOG_QUERY,
+    variables: {
+      language,
+      blogHandle,
+      pageBy: paginationSize,
+    },
+  });
+
+  return data.blog.articles;
+}
+
+const ARTICLE_QUERY = `#graphql
+  query ArticleDetails(
+    $language: LanguageCode
+    $blogHandle: String!
+    $articleHandle: String!
+  ) @inContext(language: $language) {
+    blog(handle: $blogHandle) {
+      articleByHandle(handle: $articleHandle) {
+        title
+        contentHtml
+        publishedAt
+        author: authorV2 {
+          name
+        }
+        image {
+          id
+          altText
+          url
+          width
+          height
+        }
+      }
+    }
+  }
+`;
+
+export async function getArticle(variables: {
+  language: LanguageCode;
+  blogHandle: string;
+  articleHandle: string;
+}) {
+  const data = await getStorefrontData<{
+    blog: Blog;
+  }>({
+    query: ARTICLE_QUERY,
+    variables,
+  });
+
+  return data.blog.articleByHandle;
 }
