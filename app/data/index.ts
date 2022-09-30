@@ -13,6 +13,7 @@ import type {
   ProductConnection,
   ProductVariant,
   SelectedOptionInput,
+  PageConnection,
   Shop,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
@@ -790,4 +791,64 @@ export async function getTopProducts({ count = 4 }: { count?: number } = {}) {
   });
 
   return data.products;
+}
+
+const SITEMAP_QUERY = `#graphql
+  query sitemaps($urlLimits: Int, $language: LanguageCode)
+  @inContext(language: $language) {
+    products(
+      first: $urlLimits
+      query: "published_status:'online_store:visible'"
+    ) {
+      edges {
+        node {
+          updatedAt
+          handle
+          onlineStoreUrl
+          title
+          featuredImage {
+            url
+            altText
+          }
+        }
+      }
+    }
+    collections(
+      first: $urlLimits
+      query: "published_status:'online_store:visible'"
+    ) {
+      edges {
+        node {
+          updatedAt
+          handle
+          onlineStoreUrl
+        }
+      }
+    }
+    pages(first: $urlLimits, query: "published_status:'published'") {
+      edges {
+        node {
+          updatedAt
+          handle
+          onlineStoreUrl
+        }
+      }
+    }
+  }
+`;
+
+interface SitemapQueryData {
+  products: ProductConnection;
+  collections: CollectionConnection;
+  pages: PageConnection;
+}
+
+export async function getSitemap(variables: {
+  language: string;
+  urlLimits: number;
+}) {
+  return getStorefrontData<SitemapQueryData>({
+    query: SITEMAP_QUERY,
+    variables,
+  });
 }
