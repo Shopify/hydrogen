@@ -34,6 +34,10 @@ export async function getSession(request: Request, context: AppLoadContext) {
       session.set(key, value);
     },
 
+    unset(key: string): void {
+      session.unset(key);
+    },
+
     async commit(): Promise<string> {
       return await sessionStorage.commitSession(session);
     },
