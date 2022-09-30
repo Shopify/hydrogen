@@ -25,14 +25,6 @@ export async function loader({ request, context }: LoaderArgs) {
 
 type ActionData = {
   formError?: string;
-  fieldErrors?: {
-    email: string | undefined;
-    password: string | undefined;
-  };
-  fields?: {
-    email: string;
-    password: string;
-  };
 };
 
 const badRequest = (data: ActionData) => json(data, { status: 400 });
