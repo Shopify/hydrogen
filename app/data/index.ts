@@ -849,3 +849,44 @@ export async function getBlog({
 
   return data.blog.articles;
 }
+
+const ARTICLE_QUERY = `#graphql
+  query ArticleDetails(
+    $language: LanguageCode
+    $blogHandle: String!
+    $articleHandle: String!
+  ) @inContext(language: $language) {
+    blog(handle: $blogHandle) {
+      articleByHandle(handle: $articleHandle) {
+        title
+        contentHtml
+        publishedAt
+        author: authorV2 {
+          name
+        }
+        image {
+          id
+          altText
+          url
+          width
+          height
+        }
+      }
+    }
+  }
+`;
+
+export async function getArticle(variables: {
+  language: LanguageCode;
+  blogHandle: string;
+  articleHandle: string;
+}) {
+  const data = await getStorefrontData<{
+    blog: Blog;
+  }>({
+    query: ARTICLE_QUERY,
+    variables,
+  });
+
+  return data.blog.articleByHandle;
+}
