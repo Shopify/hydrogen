@@ -16,6 +16,7 @@ import type {
   LanguageCode,
   Blog,
   Shop,
+  CountryCode,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
@@ -23,6 +24,7 @@ import {
 } from "~/lib/shopify-client";
 import { type EnhancedMenu, parseMenu } from "~/lib/utils";
 import invariant from "tiny-invariant";
+import { json } from "@remix-run/cloudflare";
 
 export async function getStorefrontData<T>({
   query,
@@ -58,6 +60,16 @@ export async function getStorefrontData<T>({
   invariant(json && json.data, "No data returned from Shopify API");
 
   return json.data;
+}
+
+async function notFoundWithFeaturedData(
+  language: LanguageCode = "EN",
+  country: CountryCode = "US"
+) {
+  throw json(
+    { featuredData: await getFeaturedData({ language, country }) },
+    { status: 404 }
+  );
 }
 
 export interface LayoutData {
@@ -168,7 +180,7 @@ export async function getProductData(
   });
 
   if (!product) {
-    throw new Response("Uh ohhhhh", { status: 404 });
+    return notFoundWithFeaturedData(languageCode, countryCode);
   }
 
   return { product, shop };
@@ -487,7 +499,7 @@ export async function getCollection({
   });
 
   if (!data.collection) {
-    throw new Response("Collection not found", { status: 404 });
+    return notFoundWithFeaturedData(languageCode, countryCode);
   }
 
   return data.collection;
@@ -888,5 +900,49 @@ export async function getArticle(variables: {
     variables,
   });
 
+  if (!data.blog.articleByHandle) {
+    return notFoundWithFeaturedData(variables.language);
+  }
+
   return data.blog.articleByHandle;
+}
+
+const NOT_FOUND_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query homepage($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
+      nodes {
+        id
+        title
+        handle
+        image {
+          altText
+          width
+          height
+          url
+        }
+      }
+    }
+    featuredProducts: products(first: 12) {
+      nodes {
+        ...ProductCard
+      }
+    }
+  }
+`;
+
+export async function getFeaturedData(variables: {
+  language: LanguageCode;
+  country: CountryCode;
+}) {
+  const data = await getStorefrontData<{
+    featuredCollections: CollectionConnection;
+    featuredProducts: ProductConnection;
+  }>({
+    query: NOT_FOUND_QUERY,
+    variables,
+  });
+
+  return data;
 }
