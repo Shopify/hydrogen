@@ -16,15 +16,18 @@ import type {
   Shop,
   CustomerAccessTokenCreatePayload,
   Customer,
+  CustomerUpdateInput,
+  CustomerUpdatePayload,
+  UserError,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
   getStorefrontApiUrl,
 } from "~/lib/shopify-client";
-import { type EnhancedMenu, parseMenu } from "~/lib/utils";
+import { type EnhancedMenu, parseMenu, getApiErrorMessage } from "~/lib/utils";
 import invariant from "tiny-invariant";
-import { logout } from "~/routes/account/logout";
-import { AppLoadContext } from "@remix-run/cloudflare";
+import { logout } from "~/routes/account.logout";
+import type { AppLoadContext } from "@remix-run/cloudflare";
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -1163,4 +1166,46 @@ export async function getCustomer({
   }
 
   return data.customer;
+}
+
+const CUSTOMER_UPDATE_MUTATION = `#graphql
+  mutation customerUpdate($customerAccessToken: String!, $customer: CustomerUpdateInput!) {
+    customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+  `;
+
+export async function updateCustomer({
+  customerAccessToken,
+  customer,
+}: {
+  customerAccessToken: string;
+  customer: CustomerUpdateInput;
+}): Promise<void> {
+  const { data, errors } = await getStorefrontData<{
+    customerUpdate: CustomerUpdatePayload;
+  }>({
+    query: CUSTOMER_UPDATE_MUTATION,
+    variables: {
+      customerAccessToken,
+      customer,
+    },
+  });
+
+  console.log(JSON.stringify({ customer, data }));
+
+  const error = getApiErrorMessage(
+    "customerUpdate",
+    data,
+    errors as UserError[]
+  );
+
+  if (error) {
+    throw new Error(error);
+  }
 }

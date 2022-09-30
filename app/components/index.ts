@@ -11,5 +11,7 @@ export { Button } from "./Button";
 export { Grid } from "./Grid";
 export { CartDetails, CartEmpty } from "./CartDetails";
 export { OrderCard } from "./OrderCard";
+export { AccountDetails } from "./AccountDetails";
+export { Modal } from "./Modal";
 // Sue me
 export * from "./Icon";

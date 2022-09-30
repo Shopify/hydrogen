@@ -1,8 +1,17 @@
 import { type LoaderArgs, redirect, json } from "@remix-run/cloudflare";
 import { Form, useLoaderData } from "@remix-run/react";
 import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
-import type { Order } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Button, OrderCard, PageHeader, Text } from "~/components";
+import type {
+  Customer,
+  Order,
+} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import {
+  Button,
+  OrderCard,
+  PageHeader,
+  Text,
+  AccountDetails,
+} from "~/components";
 import { getCustomer } from "~/data";
 import { getSession } from "~/lib/session.server";
 
@@ -44,12 +53,7 @@ export default function Account() {
         </Form>
       </PageHeader>
       {orders && <AccountOrderHistory orders={orders as Order[]} />}
-      {/* <AccountDetails
-        firstName={customer.firstName as string}
-        lastName={customer.lastName as string}
-        phone={customer.phone as string}
-        email={customer.email as string}
-      /> */}
+      <AccountDetails customer={customer as Customer} />
       {/* <AccountAddressBook
         defaultAddress={defaultAddress}
         addresses={addresses}
