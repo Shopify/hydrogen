@@ -10,5 +10,6 @@ export { Skeleton } from "./Skeleton";
 export { Button } from "./Button";
 export { Grid } from "./Grid";
 export { CartDetails, CartEmpty } from "./CartDetails";
+export { OrderCard } from "./OrderCard";
 // Sue me
 export * from "./Icon";
