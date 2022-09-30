@@ -1,7 +1,7 @@
 {
   "name": "@hydrogen/react",
   "version": "2022.7.0",
-  "description": "Components for modern custom Shopify storefronts",
+  "description": "React components, hooks, and utilities for creating custom Shopify storefronts",
   "homepage": "https://github.com/Shopify/hydrogen-ui/tree/main/packages/react",
   "license": "MIT",
   "engines": {
