@@ -1,7 +1,4 @@
-import type {
-  StorefrontApiResponseError,
-  StorefrontApiResponseOk,
-} from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
+import type { StorefrontApiResponseOk } from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
 import type {
   Cart,
   CartInput,
@@ -49,9 +46,12 @@ export async function getStorefrontData<T>({
   });
 
   if (!response.ok) {
-    // 400 or 500 level error
     const error = await response.text();
 
+    /**
+     * The Storefront API might return a string error, or a JSON-formatted {error: string}.
+     * We try both and conform them to a single {errors} format.
+     */
     try {
       return JSON.parse(error);
     } catch (_e) {
@@ -59,15 +59,7 @@ export async function getStorefrontData<T>({
     }
   }
 
-  const json: StorefrontApiResponseOk<T> = await response.json();
-
-  if (json.errors) {
-    console.log(json.errors);
-  }
-
-  invariant(json && json.data, "No data returned from Shopify API");
-
-  return json;
+  return response.json() as StorefrontApiResponseOk<T>;
 }
 
 export interface LayoutData {
