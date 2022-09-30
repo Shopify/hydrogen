@@ -1,5 +1,6 @@
 import type { LoaderArgs } from "@remix-run/cloudflare";
 import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
+import invariant from "tiny-invariant";
 import { getSitemap } from "~/data";
 
 const MAX_URLS = 250; // the google limit is 50K, however, SF API only allow querying for 250 resources each time
