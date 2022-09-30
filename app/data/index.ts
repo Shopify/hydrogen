@@ -17,6 +17,7 @@ import type {
   Blog,
   PageConnection,
   Shop,
+  CustomerAccessTokenCreatePayload,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
@@ -25,13 +26,15 @@ import {
 import { type EnhancedMenu, parseMenu } from "~/lib/utils";
 import invariant from "tiny-invariant";
 
+type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
+
 export async function getStorefrontData<T>({
   query,
   variables,
 }: {
   query: string;
   variables: Record<string, any>;
-}): Promise<T> {
+}): Promise<StorefrontApiResponse<T>> {
   const headers = getPublicTokenHeaders();
   // This needs to be application/json because we're sending JSON, not a graphql string
   headers["content-type"] = "application/json";
@@ -47,7 +50,13 @@ export async function getStorefrontData<T>({
 
   if (!response.ok) {
     // 400 or 500 level error
-    return (await response.text()) as StorefrontApiResponseError; // or apiResponse.json()
+    const error = await response.text();
+
+    try {
+      return JSON.parse(error);
+    } catch (_e) {
+      return { errors: [{ message: error }] };
+    }
   }
 
   const json: StorefrontApiResponseOk<T> = await response.json();
@@ -58,7 +67,7 @@ export async function getStorefrontData<T>({
 
   invariant(json && json.data, "No data returned from Shopify API");
 
-  return json.data;
+  return json;
 }
 
 export interface LayoutData {
@@ -74,7 +83,7 @@ export async function getLayoutData() {
   const HEADER_MENU_HANDLE = "main-menu";
   const FOOTER_MENU_HANDLE = "footer";
 
-  const data = await getStorefrontData<LayoutData>({
+  const { data } = await getStorefrontData<LayoutData>({
     query: LAYOUT_QUERY,
     variables: {
       language: languageCode,
@@ -82,6 +91,8 @@ export async function getLayoutData() {
       footerMenuHandle: FOOTER_MENU_HANDLE,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   /*
     Modify specific links/routes (optional)
@@ -155,7 +166,7 @@ export async function getProductData(
     selectedOptions.push({ name, value });
   });
 
-  const { product, shop } = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     product: Product & { selectedVariant?: ProductVariant };
     shop: Shop;
   }>({
@@ -167,6 +178,10 @@ export async function getProductData(
       handle,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
+
+  const { product, shop } = data;
 
   if (!product) {
     throw new Response("Uh ohhhhh", { status: 404 });
@@ -345,7 +360,7 @@ export async function getRecommendedProducts(productId: string, count = 12) {
   const languageCode = "EN";
   const countryCode = "US";
 
-  const products = await getStorefrontData<{
+  const { data: products } = await getStorefrontData<{
     recommended: Product[];
     additional: ProductConnection;
   }>({
@@ -357,6 +372,8 @@ export async function getRecommendedProducts(productId: string, count = 12) {
       country: countryCode,
     },
   });
+
+  invariant(products, "No data returned from Shopify API");
 
   const mergedProducts = products.recommended
     .concat(products.additional.nodes)
@@ -409,7 +426,7 @@ export async function getCollections(
   const languageCode = "EN";
   const countryCode = "US";
 
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     collections: CollectionConnection;
   }>({
     query: COLLECTIONS_QUERY,
@@ -419,6 +436,8 @@ export async function getCollections(
       language: languageCode,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   return data.collections.nodes;
 }
@@ -474,7 +493,7 @@ export async function getCollection({
   const languageCode = "EN";
   const countryCode = "US";
 
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     collection: Collection;
   }>({
     query: COLLECTION_QUERY,
@@ -486,6 +505,8 @@ export async function getCollection({
       pageBy: paginationSize,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   if (!data.collection) {
     throw new Response("Collection not found", { status: 404 });
@@ -526,7 +547,7 @@ export async function getAllProducts({
   const languageCode = "EN";
   const countryCode = "US";
 
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     products: ProductConnection;
   }>({
     query: ALL_PRODUCTS_QUERY,
@@ -537,6 +558,8 @@ export async function getAllProducts({
       pageBy: paginationSize,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   return data.products;
 }
@@ -657,7 +680,7 @@ export async function createCart({ cart }: { cart: CartInput }) {
   // TODO: You know what to do
   const countryCode = "US";
 
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     cartCreate: {
       cart: Cart;
     };
@@ -668,6 +691,8 @@ export async function createCart({ cart }: { cart: CartInput }) {
       country: countryCode,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   return data.cartCreate.cart;
 }
@@ -692,7 +717,7 @@ export async function addLineItem({
   // TODO: You know what to do
   const countryCode = "US";
 
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     cartLinesAdd: {
       cart: Cart;
     };
@@ -700,6 +725,8 @@ export async function addLineItem({
     query: ADD_LINE_ITEM_QUERY,
     variables: { cartId, lines, country: countryCode },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   return data.cartLinesAdd.cart;
 }
@@ -718,13 +745,15 @@ export async function getCart({ cartId }: { cartId: string }) {
   // TODO: Yes
   const countryCode = "US";
 
-  const data = await getStorefrontData<{ cart: Cart }>({
+  const { data } = await getStorefrontData<{ cart: Cart }>({
     query: CART_QUERY,
     variables: {
       cartId,
       country: countryCode,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   return data.cart;
 }
@@ -750,14 +779,18 @@ export async function updateLineItem({
 }) {
   const countryCode = "US";
 
-  const data = await getStorefrontData<{ cartLinesUpdate: { cart: Cart } }>({
-    query: UPDATE_LINE_ITEM_QUERY,
-    variables: {
-      cartId,
-      lines: [lineItem],
-      country: countryCode,
-    },
-  });
+  const { data } = await getStorefrontData<{ cartLinesUpdate: { cart: Cart } }>(
+    {
+      query: UPDATE_LINE_ITEM_QUERY,
+      variables: {
+        cartId,
+        lines: [lineItem],
+        country: countryCode,
+      },
+    }
+  );
+
+  invariant(data, "No data returned from Shopify API");
 
   return data.cartLinesUpdate.cart;
 }
@@ -781,7 +814,7 @@ export async function getTopProducts({ count = 4 }: { count?: number } = {}) {
   const countryCode = "US";
   const languageCode = "EN";
 
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     products: ProductConnection;
   }>({
     query: TOP_PRODUCTS_QUERY,
@@ -791,6 +824,8 @@ export async function getTopProducts({ count = 4 }: { count?: number } = {}) {
       languageCode,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   return data.products;
 }
@@ -849,10 +884,14 @@ export async function getSitemap(variables: {
   language: string;
   urlLimits: number;
 }) {
-  return getStorefrontData<SitemapQueryData>({
+  const { data } = await getStorefrontData<SitemapQueryData>({
     query: SITEMAP_QUERY,
     variables,
   });
+
+  invariant(data, "Sitemap data is missing");
+
+  return data;
 }
 
 const BLOG_QUERY = `#graphql
@@ -897,7 +936,7 @@ export async function getBlog({
   blogHandle: string;
   paginationSize: number;
 }) {
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     blog: Blog;
   }>({
     query: BLOG_QUERY,
@@ -907,6 +946,8 @@ export async function getBlog({
       pageBy: paginationSize,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   return data.blog.articles;
 }
@@ -942,12 +983,70 @@ export async function getArticle(variables: {
   blogHandle: string;
   articleHandle: string;
 }) {
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     blog: Blog;
   }>({
     query: ARTICLE_QUERY,
     variables,
   });
 
+  invariant(data, "No data returned from Shopify API");
+
   return data.blog.articleByHandle;
+}
+
+const LOGIN_MUTATION = `#graphql
+  mutation customerAccessTokenCreate($input: CustomerAccessTokenCreateInput!) {
+    customerAccessTokenCreate(input: $input) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+      customerAccessToken {
+        accessToken
+        expiresAt
+      }
+    }
+  }
+`;
+
+export class StorefrontApiError extends Error {}
+
+export async function login({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) {
+  const { data, errors } = await getStorefrontData<{
+    customerAccessTokenCreate: CustomerAccessTokenCreatePayload;
+  }>({
+    query: LOGIN_MUTATION,
+    variables: {
+      input: {
+        email,
+        password,
+      },
+    },
+  });
+
+  /**
+   * Something is wrong with the API.
+   */
+  if (errors) {
+    throw new StorefrontApiError(errors.map((e) => e.message).join(", "));
+  }
+
+  if (data?.customerAccessTokenCreate?.customerAccessToken?.accessToken) {
+    return data.customerAccessTokenCreate.customerAccessToken.accessToken;
+  }
+
+  /**
+   * Something is wrong with the user's input.
+   */
+  throw new Error(
+    data?.customerAccessTokenCreate?.customerUserErrors.join(", ")
+  );
 }
