@@ -66,10 +66,15 @@ async function notFoundWithFeaturedData(
   language: LanguageCode = "EN",
   country: CountryCode = "US"
 ) {
-  throw json(
-    { featuredData: await getFeaturedData({ language, country }) },
-    { status: 404 }
-  );
+  let featuredData;
+
+  try {
+    featuredData = await getFeaturedData({ language, country });
+  } catch (error) {
+    console.warn("Could not fetch featured data for the NotFound page", error);
+  }
+
+  throw json({ featuredData }, { status: 404 });
 }
 
 export interface LayoutData {
