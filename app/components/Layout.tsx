@@ -12,19 +12,26 @@ import {
   IconMenu,
   IconCaret,
   Section,
+  CountrySelector,
 } from "~/components";
 import { Link } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
+import { Country } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 
 export function Layout({
   children,
   data,
 }: {
   children: React.ReactNode;
-  data: LayoutData;
+  data: {
+    layoutData: LayoutData;
+    countries: Array <Country>;
+    defaultCountry: Country;
+  }
 }) {
+  const {layoutData, countries, defaultCountry} = data;
   return (
     <>
       <div className="flex flex-col min-h-screen">
@@ -33,12 +40,12 @@ export function Layout({
             Skip to content
           </a>
         </div>
-        <Header title={data.shop.name} menu={data.headerMenu} />
+        <Header title={layoutData.shop.name} menu={layoutData.headerMenu} />
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
       </div>
-      <Footer menu={data.footerMenu} />
+      <Footer menu={layoutData.footerMenu} countries={countries} defaultCountry={defaultCountry} />
     </>
   );
 }
@@ -85,7 +92,15 @@ function Header({ title, menu }: { title: string; menu: EnhancedMenu }) {
   );
 }
 
-function Footer({ menu }: { menu?: EnhancedMenu }) {
+function Footer({
+  menu,
+  countries,
+  defaultCountry,
+}: {
+  menu?: EnhancedMenu,
+  countries: Array <Country>;
+  defaultCountry: Country;
+}) {
   const { pathname } = useLocation();
 
   // TODO: Ensure locale support like in Hydrogen
@@ -113,8 +128,7 @@ function Footer({ menu }: { menu?: EnhancedMenu }) {
         <Heading size="lead" className="cursor-default" as="h3">
           Country
         </Heading>
-        {/* TODO: Add country selector */}
-        {/* <CountrySelector /> */}
+        <CountrySelector countries={countries} defaultCountry={defaultCountry} />
       </section>
       <div
         className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}

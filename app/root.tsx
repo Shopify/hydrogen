@@ -1,7 +1,8 @@
-import type {
+import {
   LinksFunction,
   LoaderFunction,
   MetaFunction,
+  defer,
 } from "@remix-run/cloudflare";
 import {
   Links,
@@ -13,7 +14,7 @@ import {
   useLoaderData,
 } from "@remix-run/react";
 import { Layout } from "~/components";
-import { getLayoutData } from "~/data";
+import { getLayoutData, getCountries } from "~/data";
 
 import styles from "./styles/app.css";
 
@@ -39,11 +40,22 @@ export const meta: MetaFunction = () => ({
 });
 
 export const loader: LoaderFunction = async function loader() {
-  return getLayoutData();
+  return defer({
+    layoutData: await getLayoutData(),
+    defaultCountry: await ({
+      currency: {
+        isoCode: "USD",
+        symbol: "$",
+      },
+      isoCode: "US",
+      name: "United States"
+    }),
+    countries: getCountries(),
+  })
 };
 
 export default function App() {
-  const layoutData = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -52,7 +64,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout data={layoutData}>
+        <Layout data={data}>
           <Outlet />
         </Layout>
         <ScrollRestoration />

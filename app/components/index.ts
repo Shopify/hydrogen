@@ -9,5 +9,6 @@ export { ProductGrid } from "./ProductGrid";
 export { Skeleton } from "./Skeleton";
 export { Button } from "./Button";
 export { Grid } from "./Grid";
+export { CountrySelector } from "./CountrySelector";
 // Sue me
 export * from "./Icon";
