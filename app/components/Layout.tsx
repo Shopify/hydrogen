@@ -12,6 +12,7 @@ import {
   IconMenu,
   IconCaret,
   Section,
+  CountrySelector,
   CartDetails,
   CartEmpty,
 } from "~/components";
@@ -19,7 +20,7 @@ import { Await, Link, useFetcher } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
-import type { Cart } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import type { Cart, Country } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import { Suspense, useEffect } from "react";
 
 export function Layout({
@@ -29,9 +30,12 @@ export function Layout({
   children: React.ReactNode;
   data: {
     layout: LayoutData;
+    countries: Array <Country>;
+    defaultCountry: Country;
     cart: Promise<Cart>;
   };
 }) {
+  const {layout, countries, defaultCountry, cart} = data;
   return (
     <>
       <div className="flex flex-col min-h-screen">
@@ -41,15 +45,15 @@ export function Layout({
           </a>
         </div>
         <Header
-          title={data.layout.shop.name}
-          menu={data.layout.headerMenu}
-          cart={data.cart}
+          title={layout.shop.name}
+          menu={layout.headerMenu}
+          cart={cart}
         />
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
       </div>
-      <Footer menu={data.layout.footerMenu} />
+      <Footer menu={layout.footerMenu} countries={countries} defaultCountry={defaultCountry} />
     </>
   );
 }
@@ -106,7 +110,15 @@ function Header({
   );
 }
 
-function Footer({ menu }: { menu?: EnhancedMenu }) {
+function Footer({
+  menu,
+  countries,
+  defaultCountry,
+}: {
+  menu?: EnhancedMenu,
+  countries: Array <Country>;
+  defaultCountry: Country;
+}) {
   const { pathname } = useLocation();
 
   // TODO: Ensure locale support like in Hydrogen
@@ -134,8 +146,7 @@ function Footer({ menu }: { menu?: EnhancedMenu }) {
         <Heading size="lead" className="cursor-default" as="h3">
           Country
         </Heading>
-        {/* TODO: Add country selector */}
-        {/* <CountrySelector /> */}
+        <CountrySelector countries={countries} defaultCountry={defaultCountry} />
       </section>
       <div
         className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}

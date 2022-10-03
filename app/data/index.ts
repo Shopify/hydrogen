@@ -14,6 +14,7 @@ import type {
   Blog,
   PageConnection,
   Shop,
+  Localization,
   CustomerAccessTokenCreatePayload,
   Customer,
   CustomerUpdateInput,
@@ -148,6 +149,36 @@ const LAYOUT_QUERY = `#graphql
     title
     type
     url
+  }
+`;
+
+export interface CountriesData {
+  localization: Localization;
+}
+
+export async function getCountries() {
+  const { data } = await getStorefrontData<CountriesData>({
+    query: COUNTRIES_QUERY,
+    variables: {},
+  });
+
+  invariant(data, "No data returned from Shopify API");
+
+  return data.localization.availableCountries.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+const COUNTRIES_QUERY = `#graphql
+  query Localization {
+    localization {
+      availableCountries {
+        isoCode
+        name
+        currency {
+          isoCode
+          symbol
+        }
+      }
+    }
   }
 `;
 
