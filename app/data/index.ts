@@ -1,23 +1,36 @@
+import type { StorefrontApiResponseOk } from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
 import type {
-  StorefrontApiResponseError,
-  StorefrontApiResponseOk,
-} from "@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types";
-import type {
+  Cart,
+  CartInput,
+  CartLineInput,
+  CartLineUpdateInput,
   Collection,
   CollectionConnection,
   Product,
   ProductConnection,
   ProductVariant,
   SelectedOptionInput,
+  LanguageCode,
+  Blog,
+  PageConnection,
   Shop,
   Localization,
+  CustomerAccessTokenCreatePayload,
+  Customer,
+  CustomerUpdateInput,
+  CustomerUpdatePayload,
+  UserError,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
   getStorefrontApiUrl,
 } from "~/lib/shopify-client";
-import { type EnhancedMenu, parseMenu } from "~/lib/utils";
+import { type EnhancedMenu, parseMenu, getApiErrorMessage } from "~/lib/utils";
 import invariant from "tiny-invariant";
+import { logout } from "~/routes/account.logout";
+import type { AppLoadContext } from "@remix-run/cloudflare";
+
+type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
 export async function getStorefrontData<T>({
   query,
@@ -25,7 +38,7 @@ export async function getStorefrontData<T>({
 }: {
   query: string;
   variables: Record<string, any>;
-}): Promise<T> {
+}): Promise<StorefrontApiResponse<T>> {
   const headers = getPublicTokenHeaders();
   // This needs to be application/json because we're sending JSON, not a graphql string
   headers["content-type"] = "application/json";
@@ -40,25 +53,27 @@ export async function getStorefrontData<T>({
   });
 
   if (!response.ok) {
-    // 400 or 500 level error
-    return (await response.text()) as StorefrontApiResponseError; // or apiResponse.json()
+    const error = await response.text();
+
+    /**
+     * The Storefront API might return a string error, or a JSON-formatted {error: string}.
+     * We try both and conform them to a single {errors} format.
+     */
+    try {
+      return JSON.parse(error);
+    } catch (_e) {
+      return { errors: [{ message: error }] };
+    }
   }
 
-  const json: StorefrontApiResponseOk<T> = await response.json();
-
-  if (json.errors) {
-    console.log(json.errors);
-  }
-
-  invariant(json && json.data, "No data returned from Shopify API");
-
-  return json.data;
+  return response.json() as StorefrontApiResponseOk<T>;
 }
 
 export interface LayoutData {
   headerMenu: EnhancedMenu;
   footerMenu: EnhancedMenu;
   shop: Shop;
+  cart?: Promise<Cart>;
 }
 
 export async function getLayoutData() {
@@ -67,7 +82,7 @@ export async function getLayoutData() {
   const HEADER_MENU_HANDLE = "main-menu";
   const FOOTER_MENU_HANDLE = "footer";
 
-  const data = await getStorefrontData<LayoutData>({
+  const { data } = await getStorefrontData<LayoutData>({
     query: LAYOUT_QUERY,
     variables: {
       language: languageCode,
@@ -75,6 +90,8 @@ export async function getLayoutData() {
       footerMenuHandle: FOOTER_MENU_HANDLE,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   /*
     Modify specific links/routes (optional)
@@ -140,14 +157,14 @@ export interface CountriesData {
 }
 
 export async function getCountries() {
-  const {
-    localization: {availableCountries},
-  } = await getStorefrontData<CountriesData>({
+  const { data } = await getStorefrontData<CountriesData>({
     query: COUNTRIES_QUERY,
     variables: {},
   });
 
-  return availableCountries.sort((a, b) => a.name.localeCompare(b.name));
+  invariant(data, "No data returned from Shopify API");
+
+  return data.localization.availableCountries.sort((a, b) => a.name.localeCompare(b.name));
 }
 
 const COUNTRIES_QUERY = `#graphql
@@ -178,7 +195,7 @@ export async function getProductData(
     selectedOptions.push({ name, value });
   });
 
-  const { product, shop } = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     product: Product & { selectedVariant?: ProductVariant };
     shop: Shop;
   }>({
@@ -190,6 +207,10 @@ export async function getProductData(
       handle,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
+
+  const { product, shop } = data;
 
   if (!product) {
     throw new Response("Uh ohhhhh", { status: 404 });
@@ -368,7 +389,7 @@ export async function getRecommendedProducts(productId: string, count = 12) {
   const languageCode = "EN";
   const countryCode = "US";
 
-  const products = await getStorefrontData<{
+  const { data: products } = await getStorefrontData<{
     recommended: Product[];
     additional: ProductConnection;
   }>({
@@ -380,6 +401,8 @@ export async function getRecommendedProducts(productId: string, count = 12) {
       country: countryCode,
     },
   });
+
+  invariant(products, "No data returned from Shopify API");
 
   const mergedProducts = products.recommended
     .concat(products.additional.nodes)
@@ -432,7 +455,7 @@ export async function getCollections(
   const languageCode = "EN";
   const countryCode = "US";
 
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     collections: CollectionConnection;
   }>({
     query: COLLECTIONS_QUERY,
@@ -442,6 +465,8 @@ export async function getCollections(
       language: languageCode,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   return data.collections.nodes;
 }
@@ -497,7 +522,7 @@ export async function getCollection({
   const languageCode = "EN";
   const countryCode = "US";
 
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     collection: Collection;
   }>({
     query: COLLECTION_QUERY,
@@ -509,6 +534,8 @@ export async function getCollection({
       pageBy: paginationSize,
     },
   });
+
+  invariant(data, "No data returned from Shopify API");
 
   if (!data.collection) {
     throw new Response("Collection not found", { status: 404 });
@@ -549,7 +576,7 @@ export async function getAllProducts({
   const languageCode = "EN";
   const countryCode = "US";
 
-  const data = await getStorefrontData<{
+  const { data } = await getStorefrontData<{
     products: ProductConnection;
   }>({
     query: ALL_PRODUCTS_QUERY,
@@ -561,5 +588,653 @@ export async function getAllProducts({
     },
   });
 
+  invariant(data, "No data returned from Shopify API");
+
   return data.products;
+}
+
+const CART_FRAGMENT = `#graphql
+fragment CartFragment on Cart {
+  id
+  checkoutUrl
+  totalQuantity
+  buyerIdentity {
+    countryCode
+    customer {
+      id
+      email
+      firstName
+      lastName
+      displayName
+    }
+    email
+    phone
+  }
+  lines(first: 100) {
+    edges {
+      node {
+        id
+        quantity
+        attributes {
+          key
+          value
+        }
+        cost {
+          totalAmount {
+            amount
+            currencyCode
+          }
+          compareAtAmountPerQuantity {
+            amount
+            currencyCode
+          }
+        }
+        merchandise {
+          ... on ProductVariant {
+            id
+            availableForSale
+            compareAtPriceV2 {
+              ...MoneyFragment
+            }
+            priceV2 {
+              ...MoneyFragment
+            }
+            requiresShipping
+            title
+            image {
+              ...ImageFragment
+            }
+            product {
+              handle
+              title
+              id
+            }
+            selectedOptions {
+              name
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+  cost {
+    subtotalAmount {
+      ...MoneyFragment
+    }
+    totalAmount {
+      ...MoneyFragment
+    }
+    totalDutyAmount {
+      ...MoneyFragment
+    }
+    totalTaxAmount {
+      ...MoneyFragment
+    }
+  }
+  note
+  attributes {
+    key
+    value
+  }
+  discountCodes {
+    code
+  }
+}
+
+fragment MoneyFragment on MoneyV2 {
+  currencyCode
+  amount
+}
+fragment ImageFragment on Image {
+  id
+  url
+  altText
+  width
+  height
+}
+`;
+
+const CREATE_CART_MUTATION = `#graphql
+mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(country: $country) {
+  cartCreate(input: $input) {
+    cart {
+      id
+    }
+  }
+}
+`;
+
+export async function createCart({ cart }: { cart: CartInput }) {
+  // TODO: You know what to do
+  const countryCode = "US";
+
+  const { data } = await getStorefrontData<{
+    cartCreate: {
+      cart: Cart;
+    };
+  }>({
+    query: CREATE_CART_MUTATION,
+    variables: {
+      input: cart,
+      country: countryCode,
+    },
+  });
+
+  invariant(data, "No data returned from Shopify API");
+
+  return data.cartCreate.cart;
+}
+
+const ADD_LINE_ITEM_QUERY = `#graphql
+  mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
+    cartLinesAdd(cartId: $cartId, lines: $lines) {
+      cart {
+        id
+      }
+    }
+  }
+`;
+
+export async function addLineItem({
+  cartId,
+  lines,
+}: {
+  cartId: string;
+  lines: CartLineInput[];
+}) {
+  // TODO: You know what to do
+  const countryCode = "US";
+
+  const { data } = await getStorefrontData<{
+    cartLinesAdd: {
+      cart: Cart;
+    };
+  }>({
+    query: ADD_LINE_ITEM_QUERY,
+    variables: { cartId, lines, country: countryCode },
+  });
+
+  invariant(data, "No data returned from Shopify API");
+
+  return data.cartLinesAdd.cart;
+}
+
+const CART_QUERY = `#graphql
+  query CartQuery($cartId: ID!, $country: CountryCode = ZZ) @inContext(country: $country) {
+    cart(id: $cartId) {
+      ...CartFragment
+    }
+  }
+
+  ${CART_FRAGMENT}
+`;
+
+export async function getCart({ cartId }: { cartId: string }) {
+  // TODO: Yes
+  const countryCode = "US";
+
+  const { data } = await getStorefrontData<{ cart: Cart }>({
+    query: CART_QUERY,
+    variables: {
+      cartId,
+      country: countryCode,
+    },
+  });
+
+  invariant(data, "No data returned from Shopify API");
+
+  return data.cart;
+}
+
+const UPDATE_LINE_ITEM_QUERY = `#graphql
+  mutation CartLineUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
+    cartLinesUpdate(cartId: $cartId, lines: $lines) {
+      cart {
+        ...CartFragment
+      }
+    }
+  }
+
+  ${CART_FRAGMENT}
+`;
+
+export async function updateLineItem({
+  cartId,
+  lineItem,
+}: {
+  cartId: string;
+  lineItem: CartLineUpdateInput;
+}) {
+  const countryCode = "US";
+
+  const { data } = await getStorefrontData<{ cartLinesUpdate: { cart: Cart } }>(
+    {
+      query: UPDATE_LINE_ITEM_QUERY,
+      variables: {
+        cartId,
+        lines: [lineItem],
+        country: countryCode,
+      },
+    }
+  );
+
+  invariant(data, "No data returned from Shopify API");
+
+  return data.cartLinesUpdate.cart;
+}
+
+const TOP_PRODUCTS_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query topProducts(
+    $count: Int
+    $countryCode: CountryCode
+    $languageCode: LanguageCode
+  ) @inContext(country: $countryCode, language: $languageCode) {
+    products(first: $count, sortKey: BEST_SELLING) {
+      nodes {
+        ...ProductCard
+      }
+    }
+  }
+`;
+
+export async function getTopProducts({ count = 4 }: { count?: number } = {}) {
+  const countryCode = "US";
+  const languageCode = "EN";
+
+  const { data } = await getStorefrontData<{
+    products: ProductConnection;
+  }>({
+    query: TOP_PRODUCTS_QUERY,
+    variables: {
+      count,
+      countryCode,
+      languageCode,
+    },
+  });
+
+  invariant(data, "No data returned from Shopify API");
+
+  return data.products;
+}
+
+const SITEMAP_QUERY = `#graphql
+  query sitemaps($urlLimits: Int, $language: LanguageCode)
+  @inContext(language: $language) {
+    products(
+      first: $urlLimits
+      query: "published_status:'online_store:visible'"
+    ) {
+      edges {
+        node {
+          updatedAt
+          handle
+          onlineStoreUrl
+          title
+          featuredImage {
+            url
+            altText
+          }
+        }
+      }
+    }
+    collections(
+      first: $urlLimits
+      query: "published_status:'online_store:visible'"
+    ) {
+      edges {
+        node {
+          updatedAt
+          handle
+          onlineStoreUrl
+        }
+      }
+    }
+    pages(first: $urlLimits, query: "published_status:'published'") {
+      edges {
+        node {
+          updatedAt
+          handle
+          onlineStoreUrl
+        }
+      }
+    }
+  }
+`;
+
+interface SitemapQueryData {
+  products: ProductConnection;
+  collections: CollectionConnection;
+  pages: PageConnection;
+}
+
+export async function getSitemap(variables: {
+  language: string;
+  urlLimits: number;
+}) {
+  const { data } = await getStorefrontData<SitemapQueryData>({
+    query: SITEMAP_QUERY,
+    variables,
+  });
+
+  invariant(data, "Sitemap data is missing");
+
+  return data;
+}
+
+const BLOG_QUERY = `#graphql
+query Blog(
+  $language: LanguageCode
+  $blogHandle: String!
+  $pageBy: Int!
+  $cursor: String
+) @inContext(language: $language) {
+  blog(handle: $blogHandle) {
+    articles(first: $pageBy, after: $cursor) {
+      edges {
+        node {
+          author: authorV2 {
+            name
+          }
+          contentHtml
+          handle
+          id
+          image {
+            id
+            altText
+            url
+            width
+            height
+          }
+          publishedAt
+          title
+        }
+      }
+    }
+  }
+}
+`;
+
+export async function getBlog({
+  language,
+  paginationSize,
+  blogHandle,
+}: {
+  language: LanguageCode;
+  blogHandle: string;
+  paginationSize: number;
+}) {
+  const { data } = await getStorefrontData<{
+    blog: Blog;
+  }>({
+    query: BLOG_QUERY,
+    variables: {
+      language,
+      blogHandle,
+      pageBy: paginationSize,
+    },
+  });
+
+  invariant(data, "No data returned from Shopify API");
+
+  return data.blog.articles;
+}
+
+const ARTICLE_QUERY = `#graphql
+  query ArticleDetails(
+    $language: LanguageCode
+    $blogHandle: String!
+    $articleHandle: String!
+  ) @inContext(language: $language) {
+    blog(handle: $blogHandle) {
+      articleByHandle(handle: $articleHandle) {
+        title
+        contentHtml
+        publishedAt
+        author: authorV2 {
+          name
+        }
+        image {
+          id
+          altText
+          url
+          width
+          height
+        }
+      }
+    }
+  }
+`;
+
+export async function getArticle(variables: {
+  language: LanguageCode;
+  blogHandle: string;
+  articleHandle: string;
+}) {
+  const { data } = await getStorefrontData<{
+    blog: Blog;
+  }>({
+    query: ARTICLE_QUERY,
+    variables,
+  });
+
+  invariant(data, "No data returned from Shopify API");
+
+  return data.blog.articleByHandle;
+}
+
+const LOGIN_MUTATION = `#graphql
+  mutation customerAccessTokenCreate($input: CustomerAccessTokenCreateInput!) {
+    customerAccessTokenCreate(input: $input) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+      customerAccessToken {
+        accessToken
+        expiresAt
+      }
+    }
+  }
+`;
+
+export class StorefrontApiError extends Error {}
+
+export async function login({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) {
+  const { data, errors } = await getStorefrontData<{
+    customerAccessTokenCreate: CustomerAccessTokenCreatePayload;
+  }>({
+    query: LOGIN_MUTATION,
+    variables: {
+      input: {
+        email,
+        password,
+      },
+    },
+  });
+
+  /**
+   * Something is wrong with the API.
+   */
+  if (errors) {
+    throw new StorefrontApiError(errors.map((e) => e.message).join(", "));
+  }
+
+  if (data?.customerAccessTokenCreate?.customerAccessToken?.accessToken) {
+    return data.customerAccessTokenCreate.customerAccessToken.accessToken;
+  }
+
+  /**
+   * Something is wrong with the user's input.
+   */
+  throw new Error(
+    data?.customerAccessTokenCreate?.customerUserErrors.join(", ")
+  );
+}
+
+const CUSTOMER_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query CustomerDetails(
+    $customerAccessToken: String!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    customer(customerAccessToken: $customerAccessToken) {
+      firstName
+      lastName
+      phone
+      email
+      defaultAddress {
+        id
+        formatted
+      }
+      addresses(first: 6) {
+        edges {
+          node {
+            id
+            formatted
+            firstName
+            lastName
+            company
+            address1
+            address2
+            country
+            province
+            city
+            zip
+            phone
+          }
+        }
+      }
+      orders(first: 250, sortKey: PROCESSED_AT, reverse: true) {
+        edges {
+          node {
+            id
+            orderNumber
+            processedAt
+            financialStatus
+            fulfillmentStatus
+            currentTotalPrice {
+              amount
+              currencyCode
+            }
+            lineItems(first: 2) {
+              edges {
+                node {
+                  variant {
+                    image {
+                      url
+                      altText
+                      height
+                      width
+                    }
+                  }
+                  title
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+    featuredProducts: products(first: 12) {
+      nodes {
+        ...ProductCard
+      }
+    }
+    featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
+      nodes {
+        id
+        title
+        handle
+        image {
+          altText
+          width
+          height
+          url
+        }
+      }
+    }
+  }
+`;
+
+export async function getCustomer({
+  request,
+  context,
+  customerAccessToken,
+}: {
+  request: Request;
+  context: AppLoadContext;
+  customerAccessToken: string;
+}) {
+  const countryCode = "US";
+  const languageCode = "EN";
+
+  const { data } = await getStorefrontData<{
+    customer: Customer;
+  }>({
+    query: CUSTOMER_QUERY,
+    variables: {
+      customerAccessToken,
+      country: countryCode,
+      language: languageCode,
+    },
+  });
+
+  /**
+   * If the customer failed to load, we assume their access token is invalid.
+   */
+  if (!data || !data.customer) {
+    throw logout(request, context);
+  }
+
+  return data.customer;
+}
+
+const CUSTOMER_UPDATE_MUTATION = `#graphql
+  mutation customerUpdate($customerAccessToken: String!, $customer: CustomerUpdateInput!) {
+    customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+  `;
+
+export async function updateCustomer({
+  customerAccessToken,
+  customer,
+}: {
+  customerAccessToken: string;
+  customer: CustomerUpdateInput;
+}): Promise<void> {
+  const { data, errors } = await getStorefrontData<{
+    customerUpdate: CustomerUpdatePayload;
+  }>({
+    query: CUSTOMER_UPDATE_MUTATION,
+    variables: {
+      customerAccessToken,
+      customer,
+    },
+  });
+
+  const error = getApiErrorMessage(
+    "customerUpdate",
+    data,
+    errors as UserError[]
+  );
+
+  if (error) {
+    throw new Error(error);
+  }
 }

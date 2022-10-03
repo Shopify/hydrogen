@@ -1,4 +1,4 @@
-name = "remix-cloudflare-workers"
+name = "h2-remix"
 workers_dev = true
 
 # https://developers.cloudflare.com/workers/platform/compatibility-dates
@@ -15,3 +15,6 @@ main = "worker/index.ts"
 
 [build]
   command = "npm run build"
+
+[vars]
+  ENCRYPTION_KEY="foobar"
