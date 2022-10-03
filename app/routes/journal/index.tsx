@@ -1,8 +1,8 @@
 import { json, type MetaFunction } from "@remix-run/cloudflare";
-import { Link, useLoaderData } from "@remix-run/react";
+import { useLoaderData } from "@remix-run/react";
 import { flattenConnection, Image } from "@shopify/hydrogen-ui-alpha";
 import type { Article } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Grid, PageHeader, Section } from "~/components";
+import { Grid, PageHeader, Section, LinkI18n } from "~/components";
 import { getBlog } from "~/data";
 import { getImageLoadingPriority, PAGINATION_SIZE } from "~/lib/const";
 
@@ -80,7 +80,7 @@ function ArticleCard({
 }) {
   return (
     <li key={article.id}>
-      <Link to={`/${blogHandle}/${article.handle}`}>
+      <LinkI18n to={`/${blogHandle}/${article.handle}`}>
         {article.image && (
           <div className="card-image aspect-[3/2]">
             <Image
@@ -100,7 +100,7 @@ function ArticleCard({
         )}
         <h2 className="mt-4 font-medium">{article.title}</h2>
         <span className="block mt-1">{article.publishedAt}</span>
-      </Link>
+      </LinkI18n>
     </li>
   );
 }

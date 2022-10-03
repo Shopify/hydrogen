@@ -5,11 +5,12 @@ import {
   type ActionFunction,
   type LoaderArgs,
 } from "@remix-run/cloudflare";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
 import { login, StorefrontApiError } from "~/data";
 import { getSession } from "~/lib/session.server";
 import { getInputStyleClasses } from "~/lib/utils";
+import { LinkI18n } from '~/components';
 
 export async function loader({ request, context }: LoaderArgs) {
   const session = await getSession(request, context);
@@ -173,20 +174,20 @@ export default function Login() {
           <div className="flex items-center mt-8 border-t border-gray-300">
             <p className="align-baseline text-sm mt-6">
               New to {shopName}? &nbsp;
-              <Link className="inline underline" to="/account/register">
+              <LinkI18n className="inline underline" to="/account/register">
                 Create an account
-              </Link>
+              </LinkI18n>
             </p>
           </div>
 
           <div className="flex items-center justify-between mt-4">
             <div className="flex-1"></div>
-            <Link
+            <LinkI18n
               className="inline-block align-baseline text-sm text-primary/50"
               to="/account/recover"
             >
               Forgot password
-            </Link>
+            </LinkI18n>
           </div>
         </Form>
       </div>
