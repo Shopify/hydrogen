@@ -12,6 +12,7 @@ export { Grid } from "./Grid";
 export { CartDetails, CartEmpty } from "./CartDetails";
 export { OrderCard } from "./OrderCard";
 export { AccountDetails } from "./AccountDetails";
+export { AccountAddressBook } from "./AccountAddressBook";
 export { Modal } from "./Modal";
 // Sue me
 export * from "./Icon";

@@ -3,6 +3,7 @@ import { Form, useLoaderData } from "@remix-run/react";
 import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
 import type {
   Customer,
+  MailingAddress,
   Order,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
@@ -11,6 +12,7 @@ import {
   PageHeader,
   Text,
   AccountDetails,
+  AccountAddressBook,
 } from "~/components";
 import { getCustomer } from "~/data";
 import { getSession } from "~/lib/session.server";
@@ -37,11 +39,13 @@ export async function loader({ request, context }: LoaderArgs) {
     customer,
     heading,
     orders,
+    addresses: flattenConnection<MailingAddress>(customer.addresses),
   });
 }
 
 export default function Account() {
-  const { customer, orders, heading } = useLoaderData<typeof loader>();
+  const { customer, orders, heading, addresses } =
+    useLoaderData<typeof loader>();
 
   return (
     <>
@@ -54,10 +58,10 @@ export default function Account() {
       </PageHeader>
       {orders && <AccountOrderHistory orders={orders as Order[]} />}
       <AccountDetails customer={customer as Customer} />
-      {/* <AccountAddressBook
-        defaultAddress={defaultAddress}
-        addresses={addresses}
-      /> */}
+      <AccountAddressBook
+        addresses={addresses as MailingAddress[]}
+        customer={customer}
+      />
       {/* {!orders && (
         <>
           <FeaturedCollections
