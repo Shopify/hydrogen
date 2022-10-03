@@ -3,6 +3,7 @@ import {
   type ActionFunction,
   defer,
   type LoaderArgs,
+  redirect,
 } from "@remix-run/cloudflare";
 import {
   Link,
@@ -26,10 +27,16 @@ import {
   Skeleton,
   Text,
 } from "~/components";
-import { getProductData, getRecommendedProducts } from "~/data";
+import {
+  addLineItem,
+  createCart,
+  getProductData,
+  getRecommendedProducts,
+} from "~/data";
 import { getExcerpt } from "~/lib/utils";
 import invariant from "tiny-invariant";
 import clsx from "clsx";
+import { getSession } from "~/lib/session.server";
 
 export const loader = async ({ params, request }: LoaderArgs) => {
   const { productHandle } = params;
@@ -47,17 +54,43 @@ export const loader = async ({ params, request }: LoaderArgs) => {
   });
 };
 
-export const action: ActionFunction = async ({ request }) => {
-  const body = await request.text();
+export const action: ActionFunction = async ({ request, context, params }) => {
+  const [body, session] = await Promise.all([
+    request.text(),
+    getSession(request, context),
+  ]);
   const formData = new URLSearchParams(body);
 
   const variantId = formData.get("variantId");
 
-  // TODO: Interact with cart!
+  invariant(variantId, "Missing variantId");
 
-  console.log({ variantId });
+  // 1. Grab the cart ID from the session
+  const cartId = await session.get("cartId");
 
-  return null;
+  // We only need a Set-Cookie header if we're creating a new cart (aka adding cartId to the session)
+  let headers = new Headers();
+
+  // 2. If none exists, create a cart (SFAPI)
+  if (!cartId) {
+    const cart = await createCart({
+      cart: { lines: [{ merchandiseId: variantId }] },
+    });
+
+    session.set("cartId", cart.id);
+    headers.set("Set-Cookie", await session.commit());
+  } else {
+    // 3. Else, update the cart with the variant ID (SFAPI)
+    await addLineItem({
+      cartId,
+      lines: [{ merchandiseId: variantId }],
+    });
+  }
+
+  // 4. Update the session with the cart ID (response headers)
+  return redirect(`/products/${params.productHandle}`, {
+    headers,
+  });
 };
 
 export default function Product() {

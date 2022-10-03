@@ -1,8 +1,8 @@
 import {
-  LinksFunction,
-  LoaderFunction,
-  MetaFunction,
   defer,
+  type LinksFunction,
+  type LoaderFunction,
+  type MetaFunction,
 } from "@remix-run/cloudflare";
 import {
   Links,
@@ -14,7 +14,8 @@ import {
   useLoaderData,
 } from "@remix-run/react";
 import { Layout } from "~/components";
-import { getLayoutData, getCountries } from "~/data";
+import { getCart, getLayoutData, getCountries } from "~/data";
+import { getSession } from "./lib/session.server";
 
 import styles from "./styles/app.css";
 
@@ -39,9 +40,15 @@ export const meta: MetaFunction = () => ({
   viewport: "width=device-width,initial-scale=1",
 });
 
-export const loader: LoaderFunction = async function loader() {
+export const loader: LoaderFunction = async function loader({
+  request,
+  context,
+}) {
+  const session = await getSession(request, context);
+  const cartId = await session.get("cartId");
+
   return defer({
-    layoutData: await getLayoutData(),
+    layout: await getLayoutData(),
     defaultCountry: await ({
       currency: {
         isoCode: "USD",
@@ -51,7 +58,8 @@ export const loader: LoaderFunction = async function loader() {
       name: "United States"
     }),
     countries: getCountries(),
-  })
+    cart: cartId ? getCart({ cartId }) : undefined,
+  });
 };
 
 export default function App() {
