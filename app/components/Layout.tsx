@@ -15,6 +15,7 @@ import {
   CountrySelector,
   CartDetails,
   CartEmpty,
+  LinkI18n
 } from "~/components";
 import { Link, useFetcher } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
@@ -244,11 +245,11 @@ function MenuMobileNav({
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
       {/* Top level menu items */}
       {(menu?.items || []).map((item) => (
-        <Link key={item.id} to={item.to} target={item.target} onClick={onClose}>
+        <LinkI18n key={item.id} to={item.to} target={item.target} onClick={onClose}>
           <Text as="span" size="copy">
             {item.title}
           </Text>
-        </Link>
+        </LinkI18n>
       ))}
     </nav>
   );
@@ -307,19 +308,19 @@ function MobileHeader({
         </form>
       </div>
 
-      <Link
+      <LinkI18n
         className="flex items-center self-stretch leading-[3rem] md:leading-[4rem] justify-center flex-grow w-full h-full"
         to="/"
       >
         <Heading className="font-bold text-center" as={isHome ? "h1" : "h2"}>
           {title}
         </Heading>
-      </Link>
+      </LinkI18n>
 
       <div className="flex items-center justify-end w-full gap-4">
-        <Link to={"/account"} className={styles.button}>
+        <LinkI18n to={"/account"} className={styles.button}>
           <IconAccount />
-        </Link>
+        </LinkI18n>
         <button onClick={openCart} className={styles.button}>
           <IconBag />
           <CartBadge dark={isHome} />
@@ -361,20 +362,20 @@ function DesktopHeader({
   return (
     <header role="banner" className={styles.container}>
       <div className="flex gap-12">
-        <Link className={`font-bold`} to="/" prefetch="intent">
+        <LinkI18n className={`font-bold`} to="/" prefetch="intent">
           {title}
-        </Link>
+        </LinkI18n>
         <nav className="flex gap-8">
           {/* Top level menu items */}
           {(menu?.items || []).map((item) => (
-            <Link
+            <LinkI18n
               key={item.id}
               to={item.to}
               target={item.target}
               prefetch="intent"
             >
               {item.title}
-            </Link>
+            </LinkI18n>
           ))}
         </nav>
       </div>
@@ -398,9 +399,9 @@ function DesktopHeader({
             <IconSearch />
           </button>
         </form>
-        <Link to={"/account"} className={styles.button}>
+        <LinkI18n to={"/account"} className={styles.button}>
           <IconAccount />
-        </Link>
+        </LinkI18n>
         <button onClick={openCart} className={styles.button}>
           <IconBag />
           <CartBadge dark={isHome} />
@@ -441,9 +442,9 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
     }
 
     return (
-      <Link to={item.to} target={item.target} prefetch="intent">
+      <LinkI18n to={item.to} target={item.target} prefetch="intent">
         {item.title}
-      </Link>
+      </LinkI18n>
     );
   };
 

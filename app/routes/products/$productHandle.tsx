@@ -6,7 +6,6 @@ import {
   redirect,
 } from "@remix-run/cloudflare";
 import {
-  Link,
   useLoaderData,
   Await,
   useSearchParams,
@@ -26,6 +25,7 @@ import {
   Section,
   Skeleton,
   Text,
+  LinkI18n,
 } from "~/components";
 import {
   addLineItem,
@@ -380,7 +380,7 @@ function ProductOptionLink({
   clonedSearchParams.set(optionName, optionValue);
 
   return (
-    <Link
+    <LinkI18n
       {...props}
       prefetch="intent"
       replace
@@ -390,7 +390,7 @@ function ProductOptionLink({
       }}
     >
       {children ?? optionValue}
-    </Link>
+    </LinkI18n>
   );
 }
 
@@ -428,12 +428,12 @@ function ProductDetail({
             />
             {learnMore && (
               <div className="">
-                <Link
+                <LinkI18n
                   className="pb-px border-b border-primary/30 text-primary/50"
                   to={learnMore}
                 >
                   Learn more
-                </Link>
+                </LinkI18n>
               </div>
             )}
           </Disclosure.Panel>

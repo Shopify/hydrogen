@@ -1,4 +1,4 @@
-import { Link, useAsyncValue, useLocation, Await } from "@remix-run/react";
+import { Link, useAsyncValue, useLocation, Await, useParams } from "@remix-run/react";
 import { Country } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 
 import {Listbox} from '@headlessui/react';
@@ -50,6 +50,8 @@ function CountrySelectorElement({
   const [listboxOpen, setListboxOpen] = useState(false);
   const countries = useAsyncValue<Array <Country>>();
   const { pathname } = useLocation();
+  const { language } = useParams();
+  const strippedPathname = pathname.replace(new RegExp(`^\/${language}\/`), '/')
   const currentCountry = countries.find(country => country.isoCode === selectedCountry) || defaultCountry;
 
   return (
@@ -83,7 +85,7 @@ function CountrySelectorElement({
                     <Listbox.Option key={country.isoCode} value={country}>
                       {({active}) => (
                         <Link
-                          to={countryIsoCode !== 'us' ? `/${countryIsoCode}${pathname}` : '/'}
+                          to={countryIsoCode !== 'us' ? `/${countryIsoCode}${strippedPathname}` : strippedPathname}
                           className={`text-contrast dark:text-primary text-contrast dark:text-primary bg-primary
                           dark:bg-contrast w-full p-2 transition rounded
                           flex justify-start items-center text-left cursor-pointer ${

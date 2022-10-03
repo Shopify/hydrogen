@@ -1,5 +1,4 @@
-import { Link } from "@remix-run/react";
-import { IconClose } from "~/components";
+import { IconClose, LinkI18n } from "~/components";
 
 export function Modal({
   children,
@@ -31,12 +30,12 @@ export function Modal({
             tabIndex={0}
           >
             <div className="absolute top-0 right-0 hidden pt-4 pr-4 sm:block">
-              <Link
+              <LinkI18n
                 to={cancelLink}
                 className="p-4 -m-4 transition text-primary hover:text-primary/50"
               >
                 <IconClose aria-label="Close panel" />
-              </Link>
+              </LinkI18n>
             </div>
             {children}
           </div>

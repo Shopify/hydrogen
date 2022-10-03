@@ -1,10 +1,9 @@
-import { Link } from "@remix-run/react";
 import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
 import type {
   Order,
   OrderLineItem,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Heading, Text } from "~/components";
+import { Heading, Text, LinkI18n } from "~/components";
 import { statusMessage } from "~/lib/utils";
 
 export function OrderCard({ order }: { order: Order }) {
@@ -14,7 +13,7 @@ export function OrderCard({ order }: { order: Order }) {
 
   return (
     <li className="grid text-center border rounded">
-      <Link
+      <LinkI18n
         className="grid items-center gap-4 p-4 md:gap-6 md:p-6 md:grid-cols-2"
         to={`/account/orders/${legacyOrderId}`}
       >
@@ -68,16 +67,16 @@ export function OrderCard({ order }: { order: Order }) {
             </dd>
           </dl>
         </div>
-      </Link>
+      </LinkI18n>
       <div className="self-end border-t">
-        <Link
+        <LinkI18n
           className="block w-full p-2 text-center"
           to={`/account/orders/${legacyOrderId}`}
         >
           <Text color="subtle" className="ml-3">
             View Details
           </Text>
-        </Link>
+        </LinkI18n>
       </div>
     </li>
   );
