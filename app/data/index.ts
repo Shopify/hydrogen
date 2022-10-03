@@ -10,6 +10,7 @@ import type {
   ProductVariant,
   SelectedOptionInput,
   Shop,
+  Localization,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
@@ -131,6 +132,36 @@ const LAYOUT_QUERY = `#graphql
     title
     type
     url
+  }
+`;
+
+export interface CountriesData {
+  localization: Localization;
+}
+
+export async function getCountries() {
+  const {
+    localization: {availableCountries},
+  } = await getStorefrontData<CountriesData>({
+    query: COUNTRIES_QUERY,
+    variables: {},
+  });
+
+  return availableCountries.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+const COUNTRIES_QUERY = `#graphql
+  query Localization {
+    localization {
+      availableCountries {
+        isoCode
+        name
+        currency {
+          isoCode
+          symbol
+        }
+      }
+    }
   }
 `;
 
