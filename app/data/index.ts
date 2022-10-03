@@ -46,6 +46,7 @@ import type {AppLoadContext} from '@remix-run/cloudflare';
 import {type Params} from '@remix-run/react';
 import type {FeaturedData} from '~/components/FeaturedSection';
 import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
+import { PAGINATION_SIZE } from '~/lib/const';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 export interface CountriesData {
@@ -2278,3 +2279,142 @@ export async function createCustomerAddress({
 
   return data.customerAddressCreate.customerAddress.id;
 }
+
+export async function searchProducts(variables: {
+  searchTerm: string;
+  cursor: string;
+  pageBy: number;
+}) {
+  // TODO: Figure out localization stuff
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  const { data, errors } = await getStorefrontData<{
+    products: Array<Product>;
+  }>({
+    query: SEARCH_QUERY,
+    variables: {
+      ...variables,
+      language: languageCode,
+      country: countryCode,
+    },
+  });
+
+  if (errors) {
+    console.error("Search error: ");
+    console.error(errors);
+  }
+
+  invariant(data, "No data returned from Shopify API");
+
+  return data.products;
+}
+
+const SEARCH_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query search(
+    $searchTerm: String
+    $country: CountryCode
+    $language: LanguageCode
+    $pageBy: Int!
+    $after: String
+  ) @inContext(country: $country, language: $language) {
+    products(
+      first: $pageBy
+      sortKey: RELEVANCE
+      query: $searchTerm
+      after: $after
+    ) {
+      nodes {
+        ...ProductCard
+      }
+      pageInfo {
+        startCursor
+        endCursor
+        hasNextPage
+        hasPreviousPage
+      }
+    }
+  }
+`;
+
+const PAGINATE_SEARCH_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query ProductsPage(
+    $searchTerm: String
+    $pageBy: Int!
+    $cursor: String
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    products(
+      sortKey: RELEVANCE
+      query: $searchTerm
+      first: $pageBy
+      after: $cursor
+    ) {
+      nodes {
+        ...ProductCard
+      }
+      pageInfo {
+        hasNextPage
+        endCursor
+      }
+    }
+  }
+`;
+
+export async function getNoResultRecommendations() {
+  // TODO: Figure out localization stuff
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  const { data, errors } = await getStorefrontData<{
+    featuredCollections: Array<Collection>;
+    featuredProducts: Array<Product>;
+  }>({
+    query: SEARCH_NO_RESULTS_QUERY,
+    variables: {
+      language: languageCode,
+      country: countryCode,
+      pageBy: PAGINATION_SIZE,
+    },
+  });
+
+  if (errors) {
+    console.error("No result recommendations error: ");
+    console.error(errors);
+  }
+
+  invariant(data, "No data returned from Shopify API");
+
+  return data;
+}
+
+const SEARCH_NO_RESULTS_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query searchNoResult(
+    $country: CountryCode
+    $language: LanguageCode
+    $pageBy: Int!
+  ) @inContext(country: $country, language: $language) {
+    featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
+      nodes {
+        id
+        title
+        handle
+        image {
+          altText
+          width
+          height
+          url
+        }
+      }
+    }
+    featuredProducts: products(first: $pageBy) {
+      nodes {
+        ...ProductCard
+      }
+    }
+  }
+`;
