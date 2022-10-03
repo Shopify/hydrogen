@@ -21,6 +21,6 @@ jobs:
       - name: Publish
         uses: cloudflare/wrangler-action@2.0.0
         env:
-          CF_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
         with:
           apiToken: ${{ secrets.CF_API_TOKEN }}
