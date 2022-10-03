@@ -14,5 +14,6 @@ export { CartDetails, CartEmpty } from "./CartDetails";
 export { OrderCard } from "./OrderCard";
 export { AccountDetails } from "./AccountDetails";
 export { Modal } from "./Modal";
+export { LinkI18n } from './LinkI18n';
 // Sue me
 export * from "./Icon";
