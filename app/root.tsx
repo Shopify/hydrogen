@@ -14,7 +14,7 @@ import {
   useLoaderData,
 } from "@remix-run/react";
 import { Layout } from "~/components";
-import { getCart, getLayoutData } from "~/data";
+import { getCart, getLayoutData, getCountries } from "~/data";
 import { getSession } from "./lib/session.server";
 
 import styles from "./styles/app.css";
@@ -49,12 +49,21 @@ export const loader: LoaderFunction = async function loader({
 
   return defer({
     layout: await getLayoutData(),
+    defaultCountry: await ({
+      currency: {
+        isoCode: "USD",
+        symbol: "$",
+      },
+      isoCode: "US",
+      name: "United States"
+    }),
+    countries: getCountries(),
     cart: cartId ? getCart({ cartId }) : undefined,
   });
 };
 
 export default function App() {
-  const layoutData = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -63,7 +72,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout data={layoutData}>
+        <Layout data={data}>
           <Outlet />
         </Layout>
         <ScrollRestoration />
