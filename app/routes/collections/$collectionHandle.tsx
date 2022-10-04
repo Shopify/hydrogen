@@ -17,7 +17,7 @@ export async function loader({ params, request }: LoaderArgs) {
   invariant(collectionHandle, "Missing collectionHandle param");
 
   const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
-  const collection = await getCollection({ handle: collectionHandle, cursor });
+  const collection = await getCollection({ handle: collectionHandle, cursor, params });
 
   return json({ collection });
 }

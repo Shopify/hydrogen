@@ -1,12 +1,12 @@
-import { json, type MetaFunction } from "@remix-run/cloudflare";
+import { json, LoaderArgs, type MetaFunction } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import { Grid, Heading, PageHeader, Section, LinkI18n } from "~/components";
 import { getCollections } from "~/data";
 import { getImageLoadingPriority } from "~/lib/const";
 
-export const loader = async () => {
-  const collections = await getCollections();
+export const loader = async ({ params }: LoaderArgs) => {
+  const collections = await getCollections(params);
 
   return json({ collections });
 };
