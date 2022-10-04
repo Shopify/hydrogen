@@ -16,7 +16,7 @@ import {
   CartDetails,
   CartEmpty,
 } from "~/components";
-import { Await, Link, useFetcher } from "@remix-run/react";
+import { Link, useFetcher } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
@@ -24,7 +24,8 @@ import type {
   Cart,
   Country,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Suspense, useEffect } from "react";
+import { useEffect } from "react";
+import {useCart} from '~/hooks/useCart'
 
 export function Layout({
   children,
@@ -35,10 +36,9 @@ export function Layout({
     layout: LayoutData;
     countries: Array<Country>;
     defaultCountry: Country;
-    cart: Promise<Cart>;
   };
 }) {
-  const { layout, countries, defaultCountry, cart } = data || {};
+  const { layout, countries, defaultCountry } = data || {};
 
   return (
     <>
@@ -51,7 +51,6 @@ export function Layout({
         <Header
           title={layout?.shop.name ?? "Hydrogen"}
           menu={layout?.headerMenu}
-          cart={cart}
         />
         <main role="main" id="mainContent" className="flex-grow">
           {children}
@@ -69,11 +68,9 @@ export function Layout({
 function Header({
   title,
   menu,
-  cart,
 }: {
   title: string;
   menu?: EnhancedMenu;
-  cart?: Promise<Cart>;
 }) {
   const { pathname } = useLocation();
 
@@ -96,7 +93,7 @@ function Header({
 
   return (
     <>
-      <CartDrawer isOpen={isCartOpen} onClose={closeCart} cart={cart} />
+      <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
       {menu && (
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
       )}
@@ -106,7 +103,6 @@ function Header({
         title={title}
         menu={menu}
         openCart={openCart}
-        cart={cart}
       />
       <MobileHeader
         countryCode={countryCode}
@@ -114,7 +110,6 @@ function Header({
         title={title}
         openCart={openCart}
         openMenu={openMenu}
-        cart={cart}
       />
     </>
   );
@@ -176,12 +171,11 @@ function Footer({
 function CartDrawer({
   isOpen,
   onClose,
-  cart,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  cart?: Promise<Cart>;
 }) {
+  const cart = useCart();
   /**
    * Whenever a component that uses a fetcher is _unmounted_, that fetcher is removed
    * from the internal Remix cache. By defining the fetcher outside of the component,
@@ -195,26 +189,20 @@ function CartDrawer({
    * drawer is opened.
    */
   useEffect(() => {
-    topProductsFetcher.load("/cart");
+    isOpen && topProductsFetcher.load("/cart");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isOpen]);
 
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
         {cart ? (
-          <Suspense fallback={<div>Loading...</div>}>
-            <Await errorElement="Hey, the cart didn't load LOL" resolve={cart}>
-              {(cart) => (
-                <CartDetails
-                  fetcher={topProductsFetcher}
-                  layout="drawer"
-                  onClose={onClose}
-                  cart={cart}
-                />
-              )}
-            </Await>
-          </Suspense>
+          <CartDetails
+            fetcher={topProductsFetcher}
+            layout="drawer"
+            onClose={onClose}
+            cart={cart}
+          />
         ) : (
           <CartEmpty
             fetcher={topProductsFetcher}
@@ -272,14 +260,12 @@ function MobileHeader({
   isHome,
   openCart,
   openMenu,
-  cart,
 }: {
   countryCode?: string | null;
   title: string;
   isHome: boolean;
   openCart: () => void;
   openMenu: () => void;
-  cart?: Promise<Cart>;
 }) {
   const { y } = useWindowScroll();
 
@@ -336,13 +322,7 @@ function MobileHeader({
         </Link>
         <button onClick={openCart} className={styles.button}>
           <IconBag />
-          {cart && (
-            <Suspense fallback={null}>
-              <Await resolve={cart}>
-                {(cart) => <CartBadge cart={cart} dark={isHome} />}
-              </Await>
-            </Suspense>
-          )}
+          <CartBadge dark={isHome} />
         </button>
       </div>
     </header>
@@ -423,25 +403,15 @@ function DesktopHeader({
         </Link>
         <button onClick={openCart} className={styles.button}>
           <IconBag />
-          {cart && (
-            <Suspense fallback={null}>
-              <Await resolve={cart}>
-                {(cart) => <CartBadge cart={cart} dark={isHome} />}
-              </Await>
-            </Suspense>
-          )}
+          <CartBadge dark={isHome} />
         </button>
       </div>
     </header>
   );
 }
 
-function CartBadge({ cart, dark }: { cart: Cart; dark: boolean }) {
-  const { totalQuantity } = cart;
-
-  if (totalQuantity < 1) {
-    return null;
-  }
+function CartBadge({ dark }: { dark: boolean }) {
+  const cart = useCart();
   return (
     <div
       className={`${
@@ -450,7 +420,7 @@ function CartBadge({ cart, dark }: { cart: Cart; dark: boolean }) {
           : "text-contrast bg-primary"
       } absolute bottom-1 right-1 text-[0.625rem] font-medium subpixel-antialiased h-3 min-w-[0.75rem] flex items-center justify-center leading-none text-center rounded-full w-auto px-[0.125rem] pb-px`}
     >
-      <span>{totalQuantity}</span>
+      <span>{cart?.totalQuantity || ''}</span>
     </div>
   );
 }
