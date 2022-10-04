@@ -11,10 +11,13 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useCatch,
   useLoaderData,
+  useMatches,
 } from "@remix-run/react";
 import { Layout } from "~/components";
 import { getCart, getLayoutData, getCountries } from "~/data";
+import { NotFound } from "./components/NotFound";
 import { getSession } from "./lib/session.server";
 
 import styles from "./styles/app.css";
@@ -49,14 +52,14 @@ export const loader: LoaderFunction = async function loader({
 
   return defer({
     layout: await getLayoutData(),
-    defaultCountry: await ({
+    defaultCountry: await {
       currency: {
         isoCode: "USD",
         symbol: "$",
       },
       isoCode: "US",
-      name: "United States"
-    }),
+      name: "United States",
+    },
     countries: getCountries(),
     cart: cartId ? getCart({ cartId }) : undefined,
   });
@@ -78,6 +81,31 @@ export default function App() {
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
+      </body>
+    </html>
+  );
+}
+
+export function CatchBoundary() {
+  const [root] = useMatches();
+  const caught = useCatch();
+
+  return (
+    <html lang="en">
+      <head>
+        <title>Not found</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Layout data={root.data as any}>
+          {caught.status === 404 ? (
+            <NotFound type={caught.data?.pageType} />
+          ) : (
+            <p>Something's wrong here.</p>
+          )}
+        </Layout>
+        <Scripts />
       </body>
     </html>
   );
