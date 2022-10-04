@@ -62,6 +62,7 @@ export function createStorefrontClient({
             ? 'application/graphql'
             : 'application/json',
         'X-SDK-Variant': 'hydrogen-ui',
+        'X-SDK-Variant-Source': 'react',
         'X-SDK-Version': storefrontApiVersion,
         'Shopify-Storefront-Private-Token':
           overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',
@@ -86,6 +87,7 @@ export function createStorefrontClient({
             ? 'application/graphql'
             : 'application/json',
         'X-SDK-Variant': 'hydrogen-ui',
+        'X-SDK-Variant-Source': 'react',
         'X-SDK-Version': storefrontApiVersion,
         'X-Shopify-Storefront-Access-Token':
           overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',
