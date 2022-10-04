@@ -6,7 +6,7 @@ import {
   useMoney,
 } from "@shopify/hydrogen-ui-alpha";
 
-import { Text } from "~/components";
+import { Text, LinkI18n } from "~/components";
 import { isDiscounted, isNewArrival } from "~/lib/utils";
 import { getProductPlaceholder } from "~/lib/placeholders";
 import type {
@@ -15,7 +15,6 @@ import type {
   ProductVariant,
   ProductVariantConnection,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Link } from "@remix-run/react";
 
 export function ProductCard({
   product,
@@ -53,7 +52,7 @@ export function ProductCard({
   const styles = clsx("grid gap-6", className);
 
   return (
-    <Link
+    <LinkI18n
       onClick={onClick}
       to={`/products/${product.handle}`}
       prefetch="intent"
@@ -105,7 +104,7 @@ export function ProductCard({
           </div>
         </div>
       </div>
-    </Link>
+    </LinkI18n>
   );
 }
 

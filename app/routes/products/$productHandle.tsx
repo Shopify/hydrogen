@@ -6,7 +6,6 @@ import {
   redirect,
 } from "@remix-run/cloudflare";
 import {
-  Link,
   useLoaderData,
   Await,
   useSearchParams,
@@ -26,6 +25,7 @@ import {
   Section,
   Skeleton,
   Text,
+  LinkI18n,
 } from "~/components";
 import {
   addLineItem,
@@ -44,13 +44,14 @@ export const loader = async ({ params, request }: LoaderArgs) => {
 
   const { shop, product } = await getProductData(
     productHandle,
-    new URL(request.url).searchParams
+    new URL(request.url).searchParams,
+    params
   );
 
   return defer({
     product,
     shop,
-    recommended: getRecommendedProducts(product.id),
+    recommended: getRecommendedProducts(product.id, params),
   });
 };
 
@@ -75,6 +76,7 @@ export const action: ActionFunction = async ({ request, context, params }) => {
   if (!cartId) {
     const cart = await createCart({
       cart: { lines: [{ merchandiseId: variantId }] },
+      params
     });
 
     session.set("cartId", cart.id);
@@ -84,6 +86,7 @@ export const action: ActionFunction = async ({ request, context, params }) => {
     await addLineItem({
       cartId,
       lines: [{ merchandiseId: variantId }],
+      params,
     });
   }
 
@@ -380,7 +383,7 @@ function ProductOptionLink({
   clonedSearchParams.set(optionName, optionValue);
 
   return (
-    <Link
+    <LinkI18n
       {...props}
       prefetch="intent"
       replace
@@ -390,7 +393,7 @@ function ProductOptionLink({
       }}
     >
       {children ?? optionValue}
-    </Link>
+    </LinkI18n>
   );
 }
 
@@ -428,12 +431,12 @@ function ProductDetail({
             />
             {learnMore && (
               <div className="">
-                <Link
+                <LinkI18n
                   className="pb-px border-b border-primary/30 text-primary/50"
                   to={learnMore}
                 >
                   Learn more
-                </Link>
+                </LinkI18n>
               </div>
             )}
           </Disclosure.Panel>

@@ -1,10 +1,10 @@
-import { Button, Grid, ProductCard } from "~/components";
+import { Button, Grid, ProductCard, LinkI18n } from "~/components";
 import { getImageLoadingPriority } from "~/lib/const";
 import type {
   Collection,
   Product,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Link, useFetcher } from "@remix-run/react";
+import { useFetcher } from "@remix-run/react";
 import { useEffect, useState } from "react";
 
 export function ProductGrid({
@@ -43,9 +43,9 @@ export function ProductGrid({
     return (
       <>
         <p>No products found on this collection</p>
-        <Link to="/products">
+        <LinkI18n to="/products">
           <p className="underline">Browse catalog</p>
-        </Link>
+        </LinkI18n>
       </>
     );
   }

@@ -1,25 +1,20 @@
-import { Link, useAsyncValue, useLocation, Await } from "@remix-run/react";
+import { Link, useAsyncValue, useLocation, Await, useParams } from "@remix-run/react";
 import { Country } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 
 import {Listbox} from '@headlessui/react';
 import { useState, Suspense } from "react";
 import { IconCaret, IconCheck } from "./Icon";
+import { getLocalizationFromLang } from "~/lib/utils";
 
 export function CountrySelector({
-  defaultCountry,
   countries,
 }: {
-  defaultCountry: Country;
   countries: Array <Country>;
 }) {
-  const selectedCountry = defaultCountry.isoCode;
   return (
     <Suspense fallback={<CountrySelectorFallback />}>
       <Await resolve={countries}>
-        <CountrySelectorElement
-          defaultCountry={defaultCountry}
-          selectedCountry={selectedCountry}
-        />
+        <CountrySelectorElement />
       </Await>
     </Suspense>
   )
@@ -32,7 +27,7 @@ function CountrySelectorFallback() {
       <Listbox.Button
           className={'flex items-center justify-between w-full py-3 px-4 border rounded border-contrast/30 dark:border-white'}
         >
-          <span className="">--</span>
+          <span>--</span>
           <IconCaret direction={'down'} />
         </Listbox.Button>
       </Listbox>
@@ -40,17 +35,15 @@ function CountrySelectorFallback() {
   )
 }
 
-function CountrySelectorElement({
-  defaultCountry,
-  selectedCountry
-}: {
-  defaultCountry: Country;
-  selectedCountry: string;
-}) {
+function CountrySelectorElement() {
   const [listboxOpen, setListboxOpen] = useState(false);
   const countries = useAsyncValue<Array <Country>>();
   const { pathname } = useLocation();
-  const currentCountry = countries.find(country => country.isoCode === selectedCountry) || defaultCountry;
+  const { lang } = useParams();
+  const { language, country } = getLocalizationFromLang(lang);
+  const languageIsoCode = language.toLowerCase();
+  const strippedPathname = pathname.replace(new RegExp(`^\/${lang}\/`), '/')
+  const currentCountry = countries.find(c => c.isoCode === country);
 
   return (
     <div className="relative">
@@ -64,7 +57,11 @@ function CountrySelectorElement({
                   open ? 'rounded-b md:rounded-t md:rounded-b-none' : 'rounded'
                 } border-contrast/30 dark:border-white`}
               >
-                <span className="">{currentCountry.name} ({currentCountry.currency.isoCode} {currentCountry.currency.symbol})</span>
+                <span>{
+                  currentCountry ?
+                    `${currentCountry.name} (${currentCountry.currency.isoCode} ${currentCountry.currency.symbol})` :
+                    '--'
+                }</span>
                 <IconCaret direction={open ? 'up' : 'down'} />
               </Listbox.Button>
 
@@ -77,13 +74,13 @@ function CountrySelectorElement({
                 }`}
               >
                 {listboxOpen && Object.values(countries).map(country => {
-                  const isSelected = country.isoCode === currentCountry.isoCode;
-                  const countryIsoCode = country.isoCode.toLocaleLowerCase();
+                  const isSelected = country.isoCode === currentCountry?.isoCode;
+                  const countryIsoCode = country.isoCode.toLowerCase();
                   return (
                     <Listbox.Option key={country.isoCode} value={country}>
                       {({active}) => (
                         <Link
-                          to={countryIsoCode !== 'us' ? `/${countryIsoCode}${pathname}` : '/'}
+                          to={countryIsoCode !== 'us' ? `/${languageIsoCode}-${countryIsoCode}${strippedPathname}` : strippedPathname}
                           className={`text-contrast dark:text-primary text-contrast dark:text-primary bg-primary
                           dark:bg-contrast w-full p-2 transition rounded
                           flex justify-start items-center text-left cursor-pointer ${
