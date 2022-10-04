@@ -104,8 +104,30 @@ export function CatchBoundary() {
           {isNotFound ? (
             <NotFound type={caught.data?.pageType} />
           ) : (
-            <GenericError />
+            <GenericError
+              error={{ message: `${caught.status} ${caught.data}` }}
+            />
           )}
+        </Layout>
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+  const [root] = useMatches();
+
+  return (
+    <html lang="en">
+      <head>
+        <title>Error</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Layout data={root.data as any}>
+          <GenericError error={error} />
         </Layout>
         <Scripts />
       </body>
