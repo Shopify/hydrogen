@@ -1,5 +1,5 @@
 import { useLocation } from "react-router";
-import type { EnhancedMenu, EnhancedMenuItem } from "~/lib/utils";
+import { EnhancedMenu, EnhancedMenuItem, getLocalizationFromLang, isHomePath } from "~/lib/utils";
 import {
   Drawer,
   useDrawer,
@@ -17,7 +17,7 @@ import {
   CartEmpty,
   LinkI18n
 } from "~/components";
-import { Await, Link, useFetcher } from "@remix-run/react";
+import { Await, useFetcher, useParams } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
@@ -26,6 +26,7 @@ import type {
   Country,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import { Suspense, useEffect } from "react";
+import { getI18nPath } from "./LinkI18n";
 
 export function Layout({
   children,
@@ -35,11 +36,10 @@ export function Layout({
   data?: {
     layout: LayoutData;
     countries: Array<Country>;
-    defaultCountry: Country;
     cart: Promise<Cart>;
   };
 }) {
-  const { layout, countries, defaultCountry, cart } = data || {};
+  const { layout, countries, cart } = data || {};
 
   return (
     <>
@@ -61,7 +61,6 @@ export function Layout({
       <Footer
         menu={layout?.footerMenu}
         countries={countries}
-        defaultCountry={defaultCountry}
       />
     </>
   );
@@ -76,12 +75,9 @@ function Header({
   menu?: EnhancedMenu;
   cart?: Promise<Cart>;
 }) {
-  const { pathname } = useLocation();
-
-  // TODO: Ensure locale support like in Hydrogen
-  const isHome = pathname === "/";
-  const localeMatch = /^\/([a-z]{2})(\/|$)/i.exec(pathname);
-  const countryCode = localeMatch ? localeMatch[1] : null;
+  const { lang } = useParams();
+  const { country } = getLocalizationFromLang(lang);
+  const isHome = isHomePath();
 
   const {
     isOpen: isCartOpen,
@@ -102,7 +98,6 @@ function Header({
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
       )}
       <DesktopHeader
-        countryCode={countryCode}
         isHome={isHome}
         title={title}
         menu={menu}
@@ -110,7 +105,6 @@ function Header({
         cart={cart}
       />
       <MobileHeader
-        countryCode={countryCode}
         isHome={isHome}
         title={title}
         openCart={openCart}
@@ -124,19 +118,11 @@ function Header({
 function Footer({
   menu,
   countries,
-  defaultCountry,
 }: {
   menu?: EnhancedMenu;
   countries?: Array<Country>;
-  defaultCountry?: Country;
 }) {
-  const { pathname } = useLocation();
-
-  // TODO: Ensure locale support like in Hydrogen
-  const localeMatch = /^\/([a-z]{2})(\/|$)/i.exec(pathname);
-  const countryCode = localeMatch ? localeMatch[1] : null;
-
-  const isHome = pathname === `/${countryCode ? countryCode + "/" : ""}`;
+  const isHome = isHomePath();
   const itemsCount = menu
     ? menu?.items?.length + 1 > 4
       ? 4
@@ -153,14 +139,13 @@ function Footer({
         bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
     >
       <FooterMenu menu={menu} />
-      {countries && defaultCountry && (
+      {countries && (
         <section className="grid gap-4 w-full md:max-w-[335px] md:ml-auto">
           <Heading size="lead" className="cursor-default" as="h3">
             Country
           </Heading>
           <CountrySelector
             countries={countries}
-            defaultCountry={defaultCountry}
           />
         </section>
       )}
@@ -268,14 +253,12 @@ function MenuMobileNav({
 }
 
 function MobileHeader({
-  countryCode,
   title,
   isHome,
   openCart,
   openMenu,
   cart,
 }: {
-  countryCode?: string | null;
   title: string;
   isHome: boolean;
   openCart: () => void;
@@ -302,7 +285,7 @@ function MobileHeader({
           <IconMenu />
         </button>
         <form
-          action={`/${countryCode ? countryCode + "/" : ""}search`}
+          action={getI18nPath('/search')}
           className="items-center gap-2 sm:flex"
         >
           <button type="submit" className={styles.button}>
@@ -351,14 +334,12 @@ function MobileHeader({
 }
 
 function DesktopHeader({
-  countryCode,
   isHome,
   menu,
   openCart,
   title,
   cart,
 }: {
-  countryCode?: string | null;
   isHome: boolean;
   openCart: () => void;
   menu?: EnhancedMenu;
@@ -401,7 +382,7 @@ function DesktopHeader({
       </div>
       <div className="flex items-center gap-1">
         <form
-          action={`/${countryCode ? countryCode + "/" : ""}search`}
+          action={getI18nPath('/search')}
           className="flex items-center gap-2"
         >
           <Input
