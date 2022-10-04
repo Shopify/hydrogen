@@ -16,7 +16,7 @@ import {
   useMatches,
 } from "@remix-run/react";
 import { Layout } from "~/components";
-import { getCart, getLayoutData } from "~/data";
+import { getCart, getLayoutData, type LayoutData } from "~/data";
 import { NotFound } from "./components/NotFound";
 import { getSession } from "./lib/session.server";
 
@@ -81,16 +81,6 @@ export function CatchBoundary() {
   const [root] = useMatches();
   const caught = useCatch();
 
-  const Body =
-    caught.status === 404 ? (
-      <NotFound
-        type={caught.data?.pageType}
-        featuredData={caught.data?.featuredData}
-      />
-    ) : (
-      <p>Something's wrong here.</p>
-    );
-
   return (
     <html lang="en">
       <head>
@@ -99,12 +89,13 @@ export function CatchBoundary() {
         <Links />
       </head>
       <body>
-        {root?.data?.layout ? (
-          <Layout data={root.data as any}>{Body}</Layout>
-        ) : (
-          <div>{Body}</div>
-        )}
-
+        <Layout data={root.data as any}>
+          {caught.status === 404 ? (
+            <NotFound type={caught.data?.pageType} />
+          ) : (
+            <p>Something's wrong here.</p>
+          )}
+        </Layout>
         <Scripts />
       </body>
     </html>

@@ -27,7 +27,7 @@ export function Layout({
   data,
 }: {
   children: React.ReactNode;
-  data: {
+  data?: {
     layout: LayoutData;
     cart: Promise<Cart>;
   };
@@ -41,15 +41,15 @@ export function Layout({
           </a>
         </div>
         <Header
-          title={data.layout.shop.name}
-          menu={data.layout.headerMenu}
-          cart={data.cart}
+          title={data?.layout.shop.name ?? "Hydrogen"}
+          menu={data?.layout.headerMenu}
+          cart={data?.cart}
         />
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
       </div>
-      <Footer menu={data.layout.footerMenu} />
+      <Footer menu={data?.layout.footerMenu} />
     </>
   );
 }
@@ -60,7 +60,7 @@ function Header({
   cart,
 }: {
   title: string;
-  menu: EnhancedMenu;
+  menu?: EnhancedMenu;
   cart?: Promise<Cart>;
 }) {
   const { pathname } = useLocation();
@@ -85,7 +85,9 @@ function Header({
   return (
     <>
       <CartDrawer isOpen={isCartOpen} onClose={closeCart} cart={cart} />
-      <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu!} />
+      {menu && (
+        <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
+      )}
       <DesktopHeader
         countryCode={countryCode}
         isHome={isHome}

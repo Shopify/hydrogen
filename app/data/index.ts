@@ -62,21 +62,6 @@ export async function getStorefrontData<T>({
   return json.data;
 }
 
-async function notFoundWithFeaturedData(
-  language: LanguageCode = "EN",
-  country: CountryCode = "US"
-) {
-  let featuredData;
-
-  try {
-    featuredData = await getFeaturedData({ language, country });
-  } catch (error) {
-    console.warn("Could not fetch featured data for the NotFound page", error);
-  }
-
-  throw json({ featuredData }, { status: 404 });
-}
-
 export interface LayoutData {
   headerMenu: EnhancedMenu;
   footerMenu: EnhancedMenu;
@@ -185,7 +170,7 @@ export async function getProductData(
   });
 
   if (!product) {
-    return notFoundWithFeaturedData(languageCode, countryCode);
+    throw new Response("Not found", { status: 500 });
   }
 
   return { product, shop };
@@ -504,7 +489,7 @@ export async function getCollection({
   });
 
   if (!data.collection) {
-    return notFoundWithFeaturedData(languageCode, countryCode);
+    throw new Response("Not found", { status: 404 });
   }
 
   return data.collection;
@@ -906,7 +891,7 @@ export async function getArticle(variables: {
   });
 
   if (!data.blog.articleByHandle) {
-    return notFoundWithFeaturedData(variables.language);
+    throw new Response("Not found", { status: 404 });
   }
 
   return data.blog.articleByHandle;
