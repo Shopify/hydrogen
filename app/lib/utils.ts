@@ -1,4 +1,4 @@
-import { type Params } from "@remix-run/react";
+import { useLocation, useParams, type Params } from "@remix-run/react";
 import type {
   MenuItem,
   Menu,
@@ -270,4 +270,12 @@ export function getLocalizationFromLang(lang?: String): {
     language: 'EN' as LanguageCode,
     country: 'US' as CountryCode,
   }
+}
+
+export function isHomePath() {
+  const { pathname } = useLocation();
+  const { lang } = useParams();
+  const strippedPathname = pathname.replace(new RegExp(`^\/${lang}\/`), '/')
+
+  return strippedPathname === '/';
 }

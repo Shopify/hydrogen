@@ -1,5 +1,4 @@
-import { useLocation } from "react-router";
-import type { EnhancedMenu, EnhancedMenuItem } from "~/lib/utils";
+import { type EnhancedMenu, type EnhancedMenuItem, isHomePath } from "~/lib/utils";
 import {
   Drawer,
   useDrawer,
@@ -17,14 +16,10 @@ import {
   CartEmpty,
   LinkI18n
 } from "~/components";
-import { Link, useFetcher } from "@remix-run/react";
+import { useFetcher } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
-import type {
-  Cart,
-  Country,
-} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import { useEffect } from "react";
 import {useCart} from '~/hooks/useCart'
 
@@ -35,11 +30,9 @@ export function Layout({
   children: React.ReactNode;
   data?: {
     layout: LayoutData;
-    countries: Array<Country>;
-    defaultCountry: Country;
   };
 }) {
-  const { layout, countries, defaultCountry } = data || {};
+  const { layout } = data || {};
 
   return (
     <>
@@ -59,8 +52,6 @@ export function Layout({
       </div>
       <Footer
         menu={layout?.footerMenu}
-        countries={countries}
-        defaultCountry={defaultCountry}
       />
     </>
   );
@@ -73,12 +64,7 @@ function Header({
   title: string;
   menu?: EnhancedMenu;
 }) {
-  const { pathname } = useLocation();
-
-  // TODO: Ensure locale support like in Hydrogen
-  const isHome = pathname === "/";
-  const localeMatch = /^\/([a-z]{2})(\/|$)/i.exec(pathname);
-  const countryCode = localeMatch ? localeMatch[1] : null;
+  const isHome = isHomePath();
 
   const {
     isOpen: isCartOpen,
@@ -99,14 +85,12 @@ function Header({
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
       )}
       <DesktopHeader
-        countryCode={countryCode}
         isHome={isHome}
         title={title}
         menu={menu}
         openCart={openCart}
       />
       <MobileHeader
-        countryCode={countryCode}
         isHome={isHome}
         title={title}
         openCart={openCart}
@@ -116,22 +100,8 @@ function Header({
   );
 }
 
-function Footer({
-  menu,
-  countries,
-  defaultCountry,
-}: {
-  menu?: EnhancedMenu;
-  countries?: Array<Country>;
-  defaultCountry?: Country;
-}) {
-  const { pathname } = useLocation();
-
-  // TODO: Ensure locale support like in Hydrogen
-  const localeMatch = /^\/([a-z]{2})(\/|$)/i.exec(pathname);
-  const countryCode = localeMatch ? localeMatch[1] : null;
-
-  const isHome = pathname === `/${countryCode ? countryCode + "/" : ""}`;
+function Footer({ menu }: { menu?: EnhancedMenu }) {
+  const isHome = isHomePath();
   const itemsCount = menu
     ? menu?.items?.length + 1 > 4
       ? 4
@@ -148,17 +118,7 @@ function Footer({
         bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
     >
       <FooterMenu menu={menu} />
-      {countries && defaultCountry && (
-        <section className="grid gap-4 w-full md:max-w-[335px] md:ml-auto">
-          <Heading size="lead" className="cursor-default" as="h3">
-            Country
-          </Heading>
-          <CountrySelector
-            countries={countries}
-            defaultCountry={defaultCountry}
-          />
-        </section>
-      )}
+      <CountrySelector />
       <div
         className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
       >
@@ -336,14 +296,12 @@ function DesktopHeader({
   menu,
   openCart,
   title,
-  cart,
 }: {
   countryCode?: string | null;
   isHome: boolean;
   openCart: () => void;
   menu?: EnhancedMenu;
   title: string;
-  cart?: Promise<Cart>;
 }) {
   const { y } = useWindowScroll();
 
@@ -488,3 +446,4 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
     </>
   );
 }
+
