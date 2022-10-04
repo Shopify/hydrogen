@@ -21,6 +21,7 @@ import type {
   CustomerUpdateInput,
   CustomerUpdatePayload,
   UserError,
+  Page,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
@@ -1033,6 +1034,38 @@ export async function getArticle(variables: {
   }
 
   return data.blog.articleByHandle;
+}
+
+const PAGE_QUERY = `#graphql
+  query PageDetails($languageCode: LanguageCode, $handle: String!)
+  @inContext(language: $languageCode) {
+    page(handle: $handle) {
+      id
+      title
+      body
+      seo {
+        description
+        title
+      }
+    }
+  }
+`;
+
+export async function getPageData(variables: {
+  language: LanguageCode;
+  handle: string;
+}) {
+  const { data } = await getStorefrontData<{ page: Page }>({
+    query: PAGE_QUERY,
+    variables,
+  });
+
+  invariant(data, "No data returned from Shopify API");
+  if (!data.page) {
+    throw new Response("Not found", { status: 404 });
+  }
+
+  return data.page;
 }
 
 const NOT_FOUND_QUERY = `#graphql
