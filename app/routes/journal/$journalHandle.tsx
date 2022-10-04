@@ -11,21 +11,20 @@ import invariant from "tiny-invariant";
 import { Button, PageHeader, Section, Text } from "~/components";
 import { getArticle } from "~/data";
 import { ATTR_LOADING_EAGER } from "~/lib/const";
+import { getLocalizationFromLang } from "~/lib/utils";
 import styles from "../../styles/custom-font.css";
 
 const BLOG_HANDLE = "journal";
 
-export async function loader({ request, params }: LoaderArgs) {
-  // TODO figure out localization
-  const languageCode = "EN";
-  const countryCode = "US";
+export async function loader({ params }: LoaderArgs) {
+  const { language, country } = getLocalizationFromLang(params.lang);
 
   invariant(params.journalHandle, "Missing journal handle");
 
   const article = await getArticle({
     blogHandle: BLOG_HANDLE,
     articleHandle: params.journalHandle,
-    language: languageCode,
+    params,
   });
 
   if (!article) {
@@ -33,7 +32,7 @@ export async function loader({ request, params }: LoaderArgs) {
   }
 
   const formattedDate = new Intl.DateTimeFormat(
-    `${languageCode}-${countryCode}`,
+    `${language}-${country}`,
     {
       year: "numeric",
       month: "long",
