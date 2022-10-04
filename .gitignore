@@ -7,3 +7,5 @@ node_modules
 /.mf
 .env
 /app/styles/app.css
+.vscode
+.DS_Store

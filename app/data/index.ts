@@ -22,6 +22,8 @@ import {
 import { type EnhancedMenu, parseMenu } from "~/lib/utils";
 import invariant from "tiny-invariant";
 
+const timings: Record<string, any> = new Map();
+
 export async function getStorefrontData<T>({
   query,
   variables,
@@ -65,7 +67,8 @@ export interface LayoutData {
   cart?: Promise<Cart>;
 }
 
-export async function getLayoutData() {
+export async function _getLayoutData() {
+  const start = new Date().getTime()
   const languageCode = "EN";
 
   const HEADER_MENU_HANDLE = "main-menu";
@@ -79,6 +82,8 @@ export async function getLayoutData() {
       footerMenuHandle: FOOTER_MENU_HANDLE,
     },
   });
+
+  logTiming("getLayoutData", start, data)
 
   /*
     Modify specific links/routes (optional)
@@ -139,10 +144,130 @@ const LAYOUT_QUERY = `#graphql
   }
 `;
 
-export async function getProductData(
+export async function getFullProductData(
   handle: string,
   searchParams: URLSearchParams
 ) {
+  const start = new Date().getTime();
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  let selectedOptions: SelectedOptionInput[] = [];
+  searchParams.forEach((value, name) => {
+    selectedOptions.push({ name, value });
+  });
+
+  const data = await getStorefrontData<{
+    product: Product & { selectedVariant?: ProductVariant };
+    shop: Shop;
+  }>({
+    query: FULL_PRODUCT_QUERY,
+    variables: {
+      country: countryCode,
+      language: languageCode,
+      selectedOptions,
+      handle,
+    },
+  });
+
+  logTiming('getFullProductData', start, data)
+
+  if (!data) {
+    throw new Response("Uh ohhhhh", { status: 404 });
+  }
+
+  return data
+}
+
+export async function getProductData(
+  handle: string,
+) {
+  const start = new Date().getTime();
+  // TODO: Figure out localization stuff
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  const { product: rawProduct } = await getStorefrontData<{
+    product: Product & { selectedVariant?: ProductVariant };
+  }>({
+    query: PRODUCT_QUERY,
+    variables: {
+      country: countryCode,
+      language: languageCode,
+      handle,
+    },
+  });
+
+  if (!rawProduct) {
+    throw new Response("Uh ohhhhh", { status: 404 });
+  }
+
+  logTiming("getProductData", start, rawProduct)
+
+  const product:  Partial<Product> & { firstVariant: ProductVariant } = {
+    ...rawProduct,
+    firstVariant: rawProduct.variants.nodes[0],
+  }
+
+  delete product.variants;
+
+  return { product };
+}
+
+export async function getProductMediaData(
+  handle: string,
+) {
+  const start = new Date().getTime();
+  // TODO: Figure out localization stuff
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  const { product } = await getStorefrontData<{
+    product: Product & { selectedVariant?: ProductVariant };
+  }>({
+    query: PRODUCT_MEDIA_QUERY,
+    variables: {
+      country: countryCode,
+      language: languageCode,
+      handle,
+    },
+  });
+
+  logTiming("getProductMediaData", start, product)
+
+  return { media: product.media };
+}
+
+export async function getPolicyData() {
+  const start = new Date().getTime();
+  // TODO: Figure out localization stuff
+  const languageCode = "EN";
+  const countryCode = "US";
+
+  const { shop } = await getStorefrontData<{
+    shop: Shop;
+  }>({
+    query: POLICIES_QUERY,
+    variables: {
+      country: countryCode,
+      language: languageCode,
+    },
+  });
+
+  if (!shop) {
+    throw new Response("Uh ohhhhh", { status: 404 });
+  }
+
+  logTiming("getPolicyData", start, shop);
+
+  return { shop };
+}
+
+export async function getSelectedVariantData(
+  handle: string,
+  searchParams: URLSearchParams
+) {
+  const start = new Date().getTime();
   // TODO: Figure out localization stuff
   const languageCode = "EN";
   const countryCode = "US";
@@ -152,11 +277,10 @@ export async function getProductData(
     selectedOptions.push({ name, value });
   });
 
-  const { product, shop } = await getStorefrontData<{
+  const { product } = await getStorefrontData<{
     product: Product & { selectedVariant?: ProductVariant };
-    shop: Shop;
   }>({
-    query: PRODUCT_QUERY,
+    query: SELECTED_VARIANT_QUERY,
     variables: {
       country: countryCode,
       language: languageCode,
@@ -169,7 +293,9 @@ export async function getProductData(
     throw new Response("Uh ohhhhh", { status: 404 });
   }
 
-  return { product, shop };
+  logTiming("getSelectedVariantData", start, product);
+
+  return { selectedVariant: product.selectedVariant };
 }
 
 const MEDIA_FRAGMENT = `#graphql
@@ -270,9 +396,55 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
 `;
 
 const PRODUCT_QUERY = `#graphql
-  ${MEDIA_FRAGMENT}
   ${PRODUCT_VARIANT_FRAGMENT}
   query Product(
+    $country: CountryCode
+    $language: LanguageCode
+    $handle: String!
+  ) @inContext(country: $country, language: $language) {
+    product(handle: $handle) {
+      id
+      title
+      vendor
+      descriptionHtml
+      options {
+        name
+        values
+      }
+      variants(first: 1) {
+        nodes {
+          ...ProductVariantFragment
+        }
+      }
+      seo {
+        description
+        title
+      }
+    }
+  }
+`;
+
+const PRODUCT_MEDIA_QUERY = `#graphql
+  ${MEDIA_FRAGMENT}
+  query Product(
+    $country: CountryCode
+    $language: LanguageCode
+    $handle: String!
+  ) @inContext(country: $country, language: $language) {
+    product(handle: $handle) {
+      media(first: 100) {
+        nodes {
+          ...Media
+        }
+      }
+    }
+  }
+`;
+
+const FULL_PRODUCT_QUERY = `#graphql
+  ${MEDIA_FRAGMENT}
+  ${PRODUCT_VARIANT_FRAGMENT}
+  query FullProduct(
     $country: CountryCode
     $language: LanguageCode
     $handle: String!
@@ -290,7 +462,7 @@ const PRODUCT_QUERY = `#graphql
       selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
         ...ProductVariantFragment
       }
-      media(first: 7) {
+      media(first: 100) {
         nodes {
           ...Media
         }
@@ -318,6 +490,40 @@ const PRODUCT_QUERY = `#graphql
   }
 `;
 
+const POLICIES_QUERY = `#graphql
+  query Policies(
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    shop {
+      shippingPolicy {
+        body
+        handle
+      }
+      refundPolicy {
+        body
+        handle
+      }
+    }
+  }
+`;
+
+const SELECTED_VARIANT_QUERY = `#graphql
+  ${PRODUCT_VARIANT_FRAGMENT}
+  query Product(
+    $country: CountryCode
+    $language: LanguageCode
+    $handle: String!
+    $selectedOptions: [SelectedOptionInput!]!
+  ) @inContext(country: $country, language: $language) {
+    product(handle: $handle) {
+      selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
+        ...ProductVariantFragment
+      }
+    }
+  }
+`;
+
 const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   ${PRODUCT_CARD_FRAGMENT}
   query productRecommendations(
@@ -337,7 +543,8 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   }
 `;
 
-export async function getRecommendedProducts(productId: string, count = 12) {
+export async function getRecommendedProductsData(productId: string, count = 12) {
+  const start = new Date().getTime()
   // TODO: You know what to do
   const languageCode = "EN";
   const countryCode = "US";
@@ -367,6 +574,8 @@ export async function getRecommendedProducts(productId: string, count = 12) {
     .indexOf(productId);
 
   mergedProducts.splice(originalProduct, 1);
+
+  logTiming('getRecommendedProductsData', start, products)
 
   return mergedProducts;
 }
@@ -711,9 +920,18 @@ const CART_QUERY = `#graphql
   ${CART_FRAGMENT}
 `;
 
+const CART_UPDATED_QUERY = `#graphql
+  query CartQuery($cartId: ID!, $country: CountryCode = ZZ) @inContext(country: $country) {
+    cart(id: $cartId) {
+      updatedAt
+    }
+  }
+`;
+
 export async function getCart({ cartId }: { cartId: string }) {
   // TODO: Yes
   const countryCode = "US";
+  const start = new Date().getTime()
 
   const data = await getStorefrontData<{ cart: Cart }>({
     query: CART_QUERY,
@@ -722,6 +940,28 @@ export async function getCart({ cartId }: { cartId: string }) {
       country: countryCode,
     },
   });
+
+  logTiming('getCart', start, data)
+
+  return data.cart;
+}
+
+export async function _getCartUpdate({ cartId }: { cartId: string }) {
+  // TODO: Yes
+  const countryCode = "US";
+  const start = new Date().getTime()
+
+  const data = await getStorefrontData<{ cart: Cart }>({
+    query: CART_UPDATED_QUERY,
+    variables: {
+      cartId,
+      country: countryCode,
+    },
+  });
+
+  console.log({data})
+
+  logTiming('_getCartUpdate', start, data)
 
   return data.cart;
 }
@@ -777,6 +1017,7 @@ const TOP_PRODUCTS_QUERY = `#graphql
 export async function getTopProducts({ count = 4 }: { count?: number } = {}) {
   const countryCode = "US";
   const languageCode = "EN";
+  const start = new Date().getTime();
 
   const data = await getStorefrontData<{
     products: ProductConnection;
@@ -789,5 +1030,20 @@ export async function getTopProducts({ count = 4 }: { count?: number } = {}) {
     },
   });
 
+  logTiming("getTopProducts", start, data);
+
   return data.products;
+}
+
+
+function logTiming(caller: string, start: number, data: unknown = {}) {
+  const end = new Date().getTime();
+  const duration = end - start;
+  timings.get(caller)
+    ? timings.set(caller, Math.round((timings.get(caller) + duration) / 2))
+    : timings.set(caller, duration);
+
+  console.log("-----------------------------------------------");
+  console.log(`⏳ ${caller} data fetch ${Math.round(JSON.stringify(data).length / 100)} Kb took:`, duration, "ms", "avg:", timings.get(caller), "ms");
+  console.log("-----------------------------------------------");
 }

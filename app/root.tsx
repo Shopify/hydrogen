@@ -12,12 +12,16 @@ import {
   Scripts,
   ScrollRestoration,
   useLoaderData,
+  type ShouldReloadFunction,
 } from "@remix-run/react";
 import { Layout } from "~/components";
-import { getCart, getLayoutData } from "~/data";
+import { getCart, _getCartUpdate, _getLayoutData } from "~/data";
 import { getSession } from "./lib/session.server";
+import memoizee from 'memoizee';
 
 import styles from "./styles/app.css";
+
+const getLayoutData = memoizee(_getLayoutData, { promise: true, maxAge: 1_000 * 3_600 })
 
 export const links: LinksFunction = () => {
   return [
@@ -40,6 +44,25 @@ export const meta: MetaFunction = () => ({
   viewport: "width=device-width,initial-scale=1",
 });
 
+export const unstable_shouldReload: ShouldReloadFunction = ({
+  // same params that go to `loader` and `action`
+  params,
+
+  // a possible form submission that caused this to be reloaded
+  submission,
+
+  // the next URL being used to render this page
+  url,
+
+  // the previous URL used to render this page
+  prevUrl,
+}) => {
+  console.log("Should reload?", submission, window)
+  const isAddToCart = submission?.action?.includes('/products/')
+  console.log({isAddToCart})
+  return isAddToCart || false
+}
+
 export const loader: LoaderFunction = async function loader({
   request,
   context,
@@ -49,7 +72,12 @@ export const loader: LoaderFunction = async function loader({
 
   return defer({
     layout: await getLayoutData(),
-    cart: cartId ? getCart({ cartId }) : undefined,
+    cartUpdatedAt: cartId
+      ? _getCartUpdate({ cartId })
+      : undefined,
+    cart: cartId
+      ? getCart({ cartId })
+      : undefined,
   });
 };
 

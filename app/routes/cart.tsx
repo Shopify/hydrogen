@@ -1,7 +1,10 @@
 import { type ActionFunction, json, defer } from "@remix-run/cloudflare";
 import invariant from "tiny-invariant";
-import { getTopProducts, updateLineItem } from "~/data";
+import { getTopProducts as _getTopProducts, updateLineItem } from "~/data";
 import { getSession } from "~/lib/session.server";
+import memoizee from 'memoizee';
+
+const getTopProducts = memoizee(_getTopProducts, { promise: true, maxAge: 60000 * 5  })
 
 export async function loader() {
   return defer({

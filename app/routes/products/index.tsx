@@ -7,7 +7,6 @@ import { getAllProducts } from "~/data";
 export async function loader({ request }: LoaderArgs) {
   const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
   const products = await getAllProducts({ cursor });
-
   return products;
 }
 

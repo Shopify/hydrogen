@@ -14,7 +14,7 @@ import {
   useTransition,
 } from "@remix-run/react";
 import { Money, ShopPayButton } from "@shopify/hydrogen-ui-alpha";
-import { type ReactNode, Suspense, useMemo } from "react";
+import { type ReactNode, Suspense, useRef, useMemo } from "react";
 import {
   Button,
   Heading,
@@ -31,25 +31,69 @@ import {
   addLineItem,
   createCart,
   getProductData,
-  getRecommendedProducts,
+  getProductMediaData,
+  getPolicyData,
+  getSelectedVariantData,
+  getRecommendedProductsData,
+  getFullProductData,
 } from "~/data";
 import { getExcerpt } from "~/lib/utils";
 import invariant from "tiny-invariant";
 import clsx from "clsx";
 import { getSession } from "~/lib/session.server";
+import memoizee from "memoizee";
 
-export const loader = async ({ params, request }: LoaderArgs) => {
-  const { productHandle } = params;
-  invariant(productHandle, "Missing productHandle param, check route filename");
+// memoize individual data fetching calls
+const getPolicies = memoizee(getPolicyData, { promise: true, maxAge: 1000 * 60 * 60 * 24 }); // fetch policy once a day for all product routes
+const getProduct = memoizee(getProductData, { promise: true, length: 1, maxAge: 1000 * 60 * 10 }); // only update when the product handle changes or after 10 minutes
+const getProductMedia = memoizee(getProductMediaData, { promise: true, length: 1, maxAge: 1000 * 60 * 10 }); // only update when the product handle changes or after 10 minutes
+const getSelectedVariant = memoizee(getSelectedVariantData, { promise: true, length: 2, maxAge: 1000 * 60 * 5 }); // update when the handle or searchParams change or after 5 minutes
+const getRecommendedProducts = memoizee(getRecommendedProductsData, { promise: true, length: 1, maxAge: 1000 * 60 * 60 * 12 }); // update when the product id changes or every 12 hours
 
-  const { shop, product } = await getProductData(
-    productHandle,
-    new URL(request.url).searchParams
-  );
+export const loader = async ({ params, request, context }: LoaderArgs) => {
+  const { handle } = params;
+  const start = new Date().getTime()
+  invariant(handle, "Missing handle param, check route filename");
+
+  const selectedOptions = new URL(request.url).searchParams;
+  const queriedOptions = selectedOptions.toString();
+
+  let [fullProduct, { product }, {media}, { selectedVariant: _selectedVariant }] = await Promise.all([
+    getFullProductData(handle, selectedOptions || []),
+    getProduct(handle),
+    getProductMedia(handle),
+     // only attempt to fetch selectedVariant if we have searchParams
+    queriedOptions
+      ? getSelectedVariant(handle, selectedOptions)
+      : {selectedVariant: null},
+  ]);
+
+  _selectedVariant = _selectedVariant ?? product.firstVariant;
+
+    /**
+   * Likewise, we're defaulting to the first variant for purposes
+   * of add to cart if there is none returned from the loader.
+   * A developer can opt out of this, too.
+   */
+  const isOutOfStock = !_selectedVariant?.availableForSale;
+  const isOnSale =
+    _selectedVariant?.priceV2?.amount &&
+    _selectedVariant?.compareAtPriceV2?.amount &&
+    _selectedVariant?.priceV2?.amount <
+    _selectedVariant?.compareAtPriceV2?.amount;
+
+  const selectedVariant = {
+    ..._selectedVariant,
+    isOutOfStock,
+    isOnSale
+  }
 
   return defer({
+    start,
     product,
-    shop,
+    media,
+    selectedVariant,
+    shop: getPolicies(),
     recommended: getRecommendedProducts(product.id),
   });
 };
@@ -88,24 +132,39 @@ export const action: ActionFunction = async ({ request, context, params }) => {
   }
 
   // 4. Update the session with the cart ID (response headers)
-  return redirect(`/products/${params.productHandle}`, {
+  return redirect(`/products/${params.handle}`, {
     headers,
   });
 };
 
 export default function Product() {
-  const { product, shop, recommended } = useLoaderData<typeof loader>();
-  const { media, title, vendor, descriptionHtml } = product;
-  const { shippingPolicy, refundPolicy } = shop;
+  const { start, media, product, shop, recommended } = useLoaderData<typeof loader>();
+  const { title, vendor, descriptionHtml } = product;
+  const end = useRef(new Date().getTime());
+
+  useMemo(() => {
+    console.log('🎯 time', `${end.current - start}ms`);
+  }, [start])
 
   return (
     <>
       <Section padding="x" className="px-0">
         <div className="grid items-start md:gap-6 lg:gap-20 md:grid-cols-2 lg:grid-cols-3">
-          <ProductGallery
-            media={media.nodes}
-            className="w-screen md:w-full lg:col-span-2"
-          />
+          <Suspense fallback={<Skeleton className="h-32" />}>
+            <Await
+              errorElement="There was a problem loading product media"
+              resolve={media}
+            >
+              {({nodes}) =>  {
+                return (
+                  <ProductGallery
+                    media={nodes || []}
+                    className="w-screen md:w-full lg:col-span-2"
+                  />
+                )
+              }}
+            </Await>
+          </Suspense>
           <div className="sticky md:-mb-nav md:top-nav md:-translate-y-nav md:h-screen md:pt-nav hiddenScroll md:overflow-y-scroll">
             <section className="flex flex-col w-full max-w-xl gap-8 p-6 md:mx-auto md:max-w-sm md:px-0">
               <div className="grid gap-2">
@@ -117,28 +176,40 @@ export default function Product() {
                 )}
               </div>
               <ProductForm />
-              <div className="grid gap-4 py-4">
-                {descriptionHtml && (
-                  <ProductDetail
-                    title="Product Details"
-                    content={descriptionHtml}
-                  />
-                )}
-                {shippingPolicy?.body && (
-                  <ProductDetail
-                    title="Shipping"
-                    content={getExcerpt(shippingPolicy.body)}
-                    learnMore={`/policies/${shippingPolicy.handle}`}
-                  />
-                )}
-                {refundPolicy?.body && (
-                  <ProductDetail
-                    title="Returns"
-                    content={getExcerpt(refundPolicy.body)}
-                    learnMore={`/policies/${refundPolicy.handle}`}
-                  />
-                )}
-              </div>
+
+              <Suspense fallback={<Skeleton className="h-32" />}>
+                <Await
+                  errorElement="There was a problem loading policies"
+                  resolve={shop}
+                >
+                  {({shop: { shippingPolicy, refundPolicy }}) =>  {
+                    return (
+                      <div className="grid gap-4 py-4">
+                        {descriptionHtml && (
+                          <ProductDetail
+                            title="Product Details"
+                            content={descriptionHtml}
+                          />
+                        )}
+                        {shippingPolicy?.body && (
+                          <ProductDetail
+                            title="Shipping"
+                            content={getExcerpt(shippingPolicy.body)}
+                            learnMore={`/policies/${shippingPolicy.handle}`}
+                          />
+                        )}
+                        {refundPolicy?.body && (
+                          <ProductDetail
+                            title="Returns"
+                            content={getExcerpt(refundPolicy.body)}
+                            learnMore={`/policies/${refundPolicy.handle}`}
+                          />
+                        )}
+                      </div>
+                    )
+                  }}
+                </Await>
+              </Suspense>
             </section>
           </div>
         </div>
@@ -158,6 +229,7 @@ export default function Product() {
 export function ProductForm() {
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
+  const closeRef = useRef<HTMLButtonElement>(null);
 
   /**
    * We update `searchParams` with in-flight request data from `transition` (if available)
@@ -170,8 +242,8 @@ export function ProductForm() {
       : currentSearchParams;
   }, [currentSearchParams, transition]);
 
-  const { product } = useLoaderData<typeof loader>();
-  const firstVariant = product.variants.nodes[0];
+  const { product, selectedVariant } = useLoaderData<typeof loader>();
+  const {firstVariant} = product;
 
   /**
    * We're making an explicit choice here to display the product options
@@ -190,20 +262,6 @@ export function ProductForm() {
 
     return clonedParams;
   }, [searchParams, firstVariant.selectedOptions]);
-
-  /**
-   * Likewise, we're defaulting to the first variant for purposes
-   * of add to cart if there is none returned from the loader.
-   * A developer can opt out of this, too.
-   */
-  const selectedVariant = product.selectedVariant ?? firstVariant;
-
-  const isOutOfStock = !selectedVariant?.availableForSale;
-  const isOnSale =
-    selectedVariant?.priceV2?.amount &&
-    selectedVariant?.compareAtPriceV2?.amount &&
-    selectedVariant?.priceV2?.amount <
-      selectedVariant?.compareAtPriceV2?.amount;
 
   return (
     <div className="grid gap-10">
@@ -233,6 +291,7 @@ export function ProductForm() {
                       {({ open }) => (
                         <>
                           <Listbox.Button
+                            ref={closeRef}
                             className={clsx(
                               "flex items-center justify-between w-full py-3 px-4 border border-primary",
                               open
@@ -265,11 +324,10 @@ export function ProductForm() {
                                       active && "bg-primary/10"
                                     )}
                                     searchParams={searchParamsWithDefaults}
-                                    onClick={() =>
-                                      console.log(
-                                        "TODO: Close dropdown somehow"
-                                      )
-                                    }
+                                    onClick={() => {
+                                      if (!closeRef.current) return;
+                                      closeRef.current.click();
+                                    }}
                                   >
                                     {value}
                                     {searchParamsWithDefaults.get(
@@ -324,11 +382,11 @@ export function ProductForm() {
               />
               <Button
                 width="full"
-                variant={isOutOfStock ? "secondary" : "primary"}
-                disabled={isOutOfStock}
+                variant={selectedVariant.isOutOfStock ? "secondary" : "primary"}
+                disabled={selectedVariant.isOutOfStock}
                 as="button"
               >
-                {isOutOfStock ? (
+                {selectedVariant.isOutOfStock ? (
                   <Text>Sold out</Text>
                 ) : (
                   <Text
@@ -341,7 +399,7 @@ export function ProductForm() {
                       data={selectedVariant?.priceV2!}
                       as="span"
                     />
-                    {isOnSale && (
+                    {selectedVariant.isOnSale && (
                       <Money
                         withoutTrailingZeros
                         data={selectedVariant?.compareAtPriceV2!}
@@ -354,7 +412,7 @@ export function ProductForm() {
               </Button>
             </Form>
           )}
-          {!isOutOfStock && (
+          {!selectedVariant.isOutOfStock && (
             <ShopPayButton variantIds={[selectedVariant?.id!]} />
           )}
         </div>

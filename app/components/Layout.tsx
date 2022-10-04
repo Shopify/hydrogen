@@ -169,9 +169,9 @@ function CartDrawer({
    * drawer is opened.
    */
   useEffect(() => {
-    topProductsFetcher.load("/cart");
+    isOpen && topProductsFetcher.load("/cart");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isOpen]);
 
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
