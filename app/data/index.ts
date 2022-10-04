@@ -13,12 +13,14 @@ import type {
   Blog,
   PageConnection,
   Shop,
+  CountryCode,
   Localization,
   CustomerAccessTokenCreatePayload,
   Customer,
   CustomerUpdateInput,
   CustomerUpdatePayload,
   UserError,
+  Page,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
@@ -164,7 +166,9 @@ export async function getCountries() {
 
   invariant(data, "No data returned from Shopify API");
 
-  return data.localization.availableCountries.sort((a, b) => a.name.localeCompare(b.name));
+  return data.localization.availableCountries.sort((a, b) =>
+    a.name.localeCompare(b.name)
+  );
 }
 
 const COUNTRIES_QUERY = `#graphql
@@ -212,7 +216,7 @@ export async function getProductData(
   const { product, shop } = data;
 
   if (!product) {
-    throw new Response("Uh ohhhhh", { status: 404 });
+    throw new Response("Not found", { status: 404 });
   }
 
   return { product, shop };
@@ -537,7 +541,7 @@ export async function getCollection({
   invariant(data, "No data returned from Shopify API");
 
   if (!data.collection) {
-    throw new Response("Collection not found", { status: 404 });
+    throw new Response("Not found", { status: 404 });
   }
 
   return data.collection;
@@ -991,6 +995,10 @@ export async function getBlog({
 
   invariant(data, "No data returned from Shopify API");
 
+  if (!data.blog?.articles) {
+    throw new Response("Not found", { status: 404 });
+  }
+
   return data.blog.articles;
 }
 
@@ -1043,7 +1051,83 @@ export async function getArticle({
 
   invariant(data, "No data returned from Shopify API");
 
+  if (!data.blog?.articleByHandle) {
+    throw new Response("Not found", { status: 404 });
+  }
+
   return data.blog.articleByHandle;
+}
+
+const PAGE_QUERY = `#graphql
+  query PageDetails($languageCode: LanguageCode, $handle: String!)
+  @inContext(language: $languageCode) {
+    page(handle: $handle) {
+      id
+      title
+      body
+      seo {
+        description
+        title
+      }
+    }
+  }
+`;
+
+export async function getPageData(variables: {
+  language: LanguageCode;
+  handle: string;
+}) {
+  const { data } = await getStorefrontData<{ page: Page }>({
+    query: PAGE_QUERY,
+    variables,
+  });
+
+  invariant(data, "No data returned from Shopify API");
+  if (!data.page) {
+    throw new Response("Not found", { status: 404 });
+  }
+
+  return data.page;
+}
+
+const NOT_FOUND_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query homepage($country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
+      nodes {
+        id
+        title
+        handle
+        image {
+          altText
+          width
+          height
+          url
+        }
+      }
+    }
+    featuredProducts: products(first: 12) {
+      nodes {
+        ...ProductCard
+      }
+    }
+  }
+`;
+
+export async function getFeaturedData(variables: {
+  language: LanguageCode;
+  country: CountryCode;
+}) {
+  const { data } = await getStorefrontData<{
+    featuredCollections: CollectionConnection;
+    featuredProducts: ProductConnection;
+  }>({
+    query: NOT_FOUND_QUERY,
+    variables,
+  });
+
+  return data;
 }
 
 const LOGIN_MUTATION = `#graphql

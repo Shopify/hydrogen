@@ -11,10 +11,14 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useCatch,
   useLoaderData,
+  useMatches,
 } from "@remix-run/react";
 import { Layout } from "~/components";
 import { getCart, getLayoutData, getCountries } from "~/data";
+import { GenericError } from "./components/GenericError";
+import { NotFound } from "./components/NotFound";
 import { getSession } from "./lib/session.server";
 
 import styles from "./styles/app.css";
@@ -50,14 +54,6 @@ export const loader: LoaderFunction = async function loader({
 
   return defer({
     layout: await getLayoutData(params),
-    defaultCountry: await ({
-      currency: {
-        isoCode: "USD",
-        symbol: "$",
-      },
-      isoCode: "US",
-      name: "United States"
-    }),
     countries: getCountries(),
     cart: cartId ? getCart({ cartId, params }) : undefined,
   });
@@ -79,6 +75,54 @@ export default function App() {
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
+      </body>
+    </html>
+  );
+}
+
+export function CatchBoundary() {
+  const [root] = useMatches();
+  const caught = useCatch();
+  const isNotFound = caught.status === 404;
+
+  return (
+    <html lang="en">
+      <head>
+        <title>{isNotFound ? "Not found" : "Error"}</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Layout data={root.data as any}>
+          {isNotFound ? (
+            <NotFound type={caught.data?.pageType} />
+          ) : (
+            <GenericError
+              error={{ message: `${caught.status} ${caught.data}` }}
+            />
+          )}
+        </Layout>
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+  const [root] = useMatches();
+
+  return (
+    <html lang="en">
+      <head>
+        <title>Error</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Layout data={root.data as any}>
+          <GenericError error={error} />
+        </Layout>
+        <Scripts />
       </body>
     </html>
   );
