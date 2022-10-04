@@ -216,7 +216,7 @@ export async function getProductData(
   const { product, shop } = data;
 
   if (!product) {
-    throw new Response("Not found", { status: 500 });
+    throw new Response("Not found", { status: 404 });
   }
 
   return { product, shop };
@@ -981,6 +981,10 @@ export async function getBlog({
 
   invariant(data, "No data returned from Shopify API");
 
+  if (!data.blog?.articles) {
+    throw new Response("Not found", { status: 404 });
+  }
+
   return data.blog.articles;
 }
 
@@ -1023,6 +1027,10 @@ export async function getArticle(variables: {
   });
 
   invariant(data, "No data returned from Shopify API");
+
+  if (!data.blog?.articleByHandle) {
+    throw new Response("Not found", { status: 404 });
+  }
 
   return data.blog.articleByHandle;
 }
