@@ -17,6 +17,7 @@ import {
 } from "@remix-run/react";
 import { Layout } from "~/components";
 import { getCart, getLayoutData, getCountries } from "~/data";
+import { GenericError } from "./components/GenericError";
 import { NotFound } from "./components/NotFound";
 import { getSession } from "./lib/session.server";
 
@@ -89,20 +90,21 @@ export default function App() {
 export function CatchBoundary() {
   const [root] = useMatches();
   const caught = useCatch();
+  const isNotFound = caught.status === 404;
 
   return (
     <html lang="en">
       <head>
-        <title>Not found</title>
+        <title>{isNotFound ? "Not found" : "Error"}</title>
         <Meta />
         <Links />
       </head>
       <body>
         <Layout data={root.data as any}>
-          {caught.status === 404 ? (
+          {isNotFound ? (
             <NotFound type={caught.data?.pageType} />
           ) : (
-            <p>Something's wrong here.</p>
+            <GenericError />
           )}
         </Layout>
         <Scripts />
