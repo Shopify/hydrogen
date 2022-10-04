@@ -3,9 +3,9 @@ import { useScroll } from "react-use";
 import { flattenConnection, Money } from "@shopify/hydrogen-ui-alpha";
 import {
   type FetcherWithComponents,
-  Link,
   useFetcher,
   useLocation,
+  Link,
 } from "@remix-run/react";
 
 import {
@@ -15,6 +15,7 @@ import {
   ProductCard,
   Skeleton,
   Text,
+  LinkI18n,
 } from "~/components";
 import type {
   Cart,
@@ -185,9 +186,9 @@ function CartLineItem({
       <div className="flex justify-between flex-grow">
         <div className="grid gap-2">
           <Heading as="h3" size="copy">
-            <Link to={`/products/${merchandise.product.handle}`}>
+            <LinkI18n to={`/products/${merchandise.product.handle}`}>
               {merchandise.product.title}
-            </Link>
+            </LinkI18n>
           </Heading>
 
           <div className="grid pb-2">

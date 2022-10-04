@@ -47,22 +47,15 @@ export const meta: MetaFunction = () => ({
 export const loader: LoaderFunction = async function loader({
   request,
   context,
+  params
 }) {
   const session = await getSession(request, context);
   const cartId = await session.get("cartId");
 
   return defer({
-    layout: await getLayoutData(),
-    defaultCountry: await {
-      currency: {
-        isoCode: "USD",
-        symbol: "$",
-      },
-      isoCode: "US",
-      name: "United States",
-    },
+    layout: await getLayoutData(params),
     countries: getCountries(),
-    cart: cartId ? getCart({ cartId }) : undefined,
+    cart: cartId ? getCart({ cartId, params }) : undefined,
   });
 };
 

@@ -1,6 +1,6 @@
-import { Link, Outlet, useOutlet } from "@remix-run/react";
+import { Outlet, useOutlet } from "@remix-run/react";
 import type { Customer } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Modal } from "~/components";
+import { Modal, LinkI18n } from "~/components";
 import type { AccountDetailsOutletContext } from "~/routes/account/edit";
 
 export function AccountDetails({ customer }: { customer: Customer }) {
@@ -20,9 +20,9 @@ export function AccountDetails({ customer }: { customer: Customer }) {
         <div className="lg:p-8 p-6 border border-gray-200 rounded">
           <div className="flex">
             <h3 className="font-bold text-base flex-1">Profile & Security</h3>
-            <Link className="underline text-sm font-normal" to="edit">
+            <LinkI18n className="underline text-sm font-normal" to="edit">
               Edit
-            </Link>
+            </LinkI18n>
           </div>
           <div className="mt-4 text-sm text-primary/50">Name</div>
           <p className="mt-1">

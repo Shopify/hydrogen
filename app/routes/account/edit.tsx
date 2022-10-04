@@ -43,7 +43,7 @@ const formDataHas = (formData: FormData, key: string) => {
   return typeof value === "string" && value.length > 0;
 };
 
-export const action: ActionFunction = async ({ request, context }) => {
+export const action: ActionFunction = async ({ request, context, params }) => {
   const [formData, session] = await Promise.all([
     request.formData(),
     getSession(request, context),
@@ -58,7 +58,7 @@ export const action: ActionFunction = async ({ request, context }) => {
 
   // Double-check current user is logged in.
   // Will throw a logout redirect if not.
-  await getCustomer({ customerAccessToken, request, context });
+  await getCustomer({ customerAccessToken, request, context, params });
 
   if (
     formDataHas(formData, "newPassword") &&

@@ -1,29 +1,28 @@
-import { json, type MetaFunction } from "@remix-run/cloudflare";
-import { Link, useLoaderData } from "@remix-run/react";
+import { json, LoaderArgs, type MetaFunction } from "@remix-run/cloudflare";
+import { useLoaderData } from "@remix-run/react";
 import { flattenConnection, Image } from "@shopify/hydrogen-ui-alpha";
 import type { Article } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Grid, PageHeader, Section } from "~/components";
+import { Grid, PageHeader, Section, LinkI18n } from "~/components";
 import { getBlog } from "~/data";
 import { getImageLoadingPriority, PAGINATION_SIZE } from "~/lib/const";
+import { getLocalizationFromLang } from "~/lib/utils";
 
 const BLOG_HANDLE = "Journal";
 
-export const loader = async () => {
-  // TODO figure out localization
-  const languageCode = "EN";
-  const countryCode = "US";
-
+export const loader = async ({params}: LoaderArgs) => {
   const journals = await getBlog({
-    language: languageCode,
+    params,
     blogHandle: BLOG_HANDLE,
     paginationSize: PAGINATION_SIZE,
   });
+
+  const { language, country } = getLocalizationFromLang(params.lang);
 
   const articles = flattenConnection(journals).map((article) => {
     const { publishedAt } = article;
     return {
       ...article,
-      publishedAt: new Intl.DateTimeFormat(`${languageCode}-${countryCode}`, {
+      publishedAt: new Intl.DateTimeFormat(`${language}-${country}`, {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -80,7 +79,7 @@ function ArticleCard({
 }) {
   return (
     <li key={article.id}>
-      <Link to={`/${blogHandle}/${article.handle}`}>
+      <LinkI18n to={`/${blogHandle}/${article.handle}`}>
         {article.image && (
           <div className="card-image aspect-[3/2]">
             <Image
@@ -100,7 +99,7 @@ function ArticleCard({
         )}
         <h2 className="mt-4 font-medium">{article.title}</h2>
         <span className="block mt-1">{article.publishedAt}</span>
-      </Link>
+      </LinkI18n>
     </li>
   );
 }

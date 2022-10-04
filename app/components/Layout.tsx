@@ -1,5 +1,5 @@
 import { useLocation } from "react-router";
-import type { EnhancedMenu, EnhancedMenuItem } from "~/lib/utils";
+import { EnhancedMenu, EnhancedMenuItem, getLocalizationFromLang, isHomePath } from "~/lib/utils";
 import {
   Drawer,
   useDrawer,
@@ -15,8 +15,9 @@ import {
   CountrySelector,
   CartDetails,
   CartEmpty,
+  LinkI18n
 } from "~/components";
-import { Await, Link, useFetcher } from "@remix-run/react";
+import { Await, useFetcher, useParams } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
@@ -25,6 +26,7 @@ import type {
   Country,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import { Suspense, useEffect } from "react";
+import { getI18nPath } from "./LinkI18n";
 
 export function Layout({
   children,
@@ -34,11 +36,10 @@ export function Layout({
   data?: {
     layout: LayoutData;
     countries: Array<Country>;
-    defaultCountry: Country;
     cart: Promise<Cart>;
   };
 }) {
-  const { layout, countries, defaultCountry, cart } = data || {};
+  const { layout, countries, cart } = data || {};
 
   return (
     <>
@@ -60,7 +61,6 @@ export function Layout({
       <Footer
         menu={layout?.footerMenu}
         countries={countries}
-        defaultCountry={defaultCountry}
       />
     </>
   );
@@ -75,12 +75,9 @@ function Header({
   menu?: EnhancedMenu;
   cart?: Promise<Cart>;
 }) {
-  const { pathname } = useLocation();
-
-  // TODO: Ensure locale support like in Hydrogen
-  const isHome = pathname === "/";
-  const localeMatch = /^\/([a-z]{2})(\/|$)/i.exec(pathname);
-  const countryCode = localeMatch ? localeMatch[1] : null;
+  const { lang } = useParams();
+  const { country } = getLocalizationFromLang(lang);
+  const isHome = isHomePath();
 
   const {
     isOpen: isCartOpen,
@@ -101,7 +98,6 @@ function Header({
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
       )}
       <DesktopHeader
-        countryCode={countryCode}
         isHome={isHome}
         title={title}
         menu={menu}
@@ -109,7 +105,6 @@ function Header({
         cart={cart}
       />
       <MobileHeader
-        countryCode={countryCode}
         isHome={isHome}
         title={title}
         openCart={openCart}
@@ -123,19 +118,11 @@ function Header({
 function Footer({
   menu,
   countries,
-  defaultCountry,
 }: {
   menu?: EnhancedMenu;
   countries?: Array<Country>;
-  defaultCountry?: Country;
 }) {
-  const { pathname } = useLocation();
-
-  // TODO: Ensure locale support like in Hydrogen
-  const localeMatch = /^\/([a-z]{2})(\/|$)/i.exec(pathname);
-  const countryCode = localeMatch ? localeMatch[1] : null;
-
-  const isHome = pathname === `/${countryCode ? countryCode + "/" : ""}`;
+  const isHome = isHomePath();
   const itemsCount = menu
     ? menu?.items?.length + 1 > 4
       ? 4
@@ -152,14 +139,13 @@ function Footer({
         bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
     >
       <FooterMenu menu={menu} />
-      {countries && defaultCountry && (
+      {countries && (
         <section className="grid gap-4 w-full md:max-w-[335px] md:ml-auto">
           <Heading size="lead" className="cursor-default" as="h3">
             Country
           </Heading>
           <CountrySelector
             countries={countries}
-            defaultCountry={defaultCountry}
           />
         </section>
       )}
@@ -256,25 +242,23 @@ function MenuMobileNav({
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
       {/* Top level menu items */}
       {(menu?.items || []).map((item) => (
-        <Link key={item.id} to={item.to} target={item.target} onClick={onClose}>
+        <LinkI18n key={item.id} to={item.to} target={item.target} onClick={onClose}>
           <Text as="span" size="copy">
             {item.title}
           </Text>
-        </Link>
+        </LinkI18n>
       ))}
     </nav>
   );
 }
 
 function MobileHeader({
-  countryCode,
   title,
   isHome,
   openCart,
   openMenu,
   cart,
 }: {
-  countryCode?: string | null;
   title: string;
   isHome: boolean;
   openCart: () => void;
@@ -301,7 +285,7 @@ function MobileHeader({
           <IconMenu />
         </button>
         <form
-          action={`/${countryCode ? countryCode + "/" : ""}search`}
+          action={getI18nPath('/search')}
           className="items-center gap-2 sm:flex"
         >
           <button type="submit" className={styles.button}>
@@ -321,19 +305,19 @@ function MobileHeader({
         </form>
       </div>
 
-      <Link
+      <LinkI18n
         className="flex items-center self-stretch leading-[3rem] md:leading-[4rem] justify-center flex-grow w-full h-full"
         to="/"
       >
         <Heading className="font-bold text-center" as={isHome ? "h1" : "h2"}>
           {title}
         </Heading>
-      </Link>
+      </LinkI18n>
 
       <div className="flex items-center justify-end w-full gap-4">
-        <Link to={"/account"} className={styles.button}>
+        <LinkI18n to={"/account"} className={styles.button}>
           <IconAccount />
-        </Link>
+        </LinkI18n>
         <button onClick={openCart} className={styles.button}>
           <IconBag />
           {cart && (
@@ -350,14 +334,12 @@ function MobileHeader({
 }
 
 function DesktopHeader({
-  countryCode,
   isHome,
   menu,
   openCart,
   title,
   cart,
 }: {
-  countryCode?: string | null;
   isHome: boolean;
   openCart: () => void;
   menu?: EnhancedMenu;
@@ -381,26 +363,26 @@ function DesktopHeader({
   return (
     <header role="banner" className={styles.container}>
       <div className="flex gap-12">
-        <Link className={`font-bold`} to="/" prefetch="intent">
+        <LinkI18n className={`font-bold`} to="/" prefetch="intent">
           {title}
-        </Link>
+        </LinkI18n>
         <nav className="flex gap-8">
           {/* Top level menu items */}
           {(menu?.items || []).map((item) => (
-            <Link
+            <LinkI18n
               key={item.id}
               to={item.to}
               target={item.target}
               prefetch="intent"
             >
               {item.title}
-            </Link>
+            </LinkI18n>
           ))}
         </nav>
       </div>
       <div className="flex items-center gap-1">
         <form
-          action={`/${countryCode ? countryCode + "/" : ""}search`}
+          action={getI18nPath('/search')}
           className="flex items-center gap-2"
         >
           <Input
@@ -418,9 +400,9 @@ function DesktopHeader({
             <IconSearch />
           </button>
         </form>
-        <Link to={"/account"} className={styles.button}>
+        <LinkI18n to={"/account"} className={styles.button}>
           <IconAccount />
-        </Link>
+        </LinkI18n>
         <button onClick={openCart} className={styles.button}>
           <IconBag />
           {cart && (
@@ -471,9 +453,9 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
     }
 
     return (
-      <Link to={item.to} target={item.target} prefetch="intent">
+      <LinkI18n to={item.to} target={item.target} prefetch="intent">
         {item.title}
-      </Link>
+      </LinkI18n>
     );
   };
 
