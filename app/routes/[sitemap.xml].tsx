@@ -4,9 +4,9 @@ import { getSitemap } from "~/data";
 
 const MAX_URLS = 250; // the google limit is 50K, however, SF API only allow querying for 250 resources each time
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request, params }: LoaderArgs) {
   const data = await getSitemap({
-    language: "EN",
+    params,
     urlLimits: MAX_URLS,
   });
 
