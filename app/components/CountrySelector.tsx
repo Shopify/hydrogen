@@ -1,5 +1,5 @@
 import { Link, useAsyncValue, useLocation, Await, useParams } from "@remix-run/react";
-import { Country, CountryCode } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import { Country } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 
 import {Listbox} from '@headlessui/react';
 import { useState, Suspense } from "react";
@@ -7,13 +7,10 @@ import { IconCaret, IconCheck } from "./Icon";
 import { getLocalizationFromLang } from "~/lib/utils";
 
 export function CountrySelector({
-  defaultCountry,
   countries,
 }: {
-  defaultCountry: Country;
   countries: Array <Country>;
 }) {
-  const selectedCountry = defaultCountry.isoCode;
   return (
     <Suspense fallback={<CountrySelectorFallback />}>
       <Await resolve={countries}>
