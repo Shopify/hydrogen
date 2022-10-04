@@ -1,4 +1,3 @@
-import {useMemo} from 'react';
 import type {ExternalVideo as ExternalVideoType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
@@ -42,7 +41,16 @@ export function ExternalVideo(props: ExternalVideoProps) {
     throw new Error(`<ExternalVideo/> requires the 'embedUrl' property`);
   }
 
-  const url = useEmbeddedVideoUrl(data.embedUrl, options);
+  let finalUrl: string = data.embedUrl;
+
+  if (options) {
+    const urlObject = new URL(data.embedUrl);
+    for (const key of Object.keys(options)) {
+      // @ts-expect-error https://github.com/microsoft/TypeScript/issues/32951
+      urlObject.searchParams.set(key, options[key]);
+    }
+    finalUrl = urlObject.toString();
+  }
 
   return (
     <iframe
@@ -52,7 +60,7 @@ export function ExternalVideo(props: ExternalVideoProps) {
       frameBorder={frameBorder}
       allow={allow}
       allowFullScreen={allowFullScreen}
-      src={url}
+      src={finalUrl}
       loading={loading}
     ></iframe>
   );
@@ -103,35 +111,4 @@ interface Vimeo {
   texttrack?: string;
   title?: VimeoBoolean;
   transparent?: VimeoBoolean;
-}
-
-export function useEmbeddedVideoUrl(url: string, parameters?: YouTube | Vimeo) {
-  return useMemo(() => {
-    if (!parameters) {
-      return url;
-    }
-
-    return addParametersToEmbeddedVideoUrl(url, parameters);
-  }, [url, parameters]);
-}
-
-export function addParametersToEmbeddedVideoUrl(
-  url: string,
-  parameters?: YouTube | Vimeo
-) {
-  if (parameters == null) {
-    return url;
-  }
-
-  const params = Object.keys(parameters).reduce((accumulator, param) => {
-    // @ts-expect-error This needs to be fixed when we migrate components from hydrogen to here.
-    const value = parameters[param];
-    if (value == null) {
-      return accumulator;
-    }
-
-    return accumulator + `&${param}=${value}`;
-  }, '');
-
-  return `${url}?${params}`;
 }

@@ -64,7 +64,7 @@ describe('<ExternalVideo />', () => {
 
     expect(videoEl).toHaveAttribute(
       'src',
-      'https://www.youtube.com/embed/a2YSgfwXc9c?&color=red&autoplay=true'
+      'https://www.youtube.com/embed/a2YSgfwXc9c?color=red&autoplay=true'
     );
   });
 
@@ -88,5 +88,27 @@ describe('<ExternalVideo />', () => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     expect(() => render(<ExternalVideo data={{id: 'hi'}} />)).toThrow();
     expect(console.error).toHaveBeenCalled();
+  });
+
+  it(`handles when the embedUrl has search params already`, () => {
+    const options = {
+      color: 'red',
+    };
+    render(
+      <ExternalVideo
+        data-testid={testId}
+        data={getExternalVideoData({
+          embedUrl: 'https://www.youtube.com/embed/a2YSgfwXc9c?autoplay=true',
+        })}
+        options={options}
+      />
+    );
+
+    const videoEl = screen.getByTestId(testId);
+
+    expect(videoEl).toHaveAttribute(
+      'src',
+      'https://www.youtube.com/embed/a2YSgfwXc9c?autoplay=true&color=red'
+    );
   });
 });
