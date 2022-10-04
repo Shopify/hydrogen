@@ -44,13 +44,14 @@ export const loader = async ({ params, request }: LoaderArgs) => {
 
   const { shop, product } = await getProductData(
     productHandle,
-    new URL(request.url).searchParams
+    new URL(request.url).searchParams,
+    params
   );
 
   return defer({
     product,
     shop,
-    recommended: getRecommendedProducts(product.id),
+    recommended: getRecommendedProducts(product.id, params),
   });
 };
 
@@ -75,6 +76,7 @@ export const action: ActionFunction = async ({ request, context, params }) => {
   if (!cartId) {
     const cart = await createCart({
       cart: { lines: [{ merchandiseId: variantId }] },
+      params
     });
 
     session.set("cartId", cart.id);
@@ -84,6 +86,7 @@ export const action: ActionFunction = async ({ request, context, params }) => {
     await addLineItem({
       cartId,
       lines: [{ merchandiseId: variantId }],
+      params,
     });
   }
 
