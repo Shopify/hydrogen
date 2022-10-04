@@ -10,14 +10,11 @@ import { PageHeader } from "~/components";
 import { getPageData } from "~/data";
 
 export async function loader({ params }: LoaderArgs) {
-  // TODO figure out localization
-  const languageCode = "EN";
-
   invariant(params.pageHandle, "Missing page handle");
 
   const page = await getPageData({
     handle: params.pageHandle,
-    language: languageCode,
+    params,
   });
 
   return json(

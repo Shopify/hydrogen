@@ -373,9 +373,9 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   query productRecommendations(
     $productId: ID!
     $count: Int
-    $countryCode: CountryCode
-    $languageCode: LanguageCode
-  ) @inContext(country: $countryCode, language: $languageCode) {
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     recommended: productRecommendations(productId: $productId) {
       ...ProductCard
     }
@@ -837,7 +837,7 @@ const TOP_PRODUCTS_QUERY = `#graphql
     $count: Int
     $country: CountryCode
     $language: LanguageCode
-  ) @inContext(country: $countryCode, language: $languageCode) {
+  ) @inContext(country: $country, language: $language) {
     products(first: $count, sortKey: BEST_SELLING) {
       nodes {
         ...ProductCard
@@ -1059,8 +1059,8 @@ export async function getArticle({
 }
 
 const PAGE_QUERY = `#graphql
-  query PageDetails($languageCode: LanguageCode, $handle: String!)
-  @inContext(language: $languageCode) {
+  query PageDetails($language: LanguageCode, $handle: String!)
+  @inContext(language: $language) {
     page(handle: $handle) {
       id
       title
@@ -1073,13 +1073,20 @@ const PAGE_QUERY = `#graphql
   }
 `;
 
-export async function getPageData(variables: {
-  language: LanguageCode;
+export async function getPageData({
+  params,
+  handle,
+}: {
+  params: Params;
   handle: string;
 }) {
+  const { language } = getLocalizationFromLang(params.lang);
   const { data } = await getStorefrontData<{ page: Page }>({
     query: PAGE_QUERY,
-    variables,
+    variables: {
+      language,
+      handle
+    },
   });
 
   invariant(data, "No data returned from Shopify API");
@@ -1115,16 +1122,19 @@ const NOT_FOUND_QUERY = `#graphql
   }
 `;
 
-export async function getFeaturedData(variables: {
-  language: LanguageCode;
-  country: CountryCode;
+export async function getFeaturedData({params}: {
+  params: Params;
 }) {
+  const { language, country } = getLocalizationFromLang(params.lang);
   const { data } = await getStorefrontData<{
     featuredCollections: CollectionConnection;
     featuredProducts: ProductConnection;
   }>({
     query: NOT_FOUND_QUERY,
-    variables,
+    variables: {
+      language,
+      country,
+    },
   });
 
   return data;
