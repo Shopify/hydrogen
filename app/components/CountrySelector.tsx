@@ -14,9 +14,7 @@ export function CountrySelector() {
   const { language, country } = getLocalizationFromLang(lang);
   const languageIsoCode = language.toLowerCase();
   const strippedPathname = pathname.replace(new RegExp(`^\/${lang}\/`), '/')
-  const currentCountry = countries?.length
-    ? countries.find(c => c.isoCode === country)
-    : null
+  const currentCountry = countries?.find(c => c.isoCode === country);
 
   return (
     !countries ? null : (
