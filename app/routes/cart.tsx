@@ -1,4 +1,5 @@
-import { type ActionFunction, json, defer, LoaderArgs } from "@remix-run/cloudflare";
+import type { LoaderArgs } from "@remix-run/cloudflare";
+import { type ActionFunction, json, defer } from "@remix-run/cloudflare";
 import invariant from "tiny-invariant";
 import { getTopProducts, updateLineItem } from "~/data";
 import { getSession } from "~/lib/session.server";
@@ -6,6 +7,10 @@ import { getSession } from "~/lib/session.server";
 export async function loader({params}: LoaderArgs) {
   return defer({
     topProducts: getTopProducts({params}),
+  }, {
+    headers: {
+      'Cache-Control': 'max-age=600'
+    }
   });
 }
 
