@@ -20,8 +20,10 @@ import { useFetcher } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
+import { getI18nPath } from "./LinkI18n";
 import { useEffect } from "react";
 import {useCart} from '~/hooks/useCart'
+
 
 export function Layout({
   children,
@@ -248,7 +250,7 @@ function MobileHeader({
           <IconMenu />
         </button>
         <form
-          action={`/${countryCode ? countryCode + "/" : ""}search`}
+          action={getI18nPath('/search')}
           className="items-center gap-2 sm:flex"
         >
           <button type="submit" className={styles.button}>
@@ -339,7 +341,7 @@ function DesktopHeader({
       </div>
       <div className="flex items-center gap-1">
         <form
-          action={`/${countryCode ? countryCode + "/" : ""}search`}
+          action={getI18nPath('/search')}
           className="flex items-center gap-2"
         >
           <Input
