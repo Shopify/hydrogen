@@ -1,4 +1,4 @@
-import { useLocation, useParams, type Params } from "@remix-run/react";
+import { useLocation, useParams } from "@remix-run/react";
 import type {
   MenuItem,
   Menu,
