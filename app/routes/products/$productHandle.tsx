@@ -10,6 +10,7 @@ import {
   Await,
   useSearchParams,
   Form,
+  useLocation,
   useTransition,
 } from "@remix-run/react";
 import { Money, ShopPayButton } from "@shopify/hydrogen-ui-alpha";
@@ -379,6 +380,13 @@ function ProductOptionLink({
   children?: ReactNode;
   [key: string]: any;
 }) {
+  const { pathname } = useLocation();
+  const isLangPathname = /\/[a-zA-Z]{2}-[a-zA-Z]{2}\//g.test(pathname);
+  // fixes internalized pathname
+  const path = isLangPathname
+    ? `/${pathname.split('/').slice(2).join('/')}`
+    : pathname
+
   const clonedSearchParams = new URLSearchParams(searchParams);
   clonedSearchParams.set(optionName, optionValue);
 
@@ -387,10 +395,7 @@ function ProductOptionLink({
       {...props}
       prefetch="intent"
       replace
-      to={{
-        pathname: ".",
-        search: clonedSearchParams.toString(),
-      }}
+      to={`${path}?${clonedSearchParams.toString()}`}
     >
       {children ?? optionValue}
     </LinkI18n>
