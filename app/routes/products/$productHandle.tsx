@@ -389,7 +389,6 @@ function ProductOptionLink({
 
   const clonedSearchParams = new URLSearchParams(searchParams);
   clonedSearchParams.set(optionName, optionValue);
-  console.log({searchParams: clonedSearchParams.toString()})
 
   return (
     <LinkI18n
