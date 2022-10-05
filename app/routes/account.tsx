@@ -15,7 +15,7 @@ import {
 import { getCustomer } from "~/data";
 import { getSession } from "~/lib/session.server";
 
-export async function loader({ request, context }: LoaderArgs) {
+export async function loader({ request, context, params }: LoaderArgs) {
   const session = await getSession(request, context);
   const customerAccessToken = await session.get("customerAccessToken");
 
@@ -23,7 +23,7 @@ export async function loader({ request, context }: LoaderArgs) {
     return redirect("/account/login");
   }
 
-  const customer = await getCustomer({ customerAccessToken, request, context });
+  const customer = await getCustomer({ customerAccessToken, params, request, context });
 
   const heading = customer
     ? customer.firstName
