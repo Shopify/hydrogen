@@ -242,8 +242,8 @@ Then, you can use the `language` context in your loaders and actions directly:
 export async function loader({ params, context: { storefront, language } }) {
   const productQuery = storefront.query({
     query: `
-    query Product($handle: String!) {
-        product(handle: $handle) {
+    query Product($handle: String!, $language: LanguageCode!) {
+        product(handle: $handle) @inContext(language: $language) {
           id
           title
         }
