@@ -1,0 +1,264 @@
+# Fetching data in Hydrogen
+
+## Running queries
+
+To load data into your Hydrogen app, use a Remix `loader` and write a GraphQL query. Hydrogen provides a special `storefront` param to make queries against your Shopify storefront.
+
+```ts
+export async function loader({ params, context: { storefront } }: LoaderArgs) {
+  const productQuery = storefront.query({
+    query: `
+    query Product($handle: String!) {
+        product(handle: $handle) {
+          id
+          title
+        }
+    }`,
+    /**
+     * Pass variables related to the query.
+     */
+    variables: {
+      handle: params.handle,
+    },
+    /**
+     * Optionally filter your data before it is returned from the loader.
+     */
+    filter(data, errors) {
+      invariant(data.product, "No product found");
+
+      return data.product;
+    },
+    /**
+     * Cache your server-side query with a built-in best practice default (SWR).
+     */
+    cache: CacheShort(),
+  });
+
+  return json({
+    product: await productQuery,
+  });
+}
+```
+
+Sometimes, you will want to prioritize critical data, like product information, while deferring comments or reviews.
+
+```ts
+export async function loader({ params, context: { storefront } }: LoaderArgs) {
+  const productQuery = storefront.query({
+    query: `#graphql
+    query Product($handle: String!) {
+      product(handle: $handle) {
+        id
+        title
+      }
+    }`,
+    variables: {
+      handle: params.handle,
+    },
+    filter(data, errors) {
+      invariant(data.product, "No product found");
+
+      return data.product;
+    },
+  });
+
+  const reviewsQuery = storefront.query({
+    query: `#graphql
+    query ProductReviews($handle: String!) {
+      productReviews(handle: $handle) {
+        nodes {
+          description
+        }
+      }
+    }`,
+    variables: {
+      handle: params.handle,
+    },
+    filter(data, errors) {
+      invariant(data.productReviews, "No product found");
+
+      return data.productReviews;
+    },
+  });
+
+  return defer({
+    product: await productQuery,
+    reviews: reviewsQuery,
+  });
+}
+```
+
+### Caching data
+
+Caching is important. TODO write better docs.
+
+```ts
+import { defer } from "@remix-run/cloudflare";
+import { CacheShort } from "@shopify/hydrogen-remix";
+
+export async function loader({ params, context: { storefront } }: LoaderArgs) {
+  const productQuery = storefront.query({
+    query: `
+    query Product($handle: String!) {
+      product(handle: $handle) {
+        id
+        title
+      }
+    }`,
+    variables: {
+      handle: params.handle,
+    },
+    filter(data, errors) {
+      invariant(data.product, "No product found");
+
+      return data.product;
+    },
+    cache: CacheShort(),
+  });
+
+  const reviewsQuery = storefront.query({
+    query: `
+    query ProductReviews($handle: String!) {
+      productReviews(handle: $handle) {
+        nodes {
+          description
+        }
+      }
+    }`,
+    variables: {
+      handle: params.handle,
+    },
+    filter(data, errors) {
+      invariant(data.productReviews, "No product found");
+
+      return data.productReviews;
+    },
+  });
+
+  return defer(
+    {
+      product: await productQuery,
+      reviews: reviewsQuery,
+    },
+    {
+      // TODO: Do we want full-page cache?
+      // See implications on caching errored defer data, etc
+      headers: {
+        "Cache-Control": "max-age=1; stale-while-revalidate=9",
+      },
+    }
+  );
+}
+```
+
+## Mutating data
+
+To mutate data in actions, use the `storefront.query` helper with the `mutation` property:
+
+```ts
+export async function action({ request, context: { storefront } }) {
+  const formData = await request.formData();
+
+  const cartMutation = storefront.query({
+    mutation: `
+    mutation lineItemUpdate($lineId: ID!, $input: CartLineUpdateInput!) {
+        lineItemUpdate(lineId: $lineId, input: $input) {
+          quantity
+        }
+    }`,
+    /**
+     * Pass variables related to the query.
+     */
+    variables: {
+      lineId: formData.get("lineId"),
+      input: formData.get("input"),
+      country: storefront.country,
+      language: storefront.language,
+    },
+    /**
+     * Optionally filter your data before it is returned from the loader.
+     */
+    filter(data, errors) {
+      invariant(data.lineItemUpdate, "Line item update not successful");
+
+      return data.lineItemUpdate;
+    },
+    /**
+     * Mutations are NEVER cached by default.
+     */
+  });
+
+  return json({
+    status: "ok",
+  });
+}
+```
+
+## Injecting country and language directives into queries
+
+The Storefront API accepts an [`@inContext` directive](https://shopify.dev/custom-storefronts/internationalization/international-pricing) to support international pricing. Depending on how you choose to implement localization in your storefront, you can inject language and country strategies into your loader context.
+
+For example, you might leverage a URL path prefix like `/en-US/products/snowboard` to determine the current locale. Rather than reading and parsing the current URL each time you make a query, you can inject this data into your loader and action context using a custom `createRequestHandler` and the `createPathnameLanguageStrategy()` helper:
+
+```ts
+// worker.ts
+import {
+  createStorefrontApi,
+  createPathnameLanguageStrategy,
+} from "@shopify/hydrogen-remix";
+
+createRequestHandler(build, {
+  getLoadContext: () => ({
+    storefront: createStorefrontApi({
+      getBuyerIp: (req) => req.headers.get("oxygen-buyer-ip"),
+    }),
+    language: createPathnameLanguageStrategy(),
+  }),
+});
+```
+
+Likewise, if you want to infer the customer's country or language from an Oxygen header, you can use the `createOxygenLanguageStrategy()`:
+
+```ts
+// worker.ts
+import {
+  createStorefrontApi,
+  createOxygenLanguageStrategy,
+} from "@shopify/hydrogen-remix";
+
+createRequestHandler(build, {
+  getLoadContext: () => ({
+    storefront: createStorefrontApi({
+      getBuyerIp: (req) => req.headers.get("oxygen-buyer-ip"),
+    }),
+    language: createOxygenLanguageStrategy(),
+  }),
+});
+```
+
+Then, you can use the `language` context in your loaders and actions directly:
+
+```ts
+export async function loader({ params, context: { storefront, language } }) {
+  const productQuery = storefront.query({
+    query: `
+    query Product($handle: String!) {
+        product(handle: $handle) {
+          id
+          title
+        }
+    }`,
+    /**
+     * Pass variables related to the query, including language.
+     */
+    variables: {
+      handle: params.handle,
+      language,
+    },
+  });
+
+  return json({
+    product: await productQuery,
+  });
+}
+```
