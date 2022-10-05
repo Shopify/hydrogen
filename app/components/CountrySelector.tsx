@@ -17,7 +17,7 @@ export function CountrySelector() {
   const currentCountry = countries?.find(c => c.isoCode === country);
 
   return (
-    !countries ? null : (
+    countries && (
       <section className="grid gap-4 w-full md:max-w-[335px] md:ml-auto">
         <Heading size="lead" className="cursor-default" as="h3">
           Country
