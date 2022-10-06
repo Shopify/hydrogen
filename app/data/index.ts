@@ -13,7 +13,6 @@ import type {
   Blog,
   PageConnection,
   Shop,
-  CountryCode,
   Localization,
   CustomerAccessTokenCreatePayload,
   Customer,
@@ -26,7 +25,12 @@ import {
   getPublicTokenHeaders,
   getStorefrontApiUrl,
 } from "~/lib/shopify-client";
-import { type EnhancedMenu, parseMenu, getApiErrorMessage, getLocalizationFromLang } from "~/lib/utils";
+import {
+  type EnhancedMenu,
+  parseMenu,
+  getApiErrorMessage,
+  getLocalizationFromLang,
+} from "~/lib/utils";
 import invariant from "tiny-invariant";
 import { logout } from "~/routes/account.logout";
 import type { AppLoadContext } from "@remix-run/cloudflare";
@@ -480,8 +484,10 @@ const COLLECTION_QUERY = `#graphql
     $handle: String!
     $country: CountryCode
     $language: LanguageCode
-    $pageBy: Int!
-    $cursor: String
+    $first: Int
+    $last: Int
+    $startCursor: String
+    $endCursor: String
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -499,12 +505,14 @@ const COLLECTION_QUERY = `#graphql
         height
         altText
       }
-      products(first: $pageBy, after: $cursor) {
+      products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
         nodes {
           ...ProductCard
         }
         pageInfo {
+          hasPreviousPage
           hasNextPage
+          startCursor
           endCursor
         }
       }
@@ -514,13 +522,15 @@ const COLLECTION_QUERY = `#graphql
 
 export async function getCollection({
   handle,
-  paginationSize = 48,
+  pageBy = 24,
+  direction = "next",
   cursor,
   params,
 }: {
   handle: string;
-  paginationSize?: number;
-  cursor?: string;
+  pageBy: number;
+  direction: "next" | "previous" | undefined;
+  cursor: string | undefined;
   params: Params;
 }) {
   const { language, country } = getLocalizationFromLang(params.lang);
@@ -530,11 +540,13 @@ export async function getCollection({
   }>({
     query: COLLECTION_QUERY,
     variables: {
-      handle,
-      cursor,
+      handle: "freestyle",
+      first: direction === "next" ? pageBy : null,
+      last: direction === "previous" ? pageBy : null,
+      startCursor: direction === "previous" && cursor ? cursor : null,
+      endCursor: direction === "next" && cursor ? cursor : null,
       language,
       country,
-      pageBy: paginationSize,
     },
   });
 
@@ -708,7 +720,13 @@ mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(c
 }
 `;
 
-export async function createCart({ cart, params }: { cart: CartInput, params: Params }) {
+export async function createCart({
+  cart,
+  params,
+}: {
+  cart: CartInput;
+  params: Params;
+}) {
   const { country } = getLocalizationFromLang(params.lang);
 
   const { data } = await getStorefrontData<{
@@ -741,7 +759,7 @@ const ADD_LINE_ITEM_QUERY = `#graphql
 export async function addLineItem({
   cartId,
   lines,
-  params
+  params,
 }: {
   cartId: string;
   lines: CartLineInput[];
@@ -773,7 +791,10 @@ const CART_QUERY = `#graphql
   ${CART_FRAGMENT}
 `;
 
-export async function getCart({ cartId, params }: {
+export async function getCart({
+  cartId,
+  params,
+}: {
   cartId: string;
   params: Params;
 }) {
@@ -846,9 +867,12 @@ const TOP_PRODUCTS_QUERY = `#graphql
   }
 `;
 
-export async function getTopProducts({ params, count = 4 }: {
+export async function getTopProducts({
+  params,
+  count = 4,
+}: {
   params: Params;
-  count?: number
+  count?: number;
 }) {
   const { language, country } = getLocalizationFromLang(params.lang);
 
@@ -1045,7 +1069,7 @@ export async function getArticle({
     variables: {
       blogHandle,
       articleHandle,
-      language
+      language,
     },
   });
 
@@ -1085,7 +1109,7 @@ export async function getPageData({
     query: PAGE_QUERY,
     variables: {
       language,
-      handle
+      handle,
     },
   });
 
@@ -1122,9 +1146,7 @@ const NOT_FOUND_QUERY = `#graphql
   }
 `;
 
-export async function getFeaturedData({params}: {
-  params: Params;
-}) {
+export async function getFeaturedData({ params }: { params: Params }) {
   const { language, country } = getLocalizationFromLang(params.lang);
   const { data } = await getStorefrontData<{
     featuredCollections: CollectionConnection;

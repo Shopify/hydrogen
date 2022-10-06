@@ -1,45 +1,18 @@
 import { Button, Grid, ProductCard, LinkI18n } from "~/components";
 import { getImageLoadingPriority } from "~/lib/const";
-import type {
-  Collection,
-  Product,
-} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { useFetcher } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import { useSearchParams, useTransition } from "@remix-run/react";
 
 export function ProductGrid({
-  url,
   collection,
 }: {
   url: string;
   collection: Collection;
 }) {
-  const initialProducts = collection?.products?.nodes || [];
-  const [nextPage, setNextPage] = useState(
-    collection?.products?.pageInfo?.hasNextPage
-  );
-  const [endCursor, setEndCursor] = useState(
-    collection?.products?.pageInfo?.endCursor
-  );
-  const [products, setProducts] = useState(initialProducts);
-  const fetcher = useFetcher();
+  const transition = useTransition();
+  const [searchParams] = useSearchParams();
 
-  function fetchMoreProducts() {
-    fetcher.load(`${url}?index&cursor=${endCursor}`);
-  }
-
-  useEffect(() => {
-    if (!fetcher.data) return;
-
-    const { collection } = fetcher.data;
-    setProducts((prev: Product[]) => [...prev, ...collection.products.nodes]);
-    setNextPage(collection.products.pageInfo.hasNextPage);
-    setEndCursor(collection.products.pageInfo.endCursor);
-  }, [fetcher.data]);
-
-  const haveProducts = initialProducts.length > 0;
-
-  if (!haveProducts) {
+  if (!collection?.products?.nodes) {
     return (
       <>
         <p>No products found on this collection</p>
@@ -50,8 +23,38 @@ export function ProductGrid({
     );
   }
 
+  /* TODO: 
+    - Load More -> Passes pages in location state via Link component
+    - Infinite Scroll -> Opt-in to trigger load more when in view
+    - Optional consideration: Virtualization if very long list (need to consider impact of scroll position, etc.)
+
+    - product grid prepends location state products if found
+    -- if found, never render a previous page link (because you'll already have it since page 1)
+*/
+
+  const { hasNextPage, hasPreviousPage, startCursor, endCursor } =
+    collection?.products?.pageInfo;
+
+  const products = collection?.products?.nodes;
+
   return (
     <>
+      {hasPreviousPage && (
+        <div className="flex items-center justify-center mt-6">
+          <Button
+            to={`.?cursor=${startCursor}&direction=previous`}
+            disabled={transition.state !== "idle"}
+            variant="secondary"
+            width="full"
+            prefetch="intent"
+          >
+            {transition.state !== "idle"
+              ? "Loading..."
+              : "Load previous products"}
+          </Button>
+        </div>
+      )}
+
       <Grid layout="products">
         {products.map((product, i) => (
           <ProductCard
@@ -62,16 +65,16 @@ export function ProductGrid({
         ))}
       </Grid>
 
-      {nextPage && (
+      {hasNextPage && (
         <div className="flex items-center justify-center mt-6">
           <Button
-            disabled={fetcher.state !== "idle"}
+            to={`.?cursor=${endCursor}&direction=next`}
+            disabled={transition.state !== "idle"}
             variant="secondary"
-            onClick={fetchMoreProducts}
             width="full"
             prefetch="intent"
           >
-            {fetcher.state !== "idle" ? "Loading..." : "Load more products"}
+            {transition.state !== "idle" ? "Loading..." : "Load more products"}
           </Button>
         </div>
       )}

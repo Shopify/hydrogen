@@ -16,8 +16,20 @@ export async function loader({ params, request }: LoaderArgs) {
 
   invariant(collectionHandle, "Missing collectionHandle param");
 
-  const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
-  const collection = await getCollection({ handle: collectionHandle, cursor, params });
+  const searchParams = new URL(request.url).searchParams;
+
+  const cursor = searchParams.get("cursor") ?? undefined;
+  const direction =
+    searchParams.get("direction") === "previous" ? "previous" : "next";
+
+  console.log("querying for cursor", cursor);
+  const collection = await getCollection({
+    handle: collectionHandle,
+    pageBy: 4,
+    direction,
+    cursor,
+    params,
+  });
 
   return json({ collection });
 }
