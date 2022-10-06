@@ -13,7 +13,6 @@ import type {
   Blog,
   PageConnection,
   Shop,
-  CountryCode,
   Localization,
   CustomerAccessTokenCreatePayload,
   Customer,
@@ -21,12 +20,18 @@ import type {
   CustomerUpdatePayload,
   UserError,
   Page,
+  ShopPolicy,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
   getStorefrontApiUrl,
 } from "~/lib/shopify-client";
-import { type EnhancedMenu, parseMenu, getApiErrorMessage, getLocalizationFromLang } from "~/lib/utils";
+import {
+  type EnhancedMenu,
+  parseMenu,
+  getApiErrorMessage,
+  getLocalizationFromLang,
+} from "~/lib/utils";
 import invariant from "tiny-invariant";
 import { logout } from "~/routes/account.logout";
 import type { AppLoadContext } from "@remix-run/cloudflare";
@@ -708,7 +713,13 @@ mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(c
 }
 `;
 
-export async function createCart({ cart, params }: { cart: CartInput, params: Params }) {
+export async function createCart({
+  cart,
+  params,
+}: {
+  cart: CartInput;
+  params: Params;
+}) {
   const { country } = getLocalizationFromLang(params.lang);
 
   const { data } = await getStorefrontData<{
@@ -741,7 +752,7 @@ const ADD_LINE_ITEM_QUERY = `#graphql
 export async function addLineItem({
   cartId,
   lines,
-  params
+  params,
 }: {
   cartId: string;
   lines: CartLineInput[];
@@ -773,7 +784,10 @@ const CART_QUERY = `#graphql
   ${CART_FRAGMENT}
 `;
 
-export async function getCart({ cartId, params }: {
+export async function getCart({
+  cartId,
+  params,
+}: {
   cartId: string;
   params: Params;
 }) {
@@ -846,9 +860,12 @@ const TOP_PRODUCTS_QUERY = `#graphql
   }
 `;
 
-export async function getTopProducts({ params, count = 4 }: {
+export async function getTopProducts({
+  params,
+  count = 4,
+}: {
   params: Params;
-  count?: number
+  count?: number;
 }) {
   const { language, country } = getLocalizationFromLang(params.lang);
 
@@ -1045,7 +1062,7 @@ export async function getArticle({
     variables: {
       blogHandle,
       articleHandle,
-      language
+      language,
     },
   });
 
@@ -1085,7 +1102,7 @@ export async function getPageData({
     query: PAGE_QUERY,
     variables: {
       language,
-      handle
+      handle,
     },
   });
 
@@ -1095,6 +1112,122 @@ export async function getPageData({
   }
 
   return data.page;
+}
+
+const POLICIES_QUERY = `#graphql
+  fragment Policy on ShopPolicy {
+    id
+    title
+    handle
+  }
+
+  query PoliciesQuery {
+    shop {
+      privacyPolicy {
+        ...Policy
+      }
+      shippingPolicy {
+        ...Policy
+      }
+      termsOfService {
+        ...Policy
+      }
+      refundPolicy {
+        ...Policy
+      }
+      subscriptionPolicy {
+        id
+        title
+        handle
+      }
+    }
+  }
+`;
+
+export async function getPolicies() {
+  const { data } = await getStorefrontData<{
+    shop: Record<string, ShopPolicy>;
+  }>({
+    query: POLICIES_QUERY,
+    variables: {},
+  });
+
+  invariant(data, "No data returned from Shopify API");
+  const policies = Object.values(data.shop || {});
+
+  if (policies.length === 0) {
+    throw new Response("Not found", { status: 404 });
+  }
+
+  return policies;
+}
+
+const POLICY_CONTENT_QUERY = `#graphql
+  fragment Policy on ShopPolicy {
+    body
+    handle
+    id
+    title
+    url
+  }
+
+  query PoliciesQuery(
+    $languageCode: LanguageCode
+    $privacyPolicy: Boolean!
+    $shippingPolicy: Boolean!
+    $termsOfService: Boolean!
+    $refundPolicy: Boolean!
+  ) @inContext(language: $languageCode) {
+    shop {
+      privacyPolicy @include(if: $privacyPolicy) {
+        ...Policy
+      }
+      shippingPolicy @include(if: $shippingPolicy) {
+        ...Policy
+      }
+      termsOfService @include(if: $termsOfService) {
+        ...Policy
+      }
+      refundPolicy @include(if: $refundPolicy) {
+        ...Policy
+      }
+    }
+  }
+`;
+
+export async function getPolicyContent({
+  params,
+  handle,
+}: {
+  params: Params;
+  handle: string;
+}) {
+  const { language } = getLocalizationFromLang(params.lang);
+
+  const policyName = handle.replace(/-([a-z])/g, (_, m1) => m1.toUpperCase());
+
+  const { data } = await getStorefrontData<{
+    shop: Record<string, ShopPolicy>;
+  }>({
+    query: POLICY_CONTENT_QUERY,
+    variables: {
+      language,
+      privacyPolicy: false,
+      shippingPolicy: false,
+      termsOfService: false,
+      refundPolicy: false,
+      [policyName]: true,
+    },
+  });
+
+  invariant(data, "No data returned from Shopify API");
+  const policy = data.shop?.[policyName];
+
+  if (!policy) {
+    throw new Response("Not found", { status: 404 });
+  }
+
+  return policy;
 }
 
 const NOT_FOUND_QUERY = `#graphql
@@ -1122,9 +1255,7 @@ const NOT_FOUND_QUERY = `#graphql
   }
 `;
 
-export async function getFeaturedData({params}: {
-  params: Params;
-}) {
+export async function getFeaturedData({ params }: { params: Params }) {
   const { language, country } = getLocalizationFromLang(params.lang);
   const { data } = await getStorefrontData<{
     featuredCollections: CollectionConnection;
