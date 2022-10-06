@@ -7,5 +7,9 @@ import type {
 export function useCart(): Cart | undefined {
   const rootData = useParentRouteData('/');
 
-  return rootData?.cart?._data
+  if (rootData?.cart?._data) {
+    return rootData?.cart?._data;
+  }
+
+  throw rootData?.cart
 }

@@ -21,9 +21,8 @@ import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
 import { getI18nPath } from "./LinkI18n";
-import { useEffect } from "react";
-import {useCart} from '~/hooks/useCart'
-
+import { Suspense, useEffect } from "react";
+import { useCart } from '~/hooks/useCart'
 
 export function Layout({
   children,
@@ -82,7 +81,9 @@ function Header({
 
   return (
     <>
-      <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
+      <Suspense fallback={null}>
+        <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
+      </Suspense>
       {menu && (
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
       )}
@@ -102,34 +103,6 @@ function Header({
   );
 }
 
-function Footer({ menu }: { menu?: EnhancedMenu }) {
-  const isHome = isHomePath();
-  const itemsCount = menu
-    ? menu?.items?.length + 1 > 4
-      ? 4
-      : menu?.items?.length + 1
-    : [];
-
-  return (
-    <Section
-      divider={isHome ? "none" : "top"}
-      as="footer"
-      role="contentinfo"
-      className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12
-        border-b md:gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-${itemsCount}
-        bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
-    >
-      <FooterMenu menu={menu} />
-      <CountrySelector />
-      <div
-        className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
-      >
-        &copy; {new Date().getFullYear()} / Shopify, Inc. Hydrogen is an MIT
-        Licensed Open Source project. This website is carbon&nbsp;neutral.
-      </div>
-    </Section>
-  );
-}
 
 function CartDrawer({
   isOpen,
@@ -218,13 +191,11 @@ function MenuMobileNav({
 }
 
 function MobileHeader({
-  countryCode,
   title,
   isHome,
   openCart,
   openMenu,
 }: {
-  countryCode?: string | null;
   title: string;
   isHome: boolean;
   openCart: () => void;
@@ -283,23 +254,20 @@ function MobileHeader({
         <LinkI18n to={"/account"} className={styles.button}>
           <IconAccount />
         </LinkI18n>
-        <button onClick={openCart} className={styles.button}>
-          <IconBag />
-          <CartBadge dark={isHome} />
-        </button>
+        <Suspense fallback={<Badge count={0} dark={isHome} openCart={openCart} />}>
+          <CartBadge dark={isHome} openCart={openCart} />
+        </Suspense>
       </div>
     </header>
   );
 }
 
 function DesktopHeader({
-  countryCode,
   isHome,
   menu,
   openCart,
   title,
 }: {
-  countryCode?: string | null;
   isHome: boolean;
   openCart: () => void;
   menu?: EnhancedMenu;
@@ -362,50 +330,95 @@ function DesktopHeader({
         <LinkI18n to={"/account"} className={styles.button}>
           <IconAccount />
         </LinkI18n>
-        <button onClick={openCart} className={styles.button}>
-          <IconBag />
-          <CartBadge dark={isHome} />
-        </button>
+        <Suspense fallback={<Badge count={0} dark={isHome} openCart={openCart} />}>
+          <CartBadge dark={isHome} openCart={openCart} />
+        </Suspense>
       </div>
     </header>
   );
 }
 
-function CartBadge({ dark }: { dark: boolean }) {
-  const cart = useCart();
+function Badge({ openCart, dark, count }: { count: number , dark: boolean, openCart: () => void }) {
   return (
-    <div
-      className={`${
-        dark
-          ? "text-primary bg-contrast dark:text-contrast dark:bg-primary"
-          : "text-contrast bg-primary"
-      } absolute bottom-1 right-1 text-[0.625rem] font-medium subpixel-antialiased h-3 min-w-[0.75rem] flex items-center justify-center leading-none text-center rounded-full w-auto px-[0.125rem] pb-px`}
-    >
-      <span>{cart?.totalQuantity || ''}</span>
-    </div>
+    <button onClick={openCart} className={'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'}>
+      <IconBag />
+      <div
+        className={`${
+          dark
+            ? "text-primary bg-contrast dark:text-contrast dark:bg-primary"
+            : "text-contrast bg-primary"
+        } absolute bottom-1 right-1 text-[0.625rem] font-medium subpixel-antialiased h-3 min-w-[0.75rem] flex items-center justify-center leading-none text-center rounded-full w-auto px-[0.125rem] pb-px`}
+      >
+        <span>{count || 0}</span>
+      </div>
+    </button>
   );
 }
+
+function CartBadge({ openCart, dark }: { dark: boolean, openCart: () => void }) {
+  const cart = useCart();
+
+  return (
+    <Badge
+      openCart={openCart}
+      count={cart?.totalQuantity || 0}
+      dark={dark}
+    />
+  );
+}
+
+
+function Footer({ menu }: { menu?: EnhancedMenu }) {
+  const isHome = isHomePath();
+  const itemsCount = menu
+    ? menu?.items?.length + 1 > 4
+      ? 4
+      : menu?.items?.length + 1
+    : [];
+
+  return (
+    <Section
+      divider={isHome ? "none" : "top"}
+      as="footer"
+      role="contentinfo"
+      className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12
+        border-b md:gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-${itemsCount}
+        bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
+    >
+      <FooterMenu menu={menu} />
+      <Suspense fallback="Loading countries...">
+        <CountrySelector />
+      </Suspense>
+      <div
+        className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
+      >
+        &copy; {new Date().getFullYear()} / Shopify, Inc. Hydrogen is an MIT
+        Licensed Open Source project. This website is carbon&nbsp;neutral.
+      </div>
+    </Section>
+  );
+}
+
+const FooterLink = ({ item }: { item: EnhancedMenuItem }) => {
+  if (item.to.startsWith("http")) {
+    return (
+      <a href={item.to} target={item.target} rel="noopener noreferrer">
+        {item.title}
+      </a>
+    );
+  }
+
+  return (
+    <LinkI18n to={item.to} target={item.target} prefetch="intent">
+      {item.title}
+    </LinkI18n>
+  );
+};
 
 function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
   const styles = {
     section: "grid gap-4",
     nav: "grid gap-2 pb-6",
-  };
-
-  const FooterLink = ({ item }: { item: EnhancedMenuItem }) => {
-    if (item.to.startsWith("http")) {
-      return (
-        <a href={item.to} target={item.target} rel="noopener noreferrer">
-          {item.title}
-        </a>
-      );
-    }
-
-    return (
-      <LinkI18n to={item.to} target={item.target} prefetch="intent">
-        {item.title}
-      </LinkI18n>
-    );
   };
 
   return (
@@ -425,12 +438,13 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
                     )}
                   </Heading>
                 </Disclosure.Button>
-                {item?.items?.length > 0 && (
+                {item?.items?.length > 0 ? (
                   <div
                     className={`${
                       open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
                     } overflow-hidden transition-all duration-300`}
                   >
+                    {/* TODO: the `static` prop causes a Suspense warning */}
                     <Disclosure.Panel static>
                       <nav className={styles.nav}>
                         {item.items.map((subItem) => (
@@ -439,7 +453,7 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
                       </nav>
                     </Disclosure.Panel>
                   </div>
-                )}
+                ): null}
               </>
             )}
           </Disclosure>
