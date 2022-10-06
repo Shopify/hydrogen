@@ -17,7 +17,7 @@ export function CountrySelector() {
   const currentCountry = countries?.find(c => c.isoCode === country);
 
   return (
-    countries && (
+    !countries ? null : (
       <section className="grid gap-4 w-full md:max-w-[335px] md:ml-auto">
         <Heading size="lead" className="cursor-default" as="h3">
           Country
@@ -49,7 +49,7 @@ export function CountrySelector() {
                       open ? 'max-h-48' : 'max-h-0'
                     }`}
                   >
-                    {open && Object.values(countries).map(country => {
+                    {open && countries.map((country) => {
                       const isSelected = country.isoCode === currentCountry?.isoCode;
                       const countryIsoCode = country.isoCode.toLowerCase();
                       return (

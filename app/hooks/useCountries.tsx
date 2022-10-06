@@ -7,6 +7,10 @@ import type {
 export function useCountries(): Array<Country> | undefined {
   const rootData = useParentRouteData('/');
 
-  return rootData?.countries?._data
+  if (rootData?.countries?._data) {
+    return rootData?.countries?._data;
+  }
+  // return rootData?.countries?._data
+  throw rootData?.countries
 }
 
