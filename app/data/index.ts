@@ -1581,8 +1581,6 @@ export async function getCustomer({
     },
   });
 
-  console.log('customer data', {data, errors, customerAccessToken})
-
   if (errors) {
     const errorMessages = errors.map(error => error.message).join('\n')
     throw new Error(errorMessages)
