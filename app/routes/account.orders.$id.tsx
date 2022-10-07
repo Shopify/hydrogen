@@ -75,7 +75,7 @@ export default function OrderRoute() {
   const {order, lineItems, discountValue, discountPercentage} = useLoaderData<typeof loader>();
   return (
     <div>
-      <PageHeader heading={`Order detail`}>
+      <PageHeader heading="Order detail">
         <Link to="/account">
           <Text color="subtle">Return to Account Overview</Text>
         </Link>
