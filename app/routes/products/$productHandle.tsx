@@ -26,7 +26,7 @@ import {
   Section,
   Skeleton,
   Text,
-  LinkI18n,
+  Link,
 } from "~/components";
 import {
   addLineItem,
@@ -77,7 +77,7 @@ export const action: ActionFunction = async ({ request, context, params }) => {
   if (!cartId) {
     const cart = await createCart({
       cart: { lines: [{ merchandiseId: variantId }] },
-      params
+      params,
     });
 
     session.set("cartId", cart.id);
@@ -384,21 +384,21 @@ function ProductOptionLink({
   const isLangPathname = /\/[a-zA-Z]{2}-[a-zA-Z]{2}\//g.test(pathname);
   // fixes internalized pathname
   const path = isLangPathname
-    ? `/${pathname.split('/').slice(2).join('/')}`
-    : pathname
+    ? `/${pathname.split("/").slice(2).join("/")}`
+    : pathname;
 
   const clonedSearchParams = new URLSearchParams(searchParams);
   clonedSearchParams.set(optionName, optionValue);
 
   return (
-    <LinkI18n
+    <Link
       {...props}
       prefetch="intent"
       replace
       to={`${path}?${clonedSearchParams.toString()}`}
     >
       {children ?? optionValue}
-    </LinkI18n>
+    </Link>
   );
 }
 
@@ -436,12 +436,12 @@ function ProductDetail({
             />
             {learnMore && (
               <div className="">
-                <LinkI18n
+                <Link
                   className="pb-px border-b border-primary/30 text-primary/50"
                   to={learnMore}
                 >
                   Learn more
-                </LinkI18n>
+                </Link>
               </div>
             )}
           </Disclosure.Panel>
