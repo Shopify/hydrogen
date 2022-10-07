@@ -1,7 +1,11 @@
-import { json, LoaderArgs, type MetaFunction } from "@remix-run/cloudflare";
+import {
+  json,
+  type LoaderArgs,
+  type MetaFunction,
+} from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Grid, Heading, PageHeader, Section, LinkI18n } from "~/components";
+import { Grid, Heading, PageHeader, Section, Link } from "~/components";
 import { getCollections } from "~/data";
 import { getImageLoadingPriority } from "~/lib/const";
 
@@ -46,7 +50,7 @@ function CollectionCard({
   loading?: HTMLImageElement["loading"];
 }) {
   return (
-    <LinkI18n to={`/collections/${collection.handle}`} className="grid gap-4">
+    <Link to={`/collections/${collection.handle}`} className="grid gap-4">
       <div className="card-image bg-primary/5 aspect-[3/2]">
         {collection?.image && (
           <img
@@ -62,6 +66,6 @@ function CollectionCard({
       <Heading as="h3" size="copy">
         {collection.title}
       </Heading>
-    </LinkI18n>
+    </Link>
   );
 }

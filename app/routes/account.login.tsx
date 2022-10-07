@@ -10,7 +10,7 @@ import { useState } from "react";
 import { login, StorefrontApiError } from "~/data";
 import { getSession } from "~/lib/session.server";
 import { getInputStyleClasses } from "~/lib/utils";
-import { LinkI18n } from '~/components';
+import { Link } from "~/components";
 
 export async function loader({ request, context }: LoaderArgs) {
   const session = await getSession(request, context);
@@ -174,20 +174,20 @@ export default function Login() {
           <div className="flex items-center mt-8 border-t border-gray-300">
             <p className="align-baseline text-sm mt-6">
               New to {shopName}? &nbsp;
-              <LinkI18n className="inline underline" to="/account/register">
+              <Link className="inline underline" to="/account/register">
                 Create an account
-              </LinkI18n>
+              </Link>
             </p>
           </div>
 
           <div className="flex items-center justify-between mt-4">
             <div className="flex-1"></div>
-            <LinkI18n
+            <Link
               className="inline-block align-baseline text-sm text-primary/50"
               to="/account/recover"
             >
               Forgot password
-            </LinkI18n>
+            </Link>
           </div>
         </Form>
       </div>
