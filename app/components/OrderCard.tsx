@@ -8,14 +8,14 @@ import { statusMessage } from "~/lib/utils";
 
 export function OrderCard({ order }: { order: Order }) {
   if (!order?.id) return null;
-  const legacyOrderId = order!.id!.split("/").pop()!.split("?")[0];
+  const [legacyOrderId, key] = order!.id!.split("/").pop()!.split("?");
   const lineItems = flattenConnection<OrderLineItem>(order?.lineItems);
 
   return (
     <li className="grid text-center border rounded">
       <Link
         className="grid items-center gap-4 p-4 md:gap-6 md:p-6 md:grid-cols-2"
-        to={`/account/orders/${legacyOrderId}`}
+        to={`/account/orders/${legacyOrderId}?${key}`}
       >
         {lineItems[0].variant?.image && (
           <div className="card-image aspect-square bg-primary/5">
