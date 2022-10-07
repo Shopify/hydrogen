@@ -181,7 +181,7 @@ export async function loader({ params, context: { storefront } }: LoaderArgs) {
 
 ## Mutating data
 
-To mutate data in actions, use the `storefront.query` helper with the `mutation` property:
+To mutate data in actions, use the `storefront.query` helper with the `mutation` property. This is just like the `query` property, except caching is not enabled:
 
 ```ts
 export async function action({ request, context: { storefront } }) {
