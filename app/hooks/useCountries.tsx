@@ -10,7 +10,7 @@ export function useCountries(): Array<Country> | undefined {
   if (rootData?.countries?._data) {
     return rootData?.countries?._data;
   }
-  // return rootData?.countries?._data
+
   throw rootData?.countries
 }
 
