@@ -5,11 +5,12 @@ import {
   type ActionFunction,
   type LoaderArgs,
 } from "@remix-run/cloudflare";
-import { Form, Link, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, useActionData, useLoaderData } from "@remix-run/react";
 import { useState } from "react";
 import { login, StorefrontApiError } from "~/data";
 import { getSession } from "~/lib/session.server";
 import { getInputStyleClasses } from "~/lib/utils";
+import { Link } from "~/components";
 
 export async function loader({ request, context }: LoaderArgs) {
   const session = await getSession(request, context);

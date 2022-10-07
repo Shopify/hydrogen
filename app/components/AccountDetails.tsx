@@ -1,6 +1,6 @@
-import { Link, Outlet, useOutlet } from "@remix-run/react";
+import { Outlet, useOutlet } from "@remix-run/react";
 import type { Customer } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Modal } from "~/components";
+import { Modal, Link } from "~/components";
 import type { AccountDetailsOutletContext } from "~/routes/account/edit";
 
 export function AccountDetails({ customer }: { customer: Customer }) {

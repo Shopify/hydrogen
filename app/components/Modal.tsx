@@ -1,5 +1,4 @@
-import { Link } from "@remix-run/react";
-import { IconClose } from "~/components";
+import { IconClose, Link } from "~/components";
 
 export function Modal({
   children,

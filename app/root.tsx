@@ -11,10 +11,14 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useCatch,
   useLoaderData,
+  useMatches,
 } from "@remix-run/react";
 import { Layout } from "~/components";
-import { getCart, getLayoutData } from "~/data";
+import { getCart, getLayoutData, getCountries } from "~/data";
+import { GenericError } from "./components/GenericError";
+import { NotFound } from "./components/NotFound";
 import { getSession } from "./lib/session.server";
 
 import styles from "./styles/app.css";
@@ -43,18 +47,20 @@ export const meta: MetaFunction = () => ({
 export const loader: LoaderFunction = async function loader({
   request,
   context,
+  params
 }) {
   const session = await getSession(request, context);
   const cartId = await session.get("cartId");
 
   return defer({
-    layout: await getLayoutData(),
-    cart: cartId ? getCart({ cartId }) : undefined,
+    layout: await getLayoutData(params),
+    countries: getCountries(),
+    cart: cartId ? getCart({ cartId, params }) : undefined,
   });
 };
 
 export default function App() {
-  const layoutData = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -63,12 +69,60 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout data={layoutData}>
+        <Layout data={data}>
           <Outlet />
         </Layout>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
+      </body>
+    </html>
+  );
+}
+
+export function CatchBoundary() {
+  const [root] = useMatches();
+  const caught = useCatch();
+  const isNotFound = caught.status === 404;
+
+  return (
+    <html lang="en">
+      <head>
+        <title>{isNotFound ? "Not found" : "Error"}</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Layout data={root.data as any}>
+          {isNotFound ? (
+            <NotFound type={caught.data?.pageType} />
+          ) : (
+            <GenericError
+              error={{ message: `${caught.status} ${caught.data}` }}
+            />
+          )}
+        </Layout>
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+export function ErrorBoundary({ error }: { error: Error }) {
+  const [root] = useMatches();
+
+  return (
+    <html lang="en">
+      <head>
+        <title>Error</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Layout data={root.data as any}>
+          <GenericError error={error} />
+        </Layout>
+        <Scripts />
       </body>
     </html>
   );

@@ -3,7 +3,6 @@ import { useScroll } from "react-use";
 import { flattenConnection, Money } from "@shopify/hydrogen-ui-alpha";
 import {
   type FetcherWithComponents,
-  Link,
   useFetcher,
   useLocation,
 } from "@remix-run/react";
@@ -15,6 +14,7 @@ import {
   ProductCard,
   Skeleton,
   Text,
+  Link,
 } from "~/components";
 import type {
   Cart,

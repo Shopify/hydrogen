@@ -1,10 +1,9 @@
-import { Link } from "@remix-run/react";
 import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
 import type {
   Order,
   OrderLineItem,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Heading, Text } from "~/components";
+import { Heading, Text, Link } from "~/components";
 import { statusMessage } from "~/lib/utils";
 
 export function OrderCard({ order }: { order: Order }) {

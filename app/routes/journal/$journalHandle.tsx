@@ -8,32 +8,27 @@ import {
 import { useLoaderData } from "@remix-run/react";
 import { Image } from "@shopify/hydrogen-ui-alpha";
 import invariant from "tiny-invariant";
-import { Button, PageHeader, Section, Text } from "~/components";
+import { PageHeader, Section } from "~/components";
 import { getArticle } from "~/data";
 import { ATTR_LOADING_EAGER } from "~/lib/const";
+import { getLocalizationFromLang } from "~/lib/utils";
 import styles from "../../styles/custom-font.css";
 
 const BLOG_HANDLE = "journal";
 
-export async function loader({ request, params }: LoaderArgs) {
-  // TODO figure out localization
-  const languageCode = "EN";
-  const countryCode = "US";
+export async function loader({ params }: LoaderArgs) {
+  const { language, country } = getLocalizationFromLang(params.lang);
 
   invariant(params.journalHandle, "Missing journal handle");
 
   const article = await getArticle({
     blogHandle: BLOG_HANDLE,
     articleHandle: params.journalHandle,
-    language: languageCode,
+    params,
   });
 
-  if (!article) {
-    throw new Response("Not found", { status: 404 });
-  }
-
   const formattedDate = new Intl.DateTimeFormat(
-    `${languageCode}-${countryCode}`,
+    `${language}-${country}`,
     {
       year: "numeric",
       month: "long",
@@ -98,25 +93,6 @@ export default function Article() {
           className="article"
         />
       </Section>
-    </>
-  );
-}
-
-export function CatchBoundary() {
-  const type = "article";
-  const heading = `We’ve lost this ${type}`;
-  const description = `We couldn’t find the ${type} you’re looking for. Try checking the URL or heading back to the home page.`;
-
-  return (
-    <>
-      <PageHeader heading={heading}>
-        <Text width="narrow" as="p">
-          {description}
-        </Text>
-        <Button width="auto" variant="secondary" to={"/"}>
-          Take me to the home page
-        </Button>
-      </PageHeader>
     </>
   );
 }

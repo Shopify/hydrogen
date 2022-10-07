@@ -4,9 +4,9 @@ import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types
 import { PageHeader, Section, ProductGrid } from "~/components";
 import { getAllProducts } from "~/data";
 
-export async function loader({ request }: LoaderArgs) {
+export async function loader({ request, params }: LoaderArgs) {
   const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
-  const products = await getAllProducts({ cursor });
+  const products = await getAllProducts({ cursor, params });
 
   return products;
 }
