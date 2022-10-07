@@ -1,8 +1,11 @@
+import { useLocation, useParams } from "@remix-run/react";
 import type {
   MenuItem,
   Menu,
   MoneyV2,
   UserError,
+  CountryCode,
+  LanguageCode,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 
 // @ts-expect-error types not available
@@ -249,4 +252,30 @@ export function getApiErrorMessage(
   if (data?.[field]?.customerUserErrors?.length)
     return data[field].customerUserErrors[0].message;
   return null;
+}
+
+export function getLocalizationFromLang(lang?: String): {
+  language: LanguageCode,
+  country: CountryCode
+} {
+  if (lang) {
+    const [language, country] = lang.split('-');
+
+    return {
+      language: language.toUpperCase() as LanguageCode,
+      country: (country.toUpperCase() || 'US') as CountryCode,
+    }
+  }
+  return {
+    language: 'EN' as LanguageCode,
+    country: 'US' as CountryCode,
+  }
+}
+
+export function isHomePath() {
+  const { pathname } = useLocation();
+  const { lang } = useParams();
+  const strippedPathname = pathname.replace(new RegExp(`^\/${lang}\/`), '/')
+
+  return strippedPathname === '/';
 }

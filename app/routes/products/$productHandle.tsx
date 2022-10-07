@@ -6,11 +6,11 @@ import {
   redirect,
 } from "@remix-run/cloudflare";
 import {
-  Link,
   useLoaderData,
   Await,
   useSearchParams,
   Form,
+  useLocation,
   useTransition,
 } from "@remix-run/react";
 import { Money, ShopPayButton } from "@shopify/hydrogen-ui-alpha";
@@ -26,6 +26,7 @@ import {
   Section,
   Skeleton,
   Text,
+  Link,
 } from "~/components";
 import {
   addLineItem,
@@ -44,13 +45,14 @@ export const loader = async ({ params, request }: LoaderArgs) => {
 
   const { shop, product } = await getProductData(
     productHandle,
-    new URL(request.url).searchParams
+    new URL(request.url).searchParams,
+    params
   );
 
   return defer({
     product,
     shop,
-    recommended: getRecommendedProducts(product.id),
+    recommended: getRecommendedProducts(product.id, params),
   });
 };
 
@@ -75,6 +77,7 @@ export const action: ActionFunction = async ({ request, context, params }) => {
   if (!cartId) {
     const cart = await createCart({
       cart: { lines: [{ merchandiseId: variantId }] },
+      params,
     });
 
     session.set("cartId", cart.id);
@@ -84,6 +87,7 @@ export const action: ActionFunction = async ({ request, context, params }) => {
     await addLineItem({
       cartId,
       lines: [{ merchandiseId: variantId }],
+      params,
     });
   }
 
@@ -376,6 +380,13 @@ function ProductOptionLink({
   children?: ReactNode;
   [key: string]: any;
 }) {
+  const { pathname } = useLocation();
+  const isLangPathname = /\/[a-zA-Z]{2}-[a-zA-Z]{2}\//g.test(pathname);
+  // fixes internalized pathname
+  const path = isLangPathname
+    ? `/${pathname.split("/").slice(2).join("/")}`
+    : pathname;
+
   const clonedSearchParams = new URLSearchParams(searchParams);
   clonedSearchParams.set(optionName, optionValue);
 
@@ -384,10 +395,7 @@ function ProductOptionLink({
       {...props}
       prefetch="intent"
       replace
-      to={{
-        pathname: ".",
-        search: clonedSearchParams.toString(),
-      }}
+      to={`${path}?${clonedSearchParams.toString()}`}
     >
       {children ?? optionValue}
     </Link>

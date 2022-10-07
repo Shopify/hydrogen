@@ -6,7 +6,7 @@ import {
   useMoney,
 } from "@shopify/hydrogen-ui-alpha";
 
-import { Text } from "~/components";
+import { Text, Link } from "~/components";
 import { isDiscounted, isNewArrival } from "~/lib/utils";
 import { getProductPlaceholder } from "~/lib/placeholders";
 import type {
@@ -15,7 +15,6 @@ import type {
   ProductVariant,
   ProductVariantConnection,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Link } from "@remix-run/react";
 
 export function ProductCard({
   product,

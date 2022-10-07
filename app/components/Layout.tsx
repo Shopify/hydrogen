@@ -1,5 +1,8 @@
-import { useLocation } from "react-router";
-import type { EnhancedMenu, EnhancedMenuItem } from "~/lib/utils";
+import {
+  type EnhancedMenu,
+  type EnhancedMenuItem,
+  isHomePath,
+} from "~/lib/utils";
 import {
   Drawer,
   useDrawer,
@@ -12,26 +15,29 @@ import {
   IconMenu,
   IconCaret,
   Section,
+  CountrySelector,
   CartDetails,
   CartEmpty,
+  Link,
 } from "~/components";
-import { Await, Link, useFetcher } from "@remix-run/react";
+import { useFetcher, useParams } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
-import type { Cart } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import { Suspense, useEffect } from "react";
+import { useCart } from "~/hooks/useCart";
 
 export function Layout({
   children,
   data,
 }: {
   children: React.ReactNode;
-  data: {
+  data?: {
     layout: LayoutData;
-    cart: Promise<Cart>;
   };
 }) {
+  const { layout } = data || {};
+
   return (
     <>
       <div className="flex flex-col min-h-screen">
@@ -41,34 +47,20 @@ export function Layout({
           </a>
         </div>
         <Header
-          title={data.layout.shop.name}
-          menu={data.layout.headerMenu}
-          cart={data.cart}
+          title={layout?.shop.name ?? "Hydrogen"}
+          menu={layout?.headerMenu}
         />
         <main role="main" id="mainContent" className="flex-grow">
           {children}
         </main>
       </div>
-      <Footer menu={data.layout.footerMenu} />
+      <Footer menu={layout?.footerMenu} />
     </>
   );
 }
 
-function Header({
-  title,
-  menu,
-  cart,
-}: {
-  title: string;
-  menu: EnhancedMenu;
-  cart?: Promise<Cart>;
-}) {
-  const { pathname } = useLocation();
-
-  // TODO: Ensure locale support like in Hydrogen
-  const isHome = pathname === "/";
-  const localeMatch = /^\/([a-z]{2})(\/|$)/i.exec(pathname);
-  const countryCode = localeMatch ? localeMatch[1] : null;
+function Header({ title, menu }: { title: string; menu?: EnhancedMenu }) {
+  const isHome = isHomePath();
 
   const {
     isOpen: isCartOpen,
@@ -84,78 +76,36 @@ function Header({
 
   return (
     <>
-      <CartDrawer isOpen={isCartOpen} onClose={closeCart} cart={cart} />
-      <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu!} />
+      <Suspense fallback={null}>
+        <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
+      </Suspense>
+      {menu && (
+        <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
+      )}
       <DesktopHeader
-        countryCode={countryCode}
         isHome={isHome}
         title={title}
         menu={menu}
         openCart={openCart}
-        cart={cart}
       />
       <MobileHeader
-        countryCode={countryCode}
         isHome={isHome}
         title={title}
         openCart={openCart}
         openMenu={openMenu}
-        cart={cart}
       />
     </>
-  );
-}
-
-function Footer({ menu }: { menu?: EnhancedMenu }) {
-  const { pathname } = useLocation();
-
-  // TODO: Ensure locale support like in Hydrogen
-  const localeMatch = /^\/([a-z]{2})(\/|$)/i.exec(pathname);
-  const countryCode = localeMatch ? localeMatch[1] : null;
-
-  const isHome = pathname === `/${countryCode ? countryCode + "/" : ""}`;
-  const itemsCount = menu
-    ? menu?.items?.length + 1 > 4
-      ? 4
-      : menu?.items?.length + 1
-    : [];
-
-  return (
-    <Section
-      divider={isHome ? "none" : "top"}
-      as="footer"
-      role="contentinfo"
-      className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12
-        border-b md:gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-${itemsCount}
-        bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
-    >
-      <FooterMenu menu={menu} />
-      <section className="grid gap-4 w-full md:max-w-[335px] md:ml-auto">
-        <Heading size="lead" className="cursor-default" as="h3">
-          Country
-        </Heading>
-        {/* TODO: Add country selector */}
-        {/* <CountrySelector /> */}
-      </section>
-      <div
-        className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
-      >
-        &copy; {new Date().getFullYear()} / Shopify, Inc. Hydrogen is an MIT
-        Licensed Open Source project. This website is carbon&nbsp;neutral.
-      </div>
-    </Section>
   );
 }
 
 function CartDrawer({
   isOpen,
   onClose,
-  cart,
 }: {
   isOpen: boolean;
   onClose: () => void;
-  cart?: Promise<Cart>;
 }) {
+  const cart = useCart();
   /**
    * Whenever a component that uses a fetcher is _unmounted_, that fetcher is removed
    * from the internal Remix cache. By defining the fetcher outside of the component,
@@ -169,26 +119,20 @@ function CartDrawer({
    * drawer is opened.
    */
   useEffect(() => {
-    topProductsFetcher.load("/cart");
+    isOpen && topProductsFetcher.load("/cart");
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isOpen]);
 
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
         {cart ? (
-          <Suspense fallback={<div>Loading...</div>}>
-            <Await errorElement="Hey, the cart didn't load LOL" resolve={cart}>
-              {(cart) => (
-                <CartDetails
-                  fetcher={topProductsFetcher}
-                  layout="drawer"
-                  onClose={onClose}
-                  cart={cart}
-                />
-              )}
-            </Await>
-          </Suspense>
+          <CartDetails
+            fetcher={topProductsFetcher}
+            layout="drawer"
+            onClose={onClose}
+            cart={cart}
+          />
         ) : (
           <CartEmpty
             fetcher={topProductsFetcher}
@@ -241,19 +185,15 @@ function MenuMobileNav({
 }
 
 function MobileHeader({
-  countryCode,
   title,
   isHome,
   openCart,
   openMenu,
-  cart,
 }: {
-  countryCode?: string | null;
   title: string;
   isHome: boolean;
   openCart: () => void;
   openMenu: () => void;
-  cart?: Promise<Cart>;
 }) {
   const { y } = useWindowScroll();
 
@@ -267,6 +207,7 @@ function MobileHeader({
       y > 50 && !isHome ? "shadow-lightHeader " : ""
     }flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`,
   };
+  const params = useParams();
 
   return (
     <header role="banner" className={styles.container}>
@@ -275,7 +216,7 @@ function MobileHeader({
           <IconMenu />
         </button>
         <form
-          action={`/${countryCode ? countryCode + "/" : ""}search`}
+          action={params.lang ? `/${params.lang}/search` : "/search"}
           className="items-center gap-2 sm:flex"
         >
           <button type="submit" className={styles.button}>
@@ -308,37 +249,29 @@ function MobileHeader({
         <Link to={"/account"} className={styles.button}>
           <IconAccount />
         </Link>
-        <button onClick={openCart} className={styles.button}>
-          <IconBag />
-          {cart && (
-            <Suspense fallback={null}>
-              <Await resolve={cart}>
-                {(cart) => <CartBadge cart={cart} dark={isHome} />}
-              </Await>
-            </Suspense>
-          )}
-        </button>
+        <Suspense
+          fallback={<Badge count={0} dark={isHome} openCart={openCart} />}
+        >
+          <CartBadge dark={isHome} openCart={openCart} />
+        </Suspense>
       </div>
     </header>
   );
 }
 
 function DesktopHeader({
-  countryCode,
   isHome,
   menu,
   openCart,
   title,
-  cart,
 }: {
-  countryCode?: string | null;
   isHome: boolean;
   openCart: () => void;
   menu?: EnhancedMenu;
   title: string;
-  cart?: Promise<Cart>;
 }) {
   const { y } = useWindowScroll();
+  const params = useParams();
 
   const styles = {
     button:
@@ -374,7 +307,7 @@ function DesktopHeader({
       </div>
       <div className="flex items-center gap-1">
         <form
-          action={`/${countryCode ? countryCode + "/" : ""}search`}
+          action={params.lang ? `/${params.lang}/search` : "/search"}
           className="flex items-center gap-2"
         >
           <Input
@@ -395,60 +328,111 @@ function DesktopHeader({
         <Link to={"/account"} className={styles.button}>
           <IconAccount />
         </Link>
-        <button onClick={openCart} className={styles.button}>
-          <IconBag />
-          {cart && (
-            <Suspense fallback={null}>
-              <Await resolve={cart}>
-                {(cart) => <CartBadge cart={cart} dark={isHome} />}
-              </Await>
-            </Suspense>
-          )}
-        </button>
+        <Suspense
+          fallback={<Badge count={0} dark={isHome} openCart={openCart} />}
+        >
+          <CartBadge dark={isHome} openCart={openCart} />
+        </Suspense>
       </div>
     </header>
   );
 }
 
-function CartBadge({ cart, dark }: { cart: Cart; dark: boolean }) {
-  const { totalQuantity } = cart;
-
-  if (totalQuantity < 1) {
-    return null;
-  }
+function Badge({
+  openCart,
+  dark,
+  count,
+}: {
+  count: number;
+  dark: boolean;
+  openCart: () => void;
+}) {
   return (
-    <div
-      className={`${
-        dark
-          ? "text-primary bg-contrast dark:text-contrast dark:bg-primary"
-          : "text-contrast bg-primary"
-      } absolute bottom-1 right-1 text-[0.625rem] font-medium subpixel-antialiased h-3 min-w-[0.75rem] flex items-center justify-center leading-none text-center rounded-full w-auto px-[0.125rem] pb-px`}
+    <button
+      onClick={openCart}
+      className={
+        "relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
+      }
     >
-      <span>{totalQuantity}</span>
-    </div>
+      <IconBag />
+      <div
+        className={`${
+          dark
+            ? "text-primary bg-contrast dark:text-contrast dark:bg-primary"
+            : "text-contrast bg-primary"
+        } absolute bottom-1 right-1 text-[0.625rem] font-medium subpixel-antialiased h-3 min-w-[0.75rem] flex items-center justify-center leading-none text-center rounded-full w-auto px-[0.125rem] pb-px`}
+      >
+        <span>{count || 0}</span>
+      </div>
+    </button>
   );
 }
+
+function CartBadge({
+  openCart,
+  dark,
+}: {
+  dark: boolean;
+  openCart: () => void;
+}) {
+  const cart = useCart();
+
+  return (
+    <Badge openCart={openCart} count={cart?.totalQuantity || 0} dark={dark} />
+  );
+}
+
+function Footer({ menu }: { menu?: EnhancedMenu }) {
+  const isHome = isHomePath();
+  const itemsCount = menu
+    ? menu?.items?.length + 1 > 4
+      ? 4
+      : menu?.items?.length + 1
+    : [];
+
+  return (
+    <Section
+      divider={isHome ? "none" : "top"}
+      as="footer"
+      role="contentinfo"
+      className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12
+        border-b md:gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-${itemsCount}
+        bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
+    >
+      <FooterMenu menu={menu} />
+      <Suspense fallback="Loading countries...">
+        <CountrySelector />
+      </Suspense>
+      <div
+        className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
+      >
+        &copy; {new Date().getFullYear()} / Shopify, Inc. Hydrogen is an MIT
+        Licensed Open Source project. This website is carbon&nbsp;neutral.
+      </div>
+    </Section>
+  );
+}
+
+const FooterLink = ({ item }: { item: EnhancedMenuItem }) => {
+  if (item.to.startsWith("http")) {
+    return (
+      <a href={item.to} target={item.target} rel="noopener noreferrer">
+        {item.title}
+      </a>
+    );
+  }
+
+  return (
+    <Link to={item.to} target={item.target} prefetch="intent">
+      {item.title}
+    </Link>
+  );
+};
 
 function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
   const styles = {
     section: "grid gap-4",
     nav: "grid gap-2 pb-6",
-  };
-
-  const FooterLink = ({ item }: { item: EnhancedMenuItem }) => {
-    if (item.to.startsWith("http")) {
-      return (
-        <a href={item.to} target={item.target} rel="noopener noreferrer">
-          {item.title}
-        </a>
-      );
-    }
-
-    return (
-      <Link to={item.to} target={item.target} prefetch="intent">
-        {item.title}
-      </Link>
-    );
   };
 
   return (
@@ -468,12 +452,13 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
                     )}
                   </Heading>
                 </Disclosure.Button>
-                {item?.items?.length > 0 && (
+                {item?.items?.length > 0 ? (
                   <div
                     className={`${
                       open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
                     } overflow-hidden transition-all duration-300`}
                   >
+                    {/* TODO: the `static` prop causes a Suspense warning */}
                     <Disclosure.Panel static>
                       <nav className={styles.nav}>
                         {item.items.map((subItem) => (
@@ -482,7 +467,7 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
                       </nav>
                     </Disclosure.Panel>
                   </div>
-                )}
+                ) : null}
               </>
             )}
           </Disclosure>

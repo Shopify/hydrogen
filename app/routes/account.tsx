@@ -17,7 +17,7 @@ import {
 import { getCustomer } from "~/data";
 import { getSession } from "~/lib/session.server";
 
-export async function loader({ request, context }: LoaderArgs) {
+export async function loader({ request, context, params }: LoaderArgs) {
   const session = await getSession(request, context);
   const customerAccessToken = await session.get("customerAccessToken");
 
@@ -25,7 +25,7 @@ export async function loader({ request, context }: LoaderArgs) {
     return redirect("/account/login");
   }
 
-  const customer = await getCustomer({ customerAccessToken, request, context });
+  const customer = await getCustomer({ customerAccessToken, params, request, context });
 
   const heading = customer
     ? customer.firstName
@@ -81,7 +81,7 @@ function AccountOrderHistory({ orders }: { orders: Order[] }) {
       <div className="grid w-full gap-4 p-4 py-6 md:gap-8 md:p-8 lg:p-12">
         <h2 className="font-bold text-lead">Order History</h2>
         {orders?.length ? <Orders orders={orders} /> : <EmptyOrders />}
-      </div>
+    </div>
     </div>
   );
 }
