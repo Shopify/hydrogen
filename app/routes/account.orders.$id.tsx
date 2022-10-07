@@ -1,3 +1,5 @@
+import invariant from "tiny-invariant";
+import clsx from "clsx";
 import { type LoaderArgs, type MetaFunction, redirect, json } from "@remix-run/cloudflare";
 import { Link, useLoaderData } from "@remix-run/react";
 import { Money, Image, flattenConnection } from "@shopify/hydrogen-ui-alpha";
@@ -16,16 +18,18 @@ import { getCustomerOrder } from "~/data";
 import { getSession } from "~/lib/session.server";
 
 export const meta: MetaFunction = ({data}) => ({
-  title: `Order ${data.order.name}`,
+  title: `Order ${data?.order?.name}`,
 });
 
 export async function loader({request, context, params}: LoaderArgs) {
   if (!params.id) {
-    redirect('/account')
+    return redirect('/account')
   }
 
   const queryParams = new URL(request.url).searchParams
   const orderToken = queryParams.get('key')
+
+  invariant(orderToken, "Order token is required")
 
   const session = await getSession(request, context);
   const customerAccessToken = await session.get("customerAccessToken");
@@ -38,17 +42,11 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const order = await getCustomerOrder({ params, orderId })
 
-  // getCustomerOrder can return a logout redirect
-  if (order instanceof Response) {
-    return order;
-  }
-
-  // order not found
   if (!order) {
-    return redirect('/account')
+    throw new Response('Order not found', { status: 404 })
   }
 
-  const lineItems = flattenConnection<OrderLineItem>(order.lineItems!);
+  const lineItems: Array<OrderLineItem> = flattenConnection<OrderLineItem>(order.lineItems!);
 
   const discountApplications = flattenConnection<DiscountApplication>(
     order.discountApplications as DiscountApplicationConnection,
@@ -119,7 +117,7 @@ export default function OrderRoute() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {lineItems.map((lineItem) => (
+                {lineItems.map((lineItem: OrderLineItem) => (
                   <tr key={lineItem.variant!.id}>
                     <td className="w-full py-4 pl-0 pr-3 align-top sm:align-middle max-w-0 sm:w-auto sm:max-w-none">
                       <div className="flex gap-6">
@@ -302,11 +300,12 @@ export default function OrderRoute() {
                 Status
               </Heading>
               <div
-                className={`mt-3 px-3 py-1 text-xs font-medium rounded-full inline-block w-auto ${
+                className={clsx(
+                  `mt-3 px-3 py-1 text-xs font-medium rounded-full inline-block w-auto`,
                   order.fulfillmentStatus === 'FULFILLED'
                     ? 'bg-green-100 text-green-800'
                     : 'bg-primary/20 text-primary/50'
-                }`}
+                )}
               >
                 <Text size="fine">
                   {statusMessage(order.fulfillmentStatus!)}
