@@ -1,15 +1,19 @@
-import { json, LoaderArgs, type MetaFunction } from "@remix-run/cloudflare";
+import {
+  json,
+  type LoaderArgs,
+  type MetaFunction,
+} from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import { flattenConnection, Image } from "@shopify/hydrogen-ui-alpha";
 import type { Article } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Grid, PageHeader, Section, LinkI18n } from "~/components";
+import { Grid, PageHeader, Section, Link } from "~/components";
 import { getBlog } from "~/data";
 import { getImageLoadingPriority, PAGINATION_SIZE } from "~/lib/const";
 import { getLocalizationFromLang } from "~/lib/utils";
 
 const BLOG_HANDLE = "Journal";
 
-export const loader = async ({params}: LoaderArgs) => {
+export const loader = async ({ params }: LoaderArgs) => {
   const journals = await getBlog({
     params,
     blogHandle: BLOG_HANDLE,
@@ -79,7 +83,7 @@ function ArticleCard({
 }) {
   return (
     <li key={article.id}>
-      <LinkI18n to={`/${blogHandle}/${article.handle}`}>
+      <Link to={`/${blogHandle}/${article.handle}`}>
         {article.image && (
           <div className="card-image aspect-[3/2]">
             <Image
@@ -99,7 +103,7 @@ function ArticleCard({
         )}
         <h2 className="mt-4 font-medium">{article.title}</h2>
         <span className="block mt-1">{article.publishedAt}</span>
-      </LinkI18n>
+      </Link>
     </li>
   );
 }

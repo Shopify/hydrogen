@@ -5,7 +5,6 @@ import {
   type FetcherWithComponents,
   useFetcher,
   useLocation,
-  Link,
 } from "@remix-run/react";
 
 import {
@@ -15,7 +14,7 @@ import {
   ProductCard,
   Skeleton,
   Text,
-  LinkI18n,
+  Link,
 } from "~/components";
 import type {
   Cart,
@@ -186,9 +185,9 @@ function CartLineItem({
       <div className="flex justify-between flex-grow">
         <div className="grid gap-2">
           <Heading as="h3" size="copy">
-            <LinkI18n to={`/products/${merchandise.product.handle}`}>
+            <Link to={`/products/${merchandise.product.handle}`}>
               {merchandise.product.title}
-            </LinkI18n>
+            </Link>
           </Heading>
 
           <div className="grid pb-2">

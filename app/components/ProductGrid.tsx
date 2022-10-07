@@ -1,4 +1,4 @@
-import { Button, Grid, ProductCard, LinkI18n } from "~/components";
+import { Button, Grid, ProductCard, Link } from "~/components";
 import { getImageLoadingPriority } from "~/lib/const";
 import type {
   Collection,
@@ -43,9 +43,9 @@ export function ProductGrid({
     return (
       <>
         <p>No products found on this collection</p>
-        <LinkI18n to="/products">
+        <Link to="/products">
           <p className="underline">Browse catalog</p>
-        </LinkI18n>
+        </Link>
       </>
     );
   }

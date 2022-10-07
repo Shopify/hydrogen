@@ -1,4 +1,8 @@
-import { type EnhancedMenu, type EnhancedMenuItem, isHomePath } from "~/lib/utils";
+import {
+  type EnhancedMenu,
+  type EnhancedMenuItem,
+  isHomePath,
+} from "~/lib/utils";
 import {
   Drawer,
   useDrawer,
@@ -14,15 +18,14 @@ import {
   CountrySelector,
   CartDetails,
   CartEmpty,
-  LinkI18n
+  Link,
 } from "~/components";
-import { useFetcher } from "@remix-run/react";
+import { useFetcher, useParams } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
-import { getI18nPath } from "./LinkI18n";
 import { Suspense, useEffect } from "react";
-import { useCart } from '~/hooks/useCart'
+import { useCart } from "~/hooks/useCart";
 
 export function Layout({
   children,
@@ -51,20 +54,12 @@ export function Layout({
           {children}
         </main>
       </div>
-      <Footer
-        menu={layout?.footerMenu}
-      />
+      <Footer menu={layout?.footerMenu} />
     </>
   );
 }
 
-function Header({
-  title,
-  menu,
-}: {
-  title: string;
-  menu?: EnhancedMenu;
-}) {
+function Header({ title, menu }: { title: string; menu?: EnhancedMenu }) {
   const isHome = isHomePath();
 
   const {
@@ -102,7 +97,6 @@ function Header({
     </>
   );
 }
-
 
 function CartDrawer({
   isOpen,
@@ -180,11 +174,11 @@ function MenuMobileNav({
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
       {/* Top level menu items */}
       {(menu?.items || []).map((item) => (
-        <LinkI18n key={item.id} to={item.to} target={item.target} onClick={onClose}>
+        <Link key={item.id} to={item.to} target={item.target} onClick={onClose}>
           <Text as="span" size="copy">
             {item.title}
           </Text>
-        </LinkI18n>
+        </Link>
       ))}
     </nav>
   );
@@ -213,6 +207,7 @@ function MobileHeader({
       y > 50 && !isHome ? "shadow-lightHeader " : ""
     }flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`,
   };
+  const params = useParams();
 
   return (
     <header role="banner" className={styles.container}>
@@ -221,7 +216,7 @@ function MobileHeader({
           <IconMenu />
         </button>
         <form
-          action={getI18nPath('/search')}
+          action={params.lang ? `/${params.lang}/search` : "/search"}
           className="items-center gap-2 sm:flex"
         >
           <button type="submit" className={styles.button}>
@@ -241,20 +236,22 @@ function MobileHeader({
         </form>
       </div>
 
-      <LinkI18n
+      <Link
         className="flex items-center self-stretch leading-[3rem] md:leading-[4rem] justify-center flex-grow w-full h-full"
         to="/"
       >
         <Heading className="font-bold text-center" as={isHome ? "h1" : "h2"}>
           {title}
         </Heading>
-      </LinkI18n>
+      </Link>
 
       <div className="flex items-center justify-end w-full gap-4">
-        <LinkI18n to={"/account"} className={styles.button}>
+        <Link to={"/account"} className={styles.button}>
           <IconAccount />
-        </LinkI18n>
-        <Suspense fallback={<Badge count={0} dark={isHome} openCart={openCart} />}>
+        </Link>
+        <Suspense
+          fallback={<Badge count={0} dark={isHome} openCart={openCart} />}
+        >
           <CartBadge dark={isHome} openCart={openCart} />
         </Suspense>
       </div>
@@ -274,6 +271,7 @@ function DesktopHeader({
   title: string;
 }) {
   const { y } = useWindowScroll();
+  const params = useParams();
 
   const styles = {
     button:
@@ -290,26 +288,26 @@ function DesktopHeader({
   return (
     <header role="banner" className={styles.container}>
       <div className="flex gap-12">
-        <LinkI18n className={`font-bold`} to="/" prefetch="intent">
+        <Link className={`font-bold`} to="/" prefetch="intent">
           {title}
-        </LinkI18n>
+        </Link>
         <nav className="flex gap-8">
           {/* Top level menu items */}
           {(menu?.items || []).map((item) => (
-            <LinkI18n
+            <Link
               key={item.id}
               to={item.to}
               target={item.target}
               prefetch="intent"
             >
               {item.title}
-            </LinkI18n>
+            </Link>
           ))}
         </nav>
       </div>
       <div className="flex items-center gap-1">
         <form
-          action={getI18nPath('/search')}
+          action={params.lang ? `/${params.lang}/search` : "/search"}
           className="flex items-center gap-2"
         >
           <Input
@@ -327,10 +325,12 @@ function DesktopHeader({
             <IconSearch />
           </button>
         </form>
-        <LinkI18n to={"/account"} className={styles.button}>
+        <Link to={"/account"} className={styles.button}>
           <IconAccount />
-        </LinkI18n>
-        <Suspense fallback={<Badge count={0} dark={isHome} openCart={openCart} />}>
+        </Link>
+        <Suspense
+          fallback={<Badge count={0} dark={isHome} openCart={openCart} />}
+        >
           <CartBadge dark={isHome} openCart={openCart} />
         </Suspense>
       </div>
@@ -338,9 +338,22 @@ function DesktopHeader({
   );
 }
 
-function Badge({ openCart, dark, count }: { count: number , dark: boolean, openCart: () => void }) {
+function Badge({
+  openCart,
+  dark,
+  count,
+}: {
+  count: number;
+  dark: boolean;
+  openCart: () => void;
+}) {
   return (
-    <button onClick={openCart} className={'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'}>
+    <button
+      onClick={openCart}
+      className={
+        "relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
+      }
+    >
       <IconBag />
       <div
         className={`${
@@ -355,18 +368,19 @@ function Badge({ openCart, dark, count }: { count: number , dark: boolean, openC
   );
 }
 
-function CartBadge({ openCart, dark }: { dark: boolean, openCart: () => void }) {
+function CartBadge({
+  openCart,
+  dark,
+}: {
+  dark: boolean;
+  openCart: () => void;
+}) {
   const cart = useCart();
 
   return (
-    <Badge
-      openCart={openCart}
-      count={cart?.totalQuantity || 0}
-      dark={dark}
-    />
+    <Badge openCart={openCart} count={cart?.totalQuantity || 0} dark={dark} />
   );
 }
-
 
 function Footer({ menu }: { menu?: EnhancedMenu }) {
   const isHome = isHomePath();
@@ -409,9 +423,9 @@ const FooterLink = ({ item }: { item: EnhancedMenuItem }) => {
   }
 
   return (
-    <LinkI18n to={item.to} target={item.target} prefetch="intent">
+    <Link to={item.to} target={item.target} prefetch="intent">
       {item.title}
-    </LinkI18n>
+    </Link>
   );
 };
 
@@ -453,7 +467,7 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
                       </nav>
                     </Disclosure.Panel>
                   </div>
-                ): null}
+                ) : null}
               </>
             )}
           </Disclosure>
@@ -462,4 +476,3 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
     </>
   );
 }
-

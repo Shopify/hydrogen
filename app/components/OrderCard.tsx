@@ -3,7 +3,7 @@ import type {
   Order,
   OrderLineItem,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Heading, Text, LinkI18n } from "~/components";
+import { Heading, Text, Link } from "~/components";
 import { statusMessage } from "~/lib/utils";
 
 export function OrderCard({ order }: { order: Order }) {
@@ -13,7 +13,7 @@ export function OrderCard({ order }: { order: Order }) {
 
   return (
     <li className="grid text-center border rounded">
-      <LinkI18n
+      <Link
         className="grid items-center gap-4 p-4 md:gap-6 md:p-6 md:grid-cols-2"
         to={`/account/orders/${legacyOrderId}`}
       >
@@ -67,16 +67,16 @@ export function OrderCard({ order }: { order: Order }) {
             </dd>
           </dl>
         </div>
-      </LinkI18n>
+      </Link>
       <div className="self-end border-t">
-        <LinkI18n
+        <Link
           className="block w-full p-2 text-center"
           to={`/account/orders/${legacyOrderId}`}
         >
           <Text color="subtle" className="ml-3">
             View Details
           </Text>
-        </LinkI18n>
+        </Link>
       </div>
     </li>
   );
