@@ -1685,8 +1685,7 @@ const HOMEPAGE_SEO_QUERY = `#graphql
   }
 `;
 
-
-export async function getCollectionHeroData({ params, handle }: { params: Params, handle: string }): Promise<CollectionHero | null | undefined> {
+export async function getCollectionHeroData({ params, handle, delay }: { delay?: number, params: Params, handle: string }): Promise<CollectionHero | null | undefined> {
   const { language, country } = getLocalizationFromLang(params.lang);
 
   const {data, errors} = await getStorefrontData<{ hero: CollectionHero }>({

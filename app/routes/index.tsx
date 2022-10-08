@@ -1,8 +1,9 @@
 import { type LoaderArgs, type MetaFunction, defer } from "@remix-run/cloudflare";
 import { Suspense } from "react";
 import { Await, useLoaderData } from "@remix-run/react";
-import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
+import { ProductSwimlane, FeaturedCollections, Hero } from '~/components';
 import { getHomeSeoData, getCollectionHeroData, getFeaturedCollectionData, getFeaturedProductsData } from "~/data";
+import { getHeroPlaceholder } from "~/lib/placeholders";
 
 export async function loader({ params }: LoaderArgs) {
   return defer({
@@ -29,10 +30,12 @@ export default function Homepage() {
     featuredProducts
   } = useLoaderData<typeof loader>();
 
-  // TODO: placeholders considering defer
-  // const [primaryHero, secondaryHero, tertiaryHero] = getHeroPlaceholder(
-  //   heroBanners.nodes,
-  // );
+  // TODO: skeletons vs placeholders
+  const skeletons = getHeroPlaceholder([
+    {},
+    {},
+    {}
+  ])
 
   // TODO: analytics
   // useServerAnalytics({
@@ -65,7 +68,7 @@ export default function Homepage() {
       )}
 
       {secondaryHero && (
-        <Suspense>
+        <Suspense fallback={<Hero {...skeletons[1]} />}>
           <Await resolve={secondaryHero}>
             {(secondaryHero) => {
               if (!secondaryHero) return null;
@@ -94,7 +97,7 @@ export default function Homepage() {
       )}
 
       {tertiaryHero && (
-        <Suspense>
+        <Suspense fallback={<Hero {...skeletons[2]} />}>
           <Await resolve={tertiaryHero}>
             {(tertiaryHero) => {
               if (!tertiaryHero) return null;
