@@ -1,4 +1,4 @@
-import { json, LoaderArgs } from "@remix-run/cloudflare";
+import { json, type LoaderArgs } from "@remix-run/cloudflare";
 import { getFeaturedData } from "~/data";
 
 export async function loader({params}: LoaderArgs) {

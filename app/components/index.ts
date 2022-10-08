@@ -15,5 +15,7 @@ export { OrderCard } from "./OrderCard";
 export { AccountDetails } from "./AccountDetails";
 export { Modal } from "./Modal";
 export { Link } from "./Link";
+export { FeaturedCollections } from "./FeaturedCollections";
+export { Hero } from "./Hero";
 // Sue me
 export * from "./Icon";
