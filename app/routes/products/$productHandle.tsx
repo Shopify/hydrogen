@@ -14,7 +14,7 @@ import {
   useTransition,
 } from "@remix-run/react";
 import { Money, ShopPayButton } from "@shopify/hydrogen-ui-alpha";
-import { type ReactNode, Suspense, useMemo } from "react";
+import { type ReactNode, useRef, Suspense, useMemo } from "react";
 import {
   Button,
   Heading,
@@ -160,6 +160,7 @@ export default function Product() {
 }
 
 export function ProductForm() {
+  const closeRef = useRef<HTMLButtonElement>();
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
 
@@ -237,6 +238,7 @@ export function ProductForm() {
                       {({ open }) => (
                         <>
                           <Listbox.Button
+                            ref={closeRef}
                             className={clsx(
                               "flex items-center justify-between w-full py-3 px-4 border border-primary",
                               open
@@ -269,11 +271,10 @@ export function ProductForm() {
                                       active && "bg-primary/10"
                                     )}
                                     searchParams={searchParamsWithDefaults}
-                                    onClick={() =>
-                                      console.log(
-                                        "TODO: Close dropdown somehow"
-                                      )
-                                    }
+                                    onClick={() => {
+                                      if (!closeRef?.current) return;
+                                      closeRef.current.click();
+                                    }}
                                   >
                                     {value}
                                     {searchParamsWithDefaults.get(
