@@ -4,27 +4,26 @@ import { Link } from "@remix-run/react";
 import { Heading, Section, Grid } from "~/components";
 
 export function FeaturedCollections({
-  data,
+  collections,
   title = "Collections",
   ...props
 }: {
-  data: Collection[];
+  collections: Collection[];
   title?: string;
   [key: string]: any;
 }) {
-  const items = data.filter((item) => item.image).length;
-  const haveCollections = data.length > 0;
+  const items = collections.filter((item) => item.image).length;
+  const haveCollections = collections.length > 0;
 
   if (!haveCollections) return null;
 
   return (
     <Section {...props} heading={title}>
       <Grid items={items}>
-        {data.map((collection) => {
+        {collections.map((collection) => {
           if (!collection?.image) {
             return null;
           }
-          // TODO: Refactor to use CollectionCard
           return (
             <Link key={collection.id} to={`/collections/${collection.handle}`}>
               <div className="grid gap-4">
