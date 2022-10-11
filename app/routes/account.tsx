@@ -1,8 +1,9 @@
 import { type LoaderArgs, redirect, json } from "@remix-run/cloudflare";
-import { Form, useLoaderData } from "@remix-run/react";
+import { Form, Outlet, useLoaderData, useOutlet } from "@remix-run/react";
 import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
 import type {
   Customer,
+  MailingAddress,
   Order,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
@@ -11,9 +12,12 @@ import {
   PageHeader,
   Text,
   AccountDetails,
+  AccountAddressBook,
+  Modal,
 } from "~/components";
 import { getCustomer } from "~/data";
 import { getSession } from "~/lib/session.server";
+import type { AccountOutletContext } from "./account/edit";
 
 export async function loader({ request, context, params }: LoaderArgs) {
   const session = await getSession(request, context);
@@ -23,7 +27,12 @@ export async function loader({ request, context, params }: LoaderArgs) {
     return redirect("/account/login");
   }
 
-  const customer = await getCustomer({ customerAccessToken, params, request, context });
+  const customer = await getCustomer({
+    customerAccessToken,
+    params,
+    request,
+    context,
+  });
 
   const heading = customer
     ? customer.firstName
@@ -37,14 +46,22 @@ export async function loader({ request, context, params }: LoaderArgs) {
     customer,
     heading,
     orders,
+    addresses: flattenConnection<MailingAddress>(customer.addresses),
   });
 }
 
 export default function Account() {
-  const { customer, orders, heading } = useLoaderData<typeof loader>();
+  const { customer, orders, heading, addresses } =
+    useLoaderData<typeof loader>();
+  const outlet = useOutlet();
 
   return (
     <>
+      {!!outlet && (
+        <Modal cancelLink=".">
+          <Outlet context={{ customer } as AccountOutletContext} />
+        </Modal>
+      )}
       <PageHeader heading={heading}>
         <Form method="post" action="/account/logout">
           <button type="submit" className="text-primary/50">
@@ -54,10 +71,10 @@ export default function Account() {
       </PageHeader>
       {orders && <AccountOrderHistory orders={orders as Order[]} />}
       <AccountDetails customer={customer as Customer} />
-      {/* <AccountAddressBook
-        defaultAddress={defaultAddress}
-        addresses={addresses}
-      /> */}
+      <AccountAddressBook
+        addresses={addresses as MailingAddress[]}
+        customer={customer}
+      />
       {/* {!orders && (
         <>
           <FeaturedCollections
@@ -77,7 +94,7 @@ function AccountOrderHistory({ orders }: { orders: Order[] }) {
       <div className="grid w-full gap-4 p-4 py-6 md:gap-8 md:p-8 lg:p-12">
         <h2 className="font-bold text-lead">Order History</h2>
         {orders?.length ? <Orders orders={orders} /> : <EmptyOrders />}
-    </div>
+      </div>
     </div>
   );
 }

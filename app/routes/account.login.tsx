@@ -121,7 +121,8 @@ export default function Login() {
               autoFocus
               onBlur={(event) => {
                 setNativeEmailError(
-                  !event.currentTarget.validity.valid
+                  event.currentTarget.value.length &&
+                    !event.currentTarget.validity.valid
                     ? "Invalid email address"
                     : null
                 );
@@ -145,7 +146,10 @@ export default function Login() {
               // eslint-disable-next-line jsx-a11y/no-autofocus
               autoFocus
               onBlur={(event) => {
-                if (event.currentTarget.validity.valid) {
+                if (
+                  event.currentTarget.validity.valid ||
+                  !event.currentTarget.value.length
+                ) {
                   setNativePasswordError(null);
                 } else {
                   setNativePasswordError(
