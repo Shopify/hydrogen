@@ -1,20 +1,11 @@
-import { Outlet, useOutlet } from "@remix-run/react";
 import type { Customer } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Modal, Link } from "~/components";
-import type { AccountDetailsOutletContext } from "~/routes/account/edit";
+import { Link } from "~/components";
 
 export function AccountDetails({ customer }: { customer: Customer }) {
-  const outlet = useOutlet();
-
   const { firstName, lastName, email, phone } = customer;
 
   return (
     <>
-      {!!outlet && (
-        <Modal cancelLink=".">
-          <Outlet context={{ customer } as AccountDetailsOutletContext} />
-        </Modal>
-      )}
       <div className="grid w-full gap-4 p-4 py-6 md:gap-8 md:p-8 lg:p-12">
         <h3 className="font-bold text-lead">Account Details</h3>
         <div className="lg:p-8 p-6 border border-gray-200 rounded">

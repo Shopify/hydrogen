@@ -16,7 +16,7 @@ import { getCustomer, updateCustomer } from "~/data";
 import { getSession } from "~/lib/session.server";
 import { getInputStyleClasses } from "~/lib/utils";
 
-export interface AccountDetailsOutletContext {
+export interface AccountOutletContext {
   customer: Customer;
 }
 
@@ -117,7 +117,7 @@ export const action: ActionFunction = async ({ request, context, params }) => {
  */
 export default function AccountDetailsEdit() {
   const actionData = useActionData<ActionData>();
-  const { customer } = useOutletContext<AccountDetailsOutletContext>();
+  const { customer } = useOutletContext<AccountOutletContext>();
   const transition = useTransition();
 
   return (
