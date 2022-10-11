@@ -1,7 +1,7 @@
 import {
   type EnhancedMenu,
   type EnhancedMenuItem,
-  isHomePath,
+  useIsHomePath,
 } from "~/lib/utils";
 import {
   Drawer,
@@ -60,7 +60,7 @@ export function Layout({
 }
 
 function Header({ title, menu }: { title: string; menu?: EnhancedMenu }) {
-  const isHome = isHomePath();
+  const isHome = useIsHomePath();
 
   const {
     isOpen: isCartOpen,
@@ -383,7 +383,7 @@ function CartBadge({
 }
 
 function Footer({ menu }: { menu?: EnhancedMenu }) {
-  const isHome = isHomePath();
+  const isHome = useIsHomePath();
   const itemsCount = menu
     ? menu?.items?.length + 1 > 4
       ? 4
