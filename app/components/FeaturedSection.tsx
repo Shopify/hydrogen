@@ -1,15 +1,15 @@
 import { useEffect } from "react";
 import { useFetcher } from "@remix-run/react";
 import type {
-  CollectionConnection,
-  ProductConnection,
+  Collection,
+  Product,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import { FeaturedCollections } from "./FeaturedCollections";
 import { ProductSwimlane } from "./ProductSwimlane";
 
-interface FeaturedData {
-  featuredCollections: CollectionConnection;
-  featuredProducts: ProductConnection;
+export interface FeaturedData {
+  featuredCollections: Collection[];
+  featuredProducts: Product[];
 }
 
 export function FeaturedSection() {
@@ -27,7 +27,7 @@ export function FeaturedSection() {
     featuredProductsFetcher.data as FeaturedData;
 
   return (
-    <>
+     <>
       {featuredCollections.nodes.length < 2 && (
         <FeaturedCollections
           title="Popular Collections"

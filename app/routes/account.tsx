@@ -1,19 +1,38 @@
-import { type LoaderArgs, redirect, json } from "@remix-run/cloudflare";
-import { Form, useLoaderData } from "@remix-run/react";
+import {
+  type LoaderArgs,
+  redirect,
+  defer,
+  type MetaFunction,
+} from "@remix-run/cloudflare";
+import {
+  Await,
+  Form,
+  Outlet,
+  useLoaderData,
+  useOutlet,
+} from "@remix-run/react";
 import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
 import type {
+  Collection,
   Customer,
+  MailingAddress,
   Order,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import { Suspense } from "react";
 import {
   Button,
   OrderCard,
   PageHeader,
   Text,
   AccountDetails,
+  AccountAddressBook,
+  Modal,
+  ProductSwimlane,
 } from "~/components";
-import { getCustomer } from "~/data";
+import { FeaturedCollections } from "~/components/FeaturedCollections";
+import { getCustomer, getFeaturedData } from "~/data";
 import { getSession } from "~/lib/session.server";
+import type { AccountOutletContext } from "./account/edit";
 
 export async function loader({ request, context, params }: LoaderArgs) {
   const session = await getSession(request, context);
@@ -23,7 +42,12 @@ export async function loader({ request, context, params }: LoaderArgs) {
     return redirect("/account/login");
   }
 
-  const customer = await getCustomer({ customerAccessToken, params, request, context });
+  const customer = await getCustomer({
+    customerAccessToken,
+    params,
+    request,
+    context,
+  });
 
   const heading = customer
     ? customer.firstName
@@ -33,18 +57,33 @@ export async function loader({ request, context, params }: LoaderArgs) {
 
   const orders = flattenConnection(customer?.orders) || [];
 
-  return json({
+  return defer({
     customer,
     heading,
     orders,
+    addresses: flattenConnection<MailingAddress>(customer.addresses),
+    featuredData: getFeaturedData({ params }),
   });
 }
 
+export const meta: MetaFunction = () => {
+  return {
+    title: "Account Details",
+  };
+};
+
 export default function Account() {
-  const { customer, orders, heading } = useLoaderData<typeof loader>();
+  const { customer, orders, heading, addresses, featuredData } =
+    useLoaderData<typeof loader>();
+  const outlet = useOutlet();
 
   return (
     <>
+      {!!outlet && (
+        <Modal cancelLink=".">
+          <Outlet context={{ customer } as AccountOutletContext} />
+        </Modal>
+      )}
       <PageHeader heading={heading}>
         <Form method="post" action="/account/logout">
           <button type="submit" className="text-primary/50">
@@ -54,19 +93,34 @@ export default function Account() {
       </PageHeader>
       {orders && <AccountOrderHistory orders={orders as Order[]} />}
       <AccountDetails customer={customer as Customer} />
-      {/* <AccountAddressBook
-        defaultAddress={defaultAddress}
-        addresses={addresses}
-      /> */}
-      {/* {!orders && (
-        <>
-          <FeaturedCollections
-            title="Popular Collections"
-            data={featuredCollections}
-          />
-          <ProductSwimlane data={featuredProducts} />
-        </>
-      )} */}
+      <AccountAddressBook
+        addresses={addresses as MailingAddress[]}
+        customer={customer as Customer}
+      />
+      {!orders.length && (
+        <Suspense>
+          <Await
+            resolve={featuredData}
+            errorElement="There was a problem loading featured products."
+          >
+            {(data) => (
+              <>
+                <FeaturedCollections
+                  title="Popular Collections"
+                  data={
+                    // @ts-expect-error Something is screwy with defer type inference here :thinking:
+                    data.featuredCollections as Collection[]
+                  }
+                />
+                <ProductSwimlane
+                  // @ts-expect-error Something is screwy with defer type inference here :thinking:
+                  data={data.featuredProducts}
+                />
+              </>
+            )}
+          </Await>
+        </Suspense>
+      )}
     </>
   );
 }
@@ -77,7 +131,7 @@ function AccountOrderHistory({ orders }: { orders: Order[] }) {
       <div className="grid w-full gap-4 p-4 py-6 md:gap-8 md:p-8 lg:p-12">
         <h2 className="font-bold text-lead">Order History</h2>
         {orders?.length ? <Orders orders={orders} /> : <EmptyOrders />}
-    </div>
+      </div>
     </div>
   );
 }
