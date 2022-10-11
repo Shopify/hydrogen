@@ -13,6 +13,7 @@ import type {
   Blog,
   PageConnection,
   Shop,
+  Order,
   Localization,
   CustomerAccessTokenCreatePayload,
   Customer,
@@ -1428,6 +1429,149 @@ const CUSTOMER_QUERY = `#graphql
   }
 `;
 
+const CUSTOMER_ORDER_QUERY = `#graphql
+  fragment Money on MoneyV2 {
+    amount
+    currencyCode
+  }
+  fragment AddressFull on MailingAddress {
+    address1
+    address2
+    city
+    company
+    country
+    countryCodeV2
+    firstName
+    formatted
+    id
+    lastName
+    name
+    phone
+    province
+    provinceCode
+    zip
+  }
+  fragment DiscountApplication on DiscountApplication {
+    value {
+      ... on MoneyV2 {
+        amount
+        currencyCode
+      }
+      ... on PricingPercentageValue {
+        percentage
+      }
+    }
+  }
+  fragment Image on Image {
+    altText
+    height
+    src: url(transform: {crop: CENTER, maxHeight: 96, maxWidth: 96, scale: 2})
+    id
+    width
+  }
+  fragment ProductVariant on ProductVariant {
+    id
+    image {
+      ...Image
+    }
+    priceV2 {
+      ...Money
+    }
+    product {
+      handle
+    }
+    sku
+    title
+  }
+  fragment LineItemFull on OrderLineItem {
+    title
+    quantity
+    discountAllocations {
+      allocatedAmount {
+        ...Money
+      }
+      discountApplication {
+        ...DiscountApplication
+      }
+    }
+    originalTotalPrice {
+      ...Money
+    }
+    discountedTotalPrice {
+      ...Money
+    }
+    variant {
+      ...ProductVariant
+    }
+  }
+
+  query CustomerOrder(
+    $country: CountryCode
+    $language: LanguageCode
+    $orderId: ID!
+  ) @inContext(country: $country, language: $language) {
+    node(id: $orderId) {
+      ... on Order {
+        id
+        name
+        orderNumber
+        processedAt
+        fulfillmentStatus
+        totalTaxV2 {
+          ...Money
+        }
+        totalPriceV2 {
+          ...Money
+        }
+        subtotalPriceV2 {
+          ...Money
+        }
+        shippingAddress {
+          ...AddressFull
+        }
+        discountApplications(first: 100) {
+          nodes {
+            ...DiscountApplication
+          }
+        }
+        lineItems(first: 100) {
+          nodes {
+            ...LineItemFull
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function getCustomerOrder({
+  orderId,
+  params,
+}: {
+  orderId: string;
+  params: Params;
+}) : Promise<Order | undefined> {
+  const { language, country } = getLocalizationFromLang(params.lang);
+
+  const { data, errors } = await getStorefrontData<{
+    node: Order;
+  }>({
+    query: CUSTOMER_ORDER_QUERY,
+    variables: {
+      country,
+      language,
+      orderId
+    },
+  });
+
+  if (errors) {
+    const errorMessages = errors.map(error => error.message).join('\n')
+    throw new Error(errorMessages)
+  }
+
+  return data?.node;
+}
+
 export async function getCustomer({
   request,
   context,
@@ -1441,7 +1585,7 @@ export async function getCustomer({
 }) {
   const { language, country } = getLocalizationFromLang(params.lang);
 
-  const { data } = await getStorefrontData<{
+  const { data, errors } = await getStorefrontData<{
     customer: Customer;
   }>({
     query: CUSTOMER_QUERY,
@@ -1452,11 +1596,16 @@ export async function getCustomer({
     },
   });
 
+  if (errors) {
+    const errorMessages = errors.map(error => error.message).join('\n')
+    throw new Error(errorMessages)
+  }
+
   /**
    * If the customer failed to load, we assume their access token is invalid.
    */
   if (!data || !data.customer) {
-    throw logout(request, context);
+    throw await logout(request, context)
   }
 
   return data.customer;
