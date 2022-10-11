@@ -45,29 +45,6 @@ const PLACEHOLDERS = {
     },
     // secondaryHero
     {
-      heading: { value: "The Winter 2022 Collection" },
-      byline: { value: "Just Dropped" },
-      cta: { value: "Shop Now →" },
-      handle: "winter-2022",
-      spread: {
-        reference: {
-          mediaContentType: "IMAGE",
-          alt: "Three young women in snowboarding attire embracing and laughing while snow falls around them",
-          previewImage: {
-            url: "https://cdn.shopify.com/s/files/1/0551/4566/0472/files/Collection_Feature_Wide.jpg?v=1654902160",
-          },
-          id: "gid://shopify/MediaImage/29259478302776",
-          image: {
-            url: "https://cdn.shopify.com/s/files/1/0551/4566/0472/files/Collection_Feature_Wide.jpg?v=1654902160",
-            width: 5000,
-            height: 2500,
-          },
-        },
-      },
-      spreadSecondary: null,
-    },
-    // tertiaryHero
-    {
       heading: { value: "From the Slopes to the Chalet" },
       byline: null,
       cta: { value: "Shop Now →" },
@@ -102,6 +79,29 @@ const PLACEHOLDERS = {
           },
         },
       },
+    },
+    // tertiaryHero
+    {
+      heading: { value: "The Winter 2022 Collection" },
+      byline: { value: "Just Dropped" },
+      cta: { value: "Shop Now →" },
+      handle: "winter-2022",
+      spread: {
+        reference: {
+          mediaContentType: "IMAGE",
+          alt: "Three young women in snowboarding attire embracing and laughing while snow falls around them",
+          previewImage: {
+            url: "https://cdn.shopify.com/s/files/1/0551/4566/0472/files/Collection_Feature_Wide.jpg?v=1654902160",
+          },
+          id: "gid://shopify/MediaImage/29259478302776",
+          image: {
+            url: "https://cdn.shopify.com/s/files/1/0551/4566/0472/files/Collection_Feature_Wide.jpg?v=1654902160",
+            width: 5000,
+            height: 2500,
+          },
+        },
+      },
+      spreadSecondary: null,
     },
   ],
   PRODUCT_INFO: [

@@ -16,5 +16,7 @@ export { AccountDetails } from "./AccountDetails";
 export { AccountAddressBook } from "./AccountAddressBook";
 export { Modal } from "./Modal";
 export { Link } from "./Link";
+export { FeaturedCollections } from "./FeaturedCollections";
+export { Hero } from "./Hero";
 // Sue me
 export * from "./Icon";
