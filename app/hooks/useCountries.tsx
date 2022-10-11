@@ -11,6 +11,6 @@ export function useCountries(): Array<Country> | undefined {
     return rootData?.countries?._data;
   }
 
-  throw rootData?.countries
+  throw rootData?.countries ?? new Promise(() => {})
 }
 
