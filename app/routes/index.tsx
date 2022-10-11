@@ -6,9 +6,11 @@ import { getHomeSeoData, getCollectionHeroData, getFeaturedCollectionData, getFe
 import { getHeroPlaceholder } from "~/lib/placeholders";
 
 export async function loader({ params }: LoaderArgs) {
+  const [shop, primaryHero] = await Promise.all([getHomeSeoData({ params }), getCollectionHeroData({ params, handle: 'freestyle' })]);
+  
   return defer({
-    shop: await getHomeSeoData({ params }),
-    primaryHero: await getCollectionHeroData({ params, handle: 'freestyle' }),
+    shop,
+    primaryHero,
     featuredProducts: getFeaturedProductsData({ params }),
     secondaryHero: getCollectionHeroData({ params, handle: 'backcountry' }),
     featuredCollections: getFeaturedCollectionData({ params }),
