@@ -11,5 +11,5 @@ export function useCart(): Cart | undefined {
     return rootData?.cart?._data;
   }
 
-  throw rootData?.cart
+  throw rootData?.cart ?? new Promise(() => {})
 }
