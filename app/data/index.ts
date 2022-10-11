@@ -42,6 +42,8 @@ import invariant from "tiny-invariant";
 import { logout } from "~/routes/account.logout";
 import type { AppLoadContext } from "@remix-run/cloudflare";
 import { type Params } from "@remix-run/react";
+import type { FeaturedData } from "~/components/FeaturedSection";
+import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -1261,7 +1263,11 @@ const NOT_FOUND_QUERY = `#graphql
   }
 `;
 
-export async function getFeaturedData({ params }: { params: Params }) {
+export async function getFeaturedData({
+  params,
+}: {
+  params: Record<string, any>;
+}): Promise<FeaturedData> {
   const { language, country } = getLocalizationFromLang(params.lang);
   const { data } = await getStorefrontData<{
     featuredCollections: CollectionConnection;
@@ -1274,7 +1280,16 @@ export async function getFeaturedData({ params }: { params: Params }) {
     },
   });
 
-  return data;
+  invariant(data, "No data returned from Shopify API");
+
+  return {
+    featuredCollections: flattenConnection<Collection>(
+      data.featuredCollections
+    ) as Collection[],
+    featuredProducts: flattenConnection<Product>(
+      data.featuredProducts
+    ) as Product[],
+  };
 }
 
 const LOGIN_MUTATION = `#graphql
@@ -1334,7 +1349,6 @@ export async function login({
 }
 
 const CUSTOMER_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
   query CustomerDetails(
     $customerAccessToken: String!
     $country: CountryCode
@@ -1405,24 +1419,6 @@ const CUSTOMER_QUERY = `#graphql
               }
             }
           }
-        }
-      }
-    }
-    featuredProducts: products(first: 12) {
-      nodes {
-        ...ProductCard
-      }
-    }
-    featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
-      nodes {
-        id
-        title
-        handle
-        image {
-          altText
-          width
-          height
-          url
         }
       }
     }
@@ -1550,7 +1546,7 @@ export async function getCustomerOrder({
 }: {
   orderId: string;
   params: Params;
-}) : Promise<Order | undefined> {
+}): Promise<Order | undefined> {
   const { language, country } = getLocalizationFromLang(params.lang);
 
   const { data, errors } = await getStorefrontData<{
@@ -1560,13 +1556,13 @@ export async function getCustomerOrder({
     variables: {
       country,
       language,
-      orderId
+      orderId,
     },
   });
 
   if (errors) {
-    const errorMessages = errors.map(error => error.message).join('\n')
-    throw new Error(errorMessages)
+    const errorMessages = errors.map((error) => error.message).join("\n");
+    throw new Error(errorMessages);
   }
 
   return data?.node;
@@ -1597,15 +1593,15 @@ export async function getCustomer({
   });
 
   if (errors) {
-    const errorMessages = errors.map(error => error.message).join('\n')
-    throw new Error(errorMessages)
+    const errorMessages = errors.map((error) => error.message).join("\n");
+    throw new Error(errorMessages);
   }
 
   /**
    * If the customer failed to load, we assume their access token is invalid.
    */
   if (!data || !data.customer) {
-    throw await logout(request, context)
+    throw await logout(request, context);
   }
 
   return data.customer;
