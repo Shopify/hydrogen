@@ -20,20 +20,21 @@ export function FeaturedSection() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+
   if (!featuredProductsFetcher.data) return null;
 
   const { featuredCollections, featuredProducts } =
     featuredProductsFetcher.data as FeaturedData;
 
   return (
-    <>
-      {featuredCollections.length < 2 && (
+     <>
+      {featuredCollections.nodes.length < 2 && (
         <FeaturedCollections
           title="Popular Collections"
-          data={featuredCollections}
+          collections={featuredCollections.nodes}
         />
       )}
-      <ProductSwimlane data={featuredProducts} />
+      <ProductSwimlane products={featuredProducts.nodes} />
     </>
   );
 }
