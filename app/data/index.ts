@@ -21,6 +21,11 @@ import type {
   UserError,
   Page,
   ShopPolicy,
+  CustomerAddressUpdatePayload,
+  MailingAddressInput,
+  CustomerAddressDeletePayload,
+  CustomerDefaultAddressUpdatePayload,
+  CustomerAddressCreatePayload,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
@@ -1342,6 +1347,16 @@ const CUSTOMER_QUERY = `#graphql
       defaultAddress {
         id
         formatted
+        firstName
+        lastName
+        company
+        address1
+        address2
+        country
+        province
+        city
+        zip
+        phone
       }
       addresses(first: 6) {
         edges {
@@ -1485,4 +1500,198 @@ export async function updateCustomer({
   if (error) {
     throw new Error(error);
   }
+}
+
+const UPDATE_ADDRESS_MUTATION = `#graphql
+  mutation customerAddressUpdate(
+    $address: MailingAddressInput!
+    $customerAccessToken: String!
+    $id: ID!
+  ) {
+    customerAddressUpdate(
+      address: $address
+      customerAccessToken: $customerAccessToken
+      id: $id
+    ) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+export async function updateCustomerAddress({
+  customerAccessToken,
+  addressId,
+  address,
+}: {
+  customerAccessToken: string;
+  addressId: string;
+  address: MailingAddressInput;
+}): Promise<void> {
+  const { data, errors } = await getStorefrontData<{
+    customerAddressUpdate: CustomerAddressUpdatePayload;
+  }>({
+    query: UPDATE_ADDRESS_MUTATION,
+    variables: {
+      customerAccessToken,
+      id: addressId,
+      address,
+    },
+  });
+
+  const error = getApiErrorMessage(
+    "customerAddressUpdate",
+    data,
+    errors as UserError[]
+  );
+
+  if (error) {
+    throw new Error(error);
+  }
+}
+
+const DELETE_ADDRESS_MUTATION = `#graphql
+  mutation customerAddressDelete($customerAccessToken: String!, $id: ID!) {
+    customerAddressDelete(customerAccessToken: $customerAccessToken, id: $id) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+      deletedCustomerAddressId
+    }
+  }
+`;
+
+export async function deleteCustomerAddress({
+  customerAccessToken,
+  addressId,
+}: {
+  customerAccessToken: string;
+  addressId: string;
+}): Promise<void> {
+  const { data, errors } = await getStorefrontData<{
+    customerAddressDelete: CustomerAddressDeletePayload;
+  }>({
+    query: DELETE_ADDRESS_MUTATION,
+    variables: {
+      customerAccessToken,
+      id: addressId,
+    },
+  });
+
+  const error = getApiErrorMessage(
+    "customerAddressDelete",
+    data,
+    errors as UserError[]
+  );
+
+  if (error) {
+    throw new Error(error);
+  }
+}
+
+const UPDATE_DEFAULT_ADDRESS_MUTATION = `#graphql
+  mutation customerDefaultAddressUpdate(
+    $addressId: ID!
+    $customerAccessToken: String!
+  ) {
+    customerDefaultAddressUpdate(
+      addressId: $addressId
+      customerAccessToken: $customerAccessToken
+    ) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+export async function updateCustomerDefaultAddress({
+  customerAccessToken,
+  addressId,
+}: {
+  customerAccessToken: string;
+  addressId: string;
+}): Promise<void> {
+  const { data, errors } = await getStorefrontData<{
+    customerDefaultAddressUpdate: CustomerDefaultAddressUpdatePayload;
+  }>({
+    query: UPDATE_DEFAULT_ADDRESS_MUTATION,
+    variables: {
+      customerAccessToken,
+      addressId,
+    },
+  });
+
+  const error = getApiErrorMessage(
+    "customerDefaultAddressUpdate",
+    data,
+    errors as UserError[]
+  );
+
+  if (error) {
+    throw new Error(error);
+  }
+}
+
+const CREATE_ADDRESS_MUTATION = `#graphql
+  mutation customerAddressCreate(
+    $address: MailingAddressInput!
+    $customerAccessToken: String!
+  ) {
+    customerAddressCreate(
+      address: $address
+      customerAccessToken: $customerAccessToken
+    ) {
+      customerAddress {
+        id
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+export async function createCustomerAddress({
+  customerAccessToken,
+  address,
+}: {
+  customerAccessToken: string;
+  address: MailingAddressInput;
+}): Promise<string> {
+  const { data, errors } = await getStorefrontData<{
+    customerAddressCreate: CustomerAddressCreatePayload;
+  }>({
+    query: CREATE_ADDRESS_MUTATION,
+    variables: {
+      customerAccessToken,
+      address,
+    },
+  });
+
+  const error = getApiErrorMessage(
+    "customerAddressCreate",
+    data,
+    errors as UserError[]
+  );
+
+  if (error) {
+    throw new Error(error);
+  }
+
+  invariant(
+    data?.customerAddressCreate?.customerAddress?.id,
+    "Expected customer address to be created"
+  );
+
+  return data.customerAddressCreate.customerAddress.id;
 }

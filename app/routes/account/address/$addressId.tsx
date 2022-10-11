@@ -1,4 +1,4 @@
-import type { ActionFunction } from "@remix-run/cloudflare";
+import { type ActionFunction, json, redirect } from "@remix-run/cloudflare";
 import {
   Form,
   useActionData,
@@ -6,29 +6,137 @@ import {
   useParams,
   useTransition,
 } from "@remix-run/react";
-import type { MailingAddress } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
+import type { MailingAddressInput } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import invariant from "tiny-invariant";
 import { Button, Text } from "~/components";
+import {
+  createCustomerAddress,
+  deleteCustomerAddress,
+  updateCustomerAddress,
+  updateCustomerDefaultAddress,
+} from "~/data";
+import { getSession } from "~/lib/session.server";
 import { getInputStyleClasses } from "~/lib/utils";
+import type { AccountOutletContext } from "../edit";
 
 interface ActionData {
   formError?: string;
 }
 
-export interface EditAddressContext {
-  addresses: MailingAddress[];
-  defaultAddress?: MailingAddress;
-}
+const badRequest = (data: ActionData) => json(data, { status: 400 });
 
-export const action: ActionFunction = async ({ request, context }) => {};
+export const action: ActionFunction = async ({ request, context }) => {
+  const [formData, session] = await Promise.all([
+    request.formData(),
+    getSession(request, context),
+  ]);
+
+  const customerAccessToken = await session.get("customerAccessToken");
+  invariant(customerAccessToken, "You must be logged in to edit your account.");
+
+  const addressId = formData.get("addressId");
+  invariant(typeof addressId === "string", "You must provide an address id.");
+
+  if (request.method === "DELETE") {
+    try {
+      await deleteCustomerAddress({
+        customerAccessToken,
+        addressId,
+      });
+
+      // TODO: Why doesn't `redirect('..')` work here? it redirects to the root / instead of /account.
+      return redirect("/account");
+    } catch (error: any) {
+      return badRequest({ formError: error.message });
+    }
+  }
+
+  const address: MailingAddressInput = {};
+
+  const keys: (keyof MailingAddressInput)[] = [
+    "lastName",
+    "firstName",
+    "address1",
+    "address2",
+    "city",
+    "province",
+    "country",
+    "zip",
+    "phone",
+    "company",
+  ];
+
+  for (const key of keys) {
+    const value = formData.get(key);
+    if (typeof value === "string") {
+      address[key] = value;
+    }
+  }
+
+  const defaultAddress = formData.get("defaultAddress");
+
+  if (addressId === "add") {
+    try {
+      const id = await createCustomerAddress({
+        customerAccessToken,
+        address,
+      });
+
+      if (defaultAddress) {
+        await updateCustomerDefaultAddress({
+          customerAccessToken,
+          addressId: id,
+        });
+      }
+
+      // TODO: Why doesn't `redirect('..')` work here? it redirects to the root / instead of /account.
+      return redirect("/account");
+    } catch (error: any) {
+      return badRequest({ formError: error.message });
+    }
+  } else {
+    try {
+      await updateCustomerAddress({
+        customerAccessToken,
+        addressId: decodeURIComponent(addressId),
+        address,
+      });
+
+      if (defaultAddress) {
+        await updateCustomerDefaultAddress({
+          customerAccessToken,
+          addressId: decodeURIComponent(addressId),
+        });
+      }
+
+      // TODO: Why doesn't `redirect('..')` work here? it redirects to the root / instead of /account.
+      return redirect("/account");
+    } catch (error: any) {
+      return badRequest({ formError: error.message });
+    }
+  }
+};
 
 export default function EditAddress() {
   const { addressId } = useParams();
   const isNewAddress = addressId === "add";
   const actionData = useActionData<ActionData>();
   const transition = useTransition();
-  const { addresses, defaultAddress } = useOutletContext<EditAddressContext>();
-  console.log({ addresses, defaultAddress });
-  const address = addresses.find((address) => address.id === addressId);
+  const { customer } = useOutletContext<AccountOutletContext>();
+  const addresses = flattenConnection(customer.addresses);
+  const defaultAddress = customer.defaultAddress;
+  /**
+   * When a refresh happens (or a user visits this link directly), the URL
+   * is actually stale because it contains a special token. This means the data
+   * loaded by the parent and passed to the outlet contains a newer, fresher token,
+   * and we don't find a match. We update the `find` logic to just perform a match
+   * on the first (permanent) part of the ID.
+   */
+  const normalizedAddress = decodeURIComponent(addressId ?? "").split("?")[0];
+  const address = addresses.find((address) =>
+    address.id!.startsWith(normalizedAddress)
+  );
 
   return (
     <>
@@ -37,7 +145,11 @@ export default function EditAddress() {
       </Text>
       <div className="max-w-lg">
         <Form method="post">
-          <input type="hidden" name="addressId" value={addressId} />
+          <input
+            type="hidden"
+            name="addressId"
+            value={address?.id ?? addressId}
+          />
           {actionData?.formError && (
             <div className="flex items-center justify-center mb-6 bg-red-100 rounded">
               <p className="m-4 text-sm text-red-900">{actionData.formError}</p>
@@ -84,8 +196,8 @@ export default function EditAddress() {
           <div className="mt-3">
             <input
               className={getInputStyleClasses()}
-              id="street1"
-              name="street1"
+              id="address1"
+              name="address1"
               type="text"
               autoComplete="address-line1"
               placeholder="Address line 1*"
@@ -101,7 +213,7 @@ export default function EditAddress() {
               name="address2"
               type="text"
               autoComplete="address-line2"
-              placeholder="Addresss line 2"
+              placeholder="Address line 2"
               aria-label="Address line 2"
               defaultValue={address?.address2 ?? ""}
             />
@@ -122,8 +234,8 @@ export default function EditAddress() {
           <div className="mt-3">
             <input
               className={getInputStyleClasses()}
-              id="state"
-              name="state"
+              id="province"
+              name="province"
               type="text"
               autoComplete="address-level1"
               placeholder="State / Province"
