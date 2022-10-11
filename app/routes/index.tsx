@@ -1,27 +1,41 @@
-import { type LoaderArgs, type MetaFunction, defer } from "@remix-run/cloudflare";
+import {
+  type LoaderArgs,
+  type MetaFunction,
+  defer,
+} from "@remix-run/cloudflare";
 import { Suspense } from "react";
 import { Await, useLoaderData } from "@remix-run/react";
-import { ProductSwimlane, FeaturedCollections, Hero } from '~/components';
-import { getHomeSeoData, getCollectionHeroData, getFeaturedCollectionData, getFeaturedProductsData } from "~/data";
+import { ProductSwimlane, FeaturedCollections, Hero } from "~/components";
+import {
+  getHomeSeoData,
+  getCollectionHeroData,
+  getFeaturedCollectionData,
+  getFeaturedProductsData,
+} from "~/data";
 import { getHeroPlaceholder } from "~/lib/placeholders";
 
 export async function loader({ params }: LoaderArgs) {
-  const [shop, primaryHero] = await Promise.all([getHomeSeoData({ params }), getCollectionHeroData({ params, handle: 'freestyle' })]);
-  
+  const [shop, primaryHero] = await Promise.all([
+    getHomeSeoData({ params }),
+    getCollectionHeroData({ params, handle: "freestyle" }),
+  ]);
+
   return defer({
     shop,
     primaryHero,
     featuredProducts: getFeaturedProductsData({ params }),
-    secondaryHero: getCollectionHeroData({ params, handle: 'backcountry' }),
+    secondaryHero: getCollectionHeroData({ params, handle: "backcountry" }),
     featuredCollections: getFeaturedCollectionData({ params }),
-    tertiaryHero: getCollectionHeroData({ params, handle: 'winter-2022' })
-  })
+    tertiaryHero: getCollectionHeroData({ params, handle: "winter-2022" }),
+  });
 }
 
-export const meta: MetaFunction = ({data}) => ({
-  title: data?.shop?.title,
-  description: data?.shop?.description,
-});
+export const meta: MetaFunction = ({ data }) => {
+  return {
+    title: data?.shop?.name,
+    description: data?.shop?.description,
+  };
+};
 
 export default function Homepage() {
   const {
@@ -29,15 +43,11 @@ export default function Homepage() {
     secondaryHero,
     tertiaryHero,
     featuredCollections,
-    featuredProducts
+    featuredProducts,
   } = useLoaderData<typeof loader>();
 
   // TODO: skeletons vs placeholders
-  const skeletons = getHeroPlaceholder([
-    {},
-    {},
-    {}
-  ])
+  const skeletons = getHeroPlaceholder([{}, {}, {}]);
 
   // TODO: analytics
   // useServerAnalytics({
@@ -63,7 +73,7 @@ export default function Homepage() {
                   title="Featured Products"
                   count={4}
                 />
-              )
+              );
             }}
           </Await>
         </Suspense>
@@ -74,9 +84,7 @@ export default function Homepage() {
           <Await resolve={secondaryHero}>
             {(secondaryHero) => {
               if (!secondaryHero) return null;
-              return (
-                <Hero {...secondaryHero} />
-              )
+              return <Hero {...secondaryHero} />;
             }}
           </Await>
         </Suspense>
@@ -92,7 +100,7 @@ export default function Homepage() {
                   collections={collections}
                   title="Collections"
                 />
-              )
+              );
             }}
           </Await>
         </Suspense>
@@ -103,9 +111,7 @@ export default function Homepage() {
           <Await resolve={tertiaryHero}>
             {(tertiaryHero) => {
               if (!tertiaryHero) return null;
-              return (
-                <Hero {...tertiaryHero} />
-              )
+              return <Hero {...tertiaryHero} />;
             }}
           </Await>
         </Suspense>
