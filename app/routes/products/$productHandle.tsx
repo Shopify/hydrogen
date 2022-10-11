@@ -152,7 +152,7 @@ export default function Product() {
           errorElement="There was a problem loading related products"
           resolve={recommended}
         >
-          {(data) => <ProductSwimlane title="Related Products" data={data} />}
+          {(products) => <ProductSwimlane title="Related Products" products={products} />}
         </Await>
       </Suspense>
     </>
