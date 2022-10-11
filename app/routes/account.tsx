@@ -1,11 +1,24 @@
-import { type LoaderArgs, redirect, json } from "@remix-run/cloudflare";
-import { Form, Outlet, useLoaderData, useOutlet } from "@remix-run/react";
+import {
+  type LoaderArgs,
+  redirect,
+  defer,
+  type MetaFunction,
+} from "@remix-run/cloudflare";
+import {
+  Await,
+  Form,
+  Outlet,
+  useLoaderData,
+  useOutlet,
+} from "@remix-run/react";
 import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
 import type {
+  Collection,
   Customer,
   MailingAddress,
   Order,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import { Suspense } from "react";
 import {
   Button,
   OrderCard,
@@ -14,8 +27,10 @@ import {
   AccountDetails,
   AccountAddressBook,
   Modal,
+  ProductSwimlane,
 } from "~/components";
-import { getCustomer } from "~/data";
+import { FeaturedCollections } from "~/components/FeaturedCollections";
+import { getCustomer, getFeaturedData } from "~/data";
 import { getSession } from "~/lib/session.server";
 import type { AccountOutletContext } from "./account/edit";
 
@@ -42,16 +57,23 @@ export async function loader({ request, context, params }: LoaderArgs) {
 
   const orders = flattenConnection(customer?.orders) || [];
 
-  return json({
+  return defer({
     customer,
     heading,
     orders,
     addresses: flattenConnection<MailingAddress>(customer.addresses),
+    featuredData: getFeaturedData({ params }),
   });
 }
 
+export const meta: MetaFunction = () => {
+  return {
+    title: "Account Details",
+  };
+};
+
 export default function Account() {
-  const { customer, orders, heading, addresses } =
+  const { customer, orders, heading, addresses, featuredData } =
     useLoaderData<typeof loader>();
   const outlet = useOutlet();
 
@@ -73,17 +95,32 @@ export default function Account() {
       <AccountDetails customer={customer as Customer} />
       <AccountAddressBook
         addresses={addresses as MailingAddress[]}
-        customer={customer}
+        customer={customer as Customer}
       />
-      {/* {!orders && (
-        <>
-          <FeaturedCollections
-            title="Popular Collections"
-            data={featuredCollections}
-          />
-          <ProductSwimlane data={featuredProducts} />
-        </>
-      )} */}
+      {!orders.length && (
+        <Suspense>
+          <Await
+            resolve={featuredData}
+            errorElement="There was a problem loading featured products."
+          >
+            {(data) => (
+              <>
+                <FeaturedCollections
+                  title="Popular Collections"
+                  data={
+                    // @ts-expect-error Something is screwy with defer type inference here :thinking:
+                    data.featuredCollections as Collection[]
+                  }
+                />
+                <ProductSwimlane
+                  // @ts-expect-error Something is screwy with defer type inference here :thinking:
+                  data={data.featuredProducts}
+                />
+              </>
+            )}
+          </Await>
+        </Suspense>
+      )}
     </>
   );
 }
