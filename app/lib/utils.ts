@@ -255,27 +255,27 @@ export function getApiErrorMessage(
 }
 
 export function getLocalizationFromLang(lang?: String): {
-  language: LanguageCode,
-  country: CountryCode
+  language: LanguageCode;
+  country: CountryCode;
 } {
-  if (lang) {
-    const [language, country] = lang.split('-');
+  if (lang && lang.includes("-")) {
+    const [language, country] = lang.split("-");
 
     return {
-      language: language.toUpperCase() as LanguageCode,
-      country: (country.toUpperCase() || 'US') as CountryCode,
-    }
+      language: language?.toUpperCase() as LanguageCode,
+      country: (country?.toUpperCase() || "US") as CountryCode,
+    };
   }
   return {
-    language: 'EN' as LanguageCode,
-    country: 'US' as CountryCode,
-  }
+    language: "EN" as LanguageCode,
+    country: "US" as CountryCode,
+  };
 }
 
-export function isHomePath() {
+export function useIsHomePath() {
   const { pathname } = useLocation();
   const { lang } = useParams();
-  const strippedPathname = pathname.replace(new RegExp(`^\/${lang}\/`), '/')
+  const strippedPathname = pathname.replace(new RegExp(`^\/${lang}\/`), "/");
 
-  return strippedPathname === '/';
+  return strippedPathname === "/";
 }
