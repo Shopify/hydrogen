@@ -30,6 +30,7 @@ import type {
   CustomerCreatePayload,
   CustomerRecoverPayload,
   CustomerResetPayload,
+  CustomerActivatePayload,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
@@ -1706,6 +1707,61 @@ export async function resetPassword({
    * Something is wrong with the user's input.
    */
   throw new Error(data?.customerReset?.customerUserErrors.join(", "));
+}
+
+const CUSTOMER_ACTIVATE_MUTATION = `#graphql
+  mutation customerActivate($id: ID!, $input: CustomerActivateInput!) {
+    customerActivate(id: $id, input: $input) {
+      customerAccessToken {
+        accessToken
+        expiresAt
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+export async function activateAccount({
+  id,
+  password,
+  activationToken,
+}: {
+  id: string;
+  password: string;
+  activationToken: string;
+}) {
+  const { data, errors } = await getStorefrontData<{
+    customerActivate: CustomerActivatePayload;
+  }>({
+    query: CUSTOMER_ACTIVATE_MUTATION,
+    variables: {
+      id: `gid://shopify/Customer/${id}`,
+      input: {
+        password,
+        activationToken,
+      },
+    },
+  });
+
+  /**
+   * Something is wrong with the API.
+   */
+  if (errors) {
+    throw new StorefrontApiError(errors.map((e) => e.message).join(", "));
+  }
+
+  if (data?.customerActivate?.customerAccessToken) {
+    return data.customerActivate.customerAccessToken;
+  }
+
+  /**
+   * Something is wrong with the user's input.
+   */
+  throw new Error(data?.customerActivate?.customerUserErrors.join(", "));
 }
 
 const CUSTOMER_QUERY = `#graphql
