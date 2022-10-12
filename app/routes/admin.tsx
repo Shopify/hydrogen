@@ -10,7 +10,6 @@ import { getPrimaryShopDomain } from '~/data';
 */
 export async function loader() {
   const shop = await getPrimaryShopDomain();
-  console.log({shop})
   invariant(shop.primaryDomain, "Missing primary domain url");
 
   const adminUrl = `${shop.primaryDomain.url}/admin`
