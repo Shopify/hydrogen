@@ -28,6 +28,7 @@ import type {
   CustomerDefaultAddressUpdatePayload,
   CustomerAddressCreatePayload,
   CustomerCreatePayload,
+  CustomerRecoverPayload,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
@@ -1616,6 +1617,39 @@ export async function registerCustomer({
    * Something is wrong with the user's input.
    */
   throw new Error(data?.customerCreate?.customerUserErrors.join(", "));
+}
+
+const CUSTOMER_RECOVER_MUTATION = `#graphql
+  mutation customerRecover($email: String!) {
+    customerRecover(email: $email) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+export async function sendPasswordResetEmail({ email }: { email: string }) {
+  const { errors } = await getStorefrontData<{
+    customerRecover: CustomerRecoverPayload;
+  }>({
+    query: CUSTOMER_RECOVER_MUTATION,
+    variables: {
+      email,
+    },
+  });
+
+  /**
+   * Something is wrong with the API.
+   */
+  if (errors) {
+    throw new StorefrontApiError(errors.map((e) => e.message).join(", "));
+  }
+
+  // User doesn't exist but we don't need to notify that.
+  return null;
 }
 
 const CUSTOMER_QUERY = `#graphql
