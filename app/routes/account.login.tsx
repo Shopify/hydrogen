@@ -155,7 +155,7 @@ export default function Login() {
                   setNativePasswordError(
                     event.currentTarget.validity.valueMissing
                       ? "Please enter a password"
-                      : "Passwords must be at least 6 characters"
+                      : "Passwords must be at least 8 characters"
                   );
                 }
               }}
