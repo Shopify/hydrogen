@@ -85,7 +85,7 @@ export const meta: MetaFunction = () => {
   };
 };
 
-export default function Login() {
+export default function Register() {
   const actionData = useActionData<ActionData>();
   const [nativeEmailError, setNativeEmailError] = useState<null | string>(null);
   const [nativePasswordError, setNativePasswordError] = useState<null | string>(
