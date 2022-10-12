@@ -5,9 +5,9 @@ import {
   type ActionFunction,
   type LoaderArgs,
 } from "@remix-run/cloudflare";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
+import { Form, useActionData } from "@remix-run/react";
 import { useState } from "react";
-import { login, StorefrontApiError } from "~/data";
+import { login, registerCustomer, StorefrontApiError } from "~/data";
 import { getSession } from "~/lib/session.server";
 import { getInputStyleClasses } from "~/lib/utils";
 import { Link } from "~/components";
@@ -20,8 +20,7 @@ export async function loader({ request, context }: LoaderArgs) {
     return redirect("/account");
   }
 
-  // TODO: Query for this?
-  return json({ shopName: "Hydrogen" });
+  return new Response(null);
 }
 
 type ActionData = {
@@ -51,6 +50,8 @@ export const action: ActionFunction = async ({ request, context }) => {
   }
 
   try {
+    console.log("CREATING ACCOUNT");
+    await registerCustomer({ email, password });
     console.log("LOGGING IN");
     const customerAccessToken = await login({ email, password });
     session.set("customerAccessToken", customerAccessToken);
@@ -73,19 +74,18 @@ export const action: ActionFunction = async ({ request, context }) => {
      */
     return badRequest({
       formError:
-        "Sorry. We did not recognize either your email or password. Please try to sign in again or create a new account.",
+        "Sorry. We could not create an account with this email. User might already exist, try to login instead.",
     });
   }
 };
 
 export const meta: MetaFunction = () => {
   return {
-    title: "Login",
+    title: "Register",
   };
 };
 
-export default function Login() {
-  const { shopName } = useLoaderData<typeof loader>();
+export default function Register() {
   const actionData = useActionData<ActionData>();
   const [nativeEmailError, setNativeEmailError] = useState<null | string>(null);
   const [nativePasswordError, setNativePasswordError] = useState<null | string>(
@@ -95,7 +95,7 @@ export default function Login() {
   return (
     <div className="flex justify-center my-24 px-4">
       <div className="max-w-md w-full">
-        <h1 className="text-4xl">Sign in.</h1>
+        <h1 className="text-4xl">Create an Account.</h1>
         {/* TODO: Add onSubmit to validate _before_ submission with native? */}
         <Form
           method="post"
@@ -172,26 +172,16 @@ export default function Login() {
               className="bg-primary text-contrast rounded py-2 px-4 focus:shadow-outline block w-full"
               type="submit"
             >
-              Sign in
+              Create Account
             </button>
           </div>
           <div className="flex items-center mt-8 border-t border-gray-300">
             <p className="align-baseline text-sm mt-6">
-              New to {shopName}? &nbsp;
-              <Link className="inline underline" to="/account/register">
-                Create an account
+              Already have an account? &nbsp;
+              <Link className="inline underline" to="/account">
+                Sign in
               </Link>
             </p>
-          </div>
-
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex-1"></div>
-            <Link
-              className="inline-block align-baseline text-sm text-primary/50"
-              to="/account/recover"
-            >
-              Forgot password
-            </Link>
           </div>
         </Form>
       </div>
