@@ -27,6 +27,7 @@ import type {
   CustomerAddressDeletePayload,
   CustomerDefaultAddressUpdatePayload,
   CustomerAddressCreatePayload,
+  CustomerCreatePayload,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
@@ -71,19 +72,18 @@ interface CollectionHero {
   cta: Metafield;
   handle: string;
   heading: Metafield;
-  height?: 'full';
-  loading?: 'eager' | 'lazy';
+  height?: "full";
+  loading?: "eager" | "lazy";
   spread: Metafield;
   spreadSecondary: Metafield;
   top?: boolean;
 }
 interface HomeSeoData {
   shop: {
-    name: string
-    description: string
-  }
+    name: string;
+    description: string;
+  };
 }
-
 
 export async function getStorefrontData<T>({
   query,
@@ -1313,17 +1313,18 @@ export async function getFeaturedData({
   };
 }
 
-
-
-
 /*
   Homepage ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 */
 
-export async function getHomeSeoData({ params }: { params: Params }): Promise<HomeSeoData | null | undefined> {
+export async function getHomeSeoData({
+  params,
+}: {
+  params: Params;
+}): Promise<HomeSeoData | null | undefined> {
   const { language, country } = getLocalizationFromLang(params.lang);
 
-  const {data, errors} = await getStorefrontData<{ shop: HomeSeoData }>({
+  const { data, errors } = await getStorefrontData<{ shop: HomeSeoData }>({
     query: HOMEPAGE_SEO_QUERY,
     variables: {
       language,
@@ -1332,11 +1333,11 @@ export async function getHomeSeoData({ params }: { params: Params }): Promise<Ho
   });
 
   if (errors) {
-    const errorMessages = errors.map(error => error.message).join('\n')
-    throw new Error(errorMessages)
+    const errorMessages = errors.map((error) => error.message).join("\n");
+    throw new Error(errorMessages);
   }
 
-  return data?.shop
+  return data?.shop;
 }
 
 const HOMEPAGE_SEO_QUERY = `#graphql
@@ -1348,27 +1349,33 @@ const HOMEPAGE_SEO_QUERY = `#graphql
   }
 `;
 
-
-export async function getCollectionHeroData({ params, handle, delay }: { delay?: number, params: Params, handle: string }): Promise<CollectionHero | null | undefined> {
+export async function getCollectionHeroData({
+  params,
+  handle,
+  delay,
+}: {
+  delay?: number;
+  params: Params;
+  handle: string;
+}): Promise<CollectionHero | null | undefined> {
   const { language, country } = getLocalizationFromLang(params.lang);
 
-  const {data, errors} = await getStorefrontData<{ hero: CollectionHero }>({
+  const { data, errors } = await getStorefrontData<{ hero: CollectionHero }>({
     query: COLLECTION_CONTENT_QUERY,
     variables: {
       language,
       country,
-      handle
+      handle,
     },
   });
 
   if (errors) {
-    const errorMessages = errors.map(error => error.message).join('\n')
-    throw new Error(errorMessages)
+    const errorMessages = errors.map((error) => error.message).join("\n");
+    throw new Error(errorMessages);
   }
 
-  return data?.hero
+  return data?.hero;
 }
-
 
 export const COLLECTION_CONTENT_FRAGMENT = `#graphql
   ${MEDIA_FRAGMENT}
@@ -1397,7 +1404,7 @@ export const COLLECTION_CONTENT_FRAGMENT = `#graphql
       }
     }
   }
-`
+`;
 
 export const COLLECTION_CONTENT_QUERY = `#graphql
   ${COLLECTION_CONTENT_FRAGMENT}
@@ -1409,10 +1416,16 @@ export const COLLECTION_CONTENT_QUERY = `#graphql
   }
 `;
 
-export async function getFeaturedCollectionData({ params }: { params: Params }): Promise<Collection[] | null | undefined> {
+export async function getFeaturedCollectionData({
+  params,
+}: {
+  params: Params;
+}): Promise<Collection[] | null | undefined> {
   const { language, country } = getLocalizationFromLang(params.lang);
 
-  const {data, errors} = await getStorefrontData<{ collections: CollectionConnection }>({
+  const { data, errors } = await getStorefrontData<{
+    collections: CollectionConnection;
+  }>({
     query: FEATURED_COLLECTIONS_QUERY,
     variables: {
       language,
@@ -1421,11 +1434,11 @@ export async function getFeaturedCollectionData({ params }: { params: Params }):
   });
 
   if (errors) {
-    const errorMessages = errors.map(error => error.message).join('\n')
-    throw new Error(errorMessages)
+    const errorMessages = errors.map((error) => error.message).join("\n");
+    throw new Error(errorMessages);
   }
 
-  return data?.collections?.nodes
+  return data?.collections?.nodes;
 }
 
 // @see: https://shopify.dev/api/storefront/2022-01/queries/collections
@@ -1451,10 +1464,16 @@ export const FEATURED_COLLECTIONS_QUERY = `#graphql
   }
 `;
 
-export async function getFeaturedProductsData({ params }: { params: Params }): Promise<Product[] | null | undefined> {
+export async function getFeaturedProductsData({
+  params,
+}: {
+  params: Params;
+}): Promise<Product[] | null | undefined> {
   const { language, country } = getLocalizationFromLang(params.lang);
 
-  const {data, errors} = await getStorefrontData<{ products: ProductConnection }>({
+  const { data, errors } = await getStorefrontData<{
+    products: ProductConnection;
+  }>({
     query: HOMEPAGE_FEATURED_PRODUCTS_QUERY,
     variables: {
       language,
@@ -1463,11 +1482,11 @@ export async function getFeaturedProductsData({ params }: { params: Params }): P
   });
 
   if (errors) {
-    const errorMessages = errors.map(error => error.message).join('\n')
-    throw new Error(errorMessages)
+    const errorMessages = errors.map((error) => error.message).join("\n");
+    throw new Error(errorMessages);
   }
 
-  return data?.products?.nodes
+  return data?.products?.nodes;
 }
 
 // @see: https://shopify.dev/api/storefront/2022-01/queries/products
@@ -1482,7 +1501,6 @@ export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
     }
   }
 `;
-
 
 /*
   Account ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1542,6 +1560,62 @@ export async function login({
   throw new Error(
     data?.customerAccessTokenCreate?.customerUserErrors.join(", ")
   );
+}
+
+const CUSTOMER_CREATE_MUTATION = `#graphql
+  mutation customerCreate($input: CustomerCreateInput!) {
+    customerCreate(input: $input) {
+      customer {
+        id
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+export async function registerCustomer({
+  email,
+  password,
+}: {
+  email: string;
+  password: string;
+}) {
+  const { data, errors } = await getStorefrontData<{
+    customerCreate: CustomerCreatePayload;
+  }>({
+    query: CUSTOMER_CREATE_MUTATION,
+    variables: {
+      input: {
+        email,
+        password,
+      },
+    },
+  });
+
+  if (errors && /Creating Customer Limit exceeded/i.test(errors[0]?.message)) {
+    // The SFAPI throws this error when the email is already in use.
+    throw new Error("User already exists or API limit exceeded");
+  }
+
+  /**
+   * Something is wrong with the API.
+   */
+  if (errors) {
+    throw new StorefrontApiError(errors.map((e) => e.message).join(", "));
+  }
+
+  if (data?.customerCreate?.customer?.id) {
+    return data.customerCreate.customer.id;
+  }
+
+  /**
+   * Something is wrong with the user's input.
+   */
+  throw new Error(data?.customerCreate?.customerUserErrors.join(", "));
 }
 
 const CUSTOMER_QUERY = `#graphql
@@ -2036,4 +2110,3 @@ export async function createCustomerAddress({
 
   return data.customerAddressCreate.customerAddress.id;
 }
-
