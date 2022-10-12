@@ -29,6 +29,7 @@ import type {
   CustomerAddressCreatePayload,
   CustomerCreatePayload,
   CustomerRecoverPayload,
+  CustomerResetPayload,
 } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import {
   getPublicTokenHeaders,
@@ -1650,6 +1651,61 @@ export async function sendPasswordResetEmail({ email }: { email: string }) {
 
   // User doesn't exist but we don't need to notify that.
   return null;
+}
+
+const CUSTOMER_RESET_MUTATION = `#graphql
+  mutation customerReset($id: ID!, $input: CustomerResetInput!) {
+    customerReset(id: $id, input: $input) {
+      customerAccessToken {
+        accessToken
+        expiresAt
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+export async function resetPassword({
+  id,
+  resetToken,
+  password,
+}: {
+  id: string;
+  resetToken: string;
+  password: string;
+}) {
+  const { data, errors } = await getStorefrontData<{
+    customerReset: CustomerResetPayload;
+  }>({
+    query: CUSTOMER_RESET_MUTATION,
+    variables: {
+      id: `gid://shopify/Customer/${id}`,
+      input: {
+        password,
+        resetToken,
+      },
+    },
+  });
+
+  /**
+   * Something is wrong with the API.
+   */
+  if (errors) {
+    throw new StorefrontApiError(errors.map((e) => e.message).join(", "));
+  }
+
+  if (data?.customerReset?.customerAccessToken) {
+    return data.customerReset.customerAccessToken;
+  }
+
+  /**
+   * Something is wrong with the user's input.
+   */
+  throw new Error(data?.customerReset?.customerUserErrors.join(", "));
 }
 
 const CUSTOMER_QUERY = `#graphql
