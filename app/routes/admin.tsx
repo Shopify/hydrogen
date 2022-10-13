@@ -1,6 +1,6 @@
-import { redirect } from "@remix-run/cloudflare";
+import { redirect } from "@remix-run/oxygen";
 import invariant from "tiny-invariant";
-import { getPrimaryShopDomain } from '~/data';
+import { getPrimaryShopDomain } from "~/data";
 
 /*
   This route redirects you to your Shopify Admin
@@ -12,6 +12,6 @@ export async function loader() {
   const shop = await getPrimaryShopDomain();
   invariant(shop.primaryDomain, "Missing primary domain url");
 
-  const adminUrl = `${shop.primaryDomain.url}/admin`
-  return redirect(adminUrl)
+  const adminUrl = `${shop.primaryDomain.url}/admin`;
+  return redirect(adminUrl);
 }

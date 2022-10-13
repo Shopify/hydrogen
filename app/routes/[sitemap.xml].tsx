@@ -1,4 +1,4 @@
-import type { LoaderArgs } from "@remix-run/cloudflare";
+import type { LoaderArgs } from "@remix-run/oxygen";
 import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
 import { getSitemap } from "~/data";
 

@@ -1,17 +1,20 @@
-import type { LoaderArgs } from "@remix-run/cloudflare";
-import { type ActionFunction, json, defer } from "@remix-run/cloudflare";
+import type { LoaderArgs } from "@remix-run/oxygen";
+import { type ActionFunction, json, defer } from "@remix-run/oxygen";
 import invariant from "tiny-invariant";
 import { getTopProducts, updateLineItem } from "~/data";
 import { getSession } from "~/lib/session.server";
 
-export async function loader({params}: LoaderArgs) {
-  return defer({
-    topProducts: getTopProducts({params}),
-  }, {
-    headers: {
-      'Cache-Control': 'max-age=600'
+export async function loader({ params }: LoaderArgs) {
+  return defer(
+    {
+      topProducts: getTopProducts({ params }),
+    },
+    {
+      headers: {
+        "Cache-Control": "max-age=600",
+      },
     }
-  });
+  );
 }
 
 export const action: ActionFunction = async ({ request, context, params }) => {
@@ -35,7 +38,11 @@ export const action: ActionFunction = async ({ request, context, params }) => {
   switch (intent) {
     case "set-quantity": {
       const quantity = Number(formData.get("quantity"));
-      await updateLineItem({ cartId, lineItem: { id: lineId, quantity }, params });
+      await updateLineItem({
+        cartId,
+        lineItem: { id: lineId, quantity },
+        params,
+      });
       break;
     }
 
@@ -44,7 +51,11 @@ export const action: ActionFunction = async ({ request, context, params }) => {
        * We're re-using the same mutation as setting a quantity of 0,
        * but theoretically we could use the `cartLinesRemove` mutation.
        */
-      await updateLineItem({ cartId, lineItem: { id: lineId, quantity: 0 }, params });
+      await updateLineItem({
+        cartId,
+        lineItem: { id: lineId, quantity: 0 },
+        params,
+      });
       break;
     }
   }

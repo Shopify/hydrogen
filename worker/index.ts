@@ -4,7 +4,7 @@ import {
   MethodNotAllowedError,
   type CacheControl,
 } from "@cloudflare/kv-asset-handler";
-import { createRequestHandler } from "@remix-run/cloudflare";
+import { createRequestHandler } from "@remix-run/oxygen";
 // Virtual module provided by wrangler
 import manifestJSON from "__STATIC_CONTENT_MANIFEST";
 // The build remix app provided by remix build
