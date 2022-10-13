@@ -12,10 +12,12 @@
     "//start": "run the app locally in production mode",
     "start": "npm run build && cross-env NODE_ENV=production npm run dev:cloudflare"
   },
+  "workspaces": [
+    "packages/@remix-run/oxygen"
+  ],
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.2.0",
     "@headlessui/react": "^1.7.2",
-    "@remix-run/cloudflare": "0.0.0-experimental-e18af792a",
     "@remix-run/react": "0.0.0-experimental-e18af792a",
     "@shopify/hydrogen-ui-alpha": "^2022.7.4",
     "clsx": "^1.2.1",
