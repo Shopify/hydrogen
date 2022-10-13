@@ -5,7 +5,7 @@ import {
   type LoaderArgs,
 } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
-import type { Collection as CollectionType } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import type {ProductConnection, Collection as CollectionType } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import invariant from "tiny-invariant";
 import { PageHeader, Section, Text } from "~/components";
 import { ProductGrid } from "~/components/ProductGrid";
@@ -64,8 +64,7 @@ export default function Collection() {
       <Section>
         <ProductGrid
           key={collection.id}
-          collection={collection as CollectionType}
-          url={`/collections/${collection.handle}`}
+          products={collection.products as ProductConnection}
         />
       </Section>
     </>
