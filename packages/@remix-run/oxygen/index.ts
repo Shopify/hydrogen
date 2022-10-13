@@ -7,8 +7,9 @@ export {
   createSessionStorage,
 } from "./implementations";
 
+export { createRequestHandler } from "./server";
+
 export {
-  createRequestHandler,
   createSession,
   isCookie,
   isSession,
