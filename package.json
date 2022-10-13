@@ -7,10 +7,10 @@
     "deploy": "wrangler publish",
     "dev:remix": "remix watch",
     "dev:css": "postcss styles --base styles --dir app/styles -w",
-    "dev:cloudflare": "cross-env NODE_ENV=development wrangler dev --local --config wrangler.dev.toml",
+    "dev:oxygen": "cross-env NODE_ENV=development wrangler dev --local --config wrangler.dev.toml",
     "dev": "npm run build && run-p \"dev:*\"",
     "//start": "run the app locally in production mode",
-    "start": "npm run build && cross-env NODE_ENV=production npm run dev:cloudflare"
+    "start": "npm run build && cross-env NODE_ENV=production npm run dev:oxygen"
   },
   "workspaces": [
     "packages/@remix-run/oxygen"
