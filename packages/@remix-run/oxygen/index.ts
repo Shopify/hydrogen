@@ -1,7 +1,5 @@
 import "./globals";
 
-export { createCloudflareKVSessionStorage } from "./sessions/cloudflareKVSessionStorage";
-
 export {
   createCookie,
   createCookieSessionStorage,
