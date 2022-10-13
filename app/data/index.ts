@@ -535,19 +535,31 @@ export async function getCollection({
 }) {
   const { language, country } = getLocalizationFromLang(params.lang);
 
+  const isNext = direction === "next";
+
+  const prevPage = {
+    handle,
+    last: pageBy,
+    startCursor: cursor ?? null,
+    language,
+    country,
+  }
+
+  const nextPage = {
+    handle,
+    first: pageBy,
+    endCursor: cursor ?? null,
+    language,
+    country,
+  }
+
+  const variables = isNext ? nextPage : prevPage;
+
   const { data } = await getStorefrontData<{
     collection: Collection;
   }>({
     query: COLLECTION_QUERY,
-    variables: {
-      handle: "freestyle",
-      first: direction === "next" ? pageBy : null,
-      last: direction === "previous" ? pageBy : null,
-      startCursor: direction === "previous" && cursor ? cursor : null,
-      endCursor: direction === "next" && cursor ? cursor : null,
-      language,
-      country,
-    },
+    variables,
   });
 
   invariant(data, "No data returned from Shopify API");
