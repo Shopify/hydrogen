@@ -23,7 +23,7 @@ export function ProductGrid({
     );
   }
 
-  /* TODO: 
+  /* TODO:
     - Load More -> Passes pages in location state via Link component
     - Infinite Scroll -> Opt-in to trigger load more when in view
     - Optional consideration: Virtualization if very long list (need to consider impact of scroll position, etc.)
@@ -72,6 +72,7 @@ export function ProductGrid({
             disabled={transition.state !== "idle"}
             variant="secondary"
             width="full"
+            preventScrollReset={true} // not working 🧐
             prefetch="intent"
           >
             {transition.state !== "idle" ? "Loading..." : "Load more products"}
