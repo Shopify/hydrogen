@@ -15,7 +15,8 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"],
-      "remix-build": ["./build/index.mjs"]
+      "remix-build": ["./build/index.mjs"],
+      "@remix-run/oxygen": ["./packages/@remix-run/oxygen"]
     },
 
     // Remix takes care of building everything in `./app` with `remix build`.
