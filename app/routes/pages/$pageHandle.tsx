@@ -3,7 +3,7 @@ import {
   LoaderArgs,
   MetaFunction,
   SerializeFrom,
-} from "@remix-run/cloudflare";
+} from "@remix-run/oxygen";
 import { useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
 import { PageHeader } from "~/components";
