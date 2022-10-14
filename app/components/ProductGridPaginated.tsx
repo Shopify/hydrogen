@@ -27,7 +27,7 @@ export function ProductGridPaginated({
       {hasPreviousPage && (
         <div className="flex items-center justify-center mt-6">
           <Button
-            to={`.?cursor=${startCursor}&direction=previous`}
+            to={`?cursor=${startCursor}&direction=previous`}
             disabled={transition.state !== 'idle'}
             variant="secondary"
             width="full"
