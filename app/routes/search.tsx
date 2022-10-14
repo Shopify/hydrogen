@@ -105,5 +105,3 @@ export async function loader({ request, context, params }: LoaderArgs) {
       : null,
   });
 }
-
-export const action: ActionFunction = async ({ request, context }) => {};
