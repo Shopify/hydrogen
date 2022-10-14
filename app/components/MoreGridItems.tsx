@@ -53,8 +53,6 @@ export function MoreGridItems({
     if (state !== "idle") return;
     if (!data) return;
 
-    console.log({resource, data})
-
     let hasNextPage: boolean = false,
         endCursor: string | null = null,
         pageItems: [] = [];
@@ -69,10 +67,10 @@ export function MoreGridItems({
         break;
       }
 
-      // TODO: collections grid
-      // case 'blog': {}
+      // TODO: collections
+      // case 'collections': {}
 
-      // TODO: blogs
+      // TODO: blog
       // case 'blog': {}
 
       default:

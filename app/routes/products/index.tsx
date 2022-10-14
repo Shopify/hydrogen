@@ -1,7 +1,6 @@
-import type { LoaderArgs, MetaFunction } from "@remix-run/cloudflare";
+import { json, type LoaderArgs,type  MetaFunction } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
 import type { ProductConnection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { json } from "react-router";
 import { PageHeader, Section, ProductGrid } from "~/components";
 import { getAllProducts } from "~/data";
 
