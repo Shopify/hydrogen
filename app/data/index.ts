@@ -432,9 +432,12 @@ const COLLECTIONS_QUERY = `#graphql
   query Collections(
     $country: CountryCode
     $language: LanguageCode
-    $pageBy: Int!
+    $first: Int
+    $last: Int
+    $startCursor: String
+    $endCursor: String
   ) @inContext(country: $country, language: $language) {
-    collections(first: $pageBy) {
+    collections(first: $first, last: $last, before: $startCursor, after: $endCursor) {
       nodes {
         id
         title
@@ -452,30 +455,57 @@ const COLLECTIONS_QUERY = `#graphql
           altText
         }
       }
+      pageInfo {
+        hasPreviousPage
+        hasNextPage
+        startCursor
+        endCursor
+      }
     }
   }
 `;
 
-export async function getCollections(
-  params: Params,
-  { paginationSize } = { paginationSize: 8 }
-) {
+export async function getCollections({
+  pageBy = 4,
+  direction = "next",
+  cursor,
+  params,
+}: {
+  pageBy: number;
+  direction: "next" | "previous" | undefined;
+  cursor: string | undefined;
+  params: Params;
+}) {
   const { language, country } = getLocalizationFromLang(params.lang);
+
+  const isNext = direction === "next";
+
+  const prevPage = {
+    last: pageBy,
+    startCursor: cursor ?? null,
+    language,
+    country,
+  }
+
+  const nextPage = {
+    first: pageBy,
+    endCursor: cursor ?? null,
+    language,
+    country,
+  }
+
+  const variables = isNext ? nextPage : prevPage;
 
   const { data } = await getStorefrontData<{
     collections: CollectionConnection;
   }>({
     query: COLLECTIONS_QUERY,
-    variables: {
-      pageBy: paginationSize,
-      country,
-      language,
-    },
+    variables,
   });
 
   invariant(data, "No data returned from Shopify API");
 
-  return data.collections.nodes;
+  return data.collections;
 }
 
 const COLLECTION_QUERY = `#graphql
@@ -576,10 +606,12 @@ const ALL_PRODUCTS_QUERY = `#graphql
   query AllProducts(
     $country: CountryCode
     $language: LanguageCode
-    $pageBy: Int!
-    $cursor: String
+    $first: Int
+    $last: Int
+    $startCursor: String
+    $endCursor: String
   ) @inContext(country: $country, language: $language) {
-    products(first: $pageBy, after: $cursor) {
+    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
       nodes {
         ...ProductCard
       }
@@ -593,26 +625,41 @@ const ALL_PRODUCTS_QUERY = `#graphql
 `;
 
 export async function getAllProducts({
-  paginationSize = 48,
   cursor,
+  direction = 'next',
+  pageBy = 4,
   params,
 }: {
-  paginationSize?: number;
   cursor?: string;
+  direction: "next" | "previous" | undefined
+  pageBy?: number;
   params: Params;
 }) {
   const { language, country } = getLocalizationFromLang(params.lang);
+
+  const isNext = direction === "next";
+
+  const prevPage = {
+    last: pageBy,
+    startCursor: cursor ?? null,
+    language,
+    country,
+  }
+
+  const nextPage = {
+    first: pageBy,
+    endCursor: cursor ?? null,
+    language,
+    country,
+  }
+
+  const variables = isNext ? nextPage : prevPage;
 
   const { data } = await getStorefrontData<{
     products: ProductConnection;
   }>({
     query: ALL_PRODUCTS_QUERY,
-    variables: {
-      cursor,
-      language,
-      country,
-      pageBy: paginationSize,
-    },
+    variables,
   });
 
   invariant(data, "No data returned from Shopify API");
