@@ -101,7 +101,7 @@ export async function loader({ request, context, params }: LoaderArgs) {
     searchTerm,
     products,
     noResultRecommendations: getRecommendations
-      ? getNoResultRecommendations()
+      ? getNoResultRecommendations(params)
       : null,
   });
 }
