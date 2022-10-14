@@ -6,9 +6,11 @@ import { ProductGridInfinite } from "./ProductGridInfinite";
 export function ProductGrid({
   paginated = false,
   products,
+  ...props
 }: {
   paginated?: boolean
   products: ProductConnection;
+  [key: string]: any;
 }) {
   if (!products?.nodes) {
     return (
@@ -28,9 +30,11 @@ export function ProductGrid({
   return (
     paginated
       ? <ProductGridPaginated
+          {...props}
           products={products}
         />
       : <ProductGridInfinite
+          {...props}
           products={products}
         />
   );
