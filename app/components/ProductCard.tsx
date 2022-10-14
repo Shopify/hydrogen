@@ -59,13 +59,6 @@ export function ProductCard({
     >
       <div className={styles}>
         <div className="card-image aspect-[4/5] bg-primary/5">
-          <Text
-            as="label"
-            size="fine"
-            className="absolute top-0 right-0 m-4 text-right text-notice"
-          >
-            {cardLabel}
-          </Text>
           {image && (
             <Image
               className="aspect-[4/5] w-full object-cover fadeIn"
@@ -83,6 +76,13 @@ export function ProductCard({
               loading={loading}
             />
           )}
+          <Text
+            as="label"
+            size="fine"
+            className="absolute top-0 right-0 m-4 text-right text-notice"
+          >
+            {cardLabel}
+          </Text>
         </div>
         <div className="grid gap-1">
           <Text
