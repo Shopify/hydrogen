@@ -1,21 +1,23 @@
-import invariant from "tiny-invariant";
-import clsx from "clsx";
-import { type LoaderArgs, type MetaFunction, redirect, json } from "@remix-run/cloudflare";
-import { Link, useLoaderData } from "@remix-run/react";
-import { Money, Image, flattenConnection } from "@shopify/hydrogen-ui-alpha";
-import {statusMessage} from '~/lib/utils';
+import invariant from 'tiny-invariant';
+import clsx from 'clsx';
+import {
+  type LoaderArgs,
+  type MetaFunction,
+  redirect,
+  json,
+} from '@remix-run/cloudflare';
+import {Link, useLoaderData} from '@remix-run/react';
+import {Money, Image, flattenConnection} from '@shopify/hydrogen-ui-alpha';
 import type {
   DiscountApplication,
   DiscountApplicationConnection,
   OrderLineItem,
 } from '@shopify/hydrogen/storefront-api-types';
-import {
-  Heading,
-  PageHeader,
-  Text,
-} from "~/components";
-import { getCustomerOrder } from "~/data";
-import { getSession } from "~/lib/session.server";
+
+import {statusMessage} from '~/lib/utils';
+import {Heading, PageHeader, Text} from '~/components';
+import {getCustomerOrder} from '~/data';
+import {getSession} from '~/lib/session.server';
 
 export const meta: MetaFunction = ({data}) => ({
   title: `Order ${data?.order?.name}`,
@@ -23,30 +25,32 @@ export const meta: MetaFunction = ({data}) => ({
 
 export async function loader({request, context, params}: LoaderArgs) {
   if (!params.id) {
-    return redirect('/account')
+    return redirect('/account');
   }
 
-  const queryParams = new URL(request.url).searchParams
-  const orderToken = queryParams.get('key')
+  const queryParams = new URL(request.url).searchParams;
+  const orderToken = queryParams.get('key');
 
-  invariant(orderToken, "Order token is required")
+  invariant(orderToken, 'Order token is required');
 
   const session = await getSession(request, context);
-  const customerAccessToken = await session.get("customerAccessToken");
+  const customerAccessToken = await session.get('customerAccessToken');
 
   if (!customerAccessToken) {
-    return redirect("/account/login");
+    return redirect('/account/login');
   }
 
   const orderId = `gid://shopify/Order/${params.id}?key=${orderToken}`;
 
-  const order = await getCustomerOrder({ params, orderId })
+  const order = await getCustomerOrder({params, orderId});
 
   if (!order) {
-    throw new Response('Order not found', { status: 404 })
+    throw new Response('Order not found', {status: 404});
   }
 
-  const lineItems: Array<OrderLineItem> = flattenConnection<OrderLineItem>(order.lineItems!);
+  const lineItems: OrderLineItem[] = flattenConnection<OrderLineItem>(
+    order.lineItems!,
+  );
 
   const discountApplications = flattenConnection<DiscountApplication>(
     order.discountApplications as DiscountApplicationConnection,
@@ -66,13 +70,14 @@ export async function loader({request, context, params}: LoaderArgs) {
     lineItems,
     discountValue,
     discountPercentage,
-  })
+  });
 }
 
 export default function OrderRoute() {
-  const {order, lineItems, discountValue, discountPercentage} = useLoaderData<typeof loader>();
+  const {order, lineItems, discountValue, discountPercentage} =
+    useLoaderData<typeof loader>();
   return (
-    <div>
+    <>
       <PageHeader heading="Order detail">
         <Link to="/account">
           <Text color="subtle">Return to Account Overview</Text>
@@ -128,7 +133,7 @@ export default function OrderRoute() {
                             <div className="w-24 card-image aspect-square">
                               <Image
                                 data={{
-                                  url: lineItem.variant.image.src!
+                                  url: lineItem.variant.image.src!,
                                 }}
                                 width={lineItem.variant.image.width!}
                                 height={lineItem.variant.image.height!}
@@ -274,16 +279,16 @@ export default function OrderRoute() {
               <Heading size="copy" className="font-semibold" as="h3">
                 Shipping Address
               </Heading>
-              {order?.shippingAddress ? (
+              {order.shippingAddress ? (
                 <ul className="mt-6">
                   <li>
                     <Text>
                       {order.shippingAddress.firstName &&
-                        order.shippingAddress.firstName + ' '}
+                        `${order.shippingAddress.firstName} `}
                       {order.shippingAddress.lastName}
                     </Text>
                   </li>
-                  {order?.shippingAddress?.formatted ? (
+                  {order.shippingAddress.formatted ? (
                     order.shippingAddress.formatted.map((line) => (
                       <li key={line}>
                         <Text>{line}</Text>
@@ -304,7 +309,7 @@ export default function OrderRoute() {
                   `mt-3 px-3 py-1 text-xs font-medium rounded-full inline-block w-auto`,
                   order.fulfillmentStatus === 'FULFILLED'
                     ? 'bg-green-100 text-green-800'
-                    : 'bg-primary/20 text-primary/50'
+                    : 'bg-primary/20 text-primary/50',
                 )}
               >
                 <Text size="fine">
@@ -315,6 +320,6 @@ export default function OrderRoute() {
           </div>
         </div>
       </div>
-    </div>
-  )
+    </>
+  );
 }

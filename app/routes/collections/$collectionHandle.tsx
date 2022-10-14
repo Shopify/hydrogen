@@ -3,23 +3,28 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LoaderArgs,
-} from "@remix-run/cloudflare";
-import { useLoaderData } from "@remix-run/react";
-import type { Collection as CollectionType } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import invariant from "tiny-invariant";
-import { PageHeader, Section, Text } from "~/components";
-import { ProductGrid } from "~/components/ProductGrid";
-import { getCollection } from "~/data";
+} from '@remix-run/cloudflare';
+import {useLoaderData} from '@remix-run/react';
+import type {Collection as CollectionType} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import invariant from 'tiny-invariant';
 
-export async function loader({ params, request }: LoaderArgs) {
-  const { collectionHandle } = params;
+import {PageHeader, Section, Text} from '~/components';
+import {ProductGrid} from '~/components/ProductGrid';
+import {getCollection} from '~/data';
 
-  invariant(collectionHandle, "Missing collectionHandle param");
+export async function loader({params, request}: LoaderArgs) {
+  const {collectionHandle} = params;
 
-  const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
-  const collection = await getCollection({ handle: collectionHandle, cursor, params });
+  invariant(collectionHandle, 'Missing collectionHandle param');
 
-  return json({ collection });
+  const cursor = new URL(request.url).searchParams.get('cursor') ?? undefined;
+  const collection = await getCollection({
+    handle: collectionHandle,
+    cursor,
+    params,
+  });
+
+  return json({collection});
 }
 
 export const meta: MetaFunction = ({
@@ -28,18 +33,18 @@ export const meta: MetaFunction = ({
   data: SerializeFrom<typeof loader> | undefined;
 }) => {
   return {
-    title: data?.collection.seo?.title ?? "Collection",
-    description: data?.collection.seo?.description,
+    title: data?.collection.seo.title ?? 'Collection',
+    description: data?.collection.seo.description,
   };
 };
 
 export default function Collection() {
-  const { collection } = useLoaderData<typeof loader>();
+  const {collection} = useLoaderData<typeof loader>();
 
   return (
     <>
       <PageHeader heading={collection.title}>
-        {collection?.description && (
+        {collection.description && (
           <div className="flex items-baseline justify-between w-full">
             <div>
               <Text format width="narrow" as="p" className="inline-block">

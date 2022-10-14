@@ -1,16 +1,12 @@
-import {
-  json,
-  type LoaderArgs,
-  type MetaFunction,
-} from "@remix-run/cloudflare";
-import { useLoaderData } from "@remix-run/react";
-import { getPolicyContent } from "~/data";
+import {json, type LoaderArgs, type MetaFunction} from '@remix-run/cloudflare';
+import {useLoaderData} from '@remix-run/react';
+import invariant from 'tiny-invariant';
 
-import { PageHeader, Section, Button } from "~/components";
-import invariant from "tiny-invariant";
+import {getPolicyContent} from '~/data';
+import {PageHeader, Section, Button} from '~/components';
 
-export async function loader({ params }: LoaderArgs) {
-  invariant(params.policyHandle, "Missing policy handle");
+export async function loader({params}: LoaderArgs) {
+  invariant(params.policyHandle, 'Missing policy handle');
 
   const policy = await getPolicyContent({
     handle: params.policyHandle,
@@ -18,23 +14,23 @@ export async function loader({ params }: LoaderArgs) {
   });
 
   return json(
-    { policy },
+    {policy},
     {
       headers: {
         // TODO cacheLong()
       },
-    }
+    },
   );
 }
 
-export const meta: MetaFunction<typeof loader> = ({ data }) => {
+export const meta: MetaFunction<typeof loader> = ({data}) => {
   return {
-    title: data?.policy?.title ?? "Policies",
+    title: data.policy.title ?? 'Policies',
   };
 };
 
 export default function Policies() {
-  const { policy } = useLoaderData<typeof loader>();
+  const {policy} = useLoaderData<typeof loader>();
 
   return (
     <>
@@ -50,14 +46,14 @@ export default function Policies() {
           <Button
             className="justify-self-start"
             variant="inline"
-            to={"/policies"}
+            to="/policies"
           >
             &larr; Back to Policies
           </Button>
         </PageHeader>
         <div className="flex-grow w-full md:w-7/12">
           <div
-            dangerouslySetInnerHTML={{ __html: policy.body }}
+            dangerouslySetInnerHTML={{__html: policy.body}}
             className="prose dark:prose-invert"
           />
         </div>
