@@ -7,7 +7,7 @@ on:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: shopify-ubuntu-latest
     name: Deploy
     steps:
       - uses: actions/checkout@v2
