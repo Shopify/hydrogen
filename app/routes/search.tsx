@@ -84,12 +84,12 @@ export default function () {
   );
 }
 
-export async function loader({ request, context }: LoaderArgs) {
+export async function loader({ request, context, params }: LoaderArgs) {
   const searchParams = new URL(request.url).searchParams;
   const cursor = searchParams.get("cursor")!;
   const searchTerm = searchParams.get("q")!;
 
-  const products = await searchProducts({
+  const products = await searchProducts(params, {
     cursor,
     searchTerm,
     pageBy: PAGINATION_SIZE,
