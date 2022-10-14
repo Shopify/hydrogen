@@ -1,8 +1,8 @@
-# @hydrogen/react
+# @shopify/hydrogen-react
 
 ## IMPORTANT
 
-This is an beta version of `@hydrogen/react`.
+This is an beta version of `@shopify/hydrogen-react`.
 
 Refer to how this package is [versioned](../../README.md#versioning).
 
@@ -23,13 +23,13 @@ This document contains the following topics:
   npm:
 
   ```bash
-  npm i --save @hydrogen/react
+  npm i --save @shopify/hydrogen-react
   ```
 
   Yarn:
 
   ```bash
-  yarn add @hydrogen/react
+  yarn add @shopify/hydrogen-react
   ```
 
 ## Authenticating the Storefront client
@@ -47,7 +47,7 @@ The following is an example:
 ```ts
 // Filename: '/shopify-client.js'
 
-import {createStorefrontClient} from '@hydrogen/react';
+import {createStorefrontClient} from '@shopify/hydrogen-react';
 
 const client = createStorefrontClient({
   privateStorefrontToken: '...',
@@ -82,9 +82,19 @@ export async function getServerSideProps() {
 }
 ```
 
-### Set the content type for the Storefront client
+### (Optional) Set the content type for the Storefront client
 
-By default, the Storefront client sends the `"content-type": "application/json"` header. You can change this to `application/graphql`.
+By default, the Storefront client sends the `"content-type": "application/json"` header. Use the `json` content type when you have GraphQL variables and when the body is an object with the following shape:
+
+```json
+{
+  "query": "...",
+  "operationName": "...",
+  "variables": { "myVariable": "someValue", ... }
+}
+```
+
+However, when the body is only a query string, such as `{"..."}`, you can optionally change the default header to `application/graphql`:
 
 ```ts
 createStorefrontClient({contentType: 'graphql', ...})
@@ -129,7 +139,7 @@ To improve your development experience, enable GraphQL autocompletion for the St
 
    ```yml
    # Filename: .graphqlrc.yml
-   schema: node_modules/@hydrogen/react/storefront.schema.json
+   schema: node_modules/@shopify/hydrogen-react/storefront.schema.json
    ```
 
 1. Install a GraphQL extension in your IDE, such as the [GraphQL extension for VSCode](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql).
@@ -150,7 +160,7 @@ The following is an example:
 import {
   type StorefrontApiResponseError,
   type StorefrontApiResponseOk,
-} from '@hydrogen/react';
+} from '@shopify/hydrogen-react';
 
 async function FetchApi<DataGeneric>() {
   const apiResponse = await fetch('...');
@@ -174,7 +184,7 @@ If you're using a library that handles 400/500 level errors for you, then you ca
 The following is an example:
 
 ```ts
-import type {Product} from '@hydrogen/react/storefront-api-types';
+import type {Product} from '@shopify/hydrogen-react/storefront-api-types';
 
 const product: Product = {};
 ```
