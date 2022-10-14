@@ -1,32 +1,9 @@
 {
-  "extends": [
-    "plugin:@shopify/typescript",
-    "plugin:@shopify/react",
-    "plugin:@shopify/node",
-    "plugin:@shopify/prettier"
-  ],
+  "extends": ["plugin:hydrogen/recommended", "plugin:hydrogen/typescript"],
   "rules": {
-    "@babel/no-unused-expressions": "off",
-    "@shopify/jsx-no-complex-expressions": "off",
-    "@shopify/jsx-no-hardcoded-content": "off",
-    "@shopify/jsx-prefer-fragment-wrappers": "off",
-    "@shopify/prefer-module-scope-constants": "off",
     "@typescript-eslint/ban-ts-comment": "off",
     "@typescript-eslint/naming-convention": "off",
-    "func-style": "off",
-    "id-length": "off",
-    "import/extensions": "off",
-    "import/no-anonymous-default-export": "off",
-    "import/order": "off",
-    "jsx-a11y/control-has-associated-label": "off",
-    "jsx-a11y/label-has-for": "off",
-    "line-comment-position": "off",
-    "no-negated-condition": "off",
-    "no-nested-ternary": "off",
-    "no-return-await": "off",
-    "no-useless-escape": "off",
-    "no-warning-comments": "off",
-    "react/button-has-type": "off",
-    "react/react-in-jsx-scope": "off"
+    "hydrogen/prefer-image-component": "off",
+    "no-useless-escape": "off"
   }
 }

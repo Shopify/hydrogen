@@ -35,6 +35,7 @@
   "prettier": "@shopify/prettier-config",
   "devDependencies": {
     "@cloudflare/workers-types": "^3.14.1",
+    "eslint-plugin-hydrogen": "0.12.2",
     "@remix-run/dev": "0.0.0-experimental-e18af792a",
     "@remix-run/eslint-config": "0.0.0-experimental-e18af792a",
     "@tailwindcss/forms": "^0.5.3",
