@@ -5,7 +5,7 @@ import {
   type LoaderArgs,
 } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
-import type {ProductConnection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import type { ProductConnection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import invariant from "tiny-invariant";
 import { PageHeader, Section, Text } from "~/components";
 import { ProductGrid } from "~/components/ProductGrid";
@@ -24,7 +24,7 @@ export async function loader({ params, request }: LoaderArgs) {
 
   const collection = await getCollection({
     handle,
-    pageBy: 4,
+    pageBy: 2,
     direction,
     cursor,
     params,
@@ -46,7 +46,6 @@ export const meta: MetaFunction = ({
 
 export default function Collection() {
   const { collection } = useLoaderData<typeof loader>();
-
   return (
     <>
       <PageHeader heading={collection.title}>

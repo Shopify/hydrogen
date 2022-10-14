@@ -1,13 +1,13 @@
-import {useEffect, cloneElement, useRef, useCallback} from 'react';
-import {useInView} from 'react-intersection-observer';
-import {useFetcher} from '@remix-run/react';
+import { useEffect, cloneElement, useRef, useCallback } from "react";
+import { useInView } from "react-intersection-observer";
+import { useFetcher } from "@remix-run/react";
 
-interface MoreGridItems {
+interface MoreGridItemsProps {
   className?: string;
   cursor: string;
   pageBy?: number;
   placeholderItem?: React.ReactElement<
-    {key: number},
+    { key: number },
     string | React.JSXElementConstructor<any>
   >;
   setCursor: (value: string | null) => void;
@@ -21,7 +21,7 @@ interface MoreGridItems {
   to enable infinite loading
 */
 export function MoreGridItems({
-  className = 'grid-flow-row grid gap-2 gap-y-6 md:gap-4 lg:gap-6 grid-cols-2 md:grid-cols-2 lg:grid-cols-4',
+  className = "grid-flow-row grid gap-2 gap-y-6 md:gap-4 lg:gap-6 grid-cols-2 md:grid-cols-2 lg:grid-cols-4",
   cursor,
   pageBy = 4,
   placeholderItem = (
@@ -31,11 +31,11 @@ export function MoreGridItems({
   setHasNextPage,
   setItems,
   ...props
-}: MoreGridItems) {
-  const {load, type, data, state} = useFetcher();
+}: MoreGridItemsProps) {
+  const { load, type, data, state } = useFetcher();
   const fetching = useRef(false);
 
-  const {ref, inView} = useInView({
+  const { ref, inView } = useInView({
     threshold: 0,
     triggerOnce: true,
   });
@@ -43,7 +43,7 @@ export function MoreGridItems({
   // load next set of items
   const loadNextPage = useCallback(() => {
     if (!inView) return;
-    if (type !== 'init') return;
+    if (type !== "init") return;
     if (fetching.current) return;
     fetching.current = true;
 
@@ -53,7 +53,7 @@ export function MoreGridItems({
 
   // merge grid results and update state
   const onPageLoadedMergeItems = useCallback(() => {
-    if (state !== 'idle') return;
+    if (state !== "idle") return;
     if (!data) return;
 
     const result =
@@ -62,7 +62,7 @@ export function MoreGridItems({
       data?.collections; // /collections
 
     if (!result) {
-      return console.warn('Paginated query data not supported', {data});
+      return console.warn("Paginated query data not supported", { data });
     }
 
     const hasNextPage = result?.pageInfo?.hasNextPage || false;
@@ -91,8 +91,8 @@ export function MoreGridItems({
   return (
     <div className={className} ref={ref} {...props}>
       {/* placeholder row of item that will be observed */}
-      {new Array(pageBy).fill('').map((_, i) => {
-        return cloneElement(placeholderItem, {key: i});
+      {new Array(pageBy).fill("").map((_, i) => {
+        return cloneElement(placeholderItem, { key: i });
       })}
     </div>
   );
