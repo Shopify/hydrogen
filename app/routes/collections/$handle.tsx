@@ -5,16 +5,16 @@ import {
   type LoaderArgs,
 } from "@remix-run/cloudflare";
 import { useLoaderData } from "@remix-run/react";
-import type {ProductConnection, Collection as CollectionType } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import type {ProductConnection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import invariant from "tiny-invariant";
 import { PageHeader, Section, Text } from "~/components";
 import { ProductGrid } from "~/components/ProductGrid";
 import { getCollection } from "~/data";
 
 export async function loader({ params, request }: LoaderArgs) {
-  const { collectionHandle } = params;
+  const { handle } = params;
 
-  invariant(collectionHandle, "Missing collectionHandle param");
+  invariant(handle, "Missing collection handle param");
 
   const searchParams = new URL(request.url).searchParams;
 
@@ -22,9 +22,8 @@ export async function loader({ params, request }: LoaderArgs) {
   const direction =
     searchParams.get("direction") === "previous" ? "previous" : "next";
 
-  console.log("querying for cursor", cursor);
   const collection = await getCollection({
-    handle: collectionHandle,
+    handle,
     pageBy: 4,
     direction,
     cursor,

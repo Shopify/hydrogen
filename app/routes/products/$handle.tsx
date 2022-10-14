@@ -40,11 +40,11 @@ import clsx from "clsx";
 import { getSession } from "~/lib/session.server";
 
 export const loader = async ({ params, request }: LoaderArgs) => {
-  const { productHandle } = params;
-  invariant(productHandle, "Missing productHandle param, check route filename");
+  const { handle } = params;
+  invariant(handle, "Missing handle param, check route filename");
 
   const { shop, product } = await getProductData(
-    productHandle,
+    handle,
     new URL(request.url).searchParams,
     params
   );
@@ -52,7 +52,9 @@ export const loader = async ({ params, request }: LoaderArgs) => {
   return defer({
     product,
     shop,
-    recommended: getRecommendedProducts(product.id, params),
+    recommended: product?.id
+      ? getRecommendedProducts(product.id, params)
+      : null
   });
 };
 
