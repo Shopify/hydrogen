@@ -19,11 +19,11 @@ module.exports = {
         shopPay: "var(--color-shop-pay)",
       },
       screens: {
-        sm: "32em",
-        md: "48em",
-        lg: "64em",
-        xl: "80em",
-        "2xl": "96em",
+        sm: "32em", // 512px
+        md: "48em", // 768px
+        lg: "64em", // 1024px
+        xl: "80em", // 1280px
+        "2xl": "96em", // 1536px
         "sm-max": { max: "48em" },
         "sm-only": { min: "32em", max: "48em" },
         "md-only": { min: "48em", max: "64em" },
