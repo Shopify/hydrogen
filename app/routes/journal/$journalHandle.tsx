@@ -4,22 +4,24 @@ import {
   type SerializeFrom,
   type LoaderArgs,
   type LinksFunction,
-} from "@remix-run/cloudflare";
-import { useLoaderData } from "@remix-run/react";
-import { Image } from "@shopify/hydrogen-ui-alpha";
-import invariant from "tiny-invariant";
-import { PageHeader, Section } from "~/components";
-import { getArticle } from "~/data";
-import { ATTR_LOADING_EAGER } from "~/lib/const";
-import { getLocalizationFromLang } from "~/lib/utils";
-import styles from "../../styles/custom-font.css";
+} from '@remix-run/cloudflare';
+import {useLoaderData} from '@remix-run/react';
+import {Image} from '@shopify/hydrogen-ui-alpha';
+import invariant from 'tiny-invariant';
 
-const BLOG_HANDLE = "journal";
+import styles from '../../styles/custom-font.css';
 
-export async function loader({ params }: LoaderArgs) {
-  const { language, country } = getLocalizationFromLang(params.lang);
+import {PageHeader, Section} from '~/components';
+import {getArticle} from '~/data';
+import {ATTR_LOADING_EAGER} from '~/lib/const';
+import {getLocalizationFromLang} from '~/lib/utils';
 
-  invariant(params.journalHandle, "Missing journal handle");
+const BLOG_HANDLE = 'journal';
+
+export async function loader({params}: LoaderArgs) {
+  const {language, country} = getLocalizationFromLang(params.lang);
+
+  invariant(params.journalHandle, 'Missing journal handle');
 
   const article = await getArticle({
     blogHandle: BLOG_HANDLE,
@@ -27,22 +29,19 @@ export async function loader({ params }: LoaderArgs) {
     params,
   });
 
-  const formattedDate = new Intl.DateTimeFormat(
-    `${language}-${country}`,
-    {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }
-  ).format(new Date(article.publishedAt));
+  const formattedDate = new Intl.DateTimeFormat(`${language}-${country}`, {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  }).format(new Date(article.publishedAt));
 
   return json(
-    { article, formattedDate },
+    {article, formattedDate},
     {
       headers: {
         // TODO cacheLong()
       },
-    }
+    },
   );
 }
 
@@ -52,19 +51,19 @@ export const meta: MetaFunction = ({
   data: SerializeFrom<typeof loader> | undefined;
 }) => {
   return {
-    title: data?.article?.seo?.title ?? "Article",
-    description: data?.article?.seo?.description,
+    title: data?.article.seo?.title ?? 'Article',
+    description: data?.article.seo?.description,
   };
 };
 
 export const links: LinksFunction = () => {
-  return [{ rel: "stylesheet", href: styles }];
+  return [{rel: 'stylesheet', href: styles}];
 };
 
 export default function Article() {
-  const { article, formattedDate } = useLoaderData<typeof loader>();
+  const {article, formattedDate} = useLoaderData<typeof loader>();
 
-  const { title, image, contentHtml, author } = article;
+  const {title, image, contentHtml, author} = article;
 
   return (
     <>
@@ -84,12 +83,12 @@ export default function Article() {
             loading={ATTR_LOADING_EAGER}
             loaderOptions={{
               scale: 2,
-              crop: "center",
+              crop: 'center',
             }}
           />
         )}
         <div
-          dangerouslySetInnerHTML={{ __html: contentHtml }}
+          dangerouslySetInnerHTML={{__html: contentHtml}}
           className="article"
         />
       </Section>

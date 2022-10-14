@@ -95,7 +95,7 @@ export async function getStorefrontData<T>({
   variables,
 }: {
   query: string;
-  variables: Record<string, any>;
+  variables: {[key: string]: any};
 }): Promise<StorefrontApiResponse<T>> {
   const headers = getPublicTokenHeaders();
   // This needs to be application/json because we're sending JSON, not a graphql string
@@ -136,7 +136,7 @@ export async function getLayoutData(params: Params) {
   const { data } = await getStorefrontData<LayoutData>({
     query: LAYOUT_QUERY,
     variables: {
-      language: language,
+      language,
       headerMenuHandle: HEADER_MENU_HANDLE,
       footerMenuHandle: FOOTER_MENU_HANDLE,
     },
@@ -154,11 +154,11 @@ export async function getLayoutData(params: Params) {
   */
   const customPrefixes = { BLOG: "", CATALOG: "products" };
 
-  const headerMenu = data?.headerMenu
+  const headerMenu = data.headerMenu
     ? parseMenu(data.headerMenu, customPrefixes)
     : undefined;
 
-  const footerMenu = data?.footerMenu
+  const footerMenu = data.footerMenu
     ? parseMenu(data.footerMenu, customPrefixes)
     : undefined;
 
@@ -212,7 +212,7 @@ export async function getCountries() {
   invariant(data, "No data returned from Shopify API");
 
   return data.localization.availableCountries.sort((a, b) =>
-    a.name.localeCompare(b.name)
+    a.name.localeCompare(b.name),
   );
 }
 
@@ -234,11 +234,11 @@ const COUNTRIES_QUERY = `#graphql
 export async function getProductData(
   handle: string,
   searchParams: URLSearchParams,
-  params: Params
+  params: Params,
 ) {
   const { language, country } = getLocalizationFromLang(params.lang);
 
-  let selectedOptions: SelectedOptionInput[] = [];
+  const selectedOptions: SelectedOptionInput[] = [];
   searchParams.forEach((value, name) => {
     selectedOptions.push({ name, value });
   });
@@ -435,7 +435,7 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 export async function getRecommendedProducts(
   productId: string,
   params: Params,
-  count = 12
+  count = 12,
 ) {
   const { language, country } = getLocalizationFromLang(params.lang);
   const { data: products } = await getStorefrontData<{
@@ -457,7 +457,7 @@ export async function getRecommendedProducts(
     .concat(products.additional.nodes)
     .filter(
       (value, index, array) =>
-        array.findIndex((value2) => value2.id === value.id) === index
+        array.findIndex((value2) => value2.id === value.id) === index,
     );
 
   const originalProduct = mergedProducts
@@ -499,7 +499,11 @@ const COLLECTIONS_QUERY = `#graphql
 
 export async function getCollections(
   params: Params,
+<<<<<<< HEAD
   { paginationSize } = { paginationSize: 8 }
+=======
+  {paginationSize} = {paginationSize: 8},
+>>>>>>> a3501a0 (add editor configs)
 ) {
   const { language, country } = getLocalizationFromLang(params.lang);
 
@@ -1046,8 +1050,13 @@ export async function getBlog({
 
   invariant(data, "No data returned from Shopify API");
 
+<<<<<<< HEAD
   if (!data.blog?.articles) {
     throw new Response("Not found", { status: 404 });
+=======
+  if (!data.blog.articles) {
+    throw new Response('Not found', {status: 404});
+>>>>>>> a3501a0 (add editor configs)
   }
 
   return data.blog.articles;
@@ -1102,8 +1111,13 @@ export async function getArticle({
 
   invariant(data, "No data returned from Shopify API");
 
+<<<<<<< HEAD
   if (!data.blog?.articleByHandle) {
     throw new Response("Not found", { status: 404 });
+=======
+  if (!data.blog.articleByHandle) {
+    throw new Response('Not found', {status: 404});
+>>>>>>> a3501a0 (add editor configs)
   }
 
   return data.blog.articleByHandle;
@@ -1179,8 +1193,13 @@ const POLICIES_QUERY = `#graphql
 `;
 
 export async function getPolicies() {
+<<<<<<< HEAD
   const { data } = await getStorefrontData<{
     shop: Record<string, ShopPolicy>;
+=======
+  const {data} = await getStorefrontData<{
+    shop: {[key: string]: ShopPolicy};
+>>>>>>> a3501a0 (add editor configs)
   }>({
     query: POLICIES_QUERY,
     variables: {},
@@ -1240,8 +1259,13 @@ export async function getPolicyContent({
 
   const policyName = handle.replace(/-([a-z])/g, (_, m1) => m1.toUpperCase());
 
+<<<<<<< HEAD
   const { data } = await getStorefrontData<{
     shop: Record<string, ShopPolicy>;
+=======
+  const {data} = await getStorefrontData<{
+    shop: {[key: string]: ShopPolicy};
+>>>>>>> a3501a0 (add editor configs)
   }>({
     query: POLICY_CONTENT_QUERY,
     variables: {
@@ -1254,8 +1278,13 @@ export async function getPolicyContent({
     },
   });
 
+<<<<<<< HEAD
   invariant(data, "No data returned from Shopify API");
   const policy = data.shop?.[policyName];
+=======
+  invariant(data, 'No data returned from Shopify API');
+  const policy = data.shop[policyName];
+>>>>>>> a3501a0 (add editor configs)
 
   if (!policy) {
     throw new Response("Not found", { status: 404 });
@@ -1292,7 +1321,7 @@ const NOT_FOUND_QUERY = `#graphql
 export async function getFeaturedData({
   params,
 }: {
-  params: Record<string, any>;
+  params: {[key: string]: any};
 }): Promise<FeaturedData> {
   const { language, country } = getLocalizationFromLang(params.lang);
   const { data } = await getStorefrontData<{
@@ -1310,10 +1339,10 @@ export async function getFeaturedData({
 
   return {
     featuredCollections: flattenConnection<Collection>(
-      data.featuredCollections
+      data.featuredCollections,
     ) as Collection[],
     featuredProducts: flattenConnection<Product>(
-      data.featuredProducts
+      data.featuredProducts,
     ) as Product[],
   };
 }
@@ -1329,7 +1358,11 @@ export async function getPrimaryShopDomain() {
     throw new Error(errors.map((error) => error).join());
   }
 
+<<<<<<< HEAD
   invariant(data?.shop?.primaryDomain, "Primary domain not found");
+=======
+  invariant(data?.shop.primaryDomain, 'Primary domain not found');
+>>>>>>> a3501a0 (add editor configs)
 
   return data.shop;
 }
@@ -1469,7 +1502,7 @@ export async function getFeaturedCollectionData({
     throw new Error(errorMessages);
   }
 
-  return data?.collections?.nodes;
+  return data?.collections.nodes;
 }
 
 // @see: https://shopify.dev/api/storefront/2022-01/queries/collections
@@ -1517,7 +1550,7 @@ export async function getFeaturedProductsData({
     throw new Error(errorMessages);
   }
 
-  return data?.products?.nodes;
+  return data?.products.nodes;
 }
 
 // @see: https://shopify.dev/api/storefront/2022-01/queries/products
@@ -1581,7 +1614,7 @@ export async function login({
     throw new StorefrontApiError(errors.map((e) => e.message).join(", "));
   }
 
-  if (data?.customerAccessTokenCreate?.customerAccessToken?.accessToken) {
+  if (data?.customerAccessTokenCreate.customerAccessToken?.accessToken) {
     return data.customerAccessTokenCreate.customerAccessToken.accessToken;
   }
 
@@ -1589,7 +1622,11 @@ export async function login({
    * Something is wrong with the user's input.
    */
   throw new Error(
+<<<<<<< HEAD
     data?.customerAccessTokenCreate?.customerUserErrors.join(", ")
+=======
+    data?.customerAccessTokenCreate.customerUserErrors.join(', '),
+>>>>>>> a3501a0 (add editor configs)
   );
 }
 
@@ -1639,14 +1676,18 @@ export async function registerCustomer({
     throw new StorefrontApiError(errors.map((e) => e.message).join(", "));
   }
 
-  if (data?.customerCreate?.customer?.id) {
+  if (data?.customerCreate.customer?.id) {
     return data.customerCreate.customer.id;
   }
 
   /**
    * Something is wrong with the user's input.
    */
+<<<<<<< HEAD
   throw new Error(data?.customerCreate?.customerUserErrors.join(", "));
+=======
+  throw new Error(data?.customerCreate.customerUserErrors.join(', '));
+>>>>>>> a3501a0 (add editor configs)
 }
 
 const CUSTOMER_RECOVER_MUTATION = `#graphql
@@ -1727,14 +1768,18 @@ export async function resetPassword({
     throw new StorefrontApiError(errors.map((e) => e.message).join(", "));
   }
 
-  if (data?.customerReset?.customerAccessToken) {
+  if (data?.customerReset.customerAccessToken) {
     return data.customerReset.customerAccessToken;
   }
 
   /**
    * Something is wrong with the user's input.
    */
+<<<<<<< HEAD
   throw new Error(data?.customerReset?.customerUserErrors.join(", "));
+=======
+  throw new Error(data?.customerReset.customerUserErrors.join(', '));
+>>>>>>> a3501a0 (add editor configs)
 }
 
 const CUSTOMER_ACTIVATE_MUTATION = `#graphql
@@ -1782,14 +1827,18 @@ export async function activateAccount({
     throw new StorefrontApiError(errors.map((e) => e.message).join(", "));
   }
 
-  if (data?.customerActivate?.customerAccessToken) {
+  if (data?.customerActivate.customerAccessToken) {
     return data.customerActivate.customerAccessToken;
   }
 
   /**
    * Something is wrong with the user's input.
    */
+<<<<<<< HEAD
   throw new Error(data?.customerActivate?.customerUserErrors.join(", "));
+=======
+  throw new Error(data?.customerActivate.customerUserErrors.join(', '));
+>>>>>>> a3501a0 (add editor configs)
 }
 
 const CUSTOMER_QUERY = `#graphql
@@ -2083,7 +2132,7 @@ export async function updateCustomer({
   const error = getApiErrorMessage(
     "customerUpdate",
     data,
-    errors as UserError[]
+    errors as UserError[],
   );
 
   if (error) {
@@ -2134,7 +2183,7 @@ export async function updateCustomerAddress({
   const error = getApiErrorMessage(
     "customerAddressUpdate",
     data,
-    errors as UserError[]
+    errors as UserError[],
   );
 
   if (error) {
@@ -2175,7 +2224,7 @@ export async function deleteCustomerAddress({
   const error = getApiErrorMessage(
     "customerAddressDelete",
     data,
-    errors as UserError[]
+    errors as UserError[],
   );
 
   if (error) {
@@ -2221,7 +2270,7 @@ export async function updateCustomerDefaultAddress({
   const error = getApiErrorMessage(
     "customerDefaultAddressUpdate",
     data,
-    errors as UserError[]
+    errors as UserError[],
   );
 
   if (error) {
@@ -2270,7 +2319,7 @@ export async function createCustomerAddress({
   const error = getApiErrorMessage(
     "customerAddressCreate",
     data,
-    errors as UserError[]
+    errors as UserError[],
   );
 
   if (error) {
@@ -2278,8 +2327,13 @@ export async function createCustomerAddress({
   }
 
   invariant(
+<<<<<<< HEAD
     data?.customerAddressCreate?.customerAddress?.id,
     "Expected customer address to be created"
+=======
+    data?.customerAddressCreate.customerAddress?.id,
+    'Expected customer address to be created',
+>>>>>>> a3501a0 (add editor configs)
   );
 
   return data.customerAddressCreate.customerAddress.id;

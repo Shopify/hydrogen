@@ -1,28 +1,25 @@
-import {
-  json,
-  type LoaderArgs,
-  type MetaFunction,
-} from "@remix-run/cloudflare";
-import { useLoaderData } from "@remix-run/react";
-import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Grid, Heading, PageHeader, Section, Link } from "~/components";
-import { getCollections } from "~/data";
-import { getImageLoadingPriority } from "~/lib/const";
+import {json, type LoaderArgs, type MetaFunction} from '@remix-run/cloudflare';
+import {useLoaderData} from '@remix-run/react';
+import type {Collection} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 
-export const loader = async ({ params }: LoaderArgs) => {
+import {Grid, Heading, PageHeader, Section, Link} from '~/components';
+import {getCollections} from '~/data';
+import {getImageLoadingPriority} from '~/lib/const';
+
+export const loader = async ({params}: LoaderArgs) => {
   const collections = await getCollections(params);
 
-  return json({ collections });
+  return json({collections});
 };
 
 export const meta: MetaFunction = () => {
   return {
-    title: "All Collections",
+    title: 'All Collections',
   };
 };
 
 export default function Collections() {
-  const { collections } = useLoaderData<typeof loader>();
+  const {collections} = useLoaderData<typeof loader>();
 
   return (
     <>
@@ -47,12 +44,12 @@ function CollectionCard({
   loading,
 }: {
   collection: Collection;
-  loading?: HTMLImageElement["loading"];
+  loading?: HTMLImageElement['loading'];
 }) {
   return (
     <Link to={`/collections/${collection.handle}`} className="grid gap-4">
       <div className="card-image bg-primary/5 aspect-[3/2]">
-        {collection?.image && (
+        {collection.image && (
           <img
             alt={collection.title}
             src={collection.image.url}

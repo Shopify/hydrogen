@@ -1,24 +1,25 @@
-import type { LoaderArgs } from "@remix-run/cloudflare";
-import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
-import { getSitemap } from "~/data";
+import type {LoaderArgs} from '@remix-run/cloudflare';
+import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
+
+import {getSitemap} from '~/data';
 
 const MAX_URLS = 250; // the google limit is 50K, however, SF API only allow querying for 250 resources each time
 
-export async function loader({ request, params }: LoaderArgs) {
+export async function loader({request, params}: LoaderArgs) {
   const data = await getSitemap({
     params,
     urlLimits: MAX_URLS,
   });
 
   return new Response(
-    shopSitemap({ data, baseUrl: new URL(request.url).origin }),
+    shopSitemap({data, baseUrl: new URL(request.url).origin}),
     {
       headers: {
-        "content-type": "application/xml",
+        'content-type': 'application/xml',
         // Cache for 24 hours
-        "cache-control": `max-age=${60 * 60 * 24}`,
+        'cache-control': `max-age=${60 * 60 * 24}`,
       },
-    }
+    },
   );
 }
 
@@ -48,7 +49,7 @@ function shopSitemap({
       const finalObject: ProductEntry = {
         url,
         lastMod: product.updatedAt!,
-        changeFreq: "daily",
+        changeFreq: 'daily',
       };
 
       if (product.featuredImage?.url) {
@@ -76,7 +77,7 @@ function shopSitemap({
       return {
         url,
         lastMod: collection.updatedAt,
-        changeFreq: "daily",
+        changeFreq: 'daily',
       };
     });
 
@@ -88,7 +89,7 @@ function shopSitemap({
       return {
         url,
         lastMod: page.updatedAt,
-        changeFreq: "weekly",
+        changeFreq: 'weekly',
       };
     });
 
@@ -99,7 +100,7 @@ function shopSitemap({
       xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
       xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
     >
-      ${urlsDatas.map((url) => renderUrlTag(url!)).join("")}
+      ${urlsDatas.map((url) => renderUrlTag(url!)).join('')}
     </urlset>`;
 }
 
@@ -128,10 +129,10 @@ function renderUrlTag({
           ? `
         <image:image>
           <image:loc>${image.url}</image:loc>
-          <image:title>${image.title ?? ""}</image:title>
-          <image:caption>${image.caption ?? ""}</image:caption>
+          <image:title>${image.title ?? ''}</image:title>
+          <image:caption>${image.caption ?? ''}</image:caption>
         </image:image>`
-          : ""
+          : ''
       }
 
     </url>
