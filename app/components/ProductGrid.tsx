@@ -1,45 +1,18 @@
-import { Button, Grid, ProductCard, Link } from "~/components";
-import { getImageLoadingPriority } from "~/lib/const";
-import type {
-  Collection,
-  Product,
-} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { useFetcher } from "@remix-run/react";
-import { useEffect, useState } from "react";
+import { Link } from "~/components";
+import type { ProductConnection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import { ProductGridPaginated } from '~/components/ProductGridPaginated';
+import { ProductGridInfinite } from "~/components/ProductGridInfinite";
 
 export function ProductGrid({
-  url,
-  collection,
+  paginated = false,
+  products,
+  ...props
 }: {
-  url: string;
-  collection: Collection;
+  paginated?: boolean
+  products: ProductConnection;
+  [key: string]: any;
 }) {
-  const initialProducts = collection?.products?.nodes || [];
-  const [nextPage, setNextPage] = useState(
-    collection?.products?.pageInfo?.hasNextPage
-  );
-  const [endCursor, setEndCursor] = useState(
-    collection?.products?.pageInfo?.endCursor
-  );
-  const [products, setProducts] = useState(initialProducts);
-  const fetcher = useFetcher();
-
-  function fetchMoreProducts() {
-    fetcher.load(`${url}?index&cursor=${endCursor}`);
-  }
-
-  useEffect(() => {
-    if (!fetcher.data) return;
-
-    const { collection } = fetcher.data;
-    setProducts((prev: Product[]) => [...prev, ...collection.products.nodes]);
-    setNextPage(collection.products.pageInfo.hasNextPage);
-    setEndCursor(collection.products.pageInfo.endCursor);
-  }, [fetcher.data]);
-
-  const haveProducts = initialProducts.length > 0;
-
-  if (!haveProducts) {
+  if (!products?.nodes) {
     return (
       <>
         <p>No products found on this collection</p>
@@ -50,31 +23,19 @@ export function ProductGrid({
     );
   }
 
-  return (
-    <>
-      <Grid layout="products">
-        {products.map((product, i) => (
-          <ProductCard
-            key={product.id}
-            product={product}
-            loading={getImageLoadingPriority(i)}
-          />
-        ))}
-      </Grid>
+    /* TODO:
+      - Optional consideration: Virtualization if very long list (need to consider impact of scroll position, etc.)
+    */
 
-      {nextPage && (
-        <div className="flex items-center justify-center mt-6">
-          <Button
-            disabled={fetcher.state !== "idle"}
-            variant="secondary"
-            onClick={fetchMoreProducts}
-            width="full"
-            prefetch="intent"
-          >
-            {fetcher.state !== "idle" ? "Loading..." : "Load more products"}
-          </Button>
-        </div>
-      )}
-    </>
+  return (
+    paginated
+      ? <ProductGridPaginated
+          {...props}
+          products={products}
+        />
+      : <ProductGridInfinite
+          {...props}
+          products={products}
+        />
   );
 }

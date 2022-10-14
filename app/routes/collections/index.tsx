@@ -1,71 +1,42 @@
-import {
-  json,
-  type LoaderArgs,
-  type MetaFunction,
-} from "@remix-run/cloudflare";
-import { useLoaderData } from "@remix-run/react";
-import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Grid, Heading, PageHeader, Section, Link } from "~/components";
-import { getCollections } from "~/data";
-import { getImageLoadingPriority } from "~/lib/const";
+import {json, LoaderArgs, type MetaFunction} from '@remix-run/cloudflare';
+import {useLoaderData} from '@remix-run/react';
+import type {CollectionConnection} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {PageHeader, Section} from '~/components';
+import {CollectionGrid} from '~/components/CollectionGrid';
+import {getCollections} from '~/data';
 
-export const loader = async ({ params }: LoaderArgs) => {
-  const collections = await getCollections(params);
+export const loader = async ({request, params}: LoaderArgs) => {
+  const searchParams = new URL(request.url).searchParams;
 
-  return json({ collections });
+  const cursor = searchParams.get('cursor') ?? undefined;
+  const direction =
+    searchParams.get('direction') === 'previous' ? 'previous' : 'next';
+
+  const collections = await getCollections({
+    cursor,
+    pageBy: 2,
+    direction,
+    params,
+  });
+
+  return json({collections});
 };
 
 export const meta: MetaFunction = () => {
   return {
-    title: "All Collections",
+    title: 'All Collections',
   };
 };
 
 export default function Collections() {
-  const { collections } = useLoaderData<typeof loader>();
+  const {collections} = useLoaderData<typeof loader>();
 
   return (
     <>
       <PageHeader heading="Collections" />
       <Section>
-        <Grid items={collections.length === 3 ? 3 : 2}>
-          {collections.map((collection, i) => (
-            <CollectionCard
-              collection={collection as Collection}
-              key={collection.id}
-              loading={getImageLoadingPriority(i, 2)}
-            />
-          ))}
-        </Grid>
+        <CollectionGrid collections={collections as CollectionConnection} />
       </Section>
     </>
-  );
-}
-
-function CollectionCard({
-  collection,
-  loading,
-}: {
-  collection: Collection;
-  loading?: HTMLImageElement["loading"];
-}) {
-  return (
-    <Link to={`/collections/${collection.handle}`} className="grid gap-4">
-      <div className="card-image bg-primary/5 aspect-[3/2]">
-        {collection?.image && (
-          <img
-            alt={collection.title}
-            src={collection.image.url}
-            height={400}
-            sizes="(max-width: 32em) 100vw, 33vw"
-            width={600}
-            loading={loading}
-          />
-        )}
-      </div>
-      <Heading as="h3" size="copy">
-        {collection.title}
-      </Heading>
-    </Link>
   );
 }
