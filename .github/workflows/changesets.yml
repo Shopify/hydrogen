@@ -65,6 +65,6 @@ jobs:
       # note that this runs on every PR that's merged.
       - name: (next) Create Release Pull Request or Publish
         id: changesets_next
-        run: node packages/react/scripts/prepare-next.js
+        run: cd packages/react/scripts && node prepare-next.js
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
