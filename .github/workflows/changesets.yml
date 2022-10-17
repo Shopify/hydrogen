@@ -65,12 +65,9 @@ jobs:
       # note that this runs on every PR that's merged.
       - name: (next) Create Release Pull Request or Publish
         id: changesets_next
-        uses: changesets/action@v1
-        with:
-          version: yarn changeset version --snapshot next
-          publish: yarn changeset publish --tag next
-          commit: '[ci] release ${{ github.ref_name }}'
-          title: '[ci] release ${{ github.ref_name }}'
+        run: |
+          yarn changeset version --snapshot next
+          yarn changeset publish --tag next
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
