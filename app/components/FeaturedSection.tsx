@@ -26,15 +26,19 @@ export function FeaturedSection() {
   const { featuredCollections, featuredProducts } =
     featuredProductsFetcher.data as FeaturedData;
 
+    console.log({featuredCollections, featuredProducts})
+
   return (
-     <>
-      {featuredCollections.nodes.length < 2 && (
+    <>
+      {featuredCollections?.nodes?.length < 2 && (
         <FeaturedCollections
           title="Popular Collections"
           collections={featuredCollections.nodes}
         />
       )}
-      <ProductSwimlane products={featuredProducts.nodes} />
+      {featuredProducts?.nodes && (
+        <ProductSwimlane products={featuredProducts.nodes} />
+      )}
     </>
   );
 }

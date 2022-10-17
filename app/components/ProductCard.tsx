@@ -56,6 +56,7 @@ export function ProductCard({
       onClick={onClick}
       to={`/products/${product.handle}`}
       prefetch="intent"
+      suppressHydrationWarning={true}
     >
       <div className={styles}>
         <div className="card-image aspect-[4/5] bg-primary/5">

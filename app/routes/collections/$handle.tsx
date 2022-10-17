@@ -22,15 +22,15 @@ export async function loader({ params, request }: LoaderArgs) {
   const direction =
     searchParams.get("direction") === "previous" ? "previous" : "next";
 
-  const collection = await getCollection({
-    handle,
-    pageBy: 2,
-    direction,
-    cursor,
-    params,
+  return json({
+    collection: await getCollection({
+      handle,
+      pageBy: 4,
+      direction,
+      cursor,
+      params,
+    })
   });
-
-  return json({ collection });
 }
 
 export const meta: MetaFunction = ({
@@ -39,8 +39,8 @@ export const meta: MetaFunction = ({
   data: SerializeFrom<typeof loader> | undefined;
 }) => {
   return {
-    title: data?.collection.seo?.title ?? "Collection",
-    description: data?.collection.seo?.description,
+    title: data?.collection?.seo?.title ?? "Collection",
+    description: data?.collection?.seo?.description,
   };
 };
 
@@ -59,7 +59,7 @@ export default function Collection() {
           </div>
         )}
       </PageHeader>
-      <Section>
+      <Section id="product-grid-section">
         <ProductGrid
           key={collection.id}
           products={collection.products as ProductConnection}

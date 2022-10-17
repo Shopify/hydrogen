@@ -459,7 +459,7 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
                     } overflow-hidden transition-all duration-300`}
                   >
                     {/* TODO: the `static` prop causes a Suspense warning */}
-                    <Disclosure.Panel static>
+                    <Disclosure.Panel>
                       <nav className={styles.nav}>
                         {item.items.map((subItem) => (
                           <FooterLink key={subItem.id} item={subItem} />
