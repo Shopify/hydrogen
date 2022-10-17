@@ -20,7 +20,7 @@ import {
   CartEmpty,
   Link,
 } from "~/components";
-import { useFetcher, useParams } from "@remix-run/react";
+import { useFetcher, useParams, Form } from "@remix-run/react";
 import { useWindowScroll } from "react-use";
 import { Disclosure } from "@headlessui/react";
 import type { LayoutData } from "~/data";
@@ -215,7 +215,8 @@ function MobileHeader({
         <button onClick={openMenu} className={styles.button}>
           <IconMenu />
         </button>
-        <form
+        <Form
+          method="get"
           action={params.lang ? `/${params.lang}/search` : "/search"}
           className="items-center gap-2 sm:flex"
         >
@@ -233,7 +234,7 @@ function MobileHeader({
             placeholder="Search"
             name="q"
           />
-        </form>
+        </Form>
       </div>
 
       <Link
@@ -306,7 +307,8 @@ function DesktopHeader({
         </nav>
       </div>
       <div className="flex items-center gap-1">
-        <form
+        <Form
+          method="get"
           action={params.lang ? `/${params.lang}/search` : "/search"}
           className="flex items-center gap-2"
         >
@@ -324,7 +326,7 @@ function DesktopHeader({
           <button type="submit" className={styles.button}>
             <IconSearch />
           </button>
-        </form>
+        </Form>
         <Link to={"/account"} className={styles.button}>
           <IconAccount />
         </Link>
