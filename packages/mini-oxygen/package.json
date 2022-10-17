@@ -12,7 +12,7 @@
   "engines": {
     "node": ">16.7.0"
   },
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
