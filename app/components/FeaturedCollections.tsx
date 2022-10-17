@@ -1,11 +1,12 @@
-import { Image } from "@shopify/hydrogen-ui-alpha";
-import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Link } from "@remix-run/react";
-import { Heading, Section, Grid } from "~/components";
+import {Image} from '@shopify/hydrogen-ui-alpha';
+import type {Collection} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {Link} from '@remix-run/react';
+
+import {Heading, Section, Grid} from '~/components';
 
 export function FeaturedCollections({
   collections,
-  title = "Collections",
+  title = 'Collections',
   ...props
 }: {
   collections: Collection[];
@@ -21,14 +22,14 @@ export function FeaturedCollections({
     <Section {...props} heading={title}>
       <Grid items={items}>
         {collections.map((collection) => {
-          if (!collection?.image) {
+          if (!collection.image) {
             return null;
           }
           return (
             <Link key={collection.id} to={`/collections/${collection.handle}`}>
               <div className="grid gap-4">
                 <div className="card-image bg-primary/5 aspect-[3/2]">
-                  {collection?.image && (
+                  {collection.image && (
                     <Image
                       alt={`Image of ${collection.title}`}
                       data={collection.image}
@@ -38,7 +39,7 @@ export function FeaturedCollections({
                       widths={[400, 500, 600, 700, 800, 900]}
                       loaderOptions={{
                         scale: 2,
-                        crop: "center",
+                        crop: 'center',
                       }}
                     />
                   )}

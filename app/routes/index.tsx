@@ -1,36 +1,33 @@
-import {
-  type LoaderArgs,
-  type MetaFunction,
-  defer,
-} from "@remix-run/cloudflare";
-import { Suspense } from "react";
-import { Await, useLoaderData } from "@remix-run/react";
-import { ProductSwimlane, FeaturedCollections, Hero } from "~/components";
+import {type LoaderArgs, type MetaFunction, defer} from '@remix-run/cloudflare';
+import {Suspense} from 'react';
+import {Await, useLoaderData} from '@remix-run/react';
+
+import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {
   getHomeSeoData,
   getCollectionHeroData,
   getFeaturedCollectionData,
   getFeaturedProductsData,
-} from "~/data";
-import { getHeroPlaceholder } from "~/lib/placeholders";
+} from '~/data';
+import {getHeroPlaceholder} from '~/lib/placeholders';
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({params}: LoaderArgs) {
   const [shop, primaryHero] = await Promise.all([
-    getHomeSeoData({ params }),
-    getCollectionHeroData({ params, handle: "freestyle" }),
+    getHomeSeoData({params}),
+    getCollectionHeroData({params, handle: 'freestyle'}),
   ]);
 
   return defer({
     shop,
     primaryHero,
-    featuredProducts: getFeaturedProductsData({ params }),
-    secondaryHero: getCollectionHeroData({ params, handle: "backcountry" }),
-    featuredCollections: getFeaturedCollectionData({ params }),
-    tertiaryHero: getCollectionHeroData({ params, handle: "winter-2022" }),
+    featuredProducts: getFeaturedProductsData({params}),
+    secondaryHero: getCollectionHeroData({params, handle: 'backcountry'}),
+    featuredCollections: getFeaturedCollectionData({params}),
+    tertiaryHero: getCollectionHeroData({params, handle: 'winter-2022'}),
   });
 }
 
-export const meta: MetaFunction = ({ data }) => {
+export const meta: MetaFunction = ({data}) => {
   return {
     title: data?.shop?.name,
     description: data?.shop?.description,

@@ -1,4 +1,4 @@
-import { IconClose, Link } from "~/components";
+import {IconClose, Link} from '~/components';
 
 export function Modal({
   children,
@@ -15,7 +15,7 @@ export function Modal({
       aria-modal="true"
       id="modal-bg"
     >
-      <div className="fixed inset-0 transition-opacity bg-opacity-75 bg-primary/40"></div>
+      <div className="fixed inset-0 transition-opacity bg-opacity-75 bg-primary/40" />
       <div className="fixed inset-0 z-50 overflow-y-auto">
         <div className="flex items-center justify-center min-h-full p-4 text-center sm:p-0">
           <div

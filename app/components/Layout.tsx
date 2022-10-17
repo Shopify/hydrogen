@@ -1,8 +1,9 @@
-import {
-  type EnhancedMenu,
-  type EnhancedMenuItem,
-  useIsHomePath,
-} from "~/lib/utils";
+import {useFetcher, useParams} from '@remix-run/react';
+import {useWindowScroll} from 'react-use';
+import {Disclosure} from '@headlessui/react';
+import {Suspense, useEffect} from 'react';
+
+import type {LayoutData} from '~/data';
 import {
   Drawer,
   useDrawer,
@@ -19,13 +20,13 @@ import {
   CartDetails,
   CartEmpty,
   Link,
-} from "~/components";
-import { useFetcher, useParams, Form } from "@remix-run/react";
-import { useWindowScroll } from "react-use";
-import { Disclosure } from "@headlessui/react";
-import type { LayoutData } from "~/data";
-import { Suspense, useEffect } from "react";
-import { useCart } from "~/hooks/useCart";
+} from '~/components';
+import {useFetcher, useParams, Form} from '@remix-run/react';
+import {useWindowScroll} from 'react-use';
+import {Disclosure} from '@headlessui/react';
+import type {LayoutData} from '~/data';
+import {Suspense, useEffect} from 'react';
+import {useCart} from '~/hooks/useCart';
 
 export function Layout({
   children,
@@ -36,7 +37,7 @@ export function Layout({
     layout: LayoutData;
   };
 }) {
-  const { layout } = data || {};
+  const {layout} = data || {};
 
   return (
     <>
@@ -47,7 +48,7 @@ export function Layout({
           </a>
         </div>
         <Header
-          title={layout?.shop.name ?? "Hydrogen"}
+          title={layout?.shop.name ?? 'Hydrogen'}
           menu={layout?.headerMenu}
         />
         <main role="main" id="mainContent" className="flex-grow">
@@ -59,7 +60,7 @@ export function Layout({
   );
 }
 
-function Header({ title, menu }: { title: string; menu?: EnhancedMenu }) {
+function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
 
   const {
@@ -98,13 +99,7 @@ function Header({ title, menu }: { title: string; menu?: EnhancedMenu }) {
   );
 }
 
-function CartDrawer({
-  isOpen,
-  onClose,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-}) {
+function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   const cart = useCart();
   /**
    * Whenever a component that uses a fetcher is _unmounted_, that fetcher is removed
@@ -119,7 +114,7 @@ function CartDrawer({
    * drawer is opened.
    */
   useEffect(() => {
-    isOpen && topProductsFetcher.load("/cart");
+    isOpen && topProductsFetcher.load('/cart');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 
@@ -173,7 +168,7 @@ function MenuMobileNav({
   return (
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
       {/* Top level menu items */}
-      {(menu?.items || []).map((item) => (
+      {(menu.items || []).map((item) => (
         <Link key={item.id} to={item.to} target={item.target} onClick={onClose}>
           <Text as="span" size="copy">
             {item.title}
@@ -195,16 +190,16 @@ function MobileHeader({
   openCart: () => void;
   openMenu: () => void;
 }) {
-  const { y } = useWindowScroll();
+  const {y} = useWindowScroll();
 
   const styles = {
-    button: "relative flex items-center justify-center w-8 h-8",
+    button: 'relative flex items-center justify-center w-8 h-8',
     container: `${
       isHome
-        ? "bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader"
-        : "bg-contrast/80 text-primary"
+        ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
+        : 'bg-contrast/80 text-primary'
     } ${
-      y > 50 && !isHome ? "shadow-lightHeader " : ""
+      y > 50 && !isHome ? 'shadow-lightHeader ' : ''
     }flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`,
   };
   const params = useParams();
@@ -217,7 +212,7 @@ function MobileHeader({
         </button>
         <Form
           method="get"
-          action={params.lang ? `/${params.lang}/search` : "/search"}
+          action={params.lang ? `/${params.lang}/search` : '/search'}
           className="items-center gap-2 sm:flex"
         >
           <button type="submit" className={styles.button}>
@@ -226,8 +221,8 @@ function MobileHeader({
           <Input
             className={
               isHome
-                ? "focus:border-contrast/20 dark:focus:border-primary/20"
-                : "focus:border-primary/20"
+                ? 'focus:border-contrast/20 dark:focus:border-primary/20'
+                : 'focus:border-primary/20'
             }
             type="search"
             variant="minisearch"
@@ -241,13 +236,13 @@ function MobileHeader({
         className="flex items-center self-stretch leading-[3rem] md:leading-[4rem] justify-center flex-grow w-full h-full"
         to="/"
       >
-        <Heading className="font-bold text-center" as={isHome ? "h1" : "h2"}>
+        <Heading className="font-bold text-center" as={isHome ? 'h1' : 'h2'}>
           {title}
         </Heading>
       </Link>
 
       <div className="flex items-center justify-end w-full gap-4">
-        <Link to={"/account"} className={styles.button}>
+        <Link to="/account" className={styles.button}>
           <IconAccount />
         </Link>
         <Suspense
@@ -271,25 +266,25 @@ function DesktopHeader({
   menu?: EnhancedMenu;
   title: string;
 }) {
-  const { y } = useWindowScroll();
+  const {y} = useWindowScroll();
   const params = useParams();
 
   const styles = {
     button:
-      "relative flex items-center justify-center w-8 h-8 focus:ring-primary/5",
+      'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5',
     container: `${
       isHome
-        ? "bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader"
-        : "bg-contrast/80 text-primary"
+        ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
+        : 'bg-contrast/80 text-primary'
     } ${
-      y > 50 && !isHome ? "shadow-lightHeader " : ""
+      y > 50 && !isHome ? 'shadow-lightHeader ' : ''
     }hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`,
   };
 
   return (
     <header role="banner" className={styles.container}>
       <div className="flex gap-12">
-        <Link className={`font-bold`} to="/" prefetch="intent">
+        <Link className="font-bold" to="/" prefetch="intent">
           {title}
         </Link>
         <nav className="flex gap-8">
@@ -309,14 +304,14 @@ function DesktopHeader({
       <div className="flex items-center gap-1">
         <Form
           method="get"
-          action={params.lang ? `/${params.lang}/search` : "/search"}
+          action={params.lang ? `/${params.lang}/search` : '/search'}
           className="flex items-center gap-2"
         >
           <Input
             className={
               isHome
-                ? "focus:border-contrast/20 dark:focus:border-primary/20"
-                : "focus:border-primary/20"
+                ? 'focus:border-contrast/20 dark:focus:border-primary/20'
+                : 'focus:border-primary/20'
             }
             type="search"
             variant="minisearch"
@@ -327,7 +322,7 @@ function DesktopHeader({
             <IconSearch />
           </button>
         </Form>
-        <Link to={"/account"} className={styles.button}>
+        <Link to={'/account'} className={styles.button}>
           <IconAccount />
         </Link>
         <Suspense
@@ -352,16 +347,14 @@ function Badge({
   return (
     <button
       onClick={openCart}
-      className={
-        "relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
-      }
+      className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
     >
       <IconBag />
       <div
         className={`${
           dark
-            ? "text-primary bg-contrast dark:text-contrast dark:bg-primary"
-            : "text-contrast bg-primary"
+            ? 'text-primary bg-contrast dark:text-contrast dark:bg-primary'
+            : 'text-contrast bg-primary'
         } absolute bottom-1 right-1 text-[0.625rem] font-medium subpixel-antialiased h-3 min-w-[0.75rem] flex items-center justify-center leading-none text-center rounded-full w-auto px-[0.125rem] pb-px`}
       >
         <span>{count || 0}</span>
@@ -370,13 +363,7 @@ function Badge({
   );
 }
 
-function CartBadge({
-  openCart,
-  dark,
-}: {
-  dark: boolean;
-  openCart: () => void;
-}) {
+function CartBadge({openCart, dark}: {dark: boolean; openCart: () => void}) {
   const cart = useCart();
 
   return (
@@ -384,17 +371,17 @@ function CartBadge({
   );
 }
 
-function Footer({ menu }: { menu?: EnhancedMenu }) {
+function Footer({menu}: {menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
   const itemsCount = menu
-    ? menu?.items?.length + 1 > 4
+    ? menu.items.length + 1 > 4
       ? 4
-      : menu?.items?.length + 1
+      : menu.items.length + 1
     : [];
 
   return (
     <Section
-      divider={isHome ? "none" : "top"}
+      divider={isHome ? 'none' : 'top'}
       as="footer"
       role="contentinfo"
       className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12
@@ -415,8 +402,8 @@ function Footer({ menu }: { menu?: EnhancedMenu }) {
   );
 }
 
-const FooterLink = ({ item }: { item: EnhancedMenuItem }) => {
-  if (item.to.startsWith("http")) {
+const FooterLink = ({item}: {item: EnhancedMenuItem}) => {
+  if (item.to.startsWith('http')) {
     return (
       <a href={item.to} target={item.target} rel="noopener noreferrer">
         {item.title}
@@ -431,10 +418,10 @@ const FooterLink = ({ item }: { item: EnhancedMenuItem }) => {
   );
 };
 
-function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
+function FooterMenu({menu}: {menu?: EnhancedMenu}) {
   const styles = {
-    section: "grid gap-4",
-    nav: "grid gap-2 pb-6",
+    section: 'grid gap-4',
+    nav: 'grid gap-2 pb-6',
   };
 
   return (
@@ -442,19 +429,19 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
       {(menu?.items || []).map((item: EnhancedMenuItem) => (
         <section key={item.id} className={styles.section}>
           <Disclosure>
-            {({ open }) => (
+            {({open}) => (
               <>
                 <Disclosure.Button className="text-left md:cursor-default">
                   <Heading className="flex justify-between" size="lead" as="h3">
                     {item.title}
-                    {item?.items?.length > 0 && (
+                    {item.items.length > 0 && (
                       <span className="md:hidden">
-                        <IconCaret direction={open ? "up" : "down"} />
+                        <IconCaret direction={open ? 'up' : 'down'} />
                       </span>
                     )}
                   </Heading>
                 </Disclosure.Button>
-                {item?.items?.length > 0 ? (
+                {item.items.length > 0 ? (
                   <div
                     className={`${
                       open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
@@ -474,7 +461,7 @@ function FooterMenu({ menu }: { menu?: EnhancedMenu }) {
             )}
           </Disclosure>
         </section>
-      ))}{" "}
+      ))}{' '}
     </>
   );
 }

@@ -1,7 +1,7 @@
-import { Fragment, useState } from "react";
-import { Dialog, Transition } from "@headlessui/react";
+import {Fragment, useState} from 'react';
+import {Dialog, Transition} from '@headlessui/react';
 
-import { Heading, IconClose } from "~/components";
+import {Heading, IconClose} from '~/components';
 
 /**
  * Drawer component that opens on user click.
@@ -15,18 +15,18 @@ export function Drawer({
   heading,
   open,
   onClose,
-  openFrom = "right",
+  openFrom = 'right',
   children,
 }: {
   heading?: string;
   open: boolean;
   onClose: () => void;
-  openFrom: "right" | "left";
+  openFrom: 'right' | 'left';
   children: React.ReactNode;
 }) {
   const offScreen = {
-    right: "translate-x-full",
-    left: "-translate-x-full",
+    right: 'translate-x-full',
+    left: '-translate-x-full',
   };
 
   return (
@@ -48,7 +48,7 @@ export function Drawer({
           <div className="absolute inset-0 overflow-hidden">
             <div
               className={`fixed inset-y-0 flex max-w-full ${
-                openFrom === "right" ? "right-0" : ""
+                openFrom === 'right' ? 'right-0' : ''
               }`}
             >
               <Transition.Child
@@ -63,7 +63,7 @@ export function Drawer({
                 <Dialog.Panel className="w-screen max-w-lg text-left align-middle transition-all transform shadow-xl h-screen-dynamic bg-contrast">
                   <header
                     className={`sticky top-0 flex items-center px-6 h-nav sm:px-8 md:px-12 ${
-                      heading ? "justify-between" : "justify-end"
+                      heading ? 'justify-between' : 'justify-end'
                     }`}
                   >
                     {heading !== null && (
