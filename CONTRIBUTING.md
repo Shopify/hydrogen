@@ -7,7 +7,7 @@ There are two ways you can develop Hydrogen-UI components:
   2. Edit the component or the component's story `[ComponentName].stories.tsx`
 - TODO: setup and document how to link this package to the demo store
 <!-- - Develop components in the demo store:
-  1. Add `"@hydrogen/react": "{major}.{minor}.{patch}"` to the demo-store's `package.json`
+  1. Add `"@shopify/hydrogen-react": "{major}.{minor}.{patch}"` to the demo-store's `package.json`
   2. Run `yarn` then `yarn dev` in the demo-store directory,
   3. Run `yarn dev:demo` in the hydrogen-ui directory -->
 

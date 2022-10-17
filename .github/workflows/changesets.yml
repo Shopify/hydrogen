@@ -36,7 +36,7 @@ jobs:
       - name: Install the packages
         run: yarn install --frozen-lockfile --ignore-engines
 
-      - name: Create Release Pull Request or Publish (for latest release)
+      - name: (latest) Create Release Pull Request or Publish
         if: steps.flags.outputs.latest == 'true'
         id: changesets
         uses: changesets/action@v1
@@ -49,13 +49,26 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Create Release Pull Request or Publish (for legacy patch release)
+      - name: (legacy) Create Release Pull Request or Publish
         if: steps.flags.outputs.latest != 'true'
         id: changesets_legacy
         uses: changesets/action@v1
         with:
           version: yarn run version
           publish: yarn changeset publish --tag legacy
+          commit: '[ci] release ${{ github.ref_name }}'
+          title: '[ci] release ${{ github.ref_name }}'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # note that this runs on every PR that's merged.
+      - name: (next) Create Release Pull Request or Publish
+        id: changesets_next
+        uses: changesets/action@v1
+        with:
+          version: yarn changeset version --snapshot next
+          publish: yarn changeset publish --tag next
           commit: '[ci] release ${{ github.ref_name }}'
           title: '[ci] release ${{ github.ref_name }}'
         env:
