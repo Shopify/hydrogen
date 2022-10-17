@@ -1,5 +1,5 @@
-import type { LoaderArgs } from "@remix-run/oxygen";
-import { type ActionFunction, json, defer } from "@remix-run/oxygen";
+import type { LoaderArgs } from "@hydrogen/remix";
+import { type ActionFunction, json, defer } from "@hydrogen/remix";
 import invariant from "tiny-invariant";
 import { getTopProducts, updateLineItem } from "~/data";
 import { getSession } from "~/lib/session.server";

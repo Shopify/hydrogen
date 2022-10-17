@@ -5,7 +5,7 @@ import {
   type MetaFunction,
   redirect,
   json,
-} from "@remix-run/oxygen";
+} from "@hydrogen/remix";
 import { Link, useLoaderData } from "@remix-run/react";
 import { Money, Image, flattenConnection } from "@shopify/hydrogen-ui-alpha";
 import { statusMessage } from "~/lib/utils";

@@ -4,7 +4,7 @@ import {
   defer,
   type LoaderArgs,
   redirect,
-} from "@remix-run/oxygen";
+} from "@hydrogen/remix";
 import {
   useLoaderData,
   Await,

@@ -3,7 +3,7 @@ import {
   redirect,
   defer,
   type MetaFunction,
-} from "@remix-run/oxygen";
+} from "@hydrogen/remix";
 import {
   Await,
   Form,

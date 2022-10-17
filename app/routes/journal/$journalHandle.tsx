@@ -4,7 +4,7 @@ import {
   type SerializeFrom,
   type LoaderArgs,
   type LinksFunction,
-} from "@remix-run/oxygen";
+} from "@hydrogen/remix";
 import { useLoaderData } from "@remix-run/react";
 import { Image } from "@shopify/hydrogen-ui-alpha";
 import invariant from "tiny-invariant";

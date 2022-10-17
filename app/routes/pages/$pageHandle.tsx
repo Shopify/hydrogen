@@ -1,9 +1,4 @@
-import {
-  json,
-  LoaderArgs,
-  MetaFunction,
-  SerializeFrom,
-} from "@remix-run/oxygen";
+import { json, LoaderArgs, MetaFunction, SerializeFrom } from "@hydrogen/remix";
 import { useLoaderData } from "@remix-run/react";
 import invariant from "tiny-invariant";
 import { PageHeader } from "~/components";
