@@ -17,14 +17,15 @@ export function createRequestHandler<Context = unknown>({
 
   return async (
     request: Request,
-    { ctx, env }: { ctx: ExecutionContext; env: any }
+    // This may be temporary unless we adjust @shopify/oxygen-workers-types
+    { ctx, env }: { ctx: Omit<ExecutionContext, "passThroughOnException">; env: any }
   ) => {
     try {
       // TODO handle same-origin asset proxy
 
       const loadContext = await getLoadContext?.(request);
 
-      return await handleRequest(request, {
+      return handleRequest(request, {
         env,
         ...ctx,
         ...loadContext,
