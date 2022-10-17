@@ -20,13 +20,13 @@ import {
   CartDetails,
   CartEmpty,
   Link,
-} from "~/components";
-import { useFetcher, useParams, Form } from "@remix-run/react";
-import { useWindowScroll } from "react-use";
-import { Disclosure } from "@headlessui/react";
-import type { LayoutData } from "~/data";
-import { Suspense, useEffect } from "react";
-import { useCart } from "~/hooks/useCart";
+} from '~/components';
+import {useFetcher, useParams, Form} from '@remix-run/react';
+import {useWindowScroll} from 'react-use';
+import {Disclosure} from '@headlessui/react';
+import type {LayoutData} from '~/data';
+import {Suspense, useEffect} from 'react';
+import {useCart} from '~/hooks/useCart';
 
 export function Layout({
   children,
@@ -212,7 +212,7 @@ function MobileHeader({
         </button>
         <Form
           method="get"
-          action={params.lang ? `/${params.lang}/search` : "/search"}
+          action={params.lang ? `/${params.lang}/search` : '/search'}
           className="items-center gap-2 sm:flex"
         >
           <button type="submit" className={styles.button}>
@@ -304,7 +304,7 @@ function DesktopHeader({
       <div className="flex items-center gap-1">
         <Form
           method="get"
-          action={params.lang ? `/${params.lang}/search` : "/search"}
+          action={params.lang ? `/${params.lang}/search` : '/search'}
           className="flex items-center gap-2"
         >
           <Input
@@ -322,7 +322,7 @@ function DesktopHeader({
             <IconSearch />
           </button>
         </Form>
-        <Link to={"/account"} className={styles.button}>
+        <Link to={'/account'} className={styles.button}>
           <IconAccount />
         </Link>
         <Suspense

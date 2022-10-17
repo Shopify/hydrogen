@@ -105,8 +105,9 @@ export default function Account() {
                   title="Popular Collections"
                   collections={
                     // @ts-expect-error Something is screwy with defer type inference here :thinking:
-                    data.featuredCollections as Collection[]} 
-                  />
+                    data.featuredCollections as Collection[]
+                  }
+                />
                 <ProductSwimlane
                   // @ts-expect-error Something is screwy with defer type inference here :thinking:
                   products={data.featuredProducts}
