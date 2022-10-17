@@ -1,7 +1,12 @@
-import {useFetcher, useParams} from '@remix-run/react';
+import {useFetcher, useParams, Form} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect} from 'react';
+import {
+  type EnhancedMenu,
+  type EnhancedMenuItem,
+  useIsHomePath,
+} from '~/lib/utils';
 
 import type {LayoutData} from '~/data';
 import {
@@ -21,11 +26,6 @@ import {
   CartEmpty,
   Link,
 } from '~/components';
-import {useFetcher, useParams, Form} from '@remix-run/react';
-import {useWindowScroll} from 'react-use';
-import {Disclosure} from '@headlessui/react';
-import type {LayoutData} from '~/data';
-import {Suspense, useEffect} from 'react';
 import {useCart} from '~/hooks/useCart';
 
 export function Layout({

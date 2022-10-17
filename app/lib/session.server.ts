@@ -7,7 +7,7 @@ import {
 let sessionStorage: SessionStorage;
 
 export async function getSession(request: Request, context: AppLoadContext) {
-  if (!context.env?.ENCRYPTION_KEY) {
+  if (!(context.env as any)?.ENCRYPTION_KEY) {
     throw new Error('ENCRYPTION_KEY environment variable is not set');
   }
 
@@ -17,7 +17,7 @@ export async function getSession(request: Request, context: AppLoadContext) {
       httpOnly: true,
       path: '/',
       sameSite: 'lax',
-      secrets: [context.env.ENCRYPTION_KEY],
+      secrets: [(context.env as any).ENCRYPTION_KEY],
     },
   });
 
