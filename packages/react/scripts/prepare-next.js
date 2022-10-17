@@ -8,7 +8,7 @@ packageJson.version = version;
 fs.writeFileSync('../package.json', JSON.stringify(packageJson, null, 2));
 
 try {
-  execSync('yarn publish --tag next');
+  execSync('npm publish --tag next');
 } catch (e) {
   console.log(e);
   console.log('Publish failed');

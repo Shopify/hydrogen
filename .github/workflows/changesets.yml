@@ -41,7 +41,6 @@ jobs:
         id: changesets
         uses: changesets/action@v1
         with:
-          version: yarn run version
           publish: yarn changeset publish
           commit: '[ci] release ${{ github.ref_name }}'
           title: '[ci] release ${{ github.ref_name }}'
@@ -54,7 +53,6 @@ jobs:
         id: changesets_legacy
         uses: changesets/action@v1
         with:
-          version: yarn run version
           publish: yarn changeset publish --tag legacy
           commit: '[ci] release ${{ github.ref_name }}'
           title: '[ci] release ${{ github.ref_name }}'
