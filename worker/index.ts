@@ -14,7 +14,7 @@ export default {
     ctx: ExecutionContext
   ): Promise<Response> {
     try {
-      return await requestHandler(request, { env, ctx });
+      return requestHandler(request, { env, ctx });
     } catch (error) {
       console.error(error);
       return new Response("An unexpected error occurred", { status: 500 });
