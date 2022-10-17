@@ -7,14 +7,12 @@ import {
   json,
 } from '@remix-run/cloudflare';
 import {Link, useLoaderData} from '@remix-run/react';
-import {
-  Money,
-  Image,
-  flattenConnection,
+import {Money, Image, flattenConnection} from '@shopify/hydrogen-ui-alpha';
+import type {
   DiscountApplication,
   DiscountApplicationConnection,
   OrderLineItem,
-} from '@shopify/hydrogen-ui-alpha';
+} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 
 import {statusMessage} from '~/lib/utils';
 import {Heading, PageHeader, Text} from '~/components';
