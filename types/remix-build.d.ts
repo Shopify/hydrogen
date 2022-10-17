@@ -1,5 +1,5 @@
 declare module "remix-build" {
-  import { type ServerBuild } from "@remix-run/cloudflare";
+  import { type ServerBuild } from "@remix-run/oxygen";
 
   export const assets: ServerBuild["assets"];
   export const assetsBuildDirectory: ServerBuild["assetsBuildDirectory"];
