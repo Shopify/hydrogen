@@ -1,9 +1,6 @@
-import {
-  type LoaderArgs,
-} from "@remix-run/cloudflare";
+import {type LoaderArgs} from '@remix-run/cloudflare';
 
 export const loader = ({request}: LoaderArgs) => {
-
   const url = new URL(request.url);
 
   return new Response(robotsTxtData({url: url.origin}), {
@@ -14,7 +11,7 @@ export const loader = ({request}: LoaderArgs) => {
       'cache-control': `max-age=${60 * 60 * 24}`,
     },
   });
-}
+};
 
 function robotsTxtData({url}: {url: string}) {
   const sitemapUrl = url ? `${url}/sitemap.xml` : undefined;

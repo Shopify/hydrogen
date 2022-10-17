@@ -1,4 +1,4 @@
-import { Link as RemixLink, useParams } from "@remix-run/react";
+import {Link as RemixLink, useParams} from '@remix-run/react';
 
 /**
  * In our app, we've chosen to wrap Remix's `Link` component to add
@@ -16,12 +16,12 @@ import { Link as RemixLink, useParams } from "@remix-run/react";
  * Ultimately, it is up to you to decide how to implement this behavior.
  */
 export function Link(props: any) {
-  const { to, ...resOfProps } = props;
-  const { lang } = useParams();
+  const {to, ...resOfProps} = props;
+  const {lang} = useParams();
 
   let toWithLang = to;
 
-  if (typeof to === "string") {
+  if (typeof to === 'string') {
     toWithLang = lang ? `/${lang}${to}` : to;
   }
 
