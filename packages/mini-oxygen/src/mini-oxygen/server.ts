@@ -67,11 +67,14 @@ function createAssetMiddleware({
       }
     }
 
-    if (fs.existsSync(filePath)) {
+    if (fs.existsSync(filePath) && fs.lstatSync(filePath).isFile()) {
       const rs = fs.createReadStream(filePath);
       const {size} = fs.statSync(filePath);
 
-      res.setHeader('Content-Type', mime.getType(filePath)!);
+      res.setHeader(
+        'Content-Type',
+        mime.getType(filePath) || 'application/octet-stream',
+      );
       res.setHeader('Content-Length', size);
 
       return rs.pipe(res);
