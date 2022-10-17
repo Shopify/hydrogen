@@ -65,9 +65,6 @@ jobs:
       # note that this runs on every PR that's merged.
       - name: (next) Create Release Pull Request or Publish
         id: changesets_next
-        run: |
-          yarn changeset version --snapshot next
-          yarn changeset publish --tag next
+        run: node packages/react/scripts/prepare-next.js
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
