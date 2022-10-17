@@ -1,0 +1,19 @@
+{
+  "port": 3000,
+  "workerFile": "build/worker-bundle.mjs",
+  "assetsDir": "public",
+  "publicPath": "",
+  "buildCommand": "npm run bundle:worker",
+  "watch": true,
+  "buildWatchPaths": [
+    "./build/index.mjs",
+    "./build/_assets",
+    "./build/node_modules",
+    "./worker/index.ts"
+  ],
+  "autoReload": true,
+  "modules": true,
+  "env": {
+    "ENCRYPTION_KEY": "foobar"
+  }
+}
