@@ -12,7 +12,8 @@
     "dev": "npm run build && run-p \"dev:*\"",
     "//start": "run the app locally in production mode",
     "start": "npm run build && cross-env NODE_ENV=production npm run dev:cloudflare",
-    "format": "prettier --write --ignore-unknown ."
+    "format": "prettier --write --ignore-unknown .",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.2.0",
