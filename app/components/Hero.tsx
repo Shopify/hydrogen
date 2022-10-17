@@ -1,6 +1,5 @@
 import clsx from 'clsx';
-import {Image, Video} from '@shopify/hydrogen-ui-alpha';
-import type {Media} from '@shopify/hydrogen/storefront-api-types';
+import {Image, Video, type Media} from '@shopify/hydrogen-ui-alpha';
 import {Link} from '@remix-run/react';
 
 import {Heading, Text} from '~/components';

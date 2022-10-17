@@ -10,7 +10,7 @@ import {Heading} from '~/components';
 
 export function CountrySelector() {
   const countries = useCountries();
-  const closeRef = useRef<HTMLButtonElement | undefined>();
+  const closeRef = useRef<HTMLButtonElement>(null);
   const {pathname} = useLocation();
   const {lang} = useParams();
   const {language, country} = getLocalizationFromLang(lang);
