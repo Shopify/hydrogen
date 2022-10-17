@@ -45,7 +45,7 @@ import {
 } from "~/lib/utils";
 import invariant from "tiny-invariant";
 import { logout } from "~/routes/account.logout";
-import type { AppLoadContext } from "@remix-run/cloudflare";
+import type { AppLoadContext } from "@remix-run/oxygen";
 import { type Params } from "@remix-run/react";
 import type { FeaturedData } from "~/components/FeaturedSection";
 import { flattenConnection } from "@shopify/hydrogen-ui-alpha";

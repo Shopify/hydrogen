@@ -2,7 +2,7 @@
   "include": ["**/*.ts"],
   "exclude": ["dist", "__tests__", "node_modules"],
   "compilerOptions": {
-    "lib": ["ES2019"],
+    "lib": ["DOM", "ES2019"],
     "target": "ES2019",
     "types": ["@cloudflare/workers-types"],
 
@@ -12,7 +12,7 @@
     "declaration": true,
     "emitDeclarationOnly": true,
     "rootDir": ".",
-    "outDir": "../../build/node_modules/@remix-run/cloudflare/dist",
+    "outDir": "../../build/node_modules/@remix-run/oxygen/dist",
 
     // Avoid naming conflicts between history and react-router-dom relying on
     // lib.dom.d.ts Window and this being a WebWorker env.
