@@ -136,7 +136,7 @@ export async function getLayoutData(params: Params) {
   const { data } = await getStorefrontData<LayoutData>({
     query: LAYOUT_QUERY,
     variables: {
-      language: language,
+      language,
       headerMenuHandle: HEADER_MENU_HANDLE,
       footerMenuHandle: FOOTER_MENU_HANDLE,
     },
@@ -238,7 +238,7 @@ export async function getProductData(
 ) {
   const { language, country } = getLocalizationFromLang(params.lang);
 
-  let selectedOptions: SelectedOptionInput[] = [];
+  const selectedOptions: SelectedOptionInput[] = [];
   searchParams.forEach((value, name) => {
     selectedOptions.push({ name, value });
   });

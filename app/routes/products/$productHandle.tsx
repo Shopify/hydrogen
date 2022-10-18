@@ -71,7 +71,7 @@ export const action: ActionFunction = async ({ request, context, params }) => {
   const cartId = await session.get("cartId");
 
   // We only need a Set-Cookie header if we're creating a new cart (aka adding cartId to the session)
-  let headers = new Headers();
+  const headers = new Headers();
 
   // 2. If none exists, create a cart (SFAPI)
   if (!cartId) {
