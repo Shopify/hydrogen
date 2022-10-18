@@ -1,8 +1,5 @@
-import { createRequestHandler as createOxygenRequestHandler } from "@remix-run/oxygen";
-import {
-  createStorefrontClient,
-  type StorefrontClientProps,
-} from "./storefront";
+import {createRequestHandler as createOxygenRequestHandler} from '@remix-run/oxygen';
+import {createStorefrontClient, type StorefrontClientProps} from './storefront';
 
 type HydrogenHandlerParams = {
   storefront: StorefrontClientProps;
