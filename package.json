@@ -9,13 +9,16 @@
     "dev:css": "postcss styles --base styles --dir app/styles -w",
     "dev:oxygen": "cross-env NODE_ENV=development wrangler dev --local --config wrangler.dev.toml",
     "dev": "npm run build && run-p \"dev:*\"",
-    "//start": "run the app locally in production mode",
-    "start": "npm run build && cross-env NODE_ENV=production npm run dev:oxygen"
+    "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
+    "start": "npm run build && cross-env NODE_ENV=production npm run dev:oxygen",
+    "format": "prettier --write --ignore-unknown .",
+    "typecheck": "tsc --noEmit"
   },
   "workspaces": [
     "packages/@remix-run/oxygen",
     "packages/@hydrogen/remix"
   ],
+  "prettier": "@shopify/prettier-config",
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.2.0",
     "@headlessui/react": "^1.7.2",
@@ -33,7 +36,10 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^3.14.1",
     "@remix-run/dev": "0.0.0-experimental-e18af792a",
-    "@remix-run/eslint-config": "0.0.0-experimental-e18af792a",
+    "@shopify/prettier-config": "^1.1.2",
+    "@shopify/eslint-plugin": "^42.0.1",
+    "eslint-plugin-hydrogen": "0.12.2",
+    "prettier": "^2.7.1",
     "@tailwindcss/forms": "^0.5.3",
     "@tailwindcss/typography": "^0.5.7",
     "@types/react": "^18.0.20",
