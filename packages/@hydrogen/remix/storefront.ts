@@ -12,8 +12,8 @@ export type StorefrontClientProps = Parameters<
 export type Storefront = ReturnType<typeof createStorefrontClient>;
 
 export type HydrogenContext = {
-  storefront: Storefront;
   [key: string]: any;
+  storefront: Storefront;
 };
 
 export function createStorefrontClient(clientOptions: StorefrontClientProps) {
@@ -26,7 +26,7 @@ export function createStorefrontClient(clientOptions: StorefrontClientProps) {
   }: {
     query: string;
     variables: Record<string, any>;
-  }): Promise<StorefrontApiResponse<T>> {
+  }): Promise<T> {
     const headers = getPublicTokenHeaders();
     // This needs to be application/json because we're sending JSON, not a graphql string
     headers['content-type'] = 'application/json';
@@ -48,17 +48,37 @@ export function createStorefrontClient(clientOptions: StorefrontClientProps) {
        * We try both and conform them to a single {errors} format.
        */
       try {
-        return JSON.parse(error);
+        throwError(response, JSON.parse(error));
       } catch (_e) {
-        return {errors: [{message: error}]};
+        throwError(response, [{ message: error }]);
       }
     }
 
-    return response.json() as StorefrontApiResponseOk<T>;
+    const { data, errors } = await response.json() as StorefrontApiResponse<T>;
+
+    if (errors) throwError(response, errors);
+
+    return data as T;
   }
 
   return {
     ...utils,
     query: getStorefrontData,
   };
+}
+
+function throwError<T>(
+  response: Response,
+  errors: StorefrontApiResponse<T>["errors"]
+) {
+  if (errors) {
+    const errorMessages =
+      typeof errors === "string"
+        ? errors
+        : errors.map((error) => error.message).join("\n");
+
+    throw new Error(errorMessages);
+  }
+
+  throw new Error(`API response error: ${response.status}`);
 }
