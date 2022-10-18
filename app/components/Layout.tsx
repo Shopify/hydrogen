@@ -164,11 +164,6 @@ function MenuMobileNav({
   menu: EnhancedMenu;
   onClose: () => void;
 }) {
-  const styles = {
-    link: 'pb-1',
-    linkActive: 'pb-1 border-b-2',
-  };
-
   return (
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
       {/* Top level menu items */}
@@ -178,9 +173,7 @@ function MenuMobileNav({
             to={item.to}
             target={item.target}
             onClick={onClose}
-            className={({isActive}) =>
-              isActive ? styles.linkActive : styles.link
-            }
+            className={({isActive}) => (isActive ? 'opacity-50' : undefined)}
           >
             <Text as="span" size="copy">
               {item.title}
@@ -283,8 +276,6 @@ function DesktopHeader({
   const params = useParams();
 
   const styles = {
-    link: 'pb-1',
-    linkActive: 'pb-1 border-b-2',
     button:
       'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5',
     container: `${
@@ -310,9 +301,7 @@ function DesktopHeader({
               to={item.to}
               target={item.target}
               prefetch="intent"
-              className={({isActive}) =>
-                isActive ? styles.linkActive : styles.link
-              }
+              className={({isActive}) => (isActive ? 'opacity-50' : undefined)}
             >
               {item.title}
             </Link>
