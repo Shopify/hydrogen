@@ -170,15 +170,29 @@ function MenuMobileNav({
   menu: EnhancedMenu;
   onClose: () => void;
 }) {
+  const styles = {
+    link: "pb-1",
+    linkActive: "pb-1 border-b-2",
+  };
+
   return (
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
       {/* Top level menu items */}
       {(menu?.items || []).map((item) => (
-        <Link key={item.id} to={item.to} target={item.target} onClick={onClose}>
-          <Text as="span" size="copy">
-            {item.title}
-          </Text>
-        </Link>
+        <span key={item.id} className="block">
+          <Link
+            to={item.to}
+            target={item.target}
+            onClick={onClose}
+            className={({ isActive }) =>
+              isActive ? styles.linkActive : styles.link
+            }
+          >
+            <Text as="span" size="copy">
+              {item.title}
+            </Text>
+          </Link>
+        </span>
       ))}
     </nav>
   );
@@ -275,6 +289,8 @@ function DesktopHeader({
   const params = useParams();
 
   const styles = {
+    link: "pb-1",
+    linkActive: "pb-1 border-b-2",
     button:
       "relative flex items-center justify-center w-8 h-8 focus:ring-primary/5",
     container: `${
@@ -289,7 +305,7 @@ function DesktopHeader({
   return (
     <header role="banner" className={styles.container}>
       <div className="flex gap-12">
-        <Link className={`font-bold`} to="/" prefetch="intent">
+        <Link className="font-bold" to="/" prefetch="intent">
           {title}
         </Link>
         <nav className="flex gap-8">
@@ -300,6 +316,9 @@ function DesktopHeader({
               to={item.to}
               target={item.target}
               prefetch="intent"
+              className={({ isActive }) =>
+                isActive ? styles.linkActive : styles.link
+              }
             >
               {item.title}
             </Link>

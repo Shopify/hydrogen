@@ -1,4 +1,14 @@
-import { Link as RemixLink, useParams } from "@remix-run/react";
+import {
+  Link as RemixLink,
+  useParams,
+  NavLink as RemixNavLink,
+  type NavLinkProps as RemixNavLinkProps,
+  type LinkProps as RemixLinkProps,
+} from "@remix-run/react";
+
+type LinkProps = Omit<RemixLinkProps, "className"> & {
+  className?: RemixNavLinkProps["className"] | RemixLinkProps["className"];
+};
 
 /**
  * In our app, we've chosen to wrap Remix's `Link` component to add
@@ -15,8 +25,8 @@ import { Link as RemixLink, useParams } from "@remix-run/react";
  *
  * Ultimately, it is up to you to decide how to implement this behavior.
  */
-export function Link(props: any) {
-  const { to, ...resOfProps } = props;
+export function Link(props: LinkProps) {
+  const { to, className, ...resOfProps } = props;
   const { lang } = useParams();
 
   let toWithLang = to;
@@ -25,5 +35,11 @@ export function Link(props: any) {
     toWithLang = lang ? `/${lang}${to}` : to;
   }
 
-  return <RemixLink to={toWithLang} {...resOfProps} />;
+  if (typeof className === "function") {
+    return (
+      <RemixNavLink to={toWithLang} className={className} {...resOfProps} />
+    );
+  }
+
+  return <RemixLink to={toWithLang} className={className} {...resOfProps} />;
 }
