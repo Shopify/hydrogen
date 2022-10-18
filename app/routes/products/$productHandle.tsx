@@ -162,7 +162,7 @@ export default function Product() {
 }
 
 export function ProductForm() {
-  const closeRef = useRef<HTMLButtonElement>();
+  const closeRef = useRef<HTMLButtonElement>(null);
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
 

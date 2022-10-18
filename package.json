@@ -11,7 +11,8 @@
     "dev": "npm run build && run-p \"dev:*\"",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "start": "npm run build && cross-env NODE_ENV=production npm run dev:oxygen",
-    "format": "prettier --write --ignore-unknown ."
+    "format": "prettier --write --ignore-unknown .",
+    "typecheck": "tsc --noEmit"
   },
   "workspaces": [
     "packages/@remix-run/oxygen",
