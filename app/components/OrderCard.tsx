@@ -1,16 +1,15 @@
-import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
+import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
 import type {
   Order,
   OrderLineItem,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import { Heading, Text, Link } from "~/components";
+import { statusMessage } from "~/lib/utils";
 
-import {Heading, Text, Link} from '~/components';
-import {statusMessage} from '~/lib/utils';
-
-export function OrderCard({order}: {order: Order}) {
-  if (!order.id) return null;
-  const [legacyOrderId, key] = order!.id!.split('/').pop()!.split('?');
-  const lineItems = flattenConnection<OrderLineItem>(order.lineItems);
+export function OrderCard({ order }: { order: Order }) {
+  if (!order?.id) return null;
+  const [legacyOrderId, key] = order!.id!.split("/").pop()!.split("?");
+  const lineItems = flattenConnection<OrderLineItem>(order?.lineItems);
 
   return (
     <li className="grid text-center border rounded">
@@ -24,14 +23,14 @@ export function OrderCard({order}: {order: Order}) {
               width={168}
               height={168}
               className="w-full fadeIn cover"
-              alt={lineItems[0].variant.image.altText ?? 'Order image'}
-              src={lineItems[0].variant.image.url}
+              alt={lineItems[0].variant?.image?.altText ?? "Order image"}
+              src={lineItems[0].variant?.image.url}
             />
           </div>
         )}
         <div
           className={`flex-col justify-center text-left ${
-            !lineItems[0].variant?.image && 'md:col-span-2'
+            !lineItems[0].variant?.image && "md:col-span-2"
           }`}
         >
           <Heading as="h3" format size="copy">
@@ -56,9 +55,9 @@ export function OrderCard({order}: {order: Order}) {
             <dd className="mt-2">
               <span
                 className={`px-3 py-1 text-xs font-medium rounded-full ${
-                  order.fulfillmentStatus === 'FULFILLED'
-                    ? 'bg-green-100 text-green-800'
-                    : 'bg-primary/5 text-primary/50'
+                  order.fulfillmentStatus === "FULFILLED"
+                    ? "bg-green-100 text-green-800"
+                    : "bg-primary/5 text-primary/50"
                 }`}
               >
                 <Text size="fine">

@@ -4,56 +4,55 @@ import {
   json,
   type ActionFunction,
   type LoaderArgs,
-} from '@remix-run/cloudflare';
-import {Form, useActionData} from '@remix-run/react';
-import {useState} from 'react';
+} from "@remix-run/cloudflare";
+import { Form, useActionData } from "@remix-run/react";
+import { useState } from "react";
+import { sendPasswordResetEmail } from "~/data";
+import { getSession } from "~/lib/session.server";
+import { getInputStyleClasses } from "~/lib/utils";
 
-import {sendPasswordResetEmail} from '~/data';
-import {getSession} from '~/lib/session.server';
-import {getInputStyleClasses} from '~/lib/utils';
-
-export async function loader({request, context}: LoaderArgs) {
+export async function loader({ request, context }: LoaderArgs) {
   const session = await getSession(request, context);
-  const customerAccessToken = await session.get('customerAccessToken');
+  const customerAccessToken = await session.get("customerAccessToken");
 
   if (customerAccessToken) {
-    return redirect('/account');
+    return redirect("/account");
   }
 
   return new Response(null);
 }
 
-interface ActionData {
+type ActionData = {
   formError?: string;
   resetRequested?: boolean;
-}
+};
 
-const badRequest = (data: ActionData) => json(data, {status: 400});
+const badRequest = (data: ActionData) => json(data, { status: 400 });
 
-export const action: ActionFunction = async ({request, context}) => {
+export const action: ActionFunction = async ({ request, context }) => {
   const formData = await request.formData();
-  const email = formData.get('email');
+  const email = formData.get("email");
 
-  if (!email || typeof email !== 'string') {
+  if (!email || typeof email !== "string") {
     return badRequest({
-      formError: 'Please provide an email.',
+      formError: "Please provide an email.",
     });
   }
 
   try {
-    await sendPasswordResetEmail({email});
+    await sendPasswordResetEmail({ email });
 
-    return json({resetRequested: true});
+    return json({ resetRequested: true });
   } catch (error: any) {
     return badRequest({
-      formError: 'Something went wrong. Please try again later.',
+      formError: "Something went wrong. Please try again later.",
     });
   }
 };
 
 export const meta: MetaFunction = () => {
   return {
-    title: 'Recover Password',
+    title: "Recover Password",
   };
 };
 
@@ -110,8 +109,8 @@ export default function Recover() {
                     setNativeEmailError(
                       event.currentTarget.value.length &&
                         !event.currentTarget.validity.valid
-                        ? 'Invalid email address'
-                        : null,
+                        ? "Invalid email address"
+                        : null
                     );
                   }}
                 />

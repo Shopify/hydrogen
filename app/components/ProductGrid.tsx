@@ -1,12 +1,11 @@
+import { Button, Grid, ProductCard, Link } from "~/components";
+import { getImageLoadingPriority } from "~/lib/const";
 import type {
   Collection,
   Product,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
-import {useFetcher} from '@remix-run/react';
-import {useEffect, useState} from 'react';
-
-import {getImageLoadingPriority} from '~/lib/const';
-import {Button, Grid, ProductCard, Link} from '~/components';
+} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import { useFetcher } from "@remix-run/react";
+import { useEffect, useState } from "react";
 
 export function ProductGrid({
   url,
@@ -15,12 +14,12 @@ export function ProductGrid({
   url: string;
   collection: Collection;
 }) {
-  const initialProducts = collection.products.nodes || [];
+  const initialProducts = collection?.products?.nodes || [];
   const [nextPage, setNextPage] = useState(
-    collection.products.pageInfo.hasNextPage,
+    collection?.products?.pageInfo?.hasNextPage
   );
   const [endCursor, setEndCursor] = useState(
-    collection.products.pageInfo.endCursor,
+    collection?.products?.pageInfo?.endCursor
   );
   const [products, setProducts] = useState(initialProducts);
   const fetcher = useFetcher();
@@ -32,7 +31,7 @@ export function ProductGrid({
   useEffect(() => {
     if (!fetcher.data) return;
 
-    const {collection} = fetcher.data;
+    const { collection } = fetcher.data;
     setProducts((prev: Product[]) => [...prev, ...collection.products.nodes]);
     setNextPage(collection.products.pageInfo.hasNextPage);
     setEndCursor(collection.products.pageInfo.endCursor);
@@ -66,13 +65,13 @@ export function ProductGrid({
       {nextPage && (
         <div className="flex items-center justify-center mt-6">
           <Button
-            disabled={fetcher.state !== 'idle'}
+            disabled={fetcher.state !== "idle"}
             variant="secondary"
             onClick={fetchMoreProducts}
             width="full"
             prefetch="intent"
           >
-            {fetcher.state !== 'idle' ? 'Loading...' : 'Load more products'}
+            {fetcher.state !== "idle" ? "Loading..." : "Load more products"}
           </Button>
         </div>
       )}

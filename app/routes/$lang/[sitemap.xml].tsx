@@ -1,1 +1,1 @@
-export {loader} from '~/routes/[sitemap.xml]';
+export { loader } from '~/routes/[sitemap.xml]';

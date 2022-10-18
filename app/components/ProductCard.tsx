@@ -1,20 +1,20 @@
-import clsx from 'clsx';
+import clsx from "clsx";
 import {
   flattenConnection,
   Image,
   Money,
   useMoney,
-} from '@shopify/hydrogen-ui-alpha';
+} from "@shopify/hydrogen-ui-alpha";
+
+import { Text, Link } from "~/components";
+import { isDiscounted, isNewArrival } from "~/lib/utils";
+import { getProductPlaceholder } from "~/lib/placeholders";
 import type {
   MoneyV2,
   Product,
   ProductVariant,
   ProductVariantConnection,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
-
-import {Text, Link} from '~/components';
-import {isDiscounted, isNewArrival} from '~/lib/utils';
-import {getProductPlaceholder} from '~/lib/placeholders';
+} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 
 export function ProductCard({
   product,
@@ -26,30 +26,30 @@ export function ProductCard({
   product: Product;
   label?: string;
   className?: string;
-  loading?: HTMLImageElement['loading'];
+  loading?: HTMLImageElement["loading"];
   onClick?: () => void;
 }) {
   let cardLabel;
 
-  const cardData = product.variants ? product : getProductPlaceholder();
+  const cardData = product?.variants ? product : getProductPlaceholder();
 
   const {
     image,
     priceV2: price,
     compareAtPriceV2: compareAtPrice,
   } = flattenConnection<ProductVariant>(
-    cardData.variants as ProductVariantConnection,
+    cardData?.variants as ProductVariantConnection
   )[0] || {};
 
   if (label) {
     cardLabel = label;
   } else if (isDiscounted(price as MoneyV2, compareAtPrice as MoneyV2)) {
-    cardLabel = 'Sale';
+    cardLabel = "Sale";
   } else if (isNewArrival(product.publishedAt)) {
-    cardLabel = 'New';
+    cardLabel = "New";
   }
 
-  const styles = clsx('grid gap-6', className);
+  const styles = clsx("grid gap-6", className);
 
   return (
     <Link
@@ -72,7 +72,7 @@ export function ProductCard({
               widths={[320]}
               sizes="320px"
               loaderOptions={{
-                crop: 'center',
+                crop: "center",
                 scale: 2,
                 width: 320,
                 height: 400,
@@ -96,7 +96,7 @@ export function ProductCard({
               <Money withoutTrailingZeros data={price!} />
               {isDiscounted(price as MoneyV2, compareAtPrice as MoneyV2) && (
                 <CompareAtPrice
-                  className="opacity-50"
+                  className={"opacity-50"}
                   data={compareAtPrice as MoneyV2}
                 />
               )}
@@ -115,10 +115,10 @@ function CompareAtPrice({
   data: MoneyV2;
   className?: string;
 }) {
-  const {currencyNarrowSymbol, withoutTrailingZerosAndCurrency} =
+  const { currencyNarrowSymbol, withoutTrailingZerosAndCurrency } =
     useMoney(data);
 
-  const styles = clsx('strike', className);
+  const styles = clsx("strike", className);
 
   return (
     <span className={styles}>

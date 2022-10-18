@@ -1,18 +1,11 @@
-import {useRef} from 'react';
-import {useScroll} from 'react-use';
-import {flattenConnection, Money} from '@shopify/hydrogen-ui-alpha';
+import { useRef } from "react";
+import { useScroll } from "react-use";
+import { flattenConnection, Money } from "@shopify/hydrogen-ui-alpha";
 import {
   type FetcherWithComponents,
   useFetcher,
   useLocation,
-} from '@remix-run/react';
-import type {
-  Cart,
-  CartCost,
-  CartLine,
-  Product,
-  ProductConnection,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from "@remix-run/react";
 
 import {
   Button,
@@ -22,11 +15,18 @@ import {
   Skeleton,
   Text,
   Link,
-} from '~/components';
+} from "~/components";
+import type {
+  Cart,
+  CartCost,
+  CartLine,
+  Product,
+  ProductConnection,
+} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 
 enum Action {
-  SetQuantity = 'set-quantity',
-  RemoveLineItem = 'remove-line-item',
+  SetQuantity = "set-quantity",
+  RemoveLineItem = "remove-line-item",
 }
 
 export function CartDetails({
@@ -35,38 +35,38 @@ export function CartDetails({
   cart,
   fetcher,
 }: {
-  layout: 'drawer' | 'page';
+  layout: "drawer" | "page";
   onClose?: () => void;
   cart: Cart;
   fetcher: FetcherWithComponents<any>;
 }) {
-  const lines = flattenConnection(cart.lines ?? {});
+  const lines = flattenConnection(cart?.lines ?? {});
   const scrollRef = useRef(null);
-  const {y} = useScroll(scrollRef);
+  const { y } = useScroll(scrollRef);
   const lineItemFetcher = useFetcher();
 
   const optimisticallyDeletingLastLine =
     lines.length === 1 &&
     lineItemFetcher.submission &&
-    lineItemFetcher.submission.formData.get('intent') === Action.RemoveLineItem;
+    lineItemFetcher.submission.formData.get("intent") === Action.RemoveLineItem;
 
   if (lines.length === 0 || optimisticallyDeletingLastLine) {
     return <CartEmpty fetcher={fetcher} onClose={onClose} layout={layout} />;
   }
 
   const container = {
-    drawer: 'grid grid-cols-1 h-screen-no-nav grid-rows-[1fr_auto]',
-    page: 'pb-12 grid md:grid-cols-2 md:items-start gap-8 md:gap-8 lg:gap-12',
+    drawer: "grid grid-cols-1 h-screen-no-nav grid-rows-[1fr_auto]",
+    page: "pb-12 grid md:grid-cols-2 md:items-start gap-8 md:gap-8 lg:gap-12",
   };
 
   const content = {
-    drawer: 'px-6 pb-6 sm-max:pt-2 overflow-auto transition md:px-12',
-    page: 'flex-grow md:translate-y-4',
+    drawer: "px-6 pb-6 sm-max:pt-2 overflow-auto transition md:px-12",
+    page: "flex-grow md:translate-y-4",
   };
 
   const summary = {
-    drawer: 'grid gap-6 p-6 border-t md:px-12',
-    page: 'sticky top-nav grid gap-6 p-4 md:px-6 md:translate-y-4 bg-primary/5 rounded w-full',
+    drawer: "grid gap-6 p-6 border-t md:px-12",
+    page: "sticky top-nav grid gap-6 p-4 md:px-6 md:translate-y-4 bg-primary/5 rounded w-full",
   };
 
   return (
@@ -74,7 +74,7 @@ export function CartDetails({
       <section
         ref={scrollRef}
         aria-labelledby="cart-contents"
-        className={`${content[layout]} ${y > 0 ? 'border-t' : ''}`}
+        className={`${content[layout]} ${y > 0 ? "border-t" : ""}`}
       >
         <ul className="grid gap-6 md:gap-10">
           {lines.map((line) => {
@@ -99,7 +99,7 @@ export function CartDetails({
   );
 }
 
-function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
+function CartCheckoutActions({ checkoutUrl }: { checkoutUrl: string }) {
   return (
     <>
       <div className="grid gap-4">
@@ -117,17 +117,17 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
   );
 }
 
-function OrderSummary({cost}: {cost: CartCost}) {
+function OrderSummary({ cost }: { cost: CartCost }) {
   return (
     <>
       <dl className="grid">
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Subtotal</Text>
           <Text as="dd">
-            {cost.subtotalAmount.amount ? (
-              <Money data={cost.subtotalAmount} />
+            {cost?.subtotalAmount?.amount ? (
+              <Money data={cost?.subtotalAmount} />
             ) : (
-              '-'
+              "-"
             )}
           </Text>
         </div>
@@ -143,7 +143,7 @@ function CartLineItem({
   line: CartLine;
   fetcher: FetcherWithComponents<any>;
 }) {
-  const {id: lineId, quantity, merchandise} = line;
+  const { id: lineId, quantity, merchandise } = line;
 
   const location = useLocation();
   let optimisticQuantity = quantity;
@@ -151,12 +151,12 @@ function CartLineItem({
 
   if (
     fetcher.submission &&
-    fetcher.submission.formData.get('lineId') === lineId
+    fetcher.submission.formData.get("lineId") === lineId
   ) {
-    switch (fetcher.submission.formData.get('intent')) {
+    switch (fetcher.submission.formData.get("intent")) {
       case Action.SetQuantity: {
         optimisticQuantity = Number(
-          fetcher.submission.formData.get('quantity'),
+          fetcher.submission.formData.get("quantity")
         );
         break;
       }
@@ -191,7 +191,7 @@ function CartLineItem({
           </Heading>
 
           <div className="grid pb-2">
-            {(merchandise.selectedOptions || []).map((option) => (
+            {(merchandise?.selectedOptions || []).map((option) => (
               <Text color="subtle" key={option.name}>
                 {option.name}: {option.value}
               </Text>
@@ -289,26 +289,26 @@ function CartLineQuantityAdjust({
 
 export function CartEmpty({
   onClose,
-  layout = 'drawer',
+  layout = "drawer",
   fetcher,
 }: {
   onClose?: () => void;
-  layout?: 'page' | 'drawer';
+  layout?: "page" | "drawer";
   fetcher: FetcherWithComponents<any>;
 }) {
   const scrollRef = useRef(null);
-  const {y} = useScroll(scrollRef);
+  const { y } = useScroll(scrollRef);
 
   const container = {
     drawer: `grid content-start gap-4 px-6 pb-8 transition overflow-y-scroll md:gap-12 md:px-12 h-screen-no-nav md:pb-12 ${
-      y > 0 ? 'border-t' : ''
+      y > 0 ? "border-t" : ""
     }`,
     page: `grid pb-12 w-full md:items-start gap-4 md:gap-8 lg:gap-12`,
   };
 
   const topProductsContainer = {
-    drawer: '',
-    page: 'md:grid-cols-4 sm:grid-col-4',
+    drawer: "",
+    page: "md:grid-cols-4 sm:grid-col-4",
   };
 
   return (
@@ -348,7 +348,7 @@ function TopProducts({
   }
 
   const products = flattenConnection(
-    fetcher.data.topProducts as ProductConnection,
+    fetcher.data.topProducts as ProductConnection
   );
 
   if (products.length === 0) {
@@ -384,15 +384,15 @@ function Loading() {
 
 function CartLinePrice({
   line,
-  priceType = 'regular',
+  priceType = "regular",
   ...passthroughProps
 }: {
   line: CartLine;
-  priceType?: 'regular' | 'compareAt';
+  priceType?: "regular" | "compareAt";
   [key: string]: any;
 }) {
   const moneyV2 =
-    priceType === 'regular'
+    priceType === "regular"
       ? line.cost.totalAmount
       : line.cost.compareAtAmountPerQuantity;
 
