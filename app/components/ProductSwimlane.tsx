@@ -1,10 +1,10 @@
-import type { Product } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { ProductCard, Section } from "~/components";
+import type {Product} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {ProductCard, Section} from '~/components';
 
-const mockProducts = new Array(12).fill("");
+const mockProducts = new Array(12).fill('');
 
 export function ProductSwimlane({
-  title = "Featured Products",
+  title = 'Featured Products',
   products = mockProducts,
   count = 12,
   ...props

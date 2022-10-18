@@ -1,14 +1,14 @@
-import { useParentRouteData } from "./useRouteData";
+import {useParentRouteData} from './useRouteData';
 
-import type { Country } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import type {Country} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 
 /*
   This is an experimental pattern that helps prevent props drilling
 */
 export function useCountries(): Array<Country> | null {
-  const rootData = useParentRouteData("/");
+  const rootData = useParentRouteData('/');
 
-  if (typeof rootData?.cart === "undefined") {
+  if (typeof rootData?.cart === 'undefined') {
     return null;
   }
 

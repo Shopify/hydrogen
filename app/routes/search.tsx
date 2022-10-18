@@ -1,7 +1,7 @@
-import { defer, type LoaderArgs } from "@hydrogen/remix";
-import { Await, Form, useLoaderData } from "@remix-run/react";
-import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Suspense } from "react";
+import {defer, type LoaderArgs} from '@hydrogen/remix';
+import {Await, Form, useLoaderData} from '@remix-run/react';
+import type {Collection} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {Suspense} from 'react';
 import {
   Heading,
   Input,
@@ -11,12 +11,12 @@ import {
   FeaturedCollections,
   Section,
   Text,
-} from "~/components";
-import { getNoResultRecommendations, searchProducts } from "~/data";
-import { PAGINATION_SIZE } from "~/lib/const";
+} from '~/components';
+import {getNoResultRecommendations, searchProducts} from '~/data';
+import {PAGINATION_SIZE} from '~/lib/const';
 
 export default function () {
-  const { searchTerm, products, noResultRecommendations } = useLoaderData();
+  const {searchTerm, products, noResultRecommendations} = useLoaderData();
   const noResults = products?.nodes?.length === 0;
 
   return (
@@ -72,7 +72,7 @@ export default function () {
           <ProductGrid
             key="search"
             url={`/search?q=${searchTerm}`}
-            collection={{ products } as Collection}
+            collection={{products} as Collection}
           />
         </Section>
       )}
@@ -80,10 +80,10 @@ export default function () {
   );
 }
 
-export async function loader({ request, context, params }: LoaderArgs) {
+export async function loader({request, context, params}: LoaderArgs) {
   const searchParams = new URL(request.url).searchParams;
-  const cursor = searchParams.get("cursor")!;
-  const searchTerm = searchParams.get("q")!;
+  const cursor = searchParams.get('cursor')!;
+  const searchTerm = searchParams.get('q')!;
 
   const products = await searchProducts(params, {
     cursor,

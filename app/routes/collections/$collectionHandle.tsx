@@ -3,27 +3,27 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LoaderArgs,
-} from "@hydrogen/remix";
-import { useLoaderData } from "@remix-run/react";
-import type { Collection as CollectionType } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import invariant from "tiny-invariant";
-import { PageHeader, Section, Text } from "~/components";
-import { ProductGrid } from "~/components/ProductGrid";
-import { getCollection } from "~/data";
+} from '@hydrogen/remix';
+import {useLoaderData} from '@remix-run/react';
+import type {Collection as CollectionType} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import invariant from 'tiny-invariant';
+import {PageHeader, Section, Text} from '~/components';
+import {ProductGrid} from '~/components/ProductGrid';
+import {getCollection} from '~/data';
 
-export async function loader({ params, request }: LoaderArgs) {
-  const { collectionHandle } = params;
+export async function loader({params, request}: LoaderArgs) {
+  const {collectionHandle} = params;
 
-  invariant(collectionHandle, "Missing collectionHandle param");
+  invariant(collectionHandle, 'Missing collectionHandle param');
 
-  const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
+  const cursor = new URL(request.url).searchParams.get('cursor') ?? undefined;
   const collection = await getCollection({
     handle: collectionHandle,
     cursor,
     params,
   });
 
-  return json({ collection });
+  return json({collection});
 }
 
 export const meta: MetaFunction = ({
@@ -32,13 +32,13 @@ export const meta: MetaFunction = ({
   data: SerializeFrom<typeof loader> | undefined;
 }) => {
   return {
-    title: data?.collection.seo?.title ?? "Collection",
+    title: data?.collection.seo?.title ?? 'Collection',
     description: data?.collection.seo?.description,
   };
 };
 
 export default function Collection() {
-  const { collection } = useLoaderData<typeof loader>();
+  const {collection} = useLoaderData<typeof loader>();
 
   return (
     <>

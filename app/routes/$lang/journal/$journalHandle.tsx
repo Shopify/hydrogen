@@ -3,7 +3,7 @@ import Component, {
   meta,
   links,
   CatchBoundary,
-} from "~/routes/journal/$journalHandle";
+} from '~/routes/journal/$journalHandle';
 
-export { loader, meta, links, CatchBoundary };
+export {loader, meta, links, CatchBoundary};
 export default Component;

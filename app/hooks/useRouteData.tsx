@@ -1,4 +1,4 @@
-import { useMatches } from "@remix-run/react";
+import {useMatches} from '@remix-run/react';
 
 export function useParentRouteData(pathname: string): any {
   const matches = useMatches();

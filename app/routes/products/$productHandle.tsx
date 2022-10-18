@@ -1,10 +1,10 @@
-import { Disclosure, Listbox } from "@headlessui/react";
+import {Disclosure, Listbox} from '@headlessui/react';
 import {
   type ActionFunction,
   defer,
   type LoaderArgs,
   redirect,
-} from "@hydrogen/remix";
+} from '@hydrogen/remix';
 import {
   useLoaderData,
   Await,
@@ -12,9 +12,9 @@ import {
   Form,
   useLocation,
   useTransition,
-} from "@remix-run/react";
-import { Money, ShopPayButton } from "@shopify/hydrogen-ui-alpha";
-import { type ReactNode, useRef, Suspense, useMemo } from "react";
+} from '@remix-run/react';
+import {Money, ShopPayButton} from '@shopify/hydrogen-ui-alpha';
+import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {
   Button,
   Heading,
@@ -27,26 +27,26 @@ import {
   Skeleton,
   Text,
   Link,
-} from "~/components";
+} from '~/components';
 import {
   addLineItem,
   createCart,
   getProductData,
   getRecommendedProducts,
-} from "~/data";
-import { getExcerpt } from "~/lib/utils";
-import invariant from "tiny-invariant";
-import clsx from "clsx";
-import { getSession } from "~/lib/session.server";
+} from '~/data';
+import {getExcerpt} from '~/lib/utils';
+import invariant from 'tiny-invariant';
+import clsx from 'clsx';
+import {getSession} from '~/lib/session.server';
 
-export const loader = async ({ params, request }: LoaderArgs) => {
-  const { productHandle } = params;
-  invariant(productHandle, "Missing productHandle param, check route filename");
+export const loader = async ({params, request}: LoaderArgs) => {
+  const {productHandle} = params;
+  invariant(productHandle, 'Missing productHandle param, check route filename');
 
-  const { shop, product } = await getProductData(
+  const {shop, product} = await getProductData(
     productHandle,
     new URL(request.url).searchParams,
-    params
+    params,
   );
 
   return defer({
@@ -56,19 +56,19 @@ export const loader = async ({ params, request }: LoaderArgs) => {
   });
 };
 
-export const action: ActionFunction = async ({ request, context, params }) => {
+export const action: ActionFunction = async ({request, context, params}) => {
   const [body, session] = await Promise.all([
     request.text(),
     getSession(request, context),
   ]);
   const formData = new URLSearchParams(body);
 
-  const variantId = formData.get("variantId");
+  const variantId = formData.get('variantId');
 
-  invariant(variantId, "Missing variantId");
+  invariant(variantId, 'Missing variantId');
 
   // 1. Grab the cart ID from the session
-  const cartId = await session.get("cartId");
+  const cartId = await session.get('cartId');
 
   // We only need a Set-Cookie header if we're creating a new cart (aka adding cartId to the session)
   const headers = new Headers();
@@ -76,17 +76,17 @@ export const action: ActionFunction = async ({ request, context, params }) => {
   // 2. If none exists, create a cart (SFAPI)
   if (!cartId) {
     const cart = await createCart({
-      cart: { lines: [{ merchandiseId: variantId }] },
+      cart: {lines: [{merchandiseId: variantId}]},
       params,
     });
 
-    session.set("cartId", cart.id);
-    headers.set("Set-Cookie", await session.commit());
+    session.set('cartId', cart.id);
+    headers.set('Set-Cookie', await session.commit());
   } else {
     // 3. Else, update the cart with the variant ID (SFAPI)
     await addLineItem({
       cartId,
-      lines: [{ merchandiseId: variantId }],
+      lines: [{merchandiseId: variantId}],
       params,
     });
   }
@@ -98,9 +98,9 @@ export const action: ActionFunction = async ({ request, context, params }) => {
 };
 
 export default function Product() {
-  const { product, shop, recommended } = useLoaderData<typeof loader>();
-  const { media, title, vendor, descriptionHtml } = product;
-  const { shippingPolicy, refundPolicy } = shop;
+  const {product, shop, recommended} = useLoaderData<typeof loader>();
+  const {media, title, vendor, descriptionHtml} = product;
+  const {shippingPolicy, refundPolicy} = shop;
 
   return (
     <>
@@ -117,7 +117,7 @@ export default function Product() {
                   {title}
                 </Heading>
                 {vendor && (
-                  <Text className={"opacity-50 font-medium"}>{vendor}</Text>
+                  <Text className={'opacity-50 font-medium'}>{vendor}</Text>
                 )}
               </div>
               <ProductForm />
@@ -172,12 +172,12 @@ export function ProductForm() {
    * request has completed.
    */
   const searchParams = useMemo(() => {
-    return transition.state === "loading" && transition.location
+    return transition.state === 'loading' && transition.location
       ? new URLSearchParams(transition.location.search)
       : currentSearchParams;
   }, [currentSearchParams, transition]);
 
-  const { product } = useLoaderData<typeof loader>();
+  const {product} = useLoaderData<typeof loader>();
   const firstVariant = product.variants.nodes[0];
 
   /**
@@ -189,7 +189,7 @@ export function ProductForm() {
   const searchParamsWithDefaults = useMemo<URLSearchParams>(() => {
     const clonedParams = new URLSearchParams(searchParams);
 
-    for (const { name, value } of firstVariant.selectedOptions) {
+    for (const {name, value} of firstVariant.selectedOptions) {
       if (!searchParams.has(name)) {
         clonedParams.set(name, value);
       }
@@ -237,26 +237,26 @@ export function ProductForm() {
                 {option.values.length > 7 ? (
                   <div className="relative w-full">
                     <Listbox>
-                      {({ open }) => (
+                      {({open}) => (
                         <>
                           <Listbox.Button
                             ref={closeRef}
                             className={clsx(
-                              "flex items-center justify-between w-full py-3 px-4 border border-primary",
+                              'flex items-center justify-between w-full py-3 px-4 border border-primary',
                               open
-                                ? "rounded-b md:rounded-t md:rounded-b-none"
-                                : "rounded"
+                                ? 'rounded-b md:rounded-t md:rounded-b-none'
+                                : 'rounded',
                             )}
                           >
                             <span>
                               {searchParamsWithDefaults.get(option.name)}
                             </span>
-                            <IconCaret direction={open ? "up" : "down"} />
+                            <IconCaret direction={open ? 'up' : 'down'} />
                           </Listbox.Button>
                           <Listbox.Options
                             className={clsx(
-                              "border-primary bg-contrast absolute bottom-12 z-30 grid h-48 w-full overflow-y-scroll rounded-t border px-2 py-2 transition-[max-height] duration-150 sm:bottom-auto md:rounded-b md:rounded-t-none md:border-t-0 md:border-b",
-                              open ? "max-h-48" : "max-h-0"
+                              'border-primary bg-contrast absolute bottom-12 z-30 grid h-48 w-full overflow-y-scroll rounded-t border px-2 py-2 transition-[max-height] duration-150 sm:bottom-auto md:rounded-b md:rounded-t-none md:border-t-0 md:border-b',
+                              open ? 'max-h-48' : 'max-h-0',
                             )}
                           >
                             {option.values.map((value) => (
@@ -264,13 +264,13 @@ export function ProductForm() {
                                 key={`option-${option.name}-${value}`}
                                 value={value}
                               >
-                                {({ active }) => (
+                                {({active}) => (
                                   <ProductOptionLink
                                     optionName={option.name}
                                     optionValue={value}
                                     className={clsx(
-                                      "text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer",
-                                      active && "bg-primary/10"
+                                      'text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer',
+                                      active && 'bg-primary/10',
                                     )}
                                     searchParams={searchParamsWithDefaults}
                                     onClick={() => {
@@ -280,7 +280,7 @@ export function ProductForm() {
                                   >
                                     {value}
                                     {searchParamsWithDefaults.get(
-                                      option.name
+                                      option.name,
                                     ) === value && (
                                       <span className="ml-2">
                                         <IconCheck />
@@ -309,8 +309,10 @@ export function ProductForm() {
                             optionValue={value}
                             searchParams={searchParamsWithDefaults}
                             className={clsx(
-                              "leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200",
-                              checked ? "border-primary/50" : "border-primary/0"
+                              'leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200',
+                              checked
+                                ? 'border-primary/50'
+                                : 'border-primary/0',
                             )}
                           />
                         </Text>
@@ -331,7 +333,7 @@ export function ProductForm() {
               />
               <Button
                 width="full"
-                variant={isOutOfStock ? "secondary" : "primary"}
+                variant={isOutOfStock ? 'secondary' : 'primary'}
                 disabled={isOutOfStock}
                 as="button"
               >
@@ -342,7 +344,7 @@ export function ProductForm() {
                     as="span"
                     className="flex items-center justify-center gap-2"
                   >
-                    <span>Add to bag</span> <span>·</span>{" "}
+                    <span>Add to bag</span> <span>·</span>{' '}
                     <Money
                       withoutTrailingZeros
                       data={selectedVariant?.priceV2!}
@@ -383,11 +385,11 @@ function ProductOptionLink({
   children?: ReactNode;
   [key: string]: any;
 }) {
-  const { pathname } = useLocation();
+  const {pathname} = useLocation();
   const isLangPathname = /\/[a-zA-Z]{2}-[a-zA-Z]{2}\//g.test(pathname);
   // fixes internalized pathname
   const path = isLangPathname
-    ? `/${pathname.split("/").slice(2).join("/")}`
+    ? `/${pathname.split('/').slice(2).join('/')}`
     : pathname;
 
   const clonedSearchParams = new URLSearchParams(searchParams);
@@ -416,7 +418,7 @@ function ProductDetail({
 }) {
   return (
     <Disclosure key={title} as="div" className="grid w-full gap-2">
-      {({ open }) => (
+      {({open}) => (
         <>
           <Disclosure.Button className="text-left">
             <div className="flex justify-between">
@@ -425,17 +427,17 @@ function ProductDetail({
               </Text>
               <IconClose
                 className={clsx(
-                  "transition-transform transform-gpu duration-200",
-                  !open && "rotate-[45deg]"
+                  'transition-transform transform-gpu duration-200',
+                  !open && 'rotate-[45deg]',
                 )}
               />
             </div>
           </Disclosure.Button>
 
-          <Disclosure.Panel className={"pb-4 pt-2 grid gap-2"}>
+          <Disclosure.Panel className={'pb-4 pt-2 grid gap-2'}>
             <div
               className="prose dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: content }}
+              dangerouslySetInnerHTML={{__html: content}}
             />
             {learnMore && (
               <div className="">
