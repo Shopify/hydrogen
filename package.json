@@ -4,7 +4,7 @@
   "scripts": {
     "build": "npm run build:css && remix build && npm run bundle:worker",
     "build:css": "postcss styles --base styles --dir app/styles --env production",
-    "bundle:worker": "esbuild worker/index.ts --bundle --outfile=build/worker-bundle.mjs --sourcemap --format=esm --define:process.env.REMIX_DEV_SERVER_WS_PORT=\\\"8002\\\"",
+    "bundle:worker": "esbuild worker/index.ts --bundle --outfile=build/worker-bundle.mjs --sourcemap --format=esm --define:process.env.REMIX_DEV_SERVER_WS_PORT=\\\"8002\\\" && echo '{\"type\":\"module\",\"main\":\"./worker-bundle.mjs\"}' > build/package.json",
     "deploy": "//todo",
     "dev:remix": "remix watch",
     "dev:css": "postcss styles --base styles --dir app/styles -w",
