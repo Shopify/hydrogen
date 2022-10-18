@@ -46,6 +46,14 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     throw new WorkerNotFoundError();
   }
 
+  if (
+    publicPath !== undefined &&
+    publicPath.length > 0 &&
+    !publicPath.endsWith('/')
+  ) {
+    log(`WARNING: publicPath must end with a trailing slash`);
+  }
+
   const mf = new MiniOxygen(
     {
       buildCommand,
