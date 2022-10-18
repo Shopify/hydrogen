@@ -13,7 +13,6 @@ import type {
   Blog,
   PageConnection,
   Shop,
-  Domain,
   Order,
   Localization,
   CustomerAccessTokenCreatePayload,
