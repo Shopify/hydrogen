@@ -1,4 +1,4 @@
-import { redirect } from "@remix-run/oxygen";
+import { redirect } from "@hydrogen/remix";
 import invariant from "tiny-invariant";
 import { getPrimaryShopDomain } from "~/data";
 
