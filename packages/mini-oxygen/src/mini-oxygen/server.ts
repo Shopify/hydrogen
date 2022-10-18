@@ -52,13 +52,7 @@ function createAssetMiddleware({
       filePath = path.join(assetsDir, pathname);
     } else {
       let pathname = url.pathname;
-      // Potential issue here: a false positive if publicPath
-      // matches as a substring. Example:
-      // publicPath === "/build"
-      // pathname === "/buildnext/a.js"
-      // However, we cannot always append a trailing slash to
-      // publicPath since it may contain query params, e.g.
-      // publicPath === "?assetName="
+      // publicPath must always have a trailing slash
       if (pathname.startsWith(publicPath)) {
         pathname = pathname.substring(publicPath.length);
         filePath = path.join(assetsDir, pathname);
@@ -67,7 +61,7 @@ function createAssetMiddleware({
       }
     }
 
-    if (fs.existsSync(filePath) && fs.lstatSync(filePath).isFile()) {
+    if (fs.lstatSync(filePath, {throwIfNoEntry: false})?.isFile()) {
       const rs = fs.createReadStream(filePath);
       const {size} = fs.statSync(filePath);
 
