@@ -2,17 +2,17 @@ import {
   createRequestHandler as createRemixRequestHandler,
   type AppLoadContext,
   type ServerBuild,
-} from "@remix-run/server-runtime";
+} from '@remix-run/server-runtime';
 import {
   getAssetFromKV,
   NotFoundError,
   MethodNotAllowedError,
   type CacheControl,
-} from "@cloudflare/kv-asset-handler";
+} from '@cloudflare/kv-asset-handler';
 
 function cacheControl(request: Request): Partial<CacheControl> {
   const url = new URL(request.url);
-  if (url.pathname.startsWith("/build")) {
+  if (url.pathname.startsWith('/build')) {
     // Cache build files for 1 year since they have a hash in their URL
     return {
       browserTTL: 60 * 60 * 24 * 365,
@@ -31,7 +31,7 @@ async function getAsset(
   request: Request,
   ctx: ExecutionContext,
   staticContent: any,
-  assetManifest: any
+  assetManifest: any,
 ) {
   try {
     return await getAssetFromKV(
@@ -45,13 +45,13 @@ async function getAsset(
         cacheControl,
         ASSET_NAMESPACE: staticContent,
         ASSET_MANIFEST: assetManifest,
-      }
+      },
     );
   } catch (e) {
     if (e instanceof NotFoundError || e instanceof MethodNotAllowedError) {
       // fall through to the remix handler
     } else {
-      return new Response("An unexpected error occurred", { status: 500 });
+      return new Response('An unexpected error occurred', {status: 500});
     }
   }
 }
@@ -71,7 +71,7 @@ export function createRequestHandler<Context = unknown>({
 
   return async (
     request: Request,
-    { ctx, env }: { ctx: ExecutionContext; env: any }
+    {ctx, env}: {ctx: ExecutionContext; env: any},
   ) => {
     try {
       if (assetManifest) {
@@ -79,7 +79,7 @@ export function createRequestHandler<Context = unknown>({
           request,
           ctx,
           env.__STATIC_CONTENT,
-          assetManifest
+          assetManifest,
         );
 
         if (asset) return asset;
@@ -95,7 +95,7 @@ export function createRequestHandler<Context = unknown>({
     } catch (e) {
       console.error(e);
 
-      return new Response("Internal Error", { status: 500 });
+      return new Response('Internal Error', {status: 500});
     }
   };
 }

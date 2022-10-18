@@ -1,8 +1,8 @@
-import clsx from "clsx";
-import { Image, Video } from "@shopify/hydrogen-ui-alpha";
-import type { Media } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Link } from "@remix-run/react";
-import { Heading, Text } from "~/components";
+import clsx from 'clsx';
+import {Image, Video} from '@shopify/hydrogen-ui-alpha';
+import type {Media} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {Link} from '@remix-run/react';
+import {Heading, Text} from '~/components';
 
 interface Metafield {
   value: string;
@@ -24,8 +24,8 @@ export function Hero({
   cta: Metafield;
   handle: string;
   heading: Metafield;
-  height?: "full";
-  loading?: "eager" | "lazy";
+  height?: 'full';
+  loading?: 'eager' | 'lazy';
   spread: Metafield;
   spreadSecondary: Metafield;
   top?: boolean;
@@ -34,11 +34,11 @@ export function Hero({
     <Link to={`/collections/${handle}`}>
       <section
         className={clsx(
-          "relative justify-end flex flex-col w-full",
-          top && "-mt-nav",
-          height === "full"
-            ? "h-screen"
-            : "aspect-[4/5] sm:aspect-square md:aspect-[5/4] lg:aspect-[3/2] xl:aspect-[2/1]"
+          'relative justify-end flex flex-col w-full',
+          top && '-mt-nav',
+          height === 'full'
+            ? 'h-screen'
+            : 'aspect-[4/5] sm:aspect-square md:aspect-[5/4] lg:aspect-[3/2] xl:aspect-[2/1]',
         )}
       >
         <div className="absolute inset-0 grid flex-grow grid-flow-col pointer-events-none auto-cols-fr -z-10 content-stretch overflow-clip">
@@ -48,8 +48,8 @@ export function Hero({
                 scale={2}
                 sizes={
                   spreadSecondary?.reference
-                    ? "(min-width: 80em) 700px, (min-width: 48em) 450px, 500px"
-                    : "(min-width: 80em) 1400px, (min-width: 48em) 900px, 500px"
+                    ? '(min-width: 80em) 700px, (min-width: 48em) 450px, 500px'
+                    : '(min-width: 80em) 1400px, (min-width: 48em) 900px, 500px'
                 }
                 widths={
                   spreadSecondary?.reference
@@ -93,7 +93,7 @@ export function Hero({
 
 interface SpreadMediaProps {
   data: Media;
-  loading?: HTMLImageElement["loading"];
+  loading?: HTMLImageElement['loading'];
   scale?: 2 | 3;
   sizes: string;
   width: number;
@@ -108,10 +108,10 @@ function SpreadMedia({
   width,
   widths,
 }: SpreadMediaProps) {
-  if (data.mediaContentType === "VIDEO") {
+  if (data.mediaContentType === 'VIDEO') {
     return (
       <Video
-        previewImageOptions={{ scale, src: data.previewImage!.url }}
+        previewImageOptions={{scale, src: data.previewImage!.url}}
         width={scale! * width}
         className="block object-cover w-full h-full"
         data={data}
@@ -124,17 +124,17 @@ function SpreadMedia({
     );
   }
 
-  if (data.mediaContentType === "IMAGE") {
+  if (data.mediaContentType === 'IMAGE') {
     return (
       <Image
         widths={widths}
         sizes={sizes}
-        alt={data.alt || "Marketing Banner Image"}
+        alt={data.alt || 'Marketing Banner Image'}
         className="block object-cover w-full h-full"
         data={data.image}
         loading={loading}
         width={width}
-        loaderOptions={{ scale, crop: "center" }}
+        loaderOptions={{scale, crop: 'center'}}
       />
     );
   }

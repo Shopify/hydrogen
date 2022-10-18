@@ -4,10 +4,10 @@ import {
   NavLink as RemixNavLink,
   type NavLinkProps as RemixNavLinkProps,
   type LinkProps as RemixLinkProps,
-} from "@remix-run/react";
+} from '@remix-run/react';
 
-type LinkProps = Omit<RemixLinkProps, "className"> & {
-  className?: RemixNavLinkProps["className"] | RemixLinkProps["className"];
+type LinkProps = Omit<RemixLinkProps, 'className'> & {
+  className?: RemixNavLinkProps['className'] | RemixLinkProps['className'];
 };
 
 /**
@@ -26,16 +26,16 @@ type LinkProps = Omit<RemixLinkProps, "className"> & {
  * Ultimately, it is up to you to decide how to implement this behavior.
  */
 export function Link(props: LinkProps) {
-  const { to, className, ...resOfProps } = props;
-  const { lang } = useParams();
+  const {to, className, ...resOfProps} = props;
+  const {lang} = useParams();
 
   let toWithLang = to;
 
-  if (typeof to === "string") {
+  if (typeof to === 'string') {
     toWithLang = lang ? `/${lang}${to}` : to;
   }
 
-  if (typeof className === "function") {
+  if (typeof className === 'function') {
     return (
       <RemixNavLink to={toWithLang} className={className} {...resOfProps} />
     );

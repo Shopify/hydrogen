@@ -1,13 +1,13 @@
-import clsx from "clsx";
+import clsx from 'clsx';
 
-type IconProps = JSX.IntrinsicElements["svg"] & {
-  direction?: "up" | "right" | "down" | "left";
+type IconProps = JSX.IntrinsicElements['svg'] & {
+  direction?: 'up' | 'right' | 'down' | 'left';
 };
 
 function Icon({
   children,
   className,
-  fill = "currentColor",
+  fill = 'currentColor',
   stroke,
   ...props
 }: IconProps) {
@@ -18,7 +18,7 @@ function Icon({
       {...props}
       fill={fill}
       stroke={stroke}
-      className={clsx("w-5 h-5", className)}
+      className={clsx('w-5 h-5', className)}
     >
       {children}
     </svg>
@@ -27,7 +27,7 @@ function Icon({
 
 export function IconMenu(props: IconProps) {
   return (
-    <Icon {...props} stroke={props.stroke || "currentColor"}>
+    <Icon {...props} stroke={props.stroke || 'currentColor'}>
       <title>Menu</title>
       <line x1="3" y1="6.375" x2="17" y2="6.375" strokeWidth="1.25" />
       <line x1="3" y1="10.375" x2="17" y2="10.375" strokeWidth="1.25" />
@@ -38,7 +38,7 @@ export function IconMenu(props: IconProps) {
 
 export function IconClose(props: IconProps) {
   return (
-    <Icon {...props} stroke={props.stroke || "currentColor"}>
+    <Icon {...props} stroke={props.stroke || 'currentColor'}>
       <title>Close</title>
       <line
         x1="4.44194"
@@ -58,24 +58,24 @@ export function IconClose(props: IconProps) {
   );
 }
 
-export function IconArrow({ direction = "right" }: IconProps) {
+export function IconArrow({direction = 'right'}: IconProps) {
   let rotate;
 
   switch (direction) {
-    case "right":
-      rotate = "rotate-0";
+    case 'right':
+      rotate = 'rotate-0';
       break;
-    case "left":
-      rotate = "rotate-180";
+    case 'left':
+      rotate = 'rotate-180';
       break;
-    case "up":
-      rotate = "-rotate-90";
+    case 'up':
+      rotate = '-rotate-90';
       break;
-    case "down":
-      rotate = "rotate-90";
+    case 'down':
+      rotate = 'rotate-90';
       break;
     default:
-      rotate = "rotate-0";
+      rotate = 'rotate-0';
   }
 
   return (
@@ -87,27 +87,27 @@ export function IconArrow({ direction = "right" }: IconProps) {
 }
 
 export function IconCaret({
-  direction = "down",
-  stroke = "currentColor",
+  direction = 'down',
+  stroke = 'currentColor',
   ...props
 }: IconProps) {
   let rotate;
 
   switch (direction) {
-    case "down":
-      rotate = "rotate-0";
+    case 'down':
+      rotate = 'rotate-0';
       break;
-    case "up":
-      rotate = "rotate-180";
+    case 'up':
+      rotate = 'rotate-180';
       break;
-    case "left":
-      rotate = "-rotate-90";
+    case 'left':
+      rotate = '-rotate-90';
       break;
-    case "right":
-      rotate = "rotate-90";
+    case 'right':
+      rotate = 'rotate-90';
       break;
     default:
-      rotate = "rotate-0";
+      rotate = 'rotate-0';
   }
 
   return (
@@ -179,7 +179,7 @@ export function IconSearch(props: IconProps) {
 }
 
 export function IconCheck({
-  stroke = "currentColor",
+  stroke = 'currentColor',
   ...props
 }: React.ComponentProps<typeof Icon>) {
   return (
@@ -198,7 +198,7 @@ export function IconCheck({
 
 export function IconRemove(props: IconProps) {
   return (
-    <Icon {...props} fill="transparent" stroke={props.stroke || "currentColor"}>
+    <Icon {...props} fill="transparent" stroke={props.stroke || 'currentColor'}>
       <title>Remove</title>
       <path
         d="M4 6H16"

@@ -1,1 +1,1 @@
-export { loader } from "~/routes/collections/all";
+export {loader} from '~/routes/collections/all';

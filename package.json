@@ -18,6 +18,7 @@
     "packages/@remix-run/oxygen",
     "packages/@hydrogen/remix"
   ],
+  "prettier": "@shopify/prettier-config",
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.2.0",
     "@headlessui/react": "^1.7.2",
