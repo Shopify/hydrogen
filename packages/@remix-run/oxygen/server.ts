@@ -25,7 +25,7 @@ export function createRequestHandler<Context = unknown>({
 
       const loadContext = await getLoadContext?.(request);
 
-      return handleRequest(request, {
+      return await handleRequest(request, {
         env,
         ...ctx,
         ...loadContext,
