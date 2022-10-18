@@ -1,4 +1,4 @@
-import { json, MetaFunction, SerializeFrom } from "@remix-run/cloudflare";
+import { json, type MetaFunction, type SerializeFrom } from "@hydrogen/remix";
 import { Link, useLoaderData } from "@remix-run/react";
 import { getPolicies } from "~/data";
 

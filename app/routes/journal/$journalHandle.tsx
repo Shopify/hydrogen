@@ -4,7 +4,7 @@ import {
   type SerializeFrom,
   type LoaderArgs,
   type LinksFunction,
-} from "@remix-run/cloudflare";
+} from "@hydrogen/remix";
 import { useLoaderData } from "@remix-run/react";
 import { Image } from "@shopify/hydrogen-ui-alpha";
 import invariant from "tiny-invariant";
@@ -27,14 +27,11 @@ export async function loader({ params }: LoaderArgs) {
     params,
   });
 
-  const formattedDate = new Intl.DateTimeFormat(
-    `${language}-${country}`,
-    {
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-    }
-  ).format(new Date(article.publishedAt));
+  const formattedDate = new Intl.DateTimeFormat(`${language}-${country}`, {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  }).format(new Date(article.publishedAt));
 
   return json(
     { article, formattedDate },

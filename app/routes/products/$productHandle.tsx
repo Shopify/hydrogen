@@ -4,7 +4,7 @@ import {
   defer,
   type LoaderArgs,
   redirect,
-} from "@remix-run/cloudflare";
+} from "@hydrogen/remix";
 import {
   useLoaderData,
   Await,
@@ -152,7 +152,9 @@ export default function Product() {
           errorElement="There was a problem loading related products"
           resolve={recommended}
         >
-          {(products) => <ProductSwimlane title="Related Products" products={products} />}
+          {(products) => (
+            <ProductSwimlane title="Related Products" products={products} />
+          )}
         </Await>
       </Suspense>
     </>

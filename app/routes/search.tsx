@@ -1,8 +1,4 @@
-import {
-  type ActionFunction,
-  defer,
-  type LoaderArgs,
-} from "@remix-run/cloudflare";
+import { defer, type LoaderArgs } from "@hydrogen/remix";
 import { Await, Form, useLoaderData } from "@remix-run/react";
 import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import { Suspense } from "react";
