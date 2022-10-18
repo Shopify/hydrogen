@@ -1,20 +1,19 @@
-import type {MetaFunction, SerializeFrom} from '@remix-run/cloudflare';
-import {json} from '@remix-run/cloudflare';
-import {Link, useLoaderData} from '@remix-run/react';
+import { json, MetaFunction, SerializeFrom } from "@remix-run/cloudflare";
+import { Link, useLoaderData } from "@remix-run/react";
+import { getPolicies } from "~/data";
 
-import {getPolicies} from '~/data';
-import {PageHeader, Section, Heading} from '~/components';
+import { PageHeader, Section, Heading } from "~/components";
 
 export async function loader() {
   const policies = await getPolicies();
 
   return json(
-    {policies},
+    { policies },
     {
       headers: {
         // TODO cacheLong()
       },
-    },
+    }
   );
 }
 
@@ -24,13 +23,13 @@ export const meta: MetaFunction = ({
   data: SerializeFrom<typeof loader> | undefined;
 }) => {
   return {
-    title: 'Policies',
-    description: 'Policies',
+    title: "Policies",
+    description: "Policies",
   };
 };
 
 export default function Policies() {
-  const {policies} = useLoaderData<typeof loader>();
+  const { policies } = useLoaderData<typeof loader>();
 
   return (
     <>

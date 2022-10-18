@@ -1,6 +1,6 @@
-import type {EntryContext} from '@remix-run/cloudflare';
-import {RemixServer} from '@remix-run/react';
-import {renderToReadableStream} from 'react-dom/server';
+import type { EntryContext } from "@remix-run/cloudflare";
+import { RemixServer } from "@remix-run/react";
+import { renderToReadableStream } from "react-dom/server";
 
 export default async function handleRequest(
   request: Request,
@@ -12,7 +12,7 @@ export default async function handleRequest(
     <RemixServer context={remixContext} url={request.url} />,
   );
 
-  responseHeaders.set('Content-Type', 'text/html');
+  responseHeaders.set("Content-Type", "text/html");
 
   return new Response(body, {
     status: responseStatusCode,

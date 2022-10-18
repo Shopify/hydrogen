@@ -1,46 +1,44 @@
-import {type ActionFunction, json, redirect} from '@remix-run/cloudflare';
+import { type ActionFunction, json, redirect } from "@remix-run/cloudflare";
 import {
   Form,
   useActionData,
   useOutletContext,
   useParams,
   useTransition,
-} from '@remix-run/react';
-import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
-import type {MailingAddressInput} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
-import invariant from 'tiny-invariant';
-
-import type {AccountOutletContext} from '../edit';
-
-import {Button, Text} from '~/components';
+} from "@remix-run/react";
+import { flattenConnection } from "@shopify/hydrogen-ui-alpha";
+import type { MailingAddressInput } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import invariant from "tiny-invariant";
+import { Button, Text } from "~/components";
 import {
   createCustomerAddress,
   deleteCustomerAddress,
   updateCustomerAddress,
   updateCustomerDefaultAddress,
-} from '~/data';
-import {getSession} from '~/lib/session.server';
-import {getInputStyleClasses} from '~/lib/utils';
+} from "~/data";
+import { getSession } from "~/lib/session.server";
+import { getInputStyleClasses } from "~/lib/utils";
+import type { AccountOutletContext } from "../edit";
 
 interface ActionData {
   formError?: string;
 }
 
-const badRequest = (data: ActionData) => json(data, {status: 400});
+const badRequest = (data: ActionData) => json(data, { status: 400 });
 
-export const action: ActionFunction = async ({request, context}) => {
+export const action: ActionFunction = async ({ request, context }) => {
   const [formData, session] = await Promise.all([
     request.formData(),
     getSession(request, context),
   ]);
 
-  const customerAccessToken = await session.get('customerAccessToken');
-  invariant(customerAccessToken, 'You must be logged in to edit your account.');
+  const customerAccessToken = await session.get("customerAccessToken");
+  invariant(customerAccessToken, "You must be logged in to edit your account.");
 
-  const addressId = formData.get('addressId');
-  invariant(typeof addressId === 'string', 'You must provide an address id.');
+  const addressId = formData.get("addressId");
+  invariant(typeof addressId === "string", "You must provide an address id.");
 
-  if (request.method === 'DELETE') {
+  if (request.method === "DELETE") {
     try {
       await deleteCustomerAddress({
         customerAccessToken,
@@ -48,37 +46,37 @@ export const action: ActionFunction = async ({request, context}) => {
       });
 
       // TODO: Why doesn't `redirect('..')` work here? it redirects to the root / instead of /account.
-      return redirect('/account');
+      return redirect("/account");
     } catch (error: any) {
-      return badRequest({formError: error.message});
+      return badRequest({ formError: error.message });
     }
   }
 
   const address: MailingAddressInput = {};
 
   const keys: (keyof MailingAddressInput)[] = [
-    'lastName',
-    'firstName',
-    'address1',
-    'address2',
-    'city',
-    'province',
-    'country',
-    'zip',
-    'phone',
-    'company',
+    "lastName",
+    "firstName",
+    "address1",
+    "address2",
+    "city",
+    "province",
+    "country",
+    "zip",
+    "phone",
+    "company",
   ];
 
   for (const key of keys) {
     const value = formData.get(key);
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
       address[key] = value;
     }
   }
 
-  const defaultAddress = formData.get('defaultAddress');
+  const defaultAddress = formData.get("defaultAddress");
 
-  if (addressId === 'add') {
+  if (addressId === "add") {
     try {
       const id = await createCustomerAddress({
         customerAccessToken,
@@ -93,9 +91,9 @@ export const action: ActionFunction = async ({request, context}) => {
       }
 
       // TODO: Why doesn't `redirect('..')` work here? it redirects to the root / instead of /account.
-      return redirect('/account');
+      return redirect("/account");
     } catch (error: any) {
-      return badRequest({formError: error.message});
+      return badRequest({ formError: error.message });
     }
   } else {
     try {
@@ -113,19 +111,19 @@ export const action: ActionFunction = async ({request, context}) => {
       }
 
       // TODO: Why doesn't `redirect('..')` work here? it redirects to the root / instead of /account.
-      return redirect('/account');
+      return redirect("/account");
     } catch (error: any) {
-      return badRequest({formError: error.message});
+      return badRequest({ formError: error.message });
     }
   }
 };
 
 export default function EditAddress() {
-  const {addressId} = useParams();
-  const isNewAddress = addressId === 'add';
+  const { addressId } = useParams();
+  const isNewAddress = addressId === "add";
   const actionData = useActionData<ActionData>();
   const transition = useTransition();
-  const {customer} = useOutletContext<AccountOutletContext>();
+  const { customer } = useOutletContext<AccountOutletContext>();
   const addresses = flattenConnection(customer.addresses);
   const defaultAddress = customer.defaultAddress;
   /**
@@ -135,15 +133,15 @@ export default function EditAddress() {
    * and we don't find a match. We update the `find` logic to just perform a match
    * on the first (permanent) part of the ID.
    */
-  const normalizedAddress = decodeURIComponent(addressId ?? '').split('?')[0];
+  const normalizedAddress = decodeURIComponent(addressId ?? "").split("?")[0];
   const address = addresses.find((address) =>
-    address.id!.startsWith(normalizedAddress),
+    address.id!.startsWith(normalizedAddress)
   );
 
   return (
     <>
       <Text className="mt-4 mb-6" as="h3" size="lead">
-        {isNewAddress ? 'Add address' : 'Edit address'}
+        {isNewAddress ? "Add address" : "Edit address"}
       </Text>
       <div className="max-w-lg">
         <Form method="post">
@@ -167,7 +165,7 @@ export default function EditAddress() {
               autoComplete="given-name"
               placeholder="First name"
               aria-label="First name"
-              defaultValue={address?.firstName ?? ''}
+              defaultValue={address?.firstName ?? ""}
             />
           </div>
           <div className="mt-3">
@@ -180,7 +178,7 @@ export default function EditAddress() {
               autoComplete="family-name"
               placeholder="Last name"
               aria-label="Last name"
-              defaultValue={address?.lastName ?? ''}
+              defaultValue={address?.lastName ?? ""}
             />
           </div>
           <div className="mt-3">
@@ -192,7 +190,7 @@ export default function EditAddress() {
               autoComplete="organization"
               placeholder="Company"
               aria-label="Company"
-              defaultValue={address?.company ?? ''}
+              defaultValue={address?.company ?? ""}
             />
           </div>
           <div className="mt-3">
@@ -205,7 +203,7 @@ export default function EditAddress() {
               placeholder="Address line 1*"
               required
               aria-label="Address line 1"
-              defaultValue={address?.address1 ?? ''}
+              defaultValue={address?.address1 ?? ""}
             />
           </div>
           <div className="mt-3">
@@ -217,7 +215,7 @@ export default function EditAddress() {
               autoComplete="address-line2"
               placeholder="Address line 2"
               aria-label="Address line 2"
-              defaultValue={address?.address2 ?? ''}
+              defaultValue={address?.address2 ?? ""}
             />
           </div>
           <div className="mt-3">
@@ -230,7 +228,7 @@ export default function EditAddress() {
               autoComplete="address-level2"
               placeholder="City"
               aria-label="City"
-              defaultValue={address?.city ?? ''}
+              defaultValue={address?.city ?? ""}
             />
           </div>
           <div className="mt-3">
@@ -243,7 +241,7 @@ export default function EditAddress() {
               placeholder="State / Province"
               required
               aria-label="State"
-              defaultValue={address?.province ?? ''}
+              defaultValue={address?.province ?? ""}
             />
           </div>
           <div className="mt-3">
@@ -256,7 +254,7 @@ export default function EditAddress() {
               placeholder="Zip / Postal Code"
               required
               aria-label="Zip"
-              defaultValue={address?.zip ?? ''}
+              defaultValue={address?.zip ?? ""}
             />
           </div>
           <div className="mt-3">
@@ -269,7 +267,7 @@ export default function EditAddress() {
               placeholder="Country"
               required
               aria-label="Country"
-              defaultValue={address?.country ?? ''}
+              defaultValue={address?.country ?? ""}
             />
           </div>
           <div className="mt-3">
@@ -281,7 +279,7 @@ export default function EditAddress() {
               autoComplete="tel"
               placeholder="Phone"
               aria-label="Phone"
-              defaultValue={address?.phone ?? ''}
+              defaultValue={address?.phone ?? ""}
             />
           </div>
           <div className="mt-4">
@@ -304,9 +302,9 @@ export default function EditAddress() {
               className="w-full rounded focus:shadow-outline"
               type="submit"
               variant="primary"
-              disabled={transition.state !== 'idle'}
+              disabled={transition.state !== "idle"}
             >
-              {transition.state !== 'idle' ? 'Saving' : 'Save'}
+              {transition.state !== "idle" ? "Saving" : "Save"}
             </Button>
           </div>
           <div>
