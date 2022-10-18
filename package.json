@@ -13,7 +13,8 @@
     "start": "npm run build && cross-env NODE_ENV=production npm run dev:oxygen"
   },
   "workspaces": [
-    "packages/@remix-run/oxygen"
+    "packages/@remix-run/oxygen",
+    "packages/@hydrogen/remix"
   ],
   "dependencies": {
     "@cloudflare/kv-asset-handler": "^0.2.0",

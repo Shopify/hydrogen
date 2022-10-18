@@ -1,4 +1,4 @@
-import type { EntryContext } from "@remix-run/oxygen";
+import type { EntryContext } from "@hydrogen/remix";
 import { RemixServer } from "@remix-run/react";
 import { renderToReadableStream } from "react-dom/server";
 

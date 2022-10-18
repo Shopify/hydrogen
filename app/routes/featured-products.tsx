@@ -1,4 +1,4 @@
-import { json, type LoaderArgs } from "@remix-run/oxygen";
+import { json, type LoaderArgs } from "@hydrogen/remix";
 import { getFeaturedData } from "~/data";
 
 export async function loader({ params }: LoaderArgs) {
