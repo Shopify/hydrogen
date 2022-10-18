@@ -5,7 +5,7 @@ on:
 jobs:
   lint:
     name: ⬣ ESLint
-    runs-on: ubuntu-latest
+    runs-on: shopify-ubuntu-latest
     steps:
       - name: 🛑 Cancel Previous Runs
         uses: styfle/cancel-workflow-action@0.11.0
