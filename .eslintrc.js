@@ -1,4 +1,11 @@
+const path = require('path');
+
+const rulesDirPlugin = require('eslint-plugin-rulesdir');
+
+rulesDirPlugin.RULES_DIR = path.join(__dirname, 'eslint-rules');
+
 module.exports = {
+  plugins: ['rulesdir'],
   extends: ['plugin:hydrogen/recommended', 'plugin:hydrogen/typescript'],
   rules: {
     '@typescript-eslint/ban-ts-comment': 'off',
@@ -9,5 +16,6 @@ module.exports = {
     'no-case-declarations': 'off',
     // TODO: Remove jest plugin from hydrogen/eslint-plugin
     'jest/no-deprecated-functions': 'off',
+    'rulesdir/no-missing-seo': 'error',
   },
 };
