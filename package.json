@@ -36,6 +36,7 @@
     "@remix-run/dev": "0.0.0-experimental-e18af792a",
     "@shopify/prettier-config": "^1.1.2",
     "@shopify/eslint-plugin": "^42.0.1",
+    "eslint-plugin-hydrogen": "0.12.2",
     "prettier": "^2.7.1",
     "@tailwindcss/forms": "^0.5.3",
     "@tailwindcss/typography": "^0.5.7",
