@@ -1,4 +1,4 @@
-import Component from '~/routes/index';
+import Component from "~/routes/index";
 
 export default Component;
 

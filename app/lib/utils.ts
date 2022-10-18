@@ -254,7 +254,7 @@ export function getApiErrorMessage(
   return null;
 }
 
-export function getLocalizationFromLang(lang?: String): {
+export function getLocalizationFromLang(lang?: string): {
   language: LanguageCode;
   country: CountryCode;
 } {
