@@ -1,1 +1,1 @@
-export {loader} from '~/routes/[robots.txt]';
+export { loader } from '~/routes/[robots.txt]';

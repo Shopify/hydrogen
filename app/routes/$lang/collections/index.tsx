@@ -1,4 +1,4 @@
-import Component, {loader, meta} from '~/routes/collections/index';
+import Component, { loader, meta } from '~/routes/collections/index';
 
-export {loader, meta};
+export { loader, meta };
 export default Component;

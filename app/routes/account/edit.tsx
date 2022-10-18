@@ -1,21 +1,20 @@
-import {json, redirect, type ActionFunction} from '@remix-run/cloudflare';
+import { json, redirect, type ActionFunction } from "@remix-run/cloudflare";
 import {
   useActionData,
   Form,
   useOutletContext,
   useTransition,
-} from '@remix-run/react';
+} from "@remix-run/react";
 import type {
   Customer,
   CustomerUpdateInput,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
-import clsx from 'clsx';
-import invariant from 'tiny-invariant';
-
-import {Button, Text} from '~/components';
-import {getCustomer, updateCustomer} from '~/data';
-import {getSession} from '~/lib/session.server';
-import {getInputStyleClasses} from '~/lib/utils';
+} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+import clsx from "clsx";
+import invariant from "tiny-invariant";
+import { Button, Text } from "~/components";
+import { getCustomer, updateCustomer } from "~/data";
+import { getSession } from "~/lib/session.server";
+import { getInputStyleClasses } from "~/lib/utils";
 
 export interface AccountOutletContext {
   customer: Customer;
@@ -35,51 +34,51 @@ export interface ActionData {
   };
 }
 
-const badRequest = (data: ActionData) => json(data, {status: 400});
+const badRequest = (data: ActionData) => json(data, { status: 400 });
 
 const formDataHas = (formData: FormData, key: string) => {
   if (!formData.has(key)) return false;
 
   const value = formData.get(key);
-  return typeof value === 'string' && value.length > 0;
+  return typeof value === "string" && value.length > 0;
 };
 
-export const action: ActionFunction = async ({request, context, params}) => {
+export const action: ActionFunction = async ({ request, context, params }) => {
   const [formData, session] = await Promise.all([
     request.formData(),
     getSession(request, context),
   ]);
 
-  const customerAccessToken = await session.get('customerAccessToken');
+  const customerAccessToken = await session.get("customerAccessToken");
 
   invariant(
     customerAccessToken,
-    'You must be logged in to update your account details.',
+    "You must be logged in to update your account details."
   );
 
   // Double-check current user is logged in.
   // Will throw a logout redirect if not.
-  await getCustomer({customerAccessToken, request, context, params});
+  await getCustomer({ customerAccessToken, request, context, params });
 
   if (
-    formDataHas(formData, 'newPassword') &&
-    !formDataHas(formData, 'currentPassword')
+    formDataHas(formData, "newPassword") &&
+    !formDataHas(formData, "currentPassword")
   ) {
     return badRequest({
       fieldErrors: {
         currentPassword:
-          'Please enter your current password before entering a new password.',
+          "Please enter your current password before entering a new password.",
       },
     });
   }
 
   if (
-    formData.has('newPassword') &&
-    formData.get('newPassword') !== formData.get('newPassword2')
+    formData.has("newPassword") &&
+    formData.get("newPassword") !== formData.get("newPassword2")
   ) {
     return badRequest({
       fieldErrors: {
-        newPassword2: 'New passwords must match.',
+        newPassword2: "New passwords must match.",
       },
     });
   }
@@ -87,22 +86,22 @@ export const action: ActionFunction = async ({request, context, params}) => {
   try {
     const customer: CustomerUpdateInput = {};
 
-    formDataHas(formData, 'firstName') &&
-      (customer.firstName = formData.get('firstName') as string);
-    formDataHas(formData, 'lastName') &&
-      (customer.lastName = formData.get('lastName') as string);
-    formDataHas(formData, 'email') &&
-      (customer.email = formData.get('email') as string);
-    formDataHas(formData, 'phone') &&
-      (customer.phone = formData.get('phone') as string);
-    formDataHas(formData, 'newPassword') &&
-      (customer.password = formData.get('newPassword') as string);
+    formDataHas(formData, "firstName") &&
+      (customer.firstName = formData.get("firstName") as string);
+    formDataHas(formData, "lastName") &&
+      (customer.lastName = formData.get("lastName") as string);
+    formDataHas(formData, "email") &&
+      (customer.email = formData.get("email") as string);
+    formDataHas(formData, "phone") &&
+      (customer.phone = formData.get("phone") as string);
+    formDataHas(formData, "newPassword") &&
+      (customer.password = formData.get("newPassword") as string);
 
-    await updateCustomer({customerAccessToken, customer});
+    await updateCustomer({ customerAccessToken, customer });
 
-    return redirect('/account');
+    return redirect("/account");
   } catch (error: any) {
-    return badRequest({formError: error.message});
+    return badRequest({ formError: error.message });
   }
 };
 
@@ -118,7 +117,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
  */
 export default function AccountDetailsEdit() {
   const actionData = useActionData<ActionData>();
-  const {customer} = useOutletContext<AccountOutletContext>();
+  const { customer } = useOutletContext<AccountOutletContext>();
   const transition = useTransition();
 
   return (
@@ -141,7 +140,7 @@ export default function AccountDetailsEdit() {
             autoComplete="given-name"
             placeholder="First name"
             aria-label="First name"
-            defaultValue={customer.firstName ?? ''}
+            defaultValue={customer.firstName ?? ""}
           />
         </div>
         <div className="mt-3">
@@ -153,7 +152,7 @@ export default function AccountDetailsEdit() {
             autoComplete="family-name"
             placeholder="Last name"
             aria-label="Last name"
-            defaultValue={customer.lastName ?? ''}
+            defaultValue={customer.lastName ?? ""}
           />
         </div>
         <div className="mt-3">
@@ -165,7 +164,7 @@ export default function AccountDetailsEdit() {
             autoComplete="tel"
             placeholder="Mobile"
             aria-label="Mobile"
-            defaultValue={customer.phone ?? ''}
+            defaultValue={customer.phone ?? ""}
           />
         </div>
         <div className="mt-3">
@@ -178,7 +177,7 @@ export default function AccountDetailsEdit() {
             required
             placeholder="Email address"
             aria-label="Email address"
-            defaultValue={customer.email ?? ''}
+            defaultValue={customer.email ?? ""}
           />
           {actionData?.fieldErrors?.email && (
             <p className="text-red-500 text-xs">
@@ -213,8 +212,8 @@ export default function AccountDetailsEdit() {
           size="fine"
           color="subtle"
           className={clsx(
-            'mt-1',
-            actionData?.fieldErrors?.newPassword && 'text-red-500',
+            "mt-1",
+            actionData?.fieldErrors?.newPassword && "text-red-500"
           )}
         >
           Passwords must be at least 8 characters.
@@ -231,9 +230,9 @@ export default function AccountDetailsEdit() {
             variant="primary"
             width="full"
             type="submit"
-            disabled={transition.state !== 'idle'}
+            disabled={transition.state !== "idle"}
           >
-            {transition.state !== 'idle' ? 'Saving' : 'Save'}
+            {transition.state !== "idle" ? "Saving" : "Save"}
           </Button>
         </div>
         <div className="mb-4">
@@ -263,7 +262,7 @@ function Password({
         name={name}
         type="password"
         autoComplete={
-          name === 'currentPassword' ? 'current-password' : undefined
+          name === "currentPassword" ? "current-password" : undefined
         }
         placeholder={label}
         aria-label={label}
