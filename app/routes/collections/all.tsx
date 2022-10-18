@@ -1,4 +1,4 @@
-import { redirect } from "@remix-run/cloudflare";
+import { redirect } from "@hydrogen/remix";
 
 export async function loader() {
   return redirect("/products");

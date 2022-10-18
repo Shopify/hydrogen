@@ -1,22 +1,19 @@
-import {
-  type LoaderArgs,
-} from "@remix-run/cloudflare";
+import { type LoaderArgs } from "@hydrogen/remix";
 
-export const loader = ({request}: LoaderArgs) => {
-
+export const loader = ({ request }: LoaderArgs) => {
   const url = new URL(request.url);
 
-  return new Response(robotsTxtData({url: url.origin}), {
+  return new Response(robotsTxtData({ url: url.origin }), {
     status: 200,
     headers: {
-      'content-type': 'text/plain',
+      "content-type": "text/plain",
       // Cache for 24 hours
-      'cache-control': `max-age=${60 * 60 * 24}`,
+      "cache-control": `max-age=${60 * 60 * 24}`,
     },
   });
-}
+};
 
-function robotsTxtData({url}: {url: string}) {
+function robotsTxtData({ url }: { url: string }) {
   const sitemapUrl = url ? `${url}/sitemap.xml` : undefined;
 
   return `
@@ -28,7 +25,7 @@ Disallow: /checkouts/
 Disallow: /checkout
 Disallow: /carts
 Disallow: /account
-${sitemapUrl ? `Sitemap: ${sitemapUrl}` : ''}
+${sitemapUrl ? `Sitemap: ${sitemapUrl}` : ""}
 
 # Google adsbot ignores robots.txt unless specifically named!
 User-agent: adsbot-google

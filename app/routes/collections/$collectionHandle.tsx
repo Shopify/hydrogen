@@ -3,7 +3,7 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LoaderArgs,
-} from "@remix-run/cloudflare";
+} from "@hydrogen/remix";
 import { useLoaderData } from "@remix-run/react";
 import type { Collection as CollectionType } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import invariant from "tiny-invariant";
@@ -17,7 +17,11 @@ export async function loader({ params, request }: LoaderArgs) {
   invariant(collectionHandle, "Missing collectionHandle param");
 
   const cursor = new URL(request.url).searchParams.get("cursor") ?? undefined;
-  const collection = await getCollection({ handle: collectionHandle, cursor, params });
+  const collection = await getCollection({
+    handle: collectionHandle,
+    cursor,
+    params,
+  });
 
   return json({ collection });
 }

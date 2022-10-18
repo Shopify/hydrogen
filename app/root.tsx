@@ -3,7 +3,7 @@ import {
   type LinksFunction,
   type LoaderFunction,
   type MetaFunction,
-} from "@remix-run/cloudflare";
+} from "@hydrogen/remix";
 import {
   Links,
   LiveReload,
@@ -47,7 +47,7 @@ export const meta: MetaFunction = () => ({
 export const loader: LoaderFunction = async function loader({
   request,
   context,
-  params
+  params,
 }) {
   const session = await getSession(request, context);
   const cartId = await session.get("cartId");

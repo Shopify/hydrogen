@@ -1,8 +1,4 @@
-import {
-  json,
-  type LoaderArgs,
-  type MetaFunction,
-} from "@remix-run/cloudflare";
+import { json, type LoaderArgs, type MetaFunction } from "@hydrogen/remix";
 import { useLoaderData } from "@remix-run/react";
 import { getPolicyContent } from "~/data";
 
