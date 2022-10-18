@@ -3,7 +3,7 @@ import {
   type LinksFunction,
   type LoaderFunction,
   type MetaFunction,
-} from '@remix-run/cloudflare';
+} from "@remix-run/cloudflare";
 import {
   Links,
   LiveReload,
@@ -14,49 +14,48 @@ import {
   useCatch,
   useLoaderData,
   useMatches,
-} from '@remix-run/react';
+} from "@remix-run/react";
+import { Layout } from "~/components";
+import { getCart, getLayoutData, getCountries } from "~/data";
+import { GenericError } from "./components/GenericError";
+import { NotFound } from "./components/NotFound";
+import { getSession } from "./lib/session.server";
 
-import {GenericError} from './components/GenericError';
-import {NotFound} from './components/NotFound';
-import {getSession} from './lib/session.server';
-import styles from './styles/app.css';
-
-import {getCart, getLayoutData, getCountries} from '~/data';
-import {Layout} from '~/components';
+import styles from "./styles/app.css";
 
 export const links: LinksFunction = () => {
   return [
-    {rel: 'stylesheet', href: styles},
+    { rel: "stylesheet", href: styles },
     {
-      rel: 'preconnect',
-      href: 'https://cdn.shopify.com',
+      rel: "preconnect",
+      href: "https://cdn.shopify.com",
     },
     {
-      rel: 'preconnect',
-      href: 'https://shop.app',
+      rel: "preconnect",
+      href: "https://shop.app",
     },
-    {rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg'},
+    { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
   ];
 };
 
 export const meta: MetaFunction = () => ({
-  charset: 'utf-8',
-  title: 'Hydrogen',
-  viewport: 'width=device-width,initial-scale=1',
+  charset: "utf-8",
+  title: "Hydrogen",
+  viewport: "width=device-width,initial-scale=1",
 });
 
 export const loader: LoaderFunction = async function loader({
   request,
   context,
-  params,
+  params
 }) {
   const session = await getSession(request, context);
-  const cartId = await session.get('cartId');
+  const cartId = await session.get("cartId");
 
   return defer({
     layout: await getLayoutData(params),
     countries: getCountries(),
-    cart: cartId ? getCart({cartId, params}) : undefined,
+    cart: cartId ? getCart({ cartId, params }) : undefined,
   });
 };
 
@@ -89,7 +88,7 @@ export function CatchBoundary() {
   return (
     <html lang="en">
       <head>
-        <title>{isNotFound ? 'Not found' : 'Error'}</title>
+        <title>{isNotFound ? "Not found" : "Error"}</title>
         <Meta />
         <Links />
       </head>
@@ -99,7 +98,7 @@ export function CatchBoundary() {
             <NotFound type={caught.data?.pageType} />
           ) : (
             <GenericError
-              error={{message: `${caught.status} ${caught.data}`}}
+              error={{ message: `${caught.status} ${caught.data}` }}
             />
           )}
         </Layout>
@@ -109,7 +108,7 @@ export function CatchBoundary() {
   );
 }
 
-export function ErrorBoundary({error}: {error: Error}) {
+export function ErrorBoundary({ error }: { error: Error }) {
   const [root] = useMatches();
 
   return (
