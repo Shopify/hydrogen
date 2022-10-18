@@ -7,7 +7,6 @@
   "watch": true,
   "buildWatchPaths": [
     "./build/index.mjs",
-    "./build/_assets",
     "./build/node_modules",
     "./worker/index.ts"
   ],
