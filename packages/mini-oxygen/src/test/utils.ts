@@ -23,13 +23,8 @@ export async function createFixture(name: string): Promise<Fixture> {
     assets: join(directory, 'assets'),
   };
 
-  function write(fileName: string, content: string) {
-    return writeFile(join(directory, fileName), content);
-  }
-
   await ensureDir(directory);
-  writeFile(join(directory, '.gitignore'), '*');
-
+  await writeFile(join(directory, '.gitignore'), '*');
   await writeFile(
     join(directory, 'mini-oxygen.config.json'),
     JSON.stringify(
