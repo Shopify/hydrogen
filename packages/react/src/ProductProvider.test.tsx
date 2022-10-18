@@ -42,7 +42,6 @@ describe('<ProductProvider />', () => {
   });
 
   it('provides setSelectedOption callback', async () => {
-    // @ts-expect-error there's an issue with this library and TS
     const user = userEvent.setup();
 
     function Component() {
@@ -122,7 +121,6 @@ describe('<ProductProvider />', () => {
   });
 
   it('provides setSelectedVariant callback', async () => {
-    // @ts-expect-error there's an issue with this library and TS
     const user = userEvent.setup();
 
     function Component() {
@@ -174,7 +172,6 @@ describe('<ProductProvider />', () => {
   });
 
   it('allows setSelectedVariant to be called with null to deselect', async () => {
-    // @ts-expect-error there's an issue with this library and TS
     const user = userEvent.setup();
 
     function Component() {
@@ -205,7 +202,6 @@ describe('<ProductProvider />', () => {
   });
 
   it('provides out of stock helper', async () => {
-    // @ts-expect-error there's an issue with this library and TS
     const user = userEvent.setup();
 
     function Component() {
@@ -261,7 +257,6 @@ describe('<ProductProvider />', () => {
   });
 
   it('supports selecting a selling plan', async () => {
-    // @ts-expect-error there's an issue with this library and TS
     const user = userEvent.setup();
 
     function Component() {

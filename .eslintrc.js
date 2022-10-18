@@ -6,7 +6,11 @@ module.exports = {
       version: 28,
     },
   },
-  ignorePatterns: ['**/storefront-api-types.d.ts', 'examples/**'],
+  ignorePatterns: [
+    '**/storefront-api-types.d.ts',
+    '**/dist/**',
+    '**/coverage/**',
+  ],
   root: true,
   plugins: ['eslint-plugin-tsdoc'],
   extends: [

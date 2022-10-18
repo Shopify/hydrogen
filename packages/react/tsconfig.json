@@ -6,7 +6,7 @@
     "strict": true,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "NodeNext",
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "declaration": true,
@@ -14,9 +14,5 @@
     "jsx": "react-jsx",
     "types": ["jest"]
   },
-  "include": ["src/**/*", "globals.d.ts", "vitest.setup.ts"],
-  "exclude": [
-    // exclude stories until https://github.com/tajo/ladle/issues/267 is fixed
-    "src/**/*.stories.tsx"
-  ]
+  "include": ["src/**/*", "globals.d.ts", "vitest.setup.ts"]
 }

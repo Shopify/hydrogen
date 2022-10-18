@@ -35,16 +35,20 @@ const TemplateChildren = () => {
   return (
     <>
       Use the Controls tab change these values on the fly
-      {Object.keys(shopValues).map((key) => {
-        return (
-          <p key={key}>
-            <strong>{key}: </strong>
-            {typeof shopValues[key] === 'string'
-              ? shopValues[key]
-              : JSON.stringify(shopValues[key])}
-          </p>
-        );
-      })}
+      {(Object.keys(shopValues) as Array<keyof typeof shopValues>).map(
+        (key) => {
+          return (
+            <p key={key}>
+              <>
+                <strong>{key}: </strong>
+                {typeof shopValues[key] === 'string'
+                  ? shopValues[key]
+                  : JSON.stringify(shopValues[key])}
+              </>
+            </p>
+          );
+        }
+      )}
     </>
   );
 };

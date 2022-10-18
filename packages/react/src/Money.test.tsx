@@ -1,4 +1,3 @@
-import React from 'react';
 import {render, screen} from '@testing-library/react';
 import {Money} from './Money.js';
 import {ShopifyProvider} from './ShopifyProvider.js';

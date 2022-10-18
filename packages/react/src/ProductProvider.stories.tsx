@@ -15,13 +15,15 @@ const TemplateChildren = () => {
   const prodHook = useProduct();
   return (
     <>
-      {Object.keys(prodHook).map((key) => {
+      {(Object.keys(prodHook) as Array<keyof typeof prodHook>).map((key) => {
         return (
           <p key={key}>
-            <strong>{key}: </strong>
-            {typeof prodHook[key] === 'string'
-              ? prodHook[key]
-              : JSON.stringify(prodHook[key])}
+            <>
+              <strong>{key}: </strong>
+              {typeof prodHook[key] === 'string'
+                ? prodHook[key]
+                : JSON.stringify(prodHook[key])}
+            </>
           </p>
         );
       })}

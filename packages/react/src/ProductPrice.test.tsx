@@ -1,4 +1,3 @@
-import React from 'react';
 import {render, screen} from '@testing-library/react';
 import {getProduct} from './ProductProvider.test.helpers.js';
 import {ProductPrice} from './ProductPrice.js';

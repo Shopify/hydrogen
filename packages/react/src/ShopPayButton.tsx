@@ -1,4 +1,3 @@
-import React from 'react';
 import {useShop} from './ShopifyProvider.js';
 import {useLoadScript} from './load-script.js';
 
