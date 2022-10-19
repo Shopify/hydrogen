@@ -5,6 +5,8 @@ import * as remixBuild from "remix-build";
 const requestHandler = createRequestHandler({
   build: remixBuild,
   mode: process.env.NODE_ENV,
+  isProxiedAsset: () => false,
+  publicPath: remixBuild.publicPath,
 });
 
 export default {
