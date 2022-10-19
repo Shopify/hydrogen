@@ -8,5 +8,5 @@ module.exports = {
   assetsBuildDirectory: "build/client/build",
   devServerBroadcastDelay: 1000,
   devServerPort: 8002,
-  ignoredRouteFiles: ["**/.*"],
+  ignoredRouteFiles: ['**/.*'],
 };

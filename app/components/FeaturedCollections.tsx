@@ -1,11 +1,11 @@
-import { Image } from "@shopify/hydrogen-ui-alpha";
-import type { Collection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Link } from "@remix-run/react";
-import { Heading, Section, Grid } from "~/components";
+import {Image} from '@shopify/hydrogen-ui-alpha';
+import type {Collection} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {Link} from '@remix-run/react';
+import {Heading, Section, Grid} from '~/components';
 
 export function FeaturedCollections({
   collections,
-  title = "Collections",
+  title = 'Collections',
   ...props
 }: {
   collections: Collection[];
@@ -38,7 +38,7 @@ export function FeaturedCollections({
                       widths={[400, 500, 600, 700, 800, 900]}
                       loaderOptions={{
                         scale: 2,
-                        crop: "center",
+                        crop: 'center',
                       }}
                     />
                   )}

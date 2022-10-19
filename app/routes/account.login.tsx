@@ -4,66 +4,66 @@ import {
   json,
   type ActionFunction,
   type LoaderArgs,
-} from "@hydrogen/remix";
-import { Form, useActionData, useLoaderData } from "@remix-run/react";
-import { useState } from "react";
-import { login, StorefrontApiError } from "~/data";
-import { getSession } from "~/lib/session.server";
-import { getInputStyleClasses } from "~/lib/utils";
-import { Link } from "~/components";
+} from '@hydrogen/remix';
+import {Form, useActionData, useLoaderData} from '@remix-run/react';
+import {useState} from 'react';
+import {login, StorefrontApiError} from '~/data';
+import {getSession} from '~/lib/session.server';
+import {getInputStyleClasses} from '~/lib/utils';
+import {Link} from '~/components';
 
-export async function loader({ request, context }: LoaderArgs) {
+export async function loader({request, context}: LoaderArgs) {
   const session = await getSession(request, context);
-  const customerAccessToken = await session.get("customerAccessToken");
+  const customerAccessToken = await session.get('customerAccessToken');
 
   if (customerAccessToken) {
-    return redirect("/account");
+    return redirect('/account');
   }
 
   // TODO: Query for this?
-  return json({ shopName: "Hydrogen" });
+  return json({shopName: 'Hydrogen'});
 }
 
 type ActionData = {
   formError?: string;
 };
 
-const badRequest = (data: ActionData) => json(data, { status: 400 });
+const badRequest = (data: ActionData) => json(data, {status: 400});
 
-export const action: ActionFunction = async ({ request, context }) => {
+export const action: ActionFunction = async ({request, context}) => {
   const [formData, session] = await Promise.all([
     request.formData(),
     getSession(request, context),
   ]);
 
-  const email = formData.get("email");
-  const password = formData.get("password");
+  const email = formData.get('email');
+  const password = formData.get('password');
 
   if (
     !email ||
     !password ||
-    typeof email !== "string" ||
-    typeof password !== "string"
+    typeof email !== 'string' ||
+    typeof password !== 'string'
   ) {
     return badRequest({
-      formError: "Please provide both an email and a password.",
+      formError: 'Please provide both an email and a password.',
     });
   }
 
   try {
-    console.log("LOGGING IN");
-    const customerAccessToken = await login({ email, password });
-    session.set("customerAccessToken", customerAccessToken);
+    console.log('LOGGING IN');
+    const customerAccessToken = await login({email, password});
+    session.set('customerAccessToken', customerAccessToken);
 
-    return redirect("/account", {
+    return redirect('/account', {
       headers: {
-        "Set-Cookie": await session.commit(),
+        'Set-Cookie': await session.commit(),
       },
     });
   } catch (error: any) {
     if (error instanceof StorefrontApiError) {
       return badRequest({
-        formError: "Something went wrong. Please try again later.",
+        formError: 'Something went wrong. Please try again later.',
       });
     }
 
@@ -73,23 +73,23 @@ export const action: ActionFunction = async ({ request, context }) => {
      */
     return badRequest({
       formError:
-        "Sorry. We did not recognize either your email or password. Please try to sign in again or create a new account.",
+        'Sorry. We did not recognize either your email or password. Please try to sign in again or create a new account.',
     });
   }
 };
 
 export const meta: MetaFunction = () => {
   return {
-    title: "Login",
+    title: 'Login',
   };
 };
 
 export default function Login() {
-  const { shopName } = useLoaderData<typeof loader>();
+  const {shopName} = useLoaderData<typeof loader>();
   const actionData = useActionData<ActionData>();
   const [nativeEmailError, setNativeEmailError] = useState<null | string>(null);
   const [nativePasswordError, setNativePasswordError] = useState<null | string>(
-    null
+    null,
   );
 
   return (
@@ -123,8 +123,8 @@ export default function Login() {
                 setNativeEmailError(
                   event.currentTarget.value.length &&
                     !event.currentTarget.validity.valid
-                    ? "Invalid email address"
-                    : null
+                    ? 'Invalid email address'
+                    : null,
                 );
               }}
             />
@@ -154,15 +154,15 @@ export default function Login() {
                 } else {
                   setNativePasswordError(
                     event.currentTarget.validity.valueMissing
-                      ? "Please enter a password"
-                      : "Passwords must be at least 8 characters"
+                      ? 'Please enter a password'
+                      : 'Passwords must be at least 8 characters',
                   );
                 }
               }}
             />
             {nativePasswordError && (
               <p className="text-red-500 text-xs">
-                {" "}
+                {' '}
                 {nativePasswordError} &nbsp;
               </p>
             )}

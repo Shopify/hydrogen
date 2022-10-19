@@ -1,9 +1,9 @@
-import { Form } from "@remix-run/react";
+import {Form} from '@remix-run/react';
 import type {
   Customer,
   MailingAddress,
-} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Button, Link, Text } from "~/components";
+} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {Button, Link, Text} from '~/components';
 
 export function AccountAddressBook({
   customer,
@@ -68,8 +68,8 @@ function Address({
       <ul className="flex-1 flex-row">
         {(address.firstName || address.lastName) && (
           <li>
-            {"" +
-              (address.firstName && address.firstName + " ") +
+            {'' +
+              (address.firstName && address.firstName + ' ') +
               address?.lastName}
           </li>
         )}

@@ -1,4 +1,4 @@
-import Component, { loader, action } from '~/routes/account.login';
+import Component, {loader, action} from '~/routes/account.login';
 
-export { loader, action };
+export {loader, action};
 export default Component;

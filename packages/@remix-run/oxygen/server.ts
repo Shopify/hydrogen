@@ -33,7 +33,7 @@ export function createRequestHandler<Context = unknown>({
     } catch (e) {
       console.error(e);
 
-      return new Response("Internal Error", { status: 500 });
+      return new Response('Internal Error', {status: 500});
     }
   };
 }
