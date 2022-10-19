@@ -1,10 +1,5 @@
 import {Disclosure, Listbox} from '@headlessui/react';
-import {
-  type ActionFunction,
-  defer,
-  type LoaderArgs,
-  redirect,
-} from '@hydrogen/remix';
+import {defer, type LoaderArgs} from '@hydrogen/remix';
 import {
   useLoaderData,
   Await,
@@ -12,6 +7,7 @@ import {
   Form,
   useLocation,
   useTransition,
+  useFetcher,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-ui-alpha';
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
@@ -28,16 +24,11 @@ import {
   Text,
   Link,
 } from '~/components';
-import {
-  addLineItem,
-  createCart,
-  getProductData,
-  getRecommendedProducts,
-} from '~/data';
+import {getProductData, getRecommendedProducts} from '~/data';
 import {getExcerpt} from '~/lib/utils';
+import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
-import {getSession} from '~/lib/session.server';
 
 export const loader = async ({params, request}: LoaderArgs) => {
   const {productHandle} = params;
@@ -53,47 +44,6 @@ export const loader = async ({params, request}: LoaderArgs) => {
     product,
     shop,
     recommended: getRecommendedProducts(product.id, params),
-  });
-};
-
-export const action: ActionFunction = async ({request, context, params}) => {
-  const [body, session] = await Promise.all([
-    request.text(),
-    getSession(request, context),
-  ]);
-  const formData = new URLSearchParams(body);
-
-  const variantId = formData.get('variantId');
-
-  invariant(variantId, 'Missing variantId');
-
-  // 1. Grab the cart ID from the session
-  const cartId = await session.get('cartId');
-
-  // We only need a Set-Cookie header if we're creating a new cart (aka adding cartId to the session)
-  const headers = new Headers();
-
-  // 2. If none exists, create a cart (SFAPI)
-  if (!cartId) {
-    const cart = await createCart({
-      cart: {lines: [{merchandiseId: variantId}]},
-      params,
-    });
-
-    session.set('cartId', cart.id);
-    headers.set('Set-Cookie', await session.commit());
-  } else {
-    // 3. Else, update the cart with the variant ID (SFAPI)
-    await addLineItem({
-      cartId,
-      lines: [{merchandiseId: variantId}],
-      params,
-    });
-  }
-
-  // 4. Update the session with the cart ID (response headers)
-  return redirect(`/products/${params.productHandle}`, {
-    headers,
   });
 };
 
@@ -162,6 +112,8 @@ export default function Product() {
 }
 
 export function ProductForm() {
+  const addToCartFetcher = useFetcher();
+  const isHydrated = useIsHydrated();
   const closeRef = useRef<HTMLButtonElement>(null);
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
@@ -325,12 +277,24 @@ export function ProductForm() {
           ))}
         <div className="grid items-stretch gap-4">
           {selectedVariant && (
-            <Form replace method="post">
+            <addToCartFetcher.Form method="post" action="/cart">
               <input
                 type="hidden"
                 name="variantId"
                 defaultValue={selectedVariant?.id}
               />
+              <input type="hidden" name="intent" defaultValue="addToCart" />
+
+              {/* used to trigger a redirect back to the PDP when JS is disabled */}
+              {isHydrated ? null : (
+                <input
+                  type="hidden"
+                  name="redirectTo"
+                  defaultValue={`products/${
+                    product.handle
+                  }?${searchParamsWithDefaults.toString()}`}
+                />
+              )}
               <Button
                 width="full"
                 variant={isOutOfStock ? 'secondary' : 'primary'}
@@ -361,7 +325,7 @@ export function ProductForm() {
                   </Text>
                 )}
               </Button>
-            </Form>
+            </addToCartFetcher.Form>
           )}
           {!isOutOfStock && (
             <ShopPayButton variantIds={[selectedVariant?.id!]} />
