@@ -4,7 +4,7 @@
   "compilerOptions": {
     "lib": ["DOM", "ES2019"],
     "target": "ES2019",
-    "types": ["@cloudflare/workers-types"],
+    "types": ["@shopify/oxygen-workers-types"],
 
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,

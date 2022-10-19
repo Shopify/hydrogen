@@ -1,0 +1,14 @@
+{
+  "port": 3000,
+  "workerFile": "build/worker/index.js",
+  "assetsDir": "build/client",
+  "publicPath": "",
+  "buildCommand": "npm run bundle:worker && npm run copy:assets",
+  "watch": true,
+  "buildWatchPaths": ["./build/server/index.js", "./worker/index.ts"],
+  "autoReload": true,
+  "modules": true,
+  "env": {
+    "ENCRYPTION_KEY": "foobar"
+  }
+}
