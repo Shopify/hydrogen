@@ -22,6 +22,7 @@ import {NotFound} from './components/NotFound';
 import {getSession} from './lib/session.server';
 
 import styles from './styles/app.css';
+import favicon from '../public/favicon.svg';
 
 export const links: LinksFunction = () => {
   return [
@@ -34,7 +35,7 @@ export const links: LinksFunction = () => {
       rel: 'preconnect',
       href: 'https://shop.app',
     },
-    {rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg'},
+    {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 };
 
