@@ -8,9 +8,9 @@ export default async function handleRequest(
   responseHeaders: Headers,
   remixContext: EntryContext,
 ) {
-  if (new URL(request.url).pathname === "/__health") {
+  if (new URL(request.url).pathname === '/__health') {
     // TODO: move this to @hydrogen/remix ?
-    return new Response(null, { status: 200 });
+    return new Response(null, {status: 200});
   }
 
   const body = await renderToReadableStream(
