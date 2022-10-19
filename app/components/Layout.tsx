@@ -34,9 +34,10 @@ export function Layout({
   children: React.ReactNode;
   data?: {
     layout: LayoutData;
+    toggleCart: boolean;
   };
 }) {
-  const {layout} = data || {};
+  const {layout, toggleCart} = data || {};
 
   return (
     <>
@@ -49,6 +50,7 @@ export function Layout({
         <Header
           title={layout?.shop.name ?? 'Hydrogen'}
           menu={layout?.headerMenu}
+          toggleCart={toggleCart}
         />
         <main role="main" id="mainContent" className="flex-grow">
           {children}
@@ -59,20 +61,35 @@ export function Layout({
   );
 }
 
-function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
+function Header({
+  title,
+  menu,
+  toggleCart,
+}: {
+  title: string;
+  menu?: EnhancedMenu;
+  toggleCart?: boolean;
+}) {
   const isHome = useIsHomePath();
 
   const {
     isOpen: isCartOpen,
     openDrawer: openCart,
     closeDrawer: closeCart,
-  } = useDrawer();
+  } = useDrawer(toggleCart);
 
   const {
     isOpen: isMenuOpen,
     openDrawer: openMenu,
     closeDrawer: closeMenu,
   } = useDrawer();
+
+  useEffect(() => {
+    // toggle the cart drawer after add to cart
+    if (toggleCart) {
+      openCart();
+    }
+  }, [openCart, toggleCart]);
 
   return (
     <>

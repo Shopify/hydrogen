@@ -38,6 +38,10 @@ export async function getSession(request: Request, context: AppLoadContext) {
       session.unset(key);
     },
 
+    flash(key: string, value: any): void {
+      session.flash(key, value);
+    },
+
     async commit(): Promise<string> {
       return await sessionStorage.commitSession(session);
     },

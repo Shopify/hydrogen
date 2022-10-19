@@ -18,7 +18,7 @@ export async function loader({params}: LoaderArgs) {
       headers: {
         'Cache-Control': 'max-age=600',
       },
-    },
+    }
   );
 }
 
@@ -52,9 +52,6 @@ export const action: ActionFunction = async ({request, context, params}) => {
           cart: {lines: [{merchandiseId: variantId}]},
           params,
         });
-
-        session.set('cartId', cart.id);
-        headers.set('Set-Cookie', await session.commit());
       } else {
         // 3. Else, update the cart with the variant ID (SFAPI)
         cart = await addLineItem({
@@ -64,13 +61,17 @@ export const action: ActionFunction = async ({request, context, params}) => {
         });
       }
 
+      session.flash('toggleCart', true);
+      session.set('cartId', cart.id);
+      headers.set('Set-Cookie', await session.commit());
+
       // if JS is disabled, this will redirect back to the referer
       if (redirectTo) {
-        return redirect(redirectTo);
+        return redirect(redirectTo, {headers});
       }
 
       // returned inside the fetcher.data
-      return json({cart});
+      return json({cart}, {headers});
     }
 
     case 'set-quantity': {

@@ -52,12 +52,22 @@ export const loader: LoaderFunction = async function loader({
 }) {
   const session = await getSession(request, context);
   const cartId = await session.get('cartId');
+  const toggleCart = await session.get('toggleCart');
 
-  return defer({
-    layout: await getLayoutData(params),
-    countries: getCountries(),
-    cart: cartId ? getCart({cartId, params}) : undefined,
-  });
+  return defer(
+    {
+      toggleCart: toggleCart ?? false,
+      layout: await getLayoutData(params),
+      countries: getCountries(),
+      cart: cartId ? getCart({cartId, params}) : undefined,
+    },
+    {
+      headers: {
+        // required to commit the flash of toggleCart
+        'Set-Cookie': await session.commit(),
+      },
+    },
+  );
 };
 
 export default function App() {
