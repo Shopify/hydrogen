@@ -53,7 +53,7 @@ export default function Journals() {
     <>
       <PageHeader heading={BLOG_HANDLE} />
       <Section>
-        <Grid as="ol" layout="blog" gap="blog">
+        <Grid as="ol" layout="blog">
           {articles.map((article, i) => (
             <ArticleCard
               blogHandle={BLOG_HANDLE.toLowerCase()}

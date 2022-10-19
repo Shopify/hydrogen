@@ -166,7 +166,7 @@ function MenuMobileNav({
 }) {
   const styles = {
     link: 'pb-1',
-    linkActive: 'pb-1 border-b-2',
+    linkActive: 'pb-1 border-b -mb-px',
   };
 
   return (
@@ -284,7 +284,7 @@ function DesktopHeader({
 
   const styles = {
     link: 'pb-1',
-    linkActive: 'pb-1 border-b-2',
+    linkActive: 'pb-1 border-b -mb-px',
     button:
       'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5',
     container: `${
