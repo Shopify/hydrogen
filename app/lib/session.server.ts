@@ -2,27 +2,27 @@ import {
   type AppLoadContext,
   createCookieSessionStorage,
   type SessionStorage,
-} from "@hydrogen/remix";
+} from '@hydrogen/remix';
 
 let sessionStorage: SessionStorage;
 
 export async function getSession(request: Request, context: AppLoadContext) {
   if (!context.env?.ENCRYPTION_KEY) {
-    throw new Error("ENCRYPTION_KEY environment variable is not set");
+    throw new Error('ENCRYPTION_KEY environment variable is not set');
   }
 
   sessionStorage ??= createCookieSessionStorage({
     cookie: {
-      name: "session",
+      name: 'session',
       httpOnly: true,
-      path: "/",
-      sameSite: "lax",
+      path: '/',
+      sameSite: 'lax',
       secrets: [context.env.ENCRYPTION_KEY],
     },
   });
 
   const session = await sessionStorage.getSession(
-    request.headers.get("Cookie")
+    request.headers.get('Cookie'),
   );
 
   return {
