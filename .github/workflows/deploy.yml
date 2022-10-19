@@ -1,16 +1,13 @@
 name: Deploy
 
-on:
-  workflow_dispatch:
-  push:
-    branches:
-      - main
+on: [push, workflow_dispatch]
 
 jobs:
   deploy:
-    runs-on: shopify-ubuntu-latest
-    if: ${{ github.repository_owner == 'shopify' }}
     name: Deploy to Oxygen
+    if: ${{ github.repository_owner == 'shopify' }}
+    timeout-minutes: 30
+    runs-on: shopify-ubuntu-latest
     steps:
       - name: Check out the code
         uses: actions/checkout@v2
@@ -29,7 +26,7 @@ jobs:
         uses: shopify/oxygenctl-action@v4
         with:
           path: .
-          oxygen_deployment_token: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_9928760 }}
+          oxygen_deployment_token: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_28966968 }}
           oxygen_worker_dir: build/worker
           oxygen_client_dir: build/client
           build_command: "HYDROGEN_ASSET_BASE_URL=$OXYGEN_ASSET_BASE_URL npm run build"
