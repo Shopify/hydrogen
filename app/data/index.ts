@@ -373,6 +373,7 @@ const PRODUCT_QUERY = `#graphql
       id
       title
       vendor
+      handle
       descriptionHtml
       options {
         name
