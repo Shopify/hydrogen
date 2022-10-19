@@ -1,7 +1,8 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
   type StorefrontApiResponseOk,
-} from '@shopify/hydrogen-ui-alpha';
+} from "@shopify/hydrogen-ui-alpha";
+import type { ExecutionArgs } from "graphql";
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -12,8 +13,8 @@ export type StorefrontClientProps = Parameters<
 export type Storefront = ReturnType<typeof createStorefrontClient>;
 
 export type HydrogenContext = {
-  [key: string]: any;
   storefront: Storefront;
+  [key: string]: unknown;
 };
 
 export function createStorefrontClient(clientOptions: StorefrontClientProps) {
@@ -25,7 +26,7 @@ export function createStorefrontClient(clientOptions: StorefrontClientProps) {
     variables,
   }: {
     query: string;
-    variables: Record<string, any>;
+    variables: ExecutionArgs["variableValues"];
   }): Promise<T> {
     const headers = getPublicTokenHeaders();
     // This needs to be application/json because we're sending JSON, not a graphql string
@@ -54,7 +55,8 @@ export function createStorefrontClient(clientOptions: StorefrontClientProps) {
       }
     }
 
-    const { data, errors } = await response.json() as StorefrontApiResponse<T>;
+    const { data, errors } =
+      (await response.json()) as StorefrontApiResponse<T>;
 
     if (errors) throwError(response, errors);
 

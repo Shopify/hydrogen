@@ -140,7 +140,7 @@ export default function Homepage() {
       {secondaryHero && (
         <Suspense fallback={<Hero {...skeletons[1]} />}>
           <Await resolve={secondaryHero}>
-            {({hero}) => {
+            {({ hero }) => {
               if (!hero) return null;
               return <Hero {...hero} />;
             }}
