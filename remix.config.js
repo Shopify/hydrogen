@@ -1,6 +1,7 @@
 /** @type {import('@remix-run/dev').AppConfig} */
+
 module.exports = {
-  publicPath: (process.env.HYDROGEN_ASSET_BASE_URL || '') + '/build/',
+  publicPath: (process.env.HYDROGEN_ASSET_BASE_URL || '/') + 'build/',
   serverModuleFormat: 'esm',
   serverBuildTarget: 'cloudflare-workers',
   serverBuildPath: 'build/server/index.js',
