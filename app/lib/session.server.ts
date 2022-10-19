@@ -2,7 +2,7 @@ import {
   type AppLoadContext,
   createCookieSessionStorage,
   type SessionStorage,
-} from "@remix-run/oxygen";
+} from "@hydrogen/remix";
 
 let sessionStorage: SessionStorage;
 

@@ -2,7 +2,7 @@ import {
   type ActionFunction,
   type AppLoadContext,
   redirect,
-} from "@remix-run/oxygen";
+} from "@hydrogen/remix";
 import { getSession } from "~/lib/session.server";
 
 export async function logout(request: Request, context: AppLoadContext) {

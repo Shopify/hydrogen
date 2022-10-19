@@ -3,7 +3,7 @@ import {
   type LinksFunction,
   type LoaderFunction,
   type MetaFunction,
-} from "@remix-run/oxygen";
+} from "@hydrogen/remix";
 import {
   Links,
   LiveReload,

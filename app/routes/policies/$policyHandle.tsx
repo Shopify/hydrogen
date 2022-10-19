@@ -1,4 +1,4 @@
-import { json, type LoaderArgs, type MetaFunction } from "@remix-run/oxygen";
+import { json, type LoaderArgs, type MetaFunction } from "@hydrogen/remix";
 import { useLoaderData } from "@remix-run/react";
 import { getPolicyContent } from "~/data";
 

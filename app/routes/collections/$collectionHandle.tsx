@@ -3,7 +3,7 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LoaderArgs,
-} from "@remix-run/oxygen";
+} from "@hydrogen/remix";
 import { useLoaderData } from "@remix-run/react";
 import type { Collection as CollectionType } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
 import invariant from "tiny-invariant";
