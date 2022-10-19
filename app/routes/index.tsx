@@ -1,4 +1,4 @@
-import { type LoaderArgs, type MetaFunction, defer } from "@remix-run/oxygen";
+import { type LoaderArgs, type MetaFunction, defer } from "@hydrogen/remix";
 import { Suspense } from "react";
 import { Await, useLoaderData } from "@remix-run/react";
 import { ProductSwimlane, FeaturedCollections, Hero } from "~/components";
