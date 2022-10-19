@@ -1,15 +1,16 @@
-import { type LoaderArgs, defer, type MetaFunction } from "@hydrogen/remix";
-import { Suspense } from "react";
-import { Await, useLoaderData } from "@remix-run/react";
-import { ProductSwimlane, FeaturedCollections, Hero } from "~/components";
-import { COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT } from "~/data";
-import { getHeroPlaceholder } from "~/lib/placeholders";
-import { getLocalizationFromLang } from "~/lib/utils";
+import {type LoaderArgs, defer, type MetaFunction} from '@hydrogen/remix';
+import {Suspense} from 'react';
+import {Await, useLoaderData} from '@remix-run/react';
+import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
+import {COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data';
+import {getHeroPlaceholder} from '~/lib/placeholders';
+import {getLocalizationFromLang} from '~/lib/utils';
 import type {
+  Collection,
   CollectionConnection,
   Metafield,
   ProductConnection,
-} from "@shopify/hydrogen-ui-alpha/storefront-api-types";
+} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 
 interface HomeSeoData {
   shop: {
@@ -23,34 +24,34 @@ interface CollectionHero {
   cta: Metafield;
   handle: string;
   heading: Metafield;
-  height?: "full";
-  loading?: "eager" | "lazy";
+  height?: 'full';
+  loading?: 'eager' | 'lazy';
   spread: Metafield;
   spreadSecondary: Metafield;
   top?: boolean;
 }
 
-export async function loader({ params, context: { storefront } }: LoaderArgs) {
-  const { language, country } = getLocalizationFromLang(params.lang);
+export async function loader({params, context: {storefront}}: LoaderArgs) {
+  const {language, country} = getLocalizationFromLang(params.lang);
 
-  const [{ shop }, { hero }] = await Promise.all([
-    storefront.query<{ shop: HomeSeoData }>({
-      query: HOMEPAGE_SEO_QUERY,
-      variables: { language, country },
-    }),
-    storefront.query<{ hero: CollectionHero }>({
-      query: COLLECTION_CONTENT_QUERY,
-      variables: {
-        language,
-        country,
-        handle: "freestyle",
-      },
-    }),
-  ]);
+  const {shop, hero} = await storefront.query<{
+    hero: CollectionHero;
+    shop: HomeSeoData;
+  }>({
+    query: HOMEPAGE_SEO_QUERY,
+    variables: {
+      language,
+      country,
+      handle: 'freestyle',
+    },
+  });
 
   return defer({
     shop,
     primaryHero: hero,
+    // @feedback
+    // Should these all be deferred? Can any of them be combined?
+    // Should there be fallback rendering while deferred?
     featuredProducts: storefront.query<{
       products: ProductConnection;
     }>({
@@ -60,12 +61,12 @@ export async function loader({ params, context: { storefront } }: LoaderArgs) {
         country,
       },
     }),
-    secondaryHero: storefront.query<{ hero: CollectionHero }>({
-      query: COLLECTION_CONTENT_QUERY,
+    secondaryHero: storefront.query<{hero: CollectionHero}>({
+      query: COLLECTION_HERO_QUERY,
       variables: {
         language,
         country,
-        handle: "backcountry",
+        handle: 'backcountry',
       },
     }),
     featuredCollections: storefront.query<{
@@ -77,12 +78,12 @@ export async function loader({ params, context: { storefront } }: LoaderArgs) {
         country,
       },
     }),
-    tertiaryHero: storefront.query<{ hero: CollectionHero }>({
-      query: COLLECTION_CONTENT_QUERY,
+    tertiaryHero: storefront.query<{hero: CollectionHero}>({
+      query: COLLECTION_HERO_QUERY,
       variables: {
         language,
         country,
-        handle: "winter-2022",
+        handle: 'winter-2022',
       },
     }),
   });
@@ -123,7 +124,7 @@ export default function Homepage() {
       {featuredProducts && (
         <Suspense>
           <Await resolve={featuredProducts}>
-            {({ products }) => {
+            {({products}) => {
               if (!products?.nodes) return null;
               return (
                 <ProductSwimlane
@@ -140,7 +141,7 @@ export default function Homepage() {
       {secondaryHero && (
         <Suspense fallback={<Hero {...skeletons[1]} />}>
           <Await resolve={secondaryHero}>
-            {({ hero }) => {
+            {({hero}) => {
               if (!hero) return null;
               return <Hero {...hero} />;
             }}
@@ -151,7 +152,7 @@ export default function Homepage() {
       {featuredCollections && (
         <Suspense>
           <Await resolve={featuredCollections}>
-            {({ collections }) => {
+            {({collections}) => {
               if (!collections?.nodes) return null;
               return (
                 <FeaturedCollections
@@ -167,7 +168,7 @@ export default function Homepage() {
       {tertiaryHero && (
         <Suspense fallback={<Hero {...skeletons[2]} />}>
           <Await resolve={tertiaryHero}>
-            {({ hero }) => {
+            {({hero}) => {
               if (!hero) return null;
               return <Hero {...hero} />;
             }}
@@ -179,7 +180,12 @@ export default function Homepage() {
 }
 
 const HOMEPAGE_SEO_QUERY = `#graphql
-  query shopInfo {
+  ${COLLECTION_CONTENT_FRAGMENT}
+  query collectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    hero: collection(handle: $handle) {
+      ...CollectionContent
+    }
     shop {
       name
       description
@@ -187,7 +193,7 @@ const HOMEPAGE_SEO_QUERY = `#graphql
   }
 `;
 
-const COLLECTION_CONTENT_QUERY = `#graphql
+const COLLECTION_HERO_QUERY = `#graphql
   ${COLLECTION_CONTENT_FRAGMENT}
   query collectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
@@ -197,7 +203,7 @@ const COLLECTION_CONTENT_QUERY = `#graphql
   }
 `;
 
-// @see: https://shopify.dev/api/storefront/2022-01/queries/products
+// @see: https://shopify.dev/api/storefront/latest/queries/products
 export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
   ${PRODUCT_CARD_FRAGMENT}
   query homepageFeaturedProducts($country: CountryCode, $language: LanguageCode)
@@ -210,7 +216,7 @@ export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
   }
 `;
 
-// @see: https://shopify.dev/api/storefront/2022-01/queries/collections
+// @see: https://shopify.dev/api/storefront/latest/queries/collections
 export const FEATURED_COLLECTIONS_QUERY = `#graphql
   query homepageFeaturedCollections($country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
