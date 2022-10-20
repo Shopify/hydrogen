@@ -18,7 +18,7 @@ export async function loader({params}: LoaderArgs) {
       headers: {
         'Cache-Control': 'max-age=600',
       },
-    },
+    }
   );
 }
 
@@ -69,8 +69,8 @@ export const action: ActionFunction = async ({request, context, params}) => {
         return redirect(redirectTo, {headers});
       }
 
-      // returned inside the fetcher.data
-      return json({cart}, {headers});
+      // returned inside the fetcher.data, addedToCart:true opens the cart drawer
+      return json({cart, addedToCart: true}, {headers});
     }
 
     case 'set-quantity': {
