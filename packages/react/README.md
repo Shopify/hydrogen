@@ -1,10 +1,12 @@
-# @shopify/hydrogen-react
+<div align="center">
 
-## IMPORTANT
+# Hydrogen UI React
 
-This is an beta version of `@shopify/hydrogen-react`.
+<a href="https://www.npmjs.com/package/@shopify/hydrogen-react"><img src="https://img.shields.io/npm/v/@shopify/hydrogen-react/latest.svg"></a> <a href="https://www.npmjs.com/package/@shopify/hydrogen-react"><img src="https://img.shields.io/npm/v/@shopify/hydrogen-react/next.svg"></a>
 
-Refer to how this package is [versioned](../../README.md#versioning).
+</div>
+
+**IMPORTANT:** This is an experimental version of `@shopify/hydrogen-react` and functionality is subject to change. Refer to how this package is [versioned](../../README.md#versioning).
 
 This document contains the following topics:
 
