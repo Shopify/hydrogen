@@ -8,7 +8,7 @@ import type {Country} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 export function useCountries(): Array<Country> | null {
   const rootData = useParentRouteData('/');
 
-  if (typeof rootData?.cart === 'undefined') {
+  if (typeof rootData?.countries?._data === 'undefined') {
     return null;
   }
 
