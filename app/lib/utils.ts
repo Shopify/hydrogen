@@ -272,7 +272,7 @@ export function getLocalizationFromLang(lang?: string): {
   };
 }
 
-export function prefixPathWithLocale(path: string) {
+export function usePrefixPathWithLocale(path: string) {
   const {lang} = useParams();
   const {language, country} = getLocalizationFromLang(lang);
 
