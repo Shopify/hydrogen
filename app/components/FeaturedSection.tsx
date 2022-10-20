@@ -15,10 +15,9 @@ export interface FeaturedData {
 
 export function FeaturedSection() {
   const featuredProductsFetcher = useFetcher();
-  const path = prefixPathWithLocale('/featured-products');
 
   useEffect(() => {
-    featuredProductsFetcher.load(path);
+    featuredProductsFetcher.load(prefixPathWithLocale('/featured-products'));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
