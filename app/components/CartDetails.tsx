@@ -48,7 +48,7 @@ export function CartDetails({
 
   const optimisticallyAddingLine = useMemo(() => {
     const fetcher = fetchers.find(
-      (fetcher) => fetcher?.submission?.action === '/cart'
+      (fetcher) => fetcher?.submission?.action === '/cart',
     );
 
     return !!fetcher?.data?.addedToCart;
@@ -171,7 +171,7 @@ function CartLineItem({
     switch (fetcher.submission.formData.get('intent')) {
       case Action.SetQuantity: {
         optimisticQuantity = Number(
-          fetcher.submission.formData.get('quantity')
+          fetcher.submission.formData.get('quantity'),
         );
         break;
       }
@@ -363,7 +363,7 @@ function TopProducts({
   }
 
   const products = flattenConnection(
-    fetcher.data.topProducts as ProductConnection
+    fetcher.data.topProducts as ProductConnection,
   );
 
   if (products.length === 0) {

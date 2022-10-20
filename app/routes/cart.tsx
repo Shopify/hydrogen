@@ -18,7 +18,7 @@ export async function loader({params}: LoaderArgs) {
       headers: {
         'Cache-Control': 'max-age=600',
       },
-    }
+    },
   );
 }
 
