@@ -3,32 +3,32 @@ import {
   redirect,
   json,
   type ActionFunction,
-} from "@remix-run/oxygen";
-import { Form, useActionData } from "@remix-run/react";
-import { useRef, useState } from "react";
-import { activateAccount, StorefrontApiError } from "~/data";
-import { getSession } from "~/lib/session.server";
-import { getInputStyleClasses } from "~/lib/utils";
+} from '@hydrogen/remix';
+import {Form, useActionData} from '@remix-run/react';
+import {useRef, useState} from 'react';
+import {activateAccount, StorefrontApiError} from '~/data';
+import {getSession} from '~/lib/session.server';
+import {getInputStyleClasses} from '~/lib/utils';
 
 type ActionData = {
   formError?: string;
 };
 
-const badRequest = (data: ActionData) => json(data, { status: 400 });
+const badRequest = (data: ActionData) => json(data, {status: 400});
 
 export const action: ActionFunction = async ({
   request,
   context,
-  params: { id, activationToken },
+  params: {id, activationToken},
 }) => {
   if (
     !id ||
     !activationToken ||
-    typeof id !== "string" ||
-    typeof activationToken !== "string"
+    typeof id !== 'string' ||
+    typeof activationToken !== 'string'
   ) {
     return badRequest({
-      formError: "Wrong token. The link you followed might be wrong.",
+      formError: 'Wrong token. The link you followed might be wrong.',
     });
   }
 
@@ -37,39 +37,39 @@ export const action: ActionFunction = async ({
     getSession(request, context),
   ]);
 
-  const password = formData.get("password");
-  const passwordConfirm = formData.get("passwordConfirm");
+  const password = formData.get('password');
+  const passwordConfirm = formData.get('passwordConfirm');
 
   if (
     !password ||
     !passwordConfirm ||
-    typeof password !== "string" ||
-    typeof passwordConfirm !== "string" ||
+    typeof password !== 'string' ||
+    typeof passwordConfirm !== 'string' ||
     password !== passwordConfirm
   ) {
     return badRequest({
-      formError: "Please provide matching passwords",
+      formError: 'Please provide matching passwords',
     });
   }
 
   try {
-    const { accessToken } = await activateAccount({
+    const {accessToken} = await activateAccount({
       id,
       activationToken,
       password,
     });
 
-    session.set("customerAccessToken", accessToken);
+    session.set('customerAccessToken', accessToken);
 
-    return redirect("/account", {
+    return redirect('/account', {
       headers: {
-        "Set-Cookie": await session.commit(),
+        'Set-Cookie': await session.commit(),
       },
     });
   } catch (error: any) {
     if (error instanceof StorefrontApiError) {
       return badRequest({
-        formError: "Something went wrong. Please try again later.",
+        formError: 'Something went wrong. Please try again later.',
       });
     }
 
@@ -78,21 +78,21 @@ export const action: ActionFunction = async ({
      * Let's make one up.
      */
     return badRequest({
-      formError: "Sorry. We could not activate your account.",
+      formError: 'Sorry. We could not activate your account.',
     });
   }
 };
 
 export const meta: MetaFunction = () => {
   return {
-    title: "Activate Account",
+    title: 'Activate Account',
   };
 };
 
 export default function Activate() {
   const actionData = useActionData<ActionData>();
   const [nativePasswordError, setNativePasswordError] = useState<null | string>(
-    null
+    null,
   );
   const [nativePasswordConfirmError, setNativePasswordConfirmError] = useState<
     null | string
@@ -108,7 +108,7 @@ export default function Activate() {
       passwordConfirmInput.current.value.length &&
       passwordConfirmInput.current.value !== passwordInput.current?.value
     ) {
-      setNativePasswordConfirmError("The two passwords entered did not match.");
+      setNativePasswordConfirmError('The two passwords entered did not match.');
     } else if (
       passwordConfirmInput.current.validity.valid ||
       !passwordConfirmInput.current.value.length
@@ -117,8 +117,8 @@ export default function Activate() {
     } else {
       setNativePasswordConfirmError(
         passwordConfirmInput.current.validity.valueMissing
-          ? "Please re-enter the password"
-          : "Passwords must be at least 8 characters"
+          ? 'Please re-enter the password'
+          : 'Passwords must be at least 8 characters',
       );
     }
   };
@@ -163,15 +163,15 @@ export default function Activate() {
                 } else {
                   setNativePasswordError(
                     event.currentTarget.validity.valueMissing
-                      ? "Please enter a password"
-                      : "Passwords must be at least 8 characters"
+                      ? 'Please enter a password'
+                      : 'Passwords must be at least 8 characters',
                   );
                 }
               }}
             />
             {nativePasswordError && (
               <p className="text-red-500 text-xs">
-                {" "}
+                {' '}
                 {nativePasswordError} &nbsp;
               </p>
             )}
@@ -180,7 +180,7 @@ export default function Activate() {
             <input
               ref={passwordConfirmInput}
               className={`mb-1 ${getInputStyleClasses(
-                nativePasswordConfirmError
+                nativePasswordConfirmError,
               )}`}
               id="passwordConfirm"
               name="passwordConfirm"
@@ -196,7 +196,7 @@ export default function Activate() {
             />
             {nativePasswordConfirmError && (
               <p className="text-red-500 text-xs">
-                {" "}
+                {' '}
                 {nativePasswordConfirmError} &nbsp;
               </p>
             )}

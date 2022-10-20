@@ -1,5 +1,5 @@
-import { redirect } from "@remix-run/oxygen";
+import {redirect} from '@hydrogen/remix';
 
 export async function loader() {
-  return redirect("/products");
+  return redirect('/products');
 }

@@ -1,59 +1,59 @@
-import { json, type LoaderArgs, type MetaFunction } from "@remix-run/oxygen";
-import { useLoaderData } from "@remix-run/react";
-import { flattenConnection, Image } from "@shopify/hydrogen-ui-alpha";
-import type { Article } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Grid, PageHeader, Section, Link } from "~/components";
-import { getBlog } from "~/data";
-import { getImageLoadingPriority, PAGINATION_SIZE } from "~/lib/const";
-import { getLocalizationFromLang } from "~/lib/utils";
+import {json, type LoaderArgs, type MetaFunction} from '@hydrogen/remix';
+import {useLoaderData} from '@remix-run/react';
+import {flattenConnection, Image} from '@shopify/hydrogen-ui-alpha';
+import type {Article} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {Grid, PageHeader, Section, Link} from '~/components';
+import {getBlog} from '~/data';
+import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
+import {getLocalizationFromLang} from '~/lib/utils';
 
-const BLOG_HANDLE = "Journal";
+const BLOG_HANDLE = 'Journal';
 
-export const loader = async ({ params }: LoaderArgs) => {
+export const loader = async ({params}: LoaderArgs) => {
   const journals = await getBlog({
     params,
     blogHandle: BLOG_HANDLE,
     paginationSize: PAGINATION_SIZE,
   });
 
-  const { language, country } = getLocalizationFromLang(params.lang);
+  const {language, country} = getLocalizationFromLang(params.lang);
 
   const articles = flattenConnection(journals).map((article) => {
-    const { publishedAt } = article;
+    const {publishedAt} = article;
     return {
       ...article,
       publishedAt: new Intl.DateTimeFormat(`${language}-${country}`, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
       }).format(new Date(publishedAt!)),
     };
   });
 
   return json(
-    { articles },
+    {articles},
     {
       headers: {
         // TODO cacheLong()
       },
-    }
+    },
   );
 };
 
 export const meta: MetaFunction = () => {
   return {
-    title: "All Journals",
+    title: 'All Journals',
   };
 };
 
 export default function Journals() {
-  const { articles } = useLoaderData<typeof loader>();
+  const {articles} = useLoaderData<typeof loader>();
 
   return (
     <>
       <PageHeader heading={BLOG_HANDLE} />
       <Section>
-        <Grid as="ol" layout="blog" gap="blog">
+        <Grid as="ol" layout="blog">
           {articles.map((article, i) => (
             <ArticleCard
               blogHandle={BLOG_HANDLE.toLowerCase()}
@@ -75,7 +75,7 @@ function ArticleCard({
 }: {
   blogHandle: string;
   article: Article;
-  loading?: HTMLImageElement["loading"];
+  loading?: HTMLImageElement['loading'];
 }) {
   return (
     <li key={article.id}>
@@ -92,7 +92,7 @@ function ArticleCard({
               width={600}
               loaderOptions={{
                 scale: 2,
-                crop: "center",
+                crop: 'center',
               }}
             />
           </div>
