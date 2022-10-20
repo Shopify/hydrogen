@@ -1,8 +1,8 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
   type StorefrontApiResponseOk,
-} from "@shopify/hydrogen-ui-alpha";
-import type { ExecutionArgs } from "graphql";
+} from '@shopify/hydrogen-ui-alpha';
+import type {ExecutionArgs} from 'graphql';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -26,7 +26,7 @@ export function createStorefrontClient(clientOptions: StorefrontClientProps) {
     variables,
   }: {
     query: string;
-    variables: ExecutionArgs["variableValues"];
+    variables: ExecutionArgs['variableValues'];
   }): Promise<T> {
     const headers = getPublicTokenHeaders();
     // This needs to be application/json because we're sending JSON, not a graphql string
@@ -51,12 +51,11 @@ export function createStorefrontClient(clientOptions: StorefrontClientProps) {
       try {
         throwError(response, JSON.parse(error));
       } catch (_e) {
-        throwError(response, [{ message: error }]);
+        throwError(response, [{message: error}]);
       }
     }
 
-    const { data, errors } =
-      (await response.json()) as StorefrontApiResponse<T>;
+    const {data, errors} = (await response.json()) as StorefrontApiResponse<T>;
 
     if (errors) throwError(response, errors);
 
@@ -71,13 +70,13 @@ export function createStorefrontClient(clientOptions: StorefrontClientProps) {
 
 function throwError<T>(
   response: Response,
-  errors: StorefrontApiResponse<T>["errors"]
+  errors: StorefrontApiResponse<T>['errors'],
 ) {
   if (errors) {
     const errorMessages =
-      typeof errors === "string"
+      typeof errors === 'string'
         ? errors
-        : errors.map((error) => error.message).join("\n");
+        : errors.map((error) => error.message).join('\n');
 
     throw new Error(errorMessages);
   }
