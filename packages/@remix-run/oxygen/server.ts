@@ -2,7 +2,7 @@ import {
   createRequestHandler as createRemixRequestHandler,
   type AppLoadContext,
   type ServerBuild,
-} from "@remix-run/server-runtime";
+} from '@remix-run/server-runtime';
 
 export function createRequestHandler<Context = unknown>({
   build,
@@ -20,7 +20,10 @@ export function createRequestHandler<Context = unknown>({
   return async (
     request: Request,
     // This may be temporary unless we adjust @shopify/oxygen-workers-types
-    { ctx, env }: { ctx: Omit<ExecutionContext, "passThroughOnException">; env: any }
+    {
+      ctx,
+      env,
+    }: {ctx: Omit<ExecutionContext, 'passThroughOnException'>; env: any},
   ) => {
     try {
       if (mode === "production" && build.publicPath !== undefined && shouldProxyAsset?.(request.url)) {
@@ -39,7 +42,7 @@ export function createRequestHandler<Context = unknown>({
     } catch (e) {
       console.error(e);
 
-      return new Response("Internal Error", { status: 500 });
+      return new Response('Internal Error', {status: 500});
     }
   };
 }

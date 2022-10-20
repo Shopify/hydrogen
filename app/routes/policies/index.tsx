@@ -1,19 +1,19 @@
-import { json, MetaFunction, SerializeFrom } from "@remix-run/oxygen";
-import { Link, useLoaderData } from "@remix-run/react";
-import { getPolicies } from "~/data";
+import {json, type MetaFunction, type SerializeFrom} from '@hydrogen/remix';
+import {Link, useLoaderData} from '@remix-run/react';
+import {getPolicies} from '~/data';
 
-import { PageHeader, Section, Heading } from "~/components";
+import {PageHeader, Section, Heading} from '~/components';
 
 export async function loader() {
   const policies = await getPolicies();
 
   return json(
-    { policies },
+    {policies},
     {
       headers: {
         // TODO cacheLong()
       },
-    }
+    },
   );
 }
 
@@ -23,13 +23,13 @@ export const meta: MetaFunction = ({
   data: SerializeFrom<typeof loader> | undefined;
 }) => {
   return {
-    title: "Policies",
-    description: "Policies",
+    title: 'Policies',
+    description: 'Policies',
   };
 };
 
 export default function Policies() {
-  const { policies } = useLoaderData<typeof loader>();
+  const {policies} = useLoaderData<typeof loader>();
 
   return (
     <>

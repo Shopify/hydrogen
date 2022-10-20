@@ -1,4 +1,4 @@
-import Component, { action } from '~/routes/account/edit';
+import Component, {action} from '~/routes/account/edit';
 
-export { action };
+export {action};
 export default Component;

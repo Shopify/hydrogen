@@ -1,8 +1,8 @@
-import type { Customer } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Link } from "~/components";
+import type {Customer} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {Link} from '~/components';
 
-export function AccountDetails({ customer }: { customer: Customer }) {
-  const { firstName, lastName, email, phone } = customer;
+export function AccountDetails({customer}: {customer: Customer}) {
+  const {firstName, lastName, email, phone} = customer;
 
   return (
     <>
@@ -18,12 +18,12 @@ export function AccountDetails({ customer }: { customer: Customer }) {
           <div className="mt-4 text-sm text-primary/50">Name</div>
           <p className="mt-1">
             {firstName || lastName
-              ? (firstName ? firstName + " " : "") + lastName
-              : "Add name"}{" "}
+              ? (firstName ? firstName + ' ' : '') + lastName
+              : 'Add name'}{' '}
           </p>
 
           <div className="mt-4 text-sm text-primary/50">Contact</div>
-          <p className="mt-1">{phone ?? "Add mobile"}</p>
+          <p className="mt-1">{phone ?? 'Add mobile'}</p>
 
           <div className="mt-4 text-sm text-primary/50">Email address</div>
           <p className="mt-1">{email}</p>

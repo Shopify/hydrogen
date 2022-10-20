@@ -1,23 +1,23 @@
-import type { EntryContext } from "@remix-run/oxygen";
-import { RemixServer } from "@remix-run/react";
-import { renderToReadableStream } from "react-dom/server";
+import type {EntryContext} from '@hydrogen/remix';
+import {RemixServer} from '@remix-run/react';
+import {renderToReadableStream} from 'react-dom/server';
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
-  remixContext: EntryContext
+  remixContext: EntryContext,
 ) {
-  if (new URL(request.url).pathname === "/__health") {
+  if (new URL(request.url).pathname === '/__health') {
     // TODO: move this to @hydrogen/remix ?
-    return new Response(null, { status: 200 });
+    return new Response(null, {status: 200});
   }
 
   const body = await renderToReadableStream(
-    <RemixServer context={remixContext} url={request.url} />
+    <RemixServer context={remixContext} url={request.url} />,
   );
 
-  responseHeaders.set("Content-Type", "text/html");
+  responseHeaders.set('Content-Type', 'text/html');
 
   return new Response(body, {
     status: responseStatusCode,
