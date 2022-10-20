@@ -5,7 +5,6 @@ import {
 } from '~/lib/utils';
 import {
   Drawer,
-  useDrawer,
   Text,
   Input,
   IconAccount,
@@ -26,6 +25,7 @@ import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
 import {Suspense, useEffect} from 'react';
 import {useCart} from '~/hooks/useCart';
+import {useGlobal} from '~/hooks/useGlobal';
 
 export function Layout({
   children,
@@ -60,39 +60,28 @@ export function Layout({
 }
 
 function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
+  const {cartOpen, toggleCart, menuOpen, toggleMenu} = useGlobal();
   const isHome = useIsHomePath();
-
-  const {
-    isOpen: isCartOpen,
-    openDrawer: openCart,
-    closeDrawer: closeCart,
-  } = useDrawer();
-
-  const {
-    isOpen: isMenuOpen,
-    openDrawer: openMenu,
-    closeDrawer: closeMenu,
-  } = useDrawer();
 
   return (
     <>
       <Suspense fallback={null}>
-        <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
+        <CartDrawer isOpen={cartOpen} onClose={toggleCart} />
       </Suspense>
       {menu && (
-        <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
+        <MenuDrawer isOpen={menuOpen} onClose={toggleMenu} menu={menu} />
       )}
       <DesktopHeader
         isHome={isHome}
         title={title}
         menu={menu}
-        openCart={openCart}
+        openCart={toggleCart}
       />
       <MobileHeader
         isHome={isHome}
         title={title}
-        openCart={openCart}
-        openMenu={openMenu}
+        openCart={toggleCart}
+        openMenu={toggleMenu}
       />
     </>
   );

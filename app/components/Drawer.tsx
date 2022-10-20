@@ -1,4 +1,4 @@
-import {Fragment, useState} from 'react';
+import {Fragment} from 'react';
 import {Dialog, Transition} from '@headlessui/react';
 
 import {Heading, IconClose} from '~/components';
@@ -94,21 +94,3 @@ export function Drawer({
 
 /* Use for associating arialabelledby with the title*/
 Drawer.Title = Dialog.Title;
-
-export function useDrawer(openDefault = false) {
-  const [isOpen, setIsOpen] = useState(openDefault);
-
-  function openDrawer() {
-    setIsOpen(true);
-  }
-
-  function closeDrawer() {
-    setIsOpen(false);
-  }
-
-  return {
-    isOpen,
-    openDrawer,
-    closeDrawer,
-  };
-}

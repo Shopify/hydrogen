@@ -20,6 +20,7 @@ import {getCart, getLayoutData, getCountries} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
 import {getSession} from './lib/session.server';
+import {GlobalProvider} from '~/hooks/useGlobal';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
@@ -72,9 +73,11 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout data={data}>
-          <Outlet />
-        </Layout>
+        <GlobalProvider>
+          <Layout data={data}>
+            <Outlet />
+          </Layout>
+        </GlobalProvider>
         <ScrollRestoration />
         <Scripts />
         <LiveReload />

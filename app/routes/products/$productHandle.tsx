@@ -4,7 +4,6 @@ import {
   useLoaderData,
   Await,
   useSearchParams,
-  Form,
   useLocation,
   useTransition,
   useFetcher,
@@ -27,6 +26,7 @@ import {
 import {getProductData, getRecommendedProducts} from '~/data';
 import {getExcerpt} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
+import {useGlobal} from '~/hooks/useGlobal';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 
@@ -114,6 +114,7 @@ export default function Product() {
 export function ProductForm() {
   const addToCartFetcher = useFetcher();
   const isHydrated = useIsHydrated();
+  const {toggleCart} = useGlobal();
   const closeRef = useRef<HTMLButtonElement>(null);
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
@@ -277,7 +278,11 @@ export function ProductForm() {
           ))}
         <div className="grid items-stretch gap-4">
           {selectedVariant && (
-            <addToCartFetcher.Form method="post" action="/cart">
+            <addToCartFetcher.Form
+              method="post"
+              action="/cart"
+              onSubmit={toggleCart}
+            >
               <input
                 type="hidden"
                 name="variantId"
