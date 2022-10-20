@@ -1,4 +1,4 @@
-import { SerializeFrom } from '@remix-run/server-runtime';
+import {SerializeFrom} from '@remix-run/server-runtime';
 import type {Product} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import {ProductCard, Section} from '~/components';
 
