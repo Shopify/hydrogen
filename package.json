@@ -28,6 +28,7 @@
     "@shopify/hydrogen-ui-alpha": "^2022.7.4",
     "clsx": "^1.2.1",
     "cross-env": "^7.0.3",
+    "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
