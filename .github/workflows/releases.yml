@@ -1,4 +1,4 @@
-name: Changesets
+name: Releases
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - '[0-9]+-[0-9]+'
 
 jobs:
-  changelog:
+  Releases:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'shopify'
     name: Changelog PR or Release
@@ -62,12 +62,8 @@ jobs:
 
       # note that this runs on every PR that's merged.
       - name: (next) Create Release Pull Request or Publish
-        id: changesets_next
-        run: |
-          cat << EOF > "$HOME/.npmrc"
-            //registry.npmjs.org/:_authToken=$NPM_TOKEN
-          EOF
-          node prepare-next.js
+        id: release_next
+        run: node prepare-next.js
         working-directory: ./packages/react/scripts
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
