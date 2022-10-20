@@ -2,13 +2,13 @@
 
 # Hydrogen UI
 
-<a href="https://github.com/Shopify/hydrogen-ui/blob/2022-7/LICENSE.md"><img src="https://img.shields.io/npm/l/@shopify/hydrogen.svg?sanitize=true" alt="License"></a>
+<a href="https://github.com/Shopify/hydrogen-ui/blob/main/LICENSE.md"><img src="https://img.shields.io/npm/l/@shopify/hydrogen.svg?sanitize=true" alt="License"></a>
 
 Hydrogen UI is a library of reusable components and utilities for building Shopify-powered custom storefronts.
 
 **Note:** Hydrogen UI is currently available as an experimental (beta) feature and functionality is subject to change.
 
-📚 [Docs](https://shopify.dev/custom-storefronts/hydrogen/alternate-frameworks) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 📝 [Changelog](./packages/react/CHANGELOG.md) | 🖼 [Hydrogen Framework](https://github.com/Shopify/hydrogen)
+📚 [Docs](https://shopify.dev/custom-storefronts/hydrogen/alternate-frameworks) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 📝 [Changelog](https://github.com/Shopify/hydrogen-ui/blob/main/packages/react/CHANGELOG.md) | 🖼 [Hydrogen Framework](https://github.com/Shopify/hydrogen)
 
 </div>
 
