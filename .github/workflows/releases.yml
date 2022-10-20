@@ -9,7 +9,7 @@ jobs:
   Releases:
     runs-on: ubuntu-latest
     if: github.repository_owner == 'shopify'
-    name: Changelog PR or Release
+    name: Releases and PR for changesets
     outputs:
       published: ${{ steps.changesets.outputs.published }}
       latest: ${{ steps.flags.outputs.latest }}
@@ -64,8 +64,7 @@ jobs:
       - name: (next) Create Release Pull Request or Publish
         id: release_next
         run: |
-          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
-          node prepare-next.js
-        working-directory: ./packages/react/scripts
+          echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+          cd packages/react/scripts node prepare-next.js
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
