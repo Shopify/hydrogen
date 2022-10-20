@@ -63,7 +63,9 @@ jobs:
       # note that this runs on every PR that's merged.
       - name: (next) Create Release Pull Request or Publish
         id: release_next
-        run: node prepare-next.js
+        run: |
+          npm config set '//registry.npmjs.org/:_authToken' "${NPM_TOKEN}"
+          node prepare-next.js
         working-directory: ./packages/react/scripts
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
