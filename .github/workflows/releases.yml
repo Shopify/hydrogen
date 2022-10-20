@@ -65,6 +65,7 @@ jobs:
         id: release_next
         run: |
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
-          cd packages/react/scripts node prepare-next.js
+          cd packages/react/scripts
+          node prepare-next.js
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
