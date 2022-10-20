@@ -272,6 +272,17 @@ export function getLocalizationFromLang(lang?: string): {
   };
 }
 
+export function prefixPathWithLocale(path: string) {
+  const {lang} = useParams();
+  const {language, country} = getLocalizationFromLang(lang);
+
+  if (language !== 'EN' && country !== 'US') {
+    return `/${language}-${country}${path.startsWith('/') ? path : '/' + path}`;
+  }
+
+  return path;
+}
+
 export function useIsHomePath() {
   const {pathname} = useLocation();
   const {lang} = useParams();

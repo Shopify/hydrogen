@@ -1,5 +1,7 @@
 import Component from '~/routes/index';
 
+export {loader} from '~/routes/index';
+
 export default Component;
 
 // Everything in the $lang folder is a re-export of the route folder
