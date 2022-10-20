@@ -1,3 +1,4 @@
+import {SerializeFrom} from '@remix-run/server-runtime';
 import type {Product} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import {ProductCard, Section} from '~/components';
 
@@ -10,7 +11,7 @@ export function ProductSwimlane({
   ...props
 }: {
   title?: string;
-  products?: Product[];
+  products?: SerializeFrom<Product[]>;
   count?: number;
 }) {
   return (

@@ -2,13 +2,14 @@ import {Image} from '@shopify/hydrogen-ui-alpha';
 import type {Collection} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import {Link} from '@remix-run/react';
 import {Heading, Section, Grid} from '~/components';
+import {SerializeFrom} from '@remix-run/server-runtime';
 
 export function FeaturedCollections({
   collections,
   title = 'Collections',
   ...props
 }: {
-  collections: Collection[];
+  collections: SerializeFrom<Collection[]>;
   title?: string;
   [key: string]: any;
 }) {
