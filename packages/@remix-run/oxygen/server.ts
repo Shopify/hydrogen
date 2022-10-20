@@ -8,12 +8,12 @@ export function createRequestHandler<Context = unknown>({
   build,
   mode,
   getLoadContext,
-  isProxiedAsset
+  shouldProxyAsset
 }: {
   build: ServerBuild;
   mode?: string;
   getLoadContext?: (request: Request) => Promise<Context> | Context;
-  isProxiedAsset?: (url: string) => boolean;
+  shouldProxyAsset?: (url: string) => boolean;
 }) {
   const handleRequest = createRemixRequestHandler(build, mode);
 
@@ -23,7 +23,7 @@ export function createRequestHandler<Context = unknown>({
     { ctx, env }: { ctx: Omit<ExecutionContext, "passThroughOnException">; env: any }
   ) => {
     try {
-      if (mode === "production" && build.publicPath !== undefined && isProxiedAsset?.(request.url)) {
+      if (mode === "production" && build.publicPath !== undefined && shouldProxyAsset?.(request.url)) {
         const url = new URL(request.url);
         const assetBasePath = (build.publicPath || '').replace(/\/$/, '')
         return fetch(request.url.replace(url.origin, assetBasePath), request);
