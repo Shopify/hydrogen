@@ -1,4 +1,4 @@
-import {Fragment, useState} from 'react';
+import {Fragment, useEffect, useState} from 'react';
 import {Dialog, Transition} from '@headlessui/react';
 
 import {Heading, IconClose} from '~/components';
@@ -97,6 +97,10 @@ Drawer.Title = Dialog.Title;
 
 export function useDrawer(openDefault = false) {
   const [isOpen, setIsOpen] = useState(openDefault);
+
+  useEffect(() => {
+    setIsOpen(openDefault ? true : false);
+  }, [openDefault]);
 
   function openDrawer() {
     setIsOpen(true);

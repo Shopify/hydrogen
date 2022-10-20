@@ -37,14 +37,20 @@ export const action: ActionFunction = async ({request, context, params}) => {
   // 1. Grab the cart ID from the session
   const cartId = await session.get('cartId');
 
+  // We only need a Set-Cookie header if we're creating
+  const headers = new Headers();
+
+  /*
+    Opens or keeps open the cart drawer after a cart mutation.
+    A unique value is needed to ensure repeating mutations
+    retrigger the Drawer component
+  */
+  session.flash('toggleCart', new Date().getTime());
+
   switch (intent) {
     case 'addToCart': {
       const variantId = formData.get('variantId');
       invariant(variantId, 'Missing variantId');
-
-      // We only need a Set-Cookie header if we're creating
-      // a new cart (aka adding cartId to the session)
-      const headers = new Headers();
 
       // 2. If none exists, create a cart (SFAPI)
       if (!cartId) {
@@ -61,7 +67,6 @@ export const action: ActionFunction = async ({request, context, params}) => {
         });
       }
 
-      session.flash('toggleCart', true);
       session.set('cartId', cart.id);
       headers.set('Set-Cookie', await session.commit());
 
@@ -84,7 +89,8 @@ export const action: ActionFunction = async ({request, context, params}) => {
         lineItem: {id: lineId, quantity},
         params,
       });
-      return json({cart});
+      headers.set('Set-Cookie', await session.commit());
+      return json({cart}, {headers});
     }
 
     case 'remove-line-item': {
@@ -95,12 +101,13 @@ export const action: ActionFunction = async ({request, context, params}) => {
       const lineId = formData.get('lineId');
       invariant(lineId, 'Missing lineId');
       invariant(cartId, 'Missing cartId');
+      headers.set('Set-Cookie', await session.commit());
       await updateLineItem({
         cartId,
         lineItem: {id: lineId, quantity: 0},
         params,
       });
-      return json({cart});
+      return json({cart}, {headers});
     }
 
     default: {

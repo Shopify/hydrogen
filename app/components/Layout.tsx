@@ -84,13 +84,6 @@ function Header({
     closeDrawer: closeMenu,
   } = useDrawer();
 
-  useEffect(() => {
-    // toggle the cart drawer after add to cart
-    if (toggleCart) {
-      openCart();
-    }
-  }, [openCart, toggleCart]);
-
   return (
     <>
       <Suspense fallback={null}>
