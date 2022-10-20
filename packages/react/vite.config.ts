@@ -60,6 +60,7 @@ export default defineConfig(({mode}) => {
         output: {
           // keep the folder structure of the components in the dist folder
           preserveModules: true,
+          preserveModulesRoot: 'src',
         },
       },
     },
