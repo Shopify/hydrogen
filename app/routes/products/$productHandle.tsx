@@ -117,6 +117,7 @@ export function ProductForm() {
   const closeRef = useRef<HTMLButtonElement>(null);
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
+  const isNavigationPending = transition.state === 'loading';
 
   /**
    * We update `searchParams` with in-flight request data from `transition` (if available)
@@ -124,10 +125,10 @@ export function ProductForm() {
    * request has completed.
    */
   const searchParams = useMemo(() => {
-    return transition.state === 'loading' && transition.location
+    return isNavigationPending && transition.location
       ? new URLSearchParams(transition.location.search)
       : currentSearchParams;
-  }, [currentSearchParams, transition]);
+  }, [isNavigationPending, currentSearchParams, transition]);
 
   const {product} = useLoaderData<typeof loader>();
   const firstVariant = product.variants.nodes[0];
@@ -295,10 +296,11 @@ export function ProductForm() {
                   }?${searchParamsWithDefaults.toString()}`}
                 />
               )}
+              {/* @todo: add optimistic state when transitioning between selectedVariant via isNavigationPending */}
               <Button
                 width="full"
                 variant={isOutOfStock ? 'secondary' : 'primary'}
-                disabled={isOutOfStock}
+                disabled={isOutOfStock || isNavigationPending}
                 as="button"
               >
                 {isOutOfStock ? (

@@ -1,12 +1,12 @@
-import {useRef} from 'react';
+import {useMemo, useRef} from 'react';
 import {useScroll} from 'react-use';
 import {flattenConnection, Money} from '@shopify/hydrogen-ui-alpha';
 import {
   type FetcherWithComponents,
   useFetcher,
   useLocation,
+  useFetchers,
 } from '@remix-run/react';
-
 import {
   Button,
   Heading,
@@ -40,10 +40,19 @@ export function CartDetails({
   cart: Cart;
   fetcher: FetcherWithComponents<any>;
 }) {
+  const fetchers = useFetchers();
   const lines = flattenConnection(cart?.lines ?? {});
   const scrollRef = useRef(null);
   const {y} = useScroll(scrollRef);
   const lineItemFetcher = useFetcher();
+
+  const optimisticallyAddingLine = useMemo(() => {
+    const fetcher = fetchers.find(
+      (fetcher) => fetcher?.submission?.action === '/cart'
+    );
+
+    return !!fetcher?.data?.addedToCart;
+  }, [fetchers]);
 
   const optimisticallyDeletingLastLine =
     lines.length === 1 &&
@@ -86,6 +95,12 @@ export function CartDetails({
               />
             );
           })}
+          {/*
+              @todo: optimistically add a line item.
+              Maybe just cover the use case where the variantId is not yet
+              in cart.lines to keep it simple, because we cart.lines are not ordered
+          */}
+          {optimisticallyAddingLine ? <p>Adding..</p> : null}
         </ul>
       </section>
       <section aria-labelledby="summary-heading" className={summary[layout]}>
@@ -156,7 +171,7 @@ function CartLineItem({
     switch (fetcher.submission.formData.get('intent')) {
       case Action.SetQuantity: {
         optimisticQuantity = Number(
-          fetcher.submission.formData.get('quantity'),
+          fetcher.submission.formData.get('quantity')
         );
         break;
       }
@@ -348,7 +363,7 @@ function TopProducts({
   }
 
   const products = flattenConnection(
-    fetcher.data.topProducts as ProductConnection,
+    fetcher.data.topProducts as ProductConnection
   );
 
   if (products.length === 0) {
