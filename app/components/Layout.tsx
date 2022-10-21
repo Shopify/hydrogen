@@ -256,7 +256,7 @@ function MobileHeader({
       </Link>
 
       <div className="flex items-center justify-end w-full gap-4">
-        <Link to={'/account'} className={styles.button}>
+        <Link to="/account" className={styles.button}>
           <IconAccount />
         </Link>
         <Suspense
@@ -341,7 +341,7 @@ function DesktopHeader({
             <IconSearch />
           </button>
         </Form>
-        <Link to={'/account'} className={styles.button}>
+        <Link to="/account" className={styles.button}>
           <IconAccount />
         </Link>
         <Suspense

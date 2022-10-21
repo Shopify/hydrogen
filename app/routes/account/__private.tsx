@@ -1,11 +1,4 @@
-import {
-  type LoaderArgs,
-  redirect,
-  defer,
-  type MetaFunction,
-} from '@hydrogen/remix';
-import {Await, Form, Outlet, useLoaderData, useOutlet} from '@remix-run/react';
-import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
+import {Await, Form, Outlet, useLoaderData, useOutlet, useMatches} from '@remix-run/react';
 import type {
   Collection,
   Customer,
@@ -24,16 +17,23 @@ import {
   ProductSwimlane,
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
+
+import {
+  type LoaderArgs,
+  redirect,
+  defer,
+} from '@hydrogen/remix';
+import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
 import {getCustomer, getFeaturedData} from '~/data';
 import {getSession} from '~/lib/session.server';
-import type {AccountOutletContext} from './account/edit';
 
 export async function loader({request, context, params}: LoaderArgs) {
   const session = await getSession(request, context);
+  const lang = params.lang;
   const customerAccessToken = await session.get('customerAccessToken');
 
   if (!customerAccessToken) {
-    return redirect('/account/login');
+    return redirect(lang ? `${lang}/account/login` : '/account/login');
   }
 
   const customer = await getCustomer({
@@ -60,24 +60,22 @@ export async function loader({request, context, params}: LoaderArgs) {
   });
 }
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'Account Details',
-  };
-};
-
-export default function Account() {
-  const {customer, orders, heading, addresses, featuredData} =
-    useLoaderData<typeof loader>();
+export default function Authenticated() {
+  const {customer, orders, heading, addresses, featuredData} = useLoaderData<typeof loader>();
   const outlet = useOutlet();
+  const matches = useMatches();
+  const renderOutletInModal = !!outlet && matches.some((match) => {
+    return match?.handle?.renderInModal
+  })
 
   return (
     <>
-      {!!outlet && (
-        <Modal cancelLink=".">
-          <Outlet context={{customer} as AccountOutletContext} />
-        </Modal>
-      )}
+      {renderOutletInModal
+        ? <Modal cancelLink=".">
+            <Outlet context={{customer} as any} />
+          </Modal>
+        : <Outlet context={{customer} as any} />
+      }
       <PageHeader heading={heading}>
         <Form method="post" action="/account/logout">
           <button type="submit" className="text-primary/50">
