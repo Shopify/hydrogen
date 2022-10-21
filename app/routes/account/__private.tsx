@@ -71,7 +71,7 @@ export default function Authenticated() {
   return (
     <>
       {renderOutletInModal
-        ? <Modal cancelLink=".">
+        ? <Modal cancelLink="/account">
             <Outlet context={{customer} as any} />
           </Modal>
         : <Outlet context={{customer} as any} />

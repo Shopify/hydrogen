@@ -1,2 +1,2 @@
-export { default, action } from '~/routes/account/__private/edit';
+export { default, handle, action } from '~/routes/account/__private/edit';
 
