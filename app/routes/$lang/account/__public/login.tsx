@@ -1,1 +1,1 @@
-export {default, loader, action} from '~/routes/account/__public/login';
+export {default, meta, loader, action} from '~/routes/account/__public/login';
