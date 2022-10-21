@@ -24,7 +24,7 @@ import {useFetcher, useParams, Form, useFetchers} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
-import {useState, Suspense, useEffect, useCallback} from 'react';
+import {Suspense, useEffect} from 'react';
 import {useCart} from '~/hooks/useCart';
 
 export function Layout({
@@ -112,7 +112,6 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 
 function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   const cart = useCart();
-  const fetchers = useFetchers();
   /**
    * Whenever a component that uses a fetcher is _unmounted_, that fetcher is removed
    * from the internal Remix cache. By defining the fetcher outside of the component,
