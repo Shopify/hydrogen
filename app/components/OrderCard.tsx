@@ -71,7 +71,7 @@ export function OrderCard({order}: {order: Order}) {
       <div className="self-end border-t">
         <Link
           className="block w-full p-2 text-center"
-          to={`/account/orders/${legacyOrderId}`}
+          to={`/account/orders/${legacyOrderId}?${key}`}
         >
           <Text color="subtle" className="ml-3">
             View Details
