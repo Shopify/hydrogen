@@ -11,12 +11,12 @@ import {sendPasswordResetEmail} from '~/data';
 import {getSession} from '~/lib/session.server';
 import {getInputStyleClasses} from '~/lib/utils';
 
-export async function loader({request, context}: LoaderArgs) {
+export async function loader({request, context, params}: LoaderArgs) {
   const session = await getSession(request, context);
   const customerAccessToken = await session.get('customerAccessToken');
 
   if (customerAccessToken) {
-    return redirect('/account');
+    return redirect(params.lang ? `${params.lang}/account` : '/account');
   }
 
   return new Response(null);

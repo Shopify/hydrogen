@@ -6,7 +6,7 @@ import {
   redirect,
   json,
 } from '@hydrogen/remix';
-import {Link, useLoaderData} from '@remix-run/react';
+import {useLoaderData} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen-ui-alpha';
 import {statusMessage} from '~/lib/utils';
 import type {
@@ -14,7 +14,7 @@ import type {
   DiscountApplicationConnection,
   OrderLineItem,
 } from '@shopify/hydrogen/storefront-api-types';
-import {Heading, PageHeader, Text} from '~/components';
+import {Link, Heading, PageHeader, Text} from '~/components';
 import {getCustomerOrder} from '~/data';
 import {getSession} from '~/lib/session.server';
 
@@ -24,7 +24,7 @@ export const meta: MetaFunction = ({data}) => ({
 
 export async function loader({request, context, params}: LoaderArgs) {
   if (!params.id) {
-    return redirect('/account');
+    return redirect(params?.lang ? `${params.lang}/account` : '/account');
   }
 
   const queryParams = new URL(request.url).searchParams;
@@ -36,7 +36,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   const customerAccessToken = await session.get('customerAccessToken');
 
   if (!customerAccessToken) {
-    return redirect('/account/login');
+    return redirect(params.lang ? `${params.lang}/account/login` : '/account/login');
   }
 
   const orderId = `gid://shopify/Order/${params.id}?key=${orderToken}`;

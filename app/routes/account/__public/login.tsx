@@ -3,12 +3,26 @@ import {
   redirect,
   json,
   type ActionFunction,
+  type LoaderArgs,
 } from '@hydrogen/remix';
-import {Form, useActionData} from '@remix-run/react';
-import {useRef, useState} from 'react';
-import {resetPassword, StorefrontApiError} from '~/data';
+import {Form, useActionData, useLoaderData} from '@remix-run/react';
+import {useState} from 'react';
+import {login, StorefrontApiError} from '~/data';
 import {getSession} from '~/lib/session.server';
 import {getInputStyleClasses} from '~/lib/utils';
+import {Link} from '~/components';
+
+export async function loader({request, context, params}: LoaderArgs) {
+  const session = await getSession(request, context);
+  const customerAccessToken = await session.get('customerAccessToken');
+
+  if (customerAccessToken) {
+    return redirect(params.lang ? `${params.lang}/account` : '/account');
+  }
+
+  // TODO: Query for this?
+  return json({shopName: 'Hydrogen'});
+}
 
 type ActionData = {
   formError?: string;
@@ -16,48 +30,32 @@ type ActionData = {
 
 const badRequest = (data: ActionData) => json(data, {status: 400});
 
-export const action: ActionFunction = async ({
-  request,
-  context,
-  params: {id, resetToken},
-}) => {
-  if (
-    !id ||
-    !resetToken ||
-    typeof id !== 'string' ||
-    typeof resetToken !== 'string'
-  ) {
-    return badRequest({
-      formError: 'Wrong token. Please try to reset your password again.',
-    });
-  }
-
+export const action: ActionFunction = async ({request, context, params}) => {
   const [formData, session] = await Promise.all([
     request.formData(),
     getSession(request, context),
   ]);
 
+  const email = formData.get('email');
   const password = formData.get('password');
-  const passwordConfirm = formData.get('passwordConfirm');
 
   if (
+    !email ||
     !password ||
-    !passwordConfirm ||
-    typeof password !== 'string' ||
-    typeof passwordConfirm !== 'string' ||
-    password !== passwordConfirm
+    typeof email !== 'string' ||
+    typeof password !== 'string'
   ) {
     return badRequest({
-      formError: 'Please provide matching passwords',
+      formError: 'Please provide both an email and a password.',
     });
   }
 
   try {
-    const {accessToken} = await resetPassword({id, resetToken, password});
+    console.log('LOGGING IN');
+    const customerAccessToken = await login({email, password});
+    session.set('customerAccessToken', customerAccessToken);
 
-    session.set('customerAccessToken', accessToken);
-
-    return redirect('/account', {
+    return redirect(params.lang ? `${params.lang}/account` : '/account', {
       headers: {
         'Set-Cookie': await session.commit(),
       },
@@ -74,56 +72,30 @@ export const action: ActionFunction = async ({
      * Let's make one up.
      */
     return badRequest({
-      formError: 'Sorry. We could not update your password.',
+      formError:
+        'Sorry. We did not recognize either your email or password. Please try to sign in again or create a new account.',
     });
   }
 };
 
 export const meta: MetaFunction = () => {
   return {
-    title: 'Reset Password',
+    title: 'Login',
   };
 };
 
-export default function Reset() {
+export default function Login() {
+  const {shopName} = useLoaderData<typeof loader>();
   const actionData = useActionData<ActionData>();
+  const [nativeEmailError, setNativeEmailError] = useState<null | string>(null);
   const [nativePasswordError, setNativePasswordError] = useState<null | string>(
     null,
   );
-  const [nativePasswordConfirmError, setNativePasswordConfirmError] = useState<
-    null | string
-  >(null);
-
-  const passwordInput = useRef<HTMLInputElement>(null);
-  const passwordConfirmInput = useRef<HTMLInputElement>(null);
-
-  const validatePasswordConfirm = () => {
-    if (!passwordConfirmInput.current) return;
-
-    if (
-      passwordConfirmInput.current.value.length &&
-      passwordConfirmInput.current.value !== passwordInput.current?.value
-    ) {
-      setNativePasswordConfirmError('The two passwords entered did not match.');
-    } else if (
-      passwordConfirmInput.current.validity.valid ||
-      !passwordConfirmInput.current.value.length
-    ) {
-      setNativePasswordConfirmError(null);
-    } else {
-      setNativePasswordConfirmError(
-        passwordConfirmInput.current.validity.valueMissing
-          ? 'Please re-enter the password'
-          : 'Passwords must be at least 8 characters',
-      );
-    }
-  };
 
   return (
     <div className="flex justify-center my-24 px-4">
       <div className="max-w-md w-full">
-        <h1 className="text-4xl">Reset Password.</h1>
-        <p className="mt-4">Enter a new password for your account.</p>
+        <h1 className="text-4xl">Sign in.</h1>
         {/* TODO: Add onSubmit to validate _before_ submission with native? */}
         <Form
           method="post"
@@ -135,9 +107,33 @@ export default function Reset() {
               <p className="m-4 text-s text-contrast">{actionData.formError}</p>
             </div>
           )}
-          <div className="mb-3">
+          <div>
             <input
-              ref={passwordInput}
+              className={`mb-1 ${getInputStyleClasses(nativeEmailError)}`}
+              id="email"
+              name="email"
+              type="email"
+              autoComplete="email"
+              required
+              placeholder="Email address"
+              aria-label="Email address"
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus
+              onBlur={(event) => {
+                setNativeEmailError(
+                  event.currentTarget.value.length &&
+                    !event.currentTarget.validity.valid
+                    ? 'Invalid email address'
+                    : null,
+                );
+              }}
+            />
+            {nativeEmailError && (
+              <p className="text-red-500 text-xs">{nativeEmailError} &nbsp;</p>
+            )}
+          </div>
+          <div>
+            <input
               className={`mb-1 ${getInputStyleClasses(nativePasswordError)}`}
               id="password"
               name="password"
@@ -155,7 +151,6 @@ export default function Reset() {
                   !event.currentTarget.value.length
                 ) {
                   setNativePasswordError(null);
-                  validatePasswordConfirm();
                 } else {
                   setNativePasswordError(
                     event.currentTarget.validity.valueMissing
@@ -172,38 +167,31 @@ export default function Reset() {
               </p>
             )}
           </div>
-          <div className="mb-3">
-            <input
-              ref={passwordConfirmInput}
-              className={`mb-1 ${getInputStyleClasses(
-                nativePasswordConfirmError,
-              )}`}
-              id="passwordConfirm"
-              name="passwordConfirm"
-              type="password"
-              autoComplete="current-password"
-              placeholder="Re-enter password"
-              aria-label="Re-enter password"
-              minLength={8}
-              required
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
-              onBlur={validatePasswordConfirm}
-            />
-            {nativePasswordConfirmError && (
-              <p className="text-red-500 text-xs">
-                {' '}
-                {nativePasswordConfirmError} &nbsp;
-              </p>
-            )}
-          </div>
           <div className="flex items-center justify-between">
             <button
               className="bg-primary text-contrast rounded py-2 px-4 focus:shadow-outline block w-full"
               type="submit"
             >
-              Save
+              Sign in
             </button>
+          </div>
+          <div className="flex items-center mt-8 border-t border-gray-300">
+            <p className="align-baseline text-sm mt-6">
+              New to {shopName}? &nbsp;
+              <Link className="inline underline" to="/account/register">
+                Create an account
+              </Link>
+            </p>
+          </div>
+
+          <div className="flex items-center justify-between mt-4">
+            <div className="flex-1"></div>
+            <Link
+              className="inline-block align-baseline text-sm text-primary/50"
+              to="/account/recover"
+            >
+              Forgot password
+            </Link>
           </div>
         </Form>
       </div>

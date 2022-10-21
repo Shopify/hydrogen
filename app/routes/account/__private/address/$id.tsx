@@ -26,7 +26,11 @@ interface ActionData {
 
 const badRequest = (data: ActionData) => json(data, {status: 400});
 
-export const action: ActionFunction = async ({request, context}) => {
+export const handle = {
+  renderInModal: true
+}
+
+export const action: ActionFunction = async ({request, context, params}) => {
   const [formData, session] = await Promise.all([
     request.formData(),
     getSession(request, context),
@@ -45,8 +49,7 @@ export const action: ActionFunction = async ({request, context}) => {
         addressId,
       });
 
-      // TODO: Why doesn't `redirect('..')` work here? it redirects to the root / instead of /account.
-      return redirect('/account');
+      return redirect(params.lang ? `${params.lang}/account` : '/account');
     } catch (error: any) {
       return badRequest({formError: error.message});
     }
@@ -90,8 +93,7 @@ export const action: ActionFunction = async ({request, context}) => {
         });
       }
 
-      // TODO: Why doesn't `redirect('..')` work here? it redirects to the root / instead of /account.
-      return redirect('/account');
+      return redirect(params.lang ? `${params.lang}/account` : '/account');
     } catch (error: any) {
       return badRequest({formError: error.message});
     }
@@ -110,8 +112,7 @@ export const action: ActionFunction = async ({request, context}) => {
         });
       }
 
-      // TODO: Why doesn't `redirect('..')` work here? it redirects to the root / instead of /account.
-      return redirect('/account');
+      return redirect(params.lang ? `${params.lang}/account` : '/account');
     } catch (error: any) {
       return badRequest({formError: error.message});
     }

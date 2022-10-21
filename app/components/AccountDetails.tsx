@@ -11,7 +11,7 @@ export function AccountDetails({customer}: {customer: Customer}) {
         <div className="lg:p-8 p-6 border border-gray-200 rounded">
           <div className="flex">
             <h3 className="font-bold text-base flex-1">Profile & Security</h3>
-            <Link className="underline text-sm font-normal" to="edit">
+            <Link className="underline text-sm font-normal" to="/account/edit">
               Edit
             </Link>
           </div>
