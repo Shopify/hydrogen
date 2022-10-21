@@ -42,6 +42,13 @@
     "./storefront.schema.json": "./storefront.schema.json",
     "./package.json": "./package.json"
   },
+  "typesVersions": {
+    "*": {
+      "storefront-api-types": [
+        "./dist/types/storefront-api-types.d.ts"
+      ]
+    }
+  },
   "main": "./dist/prod/index.cjs",
   "module": "./dist/prod/index.js",
   "types": "./dist/types/index.d.ts",
