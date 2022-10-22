@@ -1,4 +1,11 @@
-import {Await, Form, Outlet, useLoaderData, useOutlet, useMatches} from '@remix-run/react';
+import {
+  Await,
+  Form,
+  Outlet,
+  useLoaderData,
+  useMatches,
+  useLocation,
+} from '@remix-run/react';
 import type {
   Collection,
   Customer,
@@ -18,11 +25,7 @@ import {
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
 
-import {
-  type LoaderArgs,
-  redirect,
-  defer,
-} from '@hydrogen/remix';
+import {type LoaderArgs, redirect, defer} from '@hydrogen/remix';
 import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
 import {getCustomer, getFeaturedData} from '~/data';
 import {getSession} from '~/lib/session.server';
@@ -61,21 +64,43 @@ export async function loader({request, context, params}: LoaderArgs) {
 }
 
 export default function Authenticated() {
-  const {customer, orders, heading, addresses, featuredData} = useLoaderData<typeof loader>();
-  const outlet = useOutlet();
+  const {customer} = useLoaderData<typeof loader>();
+  const {pathname} = useLocation();
   const matches = useMatches();
-  const renderOutletInModal = !!outlet && matches.some((match) => {
-    return match?.handle?.renderInModal
-  })
+  const isAccountPath = Boolean(
+    pathname.match(/^\/account\/?$/) ||
+      pathname.match(/^\/[a-z]{2}-[a-z]{2}\/account\/?$/)
+  );
+
+  // routes that export handle { renderInModal: true }
+  const renderOutletInModal = matches.some((match) => {
+    return match?.handle?.renderInModal;
+  });
+
+  if (isAccountPath) {
+    return <Account />
+  }
 
   return (
+    renderOutletInModal ? (
+      <>
+        <Modal cancelLink="/account">
+          <Outlet context={{customer} as any} />
+        </Modal>
+        <Account />
+      </>
+    ) : (
+      // render sub-routes without a renderInModal handle prop
+      <Outlet context={{customer} as any} />
+    )
+  );
+}
+
+function Account() {
+  const {customer, orders, heading, addresses, featuredData} =
+    useLoaderData<typeof loader>();
+  return (
     <>
-      {renderOutletInModal
-        ? <Modal cancelLink="/account">
-            <Outlet context={{customer} as any} />
-          </Modal>
-        : <Outlet context={{customer} as any} />
-      }
       <PageHeader heading={heading}>
         <Form method="post" action="/account/logout">
           <button type="submit" className="text-primary/50">
