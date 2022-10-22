@@ -16,7 +16,7 @@ export function OrderCard({order}: {order: Order}) {
       <Link
         className="grid items-center gap-4 p-4 md:gap-6 md:p-6 md:grid-cols-2"
         to={`/account/orders/${legacyOrderId}?${key}`}
-        prefetch='intent'
+        prefetch="intent"
       >
         {lineItems[0].variant?.image && (
           <div className="card-image aspect-square bg-primary/5">
@@ -73,7 +73,7 @@ export function OrderCard({order}: {order: Order}) {
         <Link
           className="block w-full p-2 text-center"
           to={`/account/orders/${legacyOrderId}?${key}`}
-          prefetch='intent'
+          prefetch="intent"
         >
           <Text color="subtle" className="ml-3">
             View Details

@@ -36,7 +36,9 @@ export async function loader({request, context, params}: LoaderArgs) {
   const customerAccessToken = await session.get('customerAccessToken');
 
   if (!customerAccessToken) {
-    return redirect(params.lang ? `${params.lang}/account/login` : '/account/login');
+    return redirect(
+      params.lang ? `${params.lang}/account/login` : '/account/login',
+    );
   }
 
   const orderId = `gid://shopify/Order/${params.id}?key=${orderToken}`;

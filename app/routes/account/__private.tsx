@@ -69,7 +69,7 @@ export default function Authenticated() {
   const matches = useMatches();
   const isAccountPath = Boolean(
     pathname.match(/^\/account\/?$/) ||
-      pathname.match(/^\/[a-z]{2}-[a-z]{2}\/account\/?$/)
+      pathname.match(/^\/[a-z]{2}-[a-z]{2}\/account\/?$/),
   );
 
   // routes that export handle { renderInModal: true }
@@ -78,21 +78,19 @@ export default function Authenticated() {
   });
 
   if (isAccountPath) {
-    return <Account />
+    return <Account />;
   }
 
-  return (
-    renderOutletInModal ? (
-      <>
-        <Modal cancelLink="/account">
-          <Outlet context={{customer} as any} />
-        </Modal>
-        <Account />
-      </>
-    ) : (
-      // render sub-routes without a renderInModal handle prop
-      <Outlet context={{customer} as any} />
-    )
+  return renderOutletInModal ? (
+    <>
+      <Modal cancelLink="/account">
+        <Outlet context={{customer} as any} />
+      </Modal>
+      <Account />
+    </>
+  ) : (
+    // render sub-routes without a renderInModal handle prop
+    <Outlet context={{customer} as any} />
   );
 }
 

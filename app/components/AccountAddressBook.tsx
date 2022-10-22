@@ -81,7 +81,7 @@ function Address({
         <Link
           to={`/account/address/${encodeURIComponent(address.id)}`}
           className="text-left underline text-sm"
-          prefetch='intent'
+          prefetch="intent"
         >
           Edit
         </Link>

@@ -1,6 +1,6 @@
 import {redirect} from '@hydrogen/remix';
-import { LoaderArgs } from '@remix-run/server-runtime';
+import {LoaderArgs} from '@remix-run/server-runtime';
 
-export async function loader({ params }: LoaderArgs) {
+export async function loader({params}: LoaderArgs) {
   return redirect(params?.lang ? `${params.lang}/products` : '/products');
 }
