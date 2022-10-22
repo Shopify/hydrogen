@@ -16,6 +16,10 @@ type ActionData = {
 
 const badRequest = (data: ActionData) => json(data, {status: 400});
 
+export const handle = {
+  isPublic: true
+}
+
 export const action: ActionFunction = async ({
   request,
   context,
