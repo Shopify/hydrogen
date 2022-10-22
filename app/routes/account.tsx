@@ -4,7 +4,7 @@ import {
   Outlet,
   useLoaderData,
   useMatches,
-  useLocation,
+  useOutlet,
 } from '@remix-run/react';
 import type {
   Collection,
@@ -24,18 +24,24 @@ import {
   ProductSwimlane,
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
-
-import {type LoaderArgs, redirect, defer} from '@hydrogen/remix';
+import {type LoaderArgs, redirect, json, defer} from '@hydrogen/remix';
 import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
 import {getCustomer, getFeaturedData} from '~/data';
 import {getSession} from '~/lib/session.server';
 
 export async function loader({request, context, params}: LoaderArgs) {
+  const {pathname} = new URL(request.url);
   const session = await getSession(request, context);
   const lang = params.lang;
   const customerAccessToken = await session.get('customerAccessToken');
+  const isAuthenticated = Boolean(customerAccessToken);
 
-  if (!customerAccessToken) {
+  if (!isAuthenticated) {
+    if (pathname === '/account/login') {
+      return json({
+        isAuthenticated,
+      });
+    }
     return redirect(lang ? `${lang}/account/login` : '/account/login');
   }
 
@@ -52,51 +58,61 @@ export async function loader({request, context, params}: LoaderArgs) {
       : `Welcome to your account.`
     : 'Account Details';
 
-  const orders = flattenConnection(customer?.orders) || [];
+  const orders = flattenConnection(customer?.orders) as Order[];
 
   return defer({
+    isAuthenticated,
     customer,
     heading,
     orders,
-    addresses: flattenConnection<MailingAddress>(customer.addresses),
+    addresses: flattenConnection(customer.addresses) as MailingAddress[],
     featuredData: getFeaturedData({params}),
   });
 }
 
 export default function Authenticated() {
-  const {customer} = useLoaderData<typeof loader>();
-  const {pathname} = useLocation();
+  const data = useLoaderData<typeof loader>();
+  const outlet = useOutlet();
   const matches = useMatches();
-  const isAccountPath = Boolean(
-    pathname.match(/^\/account\/?$/) ||
-      pathname.match(/^\/[a-z]{2}-[a-z]{2}\/account\/?$/),
-  );
 
   // routes that export handle { renderInModal: true }
   const renderOutletInModal = matches.some((match) => {
     return match?.handle?.renderInModal;
   });
 
-  if (isAccountPath) {
-    return <Account />;
+  // Public routes
+  if (!data.isAuthenticated) {
+    return <Outlet />;
   }
 
-  return renderOutletInModal ? (
-    <>
-      <Modal cancelLink="/account">
-        <Outlet context={{customer} as any} />
-      </Modal>
-      <Account />
-    </>
-  ) : (
-    // render sub-routes without a renderInModal handle prop
-    <Outlet context={{customer} as any} />
-  );
+  // Authenticated routes
+  if (outlet) {
+    if (renderOutletInModal) {
+      return (
+        <>
+          <Modal cancelLink="/account">
+            <Outlet context={{customer: data.customer} as any} />
+          </Modal>
+          <Account {...data} />
+        </>
+      )
+    } else {
+      return <Outlet context={{customer: data.customer} as any} />
+    }
+  }
+
+  return <Account {...data} />;
 }
 
-function Account() {
-  const {customer, orders, heading, addresses, featuredData} =
-    useLoaderData<typeof loader>();
+interface Account {
+  customer: Customer
+  orders: Order[];
+  heading: string
+  addresses: MailingAddress[];
+  featuredData: any // @todo: help please
+}
+
+function Account({customer, orders, heading, addresses, featuredData}: Account) {
   return (
     <>
       <PageHeader heading={heading}>
@@ -123,12 +139,10 @@ function Account() {
                 <FeaturedCollections
                   title="Popular Collections"
                   collections={
-                    // @ts-expect-error Something is screwy with defer type inference here :thinking:
                     data.featuredCollections as Collection[]
                   }
                 />
                 <ProductSwimlane
-                  // @ts-expect-error Something is screwy with defer type inference here :thinking:
                   products={data.featuredProducts}
                 />
               </>
