@@ -27,8 +27,8 @@ interface ActionData {
 const badRequest = (data: ActionData) => json(data, {status: 400});
 
 export const handle = {
-  renderInModal: true
-}
+  renderInModal: true,
+};
 
 export const action: ActionFunction = async ({request, context, params}) => {
   const [formData, session] = await Promise.all([

@@ -59,7 +59,9 @@ export function CountrySelector() {
                             <Link
                               to={
                                 countryIsoCode !== 'us'
-                                  ? `/${languageIsoCode}-${countryIsoCode}${strippedPathname}${search || ''}`
+                                  ? `/${languageIsoCode}-${countryIsoCode}${strippedPathname}${
+                                      search || ''
+                                    }`
                                   : `${strippedPathname}${search || ''}`
                               }
                               className={`text-contrast dark:text-primary text-contrast dark:text-primary bg-primary
