@@ -66,11 +66,11 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
       // if JS is disabled, this will redirect back to the referer
       if (redirectTo) {
-        return redirect(redirectTo);
+        return redirect(redirectTo, {headers});
       }
 
       // returned inside the fetcher.data
-      return json({cart});
+      return json({cart}, {headers});
     }
 
     case 'set-quantity': {
@@ -103,14 +103,9 @@ export const action: ActionFunction = async ({request, context, params}) => {
     }
 
     default: {
-      // eslint-disable-next-line no-console
-      console.warn(`Cart intent ${intent} not supported`);
+      throw new Error(`Cart intent ${intent} not supported`);
     }
   }
-
-  return json({
-    ok: true,
-  });
 };
 
 export default function Cart() {

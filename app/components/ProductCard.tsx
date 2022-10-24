@@ -15,6 +15,7 @@ import type {
   ProductVariant,
   ProductVariantConnection,
 } from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {SerializeFrom} from '@remix-run/server-runtime';
 
 export function ProductCard({
   product,
@@ -23,7 +24,7 @@ export function ProductCard({
   loading,
   onClick,
 }: {
-  product: Product;
+  product: SerializeFrom<Product>;
   label?: string;
   className?: string;
   loading?: HTMLImageElement['loading'];

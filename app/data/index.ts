@@ -300,7 +300,7 @@ const MEDIA_FRAGMENT = `#graphql
   }
 `;
 
-const PRODUCT_CARD_FRAGMENT = `#graphql
+export const PRODUCT_CARD_FRAGMENT = `#graphql
   fragment ProductCard on Product {
     id
     title
@@ -1339,70 +1339,6 @@ const SHOP_PRIMARY_DOMAIN_QUERY = `#graphql
   }
 `;
 
-/*
-  Homepage ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-*/
-
-export async function getHomeSeoData({
-  params,
-}: {
-  params: Params;
-}): Promise<HomeSeoData | null | undefined> {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
-  const {data, errors} = await getStorefrontData<{shop: HomeSeoData}>({
-    query: HOMEPAGE_SEO_QUERY,
-    variables: {
-      language,
-      country,
-    },
-  });
-
-  if (errors) {
-    const errorMessages = errors.map((error) => error.message).join('\n');
-    throw new Error(errorMessages);
-  }
-
-  return data?.shop;
-}
-
-const HOMEPAGE_SEO_QUERY = `#graphql
-  query shopInfo {
-    shop {
-      name
-      description
-    }
-  }
-`;
-
-export async function getCollectionHeroData({
-  params,
-  handle,
-  delay,
-}: {
-  delay?: number;
-  params: Params;
-  handle: string;
-}): Promise<CollectionHero | null | undefined> {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
-  const {data, errors} = await getStorefrontData<{hero: CollectionHero}>({
-    query: COLLECTION_CONTENT_QUERY,
-    variables: {
-      language,
-      country,
-      handle,
-    },
-  });
-
-  if (errors) {
-    const errorMessages = errors.map((error) => error.message).join('\n');
-    throw new Error(errorMessages);
-  }
-
-  return data?.hero;
-}
-
 export const COLLECTION_CONTENT_FRAGMENT = `#graphql
   ${MEDIA_FRAGMENT}
   fragment CollectionContent on Collection {
@@ -1427,102 +1363,6 @@ export const COLLECTION_CONTENT_FRAGMENT = `#graphql
     spreadSecondary: metafield(namespace: "hero", key: "spread_secondary") {
       reference {
         ...Media
-      }
-    }
-  }
-`;
-
-export const COLLECTION_CONTENT_QUERY = `#graphql
-  ${COLLECTION_CONTENT_FRAGMENT}
-  query collectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
-  @inContext(country: $country, language: $language) {
-    hero: collection(handle: $handle) {
-      ...CollectionContent
-    }
-  }
-`;
-
-export async function getFeaturedCollectionData({
-  params,
-}: {
-  params: Params;
-}): Promise<Collection[] | null | undefined> {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
-  const {data, errors} = await getStorefrontData<{
-    collections: CollectionConnection;
-  }>({
-    query: FEATURED_COLLECTIONS_QUERY,
-    variables: {
-      language,
-      country,
-    },
-  });
-
-  if (errors) {
-    const errorMessages = errors.map((error) => error.message).join('\n');
-    throw new Error(errorMessages);
-  }
-
-  return data?.collections?.nodes;
-}
-
-// @see: https://shopify.dev/api/storefront/2022-01/queries/collections
-export const FEATURED_COLLECTIONS_QUERY = `#graphql
-  query homepageFeaturedCollections($country: CountryCode, $language: LanguageCode)
-  @inContext(country: $country, language: $language) {
-    collections(
-      first: 4,
-      sortKey: UPDATED_AT
-    ) {
-      nodes {
-        id
-        title
-        handle
-        image {
-          altText
-          width
-          height
-          url
-        }
-      }
-    }
-  }
-`;
-
-export async function getFeaturedProductsData({
-  params,
-}: {
-  params: Params;
-}): Promise<Product[] | null | undefined> {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
-  const {data, errors} = await getStorefrontData<{
-    products: ProductConnection;
-  }>({
-    query: HOMEPAGE_FEATURED_PRODUCTS_QUERY,
-    variables: {
-      language,
-      country,
-    },
-  });
-
-  if (errors) {
-    const errorMessages = errors.map((error) => error.message).join('\n');
-    throw new Error(errorMessages);
-  }
-
-  return data?.products?.nodes;
-}
-
-// @see: https://shopify.dev/api/storefront/2022-01/queries/products
-export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
-  query homepageFeaturedProducts($country: CountryCode, $language: LanguageCode)
-  @inContext(country: $country, language: $language) {
-    products(first: 8) {
-      nodes {
-        ...ProductCard
       }
     }
   }
