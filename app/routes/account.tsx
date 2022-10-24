@@ -1,11 +1,11 @@
 import {
-  type LoaderArgs,
-  redirect,
-  defer,
-  type MetaFunction,
-} from '@hydrogen/remix';
-import {Await, Form, Outlet, useLoaderData, useOutlet} from '@remix-run/react';
-import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
+  Await,
+  Form,
+  Outlet,
+  useLoaderData,
+  useMatches,
+  useOutlet,
+} from '@remix-run/react';
 import type {
   Collection,
   Customer,
@@ -24,16 +24,26 @@ import {
   ProductSwimlane,
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
+import {type LoaderArgs, redirect, json, defer} from '@hydrogen/remix';
+import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
 import {getCustomer, getFeaturedData} from '~/data';
 import {getSession} from '~/lib/session.server';
-import type {AccountOutletContext} from './account/edit';
 
 export async function loader({request, context, params}: LoaderArgs) {
+  const {pathname} = new URL(request.url);
   const session = await getSession(request, context);
+  const lang = params.lang;
   const customerAccessToken = await session.get('customerAccessToken');
+  const isAuthenticated = Boolean(customerAccessToken);
+  const loginPath = lang ? `${lang}/account/login` : '/account/login';
 
-  if (!customerAccessToken) {
-    return redirect('/account/login');
+  if (!isAuthenticated) {
+    if (/\/account\/login$/.test(pathname)) {
+      return json({
+        isAuthenticated,
+      });
+    }
+    return redirect(loginPath);
   }
 
   const customer = await getCustomer({
@@ -49,35 +59,69 @@ export async function loader({request, context, params}: LoaderArgs) {
       : `Welcome to your account.`
     : 'Account Details';
 
-  const orders = flattenConnection(customer?.orders) || [];
+  const orders = flattenConnection(customer?.orders) as Order[];
 
   return defer({
+    isAuthenticated,
     customer,
     heading,
     orders,
-    addresses: flattenConnection<MailingAddress>(customer.addresses),
+    addresses: flattenConnection(customer.addresses) as MailingAddress[],
     featuredData: getFeaturedData({params}),
   });
 }
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'Account Details',
-  };
-};
-
-export default function Account() {
-  const {customer, orders, heading, addresses, featuredData} =
-    useLoaderData<typeof loader>();
+export default function Authenticated() {
+  const data = useLoaderData<typeof loader>();
   const outlet = useOutlet();
+  const matches = useMatches();
 
+  // routes that export handle { renderInModal: true }
+  const renderOutletInModal = matches.some((match) => {
+    return match?.handle?.renderInModal;
+  });
+
+  // Public routes
+  if (!data.isAuthenticated) {
+    return <Outlet />;
+  }
+
+  // Authenticated routes
+  if (outlet) {
+    if (renderOutletInModal) {
+      return (
+        <>
+          <Modal cancelLink="/account">
+            <Outlet context={{customer: data.customer} as any} />
+          </Modal>
+          <Account {...data} />
+        </>
+      );
+    } else {
+      return <Outlet context={{customer: data.customer} as any} />;
+    }
+  }
+
+  return <Account {...data} />;
+}
+
+interface Account {
+  customer: Customer;
+  orders: Order[];
+  heading: string;
+  addresses: MailingAddress[];
+  featuredData: any; // @todo: help please
+}
+
+function Account({
+  customer,
+  orders,
+  heading,
+  addresses,
+  featuredData,
+}: Account) {
   return (
     <>
-      {!!outlet && (
-        <Modal cancelLink=".">
-          <Outlet context={{customer} as AccountOutletContext} />
-        </Modal>
-      )}
       <PageHeader heading={heading}>
         <Form method="post" action="/account/logout">
           <button type="submit" className="text-primary/50">
@@ -101,15 +145,9 @@ export default function Account() {
               <>
                 <FeaturedCollections
                   title="Popular Collections"
-                  collections={
-                    // @ts-expect-error Something is screwy with defer type inference here :thinking:
-                    data.featuredCollections as Collection[]
-                  }
+                  collections={data.featuredCollections as Collection[]}
                 />
-                <ProductSwimlane
-                  // @ts-expect-error Something is screwy with defer type inference here :thinking:
-                  products={data.featuredProducts}
-                />
+                <ProductSwimlane products={data.featuredProducts} />
               </>
             )}
           </Await>

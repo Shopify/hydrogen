@@ -79,8 +79,9 @@ function Address({
 
       <div className="flex flex-row font-medium mt-6">
         <Link
-          to={`address/${encodeURIComponent(address.id)}`}
+          to={`/account/address/${encodeURIComponent(address.id)}`}
           className="text-left underline text-sm"
+          prefetch="intent"
         >
           Edit
         </Link>

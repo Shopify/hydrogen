@@ -5,6 +5,7 @@ import * as remixBuild from 'remix-build';
 const requestHandler = createRequestHandler({
   build: remixBuild,
   mode: process.env.NODE_ENV,
+  shouldProxyAsset: () => false,
   storefront: {
     publicStorefrontToken: '3b580e70970c4528da70c98e097c2fa0',
     storeDomain: 'hydrogen-preview',

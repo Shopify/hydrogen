@@ -8,10 +8,12 @@ export function createRequestHandler<Context = unknown>({
   build,
   mode,
   getLoadContext,
+  shouldProxyAsset,
 }: {
   build: ServerBuild;
   mode?: string;
   getLoadContext?: (request: Request) => Promise<Context> | Context;
+  shouldProxyAsset?: (url: string) => boolean;
 }) {
   const handleRequest = createRemixRequestHandler(build, mode);
 
@@ -24,7 +26,15 @@ export function createRequestHandler<Context = unknown>({
     }: {ctx: Omit<ExecutionContext, 'passThroughOnException'>; env: any},
   ) => {
     try {
-      // TODO handle same-origin asset proxy
+      if (
+        mode === 'production' &&
+        build.publicPath !== undefined &&
+        shouldProxyAsset?.(request.url)
+      ) {
+        const url = new URL(request.url);
+        const assetBasePath = (build.publicPath || '').replace(/\/$/, '');
+        return fetch(request.url.replace(url.origin, assetBasePath), request);
+      }
 
       const loadContext = await getLoadContext?.(request);
 
