@@ -8,7 +8,7 @@ export function createRequestHandler<Context = unknown>({
   build,
   mode,
   getLoadContext,
-  shouldProxyAsset
+  shouldProxyAsset,
 }: {
   build: ServerBuild;
   mode?: string;
@@ -26,9 +26,13 @@ export function createRequestHandler<Context = unknown>({
     }: {ctx: Omit<ExecutionContext, 'passThroughOnException'>; env: any},
   ) => {
     try {
-      if (mode === "production" && build.publicPath !== undefined && shouldProxyAsset?.(request.url)) {
+      if (
+        mode === 'production' &&
+        build.publicPath !== undefined &&
+        shouldProxyAsset?.(request.url)
+      ) {
         const url = new URL(request.url);
-        const assetBasePath = (build.publicPath || '').replace(/\/$/, '')
+        const assetBasePath = (build.publicPath || '').replace(/\/$/, '');
         return fetch(request.url.replace(url.origin, assetBasePath), request);
       }
 
