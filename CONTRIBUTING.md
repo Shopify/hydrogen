@@ -45,3 +45,19 @@ If you need a helper function that is shared between the tests and stories files
 ## Package Exports Notes:
 
 - Until ESLint can resolve package.exports, we added hydrogen-ui to `.eslintrc.js`->`node/no-missing-import.allowModules`
+
+## Updating the Storefront API version
+
+Processes that need to happen:
+
+- Create a new branch for the version, e.g. `2022-10`.
+- Do a find & replace in the code to replace nearly all instances of the old version with the new version.
+  - However, don't replace documentation unless it makes sense.
+  - Also be careful that some versions of the Storefront API don't exactly match code here: for example, SFAPI `2022-07` could be both `2022-07` and `2022-7` in this codebase.
+- Run the `graphql-types` NPM script to generate the new types.
+  - If there are new scalars, or scalars are removed, update the `codegen.yml` file's custom scalar settings and run the command again.
+- Run the `ci:checks` NPM script and fix any issues that may come up.
+- Once you feel that everything is ready:
+  - Do one last `ci:checks`
+  - Push the branch up to Github. Do _not_ make a Pull Request - we want the older Storefront API branch to stay as a snapshot of the code that was there at that release.
+- Change the default branch in Github to the newly-created branch.

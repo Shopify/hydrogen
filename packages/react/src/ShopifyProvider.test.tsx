@@ -10,7 +10,7 @@ import type {PartialDeep} from 'type-fest';
 const SHOPIFY_CONFIG: ShopifyContextValue = {
   storeDomain: 'notashop.myshopify.com',
   storefrontToken: 'abc123',
-  storefrontApiVersion: '2022-07',
+  storefrontApiVersion: '2022-10',
   country: {
     isoCode: 'CA',
   },
@@ -62,6 +62,6 @@ export function getShopifyConfig(
     locale: config.locale ?? 'EN-US',
     storeDomain: config.storeDomain ?? 'notashop.myshopify.io',
     storefrontToken: config.storefrontToken ?? 'abc123',
-    storefrontApiVersion: config.storefrontApiVersion ?? '2022-07',
+    storefrontApiVersion: config.storefrontApiVersion ?? '2022-10',
   };
 }

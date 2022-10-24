@@ -1,4 +1,3 @@
-export {useCartFetch, useInstantCheckout} from './cart-hooks.js';
 export type {
   CartState,
   CartStatus,

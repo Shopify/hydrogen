@@ -4,7 +4,7 @@ on:
   push:
     branches:
       # update when the main branch updates
-      - '2022-7'
+      - '2022-10'
   workflow_dispatch:
 
 jobs:
