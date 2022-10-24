@@ -2,6 +2,7 @@
 import {resolve} from 'path';
 import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
+import packageJson from './package.json';
 
 export default defineConfig(({mode}) => {
   if (mode.includes('umdbuild')) {
@@ -56,7 +57,13 @@ export default defineConfig(({mode}) => {
       minify: false,
       rollupOptions: {
         // don't bundle these packages into our lib
-        external: ['react', 'react-dom', 'react/jsx-runtime'],
+        external: (id, parentId) => {
+          if (id.includes('xstate') || parentId?.includes('xstate')) {
+            return true;
+          }
+
+          return externals.includes(id);
+        },
         output: {
           // keep the folder structure of the components in the dist folder
           preserveModules: true,
@@ -77,3 +84,10 @@ export default defineConfig(({mode}) => {
     },
   };
 });
+
+const externals = [
+  ...Object.keys(packageJson.dependencies),
+  ...Object.keys(packageJson.peerDependencies),
+  'react/jsx-runtime',
+  'worktop/cookie',
+];
