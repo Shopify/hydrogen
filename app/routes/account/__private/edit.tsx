@@ -43,6 +43,10 @@ const formDataHas = (formData: FormData, key: string) => {
   return typeof value === 'string' && value.length > 0;
 };
 
+export const handle = {
+  renderInModal: true,
+};
+
 export const action: ActionFunction = async ({request, context, params}) => {
   const [formData, session] = await Promise.all([
     request.formData(),
@@ -99,7 +103,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
     await updateCustomer({customerAccessToken, customer});
 
-    return redirect('/account');
+    return redirect(params?.lang ? `${params.lang}/account` : '/account');
   } catch (error: any) {
     return badRequest({formError: error.message});
   }
