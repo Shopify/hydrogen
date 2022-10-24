@@ -57,6 +57,7 @@ Processes that need to happen:
 - Run the `graphql-types` NPM script to generate the new types.
   - If there are new scalars, or scalars are removed, update the `codegen.yml` file's custom scalar settings and run the command again.
 - Run the `ci:checks` NPM script and fix any issues that may come up.
+- Manually update the `package.json` `version` to the latest. Note that you can't have a leading `0` in the version number, so for example Storefront API `2022-07` would have to be `2022.7.0`
 - Once you feel that everything is ready:
   - Do one last `ci:checks`
   - Push the branch up to Github. Do _not_ make a Pull Request - we want the older Storefront API branch to stay as a snapshot of the code that was there at that release.
