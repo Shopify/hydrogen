@@ -15,28 +15,28 @@
     "dist",
     "storefront.schema.json"
   ],
-  "type": "module",
+  "type": "commonjs",
   "exports": {
     ".": {
       "module": {
         "types": "./dist/types/index.d.ts",
-        "development": "./dist/dev/index.js",
-        "production": "./dist/prod/index.js",
-        "default": "./dist/prod/index.js"
+        "development": "./dist/dev/index.mjs",
+        "production": "./dist/prod/index.mjs",
+        "default": "./dist/prod/index.mjs"
       },
       "import": {
         "types": "./dist/types/index.d.ts",
+        "development": "./dist/dev/index.mjs",
+        "production": "./dist/prod/index.mjs",
+        "default": "./dist/prod/index.mjs"
+      },
+      "require": {
+        "types": "./dist/types/index.d.cts",
         "development": "./dist/dev/index.js",
         "production": "./dist/prod/index.js",
         "default": "./dist/prod/index.js"
       },
-      "require": {
-        "types": "./dist/types/index.d.cts",
-        "development": "./dist/dev/index.cjs",
-        "production": "./dist/prod/index.cjs",
-        "default": "./dist/prod/index.cjs"
-      },
-      "default": "./dist/prod/index.js"
+      "default": "./dist/prod/index.mjs"
     },
     "./storefront-api-types": "./dist/types/storefront-api-types.d.ts",
     "./storefront.schema.json": "./storefront.schema.json",
@@ -49,8 +49,8 @@
       ]
     }
   },
-  "main": "./dist/prod/index.cjs",
-  "module": "./dist/prod/index.js",
+  "main": "./dist/prod/index.js",
+  "module": "./dist/prod/index.mjs",
   "types": "./dist/types/index.d.ts",
   "unpkg": "./dist/umd/hydrogen-react.prod.js",
   "jsdelivr": "./dist/umd/hydrogen-react.prod.js",
