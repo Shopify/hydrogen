@@ -27,13 +27,13 @@ export function FeaturedSection() {
 
   return (
     <>
-      {featuredCollections.nodes.length < 2 && (
+      {featuredCollections.length < 2 && (
         <FeaturedCollections
           title="Popular Collections"
-          collections={featuredCollections.nodes}
+          collections={featuredCollections}
         />
       )}
-      <ProductSwimlane products={featuredProducts.nodes} />
+      <ProductSwimlane products={featuredProducts} />
     </>
   );
 }

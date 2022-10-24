@@ -24,8 +24,9 @@ import {useFetcher, useParams, Form} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
-import {Suspense, useEffect} from 'react';
+import {Suspense, useEffect, useMemo} from 'react';
 import {useCart} from '~/hooks/useCart';
+import {useIsHydrated} from '~/hooks/useIsHydrated';
 
 export function Layout({
   children,
@@ -362,24 +363,44 @@ function Badge({
   dark: boolean;
   openCart: () => void;
 }) {
-  return (
+  const isHydrated = useIsHydrated();
+
+  const BadgeCounter = useMemo(
+    () => (
+      <>
+        <IconBag />
+        <div
+          className={`${
+            dark
+              ? 'text-primary bg-contrast dark:text-contrast dark:bg-primary'
+              : 'text-contrast bg-primary'
+          } absolute bottom-1 right-1 text-[0.625rem] font-medium subpixel-antialiased h-3 min-w-[0.75rem] flex items-center justify-center leading-none text-center rounded-full w-auto px-[0.125rem] pb-px`}
+        >
+          <span>{count || 0}</span>
+        </div>
+      </>
+    ),
+    [count, dark],
+  );
+
+  return isHydrated ? (
     <button
       onClick={openCart}
       className={
         'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
       }
     >
-      <IconBag />
-      <div
-        className={`${
-          dark
-            ? 'text-primary bg-contrast dark:text-contrast dark:bg-primary'
-            : 'text-contrast bg-primary'
-        } absolute bottom-1 right-1 text-[0.625rem] font-medium subpixel-antialiased h-3 min-w-[0.75rem] flex items-center justify-center leading-none text-center rounded-full w-auto px-[0.125rem] pb-px`}
-      >
-        <span>{count || 0}</span>
-      </div>
+      {BadgeCounter}
     </button>
+  ) : (
+    <Link
+      to="/cart"
+      className={
+        'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
+      }
+    >
+      {BadgeCounter}
+    </Link>
   );
 }
 
@@ -467,7 +488,7 @@ function FooterMenu({menu}: {menu?: EnhancedMenu}) {
                       open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
                     } overflow-hidden transition-all duration-300`}
                   >
-                    {/* TODO: the `static` prop causes a Suspense warning */}
+                    {/* @todo: the `static` prop causes a Suspense warning */}
                     <Disclosure.Panel static>
                       <nav className={styles.nav}>
                         {item.items.map((subItem) => (
