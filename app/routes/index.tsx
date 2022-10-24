@@ -34,6 +34,17 @@ interface CollectionHero {
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   const {language, country} = getLocalizationFromLang(params.lang);
 
+  if (
+    params.lang &&
+    language === 'EN' &&
+    country === 'US' &&
+    params.lang !== 'EN-US'
+  ) {
+    // If the lang URL param is defined, yet we still are on `EN-US`
+    // the the lang param must be invalid, send to the 404 page
+    throw new Response('Not found', {status: 404});
+  }
+
   const {shop, hero} = await storefront.query<{
     hero: CollectionHero;
     shop: HomeSeoData;

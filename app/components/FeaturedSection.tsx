@@ -6,6 +6,7 @@ import type {
 } from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import {FeaturedCollections} from './FeaturedCollections';
 import {ProductSwimlane} from './ProductSwimlane';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 export interface FeaturedData {
   featuredCollections: Collection[];
@@ -14,11 +15,11 @@ export interface FeaturedData {
 
 export function FeaturedSection() {
   const featuredProductsFetcher = useFetcher();
+  const path = usePrefixPathWithLocale('/featured-products');
 
   useEffect(() => {
-    featuredProductsFetcher.load('/featured-products');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    featuredProductsFetcher.load(path);
+  }, [path]);
 
   if (!featuredProductsFetcher.data) return null;
 
