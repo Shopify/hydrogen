@@ -20,13 +20,20 @@ import {
   CartEmpty,
   Link,
 } from '~/components';
-import {useFetcher, useParams, Form, useFetchers} from '@remix-run/react';
+import {
+  useFetcher,
+  useParams,
+  Form,
+  useFetchers,
+  Await,
+  useMatches,
+} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
-import {useCart} from '~/hooks/useCart';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
+import {Cart} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 
 export function Layout({
   children,
@@ -63,6 +70,7 @@ export function Layout({
 function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
   const fetchers = useFetchers();
+  const [root] = useMatches();
 
   const {
     isOpen: isCartOpen,
@@ -90,7 +98,11 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   return (
     <>
       <Suspense fallback={null}>
-        <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
+        <Await resolve={root.data.cart}>
+          {(cart) => (
+            <CartDrawer cart={cart} isOpen={isCartOpen} onClose={closeCart} />
+          )}
+        </Await>
       </Suspense>
       {menu && (
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
@@ -111,8 +123,15 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   );
 }
 
-function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
-  const cart = useCart();
+function CartDrawer({
+  cart,
+  isOpen,
+  onClose,
+}: {
+  cart: Cart;
+  isOpen: boolean;
+  onClose: () => void;
+}) {
   /**
    * Whenever a component that uses a fetcher is _unmounted_, that fetcher is removed
    * from the internal Remix cache. By defining the fetcher outside of the component,
@@ -217,6 +236,7 @@ function MobileHeader({
   openMenu: () => void;
 }) {
   const {y} = useWindowScroll();
+  const [root] = useMatches();
 
   const styles = {
     button: 'relative flex items-center justify-center w-8 h-8',
@@ -274,7 +294,15 @@ function MobileHeader({
         <Suspense
           fallback={<Badge count={0} dark={isHome} openCart={openCart} />}
         >
-          <CartBadge dark={isHome} openCart={openCart} />
+          <Await resolve={root.data.cart}>
+            {(cart) => (
+              <Badge
+                dark={isHome}
+                openCart={openCart}
+                count={cart.totalQuantity || 0}
+              />
+            )}
+          </Await>
         </Suspense>
       </div>
     </header>
@@ -294,6 +322,7 @@ function DesktopHeader({
 }) {
   const {y} = useWindowScroll();
   const params = useParams();
+  const [root] = useMatches();
 
   const styles = {
     link: 'pb-1',
@@ -359,7 +388,15 @@ function DesktopHeader({
         <Suspense
           fallback={<Badge count={0} dark={isHome} openCart={openCart} />}
         >
-          <CartBadge dark={isHome} openCart={openCart} />
+          <Await resolve={root.data.cart}>
+            {(cart) => (
+              <Badge
+                dark={isHome}
+                openCart={openCart}
+                count={cart.totalQuantity || 0}
+              />
+            )}
+          </Await>
         </Suspense>
       </div>
     </header>
@@ -416,15 +453,8 @@ function Badge({
   );
 }
 
-function CartBadge({openCart, dark}: {dark: boolean; openCart: () => void}) {
-  const cart = useCart();
-
-  return (
-    <Badge openCart={openCart} count={cart?.totalQuantity || 0} dark={dark} />
-  );
-}
-
 function Footer({menu}: {menu?: EnhancedMenu}) {
+  const [root] = useMatches();
   const isHome = useIsHomePath();
   const itemsCount = menu
     ? menu?.items?.length + 1 > 4
@@ -443,7 +473,9 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
     >
       <FooterMenu menu={menu} />
       <Suspense fallback="Loading countries...">
-        <CountrySelector />
+        <Await resolve={root.data.countries}>
+          {(countries) => <CountrySelector countries={countries} />}
+        </Await>
       </Suspense>
       <div
         className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
