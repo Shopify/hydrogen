@@ -13,8 +13,8 @@ import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
 
 export const handle = {
-  isPublic: true
-}
+  isPublic: true,
+};
 
 export async function loader({request, context, params}: LoaderArgs) {
   const session = await getSession(request, context);
