@@ -95,9 +95,9 @@ export default function Authenticated() {
           </Modal>
           <Account {...data} />
         </>
-      )
+      );
     } else {
-      return <Outlet context={{customer: data.customer} as any} />
+      return <Outlet context={{customer: data.customer} as any} />;
     }
   }
 
@@ -105,14 +105,20 @@ export default function Authenticated() {
 }
 
 interface Account {
-  customer: Customer
+  customer: Customer;
   orders: Order[];
-  heading: string
+  heading: string;
   addresses: MailingAddress[];
-  featuredData: any // @todo: help please
+  featuredData: any; // @todo: help please
 }
 
-function Account({customer, orders, heading, addresses, featuredData}: Account) {
+function Account({
+  customer,
+  orders,
+  heading,
+  addresses,
+  featuredData,
+}: Account) {
   return (
     <>
       <PageHeader heading={heading}>
@@ -138,13 +144,9 @@ function Account({customer, orders, heading, addresses, featuredData}: Account) 
               <>
                 <FeaturedCollections
                   title="Popular Collections"
-                  collections={
-                    data.featuredCollections as Collection[]
-                  }
+                  collections={data.featuredCollections as Collection[]}
                 />
-                <ProductSwimlane
-                  products={data.featuredProducts}
-                />
+                <ProductSwimlane products={data.featuredProducts} />
               </>
             )}
           </Await>
