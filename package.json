@@ -2,9 +2,10 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "rimraf build && npm run build:css && remix build && npm run bundle:worker && npm run copy:assets",
+    "build": "rimraf build && npm run build:css && remix build && npm run copy:assets && npm run bundle:worker --",
+    "build:prod": "npm run build -- --sourcemap --minify",
     "build:css": "postcss styles --base styles --dir app/styles --env production",
-    "bundle:worker": "esbuild worker/index.ts --bundle --outfile=build/worker/index.js --sourcemap --minify --format=esm --log-override:this-is-undefined-in-esm=silent --define:process.env.REMIX_DEV_SERVER_WS_PORT=\\\"8002\\\" && echo '{\"type\":\"module\",\"main\":\"./index.js\",\"exports\":{\".\":\"./index.js\",\"./index.js\":\"./index.js\"}}' > build/worker/package.json",
+    "bundle:worker": "esbuild worker/index.ts --bundle --outfile=build/worker/index.js --format=esm --log-override:this-is-undefined-in-esm=silent --define:process.env.REMIX_DEV_SERVER_WS_PORT=\\\"8002\\\"",
     "copy:assets": "cp -r public/* build/client",
     "deploy": "//todo",
     "dev:remix": "remix watch",
