@@ -20,7 +20,7 @@ import {
   CartEmpty,
   Link,
 } from '~/components';
-import {useFetcher, useParams, Form} from '@remix-run/react';
+import {useFetcher, useParams, Form, useFetchers} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
@@ -62,6 +62,7 @@ export function Layout({
 
 function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
+  const fetchers = useFetchers();
 
   const {
     isOpen: isCartOpen,
@@ -74,6 +75,17 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
     openDrawer: openMenu,
     closeDrawer: closeMenu,
   } = useDrawer();
+
+  // toggle cart drawer when adding to cart
+  useEffect(() => {
+    const fetcher = fetchers.find(
+      (fetcher) => fetcher?.submission?.action === '/cart',
+    );
+
+    if (!isCartOpen && fetcher?.data?.addedToCart) {
+      openCart();
+    }
+  }, [fetchers, isCartOpen, openCart]);
 
   return (
     <>
