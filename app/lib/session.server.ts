@@ -34,6 +34,10 @@ export async function getSession(request: Request, context: AppLoadContext) {
       session.set(key, value);
     },
 
+    flash(key: string, value: any): void {
+      session.flash(key, value);
+    },
+
     unset(key: string): void {
       session.unset(key);
     },
