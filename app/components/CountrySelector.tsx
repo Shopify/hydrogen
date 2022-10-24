@@ -9,7 +9,7 @@ import {Heading} from '~/components';
 export function CountrySelector() {
   const countries = useCountries();
   const closeRef = useRef<HTMLButtonElement>(null);
-  const {pathname} = useLocation();
+  const {pathname, search} = useLocation();
   const {lang} = useParams();
   const {language, country} = getLocalizationFromLang(lang);
   const languageIsoCode = language.toLowerCase();
@@ -59,8 +59,10 @@ export function CountrySelector() {
                             <Link
                               to={
                                 countryIsoCode !== 'us'
-                                  ? `/${languageIsoCode}-${countryIsoCode}${strippedPathname}`
-                                  : strippedPathname
+                                  ? `/${languageIsoCode}-${countryIsoCode}${strippedPathname}${
+                                      search || ''
+                                    }`
+                                  : `${strippedPathname}${search || ''}`
                               }
                               className={`text-contrast dark:text-primary text-contrast dark:text-primary bg-primary
                               dark:bg-contrast w-full p-2 transition rounded

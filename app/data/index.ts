@@ -40,7 +40,7 @@ import {
   getLocalizationFromLang,
 } from '~/lib/utils';
 import invariant from 'tiny-invariant';
-import {logout} from '~/routes/account.logout';
+import {logout} from '~/routes/account/__private/logout';
 import type {AppLoadContext} from '@hydrogen/remix';
 import {type Params} from '@remix-run/react';
 import type {FeaturedData} from '~/components/FeaturedSection';
@@ -1880,7 +1880,7 @@ export async function getCustomer({
    * If the customer failed to load, we assume their access token is invalid.
    */
   if (!data || !data.customer) {
-    throw await logout(request, context);
+    throw await logout(request, context, params);
   }
 
   return data.customer;
