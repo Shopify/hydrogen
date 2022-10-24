@@ -35,14 +35,15 @@ export async function loader({request, context, params}: LoaderArgs) {
   const lang = params.lang;
   const customerAccessToken = await session.get('customerAccessToken');
   const isAuthenticated = Boolean(customerAccessToken);
+  const loginPath = lang ? `${lang}/account/login` : '/account/login';
 
   if (!isAuthenticated) {
-    if (pathname === '/account/login') {
+    if (/\/account\/login$/.test(pathname)) {
       return json({
         isAuthenticated,
       });
     }
-    return redirect(lang ? `${lang}/account/login` : '/account/login');
+    return redirect(loginPath);
   }
 
   const customer = await getCustomer({
