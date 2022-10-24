@@ -1,15 +1,14 @@
-
-import { RouteMatch } from '@remix-run/react';
+import {RouteMatch} from '@remix-run/react';
 
 /*
   A utility hook to access defer props from a given route
 */
 export function useDeferred(resource: string, route: RouteMatch) {
   if (!route) {
-    throw new Error("route not provided");
+    throw new Error('route not provided');
   }
   if (!resource) {
-    throw new Error("resource not provided");
+    throw new Error('resource not provided');
   }
   const isPromise = Boolean(route?.data?.[resource]?.then);
 
@@ -21,7 +20,7 @@ export function useDeferred(resource: string, route: RouteMatch) {
 
     // Promise not yet resolved, throw while data is ready
     // Must be caught by a wrapping suspense boundary
-    throw route?.data?.[resource]
+    throw route?.data?.[resource];
   }
 
   // the [resource] was awaited in the loader return it
