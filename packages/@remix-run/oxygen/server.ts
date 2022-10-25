@@ -23,7 +23,12 @@ export function createRequestHandler<Context = unknown>({
     {
       ctx,
       env,
-    }: {ctx: Omit<ExecutionContext, 'passThroughOnException'>; env: any},
+      loadContext,
+    }: {
+      ctx: Omit<ExecutionContext, 'passThroughOnException'>;
+      env: any;
+      loadContext: any;
+    },
   ) => {
     try {
       if (
@@ -36,7 +41,10 @@ export function createRequestHandler<Context = unknown>({
         return fetch(request.url.replace(url.origin, assetBasePath), request);
       }
 
-      const loadContext = await getLoadContext?.(request);
+      loadContext = {
+        ...loadContext,
+        ...(await getLoadContext?.(request)),
+      };
 
       return await handleRequest(request, {
         env,
