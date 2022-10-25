@@ -10,6 +10,11 @@ import {
   useFetcher,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-ui-alpha';
+import {
+  Product,
+  MediaImage,
+} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {
   Button,
@@ -29,6 +34,34 @@ import {getExcerpt} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
+import {SeoDescriptor} from '~/lib/seo';
+
+export const handle = {
+  seo: (data: {product: Product}): Partial<SeoDescriptor> => {
+    const {media} = data.product;
+    const images = media.nodes
+      .filter((med) => med.mediaContentType === 'IMAGE')
+      .slice(0, 2)
+      .map((med) => ({
+        ...(med as MediaImage).image,
+        alt: med.alt || 'Product image',
+      }));
+
+    return {
+      description: 'A description of the product',
+      title: data?.product?.title,
+      titleTemplate: `%s | Product from ${data?.product?.vendor}`,
+      defaultTitle: 'Fallback title',
+      tags: ['snowboard', 'hydrogen', 'shopify'],
+      twitter: {
+        card: 'summary_large_image',
+        handle: 'shopify',
+      },
+      images,
+      alternates: [{url: `/de/products/${data.product.handle}`, lang: 'DE-BE'}],
+    };
+  },
+};
 
 export const loader = async ({params, request}: LoaderArgs) => {
   const {productHandle} = params;
