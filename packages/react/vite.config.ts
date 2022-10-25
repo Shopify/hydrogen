@@ -2,7 +2,6 @@
 import {resolve} from 'path';
 import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
-import packageJson from './package.json';
 
 export default defineConfig(({mode}) => {
   if (mode.includes('umdbuild')) {
@@ -56,20 +55,8 @@ export default defineConfig(({mode}) => {
       sourcemap: true,
       minify: false,
       rollupOptions: {
-        external: (id, parentId) => {
-          /**
-           * Don't bundle these packages into our lib
-           *
-           * This creates a better build for node esm environments,
-           * but if we wanted a browser esm build, we would either have to tell devs to use "import maps"
-           * or to create a new bundle that doesn't use these as externals
-           * */
-          if (parentId?.includes('@xstate') || id.includes('@xstate')) {
-            return true;
-          }
-
-          return externals.includes(id);
-        },
+        // don't bundle these packages into our lib
+        external: ['react', 'react-dom', 'react/jsx-runtime'],
         output: {
           // keep the folder structure of the components in the dist folder
           preserveModules: true,
@@ -90,10 +77,3 @@ export default defineConfig(({mode}) => {
     },
   };
 });
-
-const externals = [
-  ...Object.keys(packageJson.dependencies),
-  ...Object.keys(packageJson.peerDependencies),
-  'react/jsx-runtime',
-  'worktop/cookie',
-];
