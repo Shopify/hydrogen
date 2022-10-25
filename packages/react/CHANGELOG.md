@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2022.10.1
+
+### Patch Changes
+
+- 71b78b0: Initial release of version `2022-10`!
+
 ## 2022.7.1
 
 ### Patch Changes
