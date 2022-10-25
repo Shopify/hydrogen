@@ -9,6 +9,12 @@ import {getLocalizationFromLang} from '~/lib/utils';
 
 const BLOG_HANDLE = 'Journal';
 
+export const handle = {
+  seo: {
+    titleTemplate: '%s | Journal',
+  },
+};
+
 export const loader = async ({params}: LoaderArgs) => {
   const journals = await getBlog({
     params,
