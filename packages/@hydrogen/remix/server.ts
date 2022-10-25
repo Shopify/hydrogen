@@ -5,19 +5,28 @@ type HydrogenHandlerParams = {
   storefront: StorefrontClientProps;
 };
 
-export function createRequestHandler({
-  storefront,
-  getLoadContext,
-  ...oxygenHandlerParams
-}: Parameters<typeof createOxygenRequestHandler>[0] & HydrogenHandlerParams) {
-  return createOxygenRequestHandler({
-    ...oxygenHandlerParams,
-    getLoadContext: async (request) => {
-      const context = getLoadContext ? await getLoadContext(request) : {};
-      // @ts-ignore
-      context.storefront = createStorefrontClient(storefront);
+export function createRequestHandler(
+  oxygenHandlerParams: Parameters<typeof createOxygenRequestHandler>[0],
+) {
+  const handleRequest = createOxygenRequestHandler(oxygenHandlerParams);
 
-      return context;
-    },
-  });
+  return (
+    request: Request,
+    {
+      storefront,
+      ...options
+    }: Omit<Parameters<typeof handleRequest>[1], 'loadContext'> &
+      HydrogenHandlerParams,
+  ) => {
+    try {
+      return handleRequest(request, {
+        ...options,
+        loadContext: {storefront: createStorefrontClient(storefront)},
+      });
+    } catch (e) {
+      console.error(e);
+
+      return new Response('Internal Error', {status: 500});
+    }
+  };
 }
