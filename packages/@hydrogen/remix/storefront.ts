@@ -110,14 +110,17 @@ function throwError<T>(
   response: Response,
   errors: StorefrontApiResponse<T>['errors'],
 ) {
+  const reqId = response.headers.get('x-request-id');
+  const reqIdMessage = reqId ? ` - Request ID: ${reqId}` : '';
+
   if (errors) {
     const errorMessages =
       typeof errors === 'string'
         ? errors
         : errors.map((error) => error.message).join('\n');
 
-    throw new Error(errorMessages);
+    throw new Error(errorMessages + reqIdMessage);
   }
 
-  throw new Error(`API response error: ${response.status}`);
+  throw new Error(`API response error: ${response.status}` + reqIdMessage);
 }
