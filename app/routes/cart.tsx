@@ -70,7 +70,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       }
 
       // returned inside the fetcher.data, addedToCart:true opens the cart drawer
-      return json({cart, addedToCart: true}, {headers});
+      return json({addedLine: { variantId, quantity: 1 }}, {headers});
     }
 
     case 'set-quantity': {

@@ -4,6 +4,7 @@ import {
   type LoaderFunction,
   type MetaFunction,
 } from '@hydrogen/remix';
+import {Suspense} from 'react';
 import {
   Links,
   LiveReload,
@@ -13,13 +14,15 @@ import {
   ScrollRestoration,
   useCatch,
   useLoaderData,
+  Await,
   useMatches,
 } from '@remix-run/react';
 import {Layout} from '~/components';
-import {getCart, getLayoutData, getCountries} from '~/data';
+import {getCart, getLayoutData, getCountries, getCustomer} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
 import {getSession} from './lib/session.server';
+import {Events} from '~/components/Events/Events'
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
@@ -54,11 +57,20 @@ export const loader: LoaderFunction = async function loader({
 }) {
   const session = await getSession(request, context);
   const cartId = await session.get('cartId');
+  const customerAccessToken = await session.get("customerAccessToken");
 
   return defer({
     layout: await getLayoutData(params),
     countries: getCountries(),
-    cart: cartId ? getCart({cartId, params}) : undefined,
+    customer: customerAccessToken
+      ? getCustomer({
+          customerAccessToken,
+          params,
+          request,
+          context,
+        })
+      : null,
+    cart: cartId ? getCart({cartId, params}) : null,
   });
 };
 
@@ -70,12 +82,22 @@ export default function App() {
       <head>
         <Meta />
         <Links />
+        <script type="text/javascript">
+          {'window.dataLayer = window.dataLayer || []'}
+        </script>
       </head>
       <body>
         <Layout data={data}>
           <Outlet />
         </Layout>
         <ScrollRestoration />
+        <Suspense fallback={null}>
+          <Await resolve={Promise.all([data.cart, data.customer, data.countries])}>
+          {([cart, customer, countries]) => (
+            <Events cart={cart} customer={customer} countries={countries} />
+          )}
+          </Await>
+        </Suspense>
         <Scripts />
         <LiveReload />
       </body>
