@@ -584,55 +584,6 @@ export async function getCollection({
   return data.collection;
 }
 
-const ALL_PRODUCTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
-  query AllProducts(
-    $country: CountryCode
-    $language: LanguageCode
-    $pageBy: Int!
-    $cursor: String
-  ) @inContext(country: $country, language: $language) {
-    products(first: $pageBy, after: $cursor) {
-      nodes {
-        ...ProductCard
-      }
-      pageInfo {
-        hasNextPage
-        startCursor
-        endCursor
-      }
-    }
-  }
-`;
-
-export async function getAllProducts({
-  paginationSize = 48,
-  cursor,
-  params,
-}: {
-  paginationSize?: number;
-  cursor?: string;
-  params: Params;
-}) {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
-  const {data} = await getStorefrontData<{
-    products: ProductConnection;
-  }>({
-    query: ALL_PRODUCTS_QUERY,
-    variables: {
-      cursor,
-      language,
-      country,
-      pageBy: paginationSize,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.products;
-}
-
 const CART_FRAGMENT = `#graphql
 fragment CartFragment on Cart {
   id

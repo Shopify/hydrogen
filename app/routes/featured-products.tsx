@@ -9,6 +9,13 @@ import {PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getLocalizationFromLang} from '~/lib/utils';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
+  return json(await getFeaturedData(storefront, params));
+}
+
+export async function getFeaturedData(
+  storefront: LoaderArgs['context']['storefront'],
+  params: LoaderArgs['params'],
+) {
   const {language, country} = getLocalizationFromLang(params.lang);
   const data = await storefront.query<{
     featuredCollections: CollectionConnection;
@@ -20,12 +27,10 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
 
   invariant(data, 'No data returned from Shopify API');
 
-  const test = flattenConnection(data.featuredCollections);
-
-  return json({
+  return {
     featuredCollections: flattenConnection(data.featuredCollections),
     featuredProducts: flattenConnection(data.featuredProducts),
-  });
+  };
 }
 
 const FEATURED_QUERY = `#graphql
