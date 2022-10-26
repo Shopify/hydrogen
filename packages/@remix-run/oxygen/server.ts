@@ -21,13 +21,13 @@ export function createRequestHandler<Context = unknown>({
     request: Request,
     // This may be temporary unless we adjust @shopify/oxygen-workers-types
     {
-      ctx,
       env,
-      loadContext,
+      context,
     }: {
-      ctx: Omit<ExecutionContext, 'passThroughOnException'>;
       env: any;
-      loadContext: any;
+      context: Omit<ExecutionContext, 'passThroughOnException'> & {
+        [key: string]: any;
+      };
     },
   ) => {
     try {
@@ -41,17 +41,13 @@ export function createRequestHandler<Context = unknown>({
         return fetch(request.url.replace(url.origin, assetBasePath), request);
       }
 
-      loadContext = {
-        ...loadContext,
-        ...(await getLoadContext?.(request)),
-      };
-
       return await handleRequest(request, {
         env,
-        ...ctx,
-        ...loadContext,
+        ...context,
+        ...(await getLoadContext?.(request)),
       } as AppLoadContext);
     } catch (e) {
+      // eslint-disable-next-line no-console
       console.error(e);
 
       return new Response('Internal Error', {status: 500});
