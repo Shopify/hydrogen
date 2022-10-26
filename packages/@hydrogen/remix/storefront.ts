@@ -3,6 +3,7 @@ import {
   type StorefrontApiResponseOk,
 } from '@shopify/hydrogen-ui-alpha';
 import type {ExecutionArgs} from 'graphql';
+import {STOREFRONT_API_BUYER_IP_HEADER} from './constants';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -19,7 +20,7 @@ export type HydrogenContext = {
 
 export function createStorefrontClient(
   clientOptions: StorefrontClientProps,
-  {cache}: {cache?: Cache} = {},
+  {cache, buyerIp}: {cache?: Cache; buyerIp?: string} = {},
 ) {
   const utils = createStorefrontUtilities(clientOptions);
   const {getPublicTokenHeaders, getStorefrontApiUrl} = utils;
@@ -34,6 +35,9 @@ export function createStorefrontClient(
     const headers = getPublicTokenHeaders();
     // This needs to be application/json because we're sending JSON, not a graphql string
     headers['content-type'] = 'application/json';
+    if (buyerIp) {
+      headers[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
+    }
 
     const response = await fetch(getStorefrontApiUrl(), {
       body: JSON.stringify({

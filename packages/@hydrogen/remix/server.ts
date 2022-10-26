@@ -1,4 +1,7 @@
-import {createRequestHandler as createOxygenRequestHandler} from '@remix-run/oxygen';
+import {
+  createRequestHandler as createOxygenRequestHandler,
+  getBuyerIp,
+} from '@remix-run/oxygen';
 import {createStorefrontClient, type StorefrontClientProps} from './storefront';
 
 type HydrogenHandlerParams = {
@@ -31,7 +34,10 @@ export function createRequestHandler(
         context: {
           ...context,
           cache,
-          storefront: createStorefrontClient(storefront, {cache}),
+          storefront: createStorefrontClient(storefront, {
+            cache,
+            buyerIp: getBuyerIp(request),
+          }),
         },
       });
     } catch (e) {
