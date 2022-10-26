@@ -231,14 +231,14 @@ For example, you might leverage a URL path prefix like `/en-US/products/snowboar
 ```ts
 // worker.ts
 import {
-  createStorefrontApi,
+  createStorefrontClient,
   createPathnameLanguageStrategy,
 } from "@shopify/hydrogen-remix";
 
 createRequestHandler(build, {
-  getLoadContext: () => ({
-    storefront: createStorefrontApi({
-      getBuyerIp: (req) => req.headers.get("oxygen-buyer-ip"),
+  getLoadContext: (req) => ({
+    storefront: createStorefrontClient(credentials, {
+      buyerIp: req.headers.get("oxygen-buyer-ip"),
     }),
     language: createPathnameLanguageStrategy(),
   }),
@@ -250,14 +250,14 @@ Likewise, if you want to infer the customer's country or language from an Oxygen
 ```ts
 // worker.ts
 import {
-  createStorefrontApi,
+  createStorefrontClient,
   createOxygenLanguageStrategy,
 } from "@shopify/hydrogen-remix";
 
 createRequestHandler(build, {
-  getLoadContext: () => ({
-    storefront: createStorefrontApi({
-      getBuyerIp: (req) => req.headers.get("oxygen-buyer-ip"),
+  getLoadContext: (req) => ({
+    storefront: createStorefrontClient(credentials, {
+      buyerIp: req.headers.get("oxygen-buyer-ip"),
     }),
     language: createOxygenLanguageStrategy(),
   }),
