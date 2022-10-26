@@ -17,7 +17,10 @@ export type HydrogenContext = {
   [key: string]: unknown;
 };
 
-export function createStorefrontClient(clientOptions: StorefrontClientProps) {
+export function createStorefrontClient(
+  clientOptions: StorefrontClientProps,
+  {cache}: {cache?: Cache} = {},
+) {
   const utils = createStorefrontUtilities(clientOptions);
   const {getPublicTokenHeaders, getStorefrontApiUrl} = utils;
 
