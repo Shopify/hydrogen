@@ -30,24 +30,34 @@ export function createStorefrontClient(
   clientOptions: StorefrontClientProps,
   {cache, buyerIp}: {cache?: Cache; buyerIp?: string} = {},
 ) {
-  const utils = createStorefrontUtilities(clientOptions);
-  const {getPublicTokenHeaders, getStorefrontApiUrl} = utils;
+  const {getPublicTokenHeaders, getPrivateTokenHeaders, getStorefrontApiUrl} =
+    createStorefrontUtilities(clientOptions);
+
+  const defaultHeaders = clientOptions.privateStorefrontToken
+    ? getPrivateTokenHeaders()
+    : getPublicTokenHeaders();
+
+  defaultHeaders['content-type'] = 'application/json';
+
+  if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
 
   async function getStorefrontData<T>({
     query,
     variables,
     cache: cacheOptions,
+    headers = [],
   }: {
     query: string;
     variables: ExecutionArgs['variableValues'];
     cache: CachingStrategy;
+    headers?: HeadersInit;
   }): Promise<T> {
-    const headers = getPublicTokenHeaders();
-    // This needs to be application/json because we're sending JSON, not a graphql string
-    headers['content-type'] = 'application/json';
-    if (buyerIp) {
-      headers[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
-    }
+    const userHeaders =
+      headers instanceof Headers
+        ? Object.fromEntries(headers.entries())
+        : Array.isArray(headers)
+        ? Object.fromEntries(headers)
+        : headers;
 
     const response = await fetchWithServerCache(
       getStorefrontApiUrl(),
@@ -56,7 +66,7 @@ export function createStorefrontClient(
           query,
           variables,
         }),
-        headers,
+        headers: {...defaultHeaders, ...userHeaders},
         method: 'POST',
       },
       {cache, cacheOptions},
@@ -84,8 +94,10 @@ export function createStorefrontClient(
   }
 
   return {
-    ...utils,
     query: getStorefrontData,
+    getPublicTokenHeaders,
+    getPrivateTokenHeaders,
+    getStorefrontApiUrl,
     cache,
     CacheNone,
     CacheLong,
