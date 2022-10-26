@@ -1,25 +1,24 @@
 {
   "include": ["**/*.d.ts", "**/*.ts", "**/*.tsx"],
   "compilerOptions": {
+    "types": ["vitest/importMeta", "vitest/globals"],
     "lib": ["DOM", "DOM.Iterable", "ES2019"],
     "isolatedModules": true,
     "esModuleInterop": true,
     "jsx": "react-jsx",
     "moduleResolution": "node",
     "resolveJsonModule": true,
-    "target": "ES2019",
+    "module": "ESNext",
     "strict": true,
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": ".",
+    "target": "ES2019",
     "paths": {
       "~/*": ["./app/*"],
       "remix-build": ["./build/server/index.js"]
     },
-
-    // Remix takes care of building everything in `./app` with `remix build`.
-    // Wrangler takes care of building everything in `./worker` with `wrangler start` / `wrangler publish`.
     "noEmit": true
   }
 }

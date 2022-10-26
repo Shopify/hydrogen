@@ -1,0 +1,46 @@
+name: Deployment Integration Tests
+
+on:
+  workflow_dispatch:
+    # Inputs the workflow accepts.
+    inputs:
+      baseUrl:
+        description: "Base URL of the deployment to test against"
+        required: true
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18.x"
+
+      - name: Install Dependencies
+        uses: bahmutov/npm-install@v1
+
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "::set-output name=version::$(npx playwright --version | grep -h 'Version ')"
+
+      - uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: "~/.cache/ms-playwright"
+          key: "${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}"
+          restore-keys: |
+            ${{ runner.os }}-playwright-
+
+      - name: Install Playwright Browsers
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright tests
+        run: npx playwright test
+        env:
+          URL: ${{ github.event.inputs.baseUrl }}
