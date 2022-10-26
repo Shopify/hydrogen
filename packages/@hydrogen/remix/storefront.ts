@@ -3,7 +3,15 @@ import {
   type StorefrontApiResponseOk,
 } from '@shopify/hydrogen-ui-alpha';
 import type {ExecutionArgs} from 'graphql';
+import {fetchWithServerCache} from './cache/fetch';
 import {STOREFRONT_API_BUYER_IP_HEADER} from './constants';
+import {
+  CacheNone,
+  CacheLong,
+  CacheShort,
+  CacheCustom,
+  type CachingStrategy,
+} from './cache/strategies';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -28,9 +36,11 @@ export function createStorefrontClient(
   async function getStorefrontData<T>({
     query,
     variables,
+    cache: cacheOptions,
   }: {
     query: string;
     variables: ExecutionArgs['variableValues'];
+    cache: CachingStrategy;
   }): Promise<T> {
     const headers = getPublicTokenHeaders();
     // This needs to be application/json because we're sending JSON, not a graphql string
@@ -39,14 +49,18 @@ export function createStorefrontClient(
       headers[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
     }
 
-    const response = await fetch(getStorefrontApiUrl(), {
-      body: JSON.stringify({
-        query,
-        variables,
-      }),
-      headers,
-      method: 'POST',
-    });
+    const response = await fetchWithServerCache(
+      getStorefrontApiUrl(),
+      {
+        body: JSON.stringify({
+          query,
+          variables,
+        }),
+        headers,
+        method: 'POST',
+      },
+      {cache, cacheOptions},
+    );
 
     if (!response.ok) {
       const error = await response.text();
@@ -72,6 +86,11 @@ export function createStorefrontClient(
   return {
     ...utils,
     query: getStorefrontData,
+    cache,
+    CacheNone,
+    CacheLong,
+    CacheShort,
+    CacheCustom,
   };
 }
 
