@@ -7,7 +7,7 @@ export {
   createSessionStorage,
 } from './implementations';
 
-export {createRequestHandler} from './server';
+export {createRequestHandler, getBuyerIp} from './server';
 
 export {
   createSession,
