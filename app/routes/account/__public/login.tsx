@@ -137,6 +137,7 @@ export default function Login() {
               <p className="text-red-500 text-xs">{nativeEmailError} &nbsp;</p>
             )}
           </div>
+
           <div>
             <input
               className={`mb-1 ${getInputStyleClasses(nativePasswordError)}`}
@@ -180,19 +181,15 @@ export default function Login() {
               Sign in
             </button>
           </div>
-          <div className="flex items-center mt-8 border-t border-gray-300">
+          <div className="flex justify-between items-center mt-8 border-t border-gray-300">
             <p className="align-baseline text-sm mt-6">
               New to {shopName}? &nbsp;
               <Link className="inline underline" to="/account/register">
                 Create an account
               </Link>
             </p>
-          </div>
-
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex-1"></div>
             <Link
-              className="inline-block align-baseline text-sm text-primary/50"
+              className="mt-6 inline-block align-baseline text-sm text-primary/50"
               to="/account/recover"
             >
               Forgot password
