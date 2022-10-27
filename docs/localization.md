@@ -335,6 +335,42 @@ export {
 } from '~/routes/products/$productHandle';
 ```
 
+You will most likely need to create a wrapper `<Link>` component to make sure navigations
+between pages matches with localization.
+
+```jsx
+import {
+  Link as RemixLink,
+  useParams,
+  NavLink as RemixNavLink,
+  type NavLinkProps as RemixNavLinkProps,
+  type LinkProps as RemixLinkProps,
+} from '@remix-run/react';
+
+type LinkProps = Omit<RemixLinkProps, 'className'> & {
+  className?: RemixNavLinkProps['className'] | RemixLinkProps['className'];
+};
+
+export function Link(props: LinkProps) {
+  const {to, className, ...resOfProps} = props;
+  const {lang} = useParams();
+
+  let toWithLang = to;
+
+  if (typeof to === 'string') {
+    toWithLang = lang ? `/${lang}${to}` : to;
+  }
+
+  if (typeof className === 'function') {
+    return (
+      <RemixNavLink to={toWithLang} className={className} {...resOfProps} />
+    );
+  }
+
+  return <RemixLink to={toWithLang} className={className} {...resOfProps} />;
+}
+```
+
 # Request header or cookie based localization detection
 
 You would implement this localization detection for better buyer experience. However, this detection

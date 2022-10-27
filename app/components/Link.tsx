@@ -31,7 +31,6 @@ export function Link(props: LinkProps) {
 
   let toWithLang = to;
 
-  // Make sure `to` isn't a cross domain url
   if (typeof to === 'string') {
     toWithLang = lang ? `/${lang}${to}` : to;
   }
