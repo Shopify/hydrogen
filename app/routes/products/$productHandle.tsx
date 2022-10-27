@@ -1,5 +1,5 @@
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, Storefront, type LoaderArgs} from '@hydrogen/remix';
+import {defer, type LoaderArgs} from '@hydrogen/remix';
 import {
   useLoaderData,
   Await,
@@ -9,11 +9,6 @@ import {
   useFetcher,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-react';
-import {
-  Product,
-  MediaImage,
-} from '@shopify/hydrogen-react/storefront-api-types';
-
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {
   Button,
@@ -32,37 +27,6 @@ import {getExcerpt, getLocalizationFromLang} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
-<<<<<<< HEAD
-import {SeoDescriptor} from '~/lib/seo';
-
-export const handle = {
-  seo: (data: {product: Product}): Partial<SeoDescriptor> => {
-    const {media} = data.product;
-    const images = media.nodes
-      .filter((med) => med.mediaContentType === 'IMAGE')
-      .slice(0, 2)
-      .map((med) => ({
-        ...(med as MediaImage).image,
-        alt: med.alt || 'Product image',
-      }));
-
-    return {
-      description: 'A description of the product',
-      title: data?.product?.title,
-      titleTemplate: `%s | Product from ${data?.product?.vendor}`,
-      defaultTitle: 'Fallback title',
-      tags: ['snowboard', 'hydrogen', 'shopify'],
-      twitter: {
-        card: 'summary_large_image',
-        handle: 'shopify',
-      },
-      images,
-      alternates: [{url: `/de/products/${data.product.handle}`, lang: 'DE-BE'}],
-    };
-  },
-};
-||||||| parent of 036ffba (Migrate the `/products/{handle}` route)
-=======
 import {
   ProductVariant,
   SelectedOptionInput,
@@ -72,8 +36,11 @@ import {
   LanguageCode,
   CountryCode,
 } from '@shopify/hydrogen-ui-alpha/storefront-api-types';
-import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT, PRODUCT_VARIANT_FRAGMENT} from '~/data';
->>>>>>> 036ffba (Migrate the `/products/{handle}` route)
+import {
+  MEDIA_FRAGMENT,
+  PRODUCT_CARD_FRAGMENT,
+  PRODUCT_VARIANT_FRAGMENT,
+} from '~/data';
 
 export const loader = async ({
   params,
