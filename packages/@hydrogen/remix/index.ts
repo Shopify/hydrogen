@@ -1,5 +1,5 @@
-import {HydrogenContext} from './storefront';
-import {Params, Request} from '@remix-run/oxygen';
+import type {HydrogenContext} from './storefront';
+import type {Params} from '@remix-run/react';
 
 export * from '@remix-run/oxygen';
 export {createRequestHandler} from './server';

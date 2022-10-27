@@ -3,8 +3,11 @@ import {
   type StorefrontApiResponseOk,
 } from '@shopify/hydrogen-ui-alpha';
 import type {ExecutionArgs} from 'graphql';
-import {fetchWithServerCache} from './cache/fetch';
-import {STOREFRONT_API_BUYER_IP_HEADER} from './constants';
+import {FetchCacheOptions, fetchWithServerCache} from './cache/fetch';
+import {
+  STOREFRONT_API_BUYER_IP_HEADER,
+  STOREFRONT_REQUEST_GROUP_ID_HEADER,
+} from './constants';
 import {
   CacheNone,
   CacheLong,
@@ -12,6 +15,8 @@ import {
   CacheCustom,
   type CachingStrategy,
 } from './cache/strategies';
+import {parseJSON} from './utils/parse-json';
+import {generateUUID} from './utils/uuid';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -26,9 +31,33 @@ export type HydrogenContext = {
   [key: string]: unknown;
 };
 
+export type CreateStorefrontClientOptions = {
+  cache?: Cache;
+  buyerIp?: string;
+  requestGroupId?: string;
+  waitUntil?: ExecutionContext['waitUntil'];
+};
+
+// Check if the response body has GraphQL errors
+// https://spec.graphql.org/June2018/#sec-Response-Format
+const shouldCacheResponse = ([body]: [any, Response]) => {
+  try {
+    return !parseJSON(body)?.errors;
+  } catch {
+    // If we can't parse the response, then assume
+    // an error and don't cache the response
+    return false;
+  }
+};
+
 export function createStorefrontClient(
   clientOptions: StorefrontClientProps,
-  {cache, buyerIp}: {cache?: Cache; buyerIp?: string} = {},
+  {
+    cache,
+    waitUntil,
+    buyerIp,
+    requestGroupId = generateUUID(),
+  }: CreateStorefrontClientOptions = {},
 ) {
   const {getPublicTokenHeaders, getPrivateTokenHeaders, getStorefrontApiUrl} =
     createStorefrontUtilities(clientOptions);
@@ -38,7 +67,7 @@ export function createStorefrontClient(
     : getPublicTokenHeaders();
 
   defaultHeaders['content-type'] = 'application/json';
-
+  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] = requestGroupId;
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
 
   async function getStorefrontData<T>({
@@ -49,7 +78,7 @@ export function createStorefrontClient(
   }: {
     query: string;
     variables: ExecutionArgs['variableValues'];
-    cache: CachingStrategy;
+    cache?: CachingStrategy;
     headers?: HeadersInit;
   }): Promise<T> {
     const userHeaders =
@@ -59,18 +88,22 @@ export function createStorefrontClient(
         ? Object.fromEntries(headers)
         : headers;
 
-    const response = await fetchWithServerCache(
-      getStorefrontApiUrl(),
-      {
-        body: JSON.stringify({
-          query,
-          variables,
-        }),
-        headers: {...defaultHeaders, ...userHeaders},
-        method: 'POST',
-      },
-      {cache, cacheOptions},
-    );
+    const url = getStorefrontApiUrl();
+    const requestInit = {
+      method: 'POST',
+      headers: {...defaultHeaders, ...userHeaders},
+      body: JSON.stringify({
+        query,
+        variables,
+      }),
+    };
+
+    const response = await fetchWithServerCache(url, requestInit, {
+      cache,
+      cacheOptions,
+      shouldCacheResponse,
+      waitUntil,
+    });
 
     if (!response.ok) {
       const error = await response.text();
