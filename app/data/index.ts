@@ -1,7 +1,4 @@
-import {
-  type StorefrontApiResponseOk,
-  flattenConnection,
-} from '@shopify/hydrogen-react';
+import {type StorefrontApiResponseOk} from '@shopify/hydrogen-react';
 import type {
   Cart,
   CartInput,
@@ -9,12 +6,8 @@ import type {
   CartLineUpdateInput,
   Collection,
   CollectionConnection,
-  Product,
   ProductConnection,
-  ProductVariant,
-  SelectedOptionInput,
   Blog,
-  PageConnection,
   Shop,
   Order,
   Localization,
@@ -46,8 +39,6 @@ import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
 import type {AppLoadContext} from '@hydrogen/remix';
 import {type Params} from '@remix-run/react';
-import type {FeaturedData} from '~/components/FeaturedSection';
-import {PAGINATION_SIZE} from '~/lib/const';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 export interface CountriesData {
@@ -221,43 +212,7 @@ const COUNTRIES_QUERY = `#graphql
   }
 `;
 
-export async function getProductData(
-  handle: string,
-  searchParams: URLSearchParams,
-  params: Params,
-) {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
-  const selectedOptions: SelectedOptionInput[] = [];
-  searchParams.forEach((value, name) => {
-    selectedOptions.push({name, value});
-  });
-
-  const {data} = await getStorefrontData<{
-    product: Product & {selectedVariant?: ProductVariant};
-    shop: Shop;
-  }>({
-    query: PRODUCT_QUERY,
-    variables: {
-      country,
-      language,
-      selectedOptions,
-      handle,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  const {product, shop} = data;
-
-  if (!product) {
-    throw new Response('Not found', {status: 404});
-  }
-
-  return {product, shop};
-}
-
-const MEDIA_FRAGMENT = `#graphql
+export const MEDIA_FRAGMENT = `#graphql
   fragment Media on Media {
     mediaContentType
     alt
@@ -322,7 +277,7 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
   }
 `;
 
-const PRODUCT_VARIANT_FRAGMENT = `#graphql
+export const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariantFragment on ProductVariant {
     id
     availableForSale
@@ -353,113 +308,6 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
     }
   }
 `;
-
-const PRODUCT_QUERY = `#graphql
-  ${MEDIA_FRAGMENT}
-  ${PRODUCT_VARIANT_FRAGMENT}
-  query Product(
-    $country: CountryCode
-    $language: LanguageCode
-    $handle: String!
-    $selectedOptions: [SelectedOptionInput!]!
-  ) @inContext(country: $country, language: $language) {
-    product(handle: $handle) {
-      id
-      title
-      vendor
-      handle
-      descriptionHtml
-      options {
-        name
-        values
-      }
-      selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
-        ...ProductVariantFragment
-      }
-      media(first: 7) {
-        nodes {
-          ...Media
-        }
-      }
-      variants(first: 1) {
-        nodes {
-          ...ProductVariantFragment
-        }
-      }
-      seo {
-        description
-        title
-      }
-    }
-    shop {
-      name
-      shippingPolicy {
-        body
-        handle
-      }
-      refundPolicy {
-        body
-        handle
-      }
-    }
-  }
-`;
-
-const RECOMMENDED_PRODUCTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
-  query productRecommendations(
-    $productId: ID!
-    $count: Int
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
-    recommended: productRecommendations(productId: $productId) {
-      ...ProductCard
-    }
-    additional: products(first: $count, sortKey: BEST_SELLING) {
-      nodes {
-        ...ProductCard
-      }
-    }
-  }
-`;
-
-export async function getRecommendedProducts(
-  productId: string,
-  params: Params,
-  count = 12,
-) {
-  const {language, country} = getLocalizationFromLang(params.lang);
-  const {data: products} = await getStorefrontData<{
-    recommended: Product[];
-    additional: ProductConnection;
-  }>({
-    query: RECOMMENDED_PRODUCTS_QUERY,
-    variables: {
-      productId,
-      count,
-      language,
-      country,
-    },
-  });
-
-  invariant(products, 'No data returned from Shopify API');
-
-  const mergedProducts = products.recommended
-    .concat(products.additional.nodes)
-    .filter(
-      (value, index, array) =>
-        array.findIndex((value2) => value2.id === value.id) === index,
-    );
-
-  const originalProduct = mergedProducts
-    .map((item) => item.id)
-    .indexOf(productId);
-
-  mergedProducts.splice(originalProduct, 1);
-
-  return mergedProducts;
-}
 
 const COLLECTIONS_QUERY = `#graphql
   query Collections(
