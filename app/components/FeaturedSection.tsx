@@ -15,7 +15,7 @@ export interface FeaturedData {
 
 export function FeaturedSection() {
   const featuredProductsFetcher = useFetcher();
-  const path = usePrefixPathWithLocale('/featured-products');
+  const path = usePrefixPathWithLocale(`/featured-products`);
 
   useEffect(() => {
     featuredProductsFetcher.load(path);

@@ -10,9 +10,11 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import {getCollection} from '~/data';
+import {getLocalizationFromUrl} from '~/lib/utils';
 
 export async function loader({params, request}: LoaderArgs) {
   const {collectionHandle} = params;
+  const locale = getLocalizationFromUrl(request.url);
 
   invariant(collectionHandle, 'Missing collectionHandle param');
 
@@ -20,7 +22,7 @@ export async function loader({params, request}: LoaderArgs) {
   const collection = await getCollection({
     handle: collectionHandle,
     cursor,
-    params,
+    locale,
   });
 
   return json({collection});

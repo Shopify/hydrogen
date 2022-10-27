@@ -9,7 +9,7 @@ import {Form, useActionData, useLoaderData} from '@remix-run/react';
 import {useState} from 'react';
 import {login, StorefrontApiError} from '~/data';
 import {getSession} from '~/lib/session.server';
-import {getInputStyleClasses} from '~/lib/utils';
+import {getInputStyleClasses, getLocalizationFromUrl} from '~/lib/utils';
 import {Link} from '~/components';
 
 export const handle = {
@@ -19,9 +19,10 @@ export const handle = {
 export async function loader({request, context, params}: LoaderArgs) {
   const session = await getSession(request, context);
   const customerAccessToken = await session.get('customerAccessToken');
+  const {pathPrefix} = getLocalizationFromUrl(request.url);
 
   if (customerAccessToken) {
-    return redirect(params.lang ? `${params.lang}/account` : '/account');
+    return redirect(`${pathPrefix}account`);
   }
 
   // TODO: Query for this?

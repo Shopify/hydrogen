@@ -26,16 +26,17 @@ import {
 import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {type LoaderArgs, redirect, json, defer} from '@hydrogen/remix';
 import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
-import {getCustomer, getFeaturedData} from '~/data';
+import {getCustomer, getFeaturedData, login} from '~/data';
 import {getSession} from '~/lib/session.server';
+import {getLocalizationFromUrl, usePrefixPathWithLocale} from '~/lib/utils';
 
 export async function loader({request, context, params}: LoaderArgs) {
   const {pathname} = new URL(request.url);
   const session = await getSession(request, context);
-  const lang = params.lang;
   const customerAccessToken = await session.get('customerAccessToken');
   const isAuthenticated = Boolean(customerAccessToken);
-  const loginPath = lang ? `${lang}/account/login` : '/account/login';
+  const locale = getLocalizationFromUrl(request.url);
+  const loginPath = `${locale.pathPrefix}/account/login`;
 
   if (!isAuthenticated) {
     if (/\/account\/login$/.test(pathname)) {
@@ -49,6 +50,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   const customer = await getCustomer({
     customerAccessToken,
     params,
+    locale,
     request,
     context,
   });
@@ -67,7 +69,7 @@ export async function loader({request, context, params}: LoaderArgs) {
     heading,
     orders,
     addresses: flattenConnection(customer.addresses) as MailingAddress[],
-    featuredData: getFeaturedData({params}),
+    featuredData: getFeaturedData({locale}),
   });
 }
 
@@ -123,7 +125,7 @@ function Account({
   return (
     <>
       <PageHeader heading={heading}>
-        <Form method="post" action="/account/logout">
+        <Form method="post" action={usePrefixPathWithLocale('/account/logout')}>
           <button type="submit" className="text-primary/50">
             Sign out
           </button>

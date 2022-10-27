@@ -5,14 +5,24 @@ import {
   json,
   defer,
 } from '@hydrogen/remix';
+import {CountryCode} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {addLineItem, createCart, getTopProducts, updateLineItem} from '~/data';
+import {
+  addLineItem,
+  createCart,
+  getTopProducts,
+  updateCartBuyerIdentity,
+  updateLineItem,
+} from '~/data';
 import {getSession} from '~/lib/session.server';
+import {getLocalizationFromUrl} from '~/lib/utils';
 
-export async function loader({params}: LoaderArgs) {
+export async function loader({request}: LoaderArgs) {
   return defer(
     {
-      topProducts: getTopProducts({params}),
+      topProducts: getTopProducts({
+        locale: getLocalizationFromUrl(request.url),
+      }),
     },
     {
       headers: {
@@ -22,13 +32,14 @@ export async function loader({params}: LoaderArgs) {
   );
 }
 
-export const action: ActionFunction = async ({request, context, params}) => {
+export const action: ActionFunction = async ({request, context}) => {
   let cart;
 
   const [session, formData] = await Promise.all([
     getSession(request, context),
     new URLSearchParams(await request.text()),
   ]);
+  const locale = getLocalizationFromUrl(request.url);
 
   const redirectTo = formData.get('redirectTo');
   const intent = formData.get('intent');
@@ -50,7 +61,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       if (!cartId) {
         cart = await createCart({
           cart: {lines: [{merchandiseId: variantId}]},
-          params,
+          locale,
         });
 
         session.set('cartId', cart.id);
@@ -60,7 +71,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
         cart = await addLineItem({
           cartId,
           lines: [{merchandiseId: variantId}],
-          params,
+          locale,
         });
       }
 
@@ -81,7 +92,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       cart = await updateLineItem({
         cartId,
         lineItem: {id: lineId, quantity},
-        params,
+        locale,
       });
       return json({cart});
     }
@@ -97,9 +108,42 @@ export const action: ActionFunction = async ({request, context, params}) => {
       await updateLineItem({
         cartId,
         lineItem: {id: lineId, quantity: 0},
-        params,
+        locale,
       });
       return json({cart});
+    }
+
+    case 'update-cart-buyer-country': {
+      const countryCode = formData.get('country') as CountryCode;
+      invariant(countryCode, 'Missing country');
+
+      let currentCartId = cartId;
+      const headers = new Headers();
+
+      // Create an empty cart if we don't have a cart
+      if (!currentCartId) {
+        cart = await createCart({
+          cart: {lines: []},
+          locale,
+        });
+
+        session.set('cartId', cart.id);
+        currentCartId = cart.id;
+        headers.set('Set-Cookie', await session.commit());
+      }
+
+      // Update cart buyer's country code
+      if (currentCartId) {
+        cart = await updateCartBuyerIdentity({
+          cartId: currentCartId,
+          buyerIdentity: {
+            countryCode,
+          },
+          locale,
+        });
+      }
+
+      return json({cart}, {headers});
     }
 
     default: {

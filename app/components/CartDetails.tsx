@@ -23,6 +23,7 @@ import type {
   Product,
   ProductConnection,
 } from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {Link as RemixLink} from '@remix-run/react';
 
 enum Action {
   SetQuantity = 'set-quantity',
@@ -119,11 +120,11 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
     <>
       <div className="grid gap-4">
         {checkoutUrl ? (
-          <Link to={checkoutUrl} prefetch="intent" target="_self">
+          <a href={checkoutUrl} target="_self">
             <Button as="span" width="full">
               Continue to Checkout
             </Button>
-          </Link>
+          </a>
         ) : null}
         {/* TODO: Shop Pay */}
         {/* <CartShopPayButton /> */}

@@ -4,9 +4,11 @@ import type {Collection} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import {Grid, Heading, PageHeader, Section, Link} from '~/components';
 import {getCollections} from '~/data';
 import {getImageLoadingPriority} from '~/lib/const';
+import {getLocalizationFromUrl} from '~/lib/utils';
 
-export const loader = async ({params}: LoaderArgs) => {
-  const collections = await getCollections(params);
+export const loader = async ({request}: LoaderArgs) => {
+  const locale = getLocalizationFromUrl(request.url);
+  const collections = await getCollections(locale);
 
   return json({collections});
 };

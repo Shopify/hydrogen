@@ -3,10 +3,14 @@ import {useLoaderData} from '@remix-run/react';
 import type {Collection} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import {PageHeader, Section, ProductGrid} from '~/components';
 import {getAllProducts} from '~/data';
+import {getLocalizationFromUrl} from '~/lib/utils';
 
-export async function loader({request, params}: LoaderArgs) {
+export async function loader({request}: LoaderArgs) {
   const cursor = new URL(request.url).searchParams.get('cursor') ?? undefined;
-  const products = await getAllProducts({cursor, params});
+  const products = await getAllProducts({
+    cursor,
+    locale: getLocalizationFromUrl(request.url),
+  });
 
   return products;
 }

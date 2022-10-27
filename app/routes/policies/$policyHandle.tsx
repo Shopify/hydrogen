@@ -4,13 +4,14 @@ import {getPolicyContent} from '~/data';
 
 import {PageHeader, Section, Button} from '~/components';
 import invariant from 'tiny-invariant';
+import {getLocalizationFromUrl} from '~/lib/utils';
 
-export async function loader({params}: LoaderArgs) {
+export async function loader({params, request}: LoaderArgs) {
   invariant(params.policyHandle, 'Missing policy handle');
 
   const policy = await getPolicyContent({
     handle: params.policyHandle,
-    params,
+    locale: getLocalizationFromUrl(request.url),
   });
 
   return json(

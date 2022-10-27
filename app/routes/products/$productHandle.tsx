@@ -25,7 +25,11 @@ import {
   Link,
 } from '~/components';
 import {getProductData, getRecommendedProducts} from '~/data';
-import {getExcerpt} from '~/lib/utils';
+import {
+  getExcerpt,
+  getLocalizationFromUrl,
+  usePrefixPathWithLocale,
+} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
@@ -37,7 +41,7 @@ export const loader = async ({params, request}: LoaderArgs) => {
   const {shop, product} = await getProductData(
     productHandle,
     new URL(request.url).searchParams,
-    params,
+    getLocalizationFromUrl(request.url),
   );
 
   return defer({
@@ -278,7 +282,10 @@ export function ProductForm() {
           ))}
         <div className="grid items-stretch gap-4">
           {selectedVariant && (
-            <addToCartFetcher.Form method="post" action="/cart">
+            <addToCartFetcher.Form
+              method="post"
+              action={usePrefixPathWithLocale('/cart')}
+            >
               <input
                 type="hidden"
                 name="variantId"

@@ -14,6 +14,7 @@ import {
 } from '~/components';
 import {getNoResultRecommendations, searchProducts} from '~/data';
 import {PAGINATION_SIZE} from '~/lib/const';
+import {getLocalizationFromUrl} from '~/lib/utils';
 
 export default function () {
   const {searchTerm, products, noResultRecommendations} = useLoaderData();
@@ -85,7 +86,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   const cursor = searchParams.get('cursor')!;
   const searchTerm = searchParams.get('q')!;
 
-  const products = await searchProducts(params, {
+  const products = await searchProducts(getLocalizationFromUrl(request.url), {
     cursor,
     searchTerm,
     pageBy: PAGINATION_SIZE,

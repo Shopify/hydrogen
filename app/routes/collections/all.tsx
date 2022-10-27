@@ -1,6 +1,6 @@
 import {redirect} from '@hydrogen/remix';
-import {LoaderArgs} from '@remix-run/server-runtime';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
-export async function loader({params}: LoaderArgs) {
-  return redirect(params?.lang ? `${params.lang}/products` : '/products');
+export async function loader() {
+  return redirect(usePrefixPathWithLocale(`/products`));
 }

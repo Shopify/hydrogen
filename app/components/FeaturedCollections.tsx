@@ -3,6 +3,7 @@ import type {Collection} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import {Link} from '@remix-run/react';
 import {Heading, Section, Grid} from '~/components';
 import {SerializeFrom} from '@remix-run/server-runtime';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 export function FeaturedCollections({
   collections,
@@ -26,7 +27,10 @@ export function FeaturedCollections({
             return null;
           }
           return (
-            <Link key={collection.id} to={`/collections/${collection.handle}`}>
+            <Link
+              key={collection.id}
+              to={usePrefixPathWithLocale(`/collections/${collection.handle}`)}
+            >
               <div className="grid gap-4">
                 <div className="card-image bg-primary/5 aspect-[3/2]">
                   {collection?.image && (

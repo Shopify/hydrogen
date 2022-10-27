@@ -11,27 +11,30 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
 import {getArticle} from '~/data';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
-import {getLocalizationFromLang} from '~/lib/utils';
+import {getLocalizationFromUrl} from '~/lib/utils';
 import styles from '../../styles/custom-font.css';
 
 const BLOG_HANDLE = 'journal';
 
-export async function loader({params}: LoaderArgs) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+export async function loader({request, params}: LoaderArgs) {
+  const locale = getLocalizationFromUrl(request.url);
 
   invariant(params.journalHandle, 'Missing journal handle');
 
   const article = await getArticle({
     blogHandle: BLOG_HANDLE,
     articleHandle: params.journalHandle,
-    params,
+    locale,
   });
 
-  const formattedDate = new Intl.DateTimeFormat(`${language}-${country}`, {
-    year: 'numeric',
-    month: 'long',
-    day: 'numeric',
-  }).format(new Date(article.publishedAt));
+  const formattedDate = new Intl.DateTimeFormat(
+    `${locale.language}-${locale.country}`,
+    {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    },
+  ).format(new Date(article.publishedAt));
 
   return json(
     {article, formattedDate},

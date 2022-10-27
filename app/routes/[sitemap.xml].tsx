@@ -1,12 +1,14 @@
 import type {LoaderArgs} from '@hydrogen/remix';
 import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
 import {getSitemap} from '~/data';
+import {countries} from '~/data/countries';
+import {getLocalizationFromUrl} from '~/lib/utils';
 
 const MAX_URLS = 250; // the google limit is 50K, however, SF API only allow querying for 250 resources each time
 
-export async function loader({request, params}: LoaderArgs) {
+export async function loader({request}: LoaderArgs) {
   const data = await getSitemap({
-    params,
+    locale: getLocalizationFromUrl(request.url),
     urlLimits: MAX_URLS,
   });
 

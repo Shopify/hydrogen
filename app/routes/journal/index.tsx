@@ -5,28 +5,30 @@ import type {Article} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getBlog} from '~/data';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
-import {getLocalizationFromLang} from '~/lib/utils';
+import {getLocalizationFromUrl} from '~/lib/utils';
 
 const BLOG_HANDLE = 'Journal';
 
-export const loader = async ({params}: LoaderArgs) => {
+export const loader = async ({request, params}: LoaderArgs) => {
+  const locale = getLocalizationFromUrl(request.url);
   const journals = await getBlog({
-    params,
+    locale,
     blogHandle: BLOG_HANDLE,
     paginationSize: PAGINATION_SIZE,
   });
-
-  const {language, country} = getLocalizationFromLang(params.lang);
 
   const articles = flattenConnection(journals).map((article) => {
     const {publishedAt} = article;
     return {
       ...article,
-      publishedAt: new Intl.DateTimeFormat(`${language}-${country}`, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }).format(new Date(publishedAt!)),
+      publishedAt: new Intl.DateTimeFormat(
+        `${locale.language}-${locale.country}`,
+        {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        },
+      ).format(new Date(publishedAt!)),
     };
   });
 

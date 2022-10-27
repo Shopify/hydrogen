@@ -31,14 +31,10 @@ import type {
   CustomerRecoverPayload,
   CustomerResetPayload,
   CustomerActivatePayload,
+  CartBuyerIdentityInput,
 } from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import {getPublicTokenHeaders, getStorefrontApiUrl} from '~/lib/shopify-client';
-import {
-  type EnhancedMenu,
-  parseMenu,
-  getApiErrorMessage,
-  getLocalizationFromLang,
-} from '~/lib/utils';
+import {type EnhancedMenu, parseMenu, getApiErrorMessage} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
 import type {AppLoadContext} from '@hydrogen/remix';
@@ -46,6 +42,7 @@ import {type Params} from '@remix-run/react';
 import type {FeaturedData} from '~/components/FeaturedSection';
 import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
 import {PAGINATION_SIZE} from '~/lib/const';
+import {type CountryData} from './countries';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 export interface CountriesData {
@@ -123,8 +120,8 @@ export async function getStorefrontData<T>({
   return response.json() as StorefrontApiResponseOk<T>;
 }
 
-export async function getLayoutData(params: Params) {
-  const {language} = getLocalizationFromLang(params.lang);
+export async function getLayoutData(locale: CountryData) {
+  const {language} = locale;
 
   const HEADER_MENU_HANDLE = 'main-menu';
   const FOOTER_MENU_HANDLE = 'footer';
@@ -199,40 +196,12 @@ const LAYOUT_QUERY = `#graphql
   }
 `;
 
-export async function getCountries() {
-  const {data} = await getStorefrontData<CountriesData>({
-    query: COUNTRIES_QUERY,
-    variables: {},
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.localization.availableCountries.sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
-}
-
-const COUNTRIES_QUERY = `#graphql
-  query Localization {
-    localization {
-      availableCountries {
-        isoCode
-        name
-        currency {
-          isoCode
-          symbol
-        }
-      }
-    }
-  }
-`;
-
 export async function getProductData(
   handle: string,
   searchParams: URLSearchParams,
-  params: Params,
+  locale: CountryData,
 ) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+  const {language, country} = locale;
 
   const selectedOptions: SelectedOptionInput[] = [];
   searchParams.forEach((value, name) => {
@@ -431,10 +400,10 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 
 export async function getRecommendedProducts(
   productId: string,
-  params: Params,
+  locale: CountryData,
   count = 12,
 ) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+  const {language, country} = locale;
   const {data: products} = await getStorefrontData<{
     recommended: Product[];
     additional: ProductConnection;
@@ -495,10 +464,10 @@ const COLLECTIONS_QUERY = `#graphql
 `;
 
 export async function getCollections(
-  params: Params,
+  locale: CountryData,
   {paginationSize} = {paginationSize: 8},
 ) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+  const {language, country} = locale;
 
   const {data} = await getStorefrontData<{
     collections: CollectionConnection;
@@ -558,14 +527,14 @@ export async function getCollection({
   handle,
   paginationSize = 48,
   cursor,
-  params,
+  locale,
 }: {
   handle: string;
   paginationSize?: number;
   cursor?: string;
-  params: Params;
+  locale: CountryData;
 }) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+  const {language, country} = locale;
 
   const {data} = await getStorefrontData<{
     collection: Collection;
@@ -613,13 +582,13 @@ const ALL_PRODUCTS_QUERY = `#graphql
 export async function getAllProducts({
   paginationSize = 48,
   cursor,
-  params,
+  locale,
 }: {
   paginationSize?: number;
   cursor?: string;
-  params: Params;
+  locale: CountryData;
 }) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+  const {language, country} = locale;
 
   const {data} = await getStorefrontData<{
     products: ProductConnection;
@@ -752,12 +721,12 @@ mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(c
 
 export async function createCart({
   cart,
-  params,
+  locale,
 }: {
   cart: CartInput;
-  params: Params;
+  locale: CountryData;
 }) {
-  const {country} = getLocalizationFromLang(params.lang);
+  const {country} = locale;
 
   const {data} = await getStorefrontData<{
     cartCreate: {
@@ -789,13 +758,13 @@ const ADD_LINE_ITEM_QUERY = `#graphql
 export async function addLineItem({
   cartId,
   lines,
-  params,
+  locale,
 }: {
   cartId: string;
   lines: CartLineInput[];
-  params: Params;
+  locale: CountryData;
 }) {
-  const {country} = getLocalizationFromLang(params.lang);
+  const {country} = locale;
 
   const {data} = await getStorefrontData<{
     cartLinesAdd: {
@@ -804,9 +773,14 @@ export async function addLineItem({
   }>({
     query: ADD_LINE_ITEM_QUERY,
     variables: {cartId, lines, country},
+  }).then((result) => {
+    console.log(result);
+    return result;
   });
 
   invariant(data, 'No data returned from Shopify API');
+
+  console.log(data.cartLinesAdd.cart);
 
   return data.cartLinesAdd.cart;
 }
@@ -823,12 +797,12 @@ const CART_QUERY = `#graphql
 
 export async function getCart({
   cartId,
-  params,
+  locale,
 }: {
   cartId: string;
-  params: Params;
+  locale: CountryData;
 }) {
-  const {country} = getLocalizationFromLang(params.lang);
+  const {country} = locale;
 
   const {data} = await getStorefrontData<{cart: Cart}>({
     query: CART_QUERY,
@@ -858,13 +832,13 @@ const UPDATE_LINE_ITEM_QUERY = `#graphql
 export async function updateLineItem({
   cartId,
   lineItem,
-  params,
+  locale,
 }: {
   cartId: string;
   lineItem: CartLineUpdateInput;
-  params: Params;
+  locale: CountryData;
 }) {
-  const {country} = getLocalizationFromLang(params.lang);
+  const {country} = locale;
 
   const {data} = await getStorefrontData<{cartLinesUpdate: {cart: Cart}}>({
     query: UPDATE_LINE_ITEM_QUERY,
@@ -878,6 +852,47 @@ export async function updateLineItem({
   invariant(data, 'No data returned from Shopify API');
 
   return data.cartLinesUpdate.cart;
+}
+
+const UPDATE_CART_BUYER_COUNTRY = `#graphql
+  mutation CartBuyerIdentityUpdate(
+    $cartId: ID!
+    $buyerIdentity: CartBuyerIdentityInput!
+    $country: CountryCode = ZZ
+  ) @inContext(country: $country) {
+    cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
+      cart {
+        id
+      }
+    }
+  }
+`;
+
+export async function updateCartBuyerIdentity({
+  cartId,
+  buyerIdentity,
+  locale,
+}: {
+  cartId: string;
+  buyerIdentity: CartBuyerIdentityInput;
+  locale: CountryData;
+}) {
+  const {country} = locale;
+
+  const {data} = await getStorefrontData<{
+    cartBuyerIdentityUpdate: {cart: Cart};
+  }>({
+    query: UPDATE_CART_BUYER_COUNTRY,
+    variables: {
+      cartId,
+      country,
+      buyerIdentity,
+    },
+  });
+
+  invariant(data, 'No data returned from Shopify API');
+
+  return data.cartBuyerIdentityUpdate.cart;
 }
 
 const TOP_PRODUCTS_QUERY = `#graphql
@@ -896,13 +911,13 @@ const TOP_PRODUCTS_QUERY = `#graphql
 `;
 
 export async function getTopProducts({
-  params,
+  locale,
   count = 4,
 }: {
-  params: Params;
+  locale: CountryData;
   count?: number;
 }) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+  const {language, country} = locale;
 
   const {data} = await getStorefrontData<{
     products: ProductConnection;
@@ -965,13 +980,13 @@ const SITEMAP_QUERY = `#graphql
 `;
 
 export async function getSitemap({
-  params,
+  locale,
   urlLimits,
 }: {
-  params: Params;
+  locale: CountryData;
   urlLimits: number;
 }) {
-  const {language} = getLocalizationFromLang(params.lang);
+  const {language} = locale;
   const {data} = await getStorefrontData<SitemapQueryData>({
     query: SITEMAP_QUERY,
     variables: {
@@ -1019,15 +1034,15 @@ query Blog(
 `;
 
 export async function getBlog({
-  params,
+  locale,
   paginationSize,
   blogHandle,
 }: {
-  params: Params;
+  locale: CountryData;
   blogHandle: string;
   paginationSize: number;
 }) {
-  const {language} = getLocalizationFromLang(params.lang);
+  const {language} = locale;
   const {data} = await getStorefrontData<{
     blog: Blog;
   }>({
@@ -1075,15 +1090,15 @@ const ARTICLE_QUERY = `#graphql
 `;
 
 export async function getArticle({
-  params,
+  locale,
   blogHandle,
   articleHandle,
 }: {
-  params: Params;
+  locale: CountryData;
   blogHandle: string;
   articleHandle: string;
 }) {
-  const {language} = getLocalizationFromLang(params.lang);
+  const {language} = locale;
   const {data} = await getStorefrontData<{
     blog: Blog;
   }>({
@@ -1120,13 +1135,13 @@ const PAGE_QUERY = `#graphql
 `;
 
 export async function getPageData({
-  params,
+  locale,
   handle,
 }: {
-  params: Params;
+  locale: CountryData;
   handle: string;
 }) {
-  const {language} = getLocalizationFromLang(params.lang);
+  const {language} = locale;
   const {data} = await getStorefrontData<{page: Page}>({
     query: PAGE_QUERY,
     variables: {
@@ -1225,13 +1240,13 @@ const POLICY_CONTENT_QUERY = `#graphql
 `;
 
 export async function getPolicyContent({
-  params,
+  locale,
   handle,
 }: {
-  params: Params;
+  locale: CountryData;
   handle: string;
 }) {
-  const {language} = getLocalizationFromLang(params.lang);
+  const {language} = locale;
 
   const policyName = handle.replace(/-([a-z])/g, (_, m1) => m1.toUpperCase());
 
@@ -1285,11 +1300,11 @@ const NOT_FOUND_QUERY = `#graphql
 `;
 
 export async function getFeaturedData({
-  params,
+  locale,
 }: {
-  params: Record<string, any>;
+  locale: CountryData;
 }): Promise<FeaturedData> {
-  const {language, country} = getLocalizationFromLang(params.lang);
+  const {language, country} = locale;
   const {data} = await getStorefrontData<{
     featuredCollections: CollectionConnection;
     featuredProducts: ProductConnection;
@@ -1821,12 +1836,12 @@ const CUSTOMER_ORDER_QUERY = `#graphql
 
 export async function getCustomerOrder({
   orderId,
-  params,
+  locale,
 }: {
   orderId: string;
-  params: Params;
+  locale: CountryData;
 }): Promise<Order | undefined> {
-  const {language, country} = getLocalizationFromLang(params.lang);
+  const {language, country} = locale;
 
   const {data, errors} = await getStorefrontData<{
     node: Order;
@@ -1852,13 +1867,15 @@ export async function getCustomer({
   context,
   customerAccessToken,
   params,
+  locale,
 }: {
   request: Request;
   context: AppLoadContext;
   customerAccessToken: string;
   params: Params;
+  locale: CountryData;
 }) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+  const {language, country} = locale;
 
   const {data, errors} = await getStorefrontData<{
     customer: Customer;
@@ -2121,14 +2138,14 @@ export async function createCustomerAddress({
 }
 
 export async function searchProducts(
-  params: Params,
+  locale: CountryData,
   variables: {
     searchTerm: string;
     cursor: string;
     pageBy: number;
   },
 ) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+  const {language, country} = locale;
 
   const {data, errors} = await getStorefrontData<{
     products: Array<Product>;
@@ -2205,8 +2222,8 @@ const PAGINATE_SEARCH_QUERY = `#graphql
   }
 `;
 
-export async function getNoResultRecommendations(params: Params) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+export async function getNoResultRecommendations(locale: CountryData) {
+  const {language, country} = locale;
 
   const {data, errors} = await getStorefrontData<{
     featuredCollections: Array<Collection>;

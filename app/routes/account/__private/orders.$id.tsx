@@ -8,7 +8,7 @@ import {
 } from '@hydrogen/remix';
 import {useLoaderData} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen-ui-alpha';
-import {statusMessage} from '~/lib/utils';
+import {getLocalizationFromUrl, statusMessage} from '~/lib/utils';
 import type {
   DiscountApplication,
   DiscountApplicationConnection,
@@ -23,8 +23,9 @@ export const meta: MetaFunction = ({data}) => ({
 });
 
 export async function loader({request, context, params}: LoaderArgs) {
+  const locale = getLocalizationFromUrl(request.url);
   if (!params.id) {
-    return redirect(params?.lang ? `${params.lang}/account` : '/account');
+    return redirect(`${locale.pathPrefix}account`);
   }
 
   const queryParams = new URL(request.url).searchParams;
@@ -43,7 +44,7 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const orderId = `gid://shopify/Order/${params.id}?key=${orderToken}`;
 
-  const order = await getCustomerOrder({params, orderId});
+  const order = await getCustomerOrder({locale, orderId});
 
   if (!order) {
     throw new Response('Order not found', {status: 404});

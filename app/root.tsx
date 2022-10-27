@@ -1,5 +1,6 @@
 import {
   defer,
+  LoaderArgs,
   type LinksFunction,
   type LoaderFunction,
   type MetaFunction,
@@ -13,16 +14,21 @@ import {
   ScrollRestoration,
   useCatch,
   useLoaderData,
+  useLocation,
   useMatches,
+  useParams,
 } from '@remix-run/react';
 import {Layout} from '~/components';
-import {getCart, getLayoutData, getCountries} from '~/data';
+import {getCart, getLayoutData} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
 import {getSession} from './lib/session.server';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
+import {getLocalizationFromUrl} from './lib/utils';
+import {countries} from './data/countries';
+import {ActionFunction} from '@remix-run/server-runtime';
 
 export const links: LinksFunction = () => {
   return [
@@ -50,23 +56,24 @@ export const meta: MetaFunction = ({data}) => {
 export const loader: LoaderFunction = async function loader({
   request,
   context,
-  params,
 }) {
   const session = await getSession(request, context);
   const cartId = await session.get('cartId');
+  const locale = getLocalizationFromUrl(request.url);
 
   return defer({
-    layout: await getLayoutData(params),
-    countries: getCountries(),
-    cart: cartId ? getCart({cartId, params}) : undefined,
+    layout: await getLayoutData(locale),
+    countries,
+    cart: cartId ? getCart({cartId, locale}) : undefined,
   });
 };
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
+  const {lang} = useParams();
 
   return (
-    <html lang="en">
+    <html lang={lang ? lang : 'en-US'}>
       <head>
         <Meta />
         <Links />
@@ -86,6 +93,7 @@ export default function App() {
 export function CatchBoundary() {
   const [root] = useMatches();
   const caught = useCatch();
+
   const isNotFound = caught.status === 404;
 
   return (

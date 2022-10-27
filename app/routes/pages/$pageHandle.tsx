@@ -3,13 +3,14 @@ import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import {PageHeader} from '~/components';
 import {getPageData} from '~/data';
+import {getLocalizationFromUrl} from '~/lib/utils';
 
-export async function loader({params}: LoaderArgs) {
+export async function loader({params, request}: LoaderArgs) {
   invariant(params.pageHandle, 'Missing page handle');
 
   const page = await getPageData({
     handle: params.pageHandle,
-    params,
+    locale: getLocalizationFromUrl(request.url),
   });
 
   return json(
