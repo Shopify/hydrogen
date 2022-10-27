@@ -37,12 +37,18 @@ export function generateSubRequestCacheControlHeader(
 export async function getItemFromCache(
   cache: Cache,
   key: QueryKey,
-): Promise<undefined | Response> {
+): Promise<undefined | [any, Response]> {
   if (!cache) return;
   const url = getKeyUrl(hashKey(key));
   const request = new Request(url);
 
-  return CacheAPI.get(cache, request);
+  const response = await CacheAPI.get(cache, request);
+
+  if (!response) {
+    return;
+  }
+
+  return [await response.json(), response];
 }
 
 /**
