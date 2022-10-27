@@ -10,9 +10,21 @@ export type FetchCacheOptions = {
   cache?: Cache;
   cacheKey?: string | readonly unknown[];
   cacheOptions?: CachingStrategy;
-  shouldCacheResponse?: (body: any) => boolean;
+  shouldCacheResponse?: (body: any, response: Response) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
+  returnType?: 'json' | 'text' | 'arrayBuffer' | 'blob';
 };
+
+function serializeResponse(body: any, response: Response) {
+  return [
+    body,
+    {
+      status: response.status,
+      statusText: response.statusText,
+      headers: Array.from(response.headers.entries()),
+    },
+  ];
+}
 
 export async function fetchWithServerCache(
   url: string,
@@ -23,9 +35,21 @@ export async function fetchWithServerCache(
     cacheKey = [url, options],
     shouldCacheResponse = () => true,
     waitUntil,
+    returnType = 'json',
   }: FetchCacheOptions = {},
-) {
-  const doFetch = () => fetch(url, options);
+): Promise<readonly [any, Response]> {
+  const doFetch = async () => {
+    const response = await fetch(url, options);
+    let data;
+
+    try {
+      data = await response[returnType]();
+    } catch {
+      data = await response.text();
+    }
+
+    return [data, response] as const;
+  };
 
   if (!cache || !cacheKey) return doFetch();
 
@@ -35,10 +59,12 @@ export async function fetchWithServerCache(
   ];
 
   console.log('==Matching');
-  const cachedResponse = await getItemFromCache(cache, key);
-  console.log('==Matched', !!cachedResponse);
+  const cachedItem = await getItemFromCache(cache, key);
+  console.log('==Matched', !!cachedItem);
 
-  if (cachedResponse) {
+  if (cachedItem) {
+    const [value, cacheResponse] = cachedItem;
+
     // collectQueryCacheControlHeaders(
     //   request,
     //   key,
@@ -48,7 +74,7 @@ export async function fetchWithServerCache(
     /**
      * Important: Do this async
      */
-    if (isStale(key, cachedResponse)) {
+    if (isStale(key, cacheResponse)) {
       const lockKey = ['lock', ...(typeof key === 'string' ? [key] : key)];
 
       // Run revalidation asynchronously
@@ -59,10 +85,15 @@ export async function fetchWithServerCache(
           await setItemInCache(cache, lockKey, true, CacheShort({maxAge: 10}));
 
           try {
-            const output = await doFetch();
+            const [body, response] = await doFetch();
 
-            if (shouldCacheResponse(output)) {
-              await setItemInCache(cache, key, output, cacheOptions);
+            if (shouldCacheResponse(body, response)) {
+              await setItemInCache(
+                cache,
+                key,
+                serializeResponse(body, response),
+                cacheOptions,
+              );
             }
           } catch (e: any) {
             // eslint-disable-next-line no-console
@@ -77,22 +108,23 @@ export async function fetchWithServerCache(
       waitUntil?.(revalidatingPromise);
     }
 
-    return cachedResponse;
+    const [body, init] = value;
+    return [body, new Response(body, init)];
   }
 
   console.log('==Fetching');
-  const freshResponse = await doFetch();
+  const [body, response] = await doFetch();
   console.log('==Fetched');
 
   /**
    * Important: Do this async
    */
-  if (shouldCacheResponse(freshResponse)) {
+  if (shouldCacheResponse(body, response)) {
     console.log('==Caching');
     const setItemInCachePromise = setItemInCache(
       cache,
       key,
-      freshResponse,
+      serializeResponse(body, response),
       cacheOptions,
     );
 
@@ -106,5 +138,5 @@ export async function fetchWithServerCache(
   //     generateSubRequestCacheControlHeader(resolvedQueryOptions?.cache)
   //   );
 
-  return freshResponse;
+  return [body, response];
 }

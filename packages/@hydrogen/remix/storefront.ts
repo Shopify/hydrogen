@@ -40,7 +40,7 @@ export type CreateStorefrontClientOptions = {
 
 // Check if the response body has GraphQL errors
 // https://spec.graphql.org/June2018/#sec-Response-Format
-const shouldCacheResponse = ([body]: [any, Response]) => {
+const shouldCacheResponse = (body: any) => {
   try {
     return !parseJSON(body)?.errors;
   } catch {
@@ -98,7 +98,7 @@ export function createStorefrontClient(
       }),
     };
 
-    const response = await fetchWithServerCache(url, requestInit, {
+    const [body, response] = await fetchWithServerCache(url, requestInit, {
       cache,
       cacheOptions,
       shouldCacheResponse,
@@ -106,24 +106,22 @@ export function createStorefrontClient(
     });
 
     if (!response.ok) {
-      const error = await response.text();
-
       /**
        * The Storefront API might return a string error, or a JSON-formatted {error: string}.
        * We try both and conform them to a single {errors} format.
        */
       try {
-        throwError(response, JSON.parse(error));
+        throwError(response, JSON.parse(body));
       } catch (_e) {
-        throwError(response, [{message: error}]);
+        throwError(response, [{message: body}]);
       }
     }
 
-    const {data, errors} = (await response.json()) as StorefrontApiResponse<T>;
+    const {data, errors} = body as StorefrontApiResponse<T>;
 
     if (errors) throwError(response, errors);
 
-    console.log('==Returning', JSON.stringify(data));
+    console.log('==Returning', JSON.stringify(data || ''));
 
     return data as T;
   }
