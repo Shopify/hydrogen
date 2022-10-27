@@ -34,7 +34,9 @@ export async function fetchWithServerCache(
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ];
 
+  console.log('==Matching');
   const cachedResponse = await getItemFromCache(cache, key);
+  console.log('==Matched', !!cachedResponse);
 
   if (cachedResponse) {
     // collectQueryCacheControlHeaders(
@@ -78,12 +80,15 @@ export async function fetchWithServerCache(
     return cachedResponse;
   }
 
+  console.log('==Fetching');
   const freshResponse = await doFetch();
+  console.log('==Fetched');
 
   /**
    * Important: Do this async
    */
   if (shouldCacheResponse(freshResponse)) {
+    console.log('==Caching');
     const setItemInCachePromise = setItemInCache(
       cache,
       key,
@@ -92,6 +97,7 @@ export async function fetchWithServerCache(
     );
 
     waitUntil?.(setItemInCachePromise);
+    console.log('==Cached');
   }
 
   //   collectQueryCacheControlHeaders(
