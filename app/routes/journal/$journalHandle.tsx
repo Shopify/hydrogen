@@ -16,6 +16,13 @@ import styles from '../../styles/custom-font.css';
 
 const BLOG_HANDLE = 'journal';
 
+export const handle = {
+  seo: {
+    title: 'Journal',
+    description: 'A description',
+  },
+};
+
 export async function loader({params}: LoaderArgs) {
   const {language, country} = getLocalizationFromLang(params.lang);
 

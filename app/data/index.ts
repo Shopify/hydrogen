@@ -398,6 +398,7 @@ const PRODUCT_QUERY = `#graphql
       }
     }
     shop {
+      name
       shippingPolicy {
         body
         handle
@@ -1068,6 +1069,10 @@ const ARTICLE_QUERY = `#graphql
           url
           width
           height
+        }
+        seo {
+          description
+          title
         }
       }
     }
