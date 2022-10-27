@@ -1,15 +1,21 @@
 import {faker} from '@faker-js/faker';
 import type {Metafield as MetafieldType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
+import {
+  type MetafieldTypeTypes,
+  allMetafieldTypesArray,
+} from './metafield-parser.js';
 
 export function getRawMetafield(
   metafield: PartialDeep<MetafieldType, {recurseIntoArrays: true}> & {
-    type?: MetafieldTypeOptions;
+    type?: MetafieldTypeTypes;
   } = {}
-): PartialDeep<MetafieldType, {recurseIntoArrays: true}> {
-  const type: MetafieldTypeOptions =
+): PartialDeep<MetafieldType, {recurseIntoArrays: true}> & {
+  type: MetafieldTypeTypes;
+} {
+  const type: MetafieldTypeTypes =
     metafield.type == null
-      ? faker.helpers.arrayElement(METAFIELD_TYPES)
+      ? faker.helpers.arrayElement(allMetafieldTypesArray)
       : metafield.type;
 
   return {
@@ -23,20 +29,16 @@ export function getRawMetafield(
     updatedAt: metafield.updatedAt ?? faker.date.recent().toString(),
     value: metafield.value ?? getMetafieldValue(type),
     reference: metafield.reference,
+    references: metafield.references,
   };
 }
 
-export function getMetafieldValue(type: MetafieldTypeOptions) {
+export function getMetafieldValue(type: MetafieldTypeTypes) {
   switch (type) {
     case 'single_line_text_field':
       return faker.random.words();
     case 'multi_line_text_field':
       return `${faker.random.words()}\n${faker.random.words()}\n${faker.random.words()}`;
-    case 'page_reference':
-    case 'product_reference':
-    case 'variant_reference':
-    case 'file_reference':
-      return faker.random.words();
     case 'number_integer':
       return faker.datatype.number().toString();
     case 'number_decimal':
@@ -89,30 +91,8 @@ export function getMetafieldValue(type: MetafieldTypeOptions) {
         value: faker.datatype.float({min, max, precision: 0.0001}),
       });
     }
-    default:
-      return JSON.stringify(faker.datatype.json());
+    default: {
+      return faker.random.words();
+    }
   }
 }
-
-export const METAFIELD_TYPES = [
-  'single_line_text_field',
-  'multi_line_text_field',
-  'page_reference',
-  'product_reference',
-  'variant_reference',
-  'file_reference',
-  'number_integer',
-  'number_decimal',
-  'date',
-  'date_time',
-  'url',
-  'json',
-  'boolean',
-  'color',
-  'weight',
-  'volume',
-  'dimension',
-  'rating',
-] as const;
-
-type MetafieldTypeOptions = typeof METAFIELD_TYPES[number];
