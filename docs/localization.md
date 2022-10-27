@@ -348,7 +348,7 @@ import {
 } from '@remix-run/react';
 
 type LinkProps = Omit<RemixLinkProps, 'className'> & {
-  className?: RemixNavLinkProps['className'] | RemixLinkProps['className'];
+  className?: RemixNavLinkProps['className'] | RemixLinkProps['className'],
 };
 
 export function Link(props: LinkProps) {
