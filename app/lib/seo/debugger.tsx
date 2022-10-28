@@ -56,7 +56,7 @@ export function Debugger() {
 
         <div className="py-4 px-4">
           {matches.map(({id, handle, data}: RouteMatch, index: number) => (
-            <div key={index}>
+            <div key={id}>
               <span className="block font-bold block text-xs pb-2 ">{id}</span>
               <div className="whitespace-pre font-mono px-4 py-2 mb-4 text-gray-600 rounded-sm text-[10px] bg-gray-100  text-[10px] px-4">
                 {JSON.stringify(
@@ -91,7 +91,7 @@ export function Debugger() {
                 entries.map((entry: React.ReactElement, index: number) => (
                   <span
                     className="whitespace-nowrap font-mono rounded-sm text-gray-600 rounded-sm text-[10px] bg-gray-100  text-[10px] px-4"
-                    key={index}
+                    key={entry.props.name || index}
                   >
                     {renderToString(entry)}
                   </span>
