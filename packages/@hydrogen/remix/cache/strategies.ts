@@ -41,6 +41,10 @@ export function generateCacheControlHeader(
   return cacheControl.join(', ');
 }
 
+/**
+ *
+ * @public
+ */
 export function CacheNone(): NoStoreStrategy {
   return {
     mode: NO_STORE,
@@ -57,6 +61,10 @@ function guardExpirableModeType(overrideOptions?: CachingStrategy) {
   }
 }
 
+/**
+ *
+ * @public
+ */
 export function CacheShort(overrideOptions?: CachingStrategy): AllCacheOptions {
   guardExpirableModeType(overrideOptions);
   return {
@@ -67,6 +75,10 @@ export function CacheShort(overrideOptions?: CachingStrategy): AllCacheOptions {
   };
 }
 
+/**
+ *
+ * @public
+ */
 export function CacheLong(overrideOptions?: CachingStrategy): AllCacheOptions {
   guardExpirableModeType(overrideOptions);
   return {
@@ -77,6 +89,10 @@ export function CacheLong(overrideOptions?: CachingStrategy): AllCacheOptions {
   };
 }
 
+/**
+ *
+ * @public
+ */
 export function CacheCustom(overrideOptions: CachingStrategy): AllCacheOptions {
   return overrideOptions as AllCacheOptions;
 }

@@ -163,6 +163,10 @@ function isStale(request: Request, response: Response) {
   return result;
 }
 
+/**
+ *
+ * @private
+ */
 export const CacheAPI = {
   get: getItem,
   set: setItem,
