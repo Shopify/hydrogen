@@ -8,7 +8,7 @@ import {
 import type {
   Customer,
   CustomerUpdateInput,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import clsx from 'clsx';
 import invariant from 'tiny-invariant';
 import {Button, Text} from '~/components';

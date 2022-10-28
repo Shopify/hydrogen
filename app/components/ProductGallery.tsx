@@ -1,4 +1,4 @@
-import type {MediaEdge} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import type {MediaEdge} from '@shopify/hydrogen-react/storefront-api-types';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
 
 /**

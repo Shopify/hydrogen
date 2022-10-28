@@ -6,8 +6,8 @@ import {
   useParams,
   useTransition,
 } from '@remix-run/react';
-import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
-import type {MailingAddressInput} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {flattenConnection} from '@shopify/hydrogen-react';
+import type {MailingAddressInput} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {Button, Text} from '~/components';
 import {

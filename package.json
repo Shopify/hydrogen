@@ -26,7 +26,7 @@
     "@cloudflare/kv-asset-handler": "^0.2.0",
     "@headlessui/react": "^1.7.2",
     "@remix-run/react": "0.0.0-experimental-e18af792a",
-    "@shopify/hydrogen-ui-alpha": "^2022.7.4",
+    "@shopify/hydrogen-react": "^2022.10.1",
     "clsx": "^1.2.1",
     "cross-env": "^7.0.3",
     "graphql": "^16.6.0",
