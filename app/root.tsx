@@ -20,9 +20,22 @@ import {getCart, getLayoutData, getCountries} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
 import {getSession} from './lib/session.server';
+import {Seo, Debugger} from './lib/seo';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
+
+export const handle = {
+  seo: (data) => ({
+    title: data.layout.shop.name,
+    bypassTitleTemplate: true,
+    titleTemplate: `%s | ${data.layout.shop.name}`,
+    robots: {
+      index: true,
+      follow: true,
+    },
+  }),
+};
 
 export const links: LinksFunction = () => {
   return [
@@ -39,13 +52,10 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export const meta: MetaFunction = ({data}) => {
-  return {
-    charset: 'utf-8',
-    title: data.layout.shop.name,
-    viewport: 'width=device-width,initial-scale=1',
-  };
-};
+export const meta: MetaFunction = () => ({
+  charset: 'utf-8',
+  viewport: 'width=device-width,initial-scale=1',
+});
 
 export const loader: LoaderFunction = async function loader({
   request,
@@ -68,6 +78,7 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <Seo />
         <Meta />
         <Links />
       </head>
@@ -75,6 +86,7 @@ export default function App() {
         <Layout data={data}>
           <Outlet />
         </Layout>
+        <Debugger />
         <ScrollRestoration />
         <Scripts />
         <LiveReload />
@@ -126,6 +138,7 @@ export function ErrorBoundary({error}: {error: Error}) {
           <GenericError error={error} />
         </Layout>
         <Scripts />
+        <Debugger />
       </body>
     </html>
   );
