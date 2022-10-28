@@ -12,7 +12,7 @@
   "engines": {
     "node": ">16.7.0"
   },
-  "version": "0.2.1",
+  "version": "1.0.0",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -31,9 +31,9 @@
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@miniflare/queues": "^2.10.0",
     "@miniflare/cache": "^2.10.0",
     "@miniflare/core": "^2.10.0",
+    "@miniflare/queues": "^2.10.0",
     "@miniflare/runner-vm": "^2.10.0",
     "@miniflare/shared": "^2.10.0",
     "@miniflare/storage-memory": "^2.10.0",
