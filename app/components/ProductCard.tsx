@@ -4,7 +4,7 @@ import {
   Image,
   Money,
   useMoney,
-} from '@shopify/hydrogen-ui-alpha';
+} from '@shopify/hydrogen-react';
 
 import {Text, Link} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
@@ -14,7 +14,7 @@ import type {
   Product,
   ProductVariant,
   ProductVariantConnection,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {SerializeFrom} from '@remix-run/server-runtime';
 
 export function ProductCard({

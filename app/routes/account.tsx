@@ -11,7 +11,7 @@ import type {
   Customer,
   MailingAddress,
   Order,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {Suspense} from 'react';
 import {
   Button,
@@ -25,7 +25,7 @@ import {
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {type LoaderArgs, redirect, json, defer} from '@hydrogen/remix';
-import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
+import {flattenConnection} from '@shopify/hydrogen-react';
 import {getCustomer, getFeaturedData} from '~/data';
 import {getSession} from '~/lib/session.server';
 

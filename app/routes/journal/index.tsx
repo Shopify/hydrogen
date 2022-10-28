@@ -1,7 +1,7 @@
 import {json, type LoaderArgs, type MetaFunction} from '@hydrogen/remix';
 import {useLoaderData} from '@remix-run/react';
-import {flattenConnection, Image} from '@shopify/hydrogen-ui-alpha';
-import type {Article} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {flattenConnection, Image} from '@shopify/hydrogen-react';
+import type {Article} from '@shopify/hydrogen-react/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getBlog} from '~/data';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
