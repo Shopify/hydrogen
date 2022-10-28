@@ -100,13 +100,6 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
   });
 }
 
-export const meta: MetaFunction = ({data}) => {
-  return {
-    title: data?.shop?.name,
-    description: data?.shop?.description,
-  };
-};
-
 export default function Homepage() {
   const {
     primaryHero,

@@ -169,6 +169,7 @@ const LAYOUT_QUERY = `#graphql
   ) @inContext(language: $language) {
     shop {
       name
+      description
     }
     headerMenu: menu(handle: $headerMenuHandle) {
       id
