@@ -144,8 +144,6 @@ export default function Product() {
   );
 }
 
-export const handle = {};
-
 export function ProductForm() {
   const addToCartFetcher = useFetcher();
   const isHydrated = useIsHydrated();

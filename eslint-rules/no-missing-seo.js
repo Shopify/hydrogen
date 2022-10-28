@@ -31,7 +31,7 @@ module.exports = {
           }
 
           const hasSeoKey = declaration.init.properties.includes(
-            (property) => !property.key.name === 'seo',
+            (property) => property.key.name === 'seo',
           );
 
           if (hasSeoKey) {
