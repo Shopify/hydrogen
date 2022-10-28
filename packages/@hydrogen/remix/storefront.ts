@@ -42,7 +42,7 @@ export type CreateStorefrontClientOptions = {
 // https://spec.graphql.org/June2018/#sec-Response-Format
 const shouldCacheResponse = (body: any) => {
   try {
-    return !parseJSON(body)?.errors;
+    return !body?.errors;
   } catch {
     // If we can't parse the response, then assume
     // an error and don't cache the response

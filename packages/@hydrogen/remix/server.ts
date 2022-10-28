@@ -37,7 +37,7 @@ export function createRequestHandler(
           storefront: createStorefrontClient(storefront, {
             cache,
             buyerIp: getBuyerIp(request),
-            waitUntil: context.waitUntil,
+            waitUntil: (p: Promise<any>) => context.waitUntil(p),
           }),
         },
       });
