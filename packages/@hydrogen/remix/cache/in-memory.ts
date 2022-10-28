@@ -68,7 +68,8 @@ export class InMemoryCache implements Cache {
     const {body, timestamp, ...metadata} = match;
 
     const headers = new Headers(metadata.headers);
-    const cacheControl = headers.get('cache-control') || '';
+    const cacheControl =
+      headers.get('cache-control') || headers.get('real-cache-control') || '';
     const maxAge = parseInt(
       cacheControl.match(/max-age=(\d+)/)?.[1] || '0',
       10,
