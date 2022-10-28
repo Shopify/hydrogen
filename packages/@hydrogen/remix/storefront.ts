@@ -121,8 +121,6 @@ export function createStorefrontClient(
 
     if (errors) throwError(response, errors);
 
-    console.log('==Returning', JSON.stringify(data || ''));
-
     return data as T;
   }
 

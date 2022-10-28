@@ -58,9 +58,7 @@ export async function fetchWithServerCache(
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ];
 
-  console.log('==Matching');
   const cachedItem = await getItemFromCache(cache, key);
-  console.log('==Matched', !!cachedItem);
 
   if (cachedItem) {
     const [value, cacheResponse] = cachedItem;
@@ -112,15 +110,12 @@ export async function fetchWithServerCache(
     return [body, new Response(body, init)];
   }
 
-  console.log('==Fetching');
   const [body, response] = await doFetch();
-  console.log('==Fetched');
 
   /**
    * Important: Do this async
    */
   if (shouldCacheResponse(body, response)) {
-    console.log('==Caching');
     const setItemInCachePromise = setItemInCache(
       cache,
       key,
@@ -129,7 +124,6 @@ export async function fetchWithServerCache(
     );
 
     waitUntil?.(setItemInCachePromise);
-    console.log('==Cached');
   }
 
   //   collectQueryCacheControlHeaders(
