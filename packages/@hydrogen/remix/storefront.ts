@@ -38,6 +38,23 @@ export type CreateStorefrontClientOptions = {
   waitUntil?: ExecutionContext['waitUntil'];
 };
 
+type StorefromCommonOptions = {
+  variables: ExecutionArgs['variableValues'];
+  headers?: HeadersInit;
+};
+
+export type StorefrontQueryOptions = StorefromCommonOptions & {
+  query: string;
+  mutation?: never;
+  cache?: CachingStrategy;
+};
+
+export type StorefrontMutationOptions = StorefromCommonOptions & {
+  query?: never;
+  mutation: string;
+  cache?: never;
+};
+
 // Check if the response body has GraphQL errors
 // https://spec.graphql.org/June2018/#sec-Response-Format
 const shouldCacheResponse = (body: any) => {
@@ -72,21 +89,19 @@ export function createStorefrontClient(
 
   async function getStorefrontData<T>({
     query,
+    mutation,
     variables,
     cache: cacheOptions,
     headers = [],
-  }: {
-    query: string;
-    variables: ExecutionArgs['variableValues'];
-    cache?: CachingStrategy;
-    headers?: HeadersInit;
-  }): Promise<T> {
+  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
         : Array.isArray(headers)
         ? Object.fromEntries(headers)
         : headers;
+
+    query = query ?? mutation;
 
     const url = getStorefrontApiUrl();
     const requestInit = {
@@ -99,7 +114,7 @@ export function createStorefrontClient(
     };
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {
-      cacheInstance: cache,
+      cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions,
       shouldCacheResponse,
       waitUntil,
