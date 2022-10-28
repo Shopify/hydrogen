@@ -45,7 +45,13 @@ export function Debugger() {
           if (typeof value !== 'string') {
             return null;
           }
-          return <Item property={property} value={value} />;
+          return (
+            <Item
+              key={`${property}${value}`}
+              property={property}
+              value={value}
+            />
+          );
         })}
 
         <div className="py-4 px-4">
