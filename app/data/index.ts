@@ -1,4 +1,7 @@
-import type {StorefrontApiResponseOk} from '@shopify/hydrogen-ui-alpha/dist/types/storefront-api-response.types';
+import {
+  type StorefrontApiResponseOk,
+  flattenConnection,
+} from '@shopify/hydrogen-react';
 import type {
   Cart,
   CartInput,
@@ -31,7 +34,7 @@ import type {
   CustomerRecoverPayload,
   CustomerResetPayload,
   CustomerActivatePayload,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {getPublicTokenHeaders, getStorefrontApiUrl} from '~/lib/shopify-client';
 import {
   type EnhancedMenu,
@@ -44,7 +47,6 @@ import {logout} from '~/routes/account/__private/logout';
 import type {AppLoadContext} from '@hydrogen/remix';
 import {type Params} from '@remix-run/react';
 import type {FeaturedData} from '~/components/FeaturedSection';
-import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
 import {PAGINATION_SIZE} from '~/lib/const';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
@@ -93,16 +95,12 @@ export async function getStorefrontData<T>({
   query: string;
   variables: Record<string, any>;
 }): Promise<StorefrontApiResponse<T>> {
-  const headers = getPublicTokenHeaders();
-  // This needs to be application/json because we're sending JSON, not a graphql string
-  headers['content-type'] = 'application/json';
-
   const response = await fetch(getStorefrontApiUrl(), {
     body: JSON.stringify({
       query,
       variables,
     }),
-    headers,
+    headers: getPublicTokenHeaders({contentType: 'json'}),
     method: 'POST',
   });
 

@@ -5,7 +5,7 @@ import {
   type LoaderArgs,
 } from '@hydrogen/remix';
 import {useLoaderData} from '@remix-run/react';
-import type {Collection as CollectionType} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import type {Collection as CollectionType} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
