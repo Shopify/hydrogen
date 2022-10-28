@@ -1,7 +1,7 @@
 import {
   defer,
   type LinksFunction,
-  type LoaderFunction,
+  type LoaderArgs,
   type MetaFunction,
 } from '@hydrogen/remix';
 import {
@@ -11,6 +11,7 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  ShouldReloadFunction,
   useCatch,
   useLoaderData,
   useMatches,
@@ -57,11 +58,17 @@ export const meta: MetaFunction = () => ({
   viewport: 'width=device-width,initial-scale=1',
 });
 
-export const loader: LoaderFunction = async function loader({
+export const unstable_shouldReload: ShouldReloadFunction = ({submission}) => {
+  const cartSubmission = submission?.action.includes('/cart');
+  const customerSubmission = submission?.action.includes('/account');
+  return Boolean(cartSubmission || customerSubmission);
+};
+
+export async function loader({
   request,
   context,
   params,
-}) {
+}: LoaderArgs) {
   const session = await getSession(request, context);
   const cartId = await session.get('cartId');
 
