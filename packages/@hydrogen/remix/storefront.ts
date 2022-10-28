@@ -16,6 +16,7 @@ import {
   type CachingStrategy,
 } from './cache/strategies';
 import {generateUUID} from './utils/uuid';
+import {parseJSON} from './utils/parse-json';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -109,11 +110,14 @@ export function createStorefrontClient(
        * The Storefront API might return a string error, or a JSON-formatted {error: string}.
        * We try both and conform them to a single {errors} format.
        */
+      let errors;
       try {
-        throwError(response, JSON.parse(body));
+        errors = parseJSON(body);
       } catch (_e) {
-        throwError(response, [{message: body}]);
+        errors = [{message: body}];
       }
+
+      throwError(response, errors);
     }
 
     const {data, errors} = body as StorefrontApiResponse<T>;
