@@ -3,7 +3,7 @@ import {CacheShort, generateCacheControlHeader} from './strategies';
 
 function logCacheApiStatus(status: string | null, url: string) {
   // // eslint-disable-next-line no-console
-  // console.log(status, url);
+  console.log('\n' + status, url);
 }
 
 function getCacheControlSetting(
