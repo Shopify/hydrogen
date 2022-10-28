@@ -11,6 +11,7 @@ export {
   CacheLong,
   CacheCustom,
 } from './cache/strategies';
+export {InMemoryCache} from './cache/in-memory';
 
 export type LoaderArgs = {
   request: Request;

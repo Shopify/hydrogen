@@ -115,8 +115,9 @@ async function setItem(
     getCacheControlSetting(cacheControl),
   );
 
-  // CF will override cache-control, so we need to keep a
-  // non-modified real-cache-control
+  // CF will override cache-control, so we need to keep a non-modified real-cache-control
+  // cache-control is still necessary for mini-oxygen
+  response.headers.set('cache-control', cacheControlString);
   response.headers.set('real-cache-control', cacheControlString);
   response.headers.set('cache-put-date', new Date().toUTCString());
 
