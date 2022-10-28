@@ -1,6 +1,6 @@
 import type {LoaderArgs, MetaFunction} from '@hydrogen/remix';
 import {useLoaderData} from '@remix-run/react';
-import type {Collection} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import type {Collection} from '@shopify/hydrogen-react/storefront-api-types';
 import {PageHeader, Section, ProductGrid} from '~/components';
 import {getAllProducts} from '~/data';
 

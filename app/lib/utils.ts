@@ -6,7 +6,7 @@ import type {
   UserError,
   CountryCode,
   LanguageCode,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 // @ts-expect-error types not available
 import typographicBase from 'typographic-base';
