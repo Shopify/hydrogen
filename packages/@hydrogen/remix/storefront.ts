@@ -101,7 +101,10 @@ export function createStorefrontClient(
         ? Object.fromEntries(headers)
         : headers;
 
-    query = query ?? mutation;
+    query = (query ?? mutation)
+      .replace(/\s+#.*$/gm, '') // Remove GQL comments
+      .replace(/\s+/gm, ' ') // Minify spaces
+      .trim();
 
     const url = getStorefrontApiUrl();
     const requestInit = {
