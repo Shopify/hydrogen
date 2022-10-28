@@ -102,7 +102,7 @@ export function createStorefrontClient(
         : headers;
 
     query = (query ?? mutation)
-      .replace(/\s+#.*$/gm, '') // Remove GQL comments
+      .replace(/\s*#.*$/gm, '') // Remove GQL comments
       .replace(/\s+/gm, ' ') // Minify spaces
       .trim();
 
