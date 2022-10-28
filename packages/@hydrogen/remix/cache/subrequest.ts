@@ -33,6 +33,7 @@ export function generateSubRequestCacheControlHeader(
  * Get an item from the cache. If a match is found, returns a tuple
  * containing the `JSON.parse` version of the response as well
  * as the response itself so it can be checked for staleness.
+ * @private
  */
 export async function getItemFromCache(
   cache: Cache,
@@ -53,6 +54,7 @@ export async function getItemFromCache(
 
 /**
  * Put an item into the cache.
+ * @private
  */
 export async function setItemInCache(
   cache: Cache,
@@ -74,6 +76,10 @@ export async function setItemInCache(
   );
 }
 
+/**
+ *
+ * @private
+ */
 export async function deleteItemFromCache(cache: Cache, key: QueryKey) {
   if (!cache) return;
 
@@ -85,6 +91,7 @@ export async function deleteItemFromCache(cache: Cache, key: QueryKey) {
 
 /**
  * Manually check the response to see if it's stale.
+ * @private
  */
 export function isStale(key: QueryKey, response: Response) {
   return CacheAPI.isStale(new Request(getKeyUrl(hashKey(key))), response);

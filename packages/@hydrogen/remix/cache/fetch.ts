@@ -7,9 +7,9 @@ import {
 } from './subrequest';
 
 export type FetchCacheOptions = {
-  cache?: Cache;
+  cache?: CachingStrategy;
+  cacheInstance?: Cache;
   cacheKey?: string | readonly unknown[];
-  cacheOptions?: CachingStrategy;
   shouldCacheResponse?: (body: any, response: Response) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
   returnType?: 'json' | 'text' | 'arrayBuffer' | 'blob';
@@ -26,20 +26,25 @@ function serializeResponse(body: any, response: Response) {
   ];
 }
 
+/**
+ * `fetch` equivalent that stores responses in cache.
+ * Useful for calling third-party APIs that need to be cached.
+ * @public
+ */
 export async function fetchWithServerCache(
   url: string,
-  options: Request | RequestInit,
+  requestInit: Request | RequestInit,
   {
-    cache,
-    cacheOptions,
-    cacheKey = [url, options],
+    cacheInstance,
+    cache: cacheOptions,
+    cacheKey = [url, requestInit],
     shouldCacheResponse = () => true,
     waitUntil,
     returnType = 'json',
   }: FetchCacheOptions = {},
 ): Promise<readonly [any, Response]> {
   const doFetch = async () => {
-    const response = await fetch(url, options);
+    const response = await fetch(url, requestInit);
     let data;
 
     try {
@@ -51,14 +56,14 @@ export async function fetchWithServerCache(
     return [data, response] as const;
   };
 
-  if (!cache || !cacheKey) return doFetch();
+  if (!cacheInstance || !cacheKey) return doFetch();
 
   const key = [
     // '__HYDROGEN_CACHE_ID__', // TODO purgeQueryCacheOnBuild
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ];
 
-  const cachedItem = await getItemFromCache(cache, key);
+  const cachedItem = await getItemFromCache(cacheInstance, key);
 
   if (cachedItem) {
     const [value, cacheResponse] = cachedItem;
@@ -76,18 +81,23 @@ export async function fetchWithServerCache(
       const lockKey = ['lock', ...(typeof key === 'string' ? [key] : key)];
 
       // Run revalidation asynchronously
-      const revalidatingPromise = getItemFromCache(cache, lockKey).then(
+      const revalidatingPromise = getItemFromCache(cacheInstance, lockKey).then(
         async (lockExists) => {
           if (lockExists) return;
 
-          await setItemInCache(cache, lockKey, true, CacheShort({maxAge: 10}));
+          await setItemInCache(
+            cacheInstance,
+            lockKey,
+            true,
+            CacheShort({maxAge: 10}),
+          );
 
           try {
             const [body, response] = await doFetch();
 
             if (shouldCacheResponse(body, response)) {
               await setItemInCache(
-                cache,
+                cacheInstance,
                 key,
                 serializeResponse(body, response),
                 cacheOptions,
@@ -97,7 +107,7 @@ export async function fetchWithServerCache(
             // eslint-disable-next-line no-console
             console.error(`Error generating async response: ${e.message}`);
           } finally {
-            await deleteItemFromCache(cache, lockKey);
+            await deleteItemFromCache(cacheInstance, lockKey);
           }
         },
       );
@@ -117,7 +127,7 @@ export async function fetchWithServerCache(
    */
   if (shouldCacheResponse(body, response)) {
     const setItemInCachePromise = setItemInCache(
-      cache,
+      cacheInstance,
       key,
       serializeResponse(body, response),
       cacheOptions,

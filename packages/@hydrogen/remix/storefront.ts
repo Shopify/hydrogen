@@ -15,7 +15,6 @@ import {
   CacheCustom,
   type CachingStrategy,
 } from './cache/strategies';
-import {parseJSON} from './utils/parse-json';
 import {generateUUID} from './utils/uuid';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
@@ -99,8 +98,8 @@ export function createStorefrontClient(
     };
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {
-      cache,
-      cacheOptions,
+      cacheInstance: cache,
+      cache: cacheOptions,
       shouldCacheResponse,
       waitUntil,
     });
@@ -134,6 +133,17 @@ export function createStorefrontClient(
     CacheLong,
     CacheShort,
     CacheCustom,
+    fetch: (
+      url: string,
+      requestInit: RequestInit,
+      fetchOptions: Omit<FetchCacheOptions, 'cacheInstance' | 'waitUntil'>,
+    ) =>
+      fetchWithServerCache(url, requestInit, {
+        waitUntil,
+        cacheKey: [url, requestInit],
+        cacheInstance: cache,
+        ...fetchOptions,
+      }),
   };
 }
 
