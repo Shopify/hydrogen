@@ -3,6 +3,7 @@ import {
   getBuyerIp,
 } from '@remix-run/oxygen';
 import {createStorefrontClient, type StorefrontClientProps} from './storefront';
+import {InMemoryCache} from './cache/in-memory';
 
 type HydrogenHandlerParams = {
   storefront: StorefrontClientProps;
@@ -13,6 +14,11 @@ export function createRequestHandler(
   oxygenHandlerParams: Parameters<typeof createOxygenRequestHandler>[0],
 ) {
   const handleRequest = createOxygenRequestHandler(oxygenHandlerParams);
+
+  const inMemorycache =
+    oxygenHandlerParams.mode === 'development'
+      ? new InMemoryCache()
+      : undefined;
 
   return async (
     request: Request,
@@ -26,7 +32,10 @@ export function createRequestHandler(
   ) => {
     try {
       if (!cache && !!globalThis.caches) {
-        cache = await caches.open('hydrogen');
+        cache =
+          oxygenHandlerParams.mode === 'development'
+            ? inMemorycache
+            : await caches.open('hydrogen');
       }
 
       return await handleRequest(request, {

@@ -5,7 +5,11 @@
   "publicPath": "",
   "buildCommand": "npm run bundle:worker && npm run copy:assets",
   "watch": true,
-  "buildWatchPaths": ["./build/server/index.js", "./worker/index.ts"],
+  "buildWatchPaths": [
+    "./build/server/index.js",
+    "./worker/index.ts",
+    "./packages"
+  ],
   "autoReload": true,
   "modules": true,
   "env": {
