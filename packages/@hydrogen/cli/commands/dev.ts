@@ -14,7 +14,7 @@ export async function runDev({
 
   // Initial build
   const {root, entryFile, buildPathClient, buildPathWorkerFile} =
-    await runBuild({entry});
+    await runBuild({entry, minify: false, sourcemap: false});
 
   //@ts-ignore
   const remixConfig = await import(path.resolve(root, 'remix.config.js'));
@@ -28,7 +28,7 @@ export async function runDev({
     port,
     assetsDir: buildPathClient,
     publicPath: '',
-    buildCommand: `cd ${root} && npm run h2 build -- --skip-remix-build --entry ${entry}`,
+    buildCommand: `cd ${root} && npm run h2 build -- --dev-reload --entry ${entry}`,
     watch: true,
     buildWatchPaths: [
       entryFile,
