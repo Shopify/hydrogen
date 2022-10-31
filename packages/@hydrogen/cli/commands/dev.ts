@@ -1,7 +1,8 @@
 import path from 'path';
 import {cli} from '@remix-run/dev';
-import {runBuild} from './build';
 import miniOxygenPreview from '@shopify/mini-oxygen';
+import {runBuild} from './build';
+import {getProjectPaths} from '../utils/paths';
 
 export async function runDev({
   entry,
@@ -13,8 +14,10 @@ export async function runDev({
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   // Initial build
-  const {root, entryFile, buildPathClient, buildPathWorkerFile} =
-    await runBuild({entry, minify: false, sourcemap: false});
+  await runBuild({entry, minify: false, sourcemap: false});
+
+  const {root, entryFile, buildPathWorkerFile, buildPathClient} =
+    getProjectPaths(entry);
 
   //@ts-ignore
   const remixConfig = await import(path.resolve(root, 'remix.config.js'));

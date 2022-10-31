@@ -45,6 +45,4 @@ export async function runBuild({
     sourcemap,
     minify,
   });
-
-  return {root, entryFile, buildPathClient, buildPathWorkerFile};
 }
