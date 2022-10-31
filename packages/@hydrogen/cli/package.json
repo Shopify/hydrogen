@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@shopify/mini-oxygen": "^1.0.0",
+    "esbuild": "^0.15.12",
     "fs-extra": "^10.1.0"
   }
 }

@@ -25,7 +25,6 @@
     "@shopify/hydrogen-react": "^2022.10.1",
     "clsx": "^1.2.1",
     "cross-env": "^7.0.3",
-    "esbuild": "^0.15.12",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "react": "^18.2.0",
