@@ -5,14 +5,14 @@ import {getProjectPaths} from '../utils/paths';
 
 export async function runBuild({
   entry,
-  sourcemap = true,
-  minify = true,
-  skipRemixBuild = false,
+  devReload = false,
+  sourcemap = !devReload,
+  minify = !devReload,
 }: {
   entry: string;
+  devReload?: boolean;
   sourcemap?: boolean;
   minify?: boolean;
-  skipRemixBuild?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
@@ -25,7 +25,7 @@ export async function runBuild({
     publicPath,
   } = getProjectPaths(entry);
 
-  if (!skipRemixBuild) {
+  if (!devReload) {
     await fsExtra.rm(buildPath, {force: true, recursive: true});
     await cli.run(['build', root]);
   }
