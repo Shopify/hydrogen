@@ -260,7 +260,7 @@ export function getLocalizationFromUrl(requestUrl: string): CountryData & {
   const firstPathPart = url.pathname.substring(
     0,
     url.pathname.substring(1).indexOf('/') + 1,
-  );
+  ).toLowerCase();
 
   return countries[firstPathPart]
     ? {

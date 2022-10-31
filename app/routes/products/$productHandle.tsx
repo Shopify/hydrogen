@@ -37,17 +37,18 @@ import clsx from 'clsx';
 export const loader = async ({params, request}: LoaderArgs) => {
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
+  const locale = getLocalizationFromUrl(request.url);
 
   const {shop, product} = await getProductData(
     productHandle,
     new URL(request.url).searchParams,
-    getLocalizationFromUrl(request.url),
+    locale,
   );
 
   return defer({
     product,
     shop,
-    recommended: getRecommendedProducts(product.id, params),
+    recommended: getRecommendedProducts(product.id, locale),
   });
 };
 

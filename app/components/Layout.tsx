@@ -2,6 +2,7 @@ import {
   type EnhancedMenu,
   type EnhancedMenuItem,
   useIsHomePath,
+  usePrefixPathWithLocale,
 } from '~/lib/utils';
 import {
   Drawer,
@@ -119,6 +120,7 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
    * we persist it between mounting and unmounting.
    */
   const topProductsFetcher = useFetcher();
+  const cartPath = usePrefixPathWithLocale('/cart');
 
   /**
    * We load the top products, which are only shown as a fallback when the cart as empty.
@@ -126,7 +128,7 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
    * drawer is opened.
    */
   useEffect(() => {
-    isOpen && topProductsFetcher.load('/cart');
+    isOpen && topProductsFetcher.load(cartPath);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isOpen]);
 

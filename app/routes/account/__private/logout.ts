@@ -21,7 +21,6 @@ export async function logout(request: Request, context: AppLoadContext) {
 
 export async function loader({request}: LoaderArgs) {
   const {pathPrefix} = getLocalizationFromUrl(request.url);
-  console.log('logout - loader', pathPrefix);
   return redirect(pathPrefix);
 }
 

@@ -8,3 +8,5 @@ node_modules
 .env
 /app/styles/app.css
 .vscode
+
+/app/routes/$lang/*

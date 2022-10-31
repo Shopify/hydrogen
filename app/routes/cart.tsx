@@ -5,13 +5,11 @@ import {
   json,
   defer,
 } from '@hydrogen/remix';
-import {CountryCode} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {
   addLineItem,
   createCart,
   getTopProducts,
-  updateCartBuyerIdentity,
   updateLineItem,
 } from '~/data';
 import {getSession} from '~/lib/session.server';
@@ -111,39 +109,6 @@ export const action: ActionFunction = async ({request, context}) => {
         locale,
       });
       return json({cart});
-    }
-
-    case 'update-cart-buyer-country': {
-      const countryCode = formData.get('country') as CountryCode;
-      invariant(countryCode, 'Missing country');
-
-      let currentCartId = cartId;
-      const headers = new Headers();
-
-      // Create an empty cart if we don't have a cart
-      if (!currentCartId) {
-        cart = await createCart({
-          cart: {lines: []},
-          locale,
-        });
-
-        session.set('cartId', cart.id);
-        currentCartId = cart.id;
-        headers.set('Set-Cookie', await session.commit());
-      }
-
-      // Update cart buyer's country code
-      if (currentCartId) {
-        cart = await updateCartBuyerIdentity({
-          cartId: currentCartId,
-          buyerIdentity: {
-            countryCode,
-          },
-          locale,
-        });
-      }
-
-      return json({cart}, {headers});
     }
 
     default: {

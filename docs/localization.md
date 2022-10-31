@@ -280,7 +280,7 @@ When we change locale, we want to have urls to look like:
 | `example-shop.com`              | `example-shop.com/en-ca`              |
 | `example-shop.com/products/abc` | `example-shop.com/en-ca/products/abc` |
 
-To get the localized path, we'll need to add splat routes:
+To get the localized path, we'll need to add splat routes for each routes:
 
 ```
 routes/
@@ -293,46 +293,78 @@ routes/
       $productHandle.tsx
 ```
 
-And what these extra routes will do is simply a re-export of the corresponding route. For example:
+With the above `routes` structure, we can get the localization preference with
 
 ```jsx
-// routes/index.tsx
-export const meta: MetaFunction = ({data}) => {
-  ...
-}
-
-export async function loader() {
-  ...
-}
-
-export default function Homepage() {
-  ...
-}
-
-// routes/$lang/index.tsx
-export {default, meta, loader} from '~/routes/index';
+const {lang} = useParams();
 ```
 
-```jsx
-// routes/products/$productHandle.tsx
-export async function loader() {
-  ...
-}
+All route files under `$lang` are just re-exports of the main route file.
+For now, we can update `remix.config.js` to auto generate these files on build.
+Feel free to `.gitignore` files generated under `$lang` folder and re-run `dev`
+or `build` whenever a file or module export is added or removed.
 
-export default function Product() {
-  ...
-}
+```js
+const fs = require("fs");
+const path = require("path");
 
-export function ProductForm() {
-  ...
-}
+const esbuild = require("esbuild");
+const recursive = require("recursive-readdir");
 
-// routes/$lang/products/$productHandle.tsx
-export {
-  default,
-  loader,
-  ProductForm,
-} from '~/routes/products/$productHandle';
+/** @type {import('@remix-run/dev').AppConfig} */
+module.exports = {
+  ...
+  ignoredRouteFiles: ["**/.*"],
+  async routes() {
+    /**
+     * Generates the re-export route files under $lang for url path localization
+     * Note: This is temporary until we can assign multiple routes to a single route
+     */
+    const appDir = path.resolve("app");
+    const routesDir = path.resolve(appDir, "routes");
+    const langDir = path.resolve(routesDir, "$lang");
+
+    const files = await recursive(routesDir, [
+      (file) => {
+        return (
+          file.replace(/\\/g, "/").match(/routes\/\$lang\//)
+        );
+      },
+    ]);
+
+    console.log(`Duplicating ${files.length} route(s) for translations`);
+
+    for (let file of files) {
+      let bundle = await esbuild.build({
+        entryPoints: { entry: file },
+        bundle: false,
+        metafile: true,
+        write: false,
+      });
+
+      const moduleExports = bundle.metafile.outputs["entry.js"].exports;
+
+      const moduleId =
+        "~/" +
+        path
+          .relative(appDir, file)
+          .replace(/\\/g, "/")
+          .slice(0, -path.extname(file).length);
+
+      const outFile = path.resolve(langDir, path.relative(routesDir, file));
+
+      fs.mkdirSync(path.dirname(outFile), { recursive: true });
+      fs.writeFileSync(
+        outFile,
+        `export {${moduleExports.join(", ")}} from ${JSON.stringify(
+          moduleId
+        )};\n`
+      );
+    }
+
+    return {};
+  },
+};
 ```
 
 You will most likely need to create a wrapper `<Link>` component to make sure navigations

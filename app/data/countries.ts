@@ -4,7 +4,7 @@ import {
 } from '@shopify/hydrogen-ui-alpha/storefront-api-types';
 
 export type CountryData = {
-  label: string;
+  label?: string;
   language: LanguageCode;
   country: CountryCode;
 };

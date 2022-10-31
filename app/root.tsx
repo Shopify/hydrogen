@@ -1,6 +1,5 @@
 import {
   defer,
-  LoaderArgs,
   type LinksFunction,
   type LoaderFunction,
   type MetaFunction,
@@ -14,7 +13,6 @@ import {
   ScrollRestoration,
   useCatch,
   useLoaderData,
-  useLocation,
   useMatches,
   useParams,
 } from '@remix-run/react';
@@ -28,7 +26,6 @@ import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 import {getLocalizationFromUrl} from './lib/utils';
 import {countries} from './data/countries';
-import {ActionFunction} from '@remix-run/server-runtime';
 
 export const links: LinksFunction = () => {
   return [

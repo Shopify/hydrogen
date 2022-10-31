@@ -774,13 +774,10 @@ export async function addLineItem({
     query: ADD_LINE_ITEM_QUERY,
     variables: {cartId, lines, country},
   }).then((result) => {
-    console.log(result);
     return result;
   });
 
   invariant(data, 'No data returned from Shopify API');
-
-  console.log(data.cartLinesAdd.cart);
 
   return data.cartLinesAdd.cart;
 }
