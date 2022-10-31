@@ -7,10 +7,12 @@ export async function runBuild({
   entry,
   sourcemap = true,
   minify = true,
+  skipRemixBuild = false,
 }: {
   entry: string;
   sourcemap?: boolean;
   minify?: boolean;
+  skipRemixBuild?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
@@ -23,8 +25,10 @@ export async function runBuild({
     publicPath,
   } = getProjectPaths(entry);
 
-  await fsExtra.rm(buildPath, {force: true, recursive: true});
-  await cli.run(['build', root]);
+  if (!skipRemixBuild) {
+    await fsExtra.rm(buildPath, {force: true, recursive: true});
+    await cli.run(['build', root]);
+  }
 
   await fsExtra.copy(publicPath, buildPathClient, {
     recursive: true,
@@ -41,4 +45,6 @@ export async function runBuild({
     sourcemap,
     minify,
   });
+
+  return {root, entryFile, buildPathClient, buildPathWorkerFile};
 }
