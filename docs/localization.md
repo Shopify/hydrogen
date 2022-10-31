@@ -132,7 +132,7 @@ export const loader: LoaderFunction = async function loader() {
 };
 ```
 
-2. Render the avaialble countries as anchor links
+2. Render the avaialble countries as links
 
 ```jsx
 import {Link, useMatches} from '@remix-run/react';
@@ -150,109 +150,7 @@ export function CountrySelector() {
     <div>
       {Object.keys(countries).map((countryKey) => {
         const locale = countries[countryKey];
-        const isRelativePath = countryKey === '' || countryKey[0] === '/'
-
-        // use <Link> for relative links and <a> for external links
-        return isRelativePath ? (
-          <Link to={countryKey}>
-            {locale.label}
-          </Link>
-        ) : (
-          <a href={countryKey}>{locale.label}</a>
-        );
-      })}
-    </div>
-  );
-}
-```
-
-## 4. (Optional) Update buyer's cart currency on localization change
-
-If you are using url path localization scheme, you want to make sure the buyer's cart
-is displaying in the expected localization.
-
-1. In your cart action, add a `update-cart-buyer-country` intent
-
-```jsx
-export const action: ActionFunction = async ({request, context}) => {
-  ...
-
-  switch (intent) {
-    ...
-    case 'update-cart-buyer-country': {
-      const countryCode = formData.get('country') as CountryCode;
-      invariant(countryCode, 'Missing country');
-
-      let currentCartId = cartId;
-      const headers = new Headers();
-
-      // Create an empty cart if we don't have a cart
-      if (!currentCartId) {
-        cart = await createCart({
-          cart: {lines: []},
-          locale,
-        });
-
-        session.set('cartId', cart.id);
-        currentCartId = cart.id;
-        headers.set('Set-Cookie', await session.commit());
-      }
-
-      // Update cart buyer's country code
-      if (currentCartId) {
-        cart = await updateCartBuyerIdentity({
-          cartId: currentCartId,
-          buyerIdentity: {
-            countryCode,
-          },
-          locale
-        });
-      }
-
-      return json({cart}, {headers});
-    }
-
-    default: {
-      throw new Error(`Cart intent ${intent} not supported`);
-    }
-  }
-};
-```
-
-2. Attach this event to the country selector
-
-```jsx
-import {Link, useFetcher} from '@remix-run/react';
-...
-
-export function CountrySelector() {
-  ...
-
-  const countrySelectorFetcher = useFetcher();
-
-  return (
-    <div>
-      {Object.keys(countries).map((countryKey) => {
-        const locale = countries[countryKey];
-        const isRelativePath = countryKey === '' || countryKey[0] === '/'
-
-        // use <Link> for relative links and <a> for external links
-        return isRelativePath ? (
-          <Link
-            to={countryKey}
-            onClick={() => {
-              countrySelectorFetcher.submit({
-                country: locale.country,
-                intent: 'update-cart-buyer-country',
-              }, {
-                method: 'post',
-                action: '/cart'
-              });
-            }}
-          >
-            {locale.label}
-          </Link>
-        ) : (
+        return (
           <a href={countryKey}>{locale.label}</a>
         );
       })}
@@ -299,109 +197,207 @@ With the above `routes` structure, we can get the localization preference with
 const {lang} = useParams();
 ```
 
-All route files under `$lang` are just re-exports of the main route file.
-For now, we can update `remix.config.js` to auto generate these files on build.
-Feel free to `.gitignore` files generated under `$lang` folder and re-run `dev`
-or `build` whenever a file or module export is added or removed.
+1. Generate `$lang` files on build
 
-```js
-const fs = require("fs");
-const path = require("path");
+  All route files under `$lang` are just re-exports of the main route file.
+  For now, we can update `remix.config.js` to auto generate these files on build.
+  Feel free to `.gitignore` files generated under `$lang` folder and re-run `dev`
+  or `build` whenever a file or module export is added or removed.
 
-const esbuild = require("esbuild");
-const recursive = require("recursive-readdir");
+  ```js
+  const fs = require("fs");
+  const path = require("path");
 
-/** @type {import('@remix-run/dev').AppConfig} */
-module.exports = {
-  ...
-  ignoredRouteFiles: ["**/.*"],
-  async routes() {
-    /**
-     * Generates the re-export route files under $lang for url path localization
-     * Note: This is temporary until we can assign multiple routes to a single route
-     */
-    const appDir = path.resolve("app");
-    const routesDir = path.resolve(appDir, "routes");
-    const langDir = path.resolve(routesDir, "$lang");
+  const esbuild = require("esbuild");
+  const recursive = require("recursive-readdir");
 
-    const files = await recursive(routesDir, [
-      (file) => {
-        return (
-          file.replace(/\\/g, "/").match(/routes\/\$lang\//)
+  /** @type {import('@remix-run/dev').AppConfig} */
+  module.exports = {
+    ...
+    ignoredRouteFiles: ["**/.*"],
+    async routes() {
+      /**
+       * Generates the re-export route files under $lang for url path localization
+       * Note: This is temporary until we can assign multiple routes to a single route
+       */
+      const appDir = path.resolve("app");
+      const routesDir = path.resolve(appDir, "routes");
+      const langDir = path.resolve(routesDir, "$lang");
+
+      const files = await recursive(routesDir, [
+        (file) => {
+          return (
+            file.replace(/\\/g, "/").match(/routes\/\$lang\//)
+          );
+        },
+      ]);
+
+      console.log(`Duplicating ${files.length} route(s) for translations`);
+
+      for (let file of files) {
+        let bundle = await esbuild.build({
+          entryPoints: { entry: file },
+          bundle: false,
+          metafile: true,
+          write: false,
+        });
+
+        const moduleExports = bundle.metafile.outputs["entry.js"].exports;
+
+        const moduleId =
+          "~/" +
+          path
+            .relative(appDir, file)
+            .replace(/\\/g, "/")
+            .slice(0, -path.extname(file).length);
+
+        const outFile = path.resolve(langDir, path.relative(routesDir, file));
+
+        fs.mkdirSync(path.dirname(outFile), { recursive: true });
+        fs.writeFileSync(
+          outFile,
+          `export {${moduleExports.join(", ")}} from ${JSON.stringify(
+            moduleId
+          )};\n`
         );
-      },
+      }
+
+      return {};
+    },
+  };
+  ```
+
+2. Create an action route `routes/locale.tsx`
+
+  This will handle post request to update all data loader to change localization. It will
+  also check if we have a cart. If we do, we need to make sure that the localization is
+  updated as well.
+
+  ```jsx
+  import {
+    type ActionFunction,
+    redirect,
+  } from '@hydrogen/remix';
+  import {CountryCode, LanguageCode} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+  import invariant from 'tiny-invariant';
+  import { updateCartBuyerIdentity } from '~/data';
+  import { getSession } from '~/lib/session.server';
+
+  export const action: ActionFunction = async ({request, context}) => {
+
+    // Get the form data and the session of this request
+    const [session, formData] = await Promise.all([
+      getSession(request, context),
+      new URLSearchParams(await request.text()),
     ]);
 
-    console.log(`Duplicating ${files.length} route(s) for translations`);
+    const languageCode = formData.get('language') as LanguageCode;
+    invariant(languageCode, 'Missing language');
 
-    for (let file of files) {
-      let bundle = await esbuild.build({
-        entryPoints: { entry: file },
-        bundle: false,
-        metafile: true,
-        write: false,
+    const countryCode = formData.get('country') as CountryCode;
+    invariant(countryCode, 'Missing country');
+
+    let newPrefixPath = '';
+    const path = formData.get('path');
+    const hreflang = `${languageCode}-${countryCode}`;
+
+    // Special case for default locale 'en-us'
+    if (hreflang !== 'EN-US') newPrefixPath = `/${hreflang.toLowerCase()}`;
+
+    // Update cart buyer's country code if we have a cart id
+    const cartId = await session.get('cartId');
+    if (cartId) {
+      await updateCartBuyerIdentity({
+        cartId,
+        buyerIdentity: {
+          countryCode,
+        },
+        locale: {
+          country: countryCode,
+          language: languageCode,
+        },
       });
+    }
 
-      const moduleExports = bundle.metafile.outputs["entry.js"].exports;
+    return redirect(newPrefixPath + path, 302);
+  };
+  ```
 
-      const moduleId =
-        "~/" +
-        path
-          .relative(appDir, file)
-          .replace(/\\/g, "/")
-          .slice(0, -path.extname(file).length);
+3. Update the country selector component to render as forms
 
-      const outFile = path.resolve(langDir, path.relative(routesDir, file));
+  ```jsx
+  import {Form, useMatches, useParams, useLocation} from '@remix-run/react';
+  ...
 
-      fs.mkdirSync(path.dirname(outFile), { recursive: true });
-      fs.writeFileSync(
-        outFile,
-        `export {${moduleExports.join(", ")}} from ${JSON.stringify(
-          moduleId
-        )};\n`
+  export function CountrySelector() {
+    const matches = useMatches();
+    const rootData = matches.find((match) => match.pathname === '/');
+    if (!rootData) return null;
+
+    const countries = rootData?.countries;
+    if (!countries) return null;
+
+    const {pathname, search} = useLocation();
+    const {lang} = useParams();
+    const strippedPathname = lang ? pathname.replace(`/${lang}`, '') : pathname;
+
+    return (
+      <div>
+        {Object.keys(countries).map((countryKey) => {
+          const locale = countries[countryKey];
+          return (
+            <Form method="post" action="/locale" key={hreflang}>
+              <input type="hidden" name="language" value={locale.language} />
+              <input type="hidden" name="country" value={locale.country} />
+              <input type="hidden" name="path" value={`${strippedPathname}${search}`} />
+              <Button
+                type="submit"
+              >
+                {locale.label}
+              </Button>
+            </Form>
+          );
+        })}
+      </div>
+    );
+  }
+  ```
+
+4. You will most likely need to create a wrapper `<Link>` component to make sure navigations
+  between pages matches with localization.
+
+  ```jsx
+  import {
+    Link as RemixLink,
+    useParams,
+    NavLink as RemixNavLink,
+    type NavLinkProps as RemixNavLinkProps,
+    type LinkProps as RemixLinkProps,
+  } from '@remix-run/react';
+
+  type LinkProps = Omit<RemixLinkProps, 'className'> & {
+    className?: RemixNavLinkProps['className'] | RemixLinkProps['className'],
+  };
+
+  export function Link(props: LinkProps) {
+    const {to, className, ...resOfProps} = props;
+    const {lang} = useParams();
+
+    let toWithLang = to;
+
+    if (typeof to === 'string') {
+      toWithLang = lang ? `/${lang}${to}` : to;
+    }
+
+    if (typeof className === 'function') {
+      return (
+        <RemixNavLink to={toWithLang} className={className} {...resOfProps} />
       );
     }
 
-    return {};
-  },
-};
-```
-
-You will most likely need to create a wrapper `<Link>` component to make sure navigations
-between pages matches with localization.
-
-```jsx
-import {
-  Link as RemixLink,
-  useParams,
-  NavLink as RemixNavLink,
-  type NavLinkProps as RemixNavLinkProps,
-  type LinkProps as RemixLinkProps,
-} from '@remix-run/react';
-
-type LinkProps = Omit<RemixLinkProps, 'className'> & {
-  className?: RemixNavLinkProps['className'] | RemixLinkProps['className'],
-};
-
-export function Link(props: LinkProps) {
-  const {to, className, ...resOfProps} = props;
-  const {lang} = useParams();
-
-  let toWithLang = to;
-
-  if (typeof to === 'string') {
-    toWithLang = lang ? `/${lang}${to}` : to;
+    return <RemixLink to={toWithLang} className={className} {...resOfProps} />;
   }
-
-  if (typeof className === 'function') {
-    return (
-      <RemixNavLink to={toWithLang} className={className} {...resOfProps} />
-    );
-  }
-
-  return <RemixLink to={toWithLang} className={className} {...resOfProps} />;
-}
-```
+  ```
 
 # Request header or cookie based localization detection
 
