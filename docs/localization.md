@@ -119,45 +119,45 @@ export const loader: LoaderFunction = async function loader({
 
 1. Supply the available countries data from the `root` loader function
 
-```jsx
-import { countries } from '~/data/countries';
+    ```jsx
+    import { countries } from '~/data/countries';
 
-export const loader: LoaderFunction = async function loader() {
-  ...
+    export const loader: LoaderFunction = async function loader() {
+      ...
 
-  return defer({
-    ...,
-    countries,
-  });
-};
-```
+      return defer({
+        ...,
+        countries,
+      });
+    };
+    ```
 
 2. Render the avaialble countries as links
 
-```jsx
-import {Link, useMatches} from '@remix-run/react';
-...
+    ```jsx
+    import {Link, useMatches} from '@remix-run/react';
+    ...
 
-export function CountrySelector() {
-  const matches = useMatches();
-  const rootData = matches.find((match) => match.pathname === '/');
-  if (!rootData) return null;
+    export function CountrySelector() {
+      const matches = useMatches();
+      const rootData = matches.find((match) => match.pathname === '/');
+      if (!rootData) return null;
 
-  const countries = rootData?.countries;
-  if (!countries) return null;
+      const countries = rootData?.countries;
+      if (!countries) return null;
 
-  return (
-    <div>
-      {Object.keys(countries).map((countryKey) => {
-        const locale = countries[countryKey];
-        return (
-          <a href={countryKey}>{locale.label}</a>
-        );
-      })}
-    </div>
-  );
-}
-```
+      return (
+        <div>
+          {Object.keys(countries).map((countryKey) => {
+            const locale = countries[countryKey];
+            return (
+              <a href={countryKey}>{locale.label}</a>
+            );
+          })}
+        </div>
+      );
+    }
+    ```
 
 # Url path localization
 
@@ -269,134 +269,134 @@ const {lang} = useParams();
 
 2. Create an action route `routes/locale.tsx`
 
-  This will handle post request to update all data loader to change localization. It will
-  also check if we have a cart. If we do, we need to make sure that the localization is
-  updated as well.
+    This will handle post request to update all data loader to change localization. It will
+    also check if we have a cart. If we do, we need to make sure that the localization is
+    updated as well.
 
-  ```jsx
-  import {
-    type ActionFunction,
-    redirect,
-  } from '@hydrogen/remix';
-  import {CountryCode, LanguageCode} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
-  import invariant from 'tiny-invariant';
-  import { updateCartBuyerIdentity } from '~/data';
-  import { getSession } from '~/lib/session.server';
+    ```jsx
+    import {
+      type ActionFunction,
+      redirect,
+    } from '@hydrogen/remix';
+    import {CountryCode, LanguageCode} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+    import invariant from 'tiny-invariant';
+    import { updateCartBuyerIdentity } from '~/data';
+    import { getSession } from '~/lib/session.server';
 
-  export const action: ActionFunction = async ({request, context}) => {
+    export const action: ActionFunction = async ({request, context}) => {
 
-    // Get the form data and the session of this request
-    const [session, formData] = await Promise.all([
-      getSession(request, context),
-      new URLSearchParams(await request.text()),
-    ]);
+      // Get the form data and the session of this request
+      const [session, formData] = await Promise.all([
+        getSession(request, context),
+        new URLSearchParams(await request.text()),
+      ]);
 
-    const languageCode = formData.get('language') as LanguageCode;
-    invariant(languageCode, 'Missing language');
+      const languageCode = formData.get('language') as LanguageCode;
+      invariant(languageCode, 'Missing language');
 
-    const countryCode = formData.get('country') as CountryCode;
-    invariant(countryCode, 'Missing country');
+      const countryCode = formData.get('country') as CountryCode;
+      invariant(countryCode, 'Missing country');
 
-    let newPrefixPath = '';
-    const path = formData.get('path');
-    const hreflang = `${languageCode}-${countryCode}`;
+      let newPrefixPath = '';
+      const path = formData.get('path');
+      const hreflang = `${languageCode}-${countryCode}`;
 
-    // Special case for default locale 'en-us'
-    if (hreflang !== 'EN-US') newPrefixPath = `/${hreflang.toLowerCase()}`;
+      // Special case for default locale 'en-us'
+      if (hreflang !== 'EN-US') newPrefixPath = `/${hreflang.toLowerCase()}`;
 
-    // Update cart buyer's country code if we have a cart id
-    const cartId = await session.get('cartId');
-    if (cartId) {
-      await updateCartBuyerIdentity({
-        cartId,
-        buyerIdentity: {
-          countryCode,
-        },
-        locale: {
-          country: countryCode,
-          language: languageCode,
-        },
-      });
-    }
+      // Update cart buyer's country code if we have a cart id
+      const cartId = await session.get('cartId');
+      if (cartId) {
+        await updateCartBuyerIdentity({
+          cartId,
+          buyerIdentity: {
+            countryCode,
+          },
+          locale: {
+            country: countryCode,
+            language: languageCode,
+          },
+        });
+      }
 
-    return redirect(newPrefixPath + path, 302);
-  };
-  ```
+      return redirect(newPrefixPath + path, 302);
+    };
+    ```
 
 3. Update the country selector component to render as forms
 
-  ```jsx
-  import {Form, useMatches, useParams, useLocation} from '@remix-run/react';
-  ...
+    ```jsx
+    import {Form, useMatches, useParams, useLocation} from '@remix-run/react';
+    ...
 
-  export function CountrySelector() {
-    const matches = useMatches();
-    const rootData = matches.find((match) => match.pathname === '/');
-    if (!rootData) return null;
+    export function CountrySelector() {
+      const matches = useMatches();
+      const rootData = matches.find((match) => match.pathname === '/');
+      if (!rootData) return null;
 
-    const countries = rootData?.countries;
-    if (!countries) return null;
+      const countries = rootData?.countries;
+      if (!countries) return null;
 
-    const {pathname, search} = useLocation();
-    const {lang} = useParams();
-    const strippedPathname = lang ? pathname.replace(`/${lang}`, '') : pathname;
+      const {pathname, search} = useLocation();
+      const {lang} = useParams();
+      const strippedPathname = lang ? pathname.replace(`/${lang}`, '') : pathname;
 
-    return (
-      <div>
-        {Object.keys(countries).map((countryKey) => {
-          const locale = countries[countryKey];
-          return (
-            <Form method="post" action="/locale" key={hreflang}>
-              <input type="hidden" name="language" value={locale.language} />
-              <input type="hidden" name="country" value={locale.country} />
-              <input type="hidden" name="path" value={`${strippedPathname}${search}`} />
-              <Button
-                type="submit"
-              >
-                {locale.label}
-              </Button>
-            </Form>
-          );
-        })}
-      </div>
-    );
-  }
+      return (
+        <div>
+          {Object.keys(countries).map((countryKey) => {
+            const locale = countries[countryKey];
+            return (
+              <Form method="post" action="/locale" key={hreflang}>
+                <input type="hidden" name="language" value={locale.language} />
+                <input type="hidden" name="country" value={locale.country} />
+                <input type="hidden" name="path" value={`${strippedPathname}${search}`} />
+                <Button
+                  type="submit"
+                >
+                  {locale.label}
+                </Button>
+              </Form>
+            );
+          })}
+        </div>
+      );
+    }
   ```
 
 4. You will most likely need to create a wrapper `<Link>` component to make sure navigations
   between pages matches with localization.
 
-  ```jsx
-  import {
-    Link as RemixLink,
-    useParams,
-    NavLink as RemixNavLink,
-    type NavLinkProps as RemixNavLinkProps,
-    type LinkProps as RemixLinkProps,
-  } from '@remix-run/react';
+    ```jsx
+    import {
+      Link as RemixLink,
+      useParams,
+      NavLink as RemixNavLink,
+      type NavLinkProps as RemixNavLinkProps,
+      type LinkProps as RemixLinkProps,
+    } from '@remix-run/react';
 
-  type LinkProps = Omit<RemixLinkProps, 'className'> & {
-    className?: RemixNavLinkProps['className'] | RemixLinkProps['className'],
-  };
+    type LinkProps = Omit<RemixLinkProps, 'className'> & {
+      className?: RemixNavLinkProps['className'] | RemixLinkProps['className'],
+    };
 
-  export function Link(props: LinkProps) {
-    const {to, className, ...resOfProps} = props;
-    const {lang} = useParams();
+    export function Link(props: LinkProps) {
+      const {to, className, ...resOfProps} = props;
+      const {lang} = useParams();
 
-    let toWithLang = to;
+      let toWithLang = to;
 
-    if (typeof to === 'string') {
-      toWithLang = lang ? `/${lang}${to}` : to;
+      if (typeof to === 'string') {
+        toWithLang = lang ? `/${lang}${to}` : to;
+      }
+
+      if (typeof className === 'function') {
+        return (
+          <RemixNavLink to={toWithLang} className={className} {...resOfProps} />
+        );
+      }
+
+      return <RemixLink to={toWithLang} className={className} {...resOfProps} />;
     }
-
-    if (typeof className === 'function') {
-      return (
-        <RemixNavLink to={toWithLang} className={className} {...resOfProps} />
-      );
-    }
-
-    return <RemixLink to={toWithLang} className={className} {...resOfProps} />;
-  }
   ```
 
 # Request header or cookie based localization detection
