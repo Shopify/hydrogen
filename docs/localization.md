@@ -199,73 +199,73 @@ const {lang} = useParams();
 
 1. Generate `$lang` files on build
 
-  All route files under `$lang` are just re-exports of the main route file.
-  For now, we can update `remix.config.js` to auto generate these files on build.
-  Feel free to `.gitignore` files generated under `$lang` folder and re-run `dev`
-  or `build` whenever a file or module export is added or removed.
+    All route files under `$lang` are just re-exports of the main route file.
+    For now, we can update `remix.config.js` to auto generate these files on build.
+    Feel free to `.gitignore` files generated under `$lang` folder and re-run `dev`
+    or `build` whenever a file or module export is added or removed.
 
-  ```js
-  const fs = require("fs");
-  const path = require("path");
+    ```js
+    const fs = require("fs");
+    const path = require("path");
 
-  const esbuild = require("esbuild");
-  const recursive = require("recursive-readdir");
+    const esbuild = require("esbuild");
+    const recursive = require("recursive-readdir");
 
-  /** @type {import('@remix-run/dev').AppConfig} */
-  module.exports = {
-    ...
-    ignoredRouteFiles: ["**/.*"],
-    async routes() {
-      /**
-       * Generates the re-export route files under $lang for url path localization
-       * Note: This is temporary until we can assign multiple routes to a single route
-       */
-      const appDir = path.resolve("app");
-      const routesDir = path.resolve(appDir, "routes");
-      const langDir = path.resolve(routesDir, "$lang");
+    /** @type {import('@remix-run/dev').AppConfig} */
+    module.exports = {
+      ...
+      ignoredRouteFiles: ["**/.*"],
+      async routes() {
+        /**
+         * Generates the re-export route files under $lang for url path localization
+        * Note: This is temporary until we can assign multiple routes to a single route
+        */
+        const appDir = path.resolve("app");
+        const routesDir = path.resolve(appDir, "routes");
+        const langDir = path.resolve(routesDir, "$lang");
 
-      const files = await recursive(routesDir, [
-        (file) => {
-          return (
-            file.replace(/\\/g, "/").match(/routes\/\$lang\//)
+        const files = await recursive(routesDir, [
+          (file) => {
+            return (
+              file.replace(/\\/g, "/").match(/routes\/\$lang\//)
+            );
+          },
+        ]);
+
+        console.log(`Duplicating ${files.length} route(s) for translations`);
+
+        for (let file of files) {
+          let bundle = await esbuild.build({
+            entryPoints: { entry: file },
+            bundle: false,
+            metafile: true,
+            write: false,
+          });
+
+          const moduleExports = bundle.metafile.outputs["entry.js"].exports;
+
+          const moduleId =
+            "~/" +
+            path
+              .relative(appDir, file)
+              .replace(/\\/g, "/")
+              .slice(0, -path.extname(file).length);
+
+          const outFile = path.resolve(langDir, path.relative(routesDir, file));
+
+          fs.mkdirSync(path.dirname(outFile), { recursive: true });
+          fs.writeFileSync(
+            outFile,
+            `export {${moduleExports.join(", ")}} from ${JSON.stringify(
+              moduleId
+            )};\n`
           );
-        },
-      ]);
+        }
 
-      console.log(`Duplicating ${files.length} route(s) for translations`);
-
-      for (let file of files) {
-        let bundle = await esbuild.build({
-          entryPoints: { entry: file },
-          bundle: false,
-          metafile: true,
-          write: false,
-        });
-
-        const moduleExports = bundle.metafile.outputs["entry.js"].exports;
-
-        const moduleId =
-          "~/" +
-          path
-            .relative(appDir, file)
-            .replace(/\\/g, "/")
-            .slice(0, -path.extname(file).length);
-
-        const outFile = path.resolve(langDir, path.relative(routesDir, file));
-
-        fs.mkdirSync(path.dirname(outFile), { recursive: true });
-        fs.writeFileSync(
-          outFile,
-          `export {${moduleExports.join(", ")}} from ${JSON.stringify(
-            moduleId
-          )};\n`
-        );
-      }
-
-      return {};
-    },
-  };
-  ```
+        return {};
+      },
+    };
+    ```
 
 2. Create an action route `routes/locale.tsx`
 
