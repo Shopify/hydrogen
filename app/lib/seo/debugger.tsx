@@ -146,7 +146,7 @@ function Item({
     pass !== false ? (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-5 h-5 top-1 relative text-blue-500"
+        className="w-5 h-5 top-0.5 relative text-blue-500"
         viewBox="0 0 20 20"
         fill="currentColor"
       >
@@ -159,7 +159,7 @@ function Item({
     ) : (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-5 h-5 top-2 relative text-red-500"
+        className="w-5 h-5 top-0.5 relative text-red-500"
         viewBox="0 0 20 20"
         fill="currentColor"
       >
@@ -172,14 +172,13 @@ function Item({
     );
 
   return (
-    <div className="flex items-baseline px-4 py-3 ">
+    <div className="flex items-end px-4 py-3 ">
       {icon}
       <span className="font-mono flex-1 mx-1 text-gray-900 text-[10px]">
-        <span className="px-2 rounded-sm bg-gray-100">{property}</span>
+        <span className="px-2 py-1 rounded-sm bg-gray-100">{property}</span>
       </span>
-      <span className="mx-1 text-right text-xs text-gray-900 pb-1">
-        {value.slice(0, 35)}
-        {value.length > 35 && '...'}
+      <span className="pl-8 text-right text-xs text-gray-900 text-ellipsis overflow-hidden whitespace-nowrap max-w-full">
+        {value}
       </span>
     </div>
   );
