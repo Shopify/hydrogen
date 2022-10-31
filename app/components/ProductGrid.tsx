@@ -3,7 +3,7 @@ import {getImageLoadingPriority} from '~/lib/const';
 import type {
   Collection,
   Product,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {useFetcher} from '@remix-run/react';
 import {useEffect, useState} from 'react';
 

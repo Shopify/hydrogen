@@ -1,6 +1,6 @@
 import {useMemo, useRef} from 'react';
 import {useScroll} from 'react-use';
-import {flattenConnection, Money} from '@shopify/hydrogen-ui-alpha';
+import {flattenConnection, Money} from '@shopify/hydrogen-react';
 import {
   type FetcherWithComponents,
   useFetcher,
@@ -22,7 +22,7 @@ import type {
   CartLine,
   Product,
   ProductConnection,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 enum Action {
   SetQuantity = 'set-quantity',

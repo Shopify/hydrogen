@@ -6,7 +6,7 @@ import {
   type LinksFunction,
 } from '@hydrogen/remix';
 import {useLoaderData} from '@remix-run/react';
-import {Image} from '@shopify/hydrogen-ui-alpha';
+import {Image} from '@shopify/hydrogen-react';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
 import {getArticle} from '~/data';

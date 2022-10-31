@@ -1,5 +1,5 @@
 import type {LoaderArgs} from '@hydrogen/remix';
-import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
+import {flattenConnection} from '@shopify/hydrogen-react';
 import {getSitemap} from '~/data';
 
 const MAX_URLS = 250; // the google limit is 50K, however, SF API only allow querying for 250 resources each time

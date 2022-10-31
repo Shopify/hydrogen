@@ -1,7 +1,7 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
   type StorefrontApiResponseOk,
-} from '@shopify/hydrogen-ui-alpha';
+} from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {FetchCacheOptions, fetchWithServerCache} from './cache/fetch';
 import {
@@ -79,11 +79,12 @@ export function createStorefrontClient(
   const {getPublicTokenHeaders, getPrivateTokenHeaders, getStorefrontApiUrl} =
     createStorefrontUtilities(clientOptions);
 
-  const defaultHeaders = clientOptions.privateStorefrontToken
-    ? getPrivateTokenHeaders()
-    : getPublicTokenHeaders();
+  const getHeaders = clientOptions.privateStorefrontToken
+    ? getPrivateTokenHeaders
+    : getPublicTokenHeaders;
 
-  defaultHeaders['content-type'] = 'application/json';
+  const defaultHeaders = getHeaders({contentType: 'json'});
+
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] = requestGroupId;
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
 

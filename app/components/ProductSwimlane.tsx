@@ -1,5 +1,5 @@
 import {SerializeFrom} from '@remix-run/server-runtime';
-import type {Product} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import type {Product} from '@shopify/hydrogen-react/storefront-api-types';
 import {ProductCard, Section} from '~/components';
 
 const mockProducts = new Array(12).fill('');

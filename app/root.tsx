@@ -30,10 +30,6 @@ export const handle = {
     title: data.layout.shop.name,
     bypassTitleTemplate: true,
     titleTemplate: `%s | ${data.layout.shop.name}`,
-    robots: {
-      index: true,
-      follow: true,
-    },
   }),
 };
 
