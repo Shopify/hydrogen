@@ -1,9 +1,7 @@
 import clsx from 'clsx';
 import {Image, Video} from '@shopify/hydrogen-ui-alpha';
 import type {Media, Metafield} from '@shopify/hydrogen/storefront-api-types';
-import {Link} from '@remix-run/react';
-import {Heading, Text} from '~/components';
-import {usePrefixPathWithLocale} from '~/lib/utils';
+import {Heading, Text, Link} from '~/components';
 
 export function Hero({
   byline,
@@ -27,7 +25,7 @@ export function Hero({
   top?: boolean;
 }) {
   return (
-    <Link to={usePrefixPathWithLocale(`/collections/${handle}`)}>
+    <Link to={`/collections/${handle}`}>
       <section
         className={clsx(
           'relative justify-end flex flex-col w-full',

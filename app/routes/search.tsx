@@ -85,8 +85,9 @@ export async function loader({request, context, params}: LoaderArgs) {
   const searchParams = new URL(request.url).searchParams;
   const cursor = searchParams.get('cursor')!;
   const searchTerm = searchParams.get('q')!;
+  const locale = getLocalizationFromUrl(request.url);
 
-  const products = await searchProducts(getLocalizationFromUrl(request.url), {
+  const products = await searchProducts(locale, {
     cursor,
     searchTerm,
     pageBy: PAGINATION_SIZE,
@@ -98,7 +99,7 @@ export async function loader({request, context, params}: LoaderArgs) {
     searchTerm,
     products,
     noResultRecommendations: getRecommendations
-      ? getNoResultRecommendations(params)
+      ? getNoResultRecommendations(locale)
       : null,
   });
 }

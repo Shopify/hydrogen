@@ -26,7 +26,7 @@ import {
 import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {type LoaderArgs, redirect, json, defer} from '@hydrogen/remix';
 import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
-import {getCustomer, getFeaturedData, login} from '~/data';
+import {getCustomer, getFeaturedData} from '~/data';
 import {getSession} from '~/lib/session.server';
 import {getLocalizationFromUrl, usePrefixPathWithLocale} from '~/lib/utils';
 

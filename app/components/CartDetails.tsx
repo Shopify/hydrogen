@@ -23,7 +23,6 @@ import type {
   Product,
   ProductConnection,
 } from '@shopify/hydrogen-ui-alpha/storefront-api-types';
-import {Link as RemixLink} from '@remix-run/react';
 
 enum Action {
   SetQuantity = 'set-quantity',
