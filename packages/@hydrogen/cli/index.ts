@@ -31,6 +31,21 @@ if (command === 'build') {
 
     process.exit();
   })();
+} else if (
+  command === 'dev' ||
+  command === undefined ||
+  command.startsWith('-')
+) {
+  if (!options.entry) {
+    throw new Error('The flag --entry is required');
+  }
+
+  (async () => {
+    // @ts-ignore
+    const {runDev} = await import('./commands/dev');
+    // @ts-ignore
+    runDev(options);
+  })();
 } else {
   // eslint-disable-next-line no-console
   console.log(`Command "${command}" not supported`);
