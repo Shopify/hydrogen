@@ -361,7 +361,7 @@ const {lang} = useParams();
         </div>
       );
     }
-  ```
+    ```
 
 4. You will most likely need to create a wrapper `<Link>` component to make sure navigations
   between pages matches with localization.
@@ -397,7 +397,7 @@ const {lang} = useParams();
 
       return <RemixLink to={toWithLang} className={className} {...resOfProps} />;
     }
-  ```
+    ```
 
 # Request header or cookie based localization detection
 
