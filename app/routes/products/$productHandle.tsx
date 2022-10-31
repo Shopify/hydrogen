@@ -9,11 +9,11 @@ import {
   useTransition,
   useFetcher,
 } from '@remix-run/react';
-import {Money, ShopPayButton} from '@shopify/hydrogen-ui-alpha';
+import {Money, ShopPayButton} from '@shopify/hydrogen-react';
 import {
   Product,
   MediaImage,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {

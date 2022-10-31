@@ -10,7 +10,7 @@ import type {
   CollectionConnection,
   Metafield,
   ProductConnection,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 interface HomeSeoData {
   shop: {
@@ -99,13 +99,6 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     }),
   });
 }
-
-export const meta: MetaFunction = ({data}) => {
-  return {
-    title: data?.shop?.name,
-    description: data?.shop?.description,
-  };
-};
 
 export default function Homepage() {
   const {

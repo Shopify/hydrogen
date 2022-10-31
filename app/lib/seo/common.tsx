@@ -89,7 +89,7 @@ function getSeoDefaults(data: any, match: RouteMatch): SeoDescriptor {
     type = 'root';
   }
 
-  return {
+  const defaults = {
     type,
     site: data?.shop?.name,
     defaultTitle: data?.shop?.name,
@@ -103,9 +103,11 @@ function getSeoDefaults(data: any, match: RouteMatch): SeoDescriptor {
     openGraph: {},
     url: pathname,
     tags: [],
-    title: data[type]?.seo?.title,
-    description: data?.product?.seo?.description,
+    title: data?.layout?.shop?.title,
+    description: data?.layout?.shop?.description,
   };
+
+  return defaults;
 }
 
 export function useSeoConfig(): {seo: SeoDescriptor; matches: RouteMatch[]} {
@@ -146,20 +148,37 @@ export function useHeadTags(seo: SeoDescriptor) {
     '@type': 'Thing',
   };
 
-  const {titleTemplate, defaultTitle, ...rest} = seo;
-  const title = getTitle({title: rest.title, titleTemplate});
+  const {
+    titleTemplate,
+    defaultTitle,
+    bypassTitleTemplate,
+    noindex,
+    nofollow,
+    ...rest
+  } = seo;
+
+  const title = getTitle({
+    title: rest.title,
+    defaultTitle,
+    bypassTitleTemplate,
+    titleTemplate,
+  });
 
   Object.entries(rest).forEach(([key, value]) => {
     if (Array.isArray(value)) {
       switch (key) {
         case 'tags':
           const keywords = value.join(',');
-          tags.push(<meta name="keywords" content={keywords} />);
 
-          LdJson.keywords = keywords;
+          if (keywords.length > 0) {
+            tags.push(
+              <meta key="keywords" name="keywords" content={keywords} />,
+            );
+            LdJson.keywords = keywords;
+          }
+
           break;
         case 'images':
-          console.log(value);
           (value as ImageOptions[]).forEach((image) => {
             const {url, width, height, alt} = image;
 
@@ -207,14 +226,23 @@ export function useHeadTags(seo: SeoDescriptor) {
         case 'twitter':
           const {handle} = value as TwitterOptions;
 
-          links.push(<link rel="me" href={`https://twitter.com/${handle}`} />);
+          if (handle) {
+            links.push(
+              <link
+                key={`me:${handle}`}
+                rel="me"
+                href={`https://twitter.com/${handle}`}
+              />,
+            );
+          }
           break;
-
         case 'robots':
           const {noArchive, noSnippet, maxSnippet, unAvailableAfter} =
             (value as RobotsOptions) ?? {};
 
           const robotsParams = [
+            noindex ? 'noindex' : 'index',
+            nofollow ? 'nofollow' : 'follow',
             noArchive && 'noarchive',
             noSnippet && 'nosnippet',
             maxSnippet && `max-snippet:${maxSnippet}`,
@@ -223,10 +251,12 @@ export function useHeadTags(seo: SeoDescriptor) {
 
           const robotsContent = robotsParams.filter(Boolean).join(',');
 
-          tags.push(
-            <meta key="robots" name="robots" content={robotsContent} />,
-            <meta key="googlebot" name="googlebot" content={robotsContent} />,
-          );
+          if (robotsContent) {
+            tags.push(
+              <meta key="robots" name="robots" content={robotsContent} />,
+              <meta key="googlebot" name="googlebot" content={robotsContent} />,
+            );
+          }
 
           break;
       }
@@ -236,22 +266,48 @@ export function useHeadTags(seo: SeoDescriptor) {
 
     switch (key) {
       case 'title':
-        tags.push(<title>{title}</title>);
-        ogTags.push(<meta name="og:title" property={value} />);
-        twitterTags.push(<meta name="twitter:title" property={value} />);
+        tags.push(<title key={title}>{title}</title>);
+        ogTags.push(
+          <meta
+            key={`og:title:${value}`}
+            property="og:title"
+            content={value}
+          />,
+        );
+        twitterTags.push(
+          <meta
+            key={`twitter:title:${value}`}
+            name="twitter:title"
+            content={value}
+          />,
+        );
 
         LdJson.name = value;
 
         break;
       case 'description':
-        tags.push(<meta name="description" content={value} />);
-        ogTags.push(<meta name="og:description" property={value} />);
-        twitterTags.push(<meta name="twitter:description" property={value} />);
+        tags.push(
+          <meta key="description" name="description" content={value} />,
+        );
+        ogTags.push(
+          <meta
+            key="og:description"
+            property="og:description"
+            content={value}
+          />,
+        );
+        twitterTags.push(
+          <meta
+            key="twitter:description"
+            name="twitter:description"
+            content={value}
+          />,
+        );
 
         break;
 
       case 'url':
-        links.push(<link rel="canonical" href={value} />);
+        links.push(<link key="canonical" rel="canonical" href={value} />);
 
         break;
       default:
