@@ -46,6 +46,13 @@ if (command === 'build') {
     // @ts-ignore
     runDev(options);
   })();
+} else if (command === 'preview') {
+  (async () => {
+    // @ts-ignore
+    const {runPreview} = await import('./commands/preview');
+    // @ts-ignore
+    runPreview(options);
+  })();
 } else {
   // eslint-disable-next-line no-console
   console.log(`Command "${command}" not supported`);

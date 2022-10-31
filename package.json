@@ -6,6 +6,7 @@
     "build:css": "postcss styles --base styles --dir app/styles --env production",
     "dev": "ENCRYPTION_KEY=foobar run-p dev:css \"h2 dev -- --entry worker/index.ts\"",
     "dev:css": "postcss styles --base styles --dir app/styles -w",
+    "preview": "npm run build && ENCRYPTION_KEY=foobar npm run h2 preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "format": "prettier --write --ignore-unknown .",
     "typecheck": "tsc --noEmit",
