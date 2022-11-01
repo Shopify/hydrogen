@@ -1,25 +1,19 @@
-import type {LoaderArgs} from '@hydrogen/remix';
 import {flattenConnection} from '@shopify/hydrogen-react';
-import {getSitemap} from '~/data';
+import type {LoaderArgs} from '@hydrogen/remix';
+import {
+  CollectionConnection,
+  PageConnection,
+  ProductConnection,
+} from '@shopify/hydrogen-react/storefront-api-types';
+import invariant from 'tiny-invariant';
+import {getLocalizationFromLang} from '~/lib/utils';
 
 const MAX_URLS = 250; // the google limit is 50K, however, SF API only allow querying for 250 resources each time
 
-export async function loader({request, params}: LoaderArgs) {
-  const data = await getSitemap({
-    params,
-    urlLimits: MAX_URLS,
-  });
-
-  return new Response(
-    shopSitemap({data, baseUrl: new URL(request.url).origin}),
-    {
-      headers: {
-        'content-type': 'application/xml',
-        // Cache for 24 hours
-        'cache-control': `max-age=${60 * 60 * 24}`,
-      },
-    },
-  );
+interface SitemapQueryData {
+  products: ProductConnection;
+  collections: CollectionConnection;
+  pages: PageConnection;
 }
 
 interface ProductEntry {
@@ -33,11 +27,40 @@ interface ProductEntry {
   };
 }
 
+export async function loader({
+  request,
+  params,
+  context: {storefront},
+}: LoaderArgs) {
+  const {language} = getLocalizationFromLang(params.lang);
+
+  const data = await storefront.query<SitemapQueryData>({
+    query: SITEMAP_QUERY,
+    variables: {
+      language,
+      urlLimits: MAX_URLS,
+    },
+  });
+
+  invariant(data, 'Sitemap data is missing');
+
+  return new Response(
+    shopSitemap({data, baseUrl: new URL(request.url).origin}),
+    {
+      headers: {
+        'content-type': 'application/xml',
+        // Cache for 24 hours
+        'cache-control': `max-age=${60 * 60 * 24}`,
+      },
+    },
+  );
+}
+
 function shopSitemap({
   data,
   baseUrl,
 }: {
-  data: Awaited<ReturnType<typeof getSitemap>>;
+  data: SitemapQueryData;
   baseUrl: string;
 }) {
   const productsData = flattenConnection(data.products)
@@ -137,3 +160,47 @@ function renderUrlTag({
     </url>
   `;
 }
+
+const SITEMAP_QUERY = `#graphql
+  query sitemaps($urlLimits: Int, $language: LanguageCode)
+  @inContext(language: $language) {
+    products(
+      first: $urlLimits
+      query: "published_status:'online_store:visible'"
+    ) {
+      edges {
+        node {
+          updatedAt
+          handle
+          onlineStoreUrl
+          title
+          featuredImage {
+            url
+            altText
+          }
+        }
+      }
+    }
+    collections(
+      first: $urlLimits
+      query: "published_status:'online_store:visible'"
+    ) {
+      edges {
+        node {
+          updatedAt
+          handle
+          onlineStoreUrl
+        }
+      }
+    }
+    pages(first: $urlLimits, query: "published_status:'published'") {
+      edges {
+        node {
+          updatedAt
+          handle
+          onlineStoreUrl
+        }
+      }
+    }
+  }
+`;

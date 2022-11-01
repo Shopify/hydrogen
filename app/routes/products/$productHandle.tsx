@@ -4,17 +4,11 @@ import {
   useLoaderData,
   Await,
   useSearchParams,
-  Form,
   useLocation,
   useTransition,
   useFetcher,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-react';
-import {
-  Product,
-  MediaImage,
-} from '@shopify/hydrogen-react/storefront-api-types';
-
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {
   Button,
@@ -29,56 +23,102 @@ import {
   Text,
   Link,
 } from '~/components';
-import {getProductData, getRecommendedProducts} from '~/data';
-import {getExcerpt} from '~/lib/utils';
+import {getExcerpt, getLocalizationFromLang} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
-import {SeoDescriptor} from '~/lib/seo';
+import {
+  ProductVariant,
+  SelectedOptionInput,
+  Product,
+  Shop,
+  ProductConnection,
+  LanguageCode,
+  CountryCode,
+} from '@shopify/hydrogen-react/storefront-api-types';
+import {
+  MEDIA_FRAGMENT,
+  PRODUCT_CARD_FRAGMENT,
+  PRODUCT_VARIANT_FRAGMENT,
+} from '~/data';
 
-export const handle = {
-  seo: (data: {product: Product}): Partial<SeoDescriptor> => {
-    const {media} = data.product;
-    const images = media.nodes
-      .filter((med) => med.mediaContentType === 'IMAGE')
-      .slice(0, 2)
-      .map((med) => ({
-        ...(med as MediaImage).image,
-        alt: med.alt || 'Product image',
-      }));
-
-    return {
-      description: 'A description of the product',
-      title: data?.product?.title,
-      titleTemplate: `%s | Product from ${data?.product?.vendor}`,
-      defaultTitle: 'Fallback title',
-      tags: ['snowboard', 'hydrogen', 'shopify'],
-      twitter: {
-        card: 'summary_large_image',
-        handle: 'shopify',
-      },
-      images,
-      alternates: [{url: `/de/products/${data.product.handle}`, lang: 'DE-BE'}],
-    };
-  },
-};
-
-export const loader = async ({params, request}: LoaderArgs) => {
+export const loader = async ({
+  params,
+  request,
+  context: {storefront},
+}: LoaderArgs) => {
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
 
-  const {shop, product} = await getProductData(
-    productHandle,
-    new URL(request.url).searchParams,
-    params,
-  );
+  const {language, country} = getLocalizationFromLang(params.lang);
+  const searchParams = new URL(request.url).searchParams;
+
+  const selectedOptions: SelectedOptionInput[] = [];
+  searchParams.forEach((value, name) => {
+    selectedOptions.push({name, value});
+  });
+
+  const {shop, product} = await storefront.query<{
+    product: Product & {selectedVariant?: ProductVariant};
+    shop: Shop;
+  }>({
+    query: PRODUCT_QUERY,
+    variables: {
+      handle: productHandle,
+      country,
+      language,
+      selectedOptions,
+    },
+  });
 
   return defer({
     product,
     shop,
-    recommended: getRecommendedProducts(product.id, params),
+    recommended: getRecommendedProducts(
+      storefront,
+      language,
+      country,
+      product.id,
+    ),
   });
 };
+
+async function getRecommendedProducts(
+  storefront: LoaderArgs['context']['storefront'],
+  language: LanguageCode,
+  country: CountryCode,
+  productId: string,
+) {
+  const products = await storefront.query<{
+    recommended: Product[];
+    additional: ProductConnection;
+  }>({
+    query: RECOMMENDED_PRODUCTS_QUERY,
+    variables: {
+      productId,
+      count: 12,
+      language,
+      country,
+    },
+  });
+
+  invariant(products, 'No data returned from Shopify API');
+
+  const mergedProducts = products.recommended
+    .concat(products.additional.nodes)
+    .filter(
+      (value, index, array) =>
+        array.findIndex((value2) => value2.id === value.id) === index,
+    );
+
+  const originalProduct = mergedProducts
+    .map((item: Product) => item.id)
+    .indexOf(productId);
+
+  mergedProducts.splice(originalProduct, 1);
+
+  return mergedProducts;
+}
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();
@@ -454,3 +494,73 @@ function ProductDetail({
     </Disclosure>
   );
 }
+
+const PRODUCT_QUERY = `#graphql
+  ${MEDIA_FRAGMENT}
+  ${PRODUCT_VARIANT_FRAGMENT}
+  query Product(
+    $country: CountryCode
+    $language: LanguageCode
+    $handle: String!
+    $selectedOptions: [SelectedOptionInput!]!
+  ) @inContext(country: $country, language: $language) {
+    product(handle: $handle) {
+      id
+      title
+      vendor
+      handle
+      descriptionHtml
+      options {
+        name
+        values
+      }
+      selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
+        ...ProductVariantFragment
+      }
+      media(first: 7) {
+        nodes {
+          ...Media
+        }
+      }
+      variants(first: 1) {
+        nodes {
+          ...ProductVariantFragment
+        }
+      }
+      seo {
+        description
+        title
+      }
+    }
+    shop {
+      name
+      shippingPolicy {
+        body
+        handle
+      }
+      refundPolicy {
+        body
+        handle
+      }
+    }
+  }
+`;
+
+const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query productRecommendations(
+    $productId: ID!
+    $count: Int
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    recommended: productRecommendations(productId: $productId) {
+      ...ProductCard
+    }
+    additional: products(first: $count, sortKey: BEST_SELLING) {
+      nodes {
+        ...ProductCard
+      }
+    }
+  }
+`;
