@@ -2,7 +2,7 @@ import {
   createStorefrontClient as createStorefrontUtilities,
   type StorefrontApiResponseOk,
 } from '@shopify/hydrogen-react';
-import type {ExecutionArgs} from 'graphql';
+import type {ExecutionArgs, GraphQLFormattedError} from 'graphql';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -21,13 +21,32 @@ export function createStorefrontClient(clientOptions: StorefrontClientProps) {
   const utils = createStorefrontUtilities(clientOptions);
   const {getPublicTokenHeaders, getStorefrontApiUrl} = utils;
 
-  async function getStorefrontData<T>({
+  async function getStorefrontData<Data>(options: {
+    query: string;
+    variables: ExecutionArgs['variableValues'];
+  }): Promise<Data>;
+
+  async function getStorefrontData<Data, FilteredData>(options: {
+    query: string;
+    variables: ExecutionArgs['variableValues'];
+    filter: (
+      data: Data,
+      errors: readonly GraphQLFormattedError[] | undefined,
+    ) => FilteredData;
+  }): Promise<FilteredData>;
+
+  async function getStorefrontData<Data, ReturnData>({
     query,
     variables,
+    filter,
   }: {
     query: string;
     variables: ExecutionArgs['variableValues'];
-  }): Promise<T> {
+    filter?: (
+      data: Data,
+      errors: readonly GraphQLFormattedError[] | undefined,
+    ) => ReturnData;
+  }): Promise<unknown> {
     const response = await fetch(getStorefrontApiUrl(), {
       body: JSON.stringify({
         query,
@@ -51,11 +70,16 @@ export function createStorefrontClient(clientOptions: StorefrontClientProps) {
       }
     }
 
-    const {data, errors} = (await response.json()) as StorefrontApiResponse<T>;
+    const {data, errors} =
+      (await response.json()) as StorefrontApiResponse<Data>;
+
+    if (filter) {
+      return filter(data as Data, errors);
+    }
 
     if (errors) throwError(response, errors);
 
-    return data as T;
+    return data as Data;
   }
 
   return {
