@@ -16,8 +16,6 @@ import type {
   CustomerUpdateInput,
   CustomerUpdatePayload,
   UserError,
-  Page,
-  ShopPolicy,
   CustomerAddressUpdatePayload,
   MailingAddressInput,
   CustomerAddressDeletePayload,
@@ -835,45 +833,6 @@ export async function getArticle({
   }
 
   return data.blog.articleByHandle;
-}
-
-const PAGE_QUERY = `#graphql
-  query PageDetails($language: LanguageCode, $handle: String!)
-  @inContext(language: $language) {
-    page(handle: $handle) {
-      id
-      title
-      body
-      seo {
-        description
-        title
-      }
-    }
-  }
-`;
-
-export async function getPageData({
-  params,
-  handle,
-}: {
-  params: Params;
-  handle: string;
-}) {
-  const {language} = getLocalizationFromLang(params.lang);
-  const {data} = await getStorefrontData<{page: Page}>({
-    query: PAGE_QUERY,
-    variables: {
-      language,
-      handle,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-  if (!data.page) {
-    throw new Response('Not found', {status: 404});
-  }
-
-  return data.page;
 }
 
 // shop primary domain url for /admin
