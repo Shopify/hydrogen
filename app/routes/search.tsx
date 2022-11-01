@@ -8,7 +8,7 @@ import type {
   LanguageCode,
   Product,
   ProductConnection,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
 import {

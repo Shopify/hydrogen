@@ -35,7 +35,7 @@ import {
   ProductConnection,
   LanguageCode,
   CountryCode,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {
   MEDIA_FRAGMENT,
   PRODUCT_CARD_FRAGMENT,

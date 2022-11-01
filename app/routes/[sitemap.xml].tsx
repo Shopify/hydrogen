@@ -4,7 +4,7 @@ import {
   CollectionConnection,
   PageConnection,
   ProductConnection,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {getLocalizationFromLang} from '~/lib/utils';
 

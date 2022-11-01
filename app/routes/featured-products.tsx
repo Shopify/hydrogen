@@ -1,9 +1,9 @@
 import {json, type LoaderArgs} from '@hydrogen/remix';
-import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
+import {flattenConnection} from '@shopify/hydrogen-react';
 import type {
   CollectionConnection,
   ProductConnection,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getLocalizationFromLang} from '~/lib/utils';

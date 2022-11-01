@@ -3,7 +3,7 @@ import {useLoaderData} from '@remix-run/react';
 import type {
   Collection,
   ProductConnection,
-} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, ProductGrid} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
