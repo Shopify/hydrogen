@@ -61,7 +61,9 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
       watch,
       modules,
       buildWatchPaths,
+      // this should stay in sync with oxygen-dms
       compatibilityFlags: ['streams_enable_constructors'],
+      compatibilityDate: '2022-10-31',
     },
     env,
   );
