@@ -4,10 +4,7 @@ import type {
   CartInput,
   CartLineInput,
   CartLineUpdateInput,
-  Collection,
-  CollectionConnection,
   ProductConnection,
-  Blog,
   Shop,
   Order,
   Localization,
@@ -306,129 +303,6 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
     }
   }
 `;
-
-const COLLECTIONS_QUERY = `#graphql
-  query Collections(
-    $country: CountryCode
-    $language: LanguageCode
-    $pageBy: Int!
-  ) @inContext(country: $country, language: $language) {
-    collections(first: $pageBy) {
-      nodes {
-        id
-        title
-        description
-        handle
-        seo {
-          description
-          title
-        }
-        image {
-          id
-          url
-          width
-          height
-          altText
-        }
-      }
-    }
-  }
-`;
-
-export async function getCollections(
-  params: Params,
-  {paginationSize} = {paginationSize: 8},
-) {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
-  const {data} = await getStorefrontData<{
-    collections: CollectionConnection;
-  }>({
-    query: COLLECTIONS_QUERY,
-    variables: {
-      pageBy: paginationSize,
-      country,
-      language,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.collections.nodes;
-}
-
-const COLLECTION_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
-  query CollectionDetails(
-    $handle: String!
-    $country: CountryCode
-    $language: LanguageCode
-    $pageBy: Int!
-    $cursor: String
-  ) @inContext(country: $country, language: $language) {
-    collection(handle: $handle) {
-      id
-      handle
-      title
-      description
-      seo {
-        description
-        title
-      }
-      image {
-        id
-        url
-        width
-        height
-        altText
-      }
-      products(first: $pageBy, after: $cursor) {
-        nodes {
-          ...ProductCard
-        }
-        pageInfo {
-          hasNextPage
-          endCursor
-        }
-      }
-    }
-  }
-`;
-
-export async function getCollection({
-  handle,
-  paginationSize = 48,
-  cursor,
-  params,
-}: {
-  handle: string;
-  paginationSize?: number;
-  cursor?: string;
-  params: Params;
-}) {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
-  const {data} = await getStorefrontData<{
-    collection: Collection;
-  }>({
-    query: COLLECTION_QUERY,
-    variables: {
-      handle,
-      cursor,
-      language,
-      country,
-      pageBy: paginationSize,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  if (!data.collection) {
-    throw new Response('Not found', {status: 404});
-  }
-
-  return data.collection;
-}
 
 const CART_FRAGMENT = `#graphql
 fragment CartFragment on Cart {
