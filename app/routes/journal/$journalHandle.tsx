@@ -7,9 +7,9 @@ import {
 } from '@hydrogen/remix';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen-react';
+import {Blog} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
-import {getArticle} from '~/data';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
 import {getLocalizationFromLang} from '~/lib/utils';
 import styles from '../../styles/custom-font.css';
@@ -23,16 +23,27 @@ export const handle = {
   },
 };
 
-export async function loader({params}: LoaderArgs) {
+export async function loader({params, context: {storefront}}: LoaderArgs) {
   const {language, country} = getLocalizationFromLang(params.lang);
 
   invariant(params.journalHandle, 'Missing journal handle');
 
-  const article = await getArticle({
-    blogHandle: BLOG_HANDLE,
-    articleHandle: params.journalHandle,
-    params,
+  const {blog} = await storefront.query<{
+    blog: Blog;
+  }>({
+    query: ARTICLE_QUERY,
+    variables: {
+      blogHandle: BLOG_HANDLE,
+      articleHandle: params.journalHandle,
+      language,
+    },
   });
+
+  if (!blog?.articleByHandle) {
+    throw new Response('Not found', {status: 404});
+  }
+
+  const article = blog.articleByHandle;
 
   const formattedDate = new Intl.DateTimeFormat(`${language}-${country}`, {
     year: 'numeric',
@@ -100,3 +111,33 @@ export default function Article() {
     </>
   );
 }
+
+const ARTICLE_QUERY = `#graphql
+  query ArticleDetails(
+    $language: LanguageCode
+    $blogHandle: String!
+    $articleHandle: String!
+  ) @inContext(language: $language) {
+    blog(handle: $blogHandle) {
+      articleByHandle(handle: $articleHandle) {
+        title
+        contentHtml
+        publishedAt
+        author: authorV2 {
+          name
+        }
+        image {
+          id
+          altText
+          url
+          width
+          height
+        }
+        seo {
+          description
+          title
+        }
+      }
+    }
+  }
+`;
