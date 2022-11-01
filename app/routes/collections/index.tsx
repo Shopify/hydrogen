@@ -1,14 +1,30 @@
 import {json, type LoaderArgs, type MetaFunction} from '@hydrogen/remix';
 import {useLoaderData} from '@remix-run/react';
-import type {Collection} from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  Collection,
+  CollectionConnection,
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {Grid, Heading, PageHeader, Section, Link} from '~/components';
-import {getCollections} from '~/data';
 import {getImageLoadingPriority} from '~/lib/const';
+import {getLocalizationFromLang} from '~/lib/utils';
 
-export const loader = async ({params}: LoaderArgs) => {
-  const collections = await getCollections(params);
+const PAGINATION_SIZE = 8;
 
-  return json({collections});
+export const loader = async ({params, context: {storefront}}: LoaderArgs) => {
+  const {language, country} = getLocalizationFromLang(params.lang);
+
+  const {collections} = await storefront.query<{
+    collections: CollectionConnection;
+  }>({
+    query: COLLECTIONS_QUERY,
+    variables: {
+      pageBy: PAGINATION_SIZE,
+      country,
+      language,
+    },
+  });
+
+  return json({collections: collections.nodes});
 };
 
 export const meta: MetaFunction = () => {
@@ -65,3 +81,31 @@ function CollectionCard({
     </Link>
   );
 }
+
+const COLLECTIONS_QUERY = `#graphql
+  query Collections(
+    $country: CountryCode
+    $language: LanguageCode
+    $pageBy: Int!
+  ) @inContext(country: $country, language: $language) {
+    collections(first: $pageBy) {
+      nodes {
+        id
+        title
+        description
+        handle
+        seo {
+          description
+          title
+        }
+        image {
+          id
+          url
+          width
+          height
+          altText
+        }
+      }
+    }
+  }
+`;

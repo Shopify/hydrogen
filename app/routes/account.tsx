@@ -26,8 +26,9 @@ import {
 import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {type LoaderArgs, redirect, json, defer} from '@hydrogen/remix';
 import {flattenConnection} from '@shopify/hydrogen-react';
-import {getCustomer, getFeaturedData} from '~/data';
+import {getCustomer} from '~/data';
 import {getSession} from '~/lib/session.server';
+import {getFeaturedData} from './featured-products';
 
 export async function loader({request, context, params}: LoaderArgs) {
   const {pathname} = new URL(request.url);
@@ -67,7 +68,7 @@ export async function loader({request, context, params}: LoaderArgs) {
     heading,
     orders,
     addresses: flattenConnection(customer.addresses) as MailingAddress[],
-    featuredData: getFeaturedData({params}),
+    featuredData: getFeaturedData(context.storefront, params),
   });
 }
 
