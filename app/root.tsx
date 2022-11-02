@@ -22,7 +22,7 @@ import {getCart, getLayoutData, getCountries, getCustomer} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
 import {getSession} from './lib/session.server';
-import {Events} from '~/components/Events/Events'
+import {Analytics} from '~/components/Analytics';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
@@ -42,10 +42,11 @@ export const links: LinksFunction = () => {
   ];
 };
 
+// @todo: need to make sure meta's don't throw
 export const meta: MetaFunction = ({data}) => {
   return {
     charset: 'utf-8',
-    title: data.layout.shop.name,
+    title: data?.layout?.shop?.name,
     viewport: 'width=device-width,initial-scale=1',
   };
 };
@@ -57,7 +58,7 @@ export const loader: LoaderFunction = async function loader({
 }) {
   const session = await getSession(request, context);
   const cartId = await session.get('cartId');
-  const customerAccessToken = await session.get("customerAccessToken");
+  const customerAccessToken = await session.get('customerAccessToken');
 
   return defer({
     layout: await getLayoutData(params),
@@ -92,11 +93,7 @@ export default function App() {
         </Layout>
         <ScrollRestoration />
         <Suspense fallback={null}>
-          <Await resolve={Promise.all([data.cart, data.customer, data.countries])}>
-          {([cart, customer, countries]) => (
-            <Events cart={cart} customer={customer} countries={countries} />
-          )}
-          </Await>
+          <Analytics />
         </Suspense>
         <Scripts />
         <LiveReload />

@@ -643,6 +643,7 @@ fragment CartFragment on Cart {
   id
   checkoutUrl
   totalQuantity
+  updatedAt
   buyerIdentity {
     countryCode
     customer {

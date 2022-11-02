@@ -15,9 +15,35 @@ import {
 import {getNoResultRecommendations, searchProducts} from '~/data';
 import {PAGINATION_SIZE} from '~/lib/const';
 
+export const handle = {
+  isSearchRoute: true,
+};
+
+export async function loader({request, context, params}: LoaderArgs) {
+  const searchParams = new URL(request.url).searchParams;
+  const cursor = searchParams.get('cursor')!;
+  const searchTerm = searchParams.get('q')!;
+
+  const searchResults = await searchProducts(params, {
+    cursor,
+    searchTerm,
+    pageBy: PAGINATION_SIZE,
+  });
+
+  const getRecommendations = !searchTerm || searchResults?.nodes?.length === 0;
+
+  return defer({
+    searchTerm,
+    searchResults,
+    noResultRecommendations: getRecommendations
+      ? getNoResultRecommendations(params)
+      : null,
+  });
+}
+
 export default function () {
-  const {searchTerm, products, noResultRecommendations} = useLoaderData();
-  const noResults = products?.nodes?.length === 0;
+  const {searchTerm, searchResults, noResultRecommendations} = useLoaderData();
+  const noResults = searchResults?.nodes?.length === 0;
 
   return (
     <>
@@ -70,34 +96,12 @@ export default function () {
       ) : (
         <Section>
           <ProductGrid
-            key="search"
+            key={searchTerm}
             url={`/search?q=${searchTerm}`}
-            collection={{products} as Collection}
+            collection={{products: searchResults} as Collection}
           />
         </Section>
       )}
     </>
   );
-}
-
-export async function loader({request, context, params}: LoaderArgs) {
-  const searchParams = new URL(request.url).searchParams;
-  const cursor = searchParams.get('cursor')!;
-  const searchTerm = searchParams.get('q')!;
-
-  const products = await searchProducts(params, {
-    cursor,
-    searchTerm,
-    pageBy: PAGINATION_SIZE,
-  });
-
-  const getRecommendations = !searchTerm || products?.nodes?.length === 0;
-
-  return defer({
-    searchTerm,
-    products,
-    noResultRecommendations: getRecommendations
-      ? getNoResultRecommendations(params)
-      : null,
-  });
 }

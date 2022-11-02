@@ -27,9 +27,12 @@ type ActionData = {
   formError?: string;
 };
 
-const badRequest = (data: ActionData) => json(data, {status: 400});
+export const handle = {
+  isRegisterRoute: true,
+};
 
 export const action: ActionFunction = async ({request, context, params}) => {
+  const badRequest = (data: ActionData) => json(data, {status: 400});
   const [formData, session] = await Promise.all([
     request.formData(),
     getSession(request, context),
@@ -50,11 +53,10 @@ export const action: ActionFunction = async ({request, context, params}) => {
   }
 
   try {
-    console.log('CREATING ACCOUNT');
     await registerCustomer({email, password});
-    console.log('LOGGING IN');
     const customerAccessToken = await login({email, password});
     session.set('customerAccessToken', customerAccessToken);
+    session.flash('registered', true);
 
     return redirect(params.lang ? `${params.lang}/account` : '/account', {
       headers: {

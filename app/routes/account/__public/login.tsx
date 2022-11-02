@@ -12,10 +12,6 @@ import {getSession} from '~/lib/session.server';
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
 
-export const handle = {
-  isPublic: true,
-};
-
 export async function loader({request, context, params}: LoaderArgs) {
   const session = await getSession(request, context);
   const customerAccessToken = await session.get('customerAccessToken');
@@ -32,9 +28,8 @@ type ActionData = {
   formError?: string;
 };
 
-const badRequest = (data: ActionData) => json(data, {status: 400});
-
 export const action: ActionFunction = async ({request, context, params}) => {
+  const badRequest = (data: ActionData) => json(data, {status: 400});
   const [formData, session] = await Promise.all([
     request.formData(),
     getSession(request, context),
@@ -55,9 +50,9 @@ export const action: ActionFunction = async ({request, context, params}) => {
   }
 
   try {
-    console.log('LOGGING IN');
     const customerAccessToken = await login({email, password});
     session.set('customerAccessToken', customerAccessToken);
+    session.flash('loggedIn', true);
 
     return redirect(params.lang ? `${params.lang}/account` : '/account', {
       headers: {

@@ -34,6 +34,7 @@ import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {Cart} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {HydrogenEvent} from '~/lib/events';
 
 export function Layout({
   children,
@@ -94,6 +95,12 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
       openCart();
     }
   }, [fetchers, isCartOpen, openCart]);
+
+  // toggle custom cart view event
+  useEffect(() => {
+    if (!isCartOpen) return;
+    HydrogenEvent.publish('viewSideCart', {});
+  }, [isCartOpen]);
 
   return (
     <>

@@ -29,6 +29,10 @@ import {flattenConnection} from '@shopify/hydrogen-ui-alpha';
 import {getCustomer, getFeaturedData} from '~/data';
 import {getSession} from '~/lib/session.server';
 
+export const handle = {
+  isAccountRoute: true,
+};
+
 export async function loader({request, context, params}: LoaderArgs) {
   const {pathname} = new URL(request.url);
   const session = await getSession(request, context);
@@ -46,6 +50,13 @@ export async function loader({request, context, params}: LoaderArgs) {
     return redirect(loginPath);
   }
 
+  // check if user has just logged in or registered,
+  // used by useOnCustomer event logic
+  const event = {
+    loggedIn: Boolean(await session.get('loggedIn')),
+    registered: Boolean(await session.get('registered')),
+  };
+
   const customer = await getCustomer({
     customerAccessToken,
     params,
@@ -61,14 +72,22 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const orders = flattenConnection(customer?.orders) as Order[];
 
-  return defer({
-    isAuthenticated,
-    customer,
-    heading,
-    orders,
-    addresses: flattenConnection(customer.addresses) as MailingAddress[],
-    featuredData: getFeaturedData({params}),
-  });
+  return defer(
+    {
+      isAuthenticated,
+      event,
+      customer,
+      heading,
+      orders,
+      addresses: flattenConnection(customer.addresses) as MailingAddress[],
+      featuredData: getFeaturedData({params}),
+    },
+    {
+      headers: {
+        'Set-Cookie': await session.commit(),
+      },
+    },
+  );
 }
 
 export default function Authenticated() {
