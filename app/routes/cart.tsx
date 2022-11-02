@@ -9,6 +9,10 @@ import invariant from 'tiny-invariant';
 import {addLineItem, createCart, getTopProducts, updateLineItem} from '~/data';
 import {getSession} from '~/lib/session.server';
 
+export const handle = {
+  isCartRoute: true,
+};
+
 export async function loader({params}: LoaderArgs) {
   return defer(
     {
@@ -70,7 +74,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       }
 
       // returned inside the fetcher.data, addedToCart:true opens the cart drawer
-      return json({addedLine: { variantId, quantity: 1 }}, {headers});
+      return json({addedToCart: true}, {headers});
     }
 
     case 'set-quantity': {
