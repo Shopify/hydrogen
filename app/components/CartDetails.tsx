@@ -23,6 +23,7 @@ import type {
   Product,
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {RemoveFromCart} from '~/routes/__forms/RemoveFromCart';
 
 enum Action {
   SetQuantity = 'set-quantity',
@@ -107,7 +108,7 @@ export function CartDetails({
         <h2 id="summary-heading" className="sr-only">
           Order summary
         </h2>
-        <OrderSummary cost={cart.cost} />
+        <CarSummary cost={cart.cost} />
         <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
       </section>
     </div>
@@ -132,7 +133,7 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
   );
 }
 
-function OrderSummary({cost}: {cost: CartCost}) {
+function CarSummary({cost}: {cost: CartCost}) {
   return (
     <>
       <dl className="grid">
@@ -221,26 +222,16 @@ function CartLineItem({
                 quantity={optimisticQuantity}
               />
             </div>
-            <fetcher.Form method="post" action="/cart">
-              <input
-                type="hidden"
-                name="intent"
-                value={Action.RemoveLineItem}
-              />
-              <input type="hidden" name="lineId" value={lineId} />
-              <input
-                type="hidden"
-                name="redirect"
-                value={location.pathname + location.search}
-              />
-              <button
-                type="submit"
-                className="flex items-center justify-center w-10 h-10 border rounded"
-              >
-                <span className="sr-only">Remove</span>
-                <IconRemove aria-hidden="true" />
-              </button>
-            </fetcher.Form>
+            <RemoveFromCart lineIds={[lineId]}>
+              {({state}) => (
+                <>
+                  <span className="sr-only">
+                    {state === 'loading' ? 'Removing' : 'Remove'}
+                  </span>
+                  <IconRemove aria-hidden="true" />
+                </>
+              )}
+            </RemoveFromCart>
           </div>
         </div>
         <Text>

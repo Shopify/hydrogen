@@ -523,11 +523,11 @@ const UPDATE_LINE_ITEM_QUERY = `#graphql
 
 export async function updateLineItem({
   cartId,
-  lineItem,
+  lines,
   params,
 }: {
   cartId: string;
-  lineItem: CartLineUpdateInput;
+  lines: CartLineUpdateInput;
   params: Params;
 }) {
   const {country} = getLocalizationFromLang(params.lang);
@@ -536,7 +536,7 @@ export async function updateLineItem({
     query: UPDATE_LINE_ITEM_QUERY,
     variables: {
       cartId,
-      lines: [lineItem],
+      lines,
       country,
     },
   });
@@ -544,6 +544,61 @@ export async function updateLineItem({
   invariant(data, 'No data returned from Shopify API');
 
   return data.cartLinesUpdate.cart;
+}
+
+const REMOVE_LINE_ITEMS = `#graphql
+  mutation CartLinesRemove($cartId: ID!, $lineIds: [ID!]!, $country: CountryCode = ZZ)
+  @inContext(country: $country) {
+    cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+      cart {
+        id
+        lines(first: 100) {
+          edges {
+            node {
+              id
+              quantity
+              merchandise {
+                ...on ProductVariant {
+                  id
+                }
+              }
+            }
+          }
+        }
+        totalQuantity
+      }
+      errors: userErrors {
+        message
+        field
+        code
+      }
+    }
+  }
+`;
+
+export async function removeLineItems({
+  cartId,
+  lineIds,
+  params,
+}: {
+  cartId: string;
+  lineIds: Cart['id'][];
+  params: Params;
+}) {
+  const {country} = getLocalizationFromLang(params.lang);
+  const {data} = await getStorefrontData<{
+    cartLinesRemove: {cart: Cart; errors: UserError[]};
+  }>({
+    query: REMOVE_LINE_ITEMS,
+    variables: {
+      cartId,
+      lineIds,
+      country,
+    },
+  });
+
+  invariant(data, 'No data returned from Shopify API');
+  return data.cartLinesRemove;
 }
 
 const TOP_PRODUCTS_QUERY = `#graphql

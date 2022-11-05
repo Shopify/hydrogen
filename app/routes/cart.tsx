@@ -86,22 +86,6 @@ export const action: ActionFunction = async ({request, context, params}) => {
       return json({cart});
     }
 
-    case 'remove-line-item': {
-      /**
-       * We're re-using the same mutation as setting a quantity of 0,
-       * but theoretically we could use the `cartLinesRemove` mutation.
-       */
-      const lineId = formData.get('lineId');
-      invariant(lineId, 'Missing lineId');
-      invariant(cartId, 'Missing cartId');
-      await updateLineItem({
-        cartId,
-        lineItem: {id: lineId, quantity: 0},
-        params,
-      });
-      return json({cart});
-    }
-
     default: {
       throw new Error(`Cart intent ${intent} not supported`);
     }
