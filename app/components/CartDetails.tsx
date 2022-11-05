@@ -48,7 +48,7 @@ export function CartDetails({
 
   const optimisticallyAddingLine = useMemo(() => {
     const fetcher = fetchers.find(
-      (fetcher) => fetcher?.submission?.action === '/cart',
+      (fetcher) => fetcher?.submission?.action === '/AddToCart',
     );
 
     return !!fetcher?.data?.addedToCart;
@@ -95,11 +95,7 @@ export function CartDetails({
               />
             );
           })}
-          {/*
-              @todo: optimistically add a line item.
-              Maybe just cover the use case where the variantId is not yet
-              in cart.lines to keep it simple, because we cart.lines are not ordered
-          */}
+          {/* @todo: optimistically add a line item. */}
           {optimisticallyAddingLine ? <p>Adding..</p> : null}
         </ul>
       </section>
