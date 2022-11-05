@@ -359,6 +359,10 @@ export function ProductForm() {
                   merchandiseId: selectedVariant.id,
                   quantity: 1,
                 },
+                {
+                  merchandiseId: 'gid://shopify/ProductVariant/41007291138104',
+                  quantity: 3,
+                },
               ]}
             >
               {({state}) =>

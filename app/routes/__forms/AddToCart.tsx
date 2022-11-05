@@ -13,8 +13,6 @@ import {
 import type {ButtonProps} from '~/components/Button';
 
 export const action: ActionFunction = async ({request, context, params}) => {
-  // We only need a Set-Cookie header if we're creating
-  // a new cart (aka adding cartId to the session)
   const headers = new Headers();
 
   const [session, formData] = await Promise.all([
@@ -42,7 +40,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       return json({addedToCart: false, error: errorMessage}, {headers});
     }
 
-    // cart created
+    // cart created - we only need a Set-Cookie header if we're creating
     session.set('cartId', cart.id);
     headers.set('Set-Cookie', await session.commit());
     return addToCartResponse(cart, lines, formData, headers);
@@ -57,7 +55,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   if (errors?.length) {
     const errorMessage = errors.map(({message}) => message).join('\n');
-    return json({addedToCart: false, error: errorMessage}, {headers});
+    throw new Error(errorMessage);
   }
 
   return addToCartResponse(cart, lines, formData, headers);
@@ -92,24 +90,20 @@ export function AddToCart({
         <Await resolve={root.data.cart}>
           {(cart: Cart) => {
             const prevLines =
-              cart?.lines?.edges?.map(({node: {quantity, id}}) => ({
-                id,
-                quantity,
-              })) || [];
+              cart?.lines?.edges?.map(
+                ({node: {quantity, id, merchandise}}) => ({
+                  id,
+                  quantity,
+                  merchandise,
+                }),
+              ) || [];
             return (
               /* used for add to cart analytics */
-              <>
-                <input
-                  type="hidden"
-                  name="prevTotalQuantity"
-                  defaultValue={cart?.totalQuantity || 0}
-                />
-                <input
-                  type="hidden"
-                  name="prevLines"
-                  defaultValue={JSON.stringify(prevLines)}
-                />
-              </>
+              <input
+                type="hidden"
+                name="prevLines"
+                defaultValue={JSON.stringify(prevLines)}
+              />
             );
           }}
         </Await>
@@ -128,21 +122,8 @@ export function AddToCart({
 /*
   helpers -----------------------------------------------------------------------------------------
 */
-function getTotalQuantityStatus(
-  lines: CartLineInput[],
-  prevTotalQuantity: number,
-  cart: Cart,
-) {
-  // we currently have no way of knowing if a line was successfully added
-  // if adding quantity > availableForSale
-  const addingTotalQuantity = lines.reduce(
-    (addedQuantity, line) => addedQuantity + (line.quantity || 1),
-    0,
-  );
-  return cart.totalQuantity - prevTotalQuantity === addingTotalQuantity;
-}
-
-// Temporary workaround until we land https://github.com/Shopify/storefront-api-feedback/discussions/151
+// Temporary workaround until we land
+// https://github.com/Shopify/storefront-api-feedback/discussions/151
 function getLinesAddedStatus(
   lines: CartLineInput[],
   prevLines: any[],
@@ -151,14 +132,14 @@ function getLinesAddedStatus(
   return lines.reduce(
     (_result, _line) => {
       const prevLine = prevLines.find(
-        (prevLine) => prevLine.id === _line.merchandiseId,
+        (prevLine) => prevLine.merchandise.id === _line.merchandiseId,
       );
       const cartLine = cart.lines.edges.find(
         ({node: updatedLine}) =>
           updatedLine.merchandise.id === _line.merchandiseId,
       );
 
-      // new line added
+      // new line added?
       if (!prevLine) {
         if (cartLine?.node?.quantity === _line.quantity) {
           _result.linesAdded.push(_line);
@@ -168,7 +149,7 @@ function getLinesAddedStatus(
         return _result;
       }
 
-      // existing line updated
+      // existing line updated?
       if (prevLine.quantity + _line.quantity === cartLine?.node?.quantity) {
         _result.linesAdded = [..._result.linesAdded, _line];
       } else {
@@ -198,20 +179,6 @@ function addToCartResponse(
     ? (JSON.parse(String(formData.get('prevLines')) || '[]') as CartLineInput[])
     : ([] as CartLineInput[]);
 
-  const prevTotalQuantity = formData.get('prevTotalQuantity')
-    ? parseInt(String(formData.get('prevTotalQuantity')))
-    : 0;
-
-  const event = {
-    type: 'add_to_cart', // @todo: Event.type.ADD_TO_CART
-    payload: {lines},
-  };
-
-  const allSucceeded = getTotalQuantityStatus(lines, prevTotalQuantity, cart);
-  if (allSucceeded) {
-    return json({event, addedToCart: true, error: null}, {headers});
-  }
-
   // we need to figure out if a particular line failed to add
   const {linesAdded, linesNotAdded} = getLinesAddedStatus(
     lines,
@@ -219,12 +186,17 @@ function addToCartResponse(
     cart,
   );
 
+  const event: {type: string; payload: any} = {
+    type: 'add_to_cart', // @todo: Event.type.ADD_TO_CART
+    payload: {linesAdded, linesNotAdded},
+  };
+
   let errorMessage = null;
   if (linesNotAdded.length) {
     const failedVariantIds = linesNotAdded
-      .map((line) => line.merchandiseId)
+      .map((line) => line.merchandiseId.split('/').pop())
       .join(', ');
-    errorMessage = `Failed to add variants` + failedVariantIds;
+    errorMessage = `Failed to add variant(s): ${failedVariantIds}`;
   }
 
   if (linesAdded.length) {
