@@ -222,7 +222,10 @@ function CartLineItem({
                 quantity={optimisticQuantity}
               />
             </div>
-            <RemoveFromCart lineIds={[lineId]}>
+            <RemoveFromCart
+              className="flex items-center justify-center w-10 h-10 border rounded"
+              lineIds={[lineId]}
+            >
               {({state}) => (
                 <>
                   <span className="sr-only">

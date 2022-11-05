@@ -586,7 +586,8 @@ export async function removeLineItems({
   params: Params;
 }) {
   const {country} = getLocalizationFromLang(params.lang);
-  const {data} = await getStorefrontData<{
+
+  const response = await getStorefrontData<{
     cartLinesRemove: {cart: Cart; errors: UserError[]};
   }>({
     query: REMOVE_LINE_ITEMS,
@@ -597,8 +598,11 @@ export async function removeLineItems({
     },
   });
 
-  invariant(data, 'No data returned from Shopify API');
-  return data.cartLinesRemove;
+  invariant(
+    response?.data?.cartLinesRemove,
+    'No data returned from remove lines mutation',
+  );
+  return response.data.cartLinesRemove;
 }
 
 const TOP_PRODUCTS_QUERY = `#graphql

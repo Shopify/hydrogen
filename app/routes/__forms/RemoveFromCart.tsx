@@ -1,5 +1,6 @@
-import React, {Suspense} from 'react';
-import {useFetcher, useMatches, Await} from '@remix-run/react';
+import React, {Suspense, useEffect} from 'react';
+import {useFetcher, useMatches, Await, useLocation} from '@remix-run/react';
+import {useIsHydrated} from '~/hooks/useIsHydrated';
 import type {
   Cart,
   CartLine,
@@ -10,6 +11,12 @@ import {type ActionFunction, redirect, json} from '@hydrogen/remix';
 import invariant from 'tiny-invariant';
 import {removeLineItems} from '~/data';
 import {getSession} from '~/lib/session.server';
+import type {ButtonProps} from '~/components/Button';
+
+interface LinesRemoved {
+  linesRemoved: CartLine[];
+  linesNotRemoved: CartLine[];
+}
 
 export const action: ActionFunction = async ({request, context, params}) => {
   const [session, formData] = await Promise.all([
@@ -41,40 +48,50 @@ export const action: ActionFunction = async ({request, context, params}) => {
 export function RemoveFromCart({
   lineIds,
   children,
+  onSuccess = () => {},
+  ...props
 }: {
   lineIds: CartLine['id'][];
-  children: ({state}: {state: string}) => React.ReactNode;
+  children: ({state, error}: {state: string; error: string}) => React.ReactNode;
+  onSuccess?: (event: any) => void;
+  [key: keyof ButtonProps]: any;
 }) {
-  const fetcher = useFetcher();
+  const isHydrated = useIsHydrated();
   const [root] = useMatches();
-  const currentUrl = location.pathname + location.search;
+  const fetcher = useFetcher();
+  const location = useLocation();
+  const currentUrl = `${location.pathname}${
+    location.search ? '?' + location.search : ''
+  }`.replace('/null', ''); // remix bug in full-stack components?
+
+  const event = fetcher.data?.event;
+  const error = fetcher.data?.error;
+
+  useEffect(() => {
+    if (!event) return;
+    onSuccess?.(event);
+  }, [event, onSuccess]);
+
   return (
     <fetcher.Form method="post" action="/RemoveFromCart">
       <Suspense fallback={null}>
         <Await resolve={root.data.cart}>
           {(cart: Cart) => (
-            <>
-              <input
-                type="hidden"
-                name="prevLines"
-                value={JSON.stringify(cart.lines)}
-              />
-              <input
-                type="hidden"
-                name="totalQuantity"
-                value={JSON.stringify(cart.totalQuantity)}
-              />
-            </>
+            <input
+              type="hidden"
+              name="prevLines"
+              value={JSON.stringify(cart.lines)}
+            />
           )}
         </Await>
       </Suspense>
       <input type="hidden" name="lineIds" value={JSON.stringify(lineIds)} />
-      <input type="hidden" name="redirect" value={currentUrl} />
-      <button
-        type="submit"
-        className="flex items-center justify-center w-10 h-10 border rounded"
-      >
-        {children({state: fetcher.state})}
+      {/* used to trigger a redirect back to the same url when JS is disabled */}
+      {isHydrated ? null : (
+        <input type="hidden" name="redirectTo" defaultValue={currentUrl} />
+      )}
+      <button type="submit" {...props}>
+        {children({state: fetcher.state, error})}
       </button>
     </fetcher.Form>
   );
@@ -83,11 +100,6 @@ export function RemoveFromCart({
 /*
   helpers --------
 */
-interface SortedLines {
-  linesRemoved: CartLine[];
-  linesNotRemoved: CartLine[];
-}
-
 function removeFromCartResponse(
   lineIds: CartLine['id'][],
   cart: Cart,
@@ -95,13 +107,11 @@ function removeFromCartResponse(
   formData: FormData,
 ) {
   const mutationErrorMessage =
-    errors?.map(({message}) => message).join('/n') || null;
-  if (mutationErrorMessage) {
-    throw new Error(mutationErrorMessage);
-  }
+    errors?.map(({message}) => message).join('/n') || '';
+  invariant(!errors.length, mutationErrorMessage);
 
   // if no js, we essentially reload to avoid being routed to the actions route
-  const shouldRedirect = String(formData.get('redirect'));
+  const shouldRedirect = JSON.parse(String(formData.get('redirect')));
   if (shouldRedirect) {
     return redirect(shouldRedirect);
   }
@@ -111,20 +121,7 @@ function removeFromCartResponse(
     : [];
 
   // determine what line(s) were removed or not
-  const {linesRemoved = [], linesNotRemoved = []} = prevLines?.edges?.reduce(
-    (_result, {node: _prevLine}) => {
-      const lineStillExists = cart.lines.edges.find(
-        ({node: line}) => line.id === _prevLine.id,
-      );
-      if (lineStillExists) {
-        _result.linesNotRemoved = [..._result.linesNotRemoved, _prevLine];
-      } else {
-        _result.linesRemoved = [..._result.linesRemoved, _prevLine];
-      }
-      return _result;
-    },
-    {linesRemoved: [], linesNotRemoved: []} as SortedLines,
-  ) as SortedLines;
+  const {linesRemoved, linesNotRemoved} = getLinesRemoved(prevLines, cart);
 
   const removeErrorMessage = linesNotRemoved.length
     ? `Failed to remove line ids ${linesNotRemoved
@@ -138,8 +135,24 @@ function removeFromCartResponse(
       lineIds,
       linesRemoved,
     },
-    error: removeErrorMessage,
   };
 
-  return json({event});
+  return json({event, error: removeErrorMessage});
+}
+
+function getLinesRemoved(prevLines: CartLineConnection, cart: Cart) {
+  return prevLines?.edges?.reduce(
+    (_result, {node: _prevLine}) => {
+      const lineStillExists = cart.lines.edges.find(
+        ({node: line}) => line.id === _prevLine.id,
+      );
+      if (lineStillExists) {
+        _result.linesNotRemoved = [..._result.linesNotRemoved, _prevLine];
+      } else {
+        _result.linesRemoved = [..._result.linesRemoved, _prevLine];
+      }
+      return _result;
+    },
+    {linesRemoved: [], linesNotRemoved: []} as LinesRemoved,
+  ) as LinesRemoved;
 }
