@@ -350,20 +350,16 @@ export function ProductForm() {
         <div className="grid items-stretch gap-4">
           {selectedVariant && (
             <AddToCart
-              disabled={isOutOfStock || selectingVariant}
-              variantUrl={variantUrl}
               width="full"
               variant={isOutOfStock ? 'secondary' : 'primary'}
+              disabled={isOutOfStock || selectingVariant}
+              variantUrl={variantUrl}
               lines={[
                 {
                   merchandiseId: selectedVariant.id,
                   quantity: 1,
                 },
               ]}
-              onSuccess={({analytics}) => {
-                console.log('Successfully added pushing to gtm', analytics.gtm);
-                // window.dataLayer.push(analytics.gtm);
-              }}
             >
               {({state}) =>
                 isOutOfStock ? (

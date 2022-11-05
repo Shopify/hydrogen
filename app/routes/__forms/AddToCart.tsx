@@ -8,7 +8,6 @@ import {Suspense} from 'react';
 import {type ActionFunction, redirect, json} from '@hydrogen/remix';
 import {
   Cart,
-  CartLine,
   CartLineInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import type {ButtonProps} from '~/components/Button';
@@ -69,7 +68,6 @@ export function AddToCart({
   lines = [],
   variantUrl,
   disabled = false,
-  onSuccess,
   ...props
 }: {
   children: ({state, error}: {state: string; error: string}) => React.ReactNode;
@@ -77,18 +75,13 @@ export function AddToCart({
   /* the variant url to redirect to if JS is disabled/not ready  */
   variantUrl: string;
   disabled: boolean;
-  onSuccess?: (payload: any) => void;
   [key: keyof ButtonProps]: any;
 }) {
   const [root] = useMatches();
   const addToCartFetcher = useFetcher();
   const isHydrated = useIsHydrated();
-  const event =
-    addToCartFetcher.state === 'loading' && addToCartFetcher?.data?.event;
   const error =
     addToCartFetcher.state === 'loading' && addToCartFetcher?.data?.error;
-
-  // @todo: useServerEvent(onSuccess, [event]);
 
   if (!lines?.length) return null;
 
@@ -97,7 +90,7 @@ export function AddToCart({
       <input type="hidden" name="lines" defaultValue={JSON.stringify(lines)} />
       <Suspense fallback={null}>
         <Await resolve={root.data.cart}>
-          {(cart) => {
+          {(cart: Cart) => {
             const prevLines =
               cart?.lines?.edges?.map(({node: {quantity, id}}) => ({
                 id,
@@ -148,7 +141,8 @@ function getTotalQuantityStatus(
   );
   return cart.totalQuantity - prevTotalQuantity === addingTotalQuantity;
 }
-// the sadness
+
+// Temporary workaround until we land https://github.com/Shopify/storefront-api-feedback/discussions/151
 function getLinesAddedStatus(
   lines: CartLineInput[],
   prevLines: any[],
@@ -163,8 +157,9 @@ function getLinesAddedStatus(
         ({node: updatedLine}) =>
           updatedLine.merchandise.id === _line.merchandiseId,
       );
+
+      // new line added
       if (!prevLine) {
-        // new line
         if (cartLine?.node?.quantity === _line.quantity) {
           _result.linesAdded.push(_line);
         } else {
@@ -173,6 +168,7 @@ function getLinesAddedStatus(
         return _result;
       }
 
+      // existing line updated
       if (prevLine.quantity + _line.quantity === cartLine?.node?.quantity) {
         _result.linesAdded = [..._result.linesAdded, _line];
       } else {
@@ -206,19 +202,17 @@ function addToCartResponse(
     ? parseInt(String(formData.get('prevTotalQuantity')))
     : 0;
 
-  // @todo: refactor inside a StatusResponse util
-  const allSucceeded = getTotalQuantityStatus(lines, prevTotalQuantity, cart);
-
   const event = {
-    type: 'add_to_cart', // Event.type.ADD_TO_CART
+    type: 'add_to_cart', // @todo: Event.type.ADD_TO_CART
     payload: {lines},
   };
 
+  const allSucceeded = getTotalQuantityStatus(lines, prevTotalQuantity, cart);
   if (allSucceeded) {
     return json({event, addedToCart: true, error: null}, {headers});
   }
 
-  // we need to figure out which line item we didn't successfully add
+  // we need to figure out if a particular line failed to add
   const {linesAdded, linesNotAdded} = getLinesAddedStatus(
     lines,
     prevLines,
