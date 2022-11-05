@@ -4,7 +4,7 @@ import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import {addLineItem, createCart} from '~/data';
 import {getSession} from '~/lib/session.server';
-import {Suspense} from 'react';
+import {Suspense, useEffect} from 'react';
 import {type ActionFunction, redirect, json} from '@hydrogen/remix';
 import {
   Cart,
@@ -66,6 +66,7 @@ export function AddToCart({
   lines = [],
   variantUrl,
   disabled = false,
+  onSuccess = () => {},
   ...props
 }: {
   children: ({state, error}: {state: string; error: string}) => React.ReactNode;
@@ -73,13 +74,21 @@ export function AddToCart({
   /* the variant url to redirect to if JS is disabled/not ready  */
   variantUrl: string;
   disabled: boolean;
+  onSuccess?: (event: any) => void;
   [key: keyof ButtonProps]: any;
 }) {
   const [root] = useMatches();
   const addToCartFetcher = useFetcher();
   const isHydrated = useIsHydrated();
   const error =
-    addToCartFetcher.state === 'loading' && addToCartFetcher?.data?.error;
+    addToCartFetcher.state === 'idle' && addToCartFetcher?.data?.error;
+  const event =
+    addToCartFetcher.state === 'idle' && addToCartFetcher?.data?.event;
+
+  useEffect(() => {
+    if (!event) return;
+    onSuccess?.(event);
+  }, [event, onSuccess]);
 
   if (!lines?.length) return null;
 
@@ -188,11 +197,13 @@ function addToCartResponse(
 
   const event: {type: string; payload: any} = {
     type: 'add_to_cart', // @todo: Event.type.ADD_TO_CART
-    payload: {linesAdded, linesNotAdded},
+    payload: {linesAdded},
   };
 
   let errorMessage = null;
   if (linesNotAdded.length) {
+    event.payload.linesNotAdded = linesNotAdded;
+
     const failedVariantIds = linesNotAdded
       .map((line) => line.merchandiseId.split('/').pop())
       .join(', ');
