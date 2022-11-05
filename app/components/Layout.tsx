@@ -63,6 +63,9 @@ export function Layout({
 function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
   const fetchers = useFetchers();
+  const addToCartFetcher = fetchers.find(
+    (fetcher) => fetcher?.submission?.action === '/AddToCart',
+  );
 
   const {
     isOpen: isCartOpen,
@@ -78,14 +81,10 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 
   // toggle cart drawer when adding to cart
   useEffect(() => {
-    const fetcher = fetchers.find(
-      (fetcher) => fetcher?.submission?.action === '/cart',
-    );
-
-    if (!isCartOpen && fetcher?.data?.addedToCart) {
+    if (!isCartOpen && addToCartFetcher?.data?.addedToCart) {
       openCart();
     }
-  }, [fetchers, isCartOpen, openCart]);
+  }, [addToCartFetcher, isCartOpen, openCart]);
 
   return (
     <>

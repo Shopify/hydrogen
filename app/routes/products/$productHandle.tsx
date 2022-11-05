@@ -6,12 +6,10 @@ import {
   useSearchParams,
   useLocation,
   useTransition,
-  useFetcher,
 } from '@remix-run/react';
-import {Money, ShopPayButton} from '@shopify/hydrogen-react';
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
+import clsx from 'clsx';
 import {
-  Button,
   Heading,
   IconCaret,
   IconCheck,
@@ -24,9 +22,7 @@ import {
   Link,
 } from '~/components';
 import {getExcerpt, getLocalizationFromLang} from '~/lib/utils';
-import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
-import clsx from 'clsx';
 import {
   ProductVariant,
   SelectedOptionInput,
@@ -41,12 +37,51 @@ import {
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data';
+import {AddToCart} from '../__forms/AddToCart';
+import {Money, ShopPayButton} from '@shopify/hydrogen-react';
 
 export const loader = async ({
   params,
   request,
   context: {storefront},
 }: LoaderArgs) => {
+  async function getRecommendedProducts(
+    storefront: LoaderArgs['context']['storefront'],
+    language: LanguageCode,
+    country: CountryCode,
+    productId: string,
+  ) {
+    const products = await storefront.query<{
+      recommended: Product[];
+      additional: ProductConnection;
+    }>({
+      query: RECOMMENDED_PRODUCTS_QUERY,
+      variables: {
+        productId,
+        count: 12,
+        language,
+        country,
+      },
+    });
+
+    invariant(products, 'No data returned from Shopify API');
+
+    const mergedProducts = products.recommended
+      .concat(products.additional.nodes)
+      .filter(
+        (value, index, array) =>
+          array.findIndex((value2) => value2.id === value.id) === index,
+      );
+
+    const originalProduct = mergedProducts
+      .map((item: Product) => item.id)
+      .indexOf(productId);
+
+    mergedProducts.splice(originalProduct, 1);
+
+    return mergedProducts;
+  }
+
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
 
@@ -82,43 +117,6 @@ export const loader = async ({
     ),
   });
 };
-
-async function getRecommendedProducts(
-  storefront: LoaderArgs['context']['storefront'],
-  language: LanguageCode,
-  country: CountryCode,
-  productId: string,
-) {
-  const products = await storefront.query<{
-    recommended: Product[];
-    additional: ProductConnection;
-  }>({
-    query: RECOMMENDED_PRODUCTS_QUERY,
-    variables: {
-      productId,
-      count: 12,
-      language,
-      country,
-    },
-  });
-
-  invariant(products, 'No data returned from Shopify API');
-
-  const mergedProducts = products.recommended
-    .concat(products.additional.nodes)
-    .filter(
-      (value, index, array) =>
-        array.findIndex((value2) => value2.id === value.id) === index,
-    );
-
-  const originalProduct = mergedProducts
-    .map((item: Product) => item.id)
-    .indexOf(productId);
-
-  mergedProducts.splice(originalProduct, 1);
-
-  return mergedProducts;
-}
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();
@@ -185,12 +183,10 @@ export default function Product() {
 }
 
 export function ProductForm() {
-  const addToCartFetcher = useFetcher();
-  const isHydrated = useIsHydrated();
   const closeRef = useRef<HTMLButtonElement>(null);
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
-  const isNavigationPending = transition.state === 'loading';
+  const selectingVariant = transition.state === 'loading';
 
   /**
    * We update `searchParams` with in-flight request data from `transition` (if available)
@@ -198,10 +194,10 @@ export function ProductForm() {
    * request has completed.
    */
   const searchParams = useMemo(() => {
-    return isNavigationPending && transition.location
+    return selectingVariant && transition.location
       ? new URLSearchParams(transition.location.search)
       : currentSearchParams;
-  }, [isNavigationPending, currentSearchParams, transition]);
+  }, [selectingVariant, currentSearchParams, transition]);
 
   const {product} = useLoaderData<typeof loader>();
   const firstVariant = product.variants.nodes[0];
@@ -230,13 +226,15 @@ export function ProductForm() {
    * A developer can opt out of this, too.
    */
   const selectedVariant = product.selectedVariant ?? firstVariant;
-
   const isOutOfStock = !selectedVariant?.availableForSale;
   const isOnSale =
     selectedVariant?.priceV2?.amount &&
     selectedVariant?.compareAtPriceV2?.amount &&
     selectedVariant?.priceV2?.amount <
       selectedVariant?.compareAtPriceV2?.amount;
+  const variantUrl = `products/${
+    product.handle
+  }?${searchParamsWithDefaults.toString()}`;
 
   return (
     <div className="grid gap-10">
@@ -351,39 +349,34 @@ export function ProductForm() {
           ))}
         <div className="grid items-stretch gap-4">
           {selectedVariant && (
-            <addToCartFetcher.Form method="post" action="/cart">
-              <input
-                type="hidden"
-                name="variantId"
-                defaultValue={selectedVariant?.id}
-              />
-              <input type="hidden" name="intent" defaultValue="addToCart" />
-
-              {/* used to trigger a redirect back to the PDP when JS is disabled */}
-              {isHydrated ? null : (
-                <input
-                  type="hidden"
-                  name="redirectTo"
-                  defaultValue={`products/${
-                    product.handle
-                  }?${searchParamsWithDefaults.toString()}`}
-                />
-              )}
-              {/* @todo: add optimistic state when transitioning between selectedVariant via isNavigationPending */}
-              <Button
-                width="full"
-                variant={isOutOfStock ? 'secondary' : 'primary'}
-                disabled={isOutOfStock || isNavigationPending}
-                as="button"
-              >
-                {isOutOfStock ? (
+            <AddToCart
+              disabled={isOutOfStock || selectingVariant}
+              variantUrl={variantUrl}
+              width="full"
+              variant={isOutOfStock ? 'secondary' : 'primary'}
+              lines={[
+                {
+                  merchandiseId: selectedVariant.id,
+                  quantity: 1,
+                },
+              ]}
+              onSuccess={({analytics}) => {
+                console.log('Successfully added pushing to gtm', analytics.gtm);
+                // window.dataLayer.push(analytics.gtm);
+              }}
+            >
+              {({state}) =>
+                isOutOfStock ? (
                   <Text>Sold out</Text>
                 ) : (
                   <Text
                     as="span"
                     className="flex items-center justify-center gap-2"
                   >
-                    <span>Add to bag</span> <span>·</span>{' '}
+                    <span>
+                      {state === 'idle' ? 'Add to bag' : 'Adding to bag'}
+                    </span>{' '}
+                    <span>·</span>{' '}
                     <Money
                       withoutTrailingZeros
                       data={selectedVariant?.priceV2!}
@@ -398,9 +391,9 @@ export function ProductForm() {
                       />
                     )}
                   </Text>
-                )}
-              </Button>
-            </addToCartFetcher.Form>
+                )
+              }
+            </AddToCart>
           )}
           {!isOutOfStock && (
             <ShopPayButton variantIds={[selectedVariant?.id!]} />

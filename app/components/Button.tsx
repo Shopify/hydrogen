@@ -2,6 +2,13 @@ import {Link} from '@remix-run/react';
 import clsx from 'clsx';
 
 import {missingClass} from '~/lib/utils';
+export interface ButtonProps {
+  as?: React.ElementType;
+  className?: string;
+  variant?: 'primary' | 'secondary' | 'inline';
+  width?: 'auto' | 'full';
+  [key: string]: any;
+}
 
 export function Button({
   as = 'button',
@@ -9,13 +16,7 @@ export function Button({
   variant = 'primary',
   width = 'auto',
   ...props
-}: {
-  as?: React.ElementType;
-  className?: string;
-  variant?: 'primary' | 'secondary' | 'inline';
-  width?: 'auto' | 'full';
-  [key: string]: any;
-}) {
+}: ButtonProps) {
   const Component = props?.to ? Link : as;
 
   const baseButtonClasses =

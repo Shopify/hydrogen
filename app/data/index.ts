@@ -411,6 +411,25 @@ mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(c
   cartCreate(input: $input) {
     cart {
       id
+      totalQuantity
+      lines(first: 100) {
+          edges {
+            node {
+              id
+              quantity
+              merchandise {
+                ...on ProductVariant {
+                  id
+                }
+              }
+            }
+          }
+        }
+    }
+    errors: userErrors {
+      message
+      field
+      code
     }
   }
 }
@@ -422,12 +441,13 @@ export async function createCart({
 }: {
   cart: CartInput;
   params: Params;
-}) {
+}): Promise<{cart: Cart; errors: UserError[]}> {
   const {country} = getLocalizationFromLang(params.lang);
 
   const {data} = await getStorefrontData<{
     cartCreate: {
       cart: Cart;
+      errors: UserError[];
     };
   }>({
     query: CREATE_CART_MUTATION,
@@ -439,7 +459,7 @@ export async function createCart({
 
   invariant(data, 'No data returned from Shopify API');
 
-  return data.cartCreate.cart;
+  return data.cartCreate;
 }
 
 const ADD_LINE_ITEM_QUERY = `#graphql
@@ -447,6 +467,25 @@ const ADD_LINE_ITEM_QUERY = `#graphql
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
         id
+        totalQuantity
+        lines(first: 100) {
+          edges {
+            node {
+              id
+              quantity
+              merchandise {
+                ...on ProductVariant {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
+      errors: userErrors {
+        message
+        field
+        code
       }
     }
   }
@@ -460,12 +499,13 @@ export async function addLineItem({
   cartId: string;
   lines: CartLineInput[];
   params: Params;
-}) {
+}): Promise<{cart: Cart; errors: UserError[]}> {
   const {country} = getLocalizationFromLang(params.lang);
 
   const {data} = await getStorefrontData<{
     cartLinesAdd: {
       cart: Cart;
+      errors: UserError[];
     };
   }>({
     query: ADD_LINE_ITEM_QUERY,
@@ -474,7 +514,7 @@ export async function addLineItem({
 
   invariant(data, 'No data returned from Shopify API');
 
-  return data.cartLinesAdd.cart;
+  return data.cartLinesAdd;
 }
 
 const CART_QUERY = `#graphql
