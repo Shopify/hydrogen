@@ -70,6 +70,42 @@ module.exports = {
 };
 ```
 
+## Custom redirects
+
+The merchant may define custom redirects within the admin. Optionally Hydrogen can automatically route those custom redirects:
+
+```ts
+import {hydrogenRoutes} from '@shopify/hydrogen';
+
+module.exports = {
+  routes: async (defineRoutes) => {
+    return defineRoutes((route) => {
+      hydrogenRoutes(route, {
+        customRedirects: true,
+      });
+    });
+  },
+};
+```
+
+## Online-store Proxying
+
+It is easy to migrate from the online store to a Hydrogen custom storefront. Hydrogen can host some routes while proxying other routes to the online store. All URLs that match the provided pattern(s) are proxied to the online store:
+
+```ts
+import {hydrogenRoutes} from '@shopify/hydrogen';
+
+module.exports = {
+  routes: async (defineRoutes) => {
+    return defineRoutes((route) => {
+      hydrogenRoutes(route, {
+        proxy: [.+/products\/.+/],
+      });
+    });
+  },
+};
+```
+
 ## Deterministic routes
 
 Routes in Hydrogen can be defined in completely custom ways. Other services need to understand how to link to Shopify entities within a custom storefront. For example, products might exist on `/productos/:handle` instead of `/products/:handle`.
@@ -107,7 +143,7 @@ The available resource types are:
 
 Notes:
 
-1. There can only be _one_ route defined of each resource type. An exception is thrown when multiple routes are found of the same resource type. We c
+1. There can only be _one_ route defined of each resource type. An exception is thrown when multiple routes are found of the same resource type.
 1. We can warn the developer during dev mode when routes don't exist for a specific resource type.
 1. We can warn the developer during dev mode when we know a specific route doesn't meet SEO, Analytics, or other requirements.
 
@@ -145,13 +181,25 @@ A built-in resource route is available that contains a manifest of all routes de
 
 ## Future
 
-Down the road the CLI could scaffold routes of a given resource type:
+Though not priority for the initial Hydrogen release, there are other routing features we can add down the road:
+
+### CLI
+
+The CLI could scaffold routes of a given resource type:
 
 ```
 h2 scaffold route products --path "/bundles/:handle"
 h2 scaffold route page --path "/about"
 h2 setup sentry
 h2 setup elevar
+```
+
+### Hydrogen `<Link>`
+
+We could also explore a Hydrogen specific `<Link>` component that can calculate the route URL just given the type and necessary parameters:
+
+```ts
+<Link to="product" handle="hydrogen">
 ```
 
 ## Questions
