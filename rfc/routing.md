@@ -1,5 +1,9 @@
 # Routing
 
+_Date: Nov 7, 2022_
+
+---
+
 Hydrogen will provide built-in support for Shopify routes to make it easier to build a custom storefront.
 
 See [H2 Multiple Storefronts & Routing Problems](https://docs.google.com/document/d/1v0qV3wqAl3wsYvVmJhqBXAqHTX9JdSLjBJ75FJnyW0M/edit#) for a detailed motiviation.
@@ -89,7 +93,7 @@ export default function Productos() {
 The available resource types are:
 
 | **Resource Type** | **Description**           |
-|-------------------|---------------------------|
+| ----------------- | ------------------------- |
 | BLOG              | `/blogs`                  |
 | ARTICLE           | `/blogs/:handle/articles` |
 | CATALOG           | `/products`               |
