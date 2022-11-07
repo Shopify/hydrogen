@@ -1,5 +1,9 @@
 # Cart RFC
 
+_Date: Nov 7, 2022_
+
+---
+
 The Hydrogen cart has three distinct parts, some of which is provided as an example, other is available from the Hydrogen package.
 
 ## Loader data
@@ -141,31 +145,29 @@ export async function action({request, context, params}) {
 }
 ```
 
-
 ## Questions
 
 1. Rather than packaging these components and action functions within Hydrogen, would it be better to simply provide them as an example within the demo store?
-  
-    **Pros**
 
-    a. It's very explicit what is going on, and how the `<Form>`'s are wired up to the action routes
-    b. It's very easy for the developer to customize.
+   **Pros**
 
-    **Cons**
+   a. It's very explicit what is going on, and how the `<Form>`'s are wired up to the action routes
+   b. It's very easy for the developer to customize.
 
-    a. There's a lot more to grok in how the cart works. Maybe most merchants don't care, and just want a cart and buttons to easily modify it?
-    b. If we need to add or fix functionality in the cart, we have to provide migration instructions to every merchant. And we have no control over them _actually_ making the migration.
+   **Cons**
 
+   a. There's a lot more to grok in how the cart works. Maybe most merchants don't care, and just want a cart and buttons to easily modify it?
+   b. If we need to add or fix functionality in the cart, we have to provide migration instructions to every merchant. And we have no control over them _actually_ making the migration.
 
 2. Rather than three separate action routes, what if there was a single `/cart/update` action route? The user only then imports a single `updateCart()` function from Hydrogen.
 
-    **Pros**
-    
-    a. Muchs simpler. Only one route for merchants to implement.
-    b. If we add a new `applyDiscountCode` action, it can automatically be supported. The current approach would mean the merchant would have to manually add a new route and import the new `applyDiscountCode` function.
+   **Pros**
 
-    **Cons**
+   a. Muchs simpler. Only one route for merchants to implement.
+   b. If we add a new `applyDiscountCode` action, it can automatically be supported. The current approach would mean the merchant would have to manually add a new route and import the new `applyDiscountCode` function.
 
-    a. If the dev wants to do something custom before or after the cart is modified, it's harder for them to know what changed in the cart. Perhaps we could expose the "intent" in the return: `const {data, headers, redirectTo, intent} = updateCart();`
+   **Cons**
+
+   a. If the dev wants to do something custom before or after the cart is modified, it's harder for them to know what changed in the cart. Perhaps we could expose the "intent" in the return: `const {data, headers, redirectTo, intent} = updateCart();`
 
 3. Maybe these routes could be completely magic and hidden away from the developer? Rails like. The components are garanteed to work because the routes are always there and implemented properly. The con in this approach is the developer cannot easily customize them.
