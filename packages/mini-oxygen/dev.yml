@@ -4,6 +4,8 @@ up:
   - node:
       version: v16.13.0
       yarn: 1.22.5
+  - git_hooks:
+      pre-push: script/pre-push.sh
 
 commands:
   bump-version-major:
