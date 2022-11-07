@@ -3,9 +3,10 @@ import {
   type ParsedMetafields,
   type Measurement,
   type Rating,
+  type MetafieldTypeTypes,
 } from './metafield-parser.js';
 import {getRawMetafield} from './Metafield.test.helpers.js';
-import {expectType} from 'ts-expect';
+import {TypeEqual, expectType} from 'ts-expect';
 import type {
   Collection,
   GenericFile,
@@ -533,6 +534,14 @@ describe(`metafieldParser`, () => {
         expect(vol?.value === weights[index].value).toBe(true);
       });
       expectType<null | Measurement[]>(parsed?.parsedValue);
+    });
+  });
+
+  describe(`types`, () => {
+    // eslint-disable-next-line jest/expect-expect
+    it.skip(`TS tests`, () => {
+      // This test is to ensure that ParsedMetafields has a key for every item in 'allMetafieldsTypesArray'
+      expectType<TypeEqual<keyof ParsedMetafields, MetafieldTypeTypes>>(true);
     });
   });
 });

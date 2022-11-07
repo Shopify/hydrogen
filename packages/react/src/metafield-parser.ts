@@ -9,7 +9,6 @@ import type {
 } from './storefront-api-types.js';
 import type {PartialDeep, Simplify} from 'type-fest';
 import {parseJSON} from './Metafield.js';
-import {TypeEqual, expectType} from 'ts-expect';
 import {flattenConnection} from './flatten-connection.js';
 
 /**
@@ -283,9 +282,6 @@ export type ParsedMetafields<ExtraTypeGeneric = void> = {
   /** A Metafield that's been parsed, with a `parsedValue` of an array of `Measurement`s */
   'list.weight': Simplify<MeasurementListParsedMetafield>;
 };
-
-// This test is to ensure that ParsedMetafields has a key for every item in 'allMetafieldsTypesArray'
-expectType<TypeEqual<keyof ParsedMetafields, MetafieldTypeTypes>>(true);
 
 interface ParsedBase extends MetafieldBaseType {
   type: MetafieldTypeTypes;

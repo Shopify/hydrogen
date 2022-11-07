@@ -10,7 +10,10 @@
     },
     "//#lint": {},
     "//#format:check": {},
-    "typecheck": {},
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
     "test:ci": {}
   }
 }

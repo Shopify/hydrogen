@@ -1,0 +1,31 @@
+{
+  "name": "nextjs",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "run-p dev:next codegen",
+    "dev:next": "next dev",
+    "codegen": "graphql-codegen --config codegen.ts --watch",
+    "build": "next build",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@shopify/hydrogen-react": "*",
+    "graphql-request": "^5.0.0",
+    "next": "13.0.0",
+    "react": "18.2.0",
+    "react-dom": "18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "18.11.7",
+    "@types/react": "18.0.23",
+    "@types/react-dom": "18.0.7",
+    "eslint": "8.26.0",
+    "eslint-config-next": "13.0.0",
+    "typescript": "4.8.4",
+    "@graphql-codegen/cli": "2.13.7",
+    "@graphql-codegen/client-preset": "1.1.1"
+  }
+}

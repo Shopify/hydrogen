@@ -2,9 +2,15 @@
   "name": "hydrogen-ui",
   "version": "0.0.0",
   "private": true,
-  "workspaces": [
-    "packages/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "packages/*",
+      "apps/*"
+    ],
+    "nohoist": [
+      "nextjs/@graphql-codegen/**"
+    ]
+  },
   "scripts": {
     "build": "turbo run build",
     "ci:checks": "turbo run typecheck test:ci lint format:check",

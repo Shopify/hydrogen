@@ -2,14 +2,11 @@
 
 There are two ways you can develop Hydrogen-UI components:
 
-- Develop components in isolation:
-  1. Run `yarn dev` (or `yarn dev:story`) in the hydrogen-ui directory to spin up an instance of [Ladle](https://ladle.dev/)
+- Develop components in isolation (faster & easier):
+  1. Run `yarn dev:story` in the hydrogen-ui directory to spin up an instance of [Ladle](https://ladle.dev/)
   2. Edit the component or the component's story `[ComponentName].stories.tsx`
-- TODO: setup and document how to link this package to the demo store
-<!-- - Develop components in the demo store:
-  1. Add `"@shopify/hydrogen-react": "{major}.{minor}.{patch}"` to the demo-store's `package.json`
-  2. Run `yarn` then `yarn dev` in the demo-store directory,
-  3. Run `yarn dev:demo` in the hydrogen-ui directory -->
+- Develop components in a demo app (good for testing out the ecosystem support)
+  1. Run `yarn dev`
 
 ## Authoring Components
 
@@ -62,3 +59,4 @@ Processes that need to happen:
   - Do one last `ci:checks`
   - Push the branch up to Github. Do _not_ make a Pull Request - we want the older Storefront API branch to stay as a snapshot of the code that was there at that release.
 - Change the default branch in Github to the newly-created branch.
+- Create a new changelog and PR to officially publish the new version

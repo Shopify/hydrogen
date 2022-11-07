@@ -5,7 +5,7 @@ import {ModelViewer} from './ModelViewer.js';
 import type {MediaEdge as MediaEdgeType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
-interface MediaFileProps {
+export interface MediaFileProps {
   /** An object with fields that correspond to the Storefront API's [Media object](https://shopify.dev/api/storefront/reference/products/media). */
   data: PartialDeep<MediaEdgeType['node'], {recurseIntoArrays: true}>;
   /** The options for the `Image`, `Video`, or `ExternalVideo` components. */

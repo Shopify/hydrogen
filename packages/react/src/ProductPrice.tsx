@@ -7,7 +7,7 @@ import {Money, type MoneyProps} from './Money.js';
 import type {PartialDeep} from 'type-fest';
 import {flattenConnection} from './flatten-connection.js';
 
-interface ProductPriceProps {
+export interface ProductPriceProps {
   /** A [Product object](https://shopify.dev/api/storefront/reference/products/product). */
   data: PartialDeep<Product, {recurseIntoArrays: true}>;
   /** The type of price. Valid values: `regular` (default) or `compareAt`. */
