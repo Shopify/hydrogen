@@ -7,16 +7,19 @@ assignees: ''
 
 ---
 
-**Description:**
+**Description**
 
 
 
-**Requirements:**
+**Requirements**
 
 
 
-**Side-quests:**
+**To consider**
 - [ ] RFC
-- [ ] Demo Store implementation
+- [ ] Demo Store
 - [ ] Docs
-- [ ] CLI & Dev Tools
+- [ ] Types
+- [ ] Dev Tools
+- [ ] Configuration
+- [ ] Extensibility
