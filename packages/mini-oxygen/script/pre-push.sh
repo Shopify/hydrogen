@@ -1,14 +1,14 @@
 #!/bin/bash
 
-protected_branch='pre-push-to-main-warning'
+protected_branch='main'
 current_branch=$(git rev-parse --abbrev-ref HEAD)
 
-if [ $protected_branch = $current_branch ]; then
-  printf "WARNING! You're about to push to the ${protected_branch} branch. Continue?\n"
-  select yn in "Yes" "No"; do
-    case $yn in
-      Yes ) exit 0;;
-      No ) exit 1;;
-    esac
-  done
+if read local_ref local_sha remote_ref remote_sha && [ $protected_branch = $current_branch ]; then
+  printf "\033[1;91mWARNING! You're about to push to the ${protected_branch} branch. Continue? [y|n]\033[0m\n"
+  read -n 1 -r < /dev/tty
+  echo
+  if echo $REPLY | grep -E '^[Yy]$' > /dev/null; then
+    exit 0
+  fi
+  exit 1
 fi
