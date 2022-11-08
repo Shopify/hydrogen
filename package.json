@@ -2,24 +2,20 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "rimraf build && npm run build:css && remix build && npm run copy:assets && npm run bundle:worker --",
-    "build:prod": "npm run build -- --sourcemap --minify",
+    "build": "npm run build:css && npm run h2 build -- --entry worker/index.ts",
     "build:css": "postcss styles --base styles --dir app/styles --env production",
-    "bundle:worker": "esbuild worker/index.ts --bundle --outfile=build/worker/index.js --format=esm --log-override:this-is-undefined-in-esm=silent --define:process.env.REMIX_DEV_SERVER_WS_PORT=\\\"8002\\\"",
-    "copy:assets": "cp -r public/* build/client",
-    "deploy": "//todo",
-    "dev:remix": "remix watch",
+    "dev": "ENCRYPTION_KEY=foobar run-p dev:css \"h2 dev -- --entry worker/index.ts\"",
     "dev:css": "postcss styles --base styles --dir app/styles -w",
-    "dev:oxygen": "npm exec oxygen-preview",
-    "dev": "npm run build && run-p \"dev:*\"",
+    "preview": "npm run build && ENCRYPTION_KEY=foobar npm run h2 preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
-    "start": "npm run build && cross-env NODE_ENV=production npm run dev:oxygen",
     "format": "prettier --write --ignore-unknown .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "h2": "npm run --prefix packages/@hydrogen/cli start --"
   },
   "workspaces": [
     "packages/@remix-run/oxygen",
-    "packages/@hydrogen/remix"
+    "packages/@hydrogen/remix",
+    "packages/@hydrogen/cli"
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {
@@ -43,7 +39,6 @@
     "@remix-run/dev": "0.0.0-experimental-e18af792a",
     "@remix-run/eslint-config": "0.0.0-experimental-e18af792a",
     "@shopify/eslint-plugin": "^42.0.1",
-    "@shopify/mini-oxygen": "^0.2.0",
     "@shopify/oxygen-workers-types": "^3.17.2",
     "@shopify/prettier-config": "^1.1.2",
     "@tailwindcss/forms": "^0.5.3",
