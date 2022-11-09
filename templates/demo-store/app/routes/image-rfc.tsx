@@ -8,6 +8,8 @@ import {json} from '@remix-run/oxygen';
   - [ ] Support for non-100% widths
   - [ ] Support for third party data loaders
   - [ ] Create guide/docs
+  - [ ] Scale seems auto-detected; confirm true, and if so, remove prop
+  - [ ] Consider `loaded` render prop, for blurred placeholder
 */
 
 interface ImageConfig {
@@ -84,10 +86,10 @@ export function Image({
   width = '100%',
   sizes = '(min-width: 768px) 50vw, 100vw',
   aspectRatio = '1/1',
-  scale = 2,
+  scale,
   config = {
-    intervals: 10,
-    startingWidth: 300,
+    intervals: 20,
+    startingWidth: 200,
     incrementSize: 100,
     placeholderWidth: 100,
   },
@@ -148,6 +150,16 @@ export function generateShopifySrcSet(
         'w',
     )
     .join(`, `);
+  /*
+      Given:
+        src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg'
+        sizesArray = [
+          {width: 200, height: 200, crop: 'center'},
+          {width: 400, height: 400, crop: 'center'},
+        ]
+      Returns:
+        'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=200&height=200&crop=center 200w, https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=400&height=400&crop=center 400w'
+   */
 }
 
 export function generateImagerySrc(
@@ -156,36 +168,61 @@ export function generateImagerySrc(
   height: number,
   crop: Crop = 'center',
 ) {
-  // Sample URL: https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=500&height=500&crop=center
   const url = new URL(src);
   width && url.searchParams.append('width', width.toString());
   height && url.searchParams.append('height', height.toString());
   crop && url.searchParams.append('crop', crop);
   return url.href;
+  /*
+    Given:
+      src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg'
+      width = 100
+      height = 100
+      crop = 'center'
+    Returns:
+      'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=100&height=100&crop=center'
+  */
 }
 
 export function generateImageWidths(
   width: string | number = '100%',
-  intervals = 10,
-  startingWidth = 250,
-  incrementSize = 250,
-  scale = 2,
+  intervals = 20,
+  startingWidth = 200,
+  incrementSize = 100,
+  scale = 1,
 ) {
   if (width === '100%') {
     return Array.from(
       {length: intervals},
       (_, i) => (i * incrementSize + startingWidth) * scale,
     );
+    /* 
+      Given: 
+        width = '100%'
+        intervals = 10
+        startingWidth = 100
+        incrementSize = 100
+      Returns: 
+        [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+    */
   }
   // @TODO: if width !== 100% handle relative/fixed sizes: vw/em/rem/px
   return [1000];
 }
 
+// Simple utility function to convert 1/1 to [1, 1]
 export function parseAspectRatio(aspectRatio: string) {
   const [width, height] = aspectRatio.split('/');
   return Number(width) / Number(height);
+  /* 
+    Given: 
+      '1/1'
+    Returns: 
+      0.5
+  */
 }
 
+// Generate data needed for Imagery loader
 export function generateSizes(
   widths: number[] | undefined,
   aspectRatio: string,
@@ -200,4 +237,11 @@ export function generateSizes(
     };
   });
   return sizes;
+  /* 
+    Given: 
+      ([100, 200], 1/1, 'center')
+    Returns: 
+      [{width: 100, height: 100, crop: 'center'}, 
+      {width: 200, height: 200, crop: 'center'}]
+  */
 }
