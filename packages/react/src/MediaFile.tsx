@@ -4,8 +4,12 @@ import {ExternalVideo} from './ExternalVideo.js';
 import {ModelViewer} from './ModelViewer.js';
 import type {MediaEdge as MediaEdgeType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
+import type {ModelViewerElement} from '@google/model-viewer/lib/model-viewer.js';
 
-export interface MediaFileProps {
+type BaseProps = React.HTMLAttributes<
+  HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | ModelViewerElement
+>;
+export interface MediaFileProps extends BaseProps {
   /** An object with fields that correspond to the Storefront API's [Media object](https://shopify.dev/api/storefront/reference/products/media). */
   data: PartialDeep<MediaEdgeType['node'], {recurseIntoArrays: true}>;
   /** The options for the `Image`, `Video`, or `ExternalVideo` components. */
@@ -70,6 +74,7 @@ export function MediaFile({
     }
     case 'Model3d': {
       return (
+        // @ts-expect-error There are issues with the inferred HTML attribute types here for ModelViewer (and contentEditable), but I think that's a little bit beyond me at the moment
         <ModelViewer
           {...passthroughProps}
           {...mediaOptions?.modelViewer}
