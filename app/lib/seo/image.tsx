@@ -12,6 +12,7 @@ export async function getShareableImage(
       },
     });
   } catch (error) {
+    // eslint-disable-next-line no-console
     console.error('Failed to render Share Image:', component, error);
 
     return new Response(

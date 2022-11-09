@@ -19,7 +19,7 @@ export function FeaturedSection() {
 
   useEffect(() => {
     featuredProductsFetcher.load(path);
-  }, [path]);
+  }, [featuredProductsFetcher, path]);
 
   if (!featuredProductsFetcher.data) return null;
 
