@@ -9,19 +9,40 @@ import type {Collection as CollectionType} from '@shopify/hydrogen-react/storefr
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
-import {getCollection} from '~/data';
+import {getLocalizationFromLang} from '~/lib/utils';
+import type {Collection} from '@shopify/hydrogen-react/storefront-api-types';
+import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
-export async function loader({params, request}: LoaderArgs) {
+const PAGINATION_SIZE = 48;
+
+export async function loader({
+  params,
+  request,
+  context: {storefront},
+}: LoaderArgs) {
   const {collectionHandle} = params;
 
   invariant(collectionHandle, 'Missing collectionHandle param');
 
   const cursor = new URL(request.url).searchParams.get('cursor') ?? undefined;
-  const collection = await getCollection({
-    handle: collectionHandle,
-    cursor,
-    params,
+  const {language, country} = getLocalizationFromLang(params.lang);
+
+  const {collection} = await storefront.query<{
+    collection: Collection;
+  }>({
+    query: COLLECTION_QUERY,
+    variables: {
+      handle: collectionHandle,
+      pageBy: PAGINATION_SIZE,
+      cursor,
+      language,
+      country,
+    },
   });
+
+  if (!collection) {
+    throw new Response('Not found', {status: 404});
+  }
 
   return json({collection});
 }
@@ -63,3 +84,41 @@ export default function Collection() {
     </>
   );
 }
+
+const COLLECTION_QUERY = `#graphql
+  ${PRODUCT_CARD_FRAGMENT}
+  query CollectionDetails(
+    $handle: String!
+    $country: CountryCode
+    $language: LanguageCode
+    $pageBy: Int!
+    $cursor: String
+  ) @inContext(country: $country, language: $language) {
+    collection(handle: $handle) {
+      id
+      handle
+      title
+      description
+      seo {
+        description
+        title
+      }
+      image {
+        id
+        url
+        width
+        height
+        altText
+      }
+      products(first: $pageBy, after: $cursor) {
+        nodes {
+          ...ProductCard
+        }
+        pageInfo {
+          hasNextPage
+          endCursor
+        }
+      }
+    }
+  }
+`;
