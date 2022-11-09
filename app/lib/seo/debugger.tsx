@@ -54,17 +54,17 @@ export function Debugger() {
           );
         })}
 
-        <div className="py-4 px-4">
+        <div className="py-4 px-4 space-y-4">
           {matches.map(({id, handle, data}: RouteMatch, index: number) => (
             <div key={id}>
-              <span className="block font-bold block text-xs pb-2 ">{id}</span>
-              <div className="whitespace-pre font-mono px-4 py-2 mb-4 text-gray-600 rounded-sm text-[10px] bg-gray-100  text-[10px] px-4">
+              <div className="font-bold text-xs pb-2 ">{id}</div>
+              <pre className="overflow-x-scroll whitespace-pre font-mono rounded-sm bg-gray-100  text-[10px] px-4 py-2">
                 {JSON.stringify(
                   recursivelyInvokeOrReturn(handle?.seo, data),
                   null,
                   2,
                 )}
-              </div>
+              </pre>
             </div>
           ))}
         </div>
@@ -76,27 +76,18 @@ export function Debugger() {
             return null;
           }
           return (
-            <div
-              key={label}
-              className="flex flex-col font-bold block text-sm py-4 px-4"
-            >
-              <span className="block font-bold block text-xs pb-2">
+            <div key={label} className="font-bold text-sm py-4 px-4">
+              <div className="font-bold text-xs pb-2">
                 {LABEL_MAP[label as keyof typeof LABEL_MAP]}
-              </span>
-              {label === 'LdJson' ? (
-                <span className="whitespace-pre font-mono rounded-sm bg-gray-100  text-[10px] px-4">
-                  {JSON.stringify(entries, null, 2)}
-                </span>
-              ) : (
-                entries.map((entry: React.ReactElement, index: number) => (
-                  <span
-                    className="whitespace-nowrap font-mono rounded-sm text-gray-600 rounded-sm text-[10px] bg-gray-100  text-[10px] px-4"
-                    key={entry.props.name || index}
-                  >
-                    {renderToString(entry)}
-                  </span>
-                ))
-              )}
+              </div>
+              <pre className="overflow-x-scroll whitespace-pre font-mono rounded-sm bg-gray-100  text-[10px] px-4 py-2">
+                {label === 'LdJson'
+                  ? JSON.stringify(entries, null, 2)
+                  : entries.map(
+                      (entry: React.ReactElement, index: number) =>
+                        renderToString(entry) + '\n',
+                    )}
+              </pre>
             </div>
           );
         })}
@@ -155,7 +146,7 @@ function Item({
     pass !== false ? (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-5 h-5 top-1 relative text-blue-500"
+        className="w-5 h-5 top-0.5 relative text-blue-500"
         viewBox="0 0 20 20"
         fill="currentColor"
       >
@@ -168,7 +159,7 @@ function Item({
     ) : (
       <svg
         xmlns="http://www.w3.org/2000/svg"
-        className="w-5 h-5 top-2 relative text-red-500"
+        className="w-5 h-5 top-0.5 relative text-red-500"
         viewBox="0 0 20 20"
         fill="currentColor"
       >
@@ -181,14 +172,13 @@ function Item({
     );
 
   return (
-    <div className="flex items-baseline px-4 py-3 ">
+    <div className="flex items-end px-4 py-3 ">
       {icon}
       <span className="font-mono flex-1 mx-1 text-gray-900 text-[10px]">
-        <span className="px-2 rounded-sm bg-gray-100">{property}</span>
+        <span className="px-2 py-1 rounded-sm bg-gray-100">{property}</span>
       </span>
-      <span className="mx-1 text-right text-xs text-gray-900 pb-1">
-        {value.slice(0, 35)}
-        {value.length > 35 && '...'}
+      <span className="pl-8 text-right text-xs text-gray-900 text-ellipsis overflow-hidden whitespace-nowrap max-w-full">
+        {value}
       </span>
     </div>
   );

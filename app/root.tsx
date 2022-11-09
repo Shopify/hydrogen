@@ -6,7 +6,6 @@ import {
 } from '@hydrogen/remix';
 import {
   Links,
-  LiveReload,
   Meta,
   Outlet,
   Scripts,
@@ -85,7 +84,6 @@ export default function App() {
         <Debugger />
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );

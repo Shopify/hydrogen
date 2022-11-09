@@ -1,9 +1,8 @@
 import {json, type LoaderArgs, type MetaFunction} from '@hydrogen/remix';
 import {useLoaderData} from '@remix-run/react';
 import {flattenConnection, Image} from '@shopify/hydrogen-react';
-import type {Article} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Article, Blog} from '@shopify/hydrogen-react/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
-import {getBlog} from '~/data';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
 import {getLocalizationFromLang} from '~/lib/utils';
 
@@ -15,16 +14,24 @@ export const handle = {
   },
 };
 
-export const loader = async ({params}: LoaderArgs) => {
-  const journals = await getBlog({
-    params,
-    blogHandle: BLOG_HANDLE,
-    paginationSize: PAGINATION_SIZE,
+export const loader = async ({params, context: {storefront}}: LoaderArgs) => {
+  const {language, country} = getLocalizationFromLang(params.lang);
+  const {blog} = await storefront.query<{
+    blog: Blog;
+  }>({
+    query: BLOGS_QUERY,
+    variables: {
+      language,
+      blogHandle: BLOG_HANDLE,
+      pageBy: PAGINATION_SIZE,
+    },
   });
 
-  const {language, country} = getLocalizationFromLang(params.lang);
+  if (!blog?.articles) {
+    throw new Response('Not found', {status: 404});
+  }
 
-  const articles = flattenConnection(journals).map((article) => {
+  const articles = flattenConnection(blog.articles).map((article) => {
     const {publishedAt} = article;
     return {
       ...article,
@@ -109,3 +116,36 @@ function ArticleCard({
     </li>
   );
 }
+
+const BLOGS_QUERY = `#graphql
+query Blog(
+  $language: LanguageCode
+  $blogHandle: String!
+  $pageBy: Int!
+  $cursor: String
+) @inContext(language: $language) {
+  blog(handle: $blogHandle) {
+    articles(first: $pageBy, after: $cursor) {
+      edges {
+        node {
+          author: authorV2 {
+            name
+          }
+          contentHtml
+          handle
+          id
+          image {
+            id
+            altText
+            url
+            width
+            height
+          }
+          publishedAt
+          title
+        }
+      }
+    }
+  }
+}
+`;
