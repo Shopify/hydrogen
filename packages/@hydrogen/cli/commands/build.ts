@@ -57,7 +57,7 @@ export async function runBuild({
     'MB',
   );
 
-  if (sizeMB >= 1) {
+  if (process.env.NODE_ENV === 'production' && sizeMB >= 1) {
     // eslint-disable-next-line no-console
     console.warn(
       '\n-- Worker bundle exceeds 1 MB! This can delay your worker response.',
