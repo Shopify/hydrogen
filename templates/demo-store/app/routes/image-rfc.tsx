@@ -2,6 +2,14 @@ import {type LoaderArgs} from '@hydrogen/remix';
 import {useLoaderData} from '@remix-run/react';
 import {json} from '@remix-run/oxygen';
 
+/* @TODO: 
+  - [ ] Support original aspect ratio
+  - [ ] Picture element
+  - [ ] Support for non-100% widths
+  - [ ] Support for third party data loaders
+  - [ ] Create guide/docs
+*/
+
 interface ImageConfig {
   intervals: number;
   startingWidth: number;
