@@ -32,13 +32,13 @@ export function createRequestHandler(
       return await handleRequest(request, {
         ...options,
         context: {
-          ...context,
-          cache,
-          storefront: createStorefrontClient(storefront, {
+          ...createStorefrontClient(storefront, {
             cache,
             buyerIp: getBuyerIp(request),
             waitUntil: (p: Promise<any>) => context.waitUntil(p),
           }),
+          ...context,
+          cache,
         },
       });
     } catch (e) {
