@@ -55,7 +55,6 @@ export const action: ActionFunction = async ({request, context, params}) => {
   }
 
   try {
-    console.log('LOGGING IN');
     const customerAccessToken = await login({email, password});
     session.set('customerAccessToken', customerAccessToken);
 

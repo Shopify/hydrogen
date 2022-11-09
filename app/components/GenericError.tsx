@@ -13,6 +13,7 @@ export function GenericError({
   // TODO hide error in prod?
   if (error) {
     description += `\n${error.message}`;
+    // eslint-disable-next-line no-console
     console.error(error);
   }
 
