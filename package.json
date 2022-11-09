@@ -10,7 +10,7 @@
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "format": "prettier --write --ignore-unknown .",
     "typecheck": "tsc --noEmit",
-    "h2": "npm run --prefix packages/@hydrogen/cli start --"
+    "h2": "npm run --prefix packages/@hydrogen/cli --silent start --"
   },
   "workspaces": [
     "packages/@remix-run/oxygen",
