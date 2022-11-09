@@ -147,25 +147,31 @@ export function createStorefrontClient(
   }
 
   return {
-    query: getStorefrontData,
-    getPublicTokenHeaders,
-    getPrivateTokenHeaders,
-    getStorefrontApiUrl,
-    cache,
-    CacheNone,
-    CacheLong,
-    CacheShort,
-    CacheCustom,
+    storefront: {
+      query: getStorefrontData,
+      getPublicTokenHeaders,
+      getPrivateTokenHeaders,
+      getStorefrontApiUrl,
+      cache,
+      CacheNone,
+      CacheLong,
+      CacheShort,
+      CacheCustom,
+    },
     fetch: (
       url: string,
-      requestInit: RequestInit,
-      fetchOptions: Omit<FetchCacheOptions, 'cacheInstance' | 'waitUntil'>,
+      {
+        hydrogen,
+        ...requestInit
+      }: RequestInit & {
+        hydrogen?: Omit<FetchCacheOptions, 'cacheInstance' | 'waitUntil'>;
+      },
     ) =>
       fetchWithServerCache(url, requestInit, {
         waitUntil,
         cacheKey: [url, requestInit],
         cacheInstance: cache,
-        ...fetchOptions,
+        ...hydrogen,
       }),
   };
 }

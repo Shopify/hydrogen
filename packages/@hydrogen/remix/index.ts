@@ -4,7 +4,6 @@ import type {Params} from '@remix-run/react';
 export * from '@remix-run/oxygen';
 export {createRequestHandler} from './server';
 export * from './storefront';
-export {fetchWithServerCache} from './cache/fetch';
 export {
   CacheNone,
   CacheShort,
