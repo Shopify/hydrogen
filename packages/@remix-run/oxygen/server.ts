@@ -4,6 +4,13 @@ import {
   type ServerBuild,
 } from '@remix-run/server-runtime';
 
+type OxygenHandleRequestOptions = {
+  env: any;
+  context: Omit<ExecutionContext, 'passThroughOnException'> & {
+    [key: string]: any;
+  };
+};
+
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
@@ -12,7 +19,10 @@ export function createRequestHandler<Context = unknown>({
 }: {
   build: ServerBuild;
   mode?: string;
-  getLoadContext?: (request: Request) => Promise<Context> | Context;
+  getLoadContext?: (
+    request: Request,
+    params: OxygenHandleRequestOptions,
+  ) => Promise<Context> | Context;
   shouldProxyAsset?: (url: string) => boolean;
 }) {
   const handleRequest = createRemixRequestHandler(build, mode);
@@ -20,15 +30,7 @@ export function createRequestHandler<Context = unknown>({
   return async (
     request: Request,
     // This may be temporary unless we adjust @shopify/oxygen-workers-types
-    {
-      env,
-      context,
-    }: {
-      env: any;
-      context: Omit<ExecutionContext, 'passThroughOnException'> & {
-        [key: string]: any;
-      };
-    },
+    options: OxygenHandleRequestOptions,
   ) => {
     try {
       if (
@@ -42,9 +44,9 @@ export function createRequestHandler<Context = unknown>({
       }
 
       return await handleRequest(request, {
-        env,
-        ...context,
-        ...(await getLoadContext?.(request)),
+        env: options.env,
+        ...options.context,
+        ...(await getLoadContext?.(request, options)),
       } as AppLoadContext);
     } catch (e) {
       // eslint-disable-next-line no-console
@@ -53,4 +55,8 @@ export function createRequestHandler<Context = unknown>({
       return new Response('Internal Error', {status: 500});
     }
   };
+}
+
+export function getBuyerIp(request: Request) {
+  return request.headers.get('oxygen-buyer-ip') ?? undefined;
 }
