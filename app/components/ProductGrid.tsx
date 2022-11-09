@@ -1,7 +1,10 @@
-import { Link } from "~/components";
-import type { Product, ProductConnection } from "@shopify/hydrogen-ui-alpha/storefront-api-types";
-import { Paginated } from "~/components/ProductGridPaginated";
-import { ProductGridInfinite } from "~/components/ProductGridInfinite";
+import {Link} from '~/components';
+import type {
+  Product,
+  ProductConnection,
+} from '@shopify/hydrogen-ui-alpha/storefront-api-types';
+import {Paginated} from '~/components/Paginated';
+import {ProductGridInfinite} from '~/components/ProductGridInfinite';
 import {Grid, ProductCard} from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
 
@@ -28,7 +31,7 @@ export function ProductGrid({
   return paginated ? (
     <Paginated connection={products}>
       <Paginated.Grid>
-        {({ nodes }) => {
+        {({nodes}) => {
           return (
             <Grid layout="products">
               {nodes.map((product, i: number) => (
@@ -39,24 +42,20 @@ export function ProductGrid({
                 />
               ))}
             </Grid>
-          )
-      }}
+          );
+        }}
       </Paginated.Grid>
-
+      {/* TODO:
+        Consider adding <Paginated.Buttons> so that we can add
+        rendering flexibility for Paginated.Previous and Paginated.Next
+        e.g render them inside a flex container
+      */}
       <Paginated.Previous>
-        {({ isLoading }) => (
-          <span>
-            {isLoading ? 'Loading...' : 'Previous'}
-          </span>
-        )}
+        {({isLoading}) => <span>{isLoading ? 'Loading...' : 'Previous'}</span>}
       </Paginated.Previous>
 
       <Paginated.Next>
-        {({ isLoading }) => (
-          <span>
-            {isLoading ? 'Loading...' : 'Next'}
-          </span>
-        )}
+        {({isLoading}) => <span>{isLoading ? 'Loading...' : 'Next'}</span>}
       </Paginated.Next>
     </Paginated>
   ) : (
