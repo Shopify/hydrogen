@@ -4,7 +4,7 @@
   "version": "0.0.1",
   "main": "./index.ts",
   "scripts": {
-    "start": "node --experimental-vm-modules --loader ts-node/esm ./index.ts"
+    "start": "node --experimental-vm-modules --loader ts-node/esm --require=./suppress-experimental.js ./index.ts"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
