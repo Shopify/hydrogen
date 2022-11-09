@@ -2,64 +2,76 @@ import {type LoaderArgs} from '@hydrogen/remix';
 import {useLoaderData} from '@remix-run/react';
 import {json} from '@remix-run/oxygen';
 
-import {getLocalizationFromLang} from '~/lib/utils';
-
-export async function loader({params, context: {storefront}}: LoaderArgs) {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
-  if (
-    params.lang &&
-    language === 'EN' &&
-    country === 'US' &&
-    params.lang !== 'EN-US'
-  ) {
-    // If the lang URL param is defined, yet we still are on `EN-US`
-    // the the lang param must be invalid, send to the 404 page
-    throw new Response('Not found', {status: 404});
-  }
-
-  const data = await storefront.query({
-    query: PLAYGROUND_QUERY,
-    variables: {
-      language,
-      country,
-    },
-  });
-
-  return json(data);
-}
-
-export default function Playground() {
-  const {
-    product: {featuredImage},
-  } = useLoaderData<typeof loader>();
-
-  const {altText, url} = featuredImage;
-
-  return (
-    <Image src={url} alt={altText} aspectRatio="1/1" sizes="100vw" scale={2} />
-  );
-}
-
-const PLAYGROUND_QUERY = `#graphql
-  query {
-    product(handle: "snowboard") {
-     featuredImage {
-       altText
-       url
-     }
-    }
-  }
-`;
-
 interface ImageConfig {
   intervals: number;
   startingWidth: number;
   incrementSize: number;
   placeholderWidth: number;
 }
+type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right' | undefined;
+
+type ImageRFCData = {
+  product: {
+    featuredImage: {
+      altText: string;
+      url: string;
+    };
+  };
+};
+
+export const IMAGE_FRAGMENT = `#graphql
+  fragment Image on Image {
+    altText
+    url
+  }
+`;
+
+export async function loader({context: {storefront}}: LoaderArgs) {
+  const data: ImageRFCData = await storefront.query({
+    query: `#graphql
+    query {
+      product(handle: "snowboard") {
+       featuredImage {
+         ...Image
+       }
+      }
+    }
+    ${IMAGE_FRAGMENT}
+  `,
+    variables: {},
+  });
+
+  return json(data.product.featuredImage);
+}
+
+export default function ImageRFC() {
+  const {altText, url} = useLoaderData<typeof loader>();
+
+  return <Image src={url} alt={altText} aspectRatio="1/1" sizes="100vw" />;
+
+  /* Picture component should look something like:
+      <Picture
+        width="100%"
+        {...props}>
+        <Image 
+          src={data.src} 
+          aspectRatio="4/5" 
+          sizes="100vw" 
+          media="(min-width: 800px)" />
+        <Image 
+          src={data.src} 
+          aspectRatio="2/3" 
+          sizes="100vw" 
+          media="(min-width: 1200px)" />
+    </Picture>
+
+    When inside <Picture /> the <Image /> component should render a <source> element,
+    the last <Image /> component should render an <img> element.
+  */
+}
 
 export function Image({
+  as: Component = 'img',
   src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg',
   width = '100%',
   sizes = '(min-width: 768px) 50vw, 100vw',
@@ -74,6 +86,7 @@ export function Image({
   alt = 'Test Alt Tag',
   ...passthroughProps
 }: {
+  as?: 'img' | 'source';
   src: string;
   width?: string | number;
   sizes: string;
@@ -94,7 +107,7 @@ export function Image({
   const sizesArray = generateSizes(widths, aspectRatio);
 
   return (
-    <img
+    <Component
       srcSet={generateShopifySrcSet(src, sizesArray)}
       alt={alt}
       src={generateImagerySrc(
@@ -109,8 +122,6 @@ export function Image({
     />
   );
 }
-
-type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right' | undefined;
 
 export function generateShopifySrcSet(
   src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg',
@@ -162,7 +173,7 @@ export function generateImageWidths(
   return [1000];
 }
 
-function parseAspectRatio(aspectRatio: string) {
+export function parseAspectRatio(aspectRatio: string) {
   const [width, height] = aspectRatio.split('/');
   return Number(width) / Number(height);
 }
