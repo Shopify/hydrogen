@@ -7,7 +7,7 @@ import {getProjectPaths} from '../utils/paths';
 export async function runBuild({
   entry,
   devReload = false,
-  sourcemap = !devReload,
+  sourcemap = true,
   minify = !devReload,
 }: {
   entry: string;

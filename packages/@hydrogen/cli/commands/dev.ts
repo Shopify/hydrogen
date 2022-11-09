@@ -15,7 +15,7 @@ export async function runDev({
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   // Initial build
-  await runBuild({entry, minify: false, sourcemap: false});
+  await runBuild({entry, minify: false});
 
   const {root, entryFile, buildPathWorkerFile, buildPathClient} =
     getProjectPaths(entry);
