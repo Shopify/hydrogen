@@ -17,3 +17,5 @@
 - Search engine optimization
 - Analytics
 - Internationalization
+- Mutation components
+- Image component
