@@ -10,6 +10,9 @@ import {json} from '@remix-run/oxygen';
   - [ ] Create guide/docs
   - [ ] Scale seems auto-detected; confirm true, and if so, remove prop
   - [ ] Consider `loaded` render prop, for blurred placeholder
+  - [ ] Write tests
+  - [ ] Bikeshed on prop names
+  - [ ] Improve types / intellisense support
 */
 
 interface ImageConfig {
