@@ -25,7 +25,8 @@ import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 
 export const handle = {
-  seo: (data) => ({
+  // @todo - remove any and type the seo callback
+  seo: (data: any) => ({
     title: data.layout.shop.name,
     bypassTitleTemplate: true,
     titleTemplate: `%s | ${data.layout.shop.name}`,

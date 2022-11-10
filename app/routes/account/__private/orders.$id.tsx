@@ -49,9 +49,9 @@ export async function loader({request, context, params}: LoaderArgs) {
     throw new Response('Order not found', {status: 404});
   }
 
-  const lineItems: Array<OrderLineItem> = flattenConnection<OrderLineItem>(
+  const lineItems = flattenConnection<OrderLineItem>(
     order.lineItems!,
-  );
+  ) as Array<OrderLineItem>;
 
   const discountApplications = flattenConnection<DiscountApplication>(
     order.discountApplications as DiscountApplicationConnection,
