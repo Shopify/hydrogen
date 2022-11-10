@@ -1,9 +1,6 @@
 import {type StorefrontApiResponseOk} from '@shopify/hydrogen-react';
 import type {
   Cart,
-  CartInput,
-  CartLineInput,
-  CartLineUpdateInput,
   ProductConnection,
   Shop,
   Order,
@@ -259,11 +256,11 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
           width
           height
         }
-        priceV2 {
+        price {
           amount
           currencyCode
         }
-        compareAtPriceV2 {
+        compareAtPrice {
           amount
           currencyCode
         }
@@ -287,13 +284,18 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
       width
       height
     }
-    priceV2 {
+    price {
       amount
       currencyCode
     }
-    compareAtPriceV2 {
+    compareAtPrice {
       amount
       currencyCode
+    }
+    product {
+      handle
+      title
+      id
     }
     sku
     title
@@ -303,248 +305,6 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
     }
   }
 `;
-
-const CART_FRAGMENT = `#graphql
-fragment CartFragment on Cart {
-  id
-  checkoutUrl
-  totalQuantity
-  buyerIdentity {
-    countryCode
-    customer {
-      id
-      email
-      firstName
-      lastName
-      displayName
-    }
-    email
-    phone
-  }
-  lines(first: 100) {
-    edges {
-      node {
-        id
-        quantity
-        attributes {
-          key
-          value
-        }
-        cost {
-          totalAmount {
-            amount
-            currencyCode
-          }
-          compareAtAmountPerQuantity {
-            amount
-            currencyCode
-          }
-        }
-        merchandise {
-          ... on ProductVariant {
-            id
-            availableForSale
-            compareAtPriceV2 {
-              ...MoneyFragment
-            }
-            priceV2 {
-              ...MoneyFragment
-            }
-            requiresShipping
-            title
-            image {
-              ...ImageFragment
-            }
-            product {
-              handle
-              title
-              id
-            }
-            selectedOptions {
-              name
-              value
-            }
-          }
-        }
-      }
-    }
-  }
-  cost {
-    subtotalAmount {
-      ...MoneyFragment
-    }
-    totalAmount {
-      ...MoneyFragment
-    }
-    totalDutyAmount {
-      ...MoneyFragment
-    }
-    totalTaxAmount {
-      ...MoneyFragment
-    }
-  }
-  note
-  attributes {
-    key
-    value
-  }
-  discountCodes {
-    code
-  }
-}
-
-fragment MoneyFragment on MoneyV2 {
-  currencyCode
-  amount
-}
-fragment ImageFragment on Image {
-  id
-  url
-  altText
-  width
-  height
-}
-`;
-
-const CREATE_CART_MUTATION = `#graphql
-mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(country: $country) {
-  cartCreate(input: $input) {
-    cart {
-      id
-    }
-  }
-}
-`;
-
-export async function createCart({
-  cart,
-  params,
-}: {
-  cart: CartInput;
-  params: Params;
-}) {
-  const {country} = getLocalizationFromLang(params.lang);
-
-  const {data} = await getStorefrontData<{
-    cartCreate: {
-      cart: Cart;
-    };
-  }>({
-    query: CREATE_CART_MUTATION,
-    variables: {
-      input: cart,
-      country,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cartCreate.cart;
-}
-
-const ADD_LINE_ITEM_QUERY = `#graphql
-  mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
-    cartLinesAdd(cartId: $cartId, lines: $lines) {
-      cart {
-        id
-      }
-    }
-  }
-`;
-
-export async function addLineItem({
-  cartId,
-  lines,
-  params,
-}: {
-  cartId: string;
-  lines: CartLineInput[];
-  params: Params;
-}) {
-  const {country} = getLocalizationFromLang(params.lang);
-
-  const {data} = await getStorefrontData<{
-    cartLinesAdd: {
-      cart: Cart;
-    };
-  }>({
-    query: ADD_LINE_ITEM_QUERY,
-    variables: {cartId, lines, country},
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cartLinesAdd.cart;
-}
-
-const CART_QUERY = `#graphql
-  query CartQuery($cartId: ID!, $country: CountryCode = ZZ) @inContext(country: $country) {
-    cart(id: $cartId) {
-      ...CartFragment
-    }
-  }
-
-  ${CART_FRAGMENT}
-`;
-
-export async function getCart({
-  cartId,
-  params,
-}: {
-  cartId: string;
-  params: Params;
-}) {
-  const {country} = getLocalizationFromLang(params.lang);
-
-  const {data} = await getStorefrontData<{cart: Cart}>({
-    query: CART_QUERY,
-    variables: {
-      cartId,
-      country,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cart;
-}
-
-const UPDATE_LINE_ITEM_QUERY = `#graphql
-  mutation CartLineUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
-    cartLinesUpdate(cartId: $cartId, lines: $lines) {
-      cart {
-        ...CartFragment
-      }
-    }
-  }
-
-  ${CART_FRAGMENT}
-`;
-
-export async function updateLineItem({
-  cartId,
-  lineItem,
-  params,
-}: {
-  cartId: string;
-  lineItem: CartLineUpdateInput;
-  params: Params;
-}) {
-  const {country} = getLocalizationFromLang(params.lang);
-
-  const {data} = await getStorefrontData<{cartLinesUpdate: {cart: Cart}}>({
-    query: UPDATE_LINE_ITEM_QUERY,
-    variables: {
-      cartId,
-      lines: [lineItem],
-      country,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cartLinesUpdate.cart;
-}
 
 const TOP_PRODUCTS_QUERY = `#graphql
   ${PRODUCT_CARD_FRAGMENT}
@@ -1022,7 +782,7 @@ const CUSTOMER_ORDER_QUERY = `#graphql
     image {
       ...Image
     }
-    priceV2 {
+    price {
       ...Money
     }
     product {

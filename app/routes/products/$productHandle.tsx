@@ -6,12 +6,11 @@ import {
   useSearchParams,
   useLocation,
   useTransition,
-  useFetcher,
+  Params,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-react';
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {
-  Button,
   Heading,
   IconCaret,
   IconCheck,
@@ -22,9 +21,9 @@ import {
   Skeleton,
   Text,
   Link,
+  Button,
 } from '~/components';
 import {getExcerpt, getLocalizationFromLang} from '~/lib/utils';
-import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import {
@@ -41,6 +40,12 @@ import {
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data';
+import {
+  DiscountCodesUpdate,
+  useDiscountCodesUpdate,
+} from '~/routes/__mutations/__cart/DiscountCodesUpdate';
+import {LinesAddForm} from '~/routes/__mutations/__cart/LinesAdd';
+import {LinesRemoveForm} from '../__mutations/__cart/LinesRemove';
 
 export const loader = async ({
   params,
@@ -82,43 +87,6 @@ export const loader = async ({
     ),
   });
 };
-
-async function getRecommendedProducts(
-  storefront: LoaderArgs['context']['storefront'],
-  language: LanguageCode,
-  country: CountryCode,
-  productId: string,
-) {
-  const products = await storefront.query<{
-    recommended: Product[];
-    additional: ProductConnection;
-  }>({
-    query: RECOMMENDED_PRODUCTS_QUERY,
-    variables: {
-      productId,
-      count: 12,
-      language,
-      country,
-    },
-  });
-
-  invariant(products, 'No data returned from Shopify API');
-
-  const mergedProducts = products.recommended
-    .concat(products.additional.nodes)
-    .filter(
-      (value, index, array) =>
-        array.findIndex((value2) => value2.id === value.id) === index,
-    );
-
-  const originalProduct = mergedProducts
-    .map((item: Product) => item.id)
-    .indexOf(productId);
-
-  mergedProducts.splice(originalProduct, 1);
-
-  return mergedProducts;
-}
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();
@@ -185,12 +153,14 @@ export default function Product() {
 }
 
 export function ProductForm() {
-  const addToCartFetcher = useFetcher();
-  const isHydrated = useIsHydrated();
-  const closeRef = useRef<HTMLButtonElement>(null);
+  const {product} = useLoaderData<typeof loader>();
+
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
-  const isNavigationPending = transition.state === 'loading';
+  const selectingVariant = transition.state === 'loading';
+  const {discountCodesUpdate} = useDiscountCodesUpdate((event) => {
+    console.log('Applied discount', event);
+  });
 
   /**
    * We update `searchParams` with in-flight request data from `transition` (if available)
@@ -198,12 +168,11 @@ export function ProductForm() {
    * request has completed.
    */
   const searchParams = useMemo(() => {
-    return isNavigationPending && transition.location
+    return selectingVariant && transition.location
       ? new URLSearchParams(transition.location.search)
       : currentSearchParams;
-  }, [isNavigationPending, currentSearchParams, transition]);
+  }, [selectingVariant, currentSearchParams, transition]);
 
-  const {product} = useLoaderData<typeof loader>();
   const firstVariant = product.variants.nodes[0];
 
   /**
@@ -230,177 +199,84 @@ export function ProductForm() {
    * A developer can opt out of this, too.
    */
   const selectedVariant = product.selectedVariant ?? firstVariant;
-
   const isOutOfStock = !selectedVariant?.availableForSale;
   const isOnSale =
-    selectedVariant?.priceV2?.amount &&
-    selectedVariant?.compareAtPriceV2?.amount &&
-    selectedVariant?.priceV2?.amount <
-      selectedVariant?.compareAtPriceV2?.amount;
+    selectedVariant?.price?.amount &&
+    selectedVariant?.compareAtPrice?.amount &&
+    selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
 
   return (
     <div className="grid gap-10">
       <div className="grid gap-4">
-        {product.options
-          .filter((option) => option.values.length > 1)
-          .map((option) => (
-            <div
-              key={option.name}
-              className="flex flex-col flex-wrap mb-4 gap-y-2 last:mb-0"
-            >
-              <Heading as="legend" size="lead" className="min-w-[4rem]">
-                {option.name}
-              </Heading>
-              <div className="flex flex-wrap items-baseline gap-4">
-                {/**
-                 * First, we render a bunch of <Link> elements for each option value.
-                 * When the user clicks one of these buttons, it will hit the loader
-                 * to get the new data.
-                 *
-                 * If there are more than 7 values, we render a dropdown.
-                 * Otherwise, we just render plain links.
-                 */}
-                {option.values.length > 7 ? (
-                  <div className="relative w-full">
-                    <Listbox>
-                      {({open}) => (
-                        <>
-                          <Listbox.Button
-                            ref={closeRef}
-                            className={clsx(
-                              'flex items-center justify-between w-full py-3 px-4 border border-primary',
-                              open
-                                ? 'rounded-b md:rounded-t md:rounded-b-none'
-                                : 'rounded',
-                            )}
-                          >
-                            <span>
-                              {searchParamsWithDefaults.get(option.name)}
-                            </span>
-                            <IconCaret direction={open ? 'up' : 'down'} />
-                          </Listbox.Button>
-                          <Listbox.Options
-                            className={clsx(
-                              'border-primary bg-contrast absolute bottom-12 z-30 grid h-48 w-full overflow-y-scroll rounded-t border px-2 py-2 transition-[max-height] duration-150 sm:bottom-auto md:rounded-b md:rounded-t-none md:border-t-0 md:border-b',
-                              open ? 'max-h-48' : 'max-h-0',
-                            )}
-                          >
-                            {option.values.map((value) => (
-                              <Listbox.Option
-                                key={`option-${option.name}-${value}`}
-                                value={value}
-                              >
-                                {({active}) => (
-                                  <ProductOptionLink
-                                    optionName={option.name}
-                                    optionValue={value}
-                                    className={clsx(
-                                      'text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer',
-                                      active && 'bg-primary/10',
-                                    )}
-                                    searchParams={searchParamsWithDefaults}
-                                    onClick={() => {
-                                      if (!closeRef?.current) return;
-                                      closeRef.current.click();
-                                    }}
-                                  >
-                                    {value}
-                                    {searchParamsWithDefaults.get(
-                                      option.name,
-                                    ) === value && (
-                                      <span className="ml-2">
-                                        <IconCheck />
-                                      </span>
-                                    )}
-                                  </ProductOptionLink>
-                                )}
-                              </Listbox.Option>
-                            ))}
-                          </Listbox.Options>
-                        </>
-                      )}
-                    </Listbox>
-                  </div>
-                ) : (
-                  <>
-                    {option.values.map((value) => {
-                      const checked =
-                        searchParamsWithDefaults.get(option.name) === value;
-                      const id = `option-${option.name}-${value}`;
-
-                      return (
-                        <Text key={id}>
-                          <ProductOptionLink
-                            optionName={option.name}
-                            optionValue={value}
-                            searchParams={searchParamsWithDefaults}
-                            className={clsx(
-                              'leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200',
-                              checked
-                                ? 'border-primary/50'
-                                : 'border-primary/0',
-                            )}
-                          />
-                        </Text>
-                      );
-                    })}
-                  </>
-                )}
-              </div>
-            </div>
-          ))}
+        <ProductOptions
+          options={product.options}
+          searchParamsWithDefaults={searchParamsWithDefaults}
+        />
         <div className="grid items-stretch gap-4">
+          <DiscountCodesUpdate
+            discountCodes={[]}
+            onSuccess={(event) => {
+              console.log('Cleared discounts', event);
+            }}
+          >
+            {({state}) => (
+              <button>
+                <span>Clear discounts</span>
+              </button>
+            )}
+          </DiscountCodesUpdate>
           {selectedVariant && (
-            <addToCartFetcher.Form method="post" action="/cart">
-              <input
-                type="hidden"
-                name="variantId"
-                defaultValue={selectedVariant?.id}
-              />
-              <input type="hidden" name="intent" defaultValue="addToCart" />
-
-              {/* used to trigger a redirect back to the PDP when JS is disabled */}
-              {isHydrated ? null : (
-                <input
-                  type="hidden"
-                  name="redirectTo"
-                  defaultValue={`products/${
-                    product.handle
-                  }?${searchParamsWithDefaults.toString()}`}
-                />
-              )}
-              {/* @todo: add optimistic state when transitioning between selectedVariant via isNavigationPending */}
-              <Button
-                width="full"
-                variant={isOutOfStock ? 'secondary' : 'primary'}
-                disabled={isOutOfStock || isNavigationPending}
-                as="button"
-              >
-                {isOutOfStock ? (
-                  <Text>Sold out</Text>
-                ) : (
-                  <Text
-                    as="span"
-                    className="flex items-center justify-center gap-2"
-                  >
-                    <span>Add to bag</span> <span>·</span>{' '}
-                    <Money
-                      withoutTrailingZeros
-                      data={selectedVariant?.priceV2!}
+            <LinesAddForm
+              lines={[
+                {
+                  variant: selectedVariant,
+                  quantity: 1,
+                },
+              ]}
+              onSuccess={(event) => {
+                console.log('Added line(s)', event);
+                discountCodesUpdate({discountCodes: ['FREESHIPPING']});
+              }}
+            >
+              {({state, error}) => (
+                <Button
+                  as="button"
+                  width="full"
+                  type="submit"
+                  variant={isOutOfStock ? 'secondary' : 'primary'}
+                  disabled={
+                    isOutOfStock || selectingVariant || state !== 'idle'
+                  }
+                >
+                  {isOutOfStock ? (
+                    <Text>Sold out</Text>
+                  ) : (
+                    <Text
                       as="span"
-                    />
-                    {isOnSale && (
+                      className="flex items-center justify-center gap-2"
+                    >
+                      <span>
+                        {state === 'idle' ? 'Add to Bag' : 'Adding to Bag'}
+                      </span>{' '}
+                      <span>·</span>{' '}
                       <Money
                         withoutTrailingZeros
-                        data={selectedVariant?.compareAtPriceV2!}
+                        data={selectedVariant?.price!}
                         as="span"
-                        className="opacity-50 strike"
                       />
-                    )}
-                  </Text>
-                )}
-              </Button>
-            </addToCartFetcher.Form>
+                      {isOnSale && (
+                        <Money
+                          withoutTrailingZeros
+                          data={selectedVariant?.compareAtPrice!}
+                          as="span"
+                          className="opacity-50 strike"
+                        />
+                      )}
+                    </Text>
+                  )}
+                </Button>
+              )}
+            </LinesAddForm>
           )}
           {!isOutOfStock && (
             <ShopPayButton variantIds={[selectedVariant?.id!]} />
@@ -408,6 +284,125 @@ export function ProductForm() {
         </div>
       </div>
     </div>
+  );
+}
+
+function ProductOptions({
+  options,
+  searchParamsWithDefaults,
+}: {
+  options: Product['options'];
+  searchParamsWithDefaults: URLSearchParams;
+}) {
+  const closeRef = useRef<HTMLButtonElement>(null);
+  return (
+    <>
+      {options
+        .filter((option) => option.values.length > 1)
+        .map((option) => (
+          <div
+            key={option.name}
+            className="flex flex-col flex-wrap mb-4 gap-y-2 last:mb-0"
+          >
+            <Heading as="legend" size="lead" className="min-w-[4rem]">
+              {option.name}
+            </Heading>
+            <div className="flex flex-wrap items-baseline gap-4">
+              {/**
+               * First, we render a bunch of <Link> elements for each option value.
+               * When the user clicks one of these buttons, it will hit the loader
+               * to get the new data.
+               *
+               * If there are more than 7 values, we render a dropdown.
+               * Otherwise, we just render plain links.
+               */}
+              {option.values.length > 7 ? (
+                <div className="relative w-full">
+                  <Listbox>
+                    {({open}) => (
+                      <>
+                        <Listbox.Button
+                          ref={closeRef}
+                          className={clsx(
+                            'flex items-center justify-between w-full py-3 px-4 border border-primary',
+                            open
+                              ? 'rounded-b md:rounded-t md:rounded-b-none'
+                              : 'rounded',
+                          )}
+                        >
+                          <span>
+                            {searchParamsWithDefaults.get(option.name)}
+                          </span>
+                          <IconCaret direction={open ? 'up' : 'down'} />
+                        </Listbox.Button>
+                        <Listbox.Options
+                          className={clsx(
+                            'border-primary bg-contrast absolute bottom-12 z-30 grid h-48 w-full overflow-y-scroll rounded-t border px-2 py-2 transition-[max-height] duration-150 sm:bottom-auto md:rounded-b md:rounded-t-none md:border-t-0 md:border-b',
+                            open ? 'max-h-48' : 'max-h-0',
+                          )}
+                        >
+                          {option.values.map((value) => (
+                            <Listbox.Option
+                              key={`option-${option.name}-${value}`}
+                              value={value}
+                            >
+                              {({active}) => (
+                                <ProductOptionLink
+                                  optionName={option.name}
+                                  optionValue={value}
+                                  className={clsx(
+                                    'text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer',
+                                    active && 'bg-primary/10',
+                                  )}
+                                  searchParams={searchParamsWithDefaults}
+                                  onClick={() => {
+                                    if (!closeRef?.current) return;
+                                    closeRef.current.click();
+                                  }}
+                                >
+                                  {value}
+                                  {searchParamsWithDefaults.get(option.name) ===
+                                    value && (
+                                    <span className="ml-2">
+                                      <IconCheck />
+                                    </span>
+                                  )}
+                                </ProductOptionLink>
+                              )}
+                            </Listbox.Option>
+                          ))}
+                        </Listbox.Options>
+                      </>
+                    )}
+                  </Listbox>
+                </div>
+              ) : (
+                <>
+                  {option.values.map((value) => {
+                    const checked =
+                      searchParamsWithDefaults.get(option.name) === value;
+                    const id = `option-${option.name}-${value}`;
+
+                    return (
+                      <Text key={id}>
+                        <ProductOptionLink
+                          optionName={option.name}
+                          optionValue={value}
+                          searchParams={searchParamsWithDefaults}
+                          className={clsx(
+                            'leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200',
+                            checked ? 'border-primary/50' : 'border-primary/0',
+                          )}
+                        />
+                      </Text>
+                    );
+                  })}
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+    </>
   );
 }
 
@@ -564,3 +559,120 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
     }
   }
 `;
+
+async function getRecommendedProducts(
+  storefront: LoaderArgs['context']['storefront'],
+  language: LanguageCode,
+  country: CountryCode,
+  productId: string,
+) {
+  const products = await storefront.query<{
+    recommended: Product[];
+    additional: ProductConnection;
+  }>({
+    query: RECOMMENDED_PRODUCTS_QUERY,
+    variables: {
+      productId,
+      count: 12,
+      language,
+      country,
+    },
+  });
+
+  invariant(products, 'No data returned from Shopify API');
+
+  const mergedProducts = products.recommended
+    .concat(products.additional.nodes)
+    .filter(
+      (value, index, array) =>
+        array.findIndex((value2) => value2.id === value.id) === index,
+    );
+
+  const originalProduct = mergedProducts
+    .map((item: Product) => item.id)
+    .indexOf(productId);
+
+  mergedProducts.splice(originalProduct, 1);
+
+  return mergedProducts;
+}
+
+const bundleVariants = [
+  {
+    variant: {
+      id: 'gid://shopify/ProductVariant/41007290548280',
+      availableForSale: true,
+      selectedOptions: [
+        {
+          name: 'Size',
+          value: '160cm',
+        },
+        {
+          name: 'Color',
+          value: 'Syntax',
+        },
+      ],
+      image: {
+        id: 'gid://shopify/ProductImage/36705304051768',
+        url: 'https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main_c8ff0b5d-c712-429a-be00-b29bd55cbc9d.jpg?v=1655933474',
+        altText: null,
+        width: 3908,
+        height: 3908,
+      },
+      price: {
+        amount: '749.95',
+        currencyCode: 'USD',
+      },
+      compareAtPrice: null,
+      product: {
+        handle: 'the-full-stack',
+        title: 'The Full Stack Snowboard',
+        id: 'gid://shopify/Product/6730943823928',
+      },
+      sku: '',
+      title: '160cm / Syntax',
+      unitPrice: null,
+    },
+    quantity: 2,
+  },
+  {
+    variant: {
+      id: 'gid://shopify/ProductVariant/42559102648376',
+      availableForSale: true,
+      selectedOptions: [
+        {
+          name: 'Size',
+          value: '154cm',
+        },
+        {
+          name: 'Color',
+          value: 'Reactive Blue',
+        },
+      ],
+      image: {
+        id: 'gid://shopify/ProductImage/36705305231416',
+        url: 'https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main_9129b69a-0c7b-4f66-b6cf-c4222f18028a.jpg?v=1655934950',
+        altText: null,
+        width: 3908,
+        height: 3908,
+      },
+      price: {
+        amount: '629.95',
+        currencyCode: 'USD',
+      },
+      compareAtPrice: {
+        amount: '799.99',
+        currencyCode: 'USD',
+      },
+      product: {
+        handle: 'the-huebert-snowboard',
+        title: 'Mr. Huebert Hydroxy Snowboard',
+        id: 'gid://shopify/Product/7604648181816',
+      },
+      sku: null,
+      title: '154cm / Reactive Blue',
+      unitPrice: null,
+    },
+    quantity: 1,
+  },
+];

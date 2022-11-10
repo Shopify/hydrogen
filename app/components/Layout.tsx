@@ -20,13 +20,21 @@ import {
   CartEmpty,
   Link,
 } from '~/components';
-import {useFetcher, useParams, Form, useFetchers} from '@remix-run/react';
+import {
+  useFetcher,
+  useParams,
+  Form,
+  useFetchers,
+  useMatches,
+  Await,
+} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useCart} from '~/hooks/useCart';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
+import {useLinesAdd} from '~/routes/__mutations/__cart/LinesAdd';
 
 export function Layout({
   children,
@@ -62,7 +70,7 @@ export function Layout({
 
 function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
-  const fetchers = useFetchers();
+  const {linesAdding} = useLinesAdd();
 
   const {
     isOpen: isCartOpen,
@@ -78,20 +86,13 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 
   // toggle cart drawer when adding to cart
   useEffect(() => {
-    const fetcher = fetchers.find(
-      (fetcher) => fetcher?.submission?.action === '/cart',
-    );
-
-    if (!isCartOpen && fetcher?.data?.addedToCart) {
-      openCart();
-    }
-  }, [fetchers, isCartOpen, openCart]);
+    if (isCartOpen || !linesAdding?.length) return;
+    openCart();
+  }, [linesAdding, isCartOpen, openCart]);
 
   return (
     <>
-      <Suspense fallback={null}>
-        <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
-      </Suspense>
+      <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
       {menu && (
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
       )}
@@ -112,7 +113,7 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 }
 
 function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
-  const cart = useCart();
+  const [root] = useMatches();
   /**
    * Whenever a component that uses a fetcher is _unmounted_, that fetcher is removed
    * from the internal Remix cache. By defining the fetcher outside of the component,
@@ -133,20 +134,32 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
-        {cart ? (
-          <CartDetails
-            fetcher={topProductsFetcher}
-            layout="drawer"
-            onClose={onClose}
-            cart={cart}
-          />
-        ) : (
-          <CartEmpty
-            fetcher={topProductsFetcher}
-            onClose={onClose}
-            layout="drawer"
-          />
-        )}
+        <Suspense
+          fallback={
+            <div className="grid content-start gap-4 px-6 pb-8 md:gap-12 md:px-12 h-screen-no-nav md:pb-12">
+              <p>Loading...</p>
+            </div>
+          }
+        >
+          <Await resolve={root.data.cart}>
+            {(cart) =>
+              cart ? (
+                <CartDetails
+                  fetcher={topProductsFetcher}
+                  layout="drawer"
+                  onClose={onClose}
+                  cart={cart}
+                />
+              ) : (
+                <CartEmpty
+                  fetcher={topProductsFetcher}
+                  onClose={onClose}
+                  layout="drawer"
+                />
+              )
+            }
+          </Await>
+        </Suspense>
       </div>
     </Drawer>
   );

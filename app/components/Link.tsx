@@ -6,7 +6,7 @@ import {
   type LinkProps as RemixLinkProps,
 } from '@remix-run/react';
 
-type LinkProps = Omit<RemixLinkProps, 'className'> & {
+export type LinkProps = Omit<RemixLinkProps, 'className'> & {
   className?: RemixNavLinkProps['className'] | RemixLinkProps['className'];
 };
 
