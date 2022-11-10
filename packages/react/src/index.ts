@@ -6,6 +6,7 @@ export type {
   CartWithActions,
   CartAction,
 } from './cart-types.js';
+export {CartCheckoutButton} from './CartCheckoutButton.js';
 export {CartProvider, useCart} from './CartProvider.js';
 export {ExternalVideo} from './ExternalVideo.js';
 export {flattenConnection} from './flatten-connection.js';
