@@ -4,7 +4,7 @@ import {
   redirect,
   json,
   defer,
-} from '@hydrogen/remix';
+} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {addLineItem, createCart, getTopProducts, updateLineItem} from '~/data';
 import {getSession} from '~/lib/session.server';

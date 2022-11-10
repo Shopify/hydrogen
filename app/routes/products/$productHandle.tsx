@@ -1,5 +1,5 @@
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, type LoaderArgs} from '@hydrogen/remix';
+import {defer, type LoaderArgs} from '@shopify/hydrogen-remix';
 import {
   useLoaderData,
   Await,

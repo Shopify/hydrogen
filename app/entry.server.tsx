@@ -1,4 +1,4 @@
-import type {EntryContext} from '@hydrogen/remix';
+import type {EntryContext} from '@shopify/hydrogen-remix';
 import {RemixServer} from '@remix-run/react';
 import {renderToReadableStream} from 'react-dom/server';
 

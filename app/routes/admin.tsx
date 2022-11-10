@@ -1,4 +1,4 @@
-import {redirect} from '@hydrogen/remix';
+import {redirect} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {getPrimaryShopDomain} from '~/data';
 

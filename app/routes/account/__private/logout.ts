@@ -2,7 +2,7 @@ import {
   type ActionFunction,
   type AppLoadContext,
   redirect,
-} from '@hydrogen/remix';
+} from '@shopify/hydrogen-remix';
 import {LoaderArgs} from '@remix-run/server-runtime';
 import {getSession} from '~/lib/session.server';
 
