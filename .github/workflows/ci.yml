@@ -27,7 +27,7 @@ jobs:
         run: npm run lint
 
   typecheck:
-    name: ⬣ ESLint
+    name: Typescript
     runs-on: shopify-ubuntu-latest
     steps:
       - name: 🛑 Cancel Previous Runs
