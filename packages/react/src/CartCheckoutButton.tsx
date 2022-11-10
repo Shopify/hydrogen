@@ -1,5 +1,6 @@
 import {ReactNode, useEffect, useState} from 'react';
 import {useCart} from './CartProvider.js';
+import {BaseButton, BaseButtonProps} from './BaseButton.js';
 
 type PropsWeControl = 'onClick';
 
@@ -8,7 +9,7 @@ type PropsWeControl = 'onClick';
  * It must be a descendent of a `CartProvider` component.
  */
 export function CartCheckoutButton(
-  props: Omit<JSX.IntrinsicElements['button'], PropsWeControl> & {
+  props: Omit<BaseButtonProps<'button'>, PropsWeControl> & {
     /** A `ReactNode` element. */
     children: ReactNode;
   }
@@ -24,12 +25,12 @@ export function CartCheckoutButton(
   }, [requestedCheckout, status, checkoutUrl]);
 
   return (
-    <button
+    <BaseButton
       {...passthroughProps}
       disabled={requestedCheckout || passthroughProps.disabled}
       onClick={() => setRequestedCheckout(true)}
     >
       {children}
-    </button>
+    </BaseButton>
   );
 }
