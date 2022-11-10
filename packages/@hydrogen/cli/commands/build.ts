@@ -1,3 +1,4 @@
+import path from 'path';
 import {cli} from '@remix-run/dev';
 import fsExtra from 'fs-extra';
 import esbuild from 'esbuild';
@@ -6,7 +7,7 @@ import {getProjectPaths} from '../utils/paths';
 export async function runBuild({
   entry,
   devReload = false,
-  sourcemap = !devReload,
+  sourcemap = true,
   minify = !devReload,
 }: {
   entry: string;
@@ -45,4 +46,24 @@ export async function runBuild({
     sourcemap,
     minify,
   });
+
+  if (process.env.NODE_ENV === 'production') {
+    const {size} = await fsExtra.stat(buildPathWorkerFile);
+    const sizeMB = size / (1024 * 1024);
+
+    // eslint-disable-next-line no-console
+    console.log(
+      '\n' + path.relative(root, buildPathWorkerFile),
+      '  ',
+      Number(sizeMB.toFixed(2)),
+      'MB',
+    );
+
+    if (sizeMB >= 1) {
+      // eslint-disable-next-line no-console
+      console.warn(
+        '\n-- Worker bundle exceeds 1 MB! This can delay your worker response.',
+      );
+    }
+  }
 }

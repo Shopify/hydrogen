@@ -3,6 +3,7 @@ import {cli} from '@remix-run/dev';
 import miniOxygenPreview from '@shopify/mini-oxygen';
 import {runBuild} from './build';
 import {getProjectPaths} from '../utils/paths';
+import {muteDevLogs} from '../utils/log';
 
 export async function runDev({
   entry,
@@ -14,13 +15,15 @@ export async function runDev({
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   // Initial build
-  await runBuild({entry, minify: false, sourcemap: false});
+  await runBuild({entry, minify: false});
 
   const {root, entryFile, buildPathWorkerFile, buildPathClient} =
     getProjectPaths(entry);
 
   //@ts-ignore
   const remixConfig = await import(path.resolve(root, 'remix.config.js'));
+
+  muteDevLogs();
 
   // Watch server build
   cli.run(['watch', root]);
