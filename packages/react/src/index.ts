@@ -1,4 +1,5 @@
 export {AddToCartButton} from './AddToCartButton.js';
+export {BuyNowButton} from './BuyNowButton.js';
 export type {
   CartState,
   CartStatus,
