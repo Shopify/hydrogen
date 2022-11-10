@@ -31,7 +31,8 @@ import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 
 export const handle = {
-  seo: (data) => ({
+  // @todo - remove any and type the seo callback
+  seo: (data: any) => ({
     title: data.layout.shop.name,
     bypassTitleTemplate: true,
     titleTemplate: `%s | ${data.layout.shop.name}`,
