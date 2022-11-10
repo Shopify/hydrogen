@@ -6,7 +6,10 @@ import {
 
 let sessionStorage: SessionStorage;
 
-export async function getSession(request: Request, context: AppLoadContext) {
+export async function getSession(
+  request: Request,
+  context: AppLoadContext & {env?: Record<string, string>},
+) {
   if (!context.env?.ENCRYPTION_KEY) {
     throw new Error('ENCRYPTION_KEY environment variable is not set');
   }
