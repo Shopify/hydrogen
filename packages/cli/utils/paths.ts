@@ -1,7 +1,7 @@
 import path from 'path';
 
 export function getProjectPaths(entry?: string) {
-  const root = path.resolve(process.cwd(), '..', '..', '..');
+  const root = path.resolve(process.cwd(), '..', '..');
   const publicPath = path.join(root, 'public');
   const buildPath = path.join(root, 'build');
   const buildPathClient = path.join(buildPath, 'client');
