@@ -32,7 +32,7 @@ import {
 } from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
-import type {AppLoadContext} from '@hydrogen/remix';
+import type {AppLoadContext} from '@shopify/hydrogen-remix';
 import {type Params} from '@remix-run/react';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;

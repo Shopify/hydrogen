@@ -4,7 +4,7 @@ import {
   json,
   type ActionFunction,
   type LoaderArgs,
-} from '@hydrogen/remix';
+} from '@shopify/hydrogen-remix';
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
 import {login, registerCustomer, StorefrontApiError} from '~/data';

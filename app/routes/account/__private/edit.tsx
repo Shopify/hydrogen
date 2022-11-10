@@ -1,4 +1,4 @@
-import {json, redirect, type ActionFunction} from '@hydrogen/remix';
+import {json, redirect, type ActionFunction} from '@shopify/hydrogen-remix';
 import {
   useActionData,
   Form,
