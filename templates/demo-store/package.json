@@ -1,6 +1,6 @@
 {
+  "name": "demo-store",
   "private": true,
-  "sideEffects": false,
   "scripts": {
     "build": "npm run build:css && npm run h2 build -- --entry oxygen.ts",
     "build:css": "postcss styles --base styles --dir app/styles --env production",

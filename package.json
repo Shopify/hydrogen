@@ -2,12 +2,12 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "cd templates/demo-store && npm run build",
-    "dev": "cd templates/demo-store && npm run dev",
-    "preview": "cd templates/demo-store && npm run preview",
-    "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
-    "format": "prettier --write --ignore-unknown .",
-    "typecheck": "tsc --noEmit && tsc --noEmit --project ./templates/demo-store/tsconfig.json"
+    "build": "npm run build -w demo-store",
+    "dev": "npm run dev -w demo-store",
+    "preview": "npm run preview -w demo-store",
+    "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
+    "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
+    "typecheck": "tsc --noEmit && npm run typecheck -w demo-store"
   },
   "workspaces": [
     "templates/demo-store",
