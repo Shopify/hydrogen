@@ -57,8 +57,7 @@ export default defineConfig(({mode}) => {
       minify: false,
       emptyOutDir: false,
       rollupOptions: {
-        // don't bundle these packages into our lib
-        external: (id, parentId) => {
+        external: (id) => {
           /**
            * Don't bundle these packages into our lib
            *
@@ -66,8 +65,8 @@ export default defineConfig(({mode}) => {
            * but if we wanted a browser esm build, we would either have to tell devs to use "import maps"
            * or to create a new bundle that doesn't use these as externals
            * */
-          if (parentId?.includes('@xstate') || id.includes('@xstate')) {
-            return true;
+          if (id.includes('xstate')) {
+            return false;
           }
 
           return externals.includes(id);

@@ -54,7 +54,12 @@
   "types": "./dist/types/index.d.ts",
   "unpkg": "./dist/umd/hydrogen-react.prod.js",
   "jsdelivr": "./dist/umd/hydrogen-react.prod.js",
-  "sideEffects": false,
+  "sideEffects": [
+    "dist/dev/node_modules/use-sync-external-store/shim/with-selector.mjs",
+    "dist/prod/node_modules/use-sync-external-store/shim/with-selector.mjs",
+    "dist/dev/node_modules/use-sync-external-store/shim/with-selector.js",
+    "dist/prod/node_modules/use-sync-external-store/shim/with-selector.js"
+  ],
   "scripts": {
     "clean-dist": "rimraf ./dist",
     "dev": "run-s clean-dist dev:demo",
