@@ -8,17 +8,19 @@ import {muteDevLogs} from '../utils/log';
 export async function runDev({
   entry,
   port = 3000,
+  path: appPath,
 }: {
   entry: string;
-  port: number;
+  port?: number;
+  path?: string;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   // Initial build
-  await runBuild({entry, minify: false});
+  await runBuild({entry, path: appPath, minify: false});
 
   const {root, entryFile, buildPathWorkerFile, buildPathClient} =
-    getProjectPaths(entry);
+    getProjectPaths(appPath, entry);
 
   //@ts-ignore
   const remixConfig = await import(path.resolve(root, 'remix.config.js'));

@@ -9,11 +9,13 @@ export async function runBuild({
   devReload = false,
   sourcemap = true,
   minify = !devReload,
+  path: appPath,
 }: {
   entry: string;
   devReload?: boolean;
   sourcemap?: boolean;
   minify?: boolean;
+  path?: string;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
@@ -24,7 +26,7 @@ export async function runBuild({
     buildPathClient,
     buildPathWorkerFile,
     publicPath,
-  } = getProjectPaths(entry);
+  } = getProjectPaths(appPath, entry);
 
   if (!devReload) {
     await fsExtra.rm(buildPath, {force: true, recursive: true});
