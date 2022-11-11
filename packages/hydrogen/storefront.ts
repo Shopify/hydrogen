@@ -121,7 +121,7 @@ export function createStorefrontClient(
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
-      cache: cacheOptions,
+      cache: cacheOptions || CacheShort(),
       shouldCacheResponse,
       waitUntil,
     });
