@@ -1,5 +1,6 @@
 import type {MediaEdge} from '@shopify/hydrogen-react/storefront-api-types';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
+import type {MediaImage} from '@shopify/hydrogen-react/storefront-api-types';
 
 /**
  * A client component that defines a media gallery for hosting images, 3D models, and videos of products
@@ -32,7 +33,7 @@ export function ProductGallery({
             ...med.image,
             altText: med.alt || 'Product image',
           },
-        };
+        } as MediaImage;
 
         switch (med.mediaContentType) {
           case 'IMAGE':
@@ -82,10 +83,10 @@ export function ProductGallery({
             key={med.id || med.image.id}
           >
             {/* TODO: Replace with MediaFile when it's available */}
-            {med.image && (
+            {(med as MediaImage).image && (
               <img
-                src={med.image.url}
-                alt={med.image.altText}
+                src={data.image!.url}
+                alt={data.image!.altText!}
                 className="w-full h-full aspect-square fadeIn object-cover"
               />
             )}

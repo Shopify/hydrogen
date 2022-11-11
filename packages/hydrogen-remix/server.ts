@@ -32,7 +32,7 @@ export function createRequestHandler(
         cache = await caches.open('hydrogen');
       }
 
-      return await handleRequest(request, {
+      const response = await handleRequest(request, {
         ...options,
         context: {
           ...createStorefrontClient(storefront, {
@@ -44,6 +44,18 @@ export function createRequestHandler(
           cache,
         },
       });
+
+      if (oxygenHandlerParams.mode !== 'production') {
+        // eslint-disable-next-line no-console
+        console.log(
+          request.method,
+          request.url.replace(new URL(request.url).origin, ''),
+          response.status,
+          request.headers.get('purpose') === 'prefetch' ? `(prefetch)` : '',
+        );
+      }
+
+      return response;
     } catch (e) {
       // eslint-disable-next-line no-console
       console.error(e);
