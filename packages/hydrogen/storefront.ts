@@ -24,7 +24,9 @@ export type StorefrontClientProps = Parameters<
   typeof createStorefrontUtilities
 >[0];
 
-export type Storefront = ReturnType<typeof createStorefrontClient>;
+export type Storefront = ReturnType<
+  typeof createStorefrontClient
+>['storefront'];
 
 export type HydrogenContext = {
   storefront: Storefront;
