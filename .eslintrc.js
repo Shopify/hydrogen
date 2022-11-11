@@ -1,3 +1,6 @@
+/**
+ * @type {import("@types/eslint").Linter.BaseConfig}
+ */
 module.exports = {
   parser: '@typescript-eslint/parser',
   rules: {
