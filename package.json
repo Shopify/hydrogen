@@ -7,7 +7,7 @@
     "preview": "cd templates/demo-store && npm run preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "format": "prettier --write --ignore-unknown .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit && tsc --noEmit --project ./templates/demo-store/tsconfig.json"
   },
   "workspaces": [
     "templates/demo-store",

@@ -1,5 +1,9 @@
 {
-  "include": ["**/*.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": [
+    "./packages/**/*.d.ts",
+    "./packages/**/*.ts",
+    "./packages/**/*.tsx"
+  ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2019"],
     "isolatedModules": true,
@@ -11,6 +15,7 @@
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "types": ["@shopify/oxygen-workers-types"]
   }
 }
