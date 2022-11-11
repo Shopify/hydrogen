@@ -1,0 +1,9 @@
+{
+  "name": "remix.init",
+  "private": true,
+  "main": "index.mjs",
+  "license": "MIT",
+  "dependencies": {
+    "@shopify/cli-kit": "^3.22.1"
+  }
+}
