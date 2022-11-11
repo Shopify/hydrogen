@@ -43,6 +43,10 @@ export async function fetchWithServerCache(
     returnType = 'json',
   }: FetchCacheOptions = {},
 ): Promise<readonly [any, Response]> {
+  if (!cacheOptions && (!requestInit.method || requestInit.method === 'GET')) {
+    cacheOptions = CacheShort();
+  }
+
   const doFetch = async () => {
     const response = await fetch(url, requestInit);
     let data;
@@ -56,7 +60,7 @@ export async function fetchWithServerCache(
     return [data, response] as const;
   };
 
-  if (!cacheInstance || !cacheKey) return doFetch();
+  if (!cacheInstance || !cacheKey || !cacheOptions) return doFetch();
 
   const key = [
     // '__HYDROGEN_CACHE_ID__', // TODO purgeQueryCacheOnBuild
@@ -64,6 +68,7 @@ export async function fetchWithServerCache(
   ];
 
   const cachedItem = await getItemFromCache(cacheInstance, key);
+  // console.log('--- Cache', cachedItem ? 'HIT' : 'MISS');
 
   if (cachedItem) {
     const [value, cacheResponse] = cachedItem;
