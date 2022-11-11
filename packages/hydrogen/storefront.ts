@@ -3,7 +3,11 @@ import {
   type StorefrontApiResponseOk,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
-import {FetchCacheOptions, fetchWithServerCache} from './cache/fetch';
+import {
+  FetchCacheOptions,
+  fetchWithServerCache,
+  checkGraphQLErrors,
+} from './cache/fetch';
 import {
   STOREFRONT_API_BUYER_IP_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
@@ -55,18 +59,6 @@ export type StorefrontMutationOptions = StorefromCommonOptions & {
   query?: never;
   mutation: string;
   cache?: never;
-};
-
-// Check if the response body has GraphQL errors
-// https://spec.graphql.org/June2018/#sec-Response-Format
-const shouldCacheResponse = (body: any) => {
-  try {
-    return !body?.errors;
-  } catch {
-    // If we can't parse the response, then assume
-    // an error and don't cache the response
-    return false;
-  }
 };
 
 export function createStorefrontClient(
@@ -122,7 +114,7 @@ export function createStorefrontClient(
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheShort(),
-      shouldCacheResponse,
+      shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
     });
 

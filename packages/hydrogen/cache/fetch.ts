@@ -26,6 +26,10 @@ function serializeResponse(body: any, response: Response) {
   ];
 }
 
+// Check if the response body has GraphQL errors
+// https://spec.graphql.org/June2018/#sec-Response-Format
+export const checkGraphQLErrors = (body: any) => !body?.errors;
+
 /**
  * `fetch` equivalent that stores responses in cache.
  * Useful for calling third-party APIs that need to be cached.
