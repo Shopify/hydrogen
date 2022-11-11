@@ -44,12 +44,15 @@ export async function runBuild({
     outfile: buildPathWorkerFile,
     format: 'esm',
     logOverride: {'this-is-undefined-in-esm': 'silent'},
-    define: {'process.env.REMIX_DEV_SERVER_WS_PORT': '8002'},
+    define: {
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      'process.env.REMIX_DEV_SERVER_WS_PORT': '8002',
+    },
     sourcemap,
     minify,
   });
 
-  if (process.env.NODE_ENV === 'production') {
+  if (process.env.NODE_ENV !== 'development') {
     const {size} = await fsExtra.stat(buildPathWorkerFile);
     const sizeMB = size / (1024 * 1024);
 
