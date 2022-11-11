@@ -1,7 +1,9 @@
 import clsx from 'clsx';
 import {Image, Video} from '@shopify/hydrogen-react';
 import type {
+  MediaImage,
   Media,
+  Video as MediaVideo,
   Metafield,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {Link} from '@remix-run/react';
@@ -66,7 +68,7 @@ export function Hero({
                 sizes="(min-width: 80em) 700, (min-width: 48em) 450, 500"
                 widths={[450, 700]}
                 width={375}
-                data={spreadSecondary.reference}
+                data={spreadSecondary.reference as Media}
               />
             </div>
           )}
@@ -90,7 +92,7 @@ export function Hero({
 }
 
 interface SpreadMediaProps {
-  data: Media;
+  data: Media | MediaImage | MediaVideo;
   loading?: HTMLImageElement['loading'];
   scale?: 2 | 3;
   sizes: string;
@@ -112,7 +114,7 @@ function SpreadMedia({
         previewImageOptions={{scale, src: data.previewImage!.url}}
         width={scale! * width}
         className="block object-cover w-full h-full"
-        data={data}
+        data={data as MediaVideo}
         controls={false}
         muted
         loop
@@ -129,7 +131,7 @@ function SpreadMedia({
         sizes={sizes}
         alt={data.alt || 'Marketing Banner Image'}
         className="block object-cover w-full h-full"
-        data={data.image}
+        data={(data as MediaImage).image!}
         loading={loading}
         width={width}
         loaderOptions={{scale, crop: 'center'}}
