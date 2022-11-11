@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@hydrogen/remix",
+  "name": "@shopify/hydrogen-remix",
   "version": "0.0.1",
   "main": "./index.ts",
   "peerDependencies": {

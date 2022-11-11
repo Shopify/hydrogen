@@ -2,7 +2,10 @@ import {
   createRequestHandler as createOxygenRequestHandler,
   getBuyerIp,
 } from '@remix-run/oxygen';
-import {createStorefrontClient, type StorefrontClientProps} from './storefront';
+import {
+  createStorefrontClient,
+  type StorefrontClientProps,
+} from '@shopify/hydrogen-remix';
 
 type HydrogenHandlerParams = {
   storefront: StorefrontClientProps;
