@@ -14,17 +14,16 @@ export interface FeaturedData {
 }
 
 export function FeaturedSection() {
-  const featuredProductsFetcher = useFetcher();
+  const {load, data} = useFetcher();
   const path = usePrefixPathWithLocale('/featured-products');
 
   useEffect(() => {
-    featuredProductsFetcher.load(path);
-  }, [featuredProductsFetcher, path]);
+    load(path);
+  }, [load, path]);
 
-  if (!featuredProductsFetcher.data) return null;
+  if (!data) return null;
 
-  const {featuredCollections, featuredProducts} =
-    featuredProductsFetcher.data as FeaturedData;
+  const {featuredCollections, featuredProducts} = data as FeaturedData;
 
   return (
     <>
