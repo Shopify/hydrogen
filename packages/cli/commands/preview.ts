@@ -1,6 +1,6 @@
 import miniOxygenPreview from '@shopify/mini-oxygen';
 import {muteDevLogs} from '../utils/log';
-import {getProjectPaths} from '../utils/paths';
+import {getProjectPaths} from '../utils/config';
 
 export async function runPreview({
   port = 3000,
