@@ -2,10 +2,16 @@ import miniOxygenPreview from '@shopify/mini-oxygen';
 import {muteDevLogs} from '../utils/log';
 import {getProjectPaths} from '../utils/paths';
 
-export async function runPreview({port = 3000}: {port: number}) {
+export async function runPreview({
+  port = 3000,
+  path: appPath,
+}: {
+  port?: number;
+  path?: string;
+}) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
-  const {buildPathWorkerFile, buildPathClient} = getProjectPaths();
+  const {buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
 
   muteDevLogs({workerReload: false});
 
