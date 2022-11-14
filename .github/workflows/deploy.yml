@@ -32,7 +32,7 @@ jobs:
         id: deploy
         uses: shopify/oxygenctl-action@v4
         with:
-          path: .
+          path: ./templates/demo-store
           oxygen_deployment_token: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_28966968 }}
           oxygen_worker_dir: build/worker
           oxygen_client_dir: build/client

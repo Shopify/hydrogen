@@ -1,0 +1,19 @@
+{
+  "private": true,
+  "name": "@hydrogen/cli",
+  "version": "0.0.1",
+  "main": "./index.ts",
+  "scripts": {
+    "start": "node --experimental-vm-modules --loader ts-node/esm --require=./suppress-experimental.js ./index.ts"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^9.0.13",
+    "ts-node": "^10.9.1"
+  },
+  "dependencies": {
+    "@remix-run/dev": "0.0.0-experimental-e18af792a",
+    "@shopify/mini-oxygen": "^1.0.0",
+    "esbuild": "^0.15.12",
+    "fs-extra": "^10.1.0"
+  }
+}
