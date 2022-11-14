@@ -1,6 +1,8 @@
 import type {PlaywrightTestConfig} from '@playwright/test';
 import {devices} from '@playwright/test';
 
+declare const process: {env: {CI: boolean}};
+
 /**
  * Read environment variables from file.
  * https://github.com/motdotla/dotenv
