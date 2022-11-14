@@ -1,8 +1,9 @@
 import path from 'path';
-import {cli} from '@remix-run/dev';
+import * as esbuild from 'esbuild';
+import * as remix from '@remix-run/dev/dist/compiler';
 import fsExtra from 'fs-extra';
-import esbuild from 'esbuild';
-import {getProjectPaths} from '../utils/paths';
+import {getProjectPaths} from '../utils/config';
+import {getRemixConfig} from '../utils/config';
 
 export async function runBuild({
   entry,
@@ -27,8 +28,21 @@ export async function runBuild({
   } = getProjectPaths(entry);
 
   if (!devReload) {
+    const remixConfig = await getRemixConfig(root);
     await fsExtra.rm(buildPath, {force: true, recursive: true});
-    await cli.run(['build', root]);
+
+    // eslint-disable-next-line no-console
+    console.log(`Building app in ${process.env.NODE_ENV} mode...`);
+
+    await remix.build(remixConfig, {
+      mode: process.env.NODE_ENV as any,
+      sourcemap,
+      onBuildFailure: (failure: remix.BuildError) => {
+        remix.formatBuildFailure(failure);
+        // Stop here and prevent waterfall errors
+        throw Error();
+      },
+    });
   }
 
   await fsExtra.copy(publicPath, buildPathClient, {
@@ -41,10 +55,8 @@ export async function runBuild({
     bundle: true,
     outfile: buildPathWorkerFile,
     format: 'esm',
-    logOverride: {'this-is-undefined-in-esm': 'silent'},
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-      'process.env.REMIX_DEV_SERVER_WS_PORT': '8002',
     },
     sourcemap,
     minify,
