@@ -15,6 +15,9 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./app/*"],
+      "@remix-run/oxygen": ["./packages/remix-oxygen"],
+      "@shopify/hydrogen": ["./packages/hydrogen"],
+      "@shopify/hydrogen-remix": ["./packages/hydrogen-remix"],
       "remix-build": ["./build/server/index.js"]
     },
 

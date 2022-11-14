@@ -1,4 +1,9 @@
-import {json, LoaderArgs, MetaFunction, SerializeFrom} from '@hydrogen/remix';
+import {
+  json,
+  LoaderArgs,
+  MetaFunction,
+  SerializeFrom,
+} from '@shopify/hydrogen-remix';
 import type {Page} from '@shopify/hydrogen-react/storefront-api-types';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';

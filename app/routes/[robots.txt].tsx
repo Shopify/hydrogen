@@ -1,4 +1,4 @@
-import {type LoaderArgs} from '@hydrogen/remix';
+import {type LoaderArgs} from '@shopify/hydrogen-remix';
 
 export const loader = ({request}: LoaderArgs) => {
   const url = new URL(request.url);

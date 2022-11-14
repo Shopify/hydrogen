@@ -1,4 +1,4 @@
-import {createRequestHandler} from '@hydrogen/remix';
+import {createRequestHandler} from '@shopify/hydrogen-remix';
 // The build remix app provided by remix build
 import * as remixBuild from 'remix-build';
 

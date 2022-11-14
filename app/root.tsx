@@ -3,7 +3,7 @@ import {
   type LinksFunction,
   type LoaderFunction,
   type MetaFunction,
-} from '@hydrogen/remix';
+} from '@shopify/hydrogen-remix';
 import {
   Links,
   Meta,

@@ -3,7 +3,7 @@ import {
   redirect,
   json,
   type ActionFunction,
-} from '@hydrogen/remix';
+} from '@shopify/hydrogen-remix';
 import {Form, useActionData} from '@remix-run/react';
 import {useRef, useState} from 'react';
 import {activateAccount, StorefrontApiError} from '~/data';

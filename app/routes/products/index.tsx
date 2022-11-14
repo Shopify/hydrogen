@@ -1,4 +1,4 @@
-import type {LoaderArgs, MetaFunction} from '@hydrogen/remix';
+import type {LoaderArgs, MetaFunction} from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection,
