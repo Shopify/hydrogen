@@ -1,0 +1,10 @@
+{
+  "private": true,
+  "name": "@shopify/hydrogen-remix",
+  "version": "0.0.1",
+  "main": "./index.ts",
+  "peerDependencies": {
+    "@remix-run/oxygen": "*",
+    "@remix-run/react": "*"
+  }
+}

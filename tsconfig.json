@@ -1,10 +1,13 @@
 {
-  "include": ["**/*.d.ts", "**/*.ts", "**/*.tsx"],
+  "include": [
+    "./packages/**/*.d.ts",
+    "./packages/**/*.ts",
+    "./packages/**/*.tsx"
+  ],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2019"],
     "isolatedModules": true,
     "esModuleInterop": true,
-    "jsx": "react-jsx",
     "moduleResolution": "node",
     "resolveJsonModule": true,
     "target": "ES2019",
@@ -13,13 +16,6 @@
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
     "baseUrl": ".",
-    "paths": {
-      "~/*": ["./app/*"],
-      "remix-build": ["./build/server/index.js"]
-    },
-
-    // Remix takes care of building everything in `./app` with `remix build`.
-    // Wrangler takes care of building everything in `./worker` with `wrangler start` / `wrangler publish`.
-    "noEmit": true
+    "types": ["@shopify/oxygen-workers-types"]
   }
 }
