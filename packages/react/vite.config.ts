@@ -52,7 +52,13 @@ export default defineConfig(({mode, ssrBuild}) => {
       lib: {
         entry: resolve(__dirname, 'src/index.ts'),
         name: 'hydrogen-react',
-        fileName: (format) => `[name].${format === 'cjs' ? 'c' : ''}js`,
+        /**
+         * we keep the default to commonjs (and package.json#type to "commonjs")
+         * because there are issues when we try to convert to "module"; when we build, there are some files in
+         * `/dist/{folder}/node_modules/{packages and files}` that are esm but end in .js, as that's what Vite is configured to do.
+         * So the package.json doesn't transfer the settings from this package to the nested node_modules package.
+         */
+        fileName: (format) => `[name].${format === 'cjs' ? '' : 'm'}js`,
         formats: ssrBuild ? ['es', 'cjs'] : ['es'],
       },
       sourcemap: true,
@@ -65,7 +71,7 @@ export default defineConfig(({mode, ssrBuild}) => {
             For example, `import {} from '@xstate/react/fsm'` doesn't actually exist in the file path, so we need Vite to process it so it does
             Hypothetically, if they update their package to do so, then we can externalize it at that point.
 
-            Note that this has no effect on the ssr builds; if we need to mark xstate as "not external" there, then we need to use 'ssr.noExternal' https://vitejs.dev/config/ssr-options.html#ssr-noexternal
+            Note that this has no effect on the ssr builds; we need to mark xstate as "not external" in 'ssr.noExternal' https://vitejs.dev/config/ssr-options.html#ssr-noexternal
            */
           if (id.includes('xstate')) {
             return false;
@@ -79,6 +85,17 @@ export default defineConfig(({mode, ssrBuild}) => {
           preserveModulesRoot: 'src',
         },
       },
+    },
+    ssr: {
+      // for esm builds, we need Vite to process these deps in order to work correctly
+      noExternal: [
+        '@xstate',
+        '@xstate/react',
+        '@xstate/fsm',
+        '@xstate/react/fsm',
+        'use-sync-external-store',
+        'use-isomorphic-layout-effect',
+      ],
     },
     define: {
       __HYDROGEN_DEV__: mode === 'devbuild' || mode === 'test',

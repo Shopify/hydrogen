@@ -15,43 +15,43 @@
     "dist",
     "storefront.schema.json"
   ],
-  "type": "module",
+  "type": "commonjs",
   "exports": {
     ".": {
       "node": {
         "require": {
           "types": "./dist/types/index.d.cts",
-          "development": "./dist/node-dev/index.cjs",
-          "production": "./dist/node-prod/index.cjs",
-          "default": "./dist/node-prod/index.cjs"
-        },
-        "import": {
-          "types": "./dist/types/index.d.ts",
           "development": "./dist/node-dev/index.js",
           "production": "./dist/node-prod/index.js",
           "default": "./dist/node-prod/index.js"
         },
-        "default": "./dist/node-prod/index.cjs"
+        "import": {
+          "types": "./dist/types/index.d.ts",
+          "development": "./dist/node-dev/index.mjs",
+          "production": "./dist/node-prod/index.mjs",
+          "default": "./dist/node-prod/index.mjs"
+        },
+        "default": "./dist/node-prod/index.js"
       },
       "module": {
         "types": "./dist/types/index.d.ts",
-        "development": "./dist/browser-dev/index.js",
-        "production": "./dist/browser-prod/index.js",
-        "default": "./dist/browser-prod/index.js"
+        "development": "./dist/browser-dev/index.mjs",
+        "production": "./dist/browser-prod/index.mjs",
+        "default": "./dist/browser-prod/index.mjs"
       },
       "import": {
         "types": "./dist/types/index.d.ts",
+        "development": "./dist/browser-dev/index.mjs",
+        "production": "./dist/browser-prod/index.mjs",
+        "default": "./dist/browser-prod/index.mjs"
+      },
+      "require": {
+        "types": "./dist/types/index.d.cts",
         "development": "./dist/browser-dev/index.js",
         "production": "./dist/browser-prod/index.js",
         "default": "./dist/browser-prod/index.js"
       },
-      "require": {
-        "types": "./dist/types/index.d.cts",
-        "development": "./dist/browser-dev/index.cjs",
-        "production": "./dist/browser-prod/index.cjs",
-        "default": "./dist/browser-prod/index.cjs"
-      },
-      "default": "./dist/browser-prod/index.js"
+      "default": "./dist/browser-prod/index.mjs"
     },
     "./storefront-api-types": "./dist/types/storefront-api-types.d.ts",
     "./storefront.schema.json": "./storefront.schema.json",
