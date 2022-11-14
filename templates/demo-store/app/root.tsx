@@ -21,7 +21,7 @@ import {NotFound} from './components/NotFound';
 import {getSession} from './lib/session.server';
 import {Seo, Debugger} from './lib/seo';
 
-import styles from './styles/app.css';
+import styles, {red} from './styles/test.module.css';
 import favicon from '../public/favicon.svg';
 
 export const handle = {
@@ -79,6 +79,7 @@ export default function App() {
         <Links />
       </head>
       <body>
+        <div className={red}>THIS IS RED</div>
         <Layout data={data}>
           <Outlet />
         </Layout>
