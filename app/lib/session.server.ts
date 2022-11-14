@@ -2,7 +2,7 @@ import {
   type AppLoadContext,
   createCookieSessionStorage,
   type SessionStorage,
-} from '@hydrogen/remix';
+} from '@shopify/hydrogen-remix';
 
 let sessionStorage: SessionStorage;
 

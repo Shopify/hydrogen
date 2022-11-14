@@ -10,12 +10,12 @@
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "format": "prettier --write --ignore-unknown .",
     "typecheck": "tsc --noEmit",
-    "h2": "npm run --prefix packages/@hydrogen/cli --silent start --"
+    "h2": "npm run --prefix packages/cli --silent start --"
   },
   "workspaces": [
-    "packages/@remix-run/oxygen",
-    "packages/@hydrogen/remix",
-    "packages/@hydrogen/cli"
+    "packages/remix-oxygen",
+    "packages/hydrogen-remix",
+    "packages/cli"
   ],
   "prettier": "@shopify/prettier-config",
   "dependencies": {

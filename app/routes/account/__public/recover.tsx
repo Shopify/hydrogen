@@ -4,7 +4,7 @@ import {
   json,
   type ActionFunction,
   type LoaderArgs,
-} from '@hydrogen/remix';
+} from '@shopify/hydrogen-remix';
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
 import {sendPasswordResetEmail} from '~/data';

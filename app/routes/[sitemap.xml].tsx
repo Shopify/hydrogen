@@ -1,5 +1,5 @@
 import {flattenConnection} from '@shopify/hydrogen-react';
-import type {LoaderArgs} from '@hydrogen/remix';
+import type {LoaderArgs} from '@shopify/hydrogen-remix';
 import {
   CollectionConnection,
   PageConnection,

@@ -1,4 +1,8 @@
-import {type LoaderArgs, defer, type MetaFunction} from '@hydrogen/remix';
+import {
+  type LoaderArgs,
+  defer,
+  type MetaFunction,
+} from '@shopify/hydrogen-remix';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
