@@ -4,7 +4,7 @@ import {defineConfig} from 'vite';
 import react from '@vitejs/plugin-react';
 import packageJson from './package.json';
 
-export default defineConfig(({mode}) => {
+export default defineConfig(({mode, ssrBuild}) => {
   if (mode.includes('umdbuild')) {
     // config for our UMD builds, which are distinct enough that they need their own
     return {
@@ -46,12 +46,14 @@ export default defineConfig(({mode}) => {
 
   return {
     build: {
-      outDir: `dist/${mode === 'devbuild' ? 'dev' : 'prod'}/`,
+      outDir: `dist/${ssrBuild ? 'node' : 'browser'}-${
+        mode === 'devbuild' ? 'dev' : 'prod'
+      }/`,
       lib: {
         entry: resolve(__dirname, 'src/index.ts'),
         name: 'hydrogen-react',
-        fileName: (format) => `[name].${format === 'cjs' ? '' : 'm'}js`,
-        formats: ['es', 'cjs'],
+        fileName: (format) => `[name].${format === 'cjs' ? 'c' : ''}js`,
+        formats: ssrBuild ? ['es', 'cjs'] : ['es'],
       },
       sourcemap: true,
       minify: false,
@@ -59,12 +61,12 @@ export default defineConfig(({mode}) => {
       rollupOptions: {
         external: (id) => {
           /**
-           * Don't bundle these packages into our lib
-           *
-           * This creates a better build for node esm environments,
-           * but if we wanted a browser esm build, we would either have to tell devs to use "import maps"
-           * or to create a new bundle that doesn't use these as externals
-           * */
+            xstate is marked as "not external" because it has import paths that don't work in a pure-esm resolution algo (yet).
+            For example, `import {} from '@xstate/react/fsm'` doesn't actually exist in the file path, so we need Vite to process it so it does
+            Hypothetically, if they update their package to do so, then we can externalize it at that point.
+
+            Note that this has no effect on the ssr builds; if we need to mark xstate as "not external" there, then we need to use 'ssr.noExternal' https://vitejs.dev/config/ssr-options.html#ssr-noexternal
+           */
           if (id.includes('xstate')) {
             return false;
           }

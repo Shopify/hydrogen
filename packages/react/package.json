@@ -15,28 +15,43 @@
     "dist",
     "storefront.schema.json"
   ],
-  "type": "commonjs",
+  "type": "module",
   "exports": {
     ".": {
+      "node": {
+        "require": {
+          "types": "./dist/types/index.d.cts",
+          "development": "./dist/node-dev/index.cjs",
+          "production": "./dist/node-prod/index.cjs",
+          "default": "./dist/node-prod/index.cjs"
+        },
+        "import": {
+          "types": "./dist/types/index.d.ts",
+          "development": "./dist/node-dev/index.js",
+          "production": "./dist/node-prod/index.js",
+          "default": "./dist/node-prod/index.js"
+        },
+        "default": "./dist/node-prod/index.cjs"
+      },
       "module": {
         "types": "./dist/types/index.d.ts",
-        "development": "./dist/dev/index.mjs",
-        "production": "./dist/prod/index.mjs",
-        "default": "./dist/prod/index.mjs"
+        "development": "./dist/browser-dev/index.js",
+        "production": "./dist/browser-prod/index.js",
+        "default": "./dist/browser-prod/index.js"
       },
       "import": {
         "types": "./dist/types/index.d.ts",
-        "development": "./dist/dev/index.mjs",
-        "production": "./dist/prod/index.mjs",
-        "default": "./dist/prod/index.mjs"
+        "development": "./dist/browser-dev/index.js",
+        "production": "./dist/browser-prod/index.js",
+        "default": "./dist/browser-prod/index.js"
       },
       "require": {
         "types": "./dist/types/index.d.cts",
-        "development": "./dist/dev/index.js",
-        "production": "./dist/prod/index.js",
-        "default": "./dist/prod/index.js"
+        "development": "./dist/browser-dev/index.cjs",
+        "production": "./dist/browser-prod/index.cjs",
+        "default": "./dist/browser-prod/index.cjs"
       },
-      "default": "./dist/prod/index.mjs"
+      "default": "./dist/browser-prod/index.js"
     },
     "./storefront-api-types": "./dist/types/storefront-api-types.d.ts",
     "./storefront.schema.json": "./storefront.schema.json",
@@ -55,21 +70,21 @@
   "unpkg": "./dist/umd/hydrogen-react.prod.js",
   "jsdelivr": "./dist/umd/hydrogen-react.prod.js",
   "sideEffects": [
-    "dist/dev/node_modules/use-sync-external-store/shim/with-selector.mjs",
-    "dist/prod/node_modules/use-sync-external-store/shim/with-selector.mjs",
-    "dist/dev/node_modules/use-sync-external-store/shim/with-selector.js",
-    "dist/prod/node_modules/use-sync-external-store/shim/with-selector.js"
+    "dist/*/node_modules/use-sync-external-store/shim/with-selector.*js"
   ],
   "scripts": {
     "clean-dist": "rimraf ./dist",
     "dev": "run-s clean-dist dev:demo",
     "dev:story": "ladle serve",
-    "dev:demo": "run-p dev:demo:*",
-    "dev:demo:vite": "vite build --watch --emptyOutDir false --clearScreen false --mode devbuild",
+    "dev:demo": "run-p dev:demo:* ",
+    "dev:demo:browser-dev": "vite build --watch --emptyOutDir false --clearScreen false --mode devbuild",
+    "dev:demo:node-dev": "vite build --watch --emptyOutDir false --clearScreen false --mode devbuild --ssr",
     "dev:demo:ts": "tsc --watch --emitDeclarationOnly",
     "build": "npm-run-all --sequential clean-dist --parallel build:vite:* build:tsc:es --parallel build:tsc:cjs copy-storefront-types",
-    "build:vite:dev": "vite build --mode devbuild",
-    "build:vite:prod": "vite build",
+    "build:vite:browser-dev": "vite build --mode devbuild",
+    "build:vite:browser-prod": "vite build",
+    "build:vite:node-dev": "vite build --mode devbuild --ssr",
+    "build:vite:node-prod": "vite build --ssr",
     "build:vite:umddev": "vite build --mode umdbuilddev",
     "build:vite:umdprod": "vite build --mode umdbuild",
     "build:tsc:cjs": "cpy ./dist/types/index.d.ts ./dist/types/ --rename='index.d.cts' --flat",

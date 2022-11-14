@@ -6,6 +6,7 @@
       "outputs": ["dist/**"]
     },
     "dev": {
+      "dependsOn": ["^dev"],
       "cache": false
     },
     "//#lint": {},
