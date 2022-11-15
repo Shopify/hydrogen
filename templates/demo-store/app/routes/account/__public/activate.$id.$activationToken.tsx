@@ -3,10 +3,11 @@ import {
   redirect,
   json,
   type ActionFunction,
+  isStorefrontApiError,
 } from '@shopify/hydrogen-remix';
 import {Form, useActionData} from '@remix-run/react';
 import {useRef, useState} from 'react';
-import {activateAccount, StorefrontApiError} from '~/data';
+import {activateAccount} from '~/data';
 import {getSession} from '~/lib/session.server';
 import {getInputStyleClasses} from '~/lib/utils';
 
@@ -57,7 +58,7 @@ export const action: ActionFunction = async ({
   }
 
   try {
-    const {accessToken} = await activateAccount({
+    const {accessToken} = await activateAccount(context, {
       id,
       activationToken,
       password,
@@ -71,7 +72,7 @@ export const action: ActionFunction = async ({
       },
     });
   } catch (error: any) {
-    if (error instanceof StorefrontApiError) {
+    if (isStorefrontApiError(error)) {
       return badRequest({
         formError: 'Something went wrong. Please try again later.',
       });
