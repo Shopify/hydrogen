@@ -45,7 +45,7 @@ interface LinesRemoveProps {
 
 interface LinesRemove {
   linesRemoved: CartLine[];
-  linesNotRemoved: CartLine[];
+  linesNotRemoved?: CartLine[];
 }
 
 interface LinesRemoveEventPayload extends LinesRemove {
@@ -247,13 +247,13 @@ function linesRemoveResponse(
     : [];
 
   // determine what line(s) were removed or not
-  const {linesRemoved, linesNotRemoved} = getLinesRemoved(prevLines, cart);
+  const {linesRemoved, linesNotRemoved} = getLinesRemoved(
+    prevLines,
+    cart.lines,
+    lineIds,
+  );
 
-  const removeErrorMessage = linesNotRemoved.length
-    ? `Failed to remove line ids ${linesNotRemoved
-        .map(({id}: CartLine) => id)
-        .join(',')}`
-    : null;
+  let errorMessage = null;
 
   const event: LinesRemoveEvent = {
     type: 'lines_remove',
@@ -261,21 +261,36 @@ function linesRemoveResponse(
     payload: {
       lineIds,
       linesRemoved,
-      linesNotRemoved,
     },
   };
 
-  return json({event, error: removeErrorMessage});
+  if (linesNotRemoved?.length) {
+    event.payload.linesNotRemoved = linesNotRemoved;
+
+    errorMessage = linesNotRemoved.length
+      ? `Failed to remove line ids ${linesNotRemoved
+          .map(({id}: CartLine) => id)
+          .join(',')}`
+      : null;
+  }
+
+  return json({event, error: errorMessage});
 }
 
-function getLinesRemoved(prevLines: CartLineConnection, cart: Cart) {
+function getLinesRemoved(
+  prevLines: CartLineConnection,
+  cartLines: CartLineConnection,
+  lineIds: CartLine['id'][],
+) {
   return prevLines?.edges?.reduce(
     (_result, {node: _prevLine}) => {
-      const lineStillExists = cart.lines.edges.find(
+      const lineStillExists = cartLines.edges.find(
         ({node: line}) => line.id === _prevLine.id,
       );
       if (lineStillExists) {
-        _result.linesNotRemoved = [..._result.linesNotRemoved, _prevLine];
+        if (lineIds.includes(lineStillExists?.node?.id)) {
+          _result.linesNotRemoved = [..._result.linesNotRemoved, _prevLine];
+        }
       } else {
         _result.linesRemoved = [..._result.linesRemoved, _prevLine];
       }
