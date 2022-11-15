@@ -1,6 +1,5 @@
-import type {LoaderArgs, MetaFunction} from '@hydrogen/remix';
-import {useEffect} from 'react';
-import {defer} from '@hydrogen/remix';
+import type {LoaderArgs, MetaFunction} from '@shopify/hydrogen-remix';
+import {defer} from '@shopify/hydrogen-remix';
 import {
   useLoaderData,
   useFetchers,

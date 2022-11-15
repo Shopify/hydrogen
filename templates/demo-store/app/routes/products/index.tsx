@@ -5,7 +5,7 @@ import type {
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {PageHeader, Section, ProductGrid} from '~/components';
+import {PageHeader, Section, SortFilter, ProductGrid} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getLocalizationFromLang} from '~/lib/utils';
 
@@ -31,6 +31,30 @@ export async function loader({
 
   invariant(data, 'No data returned from Shopify API');
 
+  console.log([data.products]);
+  // const options = await storefront.query({
+  //   query: `query Facets {
+  //     collectionByHandle(handle: "freeride") {
+  //       handle
+  //       products(first: 10) {
+  //         filters {
+  //           id
+  //           label
+  //           type
+  //           values {
+  //             id
+  //             label
+  //             count
+  //             input
+  //           }
+  //         }
+  //       }
+  //     }
+  //   }`,
+  // });
+
+  // console.log(options.collectionByHandle?.products?.filters);
+
   return data.products;
 }
 
@@ -48,6 +72,7 @@ export default function AllProducts() {
     <>
       <PageHeader heading="All Products" variant="allCollections" />
       <Section>
+        <SortFilter />
         <ProductGrid
           key="products"
           url="/products"
@@ -67,6 +92,9 @@ const ALL_PRODUCTS_QUERY = `#graphql
     $cursor: String
   ) @inContext(country: $country, language: $language) {
     products(first: $pageBy, after: $cursor) {
+      filters {
+        id
+      }
       nodes {
         ...ProductCard
       }
