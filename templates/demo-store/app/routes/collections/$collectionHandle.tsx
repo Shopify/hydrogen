@@ -10,7 +10,6 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import {getLocalizationFromLang} from '~/lib/utils';
-import type {Collection} from '@shopify/hydrogen-react/storefront-api-types';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
 const PAGINATION_SIZE = 48;
@@ -28,7 +27,7 @@ export async function loader({
   const {language, country} = getLocalizationFromLang(params.lang);
 
   const {collection} = await storefront.query<{
-    collection: Collection;
+    collection: CollectionType;
   }>({
     query: COLLECTION_QUERY,
     variables: {

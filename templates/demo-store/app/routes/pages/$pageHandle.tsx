@@ -4,7 +4,7 @@ import {
   MetaFunction,
   SerializeFrom,
 } from '@shopify/hydrogen-remix';
-import type {Page} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import {PageHeader} from '~/components';
@@ -14,7 +14,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
   invariant(params.pageHandle, 'Missing page handle');
 
   const {language} = getLocalizationFromLang(params.lang);
-  const {page} = await storefront.query<{page: Page}>({
+  const {page} = await storefront.query<{page: PageType}>({
     query: PAGE_QUERY,
     variables: {
       language,
