@@ -23,7 +23,7 @@
     "@shopify/cli-kit": "^3.9.2"
   },
   "oclif": {
-    "commands": "./dist/commands",
+    "commands": "dist/commands",
     "topics": {
       "h2": {
         "description": "Hydrogen commands"
