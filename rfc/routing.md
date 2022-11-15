@@ -29,6 +29,7 @@ Some of the built in routes are specific to the framework, and include:
 1. `/__health` - used by Oxygen to verify the health of the application
 1. `/routeManifest.json` - Manifest describing all available routes in the Hydrogen app. See below for more details.
 1. `/graphiql` - Dev-mode UI for querying GraphQL
+1. `/admin` - A redirect to the admin for the shop
 
 Other routes are specific to Shopify, and include:
 
@@ -51,6 +52,39 @@ module.exports = {
   },
 };
 ```
+
+### Packaging Built-in Routes
+
+Some routes are packaged directly within Hydrogen. The user cannot remove these routes, they are necessary for the framework. They include `/__heatlh` and `__routeManifest.json`.
+
+Other routes are packaged within hydrogen, but exposed to the user within a `.hydrogen` directory. Consider the following app structure:
+
+```
+📂 HydrogenApp
+ ┣ 📂 app
+ ┃ ┗ 📂 routes
+ ┃   ┗ 📜 index.tsx
+ ┣ 📂 .hydrogen
+ ┃ ┗ 📂 routes
+ ┃   ┗ 📜 cart.tsx
+ ┗ 📜package.json
+```
+
+The `.hydrogen` directory is generated _each_ time the app builds. The files within it are copied from the hydrogen package. These files should _not_ be directly modified by the user. Any changes the developer makes will be overwritten the next time the app boots. The developer has the ability to see the implementation of the built-in hydrogen route. They also can copy the file out and into their own routes. Doing so means that their implementation overrides the implementation packaged by hydrogen:
+
+```
+📂 HydrogenApp
+ ┣ 📂 app
+ ┃ ┗ 📂 routes
+ ┃   ┃ 📜 index.tsx
+ ┃   ┗ 📜 cart.tsx
+ ┣ 📂 .hydrogen
+ ┃ ┗ 📂 routes
+ ┃   ┗ 📜 cart.tsx
+ ┗ 📜package.json
+```
+
+The route override when the path exactly matches. Alternatively the route could override based on route name (see below).
 
 ## Backlink Redirects
 
@@ -106,7 +140,7 @@ module.exports = {
 };
 ```
 
-## Deterministic routes
+## Named Routes
 
 Routes in Hydrogen can be defined in completely custom ways. Other services need to understand how to link to Shopify entities within a custom storefront. For example, products might exist on `/productos/:handle` instead of `/products/:handle`.
 
