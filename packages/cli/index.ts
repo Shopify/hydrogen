@@ -63,7 +63,7 @@ if (command === 'build') {
     // @ts-ignore
     const {runInit} = await import('./commands/init');
 
-    runInit();
+    runInit(options);
   })();
 } else {
   // eslint-disable-next-line no-console
