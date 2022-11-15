@@ -48,7 +48,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
       // 2. If none exists, create a cart (SFAPI)
       if (!cartId) {
-        cart = await createCart({
+        cart = await createCart(context, {
           cart: {lines: [{merchandiseId: variantId}]},
           params,
         });
@@ -57,7 +57,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
         headers.set('Set-Cookie', await session.commit());
       } else {
         // 3. Else, update the cart with the variant ID (SFAPI)
-        cart = await addLineItem({
+        cart = await addLineItem(context, {
           cartId,
           lines: [{merchandiseId: variantId}],
           params,
@@ -78,7 +78,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       invariant(lineId, 'Missing lineId');
       invariant(cartId, 'Missing cartId');
       const quantity = Number(formData.get('quantity'));
-      cart = await updateLineItem({
+      cart = await updateLineItem(context, {
         cartId,
         lineItem: {id: lineId, quantity},
         params,
@@ -94,7 +94,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       const lineId = formData.get('lineId');
       invariant(lineId, 'Missing lineId');
       invariant(cartId, 'Missing cartId');
-      await updateLineItem({
+      await updateLineItem(context, {
         cartId,
         lineItem: {id: lineId, quantity: 0},
         params,

@@ -47,11 +47,10 @@ export async function loader({request, context, params}: LoaderArgs) {
     return redirect(loginPath);
   }
 
-  const customer = await getCustomer({
+  const customer = await getCustomer(context, {
     customerAccessToken,
     params,
     request,
-    context,
   });
 
   const heading = customer
