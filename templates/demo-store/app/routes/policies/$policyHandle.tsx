@@ -22,8 +22,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
 
   const data = await storefront.query<{
     shop: Record<string, ShopPolicy>;
-  }>({
-    query: POLICY_CONTENT_QUERY,
+  }>(POLICY_CONTENT_QUERY, {
     variables: {
       language,
       privacyPolicy: false,

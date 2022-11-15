@@ -20,8 +20,7 @@ export async function getFeaturedData(
   const data = await storefront.query<{
     featuredCollections: CollectionConnection;
     featuredProducts: ProductConnection;
-  }>({
-    query: FEATURED_QUERY,
+  }>(FEATURED_QUERY, {
     variables: {language, country},
   });
 

@@ -22,8 +22,7 @@ export const loader = async ({params, context: {storefront}}: LoaderArgs) => {
   const {language, country} = getLocalizationFromLang(params.lang);
   const {blog} = await storefront.query<{
     blog: Blog;
-  }>({
-    query: BLOGS_QUERY,
+  }>(BLOGS_QUERY, {
     variables: {
       language,
       blogHandle: BLOG_HANDLE,

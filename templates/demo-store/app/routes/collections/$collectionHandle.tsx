@@ -29,8 +29,7 @@ export async function loader({
 
   const {collection} = await storefront.query<{
     collection: Collection;
-  }>({
-    query: COLLECTION_QUERY,
+  }>(COLLECTION_QUERY, {
     variables: {
       handle: collectionHandle,
       pageBy: PAGINATION_SIZE,
