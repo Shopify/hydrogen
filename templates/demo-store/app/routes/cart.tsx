@@ -9,10 +9,10 @@ import invariant from 'tiny-invariant';
 import {addLineItem, createCart, getTopProducts, updateLineItem} from '~/data';
 import {getSession} from '~/lib/session.server';
 
-export async function loader({params}: LoaderArgs) {
+export async function loader({params, context}: LoaderArgs) {
   return defer(
     {
-      topProducts: getTopProducts({params}),
+      topProducts: getTopProducts(context, {params}),
     },
     {
       headers: {
