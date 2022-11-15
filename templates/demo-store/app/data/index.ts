@@ -32,7 +32,7 @@ import {
 } from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
-import type {AppLoadContext} from '@shopify/hydrogen-remix';
+import type {HydrogenContext} from '@shopify/hydrogen-remix';
 import {type Params} from '@remix-run/react';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
@@ -102,14 +102,16 @@ export async function getStorefrontData<T>({
   return response.json() as StorefrontApiResponseOk<T>;
 }
 
-export async function getLayoutData(params: Params) {
+export async function getLayoutData(
+  {storefront}: HydrogenContext,
+  params: Params,
+) {
   const {language} = getLocalizationFromLang(params.lang);
 
   const HEADER_MENU_HANDLE = 'main-menu';
   const FOOTER_MENU_HANDLE = 'footer';
 
-  const {data} = await getStorefrontData<LayoutData>({
-    query: LAYOUT_QUERY,
+  const data = await storefront.query<LayoutData>(LAYOUT_QUERY, {
     variables: {
       language,
       headerMenuHandle: HEADER_MENU_HANDLE,
@@ -179,11 +181,8 @@ const LAYOUT_QUERY = `#graphql
   }
 `;
 
-export async function getCountries() {
-  const {data} = await getStorefrontData<CountriesData>({
-    query: COUNTRIES_QUERY,
-    variables: {},
-  });
+export async function getCountries({storefront}: HydrogenContext) {
+  const data = await storefront.query<CountriesData>(COUNTRIES_QUERY);
 
   invariant(data, 'No data returned from Shopify API');
 
@@ -487,17 +486,19 @@ const CART_QUERY = `#graphql
   ${CART_FRAGMENT}
 `;
 
-export async function getCart({
-  cartId,
-  params,
-}: {
-  cartId: string;
-  params: Params;
-}) {
+export async function getCart(
+  {storefront}: HydrogenContext,
+  {
+    cartId,
+    params,
+  }: {
+    cartId: string;
+    params: Params;
+  },
+) {
   const {country} = getLocalizationFromLang(params.lang);
 
-  const {data} = await getStorefrontData<{cart: Cart}>({
-    query: CART_QUERY,
+  const data = await storefront.query<{cart: Cart}>(CART_QUERY, {
     variables: {
       cartId,
       country,
@@ -561,19 +562,21 @@ const TOP_PRODUCTS_QUERY = `#graphql
   }
 `;
 
-export async function getTopProducts({
-  params,
-  count = 4,
-}: {
-  params: Params;
-  count?: number;
-}) {
+export async function getTopProducts(
+  {storefront}: HydrogenContext,
+  {
+    params,
+    count = 4,
+  }: {
+    params: Params;
+    count?: number;
+  },
+) {
   const {language, country} = getLocalizationFromLang(params.lang);
 
-  const {data} = await getStorefrontData<{
+  const data = await storefront.query<{
     products: ProductConnection;
-  }>({
-    query: TOP_PRODUCTS_QUERY,
+  }>(TOP_PRODUCTS_QUERY, {
     variables: {
       count,
       country,
@@ -587,15 +590,8 @@ export async function getTopProducts({
 }
 
 // shop primary domain url for /admin
-export async function getPrimaryShopDomain() {
-  const {data, errors} = await getStorefrontData<{shop: Shop}>({
-    query: SHOP_PRIMARY_DOMAIN_QUERY,
-    variables: {},
-  });
-
-  if (errors) {
-    throw new Error(errors.map((error) => error).join());
-  }
+export async function getPrimaryShopDomain({storefront}: HydrogenContext) {
+  const data = await storefront.query<{shop: Shop}>(SHOP_PRIMARY_DOMAIN_QUERY);
 
   invariant(data?.shop?.primaryDomain, 'Primary domain not found');
 
@@ -1092,30 +1088,27 @@ const CUSTOMER_ORDER_QUERY = `#graphql
   }
 `;
 
-export async function getCustomerOrder({
-  orderId,
-  params,
-}: {
-  orderId: string;
-  params: Params;
-}): Promise<Order | undefined> {
+export async function getCustomerOrder(
+  {storefront}: HydrogenContext,
+  {
+    orderId,
+    params,
+  }: {
+    orderId: string;
+    params: Params;
+  },
+): Promise<Order | undefined> {
   const {language, country} = getLocalizationFromLang(params.lang);
 
-  const {data, errors} = await getStorefrontData<{
+  const data = await storefront.query<{
     node: Order;
-  }>({
-    query: CUSTOMER_ORDER_QUERY,
+  }>(CUSTOMER_ORDER_QUERY, {
     variables: {
       country,
       language,
       orderId,
     },
   });
-
-  if (errors) {
-    const errorMessages = errors.map((error) => error.message).join('\n');
-    throw new Error(errorMessages);
-  }
 
   return data?.node;
 }
@@ -1127,27 +1120,22 @@ export async function getCustomer({
   params,
 }: {
   request: Request;
-  context: AppLoadContext;
+  context: HydrogenContext;
   customerAccessToken: string;
   params: Params;
 }) {
+  const {storefront} = context;
   const {language, country} = getLocalizationFromLang(params.lang);
 
-  const {data, errors} = await getStorefrontData<{
+  const data = await storefront.query<{
     customer: Customer;
-  }>({
-    query: CUSTOMER_QUERY,
+  }>(CUSTOMER_QUERY, {
     variables: {
       customerAccessToken,
       country,
       language,
     },
   });
-
-  if (errors) {
-    const errorMessages = errors.map((error) => error.message).join('\n');
-    throw new Error(errorMessages);
-  }
 
   /**
    * If the customer failed to load, we assume their access token is invalid.
