@@ -61,8 +61,7 @@ export const loader = async ({
   const {shop, product} = await storefront.query<{
     product: Product & {selectedVariant?: ProductVariant};
     shop: Shop;
-  }>({
-    query: PRODUCT_QUERY,
+  }>(PRODUCT_QUERY, {
     variables: {
       handle: productHandle,
       country,
@@ -92,8 +91,7 @@ async function getRecommendedProducts(
   const products = await storefront.query<{
     recommended: Product[];
     additional: ProductConnection;
-  }>({
-    query: RECOMMENDED_PRODUCTS_QUERY,
+  }>(RECOMMENDED_PRODUCTS_QUERY, {
     variables: {
       productId,
       count: 12,

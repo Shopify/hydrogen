@@ -103,8 +103,7 @@ export async function loader({
 
   const data = await storefront.query<{
     products: ProductConnection;
-  }>({
-    query: SEARCH_QUERY,
+  }>(SEARCH_QUERY, {
     variables: {
       pageBy: PAGINATION_SIZE,
       searchTerm,
@@ -164,8 +163,7 @@ export async function getNoResultRecommendations(
   const data = await storefront.query<{
     featuredCollections: CollectionConnection;
     featuredProducts: ProductConnection;
-  }>({
-    query: SEARCH_NO_RESULTS_QUERY,
+  }>(SEARCH_NO_RESULTS_QUERY, {
     variables: {
       language,
       country,
