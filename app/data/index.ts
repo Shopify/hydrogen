@@ -306,46 +306,6 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
   }
 `;
 
-const TOP_PRODUCTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
-  query topProducts(
-    $count: Int
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
-    products(first: $count, sortKey: BEST_SELLING) {
-      nodes {
-        ...ProductCard
-      }
-    }
-  }
-`;
-
-export async function getTopProducts({
-  params,
-  count = 4,
-}: {
-  params: Params;
-  count?: number;
-}) {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
-  const {data} = await getStorefrontData<{
-    products: ProductConnection;
-  }>({
-    query: TOP_PRODUCTS_QUERY,
-    variables: {
-      count,
-      country,
-      language,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.products;
-}
-
 // shop primary domain url for /admin
 export async function getPrimaryShopDomain() {
   const {data, errors} = await getStorefrontData<{shop: Shop}>({

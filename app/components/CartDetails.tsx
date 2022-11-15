@@ -2,7 +2,6 @@ import clsx from 'clsx';
 import {useRef} from 'react';
 import {useScroll} from 'react-use';
 import {flattenConnection, Money} from '@shopify/hydrogen-react';
-import {type FetcherWithComponents} from '@remix-run/react';
 import {
   Button,
   Heading,
@@ -17,29 +16,27 @@ import type {
   CartCost,
   CartLine,
   Product,
-  ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {
   LinesRemoveForm,
   useOptimisticLineRemove,
   useOptimisticLinesRemove,
-} from '~/routes/__mutations/__cart/LinesRemove';
+} from '~/routes/__components/__cart/LinesRemove';
 import {
   LinesUpdateForm,
   useOptimisticLineUpdate,
-} from '~/routes/__mutations/__cart/LinesUpdate';
-import {useOptimisticLinesAdd} from '~/routes/__mutations/__cart/LinesAdd';
+} from '~/routes/__components/__cart/LinesUpdate';
+import {useOptimisticLinesAdd} from '~/routes/__components/__cart/LinesAdd';
+import {Products} from '~/routes/__components/GetProducts';
 
 export function CartDetails({
   layout,
   onClose,
   cart,
-  fetcher,
 }: {
   layout: 'drawer' | 'page';
   onClose?: () => void;
   cart: Cart;
-  fetcher: FetcherWithComponents<any>;
 }) {
   const scrollRef = useRef(null);
   const lines = flattenConnection(cart?.lines ?? {}) as CartLine[];
@@ -67,12 +64,7 @@ export function CartDetails({
 
   return (
     <>
-      <CartEmpty
-        hidden={!isCartEmpty}
-        fetcher={fetcher}
-        onClose={onClose}
-        layout={layout}
-      />
+      <CartEmpty hidden={!isCartEmpty} onClose={onClose} layout={layout} />
       <div className={container[layout]} hidden={isCartEmpty}>
         <section
           ref={scrollRef}
@@ -118,12 +110,10 @@ export function CartDetails({
 export function CartEmpty({
   onClose,
   layout = 'drawer',
-  fetcher,
   hidden = false,
 }: {
   onClose?: () => void;
   layout?: 'page' | 'drawer';
-  fetcher: FetcherWithComponents<any>;
   hidden?: boolean;
 }) {
   const scrollRef = useRef(null);
@@ -136,11 +126,6 @@ export function CartEmpty({
       y > 0 ? 'border-t' : '',
     ]),
     page: `grid pb-12 w-full md:items-start gap-4 md:gap-8 lg:gap-12`,
-  };
-
-  const topProductsContainer = {
-    drawer: '',
-    page: 'md:grid-cols-4 sm:grid-col-4',
   };
 
   return (
@@ -158,13 +143,63 @@ export function CartEmpty({
         <Heading format size="copy">
           Shop Best Sellers
         </Heading>
-        <div
-          className={`grid grid-cols-2 gap-x-6 gap-y-8 ${topProductsContainer[layout]}`}
-        >
-          <TopProducts fetcher={fetcher} onClose={onClose} />
-        </div>
+        <BestSellingProducts onClose={onClose} layout={layout} />
       </section>
     </div>
+  );
+}
+
+function BestSellingProducts({
+  onClose,
+  layout,
+}: {
+  onClose?: () => void;
+  layout: 'page' | 'drawer';
+}) {
+  const topProductsContainer = {
+    drawer: '',
+    page: 'md:grid-cols-4 sm:grid-col-4',
+  };
+
+  return (
+    <Products count={4} sortKey="BEST_SELLING">
+      {({products, count, state}) => {
+        if (state === 'loading') {
+          return (
+            <>
+              {[...new Array(count)].map((_, i) => (
+                // eslint-disable-next-line react/no-array-index-key
+                <div key={i} className="grid gap-2">
+                  <Skeleton className="aspect-[3/4]" />
+                  <Skeleton className="w-32 h-4" />
+                </div>
+              ))}
+            </>
+          );
+        }
+
+        if (products.length === 0) {
+          return <Text format>No products found.</Text>;
+        }
+
+        return (
+          <div
+            className={clsx([
+              `grid grid-cols-2 gap-x-6 gap-y-8`,
+              topProductsContainer[layout],
+            ])}
+          >
+            {products.map((product) => (
+              <ProductCard
+                product={product as Product}
+                key={product.id}
+                onClick={onClose}
+              />
+            ))}
+          </div>
+        );
+      }}
+    </Products>
   );
 }
 
@@ -306,52 +341,6 @@ function CartLineQuantityAdjust({
           )}
         </LinesUpdateForm>
       </div>
-    </>
-  );
-}
-
-function TopProducts({
-  fetcher,
-  onClose,
-}: {
-  fetcher: FetcherWithComponents<any>;
-  onClose?: () => void;
-}) {
-  if (!fetcher.data) {
-    return <Loading />;
-  }
-
-  const products = flattenConnection(
-    fetcher.data.topProducts as ProductConnection,
-  );
-
-  if (products.length === 0) {
-    return <Text format>No products found.</Text>;
-  }
-
-  return (
-    <>
-      {products.map((product) => (
-        <ProductCard
-          product={product as Product}
-          key={product.id}
-          onClick={onClose}
-        />
-      ))}
-    </>
-  );
-}
-
-function Loading() {
-  return (
-    <>
-      {[...new Array(4)].map((_, i) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <div key={i} className="grid gap-2">
-          <Skeleton className="aspect-[3/4]" />
-          <Skeleton className="w-32 h-4" />
-        </div>
-      ))}
     </>
   );
 }

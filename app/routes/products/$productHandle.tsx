@@ -6,7 +6,6 @@ import {
   useSearchParams,
   useLocation,
   useTransition,
-  Params,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-react';
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
@@ -43,9 +42,8 @@ import {
 import {
   DiscountCodesUpdate,
   useDiscountCodesUpdate,
-} from '~/routes/__mutations/__cart/DiscountCodesUpdate';
-import {LinesAddForm} from '~/routes/__mutations/__cart/LinesAdd';
-import {LinesRemoveForm} from '../__mutations/__cart/LinesRemove';
+} from '~/routes/__components/__cart/DiscountCodesUpdate';
+import {LinesAddForm} from '~/routes/__components/__cart/LinesAdd';
 
 export const loader = async ({
   params,

@@ -1,20 +1,5 @@
-import {type LoaderArgs, defer} from '@hydrogen/remix';
 import {Suspense} from 'react';
 import {Await, useMatches} from '@remix-run/react';
-import {getTopProducts} from '~/data';
-
-export async function loader({params}: LoaderArgs) {
-  return defer(
-    {
-      topProducts: getTopProducts({params}),
-    },
-    {
-      headers: {
-        'Cache-Control': 'max-age=600',
-      },
-    },
-  );
-}
 
 export default function Cart() {
   const [root] = useMatches();

@@ -20,21 +20,14 @@ import {
   CartEmpty,
   Link,
 } from '~/components';
-import {
-  useFetcher,
-  useParams,
-  Form,
-  useFetchers,
-  useMatches,
-  Await,
-} from '@remix-run/react';
+import {useParams, Form, useMatches, Await} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useCart} from '~/hooks/useCart';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
-import {useLinesAdd} from '~/routes/__mutations/__cart/LinesAdd';
+import {useLinesAdd} from '~/routes/__components/__cart/LinesAdd';
 
 export function Layout({
   children,
@@ -114,22 +107,6 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 
 function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   const [root] = useMatches();
-  /**
-   * Whenever a component that uses a fetcher is _unmounted_, that fetcher is removed
-   * from the internal Remix cache. By defining the fetcher outside of the component,
-   * we persist it between mounting and unmounting.
-   */
-  const topProductsFetcher = useFetcher();
-
-  /**
-   * We load the top products, which are only shown as a fallback when the cart as empty.
-   * We need to do this here, otherwise we'll incur a network request every time the
-   * drawer is opened.
-   */
-  useEffect(() => {
-    isOpen && topProductsFetcher.load('/cart');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
 
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
@@ -144,18 +121,9 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
           <Await resolve={root.data.cart}>
             {(cart) =>
               cart ? (
-                <CartDetails
-                  fetcher={topProductsFetcher}
-                  layout="drawer"
-                  onClose={onClose}
-                  cart={cart}
-                />
+                <CartDetails layout="drawer" onClose={onClose} cart={cart} />
               ) : (
-                <CartEmpty
-                  fetcher={topProductsFetcher}
-                  onClose={onClose}
-                  layout="drawer"
-                />
+                <CartEmpty onClose={onClose} layout="drawer" />
               )
             }
           </Await>
@@ -165,7 +133,7 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   );
 }
 
-export function MenuDrawer({
+function MenuDrawer({
   isOpen,
   onClose,
   menu,
