@@ -162,18 +162,29 @@ export default function Productos() {
 
 The available resource types are:
 
-| **Resource Type** | **Description**           |
-| ----------------- | ------------------------- |
-| BLOG              | `/blogs`                  |
-| ARTICLE           | `/blogs/:handle/articles` |
-| CATALOG           | `/products`               |
-| COLLECTION        | `/collections/:handle`    |
-| COLLECTIONS       | `/collections`            |
-| FRONTPAGE         | `/`                       |
-| PAGE              | `/pages/:handle`          |
-| PRODUCT           | `/products/:products`     |
-| SEARCH            | `/search/?q=…`            |
-| SHOP_POLICY       | `/policies`               |
+| **Resource Type** | **Description**                          |
+| ----------------- | ---------------------------------------- |
+| BLOG              | `/blogs`                                 |
+| ARTICLE           | `/blogs/:handle/articles`                |
+| CATALOG           | `/products`                              |
+| COLLECTION        | `/collections/:handle`                   |
+| COLLECTIONS       | `/collections`                           |
+| FRONTPAGE         | `/`                                      |
+| PAGE              | `/pages/:handle`                         |
+| PRODUCT           | `/products/:products`                    |
+| SEARCH            | `/search/?q=…`                           |
+| SHOP_POLICY       | `/policies`                              |
+| LOGIN             | `/account/login`                         |
+| REGISTER          | `/account/register`                      |
+| RESET_PASSWORD    | `/account/reset.$id.$resetToken`         |
+| ACTIVATE          | `/account/activate.$id.$activationToken` |
+| RECOVER_PASSWORD  | `/account/recover`                       |
+| ACCOUNT           | `/account`.                              |
+| ACCOUNT_EDIT      | `/account/edit`                          |
+| ORDERS            | `/account/orders`                        |
+| ORDER_DETAIL      | `/account/orders.$id`                    |
+| ADDRESSES         | `/account/addresses`                     |
+| ADDRESS_DETAIL    | `/account/addresses.$id`                 |
 
 Notes:
 
