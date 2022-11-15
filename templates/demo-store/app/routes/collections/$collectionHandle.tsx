@@ -27,7 +27,21 @@ export async function loader({
 
   invariant(collectionHandle, 'Missing collectionHandle param');
 
-  const cursor = new URL(request.url).searchParams.get('cursor') ?? undefined;
+  const searchParams = new URL(request.url).searchParams;
+  const knownFilters = ['productVendor', 'productType', 'available'];
+
+  const variantOption: Record<string, string>[] = [];
+  const variables: Record<string, string | any[]> = {};
+
+  for (const [key, value] of searchParams.entries()) {
+    // TODO: Add price min/max to query
+    if (knownFilters.includes(key)) {
+      variables[key] = value;
+    } else {
+      variantOption.push({name: key, value});
+    }
+  }
+
   const {language, country} = getLocalizationFromLang(params.lang);
 
   const {collection} = await storefront.query<{
@@ -35,18 +49,20 @@ export async function loader({
   }>({
     query: COLLECTION_QUERY,
     variables: {
+      ...variables,
       handle: collectionHandle,
       pageBy: PAGINATION_SIZE,
-      cursor,
       language,
       country,
+      available: variables.available === 'false' ? false : true,
+      // TODO: Can we pass in multiple variantOptions?
+      variantOption: variantOption.length > 0 ? variantOption[0] : undefined,
     },
   });
 
   if (!collection) {
     throw new Response('Not found', {status: 404});
   }
-  const {products} = collection;
 
   return json({collection});
 }
@@ -98,6 +114,10 @@ const COLLECTION_QUERY = `#graphql
     $language: LanguageCode
     $pageBy: Int!
     $cursor: String
+    $productVendor: String
+    $productType: String
+    $available: Boolean
+    $variantOption: VariantOptionFilter
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -115,7 +135,16 @@ const COLLECTION_QUERY = `#graphql
         height
         altText
       }
-      products(first: $pageBy, after: $cursor) {
+      products(
+        first: $pageBy,
+        after: $cursor,
+        filters: {
+          productVendor: $productVendor,
+          productType: $productType,
+          available: $available
+          variantOption: $variantOption
+        }
+      ) {
         filters {
           id
           label
@@ -125,7 +154,6 @@ const COLLECTION_QUERY = `#graphql
             label
             count
             input
-
           }
         }
         nodes {
