@@ -18,5 +18,6 @@ export {Modal} from './Modal';
 export {Link} from './Link';
 export {FeaturedCollections} from './FeaturedCollections';
 export {Hero} from './Hero';
+export {SortFilter} from './SortFilter';
 // Sue me
 export * from './Icon';
