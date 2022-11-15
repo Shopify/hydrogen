@@ -153,7 +153,8 @@ export function createStorefrontClient(
         .map((value: any) => value?.customerUserErrors?.[0]?.message)
         .filter(Boolean);
 
-      throwError(response, mutationErrors, StorefrontApiError);
+      if (mutationErrors.length)
+        throwError(response, mutationErrors, StorefrontApiError);
     }
 
     return data as T;
