@@ -221,3 +221,9 @@ export const action = async ({request, context, params}) => {
 * Do intelligent caching like cache each product query results individually so it can be easily
   reused by other event requests
 * Provides result in an expected shape for shaper functions (ie. `shapeForShopifyAnalytics`) to process
+
+H2 will also provide error logging interface for analytics errors such that:
+
+* Base on user option, logs nothing in production but logs loudly in development
+* Provide standardized way to provide meaningful error messages that developers would know
+  where to look for more information
