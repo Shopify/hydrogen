@@ -1,6 +1,5 @@
 import {useEffect, forwardRef, useCallback, useMemo} from 'react';
 import {Params, useFetcher, useFetchers, useLocation} from '@remix-run/react';
-import {Button} from '~/components';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import {getSession} from '~/lib/session.server';
@@ -54,12 +53,12 @@ interface OptimisticLinesAdd {
   optimisticLinesAdd: CartLine[] | [];
 }
 
-const ACTION_PATH = '/LinesAdd';
+const ACTION_PATH = '/cart/LinesAdd';
 
 /*
   Action ----------------------------------------------------------------
 */
-export async function action({request, context, params}: ActionArgs) {
+async function action({request, context, params}: ActionArgs) {
   const headers = new Headers();
 
   const [session, formData] = await Promise.all([
@@ -98,7 +97,7 @@ export async function action({request, context, params}: ActionArgs) {
   }
 
   // we need to query the prevCart so we can validate
-  // what really added or not for analytics
+  // what was really added or not for analytics
   const prevCart = await getCartLines({cartId, params, context});
 
   // B — else add line(s) to existing cart
@@ -109,188 +108,7 @@ export async function action({request, context, params}: ActionArgs) {
     context,
   });
 
-  await sleep(4);
-
   return linesAddResponse(prevCart, cart, lines, formData, headers);
-}
-
-/*
-  Component ----------------------------------------------------------------
-  Add a set of line(s) to the cart
-  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartLinesAdd
-*/
-export const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
-  ({children = false, lines = [], onSuccess}, ref) => {
-    const {pathname, search} = useLocation();
-    const fetcher = useFetcher();
-    const isHydrated = useIsHydrated();
-    const error = fetcher?.data?.error;
-    const event = fetcher?.data?.event;
-    const eventId = fetcher?.data?.event?.id;
-
-    useEffect(() => {
-      if (!eventId) return;
-      onSuccess?.(event);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [eventId]);
-
-    // @todo: maybe throw if no lines are provided?
-    if (!lines?.length) return null;
-
-    return (
-      <fetcher.Form method="post" action={ACTION_PATH} ref={ref}>
-        <input
-          type="hidden"
-          name="lines"
-          defaultValue={JSON.stringify(lines)}
-        />
-        {/* used to trigger a redirect back to the PDP when JS is disabled */}
-        {isHydrated ? null : (
-          <input
-            type="hidden"
-            name="redirectTo"
-            defaultValue={`${pathname}${search}`}
-          />
-        )}
-        {children({state: fetcher.state, error})}
-      </fetcher.Form>
-    );
-  },
-);
-
-/*
-  Hooks ----------------------------------------------------------------
-*/
-export function useLinesAdd(
-  onSuccess: (event: LinesAddEvent) => void = () => {},
-) {
-  const fetcher = useFetcher();
-  const fetchers = useFetchers();
-  const linesAddFetcher = fetchers.find(
-    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
-  );
-
-  let linesAdding;
-
-  if (linesAddFetcher?.submission) {
-    const linesAddingStr = linesAddFetcher?.submission?.formData?.get('lines');
-    if (linesAddingStr && typeof linesAddingStr === 'string') {
-      linesAdding = JSON.parse(linesAddingStr);
-    }
-  }
-
-  const linesAdd = useCallback(
-    ({lines}: {lines: LinesAddProps['lines']}) => {
-      const form = new FormData();
-      form.set('lines', JSON.stringify(lines));
-      fetcher.submit(form, {
-        method: 'post',
-        action: ACTION_PATH,
-        replace: false,
-      });
-    },
-    [fetcher],
-  );
-
-  useEffect(() => {
-    if (!fetcher?.data?.event) return;
-    onSuccess?.(fetcher.data.event);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetcher?.data?.event]);
-
-  return {
-    linesAdd,
-    linesAddFetcher,
-    linesAdding,
-  };
-}
-
-export function useOptimisticLinesAdd(lines: CartLine[]): OptimisticLinesAdd {
-  const fetchers = useFetchers();
-  const linesAddFetcher = fetchers.find(
-    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
-  );
-  const linesAddingStr = linesAddFetcher?.submission?.formData?.get('lines');
-
-  return useMemo(() => {
-    let linesAdding: LinesAddLine[] | [] = [];
-
-    // get lines currently being added
-    if (linesAddingStr && typeof linesAddingStr === 'string') {
-      linesAdding = JSON.parse(linesAddingStr);
-    } else {
-      return {linesAdding, optimisticLinesAdd: []};
-    }
-
-    // default response
-    const result: OptimisticLinesAdd = {linesAdding, optimisticLinesAdd: []};
-
-    if (!linesAdding?.length) return result;
-
-    // convert all variants being added to cart lines that can
-    // be rendered as optimistic <CartLine />
-    const cartLinesAdding = linesAdding
-      .map((line) => {
-        const {variant} = line;
-        const lineTotalAmount = String(
-          parseFloat(variant.price.amount) * (line.quantity || 1),
-        );
-        return {
-          id: crypto.randomUUID(),
-          quantity: line.quantity,
-          cost: {
-            totalAmount: {
-              amount: lineTotalAmount,
-              currencyCode: variant.price.currencyCode,
-            },
-            compareAtAmountPerQuantity: variant.compareAtPrice,
-          },
-          merchandise: {
-            id: variant.id,
-            image: variant.image,
-            product: variant.product,
-            selectedOptions: variant.selectedOptions,
-          },
-        };
-      })
-      .reverse() as CartLine[];
-
-    if (!cartLinesAdding || !cartLinesAdding?.length) return result;
-
-    // filter just the new optimistic lines
-    const addedIds = lines.map((line) => line.merchandise.id);
-    const addingIds = cartLinesAdding.map((line) => line.merchandise.id);
-    const addingIdsNew = addingIds.filter((id) => !addedIds.includes(id));
-
-    if (!addedIds.length) {
-      // assign all adding lines: empty cart
-      result.optimisticLinesAdd = cartLinesAdding;
-      return result;
-    }
-
-    if (addingIds?.length) {
-      // assign new lines only: existing cart with lines
-      const addingLinesNew = addingIdsNew
-        .map((lineId) => {
-          const line = cartLinesAdding.find(
-            (line) => line.merchandise.id === lineId,
-          );
-          return line || null;
-        })
-        .filter(Boolean) as CartLine[];
-      result.optimisticLinesAdd = addingLinesNew;
-      return result;
-    }
-
-    return result;
-  }, [linesAddingStr, lines]);
-}
-
-// @todo: remove debug only
-async function sleep(ms: number) {
-  return new Promise((resolve) =>
-    setTimeout(resolve, Math.floor(Math.random() * ms) * 1_000),
-  );
 }
 
 /*
@@ -397,7 +215,7 @@ function getLinesAddedStatus(
 /*
   Action mutations & queries -----------------------------------------------------------------------------------------
 */
-export const USER_ERROR_FRAGMENT = `#graphql
+const USER_ERROR_FRAGMENT = `#graphql
   fragment ErrorFragment on CartUserError {
     message
     field
@@ -405,7 +223,7 @@ export const USER_ERROR_FRAGMENT = `#graphql
   }
 `;
 
-export const LINES_CART_FRAGMENT = `#graphql
+const LINES_CART_FRAGMENT = `#graphql
   fragment CartLinesFragment on Cart {
     id
     totalQuantity
@@ -468,7 +286,7 @@ const ADD_LINES_MUTATION = `#graphql
   ${USER_ERROR_FRAGMENT}
 `;
 
-export async function getCartLines({
+async function getCartLines({
   cartId,
   params,
   context,
@@ -495,7 +313,7 @@ export async function getCartLines({
   return cart;
 }
 
-export async function cartCreateLinesMutation({
+async function cartCreateLinesMutation({
   cart,
   params,
   context,
@@ -536,7 +354,7 @@ export async function cartCreateLinesMutation({
   return cartCreate.cart;
 }
 
-export async function linesAddMutation({
+async function linesAddMutation({
   cartId,
   lines,
   params,
@@ -574,3 +392,186 @@ export async function linesAddMutation({
 
   return cartLinesAdd.cart;
 }
+
+/*
+  Component ----------------------------------------------------------------
+  Add a set of line(s) to the cart
+  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartLinesAdd
+*/
+const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
+  ({children, lines = [], onSuccess}, ref) => {
+    const {pathname, search} = useLocation();
+    const fetcher = useFetcher();
+    const isHydrated = useIsHydrated();
+    const error = fetcher?.data?.error;
+    const event = fetcher?.data?.event;
+    const eventId = fetcher?.data?.event?.id;
+
+    useEffect(() => {
+      if (!eventId) return;
+      onSuccess?.(event);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [eventId]);
+
+    // @todo: maybe throw if no lines are provided?
+    if (!lines?.length) return null;
+
+    return (
+      <fetcher.Form method="post" action={ACTION_PATH} ref={ref}>
+        <input
+          type="hidden"
+          name="lines"
+          defaultValue={JSON.stringify(lines)}
+        />
+        {/* used to trigger a redirect back to the PDP when JS is disabled */}
+        {isHydrated ? null : (
+          <input
+            type="hidden"
+            name="redirectTo"
+            defaultValue={`${pathname}${search}`}
+          />
+        )}
+        {children({state: fetcher.state, error})}
+      </fetcher.Form>
+    );
+  },
+);
+
+/*
+  Hooks ---------------
+  -------------------------------------------------
+*/
+function useLinesAdd(onSuccess: (event: LinesAddEvent) => void = () => {}) {
+  const fetcher = useFetcher();
+  const fetchers = useFetchers();
+  const linesAddFetcher = fetchers.find(
+    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
+  );
+
+  let linesAdding;
+
+  if (linesAddFetcher?.submission) {
+    const linesAddingStr = linesAddFetcher?.submission?.formData?.get('lines');
+    if (linesAddingStr && typeof linesAddingStr === 'string') {
+      linesAdding = JSON.parse(linesAddingStr);
+    }
+  }
+
+  const linesAdd = useCallback(
+    ({lines}: {lines: LinesAddProps['lines']}) => {
+      const form = new FormData();
+      form.set('lines', JSON.stringify(lines));
+      fetcher.submit(form, {
+        method: 'post',
+        action: ACTION_PATH,
+        replace: false,
+      });
+    },
+    [fetcher],
+  );
+
+  useEffect(() => {
+    if (!fetcher?.data?.event) return;
+    onSuccess?.(fetcher.data.event);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetcher?.data?.event]);
+
+  return {
+    linesAdd,
+    linesAddFetcher,
+    linesAdding,
+  };
+}
+
+function useOptimisticLinesAdd(lines: CartLine[]): OptimisticLinesAdd {
+  const fetchers = useFetchers();
+  const linesAddFetcher = fetchers.find(
+    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
+  );
+  const linesAddingStr = linesAddFetcher?.submission?.formData?.get('lines');
+
+  return useMemo(() => {
+    let linesAdding: LinesAddLine[] | [] = [];
+
+    // get lines currently being added
+    if (linesAddingStr && typeof linesAddingStr === 'string') {
+      linesAdding = JSON.parse(linesAddingStr);
+    } else {
+      return {linesAdding, optimisticLinesAdd: []};
+    }
+
+    // default response
+    const result: OptimisticLinesAdd = {linesAdding, optimisticLinesAdd: []};
+
+    if (!linesAdding?.length) return result;
+
+    // convert all variants being added to cart lines that can
+    // be rendered as optimistic <CartLine />
+    const cartLinesAdding = linesAdding
+      .map((line) => {
+        const {variant} = line;
+        const lineTotalAmount = String(
+          parseFloat(variant.price.amount) * (line.quantity || 1),
+        );
+        return {
+          id: crypto.randomUUID(),
+          quantity: line.quantity,
+          cost: {
+            totalAmount: {
+              amount: lineTotalAmount,
+              currencyCode: variant.price.currencyCode,
+            },
+            compareAtAmountPerQuantity: variant.compareAtPrice,
+          },
+          merchandise: {
+            id: variant.id,
+            image: variant.image,
+            product: variant.product,
+            selectedOptions: variant.selectedOptions,
+          },
+        };
+      })
+      .reverse() as CartLine[];
+
+    if (!cartLinesAdding || !cartLinesAdding?.length) return result;
+
+    // filter just the new optimistic lines
+    const addedIds = lines.map((line) => line.merchandise.id);
+    const addingIds = cartLinesAdding.map((line) => line.merchandise.id);
+    const addingIdsNew = addingIds.filter((id) => !addedIds.includes(id));
+
+    if (!addedIds.length) {
+      // assign all adding lines: empty cart
+      result.optimisticLinesAdd = cartLinesAdding;
+      return result;
+    }
+
+    if (addingIds?.length) {
+      // assign new lines only: existing cart with lines
+      const addingLinesNew = addingIdsNew
+        .map((lineId) => {
+          const line = cartLinesAdding.find(
+            (line) => line.merchandise.id === lineId,
+          );
+          return line || null;
+        })
+        .filter(Boolean) as CartLine[];
+      result.optimisticLinesAdd = addingLinesNew;
+      return result;
+    }
+
+    return result;
+  }, [linesAddingStr, lines]);
+}
+
+export {
+  action,
+  cartCreateLinesMutation,
+  getCartLines,
+  LINES_CART_FRAGMENT,
+  LinesAddForm,
+  linesAddMutation,
+  useLinesAdd,
+  useOptimisticLinesAdd,
+  USER_ERROR_FRAGMENT,
+};

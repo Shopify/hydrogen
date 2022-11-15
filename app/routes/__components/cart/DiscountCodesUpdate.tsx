@@ -41,12 +41,17 @@ interface DiscountCodesUpdateEvent {
   payload: DiscountCodesUpdateEventPayload;
 }
 
-const ACTION_PATH = `/DiscountCodesUpdate`;
+interface DiscountCodesUpdated {
+  codesAdded: CartDiscountCode[];
+  codesRemoved: CartDiscountCode[];
+}
+
+const ACTION_PATH = `/cart/DiscountCodesUpdate`;
 
 /*
-  Action ----------------------------------------------------------------
+  action ----------------------------------------------------------------
 */
-export async function action({request, context, params}: ActionArgs) {
+async function action({request, context, params}: ActionArgs) {
   const [session, formData] = await Promise.all([
     getSession(request, context),
     new URLSearchParams(await request.text()),
@@ -75,90 +80,7 @@ export async function action({request, context, params}: ActionArgs) {
 }
 
 /*
-  Component ----------------------------------------------------------------
-  Updates the discount codes applied to the cart
-  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartDiscountCodesUpdate
-*/
-export const DiscountCodesUpdate = forwardRef(
-  (
-    {discountCodes, children, onSuccess = () => {}}: DiscountCodesUpdateProps,
-    ref: React.Ref<HTMLFormElement>,
-  ) => {
-    const formId = useId();
-    const isHydrated = useIsHydrated();
-    const fetcher = useFetcher();
-    const {pathname, search} = useLocation();
-
-    const eventId = fetcher.data?.event?.id;
-    const event = fetcher.data?.event;
-    const error = fetcher.data?.error;
-
-    // Adding onSuccess or event causes the event to fire multiple times
-    // despite no change
-    useEffect(() => {
-      if (!eventId) return;
-      onSuccess?.(event);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [eventId]);
-
-    return (
-      <fetcher.Form id={formId} method="post" action={ACTION_PATH} ref={ref}>
-        {/* used to trigger a redirect back to the same url when JS is disabled */}
-        {isHydrated ? null : (
-          <input
-            type="hidden"
-            name="redirectTo"
-            defaultValue={`${pathname}${search}`}
-          />
-        )}
-        <input
-          type="hidden"
-          name="discountCodes"
-          defaultValue={JSON.stringify(discountCodes)}
-        />
-        {children({state: fetcher.state, error})}
-      </fetcher.Form>
-    );
-  },
-);
-
-/*
-  Hook ----------------------------------------------------------------
-  Programmatically update the discount codes applied to the cart
-  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartDiscountCodesUpdate
-*/
-export function useDiscountCodesUpdate(
-  onSuccess: (event: DiscountCodesUpdateEvent) => void = () => {},
-) {
-  const fetcher = useFetcher();
-  const discountCodesUpdate = useCallback(
-    ({discountCodes}: {discountCodes: string[]}) => {
-      const form = new FormData();
-      form.set('discountCodes', JSON.stringify(discountCodes));
-      fetcher.submit(form, {
-        method: 'post',
-        action: ACTION_PATH,
-        replace: false,
-      });
-    },
-    [fetcher],
-  );
-
-  useEffect(() => {
-    if (!fetcher?.data?.event) return;
-    onSuccess?.(fetcher.data.event);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetcher?.data?.event]);
-
-  return {
-    discountCodesUpdate,
-    data: fetcher.data || null,
-    state: fetcher.state,
-  };
-}
-
-/*
-  Action helpers ----------------------------------------------------------------
+  action helpers ----------------------------------------------------------------
 */
 function discountCodesUpdateResponse(
   cart: Cart,
@@ -195,11 +117,6 @@ function discountCodesUpdateResponse(
   return json({event});
 }
 
-interface DiscountCodesUpdated {
-  codesAdded: CartDiscountCode[];
-  codesRemoved: CartDiscountCode[];
-}
-
 function getUpdatedDiscountCodes(
   prevDiscountCodes: CartDiscountCode[],
   discountCodes: CartDiscountCode[],
@@ -221,7 +138,7 @@ function getUpdatedDiscountCodes(
 }
 
 /*
-  Action Mutations -----------------------------------------------------------------------------------------
+  action nutations / queries -----------------------------------------------------------------------------------------
 */
 const DISCOUNT_CODES_UPDATE = `#graphql
   mutation cartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!], $country: CountryCode = ZZ)
@@ -279,7 +196,7 @@ async function getCartDiscounts({
   return cart;
 }
 
-export async function discountCodesUpdateMutation({
+async function discountCodesUpdateMutation({
   cartId,
   discountCodes,
   params,
@@ -316,3 +233,93 @@ export async function discountCodesUpdateMutation({
   );
   return cartDiscountCodesUpdate;
 }
+
+/*
+  Component ----------------------------------------------------------------
+  Updates the discount codes applied to the cart
+  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartDiscountCodesUpdate
+*/
+const DiscountCodesUpdateForm = forwardRef(
+  (
+    {discountCodes, children, onSuccess = () => {}}: DiscountCodesUpdateProps,
+    ref: React.Ref<HTMLFormElement>,
+  ) => {
+    const formId = useId();
+    const isHydrated = useIsHydrated();
+    const fetcher = useFetcher();
+    const {pathname, search} = useLocation();
+
+    const eventId = fetcher.data?.event?.id;
+    const event = fetcher.data?.event;
+    const error = fetcher.data?.error;
+
+    // Adding onSuccess or event causes the event to fire multiple times
+    // despite no change
+    useEffect(() => {
+      if (!eventId) return;
+      onSuccess?.(event);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [eventId]);
+
+    return (
+      <fetcher.Form id={formId} method="post" action={ACTION_PATH} ref={ref}>
+        {/* used to trigger a redirect back to the same url when JS is disabled */}
+        {isHydrated ? null : (
+          <input
+            type="hidden"
+            name="redirectTo"
+            defaultValue={`${pathname}${search}`}
+          />
+        )}
+        <input
+          type="hidden"
+          name="discountCodes"
+          defaultValue={JSON.stringify(discountCodes)}
+        />
+        {children({state: fetcher.state, error})}
+      </fetcher.Form>
+    );
+  },
+);
+
+/*
+  Hook ----------------------------------------------------------------
+  Programmatically update the discount codes applied to the cart
+  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartDiscountCodesUpdate
+*/
+function useDiscountCodesUpdate(
+  onSuccess: (event: DiscountCodesUpdateEvent) => void = () => {},
+) {
+  const fetcher = useFetcher();
+  const discountCodesUpdate = useCallback(
+    ({discountCodes}: {discountCodes: string[]}) => {
+      const form = new FormData();
+      form.set('discountCodes', JSON.stringify(discountCodes));
+      fetcher.submit(form, {
+        method: 'post',
+        action: ACTION_PATH,
+        replace: false,
+      });
+    },
+    [fetcher],
+  );
+
+  useEffect(() => {
+    if (!fetcher?.data?.event) return;
+    onSuccess?.(fetcher.data.event);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fetcher?.data?.event]);
+
+  return {
+    discountCodesUpdate,
+    data: fetcher.data || null,
+    state: fetcher.state,
+  };
+}
+
+export {
+  action,
+  DiscountCodesUpdateForm,
+  discountCodesUpdateMutation,
+  useDiscountCodesUpdate,
+};

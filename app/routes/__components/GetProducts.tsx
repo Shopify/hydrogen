@@ -16,12 +16,15 @@ interface GetProductsProps {
   state: FetcherWithComponents<any>['state'];
   count: number;
 }
+interface ProductsCompProps {
+  children: (props: GetProductsProps) => JSX.Element;
+  count?: number;
+  sortKey?: ProductSortKeys;
+}
 
-export async function loader({
-  request,
-  params,
-  context: {storefront},
-}: LoaderArgs) {
+const LOADER_PATH = '/GetProducts';
+
+async function loader({request, params, context: {storefront}}: LoaderArgs) {
   const {language, country} = getLocalizationFromLang(params.lang);
   const url = new URL(request.url);
 
@@ -55,30 +58,6 @@ export async function loader({
   return json({
     products: flattenConnection(products as ProductConnection),
   });
-}
-
-export default function ProductsComponentRoute() {
-  return null;
-}
-
-export function Products({
-  children,
-  count = 4,
-  sortKey = 'BEST_SELLING',
-}: {
-  children: (props: GetProductsProps) => JSX.Element;
-  count?: number;
-  sortKey?: ProductSortKeys;
-}) {
-  const {load, data, state} = useFetcher();
-
-  useEffect(() => {
-    load(`/GetProducts?count=${count}&sortKey=${sortKey}`);
-  }, [load, count, sortKey]);
-
-  const products = (data?.products ?? []) as Product[];
-
-  return children({products, count, state});
 }
 
 const PRODUCTS_QUERY = `#graphql
@@ -120,3 +99,38 @@ const PRODUCTS_QUERY = `#graphql
     }
   }
 `;
+
+/*
+  component -----------------------------------------------------------------------------------------
+*/
+function Products({
+  children,
+  count = 4,
+  sortKey = 'BEST_SELLING',
+}: ProductsCompProps) {
+  const {products, state} = useProducts({count, sortKey});
+  return children({products, count, state});
+}
+
+/*
+  hook -----------------------------------------------------------------------------------------
+*/
+function useProducts(props: Omit<ProductsCompProps, 'children'>) {
+  const {count = 4, sortKey = 'BEST_SELLING'} = props;
+  const {load, data, state} = useFetcher();
+
+  useEffect(() => {
+    load(`${LOADER_PATH}?count=${count}&sortKey=${sortKey}`);
+  }, [load, count, sortKey]);
+
+  const products = (data?.products ?? []) as Product[];
+
+  return {products, state};
+}
+
+// no-op
+export default function ProductsComponentRoute() {
+  return null;
+}
+
+export {loader, Products, useProducts};

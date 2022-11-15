@@ -21,12 +21,12 @@ import {
   LinesRemoveForm,
   useOptimisticLineRemove,
   useOptimisticLinesRemove,
-} from '~/routes/__components/__cart/LinesRemove';
+} from '~/routes/__components/cart/LinesRemove';
 import {
   LinesUpdateForm,
   useOptimisticLineUpdate,
-} from '~/routes/__components/__cart/LinesUpdate';
-import {useOptimisticLinesAdd} from '~/routes/__components/__cart/LinesAdd';
+} from '~/routes/__components/cart/LinesUpdate';
+import {useOptimisticLinesAdd} from '~/routes/__components/cart/LinesAdd';
 import {Products} from '~/routes/__components/GetProducts';
 
 export function CartDetails({
@@ -162,7 +162,7 @@ function BestSellingProducts({
   };
 
   return (
-    <Products count={4} sortKey="BEST_SELLING">
+    <Products count={2} sortKey="BEST_SELLING">
       {({products, count, state}) => {
         if (state === 'loading') {
           return (

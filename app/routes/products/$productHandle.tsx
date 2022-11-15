@@ -40,10 +40,10 @@ import {
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data';
 import {
-  DiscountCodesUpdate,
+  DiscountCodesUpdateForm,
   useDiscountCodesUpdate,
-} from '~/routes/__components/__cart/DiscountCodesUpdate';
-import {LinesAddForm} from '~/routes/__components/__cart/LinesAdd';
+} from '~/routes/__components/cart/DiscountCodesUpdate';
+import {LinesAddForm} from '~/routes/__components/cart/LinesAdd';
 
 export const loader = async ({
   params,
@@ -211,7 +211,7 @@ export function ProductForm() {
           searchParamsWithDefaults={searchParamsWithDefaults}
         />
         <div className="grid items-stretch gap-4">
-          <DiscountCodesUpdate
+          <DiscountCodesUpdateForm
             discountCodes={[]}
             onSuccess={(event) => {
               console.log('Cleared discounts', event);
@@ -222,7 +222,7 @@ export function ProductForm() {
                 <span>Clear discounts</span>
               </button>
             )}
-          </DiscountCodesUpdate>
+          </DiscountCodesUpdateForm>
           {selectedVariant && (
             <LinesAddForm
               lines={[

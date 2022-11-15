@@ -27,7 +27,7 @@ import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useCart} from '~/hooks/useCart';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
-import {useLinesAdd} from '~/routes/__components/__cart/LinesAdd';
+import {useLinesAdd} from '~/routes/__components/cart/LinesAdd';
 
 export function Layout({
   children,
