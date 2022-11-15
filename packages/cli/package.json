@@ -1,16 +1,18 @@
 {
   "private": true,
-  "name": "@hydrogen/cli",
+  "name": "@shopify/plugin-h2",
   "version": "0.0.1",
   "main": "./index.ts",
   "scripts": {
     "shopify": "npm run build && ../../node_modules/.bin/shopify",
+    "postinstall": "./bin/postinstall.mjs",
     "build": "tsc",
     "start": "node --experimental-vm-modules --loader ts-node/esm --require=./suppress-experimental.js ./index.ts"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.1",
+    "@shopify/cli": "^3.23.0"
   },
   "dependencies": {
     "@remix-run/dev": "0.0.0-experimental-e18af792a",
@@ -21,7 +23,7 @@
     "@shopify/cli-kit": "^3.9.2"
   },
   "oclif": {
-    "commands": "dist/commands",
+    "commands": "./dist/commands",
     "topics": {
       "h2": {
         "description": "Hydrogen commands"
