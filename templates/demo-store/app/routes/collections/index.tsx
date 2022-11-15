@@ -102,7 +102,6 @@ const COLLECTIONS_QUERY = `#graphql
           description
           title
         }
-
         image {
           id
           url

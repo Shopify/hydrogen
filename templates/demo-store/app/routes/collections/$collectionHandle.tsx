@@ -28,7 +28,7 @@ export async function loader({
   invariant(collectionHandle, 'Missing collectionHandle param');
 
   const searchParams = new URL(request.url).searchParams;
-  const knownFilters = ['productVendor', 'productType', 'available'];
+  const knownFilters = ['cursor', 'productVendor', 'productType', 'available'];
 
   const variantOption: Record<string, string>[] = [];
   const variables: Record<string, string | any[]> = {};
