@@ -31,7 +31,7 @@ export async function loader({
   const knownFilters = ['cursor', 'productVendor', 'productType', 'available'];
 
   const variantOption: Record<string, string>[] = [];
-  const variables: Record<string, string | any[]> = {};
+  const variables: Record<string, string> = {};
 
   for (const [key, value] of searchParams.entries()) {
     // TODO: Add price min/max to query
