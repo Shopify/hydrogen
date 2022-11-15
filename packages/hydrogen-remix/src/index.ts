@@ -1,11 +1,16 @@
 import type {HydrogenContext} from '@shopify/hydrogen';
 import type {AppData, DataFunctionArgs} from '@remix-run/oxygen';
+import type {Params} from '@remix-run/react';
 
 export * from '@remix-run/oxygen';
 export {createRequestHandler} from './server';
 export * from '@shopify/hydrogen';
 
+export {RESOURCE_TYPES, REQUIRED_RESOURCES} from './routing/types';
+
 export type LoaderArgs = DataFunctionArgs & {
+  request: Request;
+  params: Params;
   context: HydrogenContext;
 };
 

@@ -2,6 +2,7 @@ import {
   json,
   LoaderArgs,
   MetaFunction,
+  RESOURCE_TYPES,
   SerializeFrom,
 } from '@shopify/hydrogen-remix';
 import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
@@ -41,6 +42,12 @@ export const meta: MetaFunction = ({
     title: data?.page?.seo?.title ?? 'Page',
     description: data?.page?.seo?.description,
   };
+};
+
+export const handle = {
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.PAGE,
+  },
 };
 
 export default function Page() {

@@ -3,6 +3,7 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LoaderArgs,
+  RESOURCE_TYPES,
 } from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import type {
@@ -46,6 +47,12 @@ export type SortParam =
   | 'best-selling'
   | 'newest'
   | 'featured';
+
+export const handle = {
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.COLLECTION,
+  },
+};
 
 export async function loader({
   params,

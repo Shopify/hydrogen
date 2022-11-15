@@ -1,7 +1,7 @@
+const path = require('path');
 /** @type {import('@remix-run/dev').AppConfig} */
 
 const fs = require('fs');
-const path = require('path');
 const esbuild = require('esbuild');
 const recursive = require('recursive-readdir');
 
@@ -62,3 +62,31 @@ module.exports = {
     // });
   },
 };
+
+// // @todo - add logic for i18n
+// // const appRoutesPath = path.resolve(
+// //   '../../templates/demo-store',
+// //   'app/routes',
+// // );
+// // @todo - generalize from `path.cwd()`
+// const hydrogenRoutesPath = path.resolve(
+//   '../../templates/demo-store',
+//   '.hydrogen/routes',
+// );
+// // const appRouteFiles = await readDir(appRoutesPath);
+// const hydrogenRouteFiles = await readDir(hydrogenRoutesPath);
+// return defineRoutes((route) => {
+//   for (const hydrogenRoute of hydrogenRouteFiles) {
+//     const hydrogenRoutePath = path.relative(
+//       path.resolve('../../templates/demo-store'),
+//       hydrogenRoute,
+//     );
+
+//     const hydrogenRouteUrl = hydrogenRoutePath.substring(
+//       hydrogenRoutePath.lastIndexOf('/'),
+//       hydrogenRoutePath.lastIndexOf('.'),
+//     );
+
+//     route(hydrogenRouteUrl, '../' + hydrogenRoutePath);
+//   }
+// });

@@ -1,5 +1,9 @@
-import type {LoaderArgs, MetaFunction} from '@shopify/hydrogen-remix';
-import {useLoaderData, type Params} from '@remix-run/react';
+import {
+  LoaderArgs,
+  MetaFunction,
+  RESOURCE_TYPES,
+} from '@shopify/hydrogen-remix';
+import {useLoaderData} from '@remix-run/react';
 import type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, ProductCard, Grid, Pagination} from '~/components';
@@ -53,6 +57,12 @@ export const meta: MetaFunction = () => {
   };
 };
 
+export const handle = {
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.CATALOG,
+  },
+};
+
 export default function AllProducts() {
   const products = useLoaderData<typeof loader>();
 
@@ -96,6 +106,7 @@ const ALL_PRODUCTS_QUERY = `#graphql
         hasPreviousPage
         hasNextPage
         startCursor
+        die
         endCursor
       }
     }

@@ -1,4 +1,4 @@
-import {type LoaderArgs, defer} from '@shopify/hydrogen-remix';
+import {type LoaderArgs, defer, RESOURCE_TYPES} from '@shopify/hydrogen-remix';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
@@ -29,6 +29,12 @@ interface CollectionHero {
   spreadSecondary: Metafield;
   top?: boolean;
 }
+
+export const handle = {
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.FRONT_PAGE,
+  },
+};
 
 export async function loader({
   request,

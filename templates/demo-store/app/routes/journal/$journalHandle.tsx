@@ -4,6 +4,7 @@ import {
   type SerializeFrom,
   type LoaderArgs,
   type LinksFunction,
+  RESOURCE_TYPES,
 } from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen-react';
@@ -20,6 +21,10 @@ export const handle = {
   seo: {
     title: 'Journal',
     description: 'A description',
+  },
+
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.BLOG,
   },
 };
 
