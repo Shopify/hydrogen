@@ -143,7 +143,14 @@ export function createStorefrontClient(
 
     const {data, errors} = body as StorefrontApiResponse<T>;
 
-    if (errors) throwError(response, errors);
+    if (errors?.length) throwError(response, errors, StorefrontApiError);
+    else if (mutation && data) {
+      const mutationErrors = Object.values(data)
+        .map((value: any) => value?.customerUserErrors?.[0]?.message)
+        .filter(Boolean);
+
+      throwError(response, mutationErrors, StorefrontApiError);
+    }
 
     return data as T;
   }
