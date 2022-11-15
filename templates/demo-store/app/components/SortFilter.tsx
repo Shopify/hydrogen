@@ -16,7 +16,9 @@ export function SortFilter({filters}: {filters: Filter[]}) {
   return (
     <>
       <div className="flex items-center justify-end">
-        <Button onClick={() => setIsOpen(true)}>Filter and sort</Button>
+        <Button variant="secondary" onClick={() => setIsOpen(true)}>
+          Filter and sort
+        </Button>
       </div>
       <Drawer
         filters={filters}
