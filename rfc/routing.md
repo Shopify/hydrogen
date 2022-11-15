@@ -76,7 +76,7 @@ The `.hydrogen` directory is generated _each_ time the app builds. The files wit
 📂 HydrogenApp
  ┣ 📂 app
  ┃ ┗ 📂 routes
- ┃   ┃ 📜 index.tsx
+ ┃   ┣ 📜 index.tsx
  ┃   ┗ 📜 cart.tsx
  ┣ 📂 .hydrogen
  ┃ ┗ 📂 routes
