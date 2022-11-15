@@ -41,7 +41,7 @@ export type CreateStorefrontClientOptions = {
 };
 
 type StorefromCommonOptions = {
-  variables: ExecutionArgs['variableValues'];
+  variables?: ExecutionArgs['variableValues'];
   headers?: HeadersInit;
 };
 
@@ -90,7 +90,7 @@ export function createStorefrontClient(
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] = requestGroupId;
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
 
-  async function getStorefrontData<T>({
+  async function callStorefrontApi<T>({
     query,
     mutation,
     variables,
@@ -150,7 +150,12 @@ export function createStorefrontClient(
 
   return {
     storefront: {
-      query: getStorefrontData,
+      query: <T>(
+        query: string,
+        payload?: StorefromCommonOptions & {cache?: CachingStrategy},
+      ) => callStorefrontApi<T>({...payload, query}),
+      mutate: <T>(mutation: string, payload?: StorefromCommonOptions) =>
+        callStorefrontApi<T>({...payload, mutation}),
       getPublicTokenHeaders,
       getPrivateTokenHeaders,
       getStorefrontApiUrl,
