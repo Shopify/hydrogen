@@ -69,7 +69,7 @@ const shouldCacheResponse = (body: any) => {
   }
 };
 
-export class StorefrontApiError extends Error {}
+const StorefrontApiError = class extends Error {} as ErrorConstructor;
 export const isStorefrontApiError = (error: any) =>
   error instanceof StorefrontApiError;
 
@@ -198,7 +198,7 @@ export function createStorefrontClient(
 function throwError<T>(
   response: Response,
   errors: StorefrontApiResponse<T>['errors'],
-  ErrorConstructor: any = Error,
+  ErrorConstructor = Error,
 ) {
   const reqId = response.headers.get('x-request-id');
   const reqIdMessage = reqId ? ` - Request ID: ${reqId}` : '';
