@@ -39,14 +39,3 @@ const REDIRECT_QUERY = `#graphql
     }
   }
 `;
-function flattenConnection(urlRedirects: {
-  edges: Array<{node: {target: string}}>;
-}) {
-  throw new Error('Function not implemented.');
-}
-
-function flattenConnection(urlRedirects: {
-  edges: Array<{node: {target: string}}>;
-}) {
-  throw new Error('Function not implemented.');
-}
