@@ -44,25 +44,30 @@ export type CreateStorefrontClientOptions = {
   waitUntil?: ExecutionContext['waitUntil'];
 };
 
-type StorefromCommonOptions = {
+type StorefrontCommonOptions = {
   variables: ExecutionArgs['variableValues'];
   headers?: HeadersInit;
 };
 
-export type StorefrontQueryOptions = StorefromCommonOptions & {
+export type StorefrontQueryOptions = StorefrontCommonOptions & {
   query: string;
   mutation?: never;
   cache?: CachingStrategy;
 };
 
-export type StorefrontMutationOptions = StorefromCommonOptions & {
+export type StorefrontMutationOptions = StorefrontCommonOptions & {
   query?: never;
   mutation: string;
   cache?: never;
 };
 
 export function createStorefrontClient(
-  clientOptions: StorefrontClientProps,
+  clientOptions: StorefrontClientProps & {
+    i18n: {
+      language: string;
+      country: string;
+    };
+  },
   {
     cache,
     waitUntil,
@@ -101,13 +106,23 @@ export function createStorefrontClient(
       .replace(/\s+/gm, ' ') // Minify spaces
       .trim();
 
+    console.log('variables', {
+      language: clientOptions.i18n.language,
+      country: clientOptions.i18n.country,
+      ...variables,
+    });
+
     const url = getStorefrontApiUrl();
     const requestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
       body: JSON.stringify({
         query,
-        variables,
+        variables: {
+          language: clientOptions.i18n.language,
+          country: clientOptions.i18n.country,
+          ...variables,
+        },
       }),
     };
 

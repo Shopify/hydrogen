@@ -15,7 +15,7 @@ import {
   useMatches,
 } from '@remix-run/react';
 import {Layout} from '~/components';
-import {getCart, getLayoutData, getCountries} from '~/data';
+import {getCart, getLayoutData} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
 import {getSession} from './lib/session.server';
@@ -23,6 +23,7 @@ import {Seo, Debugger} from './lib/seo';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
+import {countries} from './data/countries';
 
 export const handle = {
   // @todo - remove any and type the seo callback
@@ -62,9 +63,9 @@ export const loader: LoaderFunction = async function loader({
   const cartId = await session.get('cartId');
 
   return defer({
-    layout: await getLayoutData(params),
-    countries: getCountries(),
-    cart: cartId ? getCart({cartId, params}) : undefined,
+    layout: await getLayoutData(),
+    countries,
+    cart: cartId ? getCart({cartId}) : undefined,
   });
 };
 

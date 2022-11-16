@@ -10,6 +10,8 @@ import type {
 
 // @ts-expect-error types not available
 import typographicBase from 'typographic-base';
+import {countries} from '~/data/countries';
+import {Locale} from './type';
 
 export interface EnhancedMenuItem extends MenuItem {
   to: string;
@@ -252,6 +254,25 @@ export function getApiErrorMessage(
   if (data?.[field]?.customerUserErrors?.length)
     return data[field].customerUserErrors[0].message;
   return null;
+}
+
+export function getLocaleFromRequest(request: Request): Locale & {
+  pathPrefix: string;
+} {
+  const url = new URL(request.url);
+  const firstPathPart = url.pathname
+    .substring(0, url.pathname.substring(1).indexOf('/') + 1)
+    .toLowerCase();
+
+  return countries[firstPathPart]
+    ? {
+        ...countries[firstPathPart],
+        pathPrefix: firstPathPart,
+      }
+    : {
+        ...countries[''],
+        pathPrefix: '',
+      };
 }
 
 export function getLocalizationFromLang(lang?: string): {

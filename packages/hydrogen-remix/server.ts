@@ -8,7 +8,12 @@ import {
 } from '@shopify/hydrogen-remix';
 
 type HydrogenHandlerParams = {
-  storefront: StorefrontClientProps;
+  storefront: StorefrontClientProps & {
+    i18n: {
+      language: string;
+      country: string;
+    };
+  };
   cache?: Cache;
 };
 

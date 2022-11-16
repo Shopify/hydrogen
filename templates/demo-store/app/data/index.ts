@@ -102,16 +102,13 @@ export async function getStorefrontData<T>({
   return response.json() as StorefrontApiResponseOk<T>;
 }
 
-export async function getLayoutData(params: Params) {
-  const {language} = getLocalizationFromLang(params.lang);
-
+export async function getLayoutData() {
   const HEADER_MENU_HANDLE = 'main-menu';
   const FOOTER_MENU_HANDLE = 'footer';
 
   const {data} = await getStorefrontData<LayoutData>({
     query: LAYOUT_QUERY,
     variables: {
-      language,
       headerMenuHandle: HEADER_MENU_HANDLE,
       footerMenuHandle: FOOTER_MENU_HANDLE,
     },
@@ -487,20 +484,11 @@ const CART_QUERY = `#graphql
   ${CART_FRAGMENT}
 `;
 
-export async function getCart({
-  cartId,
-  params,
-}: {
-  cartId: string;
-  params: Params;
-}) {
-  const {country} = getLocalizationFromLang(params.lang);
-
+export async function getCart({cartId}: {cartId: string}) {
   const {data} = await getStorefrontData<{cart: Cart}>({
     query: CART_QUERY,
     variables: {
       cartId,
-      country,
     },
   });
 
