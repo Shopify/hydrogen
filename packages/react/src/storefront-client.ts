@@ -33,6 +33,11 @@ export function createStorefrontClient({
   }
 
   return {
+    getShopifyDomain(overrideProps) {
+      return `https://${
+        overrideProps?.storeDomain ?? storeDomain
+      }.myshopify.com`;
+    },
     getStorefrontApiUrl(overrideProps) {
       return `https://${
         overrideProps?.storeDomain ?? storeDomain
@@ -128,6 +133,16 @@ type OverrideTokenHeaderProps = Partial<
 >;
 
 type StorefrontClientReturn = {
+  /**
+   * Creates the fully-qualified URL to your myshopify.com domain.
+   *
+   * By default, it will use the config you passed in when calling `createStorefrontClient()`. However, you can override the following settings on each invocation of `getShopifyDomain({...})`:
+   *
+   * - `storeDomain`
+   */
+  getShopifyDomain: (
+    props?: Partial<Pick<StorefrontClientProps, 'storeDomain'>>
+  ) => string;
   /**
    * Creates the fully-qualified URL to your store's GraphQL endpoint.
    *

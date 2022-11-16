@@ -59,6 +59,7 @@ const client = createStorefrontClient({
 
 export const getStorefrontApiUrl = client.getStorefrontApiUrl;
 export const getPrivateTokenHeaders = client.getPrivateTokenHeaders;
+export const getShopifyDomain = client.getShopifyDomain;
 ```
 
 You can then use this in your server-side queries. Here's an example of using it for [NextJS's `getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching/get-server-side-props):
@@ -81,6 +82,31 @@ export async function getServerSideProps() {
   const json = await response.json();
 
   return {props: json};
+}
+```
+
+You can also use this to proxy the liquid online store:
+
+```ts
+// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
+import {getShopifyDomain} from '../shopify-client.js';
+
+export default function handler(req, res) {
+  fetch(getShopifyDomain() + '/products', {
+    headers: {
+      /** forward some of the headers from the original request **/
+    },
+  })
+    .then((resp) => resp.text())
+    .then((text) => res.status(200).send(text))
+    .catch((error) => {
+      console.error(
+        `Error proxying the online store: ${
+          error instanceof Error ? error.stack : error
+        }`
+      );
+      res.status(500).send('Server error occurred');
+    });
 }
 ```
 

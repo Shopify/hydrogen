@@ -47,6 +47,24 @@ describe(`createStorefrontClient`, () => {
     });
   });
 
+  describe(`getShopifyDomain`, () => {
+    it(`generates a URL`, () => {
+      const client = createStorefrontClient(generateConfig());
+
+      expect(client.getShopifyDomain()).toBe(`https://testing.myshopify.com`);
+    });
+
+    it(`allows overrides`, () => {
+      const client = createStorefrontClient(generateConfig());
+
+      expect(
+        client.getShopifyDomain({
+          storeDomain: 'newdomain',
+        })
+      ).toBe(`https://newdomain.myshopify.com`);
+    });
+  });
+
   describe(`getStorefrontApiUrl`, () => {
     it(`generates a URL`, () => {
       const client = createStorefrontClient(generateConfig());
