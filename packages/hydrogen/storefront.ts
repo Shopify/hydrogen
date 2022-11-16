@@ -73,6 +73,16 @@ const StorefrontApiError = class extends Error {} as ErrorConstructor;
 export const isStorefrontApiError = (error: any) =>
   error instanceof StorefrontApiError;
 
+const isQueryRE = /(^|}\s)query[\s({]/im;
+const isMutationRE = /(^|}\s)mutation[\s({]/im;
+
+function minifyQuery(string: string) {
+  return string
+    .replace(/\s*#.*$/gm, '') // Remove GQL comments
+    .replace(/\s+/gm, ' ') // Minify spaces
+    .trim();
+}
+
 export function createStorefrontClient(
   clientOptions: StorefrontClientProps,
   {
@@ -108,17 +118,12 @@ export function createStorefrontClient(
         ? Object.fromEntries(headers)
         : headers;
 
-    query = (query ?? mutation)
-      .replace(/\s*#.*$/gm, '') // Remove GQL comments
-      .replace(/\s+/gm, ' ') // Minify spaces
-      .trim();
-
     const url = getStorefrontApiUrl();
     const requestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
       body: JSON.stringify({
-        query,
+        query: query ?? mutation,
         variables,
       }),
     };
@@ -157,9 +162,20 @@ export function createStorefrontClient(
       query: <T>(
         query: string,
         payload?: StorefrontCommonOptions & {cache?: CachingStrategy},
-      ) => callStorefrontApi<T>({...payload, query}),
-      mutate: <T>(mutation: string, payload?: StorefrontCommonOptions) =>
-        callStorefrontApi<T>({...payload, mutation}),
+      ) => {
+        query = minifyQuery(query);
+        if (isMutationRE.test(query))
+          throw new Error('storefront.query cannot execute mutations');
+
+        return callStorefrontApi<T>({...payload, query});
+      },
+      mutate: <T>(mutation: string, payload?: StorefrontCommonOptions) => {
+        mutation = minifyQuery(mutation);
+        if (isQueryRE.test(mutation))
+          throw new Error('storefront.mutate cannot execute queries');
+
+        return callStorefrontApi<T>({...payload, mutation});
+      },
       getPublicTokenHeaders,
       getPrivateTokenHeaders,
       getStorefrontApiUrl,
