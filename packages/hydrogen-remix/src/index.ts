@@ -7,6 +7,7 @@ export {createRequestHandler} from './server';
 export * from '@shopify/hydrogen';
 
 export {RESOURCE_TYPES, REQUIRED_RESOURCES} from './routing/types';
+export {notFoundMaybeRedirect} from './routing/redirect';
 
 export type LoaderArgs = DataFunctionArgs & {
   request: Request;

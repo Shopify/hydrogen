@@ -1,4 +1,9 @@
-import {type LoaderArgs, defer, RESOURCE_TYPES} from '@shopify/hydrogen-remix';
+import {
+  type LoaderArgs,
+  defer,
+  RESOURCE_TYPES,
+  notFoundMaybeRedirect,
+} from '@shopify/hydrogen-remix';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
@@ -36,23 +41,19 @@ export const handle = {
   },
 };
 
-export async function loader({
-  request,
-  params,
-  context: {storefront},
-}: LoaderArgs) {
+export async function loader({request, params, context}: LoaderArgs) {
   const {language, country} = getLocaleFromRequest(request);
 
   if (
     params.lang &&
     params.lang.toLowerCase() !== `${language}-${country}`.toLowerCase()
   ) {
-    // If the lang URL param is defined, and it didn't match a valid localization
-    // then the lang param must be invalid, send to the 404 page
-    throw new Response('Not found', {status: 404});
+    // If the lang URL param is defined, yet we still are on `EN-US`
+    // the the lang param must be invalid, send to the 404 page
+    await notFoundMaybeRedirect(request, context);
   }
 
-  const {shop, hero} = await storefront.query<{
+  const {shop, hero} = await context.storefront.query<{
     hero: CollectionHero;
     shop: HomeSeoData;
   }>(HOMEPAGE_SEO_QUERY, {
@@ -67,10 +68,10 @@ export async function loader({
     // @feedback
     // Should these all be deferred? Can any of them be combined?
     // Should there be fallback rendering while deferred?
-    featuredProducts: storefront.query<{
+    featuredProducts: context.storefront.query<{
       products: ProductConnection;
     }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY),
-    secondaryHero: storefront.query<{hero: CollectionHero}>(
+    secondaryHero: context.storefront.query<{hero: CollectionHero}>(
       COLLECTION_HERO_QUERY,
       {
         variables: {
@@ -78,10 +79,10 @@ export async function loader({
         },
       },
     ),
-    featuredCollections: storefront.query<{
+    featuredCollections: context.storefront.query<{
       collections: CollectionConnection;
     }>(FEATURED_COLLECTIONS_QUERY),
-    tertiaryHero: storefront.query<{hero: CollectionHero}>(
+    tertiaryHero: context.storefront.query<{hero: CollectionHero}>(
       COLLECTION_HERO_QUERY,
       {
         variables: {

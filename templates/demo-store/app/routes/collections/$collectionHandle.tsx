@@ -4,6 +4,7 @@ import {
   type SerializeFrom,
   type LoaderArgs,
   RESOURCE_TYPES,
+  notFoundMaybeRedirect,
 } from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import type {
@@ -54,11 +55,7 @@ export const handle = {
   },
 };
 
-export async function loader({
-  params,
-  request,
-  context: {storefront},
-}: LoaderArgs) {
+export async function loader({params, request, context}: LoaderArgs) {
   const {collectionHandle} = params;
 
   invariant(collectionHandle, 'Missing collectionHandle param');
@@ -117,7 +114,7 @@ export async function loader({
     });
   }
 
-  const {collection, collections} = await storefront.query<{
+  const {collection, collections} = await context.storefront.query<{
     collection: CollectionType;
     collections: CollectionConnection;
   }>(COLLECTION_QUERY, {
@@ -131,7 +128,7 @@ export async function loader({
   });
 
   if (!collection) {
-    throw new Response('Not found', {status: 404});
+    await notFoundMaybeRedirect(request, context);
   }
 
   const collectionNodes = flattenConnection(collections);
@@ -145,8 +142,8 @@ export const meta: MetaFunction = ({
   data: SerializeFrom<typeof loader> | undefined;
 }) => {
   return {
-    title: data?.collection.seo?.title ?? 'Collection',
-    description: data?.collection.seo?.description,
+    title: data?.collection?.seo?.title ?? 'Collection',
+    description: data?.collection?.seo?.description,
   };
 };
 

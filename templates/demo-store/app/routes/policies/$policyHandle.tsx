@@ -1,5 +1,6 @@
 import {
   json,
+  notFoundMaybeRedirect,
   type LoaderArgs,
   type MetaFunction,
 } from '@shopify/hydrogen-remix';
@@ -9,7 +10,7 @@ import {PageHeader, Section, Button} from '~/components';
 import invariant from 'tiny-invariant';
 import {ShopPolicy} from '@shopify/hydrogen-react/storefront-api-types';
 
-export async function loader({params, context: {storefront}}: LoaderArgs) {
+export async function loader({request, params, context}: LoaderArgs) {
   invariant(params.policyHandle, 'Missing policy handle');
   const handle = params.policyHandle;
 
@@ -17,7 +18,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     m1.toUpperCase(),
   );
 
-  const data = await storefront.query<{
+  const data = await context.storefront.query<{
     shop: Record<string, ShopPolicy>;
   }>(POLICY_CONTENT_QUERY, {
     variables: {
@@ -33,7 +34,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
   const policy = data.shop?.[policyName];
 
   if (!policy) {
-    throw new Response('Not found', {status: 404});
+    await notFoundMaybeRedirect(request, context);
   }
 
   return json(
