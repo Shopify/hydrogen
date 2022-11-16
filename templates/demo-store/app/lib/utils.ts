@@ -240,6 +240,16 @@ export function statusMessage(status: string) {
   }
 }
 
+/**
+ * Errors can exist in an errors object, or nested in a data field.
+ */
+export function assertApiErrors(data: Record<string, any> | null | undefined) {
+  const errorMessage = data?.customerUserErrors?.[0]?.message;
+  if (errorMessage) {
+    throw new Error(errorMessage);
+  }
+}
+
 export function getLocalizationFromLang(lang?: string): {
   language: LanguageCode;
   country: CountryCode;
