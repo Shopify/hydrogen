@@ -5,7 +5,7 @@
  * at node_modules/@shopify/cli lists the plugins in this repository. Otherwise they are not loaded
  * automatically by oclif.
  */
-import {dirname, join as pathJoin} from 'pathe';
+import {dirname, join as pathJoin} from 'path';
 import {fileURLToPath} from 'node:url';
 import {promises} from 'node:fs';
 
@@ -15,14 +15,20 @@ const cliPackageJsonPath = pathJoin(
   '../../../node_modules/@shopify/cli/package.json',
 );
 let cliPackageJson = JSON.parse(await promises.readFile(cliPackageJsonPath));
+const pluginName = '@hydrogen/cli';
 
-const pluginName = 'h2';
+if (!cliPackageJson.oclif.plugins.includes(pluginName)) {
+  cliPackageJson.oclif.plugins = [...cliPackageJson.oclif.plugins, pluginName];
+}
 
-cliPackageJson.oclif.plugins = [
-  ...cliPackageJson.oclif.plugins,
-  `@shopify/plugin-${pluginName}`,
-  '@oclif/plugin-plugins',
-];
+if (!cliPackageJson.oclif.plugins.includes('@oclif/plugin-plugins')) {
+  cliPackageJson.oclif.plugins = [
+    ...cliPackageJson.oclif.plugins,
+    '@oclif/plugin-plugins',
+  ];
+}
+
+console.log(JSON.stringify(cliPackageJson, null, 2));
 
 await promises.writeFile(
   cliPackageJsonPath,

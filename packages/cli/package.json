@@ -1,6 +1,6 @@
 {
   "private": true,
-  "name": "@shopify/plugin-h2",
+  "name": "@hydrogen/cli",
   "version": "0.0.1",
   "main": "./index.ts",
   "scripts": {
@@ -22,8 +22,12 @@
     "@oclif/core": "^1.16.3",
     "@shopify/cli-kit": "^3.9.2"
   },
+  "files": [
+    "bin",
+    "dist"
+  ],
   "oclif": {
-    "commands": "dist/commands",
+    "commands": "./dist/commands",
     "topics": {
       "h2": {
         "description": "Hydrogen commands"
