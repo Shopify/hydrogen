@@ -1,5 +1,9 @@
-import {readConfig, RemixConfig} from '@remix-run/dev/dist/config';
-import {ServerMode} from '@remix-run/dev/dist/config/serverModes';
+import {createRequire} from 'node:module';
+
+const require = createRequire(import.meta.url);
+const {ServerMode} = require('@remix-run/dev/dist/config/serverModes');
+const {readConfig, RemixConfig} = require('@remix-run/dev/dist/config');
+
 import path from 'path';
 
 const BUILD_DIR = 'build';
@@ -25,10 +29,10 @@ export function getProjectPaths(appPath?: string, entry?: string) {
   };
 }
 
-let cachedConfig: RemixConfig;
+let cachedConfig: typeof RemixConfig;
 export async function getRemixConfig(
   root: string,
-  mode = process.env.NODE_ENV as ServerMode,
+  mode = process.env.NODE_ENV as typeof ServerMode,
 ) {
   if (!cachedConfig) {
     const config = await readConfig(root, mode);

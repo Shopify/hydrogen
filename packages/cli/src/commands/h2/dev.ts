@@ -1,13 +1,44 @@
 import path from 'path';
-import * as remix from '@remix-run/dev/dist/compiler';
-import miniOxygenPreview from '@shopify/mini-oxygen';
-import {runBuild} from './build';
-import {getProjectPaths, getRemixConfig} from '../utils/config';
-import {muteDevLogs} from '../utils/log';
+import {runBuild} from './build.js';
+import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
+import {muteDevLogs} from '../../utils/log.js';
+import {flags} from '../../utils/flags.js';
+
+import {createRequire} from 'node:module';
+// TODO: why can't we use the shopify kit version of this?
+// import Command from '@shopify/cli-kit/node/base-command';
+import {Flags, Command} from '@oclif/core';
+
+const require = createRequire(import.meta.url);
+const remix = require('@remix-run/dev/dist/compiler');
+const miniOxygenPreview = require('@shopify/mini-oxygen');
+
+export default class Dev extends Command {
+  static description = 'Builds a Hydrogen storefront for production';
+  static flags = {
+    ...flags,
+    port: Flags.integer({
+      description: 'Port to run the preview server on',
+      env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
+      default: 3000,
+    }),
+    entry: Flags.string({
+      env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
+      default: '', // TODO: what is the default entry?
+    }),
+  };
+
+  async run(): Promise<void> {
+    const {flags} = await this.parse(Dev);
+    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+
+    await runDev({...flags, path: directory});
+  }
+}
 
 export async function runDev({
   entry,
-  port = 3000,
+  port,
   path: appPath,
 }: {
   entry: string;
@@ -33,15 +64,15 @@ export async function runDev({
       // eslint-disable-next-line no-console
       console.log('Rebuilding...');
     },
-    onFileCreated(file) {
+    onFileCreated(file: string) {
       // eslint-disable-next-line no-console
       console.log(`File created: ${path.relative(root, file)}`);
     },
-    onFileChanged(file) {
+    onFileChanged(file: string) {
       // eslint-disable-next-line no-console
       console.log(`File changed: ${path.relative(root, file)}`);
     },
-    onFileDeleted(file) {
+    onFileDeleted(file: string) {
       // eslint-disable-next-line no-console
       console.log(`File deleted: ${path.relative(root, file)}`);
     },

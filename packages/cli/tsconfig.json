@@ -1,8 +1,8 @@
 {
-  "include": ["**/*.ts"],
-  "exclude": ["dist"],
+  "include": ["./src/**/*.ts"],
+  "exclude": ["**/dist/**"],
   "compilerOptions": {
-    "rootDir": ".",
+    "rootDir": "src",
     "lib": ["ES2020"],
     "module": "ES2020",
     "target": "ES2020",
