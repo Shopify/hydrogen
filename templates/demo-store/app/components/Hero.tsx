@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import {Image, Video} from '@shopify/hydrogen-react';
+import {MediaFile} from '@shopify/hydrogen-react';
 import type {
   MediaImage,
   Media,
@@ -108,36 +108,30 @@ function SpreadMedia({
   width,
   widths,
 }: SpreadMediaProps) {
-  if (data.mediaContentType === 'VIDEO') {
-    return (
-      <Video
-        previewImageOptions={{scale, src: data.previewImage!.url}}
-        width={scale! * width}
-        className="block object-cover w-full h-full"
-        data={data as MediaVideo}
-        controls={false}
-        muted
-        loop
-        playsInline
-        autoPlay
-      />
-    );
-  }
-
-  if (data.mediaContentType === 'IMAGE') {
-    return (
-      <Image
-        widths={widths}
-        sizes={sizes}
-        alt={data.alt || 'Marketing Banner Image'}
-        className="block object-cover w-full h-full"
-        data={(data as MediaImage).image!}
-        loading={loading}
-        width={width}
-        loaderOptions={{scale, crop: 'center'}}
-      />
-    );
-  }
-
-  return null;
+  return (
+    <MediaFile
+      data={data}
+      // improve the types so that 'className' is recognized as a prop
+      className="block object-cover w-full h-full"
+      // @ts-expect-error Need to update the types in H-UI to allow optional properties on this object
+      mediaOptions={{
+        video: {
+          controls: false,
+          muted: true,
+          loop: true,
+          playsInline: true,
+          autoPlay: true,
+          width: (scale ?? 1) * width,
+          previewImageOptions: {scale, src: data.previewImage?.url ?? ''},
+        },
+        image: {
+          loading,
+          loaderOptions: {scale, crop: 'center'},
+          widths,
+          sizes,
+          width,
+        },
+      }}
+    />
+  );
 }
