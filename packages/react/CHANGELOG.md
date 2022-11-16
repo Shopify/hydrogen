@@ -1,5 +1,58 @@
 # @shopify/hydrogen-react
 
+## 2022.10.3
+
+### Patch Changes
+
+- ccfbbbd: Adds the functions `getStorefrontApiUrl()` and `getPublicTokenHeaders()` to the object returned by `useShop()` (and provided by `<ShopifyProvider/>`).
+
+  For example:
+
+  ```ts
+  const {storefrontId, getPublicTokenHeaders, getStorefrontApiUrl} = useShop();
+
+  fetch(getStorefrontApiUrl(), {
+    headers: getPublicTokenHeaders({contentType: 'json'})
+    body: {...}
+  })
+  ```
+
+- 0683765: Adds CartLines components and hooks.
+
+  - The `CartLineProvider` component creates a context for using a cart line.
+  - The `useCartLine` hook provides access to the cart line object. It must be a descendent of a `CartProvider` component.
+
+- 94fdddd: Provide a mapping of Storefront API's custom scalars to their actual types, for use with GraphQL CodeGen.
+
+  For example:
+
+  ```ts
+  import {storefrontApiCustomScalars} from '@shopify/hydrogen-react';
+
+  const config: CodegenConfig = {
+    // Use the schema that's bundled with @shopify/hydrogen-react
+    schema: './node_modules/@shopify/hydrogen-react/storefront.schema.json',
+    generates: {
+      './gql/': {
+        preset: 'client',
+        plugins: [],
+        config: {
+          // Use the custom scalar definitions that @shopify/hydrogen-react provides to improve the custom scalar types
+          scalars: storefrontApiCustomScalars,
+        },
+      },
+    },
+  };
+  ```
+
+- 676eb75: Adds additional builds for Node-specific targets, to help ensure that server-side code was getting compiled for server-side runtimes, instead of browser-side code for server-side runtimes.
+- 2dc6ac4: Add a new utility helper for getting the myshopify domain for the site:
+
+  ```ts
+  const client = createStorefrontClient(...);
+  client.getShopifyDomain() === `https://testing.myshopify.com`;
+  ```
+
 ## 2022.10.2
 
 ### Patch Changes
