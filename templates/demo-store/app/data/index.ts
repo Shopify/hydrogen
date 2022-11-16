@@ -259,11 +259,11 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
           width
           height
         }
-        priceV2 {
+        price {
           amount
           currencyCode
         }
-        compareAtPriceV2 {
+        compareAtPrice {
           amount
           currencyCode
         }
@@ -287,11 +287,11 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
       width
       height
     }
-    priceV2 {
+    price {
       amount
       currencyCode
     }
-    compareAtPriceV2 {
+    compareAtPrice {
       amount
       currencyCode
     }
@@ -405,77 +405,6 @@ fragment ImageFragment on Image {
   height
 }
 `;
-
-const CREATE_CART_MUTATION = `#graphql
-mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(country: $country) {
-  cartCreate(input: $input) {
-    cart {
-      id
-    }
-  }
-}
-`;
-
-export async function createCart({
-  cart,
-  params,
-}: {
-  cart: CartInput;
-  params: Params;
-}) {
-  const {country} = getLocalizationFromLang(params.lang);
-
-  const {data} = await getStorefrontData<{
-    cartCreate: {
-      cart: Cart;
-    };
-  }>({
-    query: CREATE_CART_MUTATION,
-    variables: {
-      input: cart,
-      country,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cartCreate.cart;
-}
-
-const ADD_LINE_ITEM_QUERY = `#graphql
-  mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
-    cartLinesAdd(cartId: $cartId, lines: $lines) {
-      cart {
-        id
-      }
-    }
-  }
-`;
-
-export async function addLineItem({
-  cartId,
-  lines,
-  params,
-}: {
-  cartId: string;
-  lines: CartLineInput[];
-  params: Params;
-}) {
-  const {country} = getLocalizationFromLang(params.lang);
-
-  const {data} = await getStorefrontData<{
-    cartLinesAdd: {
-      cart: Cart;
-    };
-  }>({
-    query: ADD_LINE_ITEM_QUERY,
-    variables: {cartId, lines, country},
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cartLinesAdd.cart;
-}
 
 const CART_QUERY = `#graphql
   query CartQuery($cartId: ID!, $country: CountryCode = ZZ) @inContext(country: $country) {

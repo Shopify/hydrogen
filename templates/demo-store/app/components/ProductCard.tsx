@@ -34,13 +34,10 @@ export function ProductCard({
 
   const cardData = product?.variants ? product : getProductPlaceholder();
 
-  const {
-    image,
-    priceV2: price,
-    compareAtPriceV2: compareAtPrice,
-  } = flattenConnection<ProductVariant>(
-    cardData?.variants as ProductVariantConnection,
-  )[0] || {};
+  const {image, price, compareAtPrice} =
+    flattenConnection<ProductVariant>(
+      cardData?.variants as ProductVariantConnection,
+    )[0] || {};
 
   if (label) {
     cardLabel = label;

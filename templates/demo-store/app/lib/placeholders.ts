@@ -158,11 +158,11 @@ const PLACEHOLDERS = {
             width: 1200,
             height: 1504,
           },
-          priceV2: {
+          price: {
             amount: '775.0',
             currencyCode: 'CAD',
           },
-          compareAtPriceV2: {
+          compareAtPrice: {
             amount: '840.0',
             currencyCode: 'CAD',
           },
