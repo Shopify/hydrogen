@@ -11,17 +11,18 @@
     "start": "node --experimental-vm-modules --loader ts-node/esm --require=./suppress-experimental.js ./index.ts"
   },
   "devDependencies": {
+    "@shopify/cli": "^3.23.0",
     "@types/fs-extra": "^9.0.13",
     "ts-node": "^10.9.1",
-    "@shopify/cli": "^3.23.0"
+    "typescript": "^4.9.3"
   },
   "dependencies": {
+    "@oclif/core": "^1.20.4",
     "@remix-run/dev": "0.0.0-experimental-e18af792a",
+    "@shopify/cli-kit": "^3.23.0",
     "@shopify/mini-oxygen": "^1.0.0",
     "esbuild": "^0.15.12",
-    "fs-extra": "^10.1.0",
-    "@oclif/core": "^1.16.3",
-    "@shopify/cli-kit": "^3.23.0"
+    "fs-extra": "^10.1.0"
   },
   "files": [
     "bin",
