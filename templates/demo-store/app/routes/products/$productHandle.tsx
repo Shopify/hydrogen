@@ -30,7 +30,7 @@ import clsx from 'clsx';
 import {
   ProductVariant,
   SelectedOptionInput,
-  Product,
+  Product as ProductType,
   Shop,
   ProductConnection,
   LanguageCode,
@@ -59,7 +59,7 @@ export const loader = async ({
   });
 
   const {shop, product} = await storefront.query<{
-    product: Product & {selectedVariant?: ProductVariant};
+    product: ProductType & {selectedVariant?: ProductVariant};
     shop: Shop;
   }>(PRODUCT_QUERY, {
     variables: {
@@ -89,7 +89,7 @@ async function getRecommendedProducts(
   productId: string,
 ) {
   const products = await storefront.query<{
-    recommended: Product[];
+    recommended: ProductType[];
     additional: ProductConnection;
   }>(RECOMMENDED_PRODUCTS_QUERY, {
     variables: {
@@ -110,7 +110,7 @@ async function getRecommendedProducts(
     );
 
   const originalProduct = mergedProducts
-    .map((item: Product) => item.id)
+    .map((item: ProductType) => item.id)
     .indexOf(productId);
 
   mergedProducts.splice(originalProduct, 1);

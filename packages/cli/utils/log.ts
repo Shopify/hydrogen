@@ -6,7 +6,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   const log = console.log.bind(console);
   console.log = (first, ...rest) => {
     // Miniflare logs
-    if (first.includes('[mf:')) {
+    if (typeof first === 'string' && first.includes('[mf:')) {
       if (workerReload !== false && first.includes('Worker reloaded')) {
         if (isFirstWorkerReload) isFirstWorkerReload = false;
         else return log(first.replace('[mf:inf] ', ''), ...rest);
