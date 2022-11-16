@@ -53,7 +53,7 @@ export async function runDev({
     port,
     assetsDir: buildPathClient,
     publicPath: '',
-    buildCommand: `cd ${root} && npm run h2 build -- --dev-reload --entry ${entry}`,
+    buildCommand: `h2 build --dev-reload --entry ${entry}`,
     watch: true,
     buildWatchPaths: [
       entryFile,

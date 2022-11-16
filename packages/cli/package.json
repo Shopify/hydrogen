@@ -1,10 +1,10 @@
 {
   "private": true,
-  "name": "@hydrogen/cli",
+  "name": "@shopify/hydrogen-cli",
   "version": "0.0.1",
   "main": "./index.ts",
-  "scripts": {
-    "start": "node --experimental-vm-modules --loader ts-node/esm --require=./suppress-experimental.js ./index.ts"
+  "bin": {
+    "h2": "./bin.js"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",

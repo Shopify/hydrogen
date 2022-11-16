@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 export {};
 
 const [, , ...args] = process.argv;
