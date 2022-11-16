@@ -33,6 +33,7 @@ interface LinesAddEvent {
 }
 
 interface LinesAddLine extends Omit<CartLineInput, 'merchandiseId'> {
+  /* variant is needed to optimistically add line items to the cart */
   variant: ProductVariant;
 }
 
@@ -56,7 +57,7 @@ interface OptimisticLinesAdd {
 const ACTION_PATH = '/cart/LinesAdd';
 
 /*
-  Action ----------------------------------------------------------------
+  action ----------------------------------------------------------------
 */
 async function action({request, context, params}: ActionArgs) {
   const headers = new Headers();
@@ -81,7 +82,7 @@ async function action({request, context, params}: ActionArgs) {
 
   const cartId = await session.get('cartId');
 
-  // A — no previous cart, create and add line(s)
+  // Flow A — no previous cart, create and add line(s)
   if (!cartId) {
     const cart = await cartCreateLinesMutation({
       cart: {lines},
@@ -96,11 +97,15 @@ async function action({request, context, params}: ActionArgs) {
     return linesAddResponse(null, cart, lines, formData, headers);
   }
 
-  // we need to query the prevCart so we can validate
-  // what was really added or not for analytics
+  /*
+    for analytics we need to query the previous cart lines, so we
+    can diff what was really added or not :(
+    although it's slower, we now have optimistic lines add
+    @see: issue tracker https://github.com/Shopify/storefront-api-feedback/discussions/151
+  */
   const prevCart = await getCartLines({cartId, params, context});
 
-  // B — else add line(s) to existing cart
+  // Flow B — add line(s) to existing cart
   const cart = await linesAddMutation({
     cartId,
     lines,
@@ -112,7 +117,7 @@ async function action({request, context, params}: ActionArgs) {
 }
 
 /*
-  helpers ----------------------------------------------------------------
+  action helpers ----------------------------------------------------------------
 */
 function linesAddResponse(
   prevCart: Cart | null,
@@ -128,7 +133,7 @@ function linesAddResponse(
 
   const prevLines = (prevCart?.lines || []) as Cart['lines'];
 
-  // we need to figure out if a particular line failed to add
+  // figure out if line(s) added or not
   const {linesAdded, linesNotAdded} = getLinesAddedStatus(
     addingLines,
     prevLines,
@@ -151,16 +156,20 @@ function linesAddResponse(
     errorMessage = `Failed to add variant(s): ${failedVariantIds}`;
   }
 
+  // success
   if (linesAdded.length) {
     return json({event, error: errorMessage}, {headers});
   }
 
-  // failed to add one or more
+  // failed to add one or more line(s)
   return json({error: errorMessage}, {headers});
 }
 
-// Temporary workaround for analytics until we land
-// https://github.com/Shopify/storefront-api-feedback/discussions/151
+/*
+  Diff prev lines with current lines to determine what was added
+  This is a temporary workaround for analytics until we land
+  https://github.com/Shopify/storefront-api-feedback/discussions/151
+*/
 function getLinesAddedStatus(
   addingLines: CartLineInput[],
   prevLines: Cart['lines'],
@@ -213,7 +222,7 @@ function getLinesAddedStatus(
 }
 
 /*
-  Action mutations & queries -----------------------------------------------------------------------------------------
+  action mutations & queries -----------------------------------------------------------------------------------------
 */
 const USER_ERROR_FRAGMENT = `#graphql
   fragment ErrorFragment on CartUserError {
@@ -395,7 +404,7 @@ async function linesAddMutation({
 
 /*
   Component ----------------------------------------------------------------
-  Add a set of line(s) to the cart
+  Add to cart form that adds a set of line(s) to the cart
   @see: https://shopify.dev/api/storefront/2022-10/mutations/cartLinesAdd
 */
 const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
@@ -413,8 +422,10 @@ const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [eventId]);
 
-    // @todo: maybe throw if no lines are provided?
-    if (!lines?.length) return null;
+    // @todo: Maybe throw if no lines were provided?
+    if (!lines?.length) {
+      return null;
+    }
 
     return (
       <fetcher.Form method="post" action={ACTION_PATH} ref={ref}>
@@ -438,8 +449,10 @@ const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
 );
 
 /*
-  Hooks ---------------
-  -------------------------------------------------
+  hooks ----------------------------------------------------------------
+*/
+/*
+  A utility hook to add set of line(s) to the cart programmatically
 */
 function useLinesAdd(onSuccess: (event: LinesAddEvent) => void = () => {}) {
   const fetcher = useFetcher();
@@ -483,6 +496,9 @@ function useLinesAdd(onSuccess: (event: LinesAddEvent) => void = () => {}) {
   };
 }
 
+/*
+  A utility hook to implement optimistic lines add UI
+*/
 function useOptimisticLinesAdd(lines: CartLine[]): OptimisticLinesAdd {
   const fetchers = useFetchers();
   const linesAddFetcher = fetchers.find(
