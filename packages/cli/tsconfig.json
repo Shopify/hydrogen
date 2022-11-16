@@ -1,14 +1,25 @@
 {
   "include": ["**/*.ts"],
-  "exclude": ["dist", "node_modules"],
+  "exclude": ["dist"],
   "compilerOptions": {
-    "lib": ["DOM", "ES2019"],
-    "target": "ES2019",
-    "moduleResolution": "node",
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "declaration": true,
     "rootDir": ".",
-    "outDir": "dist"
+    "lib": ["ES2020"],
+    "module": "ES2020",
+    "target": "ES2020",
+    "moduleResolution": "nodenext",
+    "esModuleInterop": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "resolveJsonModule": true,
+    "skipDefaultLibCheck": true,
+    "skipLibCheck": true,
+    "declaration": true,
+    "isolatedModules": false,
+    "composite": true,
+    "sourceMap": true,
+    "inlineSources": true,
+    "noUncheckedIndexedAccess": true,
+    "outDir": "dist",
+    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
   }
 }

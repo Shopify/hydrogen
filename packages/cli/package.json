@@ -3,6 +3,7 @@
   "name": "@hydrogen/cli",
   "version": "0.0.1",
   "main": "./index.ts",
+  "type": "module",
   "scripts": {
     "shopify": "npm run build && ../../node_modules/.bin/shopify",
     "postinstall": "./bin/postinstall.mjs",
@@ -20,7 +21,7 @@
     "esbuild": "^0.15.12",
     "fs-extra": "^10.1.0",
     "@oclif/core": "^1.16.3",
-    "@shopify/cli-kit": "^3.9.2"
+    "@shopify/cli-kit": "^3.23.0"
   },
   "files": [
     "bin",
