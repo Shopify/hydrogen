@@ -18,21 +18,21 @@ export type Scalars = {
    * For example, "#6A8D48".
    *
    */
-  Color: any;
+  Color: string;
   /**
    * Represents an [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601)-encoded date and time string.
    * For example, 3:50 pm on September 7, 2019 in the time zone of UTC (Coordinated Universal Time) is
    * represented as `"2019-09-07T15:50:00Z`".
    *
    */
-  DateTime: any;
+  DateTime: string;
   /**
    * A signed decimal number, which supports arbitrary precision and is serialized as a string.
    *
    * Example values: `"29.99"`, `"29.999"`.
    *
    */
-  Decimal: any;
+  Decimal: string;
   /**
    * A string containing HTML code. Refer to the [HTML spec](https://html.spec.whatwg.org/#elements-3) for a
    * complete list of HTML elements.
@@ -40,7 +40,7 @@ export type Scalars = {
    * Example value: `"<p>Grey cotton knit sweater.</p>"`.
    *
    */
-  HTML: any;
+  HTML: string;
   /**
    * A [JSON](https://www.json.org/json-en.html) object.
    *
@@ -66,14 +66,14 @@ export type Scalars = {
    * (`johns-apparel.myshopify.com`).
    *
    */
-  URL: any;
+  URL: string;
   /**
    * An unsigned 64-bit integer. Represents whole numeric values between 0 and 2^64 - 1 encoded as a string of base-10 digits.
    *
    * Example value: `"50"`.
    *
    */
-  UnsignedInt64: any;
+  UnsignedInt64: string;
 };
 
 /**
@@ -6845,7 +6845,7 @@ export enum WeightUnit {
 export type IndexQueryQueryVariables = Exact<{ [key: string]: never; }>;
 
 
-export type IndexQueryQuery = { __typename?: 'QueryRoot', shop: { __typename?: 'Shop', name: string }, products: { __typename?: 'ProductConnection', nodes: Array<{ __typename?: 'Product', id: string, title: string, publishedAt: any, handle: string, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, image?: { __typename?: 'Image', url: any, altText?: string | null, width?: number | null, height?: number | null } | null }> } }> } };
+export type IndexQueryQuery = { __typename?: 'QueryRoot', shop: { __typename?: 'Shop', name: string }, products: { __typename?: 'ProductConnection', nodes: Array<{ __typename?: 'Product', id: string, title: string, publishedAt: string, handle: string, variants: { __typename?: 'ProductVariantConnection', nodes: Array<{ __typename?: 'ProductVariant', id: string, image?: { __typename?: 'Image', url: string, altText?: string | null, width?: number | null, height?: number | null } | null }> } }> } };
 
 
 export const IndexQueryDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"IndexQuery"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"shop"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}}]}},{"kind":"Field","name":{"kind":"Name","value":"products"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"IntValue","value":"1"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"title"}},{"kind":"Field","name":{"kind":"Name","value":"publishedAt"}},{"kind":"Field","name":{"kind":"Name","value":"handle"}},{"kind":"Field","name":{"kind":"Name","value":"variants"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"first"},"value":{"kind":"IntValue","value":"1"}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"nodes"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"image"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"url"}},{"kind":"Field","name":{"kind":"Name","value":"altText"}},{"kind":"Field","name":{"kind":"Name","value":"width"}},{"kind":"Field","name":{"kind":"Name","value":"height"}}]}}]}}]}}]}}]}}]}}]} as unknown as DocumentNode<IndexQueryQuery, IndexQueryQueryVariables>;

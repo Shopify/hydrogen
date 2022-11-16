@@ -91,7 +91,7 @@
     "build:tsc:es": "tsc --emitDeclarationOnly --project tsconfig.typeoutput.json",
     "copy-storefront-types": "cpy ./src/storefront-api-types.d.ts ./dist/types/ --flat",
     "format": "prettier --write \"src/**/*\"",
-    "graphql-types": "graphql-codegen --config codegen.yml && yarn format",
+    "graphql-types": "graphql-codegen --config codegen.ts && yarn format",
     "prepack": "yarn build",
     "test": "vitest",
     "test:ci": "vitest run --coverage",

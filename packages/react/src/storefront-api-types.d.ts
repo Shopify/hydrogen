@@ -2,7 +2,7 @@
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
  * Based on Storefront API 2022-10
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update, and then you can run `yarn graphql-types`
- * Except custom Scalars, which are defined in the `codegen.yml` file
+ * Except custom Scalars, which are defined in the `codegen.ts` file
  */
 /* eslint-disable */
 export type Maybe<T> = T | null;

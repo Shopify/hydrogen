@@ -9,6 +9,7 @@ export type {
 } from './cart-types.js';
 export {CartCheckoutButton} from './CartCheckoutButton.js';
 export {CartProvider, useCart} from './CartProvider.js';
+export {storefrontApiCustomScalars} from './codegen.helpers.js';
 export {ExternalVideo} from './ExternalVideo.js';
 export {flattenConnection} from './flatten-connection.js';
 export {Image} from './Image.js';

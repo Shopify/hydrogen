@@ -4,7 +4,7 @@ import {useCart} from './CartProvider.js';
 import {useProduct} from './ProductProvider.js';
 import {BaseButton, BaseButtonProps} from './BaseButton.js';
 
-interface AddToCartButtonProps {
+export interface AddToCartButtonProps {
   /** An array of cart line attributes that belong to the item being added to the cart. */
   attributes?: {
     key: string;

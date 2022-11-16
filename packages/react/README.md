@@ -154,6 +154,29 @@ If you're having trouble getting it to work, then consult our [troubleshooting s
 
 Improve your development experience by adding strong typing to Storefront API responses. The following are some options for doing this.
 
+## GraphQL CodeGen
+
+To use GraphQL CodeGen, follow [their guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation) to get started. Then, when you have a `codegen.ts` file, you can modify the following lines in the codegen object to improve the CodgeGen experience:
+
+```ts
+import {storefrontApiCustomScalars} from '@shopify/hydrogen-react';
+
+const config: CodegenConfig = {
+  // Use the schema that's bundled with @shopify/hydrogen-react
+  schema: './node_modules/@shopify/hydrogen-react/storefront.schema.json',
+  generates: {
+    './gql/': {
+      preset: 'client',
+      plugins: [],
+      config: {
+        // Use the custom scalar definitions that @shopify/hydrogen-react provides to improve the types
+        scalars: storefrontApiCustomScalars,
+      },
+    },
+  },
+};
+```
+
 ### Use the `StorefrontApiResponseError` and `StorefrontApiResponseOk` helpers
 
 The following is an example:
