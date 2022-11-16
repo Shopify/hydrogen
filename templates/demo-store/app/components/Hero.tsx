@@ -111,7 +111,6 @@ function SpreadMedia({
   return (
     <MediaFile
       data={data}
-      // improve the types so that 'className' is recognized as a prop
       className="block object-cover w-full h-full"
       // @ts-expect-error Need to update the types in H-UI to allow optional properties on this object
       mediaOptions={{
