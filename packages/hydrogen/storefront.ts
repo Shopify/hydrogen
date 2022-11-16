@@ -40,18 +40,18 @@ export type CreateStorefrontClientOptions = {
   waitUntil?: ExecutionContext['waitUntil'];
 };
 
-type StorefromCommonOptions = {
+type StorefrontCommonOptions = {
   variables?: ExecutionArgs['variableValues'];
   headers?: HeadersInit;
 };
 
-export type StorefrontQueryOptions = StorefromCommonOptions & {
+export type StorefrontQueryOptions = StorefrontCommonOptions & {
   query: string;
   mutation?: never;
   cache?: CachingStrategy;
 };
 
-export type StorefrontMutationOptions = StorefromCommonOptions & {
+export type StorefrontMutationOptions = StorefrontCommonOptions & {
   query?: never;
   mutation: string;
   cache?: never;
@@ -156,9 +156,9 @@ export function createStorefrontClient(
     storefront: {
       query: <T>(
         query: string,
-        payload?: StorefromCommonOptions & {cache?: CachingStrategy},
+        payload?: StorefrontCommonOptions & {cache?: CachingStrategy},
       ) => callStorefrontApi<T>({...payload, query}),
-      mutate: <T>(mutation: string, payload?: StorefromCommonOptions) =>
+      mutate: <T>(mutation: string, payload?: StorefrontCommonOptions) =>
         callStorefrontApi<T>({...payload, mutation}),
       getPublicTokenHeaders,
       getPrivateTokenHeaders,
