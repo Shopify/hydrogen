@@ -4,6 +4,7 @@
     "./packages/**/*.ts",
     "./packages/**/*.tsx"
   ],
+  "exclude": ["**/dist/**", "**/node_modules/**", "**/cli/**"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ES2019"],
     "isolatedModules": true,

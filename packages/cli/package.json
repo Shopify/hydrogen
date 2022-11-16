@@ -8,6 +8,7 @@
     "shopify": "npm run build && ../../node_modules/.bin/shopify",
     "postinstall": "./bin/postinstall.mjs",
     "build": "tsc",
+    "typecheck": "tsc --noEmit",
     "start": "node --experimental-vm-modules --loader ts-node/esm --require=./suppress-experimental.js ./index.ts"
   },
   "devDependencies": {
