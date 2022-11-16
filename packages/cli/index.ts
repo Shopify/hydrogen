@@ -53,6 +53,18 @@ if (command === 'build') {
     // @ts-ignore
     runPreview(options);
   })();
+} else if (
+  command === 'init' ||
+  command === 'new' ||
+  command === 'create' ||
+  command === 'i'
+) {
+  (async () => {
+    // @ts-ignore
+    const {runInit} = await import('./commands/init');
+
+    runInit(options);
+  })();
 } else {
   // eslint-disable-next-line no-console
   console.log(`Command "${command}" not supported`);

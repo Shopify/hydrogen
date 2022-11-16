@@ -1,5 +1,3 @@
-import {STOREFRONT_API_BUYER_IP_HEADER} from '../constants.js';
-
 export type QueryKey = string | readonly unknown[];
 
 export function hashKey(queryKey: QueryKey): string {
@@ -17,10 +15,6 @@ export function hashKey(queryKey: QueryKey): string {
         // fallback to a safer (but slower) stringify.
         if (!!key.body && typeof key.body === 'string') {
           hash += key.body;
-          const buyerIp = key.headers[STOREFRONT_API_BUYER_IP_HEADER];
-          if (!!key.headers && buyerIp) {
-            hash += buyerIp;
-          }
         } else {
           hash += JSON.stringify(key);
         }
