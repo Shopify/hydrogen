@@ -25,6 +25,7 @@ import {
   type EnhancedMenu,
   parseMenu,
   getLocalizationFromLang,
+  assertApiErrors,
 } from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
@@ -1085,7 +1086,7 @@ export async function updateCustomer(
     customer: CustomerUpdateInput;
   },
 ): Promise<void> {
-  await storefront.mutate<{
+  const data = await storefront.mutate<{
     customerUpdate: CustomerUpdatePayload;
   }>(CUSTOMER_UPDATE_MUTATION, {
     variables: {
@@ -1093,6 +1094,8 @@ export async function updateCustomer(
       customer,
     },
   });
+
+  assertApiErrors(data.customerUpdate);
 }
 
 const UPDATE_ADDRESS_MUTATION = `#graphql
@@ -1127,7 +1130,7 @@ export async function updateCustomerAddress(
     address: MailingAddressInput;
   },
 ): Promise<void> {
-  await storefront.mutate<{
+  const data = await storefront.mutate<{
     customerAddressUpdate: CustomerAddressUpdatePayload;
   }>(UPDATE_ADDRESS_MUTATION, {
     variables: {
@@ -1136,6 +1139,8 @@ export async function updateCustomerAddress(
       address,
     },
   });
+
+  assertApiErrors(data.customerAddressUpdate);
 }
 
 const DELETE_ADDRESS_MUTATION = `#graphql
@@ -1161,7 +1166,7 @@ export async function deleteCustomerAddress(
     addressId: string;
   },
 ): Promise<void> {
-  await storefront.mutate<{
+  const data = await storefront.mutate<{
     customerAddressDelete: CustomerAddressDeletePayload;
   }>(DELETE_ADDRESS_MUTATION, {
     variables: {
@@ -1169,6 +1174,8 @@ export async function deleteCustomerAddress(
       id: addressId,
     },
   });
+
+  assertApiErrors(data.customerAddressDelete);
 }
 
 const UPDATE_DEFAULT_ADDRESS_MUTATION = `#graphql
@@ -1199,7 +1206,7 @@ export async function updateCustomerDefaultAddress(
     addressId: string;
   },
 ): Promise<void> {
-  await storefront.mutate<{
+  const data = await storefront.mutate<{
     customerDefaultAddressUpdate: CustomerDefaultAddressUpdatePayload;
   }>(UPDATE_DEFAULT_ADDRESS_MUTATION, {
     variables: {
@@ -1207,6 +1214,8 @@ export async function updateCustomerDefaultAddress(
       addressId,
     },
   });
+
+  assertApiErrors(data.customerDefaultAddressUpdate);
 }
 
 const CREATE_ADDRESS_MUTATION = `#graphql
@@ -1248,6 +1257,8 @@ export async function createCustomerAddress(
       address,
     },
   });
+
+  assertApiErrors(data.customerAddressCreate);
 
   invariant(
     data?.customerAddressCreate?.customerAddress?.id,
