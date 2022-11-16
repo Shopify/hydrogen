@@ -78,21 +78,31 @@ export function createStorefrontClient({
         );
       }
 
-      const finalContentType = overrideProps?.contentType ?? contentType;
+      const finalContentType =
+        overrideProps?.contentType ?? contentType ?? 'json';
 
-      return {
-        // default to json
-        'content-type':
-          finalContentType === 'graphql'
-            ? 'application/graphql'
-            : 'application/json',
-        'X-SDK-Variant': 'hydrogen-ui',
-        'X-SDK-Variant-Source': 'react',
-        'X-SDK-Version': storefrontApiVersion,
-        'X-Shopify-Storefront-Access-Token':
-          overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',
-      };
+      return getPublicTokenHeadersRaw(
+        finalContentType,
+        storefrontApiVersion,
+        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? ''
+      );
     },
+  };
+}
+
+export function getPublicTokenHeadersRaw(
+  contentType: 'graphql' | 'json',
+  storefrontApiVersion: string,
+  accessToken: string
+) {
+  return {
+    // default to json
+    'content-type':
+      contentType === 'graphql' ? 'application/graphql' : 'application/json',
+    'X-SDK-Variant': 'hydrogen-ui',
+    'X-SDK-Variant-Source': 'react',
+    'X-SDK-Version': storefrontApiVersion,
+    'X-Shopify-Storefront-Access-Token': accessToken,
   };
 }
 
@@ -152,9 +162,9 @@ type StorefrontClientReturn = {
       }
   ) => Record<string, string>;
   /**
-   * Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. This method uses the private Server-to-Server token which reduces the chance of throttling but must not be exposed to clients. Server-side calls should prefer using this over `getPublicTokenHeaders()`.
+   * Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. This method uses the public token which increases the chance of throttling but also can be exposed to clients. Server-side calls should prefer using `getPublicTokenHeaders()`.
    *
-   * By default, it will use the config you passed in when calling `createStorefrontClient()`. However, you can override the following settings on each invocation of `getPrivateTokenHeaders({...})`:
+   * By default, it will use the config you passed in when calling `createStorefrontClient()`. However, you can override the following settings on each invocation of `getPublicTokenHeaders({...})`:
    *
    * - `contentType`
    * - `publicStorefrontToken`

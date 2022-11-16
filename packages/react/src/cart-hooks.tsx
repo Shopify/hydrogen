@@ -6,7 +6,6 @@ import {CartCreate, defaultCartFragment} from './cart-queries.js';
 import {Cart} from './cart-types.js';
 import {
   SHOPIFY_STOREFRONT_ID_HEADER,
-  STOREFRONT_API_PUBLIC_TOKEN_HEADER,
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
   SHOPIFY_Y,
@@ -16,8 +15,7 @@ import {parse} from 'worktop/cookie';
 import type {StorefrontApiResponseOkPartial} from './storefront-api-response.types.js';
 
 export function useCartFetch() {
-  const {storeDomain, storefrontApiVersion, storefrontToken, storefrontId} =
-    useShop();
+  const {storefrontId, getPublicTokenHeaders, getStorefrontApiUrl} = useShop();
 
   return useCallback(
     <ReturnDataGeneric,>({
@@ -27,12 +25,7 @@ export function useCartFetch() {
       query: string;
       variables: Record<string, unknown>;
     }): Promise<StorefrontApiResponseOkPartial<ReturnDataGeneric>> => {
-      const headers: Record<string, string> = {
-        'Content-Type': 'application/json',
-        'X-SDK-Variant': 'hydrogen',
-        'X-SDK-Version': storefrontApiVersion,
-        [STOREFRONT_API_PUBLIC_TOKEN_HEADER]: storefrontToken,
-      };
+      const headers = getPublicTokenHeaders({contentType: 'json'});
 
       if (storefrontId) {
         headers[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
@@ -45,17 +38,14 @@ export function useCartFetch() {
         headers[SHOPIFY_STOREFRONT_S_HEADER] = cookieData[SHOPIFY_S];
       }
 
-      return fetch(
-        `https://${storeDomain}/api/${storefrontApiVersion}/graphql.json`,
-        {
-          method: 'POST',
-          headers,
-          body: JSON.stringify({
-            query: query.toString(),
-            variables,
-          }),
-        }
-      )
+      return fetch(getStorefrontApiUrl(), {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          query: query.toString(),
+          variables,
+        }),
+      })
         .then((res) => res.json())
         .catch((error) => {
           return {
@@ -64,7 +54,7 @@ export function useCartFetch() {
           };
         });
     },
-    [storeDomain, storefrontApiVersion, storefrontToken, storefrontId]
+    [getPublicTokenHeaders, storefrontId, getStorefrontApiUrl]
   );
 }
 

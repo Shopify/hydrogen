@@ -1,7 +1,7 @@
 import {ComponentProps, useState} from 'react';
 import type {Story} from '@ladle/react';
 import {CartProvider, storageAvailable, useCart} from './CartProvider.js';
-import {ShopifyContextValue, ShopifyProvider} from './ShopifyProvider.js';
+import {type ShopifyContextProps, ShopifyProvider} from './ShopifyProvider.js';
 import {CART_ID_STORAGE_KEY} from './cart-constants.js';
 
 const merchandiseId = 'gid://shopify/ProductVariant/41007290482744';
@@ -208,7 +208,7 @@ function CartComponent() {
   );
 }
 
-const config: ShopifyContextValue = {
+const config: ShopifyContextProps = {
   storeDomain: 'hydrogen-preview.myshopify.com',
   storefrontToken: '3b580e70970c4528da70c98e097c2fa0',
   storefrontApiVersion: '2022-10',

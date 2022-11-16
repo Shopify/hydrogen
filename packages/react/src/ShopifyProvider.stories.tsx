@@ -1,9 +1,8 @@
-import * as React from 'react';
 import type {Story} from '@ladle/react';
 import {
   ShopifyProvider,
   useShop,
-  type ShopifyContextValue,
+  type ShopifyContextProps,
 } from './ShopifyProvider.js';
 
 const Template: Story<{
@@ -11,7 +10,7 @@ const Template: Story<{
   storefrontToken: string;
   version: string;
 }> = ({storeDomain, storefrontToken, version}) => {
-  const config: ShopifyContextValue = {
+  const config: ShopifyContextProps = {
     storeDomain,
     storefrontToken,
     storefrontApiVersion: version,
