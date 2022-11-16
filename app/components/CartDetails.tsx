@@ -156,13 +156,13 @@ function BestSellingProducts({
   onClose?: () => void;
   layout: 'page' | 'drawer';
 }) {
-  const topProductsContainer = {
+  const container = {
     drawer: '',
     page: 'md:grid-cols-4 sm:grid-col-4',
   };
 
   return (
-    <Products count={2} sortKey="BEST_SELLING">
+    <Products count={4} sortKey="BEST_SELLING">
       {({products, count, state}) => {
         if (state === 'loading') {
           return (
@@ -186,7 +186,7 @@ function BestSellingProducts({
           <div
             className={clsx([
               `grid grid-cols-2 gap-x-6 gap-y-8`,
-              topProductsContainer[layout],
+              container[layout],
             ])}
           >
             {products.map((product) => (
