@@ -5,7 +5,7 @@
     "build": "npm run build -w demo-store",
     "dev": "npm run dev -w demo-store",
     "preview": "npm run preview -w demo-store",
-    "postinstall": "mkdir -p templates/demo-store/node_modules/.bin && cp -a node_modules/.bin/h2 templates/demo-store/node_modules/.bin",
+    "postinstall": "mkdir -p templates/demo-store/node_modules/.bin && cp -P node_modules/.bin/h2 templates/demo-store/node_modules/.bin",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
     "typecheck": "tsc --noEmit && npm run typecheck -w demo-store"
