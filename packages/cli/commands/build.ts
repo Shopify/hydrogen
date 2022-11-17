@@ -18,7 +18,9 @@ export async function runBuild({
   minify?: boolean;
   path?: string;
 }) {
-  if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
+  if (!process.env.NODE_ENV) {
+    process.env.NODE_ENV = devReload ? 'development' : 'production';
+  }
 
   const {
     root,
