@@ -34,8 +34,7 @@ export async function loader({
 }: LoaderArgs) {
   const {language} = getLocalizationFromLang(params.lang);
 
-  const data = await storefront.query<SitemapQueryData>({
-    query: SITEMAP_QUERY,
+  const data = await storefront.query<SitemapQueryData>(SITEMAP_QUERY, {
     variables: {
       language,
       urlLimits: MAX_URLS,

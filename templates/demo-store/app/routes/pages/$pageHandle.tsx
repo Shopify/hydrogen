@@ -14,8 +14,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
   invariant(params.pageHandle, 'Missing page handle');
 
   const {language} = getLocalizationFromLang(params.lang);
-  const {page} = await storefront.query<{page: PageType}>({
-    query: PAGE_QUERY,
+  const {page} = await storefront.query<{page: PageType}>(PAGE_QUERY, {
     variables: {
       language,
       handle: params.pageHandle,

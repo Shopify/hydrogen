@@ -13,10 +13,7 @@ import {PageHeader, Section, Heading} from '~/components';
 export async function loader({context: {storefront}}: LoaderArgs) {
   const data = await storefront.query<{
     shop: Record<string, ShopPolicy>;
-  }>({
-    query: POLICIES_QUERY,
-    variables: {},
-  });
+  }>(POLICIES_QUERY);
 
   invariant(data, 'No data returned from Shopify API');
   const policies = Object.values(data.shop || {});

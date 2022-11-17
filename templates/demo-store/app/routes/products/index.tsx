@@ -19,8 +19,7 @@ export async function loader({
   const {language, country} = getLocalizationFromLang(params.lang);
   const data = await storefront.query<{
     products: ProductConnection;
-  }>({
-    query: ALL_PRODUCTS_QUERY,
+  }>(ALL_PRODUCTS_QUERY, {
     variables: {
       pageBy: 48,
       cursor,
