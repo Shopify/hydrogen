@@ -7,7 +7,6 @@ const common = defineConfig({
   entryPoints: [entry],
   format: ['esm', 'cjs'],
   treeshake: true,
-  clean: true,
   sourcemap: true,
 });
 
