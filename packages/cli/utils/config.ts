@@ -39,7 +39,7 @@ export async function getRemixConfig(
       config.publicPath = hydrogenAssetBase + suffix;
     }
 
-    config.serverBuildTarget = 'cloudflare-workers';
+    config.serverBuildTarget = undefined; // Avoid bundling 3p deps
     config.serverModuleFormat = 'esm';
     config.serverPlatform = 'neutral';
 

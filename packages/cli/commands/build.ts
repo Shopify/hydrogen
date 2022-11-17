@@ -62,6 +62,7 @@ export async function runBuild({
     },
     sourcemap,
     minify,
+    conditions: ['worker', process.env.NODE_ENV],
   });
 
   if (process.env.NODE_ENV !== 'development') {
