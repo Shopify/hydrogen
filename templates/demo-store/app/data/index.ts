@@ -1,8 +1,6 @@
 import {type StorefrontApiResponseOk} from '@shopify/hydrogen-react';
 import type {
   Cart,
-  CartInput,
-  CartLineInput,
   CartLineUpdateInput,
   ProductConnection,
   Shop,
@@ -267,6 +265,14 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
           amount
           currencyCode
         }
+        selectedOptions {
+          name
+          value
+        }
+        product {
+          handle
+          title
+        }
       }
     }
   }
@@ -321,7 +327,7 @@ fragment CartFragment on Cart {
     email
     phone
   }
-  lines(first: 100) {
+  lines(first: 100, reverse: true) {
     edges {
       node {
         id
@@ -439,6 +445,7 @@ export async function getCart({
 }
 
 const UPDATE_LINE_ITEM_QUERY = `#graphql
+  ${CART_FRAGMENT}
   mutation CartLineUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
@@ -446,8 +453,6 @@ const UPDATE_LINE_ITEM_QUERY = `#graphql
       }
     }
   }
-
-  ${CART_FRAGMENT}
 `;
 
 export async function updateLineItem({
@@ -461,7 +466,7 @@ export async function updateLineItem({
 }) {
   const {country} = getLocalizationFromLang(params.lang);
 
-  const {data} = await getStorefrontData<{cartLinesUpdate: {cart: Cart}}>({
+  const result = await getStorefrontData<{cartLinesUpdate: {cart: Cart}}>({
     query: UPDATE_LINE_ITEM_QUERY,
     variables: {
       cartId,
@@ -470,9 +475,9 @@ export async function updateLineItem({
     },
   });
 
-  invariant(data, 'No data returned from Shopify API');
+  invariant(result?.data, 'No data returned from Shopify API');
 
-  return data.cartLinesUpdate.cart;
+  return result?.data.cartLinesUpdate.cart;
 }
 
 const TOP_PRODUCTS_QUERY = `#graphql

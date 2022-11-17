@@ -34,19 +34,18 @@ import {
   LanguageCode,
   CountryCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
-/* @todo: we move these to app/graphql ? */
 import {
   MEDIA_FRAGMENT,
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
-} from '~/data';
+} from '~/data'; /* @todo: we move these to app/graphql ? */
 import {LinesAddForm} from '~/routes/__resources/cart/LinesAdd';
 
-export const loader = async ({
+export async function loader({
   params,
   request,
   context: {storefront},
-}: LoaderArgs) => {
+}: LoaderArgs) {
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
 
@@ -71,17 +70,23 @@ export const loader = async ({
     },
   });
 
+  if (!product?.id) {
+    throw new Error('product not found');
+  }
+
+  const recommended = getRecommendedProducts(
+    storefront,
+    language,
+    country,
+    product.id,
+  );
+
   return defer({
     product,
     shop,
-    recommended: getRecommendedProducts(
-      storefront,
-      language,
-      country,
-      product.id,
-    ),
+    recommended,
   });
-};
+}
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();
@@ -153,9 +158,6 @@ export function ProductForm() {
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
   const selectingVariant = transition.state === 'loading';
-  const {discountCodesUpdate} = useDiscountCodesUpdate((event) => {
-    console.log('Applied discount', event);
-  });
 
   /**
    * We update `searchParams` with in-flight request data from `transition` (if available)
@@ -217,44 +219,49 @@ export function ProductForm() {
                 },
               ]}
             >
-              {({state}) => (
-                <Button
-                  as="button"
-                  width="full"
-                  type="submit"
-                  variant={isOutOfStock ? 'secondary' : 'primary'}
-                  disabled={
-                    isOutOfStock || selectingVariant || state !== 'idle'
-                  }
-                >
-                  {isOutOfStock ? (
-                    <Text>Sold out</Text>
-                  ) : (
-                    <Text
-                      as="span"
-                      className="flex items-center justify-center gap-2"
+              {({state, error}) => {
+                return (
+                  <>
+                    <Button
+                      as="button"
+                      width="full"
+                      type="submit"
+                      variant={isOutOfStock ? 'secondary' : 'primary'}
+                      disabled={
+                        isOutOfStock || selectingVariant || state !== 'idle'
+                      }
                     >
-                      <span>
-                        {state === 'idle' ? 'Add to Bag' : 'Adding to Bag'}
-                      </span>{' '}
-                      <span>·</span>{' '}
-                      <Money
-                        withoutTrailingZeros
-                        data={selectedVariant?.price!}
-                        as="span"
-                      />
-                      {isOnSale && (
-                        <Money
-                          withoutTrailingZeros
-                          data={selectedVariant?.compareAtPrice!}
+                      {isOutOfStock ? (
+                        <Text>Sold out</Text>
+                      ) : (
+                        <Text
                           as="span"
-                          className="opacity-50 strike"
-                        />
+                          className="flex items-center justify-center gap-2"
+                        >
+                          <span>
+                            {state === 'idle' ? 'Add to Bag' : 'Adding to Bag'}
+                          </span>{' '}
+                          <span>·</span>{' '}
+                          <Money
+                            withoutTrailingZeros
+                            data={selectedVariant?.price!}
+                            as="span"
+                          />
+                          {isOnSale && (
+                            <Money
+                              withoutTrailingZeros
+                              data={selectedVariant?.compareAtPrice!}
+                              as="span"
+                              className="opacity-50 strike"
+                            />
+                          )}
+                        </Text>
                       )}
-                    </Text>
-                  )}
-                </Button>
-              )}
+                    </Button>
+                    {error ? <Text>{error}</Text> : null}
+                  </>
+                );
+              }}
             </LinesAddForm>
           )}
           {!isOutOfStock && (
