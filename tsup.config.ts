@@ -1,7 +1,9 @@
 import {defineConfig} from 'tsup';
 import fs from 'fs/promises';
+import path from 'path';
 
 const entry = 'src/index.ts';
+const outDir = 'dist';
 
 const common = defineConfig({
   entryPoints: [entry],
@@ -13,21 +15,21 @@ const common = defineConfig({
 export default defineConfig([
   {
     ...common,
+    env: {NODE_ENV: 'development'},
+    outDir: path.join(outDir, 'development'),
+  },
+  {
+    ...common,
     env: {NODE_ENV: 'production'},
     dts: entry,
-    outDir: 'dist/production',
+    outDir: path.join(outDir, 'production'),
     minify: true,
     async onSuccess() {
       await fs.writeFile(
-        './dist/index.cjs',
+        path.resolve(process.cwd(), outDir, 'index.cjs'),
         `module.exports = process.env.NODE_ENV === 'development' ? require('./development/index.cjs') : require('./production/index.cjs');`,
         'utf-8',
       );
     },
-  },
-  {
-    ...common,
-    env: {NODE_ENV: 'development'},
-    outDir: 'dist/development',
   },
 ]);
