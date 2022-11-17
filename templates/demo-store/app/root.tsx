@@ -248,8 +248,6 @@ const CART_QUERY = `#graphql
     width
     height
   }
-
-
 `;
 
 export async function getCart({

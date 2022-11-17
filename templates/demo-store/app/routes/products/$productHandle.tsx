@@ -60,8 +60,7 @@ export async function loader({
   const {shop, product} = await storefront.query<{
     product: Product & {selectedVariant?: ProductVariant};
     shop: Shop;
-  }>({
-    query: PRODUCT_QUERY,
+  }>(PRODUCT_QUERY, {
     variables: {
       handle: productHandle,
       country,
@@ -84,9 +83,9 @@ export async function loader({
   return defer({
     product,
     shop,
-    recommended,
+    recommended
   });
-}
+};
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();

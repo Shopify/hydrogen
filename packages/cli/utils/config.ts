@@ -35,7 +35,8 @@ export async function getRemixConfig(
 
     const hydrogenAssetBase = process.env.HYDROGEN_ASSET_BASE_URL;
     if (hydrogenAssetBase) {
-      config.publicPath = hydrogenAssetBase + config.publicPath;
+      const suffix = config.publicPath?.replace(/\\/g, '/').replace(/^\//, '');
+      config.publicPath = hydrogenAssetBase + suffix;
     }
 
     config.serverBuildTarget = 'cloudflare-workers';
