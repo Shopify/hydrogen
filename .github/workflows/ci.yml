@@ -16,7 +16,7 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - name: 📥 Download deps
         uses: bahmutov/npm-install@v1
@@ -39,12 +39,15 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - name: 📥 Download deps
         uses: bahmutov/npm-install@v1
         with:
           useLockFile: false
+
+      - name: 📦 Build packages
+        run: npm run build
 
       - name: ✅ Typecheck
         run: npm run typecheck
@@ -63,10 +66,13 @@ jobs:
       - name: ⎔ Setup node
         uses: actions/setup-node@v3
         with:
-          node-version: 16
+          node-version: 18
 
       - name: 📥 Install dependencies
         run: npm ci
+
+      - name: 📦 Build packages
+        run: npm run build
 
       - name: 💽 Install Playwright Browsers
         run: npx playwright install --with-deps
