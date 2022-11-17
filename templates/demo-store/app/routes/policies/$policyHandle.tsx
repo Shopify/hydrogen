@@ -34,7 +34,7 @@ export async function loader({request, params, context}: LoaderArgs) {
   const policy = data.shop?.[policyName];
 
   if (!policy) {
-    await notFoundMaybeRedirect(request, context);
+    throw await notFoundMaybeRedirect(request, context);
   }
 
   return json(

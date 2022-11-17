@@ -128,7 +128,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   if (!collection) {
-    await notFoundMaybeRedirect(request, context);
+    throw await notFoundMaybeRedirect(request, context);
   }
 
   const collectionNodes = flattenConnection(collections);

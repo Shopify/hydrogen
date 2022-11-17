@@ -50,7 +50,7 @@ export async function loader({request, params, context}: LoaderArgs) {
   ) {
     // If the lang URL param is defined, yet we still are on `EN-US`
     // the the lang param must be invalid, send to the 404 page
-    await notFoundMaybeRedirect(request, context);
+    throw await notFoundMaybeRedirect(request, context);
   }
 
   const {shop, hero} = await context.storefront.query<{

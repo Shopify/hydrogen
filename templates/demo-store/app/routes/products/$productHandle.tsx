@@ -66,7 +66,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   if (!product?.id) {
-    await notFoundMaybeRedirect(request, context);
+    throw await notFoundMaybeRedirect(request, context);
   }
 
   const recommended = getRecommendedProducts(context.storefront, product.id);

@@ -21,7 +21,7 @@ export async function loader({request, params, context}: LoaderArgs) {
   });
 
   if (!page) {
-    await notFoundMaybeRedirect(request, context);
+    throw await notFoundMaybeRedirect(request, context);
   }
 
   return json(

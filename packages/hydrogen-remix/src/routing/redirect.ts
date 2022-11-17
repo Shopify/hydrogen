@@ -3,7 +3,7 @@ import {HydrogenContext} from '..';
 export async function notFoundMaybeRedirect(
   request: Request,
   context: HydrogenContext,
-): Promise<void> {
+): Promise<Response> {
   const {pathname, search} = new URL(request.url);
   const {urlRedirects} = await context.storefront.query<{
     urlRedirects: {
@@ -17,14 +17,14 @@ export async function notFoundMaybeRedirect(
   });
 
   if (urlRedirects?.edges?.length) {
-    throw new Response(null, {
+    return new Response(null, {
       status: 301,
       headers: {
         location: urlRedirects.edges[0]?.node?.target!,
       },
     });
   } else {
-    throw new Response('Not found', {status: 404});
+    return new Response('Not found', {status: 404});
   }
 }
 

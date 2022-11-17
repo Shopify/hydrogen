@@ -44,7 +44,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   if (!blog?.articleByHandle) {
-    await notFoundMaybeRedirect(request, context);
+    throw await notFoundMaybeRedirect(request, context);
   }
 
   const article = blog.articleByHandle;
