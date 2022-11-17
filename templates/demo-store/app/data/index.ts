@@ -20,6 +20,7 @@ import type {
   CustomerRecoverPayload,
   CustomerResetPayload,
   CustomerActivatePayload,
+  CartBuyerIdentityInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {
   type EnhancedMenu,
@@ -485,6 +486,44 @@ export async function updateLineItem(
   invariant(data, 'No data returned from Shopify API');
 
   return data.cartLinesUpdate.cart;
+}
+
+const UPDATE_CART_BUYER_COUNTRY = `#graphql
+  mutation CartBuyerIdentityUpdate(
+    $cartId: ID!
+    $buyerIdentity: CartBuyerIdentityInput!
+    $country: CountryCode = ZZ
+  ) @inContext(country: $country) {
+    cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
+      cart {
+        id
+      }
+    }
+  }
+`;
+
+export async function updateCartBuyerIdentity(
+  {storefront}: HydrogenContext,
+  {
+    cartId,
+    buyerIdentity,
+  }: {
+    cartId: string;
+    buyerIdentity: CartBuyerIdentityInput;
+  },
+) {
+  const data = await storefront.mutate<{
+    cartBuyerIdentityUpdate: {cart: Cart};
+  }>(UPDATE_CART_BUYER_COUNTRY, {
+    variables: {
+      cartId,
+      buyerIdentity,
+    },
+  });
+
+  invariant(data, 'No data returned from Shopify API');
+
+  return data.cartBuyerIdentityUpdate.cart;
 }
 
 const TOP_PRODUCTS_QUERY = `#graphql
