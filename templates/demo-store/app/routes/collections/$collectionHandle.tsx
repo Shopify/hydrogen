@@ -5,14 +5,10 @@ import {
   type LoaderArgs,
 } from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
-import type {
-  Collection as CollectionType,
-  Filter,
-} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Collection as CollectionType} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {PageHeader, Section, Text, SortFilter} from '~/components';
+import {PageHeader, Section, Text} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
-import {getLocalizationFromLang} from '~/lib/utils';
 
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
@@ -30,15 +26,14 @@ export async function loader({
   const searchParams = new URL(request.url).searchParams;
   const knownFilters = ['cursor', 'productVendor', 'productType', 'available'];
 
-  const variantOption: Record<string, string>[] = [];
-  const variables: Record<string, string> = {};
+  const filters: Record<string, {name: string; value: string} | string>[] = [];
 
   for (const [key, value] of searchParams.entries()) {
     // TODO: Add price min/max to query
     if (knownFilters.includes(key)) {
-      variables[key] = value;
+      filters.push({[key]: value});
     } else {
-      variantOption.push({name: key, value});
+      filters.push({variantOption: {name: key, value}});
     }
   }
 
@@ -46,12 +41,9 @@ export async function loader({
     collection: CollectionType;
   }>(COLLECTION_QUERY, {
     variables: {
-      ...variables,
       handle: collectionHandle,
       pageBy: PAGINATION_SIZE,
-      available: variables.available === 'false' ? false : true,
-      // TODO: Can we pass in multiple variantOptions?
-      variantOption: variantOption.length > 0 ? variantOption[0] : undefined,
+      filters,
     },
   });
 
@@ -109,10 +101,7 @@ const COLLECTION_QUERY = `#graphql
     $language: LanguageCode
     $pageBy: Int!
     $cursor: String
-    $productVendor: String
-    $productType: String
-    $available: Boolean
-    $variantOption: VariantOptionFilter
+    $filters: [ProductFilter!]
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -133,12 +122,7 @@ const COLLECTION_QUERY = `#graphql
       products(
         first: $pageBy,
         after: $cursor,
-        filters: {
-          productVendor: $productVendor,
-          productType: $productType,
-          available: $available
-          variantOption: $variantOption
-        }
+        filters: $filters,
       ) {
         filters {
           id
