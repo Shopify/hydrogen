@@ -1,0 +1,15 @@
+{
+  "include": ["**/*.ts"],
+  "exclude": ["dist", "__tests__", "node_modules"],
+  "compilerOptions": {
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "target": "ESNext",
+    "types": ["@shopify/oxygen-workers-types", "Node"],
+    "moduleResolution": "Node",
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "declaration": true,
+    "rootDir": ".",
+    "outDir": "dist"
+  }
+}
