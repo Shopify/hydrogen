@@ -37,6 +37,7 @@
     "@shopify/hydrogen-react": "*"
   },
   "devDependencies": {
-    "@shopify/hydrogen-react": "*"
+    "@shopify/hydrogen-react": "*",
+    "@types/node": "^18.11.9"
   }
 }
