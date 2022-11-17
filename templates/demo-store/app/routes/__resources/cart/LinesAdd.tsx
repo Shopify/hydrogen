@@ -1,17 +1,24 @@
-import {useEffect, forwardRef, useCallback, useMemo} from 'react';
-import {Params, useFetcher, useFetchers, useLocation} from '@remix-run/react';
+import {diff} from 'fast-array-diff';
+import {useEffect, forwardRef, useCallback, useMemo, useId} from 'react';
+import {
+  type Fetcher,
+  Params,
+  useFetcher,
+  useFetchers,
+  useLocation,
+} from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import {getSession} from '~/lib/session.server';
+import type {SerializeFrom} from '@remix-run/server-runtime';
 import {
   type ActionArgs,
   type AppLoadContext,
   redirect,
   json,
-  CacheNone,
 } from '@shopify/hydrogen-remix';
 import {getLocalizationFromLang} from '~/lib/utils';
-import {
+import type {
   Cart,
   CartInput,
   CartLine,
@@ -19,6 +26,7 @@ import {
   ProductVariant,
   UserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import type {PartialDeep} from 'type-fest';
 import React from 'react';
 
 interface LinesAddEventPayload {
@@ -27,14 +35,17 @@ interface LinesAddEventPayload {
 }
 
 interface LinesAddEvent {
-  type: 'lines_add';
+  type: 'lines_add' | 'lines_add_error';
   id: string;
   payload: LinesAddEventPayload;
 }
 
 interface LinesAddLine extends Omit<CartLineInput, 'merchandiseId'> {
   /* variant is needed to optimistically add line items to the cart */
-  variant: ProductVariant;
+  variant:
+    | SerializeFrom<ProductVariant>
+    | ProductVariant
+    | PartialDeep<ProductVariant, {recurseIntoArrays: true}>;
 }
 
 interface LinesAddProps {
@@ -54,11 +65,35 @@ interface OptimisticLinesAdd {
   optimisticLinesAdd: CartLine[] | [];
 }
 
+interface LinesAddResponseProps {
+  prevCart: Cart | null;
+  cart: Cart;
+  lines: CartLineInput[];
+  formData: FormData;
+  headers: Headers;
+}
+
+type DiffingLine = Pick<CartLine, 'id' | 'quantity'> & {
+  merchandiseId: CartLine['merchandise']['id'];
+};
+
+interface DiffLinesProps {
+  addingLines: CartLineInput[];
+  prevLines: Cart['lines'];
+  currentLines: Cart['lines'];
+}
+
+interface UseLinesAdd {
+  linesAdd: ({lines}: {lines: LinesAddProps['lines']}) => void;
+  linesAdding: LinesAddLine[] | null;
+  linesAddingFetcher: Fetcher<any> | undefined;
+}
+
 const ACTION_PATH = '/cart/LinesAdd';
 
-/*
-  action ----------------------------------------------------------------
-*/
+/**
+ * action that handles cart create (with lines) and lines add
+ */
 async function action({request, context, params}: ActionArgs) {
   const headers = new Headers();
 
@@ -78,14 +113,14 @@ async function action({request, context, params}: ActionArgs) {
       ...line,
       merchandiseId: variant.id,
     };
-  });
+  }) as CartLineInput[];
 
   const cartId = await session.get('cartId');
 
   // Flow A — no previous cart, create and add line(s)
   if (!cartId) {
     const cart = await cartCreateLinesMutation({
-      cart: {lines},
+      input: {lines},
       params,
       context,
     });
@@ -94,14 +129,19 @@ async function action({request, context, params}: ActionArgs) {
     session.set('cartId', cart.id);
     headers.set('Set-Cookie', await session.commit());
 
-    return linesAddResponse(null, cart, lines, formData, headers);
+    return linesAddResponse({
+      prevCart: null,
+      cart,
+      lines,
+      formData,
+      headers,
+    });
   }
 
   /*
     for analytics we need to query the previous cart lines, so we
     can diff what was really added or not :(
     although it's slower, we now have optimistic lines add
-    @see: issue tracker https://github.com/Shopify/storefront-api-feedback/discussions/151
   */
   const prevCart = await getCartLines({cartId, params, context});
 
@@ -113,19 +153,20 @@ async function action({request, context, params}: ActionArgs) {
     context,
   });
 
-  return linesAddResponse(prevCart, cart, lines, formData, headers);
+  return linesAddResponse({prevCart, cart, lines, formData, headers});
 }
 
-/*
-  action helpers ----------------------------------------------------------------
-*/
-function linesAddResponse(
-  prevCart: Cart | null,
-  cart: Cart,
-  addingLines: CartLineInput[],
-  formData: FormData,
-  headers: Headers,
-) {
+/**
+ * Helper function to handle linesAdd action responses
+ * @returns action response
+ */
+function linesAddResponse({
+  prevCart,
+  cart,
+  lines,
+  formData,
+  headers,
+}: LinesAddResponseProps) {
   // if JS is disabled, this will redirect back to the referer
   if (formData.get('redirectTo')) {
     return redirect(String(formData.get('redirectTo')), {headers});
@@ -133,12 +174,34 @@ function linesAddResponse(
 
   const prevLines = (prevCart?.lines || []) as Cart['lines'];
 
-  // figure out if line(s) added or not
-  const {linesAdded, linesNotAdded} = getLinesAddedStatus(
+  // create analytics event payload
+  const {event, error} = instrumentEvent({
+    addingLines: lines,
+    prevLines,
+    currentLines: cart.lines,
+  });
+
+  return json({event, error}, {headers});
+}
+
+/**
+ * helper function to instrument lines_add | lines_add_error events
+ * @param addingLines - line inputs being added
+ * @param prevLines - lines before the mutation
+ * @param currentLines - lines after the mutation
+ * @returns {event, error}
+ */
+function instrumentEvent({
+  addingLines,
+  currentLines,
+  prevLines,
+}: DiffLinesProps) {
+  // diff lines for analytics
+  const {linesAdded, linesNotAdded} = diffLines({
     addingLines,
     prevLines,
-    cart.lines,
-  );
+    currentLines,
+  });
 
   const event: LinesAddEvent = {
     type: 'lines_add',
@@ -146,79 +209,63 @@ function linesAddResponse(
     payload: {linesAdded},
   };
 
-  let errorMessage = null;
+  let error = null;
   if (linesNotAdded.length) {
+    event.type = 'lines_add_error';
     event.payload.linesNotAdded = linesNotAdded;
 
     const failedVariantIds = linesNotAdded
       .map((line) => line.merchandiseId.split('/').pop())
       .join(', ');
-    errorMessage = `Failed to add variant(s): ${failedVariantIds}`;
+
+    error = `Failed to add variant(s): ${failedVariantIds}`;
   }
 
-  // success
-  if (linesAdded.length) {
-    return json({event, error: errorMessage}, {headers});
-  }
-
-  // failed to add one or more line(s)
-  return json({error: errorMessage}, {headers});
+  return {event, error};
 }
 
-/*
-  Diff prev lines with current lines to determine what was added
-  This is a temporary workaround for analytics until we land
-  https://github.com/Shopify/storefront-api-feedback/discussions/151
-*/
-function getLinesAddedStatus(
-  addingLines: CartLineInput[],
-  prevLines: Cart['lines'],
-  lines: Cart['lines'],
-) {
-  return addingLines.reduce(
-    (result, line) => {
-      const prevLine = prevLines?.edges?.length
-        ? prevLines.edges.find(
-            ({node: prevLine}) =>
-              prevLine.merchandise.id === line.merchandiseId,
-          )
-        : null;
-      const cartLine = lines.edges.find(
-        ({node: updatedLine}) =>
-          updatedLine.merchandise.id === line.merchandiseId,
-      );
+/**
+ * Diff prev lines with current lines to determine what was added
+ * This is a temporary workaround for analytics until we land
+ * @see: https://github.com/Shopify/storefront-api-feedback/discussions/151
+ * @param addingLines - line inputs being added
+ * @param prevLines - lines before the mutation
+ * @param currentLines - lines after the mutation
+ * @returns {linesAdded, linesNotAdded}
+ */
+function diffLines({addingLines, prevLines, currentLines}: DiffLinesProps) {
+  const prev: DiffingLine[] =
+    prevLines?.edges?.map(({node: {id, quantity, merchandise}}) => ({
+      id,
+      quantity,
+      merchandiseId: merchandise.id,
+    })) || [];
 
-      // new line added?
-      if (!prevLine) {
-        if (cartLine?.node?.quantity === line.quantity) {
-          result.linesAdded.push(line);
-        } else {
-          result.linesNotAdded.push(line);
-        }
-        return result;
-      }
+  const next: DiffingLine[] =
+    currentLines?.edges?.map(({node: {id, quantity, merchandise}}) => ({
+      id,
+      quantity,
+      merchandiseId: merchandise.id,
+    })) || [];
 
-      if (!cartLine) {
-        result.linesNotAdded = [...result.linesNotAdded, line];
-        return result;
-      }
+  // compar lines
+  function comparer(prevLine: DiffingLine, line: DiffingLine) {
+    return (
+      prevLine.id === line.id &&
+      prevLine.merchandiseId === line.merchandiseId &&
+      line.quantity <= prevLine.quantity
+    );
+  }
 
-      // existing line updated?
-      if (
-        prevLine.node.quantity + (line.quantity || 1) ===
-        cartLine.node.quantity
-      ) {
-        result.linesAdded = [...result.linesAdded, line];
-      } else {
-        result.linesNotAdded = [...result.linesNotAdded, line];
-      }
-      return result;
-    },
-    {linesAdded: [], linesNotAdded: []} as {
-      linesAdded: CartLineInput[];
-      linesNotAdded: CartLineInput[];
-    },
-  );
+  const {added} = diff(prev, next, comparer);
+  const linesAdded = added || [];
+  const linesAddedIds = linesAdded?.map(({merchandiseId}) => merchandiseId);
+  const linesNotAdded =
+    addingLines?.filter(({merchandiseId}) => {
+      return !linesAddedIds.includes(merchandiseId);
+    }) || [];
+
+  return {linesAdded, linesNotAdded};
 }
 
 /*
@@ -253,7 +300,7 @@ const LINES_CART_FRAGMENT = `#graphql
 `;
 
 const CART_LINES_QUERY = `#graphql
-  query CartQuery($cartId: ID!, $country: CountryCode = ZZ)
+  query ($cartId: ID!, $country: CountryCode = ZZ)
   @inContext(country: $country) {
     cart(id: $cartId) {
       ...CartLinesFragment
@@ -263,8 +310,9 @@ const CART_LINES_QUERY = `#graphql
   ${LINES_CART_FRAGMENT}
 `;
 
+// @see: https://shopify.dev/api/storefront/2022-01/mutations/cartcreate
 const CREATE_CART_ADD_LINES_MUTATION = `#graphql
-  mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ)
+  mutation ($input: CartInput!, $country: CountryCode = ZZ)
   @inContext(country: $country) {
     cartCreate(input: $input) {
       cart {
@@ -280,7 +328,7 @@ const CREATE_CART_ADD_LINES_MUTATION = `#graphql
 `;
 
 const ADD_LINES_MUTATION = `#graphql
-  mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ)
+  mutation ($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ)
   @inContext(country: $country) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
@@ -295,6 +343,12 @@ const ADD_LINES_MUTATION = `#graphql
   ${USER_ERROR_FRAGMENT}
 `;
 
+/**
+ * Fetch the current cart lines
+ * @param cartId
+ * @see https://shopify.dev/api/storefront/2022-01/queries/cart
+ * @returns cart query result
+ */
 async function getCartLines({
   cartId,
   params,
@@ -315,19 +369,28 @@ async function getCartLines({
       cartId,
       country,
     },
-    cache: CacheNone(),
+    cache: storefront.CacheNone(),
   });
 
   invariant(cart, 'No data returned from cart lines query');
   return cart;
 }
 
+/*
+  Create a cart with line(s) mutation
+*/
+/**
+ * Create a cart with line(s) mutation
+ * @param input CartInput https://shopify.dev/api/storefront/2022-01/input-objects/CartInput
+ * @see https://shopify.dev/api/storefront/2022-01/mutations/cartcreate
+ * @returns mutated cart
+ */
 async function cartCreateLinesMutation({
-  cart,
+  input,
   params,
   context,
 }: {
-  cart: CartInput;
+  input: CartInput;
   params: Params;
   context: AppLoadContext;
 }) {
@@ -345,10 +408,10 @@ async function cartCreateLinesMutation({
   }>({
     query: CREATE_CART_ADD_LINES_MUTATION,
     variables: {
-      input: cart,
+      input,
       country,
     },
-    cache: CacheNone(),
+    cache: storefront.CacheNone(),
   });
 
   invariant(cartCreate, 'No data returned from cart create mutation');
@@ -363,6 +426,13 @@ async function cartCreateLinesMutation({
   return cartCreate.cart;
 }
 
+/**
+ * Cart linesAdd mutation
+ * @param cartId
+ * @param lines [CartLineInput!]! https://shopify.dev/api/storefront/2022-01/input-objects/CartLineInput
+ * @see https://shopify.dev/api/storefront/2022-01/mutations/cartLinesAdd
+ * @returns mutated cart
+ */
 async function linesAddMutation({
   cartId,
   lines,
@@ -387,7 +457,7 @@ async function linesAddMutation({
   }>({
     query: ADD_LINES_MUTATION,
     variables: {cartId, lines, country},
-    cache: CacheNone(),
+    cache: storefront.CacheNone(),
   });
 
   invariant(cartLinesAdd, 'No data returned from line(s) add mutation');
@@ -409,6 +479,7 @@ async function linesAddMutation({
 */
 const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
   ({children, lines = [], onSuccess}, ref) => {
+    const formId = useId();
     const {pathname, search} = useLocation();
     const fetcher = useFetcher();
     const isHydrated = useIsHydrated();
@@ -428,7 +499,7 @@ const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
     }
 
     return (
-      <fetcher.Form method="post" action={ACTION_PATH} ref={ref}>
+      <fetcher.Form id={formId} method="post" action={ACTION_PATH} ref={ref}>
         <input
           type="hidden"
           name="lines"
@@ -451,22 +522,39 @@ const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
 /*
   hooks ----------------------------------------------------------------
 */
-/*
-  A utility hook to add set of line(s) to the cart programmatically
-*/
-function useLinesAdd(onSuccess: (event: LinesAddEvent) => void = () => {}) {
-  const fetcher = useFetcher();
+/**
+ * Utility hook to get the active LinesAdd fetcher
+ * @returns fetcher
+ */
+function useLinesAddingFetcher() {
   const fetchers = useFetchers();
-  const linesAddFetcher = fetchers.find(
+  return fetchers.find(
     (fetcher) => fetcher?.submission?.action === ACTION_PATH,
   );
+}
 
-  let linesAdding;
+/**
+ * A hook version of LinesAddForm to add cart line(s) programmatically
+ * @param onSuccess callback function that executes on success
+ * @returns { linesAdd, linesAdding, linesAddingFetcher }
+ */
+function useLinesAdd(
+  onSuccess: (event: LinesAddEvent) => void = () => {},
+): UseLinesAdd {
+  const linesAddingFetcher = useLinesAddingFetcher();
+  const fetcher = useFetcher();
 
-  if (linesAddFetcher?.submission) {
-    const linesAddingStr = linesAddFetcher?.submission?.formData?.get('lines');
+  let linesAdding = null;
+
+  if (linesAddingFetcher?.submission) {
+    const linesAddingStr =
+      linesAddingFetcher?.submission?.formData?.get('lines');
     if (linesAddingStr && typeof linesAddingStr === 'string') {
-      linesAdding = JSON.parse(linesAddingStr);
+      try {
+        linesAdding = JSON.parse(linesAddingStr);
+      } catch (_) {
+        //
+      }
     }
   }
 
@@ -491,21 +579,24 @@ function useLinesAdd(onSuccess: (event: LinesAddEvent) => void = () => {}) {
 
   return {
     linesAdd,
-    linesAddFetcher,
     linesAdding,
+    linesAddingFetcher,
   };
 }
 
-/*
-  A utility hook to implement optimistic lines add UI
-*/
-function useOptimisticLinesAdd(lines: CartLine[]): OptimisticLinesAdd {
-  const fetchers = useFetchers();
-  const linesAddFetcher = fetchers.find(
-    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
-  );
-  const linesAddingStr = linesAddFetcher?.submission?.formData?.get('lines');
+/**
+ * A utility hook to implement adding lines optimistic UI
+ * @param lines CartLine[]
+ * @returns {linesAdding, optimisticLinesAdd: []}
+ */
+function useOptimisticLinesAdd(
+  lines: PartialDeep<CartLine, {recurseIntoArrays: true}>[],
+): OptimisticLinesAdd {
+  const linesAddingFetcher = useLinesAddingFetcher();
+  const linesAddingStr = linesAddingFetcher?.submission?.formData?.get('lines');
 
+  // filter lines being currently added and map them as cart line(s)
+  // returns {linesAdding, optimisticLinesAdd: []}
   return useMemo(() => {
     let linesAdding: LinesAddLine[] | [] = [];
 
@@ -516,43 +607,61 @@ function useOptimisticLinesAdd(lines: CartLine[]): OptimisticLinesAdd {
       return {linesAdding, optimisticLinesAdd: []};
     }
 
-    // default response
+    // default return
     const result: OptimisticLinesAdd = {linesAdding, optimisticLinesAdd: []};
 
     if (!linesAdding?.length) return result;
 
-    // convert all variants being added to cart lines that can
-    // be rendered as optimistic <CartLine />
-    const cartLinesAdding = linesAdding
-      .map((line) => {
-        const {variant} = line;
+    function mapVariantToLine(
+      line: LinesAddLine,
+    ): PartialDeep<CartLine> | null {
+      const {variant} = line;
+      if (!variant) return null;
+      const optimisticLine = {
+        id: crypto.randomUUID(),
+        quantity: line.quantity,
+        merchandise: {
+          id: variant.id,
+          image: variant.image,
+          product: variant.product,
+          selectedOptions: variant.selectedOptions,
+        },
+      } as PartialDeep<CartLine>;
+
+      const {price, compareAtPrice} = variant;
+      if (price && price?.amount && price?.currencyCode && compareAtPrice) {
         const lineTotalAmount = String(
-          parseFloat(variant.price.amount) * (line.quantity || 1),
+          parseFloat(price.amount) * (line.quantity || 1),
         );
-        return {
-          id: crypto.randomUUID(),
-          quantity: line.quantity,
-          cost: {
-            totalAmount: {
-              amount: lineTotalAmount,
-              currencyCode: variant.price.currencyCode,
-            },
-            compareAtAmountPerQuantity: variant.compareAtPrice,
+        optimisticLine.cost = {
+          totalAmount: {
+            amount: lineTotalAmount,
+            currencyCode: price.currencyCode,
           },
-          merchandise: {
-            id: variant.id,
-            image: variant.image,
-            product: variant.product,
-            selectedOptions: variant.selectedOptions,
-          },
+          compareAtAmountPerQuantity: compareAtPrice,
         };
-      })
+      }
+
+      return optimisticLine;
+    }
+
+    // convert all variants being added to cart lines that can
+    // be rendered as optimistic lines with <CartLine />
+    const cartLinesAdding = linesAdding
+      .map(mapVariantToLine)
+      .filter(Boolean)
       .reverse() as CartLine[];
 
     if (!cartLinesAdding || !cartLinesAdding?.length) return result;
 
     // filter just the new optimistic lines
-    const addedIds = lines.map((line) => line.merchandise.id);
+    const addedIds = lines
+      .map((line) => {
+        if (!line?.merchandise?.id) return null;
+        return line.merchandise.id;
+      })
+      .filter(Boolean);
+
     const addingIds = cartLinesAdding.map((line) => line.merchandise.id);
     const addingIdsNew = addingIds.filter((id) => !addedIds.includes(id));
 
@@ -564,7 +673,7 @@ function useOptimisticLinesAdd(lines: CartLine[]): OptimisticLinesAdd {
 
     if (addingIds?.length) {
       // assign new lines only: existing cart with lines
-      const addingLinesNew = addingIdsNew
+      const linesNew = addingIdsNew
         .map((lineId) => {
           const line = cartLinesAdding.find(
             (line) => line.merchandise.id === lineId,
@@ -572,7 +681,7 @@ function useOptimisticLinesAdd(lines: CartLine[]): OptimisticLinesAdd {
           return line || null;
         })
         .filter(Boolean) as CartLine[];
-      result.optimisticLinesAdd = addingLinesNew;
+      result.optimisticLinesAdd = linesNew;
       return result;
     }
 
@@ -584,10 +693,10 @@ export {
   action,
   cartCreateLinesMutation,
   getCartLines,
-  LINES_CART_FRAGMENT,
+  LINES_CART_FRAGMENT, // @todo: would be great if these lived in a shared graphql/ folder
   LinesAddForm,
   linesAddMutation,
   useLinesAdd,
   useOptimisticLinesAdd,
-  USER_ERROR_FRAGMENT,
+  USER_ERROR_FRAGMENT, // @todo: would be great if these lived in a shared graphql/ folder
 };

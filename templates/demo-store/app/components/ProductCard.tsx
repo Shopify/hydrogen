@@ -16,6 +16,7 @@ import type {
   ProductVariantConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {SerializeFrom} from '@remix-run/server-runtime';
+import {LinesAddForm} from '~/routes/__resources/cart/LinesAdd';
 
 export function ProductCard({
   product,
@@ -32,12 +33,15 @@ export function ProductCard({
 }) {
   let cardLabel;
 
-  const cardData = product?.variants ? product : getProductPlaceholder();
+  const cartProduct = product?.variants ? product : getProductPlaceholder();
+  if (!cartProduct?.variants?.nodes?.length) return null;
 
-  const {image, price, compareAtPrice} =
-    flattenConnection<ProductVariant>(
-      cardData?.variants as ProductVariantConnection,
-    )[0] || {};
+  const firstVariant = flattenConnection<ProductVariant>(
+    cartProduct?.variants as ProductVariantConnection,
+  )[0];
+
+  if (!firstVariant) return null;
+  const {image, price, compareAtPrice} = firstVariant;
 
   if (label) {
     cardLabel = label;
@@ -50,59 +54,75 @@ export function ProductCard({
   const styles = clsx('grid gap-6', className);
 
   return (
-    <Link
-      onClick={onClick}
-      to={`/products/${product.handle}`}
-      prefetch="intent"
-    >
-      <div className={styles}>
-        <div className="card-image aspect-[4/5] bg-primary/5">
-          <Text
-            as="label"
-            size="fine"
-            className="absolute top-0 right-0 m-4 text-right text-notice"
-          >
-            {cardLabel}
-          </Text>
-          {image && (
-            <Image
-              className="aspect-[4/5] w-full object-cover fadeIn"
-              widths={[320]}
-              sizes="320px"
-              loaderOptions={{
-                crop: 'center',
-                scale: 2,
-                width: 320,
-                height: 400,
-              }}
-              // @ts-ignore Stock type has `src` as optional
-              data={image}
-              alt={image.altText || `Picture of ${product.title}`}
-              loading={loading}
-            />
-          )}
-        </div>
-        <div className="grid gap-1">
-          <Text
-            className="w-full overflow-hidden whitespace-nowrap text-ellipsis "
-            as="h3"
-          >
-            {product.title}
-          </Text>
-          <div className="flex gap-4">
-            <Text className="flex gap-4">
-              <Money withoutTrailingZeros data={price!} />
-              {isDiscounted(price as MoneyV2, compareAtPrice as MoneyV2) && (
-                <CompareAtPrice
-                  className={'opacity-50'}
-                  data={compareAtPrice as MoneyV2}
-                />
-              )}
+    <div className="flex flex-col">
+      <Link
+        onClick={onClick}
+        to={`/products/${product.handle}`}
+        prefetch="intent"
+      >
+        <div className={styles}>
+          <div className="card-image aspect-[4/5] bg-primary/5">
+            <Text
+              as="label"
+              size="fine"
+              className="absolute top-0 right-0 m-4 text-right text-notice"
+            >
+              {cardLabel}
             </Text>
+            {image && (
+              <Image
+                className="aspect-[4/5] w-full object-cover fadeIn"
+                widths={[320]}
+                sizes="320px"
+                loaderOptions={{
+                  crop: 'center',
+                  scale: 2,
+                  width: 320,
+                  height: 400,
+                }}
+                // @ts-ignore Stock type has `src` as optional
+                data={image}
+                alt={image.altText || `Picture of ${product.title}`}
+                loading={loading}
+              />
+            )}
+          </div>
+          <div className="grid gap-1">
+            <Text
+              className="w-full overflow-hidden whitespace-nowrap text-ellipsis "
+              as="h3"
+            >
+              {product.title}
+            </Text>
+            <div className="flex gap-4">
+              <Text className="flex gap-4">
+                <Money withoutTrailingZeros data={price!} />
+                {isDiscounted(price as MoneyV2, compareAtPrice as MoneyV2) && (
+                  <CompareAtPrice
+                    className={'opacity-50'}
+                    data={compareAtPrice as MoneyV2}
+                  />
+                )}
+              </Text>
+            </div>
           </div>
         </div>
-      </div>
-    </Link>
+      </Link>
+      {firstVariant && (
+        <LinesAddForm
+          lines={[
+            {
+              quantity: 1,
+              variant: firstVariant,
+            },
+          ]}
+        >
+          {() => {
+            return <button type="submit">Add to Cart</button>;
+          }}
+        </LinesAddForm>
+      )}
+    </div>
   );
 }
 

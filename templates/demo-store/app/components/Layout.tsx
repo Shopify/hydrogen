@@ -27,6 +27,7 @@ import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useCart} from '~/hooks/useCart';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
+import {useLinesAdd} from '~/routes/__resources/cart/LinesAdd';
 
 export function Layout({
   children,
@@ -62,7 +63,7 @@ export function Layout({
 
 function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
-  const fetchers = useFetchers();
+  const {linesAdding} = useLinesAdd();
 
   const {
     isOpen: isCartOpen,
@@ -78,14 +79,9 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 
   // toggle cart drawer when adding to cart
   useEffect(() => {
-    const fetcher = fetchers.find(
-      (fetcher) => fetcher?.submission?.action === '/cart',
-    );
-
-    if (!isCartOpen && fetcher?.data?.addedToCart) {
-      openCart();
-    }
-  }, [fetchers, isCartOpen, openCart]);
+    if (isCartOpen || !linesAdding?.length) return;
+    openCart();
+  }, [linesAdding, isCartOpen, openCart]);
 
   return (
     <>

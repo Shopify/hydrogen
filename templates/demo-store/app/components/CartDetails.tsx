@@ -23,6 +23,7 @@ import type {
   Product,
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {useOptimisticLinesAdd} from '~/routes/__resources/cart/LinesAdd';
 
 enum Action {
   SetQuantity = 'set-quantity',
@@ -46,13 +47,7 @@ export function CartDetails({
   const {y} = useScroll(scrollRef);
   const lineItemFetcher = useFetcher();
 
-  const optimisticallyAddingLine = useMemo(() => {
-    const fetcher = fetchers.find(
-      (fetcher) => fetcher?.submission?.action === '/cart',
-    );
-
-    return !!fetcher?.data?.addedToCart;
-  }, [fetchers]);
+  const {optimisticLinesAdd} = useOptimisticLinesAdd(lines);
 
   const optimisticallyDeletingLastLine =
     lines.length === 1 &&
@@ -86,6 +81,18 @@ export function CartDetails({
         className={`${content[layout]} ${y > 0 ? 'border-t' : ''}`}
       >
         <ul className="grid gap-6 md:gap-10">
+          {/* Optimistic cart lines will be replaced with actual lines when ready */}
+          {optimisticLinesAdd?.length
+            ? optimisticLinesAdd.map((line) => (
+                <CartLineItem
+                  key={line.merchandise.id}
+                  fetcher={lineItemFetcher}
+                  optimistic
+                  line={line as CartLine}
+                />
+              ))
+            : null}
+          {/* car lines already added */}
           {lines.map((line) => {
             return (
               <CartLineItem
@@ -95,12 +102,6 @@ export function CartDetails({
               />
             );
           })}
-          {/*
-              @todo: optimistically add a line item.
-              Maybe just cover the use case where the variantId is not yet
-              in cart.lines to keep it simple, because we cart.lines are not ordered
-          */}
-          {optimisticallyAddingLine ? <p>Adding..</p> : null}
         </ul>
       </section>
       <section aria-labelledby="summary-heading" className={summary[layout]}>
@@ -154,9 +155,11 @@ function OrderSummary({cost}: {cost: CartCost}) {
 function CartLineItem({
   line,
   fetcher,
+  optimistic = false,
 }: {
   line: CartLine;
   fetcher: FetcherWithComponents<any>;
+  optimistic?: boolean;
 }) {
   const {id: lineId, quantity, merchandise} = line;
 
@@ -406,6 +409,8 @@ function CartLinePrice({
   priceType?: 'regular' | 'compareAt';
   [key: string]: any;
 }) {
+  if (!line?.cost?.totalAmount) return null;
+
   const moneyV2 =
     priceType === 'regular'
       ? line.cost.totalAmount
