@@ -28,6 +28,10 @@ jobs:
         run: |
           CI=true npm i
 
+      - name: Build packages
+        run: |
+          CI=true npm run build
+
       - name: Build and Publish to Oxygen
         id: deploy
         uses: shopify/oxygenctl-action@v4
