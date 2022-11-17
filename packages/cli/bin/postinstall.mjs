@@ -28,8 +28,6 @@ if (!cliPackageJson.oclif.plugins.includes('@oclif/plugin-plugins')) {
   ];
 }
 
-console.log(JSON.stringify(cliPackageJson, null, 2));
-
 await promises.writeFile(
   cliPackageJsonPath,
   JSON.stringify(cliPackageJson, null, 2),
