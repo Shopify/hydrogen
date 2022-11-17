@@ -2,8 +2,8 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "npm run build -w demo-store",
-    "dev": "npm run dev -w demo-store",
+    "build": "turbo build --parallel",
+    "dev": "turbo dev --parallel",
     "preview": "npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
@@ -25,6 +25,7 @@
     "lint-staged": "^10.5.4",
     "prettier": "^2.7.1",
     "tsup": "^6.5.0",
+    "turbo": "^1.6.3",
     "typescript": "^4.8.3",
     "yorkie": "^2.0.0"
   },
