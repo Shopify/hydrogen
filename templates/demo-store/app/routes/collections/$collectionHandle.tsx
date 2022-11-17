@@ -47,7 +47,6 @@ export async function loader({
     collection: CollectionType;
   }>(COLLECTION_QUERY, {
     variables: {
-      variantOptions: [],
       handle: collectionHandle,
       pageBy: PAGINATION_SIZE,
       language,
@@ -111,7 +110,6 @@ const COLLECTION_QUERY = `#graphql
     $pageBy: Int!
     $cursor: String
     $filters: [ProductFilter!]
-
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
