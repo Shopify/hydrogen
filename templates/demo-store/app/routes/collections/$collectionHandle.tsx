@@ -30,15 +30,14 @@ export async function loader({
   const searchParams = new URL(request.url).searchParams;
   const knownFilters = ['cursor', 'productVendor', 'productType', 'available'];
 
-  const variantOption: Record<string, string>[] = [];
-  const variables: Record<string, string> = {};
+  const filters: Record<string, {name: string; value: string} | string>[] = [];
 
   for (const [key, value] of searchParams.entries()) {
     // TODO: Add price min/max to query
     if (knownFilters.includes(key)) {
-      variables[key] = value;
+      filters.push({[key]: value});
     } else {
-      variantOption.push({name: key, value});
+      filters.push({variantOption: {name: key, value}});
     }
   }
 
@@ -48,14 +47,12 @@ export async function loader({
     collection: CollectionType;
   }>(COLLECTION_QUERY, {
     variables: {
-      ...variables,
+      variantOptions: [],
       handle: collectionHandle,
       pageBy: PAGINATION_SIZE,
       language,
       country,
-      available: variables.available === 'false' ? false : true,
-      // TODO: Can we pass in multiple variantOptions?
-      variantOption: variantOption.length > 0 ? variantOption[0] : undefined,
+      filters,
     },
   });
 
@@ -113,10 +110,8 @@ const COLLECTION_QUERY = `#graphql
     $language: LanguageCode
     $pageBy: Int!
     $cursor: String
-    $productVendor: String
-    $productType: String
-    $available: Boolean
-    $variantOption: VariantOptionFilter
+    $filters: [ProductFilter!]
+
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -137,12 +132,7 @@ const COLLECTION_QUERY = `#graphql
       products(
         first: $pageBy,
         after: $cursor,
-        filters: {
-          productVendor: $productVendor,
-          productType: $productType,
-          available: $available
-          variantOption: $variantOption
-        }
+        filters: $filters,
       ) {
         filters {
           id
