@@ -62,9 +62,9 @@ export const loader: LoaderFunction = async function loader({
   const cartId = await session.get('cartId');
 
   return defer({
-    layout: await getLayoutData(params),
-    countries: getCountries(),
-    cart: cartId ? getCart({cartId, params}) : undefined,
+    layout: await getLayoutData(context, params),
+    countries: getCountries(context),
+    cart: cartId ? getCart(context, {cartId, params}) : undefined,
   });
 };
 

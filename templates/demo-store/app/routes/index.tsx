@@ -52,8 +52,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
   const {shop, hero} = await storefront.query<{
     hero: CollectionHero;
     shop: HomeSeoData;
-  }>({
-    query: HOMEPAGE_SEO_QUERY,
+  }>(HOMEPAGE_SEO_QUERY, {
     variables: {
       language,
       country,
@@ -69,38 +68,40 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     // Should there be fallback rendering while deferred?
     featuredProducts: storefront.query<{
       products: ProductConnection;
-    }>({
-      query: HOMEPAGE_FEATURED_PRODUCTS_QUERY,
+    }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
       variables: {
         language,
         country,
       },
     }),
-    secondaryHero: storefront.query<{hero: CollectionHero}>({
-      query: COLLECTION_HERO_QUERY,
-      variables: {
-        language,
-        country,
-        handle: 'backcountry',
+    secondaryHero: storefront.query<{hero: CollectionHero}>(
+      COLLECTION_HERO_QUERY,
+      {
+        variables: {
+          language,
+          country,
+          handle: 'backcountry',
+        },
       },
-    }),
+    ),
     featuredCollections: storefront.query<{
       collections: CollectionConnection;
-    }>({
-      query: FEATURED_COLLECTIONS_QUERY,
+    }>(FEATURED_COLLECTIONS_QUERY, {
       variables: {
         language,
         country,
       },
     }),
-    tertiaryHero: storefront.query<{hero: CollectionHero}>({
-      query: COLLECTION_HERO_QUERY,
-      variables: {
-        language,
-        country,
-        handle: 'winter-2022',
+    tertiaryHero: storefront.query<{hero: CollectionHero}>(
+      COLLECTION_HERO_QUERY,
+      {
+        variables: {
+          language,
+          country,
+          handle: 'winter-2022',
+        },
       },
-    }),
+    ),
   });
 }
 

@@ -30,8 +30,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
 
   const {blog} = await storefront.query<{
     blog: Blog;
-  }>({
-    query: ARTICLE_QUERY,
+  }>(ARTICLE_QUERY, {
     variables: {
       blogHandle: BLOG_HANDLE,
       articleHandle: params.journalHandle,
