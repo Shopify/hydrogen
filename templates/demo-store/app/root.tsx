@@ -165,7 +165,7 @@ const CART_QUERY = `#graphql
       email
       phone
     }
-    lines(first: 100, reverse: true) {
+    lines(first: 100) {
       edges {
         node {
           id
