@@ -33,9 +33,6 @@
   "files": [
     "dist"
   ],
-  "dependencies": {
-    "@types/node": "^18.11.9"
-  },
   "peerDependencies": {
     "@remix-run/oxygen": "*",
     "@remix-run/react": "*",
