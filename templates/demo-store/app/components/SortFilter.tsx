@@ -47,43 +47,42 @@ export function Drawer({
       heading="Filter and sort"
       openFrom="right"
     >
-      <>
-        <nav className="py-8 px-8 md:px-12 ">
-          {filters.map((filter: Filter) => (
-            <>
-              <Heading as="h4" size="lead" className="pb-2">
-                {filter.label}
-              </Heading>
-              <ul key={filter.id} className="pb-8">
-                {filter.values?.map((option) => {
-                  const params = new URLSearchParams(location.search);
+      <nav className="py-8 px-8 md:px-12 ">
+        {filters.map((filter: Filter) => (
+          <div key={filter.id}>
+            <Heading as="h4" size="lead" className="pb-2">
+              {filter.label}
+            </Heading>
+            <ul key={filter.id} className="pb-8">
+              {filter.values?.map((option) => {
+                const params = new URLSearchParams(location.search);
 
-                  const newParams = filterInputToParams(
-                    filter.type,
-                    option.input as string,
-                    params,
-                  );
+                const newParams = filterInputToParams(
+                  filter.type,
+                  option.input as string,
+                  params,
+                );
 
-                  const to = `${location.pathname}?${newParams.toString()}`;
-                  return (
-                    <li key={option.id}>
-                      <Link
-                        className="focus:underline hover:underline whitespace-nowrap"
-                        prefetch="intent"
-                        onClick={onClose}
-                        reloadDocument
-                        to={to}
-                      >
-                        {option.label}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </>
-          ))}
-        </nav>
-      </>
+                const to = `${location.pathname}?${newParams.toString()}`;
+
+                return (
+                  <li key={option.id}>
+                    <Link
+                      className="focus:underline hover:underline whitespace-nowrap"
+                      prefetch="intent"
+                      onClick={onClose}
+                      reloadDocument
+                      to={to}
+                    >
+                      {option.label}
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        ))}
+      </nav>
     </DrawerComponent>
   );
 }
