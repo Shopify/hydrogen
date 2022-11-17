@@ -62,7 +62,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   // Double-check current user is logged in.
   // Will throw a logout redirect if not.
-  await getCustomer({customerAccessToken, request, context, params});
+  await getCustomer(context, {customerAccessToken, request, params});
 
   if (
     formDataHas(formData, 'newPassword') &&
@@ -101,7 +101,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
     formDataHas(formData, 'newPassword') &&
       (customer.password = formData.get('newPassword') as string);
 
-    await updateCustomer({customerAccessToken, customer});
+    await updateCustomer(context, {customerAccessToken, customer});
 
     return redirect(params?.lang ? `${params.lang}/account` : '/account');
   } catch (error: any) {

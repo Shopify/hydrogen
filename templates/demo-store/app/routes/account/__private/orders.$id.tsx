@@ -43,7 +43,7 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const orderId = `gid://shopify/Order/${params.id}?key=${orderToken}`;
 
-  const order = await getCustomerOrder({params, orderId});
+  const order = await getCustomerOrder(context, {params, orderId});
 
   if (!order) {
     throw new Response('Order not found', {status: 404});
