@@ -20,7 +20,7 @@ export default defineConfig([
     async onSuccess() {
       await fs.writeFile(
         './dist/index.cjs',
-        `module.exports = process.env.NODE_ENV === 'development' ? require('./development/index.cjs') : require('./production/index.cjs);`,
+        `module.exports = process.env.NODE_ENV === 'development' ? require('./development/index.cjs') : require('./production/index.cjs');`,
         'utf-8',
       );
     },
