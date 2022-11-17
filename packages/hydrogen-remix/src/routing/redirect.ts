@@ -9,8 +9,7 @@ export async function notFoundMaybeRedirect(
     urlRedirects: {
       edges: Array<{node: {target: string}}>;
     };
-  }>({
-    query: REDIRECT_QUERY,
+  }>(REDIRECT_QUERY, {
     variables: {
       url: pathname + search,
     },
