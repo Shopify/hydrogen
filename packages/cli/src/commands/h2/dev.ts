@@ -23,8 +23,8 @@ export default class Dev extends Command {
       default: 3000,
     }),
     entry: Flags.string({
-      env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
-      default: '', // TODO: what is the default entry?
+      env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
+      default: 'oxygen.ts',
     }),
   };
 
@@ -79,7 +79,7 @@ export async function runDev({
   });
 
   // Run MiniOxygen and watch worker build
-  miniOxygenPreview({
+  miniOxygenPreview.default({
     workerFile: buildPathWorkerFile,
     port,
     assetsDir: buildPathClient,
