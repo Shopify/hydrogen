@@ -1,6 +1,6 @@
 {
   "include": ["**/*.ts"],
-  "exclude": ["dist", "__tests__", "node_modules"],
+  "exclude": ["dist", "__tests__", "node_modules", "templates"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "target": "ESNext",
@@ -14,9 +14,6 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true,
-    "baseUrl": ".",
-    "rootDir": ".",
-    "outDir": "dist"
+    "skipLibCheck": true
   }
 }
