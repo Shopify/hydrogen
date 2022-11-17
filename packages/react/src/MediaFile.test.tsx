@@ -8,5 +8,9 @@ describe(`<MediaFile/>`, () => {
 
     // @ts-expect-error 'blah' isn't a valid property
     <MediaFile data={{blah: 'test'}} />;
+
+    // Allow some of the mediaOptions to exist, instead of requiring all of them.
+    <MediaFile data={{id: 'test'}} mediaOptions={{image: {}, video: {}}} />;
+    <MediaFile data={{id: 'test'}} mediaOptions={{}} />;
   });
 });

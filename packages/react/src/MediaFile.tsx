@@ -15,16 +15,16 @@ export interface MediaFileProps extends BaseProps {
   /** The options for the `Image`, `Video`, or `ExternalVideo` components. */
   mediaOptions?: {
     /** Props that will only apply when an `<Image />` is rendered */
-    image: Omit<ShopifyImageProps, 'data'>;
+    image?: Omit<ShopifyImageProps, 'data'>;
     /** Props that will only apply when a `<Video />` is rendered */
-    video: Omit<React.ComponentProps<typeof Video>, 'data'>;
+    video?: Omit<React.ComponentProps<typeof Video>, 'data'>;
     /** Props that will only apply when an `<ExternalVideo />` is rendered */
-    externalVideo: Omit<
+    externalVideo?: Omit<
       React.ComponentProps<typeof ExternalVideo>['options'],
       'data'
     >;
     /** Props that will only apply when a `<ModelViewer />` is rendered */
-    modelViewer: Omit<typeof ModelViewer, 'data'>;
+    modelViewer?: Omit<typeof ModelViewer, 'data'>;
   };
 }
 
@@ -83,11 +83,11 @@ export function MediaFile({
       );
     }
     default: {
-      const typenameMissingMessage = `<MediaFile /> requires the '__typename' property to exist on the 'data' prop in order to correctly render the correct component for this media. Rendering 'null' by default`;
+      const typenameMissingMessage = `<MediaFile /> requires the '__typename' property to exist on the 'data' prop in order to render the matching sub-component for this type of media.`;
       if (__HYDROGEN_DEV__) {
         throw new Error(typenameMissingMessage);
       } else {
-        console.error(typenameMissingMessage);
+        console.error(`${typenameMissingMessage}  Rendering 'null' by default`);
         return null;
       }
     }
