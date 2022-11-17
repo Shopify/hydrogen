@@ -2,20 +2,14 @@
   "include": ["**/*.ts"],
   "exclude": ["dist", "__tests__", "node_modules"],
   "compilerOptions": {
-    "lib": ["DOM", "ES2019"],
-    "target": "ES2019",
-    "types": ["@shopify/oxygen-workers-types"],
-
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "target": "ESNext",
+    "types": ["@shopify/oxygen-workers-types", "Node"],
     "moduleResolution": "node",
     "allowSyntheticDefaultImports": true,
     "strict": true,
     "declaration": true,
-    "emitDeclarationOnly": true,
     "rootDir": ".",
-    "outDir": "../../build/node_modules/@remix-run/oxygen/dist",
-
-    // Avoid naming conflicts between history and react-router-dom relying on
-    // lib.dom.d.ts Window and this being a WebWorker env.
-    "skipLibCheck": true
+    "outDir": "dist"
   }
 }
