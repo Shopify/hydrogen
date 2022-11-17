@@ -36,8 +36,10 @@
   "peerDependencies": {
     "@shopify/hydrogen-react": "*"
   },
-  "devDependencies": {
-    "@shopify/hydrogen-react": "*",
+  "dependencies": {
     "@types/node": "^18.11.9"
+  },
+  "devDependencies": {
+    "@shopify/hydrogen-react": "*"
   }
 }
