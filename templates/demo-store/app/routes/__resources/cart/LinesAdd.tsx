@@ -13,7 +13,7 @@ import {getSession} from '~/lib/session.server';
 import type {SerializeFrom} from '@remix-run/server-runtime';
 import {
   type ActionArgs,
-  type AppLoadContext,
+  type HydrogenContext,
   redirect,
   json,
 } from '@shopify/hydrogen-remix';
@@ -23,6 +23,7 @@ import type {
   CartInput,
   CartLine,
   CartLineInput,
+  CartUserError,
   ProductVariant,
   UserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
@@ -89,6 +90,7 @@ interface UseLinesAdd {
   linesAddingFetcher: Fetcher<any> | undefined;
 }
 
+// should match the path of the file
 const ACTION_PATH = '/cart/LinesAdd';
 
 /**
@@ -119,11 +121,15 @@ async function action({request, context, params}: ActionArgs) {
 
   // Flow A — no previous cart, create and add line(s)
   if (!cartId) {
-    const cart = await cartCreateLinesMutation({
+    const {cart, errors} = await cartCreateLinesMutation({
       input: {lines},
       params,
       context,
     });
+
+    if (errors?.length) {
+      return linesAddErrorResponse(errors);
+    }
 
     // cart created - we only need a Set-Cookie header if we're creating
     session.set('cartId', cart.id);
@@ -146,14 +152,23 @@ async function action({request, context, params}: ActionArgs) {
   const prevCart = await getCartLines({cartId, params, context});
 
   // Flow B — add line(s) to existing cart
-  const cart = await linesAddMutation({
+  const {cart, errors} = await linesAddMutation({
     cartId,
     lines,
     params,
     context,
   });
 
+  if (errors?.length) {
+    return linesAddErrorResponse(errors);
+  }
+
   return linesAddResponse({prevCart, cart, lines, formData, headers});
+}
+
+function linesAddErrorResponse(errors: CartUserError[]) {
+  const errorMessage = errors.map(({message}) => message).join('\n');
+  return json({error: errorMessage});
 }
 
 /**
@@ -300,20 +315,19 @@ const LINES_CART_FRAGMENT = `#graphql
 `;
 
 const CART_LINES_QUERY = `#graphql
-  query ($cartId: ID!, $country: CountryCode = ZZ)
-  @inContext(country: $country) {
+  query ($cartId: ID!, $country: CountryCode = ZZ, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     cart(id: $cartId) {
       ...CartLinesFragment
     }
   }
-
   ${LINES_CART_FRAGMENT}
 `;
 
 // @see: https://shopify.dev/api/storefront/2022-01/mutations/cartcreate
 const CREATE_CART_ADD_LINES_MUTATION = `#graphql
-  mutation ($input: CartInput!, $country: CountryCode = ZZ)
-  @inContext(country: $country) {
+  mutation ($input: CartInput!, $country: CountryCode = ZZ, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     cartCreate(input: $input) {
       cart {
         ...CartLinesFragment
@@ -328,8 +342,8 @@ const CREATE_CART_ADD_LINES_MUTATION = `#graphql
 `;
 
 const ADD_LINES_MUTATION = `#graphql
-  mutation ($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ)
-  @inContext(country: $country) {
+  mutation ($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
         ...CartLinesFragment
@@ -356,18 +370,18 @@ async function getCartLines({
 }: {
   cartId: string;
   params: Params;
-  context: AppLoadContext;
+  context: HydrogenContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cart create mutation');
 
-  const {country} = getLocalizationFromLang(params.lang);
+  const {country, language} = getLocalizationFromLang(params.lang);
 
-  const {cart} = await storefront.query<{cart: Cart}>({
-    query: CART_LINES_QUERY,
+  const {cart} = await storefront.query<{cart: Cart}>(CART_LINES_QUERY, {
     variables: {
       cartId,
       country,
+      language,
     },
     cache: storefront.CacheNone(),
   });
@@ -392,38 +406,26 @@ async function cartCreateLinesMutation({
 }: {
   input: CartInput;
   params: Params;
-  context: AppLoadContext;
+  context: HydrogenContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cart create mutation');
 
-  const {country} = getLocalizationFromLang(params.lang);
+  const {country, language} = getLocalizationFromLang(params.lang);
 
-  const {cartCreate} = await storefront.query<{
+  const {cartCreate} = await storefront.mutate<{
     cartCreate: {
       cart: Cart;
-      errors: UserError[];
+      errors: CartUserError[];
     };
     errors: UserError[];
-  }>({
-    query: CREATE_CART_ADD_LINES_MUTATION,
-    variables: {
-      input,
-      country,
-    },
-    cache: storefront.CacheNone(),
+  }>(CREATE_CART_ADD_LINES_MUTATION, {
+    variables: {input, country, language},
   });
 
   invariant(cartCreate, 'No data returned from cart create mutation');
 
-  if (cartCreate.errors?.length) {
-    const errorMessage = cartCreate.errors
-      .map(({message}) => message)
-      .join('\n');
-    return json({addedToCart: false, error: errorMessage});
-  }
-
-  return cartCreate.cart;
+  return cartCreate;
 }
 
 /**
@@ -442,34 +444,25 @@ async function linesAddMutation({
   cartId: string;
   lines: CartLineInput[];
   params: Params;
-  context: AppLoadContext;
+  context: HydrogenContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in lines add mutation');
 
-  const {country} = getLocalizationFromLang(params.lang);
+  const {country, language} = getLocalizationFromLang(params.lang);
 
-  const {cartLinesAdd} = await storefront.query<{
+  const {cartLinesAdd} = await storefront.mutate<{
     cartLinesAdd: {
       cart: Cart;
-      errors: UserError[];
+      errors: CartUserError[];
     };
-  }>({
-    query: ADD_LINES_MUTATION,
-    variables: {cartId, lines, country},
-    cache: storefront.CacheNone(),
+  }>(ADD_LINES_MUTATION, {
+    variables: {cartId, lines, country, language},
   });
 
   invariant(cartLinesAdd, 'No data returned from line(s) add mutation');
 
-  if (cartLinesAdd?.errors?.length) {
-    const errorMessage = cartLinesAdd.errors
-      .map(({message}) => message)
-      .join('\n');
-    throw new Error(errorMessage);
-  }
-
-  return cartLinesAdd.cart;
+  return cartLinesAdd;
 }
 
 /*
@@ -666,7 +659,7 @@ function useOptimisticLinesAdd(
     const addingIdsNew = addingIds.filter((id) => !addedIds.includes(id));
 
     if (!addedIds.length) {
-      // assign all adding lines: empty cart
+      // assign all adding lines empty cart
       result.optimisticLinesAdd = cartLinesAdding;
       return result;
     }

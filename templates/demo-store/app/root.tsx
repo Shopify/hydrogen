@@ -1,9 +1,9 @@
 import {
-  AppLoadContext,
   defer,
   type LinksFunction,
   type MetaFunction,
   type LoaderArgs,
+  HydrogenContext,
 } from '@shopify/hydrogen-remix';
 import {
   Links,
@@ -28,6 +28,7 @@ import favicon from '../public/favicon.svg';
 import {getLocalizationFromLang} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
+import type {LayoutData} from '~/data';
 
 export const handle = {
   // @todo - remove any and type the seo callback
@@ -63,9 +64,9 @@ export async function loader({request, context, params}: LoaderArgs) {
   const cartId = await session.get('cartId');
 
   return defer({
-    layout: await getLayoutData(params),
-    countries: getCountries(),
-    cart: cartId ? getCart({cartId, params, context}) : undefined,
+    layout: await getLayoutData(context, params),
+    countries: getCountries(context),
+    cart: cartId ? getCart(context, {cartId, params}) : undefined,
   });
 }
 
@@ -80,7 +81,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout data={data}>
+        <Layout layout={data.layout as LayoutData}>
           <Outlet />
         </Layout>
         <Debugger />
@@ -104,7 +105,7 @@ export function CatchBoundary() {
         <Links />
       </head>
       <body>
-        <Layout data={root.data as any}>
+        <Layout layout={root.data.layout}>
           {isNotFound ? (
             <NotFound type={caught.data?.pageType} />
           ) : (
@@ -130,7 +131,7 @@ export function ErrorBoundary({error}: {error: Error}) {
         <Links />
       </head>
       <body>
-        <Layout data={root.data as any}>
+        <Layout layout={root.data.layout}>
           <GenericError error={error} />
         </Layout>
         <Scripts />
@@ -141,8 +142,8 @@ export function ErrorBoundary({error}: {error: Error}) {
 }
 
 const CART_QUERY = `#graphql
-  query CartQuery($cartId: ID!, $country: CountryCode = ZZ)
-  @inContext(country: $country) {
+  query CartQuery($cartId: ID!, $country: CountryCode, $language: LanguageCode)
+    @inContext(country: $country, language: $language) {
     cart(id: $cartId) {
       ...CartFragment
     }
@@ -250,28 +251,23 @@ const CART_QUERY = `#graphql
   }
 `;
 
-export async function getCart({
-  cartId,
-  params,
-  context,
-}: {
-  cartId: string;
-  params: Params;
-  context: AppLoadContext;
-}) {
+export async function getCart(
+  context: HydrogenContext,
+  {
+    cartId,
+    params,
+  }: {
+    cartId: string;
+    params: Params;
+  },
+) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cart query');
 
-  const {country} = getLocalizationFromLang(params.lang);
+  const {country, language} = getLocalizationFromLang(params.lang);
 
-  // @todo: remove ts-ignore
-  // @ts-ignore storefront types are not working
-  const {cart} = await storefront.query<{cart: Cart}>({
-    query: CART_QUERY,
-    variables: {
-      cartId,
-      country,
-    },
+  const {cart} = await storefront.query<{cart: Cart}>(CART_QUERY, {
+    variables: {cartId, country, language},
     cache: storefront.CacheNone(),
   });
 

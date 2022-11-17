@@ -31,15 +31,11 @@ import {useLinesAdd} from '~/routes/__resources/cart/LinesAdd';
 
 export function Layout({
   children,
-  data,
+  layout,
 }: {
   children: React.ReactNode;
-  data?: {
-    layout: LayoutData;
-  };
+  layout: LayoutData;
 }) {
-  const {layout} = data || {};
-
   return (
     <>
       <div className="flex flex-col min-h-screen">
