@@ -23,6 +23,7 @@ import type {
   Product,
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {useOptimisticLinesAdd} from '~/routes/__resources/cart/LinesAdd';
 
 enum Action {
   SetQuantity = 'set-quantity',
@@ -40,26 +41,22 @@ export function CartDetails({
   cart: Cart;
   fetcher: FetcherWithComponents<any>;
 }) {
-  const fetchers = useFetchers();
   const lines = flattenConnection(cart?.lines ?? {});
   const scrollRef = useRef(null);
   const {y} = useScroll(scrollRef);
   const lineItemFetcher = useFetcher();
-
-  const optimisticallyAddingLine = useMemo(() => {
-    const fetcher = fetchers.find(
-      (fetcher) => fetcher?.submission?.action === '/cart',
-    );
-
-    return !!fetcher?.data?.addedToCart;
-  }, [fetchers]);
-
+  const {optimisticLinesAdd} = useOptimisticLinesAdd(lines);
   const optimisticallyDeletingLastLine =
     lines.length === 1 &&
     lineItemFetcher.submission &&
     lineItemFetcher.submission.formData.get('intent') === Action.RemoveLineItem;
 
-  if (lines.length === 0 || optimisticallyDeletingLastLine) {
+  const cartIsEmpty = Boolean(
+    (lines.length === 0 && !optimisticLinesAdd.length) ||
+      optimisticallyDeletingLastLine,
+  );
+
+  if (cartIsEmpty) {
     return <CartEmpty fetcher={fetcher} onClose={onClose} layout={layout} />;
   }
 
@@ -86,21 +83,27 @@ export function CartDetails({
         className={`${content[layout]} ${y > 0 ? 'border-t' : ''}`}
       >
         <ul className="grid gap-6 md:gap-10">
+          {/* Optimistic cart lines will be replaced with actual lines when ready */}
+          {optimisticLinesAdd?.length
+            ? optimisticLinesAdd.map((line) => (
+                <CartLineItem
+                  key={line.merchandise.id}
+                  line={line as CartLine}
+                  fetcher={lineItemFetcher}
+                  optimistic
+                />
+              ))
+            : null}
+          {/* car lines already added */}
           {lines.map((line) => {
             return (
               <CartLineItem
-                fetcher={lineItemFetcher}
                 key={line.id}
                 line={line as CartLine}
+                fetcher={lineItemFetcher}
               />
             );
           })}
-          {/*
-              @todo: optimistically add a line item.
-              Maybe just cover the use case where the variantId is not yet
-              in cart.lines to keep it simple, because we cart.lines are not ordered
-          */}
-          {optimisticallyAddingLine ? <p>Adding..</p> : null}
         </ul>
       </section>
       <section aria-labelledby="summary-heading" className={summary[layout]}>
@@ -154,9 +157,11 @@ function OrderSummary({cost}: {cost: CartCost}) {
 function CartLineItem({
   line,
   fetcher,
+  optimistic = false,
 }: {
   line: CartLine;
   fetcher: FetcherWithComponents<any>;
+  optimistic?: boolean;
 }) {
   const {id: lineId, quantity, merchandise} = line;
 
@@ -200,9 +205,13 @@ function CartLineItem({
       <div className="flex justify-between flex-grow">
         <div className="grid gap-2">
           <Heading as="h3" size="copy">
-            <Link to={`/products/${merchandise.product.handle}`}>
-              {merchandise.product.title}
-            </Link>
+            {merchandise?.product?.handle ? (
+              <Link to={`/products/${merchandise.product.handle}`}>
+                {merchandise?.product?.title || ''}
+              </Link>
+            ) : (
+              <Text>{merchandise?.product?.title || ''}</Text>
+            )}
           </Heading>
 
           <div className="grid pb-2">
@@ -219,6 +228,7 @@ function CartLineItem({
                 fetcher={fetcher}
                 lineId={lineId}
                 quantity={optimisticQuantity}
+                optimistic={optimistic}
               />
             </div>
             <fetcher.Form method="post" action="/cart">
@@ -236,6 +246,7 @@ function CartLineItem({
               <button
                 type="submit"
                 className="flex items-center justify-center w-10 h-10 border rounded"
+                disabled={optimistic}
               >
                 <span className="sr-only">Remove</span>
                 <IconRemove aria-hidden="true" />
@@ -255,7 +266,9 @@ function CartLineQuantityAdjust({
   lineId,
   quantity,
   fetcher,
+  optimistic,
 }: {
+  optimistic: boolean;
   lineId: string;
   quantity: number;
   fetcher: FetcherWithComponents<any>;
@@ -283,7 +296,7 @@ function CartLineQuantityAdjust({
           name="quantity"
           value={Math.max(0, quantity - 1).toFixed(0)}
           aria-label="Decrease quantity"
-          disabled={quantity <= 1}
+          disabled={quantity <= 1 || optimistic}
           className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
         >
           &#8722;
@@ -294,6 +307,7 @@ function CartLineQuantityAdjust({
           value={(quantity + 1).toFixed(0)}
           aria-label="Increase quantity"
           className="w-10 h-10 transition text-primary/50 hover:text-primary"
+          disabled={optimistic}
         >
           &#43;
         </button>
@@ -406,6 +420,8 @@ function CartLinePrice({
   priceType?: 'regular' | 'compareAt';
   [key: string]: any;
 }) {
+  if (!line?.cost?.totalAmount) return null;
+
   const moneyV2 =
     priceType === 'regular'
       ? line.cost.totalAmount

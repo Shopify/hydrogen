@@ -1,7 +1,5 @@
 import type {
   Cart,
-  CartInput,
-  CartLineInput,
   CartLineUpdateInput,
   ProductConnection,
   Shop,
@@ -200,13 +198,21 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
           width
           height
         }
-        priceV2 {
+        price {
           amount
           currencyCode
         }
-        compareAtPriceV2 {
+        compareAtPrice {
           amount
           currencyCode
+        }
+        selectedOptions {
+          name
+          value
+        }
+        product {
+          handle
+          title
         }
       }
     }
@@ -228,11 +234,11 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
       width
       height
     }
-    priceV2 {
+    price {
       amount
       currencyCode
     }
-    compareAtPriceV2 {
+    compareAtPrice {
       amount
       currencyCode
     }
@@ -241,6 +247,10 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
     unitPrice {
       amount
       currencyCode
+    }
+    product {
+      title
+      handle
     }
   }
 `;
@@ -262,7 +272,7 @@ fragment CartFragment on Cart {
     email
     phone
   }
-  lines(first: 100) {
+  lines(first: 100, reverse: true) {
     edges {
       node {
         id
@@ -347,116 +357,8 @@ fragment ImageFragment on Image {
 }
 `;
 
-const CREATE_CART_MUTATION = `#graphql
-mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(country: $country) {
-  cartCreate(input: $input) {
-    cart {
-      id
-    }
-  }
-}
-`;
-
-export async function createCart(
-  {storefront}: HydrogenContext,
-  {
-    cart,
-    params,
-  }: {
-    cart: CartInput;
-    params: Params;
-  },
-) {
-  const {country} = getLocalizationFromLang(params.lang);
-
-  const data = await storefront.mutate<{
-    cartCreate: {
-      cart: Cart;
-    };
-  }>(CREATE_CART_MUTATION, {
-    variables: {
-      input: cart,
-      country,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cartCreate.cart;
-}
-
-const ADD_LINE_ITEM_MUTATION = `#graphql
-  mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
-    cartLinesAdd(cartId: $cartId, lines: $lines) {
-      cart {
-        id
-      }
-    }
-  }
-`;
-
-export async function addLineItem(
-  {storefront}: HydrogenContext,
-  {
-    cartId,
-    lines,
-    params,
-  }: {
-    cartId: string;
-    lines: CartLineInput[];
-    params: Params;
-  },
-) {
-  const {country} = getLocalizationFromLang(params.lang);
-
-  const data = await storefront.mutate<{
-    cartLinesAdd: {
-      cart: Cart;
-    };
-  }>(ADD_LINE_ITEM_MUTATION, {
-    variables: {cartId, lines, country},
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cartLinesAdd.cart;
-}
-
-const CART_QUERY = `#graphql
-  query CartQuery($cartId: ID!, $country: CountryCode = ZZ) @inContext(country: $country) {
-    cart(id: $cartId) {
-      ...CartFragment
-    }
-  }
-
+const UPDATE_LINE_ITEM_QUERY = `#graphql
   ${CART_FRAGMENT}
-`;
-
-export async function getCart(
-  {storefront}: HydrogenContext,
-  {
-    cartId,
-    params,
-  }: {
-    cartId: string;
-    params: Params;
-  },
-) {
-  const {country} = getLocalizationFromLang(params.lang);
-
-  const data = await storefront.query<{cart: Cart}>(CART_QUERY, {
-    variables: {
-      cartId,
-      country,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cart;
-}
-
-const UPDATE_LINE_ITEM_MUTATION = `#graphql
   mutation CartLineUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
@@ -464,8 +366,6 @@ const UPDATE_LINE_ITEM_MUTATION = `#graphql
       }
     }
   }
-
-  ${CART_FRAGMENT}
 `;
 
 export async function updateLineItem(
@@ -480,15 +380,16 @@ export async function updateLineItem(
     params: Params;
   },
 ) {
-  const {country} = getLocalizationFromLang(params.lang);
+  const {country, language} = getLocalizationFromLang(params.lang);
 
   const data = await storefront.mutate<{cartLinesUpdate: {cart: Cart}}>(
-    UPDATE_LINE_ITEM_MUTATION,
+    UPDATE_LINE_ITEM_QUERY,
     {
       variables: {
         cartId,
         lines: [lineItem],
         country,
+        language,
       },
     },
   );
