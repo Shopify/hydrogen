@@ -196,10 +196,6 @@ export function ProductForm() {
    */
   const selectedVariant = product.selectedVariant ?? firstVariant;
   const isOutOfStock = !selectedVariant?.availableForSale;
-  const isOnSale =
-    selectedVariant?.price?.amount &&
-    selectedVariant?.compareAtPrice?.amount &&
-    selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
 
   return (
     <div className="grid gap-10">
@@ -208,65 +204,18 @@ export function ProductForm() {
           options={product.options}
           searchParamsWithDefaults={searchParamsWithDefaults}
         />
-        <div className="grid items-stretch gap-4">
-          {selectedVariant && (
-            <LinesAddForm
-              lines={[
-                {
-                  variant: selectedVariant,
-                  quantity: 1,
-                },
-              ]}
-            >
-              {({state, error}) => {
-                return (
-                  <>
-                    <Button
-                      as="button"
-                      width="full"
-                      type="submit"
-                      variant={isOutOfStock ? 'secondary' : 'primary'}
-                      disabled={
-                        isOutOfStock || selectingVariant || state !== 'idle'
-                      }
-                    >
-                      {isOutOfStock ? (
-                        <Text>Sold out</Text>
-                      ) : (
-                        <Text
-                          as="span"
-                          className="flex items-center justify-center gap-2"
-                        >
-                          <span>
-                            {state === 'idle' ? 'Add to Bag' : 'Adding to Bag'}
-                          </span>{' '}
-                          <span>·</span>{' '}
-                          <Money
-                            withoutTrailingZeros
-                            data={selectedVariant?.price!}
-                            as="span"
-                          />
-                          {isOnSale && (
-                            <Money
-                              withoutTrailingZeros
-                              data={selectedVariant?.compareAtPrice!}
-                              as="span"
-                              className="opacity-50 strike"
-                            />
-                          )}
-                        </Text>
-                      )}
-                    </Button>
-                    {error ? <Text>{error}</Text> : null}
-                  </>
-                );
-              }}
-            </LinesAddForm>
-          )}
-          {!isOutOfStock && (
-            <ShopPayButton variantIds={[selectedVariant?.id!]} />
-          )}
-        </div>
+        {selectedVariant && (
+          <div className="grid items-stretch gap-4">
+            <AddToCartButton
+              selectedVariant={selectedVariant}
+              selectingVariant={selectingVariant}
+              isOutOfStock={isOutOfStock}
+            />
+            {!isOutOfStock && (
+              <ShopPayButton variantIds={[selectedVariant?.id!]} />
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -388,6 +337,75 @@ function ProductOptions({
           </div>
         ))}
     </>
+  );
+}
+
+function AddToCartButton({
+  isOutOfStock,
+  selectedVariant,
+  selectingVariant,
+}: {
+  isOutOfStock: boolean;
+  selectedVariant: ProductVariant;
+  selectingVariant: boolean;
+}) {
+  const isOnSale =
+    selectedVariant?.price?.amount &&
+    selectedVariant?.compareAtPrice?.amount &&
+    selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
+
+  return (
+    <LinesAddForm
+      lines={[
+        {
+          variant: selectedVariant,
+          quantity: 1,
+        },
+      ]}
+    >
+      {({state, error}) => {
+        const disabled = isOutOfStock || selectingVariant || state !== 'idle';
+        return (
+          <>
+            <Button
+              as="button"
+              width="full"
+              type="submit"
+              variant={isOutOfStock ? 'secondary' : 'primary'}
+              disabled={disabled}
+            >
+              {isOutOfStock ? (
+                <Text>Sold out</Text>
+              ) : (
+                <Text
+                  as="span"
+                  className="flex items-center justify-center gap-2"
+                >
+                  <span>
+                    {state === 'idle' ? 'Add to Bag' : 'Adding to Bag'}
+                  </span>{' '}
+                  <span>·</span>{' '}
+                  <Money
+                    withoutTrailingZeros
+                    data={selectedVariant?.price!}
+                    as="span"
+                  />
+                  {isOnSale && (
+                    <Money
+                      withoutTrailingZeros
+                      data={selectedVariant?.compareAtPrice!}
+                      as="span"
+                      className="opacity-50 strike"
+                    />
+                  )}
+                </Text>
+              )}
+            </Button>
+            {error ? <Text>{error}</Text> : null}
+          </>
+        );
+      }}
+    </LinesAddForm>
   );
 }
 
