@@ -4,7 +4,7 @@
   "scripts": {
     "build": "turbo build --parallel",
     "dev": "LOCAL_DEV=true turbo dev --parallel",
-    "preview": "npm run preview -w demo-store",
+    "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
     "typecheck": "tsc --noEmit && npm run typecheck -w demo-store"
