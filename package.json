@@ -3,7 +3,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "turbo build --parallel",
-    "dev": "turbo dev --parallel",
+    "dev": "LOCAL_DEV=true turbo dev --parallel",
     "preview": "npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
