@@ -101,7 +101,7 @@ async function action({request, context, params}: ActionArgs) {
 
   const [session, formData] = await Promise.all([
     getSession(request, context),
-    new URLSearchParams(await request.text()),
+    request.formData(),
   ]);
 
   const rawLines = formData.get('lines')
@@ -243,6 +243,7 @@ function instrumentEvent({
  * Diff prev lines with current lines to determine what was added
  * This is a temporary workaround for analytics until we land
  * @see: https://github.com/Shopify/storefront-api-feedback/discussions/151
+ * @todo: remove when storefront api releases this feature
  * @param addingLines - line inputs being added
  * @param prevLines - lines before the mutation
  * @param currentLines - lines after the mutation

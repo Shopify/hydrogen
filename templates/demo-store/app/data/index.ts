@@ -247,6 +247,10 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
       amount
       currencyCode
     }
+    product {
+      title
+      handle
+    }
   }
 `;
 

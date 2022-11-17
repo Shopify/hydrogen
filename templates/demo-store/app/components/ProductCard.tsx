@@ -80,7 +80,6 @@ export function ProductCard({
                   width: 320,
                   height: 400,
                 }}
-                // @ts-ignore Stock type has `src` as optional
                 data={image}
                 alt={image.altText || `Picture of ${product.title}`}
                 loading={loading}

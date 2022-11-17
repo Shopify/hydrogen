@@ -205,9 +205,13 @@ function CartLineItem({
       <div className="flex justify-between flex-grow">
         <div className="grid gap-2">
           <Heading as="h3" size="copy">
-            <Link to={`/products/${merchandise.product.handle}`}>
-              {merchandise.product.title}
-            </Link>
+            {merchandise?.product?.handle ? (
+              <Link to={`/products/${merchandise.product.handle}`}>
+                {merchandise?.product?.title || ''}
+              </Link>
+            ) : (
+              <Text>{merchandise?.product?.title || ''}</Text>
+            )}
           </Heading>
 
           <div className="grid pb-2">
@@ -224,6 +228,7 @@ function CartLineItem({
                 fetcher={fetcher}
                 lineId={lineId}
                 quantity={optimisticQuantity}
+                optimistic={optimistic}
               />
             </div>
             <fetcher.Form method="post" action="/cart">
@@ -241,6 +246,7 @@ function CartLineItem({
               <button
                 type="submit"
                 className="flex items-center justify-center w-10 h-10 border rounded"
+                disabled={optimistic}
               >
                 <span className="sr-only">Remove</span>
                 <IconRemove aria-hidden="true" />
@@ -260,7 +266,9 @@ function CartLineQuantityAdjust({
   lineId,
   quantity,
   fetcher,
+  optimistic,
 }: {
+  optimistic: boolean;
   lineId: string;
   quantity: number;
   fetcher: FetcherWithComponents<any>;
@@ -288,7 +296,7 @@ function CartLineQuantityAdjust({
           name="quantity"
           value={Math.max(0, quantity - 1).toFixed(0)}
           aria-label="Decrease quantity"
-          disabled={quantity <= 1}
+          disabled={quantity <= 1 || optimistic}
           className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
         >
           &#8722;
@@ -299,6 +307,7 @@ function CartLineQuantityAdjust({
           value={(quantity + 1).toFixed(0)}
           aria-label="Increase quantity"
           className="w-10 h-10 transition text-primary/50 hover:text-primary"
+          disabled={optimistic}
         >
           &#43;
         </button>
