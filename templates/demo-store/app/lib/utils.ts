@@ -260,9 +260,8 @@ export function getLocaleFromRequest(request: Request): Locale & {
   pathPrefix: string;
 } {
   const url = new URL(request.url);
-  const firstPathPart = url.pathname
-    .substring(0, url.pathname.substring(1).indexOf('/') + 1)
-    .toLowerCase();
+  const firstPathPart =
+    '/' + url.pathname.substring(1).split('/')[0].toLowerCase();
 
   return countries[firstPathPart]
     ? {

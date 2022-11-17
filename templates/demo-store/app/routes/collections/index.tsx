@@ -14,17 +14,13 @@ import {getLocalizationFromLang} from '~/lib/utils';
 
 const PAGINATION_SIZE = 8;
 
-export const loader = async ({params, context: {storefront}}: LoaderArgs) => {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
+export const loader = async ({context: {storefront}}: LoaderArgs) => {
   const {collections} = await storefront.query<{
     collections: CollectionConnection;
   }>({
     query: COLLECTIONS_QUERY,
     variables: {
       pageBy: PAGINATION_SIZE,
-      country,
-      language,
     },
   });
 

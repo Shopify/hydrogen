@@ -49,5 +49,15 @@ module.exports = {
     }
 
     return {};
+    // Figure out why this won't work
+    //
+    // return defineRoutes((route) => {
+    //   for (let file of files) {
+    //     const relativeFilePath = file.replace(__dirname + "/app/routes/", "");
+    //     route("*/" + relativeFilePath, "routes/" + relativeFilePath);
+
+    //     console.log("/*/" + relativeFilePath, "routes/" + relativeFilePath);
+    //   }
+    // });
   },
 };

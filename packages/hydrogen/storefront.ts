@@ -112,17 +112,23 @@ export function createStorefrontClient(
       ...variables,
     });
 
+    const queryVariables = {...variables};
+
+    if (!variables?.country && /\$country/.test(query)) {
+      queryVariables.country = clientOptions.i18n.country;
+    }
+
+    if (!variables?.language && /\$language/.test(query)) {
+      queryVariables.language = clientOptions.i18n.language;
+    }
+
     const url = getStorefrontApiUrl();
     const requestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
       body: JSON.stringify({
         query,
-        variables: {
-          language: clientOptions.i18n.language,
-          country: clientOptions.i18n.country,
-          ...variables,
-        },
+        variables: queryVariables,
       }),
     };
 

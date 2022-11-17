@@ -55,8 +55,6 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
   }>({
     query: HOMEPAGE_SEO_QUERY,
     variables: {
-      language,
-      country,
       handle: 'freestyle',
     },
   });
@@ -71,16 +69,11 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
       products: ProductConnection;
     }>({
       query: HOMEPAGE_FEATURED_PRODUCTS_QUERY,
-      variables: {
-        language,
-        country,
-      },
+      variables: {},
     }),
     secondaryHero: storefront.query<{hero: CollectionHero}>({
       query: COLLECTION_HERO_QUERY,
       variables: {
-        language,
-        country,
         handle: 'backcountry',
       },
     }),
@@ -88,16 +81,11 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
       collections: CollectionConnection;
     }>({
       query: FEATURED_COLLECTIONS_QUERY,
-      variables: {
-        language,
-        country,
-      },
+      variables: {},
     }),
     tertiaryHero: storefront.query<{hero: CollectionHero}>({
       query: COLLECTION_HERO_QUERY,
       variables: {
-        language,
-        country,
         handle: 'winter-2022',
       },
     }),

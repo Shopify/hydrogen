@@ -42,8 +42,6 @@ export async function loader({
     }
   }
 
-  const {language, country} = getLocalizationFromLang(params.lang);
-
   const {collection} = await storefront.query<{
     collection: CollectionType;
   }>({
@@ -52,8 +50,6 @@ export async function loader({
       ...variables,
       handle: collectionHandle,
       pageBy: PAGINATION_SIZE,
-      language,
-      country,
       available: variables.available === 'false' ? false : true,
       // TODO: Can we pass in multiple variantOptions?
       variantOption: variantOption.length > 0 ? variantOption[0] : undefined,
@@ -95,7 +91,7 @@ export default function Collection() {
         )}
       </PageHeader>
       <Section>
-        <SortFilter filters={collection.products.filters as Filter[]} />
+        {/* <SortFilter filters={collection.products.filters as Filter[]} /> */}
         <ProductGrid
           key={collection.id}
           collection={collection as CollectionType}
