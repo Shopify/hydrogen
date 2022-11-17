@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "version": "2.0.0-alpha.1",
-  "main": "index.cjs",
+  "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
@@ -18,7 +18,7 @@
         "development": "./dist/development/index.js",
         "default": "./dist/production/index.js"
       },
-      "require": "./index.cjs",
+      "require": "./dist/index.cjs",
       "import": {
         "development": "./dist/development/index.js",
         "default": "./dist/production/index.js"
@@ -31,8 +31,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
-    "index.cjs"
+    "dist"
   ],
   "peerDependencies": {
     "@shopify/hydrogen-react": "*"
