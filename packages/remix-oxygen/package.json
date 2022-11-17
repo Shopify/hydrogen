@@ -8,8 +8,8 @@
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup",
-    "dev": "tsup watch"
+    "build": "tsup --clean",
+    "dev": "tsup --watch"
   },
   "exports": {
     ".": {

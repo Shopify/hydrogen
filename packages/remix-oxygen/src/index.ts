@@ -1,5 +1,3 @@
-import './globals';
-
 export {
   createCookie,
   createCookieSessionStorage,
