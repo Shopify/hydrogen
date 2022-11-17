@@ -41,20 +41,22 @@ export function CartDetails({
   cart: Cart;
   fetcher: FetcherWithComponents<any>;
 }) {
-  const fetchers = useFetchers();
   const lines = flattenConnection(cart?.lines ?? {});
   const scrollRef = useRef(null);
   const {y} = useScroll(scrollRef);
   const lineItemFetcher = useFetcher();
-
   const {optimisticLinesAdd} = useOptimisticLinesAdd(lines);
-
   const optimisticallyDeletingLastLine =
     lines.length === 1 &&
     lineItemFetcher.submission &&
     lineItemFetcher.submission.formData.get('intent') === Action.RemoveLineItem;
 
-  if (lines.length === 0 || optimisticallyDeletingLastLine) {
+  const cartIsEmpty = Boolean(
+    (lines.length === 0 && !optimisticLinesAdd.length) ||
+      optimisticallyDeletingLastLine,
+  );
+
+  if (cartIsEmpty) {
     return <CartEmpty fetcher={fetcher} onClose={onClose} layout={layout} />;
   }
 
@@ -86,9 +88,9 @@ export function CartDetails({
             ? optimisticLinesAdd.map((line) => (
                 <CartLineItem
                   key={line.merchandise.id}
+                  line={line as CartLine}
                   fetcher={lineItemFetcher}
                   optimistic
-                  line={line as CartLine}
                 />
               ))
             : null}
@@ -96,9 +98,9 @@ export function CartDetails({
           {lines.map((line) => {
             return (
               <CartLineItem
-                fetcher={lineItemFetcher}
                 key={line.id}
                 line={line as CartLine}
+                fetcher={lineItemFetcher}
               />
             );
           })}

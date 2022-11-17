@@ -83,9 +83,9 @@ export async function loader({
   return defer({
     product,
     shop,
-    recommended
+    recommended,
   });
-};
+}
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();
@@ -554,14 +554,8 @@ async function getRecommendedProducts(
   const products = await storefront.query<{
     recommended: Product[];
     additional: ProductConnection;
-  }>({
-    query: RECOMMENDED_PRODUCTS_QUERY,
-    variables: {
-      productId,
-      count: 12,
-      language,
-      country,
-    },
+  }>(RECOMMENDED_PRODUCTS_QUERY, {
+    variables: {productId, count: 12, language, country},
   });
 
   invariant(products, 'No data returned from Shopify API');

@@ -250,6 +250,150 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
   }
 `;
 
+const CART_FRAGMENT = `#graphql
+fragment CartFragment on Cart {
+  id
+  checkoutUrl
+  totalQuantity
+  buyerIdentity {
+    countryCode
+    customer {
+      id
+      email
+      firstName
+      lastName
+      displayName
+    }
+    email
+    phone
+  }
+  lines(first: 100, reverse: true) {
+    edges {
+      node {
+        id
+        quantity
+        attributes {
+          key
+          value
+        }
+        cost {
+          totalAmount {
+            amount
+            currencyCode
+          }
+          compareAtAmountPerQuantity {
+            amount
+            currencyCode
+          }
+        }
+        merchandise {
+          ... on ProductVariant {
+            id
+            availableForSale
+            compareAtPriceV2 {
+              ...MoneyFragment
+            }
+            priceV2 {
+              ...MoneyFragment
+            }
+            requiresShipping
+            title
+            image {
+              ...ImageFragment
+            }
+            product {
+              handle
+              title
+              id
+            }
+            selectedOptions {
+              name
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+  cost {
+    subtotalAmount {
+      ...MoneyFragment
+    }
+    totalAmount {
+      ...MoneyFragment
+    }
+    totalDutyAmount {
+      ...MoneyFragment
+    }
+    totalTaxAmount {
+      ...MoneyFragment
+    }
+  }
+  note
+  attributes {
+    key
+    value
+  }
+  discountCodes {
+    code
+  }
+}
+
+fragment MoneyFragment on MoneyV2 {
+  currencyCode
+  amount
+}
+fragment ImageFragment on Image {
+  id
+  url
+  altText
+  width
+  height
+}
+`;
+
+const UPDATE_LINE_ITEM_QUERY = `#graphql
+  ${CART_FRAGMENT}
+  mutation CartLineUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
+    cartLinesUpdate(cartId: $cartId, lines: $lines) {
+      cart {
+        ...CartFragment
+      }
+    }
+  }
+`;
+
+export async function updateLineItem(
+  {storefront}: HydrogenContext,
+  {
+    cartId,
+    lineItem,
+    params,
+  }: {
+    cartId: string;
+    lineItem: CartLineUpdateInput;
+    params: Params;
+  },
+) {
+  const {country, language} = getLocalizationFromLang(params.lang);
+
+  const data = await storefront.mutate<{cartLinesUpdate: {cart: Cart}}>(
+    UPDATE_LINE_ITEM_QUERY,
+    {
+      variables: {
+        cartId,
+        lines: [lineItem],
+        country,
+        language,
+      },
+    },
+  );
+
+  invariant(data, 'No data returned from Shopify API');
+
+  return data.cartLinesUpdate.cart;
+}
+
 const TOP_PRODUCTS_QUERY = `#graphql
   ${PRODUCT_CARD_FRAGMENT}
   query topProducts(
