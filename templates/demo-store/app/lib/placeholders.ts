@@ -26,6 +26,7 @@ const PLACEHOLDERS = {
       },
       spreadSecondary: {
         reference: {
+          __typename: 'MediaImage',
           mediaContentType: 'IMAGE',
           alt: 'A snowboarder standing on a mountain top in choppy snow, shows off the back of his snowboard which reads Hydrogen in a cursive script.',
           previewImage: {
@@ -51,6 +52,7 @@ const PLACEHOLDERS = {
       handle: 'backcountry',
       spread: {
         reference: {
+          __typename: 'MediaImage',
           mediaContentType: 'IMAGE',
           alt: 'A skier hikes up a mountain through the snow with skis over their shoulder.',
           previewImage: {
@@ -66,6 +68,7 @@ const PLACEHOLDERS = {
       },
       spreadSecondary: {
         reference: {
+          __typename: 'MediaImage',
           mediaContentType: 'IMAGE',
           alt: 'A snow covered lodge is illuminated by lights at night with a dark starry sky and mountain backdrop.',
           previewImage: {
@@ -88,6 +91,7 @@ const PLACEHOLDERS = {
       handle: 'winter-2022',
       spread: {
         reference: {
+          __typename: 'MediaImage',
           mediaContentType: 'IMAGE',
           alt: 'Three young women in snowboarding attire embracing and laughing while snow falls around them',
           previewImage: {

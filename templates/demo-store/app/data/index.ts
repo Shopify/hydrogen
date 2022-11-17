@@ -149,6 +149,7 @@ const COUNTRIES_QUERY = `#graphql
 
 export const MEDIA_FRAGMENT = `#graphql
   fragment Media on Media {
+    __typename
     mediaContentType
     alt
     previewImage {
