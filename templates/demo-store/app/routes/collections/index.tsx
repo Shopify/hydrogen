@@ -17,8 +17,7 @@ const PAGINATION_SIZE = 8;
 export const loader = async ({context: {storefront}}: LoaderArgs) => {
   const {collections} = await storefront.query<{
     collections: CollectionConnection;
-  }>({
-    query: COLLECTIONS_QUERY,
+  }>(COLLECTIONS_QUERY, {
     variables: {
       pageBy: PAGINATION_SIZE,
     },

@@ -245,15 +245,11 @@ export function statusMessage(status: string) {
 /**
  * Errors can exist in an errors object, or nested in a data field.
  */
-export function getApiErrorMessage(
-  field: string,
-  data: Record<string, any> | null | undefined,
-  errors?: UserError[],
-) {
-  if (errors?.length) return errors[0].message ?? errors[0];
-  if (data?.[field]?.customerUserErrors?.length)
-    return data[field].customerUserErrors[0].message;
-  return null;
+export function assertApiErrors(data: Record<string, any> | null | undefined) {
+  const errorMessage = data?.customerUserErrors?.[0]?.message;
+  if (errorMessage) {
+    throw new Error(errorMessage);
+  }
 }
 
 export function getLocaleFromRequest(request: Request): Locale & {

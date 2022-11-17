@@ -1,4 +1,3 @@
-import {type StorefrontApiResponseOk} from '@shopify/hydrogen-react';
 import type {
   Cart,
   CartInput,
@@ -12,7 +11,6 @@ import type {
   Customer,
   CustomerUpdateInput,
   CustomerUpdatePayload,
-  UserError,
   CustomerAddressUpdatePayload,
   MailingAddressInput,
   CustomerAddressDeletePayload,
@@ -23,19 +21,17 @@ import type {
   CustomerResetPayload,
   CustomerActivatePayload,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {getPublicTokenHeaders, getStorefrontApiUrl} from '~/lib/shopify-client';
 import {
   type EnhancedMenu,
   parseMenu,
-  getApiErrorMessage,
   getLocalizationFromLang,
+  assertApiErrors,
 } from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
-import type {AppLoadContext} from '@shopify/hydrogen-remix';
+import type {HydrogenContext} from '@shopify/hydrogen-remix';
 import {type Params} from '@remix-run/react';
 
-type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 export interface CountriesData {
   localization: Localization;
 }
@@ -46,68 +42,12 @@ export interface LayoutData {
   shop: Shop;
   cart?: Promise<Cart>;
 }
-interface Metafield {
-  value: string;
-  reference?: object;
-}
 
-interface CollectionHero {
-  byline: Metafield;
-  cta: Metafield;
-  handle: string;
-  heading: Metafield;
-  height?: 'full';
-  loading?: 'eager' | 'lazy';
-  spread: Metafield;
-  spreadSecondary: Metafield;
-  top?: boolean;
-}
-interface HomeSeoData {
-  shop: {
-    name: string;
-    description: string;
-  };
-}
-
-export async function getStorefrontData<T>({
-  query,
-  variables,
-}: {
-  query: string;
-  variables: Record<string, any>;
-}): Promise<StorefrontApiResponse<T>> {
-  const response = await fetch(getStorefrontApiUrl(), {
-    body: JSON.stringify({
-      query,
-      variables,
-    }),
-    headers: getPublicTokenHeaders({contentType: 'json'}),
-    method: 'POST',
-  });
-
-  if (!response.ok) {
-    const error = await response.text();
-
-    /**
-     * The Storefront API might return a string error, or a JSON-formatted {error: string}.
-     * We try both and conform them to a single {errors} format.
-     */
-    try {
-      return JSON.parse(error);
-    } catch (_e) {
-      return {errors: [{message: error}]};
-    }
-  }
-
-  return response.json() as StorefrontApiResponseOk<T>;
-}
-
-export async function getLayoutData() {
+export async function getLayoutData({storefront}: HydrogenContext) {
   const HEADER_MENU_HANDLE = 'main-menu';
   const FOOTER_MENU_HANDLE = 'footer';
 
-  const {data} = await getStorefrontData<LayoutData>({
-    query: LAYOUT_QUERY,
+  const data = await storefront.query<LayoutData>(LAYOUT_QUERY, {
     variables: {
       headerMenuHandle: HEADER_MENU_HANDLE,
       footerMenuHandle: FOOTER_MENU_HANDLE,
@@ -176,11 +116,8 @@ const LAYOUT_QUERY = `#graphql
   }
 `;
 
-export async function getCountries() {
-  const {data} = await getStorefrontData<CountriesData>({
-    query: COUNTRIES_QUERY,
-    variables: {},
-  });
+export async function getCountries({storefront}: HydrogenContext) {
+  const data = await storefront.query<CountriesData>(COUNTRIES_QUERY);
 
   invariant(data, 'No data returned from Shopify API');
 
@@ -206,6 +143,7 @@ const COUNTRIES_QUERY = `#graphql
 
 export const MEDIA_FRAGMENT = `#graphql
   fragment Media on Media {
+    __typename
     mediaContentType
     alt
     previewImage {
@@ -413,21 +351,23 @@ mutation CartCreate($input: CartInput!, $country: CountryCode = ZZ) @inContext(c
 }
 `;
 
-export async function createCart({
-  cart,
-  params,
-}: {
-  cart: CartInput;
-  params: Params;
-}) {
+export async function createCart(
+  {storefront}: HydrogenContext,
+  {
+    cart,
+    params,
+  }: {
+    cart: CartInput;
+    params: Params;
+  },
+) {
   const {country} = getLocalizationFromLang(params.lang);
 
-  const {data} = await getStorefrontData<{
+  const data = await storefront.mutate<{
     cartCreate: {
       cart: Cart;
     };
-  }>({
-    query: CREATE_CART_MUTATION,
+  }>(CREATE_CART_MUTATION, {
     variables: {
       input: cart,
       country,
@@ -439,7 +379,7 @@ export async function createCart({
   return data.cartCreate.cart;
 }
 
-const ADD_LINE_ITEM_QUERY = `#graphql
+const ADD_LINE_ITEM_MUTATION = `#graphql
   mutation CartLineAdd($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
       cart {
@@ -449,23 +389,25 @@ const ADD_LINE_ITEM_QUERY = `#graphql
   }
 `;
 
-export async function addLineItem({
-  cartId,
-  lines,
-  params,
-}: {
-  cartId: string;
-  lines: CartLineInput[];
-  params: Params;
-}) {
+export async function addLineItem(
+  {storefront}: HydrogenContext,
+  {
+    cartId,
+    lines,
+    params,
+  }: {
+    cartId: string;
+    lines: CartLineInput[];
+    params: Params;
+  },
+) {
   const {country} = getLocalizationFromLang(params.lang);
 
-  const {data} = await getStorefrontData<{
+  const data = await storefront.mutate<{
     cartLinesAdd: {
       cart: Cart;
     };
-  }>({
-    query: ADD_LINE_ITEM_QUERY,
+  }>(ADD_LINE_ITEM_MUTATION, {
     variables: {cartId, lines, country},
   });
 
@@ -484,9 +426,15 @@ const CART_QUERY = `#graphql
   ${CART_FRAGMENT}
 `;
 
-export async function getCart({cartId}: {cartId: string}) {
-  const {data} = await getStorefrontData<{cart: Cart}>({
-    query: CART_QUERY,
+export async function getCart(
+  {storefront}: HydrogenContext,
+  {
+    cartId,
+  }: {
+    cartId: string;
+  },
+) {
+  const data = await storefront.query<{cart: Cart}>(CART_QUERY, {
     variables: {
       cartId,
     },
@@ -497,7 +445,7 @@ export async function getCart({cartId}: {cartId: string}) {
   return data.cart;
 }
 
-const UPDATE_LINE_ITEM_QUERY = `#graphql
+const UPDATE_LINE_ITEM_MUTATION = `#graphql
   mutation CartLineUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
@@ -509,25 +457,30 @@ const UPDATE_LINE_ITEM_QUERY = `#graphql
   ${CART_FRAGMENT}
 `;
 
-export async function updateLineItem({
-  cartId,
-  lineItem,
-  params,
-}: {
-  cartId: string;
-  lineItem: CartLineUpdateInput;
-  params: Params;
-}) {
+export async function updateLineItem(
+  {storefront}: HydrogenContext,
+  {
+    cartId,
+    lineItem,
+    params,
+  }: {
+    cartId: string;
+    lineItem: CartLineUpdateInput;
+    params: Params;
+  },
+) {
   const {country} = getLocalizationFromLang(params.lang);
 
-  const {data} = await getStorefrontData<{cartLinesUpdate: {cart: Cart}}>({
-    query: UPDATE_LINE_ITEM_QUERY,
-    variables: {
-      cartId,
-      lines: [lineItem],
-      country,
+  const data = await storefront.mutate<{cartLinesUpdate: {cart: Cart}}>(
+    UPDATE_LINE_ITEM_MUTATION,
+    {
+      variables: {
+        cartId,
+        lines: [lineItem],
+        country,
+      },
     },
-  });
+  );
 
   invariant(data, 'No data returned from Shopify API');
 
@@ -549,19 +502,21 @@ const TOP_PRODUCTS_QUERY = `#graphql
   }
 `;
 
-export async function getTopProducts({
-  params,
-  count = 4,
-}: {
-  params: Params;
-  count?: number;
-}) {
+export async function getTopProducts(
+  {storefront}: HydrogenContext,
+  {
+    params,
+    count = 4,
+  }: {
+    params: Params;
+    count?: number;
+  },
+) {
   const {language, country} = getLocalizationFromLang(params.lang);
 
-  const {data} = await getStorefrontData<{
+  const data = await storefront.query<{
     products: ProductConnection;
-  }>({
-    query: TOP_PRODUCTS_QUERY,
+  }>(TOP_PRODUCTS_QUERY, {
     variables: {
       count,
       country,
@@ -575,15 +530,8 @@ export async function getTopProducts({
 }
 
 // shop primary domain url for /admin
-export async function getPrimaryShopDomain() {
-  const {data, errors} = await getStorefrontData<{shop: Shop}>({
-    query: SHOP_PRIMARY_DOMAIN_QUERY,
-    variables: {},
-  });
-
-  if (errors) {
-    throw new Error(errors.map((error) => error).join());
-  }
+export async function getPrimaryShopDomain({storefront}: HydrogenContext) {
+  const data = await storefront.query<{shop: Shop}>(SHOP_PRIMARY_DOMAIN_QUERY);
 
   invariant(data?.shop?.primaryDomain, 'Primary domain not found');
 
@@ -649,19 +597,19 @@ const LOGIN_MUTATION = `#graphql
   }
 `;
 
-export class StorefrontApiError extends Error {}
-
-export async function login({
-  email,
-  password,
-}: {
-  email: string;
-  password: string;
-}) {
-  const {data, errors} = await getStorefrontData<{
+export async function login(
+  {storefront}: HydrogenContext,
+  {
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  },
+) {
+  const data = await storefront.mutate<{
     customerAccessTokenCreate: CustomerAccessTokenCreatePayload;
-  }>({
-    query: LOGIN_MUTATION,
+  }>(LOGIN_MUTATION, {
     variables: {
       input: {
         email,
@@ -669,13 +617,6 @@ export async function login({
       },
     },
   });
-
-  /**
-   * Something is wrong with the API.
-   */
-  if (errors) {
-    throw new StorefrontApiError(errors.map((e) => e.message).join(', '));
-  }
 
   if (data?.customerAccessTokenCreate?.customerAccessToken?.accessToken) {
     return data.customerAccessTokenCreate.customerAccessToken.accessToken;
@@ -704,17 +645,19 @@ const CUSTOMER_CREATE_MUTATION = `#graphql
   }
 `;
 
-export async function registerCustomer({
-  email,
-  password,
-}: {
-  email: string;
-  password: string;
-}) {
-  const {data, errors} = await getStorefrontData<{
+export async function registerCustomer(
+  {storefront}: HydrogenContext,
+  {
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  },
+) {
+  const data = await storefront.mutate<{
     customerCreate: CustomerCreatePayload;
-  }>({
-    query: CUSTOMER_CREATE_MUTATION,
+  }>(CUSTOMER_CREATE_MUTATION, {
     variables: {
       input: {
         email,
@@ -722,18 +665,6 @@ export async function registerCustomer({
       },
     },
   });
-
-  if (errors && /Creating Customer Limit exceeded/i.test(errors[0]?.message)) {
-    // The SFAPI throws this error when the email is already in use.
-    throw new Error('User already exists or API limit exceeded');
-  }
-
-  /**
-   * Something is wrong with the API.
-   */
-  if (errors) {
-    throw new StorefrontApiError(errors.map((e) => e.message).join(', '));
-  }
 
   if (data?.customerCreate?.customer?.id) {
     return data.customerCreate.customer.id;
@@ -757,22 +688,15 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
   }
 `;
 
-export async function sendPasswordResetEmail({email}: {email: string}) {
-  const {errors} = await getStorefrontData<{
+export async function sendPasswordResetEmail(
+  {storefront}: HydrogenContext,
+  {email}: {email: string},
+) {
+  await storefront.mutate<{
     customerRecover: CustomerRecoverPayload;
-  }>({
-    query: CUSTOMER_RECOVER_MUTATION,
-    variables: {
-      email,
-    },
+  }>(CUSTOMER_RECOVER_MUTATION, {
+    variables: {email},
   });
-
-  /**
-   * Something is wrong with the API.
-   */
-  if (errors) {
-    throw new StorefrontApiError(errors.map((e) => e.message).join(', '));
-  }
 
   // User doesn't exist but we don't need to notify that.
   return null;
@@ -794,19 +718,21 @@ const CUSTOMER_RESET_MUTATION = `#graphql
   }
 `;
 
-export async function resetPassword({
-  id,
-  resetToken,
-  password,
-}: {
-  id: string;
-  resetToken: string;
-  password: string;
-}) {
-  const {data, errors} = await getStorefrontData<{
+export async function resetPassword(
+  {storefront}: HydrogenContext,
+  {
+    id,
+    resetToken,
+    password,
+  }: {
+    id: string;
+    resetToken: string;
+    password: string;
+  },
+) {
+  const data = await storefront.mutate<{
     customerReset: CustomerResetPayload;
-  }>({
-    query: CUSTOMER_RESET_MUTATION,
+  }>(CUSTOMER_RESET_MUTATION, {
     variables: {
       id: `gid://shopify/Customer/${id}`,
       input: {
@@ -815,13 +741,6 @@ export async function resetPassword({
       },
     },
   });
-
-  /**
-   * Something is wrong with the API.
-   */
-  if (errors) {
-    throw new StorefrontApiError(errors.map((e) => e.message).join(', '));
-  }
 
   if (data?.customerReset?.customerAccessToken) {
     return data.customerReset.customerAccessToken;
@@ -849,19 +768,21 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
   }
 `;
 
-export async function activateAccount({
-  id,
-  password,
-  activationToken,
-}: {
-  id: string;
-  password: string;
-  activationToken: string;
-}) {
-  const {data, errors} = await getStorefrontData<{
+export async function activateAccount(
+  {storefront}: HydrogenContext,
+  {
+    id,
+    password,
+    activationToken,
+  }: {
+    id: string;
+    password: string;
+    activationToken: string;
+  },
+) {
+  const data = await storefront.mutate<{
     customerActivate: CustomerActivatePayload;
-  }>({
-    query: CUSTOMER_ACTIVATE_MUTATION,
+  }>(CUSTOMER_ACTIVATE_MUTATION, {
     variables: {
       id: `gid://shopify/Customer/${id}`,
       input: {
@@ -870,13 +791,6 @@ export async function activateAccount({
       },
     },
   });
-
-  /**
-   * Something is wrong with the API.
-   */
-  if (errors) {
-    throw new StorefrontApiError(errors.map((e) => e.message).join(', '));
-  }
 
   if (data?.customerActivate?.customerAccessToken) {
     return data.customerActivate.customerAccessToken;
@@ -1080,19 +994,21 @@ const CUSTOMER_ORDER_QUERY = `#graphql
   }
 `;
 
-export async function getCustomerOrder({
-  orderId,
-  params,
-}: {
-  orderId: string;
-  params: Params;
-}): Promise<Order | undefined> {
+export async function getCustomerOrder(
+  {storefront}: HydrogenContext,
+  {
+    orderId,
+    params,
+  }: {
+    orderId: string;
+    params: Params;
+  },
+): Promise<Order | undefined> {
   const {language, country} = getLocalizationFromLang(params.lang);
 
-  const {data, errors} = await getStorefrontData<{
+  const data = await storefront.query<{
     node: Order;
-  }>({
-    query: CUSTOMER_ORDER_QUERY,
+  }>(CUSTOMER_ORDER_QUERY, {
     variables: {
       country,
       language,
@@ -1100,42 +1016,33 @@ export async function getCustomerOrder({
     },
   });
 
-  if (errors) {
-    const errorMessages = errors.map((error) => error.message).join('\n');
-    throw new Error(errorMessages);
-  }
-
   return data?.node;
 }
 
-export async function getCustomer({
-  request,
-  context,
-  customerAccessToken,
-  params,
-}: {
-  request: Request;
-  context: AppLoadContext;
-  customerAccessToken: string;
-  params: Params;
-}) {
+export async function getCustomer(
+  context: HydrogenContext,
+  {
+    request,
+    customerAccessToken,
+    params,
+  }: {
+    request: Request;
+    customerAccessToken: string;
+    params: Params;
+  },
+) {
+  const {storefront} = context;
   const {language, country} = getLocalizationFromLang(params.lang);
 
-  const {data, errors} = await getStorefrontData<{
+  const data = await storefront.query<{
     customer: Customer;
-  }>({
-    query: CUSTOMER_QUERY,
+  }>(CUSTOMER_QUERY, {
     variables: {
       customerAccessToken,
       country,
       language,
     },
   });
-
-  if (errors) {
-    const errorMessages = errors.map((error) => error.message).join('\n');
-    throw new Error(errorMessages);
-  }
 
   /**
    * If the customer failed to load, we assume their access token is invalid.
@@ -1159,32 +1066,26 @@ const CUSTOMER_UPDATE_MUTATION = `#graphql
   }
   `;
 
-export async function updateCustomer({
-  customerAccessToken,
-  customer,
-}: {
-  customerAccessToken: string;
-  customer: CustomerUpdateInput;
-}): Promise<void> {
-  const {data, errors} = await getStorefrontData<{
+export async function updateCustomer(
+  {storefront}: HydrogenContext,
+  {
+    customerAccessToken,
+    customer,
+  }: {
+    customerAccessToken: string;
+    customer: CustomerUpdateInput;
+  },
+): Promise<void> {
+  const data = await storefront.mutate<{
     customerUpdate: CustomerUpdatePayload;
-  }>({
-    query: CUSTOMER_UPDATE_MUTATION,
+  }>(CUSTOMER_UPDATE_MUTATION, {
     variables: {
       customerAccessToken,
       customer,
     },
   });
 
-  const error = getApiErrorMessage(
-    'customerUpdate',
-    data,
-    errors as UserError[],
-  );
-
-  if (error) {
-    throw new Error(error);
-  }
+  assertApiErrors(data.customerUpdate);
 }
 
 const UPDATE_ADDRESS_MUTATION = `#graphql
@@ -1207,19 +1108,21 @@ const UPDATE_ADDRESS_MUTATION = `#graphql
   }
 `;
 
-export async function updateCustomerAddress({
-  customerAccessToken,
-  addressId,
-  address,
-}: {
-  customerAccessToken: string;
-  addressId: string;
-  address: MailingAddressInput;
-}): Promise<void> {
-  const {data, errors} = await getStorefrontData<{
+export async function updateCustomerAddress(
+  {storefront}: HydrogenContext,
+  {
+    customerAccessToken,
+    addressId,
+    address,
+  }: {
+    customerAccessToken: string;
+    addressId: string;
+    address: MailingAddressInput;
+  },
+): Promise<void> {
+  const data = await storefront.mutate<{
     customerAddressUpdate: CustomerAddressUpdatePayload;
-  }>({
-    query: UPDATE_ADDRESS_MUTATION,
+  }>(UPDATE_ADDRESS_MUTATION, {
     variables: {
       customerAccessToken,
       id: addressId,
@@ -1227,15 +1130,7 @@ export async function updateCustomerAddress({
     },
   });
 
-  const error = getApiErrorMessage(
-    'customerAddressUpdate',
-    data,
-    errors as UserError[],
-  );
-
-  if (error) {
-    throw new Error(error);
-  }
+  assertApiErrors(data.customerAddressUpdate);
 }
 
 const DELETE_ADDRESS_MUTATION = `#graphql
@@ -1251,32 +1146,26 @@ const DELETE_ADDRESS_MUTATION = `#graphql
   }
 `;
 
-export async function deleteCustomerAddress({
-  customerAccessToken,
-  addressId,
-}: {
-  customerAccessToken: string;
-  addressId: string;
-}): Promise<void> {
-  const {data, errors} = await getStorefrontData<{
+export async function deleteCustomerAddress(
+  {storefront}: HydrogenContext,
+  {
+    customerAccessToken,
+    addressId,
+  }: {
+    customerAccessToken: string;
+    addressId: string;
+  },
+): Promise<void> {
+  const data = await storefront.mutate<{
     customerAddressDelete: CustomerAddressDeletePayload;
-  }>({
-    query: DELETE_ADDRESS_MUTATION,
+  }>(DELETE_ADDRESS_MUTATION, {
     variables: {
       customerAccessToken,
       id: addressId,
     },
   });
 
-  const error = getApiErrorMessage(
-    'customerAddressDelete',
-    data,
-    errors as UserError[],
-  );
-
-  if (error) {
-    throw new Error(error);
-  }
+  assertApiErrors(data.customerAddressDelete);
 }
 
 const UPDATE_DEFAULT_ADDRESS_MUTATION = `#graphql
@@ -1297,32 +1186,26 @@ const UPDATE_DEFAULT_ADDRESS_MUTATION = `#graphql
   }
 `;
 
-export async function updateCustomerDefaultAddress({
-  customerAccessToken,
-  addressId,
-}: {
-  customerAccessToken: string;
-  addressId: string;
-}): Promise<void> {
-  const {data, errors} = await getStorefrontData<{
+export async function updateCustomerDefaultAddress(
+  {storefront}: HydrogenContext,
+  {
+    customerAccessToken,
+    addressId,
+  }: {
+    customerAccessToken: string;
+    addressId: string;
+  },
+): Promise<void> {
+  const data = await storefront.mutate<{
     customerDefaultAddressUpdate: CustomerDefaultAddressUpdatePayload;
-  }>({
-    query: UPDATE_DEFAULT_ADDRESS_MUTATION,
+  }>(UPDATE_DEFAULT_ADDRESS_MUTATION, {
     variables: {
       customerAccessToken,
       addressId,
     },
   });
 
-  const error = getApiErrorMessage(
-    'customerDefaultAddressUpdate',
-    data,
-    errors as UserError[],
-  );
-
-  if (error) {
-    throw new Error(error);
-  }
+  assertApiErrors(data.customerDefaultAddressUpdate);
 }
 
 const CREATE_ADDRESS_MUTATION = `#graphql
@@ -1346,32 +1229,26 @@ const CREATE_ADDRESS_MUTATION = `#graphql
   }
 `;
 
-export async function createCustomerAddress({
-  customerAccessToken,
-  address,
-}: {
-  customerAccessToken: string;
-  address: MailingAddressInput;
-}): Promise<string> {
-  const {data, errors} = await getStorefrontData<{
+export async function createCustomerAddress(
+  {storefront}: HydrogenContext,
+  {
+    customerAccessToken,
+    address,
+  }: {
+    customerAccessToken: string;
+    address: MailingAddressInput;
+  },
+): Promise<string> {
+  const data = await storefront.mutate<{
     customerAddressCreate: CustomerAddressCreatePayload;
-  }>({
-    query: CREATE_ADDRESS_MUTATION,
+  }>(CREATE_ADDRESS_MUTATION, {
     variables: {
       customerAccessToken,
       address,
     },
   });
 
-  const error = getApiErrorMessage(
-    'customerAddressCreate',
-    data,
-    errors as UserError[],
-  );
-
-  if (error) {
-    throw new Error(error);
-  }
+  assertApiErrors(data.customerAddressCreate);
 
   invariant(
     data?.customerAddressCreate?.customerAddress?.id,

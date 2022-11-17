@@ -4,10 +4,11 @@ import {
   json,
   type ActionFunction,
   type LoaderArgs,
+  isStorefrontApiError,
 } from '@shopify/hydrogen-remix';
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
-import {login, registerCustomer, StorefrontApiError} from '~/data';
+import {login, registerCustomer} from '~/data';
 import {getSession} from '~/lib/session.server';
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
@@ -50,8 +51,8 @@ export const action: ActionFunction = async ({request, context, params}) => {
   }
 
   try {
-    await registerCustomer({email, password});
-    const customerAccessToken = await login({email, password});
+    await registerCustomer(context, {email, password});
+    const customerAccessToken = await login(context, {email, password});
     session.set('customerAccessToken', customerAccessToken);
 
     return redirect(params.lang ? `${params.lang}/account` : '/account', {
@@ -60,7 +61,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       },
     });
   } catch (error: any) {
-    if (error instanceof StorefrontApiError) {
+    if (isStorefrontApiError(error)) {
       return badRequest({
         formError: 'Something went wrong. Please try again later.',
       });

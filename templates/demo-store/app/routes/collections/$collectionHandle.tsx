@@ -44,8 +44,7 @@ export async function loader({
 
   const {collection} = await storefront.query<{
     collection: CollectionType;
-  }>({
-    query: COLLECTION_QUERY,
+  }>(COLLECTION_QUERY, {
     variables: {
       ...variables,
       handle: collectionHandle,

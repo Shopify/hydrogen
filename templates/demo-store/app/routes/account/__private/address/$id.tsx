@@ -44,7 +44,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   if (request.method === 'DELETE') {
     try {
-      await deleteCustomerAddress({
+      await deleteCustomerAddress(context, {
         customerAccessToken,
         addressId,
       });
@@ -81,13 +81,13 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   if (addressId === 'add') {
     try {
-      const id = await createCustomerAddress({
+      const id = await createCustomerAddress(context, {
         customerAccessToken,
         address,
       });
 
       if (defaultAddress) {
-        await updateCustomerDefaultAddress({
+        await updateCustomerDefaultAddress(context, {
           customerAccessToken,
           addressId: id,
         });
@@ -99,14 +99,14 @@ export const action: ActionFunction = async ({request, context, params}) => {
     }
   } else {
     try {
-      await updateCustomerAddress({
+      await updateCustomerAddress(context, {
         customerAccessToken,
         addressId: decodeURIComponent(addressId),
         address,
       });
 
       if (defaultAddress) {
-        await updateCustomerDefaultAddress({
+        await updateCustomerDefaultAddress(context, {
           customerAccessToken,
           addressId: decodeURIComponent(addressId),
         });

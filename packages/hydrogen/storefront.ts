@@ -45,7 +45,7 @@ export type CreateStorefrontClientOptions = {
 };
 
 type StorefrontCommonOptions = {
-  variables: ExecutionArgs['variableValues'];
+  variables?: ExecutionArgs['variableValues'];
   headers?: HeadersInit;
 };
 
@@ -60,6 +60,20 @@ export type StorefrontMutationOptions = StorefrontCommonOptions & {
   mutation: string;
   cache?: never;
 };
+
+const StorefrontApiError = class extends Error {} as ErrorConstructor;
+export const isStorefrontApiError = (error: any) =>
+  error instanceof StorefrontApiError;
+
+const isQueryRE = /(^|}\s)query[\s({]/im;
+const isMutationRE = /(^|}\s)mutation[\s({]/im;
+
+function minifyQuery(string: string) {
+  return string
+    .replace(/\s*#.*$/gm, '') // Remove GQL comments
+    .replace(/\s+/gm, ' ') // Minify spaces
+    .trim();
+}
 
 export function createStorefrontClient(
   clientOptions: StorefrontClientProps & {
@@ -87,7 +101,7 @@ export function createStorefrontClient(
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] = requestGroupId;
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
 
-  async function getStorefrontData<T>({
+  async function callStorefrontApi<T>({
     query,
     mutation,
     variables,
@@ -101,10 +115,7 @@ export function createStorefrontClient(
         ? Object.fromEntries(headers)
         : headers;
 
-    query = (query ?? mutation)
-      .replace(/\s*#.*$/gm, '') // Remove GQL comments
-      .replace(/\s+/gm, ' ') // Minify spaces
-      .trim();
+    query = query ?? mutation;
 
     console.log('variables', {
       language: clientOptions.i18n.language,
@@ -156,14 +167,30 @@ export function createStorefrontClient(
 
     const {data, errors} = body as StorefrontApiResponse<T>;
 
-    if (errors) throwError(response, errors);
+    if (errors?.length) throwError(response, errors, StorefrontApiError);
 
     return data as T;
   }
 
   return {
     storefront: {
-      query: getStorefrontData,
+      query: <T>(
+        query: string,
+        payload?: StorefrontCommonOptions & {cache?: CachingStrategy},
+      ) => {
+        query = minifyQuery(query);
+        if (isMutationRE.test(query))
+          throw new Error('storefront.query cannot execute mutations');
+
+        return callStorefrontApi<T>({...payload, query});
+      },
+      mutate: <T>(mutation: string, payload?: StorefrontCommonOptions) => {
+        mutation = minifyQuery(mutation);
+        if (isQueryRE.test(mutation))
+          throw new Error('storefront.mutate cannot execute queries');
+
+        return callStorefrontApi<T>({...payload, mutation});
+      },
       getPublicTokenHeaders,
       getPrivateTokenHeaders,
       getStorefrontApiUrl,
@@ -194,6 +221,7 @@ export function createStorefrontClient(
 function throwError<T>(
   response: Response,
   errors: StorefrontApiResponse<T>['errors'],
+  ErrorConstructor = Error,
 ) {
   const reqId = response.headers.get('x-request-id');
   const reqIdMessage = reqId ? ` - Request ID: ${reqId}` : '';
@@ -204,8 +232,10 @@ function throwError<T>(
         ? errors
         : errors.map((error) => error.message).join('\n');
 
-    throw new Error(errorMessages + reqIdMessage);
+    throw new ErrorConstructor(errorMessages + reqIdMessage);
   }
 
-  throw new Error(`API response error: ${response.status}` + reqIdMessage);
+  throw new ErrorConstructor(
+    `API response error: ${response.status}` + reqIdMessage,
+  );
 }
