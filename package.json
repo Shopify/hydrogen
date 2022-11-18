@@ -3,7 +3,7 @@
   "sideEffects": false,
   "scripts": {
     "build": "turbo build --parallel",
-    "dev": "LOCAL_DEV=true turbo dev --parallel",
+    "dev": "cross-env LOCAL_DEV=true turbo dev --parallel",
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
@@ -20,6 +20,7 @@
   "devDependencies": {
     "@playwright/test": "^1.27.1",
     "@types/eslint": "^8.4.10",
+    "cross-env": "^7.0.3",
     "eslint": "^8.20.0",
     "lint-staged": "^10.5.4",
     "prettier": "^2.7.1",
