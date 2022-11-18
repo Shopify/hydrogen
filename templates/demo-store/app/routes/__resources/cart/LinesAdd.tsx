@@ -2,7 +2,6 @@ import {diff} from 'fast-array-diff';
 import {useEffect, forwardRef, useCallback, useMemo, useId} from 'react';
 import {
   type Fetcher,
-  Params,
   useFetcher,
   useFetchers,
   useLocation,
@@ -17,7 +16,6 @@ import {
   redirect,
   json,
 } from '@shopify/hydrogen-remix';
-import {getLocalizationFromLang} from '~/lib/utils';
 import type {
   Cart,
   CartInput,
@@ -96,7 +94,7 @@ const ACTION_PATH = '/cart/LinesAdd';
 /**
  * action that handles cart create (with lines) and lines add
  */
-async function action({request, context, params}: ActionArgs) {
+async function action({request, context}: ActionArgs) {
   const headers = new Headers();
 
   const [session, formData] = await Promise.all([
@@ -123,7 +121,6 @@ async function action({request, context, params}: ActionArgs) {
   if (!cartId) {
     const {cart, errors} = await cartCreateLinesMutation({
       input: {lines},
-      params,
       context,
     });
 
@@ -149,13 +146,12 @@ async function action({request, context, params}: ActionArgs) {
     can diff what was really added or not :(
     although it's slower, we now have optimistic lines add
   */
-  const prevCart = await getCartLines({cartId, params, context});
+  const prevCart = await getCartLines({cartId, context});
 
   // Flow B — add line(s) to existing cart
   const {cart, errors} = await linesAddMutation({
     cartId,
     lines,
-    params,
     context,
   });
 
@@ -366,23 +362,17 @@ const ADD_LINES_MUTATION = `#graphql
  */
 async function getCartLines({
   cartId,
-  params,
   context,
 }: {
   cartId: string;
-  params: Params;
   context: HydrogenContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cart create mutation');
 
-  const {country, language} = getLocalizationFromLang(params.lang);
-
   const {cart} = await storefront.query<{cart: Cart}>(CART_LINES_QUERY, {
     variables: {
       cartId,
-      country,
-      language,
     },
     cache: storefront.CacheNone(),
   });
@@ -402,17 +392,13 @@ async function getCartLines({
  */
 async function cartCreateLinesMutation({
   input,
-  params,
   context,
 }: {
   input: CartInput;
-  params: Params;
   context: HydrogenContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cart create mutation');
-
-  const {country, language} = getLocalizationFromLang(params.lang);
 
   const {cartCreate} = await storefront.mutate<{
     cartCreate: {
@@ -421,7 +407,7 @@ async function cartCreateLinesMutation({
     };
     errors: UserError[];
   }>(CREATE_CART_ADD_LINES_MUTATION, {
-    variables: {input, country, language},
+    variables: {input},
   });
 
   invariant(cartCreate, 'No data returned from cart create mutation');
@@ -439,18 +425,14 @@ async function cartCreateLinesMutation({
 async function linesAddMutation({
   cartId,
   lines,
-  params,
   context,
 }: {
   cartId: string;
   lines: CartLineInput[];
-  params: Params;
   context: HydrogenContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in lines add mutation');
-
-  const {country, language} = getLocalizationFromLang(params.lang);
 
   const {cartLinesAdd} = await storefront.mutate<{
     cartLinesAdd: {
@@ -458,7 +440,7 @@ async function linesAddMutation({
       errors: CartUserError[];
     };
   }>(ADD_LINES_MUTATION, {
-    variables: {cartId, lines, country, language},
+    variables: {cartId, lines},
   });
 
   invariant(cartLinesAdd, 'No data returned from line(s) add mutation');
