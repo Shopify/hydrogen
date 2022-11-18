@@ -5,9 +5,12 @@ import {
   type LoaderArgs,
 } from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
-import type {Collection as CollectionType} from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  Collection as CollectionType,
+  Filter,
+} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {PageHeader, Section, Text} from '~/components';
+import {PageHeader, Section, Text, SortFilter} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
@@ -82,7 +85,7 @@ export default function Collection() {
         )}
       </PageHeader>
       <Section>
-        {/* <SortFilter filters={collection.products.filters as Filter[]} /> */}
+        <SortFilter filters={collection.products.filters as Filter[]} />
         <ProductGrid
           key={collection.id}
           collection={collection as CollectionType}
