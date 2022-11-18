@@ -2,9 +2,11 @@ import {Form, useFetchers, useLocation, useParams} from '@remix-run/react';
 import {useCountries} from '~/hooks/useCountries';
 import {Heading, Button, IconCheck} from '~/components';
 import {useEffect, useRef} from 'react';
+import {useSelectedLocale} from '~/hooks/useSelectedLocale';
 
 export function CountrySelector() {
   const countries = useCountries();
+  const selectedLocale = useSelectedLocale();
 
   const closeRef = useRef<HTMLDetailsElement>(null);
   const {pathname, search} = useLocation();
@@ -15,12 +17,9 @@ export function CountrySelector() {
     closeRef.current?.removeAttribute('open');
   }, [fetchers]);
 
-  if (!countries) return null;
+  if (!countries || !selectedLocale) return null;
 
-  const selectedCountry = lang
-    ? countries[`/${lang.toLowerCase()}`]
-    : countries[''];
-  const strippedPathname = lang ? pathname.replace(`/${lang}`, '') : pathname;
+  const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
 
   return (
     <section className="grid gap-4 w-full md:max-w-[335px] md:ml-auto">
@@ -33,14 +32,14 @@ export function CountrySelector() {
           ref={closeRef}
         >
           <summary className="flex items-center justify-between w-full py-3 px-4">
-            {selectedCountry.label}
+            {selectedLocale.label}
           </summary>
           <div className="overflow-auto border-t py-2 bg-contrast w-full max-h-36">
             {Object.keys(countries).map((countryPath) => {
               const locale = countries[countryPath];
               const isSelected =
-                locale.language === selectedCountry.language &&
-                locale.country === selectedCountry.country;
+                locale.language === selectedLocale.language &&
+                locale.country === selectedLocale.country;
               const hreflang = `${locale.language}-${locale.country}`;
               return (
                 <Form method="post" action="/locale" key={hreflang}>

@@ -18,6 +18,7 @@ module.exports = {
       },
     ]);
 
+    // eslint-disable-next-line no-console
     console.log(`Duplicating ${files.length} route(s) for translations`);
 
     for (let file of files) {

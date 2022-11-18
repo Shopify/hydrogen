@@ -8,7 +8,7 @@ import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getHeroPlaceholder} from '~/lib/placeholders';
-import {getLocalizationFromLang} from '~/lib/utils';
+import {getLocaleFromRequest, getLocalizationFromLang} from '~/lib/utils';
 import type {
   Collection,
   CollectionConnection,
@@ -35,8 +35,12 @@ interface CollectionHero {
   top?: boolean;
 }
 
-export async function loader({params, context: {storefront}}: LoaderArgs) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+export async function loader({
+  request,
+  params,
+  context: {storefront},
+}: LoaderArgs) {
+  const {language, country} = getLocaleFromRequest(request);
 
   if (
     params.lang &&
@@ -45,7 +49,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     params.lang !== 'EN-US'
   ) {
     // If the lang URL param is defined, yet we still are on `EN-US`
-    // the the lang param must be invalid, send to the 404 page
+    // then the lang param must be invalid, send to the 404 page
     throw new Response('Not found', {status: 404});
   }
 

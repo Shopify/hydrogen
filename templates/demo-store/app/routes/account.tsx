@@ -49,7 +49,6 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const customer = await getCustomer(context, {
     customerAccessToken,
-    params,
     request,
   });
 

@@ -24,7 +24,6 @@ export const loader = async ({params, context: {storefront}}: LoaderArgs) => {
     blog: Blog;
   }>(BLOGS_QUERY, {
     variables: {
-      language,
       blogHandle: BLOG_HANDLE,
       pageBy: PAGINATION_SIZE,
     },

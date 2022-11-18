@@ -1,11 +1,15 @@
 import {useMatches} from '@remix-run/react';
 import {useDeferred} from './useDeferred';
-import {Localizations} from '~/lib/type';
+import {Locale} from '~/lib/type';
 
 /*
   This is an experimental pattern that helps prevent props drilling
 */
-export function useCountries(): Localizations | null {
+export function useSelectedLocale():
+  | (Locale & {
+      pathPrefix: string;
+    })
+  | null {
   const [root] = useMatches();
-  return useDeferred('countries', root);
+  return useDeferred('selectedLocale', root);
 }

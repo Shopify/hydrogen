@@ -9,10 +9,10 @@ import invariant from 'tiny-invariant';
 import {addLineItem, createCart, getTopProducts, updateLineItem} from '~/data';
 import {getSession} from '~/lib/session.server';
 
-export async function loader({params, context}: LoaderArgs) {
+export async function loader({context}: LoaderArgs) {
   return defer(
     {
-      topProducts: getTopProducts(context, {params}),
+      topProducts: getTopProducts(context, {}),
     },
     {
       headers: {
@@ -50,7 +50,6 @@ export const action: ActionFunction = async ({request, context, params}) => {
       if (!cartId) {
         cart = await createCart(context, {
           cart: {lines: [{merchandiseId: variantId}]},
-          params,
         });
 
         session.set('cartId', cart.id);
@@ -60,7 +59,6 @@ export const action: ActionFunction = async ({request, context, params}) => {
         cart = await addLineItem(context, {
           cartId,
           lines: [{merchandiseId: variantId}],
-          params,
         });
       }
 
@@ -97,7 +95,6 @@ export const action: ActionFunction = async ({request, context, params}) => {
       await updateLineItem(context, {
         cartId,
         lineItem: {id: lineId, quantity: 0},
-        params,
       });
       return json({cart});
     }

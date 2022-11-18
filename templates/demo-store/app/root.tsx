@@ -24,6 +24,7 @@ import {Seo, Debugger} from './lib/seo';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 import {countries} from './data/countries';
+import {getLocaleFromRequest} from './lib/utils';
 
 export const handle = {
   // @todo - remove any and type the seo callback
@@ -57,13 +58,14 @@ export const meta: MetaFunction = () => ({
 export const loader: LoaderFunction = async function loader({
   request,
   context,
-  params,
 }) {
   const session = await getSession(request, context);
   const cartId = await session.get('cartId');
+  const selectedLocale = getLocaleFromRequest(request);
 
   return defer({
     layout: await getLayoutData(context),
+    selectedLocale,
     countries,
     cart: cartId ? getCart(context, {cartId}) : undefined,
   });

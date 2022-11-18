@@ -10,6 +10,9 @@ export function useDeferred(resource: string, route: RouteMatch) {
   if (!resource) {
     throw new Error('resource not provided');
   }
+
+  if (!route.data) return null;
+
   const isPromise = Boolean(route?.data?.[resource]?.then);
 
   if (isPromise) {

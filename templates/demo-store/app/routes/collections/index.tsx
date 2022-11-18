@@ -10,7 +10,6 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {Grid, Heading, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
-import {getLocalizationFromLang} from '~/lib/utils';
 
 const PAGINATION_SIZE = 8;
 

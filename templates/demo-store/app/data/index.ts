@@ -22,16 +22,10 @@ import type {
   CustomerActivatePayload,
   CartBuyerIdentityInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {
-  type EnhancedMenu,
-  parseMenu,
-  getLocalizationFromLang,
-  assertApiErrors,
-} from '~/lib/utils';
+import {type EnhancedMenu, parseMenu, assertApiErrors} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
 import type {HydrogenContext} from '@shopify/hydrogen-remix';
-import {type Params} from '@remix-run/react';
 
 export interface CountriesData {
   localization: Localization;
@@ -356,14 +350,10 @@ export async function createCart(
   {storefront}: HydrogenContext,
   {
     cart,
-    params,
   }: {
     cart: CartInput;
-    params: Params;
   },
 ) {
-  const {country} = getLocalizationFromLang(params.lang);
-
   const data = await storefront.mutate<{
     cartCreate: {
       cart: Cart;
@@ -371,7 +361,6 @@ export async function createCart(
   }>(CREATE_CART_MUTATION, {
     variables: {
       input: cart,
-      country,
     },
   });
 
@@ -395,21 +384,17 @@ export async function addLineItem(
   {
     cartId,
     lines,
-    params,
   }: {
     cartId: string;
     lines: CartLineInput[];
-    params: Params;
   },
 ) {
-  const {country} = getLocalizationFromLang(params.lang);
-
   const data = await storefront.mutate<{
     cartLinesAdd: {
       cart: Cart;
     };
   }>(ADD_LINE_ITEM_MUTATION, {
-    variables: {cartId, lines, country},
+    variables: {cartId, lines},
   });
 
   invariant(data, 'No data returned from Shopify API');
@@ -463,22 +448,17 @@ export async function updateLineItem(
   {
     cartId,
     lineItem,
-    params,
   }: {
     cartId: string;
     lineItem: CartLineUpdateInput;
-    params: Params;
   },
 ) {
-  const {country} = getLocalizationFromLang(params.lang);
-
   const data = await storefront.mutate<{cartLinesUpdate: {cart: Cart}}>(
     UPDATE_LINE_ITEM_MUTATION,
     {
       variables: {
         cartId,
         lines: [lineItem],
-        country,
       },
     },
   );
@@ -544,22 +524,16 @@ const TOP_PRODUCTS_QUERY = `#graphql
 export async function getTopProducts(
   {storefront}: HydrogenContext,
   {
-    params,
     count = 4,
   }: {
-    params: Params;
     count?: number;
   },
 ) {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
   const data = await storefront.query<{
     products: ProductConnection;
   }>(TOP_PRODUCTS_QUERY, {
     variables: {
       count,
-      country,
-      language,
     },
   });
 
@@ -1037,20 +1011,14 @@ export async function getCustomerOrder(
   {storefront}: HydrogenContext,
   {
     orderId,
-    params,
   }: {
     orderId: string;
-    params: Params;
   },
 ): Promise<Order | undefined> {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
   const data = await storefront.query<{
     node: Order;
   }>(CUSTOMER_ORDER_QUERY, {
     variables: {
-      country,
-      language,
       orderId,
     },
   });
@@ -1063,23 +1031,18 @@ export async function getCustomer(
   {
     request,
     customerAccessToken,
-    params,
   }: {
     request: Request;
     customerAccessToken: string;
-    params: Params;
   },
 ) {
   const {storefront} = context;
-  const {language, country} = getLocalizationFromLang(params.lang);
 
   const data = await storefront.query<{
     customer: Customer;
   }>(CUSTOMER_QUERY, {
     variables: {
       customerAccessToken,
-      country,
-      language,
     },
   });
 
@@ -1087,7 +1050,7 @@ export async function getCustomer(
    * If the customer failed to load, we assume their access token is invalid.
    */
   if (!data || !data.customer) {
-    throw await logout(request, context, params);
+    throw await logout(request, context);
   }
 
   return data.customer;

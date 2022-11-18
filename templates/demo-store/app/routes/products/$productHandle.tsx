@@ -23,7 +23,7 @@ import {
   Text,
   Link,
 } from '~/components';
-import {getExcerpt, getLocalizationFromLang} from '~/lib/utils';
+import {getExcerpt} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
@@ -33,8 +33,6 @@ import {
   Product as ProductType,
   Shop,
   ProductConnection,
-  LanguageCode,
-  CountryCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {
   MEDIA_FRAGMENT,
@@ -50,7 +48,6 @@ export const loader = async ({
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
 
-  const {language, country} = getLocalizationFromLang(params.lang);
   const searchParams = new URL(request.url).searchParams;
 
   const selectedOptions: SelectedOptionInput[] = [];
@@ -64,8 +61,6 @@ export const loader = async ({
   }>(PRODUCT_QUERY, {
     variables: {
       handle: productHandle,
-      country,
-      language,
       selectedOptions,
     },
   });
@@ -73,19 +68,12 @@ export const loader = async ({
   return defer({
     product,
     shop,
-    recommended: getRecommendedProducts(
-      storefront,
-      language,
-      country,
-      product.id,
-    ),
+    recommended: getRecommendedProducts(storefront, product.id),
   });
 };
 
 async function getRecommendedProducts(
   storefront: LoaderArgs['context']['storefront'],
-  language: LanguageCode,
-  country: CountryCode,
   productId: string,
 ) {
   const products = await storefront.query<{
@@ -95,8 +83,6 @@ async function getRecommendedProducts(
     variables: {
       productId,
       count: 12,
-      language,
-      country,
     },
   });
 
