@@ -1,4 +1,4 @@
-import {HydrogenContext} from '..';
+import {HydrogenContext} from '../../hydrogen/src';
 
 export async function notFoundMaybeRedirect(
   request: Request,
