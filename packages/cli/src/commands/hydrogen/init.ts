@@ -1,13 +1,9 @@
+import {cli as remixCli} from '@remix-run/dev';
 // TODO: why can't we use the shopify kit version of this?
 import {Flags, Command} from '@oclif/core';
 
-import {createRequire} from 'node:module';
-
-const require = createRequire(import.meta.url);
-const remix = require('@remix-run/dev/dist/cli/run');
-
 export default class Init extends Command {
-  static description = 'Builds a Hydrogen storefront for production';
+  static description = 'Creates a new Hydrogen storefront project';
   static flags = {
     typescript: Flags.boolean({
       description: 'Use TypeScript',
@@ -30,5 +26,5 @@ function runInit({typescript}: {typescript?: Boolean}) {
     typescript ? '--typescript' : '',
   ];
 
-  remix.run(['create', ...defaults]);
+  remixCli.run(['create', ...defaults]);
 }
