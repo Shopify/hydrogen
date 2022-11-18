@@ -1,4 +1,4 @@
-#!/usr/bin/env node
+#!/usr/bin/env -S node
 
 /*
   This file is equivalent to `shopify hydrogen build --devReload --entry xyz`.
