@@ -1,6 +1,8 @@
-import {useState} from 'react';
+import {SyntheticEvent, useMemo, useState} from 'react';
 import {Heading, Button, Drawer as DrawerComponent} from '~/components';
-import {Link, useLocation} from '@remix-run/react';
+import {Link, useLocation, useSearchParams} from '@remix-run/react';
+import {useDebounce} from 'react-use';
+
 import type {
   FilterType,
   Filter,
@@ -10,7 +12,7 @@ type Props = {
   filters: Filter[];
 };
 
-export function SortFilter({filters}: {filters: Filter[]}) {
+export function SortFilter({filters}: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -20,7 +22,7 @@ export function SortFilter({filters}: {filters: Filter[]}) {
           Filter and sort
         </Button>
       </div>
-      <Drawer
+      <FiltersDrawer
         filters={filters}
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
@@ -29,7 +31,7 @@ export function SortFilter({filters}: {filters: Filter[]}) {
   );
 }
 
-export function Drawer({
+export function FiltersDrawer({
   isOpen,
   onClose,
   filters = [],
@@ -38,7 +40,44 @@ export function Drawer({
   onClose: () => void;
   filters: Filter[];
 }) {
+  const [params] = useSearchParams();
   const location = useLocation();
+
+  const filterMarkup = (filter: Filter, option: Filter['values'][0]) => {
+    switch (filter.type) {
+      case 'PRICE_RANGE':
+        const min =
+          params.has('minPrice') && !isNaN(Number(params.get('minPrice')))
+            ? Number(params.get('minPrice'))
+            : undefined;
+
+        const max =
+          params.has('maxPrice') && !isNaN(Number(params.get('maxPrice')))
+            ? Number(params.get('maxPrice'))
+            : undefined;
+
+        return <PriceRangeFilter min={min} max={max} />;
+
+      default:
+        const to = getFilterLink(
+          filter,
+          option.input as string,
+          params,
+          location,
+        );
+        return (
+          <Link
+            className="focus:underline hover:underline whitespace-nowrap"
+            prefetch="intent"
+            onClick={onClose}
+            reloadDocument
+            to={to}
+          >
+            {option.label}
+          </Link>
+        );
+    }
+  };
 
   return (
     <DrawerComponent
@@ -55,35 +94,93 @@ export function Drawer({
             </Heading>
             <ul key={filter.id} className="pb-8">
               {filter.values?.map((option) => {
-                const params = new URLSearchParams(location.search);
-
-                const newParams = filterInputToParams(
-                  filter.type,
-                  option.input as string,
-                  params,
-                );
-
-                const to = `${location.pathname}?${newParams.toString()}`;
-
-                return (
-                  <li key={option.id}>
-                    <Link
-                      className="focus:underline hover:underline whitespace-nowrap"
-                      prefetch="intent"
-                      onClick={onClose}
-                      reloadDocument
-                      to={to}
-                    >
-                      {option.label}
-                    </Link>
-                  </li>
-                );
+                return <li key={option.id}>{filterMarkup(filter, option)}</li>;
               })}
             </ul>
           </div>
         ))}
       </nav>
     </DrawerComponent>
+  );
+}
+
+function getFilterLink(
+  filter: Filter,
+  rawInput: string | Record<string, any>,
+  params: URLSearchParams,
+  location: ReturnType<typeof useLocation>,
+) {
+  const paramsClone = new URLSearchParams(params);
+  const newParams = filterInputToParams(filter.type, rawInput, paramsClone);
+  return `${location.pathname}?${newParams.toString()}`;
+}
+
+const PRICE_RANGE_FILTER_DEBOUNCE = 500;
+
+function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
+  const location = useLocation();
+  const params = useMemo(
+    () => new URLSearchParams(location.search),
+    [location.search],
+  );
+
+  const [minPrice, setMinPrice] = useState(min ? String(min) : '');
+  const [maxPrice, setMaxPrice] = useState(max ? String(max) : '');
+
+  useDebounce(
+    () => {
+      if (
+        (minPrice === '' || minPrice === String(min)) &&
+        (maxPrice === '' || maxPrice === String(max))
+      )
+        return;
+
+      const price: {min?: string; max?: string} = {};
+      if (minPrice !== '') price.min = minPrice;
+      if (maxPrice !== '') price.max = maxPrice;
+
+      const newParams = filterInputToParams('PRICE_RANGE', {price}, params);
+      window.location.href = `${location.pathname}?${newParams.toString()}`;
+    },
+    PRICE_RANGE_FILTER_DEBOUNCE,
+    [minPrice, maxPrice],
+  );
+
+  const onChangeMax = (event: SyntheticEvent) => {
+    const newMaxPrice = (event.target as HTMLInputElement).value;
+    setMaxPrice(newMaxPrice);
+  };
+
+  const onChangeMin = (event: SyntheticEvent) => {
+    const newMinPrice = (event.target as HTMLInputElement).value;
+    setMinPrice(newMinPrice);
+  };
+
+  return (
+    <div className="flex">
+      <label className="mb-4">
+        <span>from</span>
+        <input
+          name="maxPrice"
+          className="text-black"
+          type="text"
+          defaultValue={min}
+          placeholder={'$'}
+          onChange={onChangeMin}
+        />
+      </label>
+      <label>
+        <span>to</span>
+        <input
+          name="minPrice"
+          className="text-black"
+          type="number"
+          defaultValue={max}
+          placeholder={'$'}
+          onChange={onChangeMax}
+        />
+      </label>
+    </div>
   );
 }
 
@@ -95,8 +192,8 @@ function filterInputToParams(
   const input = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
   switch (type) {
     case 'PRICE_RANGE':
-      params.set('minPrice', input.min);
-      params.set('maxPrice', input.max);
+      if (input.price.min) params.set('minPrice', input.price.min);
+      if (input.price.max) params.set('maxPrice', input.price.max);
       break;
     case 'LIST':
       Object.entries(input).forEach(([key, value]) => {
