@@ -6,21 +6,14 @@ import {
 
 let sessionStorage: SessionStorage;
 
-export async function getSession(
-  request: Request,
-  context: AppLoadContext & {env?: Record<string, string>},
-) {
-  if (!context.env?.ENCRYPTION_KEY) {
-    throw new Error('ENCRYPTION_KEY environment variable is not set');
-  }
-
+export async function getSession(request: Request, secrets: string[]) {
   sessionStorage ??= createCookieSessionStorage({
     cookie: {
       name: 'session',
       httpOnly: true,
       path: '/',
       sameSite: 'lax',
-      secrets: [context.env.ENCRYPTION_KEY],
+      secrets,
     },
   });
 
@@ -28,25 +21,5 @@ export async function getSession(
     request.headers.get('Cookie'),
   );
 
-  return {
-    async get(key: string): Promise<any> {
-      return await session.get(key);
-    },
-
-    set(key: string, value: any): void {
-      session.set(key, value);
-    },
-
-    flash(key: string, value: any): void {
-      session.flash(key, value);
-    },
-
-    unset(key: string): void {
-      session.unset(key);
-    },
-
-    async commit(): Promise<string> {
-      return await sessionStorage.commitSession(session);
-    },
-  };
+  return {session, sessionStorage};
 }
