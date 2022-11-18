@@ -79,7 +79,6 @@ export const action: ActionFunction = async ({request, context, params}) => {
       cart = await updateLineItem(context, {
         cartId,
         lineItem: {id: lineId, quantity},
-        params,
       });
       return json({cart});
     }

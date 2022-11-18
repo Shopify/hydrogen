@@ -66,7 +66,7 @@ export async function loader({request, context, params}: LoaderArgs) {
     heading,
     orders,
     addresses: flattenConnection(customer.addresses) as MailingAddress[],
-    featuredData: getFeaturedData(context.storefront, params),
+    featuredData: getFeaturedData(context.storefront),
   });
 }
 
