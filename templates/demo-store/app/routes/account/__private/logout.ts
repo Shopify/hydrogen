@@ -9,14 +9,14 @@ export async function logout(
   context: AppLoadContext,
   params: LoaderArgs['params'],
 ) {
-  const {session, sessionStorage} = context;
+  const {session} = context;
   session.unset('customerAccessToken');
 
   return redirect(
     params.lang ? `${params.lang}/account/login` : '/account/login',
     {
       headers: {
-        'Set-Cookie': await sessionStorage.commitSession(session),
+        'Set-Cookie': await session.commit(),
       },
     },
   );

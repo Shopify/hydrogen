@@ -60,13 +60,13 @@ export const action: ActionFunction = async ({
       password,
     });
 
-    const {session, sessionStorage} = context;
+    const {session} = context;
 
     session.set('customerAccessToken', accessToken);
 
     return redirect(lang ? `${lang}/account` : '/account', {
       headers: {
-        'Set-Cookie': await sessionStorage.commitSession(session),
+        'Set-Cookie': await session.commit(),
       },
     });
   } catch (error: any) {

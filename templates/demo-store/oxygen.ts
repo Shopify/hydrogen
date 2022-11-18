@@ -1,7 +1,7 @@
 import {createRequestHandler} from '@shopify/hydrogen-remix';
 // The build remix app provided by remix build
 import * as remixBuild from 'remix-build';
-import {getSession} from '~/lib/session.server';
+import {HydrogenSession} from '~/lib/session.server';
 
 declare const process: {env: {NODE_ENV: string}};
 
@@ -23,9 +23,7 @@ export default {
       return new Response('Internal Server Error', {status: 500});
     }
 
-    const {session, sessionStorage} = await getSession(request, [
-      env.SESSION_SECRET,
-    ]);
+    const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
 
     try {
       return await requestHandler(
@@ -41,7 +39,6 @@ export default {
         },
         {
           session,
-          sessionStorage,
         },
       );
     } catch (error) {
