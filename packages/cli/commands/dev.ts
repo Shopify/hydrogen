@@ -4,6 +4,7 @@ import miniOxygenPreview from '@shopify/mini-oxygen';
 import {runBuild} from './build';
 import {getProjectPaths, getRemixConfig} from '../utils/config';
 import {muteDevLogs} from '../utils/log';
+import fs from 'fs-extra';
 
 export async function runDev({
   entry,
@@ -47,6 +48,26 @@ export async function runDev({
     },
   });
 
+  const buildWatchPaths = [
+    entryFile,
+    path.resolve(root, remixConfig.serverBuildPath),
+  ];
+
+  if (process.env.LOCAL_DEV) {
+    // Watch local packages when developing in Hydrogen repo
+    const packagesPath = path.resolve(
+      path.dirname(require.resolve('@shopify/hydrogen')),
+      '..',
+      '..',
+    );
+
+    const packages = (await fs.readdir(packagesPath)).map((pkg) =>
+      path.resolve(packagesPath, pkg, 'dist'),
+    );
+
+    buildWatchPaths.push(...packages);
+  }
+
   // Run MiniOxygen and watch worker build
   miniOxygenPreview({
     workerFile: buildPathWorkerFile,
@@ -55,10 +76,7 @@ export async function runDev({
     publicPath: '',
     buildCommand: `cd ${root} && npm run h2 build -- --dev-reload --entry ${entry}`,
     watch: true,
-    buildWatchPaths: [
-      entryFile,
-      path.resolve(root, remixConfig.serverBuildPath),
-    ],
+    buildWatchPaths,
     autoReload: true,
     modules: true,
     env: process.env,

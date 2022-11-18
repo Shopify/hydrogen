@@ -3,6 +3,8 @@ node_modules
 /.mf
 .env
 .vscode
+.turbo
 /test-results/
 /playwright-report/
 /playwright/.cache/
+**/dist
