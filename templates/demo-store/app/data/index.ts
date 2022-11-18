@@ -27,7 +27,7 @@ import {
 } from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
-import type {HydrogenContext} from '@shopify/hydrogen-remix';
+import type {AppLoadContext, HydrogenContext} from '@shopify/hydrogen-remix';
 import {type Params} from '@remix-run/react';
 
 export interface CountriesData {
@@ -932,9 +932,8 @@ export async function getCustomerOrder(
 }
 
 export async function getCustomer(
-  context: HydrogenContext,
+  context: AppLoadContext & HydrogenContext,
   {
-    request,
     customerAccessToken,
     params,
   }: {
@@ -960,7 +959,7 @@ export async function getCustomer(
    * If the customer failed to load, we assume their access token is invalid.
    */
   if (!data || !data.customer) {
-    throw await logout(request, context, params);
+    throw logout(context, params);
   }
 
   return data.customer;

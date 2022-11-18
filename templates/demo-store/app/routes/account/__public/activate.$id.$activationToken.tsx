@@ -8,7 +8,6 @@ import {
 import {Form, useActionData} from '@remix-run/react';
 import {useRef, useState} from 'react';
 import {activateAccount} from '~/data';
-import {getSession} from '~/lib/session.server';
 import {getInputStyleClasses} from '~/lib/utils';
 
 type ActionData = {
@@ -37,10 +36,7 @@ export const action: ActionFunction = async ({
     });
   }
 
-  const [formData, session] = await Promise.all([
-    request.formData(),
-    getSession(request, context),
-  ]);
+  const formData = await request.formData();
 
   const password = formData.get('password');
   const passwordConfirm = formData.get('passwordConfirm');
@@ -64,11 +60,13 @@ export const action: ActionFunction = async ({
       password,
     });
 
+    const {session, sessionStorage} = context;
+
     session.set('customerAccessToken', accessToken);
 
     return redirect(lang ? `${lang}/account` : '/account', {
       headers: {
-        'Set-Cookie': await session.commit(),
+        'Set-Cookie': await sessionStorage.commitSession(session),
       },
     });
   } catch (error: any) {
