@@ -1,4 +1,4 @@
-# Hydrogen on Remix, Demo Store
+# Hydrogen 2.0
 
 [Roadmap (Github Project)](https://github.com/orgs/Shopify/projects/5093/views/1)
 
