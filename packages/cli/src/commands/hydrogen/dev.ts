@@ -6,6 +6,8 @@ import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
 import {flags} from '../../utils/flags.js';
 import fs from 'fs-extra';
+import {fileURLToPath} from 'url';
+import {createRequire} from 'module';
 
 // TODO: why can't we use the shopify kit version of this?
 // import Command from '@shopify/cli-kit/node/base-command';
@@ -88,6 +90,7 @@ export async function runDev({
 
   if (process.env.LOCAL_DEV) {
     // Watch local packages when developing in Hydrogen repo
+    const require = createRequire(import.meta.url);
     const packagesPath = path.resolve(
       path.dirname(require.resolve('@shopify/hydrogen')),
       '..',
@@ -101,13 +104,23 @@ export async function runDev({
     buildWatchPaths.push(...packages);
   }
 
+  const devReloadPath = path.resolve(
+    fileURLToPath(import.meta.url),
+    '..',
+    '..',
+    '..',
+    '..',
+    'bin',
+    'dev-reload.mjs',
+  );
+
   // Run MiniOxygen and watch worker build
   miniOxygenPreview({
     workerFile: buildPathWorkerFile,
     port,
     assetsDir: buildPathClient,
     publicPath: '',
-    buildCommand: `shopify hydrogen build --dev-reload --entry ${entry}`,
+    buildCommand: `${devReloadPath} ${entry}`,
     watch: true,
     buildWatchPaths,
     autoReload: true,

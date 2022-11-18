@@ -6,14 +6,13 @@
 
 import path from 'path';
 import fs from 'fs/promises';
+import {fileURLToPath} from 'url';
 
 try {
-  const cliPkgPath = path.dirname(
-    path.dirname(await import.meta.resolve('@shopify/cli')),
-  );
+  const cliPkgPath = fileURLToPath(await import.meta.resolve('@shopify/cli'));
 
   // @shopify/cli/dist/xyz => @shopify/cli/bin/run.js
-  const cliFilePath = path.join(cliPkgPath, 'bin', 'run.js').split(':')[1];
+  const cliFilePath = path.join(cliPkgPath, '..', '..', 'bin', 'run.js');
 
   const content = await fs.readFile(cliFilePath, 'utf-8');
   await fs.writeFile(

@@ -4,6 +4,7 @@
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "target": "ESNext",
+    "module": "ESNext",
     "types": ["@shopify/oxygen-workers-types"],
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
