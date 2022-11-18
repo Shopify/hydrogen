@@ -35,7 +35,6 @@ function RemoveFromCart({lindeIds}) {
       lineIds={lindeIds}
       onSuccess={(event) => {
         navigator.sendBeacon('/events', JSON.stringify(event))
-        toggleNotification()
       }}
     >
       {(state, error) => (

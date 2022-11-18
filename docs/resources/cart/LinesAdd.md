@@ -47,7 +47,6 @@ function AddToCartButton({selectedVariant, quantity}) {
       ]}
       onSuccess={(event) => {
         navigator.sendBeacon('/events', JSON.stringify(event))
-        toggleNotification()
       }}
     >
       {(state, error) => (
