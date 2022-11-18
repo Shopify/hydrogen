@@ -52,12 +52,12 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   try {
     const customerAccessToken = await login(context, {email, password});
-    const {session, sessionStorage} = context;
+    const {session} = context;
     session.set('customerAccessToken', customerAccessToken);
 
     return redirect(params.lang ? `${params.lang}/account` : '/account', {
       headers: {
-        'Set-Cookie': await sessionStorage.commitSession(session),
+        'Set-Cookie': await session.commit(),
       },
     });
   } catch (error: any) {

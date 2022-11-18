@@ -96,7 +96,7 @@ const ACTION_PATH = '/cart/LinesAdd';
  * action that handles cart create (with lines) and lines add
  */
 async function action({request, context, params}: ActionArgs) {
-  const {session, sessionStorage} = context;
+  const {session} = context;
   const headers = new Headers();
 
   const formData = await request.formData();
@@ -130,7 +130,7 @@ async function action({request, context, params}: ActionArgs) {
 
     // cart created - we only need a Set-Cookie header if we're creating
     session.set('cartId', cart.id);
-    headers.set('Set-Cookie', await sessionStorage.commitSession(session));
+    headers.set('Set-Cookie', await session.commit());
 
     return linesAddResponse({
       prevCart: null,

@@ -29,7 +29,7 @@ type ActionData = {
 const badRequest = (data: ActionData) => json(data, {status: 400});
 
 export const action: ActionFunction = async ({request, context, params}) => {
-  const {session, sessionStorage} = context;
+  const {session} = context;
   const formData = await request.formData();
 
   const email = formData.get('email');
@@ -53,7 +53,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
     return redirect(params.lang ? `${params.lang}/account` : '/account', {
       headers: {
-        'Set-Cookie': await sessionStorage.commitSession(session),
+        'Set-Cookie': await session.commit(),
       },
     });
   } catch (error: any) {
