@@ -21,12 +21,21 @@ import {
 } from './cache/strategies';
 import {generateUUID} from './utils/uuid';
 import {parseJSON} from './utils/parse-json';
+import {
+  CountryCode,
+  LanguageCode,
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
 export type StorefrontClientProps = Parameters<
   typeof createStorefrontUtilities
->[0];
+>[0] & {
+  i18n: {
+    language: LanguageCode;
+    country: CountryCode;
+  };
+};
 
 export type Storefront = ReturnType<
   typeof createStorefrontClient
@@ -76,12 +85,7 @@ function minifyQuery(string: string) {
 }
 
 export function createStorefrontClient(
-  clientOptions: StorefrontClientProps & {
-    i18n: {
-      language: string;
-      country: string;
-    };
-  },
+  clientOptions: StorefrontClientProps,
   {
     cache,
     waitUntil,

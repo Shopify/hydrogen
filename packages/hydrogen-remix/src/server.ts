@@ -8,12 +8,7 @@ import {
 } from '@shopify/hydrogen';
 
 type HydrogenHandlerParams = {
-  storefront: StorefrontClientProps & {
-    i18n: {
-      language: string;
-      country: string;
-    };
-  };
+  storefront: StorefrontClientProps;
   cache?: Cache;
 };
 

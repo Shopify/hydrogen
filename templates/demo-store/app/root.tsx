@@ -9,7 +9,6 @@ import {
   Links,
   Meta,
   Outlet,
-  Params,
   Scripts,
   ScrollRestoration,
   useCatch,
