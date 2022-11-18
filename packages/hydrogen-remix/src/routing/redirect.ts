@@ -17,7 +17,7 @@ export async function notFoundMaybeRedirect(
 
   if (urlRedirects?.edges?.length) {
     return new Response(null, {
-      status: 301,
+      status: 302,
       headers: {
         location: urlRedirects.edges[0]?.node?.target!,
       },
