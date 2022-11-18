@@ -381,9 +381,6 @@ async function getCartLines({
   return cart;
 }
 
-/*
-  Create a cart with line(s) mutation
-*/
 /**
  * Create a cart with line(s) mutation
  * @param input CartInput https://shopify.dev/api/storefront/2022-01/input-objects/CartInput
@@ -448,11 +445,12 @@ async function linesAddMutation({
   return cartLinesAdd;
 }
 
-/*
-  Component ----------------------------------------------------------------
-  Add to cart form that adds a set of line(s) to the cart
-  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartLinesAdd
-*/
+/**
+ * Add to cart form that adds a set of line(s) to the cart
+ * @param lines an array of line(s) to add. {quantity, variant}[]
+ * @param children render submit button
+ * @param onSuccess? callback that runs after each form submission
+ */
 const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
   ({children, lines = [], onSuccess}, ref) => {
     const formId = useId();

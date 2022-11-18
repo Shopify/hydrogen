@@ -25,10 +25,6 @@ import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
 import type {HydrogenContext} from '@shopify/hydrogen-remix';
 
-export interface CountriesData {
-  localization: Localization;
-}
-
 export interface LayoutData {
   headerMenu: EnhancedMenu;
   footerMenu: EnhancedMenu;
@@ -106,31 +102,6 @@ const LAYOUT_QUERY = `#graphql
     title
     type
     url
-  }
-`;
-
-export async function getCountries({storefront}: HydrogenContext) {
-  const data = await storefront.query<CountriesData>(COUNTRIES_QUERY);
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.localization.availableCountries.sort((a, b) =>
-    a.name.localeCompare(b.name),
-  );
-}
-
-const COUNTRIES_QUERY = `#graphql
-  query Localization {
-    localization {
-      availableCountries {
-        isoCode
-        name
-        currency {
-          isoCode
-          symbol
-        }
-      }
-    }
   }
 `;
 
