@@ -1,23 +1,22 @@
 import path from 'path';
-import * as remix from '@remix-run/dev/dist/compiler';
-import miniOxygenPreview from '@shopify/mini-oxygen';
-import {runBuild} from './build';
-import {getProjectPaths, getRemixConfig} from '../../utils/config';
-import {muteDevLogs} from '../../utils/log';
-import {flags} from '../../utils/flags';
+import * as remix from '@remix-run/dev/dist/compiler.js';
+import miniOxygen from '@shopify/mini-oxygen';
+import {runBuild} from './build.js';
+import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
+import {muteDevLogs} from '../../utils/log.js';
+import {flags} from '../../utils/flags.js';
 import fs from 'fs-extra';
 
-// import {createRequire} from 'node:module';
 // TODO: why can't we use the shopify kit version of this?
 // import Command from '@shopify/cli-kit/node/base-command';
 import {Flags, Command} from '@oclif/core';
 
-// const require = createRequire(import.meta.url);
-// const remix = require('@remix-run/dev/dist/compiler');
-// const miniOxygenPreview = require('@shopify/mini-oxygen');
+const miniOxygenPreview =
+  (miniOxygen as unknown as {default: typeof miniOxygen}).default ?? miniOxygen;
 
 export default class Dev extends Command {
-  static description = 'Builds a Hydrogen storefront for production';
+  static description =
+    'Runs Hydrogen storefront in a MiniOxygen worker in development';
   static flags = {
     ...flags,
     port: Flags.integer({
@@ -103,12 +102,12 @@ export async function runDev({
   }
 
   // Run MiniOxygen and watch worker build
-  miniOxygenPreview.default({
+  miniOxygenPreview({
     workerFile: buildPathWorkerFile,
     port,
     assetsDir: buildPathClient,
     publicPath: '',
-    buildCommand: `cd ${root} && npm run h2 build -- --dev-reload --entry ${entry}`,
+    buildCommand: `shopify hydrogen build --dev-reload --entry ${entry}`,
     watch: true,
     buildWatchPaths,
     autoReload: true,

@@ -1,16 +1,15 @@
 import {muteDevLogs} from '../../utils/log.js';
 import {getProjectPaths} from '../../utils/config.js';
 import {flags} from '../../utils/flags.js';
-
-import {createRequire} from 'node:module';
+import miniOxygen from '@shopify/mini-oxygen';
 import {Command} from '@oclif/core';
 
-const require = createRequire(import.meta.url);
-
-const miniOxygenPreview = require('@shopify/mini-oxygen');
+const miniOxygenPreview =
+  (miniOxygen as unknown as {default: typeof miniOxygen}).default ?? miniOxygen;
 
 export default class Preview extends Command {
-  static description = 'Builds a Hydrogen storefront for production';
+  static description =
+    'Runs an existing Hydrogen storefront build in a MiniOxygen worker';
   static flags = {
     paths: flags.path,
     port: flags.port,
@@ -37,7 +36,7 @@ export async function runPreview({
   muteDevLogs({workerReload: false});
 
   // Run MiniOxygen and watch worker build
-  miniOxygenPreview.default({
+  miniOxygenPreview({
     workerFile: buildPathWorkerFile,
     port,
     assetsDir: buildPathClient,
