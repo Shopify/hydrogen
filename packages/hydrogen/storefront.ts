@@ -117,12 +117,6 @@ export function createStorefrontClient(
 
     query = query ?? mutation;
 
-    console.log('variables', {
-      language: clientOptions.i18n.language,
-      country: clientOptions.i18n.country,
-      ...variables,
-    });
-
     const queryVariables = {...variables};
 
     if (!variables?.country && /\$country/.test(query)) {

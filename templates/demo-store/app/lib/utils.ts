@@ -281,8 +281,8 @@ export function usePrefixPathWithLocale(path: string) {
 
 export function useIsHomePath() {
   const {pathname} = useLocation();
-  const {lang} = useParams();
-  const strippedPathname = pathname.replace(new RegExp(`^\/${lang}\/`), '/');
+  const selectedLocale = useSelectedLocale();
+  const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
 
   return strippedPathname === '/';
 }
