@@ -5,7 +5,7 @@ import {
 import {
   createStorefrontClient,
   type StorefrontClientProps,
-} from '@shopify/hydrogen-remix';
+} from '@shopify/hydrogen';
 
 type HydrogenHandlerParams = {
   storefront: StorefrontClientProps;
