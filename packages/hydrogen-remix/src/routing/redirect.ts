@@ -1,4 +1,4 @@
-import {HydrogenContext} from '../../hydrogen/src';
+import type {HydrogenContext} from '@shopify/hydrogen';
 
 export async function notFoundMaybeRedirect(
   request: Request,
