@@ -1,16 +1,11 @@
-import {
-  type LoaderArgs,
-  defer,
-  type MetaFunction,
-} from '@shopify/hydrogen-remix';
+import {type LoaderArgs, defer} from '@shopify/hydrogen-remix';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getHeroPlaceholder} from '~/lib/placeholders';
-import {getLocaleFromRequest, getLocalizationFromLang} from '~/lib/utils';
+import {getLocaleFromRequest} from '~/lib/utils';
 import type {
-  Collection,
   CollectionConnection,
   Metafield,
   ProductConnection,

@@ -5,11 +5,9 @@ import {Locale} from '~/lib/type';
 /*
   This is an experimental pattern that helps prevent props drilling
 */
-export function useSelectedLocale():
-  | (Locale & {
-      pathPrefix: string;
-    })
-  | null {
+export function useSelectedLocale(): Locale & {
+  pathPrefix: string;
+} {
   const [root] = useMatches();
-  return useDeferred('selectedLocale', root);
+  return root.data.selectedLocale;
 }

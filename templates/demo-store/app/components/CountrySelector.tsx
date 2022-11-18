@@ -1,4 +1,4 @@
-import {Form, useFetchers, useLocation, useParams} from '@remix-run/react';
+import {Form, useFetchers, useLocation} from '@remix-run/react';
 import {useCountries} from '~/hooks/useCountries';
 import {Heading, Button, IconCheck} from '~/components';
 import {useEffect, useRef} from 'react';
@@ -10,7 +10,6 @@ export function CountrySelector() {
 
   const closeRef = useRef<HTMLDetailsElement>(null);
   const {pathname, search} = useLocation();
-  const {lang} = useParams();
 
   const fetchers = useFetchers();
   useEffect(() => {

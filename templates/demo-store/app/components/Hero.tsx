@@ -8,6 +8,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {Link} from '@remix-run/react';
 import {Heading, Text} from '~/components';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 export function Hero({
   byline,
@@ -31,7 +32,7 @@ export function Hero({
   top?: boolean;
 }) {
   return (
-    <Link to={`/collections/${handle}`}>
+    <Link to={usePrefixPathWithLocale(`/collections/${handle}`)}>
       <section
         className={clsx(
           'relative justify-end flex flex-col w-full',

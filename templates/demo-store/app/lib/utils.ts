@@ -11,6 +11,7 @@ import type {
 // @ts-expect-error types not available
 import typographicBase from 'typographic-base';
 import {countries} from '~/data/countries';
+import {useSelectedLocale} from '~/hooks/useSelectedLocale';
 import {Locale} from './type';
 
 export interface EnhancedMenuItem extends MenuItem {
@@ -270,33 +271,12 @@ export function getLocaleFromRequest(request: Request): Locale & {
       };
 }
 
-export function getLocalizationFromLang(lang?: string): {
-  language: LanguageCode;
-  country: CountryCode;
-} {
-  if (lang && lang.includes('-')) {
-    const [language, country] = lang.split('-');
-
-    return {
-      language: language?.toUpperCase() as LanguageCode,
-      country: (country?.toUpperCase() || 'US') as CountryCode,
-    };
-  }
-  return {
-    language: 'EN' as LanguageCode,
-    country: 'US' as CountryCode,
-  };
-}
-
 export function usePrefixPathWithLocale(path: string) {
-  const {lang} = useParams();
-  const {language, country} = getLocalizationFromLang(lang);
+  const selectedLocale = useSelectedLocale();
 
-  if (language !== 'EN' && country !== 'US') {
-    return `/${language}-${country}${path.startsWith('/') ? path : '/' + path}`;
-  }
-
-  return path;
+  return selectedLocale
+    ? `${selectedLocale.pathPrefix}${path.startsWith('/') ? path : '/' + path}`
+    : path;
 }
 
 export function useIsHomePath() {

@@ -61,11 +61,10 @@ export const loader: LoaderFunction = async function loader({
 }) {
   const session = await getSession(request, context);
   const cartId = await session.get('cartId');
-  const selectedLocale = getLocaleFromRequest(request);
 
   return defer({
     layout: await getLayoutData(context),
-    selectedLocale,
+    selectedLocale: await getLocaleFromRequest(request),
     countries,
     cart: cartId ? getCart(context, {cartId}) : undefined,
   });
