@@ -1,4 +1,4 @@
-#!/usr/bin/env node --experimental-import-meta-resolve
+#!/usr/bin/env -S node --experimental-import-meta-resolve
 
 /**
  * This scripts patches Shopify CLI to add a Node experimental flag required by MiniOxygen
