@@ -1,17 +1,17 @@
 # LinesAdd
 
-The `LinesAdd` cart resource is a full-stack component that provides a set of utilities to facilitate adding line(s) to the cart. It also provides a set of hooks to help you handle optimistic and pending UI.
+The `LinesAdd` cart resource is a full-stack component that provides a set of utilities to add line(s) to the cart. It also provides a set of hooks to help you handle optimistic and pending UI.
 
 ## `LinesAddForm`
 
 A Remix `fetcher.Form` that adds a set of line(s) to the cart. This form mutates the cart via the [cartLinesAdd](https://shopify.dev/api/storefront/2022-10/mutations/cartLinesAdd) mutation and provides
 `error`, `state` and `event` instrumentation for analytics.
 
-| Prop         | Type                    | Description                                         |
-| ------------ | ----------------------- | --------------------------------------------------- | --------------------------- | ------------------------------------------------------------------------------ |
-| `lines`      | `{quantity, variant}[]` | `lines items to add to the cart`                    |
-| `onSuccess?` | `(event) => void`       | `A callback that runs after every successful event` |
-| `children`   | `({ state: 'idle'       | 'submitting'                                        | 'loading'; error: string})` | `A render prop that provides the state and errors for the current submission.` |
+| Prop         | Type                                                             | Description                                                                    |
+| ------------ | ---------------------------------------------------------------- | ------------------------------------------------------------------------------ |
+| `lines`      | `{quantity, variant}[]`                                          | `lines items to add to the cart`                                               |
+| `onSuccess?` | `(event) => void`                                                | `A callback that runs after every successful event`                            |
+| `children`   | `({ state: 'idle' or 'submitting' or 'loading'; error: string})` | `A render prop that provides the state and errors for the current submission.` |
 
 Basic use:
 
@@ -47,7 +47,6 @@ function AddToCartButton({selectedVariant, quantity}) {
       ]}
       onSuccess={(event) => {
         navigator.sendBeacon('/events', JSON.stringify(event))
-        toggleNotification()
       }}
     >
       {(state, error) => (
@@ -83,15 +82,38 @@ const {linesAdd, linesAdding, linesAddingFetcher} = useLinesAdd(onSuccess);
 | :----------- | :---------------- | :-------------------------------------------------- |
 | `onSuccess?` | `(event) => void` | `A callback that runs after every successful event` |
 
-Example use
+Example use: reacting to add to cart event
 
 ```jsx
-// A hook that adds a free gift variant to the cart, if there are 3 items in the cart
+// Toggle a cart drawer when adding to cart
+function Layout() {
+  const {linesAdding} = useLinesAdd();
+  const [drawer, setDrawer] = useState(false);
+
+  useEffect(() => {
+    if (drawer || !linesAdding) return;
+    setDrawer(true);
+  }, [linesAdding, drawer, setDrawer]);
+
+  return (
+    <div>
+      <Header />
+      <CartDrawer className={drawer ? '' : 'hidden'} setDrawer={setDrawer} />
+    </div>
+  );
+}
+```
+
+Example use: programmatic add to cart
+
+```jsx
+// A hook that programmatically adds a free gift variant to the cart,
+// if there are 3 or more items in the cart
 function useAddFreeGift({cart}) {
   const {linesAdd, linesAdding} = useLinesAdd();
   const giftInCart = cart.lines...
   const freeGiftProductVariant = ...
-  const shouldAddGift = !linesAdding && !giftInCart && cart.lines.edges.length !== 3;
+  const shouldAddGift = !linesAdding && !giftInCart && cart.lines.edges.length >= 3;
 
   useEffect(() => {
     if (!shouldAddGift) return;
