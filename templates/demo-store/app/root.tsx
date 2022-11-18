@@ -103,7 +103,7 @@ export function CatchBoundary() {
         <Links />
       </head>
       <body>
-        <Layout layout={root.data?.layout}>
+        <Layout layout={root.data.layout}>
           {isNotFound ? (
             <NotFound type={caught.data?.pageType} />
           ) : (
