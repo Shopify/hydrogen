@@ -4,7 +4,6 @@ import type {
   ProductConnection,
   Shop,
   Order,
-  Localization,
   CustomerAccessTokenCreatePayload,
   Customer,
   CustomerUpdateInput,
