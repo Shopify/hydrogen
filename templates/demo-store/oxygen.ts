@@ -1,4 +1,4 @@
-import {createRequestHandler} from '@shopify/hydrogen-remix';
+import {createRequestHandler, proxyLiquidRoute} from '@shopify/hydrogen-remix';
 // The build remix app provided by remix build
 import * as remixBuild from 'remix-build';
 import {getLocaleFromRequest} from '~/lib/utils';
@@ -11,6 +11,12 @@ const requestHandler = createRequestHandler({
   mode: process.env.NODE_ENV,
   shouldProxyAsset: () => false,
 });
+
+const storefrontConfig = {
+  publicStorefrontToken: '3b580e70970c4528da70c98e097c2fa0',
+  storeDomain: 'hydrogen-preview',
+  storefrontApiVersion: '2023-01',
+};
 
 export default {
   async fetch(
@@ -25,6 +31,14 @@ export default {
     }
 
     const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
+
+    if (new URL(request.url).pathname === '/proxy') {
+      return await proxyLiquidRoute(
+        request,
+        storefrontConfig.storeDomain,
+        '/pages/about',
+      );
+    }
 
     try {
       return await requestHandler(
