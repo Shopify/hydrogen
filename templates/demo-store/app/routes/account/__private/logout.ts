@@ -27,5 +27,5 @@ export async function loader({params}: LoaderArgs) {
 }
 
 export const action: ActionFunction = async ({context, params}) => {
-  return logout(context, params);
+  return await logout(context, params);
 };

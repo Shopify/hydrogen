@@ -959,7 +959,7 @@ export async function getCustomer(
    * If the customer failed to load, we assume their access token is invalid.
    */
   if (!data || !data.customer) {
-    throw logout(context, params);
+    throw await logout(context, params);
   }
 
   return data.customer;
