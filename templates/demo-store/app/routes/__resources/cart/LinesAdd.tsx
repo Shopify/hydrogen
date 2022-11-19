@@ -5,6 +5,7 @@ import {
   useFetcher,
   useFetchers,
   useLocation,
+  useMatches,
 } from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
@@ -27,6 +28,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import type {PartialDeep} from 'type-fest';
 import React from 'react';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 interface LinesAddEventPayload {
   linesAdded: CartLineInput[];
@@ -460,6 +462,7 @@ const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
     const error = fetcher?.data?.error;
     const event = fetcher?.data?.event;
     const eventId = fetcher?.data?.event?.id;
+    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
     useEffect(() => {
       if (!eventId) return;
@@ -473,7 +476,12 @@ const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
     }
 
     return (
-      <fetcher.Form id={formId} method="post" action={ACTION_PATH} ref={ref}>
+      <fetcher.Form
+        id={formId}
+        method="post"
+        action={localizedActionPath}
+        ref={ref}
+      >
         <input
           type="hidden"
           name="lines"
@@ -501,9 +509,11 @@ const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
  * @returns fetcher
  */
 function useLinesAddingFetcher() {
+  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
+
   const fetchers = useFetchers();
   return fetchers.find(
-    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
+    (fetcher) => fetcher?.submission?.action === localizedActionPath,
   );
 }
 
@@ -517,6 +527,7 @@ function useLinesAdd(
 ): UseLinesAdd {
   const linesAddingFetcher = useLinesAddingFetcher();
   const fetcher = useFetcher();
+  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
   let linesAdding = null;
 
@@ -538,11 +549,11 @@ function useLinesAdd(
       form.set('lines', JSON.stringify(lines));
       fetcher.submit(form, {
         method: 'post',
-        action: ACTION_PATH,
+        action: localizedActionPath,
         replace: false,
       });
     },
-    [fetcher],
+    [fetcher, localizedActionPath],
   );
 
   useEffect(() => {
