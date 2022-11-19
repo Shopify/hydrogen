@@ -82,7 +82,7 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 
   return (
     <>
-      <Suspense fallback={'Loading cart...'}>
+      <Suspense fallback={null}>
         <Await resolve={root.data.cart}>
           {(cart) => (
             <CartDrawer cart={cart} isOpen={isCartOpen} onClose={closeCart} />
