@@ -378,7 +378,7 @@ function CartCount({
           <Badge
             dark={isHome}
             openCart={openCart}
-            count={cart.totalQuantity || 0}
+            count={cart?.totalQuantity || 0}
           />
         )}
       </Await>
