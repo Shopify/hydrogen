@@ -175,7 +175,7 @@ function diffLines({removingLineIds, prevLines, currentLines}: DiffLinesProps) {
   Mutation -----------------------------------------------------------------------------------------
 */
 const REMOVE_LINE_ITEMS_MUTATION = `#graphql
-  mutation ($cartId: ID!, $lineIds: [ID!]!, $country: CountryCode = ZZ,, $language: LanguageCode)
+  mutation ($cartId: ID!, $lineIds: [ID!]!, $language: LanguageCode, $country: CountryCode)
   @inContext(country: $country, language: $language) {
     cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
       cart {
