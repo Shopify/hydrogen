@@ -3,11 +3,10 @@ import {Listbox} from '@headlessui/react';
 import {IconCaret, IconCheck} from './Icon';
 import {useRef} from 'react';
 import {getLocalizationFromLang} from '~/lib/utils';
-import {useCountries} from '~/hooks/useCountries';
 import {Heading} from '~/components';
+import {Country} from '@shopify/hydrogen-react/storefront-api-types';
 
-export function CountrySelector() {
-  const countries = useCountries();
+export function CountrySelector({countries}: {countries: Country[]}) {
   const closeRef = useRef<HTMLButtonElement>(null);
   const {pathname, search} = useLocation();
   const {lang} = useParams();
