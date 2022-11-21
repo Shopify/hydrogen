@@ -37,31 +37,32 @@ const LOADER_PATH = '/api/products';
  * @param sortKey
  * @returns Product[]
  */
-async function loader({request, params, context: {storefront}}: LoaderArgs) {
+export function loader({request, params, context: {storefront}}: LoaderArgs) {
   const {language, country} = getLocalizationFromLang(params.lang);
   const url = new URL(request.url);
+  const searchParams = new URLSearchParams(decodeURIComponent(url.search));
 
-  const searchParams = new URLSearchParams(url.searchParams);
   const sortKey = searchParams.get('sortKey') ?? 'BEST_SELLING';
   const query = searchParams.get('query') ?? '';
 
-  let reverse;
+  let reverse = false;
   try {
     const _reverse = searchParams.get('reverse');
     if (_reverse === 'true') {
       reverse = true;
     }
   } catch (_) {
-    reverse = false;
+    // noop
   }
-  let count;
+
+  let count = 4;
   try {
     const _count = searchParams.get('count');
     if (typeof _count === 'string') {
       count = parseInt(_count);
     }
   } catch (_) {
-    count = 4;
+    // noop
   }
 
   const {products} = await storefront.query<{
@@ -135,44 +136,7 @@ const PRODUCTS_QUERY = `#graphql
   }
 `;
 
-// @todo: optional could remove
-function Products({
-  children,
-  count = 4,
-  query = '',
-  reverse = false,
-  sortKey = 'BEST_SELLING',
-}: ProductsCompProps) {
-  const {products, state} = useProducts({
-    sortKey,
-    count,
-    query,
-    reverse,
-  });
-
-  return children({products, count, state});
-}
-
-// @todo: optional could remove
-function useProducts(props: Omit<ProductsCompProps, 'children'>) {
-  const queryString = Object.entries(props)
-    .map(([key, val]) => `${key}=${val}`)
-    .join('&');
-
-  const {load, data, state} = useFetcher();
-
-  useEffect(() => {
-    load(`${LOADER_PATH}?${encodeURIComponent(queryString)}`);
-  }, [load, queryString]);
-
-  const products = (data?.products ?? []) as Product[];
-
-  return {products, state};
-}
-
 // no-op
 export default function ProductsApiRoute() {
   return null;
 }
-
-export {loader, Products, useProducts};

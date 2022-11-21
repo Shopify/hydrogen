@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import {useEffect, useId} from 'react';
+import {useEffect, useId, useMemo} from 'react';
 import {useFetcher} from '@remix-run/react';
 import {Heading, ProductCard, Skeleton, Text} from '~/components';
 import type {
@@ -17,6 +17,15 @@ interface FeaturedProductsProps {
   sortKey: ProductSortKeys;
 }
 
+/**
+ * Display a grid of products and a heading based on some options.
+ * This components uses the storefront API products query
+ * @see: https://shopify.dev/api/storefront/2023-01/queries/products
+ * @param count number of products to display
+ * @param query a filtering query @see: https://shopify.dev/api/storefront/2023-01/queries/products#argument-products-query
+ * @param reverse wether to reverse the product results
+ * @param sortKey Sort the underlying list by the given key.
+ */
 export function FeaturedProducts({
   count = 4,
   heading = 'Shop Best Sellers',
@@ -27,15 +36,18 @@ export function FeaturedProducts({
   sortKey = 'BEST_SELLING',
 }: FeaturedProductsProps) {
   const {load, data} = useFetcher();
+  const queryString = useMemo(
+    () =>
+      Object.entries({count, sortKey, query, reverse})
+        .map(([key, val]) => (val ? `${key}=${val}` : null))
+        .filter(Boolean)
+        .join('&'),
+    [count, sortKey, query, reverse],
+  );
 
   useEffect(() => {
-    const queryString = Object.entries({count, sortKey, query, reverse})
-      .map(([key, val]) => `${key}=${val}`)
-      .join('&');
-
-    // @todo add reverse and query params
     load(`/api/products?${encodeURIComponent(queryString)}`);
-  }, [load, count, sortKey, query, reverse]);
+  }, [load, queryString]);
 
   return (
     <>
@@ -58,6 +70,9 @@ export function FeaturedProducts({
   );
 }
 
+/**
+ * Render the FeaturedProducts content based on the fetcher's state. "loading", "empty" or "products"
+ */
 function FeatureProductsContent({
   count = 4,
   onClick,
