@@ -5,13 +5,10 @@ import {
 import {type ActionFunction, redirect} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {updateCartBuyerIdentity} from '~/data';
-import {getSession} from '~/lib/session.server';
 
 export const action: ActionFunction = async ({request, context}) => {
-  const [session, formData] = await Promise.all([
-    getSession(request, context),
-    new URLSearchParams(await request.text()),
-  ]);
+  const {session} = context;
+  const formData = await request.formData();
 
   const languageCode = formData.get('language') as LanguageCode;
   invariant(languageCode, 'Missing language');
