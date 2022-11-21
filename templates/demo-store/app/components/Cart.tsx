@@ -401,9 +401,8 @@ export function CartEmpty({
       </section>
       <section className="grid gap-8 pt-4">
         <FeaturedProducts
-          heading="Shop Best Sellers"
           count={4}
-          reverse
+          heading="Shop Best Sellers"
           layout={layout}
           onClose={onClose}
           sortKey="BEST_SELLING"
