@@ -1,12 +1,11 @@
 import {type LoaderArgs, json} from '@shopify/hydrogen-remix';
-import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
+import {type FetcherWithComponents} from '@remix-run/react';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import {
   Product,
   ProductConnection,
   ProductSortKeys,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {useEffect} from 'react';
 import invariant from 'tiny-invariant';
 import {getLocalizationFromLang} from '~/lib/utils';
 
@@ -37,7 +36,11 @@ const LOADER_PATH = '/api/products';
  * @param sortKey
  * @returns Product[]
  */
-export function loader({request, params, context: {storefront}}: LoaderArgs) {
+export async function loader({
+  request,
+  params,
+  context: {storefront},
+}: LoaderArgs) {
   const {language, country} = getLocalizationFromLang(params.lang);
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(decodeURIComponent(url.search));
