@@ -1,13 +1,7 @@
 import {type LoaderArgs, json} from '@shopify/hydrogen-remix';
-import {type FetcherWithComponents} from '@remix-run/react';
 import {flattenConnection} from '@shopify/hydrogen-react';
-import {
-  Product,
-  ProductConnection,
-  ProductSortKeys,
-} from '@shopify/hydrogen-react/storefront-api-types';
+import {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {getLocalizationFromLang} from '~/lib/utils';
 
 // adjust if changing the routes pathname
 const LOADER_PATH = '/api/products';
@@ -21,12 +15,7 @@ const LOADER_PATH = '/api/products';
  * @param sortKey
  * @returns Product[]
  */
-export async function loader({
-  request,
-  params,
-  context: {storefront},
-}: LoaderArgs) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+export async function loader({request, context: {storefront}}: LoaderArgs) {
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
 
@@ -57,9 +46,7 @@ export async function loader({
     products: ProductConnection;
   }>(PRODUCTS_QUERY, {
     variables: {
-      country,
       count,
-      language,
       query,
       reverse,
       sortKey,
