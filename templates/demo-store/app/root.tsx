@@ -72,7 +72,7 @@ export default function App() {
   const data = useLoaderData<typeof loader>();
 
   return (
-    <html lang="en">
+    <html lang={data.selectedLocale.language}>
       <head>
         <Seo />
         <Meta />
@@ -80,7 +80,7 @@ export default function App() {
       </head>
       <body>
         <Layout layout={data.layout as LayoutData}>
-          <Outlet />
+          <Outlet key={data.selectedLocale.country} />
         </Layout>
         <Debugger />
         <ScrollRestoration />
