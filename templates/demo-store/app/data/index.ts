@@ -157,11 +157,11 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
           width
           height
         }
-        price {
+        price: priceV2 {
           amount
           currencyCode
         }
-        compareAtPrice {
+        compareAtPrice: compareAtPriceV2 {
           amount
           currencyCode
         }
@@ -193,11 +193,11 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
       width
       height
     }
-    price {
+    price: priceV2 {
       amount
       currencyCode
     }
-    compareAtPrice {
+    compareAtPrice: compareAtPriceV2 {
       amount
       currencyCode
     }
