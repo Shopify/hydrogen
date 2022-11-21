@@ -157,11 +157,11 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
           width
           height
         }
-        price {
+        price: priceV2 {
           amount
           currencyCode
         }
-        compareAtPrice {
+        compareAtPrice: compareAtPriceV2 {
           amount
           currencyCode
         }
@@ -193,11 +193,11 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
       width
       height
     }
-    price {
+    price: priceV2 {
       amount
       currencyCode
     }
-    compareAtPrice {
+    compareAtPrice: compareAtPriceV2 {
       amount
       currencyCode
     }
@@ -388,42 +388,6 @@ export async function updateCartBuyerIdentity(
   invariant(data, 'No data returned from Shopify API');
 
   return data.cartBuyerIdentityUpdate.cart;
-}
-
-const TOP_PRODUCTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
-  query topProducts(
-    $count: Int
-    $country: CountryCode
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
-    products(first: $count, sortKey: BEST_SELLING) {
-      nodes {
-        ...ProductCard
-      }
-    }
-  }
-`;
-
-export async function getTopProducts(
-  {storefront}: HydrogenContext,
-  {
-    count = 4,
-  }: {
-    count?: number;
-  },
-) {
-  const data = await storefront.query<{
-    products: ProductConnection;
-  }>(TOP_PRODUCTS_QUERY, {
-    variables: {
-      count,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.products;
 }
 
 // shop primary domain url for /admin
