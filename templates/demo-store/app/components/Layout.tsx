@@ -16,18 +16,17 @@ import {
   IconCaret,
   Section,
   CountrySelector,
-  CartDetails,
-  CartEmpty,
+  Cart,
+  CartLoading,
   Link,
 } from '~/components';
-import {useFetcher, useParams, Form, Await, useMatches} from '@remix-run/react';
+import {useParams, Form, Await, useMatches} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useLinesAdd} from '~/routes/__resources/cart/LinesAdd';
-import type {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 
 export function Layout({
   children,
@@ -59,7 +58,6 @@ export function Layout({
 
 function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
-  const [root] = useMatches();
   const {linesAdding} = useLinesAdd();
 
   const {
@@ -82,13 +80,7 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 
   return (
     <>
-      <Suspense fallback={null}>
-        <Await resolve={root.data.cart}>
-          {(cart) => (
-            <CartDrawer cart={cart} isOpen={isCartOpen} onClose={closeCart} />
-          )}
-        </Await>
-      </Suspense>
+      <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
       {menu && (
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
       )}
@@ -108,49 +100,17 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   );
 }
 
-function CartDrawer({
-  cart,
-  isOpen,
-  onClose,
-}: {
-  cart: Cart;
-  isOpen: boolean;
-  onClose: () => void;
-}) {
-  /**
-   * Whenever a component that uses a fetcher is _unmounted_, that fetcher is removed
-   * from the internal Remix cache. By defining the fetcher outside of the component,
-   * we persist it between mounting and unmounting.
-   */
-  const topProductsFetcher = useFetcher();
-
-  /**
-   * We load the top products, which are only shown as a fallback when the cart as empty.
-   * We need to do this here, otherwise we'll incur a network request every time the
-   * drawer is opened.
-   */
-  useEffect(() => {
-    isOpen && topProductsFetcher.load('/cart');
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isOpen]);
+function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
+  const [root] = useMatches();
 
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
-        {cart ? (
-          <CartDetails
-            fetcher={topProductsFetcher}
-            layout="drawer"
-            onClose={onClose}
-            cart={cart}
-          />
-        ) : (
-          <CartEmpty
-            fetcher={topProductsFetcher}
-            onClose={onClose}
-            layout="drawer"
-          />
-        )}
+        <Suspense fallback={<CartLoading />}>
+          <Await resolve={root.data.cart}>
+            {(cart) => <Cart layout="drawer" onClose={onClose} cart={cart} />}
+          </Await>
+        </Suspense>
       </div>
     </Drawer>
   );

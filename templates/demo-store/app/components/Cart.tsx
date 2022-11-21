@@ -1,145 +1,173 @@
 import clsx from 'clsx';
 import {useRef} from 'react';
 import {useScroll} from 'react-use';
-import {flattenConnection, Money} from '@shopify/hydrogen-react';
+import {flattenConnection, Image, Money} from '@shopify/hydrogen-react';
 import {
   type FetcherWithComponents,
   useFetcher,
   useLocation,
 } from '@remix-run/react';
-import {
-  Button,
-  Heading,
-  IconRemove,
-  ProductCard,
-  Skeleton,
-  Text,
-  Link,
-} from '~/components';
+import {Button, Heading, IconRemove, Text, Link} from '~/components';
 import type {
   Cart,
   CartCost,
   CartLine,
-  Product,
-  ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useOptimisticLinesAdd} from '~/routes/__resources/cart/LinesAdd';
 import {
   LinesRemoveForm,
+  useLinesRemove,
   useOptimisticLineRemove,
-  useOptimisticLinesRemove,
 } from '~/routes/__resources/cart/LinesRemove';
+import {FeaturedProducts} from '~/components/FeaturedProducts';
 
 enum Action {
   SetQuantity = 'set-quantity',
-  RemoveLineItem = 'remove-line-item',
+}
+
+type Layouts = 'page' | 'drawer';
+
+export function Cart({
+  layout,
+  onClose,
+  cart,
+}: {
+  layout: Layouts;
+  onClose?: () => void;
+  cart: Cart | null;
+}) {
+  const linesCount = cart?.lines?.edges?.length || 0;
+  const {linesAdding} = useOptimisticLinesAdd();
+  const {linesRemoving} = useLinesRemove();
+  const addingFirstLine = Boolean(linesCount === 0 && linesAdding.length);
+  const removingLastLine = Boolean(linesCount === 1 && linesRemoving.length);
+
+  // a lines condition based on optimistic lines
+  const hasLines = Boolean(
+    (linesCount || addingFirstLine) && !removingLastLine,
+  );
+
+  return (
+    <>
+      <CartEmpty hidden={hasLines} onClose={onClose} layout={layout} />
+      <CartDetails cart={cart} layout={layout} />
+    </>
+  );
 }
 
 export function CartDetails({
   layout,
-  onClose,
   cart,
-  fetcher,
 }: {
-  layout: 'drawer' | 'page';
-  onClose?: () => void;
-  cart: Cart;
-  fetcher: FetcherWithComponents<any>;
+  layout: Layouts;
+  cart: Cart | null;
 }) {
-  const lines = flattenConnection(cart?.lines ?? {});
-  const scrollRef = useRef(null);
-  const {y} = useScroll(scrollRef);
-  const lineItemFetcher = useFetcher();
-  const {optimisticLinesAdd} = useOptimisticLinesAdd(lines);
-  const {optimisticLastLineRemove} = useOptimisticLinesRemove(lines);
-
-  const cartIsEmpty = Boolean(
-    (lines.length === 0 && !optimisticLinesAdd.length) ||
-      optimisticLastLineRemove,
-  );
-
-  if (cartIsEmpty) {
-    return <CartEmpty fetcher={fetcher} onClose={onClose} layout={layout} />;
-  }
+  // @todo: get optimistic cart cost
+  const isZeroCost = !cart || cart?.cost?.subtotalAmount?.amount === '0.0';
 
   const container = {
     drawer: 'grid grid-cols-1 h-screen-no-nav grid-rows-[1fr_auto]',
-    page: 'pb-12 grid md:grid-cols-2 md:items-start gap-8 md:gap-8 lg:gap-12',
+    page: 'w-full pb-12 grid md:grid-cols-2 md:items-start gap-8 md:gap-8 lg:gap-12',
   };
 
-  const content = {
-    drawer: 'px-6 pb-6 sm-max:pt-2 overflow-auto transition md:px-12',
-    page: 'flex-grow md:translate-y-4',
-  };
+  return (
+    <div className={container[layout]}>
+      <CartLines lines={cart?.lines} layout={layout} />
+      {!isZeroCost && (
+        <CartSummary cost={cart.cost} layout={layout}>
+          <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
+        </CartSummary>
+      )}
+    </div>
+  );
+}
 
+function CartLines({
+  layout = 'drawer',
+  lines: cartLines,
+}: {
+  layout: Layouts;
+  lines: Cart['lines'] | undefined;
+}) {
+  const currentLines = cartLines ? flattenConnection(cartLines) : [];
+  const {optimisticLinesAdd} = useOptimisticLinesAdd(currentLines);
+
+  const scrollRef = useRef(null);
+  const {y} = useScroll(scrollRef);
+  const lineItemFetcher = useFetcher();
+
+  const className = clsx([
+    y > 0 ? 'border-t' : '',
+    layout === 'page'
+      ? 'flex-grow md:translate-y-4'
+      : 'px-6 pb-6 sm-max:pt-2 overflow-auto transition md:px-12',
+  ]);
+
+  return (
+    <section
+      ref={scrollRef}
+      aria-labelledby="cart-contents"
+      className={className}
+    >
+      <ul className="grid gap-6 md:gap-10">
+        {optimisticLinesAdd.map((line) => {
+          return (
+            <CartLineItem
+              key={line.id}
+              line={line as CartLine}
+              fetcher={lineItemFetcher}
+              optimistic
+            />
+          );
+        })}
+        {currentLines.map((line) => {
+          return (
+            <CartLineItem
+              key={line.id}
+              line={line as CartLine}
+              fetcher={lineItemFetcher}
+            />
+          );
+        })}
+      </ul>
+    </section>
+  );
+}
+
+function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
+  if (!checkoutUrl) return null;
+
+  return (
+    <div className="flex flex-col">
+      <a href={checkoutUrl} target="_self">
+        <Button as="span" width="full">
+          Continue to Checkout
+        </Button>
+      </a>
+      {/* @todo: <CartShopPayButton cart={cart} /> */}
+    </div>
+  );
+}
+
+function CartSummary({
+  cost,
+  layout,
+  children = null,
+}: {
+  children?: React.ReactNode;
+  cost: CartCost;
+  layout: Layouts;
+}) {
   const summary = {
     drawer: 'grid gap-6 p-6 border-t md:px-12',
     page: 'sticky top-nav grid gap-6 p-4 md:px-6 md:translate-y-4 bg-primary/5 rounded w-full',
   };
 
   return (
-    <div className={container[layout]}>
-      <section
-        ref={scrollRef}
-        aria-labelledby="cart-contents"
-        className={`${content[layout]} ${y > 0 ? 'border-t' : ''}`}
-      >
-        <ul className="grid gap-6 md:gap-10">
-          {/* Optimistic cart lines will be replaced with actual lines when ready */}
-          {optimisticLinesAdd?.length
-            ? optimisticLinesAdd.map((line) => (
-                <CartLineItem
-                  key={line.merchandise.id}
-                  line={line as CartLine}
-                  fetcher={lineItemFetcher}
-                  optimistic
-                />
-              ))
-            : null}
-          {/* car lines already added */}
-          {lines.map((line) => {
-            return (
-              <CartLineItem
-                key={line.id}
-                line={line as CartLine}
-                fetcher={lineItemFetcher}
-              />
-            );
-          })}
-        </ul>
-      </section>
-      <section aria-labelledby="summary-heading" className={summary[layout]}>
-        <h2 id="summary-heading" className="sr-only">
-          Order summary
-        </h2>
-        <OrderSummary cost={cart.cost} />
-        <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
-      </section>
-    </div>
-  );
-}
-
-function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
-  return (
-    <>
-      <div className="grid gap-4">
-        {checkoutUrl ? (
-          <a href={checkoutUrl} target="_self">
-            <Button as="span" width="full">
-              Continue to Checkout
-            </Button>
-          </a>
-        ) : null}
-        {/* TODO: Shop Pay */}
-        {/* <CartShopPayButton /> */}
-      </div>
-    </>
-  );
-}
-
-function OrderSummary({cost}: {cost: CartCost}) {
-  return (
-    <>
+    <section aria-labelledby="summary-heading" className={summary[layout]}>
+      <h2 id="summary-heading" className="sr-only">
+        Order summary
+      </h2>
       <dl className="grid">
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Subtotal</Text>
@@ -152,7 +180,8 @@ function OrderSummary({cost}: {cost: CartCost}) {
           </Text>
         </div>
       </dl>
-    </>
+      {children}
+    </section>
   );
 }
 
@@ -190,10 +219,10 @@ function CartLineItem({
     >
       <div className="flex-shrink">
         {merchandise.image && (
-          <img
-            width={112}
-            height={112}
-            src={merchandise.image.url}
+          <Image
+            width={220}
+            height={220}
+            data={merchandise.image}
             className="object-cover object-center w-24 h-24 border rounded md:w-28 md:h-28"
             alt={merchandise.title}
           />
@@ -298,7 +327,7 @@ function CartLineQuantityAdjust({
         >
           &#8722;
         </button>
-        <div className="px-2 text-center">{quantity}</div>
+        <div className="px-2 w-8 text-center">{quantity}</div>
         <button
           name="quantity"
           value={(quantity + 1).toFixed(0)}
@@ -309,101 +338,6 @@ function CartLineQuantityAdjust({
           &#43;
         </button>
       </fetcher.Form>
-    </>
-  );
-}
-
-export function CartEmpty({
-  onClose,
-  layout = 'drawer',
-  fetcher,
-}: {
-  onClose?: () => void;
-  layout?: 'page' | 'drawer';
-  fetcher: FetcherWithComponents<any>;
-}) {
-  const scrollRef = useRef(null);
-  const {y} = useScroll(scrollRef);
-
-  const container = {
-    drawer: `grid content-start gap-4 px-6 pb-8 transition overflow-y-scroll md:gap-12 md:px-12 h-screen-no-nav md:pb-12 ${
-      y > 0 ? 'border-t' : ''
-    }`,
-    page: `grid pb-12 w-full md:items-start gap-4 md:gap-8 lg:gap-12`,
-  };
-
-  const topProductsContainer = {
-    drawer: '',
-    page: 'md:grid-cols-4 sm:grid-col-4',
-  };
-
-  return (
-    <div ref={scrollRef} className={container[layout]}>
-      <section className="grid gap-6">
-        <Text format>
-          Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you
-          started!
-        </Text>
-        <div>
-          <Button onClick={onClose}>Continue shopping</Button>
-        </div>
-      </section>
-      <section className="grid gap-8 pt-4">
-        <Heading format size="copy">
-          Shop Best Sellers
-        </Heading>
-        <div
-          className={`grid grid-cols-2 gap-x-6 gap-y-8 ${topProductsContainer[layout]}`}
-        >
-          <TopProducts fetcher={fetcher} onClose={onClose} />
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function TopProducts({
-  fetcher,
-  onClose,
-}: {
-  fetcher: FetcherWithComponents<any>;
-  onClose?: () => void;
-}) {
-  if (!fetcher.data) {
-    return <Loading />;
-  }
-
-  const products = flattenConnection(
-    fetcher.data.topProducts as ProductConnection,
-  );
-
-  if (products.length === 0) {
-    return <Text format>No products found.</Text>;
-  }
-
-  return (
-    <>
-      {products.map((product) => (
-        <ProductCard
-          product={product as Product}
-          key={product.id}
-          onClick={onClose}
-        />
-      ))}
-    </>
-  );
-}
-
-function Loading() {
-  return (
-    <>
-      {[...new Array(4)].map((_, i) => (
-        // eslint-disable-next-line react/no-array-index-key
-        <div key={i} className="grid gap-2">
-          <Skeleton className="aspect-[3/4]" />
-          <Skeleton className="w-32 h-4" />
-        </div>
-      ))}
     </>
   );
 }
@@ -428,5 +362,53 @@ function CartLinePrice({
     return null;
   }
 
-  return <Money {...passthroughProps} data={moneyV2} />;
+  return <Money withoutTrailingZeros {...passthroughProps} data={moneyV2} />;
+}
+
+export function CartEmpty({
+  hidden = false,
+  layout = 'drawer',
+  onClose,
+}: {
+  hidden: boolean;
+  layout?: Layouts;
+  onClose?: () => void;
+}) {
+  const scrollRef = useRef(null);
+  const {y} = useScroll(scrollRef);
+
+  const container = {
+    drawer: clsx([
+      'content-start gap-4 px-6 pb-8 transition overflow-y-scroll md:gap-12 md:px-12 h-screen-no-nav md:pb-12',
+      y > 0 ? 'border-t' : '',
+    ]),
+    page: clsx([
+      hidden ? '' : 'grid',
+      `pb-12 w-full md:items-start gap-4 md:gap-8 lg:gap-12`,
+    ]),
+  };
+
+  return (
+    <div ref={scrollRef} className={container[layout]} hidden={hidden}>
+      <section className="grid gap-6">
+        <Text format>
+          Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you
+          started!
+        </Text>
+        <div>
+          <Button onClick={onClose}>Continue shopping</Button>
+        </div>
+      </section>
+      <section className="grid gap-8 pt-4">
+        <FeaturedProducts
+          heading="Shop Best Sellers"
+          count={4}
+          reverse
+          layout={layout}
+          onClose={onClose}
+          sortKey="BEST_SELLING"
+        />
+      </section>
+    </div>
+  );
 }
