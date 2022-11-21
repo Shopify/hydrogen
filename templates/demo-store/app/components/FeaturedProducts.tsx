@@ -46,7 +46,7 @@ export function FeaturedProducts({
   );
 
   useEffect(() => {
-    load(`/api/products?${encodeURIComponent(queryString)}`);
+    load(`/api/products?${queryString}`);
   }, [load, queryString]);
 
   return (

@@ -9,21 +9,6 @@ import {
 import invariant from 'tiny-invariant';
 import {getLocalizationFromLang} from '~/lib/utils';
 
-interface GetProductsProps {
-  products: Product[] | [];
-  state: FetcherWithComponents<any>['state'];
-  count: number | null;
-}
-
-interface ProductsCompProps {
-  children: (props: GetProductsProps) => JSX.Element;
-  count: number | null;
-  /* query by `available_for_sale`, `created_at`, `product_type`, `tag`, `tag_not`, `title`, `updated_at`, `variants.price`, `vendor`. @see: https://shopify.dev/api/usage/search-syntax#examples*/
-  query?: string;
-  reverse?: boolean;
-  sortKey?: ProductSortKeys;
-}
-
 // adjust if changing the routes pathname
 const LOADER_PATH = '/api/products';
 
@@ -43,7 +28,7 @@ export async function loader({
 }: LoaderArgs) {
   const {language, country} = getLocalizationFromLang(params.lang);
   const url = new URL(request.url);
-  const searchParams = new URLSearchParams(decodeURIComponent(url.search));
+  const searchParams = new URLSearchParams(url.search);
 
   const sortKey = searchParams.get('sortKey') ?? 'BEST_SELLING';
   const query = searchParams.get('query') ?? '';
