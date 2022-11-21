@@ -16,7 +16,6 @@ import {
 } from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {getLocalizationFromLang} from '~/lib/utils';
-import {getSession} from '~/lib/session.server';
 import {getCartLines} from './LinesAdd';
 
 interface LinesRemoveProps {
@@ -58,12 +57,9 @@ const ACTION_PATH = '/cart/LinesRemove';
  * action that handles the line(s) remove mutation
  */
 async function action({request, context, params}: ActionArgs) {
-  const [session, formData] = await Promise.all([
-    getSession(request, context),
-    request.formData(),
-  ]);
+  const formData = await request.formData();
 
-  const cartId = await session.get('cartId');
+  const cartId = await context.session.get('cartId');
   invariant(cartId, 'Missing cartId');
 
   invariant(formData.get('lineIds'), 'Missing lineIds');
