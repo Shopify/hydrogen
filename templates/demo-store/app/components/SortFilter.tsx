@@ -1,15 +1,14 @@
-import {SyntheticEvent, useMemo, Fragment, useState} from 'react';
+import {SyntheticEvent, useMemo, useState} from 'react';
 import {Menu} from '@headlessui/react';
 
+import {Heading, IconFilters, IconCaret, IconXMark, Text} from '~/components';
 import {
-  Heading,
-  Drawer as DrawerComponent,
-  IconFilters,
-  IconCaret,
-  IconXMark,
-  Text,
-} from '~/components';
-import {Link, useLocation, useSearchParams, Location} from '@remix-run/react';
+  Link,
+  useLocation,
+  useSearchParams,
+  Location,
+  useNavigate,
+} from '@remix-run/react';
 import {useDebounce} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 
@@ -48,11 +47,7 @@ export function SortFilter({filters, appliedFilters = [], children}: Props) {
               : 'opacity-0 min-w-[0px] w-[0px] pr-0'
           }`}
         >
-          <FiltersDrawer
-            filters={filters}
-            appliedFilters={appliedFilters}
-            onClose={() => setIsOpen(false)}
-          />
+          <FiltersDrawer filters={filters} appliedFilters={appliedFilters} />
         </div>
         <div>{children}</div>
       </div>
@@ -61,11 +56,9 @@ export function SortFilter({filters, appliedFilters = [], children}: Props) {
 }
 
 export function FiltersDrawer({
-  onClose,
   filters = [],
   appliedFilters = [],
 }: {
-  onClose: () => void;
   filters: Filter[];
   appliedFilters: AppliedFilter[];
 }) {
@@ -98,8 +91,6 @@ export function FiltersDrawer({
           <Link
             className="focus:underline hover:underline"
             prefetch="intent"
-            onClick={onClose}
-            reloadDocument
             to={to}
           >
             {option.label}
@@ -164,7 +155,6 @@ function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
               to={getAppliedFilterLink(filter, params, location)}
               className="rounded-full border px-2 flex gap"
               key={`${filter.label}-${filter.urlParam}`}
-              reloadDocument
             >
               <span className="flex-grow">{filter.label}</span>
               <span>
@@ -216,6 +206,7 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
     () => new URLSearchParams(location.search),
     [location.search],
   );
+  const navigate = useNavigate();
 
   const [minPrice, setMinPrice] = useState(min ? String(min) : '');
   const [maxPrice, setMaxPrice] = useState(max ? String(max) : '');
@@ -233,7 +224,7 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
       if (maxPrice !== '') price.max = maxPrice;
 
       const newParams = filterInputToParams('PRICE_RANGE', {price}, params);
-      window.location.href = `${location.pathname}?${newParams.toString()}`;
+      navigate(`${location.pathname}?${newParams.toString()}`);
     },
     PRICE_RANGE_FILTER_DEBOUNCE,
     [minPrice, maxPrice],
@@ -353,7 +344,6 @@ export default function SortMenu() {
                   activeItem?.key === item.key ? 'font-bold' : 'font-normal'
                 }`}
                 to={getSortLink(item.key, params, location)}
-                reloadDocument
               >
                 {item.label}
               </Link>
