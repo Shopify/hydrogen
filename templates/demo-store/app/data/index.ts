@@ -22,7 +22,7 @@ import type {
 import {type EnhancedMenu, parseMenu, assertApiErrors} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
-import type {HydrogenContext} from '@shopify/hydrogen-remix';
+import type {AppLoadContext, HydrogenContext} from '@shopify/hydrogen-remix';
 
 export interface LayoutData {
   headerMenu: EnhancedMenu;
@@ -911,7 +911,7 @@ export async function getCustomerOrder(
 }
 
 export async function getCustomer(
-  context: HydrogenContext,
+  context: AppLoadContext & HydrogenContext,
   {
     request,
     customerAccessToken,

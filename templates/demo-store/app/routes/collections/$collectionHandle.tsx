@@ -17,6 +17,17 @@ import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
 const PAGINATION_SIZE = 48;
 
+type VariantFilterParam = Record<string, string>;
+type PriceFiltersQueryParam = Record<'price', {max?: number; min?: number}>;
+type VariantOptionFiltersQueryParam = Record<
+  'variantOption',
+  {name: string; value: string}
+>;
+
+type FiltersQueryParams = Array<
+  VariantFilterParam | PriceFiltersQueryParam | VariantOptionFiltersQueryParam
+>;
+
 export async function loader({
   params,
   request,
@@ -28,16 +39,32 @@ export async function loader({
 
   const searchParams = new URL(request.url).searchParams;
   const knownFilters = ['cursor', 'productVendor', 'productType', 'available'];
+  const priceFilters = ['minPrice', 'maxPrice'];
 
-  const filters: Record<string, {name: string; value: string} | string>[] = [];
+  const filters: FiltersQueryParams = [];
 
   for (const [key, value] of searchParams.entries()) {
-    // TODO: Add price min/max to query
     if (knownFilters.includes(key)) {
       filters.push({[key]: value});
-    } else {
+    } else if (!priceFilters.includes(key)) {
       filters.push({variantOption: {name: key, value}});
     }
+  }
+
+  // Builds min and max price filter since we can't stack them separately into
+  // the filters array. See price filters limitations:
+  // https://shopify.dev/custom-storefronts/products-collections/filter-products#limitations
+  if (searchParams.has('minPrice') || searchParams.has('maxPrice')) {
+    const price: {min?: number; max?: number} = {};
+    if (searchParams.has('minPrice')) {
+      price.min = Number(searchParams.get('minPrice')) || 0;
+    }
+    if (searchParams.has('maxPrice')) {
+      price.max = Number(searchParams.get('maxPrice')) || 0;
+    }
+    filters.push({
+      price,
+    });
   }
 
   const {collection} = await storefront.query<{

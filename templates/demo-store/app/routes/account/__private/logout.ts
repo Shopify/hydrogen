@@ -4,11 +4,10 @@ import {
   redirect,
 } from '@shopify/hydrogen-remix';
 import {LoaderArgs} from '@remix-run/server-runtime';
-import {getSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
 
 export async function logout(request: Request, context: AppLoadContext) {
-  const session = await getSession(request, context);
+  const {session} = context;
   session.unset('customerAccessToken');
 
   const {pathPrefix} = getLocaleFromRequest(request);

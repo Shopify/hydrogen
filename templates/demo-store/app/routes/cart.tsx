@@ -6,7 +6,6 @@ import {
 } from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {getTopProducts, updateLineItem} from '~/data';
-import {getSession} from '~/lib/session.server';
 
 export async function loader({context}: LoaderArgs) {
   return defer(
@@ -24,17 +23,14 @@ export async function loader({context}: LoaderArgs) {
 export const action: ActionFunction = async ({request, context}) => {
   let cart;
 
-  const [session, formData] = await Promise.all([
-    getSession(request, context),
-    new URLSearchParams(await request.text()),
-  ]);
+  const formData = new URLSearchParams(await request.text());
 
   const redirectTo = formData.get('redirectTo');
   const intent = formData.get('intent');
   invariant(intent, 'Missing cart intent');
 
   // 1. Grab the cart ID from the session
-  const cartId = await session.get('cartId');
+  const cartId = await context.session.get('cartId');
 
   switch (intent) {
     case 'set-quantity': {

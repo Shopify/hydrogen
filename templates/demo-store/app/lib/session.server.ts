@@ -1,52 +1,57 @@
 import {
-  type AppLoadContext,
   createCookieSessionStorage,
   type SessionStorage,
+  type Session,
 } from '@shopify/hydrogen-remix';
 
-let sessionStorage: SessionStorage;
+/**
+ * This is a custom session implementation for your Hydrogen shop.
+ * Feel free to customize it to your needs, add helper methods, or
+ * swap out the cookie-based implementation with something else!
+ */
+export class HydrogenSession {
+  constructor(
+    private sessionStorage: SessionStorage,
+    private session: Session,
+  ) {}
 
-export async function getSession(
-  request: Request,
-  context: AppLoadContext & {env?: Record<string, string>},
-) {
-  if (!context.env?.ENCRYPTION_KEY) {
-    throw new Error('ENCRYPTION_KEY environment variable is not set');
+  static async init(request: Request, secrets: string[]) {
+    const storage = createCookieSessionStorage({
+      cookie: {
+        name: 'session',
+        httpOnly: true,
+        path: '/',
+        sameSite: 'lax',
+        secrets,
+      },
+    });
+
+    const session = await storage.getSession(request.headers.get('Cookie'));
+
+    return new this(storage, session);
   }
 
-  sessionStorage ??= createCookieSessionStorage({
-    cookie: {
-      name: 'session',
-      httpOnly: true,
-      path: '/',
-      sameSite: 'lax',
-      secrets: [context.env.ENCRYPTION_KEY],
-    },
-  });
+  get(key: string) {
+    return this.session.get(key);
+  }
 
-  const session = await sessionStorage.getSession(
-    request.headers.get('Cookie'),
-  );
+  destroy() {
+    return this.sessionStorage.destroySession(this.session);
+  }
 
-  return {
-    async get(key: string): Promise<any> {
-      return await session.get(key);
-    },
+  flash(key: string, value: any) {
+    this.session.flash(key, value);
+  }
 
-    set(key: string, value: any): void {
-      session.set(key, value);
-    },
+  unset(key: string) {
+    this.session.unset(key);
+  }
 
-    flash(key: string, value: any): void {
-      session.flash(key, value);
-    },
+  set(key: string, value: any) {
+    this.session.set(key, value);
+  }
 
-    unset(key: string): void {
-      session.unset(key);
-    },
-
-    async commit(): Promise<string> {
-      return await sessionStorage.commitSession(session);
-    },
-  };
+  commit() {
+    return this.sessionStorage.commitSession(this.session);
+  }
 }

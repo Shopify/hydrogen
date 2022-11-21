@@ -26,6 +26,7 @@ export function createRequestHandler(
       ...options
     }: Omit<Parameters<typeof handleRequest>[1], 'loadContext'> &
       HydrogenHandlerParams,
+    customContext?: Record<string, any>,
   ) => {
     try {
       if (!cache && !!globalThis.caches) {
@@ -42,6 +43,7 @@ export function createRequestHandler(
           }),
           ...context,
           cache,
+          ...customContext,
         },
       });
 

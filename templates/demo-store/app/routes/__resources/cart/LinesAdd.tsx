@@ -9,7 +9,6 @@ import {
 } from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
-import {getSession} from '~/lib/session.server';
 import type {SerializeFrom} from '@remix-run/server-runtime';
 import {
   type ActionArgs,
@@ -97,12 +96,10 @@ const ACTION_PATH = '/cart/LinesAdd';
  * action that handles cart create (with lines) and lines add
  */
 async function action({request, context}: ActionArgs) {
+  const {session} = context;
   const headers = new Headers();
 
-  const [session, formData] = await Promise.all([
-    getSession(request, context),
-    request.formData(),
-  ]);
+  const formData = await request.formData();
 
   const rawLines = formData.get('lines')
     ? (JSON.parse(String(formData.get('lines'))) as LinesAddLine[])

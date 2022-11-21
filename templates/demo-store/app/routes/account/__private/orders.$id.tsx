@@ -16,7 +16,6 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {Link, Heading, PageHeader, Text} from '~/components';
 import {getCustomerOrder} from '~/data';
-import {getSession} from '~/lib/session.server';
 
 export const meta: MetaFunction = ({data}) => ({
   title: `Order ${data?.order?.name}`,
@@ -32,8 +31,7 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   invariant(orderToken, 'Order token is required');
 
-  const session = await getSession(request, context);
-  const customerAccessToken = await session.get('customerAccessToken');
+  const customerAccessToken = await context.session.get('customerAccessToken');
 
   if (!customerAccessToken) {
     return redirect(
