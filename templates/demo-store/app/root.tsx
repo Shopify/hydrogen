@@ -20,7 +20,6 @@ import {Layout} from '~/components';
 import {getLayoutData, getCountries} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
-import {getSession} from './lib/session.server';
 import {Seo, Debugger} from './lib/seo';
 
 import styles from './styles/app.css';
@@ -59,9 +58,8 @@ export const meta: MetaFunction = () => ({
   viewport: 'width=device-width,initial-scale=1',
 });
 
-export async function loader({request, context, params}: LoaderArgs) {
-  const session = await getSession(request, context);
-  const cartId = await session.get('cartId');
+export async function loader({context, params}: LoaderArgs) {
+  const cartId = await context.session.get('cartId');
 
   return defer({
     layout: await getLayoutData(context, params),
