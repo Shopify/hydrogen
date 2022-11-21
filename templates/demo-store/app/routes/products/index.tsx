@@ -106,7 +106,6 @@ const ALL_PRODUCTS_QUERY = `#graphql
         hasPreviousPage
         hasNextPage
         startCursor
-        die
         endCursor
       }
     }
