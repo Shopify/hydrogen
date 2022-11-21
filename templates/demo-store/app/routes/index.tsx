@@ -39,11 +39,9 @@ export async function loader({
 
   if (
     params.lang &&
-    language === 'EN' &&
-    country === 'US' &&
-    params.lang !== 'EN-US'
+    params.lang.toLowerCase() !== `${language}-${country}`.toLowerCase()
   ) {
-    // If the lang URL param is defined, yet we still are on `EN-US`
+    // If the lang URL param is defined, and it didn't match a valid localization
     // then the lang param must be invalid, send to the 404 page
     throw new Response('Not found', {status: 404});
   }
