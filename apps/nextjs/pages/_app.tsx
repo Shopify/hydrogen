@@ -6,7 +6,7 @@ export default function App({Component, pageProps}: AppProps) {
   return (
     <ShopifyProvider
       shopifyConfig={{
-        storeDomain: `hydrogen-preview.myshopify.com`,
+        storeDomain: `hydrogen-preview`,
         storefrontToken: '3b580e70970c4528da70c98e097c2fa0',
         storefrontApiVersion: '2022-10',
         locale: 'EN-US',

@@ -25,6 +25,8 @@ import {flattenConnection} from './flatten-connection.js';
 export function metafieldParser<ReturnGeneric>(
   metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>
 ): ReturnGeneric {
+  // @deprecated this function will be renamed to 'parseMetafield()'
+
   if (!metafield.type) {
     const noTypeError = `metafieldParser(): The 'type' field is required in order to parse the Metafield.`;
     if (__HYDROGEN_DEV__) {
