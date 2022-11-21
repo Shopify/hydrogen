@@ -14,6 +14,7 @@ export async function notFoundMaybeRedirect(
     variables: {
       url: pathname + search,
     },
+    storefrontApiVersion: '2023-01',
   });
 
   if (urlRedirects?.edges?.length) {
