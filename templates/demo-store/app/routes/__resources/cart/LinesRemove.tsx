@@ -293,7 +293,7 @@ function useLinesRemove(
     (fetcher) => fetcher?.submission?.action === localizedActionPath,
   );
 
-  let linesRemoving;
+  let linesRemoving = [];
 
   // set linesRemoving
   if (linesRemoveFetcher?.submission) {

@@ -51,8 +51,6 @@ export function ProductCard({
     cardLabel = 'New';
   }
 
-  const styles = clsx('grid gap-6', className);
-
   return (
     <div className="flex flex-col">
       <Link
@@ -60,7 +58,7 @@ export function ProductCard({
         to={`/products/${product.handle}`}
         prefetch="intent"
       >
-        <div className={styles}>
+        <div className={clsx('grid gap-6', className)}>
           <div className="card-image aspect-[4/5] bg-primary/5">
             <Text
               as="label"
@@ -116,9 +114,7 @@ export function ProductCard({
             },
           ]}
         >
-          {() => {
-            return <button type="submit">Add to Cart</button>;
-          }}
+          {() => <button type="submit">Add to Cart</button>}
         </LinesAddForm>
       )}
     </div>
