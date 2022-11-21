@@ -12,12 +12,6 @@ const requestHandler = createRequestHandler({
   shouldProxyAsset: () => false,
 });
 
-const storefrontConfig = {
-  publicStorefrontToken: '3b580e70970c4528da70c98e097c2fa0',
-  storeDomain: 'hydrogen-preview',
-  storefrontApiVersion: '2023-01',
-};
-
 export default {
   async fetch(
     request: Request,
@@ -31,6 +25,13 @@ export default {
     }
 
     const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
+
+    const storefrontConfig = {
+      publicStorefrontToken: '3b580e70970c4528da70c98e097c2fa0',
+      storeDomain: 'hydrogen-preview',
+      storefrontApiVersion: '2023-01',
+      i18n: getLocaleFromRequest(request),
+    };
 
     if (new URL(request.url).pathname === '/proxy') {
       return await proxyLiquidRoute(
