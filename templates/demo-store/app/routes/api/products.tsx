@@ -3,9 +3,6 @@ import {flattenConnection} from '@shopify/hydrogen-react';
 import {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 
-// adjust if changing the routes pathname
-const LOADER_PATH = '/api/products';
-
 /**
  * Fetch a given set of products from the storefront API
  * @see: https://shopify.dev/api/storefront/2023-01/queries/products
