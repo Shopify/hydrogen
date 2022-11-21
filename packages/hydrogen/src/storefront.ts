@@ -47,6 +47,7 @@ export type CreateStorefrontClientOptions = {
 type StorefrontCommonOptions = {
   variables?: ExecutionArgs['variableValues'];
   headers?: HeadersInit;
+  storefrontApiVersion?: string;
 };
 
 export type StorefrontQueryOptions = StorefrontCommonOptions & {
@@ -102,6 +103,7 @@ export function createStorefrontClient(
     variables,
     cache: cacheOptions,
     headers = [],
+    storefrontApiVersion,
   }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
     const userHeaders =
       headers instanceof Headers
@@ -110,7 +112,7 @@ export function createStorefrontClient(
         ? Object.fromEntries(headers)
         : headers;
 
-    const url = getStorefrontApiUrl();
+    const url = getStorefrontApiUrl({storefrontApiVersion});
     const requestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
