@@ -1,11 +1,11 @@
-import {useMemo, useRef} from 'react';
+import clsx from 'clsx';
+import {useRef} from 'react';
 import {useScroll} from 'react-use';
 import {flattenConnection, Money} from '@shopify/hydrogen-react';
 import {
   type FetcherWithComponents,
   useFetcher,
   useLocation,
-  useFetchers,
 } from '@remix-run/react';
 import {
   Button,
@@ -24,6 +24,11 @@ import type {
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useOptimisticLinesAdd} from '~/routes/__resources/cart/LinesAdd';
+import {
+  LinesRemoveForm,
+  useOptimisticLineRemove,
+  useOptimisticLinesRemove,
+} from '~/routes/__resources/cart/LinesRemove';
 
 enum Action {
   SetQuantity = 'set-quantity',
@@ -46,14 +51,11 @@ export function CartDetails({
   const {y} = useScroll(scrollRef);
   const lineItemFetcher = useFetcher();
   const {optimisticLinesAdd} = useOptimisticLinesAdd(lines);
-  const optimisticallyDeletingLastLine =
-    lines.length === 1 &&
-    lineItemFetcher.submission &&
-    lineItemFetcher.submission.formData.get('intent') === Action.RemoveLineItem;
+  const {optimisticLastLineRemove} = useOptimisticLinesRemove(lines);
 
   const cartIsEmpty = Boolean(
     (lines.length === 0 && !optimisticLinesAdd.length) ||
-      optimisticallyDeletingLastLine,
+      optimisticLastLineRemove,
   );
 
   if (cartIsEmpty) {
@@ -122,11 +124,11 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
     <>
       <div className="grid gap-4">
         {checkoutUrl ? (
-          <Link to={checkoutUrl} prefetch="intent" target="_self">
+          <a href={checkoutUrl} target="_self">
             <Button as="span" width="full">
               Continue to Checkout
             </Button>
-          </Link>
+          </a>
         ) : null}
         {/* TODO: Shop Pay */}
         {/* <CartShopPayButton /> */}
@@ -164,10 +166,8 @@ function CartLineItem({
   optimistic?: boolean;
 }) {
   const {id: lineId, quantity, merchandise} = line;
-
-  const location = useLocation();
+  const {optimisticLineRemove} = useOptimisticLineRemove(line);
   let optimisticQuantity = quantity;
-  let optimisticallyDeleting = false;
 
   if (
     fetcher.submission &&
@@ -180,16 +180,14 @@ function CartLineItem({
         );
         break;
       }
-
-      case Action.RemoveLineItem: {
-        optimisticallyDeleting = true;
-        break;
-      }
     }
   }
 
-  return optimisticallyDeleting ? null : (
-    <li key={lineId} className="flex gap-4">
+  return (
+    <li
+      key={lineId}
+      className={clsx(['flex gap-4', optimisticLineRemove ? 'hidden' : ''])}
+    >
       <div className="flex-shrink">
         {merchandise.image && (
           <img
@@ -231,27 +229,7 @@ function CartLineItem({
                 optimistic={optimistic}
               />
             </div>
-            <fetcher.Form method="post" action="/cart">
-              <input
-                type="hidden"
-                name="intent"
-                value={Action.RemoveLineItem}
-              />
-              <input type="hidden" name="lineId" value={lineId} />
-              <input
-                type="hidden"
-                name="redirect"
-                value={location.pathname + location.search}
-              />
-              <button
-                type="submit"
-                className="flex items-center justify-center w-10 h-10 border rounded"
-                disabled={optimistic}
-              >
-                <span className="sr-only">Remove</span>
-                <IconRemove aria-hidden="true" />
-              </button>
-            </fetcher.Form>
+            <CartLineRemove lineIds={[lineId]} />
           </div>
         </div>
         <Text>
@@ -259,6 +237,25 @@ function CartLineItem({
         </Text>
       </div>
     </li>
+  );
+}
+
+function CartLineRemove({lineIds}: {lineIds: CartLine['id'][]}) {
+  return (
+    <LinesRemoveForm lineIds={lineIds}>
+      {({state}) => (
+        <button
+          className="flex items-center justify-center w-10 h-10 border rounded"
+          type="submit"
+          disabled={state !== 'idle'}
+        >
+          <span className="sr-only">
+            {state === 'loading' ? 'Removing' : 'Remove'}
+          </span>
+          <IconRemove aria-hidden="true" />
+        </button>
+      )}
+    </LinesRemoveForm>
   );
 }
 

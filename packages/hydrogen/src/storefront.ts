@@ -21,12 +21,21 @@ import {
 } from './cache/strategies';
 import {generateUUID} from './utils/uuid';
 import {parseJSON} from './utils/parse-json';
+import {
+  CountryCode,
+  LanguageCode,
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
 export type StorefrontClientProps = Parameters<
   typeof createStorefrontUtilities
->[0];
+>[0] & {
+  i18n: {
+    language: LanguageCode;
+    country: CountryCode;
+  };
+};
 
 export type Storefront = ReturnType<
   typeof createStorefrontClient
@@ -47,6 +56,7 @@ export type CreateStorefrontClientOptions = {
 type StorefrontCommonOptions = {
   variables?: ExecutionArgs['variableValues'];
   headers?: HeadersInit;
+  storefrontApiVersion?: string;
 };
 
 export type StorefrontQueryOptions = StorefrontCommonOptions & {
@@ -102,6 +112,7 @@ export function createStorefrontClient(
     variables,
     cache: cacheOptions,
     headers = [],
+    storefrontApiVersion,
   }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
     const userHeaders =
       headers instanceof Headers
@@ -110,13 +121,25 @@ export function createStorefrontClient(
         ? Object.fromEntries(headers)
         : headers;
 
-    const url = getStorefrontApiUrl();
+    query = query ?? mutation;
+
+    const queryVariables = {...variables};
+
+    if (!variables?.country && /\$country/.test(query)) {
+      queryVariables.country = clientOptions.i18n.country;
+    }
+
+    if (!variables?.language && /\$language/.test(query)) {
+      queryVariables.language = clientOptions.i18n.language;
+    }
+
+    const url = getStorefrontApiUrl({storefrontApiVersion});
     const requestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
       body: JSON.stringify({
-        query: query ?? mutation,
-        variables,
+        query,
+        variables: queryVariables,
       }),
     };
 

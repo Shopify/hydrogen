@@ -8,13 +8,11 @@ import {
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
 import {sendPasswordResetEmail} from '~/data';
-import {getSession} from '~/lib/session.server';
 import {Link} from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
 
-export async function loader({request, context, params}: LoaderArgs) {
-  const session = await getSession(request, context);
-  const customerAccessToken = await session.get('customerAccessToken');
+export async function loader({context, params}: LoaderArgs) {
+  const customerAccessToken = await context.session.get('customerAccessToken');
 
   if (customerAccessToken) {
     return redirect(params.lang ? `${params.lang}/account` : '/account');

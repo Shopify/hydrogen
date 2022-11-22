@@ -8,15 +8,12 @@ import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-type
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import {PageHeader} from '~/components';
-import {getLocalizationFromLang} from '~/lib/utils';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   invariant(params.pageHandle, 'Missing page handle');
 
-  const {language} = getLocalizationFromLang(params.lang);
   const {page} = await storefront.query<{page: PageType}>(PAGE_QUERY, {
     variables: {
-      language,
       handle: params.pageHandle,
     },
   });

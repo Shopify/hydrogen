@@ -27,14 +27,12 @@ import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {type LoaderArgs, redirect, json, defer} from '@shopify/hydrogen-remix';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import {getCustomer} from '~/data';
-import {getSession} from '~/lib/session.server';
 import {getFeaturedData} from './featured-products';
 
 export async function loader({request, context, params}: LoaderArgs) {
   const {pathname} = new URL(request.url);
-  const session = await getSession(request, context);
   const lang = params.lang;
-  const customerAccessToken = await session.get('customerAccessToken');
+  const customerAccessToken = await context.session.get('customerAccessToken');
   const isAuthenticated = Boolean(customerAccessToken);
   const loginPath = lang ? `${lang}/account/login` : '/account/login';
 
@@ -49,7 +47,6 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const customer = await getCustomer(context, {
     customerAccessToken,
-    params,
     request,
   });
 
@@ -67,7 +64,7 @@ export async function loader({request, context, params}: LoaderArgs) {
     heading,
     orders,
     addresses: flattenConnection(customer.addresses) as MailingAddress[],
-    featuredData: getFeaturedData(context.storefront, params),
+    featuredData: getFeaturedData(context.storefront),
   });
 }
 

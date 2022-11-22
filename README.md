@@ -1,12 +1,10 @@
-# Hydrogen on Remix, Demo Store
+# Hydrogen 2.0
 
-[Hydrogen 2.0 Gameplan Doc](https://docs.google.com/document/d/1iEerwYgs30rVDJi5JbfxCJf2K-boAwGOODmDFCNQDmY/edit#) _(High level roadmap)_
+[Roadmap (Github Project)](https://github.com/orgs/Shopify/projects/5093/views/1)
 
-[Github Project for Demo Store & H2](https://github.com/orgs/Shopify/projects/5093/views/2) _(Tickets, etc.)_
+[Demo Store on Oxygen](https://h2-demo-store-f1f4fa724b7467f41f07.o2.myshopify.dev/)
 
-[Oxygen Deployment](https://h2-demo-store-f1f4fa724b7467f41f07.o2.myshopify.dev/)
-
-[Slack Channel](https://shopify.slack.com/archives/C0431CUNVTN)
+[Slack Channel (#hydrogen)](https://shopify.slack.com/archives/C028UNNRJAH)
 
 ## Development
 

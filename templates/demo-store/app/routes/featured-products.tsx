@@ -6,23 +6,18 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
-import {getLocalizationFromLang} from '~/lib/utils';
 
-export async function loader({params, context: {storefront}}: LoaderArgs) {
-  return json(await getFeaturedData(storefront, params));
+export async function loader({context: {storefront}}: LoaderArgs) {
+  return json(await getFeaturedData(storefront));
 }
 
 export async function getFeaturedData(
   storefront: LoaderArgs['context']['storefront'],
-  params: LoaderArgs['params'],
 ) {
-  const {language, country} = getLocalizationFromLang(params.lang);
   const data = await storefront.query<{
     featuredCollections: CollectionConnection;
     featuredProducts: ProductConnection;
-  }>(FEATURED_QUERY, {
-    variables: {language, country},
-  });
+  }>(FEATURED_QUERY);
 
   invariant(data, 'No data returned from Shopify API');
 

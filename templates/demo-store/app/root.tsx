@@ -9,7 +9,6 @@ import {
   Links,
   Meta,
   Outlet,
-  Params,
   Scripts,
   ScrollRestoration,
   useCatch,
@@ -17,18 +16,17 @@ import {
   useMatches,
 } from '@remix-run/react';
 import {Layout} from '~/components';
-import {getLayoutData, getCountries} from '~/data';
+import {getLayoutData, type LayoutData} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
-import {getSession} from './lib/session.server';
 import {Seo, Debugger} from './lib/seo';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
-import {getLocalizationFromLang} from './lib/utils';
+import {countries} from './data/countries';
+import {getLocaleFromRequest} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
-import type {LayoutData} from '~/data';
 
 export const handle = {
   // @todo - remove any and type the seo callback
@@ -59,29 +57,33 @@ export const meta: MetaFunction = () => ({
   viewport: 'width=device-width,initial-scale=1',
 });
 
-export async function loader({request, context, params}: LoaderArgs) {
-  const session = await getSession(request, context);
-  const cartId = await session.get('cartId');
+export async function loader({context, request}: LoaderArgs) {
+  const cartId = await context.session.get('cartId');
 
   return defer({
-    layout: await getLayoutData(context, params),
-    countries: getCountries(context),
-    cart: cartId ? getCart(context, {cartId, params}) : undefined,
+    layout: await getLayoutData(context),
+    selectedLocale: await getLocaleFromRequest(request),
+    countries,
+    cart: cartId ? getCart(context, {cartId}) : undefined,
   });
 }
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
+  const locale = data.selectedLocale;
 
   return (
-    <html lang="en">
+    <html lang={locale.language}>
       <head>
         <Seo />
         <Meta />
         <Links />
       </head>
       <body>
-        <Layout layout={data.layout as LayoutData}>
+        <Layout
+          layout={data.layout as LayoutData}
+          key={`${locale.language}-${locale.country}`}
+        >
           <Outlet />
         </Layout>
         <Debugger />
@@ -96,16 +98,20 @@ export function CatchBoundary() {
   const [root] = useMatches();
   const caught = useCatch();
   const isNotFound = caught.status === 404;
+  const locale = root.data.selectedLocale;
 
   return (
-    <html lang="en">
+    <html lang={locale.language}>
       <head>
         <title>{isNotFound ? 'Not found' : 'Error'}</title>
         <Meta />
         <Links />
       </head>
       <body>
-        <Layout layout={root.data.layout}>
+        <Layout
+          layout={root.data.layout}
+          key={`${locale.language}-${locale.country}`}
+        >
           {isNotFound ? (
             <NotFound type={caught.data?.pageType} />
           ) : (
@@ -124,7 +130,7 @@ export function ErrorBoundary({error}: {error: Error}) {
   const [root] = useMatches();
 
   return (
-    <html lang="en">
+    <html lang={root.data.selectedLocale.language}>
       <head>
         <title>Error</title>
         <Meta />
@@ -255,19 +261,15 @@ export async function getCart(
   context: HydrogenContext,
   {
     cartId,
-    params,
   }: {
     cartId: string;
-    params: Params;
   },
 ) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cart query');
 
-  const {country, language} = getLocalizationFromLang(params.lang);
-
   const {cart} = await storefront.query<{cart: Cart}>(CART_QUERY, {
-    variables: {cartId, country, language},
+    variables: {cartId},
     cache: storefront.CacheNone(),
   });
 

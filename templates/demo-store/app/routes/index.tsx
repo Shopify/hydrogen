@@ -1,16 +1,11 @@
-import {
-  type LoaderArgs,
-  defer,
-  type MetaFunction,
-} from '@shopify/hydrogen-remix';
+import {type LoaderArgs, defer} from '@shopify/hydrogen-remix';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getHeroPlaceholder} from '~/lib/placeholders';
-import {getLocalizationFromLang} from '~/lib/utils';
+import {getLocaleFromRequest} from '~/lib/utils';
 import type {
-  Collection,
   CollectionConnection,
   Metafield,
   ProductConnection,
@@ -35,17 +30,19 @@ interface CollectionHero {
   top?: boolean;
 }
 
-export async function loader({params, context: {storefront}}: LoaderArgs) {
-  const {language, country} = getLocalizationFromLang(params.lang);
+export async function loader({
+  request,
+  params,
+  context: {storefront},
+}: LoaderArgs) {
+  const {language, country} = getLocaleFromRequest(request);
 
   if (
     params.lang &&
-    language === 'EN' &&
-    country === 'US' &&
-    params.lang !== 'EN-US'
+    params.lang.toLowerCase() !== `${language}-${country}`.toLowerCase()
   ) {
-    // If the lang URL param is defined, yet we still are on `EN-US`
-    // the the lang param must be invalid, send to the 404 page
+    // If the lang URL param is defined, and it didn't match a valid localization
+    // then the lang param must be invalid, send to the 404 page
     throw new Response('Not found', {status: 404});
   }
 
@@ -54,8 +51,6 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     shop: HomeSeoData;
   }>(HOMEPAGE_SEO_QUERY, {
     variables: {
-      language,
-      country,
       handle: 'freestyle',
     },
   });
@@ -68,36 +63,22 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     // Should there be fallback rendering while deferred?
     featuredProducts: storefront.query<{
       products: ProductConnection;
-    }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
-      variables: {
-        language,
-        country,
-      },
-    }),
+    }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY),
     secondaryHero: storefront.query<{hero: CollectionHero}>(
       COLLECTION_HERO_QUERY,
       {
         variables: {
-          language,
-          country,
           handle: 'backcountry',
         },
       },
     ),
     featuredCollections: storefront.query<{
       collections: CollectionConnection;
-    }>(FEATURED_COLLECTIONS_QUERY, {
-      variables: {
-        language,
-        country,
-      },
-    }),
+    }>(FEATURED_COLLECTIONS_QUERY),
     tertiaryHero: storefront.query<{hero: CollectionHero}>(
       COLLECTION_HERO_QUERY,
       {
         variables: {
-          language,
-          country,
           handle: 'winter-2022',
         },
       },

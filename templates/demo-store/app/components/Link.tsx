@@ -1,9 +1,9 @@
 import {
   Link as RemixLink,
-  useParams,
   NavLink as RemixNavLink,
   type NavLinkProps as RemixNavLinkProps,
   type LinkProps as RemixLinkProps,
+  useMatches,
 } from '@remix-run/react';
 
 type LinkProps = Omit<RemixLinkProps, 'className'> & {
@@ -27,19 +27,20 @@ type LinkProps = Omit<RemixLinkProps, 'className'> & {
  */
 export function Link(props: LinkProps) {
   const {to, className, ...resOfProps} = props;
-  const {lang} = useParams();
+  const [root] = useMatches();
+  const selectedLocale = root.data.selectedLocale;
 
-  let toWithLang = to;
+  let toWithLocale = to;
 
   if (typeof to === 'string') {
-    toWithLang = lang ? `/${lang}${to}` : to;
+    toWithLocale = selectedLocale ? `${selectedLocale.pathPrefix}${to}` : to;
   }
 
   if (typeof className === 'function') {
     return (
-      <RemixNavLink to={toWithLang} className={className} {...resOfProps} />
+      <RemixNavLink to={toWithLocale} className={className} {...resOfProps} />
     );
   }
 
-  return <RemixLink to={toWithLang} className={className} {...resOfProps} />;
+  return <RemixLink to={toWithLocale} className={className} {...resOfProps} />;
 }

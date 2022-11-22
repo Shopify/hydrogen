@@ -22,7 +22,8 @@ import {
   Link,
   Button,
 } from '~/components';
-import {getExcerpt, getLocalizationFromLang} from '~/lib/utils';
+import {getExcerpt} from '~/lib/utils';
+import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import {
@@ -31,8 +32,6 @@ import {
   Product,
   Shop,
   ProductConnection,
-  LanguageCode,
-  CountryCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {
   MEDIA_FRAGMENT,
@@ -49,7 +48,6 @@ export async function loader({
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
 
-  const {language, country} = getLocalizationFromLang(params.lang);
   const searchParams = new URL(request.url).searchParams;
 
   const selectedOptions: SelectedOptionInput[] = [];
@@ -63,8 +61,6 @@ export async function loader({
   }>(PRODUCT_QUERY, {
     variables: {
       handle: productHandle,
-      country,
-      language,
       selectedOptions,
     },
   });
@@ -73,12 +69,7 @@ export async function loader({
     throw new Error('product not found');
   }
 
-  const recommended = getRecommendedProducts(
-    storefront,
-    language,
-    country,
-    product.id,
-  );
+  const recommended = getRecommendedProducts(storefront, product.id);
 
   return defer({
     product,
@@ -565,15 +556,13 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 
 async function getRecommendedProducts(
   storefront: LoaderArgs['context']['storefront'],
-  language: LanguageCode,
-  country: CountryCode,
   productId: string,
 ) {
   const products = await storefront.query<{
     recommended: Product[];
     additional: ProductConnection;
   }>(RECOMMENDED_PRODUCTS_QUERY, {
-    variables: {productId, count: 12, language, country},
+    variables: {productId, count: 12},
   });
 
   invariant(products, 'No data returned from Shopify API');
