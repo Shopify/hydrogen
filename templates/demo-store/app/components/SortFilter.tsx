@@ -1,5 +1,10 @@
 import {SyntheticEvent, useMemo, useState} from 'react';
-import {Heading, Button, Drawer as DrawerComponent} from '~/components';
+import {
+  Heading,
+  Button,
+  Drawer as DrawerComponent,
+  IconXMark,
+} from '~/components';
 import {Link, useLocation, useSearchParams} from '@remix-run/react';
 import {useDebounce} from 'react-use';
 
@@ -122,16 +127,19 @@ function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
       <Heading as="h4" size="lead" className="pb-2">
         Applied filters
       </Heading>
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         {filters.map((filter: AppliedFilter) => {
           return (
             <Link
               to={getAppliedFilterLink(filter, params, location)}
-              className="rounded-full border px-4"
+              className="rounded-full border px-2 flex gap"
               key={`${filter.label}-${filter.urlParam}`}
               reloadDocument
             >
-              <span>{filter.label}</span> <span>x</span>
+              <span className="flex-grow">{filter.label}</span>
+              <span>
+                <IconXMark />
+              </span>
             </Link>
           );
         })}
