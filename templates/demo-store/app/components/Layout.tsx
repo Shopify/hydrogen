@@ -437,7 +437,6 @@ function Badge({
 }
 
 function Footer({menu}: {menu?: EnhancedMenu}) {
-  const [root] = useMatches();
   const isHome = useIsHomePath();
   const itemsCount = menu
     ? menu?.items?.length + 1 > 4
@@ -455,11 +454,7 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
         bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
     >
       <FooterMenu menu={menu} />
-      <Suspense fallback="Loading countries...">
-        <Await resolve={root.data.countries}>
-          {(countries) => <CountrySelector countries={countries} />}
-        </Await>
-      </Suspense>
+      <CountrySelector />
       <div
         className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
       >

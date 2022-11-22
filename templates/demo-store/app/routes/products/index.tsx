@@ -7,24 +7,16 @@ import type {
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, ProductGrid} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
-import {getLocalizationFromLang} from '~/lib/utils';
 
-export async function loader({
-  request,
-  params,
-  context: {storefront},
-}: LoaderArgs) {
+export async function loader({request, context: {storefront}}: LoaderArgs) {
   const cursor = new URL(request.url).searchParams.get('cursor') ?? undefined;
 
-  const {language, country} = getLocalizationFromLang(params.lang);
   const data = await storefront.query<{
     products: ProductConnection;
   }>(ALL_PRODUCTS_QUERY, {
     variables: {
       pageBy: 48,
       cursor,
-      language,
-      country,
     },
   });
 

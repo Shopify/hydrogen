@@ -21,12 +21,21 @@ import {
 } from './cache/strategies';
 import {generateUUID} from './utils/uuid';
 import {parseJSON} from './utils/parse-json';
+import {
+  CountryCode,
+  LanguageCode,
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
 export type StorefrontClientProps = Parameters<
   typeof createStorefrontUtilities
->[0];
+>[0] & {
+  i18n: {
+    language: LanguageCode;
+    country: CountryCode;
+  };
+};
 
 export type Storefront = ReturnType<
   typeof createStorefrontClient
@@ -112,13 +121,25 @@ export function createStorefrontClient(
         ? Object.fromEntries(headers)
         : headers;
 
+    query = query ?? mutation;
+
+    const queryVariables = {...variables};
+
+    if (!variables?.country && /\$country/.test(query)) {
+      queryVariables.country = clientOptions.i18n.country;
+    }
+
+    if (!variables?.language && /\$language/.test(query)) {
+      queryVariables.language = clientOptions.i18n.language;
+    }
+
     const url = getStorefrontApiUrl({storefrontApiVersion});
     const requestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
       body: JSON.stringify({
-        query: query ?? mutation,
-        variables,
+        query,
+        variables: queryVariables,
       }),
     };
 

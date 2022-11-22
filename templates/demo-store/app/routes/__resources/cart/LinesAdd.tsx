@@ -2,10 +2,10 @@ import {diff} from 'fast-array-diff';
 import {useEffect, forwardRef, useCallback, useMemo, useId} from 'react';
 import {
   type Fetcher,
-  Params,
   useFetcher,
   useFetchers,
   useLocation,
+  useMatches,
 } from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
@@ -16,7 +16,6 @@ import {
   redirect,
   json,
 } from '@shopify/hydrogen-remix';
-import {getLocalizationFromLang} from '~/lib/utils';
 import type {
   Cart,
   CartInput,
@@ -28,6 +27,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import type {PartialDeep} from 'type-fest';
 import React from 'react';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 interface LinesAddEventPayload {
   linesAdded: CartLineInput[];
@@ -95,7 +95,7 @@ const ACTION_PATH = '/cart/LinesAdd';
 /**
  * action that handles cart create (with lines) and lines add
  */
-async function action({request, context, params}: ActionArgs) {
+async function action({request, context}: ActionArgs) {
   const {session} = context;
   const headers = new Headers();
 
@@ -120,7 +120,6 @@ async function action({request, context, params}: ActionArgs) {
   if (!cartId) {
     const {cart, errors} = await cartCreateLinesMutation({
       input: {lines},
-      params,
       context,
     });
 
@@ -146,13 +145,12 @@ async function action({request, context, params}: ActionArgs) {
     can diff what was really added or not :(
     although it's slower, we now have optimistic lines add
   */
-  const prevCart = await getCartLines({cartId, params, context});
+  const prevCart = await getCartLines({cartId, context});
 
   // Flow B — add line(s) to existing cart
   const {cart, errors} = await linesAddMutation({
     cartId,
     lines,
-    params,
     context,
   });
 
@@ -363,23 +361,17 @@ const ADD_LINES_MUTATION = `#graphql
  */
 async function getCartLines({
   cartId,
-  params,
   context,
 }: {
   cartId: string;
-  params: Params;
   context: HydrogenContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cart create mutation');
 
-  const {country, language} = getLocalizationFromLang(params.lang);
-
   const {cart} = await storefront.query<{cart: Cart}>(CART_LINES_QUERY, {
     variables: {
       cartId,
-      country,
-      language,
     },
     cache: storefront.CacheNone(),
   });
@@ -396,17 +388,13 @@ async function getCartLines({
  */
 async function cartCreateLinesMutation({
   input,
-  params,
   context,
 }: {
   input: CartInput;
-  params: Params;
   context: HydrogenContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cart create mutation');
-
-  const {country, language} = getLocalizationFromLang(params.lang);
 
   const {cartCreate} = await storefront.mutate<{
     cartCreate: {
@@ -415,7 +403,7 @@ async function cartCreateLinesMutation({
     };
     errors: UserError[];
   }>(CREATE_CART_ADD_LINES_MUTATION, {
-    variables: {input, country, language},
+    variables: {input},
   });
 
   invariant(cartCreate, 'No data returned from cart create mutation');
@@ -433,18 +421,14 @@ async function cartCreateLinesMutation({
 async function linesAddMutation({
   cartId,
   lines,
-  params,
   context,
 }: {
   cartId: string;
   lines: CartLineInput[];
-  params: Params;
   context: HydrogenContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in lines add mutation');
-
-  const {country, language} = getLocalizationFromLang(params.lang);
 
   const {cartLinesAdd} = await storefront.mutate<{
     cartLinesAdd: {
@@ -452,7 +436,7 @@ async function linesAddMutation({
       errors: CartUserError[];
     };
   }>(ADD_LINES_MUTATION, {
-    variables: {cartId, lines, country, language},
+    variables: {cartId, lines},
   });
 
   invariant(cartLinesAdd, 'No data returned from line(s) add mutation');
@@ -475,6 +459,7 @@ const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
     const error = fetcher?.data?.error;
     const event = fetcher?.data?.event;
     const eventId = fetcher?.data?.event?.id;
+    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
     useEffect(() => {
       if (!eventId) return;
@@ -488,7 +473,12 @@ const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
     }
 
     return (
-      <fetcher.Form id={formId} method="post" action={ACTION_PATH} ref={ref}>
+      <fetcher.Form
+        id={formId}
+        method="post"
+        action={localizedActionPath}
+        ref={ref}
+      >
         <input
           type="hidden"
           name="lines"
@@ -516,9 +506,11 @@ const LinesAddForm = forwardRef<HTMLFormElement, LinesAddProps>(
  * @returns fetcher
  */
 function useLinesAddingFetcher() {
+  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
+
   const fetchers = useFetchers();
   return fetchers.find(
-    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
+    (fetcher) => fetcher?.submission?.action === localizedActionPath,
   );
 }
 
@@ -532,6 +524,7 @@ function useLinesAdd(
 ): UseLinesAdd {
   const linesAddingFetcher = useLinesAddingFetcher();
   const fetcher = useFetcher();
+  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
   let linesAdding = null;
 
@@ -553,11 +546,11 @@ function useLinesAdd(
       form.set('lines', JSON.stringify(lines));
       fetcher.submit(form, {
         method: 'post',
-        action: ACTION_PATH,
+        action: localizedActionPath,
         replace: false,
       });
     },
-    [fetcher],
+    [fetcher, localizedActionPath],
   );
 
   useEffect(() => {

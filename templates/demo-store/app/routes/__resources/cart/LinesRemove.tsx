@@ -1,5 +1,5 @@
 import React, {forwardRef, useCallback, useEffect, useId} from 'react';
-import {useFetcher, useLocation, Params, useFetchers} from '@remix-run/react';
+import {useFetcher, useLocation, useFetchers} from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import type {PartialDeep} from 'type-fest';
 import type {
@@ -15,8 +15,8 @@ import {
   json,
 } from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
-import {getLocalizationFromLang} from '~/lib/utils';
 import {getCartLines} from './LinesAdd';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 interface LinesRemoveProps {
   lineIds: CartLine['id'][];
@@ -56,7 +56,7 @@ const ACTION_PATH = '/cart/LinesRemove';
 /**
  * action that handles the line(s) remove mutation
  */
-async function action({request, context, params}: ActionArgs) {
+async function action({request, context}: ActionArgs) {
   const formData = await request.formData();
 
   const cartId = await context.session.get('cartId');
@@ -69,12 +69,11 @@ async function action({request, context, params}: ActionArgs) {
 
   // we need to query the prevCart so we can validate
   // what was really added or not for analytics
-  const prevCart = await getCartLines({cartId, params, context});
+  const prevCart = await getCartLines({cartId, context});
 
   const {cart, errors} = await linesRemoveMutation({
     cartId,
     lineIds,
-    params,
     context,
   });
 
@@ -211,18 +210,14 @@ const REMOVE_LINE_ITEMS_MUTATION = `#graphql
 async function linesRemoveMutation({
   cartId,
   lineIds,
-  params,
   context,
 }: {
   cartId: string;
   lineIds: Cart['id'][];
-  params: Params;
   context: HydrogenContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in lines remove mutation');
-
-  const {country, language} = getLocalizationFromLang(params.lang);
 
   const {cartLinesRemove} = await storefront.mutate<{
     cartLinesRemove: {cart: Cart; errors: UserError[]};
@@ -230,8 +225,6 @@ async function linesRemoveMutation({
     variables: {
       cartId,
       lineIds,
-      country,
-      language,
     },
   });
 
@@ -256,6 +249,7 @@ const LinesRemoveForm = forwardRef(
     const fetcher = useFetcher();
     const location = useLocation();
     const currentUrl = `${location.pathname}${location.search}`;
+    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
     const event = fetcher.data?.event;
     const error = fetcher.data?.error;
@@ -266,7 +260,12 @@ const LinesRemoveForm = forwardRef(
     }, [event, onSuccess]);
 
     return (
-      <fetcher.Form id={formId} method="post" action={ACTION_PATH} ref={ref}>
+      <fetcher.Form
+        id={formId}
+        method="post"
+        action={localizedActionPath}
+        ref={ref}
+      >
         <input type="hidden" name="lineIds" value={JSON.stringify(lineIds)} />
         {/* used to trigger a redirect back to the same url when JS is disabled */}
         {isHydrated ? null : (
@@ -286,10 +285,12 @@ const LinesRemoveForm = forwardRef(
 function useLinesRemove(
   onSuccess: (event: LinesRemoveEvent) => void = () => {},
 ) {
+  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
+
   const fetcher = useFetcher();
   const fetchers = useFetchers();
   const linesRemoveFetcher = fetchers.find(
-    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
+    (fetcher) => fetcher?.submission?.action === localizedActionPath,
   );
 
   let linesRemoving;
@@ -313,11 +314,11 @@ function useLinesRemove(
       form.set('lineIds', JSON.stringify(lineIds));
       fetcher.submit(form, {
         method: 'post',
-        action: ACTION_PATH,
+        action: localizedActionPath,
         replace: false,
       });
     },
-    [fetcher],
+    [fetcher, localizedActionPath],
   );
 
   useEffect(() => {
@@ -341,9 +342,11 @@ function useLinesRemove(
 function useOptimisticLinesRemove(
   lines?: PartialDeep<CartLine, {recurseIntoArrays: true}>[] | CartLine[],
 ) {
+  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
+
   const fetchers = useFetchers();
   const linesRemoveFetcher = fetchers.find(
-    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
+    (fetcher) => fetcher?.submission?.action === localizedActionPath,
   );
 
   let linesRemoving: CartLine['id'][] = [];

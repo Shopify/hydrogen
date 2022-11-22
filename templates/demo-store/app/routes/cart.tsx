@@ -7,10 +7,10 @@ import {
 import invariant from 'tiny-invariant';
 import {getTopProducts, updateLineItem} from '~/data';
 
-export async function loader({params, context}: LoaderArgs) {
+export async function loader({context}: LoaderArgs) {
   return defer(
     {
-      topProducts: getTopProducts(context, {params}),
+      topProducts: getTopProducts(context, {}),
     },
     {
       headers: {
@@ -20,7 +20,7 @@ export async function loader({params, context}: LoaderArgs) {
   );
 }
 
-export const action: ActionFunction = async ({request, context, params}) => {
+export const action: ActionFunction = async ({request, context}) => {
   let cart;
 
   const formData = new URLSearchParams(await request.text());
@@ -41,7 +41,6 @@ export const action: ActionFunction = async ({request, context, params}) => {
       cart = await updateLineItem(context, {
         cartId,
         lineItem: {id: lineId, quantity},
-        params,
       });
       return json({cart});
     }

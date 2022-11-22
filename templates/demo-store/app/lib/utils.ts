@@ -1,15 +1,14 @@
-import {useLocation, useParams} from '@remix-run/react';
+import {useLocation, useMatches} from '@remix-run/react';
 import type {
   MenuItem,
   Menu,
   MoneyV2,
-  UserError,
-  CountryCode,
-  LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 // @ts-expect-error types not available
 import typographicBase from 'typographic-base';
+import {countries} from '~/data/countries';
+import {Locale} from './type';
 
 export interface EnhancedMenuItem extends MenuItem {
   to: string;
@@ -250,39 +249,38 @@ export function assertApiErrors(data: Record<string, any> | null | undefined) {
   }
 }
 
-export function getLocalizationFromLang(lang?: string): {
-  language: LanguageCode;
-  country: CountryCode;
+export function getLocaleFromRequest(request: Request): Locale & {
+  pathPrefix: string;
 } {
-  if (lang && lang.includes('-')) {
-    const [language, country] = lang.split('-');
+  const url = new URL(request.url);
+  const firstPathPart =
+    '/' + url.pathname.substring(1).split('/')[0].toLowerCase();
 
-    return {
-      language: language?.toUpperCase() as LanguageCode,
-      country: (country?.toUpperCase() || 'US') as CountryCode,
-    };
-  }
-  return {
-    language: 'EN' as LanguageCode,
-    country: 'US' as CountryCode,
-  };
+  return countries[firstPathPart]
+    ? {
+        ...countries[firstPathPart],
+        pathPrefix: firstPathPart,
+      }
+    : {
+        ...countries['default'],
+        pathPrefix: '',
+      };
 }
 
 export function usePrefixPathWithLocale(path: string) {
-  const {lang} = useParams();
-  const {language, country} = getLocalizationFromLang(lang);
+  const [root] = useMatches();
+  const selectedLocale = root.data.selectedLocale;
 
-  if (language !== 'EN' && country !== 'US') {
-    return `/${language}-${country}${path.startsWith('/') ? path : '/' + path}`;
-  }
-
-  return path;
+  return selectedLocale
+    ? `${selectedLocale.pathPrefix}${path.startsWith('/') ? path : '/' + path}`
+    : path;
 }
 
 export function useIsHomePath() {
   const {pathname} = useLocation();
-  const {lang} = useParams();
-  const strippedPathname = pathname.replace(new RegExp(`^\/${lang}\/`), '/');
+  const [root] = useMatches();
+  const selectedLocale = root.data.selectedLocale;
+  const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
 
   return strippedPathname === '/';
 }

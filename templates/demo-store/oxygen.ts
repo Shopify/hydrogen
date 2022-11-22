@@ -1,6 +1,7 @@
 import {createRequestHandler} from '@shopify/hydrogen-remix';
 // The build remix app provided by remix build
 import * as remixBuild from 'remix-build';
+import {getLocaleFromRequest} from '~/lib/utils';
 import {HydrogenSession} from '~/lib/session.server';
 
 declare const process: {env: {NODE_ENV: string}};
@@ -35,6 +36,7 @@ export default {
             publicStorefrontToken: '3b580e70970c4528da70c98e097c2fa0',
             storeDomain: 'hydrogen-preview',
             storefrontApiVersion: '2022-10',
+            i18n: getLocaleFromRequest(request),
           },
         },
         {

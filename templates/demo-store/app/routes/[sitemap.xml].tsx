@@ -6,7 +6,6 @@ import {
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {getLocalizationFromLang} from '~/lib/utils';
 
 const MAX_URLS = 250; // the google limit is 50K, however, SF API only allow querying for 250 resources each time
 
@@ -27,16 +26,9 @@ interface ProductEntry {
   };
 }
 
-export async function loader({
-  request,
-  params,
-  context: {storefront},
-}: LoaderArgs) {
-  const {language} = getLocalizationFromLang(params.lang);
-
+export async function loader({request, context: {storefront}}: LoaderArgs) {
   const data = await storefront.query<SitemapQueryData>(SITEMAP_QUERY, {
     variables: {
-      language,
       urlLimits: MAX_URLS,
     },
   });
