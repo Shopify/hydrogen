@@ -10,7 +10,8 @@ export {Skeleton} from './Skeleton';
 export {Button} from './Button';
 export {Grid} from './Grid';
 export {CountrySelector} from './CountrySelector';
-export {CartDetails, CartEmpty} from './CartDetails';
+export {Cart} from './Cart';
+export {CartLoading} from './CartLoading';
 export {OrderCard} from './OrderCard';
 export {AccountDetails} from './AccountDetails';
 export {AccountAddressBook} from './AccountAddressBook';
@@ -19,5 +20,4 @@ export {Link} from './Link';
 export {FeaturedCollections} from './FeaturedCollections';
 export {Hero} from './Hero';
 export {SortFilter} from './SortFilter';
-// Sue me
 export * from './Icon';

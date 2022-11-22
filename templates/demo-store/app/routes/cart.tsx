@@ -1,31 +1,14 @@
-import {
-  type LoaderArgs,
-  type ActionFunction,
-  json,
-  defer,
-} from '@shopify/hydrogen-remix';
+import {CartLoading, Cart} from '~/components';
+import {Await, useMatches} from '@remix-run/react';
+import {Suspense} from 'react';
+import {type ActionFunction, json} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
-import {getTopProducts, updateLineItem} from '~/data';
-
-export async function loader({context}: LoaderArgs) {
-  return defer(
-    {
-      topProducts: getTopProducts(context, {}),
-    },
-    {
-      headers: {
-        'Cache-Control': 'max-age=600',
-      },
-    },
-  );
-}
+import {updateLineItem} from '~/data';
 
 export const action: ActionFunction = async ({request, context}) => {
   let cart;
 
   const formData = new URLSearchParams(await request.text());
-
-  const redirectTo = formData.get('redirectTo');
   const intent = formData.get('intent');
   invariant(intent, 'Missing cart intent');
 
@@ -51,6 +34,16 @@ export const action: ActionFunction = async ({request, context}) => {
   }
 };
 
-export default function Cart() {
-  return <h1>Todo: Build a cart here</h1>;
+export default function CartRoute() {
+  const [root] = useMatches();
+  // @todo: finish on a separate PR
+  return (
+    <div className="grid w-full gap-8 p-6 py-8 md:p-8 lg:p-12 justify-items-start">
+      <Suspense fallback={<CartLoading />}>
+        <Await resolve={root.data.cart}>
+          {(cart) => <Cart layout="page" cart={cart} />}
+        </Await>
+      </Suspense>
+    </div>
+  );
 }

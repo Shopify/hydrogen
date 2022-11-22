@@ -568,11 +568,11 @@ function useLinesAdd(
 
 /**
  * A utility hook to implement adding lines optimistic UI
- * @param lines CartLine[]
+ * @param lines CartLine[] | unknown
  * @returns {linesAdding, optimisticLinesAdd: []}
  */
 function useOptimisticLinesAdd(
-  lines: PartialDeep<CartLine, {recurseIntoArrays: true}>[],
+  lines?: PartialDeep<CartLine, {recurseIntoArrays: true}>[] | unknown,
 ): OptimisticLinesAdd {
   const linesAddingFetcher = useLinesAddingFetcher();
   const linesAddingStr = linesAddingFetcher?.submission?.formData?.get('lines');
@@ -611,7 +611,8 @@ function useOptimisticLinesAdd(
       } as PartialDeep<CartLine>;
 
       const {price, compareAtPrice} = variant;
-      if (price && price?.amount && price?.currencyCode && compareAtPrice) {
+
+      if (price && price?.amount && price?.currencyCode) {
         const lineTotalAmount = String(
           parseFloat(price.amount) * (line.quantity || 1),
         );
@@ -620,8 +621,12 @@ function useOptimisticLinesAdd(
             amount: lineTotalAmount,
             currencyCode: price.currencyCode,
           },
-          compareAtAmountPerQuantity: compareAtPrice,
         };
+      }
+      if (compareAtPrice) {
+        if (optimisticLine?.cost) {
+          optimisticLine.cost.compareAtAmountPerQuantity = compareAtPrice;
+        }
       }
 
       return optimisticLine;
@@ -637,12 +642,14 @@ function useOptimisticLinesAdd(
     if (!cartLinesAdding || !cartLinesAdding?.length) return result;
 
     // filter just the new optimistic lines
-    const addedIds = lines
-      .map((line) => {
-        if (!line?.merchandise?.id) return null;
-        return line.merchandise.id;
-      })
-      .filter(Boolean);
+    const addedIds = Array.isArray(lines)
+      ? lines
+          .map((line) => {
+            if (!line?.merchandise?.id) return null;
+            return line.merchandise.id;
+          })
+          .filter(Boolean)
+      : [];
 
     const addingIds = cartLinesAdding.map((line) => line.merchandise.id);
     const addingIdsNew = addingIds.filter((id) => !addedIds.includes(id));
