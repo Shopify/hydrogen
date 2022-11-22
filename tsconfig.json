@@ -1,10 +1,11 @@
 {
   "include": ["**/*.ts"],
-  "exclude": ["dist", "__tests__", "node_modules", "templates"],
+  "exclude": ["dist", "__tests__", "node_modules", "templates", "packages/cli"],
   "compilerOptions": {
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "target": "ESNext",
-    "types": ["@shopify/oxygen-workers-types"],
+    "module": "ESNext",
+    "types": ["@shopify/oxygen-workers-types", "node"],
     "moduleResolution": "Node",
     "allowSyntheticDefaultImports": true,
     "strict": true,
@@ -14,6 +15,7 @@
     "resolveJsonModule": true,
     "allowJs": true,
     "forceConsistentCasingInFileNames": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true
   }
 }

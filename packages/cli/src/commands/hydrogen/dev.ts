@@ -1,14 +1,49 @@
 import path from 'path';
-import * as remix from '@remix-run/dev/dist/compiler';
-import miniOxygenPreview from '@shopify/mini-oxygen';
-import {runBuild} from './build';
-import {getProjectPaths, getRemixConfig} from '../utils/config';
-import {muteDevLogs} from '../utils/log';
+import * as remix from '@remix-run/dev/dist/compiler.js';
+import miniOxygen from '@shopify/mini-oxygen';
+import {runBuild} from './build.js';
+import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
+import {muteDevLogs} from '../../utils/log.js';
+import {flags} from '../../utils/flags.js';
 import fs from 'fs-extra';
+import {fileURLToPath} from 'url';
+import {createRequire} from 'module';
+
+import Command from '@shopify/cli-kit/node/base-command';
+import {Flags} from '@oclif/core';
+
+const miniOxygenPreview =
+  miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
+
+// @ts-ignore
+export default class Dev extends Command {
+  static description =
+    'Runs Hydrogen storefront in a MiniOxygen worker in development';
+  static flags = {
+    ...flags,
+    port: Flags.integer({
+      description: 'Port to run the preview server on',
+      env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
+      default: 3000,
+    }),
+    entry: Flags.string({
+      env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
+      default: 'oxygen.ts',
+    }),
+  };
+
+  async run(): Promise<void> {
+    // @ts-ignore
+    const {flags} = await this.parse(Dev);
+    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+
+    await runDev({...flags, path: directory});
+  }
+}
 
 export async function runDev({
   entry,
-  port = 3000,
+  port,
   path: appPath,
 }: {
   entry: string;
@@ -34,15 +69,15 @@ export async function runDev({
       // eslint-disable-next-line no-console
       console.log('Rebuilding...');
     },
-    onFileCreated(file) {
+    onFileCreated(file: string) {
       // eslint-disable-next-line no-console
       console.log(`File created: ${path.relative(root, file)}`);
     },
-    onFileChanged(file) {
+    onFileChanged(file: string) {
       // eslint-disable-next-line no-console
       console.log(`File changed: ${path.relative(root, file)}`);
     },
-    onFileDeleted(file) {
+    onFileDeleted(file: string) {
       // eslint-disable-next-line no-console
       console.log(`File deleted: ${path.relative(root, file)}`);
     },
@@ -55,6 +90,7 @@ export async function runDev({
 
   if (process.env.LOCAL_DEV) {
     // Watch local packages when developing in Hydrogen repo
+    const require = createRequire(import.meta.url);
     const packagesPath = path.resolve(
       path.dirname(require.resolve('@shopify/hydrogen')),
       '..',
@@ -68,13 +104,23 @@ export async function runDev({
     buildWatchPaths.push(...packages);
   }
 
+  const devReloadPath = path.resolve(
+    fileURLToPath(import.meta.url),
+    '..',
+    '..',
+    '..',
+    '..',
+    'bin',
+    'dev-reload.mjs',
+  );
+
   // Run MiniOxygen and watch worker build
   miniOxygenPreview({
     workerFile: buildPathWorkerFile,
     port,
     assetsDir: buildPathClient,
     publicPath: '',
-    buildCommand: `cd ${root} && npm run h2 build -- --dev-reload --entry ${entry}`,
+    buildCommand: `${devReloadPath} ${entry}`,
     watch: true,
     buildWatchPaths,
     autoReload: true,
