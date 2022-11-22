@@ -115,6 +115,8 @@ export function FiltersDrawer({
 }
 
 function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
+  const [params] = useSearchParams();
+  const location = useLocation();
   return (
     <>
       <Heading as="h4" size="lead" className="pb-2">
@@ -124,9 +126,10 @@ function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
         {filters.map((filter: AppliedFilter) => {
           return (
             <Link
-              to=""
+              to={getAppliedFilterLink(filter, params, location)}
               className="rounded-full border px-4"
               key={`${filter.label}-${filter.urlParam}`}
+              reloadDocument
             >
               <span>{filter.label}</span> <span>x</span>
             </Link>
@@ -135,6 +138,16 @@ function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
       </div>
     </>
   );
+}
+
+function getAppliedFilterLink(
+  filter: AppliedFilter,
+  params: URLSearchParams,
+  location: ReturnType<typeof useLocation>,
+) {
+  const paramsClone = new URLSearchParams(params);
+  paramsClone.delete(filter.urlParam);
+  return `${location.pathname}?${paramsClone.toString()}`;
 }
 
 function getFilterLink(
