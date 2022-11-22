@@ -24,6 +24,11 @@ type VariantOptionFiltersQueryParam = Record<
   {name: string; value: string}
 >;
 
+export type AppliedFilter = {
+  label: string;
+  urlParam: string;
+};
+
 type FiltersQueryParams = Array<
   VariantFilterParam | PriceFiltersQueryParam | VariantOptionFiltersQueryParam
 >;
@@ -42,6 +47,7 @@ export async function loader({
   const priceFilters = ['minPrice', 'maxPrice'];
 
   const filters: FiltersQueryParams = [];
+  const appliedFilters: AppliedFilter[] = [];
 
   for (const [key, value] of searchParams.entries()) {
     if (knownFilters.includes(key)) {
@@ -49,6 +55,7 @@ export async function loader({
     } else if (!priceFilters.includes(key)) {
       filters.push({variantOption: {name: key, value}});
     }
+    appliedFilters.push({label: value, urlParam: key});
   }
 
   // Builds min and max price filter since we can't stack them separately into
@@ -81,7 +88,7 @@ export async function loader({
     throw new Response('Not found', {status: 404});
   }
 
-  return json({collection});
+  return json({collection, appliedFilters});
 }
 
 export const meta: MetaFunction = ({
@@ -96,7 +103,7 @@ export const meta: MetaFunction = ({
 };
 
 export default function Collection() {
-  const {collection} = useLoaderData<typeof loader>();
+  const {collection, appliedFilters} = useLoaderData<typeof loader>();
 
   return (
     <>
@@ -112,7 +119,10 @@ export default function Collection() {
         )}
       </PageHeader>
       <Section>
-        <SortFilter filters={collection.products.filters as Filter[]} />
+        <SortFilter
+          filters={collection.products.filters as Filter[]}
+          appliedFilters={appliedFilters}
+        />
         <ProductGrid
           key={collection.id}
           collection={collection as CollectionType}
