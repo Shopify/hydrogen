@@ -60,9 +60,9 @@ export const CART: PartialDeep<Cart, {recurseIntoArrays: true}> = {
 };
 
 export function getCartMock(
-  options?: Partial<Cart>
+  options?: PartialDeep<Cart>
 ): PartialDeep<Cart, {recurseIntoArrays: true}> {
-  return {...CART, ...options};
+  return mergeDeep({...CART}, {...options});
 }
 
 export const CART_WITH_LINES: PartialDeep<Cart, {recurseIntoArrays: true}> = {
@@ -80,14 +80,27 @@ export const CART_WITH_LINES_FLATTENED: PartialDeep<
   lines: flattenConnection(CART_WITH_LINES.lines),
 };
 
+/**
+ * Creates a `CartLine` mock
+ * @param options - The options to override the default cart line values
+ */
 export function getCartLineMock(
-  options?: Partial<CartLine>
+  options?: PartialDeep<CartLine>
 ): PartialDeep<CartLine, {recurseIntoArrays: true}> {
-  return {...CART_LINE, ...options};
+  return mergeDeep({...CART_LINE}, {...options});
 }
 
+/**
+ * Creates a `CartLine[]` array mock.
+ * @param options - The options to override the default cart line mock
+ * @param count - The number of cart lines to create
+ *
+ * are the number of cart lines to create.
+ */
 export function getCartLinesMock(
-  getOptions?: ((index: number) => Partial<CartLine>) | Partial<CartLine>,
+  getOptions?:
+    | ((index: number) => PartialDeep<CartLine>)
+    | PartialDeep<CartLine>,
   count?: number
 ): CartLineConnection {
   const nodes = Array.from({length: count ?? 1}, (_, index) => {
@@ -102,4 +115,49 @@ export function getCartLinesMock(
   return {
     edges: nodes,
   } as CartLineConnection;
+}
+
+/**
+ * Performs a deep merge of `source` into `target`.
+ * creating a new object.
+ * @param target - The target object to merge into
+ * @param source - The source object to merge from
+ *
+ * @remarks Modified from [enten](https://gist.github.com/ahtcx/0cd94e62691f539160b32ecda18af3d6)
+ * and [jhildenbiddle](https://stackoverflow.com/a/48218209).
+ */
+function mergeDeep(
+  target: Partial<Record<string, unknown>>,
+  source: Partial<Record<string, unknown>>
+): Partial<Record<string, unknown>> {
+  const isObject = (obj: unknown) => obj && typeof obj === 'object';
+
+  if (!isObject(target) || !isObject(source)) {
+    return {...source};
+  }
+
+  const newTarget = {...target};
+  const newSource = {...source};
+
+  Object.keys(newSource).forEach((key) => {
+    const newTargetValue = newTarget[key];
+    const newSourceValue = newSource[key];
+
+    if (Array.isArray(newTargetValue) && Array.isArray(newSourceValue)) {
+      newTarget[key] = [...newTargetValue, ...newSourceValue];
+    } else if (
+      isObject(newTargetValue) &&
+      isObject(newSourceValue) &&
+      newSourceValue
+    ) {
+      newTarget[key] = mergeDeep(
+        Object.assign({}, newTargetValue),
+        newSourceValue
+      );
+    } else {
+      newTarget[key] = newSourceValue;
+    }
+  });
+
+  return newTarget;
 }
