@@ -2,11 +2,12 @@ import {muteDevLogs} from '../../utils/log.js';
 import {getProjectPaths} from '../../utils/config.js';
 import {flags} from '../../utils/flags.js';
 import miniOxygen from '@shopify/mini-oxygen';
-import {Command} from '@oclif/core';
+import Command from '@shopify/cli-kit/node/base-command';
 
 const miniOxygenPreview =
-  (miniOxygen as unknown as {default: typeof miniOxygen}).default ?? miniOxygen;
+  miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
 
+// @ts-ignore
 export default class Preview extends Command {
   static description =
     'Runs an existing Hydrogen storefront build in a MiniOxygen worker';
@@ -16,6 +17,7 @@ export default class Preview extends Command {
   };
 
   async run(): Promise<void> {
+    // @ts-ignore
     const {flags} = await this.parse(Preview);
 
     await runPreview({...flags});

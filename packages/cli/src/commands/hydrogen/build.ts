@@ -5,10 +5,10 @@ import fsExtra from 'fs-extra';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {flags} from '../../utils/flags.js';
 
-// TODO: why can't we use the shopify kit version of this?
-// import Command from '@shopify/cli-kit/node/base-command';
-import {Flags, Command} from '@oclif/core';
+import Command from '@shopify/cli-kit/node/base-command';
+import {Flags} from '@oclif/core';
 
+// @ts-ignore
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production';
   static flags = {
@@ -30,6 +30,7 @@ export default class Build extends Command {
   };
 
   async run(): Promise<void> {
+    // @ts-ignore
     const {flags} = await this.parse(Build);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
