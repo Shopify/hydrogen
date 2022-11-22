@@ -4,11 +4,11 @@ import {
   type MetaFunction,
   type SerializeFrom,
 } from '@shopify/hydrogen-remix';
-import {Link, useLoaderData} from '@remix-run/react';
+import {useLoaderData} from '@remix-run/react';
 import {ShopPolicy} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 
-import {PageHeader, Section, Heading} from '~/components';
+import {PageHeader, Section, Heading, Link} from '~/components';
 
 export async function loader({context: {storefront}}: LoaderArgs) {
   const data = await storefront.query<{

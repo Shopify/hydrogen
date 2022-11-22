@@ -3,8 +3,8 @@ import {
   NavLink as RemixNavLink,
   type NavLinkProps as RemixNavLinkProps,
   type LinkProps as RemixLinkProps,
+  useMatches,
 } from '@remix-run/react';
-import {useSelectedLocale} from '~/hooks/useSelectedLocale';
 
 type LinkProps = Omit<RemixLinkProps, 'className'> & {
   className?: RemixNavLinkProps['className'] | RemixLinkProps['className'];
@@ -27,7 +27,8 @@ type LinkProps = Omit<RemixLinkProps, 'className'> & {
  */
 export function Link(props: LinkProps) {
   const {to, className, ...resOfProps} = props;
-  const selectedLocale = useSelectedLocale();
+  const [root] = useMatches();
+  const selectedLocale = root.data.selectedLocale;
 
   let toWithLocale = to;
 

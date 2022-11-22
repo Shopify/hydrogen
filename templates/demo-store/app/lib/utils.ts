@@ -1,17 +1,13 @@
-import {useLocation, useParams} from '@remix-run/react';
+import {useLocation, useMatches} from '@remix-run/react';
 import type {
   MenuItem,
   Menu,
   MoneyV2,
-  UserError,
-  CountryCode,
-  LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 // @ts-expect-error types not available
 import typographicBase from 'typographic-base';
 import {countries} from '~/data/countries';
-import {useSelectedLocale} from '~/hooks/useSelectedLocale';
 import {Locale} from './type';
 
 export interface EnhancedMenuItem extends MenuItem {
@@ -272,7 +268,8 @@ export function getLocaleFromRequest(request: Request): Locale & {
 }
 
 export function usePrefixPathWithLocale(path: string) {
-  const selectedLocale = useSelectedLocale();
+  const [root] = useMatches();
+  const selectedLocale = root.data.selectedLocale;
 
   return selectedLocale
     ? `${selectedLocale.pathPrefix}${path.startsWith('/') ? path : '/' + path}`
@@ -281,7 +278,8 @@ export function usePrefixPathWithLocale(path: string) {
 
 export function useIsHomePath() {
   const {pathname} = useLocation();
-  const selectedLocale = useSelectedLocale();
+  const [root] = useMatches();
+  const selectedLocale = root.data.selectedLocale;
   const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
 
   return strippedPathname === '/';

@@ -70,17 +70,21 @@ export async function loader({context, request}: LoaderArgs) {
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
+  const locale = data.selectedLocale;
 
   return (
-    <html lang={data.selectedLocale.language}>
+    <html lang={locale.language}>
       <head>
         <Seo />
         <Meta />
         <Links />
       </head>
       <body>
-        <Layout layout={data.layout as LayoutData}>
-          <Outlet key={data.selectedLocale.country} />
+        <Layout
+          layout={data.layout as LayoutData}
+          key={`${locale.language}-${locale.country}`}
+        >
+          <Outlet />
         </Layout>
         <Debugger />
         <ScrollRestoration />
@@ -94,16 +98,20 @@ export function CatchBoundary() {
   const [root] = useMatches();
   const caught = useCatch();
   const isNotFound = caught.status === 404;
+  const locale = root.data.selectedLocale;
 
   return (
-    <html lang="en">
+    <html lang={locale.language}>
       <head>
         <title>{isNotFound ? 'Not found' : 'Error'}</title>
         <Meta />
         <Links />
       </head>
       <body>
-        <Layout layout={root.data.layout}>
+        <Layout
+          layout={root.data.layout}
+          key={`${locale.language}-${locale.country}`}
+        >
           {isNotFound ? (
             <NotFound type={caught.data?.pageType} />
           ) : (
@@ -122,7 +130,7 @@ export function ErrorBoundary({error}: {error: Error}) {
   const [root] = useMatches();
 
   return (
-    <html lang="en">
+    <html lang={root.data.selectedLocale.language}>
       <head>
         <title>Error</title>
         <Meta />
