@@ -58,11 +58,15 @@ export const meta: MetaFunction = () => ({
 });
 
 export async function loader({context, request}: LoaderArgs) {
-  const cartId = await context.session.get('cartId');
+  const [cartId, layout, selectedLocale] = await Promise.all([
+    context.session.get('cartId'),
+    getLayoutData(context),
+    getLocaleFromRequest(request),
+  ]);
 
   return defer({
-    layout: await getLayoutData(context),
-    selectedLocale: await getLocaleFromRequest(request),
+    layout,
+    selectedLocale,
     countries,
     cart: cartId ? getCart(context, {cartId}) : undefined,
   });
@@ -182,6 +186,10 @@ const CART_QUERY = `#graphql
           }
           cost {
             totalAmount {
+              amount
+              currencyCode
+            }
+            amountPerQuantity {
               amount
               currencyCode
             }

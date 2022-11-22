@@ -1,3 +1,4 @@
+import invariant from 'tiny-invariant';
 import type {PartialDeep} from 'type-fest';
 import {forwardRef, useCallback, useEffect, useId} from 'react';
 import {useFetcher, useLocation, useFetchers} from '@remix-run/react';
@@ -14,13 +15,13 @@ import {
   redirect,
   json,
 } from '@shopify/hydrogen-remix';
-import invariant from 'tiny-invariant';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {
   getCartLines,
   LINES_CART_FRAGMENT,
   USER_ERROR_FRAGMENT,
 } from './LinesAdd';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 interface UpdateCartLineProps {
   lines: CartLineUpdateInput[];
@@ -237,6 +238,7 @@ const LinesUpdateForm = forwardRef(
     const event = fetcher.data?.event;
     const eventId = fetcher.data?.event?.id;
     const error = fetcher.data?.error;
+    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
     useEffect(() => {
       if (!eventId) return;
@@ -247,7 +249,12 @@ const LinesUpdateForm = forwardRef(
     if (!lines.length) return null;
 
     return (
-      <fetcher.Form id={formId} method="post" action={ACTION_PATH} ref={ref}>
+      <fetcher.Form
+        id={formId}
+        method="post"
+        action={localizedActionPath}
+        ref={ref}
+      >
         {/* used to trigger a redirect back to the same url when JS is disabled */}
         {isHydrated ? null : (
           <input
@@ -269,8 +276,9 @@ const LinesUpdateForm = forwardRef(
  */
 function useLinesUpdatingFetcher() {
   const fetchers = useFetchers();
+  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
   return fetchers.find(
-    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
+    (fetcher) => fetcher?.submission?.action === localizedActionPath,
   );
 }
 
@@ -284,6 +292,7 @@ function useLinesUpdate(
 ) {
   const fetcher = useFetcher();
   const linesUpdateFetcher = useLinesUpdatingFetcher();
+  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
   let linesUpdating;
 
@@ -306,11 +315,11 @@ function useLinesUpdate(
       form.set('lines', JSON.stringify(lines));
       fetcher.submit(form, {
         method: 'post',
-        action: ACTION_PATH,
+        action: localizedActionPath,
         replace: false,
       });
     },
-    [fetcher],
+    [fetcher, localizedActionPath],
   );
 
   useEffect(() => {
@@ -328,20 +337,19 @@ function useLinesUpdate(
 
 /**
  * A utility hook to implement optimistic line updates
- * @param lines CartLine
- * @returns {optimisticLineUpdateQuantity, lineUpdating, linesUpdating}
+ * @param line CartLine
+ * @returns {lineUpdating, linesUpdating}
  */
-function useOptimisticLineUpdate(
-  line?: CartLine | PartialDeep<CartLine, {recurseIntoArrays: true}>,
+function useLineUpdating(
+  line: CartLine | PartialDeep<CartLine, {recurseIntoArrays: true}>,
 ) {
   const linesUpdateFetcher = useLinesUpdatingFetcher();
 
   let linesUpdating: CartLine[] = [];
-  let lineUpdating: CartLine | null | undefined = null;
-  let optimisticLineUpdateQuantity = line?.quantity || 1;
+  let lineUpdating: CartLine | null = null;
 
   if (!linesUpdateFetcher?.submission) {
-    return {lineUpdating, linesUpdating, optimisticLineUpdateQuantity};
+    return {lineUpdating, linesUpdating};
   }
 
   // parse updating lines
@@ -356,16 +364,12 @@ function useOptimisticLineUpdate(
   }
 
   // filter updating line
-  lineUpdating =
-    line && linesUpdating?.length
-      ? linesUpdating.find((updatingLine) => updatingLine.id === line.id)
-      : null;
-
-  if (lineUpdating) {
-    optimisticLineUpdateQuantity = lineUpdating.quantity;
+  if (line && linesUpdating?.length) {
+    lineUpdating =
+      linesUpdating.find((updatingLine) => updatingLine.id === line.id) || null;
   }
 
-  return {optimisticLineUpdateQuantity, lineUpdating, linesUpdating};
+  return {lineUpdating, linesUpdating};
 }
 
 export {
@@ -373,5 +377,5 @@ export {
   LinesUpdateForm,
   linesUpdateMutation,
   useLinesUpdate,
-  useOptimisticLineUpdate,
+  useLineUpdating,
 };

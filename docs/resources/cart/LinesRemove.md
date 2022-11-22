@@ -9,7 +9,7 @@ A Remix `fetcher.Form` that removes a set of line(s) from the cart. This form mu
 
 | Prop         | Type                                                             | Description                                                                    |
 | :----------- | :--------------------------------------------------------------- | :----------------------------------------------------------------------------- |
-| `lineIds`    | `['lineId..]`                                                    | `line ids to remove from the cart`                                             |
+| `lineIds`    | `[ID!]!`                                                         | `line ids to remove from the cart`                                             |
 | `onSuccess?` | `(event) => void`                                                | `A callback that runs after every successful event`                            |
 | `children`   | `({ state: 'idle' or 'submitting' or 'loading'; error: string})` | `A render prop that provides the state and errors for the current submission.` |
 
