@@ -5,6 +5,7 @@ import {
 import {type ActionFunction, redirect} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {updateCartBuyerIdentity} from '~/data';
+import {countries} from '~/data/countries';
 
 export const action: ActionFunction = async ({request, context}) => {
   const {session} = context;
@@ -19,8 +20,10 @@ export const action: ActionFunction = async ({request, context}) => {
   let newPrefixPath = '';
   const path = formData.get('path');
   const hreflang = `${languageCode}-${countryCode}`;
+  const defaultLocale = countries['default'];
 
-  if (hreflang !== 'EN-US') newPrefixPath = `/${hreflang.toLowerCase()}`;
+  if (hreflang !== `${defaultLocale.language}-${defaultLocale.country}`)
+    newPrefixPath = `/${hreflang.toLowerCase()}`;
 
   const cartId = await session.get('cartId');
 
