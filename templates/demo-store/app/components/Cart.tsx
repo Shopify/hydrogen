@@ -2,11 +2,6 @@ import clsx from 'clsx';
 import {useRef} from 'react';
 import {useScroll} from 'react-use';
 import {flattenConnection, Image, Money} from '@shopify/hydrogen-react';
-import {
-  type FetcherWithComponents,
-  useFetcher,
-  useLocation,
-} from '@remix-run/react';
 import {Button, Heading, IconRemove, Text, Link} from '~/components';
 import type {
   Cart,
@@ -20,10 +15,10 @@ import {
   useOptimisticLineRemove,
 } from '~/routes/__resources/cart/LinesRemove';
 import {FeaturedProducts} from '~/components/FeaturedProducts';
-
-enum Action {
-  SetQuantity = 'set-quantity',
-}
+import {
+  useLineUpdating,
+  LinesUpdateForm,
+} from '~/routes/__resources/cart/LinesUpdate';
 
 type Layouts = 'page' | 'drawer';
 
@@ -91,10 +86,8 @@ function CartLines({
 }) {
   const currentLines = cartLines ? flattenConnection(cartLines) : [];
   const {optimisticLinesAdd} = useOptimisticLinesAdd(currentLines);
-
   const scrollRef = useRef(null);
   const {y} = useScroll(scrollRef);
-  const lineItemFetcher = useFetcher();
 
   const className = clsx([
     y > 0 ? 'border-t' : '',
@@ -110,25 +103,12 @@ function CartLines({
       className={className}
     >
       <ul className="grid gap-6 md:gap-10">
-        {optimisticLinesAdd.map((line) => {
-          return (
-            <CartLineItem
-              key={line.id}
-              line={line as CartLine}
-              fetcher={lineItemFetcher}
-              optimistic
-            />
-          );
-        })}
-        {currentLines.map((line) => {
-          return (
-            <CartLineItem
-              key={line.id}
-              line={line as CartLine}
-              fetcher={lineItemFetcher}
-            />
-          );
-        })}
+        {optimisticLinesAdd.map((line) => (
+          <CartLineItem key={line.id} line={line as CartLine} optimistic />
+        ))}
+        {currentLines.map((line) => (
+          <CartLineItem key={line.id} line={line as CartLine} />
+        ))}
       </ul>
     </section>
   );
@@ -187,34 +167,22 @@ function CartSummary({
 
 function CartLineItem({
   line,
-  fetcher,
   optimistic = false,
 }: {
   line: CartLine;
-  fetcher: FetcherWithComponents<any>;
   optimistic?: boolean;
 }) {
-  const {id: lineId, quantity, merchandise} = line;
   const {optimisticLineRemove} = useOptimisticLineRemove(line);
-  let optimisticQuantity = quantity;
 
-  if (
-    fetcher.submission &&
-    fetcher.submission.formData.get('lineId') === lineId
-  ) {
-    switch (fetcher.submission.formData.get('intent')) {
-      case Action.SetQuantity: {
-        optimisticQuantity = Number(
-          fetcher.submission.formData.get('quantity'),
-        );
-        break;
-      }
-    }
-  }
+  if (!line?.id) return null;
+
+  const {id, quantity, merchandise} = line;
+
+  if (typeof quantity === 'undefined' || !merchandise?.product) return null;
 
   return (
     <li
-      key={lineId}
+      key={id}
       className={clsx(['flex gap-4', optimisticLineRemove ? 'hidden' : ''])}
     >
       <div className="flex-shrink">
@@ -251,14 +219,9 @@ function CartLineItem({
 
           <div className="flex items-center gap-2">
             <div className="flex justify-start text-copy">
-              <CartLineQuantityAdjust
-                fetcher={fetcher}
-                lineId={lineId}
-                quantity={optimisticQuantity}
-                optimistic={optimistic}
-              />
+              <CartLineQuantityAdjust line={line} optimistic={optimistic} />
             </div>
-            <CartLineRemove lineIds={[lineId]} />
+            <CartLineRemove lineIds={[id]} />
           </div>
         </div>
         <Text>
@@ -289,55 +252,55 @@ function CartLineRemove({lineIds}: {lineIds: CartLine['id'][]}) {
 }
 
 function CartLineQuantityAdjust({
-  lineId,
-  quantity,
-  fetcher,
+  line,
   optimistic,
 }: {
   optimistic: boolean;
-  lineId: string;
-  quantity: number;
-  fetcher: FetcherWithComponents<any>;
+  line: CartLine;
 }) {
-  const location = useLocation();
+  const {lineUpdating} = useLineUpdating(line);
+  if (!line) return null;
+  const {id: lineId, quantity: actualQuantity} = line;
+  const quantity = lineUpdating ? lineUpdating.quantity : actualQuantity;
+  const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
+  const nextQuantity = Number((quantity + 1).toFixed(0));
 
   return (
     <>
       <label htmlFor={`quantity-${lineId}`} className="sr-only">
         Quantity, {quantity}
       </label>
-      <fetcher.Form
-        method="post"
-        action="/cart"
-        className="flex items-center border rounded"
-      >
-        <input type="hidden" name="intent" defaultValue={Action.SetQuantity} />
-        <input type="hidden" name="lineId" value={lineId} />
-        <input
-          type="hidden"
-          name="redirect"
-          value={location.pathname + location.search}
-        />
-        <button
-          name="quantity"
-          value={Math.max(0, quantity - 1).toFixed(0)}
-          aria-label="Decrease quantity"
-          disabled={quantity <= 1 || optimistic}
-          className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
-        >
-          &#8722;
-        </button>
-        <div className="px-2 w-8 text-center">{quantity}</div>
-        <button
-          name="quantity"
-          value={(quantity + 1).toFixed(0)}
-          aria-label="Increase quantity"
-          className="w-10 h-10 transition text-primary/50 hover:text-primary"
-          disabled={optimistic}
-        >
-          &#43;
-        </button>
-      </fetcher.Form>
+      <div className="flex items-center border rounded">
+        <LinesUpdateForm lines={[{id: lineId, quantity: prevQuantity}]}>
+          {() => (
+            <button
+              name="decrease-quantity"
+              aria-label="Decrease quantity"
+              className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
+              value={prevQuantity}
+              disabled={quantity <= 1 || optimistic}
+            >
+              <span>&#8722;</span>
+            </button>
+          )}
+        </LinesUpdateForm>
+
+        <div className="px-2 text-center">{quantity}</div>
+
+        <LinesUpdateForm lines={[{id: lineId, quantity: nextQuantity}]}>
+          {() => (
+            <button
+              className="w-10 h-10 transition text-primary/50 hover:text-primary"
+              name="increase-quantity"
+              value={nextQuantity}
+              aria-label="Increase quantity"
+              disabled={optimistic}
+            >
+              <span>&#43;</span>
+            </button>
+          )}
+        </LinesUpdateForm>
+      </div>
     </>
   );
 }
@@ -351,11 +314,26 @@ function CartLinePrice({
   priceType?: 'regular' | 'compareAt';
   [key: string]: any;
 }) {
-  if (!line?.cost?.totalAmount) return null;
+  const {lineUpdating} = useLineUpdating(line);
+
+  if (!line?.cost?.amountPerQuantity || !line?.cost?.totalAmount) return null;
+
+  // optimistic line item price
+  const totalAmount = lineUpdating
+    ? {
+        amount: String(
+          (
+            lineUpdating.quantity *
+            parseFloat(line.cost.amountPerQuantity.amount)
+          ).toFixed(2),
+        ),
+        currencyCode: line.cost.amountPerQuantity.currencyCode,
+      }
+    : line.cost.totalAmount;
 
   const moneyV2 =
     priceType === 'regular'
-      ? line.cost.totalAmount
+      ? totalAmount
       : line.cost.compareAtAmountPerQuantity;
 
   if (moneyV2 == null) {
