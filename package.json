@@ -7,7 +7,7 @@
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
-    "typecheck": "tsc --noEmit && npm run typecheck -w demo-store"
+    "typecheck": "tsc --noEmit && npm run typecheck -w demo-store && npm run typecheck -w @shopify/cli-hydrogen"
   },
   "workspaces": [
     "templates/demo-store",

@@ -1,5 +1,5 @@
-import {readConfig, RemixConfig} from '@remix-run/dev/dist/config';
-import {ServerMode} from '@remix-run/dev/dist/config/serverModes';
+import {readConfig, type RemixConfig} from '@remix-run/dev/dist/config.js';
+import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
 import path from 'path';
 
 const BUILD_DIR = 'build';
