@@ -5,7 +5,7 @@ import {type ActionFunction, json} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {updateLineItem} from '~/data';
 
-export const action: ActionFunction = async ({request, context, params}) => {
+export const action: ActionFunction = async ({request, context}) => {
   let cart;
 
   const formData = new URLSearchParams(await request.text());
