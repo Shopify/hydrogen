@@ -6,7 +6,10 @@
       "inputs": ["src/**/*.ts", "./tsup.config.ts"]
     },
     "dev": {
-      "dependsOn": ["@shopify/hydrogen-remix#build"],
+      "dependsOn": [
+        "@shopify/cli-hydrogen#build",
+        "@shopify/hydrogen-remix#build"
+      ],
       "cache": false
     },
     "lint": {
@@ -20,7 +23,10 @@
       "dependsOn": ["@shopify/hydrogen#build", "@remix-run/oxygen#build"]
     },
     "demo-store#build": {
-      "dependsOn": ["@shopify/hydrogen-remix#build"]
+      "dependsOn": [
+        "@shopify/cli-hydrogen#build",
+        "@shopify/hydrogen-remix#build"
+      ]
     }
   }
 }
