@@ -1,7 +1,8 @@
 import {cli as remixCli} from '@remix-run/dev';
-// TODO: why can't we use the shopify kit version of this?
-import {Flags, Command} from '@oclif/core';
+import Command from '@shopify/cli-kit/node/base-command';
+import {Flags} from '@oclif/core';
 
+// @ts-ignore
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront project';
   static flags = {
@@ -12,6 +13,7 @@ export default class Init extends Command {
   };
 
   async run(): Promise<void> {
+    // @ts-ignore
     const {flags} = await this.parse(Init);
 
     await runInit({...flags});

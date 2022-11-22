@@ -9,13 +9,13 @@ import fs from 'fs-extra';
 import {fileURLToPath} from 'url';
 import {createRequire} from 'module';
 
-// TODO: why can't we use the shopify kit version of this?
-// import Command from '@shopify/cli-kit/node/base-command';
-import {Flags, Command} from '@oclif/core';
+import Command from '@shopify/cli-kit/node/base-command';
+import {Flags} from '@oclif/core';
 
 const miniOxygenPreview =
-  (miniOxygen as unknown as {default: typeof miniOxygen}).default ?? miniOxygen;
+  miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
 
+// @ts-ignore
 export default class Dev extends Command {
   static description =
     'Runs Hydrogen storefront in a MiniOxygen worker in development';

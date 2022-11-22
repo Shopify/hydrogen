@@ -2,6 +2,7 @@
   "extends": "../../tsconfig.json",
   "include": ["src/**/*.ts"],
   "compilerOptions": {
+    "moduleResolution": "NodeNext",
     "rootDir": "src",
     "composite": true,
     "sourceMap": true,
