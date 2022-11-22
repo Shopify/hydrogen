@@ -28,6 +28,8 @@ type FiltersQueryParams = Array<
   VariantFilterParam | PriceFiltersQueryParam | VariantOptionFiltersQueryParam
 >;
 
+type SortParam = 'price-asc' | 'price-desc' | 'trending' | 'latest' | 'oldest';
+
 export async function loader({
   params,
   request,
@@ -40,7 +42,9 @@ export async function loader({
   const searchParams = new URL(request.url).searchParams;
   const knownFilters = ['cursor', 'productVendor', 'productType', 'available'];
   const priceFilters = ['minPrice', 'maxPrice'];
-
+  const {sortKey, reverse} = getSortValuesFromParam(
+    searchParams.get('sort') as SortParam,
+  );
   const filters: FiltersQueryParams = [];
 
   for (const [key, value] of searchParams.entries()) {
@@ -74,6 +78,8 @@ export async function loader({
       handle: collectionHandle,
       pageBy: PAGINATION_SIZE,
       filters,
+      sortKey,
+      reverse,
     },
   });
 
@@ -132,6 +138,8 @@ const COLLECTION_QUERY = `#graphql
     $pageBy: Int!
     $cursor: String
     $filters: [ProductFilter!]
+    $sortKey: ProductCollectionSortKeys!
+    $reverse: Boolean
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -153,6 +161,8 @@ const COLLECTION_QUERY = `#graphql
         first: $pageBy,
         after: $cursor,
         filters: $filters,
+        sortKey: $sortKey,
+        reverse: $reverse
       ) {
         filters {
           id
@@ -176,3 +186,38 @@ const COLLECTION_QUERY = `#graphql
     }
   }
 `;
+
+function getSortValuesFromParam(sortParam: SortParam | null) {
+  switch (sortParam) {
+    case 'price-asc':
+      return {
+        sortKey: 'PRICE',
+        reverse: false,
+      };
+    case 'price-desc':
+      return {
+        sortKey: 'PRICE',
+        reverse: true,
+      };
+    case 'trending':
+      return {
+        sortKey: 'BEST_SELLING',
+        reverse: false,
+      };
+    case 'latest':
+      return {
+        sortKey: 'CREATED_AT',
+        reverse: true,
+      };
+    case 'oldest':
+      return {
+        sortKey: 'CREATED_AT',
+        reverse: false,
+      };
+    default:
+      return {
+        sortKey: 'RELEVANCE',
+        reverse: false,
+      };
+  }
+}
