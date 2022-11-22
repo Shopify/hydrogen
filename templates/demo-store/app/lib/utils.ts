@@ -262,7 +262,7 @@ export function getLocaleFromRequest(request: Request): Locale & {
         pathPrefix: firstPathPart,
       }
     : {
-        ...countries[''],
+        ...countries['default'],
         pathPrefix: '',
       };
 }
