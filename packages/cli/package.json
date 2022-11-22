@@ -8,9 +8,6 @@
     "typecheck": "tsc --noEmit",
     "postinstall": "./bin/postinstall.mjs"
   },
-  "exports": {
-    "./*": "./dist/*"
-  },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13"
   },
