@@ -4,30 +4,26 @@ import {
   redirect,
 } from '@shopify/hydrogen-remix';
 import {LoaderArgs} from '@remix-run/server-runtime';
-import {getSession} from '~/lib/session.server';
+import {getLocaleFromRequest} from '~/lib/utils';
 
-export async function logout(
-  request: Request,
-  context: AppLoadContext,
-  params: LoaderArgs['params'],
-) {
-  const session = await getSession(request, context);
+export async function logout(request: Request, context: AppLoadContext) {
+  const {session} = context;
   session.unset('customerAccessToken');
 
-  return redirect(
-    params.lang ? `${params.lang}/account/login` : '/account/login',
-    {
-      headers: {
-        'Set-Cookie': await session.commit(),
-      },
+  const {pathPrefix} = getLocaleFromRequest(request);
+
+  return redirect(`${pathPrefix}/account/login`, {
+    headers: {
+      'Set-Cookie': await session.commit(),
     },
-  );
+  });
 }
 
-export async function loader({params}: LoaderArgs) {
-  return redirect(params.lang ? `${params.lang}/` : '/');
+export async function loader({request}: LoaderArgs) {
+  const {pathPrefix} = getLocaleFromRequest(request);
+  return redirect(pathPrefix);
 }
 
-export const action: ActionFunction = async ({request, context, params}) => {
-  return logout(request, context, params);
+export const action: ActionFunction = async ({request, context}) => {
+  return logout(request, context);
 };

@@ -16,7 +16,6 @@ import {
   updateCustomerAddress,
   updateCustomerDefaultAddress,
 } from '~/data';
-import {getSession} from '~/lib/session.server';
 import {getInputStyleClasses} from '~/lib/utils';
 import type {AccountOutletContext} from '../edit';
 
@@ -31,12 +30,9 @@ export const handle = {
 };
 
 export const action: ActionFunction = async ({request, context, params}) => {
-  const [formData, session] = await Promise.all([
-    request.formData(),
-    getSession(request, context),
-  ]);
+  const formData = await request.formData();
 
-  const customerAccessToken = await session.get('customerAccessToken');
+  const customerAccessToken = await context.session.get('customerAccessToken');
   invariant(customerAccessToken, 'You must be logged in to edit your account.');
 
   const addressId = formData.get('addressId');

@@ -9,7 +9,6 @@ import {
 import {Form, useActionData, useLoaderData} from '@remix-run/react';
 import {useState} from 'react';
 import {login} from '~/data';
-import {getSession} from '~/lib/session.server';
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
 
@@ -17,9 +16,8 @@ export const handle = {
   isPublic: true,
 };
 
-export async function loader({request, context, params}: LoaderArgs) {
-  const session = await getSession(request, context);
-  const customerAccessToken = await session.get('customerAccessToken');
+export async function loader({context, params}: LoaderArgs) {
+  const customerAccessToken = await context.session.get('customerAccessToken');
 
   if (customerAccessToken) {
     return redirect(params.lang ? `${params.lang}/account` : '/account');
@@ -36,10 +34,7 @@ type ActionData = {
 const badRequest = (data: ActionData) => json(data, {status: 400});
 
 export const action: ActionFunction = async ({request, context, params}) => {
-  const [formData, session] = await Promise.all([
-    request.formData(),
-    getSession(request, context),
-  ]);
+  const formData = await request.formData();
 
   const email = formData.get('email');
   const password = formData.get('password');
@@ -57,6 +52,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   try {
     const customerAccessToken = await login(context, {email, password});
+    const {session} = context;
     session.set('customerAccessToken', customerAccessToken);
 
     return redirect(params.lang ? `${params.lang}/account` : '/account', {

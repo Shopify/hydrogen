@@ -7,14 +7,11 @@ import {useLoaderData} from '@remix-run/react';
 
 import {PageHeader, Section, Button} from '~/components';
 import invariant from 'tiny-invariant';
-import {getLocalizationFromLang} from '~/lib/utils';
 import {ShopPolicy} from '@shopify/hydrogen-react/storefront-api-types';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   invariant(params.policyHandle, 'Missing policy handle');
   const handle = params.policyHandle;
-
-  const {language} = getLocalizationFromLang(params.lang);
 
   const policyName = handle.replace(/-([a-z])/g, (_: unknown, m1: string) =>
     m1.toUpperCase(),
@@ -24,7 +21,6 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     shop: Record<string, ShopPolicy>;
   }>(POLICY_CONTENT_QUERY, {
     variables: {
-      language,
       privacyPolicy: false,
       shippingPolicy: false,
       termsOfService: false,
@@ -99,12 +95,12 @@ const POLICY_CONTENT_QUERY = `#graphql
   }
 
   query PoliciesQuery(
-    $languageCode: LanguageCode
+    $language: LanguageCode
     $privacyPolicy: Boolean!
     $shippingPolicy: Boolean!
     $termsOfService: Boolean!
     $refundPolicy: Boolean!
-  ) @inContext(language: $languageCode) {
+  ) @inContext(language: $language) {
     shop {
       privacyPolicy @include(if: $privacyPolicy) {
         ...Policy

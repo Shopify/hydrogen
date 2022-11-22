@@ -13,7 +13,6 @@ import clsx from 'clsx';
 import invariant from 'tiny-invariant';
 import {Button, Text} from '~/components';
 import {getCustomer, updateCustomer} from '~/data';
-import {getSession} from '~/lib/session.server';
 import {getInputStyleClasses} from '~/lib/utils';
 
 export interface AccountOutletContext {
@@ -48,12 +47,9 @@ export const handle = {
 };
 
 export const action: ActionFunction = async ({request, context, params}) => {
-  const [formData, session] = await Promise.all([
-    request.formData(),
-    getSession(request, context),
-  ]);
+  const formData = await request.formData();
 
-  const customerAccessToken = await session.get('customerAccessToken');
+  const customerAccessToken = await context.session.get('customerAccessToken');
 
   invariant(
     customerAccessToken,
@@ -62,7 +58,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   // Double-check current user is logged in.
   // Will throw a logout redirect if not.
-  await getCustomer(context, {customerAccessToken, request, params});
+  await getCustomer(context, {customerAccessToken, request});
 
   if (
     formDataHas(formData, 'newPassword') &&

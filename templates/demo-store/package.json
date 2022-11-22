@@ -4,9 +4,9 @@
   "scripts": {
     "build": "npm run build:css && shopify hydrogen build --entry oxygen.ts",
     "build:css": "postcss styles --base styles --dir app/styles --env production",
-    "dev": "ENCRYPTION_KEY=foobar concurrently -g -r npm:dev:css \"shopify hydrogen dev --entry oxygen.ts\"",
+    "dev": "SESSION_SECRET=foobar concurrently -g -r npm:dev:css \"shopify hydrogen dev --entry oxygen.ts\"",
     "dev:css": "postcss styles --base styles --dir app/styles -w",
-    "preview": "npm run build && ENCRYPTION_KEY=foobar shopify hydrogen preview",
+    "preview": "npm run build && SESSION_SECRET=foobar shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "format": "prettier --write --ignore-unknown .",
     "typecheck": "tsc --noEmit"
@@ -46,6 +46,7 @@
     "@types/react-dom": "^18.0.6",
     "concurrently": "^7.4.0",
     "cross-env": "^7.0.3",
+    "esbuild": "^0.15.14",
     "eslint": "^8.20.0",
     "eslint-plugin-hydrogen": "0.12.2",
     "postcss": "^8.4.16",
@@ -53,6 +54,7 @@
     "postcss-import": "^15.0.0",
     "postcss-preset-env": "^7.8.2",
     "prettier": "^2.7.1",
+    "recursive-readdir": "^2.2.3",
     "rimraf": "^3.0.2",
     "tailwindcss": "^3.1.8",
     "typescript": "^4.8.3"
