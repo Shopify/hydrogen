@@ -4,8 +4,6 @@ import {Await, Form, useLoaderData} from '@remix-run/react';
 import type {
   Collection,
   CollectionConnection,
-  CountryCode,
-  LanguageCode,
   Product,
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
@@ -23,7 +21,6 @@ import {
 } from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
 import {PAGINATION_SIZE} from '~/lib/const';
-import {getLocalizationFromLang} from '~/lib/utils';
 
 export default function () {
   const {searchTerm, products, noResultRecommendations} =
@@ -91,15 +88,10 @@ export default function () {
   );
 }
 
-export async function loader({
-  request,
-  params,
-  context: {storefront},
-}: LoaderArgs) {
+export async function loader({request, context: {storefront}}: LoaderArgs) {
   const searchParams = new URL(request.url).searchParams;
   const cursor = searchParams.get('cursor')!;
   const searchTerm = searchParams.get('q')!;
-  const {language, country} = getLocalizationFromLang(params.lang);
 
   const data = await storefront.query<{
     products: ProductConnection;
@@ -108,8 +100,6 @@ export async function loader({
       pageBy: PAGINATION_SIZE,
       searchTerm,
       cursor,
-      language,
-      country,
     },
   });
 
@@ -122,7 +112,7 @@ export async function loader({
     searchTerm,
     products,
     noResultRecommendations: getRecommendations
-      ? getNoResultRecommendations(storefront, language, country)
+      ? getNoResultRecommendations(storefront)
       : Promise.resolve(null),
   });
 }
@@ -157,16 +147,12 @@ const SEARCH_QUERY = `#graphql
 
 export async function getNoResultRecommendations(
   storefront: LoaderArgs['context']['storefront'],
-  language: LanguageCode,
-  country: CountryCode,
 ) {
   const data = await storefront.query<{
     featuredCollections: CollectionConnection;
     featuredProducts: ProductConnection;
   }>(SEARCH_NO_RESULTS_QUERY, {
     variables: {
-      language,
-      country,
       pageBy: PAGINATION_SIZE,
     },
   });

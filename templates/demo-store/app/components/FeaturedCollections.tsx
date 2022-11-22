@@ -1,7 +1,6 @@
 import {Image} from '@shopify/hydrogen-react';
 import type {Collection} from '@shopify/hydrogen-react/storefront-api-types';
-import {Link} from '@remix-run/react';
-import {Heading, Section, Grid} from '~/components';
+import {Heading, Section, Grid, Link} from '~/components';
 import {SerializeFrom} from '@remix-run/server-runtime';
 
 export function FeaturedCollections({

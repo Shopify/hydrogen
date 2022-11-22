@@ -10,20 +10,15 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {Grid, Heading, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
-import {getLocalizationFromLang} from '~/lib/utils';
 
 const PAGINATION_SIZE = 8;
 
-export const loader = async ({params, context: {storefront}}: LoaderArgs) => {
-  const {language, country} = getLocalizationFromLang(params.lang);
-
+export const loader = async ({context: {storefront}}: LoaderArgs) => {
   const {collections} = await storefront.query<{
     collections: CollectionConnection;
   }>(COLLECTIONS_QUERY, {
     variables: {
       pageBy: PAGINATION_SIZE,
-      country,
-      language,
     },
   });
 

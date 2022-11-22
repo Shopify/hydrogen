@@ -6,8 +6,7 @@ import type {
   Video as MediaVideo,
   Metafield,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {Link} from '@remix-run/react';
-import {Heading, Text} from '~/components';
+import {Heading, Text, Link} from '~/components';
 
 export function Hero({
   byline,

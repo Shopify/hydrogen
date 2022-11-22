@@ -12,7 +12,6 @@ import type {
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
-import {getLocalizationFromLang} from '~/lib/utils';
 
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
@@ -68,16 +67,12 @@ export async function loader({
     });
   }
 
-  const {language, country} = getLocalizationFromLang(params.lang);
-
   const {collection} = await storefront.query<{
     collection: CollectionType;
   }>(COLLECTION_QUERY, {
     variables: {
       handle: collectionHandle,
       pageBy: PAGINATION_SIZE,
-      language,
-      country,
       filters,
     },
   });

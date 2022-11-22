@@ -8,7 +8,7 @@ import {flattenConnection, Image} from '@shopify/hydrogen-react';
 import type {Article, Blog} from '@shopify/hydrogen-react/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
-import {getLocalizationFromLang} from '~/lib/utils';
+import {getLocaleFromRequest} from '~/lib/utils';
 
 const BLOG_HANDLE = 'Journal';
 
@@ -18,13 +18,12 @@ export const handle = {
   },
 };
 
-export const loader = async ({params, context: {storefront}}: LoaderArgs) => {
-  const {language, country} = getLocalizationFromLang(params.lang);
+export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
+  const {language, country} = getLocaleFromRequest(request);
   const {blog} = await storefront.query<{
     blog: Blog;
   }>(BLOGS_QUERY, {
     variables: {
-      language,
       blogHandle: BLOG_HANDLE,
       pageBy: PAGINATION_SIZE,
     },
