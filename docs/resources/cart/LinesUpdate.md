@@ -106,15 +106,14 @@ function CartLineEngraving({line}) {
 }
 ```
 
-## `useOptimisticLineUpdate`
+## `useLineUpdating`
 
 A utility hook to easily implement optimistic UI for a line item being updated.
 
 Hook signature
 
 ```jsx
-const {optimisticLineUpdateQuantity, lineUpdating} =
-  useOptimisticLinesUpdate(line);
+const {lineUpdating, linesUpdating} = useLineUpdating(line);
 ```
 
 | Action          | Description                                                                                                |
@@ -126,7 +125,7 @@ Example use
 
 ```jsx
 function CartLineQuantity({line}) {
-  const {lineUpdating} = useOptimisticLineUpdate(line);
+  const {lineUpdating} = useLineUpdating(line);
 
   return <span>{lineUpdating ? lineUpdating.quantity : line.quantity}</span>;
 }
