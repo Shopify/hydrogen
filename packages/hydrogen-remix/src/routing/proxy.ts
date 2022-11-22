@@ -9,6 +9,8 @@ export async function proxyLiquidRoute(
   const headers = new Headers();
   const host = `${storefrontDomain}.myshopify.com`;
 
+  // @todo - filter out google bot user agents when proxying
+
   const headersToFilterOut = ['connection'];
 
   for (const [key, value] of request.headers.entries()) {

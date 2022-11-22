@@ -63,30 +63,32 @@ module.exports = {
   },
 };
 
-// // @todo - add logic for i18n
-// // const appRoutesPath = path.resolve(
-// //   '../../templates/demo-store',
-// //   'app/routes',
-// // );
-// // @todo - generalize from `path.cwd()`
-// const hydrogenRoutesPath = path.resolve(
-//   '../../templates/demo-store',
-//   '.hydrogen/routes',
-// );
-// // const appRouteFiles = await readDir(appRoutesPath);
-// const hydrogenRouteFiles = await readDir(hydrogenRoutesPath);
-// return defineRoutes((route) => {
-//   for (const hydrogenRoute of hydrogenRouteFiles) {
-//     const hydrogenRoutePath = path.relative(
-//       path.resolve('../../templates/demo-store'),
-//       hydrogenRoute,
-//     );
+//   // @todo - extract into packaged helper function
+//   // @todo - add logic for i18n
+//   // const appRoutesPath = path.resolve(
+//   //   '../../templates/demo-store',
+//   //   'app/routes',
+//   // );
+//   // @todo - generalize from `path.cwd()`
+//   const hydrogenRoutesPath = path.resolve(
+//     '../../templates/demo-store',
+//     '.hydrogen/routes',
+//   );
+//   // const appRouteFiles = await readDir(appRoutesPath);
+//   const hydrogenRouteFiles = await readDir(hydrogenRoutesPath);
+//   return defineRoutes((route) => {
+//     for (const hydrogenRoute of hydrogenRouteFiles) {
+//       const hydrogenRoutePath = path.relative(
+//         path.resolve('../../templates/demo-store'),
+//         hydrogenRoute,
+//       );
 
-//     const hydrogenRouteUrl = hydrogenRoutePath.substring(
-//       hydrogenRoutePath.lastIndexOf('/'),
-//       hydrogenRoutePath.lastIndexOf('.'),
-//     );
+//       const hydrogenRouteUrl = hydrogenRoutePath.substring(
+//         hydrogenRoutePath.lastIndexOf('/'),
+//         hydrogenRoutePath.lastIndexOf('.'),
+//       );
 
-//     route(hydrogenRouteUrl, '../' + hydrogenRoutePath);
-//   }
-// });
+//       route(hydrogenRouteUrl, '../' + hydrogenRoutePath);
+//     }
+//   });
+// },
