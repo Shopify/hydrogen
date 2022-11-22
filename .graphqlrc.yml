@@ -1,0 +1,3 @@
+# This file should be part of the demo-store template, but the GraphQL VSCode plugin doesn't actually look at folders when searching for this file, so it has to live at the root.
+# There is a duplicated file in templates/demo-store/ , and it's kept there so that if someone were to spin up the demo-store on their own then it would be included and "just work"
+schema: node_modules/@shopify/hydrogen-react/storefront.schema.json
