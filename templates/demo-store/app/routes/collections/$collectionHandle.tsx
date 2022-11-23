@@ -10,19 +10,10 @@ import type {
   Filter,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {
-  PageHeader,
-  Section,
-  Text,
-  SortFilter,
-  Button,
-  IconFilters,
-} from '~/components';
+import {PageHeader, Section, Text, SortFilter} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
-import {useState} from 'react';
-import SortMenu from '~/components/SortFilter';
 
 const PAGINATION_SIZE = 48;
 

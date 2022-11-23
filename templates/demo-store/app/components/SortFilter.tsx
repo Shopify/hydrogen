@@ -22,18 +22,16 @@ export function SortFilter({filters, appliedFilters = [], children}: Props) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <>
-      <div>
-        <div className="flex items-center justify-between w-full">
-          <button
-            onClick={() => setIsOpen(!isOpen)}
-            className={
-              'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
-            }
-          >
-            <IconFilters stroke="white" />
-          </button>
-          <SortMenu />
-        </div>
+      <div className="flex items-center justify-between w-full">
+        <button
+          onClick={() => setIsOpen(!isOpen)}
+          className={
+            'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
+          }
+        >
+          <IconFilters stroke="white" />
+        </button>
+        <SortMenu />
       </div>
       <div className="flex">
         <div
