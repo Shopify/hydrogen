@@ -4,59 +4,59 @@
 
 1. In your `oxygen.ts`, update `i18n`'s `language` and `country` to your locale preference
 
-```jsx
-return await requestHandler(
-  request,
-  {
-    env,
-    context,
-    storefront: {
-      ...
-      storefrontApiVersion: '2022-10',
-      i18n: {
-        language: 'EN',
-        country: 'CA',
-      },
-    },
-  },
-  {
-    session,
-  },
-);
-```
+   ```jsx
+   return await requestHandler(
+     request,
+     {
+       env,
+       context,
+       storefront: {
+         ...
+         storefrontApiVersion: '2022-10',
+         i18n: {
+           language: 'EN',
+           country: 'CA',
+         },
+       },
+     },
+     {
+       session,
+     },
+   );
+   ```
 
-Notes:
+   Notes:
 
-- `language` should follow [LanguageCode enum](https://shopify.dev/api/storefront/2022-10/enums/LanguageCode)
-- `country` should follow [CountryCode enum](https://shopify.dev/api/storefront/2022-10/enums/CountryCode)
+   - `language` should follow [LanguageCode enum](https://shopify.dev/api/storefront/2022-10/enums/LanguageCode)
+   - `country` should follow [CountryCode enum](https://shopify.dev/api/storefront/2022-10/enums/CountryCode)
 
 2. Make sure your `root.tsx` are updated according to your locale preference as well.
 
-```jsx
-export default function App() {
-  return (
-    <html lang="EN">
-      ...
-    </html>
-  );
-}
+   ```jsx
+   export default function App() {
+     return (
+       <html lang="EN">
+         ...
+       </html>
+     );
+   }
 
-export function CatchBoundary() {
-  return (
-    <html lang="EN">
-      ...
-    </html>
-  );
-}
+   export function CatchBoundary() {
+     return (
+       <html lang="EN">
+         ...
+       </html>
+     );
+   }
 
-export ErrorBoundary({error}: {error: Error}) {
-  return (
-    <html lang="EN">
-      ...
-    </html>
-  );
-}
-```
+   export ErrorBoundary({error}: {error: Error}) {
+     return (
+       <html lang="EN">
+         ...
+       </html>
+     );
+   }
+   ```
 
 ## Setting up with more than one localizations
 
@@ -64,152 +64,152 @@ export ErrorBoundary({error}: {error: Error}) {
 
 1. Create a utilities function that will return an object with a partial shape of following:
 
-```jsx
-import {
-  CountryCode,
-  LanguageCode,
-} from '@shopify/hydrogen-react/storefront-api-types';
+   ```jsx
+   import {
+     CountryCode,
+     LanguageCode,
+   } from '@shopify/hydrogen-react/storefront-api-types';
 
-export type Locale = {
-  language: LanguageCode,
-  country: CountryCode,
-};
-```
+   export type Locale = {
+     language: LanguageCode,
+     country: CountryCode,
+   };
+   ```
 
-Example utilities function:
+   Example utilities function:
 
-```jsx
-export function getLocaleFromRequest(request: Request): Locale {
-  const url = new URL(request.url);
+   ```jsx
+   export function getLocaleFromRequest(request: Request): Locale {
+     const url = new URL(request.url);
 
-  switch (url.host) {
-    case 'ca.hydrogen.shop':
-      return {
-        language: 'EN',
-        country: 'CA',
-      };
-      break;
-    case 'hydrogen.au':
-      return {
-        language: 'EN',
-        country: 'AU',
-      };
-      break;
-    default:
-      return {
-        language: 'EN',
-        country: 'US',
-      };
-  }
-}
-```
+     switch (url.host) {
+       case 'ca.hydrogen.shop':
+         return {
+           language: 'EN',
+           country: 'CA',
+         };
+         break;
+       case 'hydrogen.au':
+         return {
+           language: 'EN',
+           country: 'AU',
+         };
+         break;
+       default:
+         return {
+           language: 'EN',
+           country: 'US',
+         };
+     }
+   }
+   ```
 
 2. In your `oxygen.ts`, update `i18n` to the result of the utilities function
 
-```jsx
-return await requestHandler(
-  request,
-  {
-    env,
-    context,
-    storefront: {
-      ...
-      storefrontApiVersion: '2022-10',
-      i18n: getLocaleFromRequest(request),
-    },
-  },
-  {
-    session,
-  },
-);
-```
+   ```jsx
+   return await requestHandler(
+     request,
+     {
+       env,
+       context,
+       storefront: {
+         ...
+         storefrontApiVersion: '2022-10',
+         i18n: getLocaleFromRequest(request),
+       },
+     },
+     {
+       session,
+     },
+   );
+   ```
 
 3. Update your graphql queries with `inContext` directives
 
-For example:
+   For example:
 
-```jsx
-const FEATURED_QUERY = `#graphql
-  query homepage {
-    collections(first: 3, sortKey: UPDATED_AT) {
-      nodes {
-        id
-        title
-        handle
-        image {
-          altText
-          width
-          height
-          url
-        }
-      }
-    }
-  }
-`;
-```
+   ```jsx
+   const FEATURED_QUERY = `#graphql
+     query homepage {
+       collections(first: 3, sortKey: UPDATED_AT) {
+         nodes {
+           id
+           title
+           handle
+           image {
+             altText
+             width
+             height
+             url
+           }
+         }
+       }
+     }
+   `;
+   ```
 
-Add the `inContext` with `$country` and `$language`
+   Add the `inContext` with `$country` and `$language`
 
-```jsx
-const FEATURED_COLLECTIONS_QUERY = `#graphql
-  query homepage($country: CountryCode, $language: LanguageCode)
-  @inContext(country: $country, language: $language) {
-    collections(first: 3, sortKey: UPDATED_AT) {
-      nodes {
-        id
-        title
-        handle
-        image {
-          altText
-          width
-          height
-          url
-        }
-      }
-    }
-  }
-`;
-```
+   ```jsx
+   const FEATURED_COLLECTIONS_QUERY = `#graphql
+     query homepage($country: CountryCode, $language: LanguageCode)
+     @inContext(country: $country, language: $language) {
+       collections(first: 3, sortKey: UPDATED_AT) {
+         nodes {
+           id
+           title
+           handle
+           image {
+             altText
+             width
+             height
+             url
+           }
+         }
+       }
+     }
+   `;
+   ```
 
-Then you can make the query with `storefront.query` in the data loader
+   Then you can make the query with `storefront.query` in the data loader
 
-```jsx
-export async function loader({
-  context: {storefront},
-}: LoaderArgs) {
-  return json({
-    featureCollections: await storefront.query<{
-      collections: CollectionConnection;
-    }>(FEATURED_COLLECTIONS_QUERY),
-  });
-}
-```
+   ```jsx
+   export async function loader({
+     context: {storefront},
+   }: LoaderArgs) {
+     return json({
+       featureCollections: await storefront.query<{
+         collections: CollectionConnection;
+       }>(FEATURED_COLLECTIONS_QUERY),
+     });
+   }
+   ```
 
-Notice that we didn't need to provide query variables for `country` and `language`?
-This is because `storefront.query` function will inject these values for you base on
-what's defined in the `i18n`.
+   Notice that we didn't need to provide query variables for `country` and `language`?
+   This is because `storefront.query` function will inject these values for you base on
+   what's defined in the `i18n`.
 
-For example, if a request came from `hydrogen.au`, country `AU` and language `EN` will be
-used as defined in the example utilities function above.
+   For example, if a request came from `hydrogen.au`, country `AU` and language `EN` will be
+   used as defined in the example utilities function above.
 
-However, if you need to override it, you just need to supply the query variables
+   However, if you need to override it, you just need to supply the query variables
 
-```jsx
-export async function loader({
-  context: {storefront},
-}: LoaderArgs) {
-  return json({
-    featureCollection: await storefront.query<{
-      collections: CollectionConnection;
-    }>(FEATURED_COLLECTIONS_QUERY, {
-      variables: {
-        country: 'CA',    // Always query back in CA currency
-        language: 'FR',   // Always query back in FR language
-      }
-    }),
-  });
-}
-```
+   ```jsx
+   export async function loader({
+     context: {storefront},
+   }: LoaderArgs) {
+     return json({
+       featureCollection: await storefront.query<{
+         collections: CollectionConnection;
+       }>(FEATURED_COLLECTIONS_QUERY, {
+         variables: {
+           country: 'CA',    // Always query back in CA currency
+           language: 'FR',   // Always query back in FR language
+         }
+       }),
+     });
+   }
+   ```
 
 ### Localization scheme using url paths
 
@@ -223,137 +223,194 @@ We want to have urls to look like the following:
 
 1. Update the utilities function to handle the new url path
 
-```jsx
-export function getLocaleFromRequest(request: Request): Locale {
-  const url = new URL(request.url);
+   ```jsx
+   export function getLocaleFromRequest(request: Request): Locale {
+     const url = new URL(request.url);
 
-  switch (url.host) {
-    case 'ca.hydrogen.shop':
-      if (/^\/fr($|\/)/.test(url.pathname)) {
-        return {
-          language: 'FR',
-          country: 'CA',
-        };
-      } else {
-        return {
-          language: 'EN',
-          country: 'CA',
-        };
-      }
-      break;
-    case 'hydrogen.au':
-      return {
-        language: 'EN',
-        country: 'AU',
-      };
-      break;
-    default:
-      return {
-        language: 'EN',
-        country: 'US',
-      };
-  }
-}
-```
+     switch (url.host) {
+       case 'ca.hydrogen.shop':
+         if (/^\/fr($|\/)/.test(url.pathname)) {
+           return {
+             language: 'FR',
+             country: 'CA',
+           };
+         } else {
+           return {
+             language: 'EN',
+             country: 'CA',
+           };
+         }
+         break;
+       case 'hydrogen.au':
+         return {
+           language: 'EN',
+           country: 'AU',
+         };
+         break;
+       default:
+         return {
+           language: 'EN',
+           country: 'US',
+         };
+     }
+   }
+   ```
 
 2. Using Remix's splat routes, we are going to generate `/$lang/*` files
    (Note: This is temporary workaround for now)
 
-All route files under `$lang` are just re-exports of the main routes file.
-For now, we can update `remix.config.js` to auto generate these files on build.
-Feel free to `.gitignore` files generated under `$lang` folder and re-run `dev`
-or `build` whenever a file or module export is added or removed.
+   All route files under `$lang` are just re-exports of the main routes file.
+   For now, we can update `remix.config.js` to auto generate these files on build.
+   Feel free to `.gitignore` files generated under `$lang` folder and re-run `dev`
+   or `build` whenever a file or module export is added or removed.
 
-```jsx
-const fs = require('fs');
-const path = require('path');
-const esbuild = require('esbuild');
-const recursive = require('recursive-readdir');
+   ```jsx
+   const fs = require('fs');
+   const path = require('path');
+   const esbuild = require('esbuild');
+   const recursive = require('recursive-readdir');
 
-module.exports = {
-  ignoredRouteFiles: ['**/.*'],
-  async routes() {
-    const appDir = path.resolve(__dirname, 'app');
-    const routesDir = path.resolve(appDir, 'routes');
-    const langDir = path.resolve(routesDir, '$lang');
+   module.exports = {
+     ignoredRouteFiles: ['**/.*'],
+     async routes() {
+       const appDir = path.resolve(__dirname, 'app');
+       const routesDir = path.resolve(appDir, 'routes');
+       const langDir = path.resolve(routesDir, '$lang');
 
-    const files = await recursive(routesDir, [
-      (file) => {
-        return file.replace(/\\/g, '/').match(/routes\/\$lang\//);
-      },
-    ]);
+       const files = await recursive(routesDir, [
+         (file) => {
+           return file.replace(/\\/g, '/').match(/routes\/\$lang\//);
+         },
+       ]);
 
-    // eslint-disable-next-line no-console
-    console.log(`Duplicating ${files.length} route(s) for translations`);
+       // eslint-disable-next-line no-console
+       console.log(`Duplicating ${files.length} route(s) for translations`);
 
-    for (let file of files) {
-      let bundle = await esbuild.build({
-        entryPoints: {entry: file},
-        bundle: false,
-        metafile: true,
-        write: false,
-      });
+       for (let file of files) {
+         let bundle = await esbuild.build({
+           entryPoints: {entry: file},
+           bundle: false,
+           metafile: true,
+           write: false,
+         });
 
-      const moduleExports = bundle.metafile.outputs['entry.js'].exports;
+         const moduleExports = bundle.metafile.outputs['entry.js'].exports;
 
-      const moduleId =
-        '~/' +
-        path
-          .relative(appDir, file)
-          .replace(/\\/g, '/')
-          .slice(0, -path.extname(file).length);
+         const moduleId =
+           '~/' +
+           path
+             .relative(appDir, file)
+             .replace(/\\/g, '/')
+             .slice(0, -path.extname(file).length);
 
-      const outFile = path.resolve(langDir, path.relative(routesDir, file));
+         const outFile = path.resolve(langDir, path.relative(routesDir, file));
 
-      fs.mkdirSync(path.dirname(outFile), {recursive: true});
-      fs.writeFileSync(
-        outFile,
-        `export {${moduleExports.join(', ')}} from ${JSON.stringify(
-          moduleId,
-        )};\n`,
-      );
-    }
+         fs.mkdirSync(path.dirname(outFile), {recursive: true});
+         fs.writeFileSync(
+           outFile,
+           `export {${moduleExports.join(', ')}} from ${JSON.stringify(
+             moduleId,
+           )};\n`,
+         );
+       }
 
-    return {};
-  },
-};
-```
+       return {};
+     },
+   };
+   ```
 
 3. Make sure to add a `$.tsx` files under `/routes` folder. This splat route
    will handle all the non-matching splat routes. It should contain the following:
 
-```jsx
-export async function loader() {
-  throw new Response('Not found', {status: 404});
-}
+   ```jsx
+   export async function loader() {
+     throw new Response('Not found', {status: 404});
+   }
 
-export default function Component() {
-  return null;
-}
-```
+   export default function Component() {
+     return null;
+   }
+   ```
 
 4. In the `routes/index.tsx`, handle invalid url path localizations
 
-```jsx
-export async function loader({
-  request,
-  params,
-  context: {storefront},
-}: LoaderArgs) {
-  const {language} = getLocaleFromRequest(request);
+   ```jsx
+   export async function loader({
+     request,
+     params,
+     context: {storefront},
+   }: LoaderArgs) {
+     const {language} = getLocaleFromRequest(request);
 
-  if (
-    params.lang &&
-    params.lang.toLowerCase() !== language.toLowerCase()
-  ) {
-    // If the lang URL param is defined, and it didn't match a valid localization,
-    // then the lang param must be invalid, send to the 404 page
-    throw new Response('Not found', {status: 404});
-  }
+     if (
+       params.lang &&
+       params.lang.toLowerCase() !== language.toLowerCase()
+     ) {
+       // If the lang URL param is defined, and it didn't match a valid localization,
+       // then the lang param must be invalid, send to the 404 page
+       throw new Response('Not found', {status: 404});
+     }
 
-  ...
-}
-```
+     ...
+   }
+   ```
+
+5. Create an utility function that will add the path prefix to url path
+
+   ```jsx
+   export function usePrefixPathWithLocale(path: string) {
+     const [root] = useMatches();
+     const selectedLocale = root.data.selectedLocale;
+
+     return selectedLocale
+       ? `${selectedLocale.pathPrefix}${
+           path.startsWith('/') ? path : '/' + path
+         }`
+       : path;
+   }
+   ```
+
+   Use this utility function anywhere where you need to define a localized path.
+   For example, form actions should be localize path as well.
+
+6. Create a `<Link />` wrapper component that will add the path prefix and
+   make sure your project is using this `Link` component for all inbound
+   navigation.
+
+   ```jsx
+   import {
+     Link as RemixLink,
+     NavLink as RemixNavLink,
+     useMatches,
+   } from '@remix-run/react';
+   import {usePrefixPathWithLocale} from '~/lib/utils';
+
+   export function Link(props) {
+     const {to, className, ...resOfProps} = props;
+     const [root] = useMatches();
+     const selectedLocale = root.data.selectedLocale;
+
+     let toWithLocale = to;
+
+     if (typeof to === 'string') {
+       toWithLocale = selectedLocale ? `${selectedLocale.pathPrefix}${to}` : to;
+     }
+
+     if (typeof className === 'function') {
+       return (
+         <RemixNavLink
+           to={toWithLocale}
+           className={className}
+           {...resOfProps}
+         />
+       );
+     }
+
+     return (
+       <RemixLink to={toWithLocale} className={className} {...resOfProps} />
+     );
+   }
+   ```
 
 ### Localization detection using response header, cookies, or url search params
 
@@ -412,253 +469,250 @@ export function getLocaleFromRequest(request: Request): Locale {
    at every page. For performance and SEO reasons, it is recommended that it is just a static
    json variable. Optionally, you can create a build script that generates this file on build.
 
-```jsx
-export const countries = {
-  default: {
-    language: 'EN',
-    country: 'US',
-    label: 'United States (USD $)',
-    host: 'hydrogen.shop',
-  },
-  'en-ca': {
-    language: 'EN',
-    country: 'CA',
-    label: 'Canada (CAD $)',
-    host: 'ca.hydrogen.shop',
-  },
-  'fr-ca': {
-    language: 'EN',
-    country: 'CA',
-    label: 'Canada (Français) (CAD $)',
-    host: 'ca.hydrogen.shop',
-    pathPrefix: '/fr',
-  },
-  'en-au': {
-    language: 'EN',
-    country: 'AU',
-    label: 'Australia (AUD $)',
-    host: 'hydrogen.au',
-  },
-};
-```
+   ```jsx
+   export const countries = {
+     default: {
+       language: 'EN',
+       country: 'US',
+       label: 'United States (USD $)',
+       host: 'hydrogen.shop',
+     },
+     'en-ca': {
+       language: 'EN',
+       country: 'CA',
+       label: 'Canada (CAD $)',
+       host: 'ca.hydrogen.shop',
+     },
+     'fr-ca': {
+       language: 'EN',
+       country: 'CA',
+       label: 'Canada (Français) (CAD $)',
+       host: 'ca.hydrogen.shop',
+       pathPrefix: '/fr',
+     },
+     'en-au': {
+       language: 'EN',
+       country: 'AU',
+       label: 'Australia (AUD $)',
+       host: 'hydrogen.au',
+     },
+   };
+   ```
 
-You are feel to add any keys that would help you generate the country selector easier.
-Make sure to update your utility function with the countries json
+   You are feel to add any keys that would help you generate the country selector easier.
+   Make sure to update your utility function with the countries json
 
-```jsx
-import {countries} from '~/data/countries';
+   ```jsx
+   import {countries} from '~/data/countries';
 
-export function getLocaleFromRequest(request: Request): Locale {
-  const url = new URL(request.url);
+   export function getLocaleFromRequest(request: Request): Locale {
+     const url = new URL(request.url);
 
-  switch (url.host) {
-    case 'ca.hydrogen.shop':
-      if (/^\/fr($|\/)/.test(url.pathname)) {
-        return countries['fr-ca'];
-      } else {
-        return countries['en-ca'];
-      }
-      break;
-    case 'hydrogen.au':
-      return countries['en-au'];
-      break;
-    default:
-      return countries['default'];
-  }
-}
-```
+     switch (url.host) {
+       case 'ca.hydrogen.shop':
+         if (/^\/fr($|\/)/.test(url.pathname)) {
+           return countries['fr-ca'];
+         } else {
+           return countries['en-ca'];
+         }
+         break;
+       case 'hydrogen.au':
+         return countries['en-au'];
+         break;
+       default:
+         return countries['default'];
+     }
+   }
+   ```
 
 2. Supply the selected locale and the available countries in the `root` loader function
 
-```jsx
-import {countries} from '~/data/countries';
+   ```jsx
+   import {countries} from '~/data/countries';
 
-export const loader: LoaderFunction = async function loader() {
-  ...
-  return defer({
-    ...,
-    selectedLocale: await getLocaleFromRequest(request),
-    countries,
-  });
-};
-```
+   export const loader: LoaderFunction = async function loader() {
+     ...
+     return defer({
+       ...,
+       selectedLocale: await getLocaleFromRequest(request),
+       countries,
+     });
+   };
+   ```
 
 3. Render the available countries as forms
 
-```jsx
-import {Form, useLoaderData, useLocation} from '@remix-run/react';
-...
-export function CountrySelector() {
-  const {countries, selectedLocale} = useLoaderData();
-  const {pathname, search} = useLocation();
+   ```jsx
+   import {Form, useLoaderData, useLocation} from '@remix-run/react';
+   ...
+   export function CountrySelector() {
+     const {countries, selectedLocale} = useLoaderData();
+     const {pathname, search} = useLocation();
 
-  if (!countries || !selectedLocale) return null;
+     if (!countries || !selectedLocale) return null;
 
-  const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
+     const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
 
-  return (
-    <details>
-      <summary>
-        {selectedLocale.label}
-      </summary>
-      <div className="overflow-auto border-t py-2 bg-contrast w-full max-h-36">
-        {Object.keys(countries).map((countryKey) => {
-          const locale = countries[countryKey];
-          const hreflang = `${locale.language}-${locale.country}`;
+     return (
+       <details>
+         <summary>
+           {selectedLocale.label}
+         </summary>
+         <div className="overflow-auto border-t py-2 bg-contrast w-full max-h-36">
+           {Object.keys(countries).map((countryKey) => {
+             const locale = countries[countryKey];
+             const hreflang = `${locale.language}-${locale.country}`;
 
-          return (
-            <Form method="post" action="/locale" key={hreflang}>
-              <input
-                type="hidden"
-                name="language"
-                value={locale.language}
-              />
-              <input type="hidden" name="country" value={locale.country} />
-              <input
-                type="hidden"
-                name="path"
-                value={`${strippedPathname}${search}`}
-              />
-              <Button
-                type="submit"
-                variant="primary"
-              >
-                {locale.label}
-              </Button>
-            </Form>
-          );
-        })}
-      </div>
-    </details>
-  );
-}
-```
+             return (
+               <Form method="post" action="/locale" key={hreflang}>
+                 <input
+                   type="hidden"
+                   name="language"
+                   value={locale.language}
+                 />
+                 <input type="hidden" name="country" value={locale.country} />
+                 <input
+                   type="hidden"
+                   name="path"
+                   value={`${strippedPathname}${search}`}
+                 />
+                 <Button
+                   type="submit"
+                   variant="primary"
+                 >
+                   {locale.label}
+                 </Button>
+               </Form>
+             );
+           })}
+         </div>
+       </details>
+     );
+   }
+   ```
 
 4. Create the `routes/locale.tsx` route that will handle locale change
 
-```jsx
-import {
-  CountryCode,
-  LanguageCode,
-} from '@shopify/hydrogen-react/storefront-api-types';
-import {type ActionFunction, redirect} from '@shopify/hydrogen-remix';
-import invariant from 'tiny-invariant';
-import {updateCartBuyerIdentity} from '~/data';
-import {countries} from '~/data/countries';
+   ```jsx
+   import {
+     CountryCode,
+     LanguageCode,
+   } from '@shopify/hydrogen-react/storefront-api-types';
+   import {type ActionFunction, redirect} from '@shopify/hydrogen-remix';
+   import invariant from 'tiny-invariant';
+   import {updateCartBuyerIdentity} from '~/data';
+   import {countries} from '~/data/countries';
 
-export const action: ActionFunction = async ({request, context}) => {
-  const {session} = context;
-  const formData = await request.formData();
+   export const action: ActionFunction = async ({request, context}) => {
+     const {session} = context;
+     const formData = await request.formData();
 
-  // Make sure the form request is valid
-  const languageCode = formData.get('language') as LanguageCode;
-  invariant(languageCode, 'Missing language');
+     // Make sure the form request is valid
+     const languageCode = formData.get('language') as LanguageCode;
+     invariant(languageCode, 'Missing language');
 
-  const countryCode = formData.get('country') as CountryCode;
-  invariant(countryCode, 'Missing country');
+     const countryCode = formData.get('country') as CountryCode;
+     invariant(countryCode, 'Missing country');
 
-  // determine where to redirect to relative to where user navigated from
-  // ie. hydrogen.shop/collections -> ca.hydrogen.shop/collections
-  const path = formData.get('path');
-  const toLocale = countries[`${languageCode}-${countryCode}`.toLowerCase()];
+     // determine where to redirect to relative to where user navigated from
+     // ie. hydrogen.shop/collections -> ca.hydrogen.shop/collections
+     const path = formData.get('path');
+     const toLocale = countries[`${languageCode}-${countryCode}`.toLowerCase()];
 
-  const cartId = await session.get('cartId');
+     const cartId = await session.get('cartId');
 
-  // Update cart buyer's country code if we have a cart id
-  if (cartId) {
-    await updateCartBuyerIdentity(context, {
-      cartId,
-      buyerIdentity: {
-        countryCode,
-      },
-    });
-  }
+     // Update cart buyer's country code if we have a cart id
+     if (cartId) {
+       await updateCartBuyerIdentity(context, {
+         cartId,
+         buyerIdentity: {
+           countryCode,
+         },
+       });
+     }
 
-  // If your user navigated to another domain due to locale change, you can put
-  // the cart id in the response header. Make sure to pick up the cart id when
-  // the request reached the other localization
-  return redirect(`https://${toLocale.host}${toLocale.pathPrefix || ''}${path}`, 302);
-};
+     return redirect(`https://${toLocale.host}${toLocale.pathPrefix || ''}${path}`, 302);
+   };
 
-function updateCartBuyerIdentity(
-  {storefront}: HydrogenContext,
-  {
-    cartId,
-    buyerIdentity,
-  }: {
-    cartId: string;
-    buyerIdentity: CartBuyerIdentityInput;
-  },
-) {
-  const data = await storefront.mutate<{
-    cartBuyerIdentityUpdate: {cart: Cart};
-  }>(UPDATE_CART_BUYER_COUNTRY, {
-    variables: {
-      cartId,
-      buyerIdentity,
-    },
-  });
+   function updateCartBuyerIdentity(
+     {storefront}: HydrogenContext,
+     {
+       cartId,
+       buyerIdentity,
+     }: {
+       cartId: string;
+       buyerIdentity: CartBuyerIdentityInput;
+     },
+   ) {
+     const data = await storefront.mutate<{
+       cartBuyerIdentityUpdate: {cart: Cart};
+     }>(UPDATE_CART_BUYER_COUNTRY, {
+       variables: {
+         cartId,
+         buyerIdentity,
+       },
+     });
 
-  invariant(data, 'No data returned from Shopify API');
+     invariant(data, 'No data returned from Shopify API');
 
-  return data.cartBuyerIdentityUpdate.cart;
-}
+     return data.cartBuyerIdentityUpdate.cart;
+   }
 
-const UPDATE_CART_BUYER_COUNTRY = `#graphql
-  mutation CartBuyerIdentityUpdate(
-    $cartId: ID!
-    $buyerIdentity: CartBuyerIdentityInput!
-    $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
-    cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
-      cart {
-        id
-      }
-    }
-  }
-`;
-```
+   const UPDATE_CART_BUYER_COUNTRY = `#graphql
+     mutation CartBuyerIdentityUpdate(
+       $cartId: ID!
+       $buyerIdentity: CartBuyerIdentityInput!
+       $country: CountryCode = ZZ
+     ) @inContext(country: $country) {
+       cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
+         cart {
+           id
+         }
+       }
+     }
+   `;
+   ```
 
-4. Make sure to provide a `key` to the components that will change due to localization.
+5. Make sure to provide a `key` to the components that will change due to localization.
    Especially for url path localization schemes.
 
-Sometimes, React won't know when to re-render a component. This means that, you could
-be changing the locale and you will see the correct currency data being returned, but
-React didn't re-render and old currency is still being displayed.
+   Sometimes, React won't know when to re-render a component. This means that, you could
+   be changing the locale and you will see the correct currency data being returned, but
+   React didn't re-render and old currency is still being displayed.
 
-The easy way to avoid this problem is to put localization as key in the `App`.
+   The easy way to avoid this problem is to put localization as key in the `App`.
 
-```jsx
-export default function App() {
-  const data = useLoaderData<typeof loader>();
-  const locale = data.selectedLocale;
+   ```jsx
+   export default function App() {
+     const data = useLoaderData<typeof loader>();
+     const locale = data.selectedLocale;
 
-  return (
-    <html lang={locale.language}>
-      <head>
-        <Seo />
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <Layout
-          layout={data.layout as LayoutData}
-          key={`${locale.language}-${locale.country}`} . // key by hreflang
-        >
-          <Outlet />
-        </Layout>
-        <Debugger />
-        <ScrollRestoration />
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-```
+     return (
+       <html lang={locale.language}>
+         <head>
+           <Seo />
+           <Meta />
+           <Links />
+         </head>
+         <body>
+           <Layout
+             layout={data.layout as LayoutData}
+             key={`${locale.language}-${locale.country}`} . // key by hreflang
+           >
+             <Outlet />
+           </Layout>
+           <Debugger />
+           <ScrollRestoration />
+           <Scripts />
+         </body>
+       </html>
+     );
+   }
+   ```
 
-However, you may see a page jump when changing locale.
+   However, you may see a page jump when changing locale.
 
-The other way is to key by individual components. As you can see, this gets
-messy very quickly.
+   The other way is to key by individual components. As you can see, this gets
+   messy very quickly.
 
-Reference: https://kentcdodds.com/blog/understanding-reacts-key-prop
+   Reference: https://kentcdodds.com/blog/understanding-reacts-key-prop
