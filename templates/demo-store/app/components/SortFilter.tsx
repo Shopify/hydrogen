@@ -1,11 +1,10 @@
 import {SyntheticEvent, useMemo, Fragment, useState} from 'react';
 import {Menu} from '@headlessui/react';
 
-import {Heading, IconXMark, IconCaret, Text} from '~/components';
+import {Heading, IconXMark, IconCaret, Text, IconFilters} from '~/components';
 import {Link, useLocation, useSearchParams, Location} from '@remix-run/react';
 import {useDebounce} from 'react-use';
 import {Disclosure} from '@headlessui/react';
-import clsx from 'clsx';
 
 import type {
   FilterType,
@@ -14,47 +13,53 @@ import type {
 import {AppliedFilter, SortParam} from '~/routes/collections/$collectionHandle';
 
 type Props = {
-  open: boolean;
   filters: Filter[];
   appliedFilters?: AppliedFilter[];
-  onClose: () => void;
+  children: React.ReactNode;
 };
 
-export function SortFilter({
-  open,
-  onClose,
-  filters,
-  appliedFilters = [],
-}: Props) {
+export function SortFilter({filters, appliedFilters = [], children}: Props) {
+  const [isOpen, setIsOpen] = useState(false);
   return (
-    <FiltersDrawer
-      filters={filters}
-      appliedFilters={appliedFilters}
-      isOpen={open}
-      onClose={onClose}
-    />
+    <>
+      <div>
+        <div className="flex items-center justify-between w-full">
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className={
+              'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
+            }
+          >
+            <IconFilters stroke="white" />
+          </button>
+          <SortMenu />
+        </div>
+      </div>
+      <div className="flex">
+        <div
+          className={`transition-all duration-200 ${
+            isOpen
+              ? 'opacity-100 min-w-[240px] w-[240px] pr-4 md:pr-8'
+              : 'opacity-0 min-w-[0px] w-[0px] pr-0'
+          }`}
+        >
+          <FiltersDrawer
+            filters={filters}
+            appliedFilters={appliedFilters}
+            onClose={() => setIsOpen(false)}
+          />
+        </div>
+        <div>{children}</div>
+      </div>
+    </>
   );
 }
 
-export function FiltersDrawerV2({
-  isOpen,
-  onClose,
-  children,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  children: React.ReactNode;
-}) {
-  return <div>{children}</div>;
-}
-
 export function FiltersDrawer({
-  isOpen,
   onClose,
   filters = [],
   appliedFilters = [],
 }: {
-  isOpen: boolean;
   onClose: () => void;
   filters: Filter[];
   appliedFilters: AppliedFilter[];
@@ -99,7 +104,7 @@ export function FiltersDrawer({
   };
 
   return (
-    <FiltersDrawerV2 isOpen={isOpen} onClose={onClose}>
+    <>
       <nav className="py-8">
         {appliedFilters.length > 0 ? (
           <div className="pb-8">
@@ -135,7 +140,7 @@ export function FiltersDrawer({
           ))}
         </div>
       </nav>
-    </FiltersDrawerV2>
+    </>
   );
 }
 
@@ -272,7 +277,6 @@ function filterInputToParams(
   rawInput: string | Record<string, any>,
   params: URLSearchParams,
 ) {
-  console.log(params);
   const input = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
   switch (type) {
     case 'PRICE_RANGE':
