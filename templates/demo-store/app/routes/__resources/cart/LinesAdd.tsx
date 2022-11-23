@@ -5,7 +5,6 @@ import {
   useFetcher,
   useFetchers,
   useLocation,
-  useMatches,
 } from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';

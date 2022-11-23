@@ -4,5 +4,6 @@ export {
   CacheShort,
   CacheLong,
   CacheCustom,
+  generateCacheControlHeader,
 } from './cache/strategies';
 export {InMemoryCache} from './cache/in-memory';

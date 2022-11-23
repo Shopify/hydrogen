@@ -23,7 +23,6 @@ import {Seo, Debugger} from './lib/seo';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
-import {countries} from './data/countries';
 import {getLocaleFromRequest} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
@@ -67,7 +66,6 @@ export async function loader({context, request}: LoaderArgs) {
   return defer({
     layout,
     selectedLocale,
-    countries,
     cart: cartId ? getCart(context, {cartId}) : undefined,
   });
 }
