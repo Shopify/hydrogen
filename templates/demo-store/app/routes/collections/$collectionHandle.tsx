@@ -123,7 +123,6 @@ export const meta: MetaFunction = ({
 
 export default function Collection() {
   const {collection, appliedFilters} = useLoaderData<typeof loader>();
-  const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
@@ -139,42 +138,16 @@ export default function Collection() {
         )}
       </PageHeader>
       <Section>
-        <div>
-          <div className="flex items-center justify-between w-full">
-            <button
-              onClick={() => setIsOpen(!isOpen)}
-              className={
-                'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
-              }
-            >
-              <IconFilters stroke="white" />
-            </button>
-            <SortMenu />
-          </div>
-        </div>
-        <div className="flex">
-          <div
-            className={`transition-all duration-200 ${
-              isOpen
-                ? 'opacity-100 min-w-[240px] w-[240px] pr-4 md:pr-8'
-                : 'opacity-0 min-w-[0px] w-[0px] pr-0'
-            }`}
-          >
-            <SortFilter
-              open={isOpen}
-              filters={collection.products.filters as Filter[]}
-              appliedFilters={appliedFilters}
-              onClose={() => setIsOpen(false)}
-            />
-          </div>
-          <div>
-            <ProductGrid
-              key={collection.id}
-              collection={collection as CollectionType}
-              url={`/collections/${collection.handle}`}
-            />
-          </div>
-        </div>
+        <SortFilter
+          filters={collection.products.filters as Filter[]}
+          appliedFilters={appliedFilters}
+        >
+          <ProductGrid
+            key={collection.id}
+            collection={collection as CollectionType}
+            url={`/collections/${collection.handle}`}
+          />
+        </SortFilter>
       </Section>
     </>
   );
