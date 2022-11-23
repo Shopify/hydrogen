@@ -46,10 +46,10 @@ describe('<Money />', () => {
     expect(screen.getByText(money.amount, {exact: false})).toHaveClass('money');
   });
 
-  it.todo(`validates props when a component is passed to the 'as' prop`, () => {
+  it(`validates props when a different Element  is passed to the 'as' prop`, () => {
     const money = getPrice();
-    // @ts-expect-error figure out a better component to use here since Link won't be coming to h-ui
-    render(<Money data={money} as={Link} to="/test" />, {
+
+    render(<Money data={money} as="button" disabled />, {
       wrapper: ({children}) => (
         <ShopifyProvider shopifyConfig={getShopifyConfig()}>
           {children}
@@ -57,11 +57,11 @@ describe('<Money />', () => {
       ),
     });
 
-    const element = screen.getByRole('link', {
+    const element = screen.getByRole('button', {
       name: new RegExp(money.amount),
     });
 
-    expect(element).toHaveAttribute('href', '/test');
+    expect(element).toHaveAttribute('disabled');
   });
 
   it(`removes trailing zeros when the prop is passed`, () => {

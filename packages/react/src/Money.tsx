@@ -31,7 +31,7 @@ export type MoneyProps<ComponentGeneric extends React.ElementType> =
  * [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) according to the
  * `locale` in the `ShopifyProvider` component.
  */
-export function Money<ComponentGeneric extends React.ElementType>({
+export function Money<ComponentGeneric extends React.ElementType = 'div'>({
   data,
   as,
   withoutCurrency,
