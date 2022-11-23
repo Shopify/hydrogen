@@ -1,19 +1,10 @@
 import {SyntheticEvent, useMemo, Fragment, useState} from 'react';
 import {Menu} from '@headlessui/react';
 
-import {
-  Heading,
-  Drawer as DrawerComponent,
-  IconFilters,
-  IconCaret,
-  IconXMark,
-  IconCaret,
-  Text,
-} from '~/components';
+import {Heading, IconXMark, IconCaret, Text, IconFilters} from '~/components';
 import {Link, useLocation, useSearchParams, Location} from '@remix-run/react';
 import {useDebounce} from 'react-use';
 import {Disclosure} from '@headlessui/react';
-import clsx from 'clsx';
 
 import type {
   FilterType,
@@ -24,16 +15,16 @@ import {AppliedFilter, SortParam} from '~/routes/collections/$collectionHandle';
 type Props = {
   filters: Filter[];
   appliedFilters?: AppliedFilter[];
+  children: React.ReactNode;
 };
 
-export function SortFilter({filters, appliedFilters = []}: Props) {
+export function SortFilter({filters, appliedFilters = [], children}: Props) {
   const [isOpen, setIsOpen] = useState(false);
-
   return (
     <>
       <div className="flex items-center justify-between w-full">
         <button
-          onClick={() => setIsOpen(true)}
+          onClick={() => setIsOpen(!isOpen)}
           className={
             'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
           }
@@ -42,23 +33,31 @@ export function SortFilter({filters, appliedFilters = []}: Props) {
         </button>
         <SortMenu />
       </div>
-      <FiltersDrawer
-        filters={filters}
-        appliedFilters={appliedFilters}
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-      />
+      <div className="flex">
+        <div
+          className={`transition-all duration-200 ${
+            isOpen
+              ? 'opacity-100 min-w-[240px] w-[240px] pr-4 md:pr-8'
+              : 'opacity-0 min-w-[0px] w-[0px] pr-0'
+          }`}
+        >
+          <FiltersDrawer
+            filters={filters}
+            appliedFilters={appliedFilters}
+            onClose={() => setIsOpen(false)}
+          />
+        </div>
+        <div>{children}</div>
+      </div>
     </>
   );
 }
 
 export function FiltersDrawer({
-  isOpen,
   onClose,
   filters = [],
   appliedFilters = [],
 }: {
-  isOpen: boolean;
   onClose: () => void;
   filters: Filter[];
   appliedFilters: AppliedFilter[];
@@ -90,7 +89,7 @@ export function FiltersDrawer({
         );
         return (
           <Link
-            className="focus:underline hover:underline whitespace-nowrap"
+            className="focus:underline hover:underline"
             prefetch="intent"
             onClick={onClose}
             reloadDocument
@@ -103,22 +102,17 @@ export function FiltersDrawer({
   };
 
   return (
-    <DrawerComponent
-      open={isOpen}
-      onClose={onClose}
-      heading="Filter and sort"
-      openFrom="left"
-    >
-      <>
+    <>
+      <nav className="py-8">
         {appliedFilters.length > 0 ? (
-          <div className="px-8 md:px-12 py-8">
+          <div className="pb-8">
             <AppliedFilters filters={appliedFilters} />
           </div>
         ) : null}
-        <span className="text-primary/50' text-lead py-4 block font-light px-8 md:px-12">
+        <Heading as="h4" size="lead" className="pb-4">
           Filter By
-        </span>
-        <div className="divide-y px-8 md:px-12">
+        </Heading>
+        <div className="divide-y">
           {filters.map((filter: Filter) => (
             <Disclosure as="div" key={filter.id} className="w-full">
               {({open}) => (
@@ -143,8 +137,8 @@ export function FiltersDrawer({
             </Disclosure>
           ))}
         </div>
-      </>
-    </DrawerComponent>
+      </nav>
+    </>
   );
 }
 
@@ -153,7 +147,7 @@ function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
   const location = useLocation();
   return (
     <>
-      <Heading as="h4" size="lead" className="pb-2">
+      <Heading as="h4" size="lead" className="pb-4">
         Applied filters
       </Heading>
       <div className="flex flex-wrap gap-2">
@@ -249,7 +243,7 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
   };
 
   return (
-    <div className="flex">
+    <div className="flex flex-col">
       <label className="mb-4">
         <span>from</span>
         <input
@@ -281,7 +275,6 @@ function filterInputToParams(
   rawInput: string | Record<string, any>,
   params: URLSearchParams,
 ) {
-  console.log(params);
   const input = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
   switch (type) {
     case 'PRICE_RANGE':
@@ -348,7 +341,7 @@ export default function SortMenu() {
           <Menu.Item key={item.label}>
             {({active}) => (
               <Link
-                className={`w-48 px-5 w-full block ${active ? '' : ''}`}
+                className={`px-5 w-full block ${active ? '' : ''}`}
                 to={getSortLink(item.key, params, location)}
                 reloadDocument
               >
