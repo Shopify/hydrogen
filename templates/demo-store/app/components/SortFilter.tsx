@@ -106,11 +106,10 @@ export function FiltersDrawer({
             <AppliedFilters filters={appliedFilters} />
           </div>
         ) : null}
-        <div className="divide-y px-8 md:px-12 py-8">
-          <Text size="lead" className="py-4" as="h4">
-            Filter By
-          </Text>
-
+        <span className="text-primary/50' text-lead py-4 block font-light px-8 md:px-12">
+          Filter By
+        </span>
+        <div className="divide-y px-8 md:px-12">
           {filters.map((filter: Filter) => (
             <Disclosure as="div" key={filter.id} className="w-full">
               {({open}) => (
@@ -120,10 +119,10 @@ export function FiltersDrawer({
                     <IconCaret direction={open ? 'up' : 'down'} />
                   </Disclosure.Button>
                   <Disclosure.Panel key={filter.id}>
-                    <ul key={filter.id} className="py-4">
+                    <ul key={filter.id} className="py-2">
                       {filter.values?.map((option) => {
                         return (
-                          <li key={option.id}>
+                          <li key={option.id} className="pb-4">
                             {filterMarkup(filter, option)}
                           </li>
                         );
