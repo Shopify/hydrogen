@@ -8,14 +8,14 @@ import {
   IconCaret,
   IconXMark,
 } from '~/components';
-import {Link, useLocation, useSearchParams} from '@remix-run/react';
+import {Link, useLocation, useSearchParams, Location} from '@remix-run/react';
 import {useDebounce} from 'react-use';
 
 import type {
   FilterType,
   Filter,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {AppliedFilter} from '~/routes/collections/$collectionHandle';
+import {AppliedFilter, SortParam} from '~/routes/collections/$collectionHandle';
 
 type Props = {
   filters: Filter[];
@@ -160,11 +160,20 @@ function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
 function getAppliedFilterLink(
   filter: AppliedFilter,
   params: URLSearchParams,
-  location: ReturnType<typeof useLocation>,
+  location: Location,
 ) {
   const paramsClone = new URLSearchParams(params);
   paramsClone.delete(filter.urlParam);
   return `${location.pathname}?${paramsClone.toString()}`;
+}
+
+function getSortLink(
+  sort: SortParam,
+  params: URLSearchParams,
+  location: Location,
+) {
+  params.set('sort', sort);
+  return `${location.pathname}?${params.toString()}`;
 }
 
 function getFilterLink(
@@ -278,7 +287,7 @@ function filterInputToParams(
 }
 
 export default function SortMenu() {
-  const items = [
+  const items: {label: string; key: SortParam}[] = [
     {
       label: 'Price: Low - High',
       key: 'price-low-high',
@@ -296,8 +305,8 @@ export default function SortMenu() {
       key: 'newest',
     },
   ];
+  const [params] = useSearchParams();
   const location = useLocation();
-  const params = new URLSearchParams(location.search);
   const activeItem = items.find((item) => item.key === params.get('sort'));
   const remainingItems = items.filter(
     (item) => item.key !== (activeItem || items[0]).key,
@@ -319,7 +328,7 @@ export default function SortMenu() {
             {({active}) => (
               <Link
                 className={`w-48 px-5 w-full block ${active ? '' : ''}`}
-                to={`?sort=${item.key}`}
+                to={getSortLink(item.key, params, location)}
                 reloadDocument
               >
                 {item.label}

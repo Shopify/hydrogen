@@ -33,7 +33,7 @@ type FiltersQueryParams = Array<
   VariantFilterParam | PriceFiltersQueryParam | VariantOptionFiltersQueryParam
 >;
 
-type SortParam =
+export type SortParam =
   | 'price-low-high'
   | 'price-high-low'
   | 'best-selling'
