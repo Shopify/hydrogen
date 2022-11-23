@@ -93,7 +93,6 @@ function CartDiscounts({
 }: {
   discountCodes: Cart['discountCodes'];
 }) {
-  const [discountCode, setDiscountCode] = useState<string>('');
   const {discountCodesUpdating} = useDiscountCodesUpdating();
   const [hovered, setHovered] = useState(false);
 
@@ -134,28 +133,25 @@ function CartDiscounts({
       </dl>
 
       {/* No discounts, show an input to apply a discount */}
-      <div
-        className={clsx(
-          optimisticDiscounts ? 'hidden' : 'flex',
-          'flex items-center justify-between',
-        )}
-      >
-        <input
-          className={getInputStyleClasses()}
-          type="text"
-          onChange={(event: ChangeEvent<HTMLInputElement>) => {
-            if (typeof event?.target?.value !== 'string') return;
-            setDiscountCode(event.target.value);
-          }}
-        />
-        <DiscountCodesUpdateForm discountCodes={[discountCode]}>
-          {({state}) => (
-            <button className="w-[100px]">
+      <DiscountCodesUpdateForm>
+        {() => (
+          <div
+            className={clsx(
+              optimisticDiscounts ? 'hidden' : 'flex',
+              'items-center justify-between',
+            )}
+          >
+            <input
+              className={getInputStyleClasses()}
+              type="text"
+              name="discountCodes"
+            />
+            <button className="w-[150px] flex justify-end">
               <Text size="fine">Apply Discount</Text>
             </button>
-          )}
-        </DiscountCodesUpdateForm>
-      </div>
+          </div>
+        )}
+      </DiscountCodesUpdateForm>
     </>
   );
 }
