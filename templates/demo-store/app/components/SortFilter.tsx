@@ -4,9 +4,13 @@ import {
   Button,
   Drawer as DrawerComponent,
   IconXMark,
+  IconCaret,
+  Text,
 } from '~/components';
 import {Link, useLocation, useSearchParams} from '@remix-run/react';
 import {useDebounce} from 'react-use';
+import {Disclosure} from '@headlessui/react';
+import clsx from 'clsx';
 
 import type {
   FilterType,
@@ -96,25 +100,41 @@ export function FiltersDrawer({
       heading="Filter and sort"
       openFrom="right"
     >
-      <nav className="py-8 px-8 md:px-12 ">
+      <>
         {appliedFilters.length > 0 ? (
-          <div className="pb-8">
+          <div className="px-8 md:px-12 py-8">
             <AppliedFilters filters={appliedFilters} />
           </div>
         ) : null}
-        {filters.map((filter: Filter) => (
-          <div key={filter.id}>
-            <Heading as="h4" size="lead" className="pb-2">
-              {filter.label}
-            </Heading>
-            <ul key={filter.id} className="pb-8">
-              {filter.values?.map((option) => {
-                return <li key={option.id}>{filterMarkup(filter, option)}</li>;
-              })}
-            </ul>
-          </div>
-        ))}
-      </nav>
+        <span className="text-primary/50' text-lead py-4 block font-light px-8 md:px-12">
+          Filter By
+        </span>
+        <div className="divide-y px-8 md:px-12">
+          {filters.map((filter: Filter) => (
+            <Disclosure as="div" key={filter.id} className="w-full">
+              {({open}) => (
+                <>
+                  <Disclosure.Button className="py-4 w-full flex justify-between">
+                    <Text size="lead">{filter.label}</Text>
+                    <IconCaret direction={open ? 'up' : 'down'} />
+                  </Disclosure.Button>
+                  <Disclosure.Panel key={filter.id}>
+                    <ul key={filter.id} className="py-2">
+                      {filter.values?.map((option) => {
+                        return (
+                          <li key={option.id} className="pb-4">
+                            {filterMarkup(filter, option)}
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </Disclosure.Panel>
+                </>
+              )}
+            </Disclosure>
+          ))}
+        </div>
+      </>
     </DrawerComponent>
   );
 }
@@ -243,6 +263,7 @@ function filterInputToParams(
   rawInput: string | Record<string, any>,
   params: URLSearchParams,
 ) {
+  console.log(params);
   const input = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
   switch (type) {
     case 'PRICE_RANGE':

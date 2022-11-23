@@ -3,7 +3,7 @@ import {Heading, Button, IconCheck} from '~/components';
 import {useEffect, useRef} from 'react';
 
 export function CountrySelector() {
-  const {countries, selectedLocale} = useLoaderData();
+  const {countries, selectedLocale} = useLoaderData() || {};
 
   const closeRef = useRef<HTMLDetailsElement>(null);
   const {pathname, search} = useLocation();
