@@ -4,9 +4,13 @@ import {
   Button,
   Drawer as DrawerComponent,
   IconXMark,
+  IconCaret,
+  Text,
 } from '~/components';
 import {Link, useLocation, useSearchParams} from '@remix-run/react';
 import {useDebounce} from 'react-use';
+import {Disclosure} from '@headlessui/react';
+import clsx from 'clsx';
 
 import type {
   FilterType,
@@ -96,25 +100,37 @@ export function FiltersDrawer({
       heading="Filter and sort"
       openFrom="right"
     >
-      <nav className="py-8 px-8 md:px-12 ">
+      <div className="divide-y px-8 md:px-12 ">
         {appliedFilters.length > 0 ? (
           <div className="pb-8">
             <AppliedFilters filters={appliedFilters} />
           </div>
         ) : null}
+        <Text size="lead" className="pb-4" as="h4">
+          Filter By
+        </Text>
         {filters.map((filter: Filter) => (
-          <div key={filter.id}>
-            <Heading as="h4" size="lead" className="pb-2">
-              {filter.label}
-            </Heading>
-            <ul key={filter.id} className="pb-8">
-              {filter.values?.map((option) => {
-                return <li key={option.id}>{filterMarkup(filter, option)}</li>;
-              })}
-            </ul>
-          </div>
+          <Disclosure as="div" key={filter.id} className="py-4 w-full ">
+            {({open}) => (
+              <>
+                <Disclosure.Button className="w-full flex justify-between">
+                  <Text size="lead">{filter.label}</Text>
+                  <IconCaret direction={open ? 'up' : 'down'} />
+                </Disclosure.Button>
+                <Disclosure.Panel key={filter.id}>
+                  <ul key={filter.id} className="py-4">
+                    {filter.values?.map((option) => {
+                      return (
+                        <li key={option.id}>{filterMarkup(filter, option)}</li>
+                      );
+                    })}
+                  </ul>
+                </Disclosure.Panel>
+              </>
+            )}
+          </Disclosure>
         ))}
-      </nav>
+      </div>
     </DrawerComponent>
   );
 }
@@ -243,6 +259,7 @@ function filterInputToParams(
   rawInput: string | Record<string, any>,
   params: URLSearchParams,
 ) {
+  console.log(params);
   const input = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;
   switch (type) {
     case 'PRICE_RANGE':
