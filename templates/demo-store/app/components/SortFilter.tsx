@@ -1,7 +1,14 @@
 import {SyntheticEvent, useMemo, Fragment, useState} from 'react';
 import {Menu} from '@headlessui/react';
 
-import {Heading, IconXMark, IconCaret, Text, IconFilters} from '~/components';
+import {
+  Heading,
+  Drawer as DrawerComponent,
+  IconFilters,
+  IconCaret,
+  IconXMark,
+  Text,
+} from '~/components';
 import {Link, useLocation, useSearchParams, Location} from '@remix-run/react';
 import {useDebounce} from 'react-use';
 import {Disclosure} from '@headlessui/react';
@@ -29,7 +36,7 @@ export function SortFilter({filters, appliedFilters = [], children}: Props) {
             'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
           }
         >
-          <IconFilters stroke="white" />
+          <IconFilters />
         </button>
         <SortMenu />
       </div>
@@ -302,6 +309,7 @@ function filterInputToParams(
 
 export default function SortMenu() {
   const items: {label: string; key: SortParam}[] = [
+    {label: 'Featured', key: 'featured'},
     {
       label: 'Price: Low - High',
       key: 'price-low-high',
@@ -322,26 +330,28 @@ export default function SortMenu() {
   const [params] = useSearchParams();
   const location = useLocation();
   const activeItem = items.find((item) => item.key === params.get('sort'));
-  const remainingItems = items.filter(
-    (item) => item.key !== (activeItem || items[0]).key,
-  );
 
   return (
     <Menu as="div" className="relative z-40">
-      <Menu.Button className="flex items-center	">
-        <span className="px-2">Sort by:</span>
-        <span>{(activeItem || items[0]).label}</span> <IconCaret />
+      <Menu.Button className="flex items-center">
+        <span className="px-2">
+          <span className="px-2 font-medium">Sort by:</span>
+          <span>{(activeItem || items[0]).label}</span>
+        </span>
+        <IconCaret />
       </Menu.Button>
 
       <Menu.Items
         as="nav"
-        className="bg-contrast flex flex-col absolute text-right right-0 w-48 origin-top-right focus:outline-none"
+        className="bg-contrast flex flex-col absolute text-right right-0 p-4"
       >
-        {remainingItems.map((item) => (
+        {items.map((item) => (
           <Menu.Item key={item.label}>
-            {({active}) => (
+            {() => (
               <Link
-                className={`px-5 w-full block ${active ? '' : ''}`}
+                className={`block text-sm pb-2 px-3 ${
+                  activeItem?.key === item.key ? 'font-bold' : 'font-normal'
+                }`}
                 to={getSortLink(item.key, params, location)}
                 reloadDocument
               >

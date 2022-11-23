@@ -37,7 +37,8 @@ export type SortParam =
   | 'price-low-high'
   | 'price-high-low'
   | 'best-selling'
-  | 'newest';
+  | 'newest'
+  | 'featured';
 
 export async function loader({
   params,
@@ -223,6 +224,11 @@ function getSortValuesFromParam(sortParam: SortParam | null) {
       return {
         sortKey: 'CREATED',
         reverse: true,
+      };
+    case 'featured':
+      return {
+        sortKey: 'MANUAL',
+        reverse: false,
       };
     default:
       return {
