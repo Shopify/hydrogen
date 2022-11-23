@@ -286,7 +286,6 @@ function useLinesRemove(
   onSuccess: (event: LinesRemoveEvent) => void = () => {},
 ) {
   const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
-
   const fetcher = useFetcher();
   const fetchers = useFetchers();
   const linesRemoveFetcher = fetchers.find(

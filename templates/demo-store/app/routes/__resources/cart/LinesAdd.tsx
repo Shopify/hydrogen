@@ -258,7 +258,7 @@ function diffLines({addingLines, prevLines, currentLines}: DiffLinesProps) {
       merchandiseId: merchandise.id,
     })) || [];
 
-  // compar lines
+  // lines comparison function
   function comparer(prevLine: DiffingLine, line: DiffingLine) {
     return (
       prevLine.id === line.id &&
@@ -620,6 +620,7 @@ function useOptimisticLinesAdd(
             amount: lineTotalAmount,
             currencyCode: price.currencyCode,
           },
+          amountPerQuantity: price,
         };
       }
       if (compareAtPrice) {
