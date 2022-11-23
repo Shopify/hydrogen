@@ -1,8 +1,9 @@
 import clsx from 'clsx';
-import {useRef} from 'react';
+import {ChangeEvent, useRef, useState} from 'react';
 import {useScroll} from 'react-use';
 import {flattenConnection, Image, Money} from '@shopify/hydrogen-react';
 import {Button, Heading, IconRemove, Text, Link} from '~/components';
+import {getInputStyleClasses} from '~/lib/utils';
 import type {
   Cart,
   CartCost,
@@ -19,6 +20,10 @@ import {
   useLineUpdating,
   LinesUpdateForm,
 } from '~/routes/__resources/cart/LinesUpdate';
+import {
+  DiscountCodesUpdateForm,
+  useDiscountCodesUpdating,
+} from '~/routes/__resources/cart/DiscountCodesUpdate';
 
 type Layouts = 'page' | 'drawer';
 
@@ -70,10 +75,88 @@ export function CartDetails({
       <CartLines lines={cart?.lines} layout={layout} />
       {!isZeroCost && (
         <CartSummary cost={cart.cost} layout={layout}>
+          <CartDiscounts discountCodes={cart.discountCodes} />
           <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
         </CartSummary>
       )}
     </div>
+  );
+}
+
+/**
+ * Temporary discount UI
+ * @param discountCodes the current discount codes applied to the cart
+ * @todo rework when a design is ready
+ */
+function CartDiscounts({
+  discountCodes,
+}: {
+  discountCodes: Cart['discountCodes'];
+}) {
+  const [discountCode, setDiscountCode] = useState<string>('');
+  const {discountCodesUpdating} = useDiscountCodesUpdating();
+  const [hovered, setHovered] = useState(false);
+
+  const discounts = discountCodesUpdating
+    ? discountCodesUpdating
+    : discountCodes;
+
+  const optimisticDiscounts =
+    discounts?.map(({code}) => code).join(', ') || null;
+
+  return (
+    <>
+      {/* Have existing discount, display it with a remove option */}
+      <dl className={clsx(optimisticDiscounts ? 'grid' : 'hidden')}>
+        <div className="flex items-center justify-between font-medium">
+          <Text as="dt">Discount(s)</Text>
+          <div
+            className="flex items-center justify-between"
+            onMouseEnter={() => setHovered(true)}
+            onMouseLeave={() => setHovered(false)}
+          >
+            <DiscountCodesUpdateForm
+              className={hovered ? 'block' : 'hidden'}
+              discountCodes={[]}
+            >
+              {() => (
+                <button>
+                  <IconRemove
+                    aria-hidden="true"
+                    style={{height: 18, marginRight: 4}}
+                  />
+                </button>
+              )}
+            </DiscountCodesUpdateForm>
+            <Text as="dd">{optimisticDiscounts}</Text>
+          </div>
+        </div>
+      </dl>
+
+      {/* No discounts, show an input to apply a discount */}
+      <div
+        className={clsx(
+          optimisticDiscounts ? 'hidden' : 'flex',
+          'flex items-center justify-between',
+        )}
+      >
+        <input
+          className={getInputStyleClasses()}
+          type="text"
+          onChange={(event: ChangeEvent<HTMLInputElement>) => {
+            if (typeof event?.target?.value !== 'string') return;
+            setDiscountCode(event.target.value);
+          }}
+        />
+        <DiscountCodesUpdateForm discountCodes={[discountCode]}>
+          {({state}) => (
+            <button className="w-[100px]">
+              <Text size="fine">Apply Discount</Text>
+            </button>
+          )}
+        </DiscountCodesUpdateForm>
+      </div>
+    </>
   );
 }
 
@@ -118,7 +201,7 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
   if (!checkoutUrl) return null;
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col mt-2">
       <a href={checkoutUrl} target="_self">
         <Button as="span" width="full">
           Continue to Checkout
@@ -139,7 +222,7 @@ function CartSummary({
   layout: Layouts;
 }) {
   const summary = {
-    drawer: 'grid gap-6 p-6 border-t md:px-12',
+    drawer: 'grid gap-4 p-6 border-t md:px-12',
     page: 'sticky top-nav grid gap-6 p-4 md:px-6 md:translate-y-4 bg-primary/5 rounded w-full',
   };
 
