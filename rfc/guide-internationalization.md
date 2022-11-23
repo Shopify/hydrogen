@@ -573,7 +573,7 @@ export function getLocaleFromRequest(request: Request): Locale {
    ...
    export function CountrySelector() {
      const [root] = useMatches();
-      const selectedLocale = root.data.selectedLocale;
+     const selectedLocale = root.data.selectedLocale;
      const {pathname, search} = useLocation();
 
      const [countries, setCountries] = useState({});
