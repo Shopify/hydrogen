@@ -525,7 +525,7 @@ export function getLocaleFromRequest(request: Request): Locale {
    }
    ```
 
-2. Supply the selected locale and the available countries in the `root` loader function
+2. Supply the selected locale in the `root` loader function
 
    ```jsx
    import {countries} from '~/data/countries';
@@ -535,21 +535,58 @@ export function getLocaleFromRequest(request: Request): Locale {
      return defer({
        ...,
        selectedLocale: await getLocaleFromRequest(request),
-       countries,
      });
    };
    ```
 
-3. Render the available countries as forms
+3. Create an api endpoint for the available countries
 
    ```jsx
-   import {Form, useLoaderData, useLocation} from '@remix-run/react';
+   // routes/api/countries
+   import {json} from '@remix-run/server-runtime';
+   import {CacheLong, generateCacheControlHeader} from '@shopify/hydrogen';
+   import {countries} from '~/data/countries';
+
+   export async function loader() {
+     return json(
+       {
+         ...countries,
+       },
+       {
+         headers: {
+           'cache-control': generateCacheControlHeader(CacheLong()),
+         },
+       },
+     );
+   }
+
+   // no-op
+   export default function CountriesApiRoute() {
+     return null;
+   }
+   ```
+
+4. Render the available countries as forms
+
+   ```jsx
+   import {Form, useMatches, useLocation} from '@remix-run/react';
    ...
    export function CountrySelector() {
-     const {countries, selectedLocale} = useLoaderData();
+     const [root] = useMatches();
+     const selectedLocale = root.data.selectedLocale;
      const {pathname, search} = useLocation();
 
-     if (!countries || !selectedLocale) return null;
+     const [countries, setCountries] = useState({});
+
+      // Get available countries list
+      const fetcher = useFetcher();
+      useEffect(() => {
+        if (!fetcher.data) {
+          fetcher.load('/api/countries');
+          return;
+        }
+        setCountries(fetcher.data);
+      }, [countries, fetcher.data]);
 
      const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
 
@@ -559,7 +596,7 @@ export function getLocaleFromRequest(request: Request): Locale {
            {selectedLocale.label}
          </summary>
          <div className="overflow-auto border-t py-2 bg-contrast w-full max-h-36">
-           {Object.keys(countries).map((countryKey) => {
+           {countries && Object.keys(countries).map((countryKey) => {
              const locale = countries[countryKey];
              const hreflang = `${locale.language}-${locale.country}`;
 
@@ -591,7 +628,7 @@ export function getLocaleFromRequest(request: Request): Locale {
    }
    ```
 
-4. Create the `routes/locale.tsx` route that will handle locale change
+5. Create the `routes/locale.tsx` route that will handle locale change
 
    ```jsx
    import {
@@ -673,7 +710,7 @@ export function getLocaleFromRequest(request: Request): Locale {
    `;
    ```
 
-5. Make sure to provide a `key` to the components that will change due to localization.
+6. Make sure to provide a `key` to the components that will change due to localization.
    Especially for url path localization schemes.
 
    Sometimes, React won't know when to re-render a component. This means that, you could
