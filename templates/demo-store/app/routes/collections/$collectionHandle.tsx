@@ -33,7 +33,11 @@ type FiltersQueryParams = Array<
   VariantFilterParam | PriceFiltersQueryParam | VariantOptionFiltersQueryParam
 >;
 
-type SortParam = 'price-asc' | 'price-desc' | 'trending' | 'latest' | 'oldest';
+export type SortParam =
+  | 'price-low-high'
+  | 'price-high-low'
+  | 'best-selling'
+  | 'newest';
 
 export async function loader({
   params,
@@ -199,30 +203,25 @@ const COLLECTION_QUERY = `#graphql
 
 function getSortValuesFromParam(sortParam: SortParam | null) {
   switch (sortParam) {
-    case 'price-asc':
-      return {
-        sortKey: 'PRICE',
-        reverse: false,
-      };
-    case 'price-desc':
+    case 'price-high-low':
       return {
         sortKey: 'PRICE',
         reverse: true,
       };
-    case 'trending':
+    case 'price-low-high':
+      return {
+        sortKey: 'PRICE',
+        reverse: false,
+      };
+    case 'best-selling':
       return {
         sortKey: 'BEST_SELLING',
         reverse: false,
       };
-    case 'latest':
+    case 'newest':
       return {
-        sortKey: 'CREATED_AT',
+        sortKey: 'CREATED',
         reverse: true,
-      };
-    case 'oldest':
-      return {
-        sortKey: 'CREATED_AT',
-        reverse: false,
       };
     default:
       return {
