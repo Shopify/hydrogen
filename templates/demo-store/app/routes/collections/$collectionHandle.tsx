@@ -132,12 +132,13 @@ export default function Collection() {
         <SortFilter
           filters={collection.products.filters as Filter[]}
           appliedFilters={appliedFilters}
-        />
-        <ProductGrid
-          key={collection.id}
-          collection={collection as CollectionType}
-          url={`/collections/${collection.handle}`}
-        />
+        >
+          <ProductGrid
+            key={collection.id}
+            collection={collection as CollectionType}
+            url={`/collections/${collection.handle}`}
+          />
+        </SortFilter>
       </Section>
     </>
   );
