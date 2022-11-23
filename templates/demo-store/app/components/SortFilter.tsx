@@ -1,5 +1,10 @@
 import {SyntheticEvent, useMemo, useState} from 'react';
-import {Heading, Button, Drawer as DrawerComponent} from '~/components';
+import {
+  Heading,
+  Button,
+  Drawer as DrawerComponent,
+  IconXMark,
+} from '~/components';
 import {Link, useLocation, useSearchParams} from '@remix-run/react';
 import {useDebounce} from 'react-use';
 
@@ -7,12 +12,14 @@ import type {
   FilterType,
   Filter,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {AppliedFilter} from '~/routes/collections/$collectionHandle';
 
 type Props = {
   filters: Filter[];
+  appliedFilters?: AppliedFilter[];
 };
 
-export function SortFilter({filters}: Props) {
+export function SortFilter({filters, appliedFilters = []}: Props) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -24,6 +31,7 @@ export function SortFilter({filters}: Props) {
       </div>
       <FiltersDrawer
         filters={filters}
+        appliedFilters={appliedFilters}
         isOpen={isOpen}
         onClose={() => setIsOpen(false)}
       />
@@ -35,10 +43,12 @@ export function FiltersDrawer({
   isOpen,
   onClose,
   filters = [],
+  appliedFilters = [],
 }: {
   isOpen: boolean;
   onClose: () => void;
   filters: Filter[];
+  appliedFilters: AppliedFilter[];
 }) {
   const [params] = useSearchParams();
   const location = useLocation();
@@ -87,6 +97,11 @@ export function FiltersDrawer({
       openFrom="right"
     >
       <nav className="py-8 px-8 md:px-12 ">
+        {appliedFilters.length > 0 ? (
+          <div className="pb-8">
+            <AppliedFilters filters={appliedFilters} />
+          </div>
+        ) : null}
         {filters.map((filter: Filter) => (
           <div key={filter.id}>
             <Heading as="h4" size="lead" className="pb-2">
@@ -102,6 +117,45 @@ export function FiltersDrawer({
       </nav>
     </DrawerComponent>
   );
+}
+
+function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
+  const [params] = useSearchParams();
+  const location = useLocation();
+  return (
+    <>
+      <Heading as="h4" size="lead" className="pb-2">
+        Applied filters
+      </Heading>
+      <div className="flex flex-wrap gap-2">
+        {filters.map((filter: AppliedFilter) => {
+          return (
+            <Link
+              to={getAppliedFilterLink(filter, params, location)}
+              className="rounded-full border px-2 flex gap"
+              key={`${filter.label}-${filter.urlParam}`}
+              reloadDocument
+            >
+              <span className="flex-grow">{filter.label}</span>
+              <span>
+                <IconXMark />
+              </span>
+            </Link>
+          );
+        })}
+      </div>
+    </>
+  );
+}
+
+function getAppliedFilterLink(
+  filter: AppliedFilter,
+  params: URLSearchParams,
+  location: ReturnType<typeof useLocation>,
+) {
+  const paramsClone = new URLSearchParams(params);
+  paramsClone.delete(filter.urlParam);
+  return `${location.pathname}?${paramsClone.toString()}`;
 }
 
 function getFilterLink(
