@@ -1,8 +1,11 @@
-import {SyntheticEvent, useMemo, useState} from 'react';
+import {SyntheticEvent, useMemo, Fragment, useState} from 'react';
+import {Menu} from '@headlessui/react';
+
 import {
   Heading,
-  Button,
   Drawer as DrawerComponent,
+  IconFilters,
+  IconCaret,
   IconXMark,
 } from '~/components';
 import {Link, useLocation, useSearchParams} from '@remix-run/react';
@@ -24,10 +27,16 @@ export function SortFilter({filters, appliedFilters = []}: Props) {
 
   return (
     <>
-      <div className="flex items-center justify-end">
-        <Button variant="secondary" onClick={() => setIsOpen(true)}>
-          Filter and sort
-        </Button>
+      <div className="flex items-center justify-between w-full">
+        <button
+          onClick={() => setIsOpen(true)}
+          className={
+            'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
+          }
+        >
+          <IconFilters stroke="white" />
+        </button>
+        <SortMenu />
       </div>
       <FiltersDrawer
         filters={filters}
@@ -94,7 +103,7 @@ export function FiltersDrawer({
       open={isOpen}
       onClose={onClose}
       heading="Filter and sort"
-      openFrom="right"
+      openFrom="left"
     >
       <nav className="py-8 px-8 md:px-12 ">
         {appliedFilters.length > 0 ? (
@@ -266,4 +275,59 @@ function filterInputToParams(
   }
 
   return params;
+}
+
+export default function SortMenu() {
+  const items = [
+    {
+      label: 'Price: Low - High',
+      key: 'price-low-high',
+    },
+    {
+      label: 'Price: High - Low',
+      key: 'price-high-low',
+    },
+    {
+      label: 'Best Selling',
+      key: 'best-selling',
+    },
+    {
+      label: 'Newest',
+      key: 'newest',
+    },
+  ];
+  const location = useLocation();
+  const params = new URLSearchParams(location.search);
+  const activeItem = items.find((item) => item.key === params.get('sort'));
+  const remainingItems = items.filter(
+    (item) => item.key !== (activeItem || items[0]).key,
+  );
+
+  return (
+    <Menu as="div" className="relative z-40">
+      <Menu.Button className="flex items-center	">
+        <span className="px-2">Sort by:</span>
+        <span>{(activeItem || items[0]).label}</span> <IconCaret />
+      </Menu.Button>
+
+      <Menu.Items
+        as="nav"
+        className="bg-contrast flex flex-col absolute text-right right-0 w-48 origin-top-right focus:outline-none"
+      >
+        {remainingItems.map((item) => (
+          <Menu.Item key={item.label}>
+            {({active}) => (
+              <Link
+                className={`w-48 px-5 w-full block ${active ? '' : ''}`}
+                to={`?sort=${item.key}`}
+                reloadDocument
+              >
+                {item.label}
+              </Link>
+            )}
+          </Menu.Item>
+        ))}
+      </Menu.Items>
+    </Menu>
+  );
 }
