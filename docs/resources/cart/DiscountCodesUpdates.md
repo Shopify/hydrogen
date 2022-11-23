@@ -31,13 +31,15 @@ Advanced use:
 function FreeShippingDiscount({line}) {
   return (
     <DiscountCodesUpdateForm
-      discountCodes={['FREESHIPPING']}
       onSuccess={(event) => {
         navigator.sendBeacon('/events', JSON.stringify(event))
       }}
     >
       {(state, error) => (
-        <button>{state === 'idle' ? 'Apply Discount' : 'Applying discount'}</button>
+        <div>
+          <input type="text" name="discountCodes" />
+          <button>{state === 'idle' ? 'Apply Discount' : 'Applying discount'}</button>
+        </div>
         {error ? <p>{error}</p>}
       )}
     </DiscountCodesUpdateForm>
@@ -71,7 +73,7 @@ const {discountCodesUpdate} = useDiscountCodesUpdate(onSuccess);
 Example: Add a free shipping discount code programmatically if cart total is $100 or more
 
 ```jsx
-function useFreeShippingDiscount({cart}) {
+function useApplyFreeShipping({cart}) {
   const totalCartAmount = parseFloat(cart.cost.totalAmount.amount);
   const currentDiscountCodes = cart.discountCodes.map(({code}) => code);
   const qualifiesForFreeShipping = totalCartAmount >= 100;
@@ -90,27 +92,38 @@ function useFreeShippingDiscount({cart}) {
 }
 ```
 
-## `useLineUpdating`
+## `useDiscountCodesUpdating`
 
 A utility hook to easily implement optimistic UI for a line item being updated.
 
 Hook signature
 
 ```jsx
-const {lineUpdating, linesUpdating} = useLineUpdating(line);
+const {discountCodesUpdating} = useDiscountCodesUpdating();
 ```
 
-| Action          | Description                                                                                                |
-| :-------------- | :--------------------------------------------------------------------------------------------------------- |
-| `lineUpdating`  | The line being updated                                                                                     |
-| `linesUpdating` | The line(s) being updated. If the fetcher is idle it will be null. Useful for handling optimistic updates. |
+| Action                  | Description                                |
+| :---------------------- | :----------------------------------------- |
+| `discountCodesUpdating` | The discount codes currently being updated |
 
 Example use
 
 ```jsx
-function CartLineQuantity({line}) {
-  const {lineUpdating} = useLineUpdating(line);
+function CartDiscounts({cart}) {
+  const currenDiscountCodes = cart.discountCodes;
+  const {discountCodesUpdating} = useDiscountCodesUpdating();
 
-  return <span>{lineUpdating ? lineUpdating.quantity : line.quantity}</span>;
+  const optimisticDiscounts = discountCodesUpdating ?? currentDiscountCodes;
+  const optimisticDiscountCodes = optimisticDiscounts
+    .map(({code}) => code)
+    .join(',');
+
+  return (
+    <div>
+      <p>
+        Discount(s): <span>{optimisticDiscountCodes}</span>
+      </p>
+    </div>
+  );
 }
 ```

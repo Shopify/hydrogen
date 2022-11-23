@@ -17,7 +17,7 @@ import invariant from 'tiny-invariant';
 import {usePrefixPathWithLocale} from '~/lib/utils';
 
 interface DiscountCodesUpdateProps {
-  discountCodes: string[];
+  discountCodes?: string[];
   children: ({
     state,
     error,
@@ -69,10 +69,9 @@ async function action({request, context}: ActionArgs) {
 
   invariant(cartId, 'Missing cartId');
 
-  invariant(formData.get('discountCodes'), 'Missing discountCodes');
-  const discountCodes = formData.get('discountCodes')
-    ? (JSON.parse(String(formData.get('discountCodes'))) as string[])
-    : ([] as string[]);
+  const formDiscountCodes = formData.getAll('discountCodes');
+  invariant(formDiscountCodes, 'Missing discountCodes');
+  const discountCodes = (formDiscountCodes || []) as string[];
 
   // we fetch teh previous discountCodes to
   // diff them after mutating for analytics
@@ -274,6 +273,7 @@ const DiscountCodesUpdateForm = forwardRef<
   HTMLFormElement,
   DiscountCodesUpdateProps
 >(({discountCodes, children, onSuccess, className}, ref) => {
+  const discountCodesInProps = typeof discountCodes !== 'undefined';
   const formId = useId();
   const isHydrated = useIsHydrated();
   const fetcher = useFetcher();
@@ -308,11 +308,16 @@ const DiscountCodesUpdateForm = forwardRef<
           defaultValue={`${pathname}${search}`}
         />
       )}
-      <input
-        type="hidden"
-        name="discountCodes"
-        defaultValue={JSON.stringify(discountCodes)}
-      />
+      {discountCodesInProps &&
+        discountCodes.map((code, i) => (
+          <input
+            // eslint-disable-next-line react/no-array-index-key
+            key={`${code}-${i}`}
+            type="hidden"
+            name="discountCodes"
+            defaultValue={code}
+          />
+        ))}
       {children({state: fetcher.state, error})}
     </fetcher.Form>
   );
