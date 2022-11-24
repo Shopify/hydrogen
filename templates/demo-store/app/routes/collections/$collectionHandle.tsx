@@ -4,13 +4,17 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@shopify/hydrogen-remix';
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, useMatches, Link} from '@remix-run/react';
 import type {
   Collection as CollectionType,
+  CollectionConnection,
+  MetafieldReferenceEdge,
+  MetafieldReference,
   Filter,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {flattenConnection} from '@shopify/hydrogen-react';
 import invariant from 'tiny-invariant';
-import {PageHeader, Section, Text, SortFilter} from '~/components';
+import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
@@ -115,6 +119,11 @@ export const meta: MetaFunction = ({
 
 export default function Collection() {
   const {collection, appliedFilters} = useLoaderData<typeof loader>();
+  const breadcrumbs =
+    collection.metafield?.references &&
+    flattenConnection<MetafieldReference>(collection.metafield.references)
+      .reverse()
+      .reduce<any[]>((acc, collection) => [collection, ...acc], [collection]);
 
   return (
     <>
@@ -128,6 +137,8 @@ export default function Collection() {
             </div>
           </div>
         )}
+
+        <Breadcrumbs breadcrumbs={breadcrumbs} />
       </PageHeader>
       <Section>
         <SortFilter
@@ -172,6 +183,23 @@ const COLLECTION_QUERY = `#graphql
         width
         height
         altText
+      }
+      metafield(namespace: "breadcrumbs", key: "parents") {
+        id
+        value
+        references(first: 10) {
+          edges {
+            node {
+              ... on Collection {
+                id
+                handle
+                title
+              }
+            }
+          }
+        }
+        namespace
+        key
       }
       products(
         first: $pageBy,
