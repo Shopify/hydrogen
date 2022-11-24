@@ -18,6 +18,7 @@ const DEFAULTS: Required<Omit<MiniOxygenPreviewOptions, 'log'>> = {
   buildWatchPaths: ['./src'],
   autoReload: true,
   modules: true,
+  sourceMap: true,
   env: {},
 };
 
