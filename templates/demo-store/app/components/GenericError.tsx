@@ -32,9 +32,10 @@ export function GenericError({
               overflow: 'auto',
               maxWidth: '100%',
             }}
-          >
-            {error.stack}
-          </pre>
+            dangerouslySetInnerHTML={{
+              __html: addLinksToStackTrace(error.stack),
+            }}
+          />
         )}
         <Button width="auto" variant="secondary" to={'/'}>
           Take me to the home page
@@ -42,5 +43,16 @@ export function GenericError({
       </PageHeader>
       <FeaturedSection />
     </>
+  );
+}
+
+function addLinksToStackTrace(stackTrace: string) {
+  return stackTrace?.replace(
+    /^\s*at\s?.*?[(\s]((\/|\w\:)[^)\n]+)/gim,
+    (all, m1) =>
+      all.replace(
+        m1,
+        `<a href="vscode://file${m1}" class="hover:underline">${m1}</a>`,
+      ),
   );
 }
