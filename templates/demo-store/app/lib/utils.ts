@@ -249,6 +249,11 @@ export function assertApiErrors(data: Record<string, any> | null | undefined) {
   }
 }
 
+export const DEFAULT_LOCALE: Locale & {pathPrefix: string} = Object.freeze({
+  ...countries.default,
+  pathPrefix: '',
+});
+
 export function getLocaleFromRequest(request: Request): Locale & {
   pathPrefix: string;
 } {
@@ -269,17 +274,17 @@ export function getLocaleFromRequest(request: Request): Locale & {
 
 export function usePrefixPathWithLocale(path: string) {
   const [root] = useMatches();
-  const selectedLocale = root.data.selectedLocale;
+  const selectedLocale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
 
-  return selectedLocale
-    ? `${selectedLocale.pathPrefix}${path.startsWith('/') ? path : '/' + path}`
-    : path;
+  return `${selectedLocale.pathPrefix}${
+    path.startsWith('/') ? path : '/' + path
+  }`;
 }
 
 export function useIsHomePath() {
   const {pathname} = useLocation();
   const [root] = useMatches();
-  const selectedLocale = root.data.selectedLocale;
+  const selectedLocale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
   const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
 
   return strippedPathname === '/';
