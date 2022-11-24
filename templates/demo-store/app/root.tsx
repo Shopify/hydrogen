@@ -23,16 +23,16 @@ import {Seo, Debugger} from './lib/seo';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
-import {getLocaleFromRequest} from './lib/utils';
+import {DEFAULT_LOCALE, getLocaleFromRequest} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 
 export const handle = {
   // @todo - remove any and type the seo callback
   seo: (data: any) => ({
-    title: data.layout.shop.name,
+    title: data?.layout.shop.name,
     bypassTitleTemplate: true,
-    titleTemplate: `%s | ${data.layout.shop.name}`,
+    titleTemplate: `%s | ${data?.layout.shop.name}`,
   }),
 };
 
@@ -57,6 +57,7 @@ export const meta: MetaFunction = () => ({
 });
 
 export async function loader({context, request}: LoaderArgs) {
+  throw new Error('Tiririrri');
   const [cartId, layout, selectedLocale] = await Promise.all([
     context.session.get('cartId'),
     getLayoutData(context),
@@ -72,7 +73,7 @@ export async function loader({context, request}: LoaderArgs) {
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
-  const locale = data.selectedLocale;
+  const locale = data.selectedLocale ?? DEFAULT_LOCALE;
 
   return (
     <html lang={locale.language}>
@@ -100,7 +101,7 @@ export function CatchBoundary() {
   const [root] = useMatches();
   const caught = useCatch();
   const isNotFound = caught.status === 404;
-  const locale = root.data.selectedLocale;
+  const locale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
 
   return (
     <html lang={locale.language}>
@@ -130,16 +131,17 @@ export function CatchBoundary() {
 
 export function ErrorBoundary({error}: {error: Error}) {
   const [root] = useMatches();
+  const locale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
 
   return (
-    <html lang={root.data.selectedLocale.language}>
+    <html lang={locale.language}>
       <head>
         <title>Error</title>
         <Meta />
         <Links />
       </head>
       <body>
-        <Layout layout={root.data.layout}>
+        <Layout layout={root.data?.layout}>
           <GenericError error={error} />
         </Layout>
         <Scripts />
