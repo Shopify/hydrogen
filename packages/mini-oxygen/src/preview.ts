@@ -20,6 +20,7 @@ export type MiniOxygenPreviewOptions = Partial<{
   buildCommand: string;
   buildWatchPaths: string[];
   autoReload: boolean;
+  sourceMap: boolean;
   env: {[key: string]: unknown};
 }>;
 
@@ -38,6 +39,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     buildCommand,
     autoReload = false,
     modules = true,
+    sourceMap = true,
     env = {},
   } = opts;
   const root = process.cwd();
@@ -60,6 +62,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
       scriptPath: path.resolve(root, workerFile),
       watch,
       modules,
+      sourceMap,
       buildWatchPaths,
       // this should stay in sync with oxygen-dms
       compatibilityFlags: ['streams_enable_constructors'],
