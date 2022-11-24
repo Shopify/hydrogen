@@ -20,4 +20,5 @@ export {Link} from './Link';
 export {FeaturedCollections} from './FeaturedCollections';
 export {Hero} from './Hero';
 export {SortFilter} from './SortFilter';
+export {Breadcrumbs} from './Breadcrumbs';
 export * from './Icon';
