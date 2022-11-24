@@ -57,7 +57,6 @@ export const meta: MetaFunction = () => ({
 });
 
 export async function loader({context, request}: LoaderArgs) {
-  throw new Error('Tiririrri');
   const [cartId, layout, selectedLocale] = await Promise.all([
     context.session.get('cartId'),
     getLayoutData(context),
