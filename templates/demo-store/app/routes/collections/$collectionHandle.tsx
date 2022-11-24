@@ -7,6 +7,9 @@ import {
 import {useLoaderData, useMatches, Link} from '@remix-run/react';
 import type {
   Collection as CollectionType,
+  CollectionConnection,
+  MetafieldReferenceEdge,
+  MetafieldReference,
   Filter,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {flattenConnection} from '@shopify/hydrogen-react';
@@ -118,9 +121,9 @@ export default function Collection() {
   const {collection, appliedFilters} = useLoaderData<typeof loader>();
   const breadcrumbs =
     collection.metafield?.references &&
-    flattenConnection<CollectionType>(collection.metafield?.references)
+    flattenConnection<MetafieldReference>(collection.metafield.references)
       .reverse()
-      .reduce((acc, collection) => [collection, ...acc], [collection]);
+      .reduce<any[]>((acc, collection) => [collection, ...acc], [collection]);
 
   return (
     <>

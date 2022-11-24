@@ -8,10 +8,10 @@ interface Breadcrumb {
 }
 
 // Renders a breadcrumb trail from a references metafield list
-export function Breadcrumbs<Reference>({
+export function Breadcrumbs({
   breadcrumbs,
 }: {
-  breadcrumbs: (Breadcrumb & Partial<Reference>)[];
+  breadcrumbs?: Breadcrumb[] | null;
 }) {
   if (!breadcrumbs || breadcrumbs.length === 0) {
     return null;
