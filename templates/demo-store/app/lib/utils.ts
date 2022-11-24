@@ -281,6 +281,16 @@ export function useIsHomePath() {
   const [root] = useMatches();
   const selectedLocale = root.data.selectedLocale;
   const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
-
   return strippedPathname === '/';
+}
+
+/**
+ * A utility that removes properties with falsy values
+ * @param obj An object
+ * @returns the object without falsy property values
+ */
+export function withoutFalsyProps(obj: object) {
+  return Object.fromEntries(
+    Object.entries(obj).filter(([key, value]) => value),
+  );
 }
