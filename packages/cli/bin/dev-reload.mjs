@@ -9,4 +9,8 @@
 
 import {runBuild} from '../dist/commands/hydrogen/build.js';
 
-await runBuild({devReload: true, entry: process.argv[2]});
+await runBuild({
+  devReload: true,
+  entry: process.argv[2],
+  node: process.argv.some((arg) => arg === '--node'),
+});

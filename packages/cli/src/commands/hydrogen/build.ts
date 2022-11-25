@@ -27,6 +27,10 @@ export default class Build extends Command {
       description: 'Minify the build output',
       env: 'SHOPIFY_HYDROGEN_FLAG_MINIFY',
     }),
+    node: Flags.boolean({
+      env: 'SHOPIFY_HYDROGEN_FLAG_NODE',
+      default: false,
+    }),
   };
 
   async run(): Promise<void> {
@@ -44,16 +48,19 @@ export async function runBuild({
   sourcemap = true,
   minify = !devReload,
   path: appPath,
+  node = false,
 }: {
   entry: string;
   devReload?: boolean;
   sourcemap?: boolean;
   minify?: boolean;
   path?: string;
+  node?: boolean;
 }) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = devReload ? 'development' : 'production';
   }
+
   const {
     root,
     entryFile,
@@ -62,6 +69,7 @@ export async function runBuild({
     buildPathWorkerFile,
     publicPath,
   } = getProjectPaths(appPath, entry);
+
   if (!devReload) {
     const remixConfig = await getRemixConfig(root);
     await fsExtra.rm(buildPath, {force: true, recursive: true});
@@ -77,22 +85,29 @@ export async function runBuild({
       },
     });
   }
+
   await fsExtra.copy(publicPath, buildPathClient, {
     recursive: true,
     overwrite: true,
   });
+
+  const conditions = ['worker', process.env.NODE_ENV];
+  if (node) conditions.unshift('node-dev');
+
   await esbuild.build({
     entryPoints: [entryFile],
     bundle: true,
     outfile: buildPathWorkerFile,
-    format: 'esm',
+    format: node ? 'cjs' : 'esm',
+    platform: node ? 'node' : undefined,
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     },
     sourcemap,
     minify,
-    conditions: ['worker', process.env.NODE_ENV],
+    conditions,
   });
+
   if (process.env.NODE_ENV !== 'development') {
     const {size} = await fsExtra.stat(buildPathWorkerFile);
     const sizeMB = size / (1024 * 1024);

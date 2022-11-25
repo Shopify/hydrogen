@@ -30,6 +30,10 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
       default: 'oxygen.ts',
     }),
+    node: Flags.boolean({
+      env: 'SHOPIFY_HYDROGEN_FLAG_NODE',
+      default: false,
+    }),
   };
 
   async run(): Promise<void> {
@@ -45,15 +49,17 @@ export async function runDev({
   entry,
   port,
   path: appPath,
+  node = false,
 }: {
   entry: string;
   port?: number;
   path?: string;
+  node?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   // Initial build
-  await runBuild({entry, path: appPath, minify: false});
+  await runBuild({entry, path: appPath, minify: false, node});
 
   const {root, entryFile, buildPathWorkerFile, buildPathClient} =
     getProjectPaths(appPath, entry);
@@ -114,13 +120,28 @@ export async function runDev({
     'dev-reload.mjs',
   );
 
+  const buildCommand = `${devReloadPath} ${entry}`;
+
+  if (node) {
+    const {setupNodeServer} = await import('../../utils/node-server.js');
+
+    return setupNodeServer({
+      buildPathWorkerFile,
+      buildPathClient,
+      buildWatchPaths,
+      port,
+      buildCommand: buildCommand + ' --node',
+      env: process.env,
+    });
+  }
+
   // Run MiniOxygen and watch worker build
   miniOxygenPreview({
     workerFile: buildPathWorkerFile,
     port,
     assetsDir: buildPathClient,
     publicPath: '',
-    buildCommand: `${devReloadPath} ${entry}`,
+    buildCommand,
     watch: true,
     buildWatchPaths,
     autoReload: true,
