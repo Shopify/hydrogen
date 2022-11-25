@@ -1,6 +1,5 @@
 import path from 'path';
 import * as remix from '@remix-run/dev/dist/compiler.js';
-import miniOxygen from '@shopify/mini-oxygen';
 import {runBuild} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
@@ -11,9 +10,16 @@ import {createRequire} from 'module';
 
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
+import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
-const miniOxygenPreview =
-  miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
+const devReloadPath = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+  '..',
+  'bin',
+  'dev-reload.mjs',
+);
 
 // @ts-ignore
 export default class Dev extends Command {
@@ -104,27 +110,12 @@ export async function runDev({
     buildWatchPaths.push(...packages);
   }
 
-  const devReloadPath = path.resolve(
-    fileURLToPath(import.meta.url),
-    '..',
-    '..',
-    '..',
-    '..',
-    'bin',
-    'dev-reload.mjs',
-  );
-
   // Run MiniOxygen and watch worker build
-  miniOxygenPreview({
-    workerFile: buildPathWorkerFile,
+  startMiniOxygen({
     port,
-    assetsDir: buildPathClient,
-    publicPath: '',
+    buildPathWorkerFile,
+    buildPathClient,
     buildCommand: `${devReloadPath} ${entry}`,
-    watch: true,
     buildWatchPaths,
-    autoReload: true,
-    modules: true,
-    env: process.env,
   });
 }
