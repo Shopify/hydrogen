@@ -1,5 +1,5 @@
 /// <reference types="@remix-run/dev" />
-/// <reference types="@shopify/h2-test-remix-oxygen" />
+/// <reference types="@remix-run/oxygen" />
 
 import {Session, SessionStorage} from '@shopify/hydrogen-remix';
 import '@shopify/hydrogen-remix';
