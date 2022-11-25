@@ -33,8 +33,8 @@ export default {
           env,
           context,
           storefront: {
-            publicStorefrontToken: env.PUBLIC_STOREFRONT_TOKEN,
-            storeDomain: env.STOREFRONT_DOMAIN,
+            publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
+            storeDomain: env.SHOPIFY_STORE_DOMAIN,
             storefrontApiVersion: '2022-10',
             i18n: getLocaleFromRequest(request),
           },

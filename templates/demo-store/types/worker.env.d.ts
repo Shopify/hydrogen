@@ -2,6 +2,6 @@
 
 interface Env {
   SESSION_SECRET: string;
-  PUBLIC_STOREFRONT_TOKEN: string;
-  STOREFRONT_DOMAIN: string;
+  SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN: string;
+  SHOPIFY_STORE_DOMAIN: string;
 }
