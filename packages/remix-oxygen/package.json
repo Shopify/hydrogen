@@ -1,5 +1,5 @@
 {
-  "name": "@remix-run/oxygen",
+  "name": "@shopify/h2-test-remix-oxygen",
   "private": true,
   "type": "module",
   "version": "0.0.1",
