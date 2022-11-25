@@ -50,7 +50,7 @@ jobs:
         uses: changesets/action@v1
         with:
           version: npm run version
-          publish: npx changeset publish
+          publish: npm run changeset publish
           commit: '[ci] release ${{ github.ref_name }}'
           title: '[ci] release ${{ github.ref_name }}'
         env:
@@ -63,7 +63,7 @@ jobs:
       #   uses: changesets/action@v1
       #   with:
       #     version: npm run version
-      #     publish: npx changeset publish --tag legacy
+      #     publish: npm run changeset publish --tag legacy
       #     commit: '[ci] release ${{ github.ref_name }}'
       #     title: '[ci] release ${{ github.ref_name }}'
       #   env:
