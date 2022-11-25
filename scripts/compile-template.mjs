@@ -27,7 +27,7 @@ export async function compileTemplate(
     nosort: true,
     nodir: true,
     dot: true,
-    ignore: ['**/dist/**', '**/node_modules/**', '**/build/**', '**/.cache/**'],
+    ignore: ['**/dist/**', '**/node_modules/**'],
   });
 
   rimraf.sync(JSTemplateDirectory);
@@ -54,8 +54,6 @@ async function createProcessor(from, to, template) {
     let destination = filepath.replace(from, to);
     let content = await fs.readFile(filepath, 'utf8');
 
-    console.log(filepath);
-
     switch (ext) {
       case '.ts':
       case '.tsx':
@@ -80,8 +78,8 @@ async function createProcessor(from, to, template) {
 
     switch (filename) {
       case 'favicon.ico':
-      case '.stackblitzrc':
       case '.eslintignore':
+      case '.editorconfig':
       case '.graphqlrc.yml':
       case '_gitignore':
         await fs.mkdirp(resolve(destination, '..'));
@@ -115,7 +113,6 @@ async function createProcessor(from, to, template) {
         );
 
         break;
-      case '.editorconfig':   // TO-DO: remove user specific files
       case '.DS_Store':       // TO-DO: remove user specific files
       case 'turbo-build.log':
       case 'yarn.lock':
