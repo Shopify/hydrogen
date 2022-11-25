@@ -34,7 +34,7 @@
     "dist"
   ],
   "peerDependencies": {
-    "@remix-run/oxygen": "*",
+    "@shopify/h2-test-remix-oxygen": "*",
     "@remix-run/react": "*",
     "@shopify/h2-test-hydrogen": "*"
   }
