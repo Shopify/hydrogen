@@ -8,7 +8,7 @@ import {resolve} from 'path';
 
 import {MiniOxygenPreviewOptions, configFileName} from './preview';
 
-const DEFAULTS: Required<Omit<MiniOxygenPreviewOptions, 'log'>> = {
+const DEFAULTS: Required<Omit<MiniOxygenPreviewOptions, 'log' | 'envPath'>> = {
   port: 3000,
   workerFile: 'dist/worker/index.js',
   assetsDir: 'dist/client',
@@ -65,6 +65,27 @@ const DEFAULTS: Required<Omit<MiniOxygenPreviewOptions, 'log'>> = {
         name: 'publicPath',
         message: 'URL or pathname that prefixes the public assets file names',
         default: DEFAULTS.publicPath,
+      },
+      {
+        name: 'envPath',
+        message: 'Path to the .env file to be loaded automatically',
+        filter(input) {
+          if (input === '') {
+            return undefined;
+          }
+          return input;
+        },
+        validate: (input) => {
+          if (input === "" || input === undefined) {
+              return true;
+          }
+
+          return existsSync(resolve(input))
+            ? true
+            : `No file found at ${resolve(
+                input,
+              )}`;
+        },
       },
       {
         name: 'buildCommand',

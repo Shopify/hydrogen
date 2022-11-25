@@ -21,6 +21,7 @@ export type MiniOxygenPreviewOptions = Partial<{
   buildWatchPaths: string[];
   autoReload: boolean;
   sourceMap: boolean;
+  envPath: string;
   env: {[key: string]: unknown};
 }>;
 
@@ -40,6 +41,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     autoReload = false,
     modules = true,
     sourceMap = true,
+    envPath,
     env = {},
   } = opts;
   const root = process.cwd();
@@ -59,6 +61,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
   const mf = new MiniOxygen(
     {
       buildCommand,
+      envPath,
       scriptPath: path.resolve(root, workerFile),
       watch,
       modules,
