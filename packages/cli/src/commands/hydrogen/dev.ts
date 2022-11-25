@@ -112,6 +112,7 @@ export async function runDev({
 
   // Run MiniOxygen and watch worker build
   startMiniOxygen({
+    root,
     port,
     buildPathWorkerFile,
     buildPathClient,
