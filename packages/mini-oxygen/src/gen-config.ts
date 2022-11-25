@@ -76,15 +76,13 @@ const DEFAULTS: Required<Omit<MiniOxygenPreviewOptions, 'log' | 'envPath'>> = {
           return input;
         },
         validate: (input) => {
-          if (input === "" || input === undefined) {
-              return true;
+          if (input === '' || input === undefined) {
+            return true;
           }
 
           return existsSync(resolve(input))
             ? true
-            : `No file found at ${resolve(
-                input,
-              )}`;
+            : `No file found at ${resolve(input)}`;
         },
       },
       {
