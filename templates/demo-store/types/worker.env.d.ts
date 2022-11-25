@@ -2,4 +2,6 @@
 
 interface Env {
   SESSION_SECRET: string;
+  PUBLIC_STOREFRONT_TOKEN: string;
+  STOREFRONT_DOMAIN: string;
 }
