@@ -32,7 +32,7 @@ export default class Dev extends Command {
     }),
     node: Flags.boolean({
       env: 'SHOPIFY_HYDROGEN_FLAG_NODE',
-      default: false,
+      default: !!process.env.GIT_PROXY?.includes('stackblitz'),
     }),
   };
 
