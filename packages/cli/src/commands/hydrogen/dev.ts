@@ -92,7 +92,7 @@ export async function runDev({
     // Watch local packages when developing in Hydrogen repo
     const require = createRequire(import.meta.url);
     const packagesPath = path.resolve(
-      path.dirname(require.resolve('@shopify/hydrogen')),
+      path.dirname(require.resolve('@shopify/h2-test-hydrogen')),
       '..',
       '..',
     );
