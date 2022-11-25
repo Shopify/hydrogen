@@ -1,6 +1,6 @@
 /* eslint-disable no-case-declarations */
 import rimraf from 'rimraf';
-import {resolve, basename, sep, extname} from 'path';
+import {resolve, basename, sep, extname, relative} from 'path';
 import fs from 'fs-extra';
 import glob from 'fast-glob';
 import ts from 'typescript';
@@ -27,7 +27,7 @@ export async function compileTemplate(
     nosort: true,
     nodir: true,
     dot: true,
-    ignore: ['**/dist/**', '**/node_modules/**'],
+    ignore: ['**/dist/**', '**/node_modules/**', '**/build/**', '**/.cache/**'],
   });
 
   rimraf.sync(JSTemplateDirectory);
@@ -41,15 +41,20 @@ export async function compileTemplate(
   await Promise.all(files.map(processor));
 }
 
+const matchHashComment = new RegExp(/\/\/.*/, 'g');
+
 async function createProcessor(from, to, template) {
   const tsConfig = await fs.readFile(resolve(from, 'tsconfig.json'), 'utf8');
-  const config = JSON.parse(tsConfig);
+
+  const config = JSON.parse(tsConfig.replace(matchHashComment, '').trim());
 
   return async function processFile(filepath) {
     const filename = basename(filepath);
     const ext = extname(filepath);
     let destination = filepath.replace(from, to);
     let content = await fs.readFile(filepath, 'utf8');
+
+    console.log(filepath);
 
     switch (ext) {
       case '.ts':
@@ -76,6 +81,8 @@ async function createProcessor(from, to, template) {
     switch (filename) {
       case 'favicon.ico':
       case '.stackblitzrc':
+      case '.eslintignore':
+      case '.graphqlrc.yml':
       case '_gitignore':
         await fs.mkdirp(resolve(destination, '..'));
         await fs.writeFile(
@@ -108,6 +115,9 @@ async function createProcessor(from, to, template) {
         );
 
         break;
+      case '.editorconfig':   // TO-DO: remove user specific files
+      case '.DS_Store':       // TO-DO: remove user specific files
+      case 'turbo-build.log':
       case 'yarn.lock':
       case '.gitignore':
       case 'yarn-error.log':
@@ -120,19 +130,23 @@ async function createProcessor(from, to, template) {
           .replace('-ts', '-js');
         break;
       case 'package.json':
-        const packageJSON = JSON.parse(content);
-        const newPackageJSON = Object.assign(packageJSON, {
-          name: `${template}-js`,
-          description:
-            template === 'hello-world'
-              ? 'An example using JavaScript in Hydrogen'
-              : packageJSON.description,
-        });
+        const relativeFilepath = relative(from, filepath);
 
-        delete packageJSON.devDependencies.typescript;
-        delete packageJSON.devDependencies['@types/react'];
+        if (relativeFilepath === 'package.json') {
+          const packageJSON = JSON.parse(content);
+          const newPackageJSON = Object.assign(packageJSON, {
+            name: `${template}-js`,
+            description:
+              template === 'hello-world'
+                ? 'An example using JavaScript in Hydrogen'
+                : packageJSON.description,
+          });
 
-        content = JSON.stringify(newPackageJSON, null, 2);
+          delete packageJSON.devDependencies.typescript;
+          delete packageJSON.devDependencies['@types/react'];
+
+          content = JSON.stringify(newPackageJSON, null, 2);
+        }
     }
 
     content = await format(content, filename);
