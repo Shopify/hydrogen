@@ -30,11 +30,12 @@ export async function runPreview({
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
-  const {buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
+  const {root, buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
 
   muteDevLogs({workerReload: false});
 
   startMiniOxygen({
+    root,
     port,
     buildPathClient,
     buildPathWorkerFile,
