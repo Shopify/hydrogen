@@ -7,7 +7,7 @@
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
-    "typecheck": "tsc --noEmit && npm run typecheck -w demo-store && npm run typecheck -w @shopify/cli-h2test",
+    "typecheck": "tsc --noEmit && npm run typecheck -w demo-store && npm run typecheck -w @shopify/cli-h2-test",
     "version": "changeset version && node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "clean-all": "rimraf node_modules && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/hydrogen-remix/dist && rimraf packages/cli/dist"
   },
