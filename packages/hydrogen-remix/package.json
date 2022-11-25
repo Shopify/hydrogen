@@ -8,20 +8,18 @@
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup --clean --config ../../tsup.config.ts",
-    "dev": "tsup --watch --config ../../tsup.config.ts"
+    "build": "tsup --clean --config ./tsup.config.ts",
+    "dev": "tsup --watch --config ./tsup.config.ts"
   },
   "exports": {
     ".": {
       "types": "./dist/production/index.d.ts",
-      "module": {
-        "development": "./dist/development/index.js",
-        "default": "./dist/production/index.js"
-      },
-      "require": "./dist/index.cjs",
-      "import": {
-        "development": "./dist/development/index.js",
-        "default": "./dist/production/index.js"
+      "node-dev": {
+        "require": "./dist/index.cjs",
+        "default": {
+          "development": "./dist/development/node/index.js",
+          "default": "./dist/production/node/index.js"
+        }
       },
       "default": {
         "development": "./dist/development/index.js",
@@ -35,7 +33,13 @@
   ],
   "peerDependencies": {
     "@remix-run/oxygen": "*",
+    "@remix-run/express": "*",
+    "@remix-run/node": "*",
     "@remix-run/react": "*",
     "@shopify/hydrogen": "*"
+  },
+  "devDependencies": {
+    "@remix-run/express": "0.0.0-experimental-e18af792a",
+    "@remix-run/node": "0.0.0-experimental-e18af792a"
   }
 }
