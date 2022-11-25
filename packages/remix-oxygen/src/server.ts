@@ -11,20 +11,22 @@ type OxygenHandleRequestOptions = {
   };
 };
 
-export function createRequestHandler<Context = unknown>({
-  build,
-  mode,
-  getLoadContext,
-  shouldProxyAsset,
-}: {
+export type CreateRequestHandlerOptions = {
   build: ServerBuild;
   mode?: string;
   getLoadContext?: (
     request: Request,
     params: OxygenHandleRequestOptions,
-  ) => Promise<Context> | Context;
+  ) => Promise<Record<string, any>> | Record<string, any>;
   shouldProxyAsset?: (url: string) => boolean;
-}) {
+};
+
+export function createRequestHandler({
+  build,
+  mode,
+  getLoadContext,
+  shouldProxyAsset,
+}: CreateRequestHandlerOptions) {
   const handleRequest = createRemixRequestHandler(build, mode);
 
   return async (
