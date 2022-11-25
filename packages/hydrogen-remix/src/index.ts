@@ -1,9 +1,9 @@
-import type {HydrogenContext} from '@shopify/hydrogen';
+import type {HydrogenContext} from '@shopify/h2-test-hydrogen';
 import type {AppData, DataFunctionArgs} from '@remix-run/oxygen';
 
 export * from '@remix-run/oxygen';
 export {createRequestHandler} from './server';
-export * from '@shopify/hydrogen';
+export * from '@shopify/h2-test-hydrogen';
 
 export type LoaderArgs = DataFunctionArgs & {
   context: HydrogenContext;

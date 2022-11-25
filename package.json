@@ -7,7 +7,9 @@
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
-    "typecheck": "tsc --noEmit && npm run typecheck -w demo-store && npm run typecheck -w @shopify/cli-hydrogen"
+    "typecheck": "tsc --noEmit && npm run typecheck -w demo-store && npm run typecheck -w @shopify/cli-h2test",
+    "version": "changeset version && node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
+    "clean-all": "rimraf node_modules && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/hydrogen-remix/dist && rimraf packages/cli/dist"
   },
   "workspaces": [
     "templates/demo-store",
@@ -18,12 +20,15 @@
   ],
   "prettier": "@shopify/prettier-config",
   "devDependencies": {
+    "@changesets/changelog-github": "^0.4.7",
+    "@changesets/cli": "^2.25.2",
     "@playwright/test": "^1.27.1",
     "@types/eslint": "^8.4.10",
     "cross-env": "^7.0.3",
     "eslint": "^8.20.0",
     "lint-staged": "^10.5.4",
     "prettier": "^2.7.1",
+    "rimraf": "^3.0.2",
     "tsup": "^6.5.0",
     "turbo": "^1.6.3",
     "typescript": "^4.8.3",
