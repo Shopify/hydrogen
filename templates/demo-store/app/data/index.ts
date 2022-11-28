@@ -1,7 +1,6 @@
 import type {
   Cart,
   CartLineUpdateInput,
-  ProductConnection,
   Shop,
   Order,
   CustomerAccessTokenCreatePayload,
@@ -17,7 +16,6 @@ import type {
   CustomerRecoverPayload,
   CustomerResetPayload,
   CustomerActivatePayload,
-  CartBuyerIdentityInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {type EnhancedMenu, parseMenu, assertApiErrors} from '~/lib/utils';
 import invariant from 'tiny-invariant';
@@ -315,80 +313,6 @@ fragment ImageFragment on Image {
   height
 }
 `;
-
-const UPDATE_LINE_ITEM_QUERY = `#graphql
-  ${CART_FRAGMENT}
-  mutation CartLineUpdate($cartId: ID!, $lines: [CartLineUpdateInput!]!, $country: CountryCode = ZZ) @inContext(country: $country) {
-    cartLinesUpdate(cartId: $cartId, lines: $lines) {
-      cart {
-        ...CartFragment
-      }
-    }
-  }
-`;
-
-export async function updateLineItem(
-  {storefront}: HydrogenContext,
-  {
-    cartId,
-    lineItem,
-  }: {
-    cartId: string;
-    lineItem: CartLineUpdateInput;
-  },
-) {
-  const data = await storefront.mutate<{cartLinesUpdate: {cart: Cart}}>(
-    UPDATE_LINE_ITEM_QUERY,
-    {
-      variables: {
-        cartId,
-        lines: [lineItem],
-      },
-    },
-  );
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cartLinesUpdate.cart;
-}
-
-const UPDATE_CART_BUYER_COUNTRY = `#graphql
-  mutation CartBuyerIdentityUpdate(
-    $cartId: ID!
-    $buyerIdentity: CartBuyerIdentityInput!
-    $country: CountryCode = ZZ
-  ) @inContext(country: $country) {
-    cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
-      cart {
-        id
-      }
-    }
-  }
-`;
-
-export async function updateCartBuyerIdentity(
-  {storefront}: HydrogenContext,
-  {
-    cartId,
-    buyerIdentity,
-  }: {
-    cartId: string;
-    buyerIdentity: CartBuyerIdentityInput;
-  },
-) {
-  const data = await storefront.mutate<{
-    cartBuyerIdentityUpdate: {cart: Cart};
-  }>(UPDATE_CART_BUYER_COUNTRY, {
-    variables: {
-      cartId,
-      buyerIdentity,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  return data.cartBuyerIdentityUpdate.cart;
-}
 
 // shop primary domain url for /admin
 export async function getPrimaryShopDomain({storefront}: HydrogenContext) {
