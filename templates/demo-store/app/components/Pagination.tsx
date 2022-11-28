@@ -30,7 +30,6 @@ type Connection<Resource> = Resource extends 'article'
 
 type Props<Resource> = {
   connection: Connection<Resource>;
-  className?: string;
 };
 
 export function usePagination<Resource = 'product'>({
@@ -40,11 +39,14 @@ export function usePagination<Resource = 'product'>({
   const location = useLocation();
   const search = new URLSearchParams(location.search);
   const isPrevious = search.get('direction') === 'previous';
-  const {nodes: itemsInState = [], ...state} =
-    (location.state as Connection<Resource>) || {};
+  const {
+    nodes: itemsInState = [],
+    pageInfo: pageInfoInState,
+    ...state
+  } = (location.state?.nodes as Connection<Resource>) || {};
 
   const {items, startCursor, endCursor, hasPreviousPage, hasNextPage} =
-    Object.assign({}, pageInfo, state, {
+    Object.assign({}, pageInfo, pageInfoInState, {
       ...(itemsInState && isPrevious
         ? {
             items: [...nodes, ...itemsInState],
