@@ -6,7 +6,6 @@ test.describe('Cart', () => {
     // Home => Collections => First collection => First product
     await page.goto(`/`);
     await page.locator(`header nav a:text-is("Collections")`).click();
-    await page.locator(`header nav a:text-is("Collections")`).click();
     await page.locator(`[data-test=collection-grid] a  >> nth=0`).click();
     await page.locator(`[data-test=product-grid] a  >> nth=0`).click();
     await page.locator(`[data-test=add-to-cart]`).click();
