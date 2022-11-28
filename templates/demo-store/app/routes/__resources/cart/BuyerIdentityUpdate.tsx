@@ -4,7 +4,6 @@ import {useIsHydrated} from '~/hooks/useIsHydrated';
 import type {
   Cart,
   CartBuyerIdentityInput,
-  CartDiscountCode,
   UserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {
@@ -15,6 +14,7 @@ import {
 } from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {usePrefixPathWithLocale, withoutFalsyProps} from '~/lib/utils';
+import {cartCreate} from './LinesAdd';
 
 interface BuyerIdentityUpdateProps {
   buyerIdentity?: CartBuyerIdentityInput;
@@ -37,15 +37,9 @@ interface BuyerIdentityUpdateEventPayload {
 }
 
 interface BuyerIdentityUpdateEvent {
-  type: 'buyer_identity_update' | 'buyer_identity_update_error';
+  type: 'buyer_identity_update';
   id: string;
   payload: BuyerIdentityUpdateEventPayload;
-}
-
-interface BuyerIdentityUpdated {
-  codesAdded: CartDiscountCode[];
-  codesNotAdded: string[];
-  codesRemoved: CartDiscountCode[];
 }
 
 const ACTION_PATH = `/cart/BuyerIdentityUpdate`;
@@ -55,14 +49,13 @@ const ACTION_PATH = `/cart/BuyerIdentityUpdate`;
  */
 async function action({request, context}: ActionArgs) {
   const {session} = context;
+  const headers = new Headers();
 
   const [cartId, customerAccessToken, formData] = await Promise.all([
     session.get('cartId'),
     session.get('customerAccessToken'),
     request.formData(),
   ]);
-
-  invariant(cartId, 'Missing cartId');
 
   const buyerIdentity = withoutFalsyProps({
     countryCode: formData.get('countryCode'),
@@ -87,41 +80,52 @@ async function action({request, context}: ActionArgs) {
     'No buyerIdentity properties to update',
   );
 
-  const {cart, errors} = await cartBuyerIdentityUpdate({
-    cartId,
-    buyerIdentity,
-    context,
-  });
+  // if we have an existing cart, we update the identity,
+  // else we create a new cart with the passed identity
+  const {cart, errors} = cartId
+    ? await cartBuyerIdentityUpdate({
+        cartId,
+        buyerIdentity,
+        context,
+      })
+    : await cartCreate({
+        input: {buyerIdentity},
+        context,
+      });
 
   if (errors?.length) {
     const errorMessage = errors.map(({message}) => message).join('\n');
     return json({error: errorMessage});
   }
+
+  session.set('cartId', cart.id);
+  headers.set('Set-Cookie', await session.commit());
+
   // if no js, we essentially reload to avoid being routed to the actions route
   if (formData.get('redirectTo')) {
-    return redirect(String(formData.get('redirectTo')));
+    return redirect(String(formData.get('redirectTo')), {headers});
   }
 
   const {event, error} = instrumentEvent({
     addingBuyerIdentity: buyerIdentity,
-    currentBuyerIdentity: cart.buyerIdentity,
+    updatedBuyerIdentity: cart.buyerIdentity,
   });
 
-  return json({event, error});
+  return json({event, error}, {headers});
 }
 
 /**
  * Helper function to instrument buyer_identity_update | buyer_identity_update_error events
  * @param prevBuyerIdentity the applied discounts before the update mutation
- * @param currentBuyerIdentity the applied discounts after the update mutation
+ * @param updatedBuyerIdentity the applied discounts after the update mutation
  * @returns {event, error}
  */
 function instrumentEvent({
   addingBuyerIdentity,
-  currentBuyerIdentity,
+  updatedBuyerIdentity,
 }: {
   addingBuyerIdentity: CartBuyerIdentityInput;
-  currentBuyerIdentity: Cart['buyerIdentity'];
+  updatedBuyerIdentity: Cart['buyerIdentity'];
 }): {
   error: string | null;
   event: BuyerIdentityUpdateEvent;
@@ -131,7 +135,7 @@ function instrumentEvent({
     id: crypto.randomUUID(),
     payload: {
       buyerIdentityUpdate: addingBuyerIdentity,
-      buyerIdentity: currentBuyerIdentity,
+      buyerIdentity: updatedBuyerIdentity,
     },
   };
 
