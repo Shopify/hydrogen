@@ -2,7 +2,7 @@
   "name": "@shopify/h2-test-hydrogen-remix",
   "private": true,
   "type": "module",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
@@ -34,8 +34,8 @@
     "dist"
   ],
   "peerDependencies": {
-    "@shopify/h2-test-remix-oxygen": "*",
+    "@shopify/h2-test-remix-oxygen": "^0.0.1",
     "@remix-run/react": "*",
-    "@shopify/h2-test-hydrogen": "*"
+    "@shopify/h2-test-hydrogen": "^2.0.0-alpha.1"
   }
 }
