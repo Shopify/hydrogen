@@ -2,7 +2,7 @@
   "name": "@shopify/h2-test-hydrogen",
   "private": true,
   "type": "module",
-  "version": "2.0.0-alpha.0",
+  "version": "2.0.0-alpha.1",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
