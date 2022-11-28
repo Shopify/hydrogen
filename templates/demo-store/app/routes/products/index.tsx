@@ -43,6 +43,7 @@ export default function AllProducts() {
           key="products"
           url="/products"
           collection={{products} as Collection}
+          data-test="product-grid"
         />
       </Section>
     </>

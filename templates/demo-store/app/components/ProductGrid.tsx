@@ -10,11 +10,15 @@ import {useEffect, useState} from 'react';
 export function ProductGrid({
   url,
   collection,
+  ...props
 }: {
   url: string;
   collection: Collection;
 }) {
-  const initialProducts = collection?.products?.nodes || [];
+  const [initialProducts, setInitialProducts] = useState(
+    collection?.products?.nodes || [],
+  );
+
   const [nextPage, setNextPage] = useState(
     collection?.products?.pageInfo?.hasNextPage,
   );
@@ -22,6 +26,14 @@ export function ProductGrid({
     collection?.products?.pageInfo?.endCursor,
   );
   const [products, setProducts] = useState(initialProducts);
+
+  // props have changes, reset component state
+  const productProps = collection?.products?.nodes || [];
+  if (initialProducts !== productProps) {
+    setInitialProducts(productProps);
+    setProducts(productProps);
+  }
+
   const fetcher = useFetcher();
 
   function fetchMoreProducts() {
@@ -52,7 +64,7 @@ export function ProductGrid({
 
   return (
     <>
-      <Grid layout="products">
+      <Grid layout="products" {...props}>
         {products.map((product, i) => (
           <ProductCard
             key={product.id}
