@@ -77,6 +77,7 @@ export function Drawer({
                       type="button"
                       className="p-4 -m-4 transition text-primary hover:text-primary/50"
                       onClick={onClose}
+                      data-test="close-cart"
                     >
                       <IconClose aria-label="Close panel" />
                     </button>

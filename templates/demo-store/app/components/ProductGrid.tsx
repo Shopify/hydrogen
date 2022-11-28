@@ -10,6 +10,7 @@ import {useEffect, useState} from 'react';
 export function ProductGrid({
   url,
   collection,
+  ...props
 }: {
   url: string;
   collection: Collection;
@@ -52,7 +53,7 @@ export function ProductGrid({
 
   return (
     <>
-      <Grid layout="products">
+      <Grid layout="products" {...props}>
         {products.map((product, i) => (
           <ProductCard
             key={product.id}
