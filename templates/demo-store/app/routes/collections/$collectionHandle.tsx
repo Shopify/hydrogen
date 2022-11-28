@@ -87,8 +87,9 @@ export async function loader({
     });
   }
 
-  const {collection} = await storefront.query<{
+  const {collection, collections} = await storefront.query<{
     collection: CollectionType;
+    collections: CollectionConnection;
   }>(COLLECTION_QUERY, {
     variables: {
       handle: collectionHandle,
@@ -103,6 +104,9 @@ export async function loader({
     throw new Response('Not found', {status: 404});
   }
 
+  const categories = collections;
+
+  // console.log(categories);
   return json({collection, appliedFilters});
 }
 
@@ -226,6 +230,14 @@ const COLLECTION_QUERY = `#graphql
         pageInfo {
           hasNextPage
           endCursor
+        }
+      }
+      collections(first: 100) {
+        edges {
+          node {
+            title
+            handle
+          }
         }
       }
     }
