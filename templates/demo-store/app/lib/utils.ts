@@ -2,6 +2,7 @@ import {useLocation, useMatches} from '@remix-run/react';
 import type {
   MenuItem,
   Menu,
+  CustomerUserError,
   MoneyV2,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
@@ -237,6 +238,35 @@ export function statusMessage(status: string) {
   } catch (error) {
     return status;
   }
+}
+
+/**
+ * Map/overwrite a CustomerError code to a human readable message
+ * @param error CustomerUserError
+ * @returns string error message
+ */
+export function getCustomerError(error: CustomerUserError): string {
+  const defaultError = 'Unknown error';
+  if (!error?.code && error?.message) return error.message;
+  if (!error?.code) return defaultError;
+  return {
+    ALREADY_ENABLED: 'Customer already enabled.',
+    BAD_DOMAIN: 'Input email contains an invalid domain name.',
+    BLANK: 'The input value is blank.',
+    CONTAINS_HTML_TAGS: 'Input contains HTML tags.',
+    CONTAINS_URL: 'Input contains URL.',
+    CUSTOMER_DISABLED: 'Customer is disabled.',
+    INVALID: 'The input value is invalid.',
+    INVALID_MULTIPASS_REQUEST: 'Multipass token is not valid.',
+    NOT_FOUND: 'Address does not exist.',
+    PASSWORD_STARTS_OR_ENDS_WITH_WHITESPACE:
+      'Input password starts or ends with whitespace.',
+    TAKEN: 'The input value is already taken.',
+    TOKEN_INVALID: 'Invalid activation token.',
+    TOO_LONG: 'The input value is too long.',
+    TOO_SHORT: 'The input value is too short.',
+    UNIDENTIFIED_CUSTOMER: 'Unidentified customer.',
+  }?.[error.code];
 }
 
 /**

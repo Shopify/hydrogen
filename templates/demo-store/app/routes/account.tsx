@@ -7,12 +7,13 @@ import {
   useOutlet,
 } from '@remix-run/react';
 import type {
+  Product,
   Collection,
   Customer,
   MailingAddress,
   Order,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {Suspense} from 'react';
+import {Suspense, useEffect} from 'react';
 import {
   Button,
   OrderCard,
@@ -24,29 +25,78 @@ import {
   ProductSwimlane,
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
-import {type LoaderArgs, redirect, json, defer} from '@shopify/hydrogen-remix';
+import {
+  type LoaderArgs,
+  type SerializeFrom,
+  redirect,
+  json,
+  defer,
+} from '@shopify/hydrogen-remix';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import {getCustomer} from '~/data';
 import {getFeaturedData} from './featured-products';
+import type {PartialDeep} from 'type-fest';
+
+interface NotAuthAccountProps {
+  customer: null;
+  orders: null;
+  heading: null;
+  addresses: null;
+  featuredData: null;
+}
+
+interface AuthAccountProps {
+  customer: Customer | null;
+  orders: Order[] | null;
+  heading: string | null;
+  addresses: MailingAddress[] | null;
+  featuredData: Promise<
+    SerializeFrom<{
+      featuredCollections: PartialDeep<Collection, {recurseIntoArrays: true}>[];
+      featuredProducts: PartialDeep<Product, {recurseIntoArrays: true}>[];
+    }>
+  >;
+}
+type AccountProps = NotAuthAccountProps | AuthAccountProps;
 
 export async function loader({request, context, params}: LoaderArgs) {
+  const {session} = context;
   const {pathname} = new URL(request.url);
   const lang = params.lang;
-  const customerAccessToken = await context.session.get('customerAccessToken');
-  const isAuthenticated = Boolean(customerAccessToken);
+  const [auth, event] = await Promise.all([
+    session.getAuth(),
+    session.getEvent(),
+  ]);
+
   const loginPath = lang ? `${lang}/account/login` : '/account/login';
 
-  if (!isAuthenticated) {
-    if (/\/account\/login$/.test(pathname)) {
+  const isPublicSubRoute = () =>
+    /\/account\/login$/.test(pathname) ||
+    /\/account\/register$/.test(pathname) ||
+    /\/account\/recover$/.test(pathname) ||
+    /\/account\/reset\//.test(pathname) ||
+    /\/account\/activate\//.test(pathname);
+
+  if (!auth.isAuthenticated) {
+    if (isPublicSubRoute()) {
       return json({
-        isAuthenticated,
+        addresses: null,
+        customer: null,
+        event: null,
+        featuredData: null,
+        heading: null,
+        isAuthenticated: false,
+        orders: null,
       });
     }
+
+    // redirect to login any other un-auth  sub-route
     return redirect(loginPath);
   }
 
+  // is authenticated
   const customer = await getCustomer(context, {
-    customerAccessToken,
+    customerAccessToken: auth.customerAccessToken.accessToken,
     request,
   });
 
@@ -58,18 +108,32 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const orders = flattenConnection(customer?.orders) as Order[];
 
-  return defer({
-    isAuthenticated,
-    customer,
-    heading,
-    orders,
-    addresses: flattenConnection(customer.addresses) as MailingAddress[],
-    featuredData: getFeaturedData(context.storefront),
-  });
+  // reset flashed event is available
+  let responseInit = {};
+  if (event) {
+    responseInit = {
+      headers: {
+        'Set-Cookie': await session.commit(),
+      },
+    };
+  }
+
+  return defer(
+    {
+      addresses: flattenConnection(customer.addresses) as MailingAddress[],
+      customer,
+      event,
+      featuredData: getFeaturedData(context.storefront),
+      heading,
+      isAuthenticated: auth.isAuthenticated,
+      orders,
+    },
+    responseInit,
+  );
 }
 
 export default function Authenticated() {
-  const data = useLoaderData<typeof loader>();
+  const {isAuthenticated, event, ...data} = useLoaderData<typeof loader>();
   const outlet = useOutlet();
   const matches = useMatches();
 
@@ -78,8 +142,15 @@ export default function Authenticated() {
     return match?.handle?.renderInModal;
   });
 
+  // capture login and register
+  useEffect(() => {
+    if (!event) return;
+    // @todo
+    navigator.sendBeacon('/events', JSON.stringify(event));
+  }, [event]);
+
   // Public routes
-  if (!data.isAuthenticated) {
+  if (!isAuthenticated) {
     return <Outlet />;
   }
 
@@ -102,24 +173,16 @@ export default function Authenticated() {
   return <Account {...data} />;
 }
 
-interface Account {
-  customer: Customer;
-  orders: Order[];
-  heading: string;
-  addresses: MailingAddress[];
-  featuredData: any; // @todo: help please
-}
-
 function Account({
   customer,
   orders,
   heading,
   addresses,
   featuredData,
-}: Account) {
+}: AccountProps) {
   return (
     <>
-      <PageHeader heading={heading}>
+      <PageHeader heading={heading || ''}>
         <Form method="post" action="/account/logout">
           <button type="submit" className="text-primary/50">
             Sign out
@@ -132,7 +195,7 @@ function Account({
         addresses={addresses as MailingAddress[]}
         customer={customer as Customer}
       />
-      {!orders.length && (
+      {!orders?.length && (
         <Suspense>
           <Await
             resolve={featuredData}
@@ -140,11 +203,17 @@ function Account({
           >
             {(data) => (
               <>
-                <FeaturedCollections
-                  title="Popular Collections"
-                  collections={data.featuredCollections as Collection[]}
-                />
-                <ProductSwimlane products={data.featuredProducts} />
+                {data?.featuredCollections && (
+                  <FeaturedCollections
+                    title="Popular Collections"
+                    collections={data.featuredCollections as Collection[]}
+                  />
+                )}
+                {data?.featuredProducts && (
+                  <ProductSwimlane
+                    products={data.featuredProducts as Product[]}
+                  />
+                )}
               </>
             )}
           </Await>

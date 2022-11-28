@@ -42,12 +42,6 @@ interface BuyerIdentityUpdateEvent {
   payload: BuyerIdentityUpdateEventPayload;
 }
 
-interface BuyerIdentityUpdated {
-  codesAdded: CartDiscountCode[];
-  codesNotAdded: string[];
-  codesRemoved: CartDiscountCode[];
-}
-
 const ACTION_PATH = `/cart/BuyerIdentityUpdate`;
 
 /**

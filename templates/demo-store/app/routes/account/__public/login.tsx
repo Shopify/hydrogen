@@ -1,197 +1,111 @@
+import {redirect, json, type LoaderArgs} from '@shopify/hydrogen-remix';
 import {
-  type MetaFunction,
-  redirect,
-  json,
-  type ActionFunction,
-  type LoaderArgs,
-  isStorefrontApiError,
-} from '@shopify/hydrogen-remix';
-import {Form, useActionData, useLoaderData} from '@remix-run/react';
-import {useState} from 'react';
-import {login} from '~/data';
-import {getInputStyleClasses} from '~/lib/utils';
+  getCustomerError,
+  getInputStyleClasses,
+  usePrefixPathWithLocale,
+} from '~/lib/utils';
 import {Link} from '~/components';
+import {CustomerAccessTokenCreateForm} from '~/routes/__resources/customer/CustomerAccessTokenCreate';
+import clsx from 'clsx';
 
 export const handle = {
   isPublic: true,
 };
 
 export async function loader({context, params}: LoaderArgs) {
-  const customerAccessToken = await context.session.get('customerAccessToken');
+  const {session} = context;
+  const {isAuthenticated} = await session.getAuth();
 
-  if (customerAccessToken) {
+  if (isAuthenticated) {
     return redirect(params.lang ? `${params.lang}/account` : '/account');
   }
 
-  // TODO: Query for this?
-  return json({shopName: 'Hydrogen'});
+  return json({});
 }
 
-type ActionData = {
-  formError?: string;
-};
-
-const badRequest = (data: ActionData) => json(data, {status: 400});
-
-export const action: ActionFunction = async ({request, context, params}) => {
-  const formData = await request.formData();
-
-  const email = formData.get('email');
-  const password = formData.get('password');
-
-  if (
-    !email ||
-    !password ||
-    typeof email !== 'string' ||
-    typeof password !== 'string'
-  ) {
-    return badRequest({
-      formError: 'Please provide both an email and a password.',
-    });
-  }
-
-  try {
-    const customerAccessToken = await login(context, {email, password});
-    const {session} = context;
-    session.set('customerAccessToken', customerAccessToken);
-
-    return redirect(params.lang ? `${params.lang}/account` : '/account', {
-      headers: {
-        'Set-Cookie': await session.commit(),
-      },
-    });
-  } catch (error: any) {
-    if (isStorefrontApiError(error)) {
-      return badRequest({
-        formError: 'Something went wrong. Please try again later.',
-      });
-    }
-
-    /**
-     * The user did something wrong, but the raw error from the API is not super friendly.
-     * Let's make one up.
-     */
-    return badRequest({
-      formError:
-        'Sorry. We did not recognize either your email or password. Please try to sign in again or create a new account.',
-    });
-  }
-};
-
-export const meta: MetaFunction = () => {
+export function meta() {
   return {
     title: 'Login',
   };
-};
+}
 
 export default function Login() {
-  const {shopName} = useLoaderData<typeof loader>();
-  const actionData = useActionData<ActionData>();
-  const [nativeEmailError, setNativeEmailError] = useState<null | string>(null);
-  const [nativePasswordError, setNativePasswordError] = useState<null | string>(
-    null,
-  );
+  const localizedRegisterUrl = usePrefixPathWithLocale('/account/register');
+  const localizedRecoverUrl = usePrefixPathWithLocale('/account/recover');
 
   return (
     <div className="flex justify-center my-24 px-4">
       <div className="max-w-md w-full">
         <h1 className="text-4xl">Sign in.</h1>
-        {/* TODO: Add onSubmit to validate _before_ submission with native? */}
-        <Form
-          method="post"
-          noValidate
-          className="pt-6 pb-8 mt-4 mb-4 space-y-3"
-        >
-          {actionData?.formError && (
-            <div className="flex items-center justify-center mb-6 bg-zinc-500">
-              <p className="m-4 text-s text-contrast">{actionData.formError}</p>
-            </div>
-          )}
-          <div>
-            <input
-              className={`mb-1 ${getInputStyleClasses(nativeEmailError)}`}
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
-              required
-              placeholder="Email address"
-              aria-label="Email address"
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
-              onBlur={(event) => {
-                setNativeEmailError(
-                  event.currentTarget.value.length &&
-                    !event.currentTarget.validity.valid
-                    ? 'Invalid email address'
-                    : null,
-                );
-              }}
-            />
-            {nativeEmailError && (
-              <p className="text-red-500 text-xs">{nativeEmailError} &nbsp;</p>
-            )}
-          </div>
-
-          <div>
-            <input
-              className={`mb-1 ${getInputStyleClasses(nativePasswordError)}`}
-              id="password"
-              name="password"
-              type="password"
-              autoComplete="current-password"
-              placeholder="Password"
-              aria-label="Password"
-              minLength={8}
-              required
-              // eslint-disable-next-line jsx-a11y/no-autofocus
-              autoFocus
-              onBlur={(event) => {
-                if (
-                  event.currentTarget.validity.valid ||
-                  !event.currentTarget.value.length
-                ) {
-                  setNativePasswordError(null);
-                } else {
-                  setNativePasswordError(
-                    event.currentTarget.validity.valueMissing
-                      ? 'Please enter a password'
-                      : 'Passwords must be at least 8 characters',
-                  );
-                }
-              }}
-            />
-            {nativePasswordError && (
-              <p className="text-red-500 text-xs">
-                {' '}
-                {nativePasswordError} &nbsp;
-              </p>
-            )}
-          </div>
-          <div className="flex items-center justify-between">
-            <button
-              className="bg-primary text-contrast rounded py-2 px-4 focus:shadow-outline block w-full"
-              type="submit"
-            >
-              Sign in
-            </button>
-          </div>
-          <div className="flex justify-between items-center mt-8 border-t border-gray-300">
-            <p className="align-baseline text-sm mt-6">
-              New to {shopName}? &nbsp;
-              <Link className="inline underline" to="/account/register">
-                Create an account
-              </Link>
-            </p>
-            <Link
-              className="mt-6 inline-block align-baseline text-sm text-primary/50"
-              to="/account/recover"
-            >
-              Forgot password
+        <LoginForm />
+        <div className="flex justify-between items-center mt-8 border-t border-gray-300">
+          <p className="align-baseline text-sm mt-6">
+            New to Hydrogen? &nbsp;
+            <Link className="inline underline" to={localizedRegisterUrl}>
+              Create an account
             </Link>
-          </div>
-        </Form>
+          </p>
+          <Link
+            className="mt-6 inline-block align-baseline text-sm text-primary/50"
+            to={localizedRecoverUrl}
+          >
+            Forgot password
+          </Link>
+        </div>
       </div>
     </div>
+  );
+}
+
+function LoginForm() {
+  return (
+    <CustomerAccessTokenCreateForm className="pt-6 pb-8 mt-4 mb-4 space-y-3">
+      {({state, errors}) => {
+        return (
+          <div className="flex flex-col">
+            {errors?.length && (
+              <div className="flex flex-col items-center justify-center mb-6 bg-zinc-500">
+                {errors.map((error) => (
+                  <p key={error.code} className="m-4 text-s text-contrast">
+                    {getCustomerError(error)}
+                  </p>
+                ))}
+              </div>
+            )}
+            <input
+              aria-label="Email address"
+              autoComplete="email"
+              // eslint-disable-next-line jsx-a11y/no-autofocus
+              autoFocus
+              className={clsx(['mb-2', getInputStyleClasses()])}
+              id="email"
+              name="email"
+              placeholder="Email address"
+              required
+              type="email"
+            />
+            <input
+              aria-label="Password"
+              autoComplete="current-password"
+              className={clsx(['mb-4', getInputStyleClasses()])}
+              id="password"
+              minLength={8}
+              name="password"
+              placeholder="Password"
+              required
+              type="password"
+            />
+            <div className="flex items-center justify-between">
+              <button
+                className="bg-primary text-contrast rounded py-2 px-4 focus:shadow-outline block w-full"
+                type="submit"
+              >
+                {state === 'idle' ? 'Sign in' : 'Signing in'}
+              </button>
+            </div>
+          </div>
+        );
+      }}
+    </CustomerAccessTokenCreateForm>
   );
 }
