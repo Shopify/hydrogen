@@ -1,23 +1,44 @@
 import type {LoaderArgs, MetaFunction} from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import type {
-  Collection,
   ProductConnection,
+  Collection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {PageHeader, Section, ProductGrid} from '~/components';
+import {PageHeader, Section, ProductCard, Grid} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
+import {getImageLoadingPriority} from '~/lib/const';
+const PAGE_BY = 2;
 
-export async function loader({request, context: {storefront}}: LoaderArgs) {
-  const cursor = new URL(request.url).searchParams.get('cursor') ?? undefined;
+export async function loader({
+  request,
+  params,
+  context: {storefront},
+}: LoaderArgs) {
+  const searchParams = new URL(request.url).searchParams;
+  // console.log(params, searchParams);
+
+  const cursor = searchParams.get('cursor') ?? undefined;
+  const direction =
+    searchParams.get('direction') === 'previous' ? 'previous' : 'next';
+  const isNext = direction === 'next';
+
+  const prevPage = {
+    last: PAGE_BY,
+    startCursor: cursor ?? null,
+  };
+
+  const nextPage = {
+    first: PAGE_BY,
+    endCursor: cursor ?? null,
+  };
+
+  const variables = isNext ? nextPage : prevPage;
 
   const data = await storefront.query<{
     products: ProductConnection;
   }>(ALL_PRODUCTS_QUERY, {
-    variables: {
-      pageBy: 48,
-      cursor,
-    },
+    variables,
   });
 
   invariant(data, 'No data returned from Shopify API');
@@ -39,12 +60,15 @@ export default function AllProducts() {
     <>
       <PageHeader heading="All Products" variant="allCollections" />
       <Section>
-        <ProductGrid
-          key="products"
-          url="/products"
-          collection={{products} as Collection}
-          data-test="product-grid"
-        />
+        <Grid layout="products">
+          {products.nodes.map((product, i) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              loading={getImageLoadingPriority(i)}
+            />
+          ))}
+        </Grid>
       </Section>
     </>
   );
@@ -55,14 +79,17 @@ const ALL_PRODUCTS_QUERY = `#graphql
   query AllProducts(
     $country: CountryCode
     $language: LanguageCode
-    $pageBy: Int!
-    $cursor: String
+    $first: Int
+    $last: Int
+    $startCursor: String
+    $endCursor: String
   ) @inContext(country: $country, language: $language) {
-    products(first: $pageBy, after: $cursor) {
+    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
       nodes {
         ...ProductCard
       }
       pageInfo {
+        hasPreviousPage
         hasNextPage
         startCursor
         endCursor
