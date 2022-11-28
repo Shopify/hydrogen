@@ -559,7 +559,7 @@ async function getRecommendedProducts(
   productId: string,
 ) {
   const products = await storefront.query<{
-    recommended: Product[];
+    recommended: ProductType[];
     additional: ProductConnection;
   }>(RECOMMENDED_PRODUCTS_QUERY, {
     variables: {productId, count: 12},
@@ -575,7 +575,7 @@ async function getRecommendedProducts(
     );
 
   const originalProduct = mergedProducts
-    .map((item: Product) => item.id)
+    .map((item: ProductType) => item.id)
     .indexOf(productId);
 
   mergedProducts.splice(originalProduct, 1);
