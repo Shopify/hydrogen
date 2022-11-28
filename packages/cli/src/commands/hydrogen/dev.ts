@@ -32,6 +32,8 @@ export default class Dev extends Command {
     }),
     node: Flags.boolean({
       env: 'SHOPIFY_HYDROGEN_FLAG_NODE',
+      description:
+        'Serve the storefront using a Node.js server instead of MiniOxygen',
       default: !!process.env.GIT_PROXY?.includes('stackblitz'),
     }),
   };
