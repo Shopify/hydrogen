@@ -15,24 +15,8 @@ export async function hydrogenRoutes(
     await buildLangRoutes();
   }
 
-  const templatesPath = path.resolve(__dirname, '../../templates');
+  await copyTemplates();
 
-  // fs.copyFileSync(templatesPath)
-
-  // const templates = await readDir(templatesPath);
-
-  // for (const template of templates) {
-  //   console.log(template);
-  // }
-
-  // @todo - extract into packaged helper function
-  // @todo - add logic for i18n
-  // const appRoutesPath = path.resolve(
-  //   '../../templates/demo-store',
-  //   'app/routes',
-  // );
-  // @todo - generalize from `path.cwd()`
-  // const appRouteFiles = await readDir(appRoutesPath);
   const hydrogenRoutesPath = path.resolve(process.cwd(), '.hydrogen/routes');
   const hydrogenRouteFiles = await readDir(hydrogenRoutesPath);
   return defineRoutes((route: any) => {
@@ -47,6 +31,30 @@ export async function hydrogenRoutes(
       route(hydrogenRouteUrl, '../' + hydrogenRoutePath);
     }
   });
+}
+
+async function copyTemplates() {
+  const templates = await readDir(path.resolve(__dirname, '../../templates'));
+
+  const hydrogenDirectory = path.resolve(process.cwd(), '.hydrogen');
+  const hydrogenRoutesPath = path.resolve(process.cwd(), '.hydrogen/routes');
+
+  if (!fs.existsSync(hydrogenDirectory)) {
+    fs.mkdirSync(hydrogenDirectory);
+  }
+
+  if (!fs.existsSync(hydrogenRoutesPath)) {
+    fs.mkdirSync(hydrogenRoutesPath);
+  }
+
+  for (const template of templates) {
+    const destination = path.resolve(
+      hydrogenDirectory,
+      path.basename(path.dirname(template)),
+      path.basename(template),
+    );
+    fs.copyFileSync(template, destination);
+  }
 }
 
 async function buildLangRoutes() {
