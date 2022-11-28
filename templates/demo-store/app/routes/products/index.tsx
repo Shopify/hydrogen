@@ -1,11 +1,14 @@
 import type {LoaderArgs, MetaFunction} from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
-import type {
-  ProductConnection,
-  Collection,
-} from '@shopify/hydrogen-react/storefront-api-types';
+import type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {PageHeader, Section, ProductCard, Grid} from '~/components';
+import {
+  PageHeader,
+  Section,
+  ProductCard,
+  Grid,
+  ForwardBackPagination,
+} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getImageLoadingPriority} from '~/lib/const';
 const PAGE_BY = 2;
@@ -16,8 +19,6 @@ export async function loader({
   context: {storefront},
 }: LoaderArgs) {
   const searchParams = new URL(request.url).searchParams;
-  // console.log(params, searchParams);
-
   const cursor = searchParams.get('cursor') ?? undefined;
   const direction =
     searchParams.get('direction') === 'previous' ? 'previous' : 'next';
@@ -60,15 +61,19 @@ export default function AllProducts() {
     <>
       <PageHeader heading="All Products" variant="allCollections" />
       <Section>
-        <Grid layout="products">
-          {products.nodes.map((product, i) => (
-            <ProductCard
-              key={product.id}
-              product={product}
-              loading={getImageLoadingPriority(i)}
-            />
-          ))}
-        </Grid>
+        <ForwardBackPagination connection={products}>
+          {({items}) => {
+            const itemsMarkup = items.map((product, i) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                loading={getImageLoadingPriority(i)}
+              />
+            ));
+
+            return <Grid>{itemsMarkup}</Grid>;
+          }}
+        </ForwardBackPagination>
       </Section>
     </>
   );
