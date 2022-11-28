@@ -11,6 +11,7 @@ import {createRequire} from 'module';
 
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
+import {isWebContainer} from '../../utils/platform.js';
 
 const miniOxygenPreview =
   miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
@@ -34,7 +35,7 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_NODE',
       description:
         'Serve the storefront using a Node.js server instead of MiniOxygen',
-      default: !!process.env.GIT_PROXY?.includes('stackblitz'),
+      default: isWebContainer(),
     }),
   };
 

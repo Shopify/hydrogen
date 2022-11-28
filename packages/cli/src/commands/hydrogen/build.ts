@@ -7,6 +7,7 @@ import {flags} from '../../utils/flags.js';
 
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
+import {isWebContainer} from '../../utils/platform.js';
 
 // @ts-ignore
 export default class Build extends Command {
@@ -29,7 +30,7 @@ export default class Build extends Command {
     }),
     node: Flags.boolean({
       env: 'SHOPIFY_HYDROGEN_FLAG_NODE',
-      default: !!process.env.GIT_PROXY?.includes('stackblitz'),
+      default: isWebContainer(),
       hidden: true,
     }),
   };
