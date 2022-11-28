@@ -15,7 +15,10 @@ export function ProductGrid({
   url: string;
   collection: Collection;
 }) {
-  const initialProducts = collection?.products?.nodes || [];
+  const [initialProducts, setInitialProducts] = useState(
+    collection?.products?.nodes || [],
+  );
+
   const [nextPage, setNextPage] = useState(
     collection?.products?.pageInfo?.hasNextPage,
   );
@@ -23,6 +26,14 @@ export function ProductGrid({
     collection?.products?.pageInfo?.endCursor,
   );
   const [products, setProducts] = useState(initialProducts);
+
+  // props have changes, reset component state
+  const productProps = collection?.products?.nodes || [];
+  if (initialProducts !== productProps) {
+    setInitialProducts(productProps);
+    setProducts(productProps);
+  }
+
   const fetcher = useFetcher();
 
   function fetchMoreProducts() {
