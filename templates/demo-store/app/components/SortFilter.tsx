@@ -40,12 +40,12 @@ export function SortFilter({filters, appliedFilters = [], children}: Props) {
         </button>
         <SortMenu />
       </div>
-      <div className="flex">
+      <div className="flex flex-wrap flex-col md:flex-row">
         <div
           className={`transition-all duration-200 ${
             isOpen
-              ? 'opacity-100 min-w-[240px] w-[240px] pr-4 md:pr-8'
-              : 'opacity-0 min-w-[0px] w-[0px] pr-0'
+              ? 'opacity-100 min-w-full md:min-w-[240px] md:w-[240px] pr-4 md:pr-8 max-h-full'
+              : 'opacity-0 md:min-w-[0px] md:w-[0px] pr-0 max-h-0 md:max-h-full'
           }`}
         >
           <FiltersDrawer
@@ -54,7 +54,7 @@ export function SortFilter({filters, appliedFilters = [], children}: Props) {
             onClose={() => setIsOpen(false)}
           />
         </div>
-        <div>{children}</div>
+        <div className="flex-1">{children}</div>
       </div>
     </>
   );
