@@ -117,7 +117,7 @@ async function action({request, context}: ActionArgs) {
 
   // Flow A — no previous cart, create and add line(s)
   if (!cartId) {
-    const {cart, errors} = await cartCreateLinesMutation({
+    const {cart, errors} = await cartCreate({
       input: {lines},
       context,
     });
@@ -385,7 +385,7 @@ async function getCartLines({
  * @see https://shopify.dev/api/storefront/2022-01/mutations/cartcreate
  * @returns mutated cart
  */
-async function cartCreateLinesMutation({
+async function cartCreate({
   input,
   context,
 }: {
@@ -393,7 +393,7 @@ async function cartCreateLinesMutation({
   context: HydrogenContext;
 }) {
   const {storefront} = context;
-  invariant(storefront, 'missing storefront client in cart create mutation');
+  invariant(storefront, 'missing storefront client in cartCreate mutation');
 
   const {cartCreate} = await storefront.mutate<{
     cartCreate: {
@@ -405,7 +405,7 @@ async function cartCreateLinesMutation({
     variables: {input},
   });
 
-  invariant(cartCreate, 'No data returned from cart create mutation');
+  invariant(cartCreate, 'No data returned from cartCreate mutation');
 
   return cartCreate;
 }
@@ -680,7 +680,7 @@ function useOptimisticLinesAdd(
 
 export {
   action,
-  cartCreateLinesMutation,
+  cartCreate,
   getCartLines,
   LINES_CART_FRAGMENT, // @todo: would be great if these lived in a shared graphql/ folder
   LinesAddForm,
