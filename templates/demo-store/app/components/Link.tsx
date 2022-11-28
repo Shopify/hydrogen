@@ -28,7 +28,7 @@ type LinkProps = Omit<RemixLinkProps, 'className'> & {
 export function Link(props: LinkProps) {
   const {to, className, ...resOfProps} = props;
   const [root] = useMatches();
-  const selectedLocale = root.data.selectedLocale;
+  const selectedLocale = root.data?.selectedLocale;
 
   let toWithLocale = to;
 
