@@ -2,6 +2,8 @@ import fsExtra from 'fs-extra';
 import childProcess from 'child_process';
 import {createRequire} from 'module';
 import {installGlobals} from '@remix-run/node';
+import type {BuildOptions} from 'esbuild';
+import type {IncomingMessage} from 'http';
 
 type NodeServerOptions = {
   port?: number;
@@ -23,8 +25,8 @@ async function setupNodeServer({
   env,
 }: NodeServerOptions) {
   if (process.env.NODE_ENV === 'production') {
-    console.error(
-      new Error('Running node server in production. Using the node server should only be used for development!'),
+    console.warn(
+      'Running Node server in production. The Node server should only be used for development!',
     );
   }
 
@@ -42,14 +44,7 @@ async function setupNodeServer({
   const wss = new WebSocket.Server({port: wsPort});
 
   app.all('*', async (request: any, response: any, next: any) => {
-    const {
-      default: {fetch: fetchHandler},
-    } = require(buildPathWorkerFile);
-
-    request.headers['get'] = (prop: string) => request.headers[prop];
-    const origin = `${request.protocol}://${request.get('host')}`;
-    const url = new URL(request.url, origin);
-    request.url = url.toString();
+    const {fetch: fetchHandler} = require(buildPathWorkerFile);
 
     // Inject live reload script in HTML responses
     const decoder = new TextDecoder();
@@ -104,4 +99,34 @@ async function setupNodeServer({
   });
 }
 
-export {setupNodeServer};
+const nodeFetch = function (request: IncomingMessage, env: any, ctx: any) {
+  Object.defineProperty(request.headers, 'get', {
+    get: () => (prop: string) => request.headers[prop],
+  });
+
+  if (!request.url?.includes('://')) {
+    Object.defineProperty(request, 'url', {
+      value: new URL(
+        request.url ?? '',
+        // @ts-ignore
+        `${request.protocol ?? 'http'}://${
+          request.headers.host ?? 'localhost'
+        }`,
+      ).toString(),
+    });
+  }
+
+  // @ts-ignore
+  return __fetchHandler(request, env, ctx);
+};
+
+function addNodeBuildOptions(options: BuildOptions) {
+  options.platform = 'node';
+  options.format = 'cjs';
+  options.conditions?.unshift('node-dev');
+  options.footer = {
+    js: `const __fetchHandler = module.exports.default.fetch;\nmodule.exports = {fetch:${nodeFetch.toString()}}`,
+  };
+}
+
+export {setupNodeServer, addNodeBuildOptions};

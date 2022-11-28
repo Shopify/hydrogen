@@ -93,22 +93,25 @@ export async function runBuild({
     overwrite: true,
   });
 
-  const conditions = ['worker', process.env.NODE_ENV];
-  if (node) conditions.unshift('node-dev');
-
-  await esbuild.build({
+  const buildOptions: esbuild.BuildOptions = {
     entryPoints: [entryFile],
     bundle: true,
     outfile: buildPathWorkerFile,
-    format: node ? 'cjs' : 'esm',
-    platform: node ? 'node' : undefined,
+    format: 'esm',
     define: {
       'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
     },
     sourcemap,
     minify,
-    conditions,
-  });
+    conditions: ['worker', process.env.NODE_ENV],
+  };
+
+  if (node) {
+    const {addNodeBuildOptions} = await import('../../utils/node-server.js');
+    addNodeBuildOptions(buildOptions);
+  }
+
+  await esbuild.build(buildOptions);
 
   if (process.env.NODE_ENV !== 'development') {
     const {size} = await fsExtra.stat(buildPathWorkerFile);
