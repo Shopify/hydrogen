@@ -98,7 +98,6 @@ async function action({request, context}: ActionArgs) {
     return json({error: errorMessage});
   }
 
-  // cart created - we only need a Set-Cookie header if we're creating
   session.set('cartId', cart.id);
   headers.set('Set-Cookie', await session.commit());
 
