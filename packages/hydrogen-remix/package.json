@@ -47,7 +47,8 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "templates"
   ],
   "peerDependencies": {
     "@remix-run/oxygen": "*",
