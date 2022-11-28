@@ -8,16 +8,13 @@ import {
   ProductCard,
   Grid,
   ForwardBackPagination,
+  InfiniteScrollPagination,
 } from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getImageLoadingPriority} from '~/lib/const';
 const PAGE_BY = 2;
 
-export async function loader({
-  request,
-  params,
-  context: {storefront},
-}: LoaderArgs) {
+export async function loader({request, context: {storefront}}: LoaderArgs) {
   const searchParams = new URL(request.url).searchParams;
   const cursor = searchParams.get('cursor') ?? undefined;
   const direction =
@@ -61,7 +58,7 @@ export default function AllProducts() {
     <>
       <PageHeader heading="All Products" variant="allCollections" />
       <Section>
-        <ForwardBackPagination connection={products}>
+        {/* <ForwardBackPagination connection={products}>
           {({items}) => {
             const itemsMarkup = items.map((product, i) => (
               <ProductCard
@@ -73,7 +70,20 @@ export default function AllProducts() {
 
             return <Grid>{itemsMarkup}</Grid>;
           }}
-        </ForwardBackPagination>
+        </ForwardBackPagination> */}
+        <InfiniteScrollPagination connection={products}>
+          {({items}) => {
+            const itemsMarkup = items.map((product, i) => (
+              <ProductCard
+                key={product.id}
+                product={product}
+                loading={getImageLoadingPriority(i)}
+              />
+            ));
+
+            return <Grid>{itemsMarkup}</Grid>;
+          }}
+        </InfiniteScrollPagination>
       </Section>
     </>
   );

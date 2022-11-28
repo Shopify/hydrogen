@@ -39,11 +39,8 @@ export function usePagination<Resource = 'product'>({
   const location = useLocation();
   const search = new URLSearchParams(location.search);
   const isPrevious = search.get('direction') === 'previous';
-  const {
-    nodes: itemsInState = [],
-    pageInfo: pageInfoInState,
-    ...state
-  } = (location.state?.nodes as Connection<Resource>) || {};
+  const {nodes: itemsInState = [], pageInfo: pageInfoInState} =
+    (location.state as Connection<Resource>) || {nodes, pageInfo};
 
   const {items, startCursor, endCursor, hasPreviousPage, hasNextPage} =
     Object.assign({}, pageInfo, pageInfoInState, {
@@ -148,6 +145,7 @@ export function InfiniteScrollPagination<Resource = 'products'>({
     string | React.JSXElementConstructor<any>
   >;
 }) {
+  const location = useLocation();
   const {ref, inView} = useInView({
     threshold: 0,
   });
@@ -157,16 +155,19 @@ export function InfiniteScrollPagination<Resource = 'products'>({
     pageInfo: {startCursor, endCursor, hasPreviousPage, hasNextPage},
     nodes: items,
   } = usePagination(connection);
-  const params = new URLSearchParams(location.search);
 
   const loadNextPage = useCallback(() => {
     if (!inView) return;
 
-    const href = window.location.pathname + `?index&cursor=${endCursor}`;
-    navigate(href, {state: {startCursor, endCursor, hasPreviousPage, items}});
+    const href = location.pathname + `?index&cursor=${endCursor}`;
+    navigate(href, {
+      state: {
+        nodes: items,
+        pageInfo: {startCursor, endCursor, hasPreviousPage, hasNextPage},
+      },
+    });
   }, [endCursor, inView]);
 
-  // when the placeholder grid comes into view, fetch new page
   useEffect(loadNextPage, [endCursor, inView]);
 
   return (
