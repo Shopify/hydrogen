@@ -5,7 +5,7 @@ import {flattenConnection, Image, Money} from '@shopify/hydrogen-react';
 import {Button, Heading, IconRemove, Text, Link} from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
 import type {
-  Cart,
+  Cart as CartType,
   CartCost,
   CartLine,
 } from '@shopify/hydrogen-react/storefront-api-types';
@@ -34,7 +34,7 @@ export function Cart({
 }: {
   layout: Layouts;
   onClose?: () => void;
-  cart: Cart | null;
+  cart: CartType | null;
 }) {
   const linesCount = cart?.lines?.edges?.length || 0;
   const {linesAdding} = useOptimisticLinesAdd();
@@ -60,7 +60,7 @@ export function CartDetails({
   cart,
 }: {
   layout: Layouts;
-  cart: Cart | null;
+  cart: CartType | null;
 }) {
   // @todo: get optimistic cart cost
   const isZeroCost = !cart || cart?.cost?.subtotalAmount?.amount === '0.0';
@@ -91,7 +91,7 @@ export function CartDetails({
 function CartDiscounts({
   discountCodes,
 }: {
-  discountCodes: Cart['discountCodes'];
+  discountCodes: CartType['discountCodes'];
 }) {
   const {discountCodesUpdating} = useDiscountCodesUpdating();
   const [hovered, setHovered] = useState(false);
@@ -161,7 +161,7 @@ function CartLines({
   lines: cartLines,
 }: {
   layout: Layouts;
-  lines: Cart['lines'] | undefined;
+  lines: CartType['lines'] | undefined;
 }) {
   const currentLines = cartLines ? flattenConnection(cartLines) : [];
   const {optimisticLinesAdd} = useOptimisticLinesAdd(currentLines);
