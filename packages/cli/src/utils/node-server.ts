@@ -24,7 +24,7 @@ async function setupNodeServer({
 }: NodeServerOptions) {
   if (process.env.NODE_ENV === 'production') {
     console.error(
-      new Error('This Node server should only be used for development!'),
+      new Error('Running node server in production. Using the node server should only be used for development!'),
     );
   }
 
