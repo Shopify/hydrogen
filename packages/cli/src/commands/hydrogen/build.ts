@@ -54,6 +54,7 @@ export async function runBuild({
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = devReload ? 'development' : 'production';
   }
+
   const {
     root,
     entryFile,
@@ -62,11 +63,14 @@ export async function runBuild({
     buildPathWorkerFile,
     publicPath,
   } = getProjectPaths(appPath, entry);
+
   if (!devReload) {
     const remixConfig = await getRemixConfig(root);
     await fsExtra.rm(buildPath, {force: true, recursive: true});
+
     // eslint-disable-next-line no-console
     console.log(`Building app in ${process.env.NODE_ENV} mode...`);
+
     await remix.build(remixConfig, {
       mode: process.env.NODE_ENV as any,
       sourcemap,
@@ -77,10 +81,12 @@ export async function runBuild({
       },
     });
   }
+
   await fsExtra.copy(publicPath, buildPathClient, {
     recursive: true,
     overwrite: true,
   });
+
   await esbuild.build({
     entryPoints: [entryFile],
     bundle: true,
@@ -93,9 +99,11 @@ export async function runBuild({
     minify,
     conditions: ['worker', process.env.NODE_ENV],
   });
+
   if (process.env.NODE_ENV !== 'development') {
     const {size} = await fsExtra.stat(buildPathWorkerFile);
     const sizeMB = size / (1024 * 1024);
+
     // eslint-disable-next-line no-console
     console.log(
       '\n' + path.relative(root, buildPathWorkerFile),
@@ -103,6 +111,7 @@ export async function runBuild({
       Number(sizeMB.toFixed(2)),
       'MB',
     );
+
     if (sizeMB >= 1) {
       // eslint-disable-next-line no-console
       console.warn(

@@ -230,7 +230,7 @@ function CartSummary({
       <dl className="grid">
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Subtotal</Text>
-          <Text as="dd">
+          <Text as="dd" data-test="subtotal">
             {cost?.subtotalAmount?.amount ? (
               <Money data={cost?.subtotalAmount} />
             ) : (
@@ -364,7 +364,9 @@ function CartLineQuantityAdjust({
           )}
         </LinesUpdateForm>
 
-        <div className="px-2 text-center">{quantity}</div>
+        <div className="px-2 text-center" data-test="item-quantity">
+          {quantity}
+        </div>
 
         <LinesUpdateForm lines={[{id: lineId, quantity: nextQuantity}]}>
           {() => (
