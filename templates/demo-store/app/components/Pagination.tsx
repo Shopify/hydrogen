@@ -16,31 +16,28 @@ import {useTransition, useLocation, useNavigate} from '@remix-run/react';
 
 import {Button} from '~/components';
 
-interface PaginationLocationState extends PageInfo {
-  items: Product[] | Collection[] | Article[] | Blog[];
+interface PaginationLocationState<ItemsGeneric> extends PageInfo {
+  items: ItemsGeneric;
 }
 
-type Connection<Resource> = Resource extends 'article'
-  ? ArticleConnection
-  : Resource extends 'blog'
-  ? BlogConnection
-  : Resource extends 'collection'
-  ? CollectionConnection
-  : ProductConnection;
-
-type Props<Resource> = {
-  connection: Connection<Resource>;
+type Connection = {
+  pageInfo: PageInfo;
+  nodes: unknown[];
 };
 
-export function usePagination<Resource = 'product'>({
+type Props<Resource extends Connection> = {
+  connection: Resource;
+};
+
+export function usePagination<Resource extends Connection>({
   pageInfo,
   nodes,
-}: Connection<Resource>): Connection<Resource> {
+}: Resource): Connection {
   const location = useLocation();
   const search = new URLSearchParams(location.search);
   const isPrevious = search.get('direction') === 'previous';
   const {nodes: itemsInState = [], pageInfo: pageInfoInState} =
-    (location.state as Connection<Resource>) || {nodes, pageInfo};
+    (location.state as Resource) || {nodes, pageInfo};
 
   const {items, startCursor, endCursor, hasPreviousPage, hasNextPage} =
     Object.assign({}, pageInfo, pageInfoInState, {
@@ -60,14 +57,16 @@ export function usePagination<Resource = 'product'>({
       hasPreviousPage,
       hasNextPage,
     },
-  } as Connection<Resource>;
+  };
 }
 
-export function ForwardBackPagination<Resource = 'products'>({
+export function ForwardBackPagination<Resource extends Connection>({
   connection,
   children = () => null,
 }: Props<Resource> & {
-  children: (props: PaginationLocationState) => React.ReactNode;
+  children: (
+    props: PaginationLocationState<Resource['nodes']>,
+  ) => React.ReactNode;
 }) {
   const transition = useTransition();
   const location = useLocation();
@@ -134,12 +133,14 @@ export function ForwardBackPagination<Resource = 'products'>({
   );
 }
 
-export function InfiniteScrollPagination<Resource = 'products'>({
+export function InfiniteScrollPagination<Resource extends Connection>({
   connection,
   children = () => null,
   placeholder = <div />,
 }: Props<Resource> & {
-  children: (props: PaginationLocationState) => React.ReactNode;
+  children: (
+    props: PaginationLocationState<Resource['nodes']>,
+  ) => React.ReactNode;
   placeholder?: React.ReactElement<
     {key: number},
     string | React.JSXElementConstructor<any>
