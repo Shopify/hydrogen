@@ -14,10 +14,11 @@ import {
   useState,
 } from 'react';
 import type {Localizations} from '~/lib/type';
+import {DEFAULT_LOCALE} from '~/lib/utils';
 
 export function CountrySelector() {
   const [root] = useMatches();
-  const selectedLocale = root.data.selectedLocale;
+  const selectedLocale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
   const {pathname, search} = useLocation();
   const strippedPathname = pathname.replace(selectedLocale.pathPrefix, '');
 

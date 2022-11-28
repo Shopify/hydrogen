@@ -363,6 +363,7 @@ function AddToCartButton({
               type="submit"
               variant={isOutOfStock ? 'secondary' : 'primary'}
               disabled={disabled}
+              data-test="add-to-cart"
             >
               {isOutOfStock ? (
                 <Text>Sold out</Text>

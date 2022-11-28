@@ -149,6 +149,7 @@ export default function Collection() {
             key={collection.id}
             collection={collection as CollectionType}
             url={`/collections/${collection.handle}`}
+            data-test="product-grid"
           />
         </SortFilter>
       </Section>
