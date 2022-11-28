@@ -38,7 +38,10 @@ export default function Collections() {
     <>
       <PageHeader heading="Collections" />
       <Section>
-        <Grid items={collections.length === 3 ? 3 : 2}>
+        <Grid
+          items={collections.length === 3 ? 3 : 2}
+          data-test="collection-grid"
+        >
           {collections.map((collection, i) => (
             <CollectionCard
               collection={collection as Collection}
