@@ -14,6 +14,7 @@ import {getImageLoadingPriority} from '~/lib/const';
 const PAGINATION_SIZE = 8;
 
 export const loader = async ({context: {storefront}}: LoaderArgs) => {
+  console.log('>>>> RAN LOADER');
   const {collections} = await storefront.query<{
     collections: CollectionConnection;
   }>(COLLECTIONS_QUERY, {
@@ -32,6 +33,7 @@ export const meta: MetaFunction = () => {
 };
 
 export default function Collections() {
+  console.log('>>>> RAN COLLECTIONS');
   const {collections} = useLoaderData<typeof loader>();
 
   return (

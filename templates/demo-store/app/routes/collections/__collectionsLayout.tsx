@@ -4,11 +4,9 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@shopify/hydrogen-remix';
-import {useLoaderData, useMatches, Link} from '@remix-run/react';
+import {useLoaderData, useMatches, Link, Outlet} from '@remix-run/react';
 import type {
   Collection as CollectionType,
-  CollectionConnection,
-  MetafieldReferenceEdge,
   MetafieldReference,
   Filter,
 } from '@shopify/hydrogen-react/storefront-api-types';
@@ -49,6 +47,7 @@ export async function loader({
   request,
   context: {storefront},
 }: LoaderArgs) {
+  console.log(params);
   const {collectionHandle} = params;
 
   invariant(collectionHandle, 'Missing collectionHandle param');
@@ -119,6 +118,8 @@ export const meta: MetaFunction = ({
 
 export default function Collection() {
   const {collection, appliedFilters} = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader>();
+  console.log('>>>>>>> $$ ', data);
   const breadcrumbs =
     collection.metafield?.references &&
     flattenConnection<MetafieldReference>(collection.metafield.references)
@@ -137,20 +138,9 @@ export default function Collection() {
             </div>
           </div>
         )}
-
-        <Breadcrumbs breadcrumbs={breadcrumbs} />
       </PageHeader>
       <Section>
-        <SortFilter
-          filters={collection.products.filters as Filter[]}
-          appliedFilters={appliedFilters}
-        >
-          <ProductGrid
-            key={collection.id}
-            collection={collection as CollectionType}
-            url={`/collections/${collection.handle}`}
-          />
-        </SortFilter>
+        <Outlet context={{collection, appliedFilters, breadcrumbs}} />
       </Section>
     </>
   );
