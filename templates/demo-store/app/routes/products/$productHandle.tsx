@@ -25,10 +25,10 @@ import {
 import {getExcerpt} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
-import {
+import type {
   ProductVariant,
   SelectedOptionInput,
-  Product,
+  Product as ProductType,
   Shop,
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
@@ -55,7 +55,7 @@ export async function loader({
   });
 
   const {shop, product} = await storefront.query<{
-    product: Product & {selectedVariant?: ProductVariant};
+    product: ProductType & {selectedVariant?: ProductVariant};
     shop: Shop;
   }>(PRODUCT_QUERY, {
     variables: {
@@ -215,7 +215,7 @@ function ProductOptions({
   options,
   searchParamsWithDefaults,
 }: {
-  options: Product['options'];
+  options: ProductType['options'];
   searchParamsWithDefaults: URLSearchParams;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -558,7 +558,7 @@ async function getRecommendedProducts(
   productId: string,
 ) {
   const products = await storefront.query<{
-    recommended: Product[];
+    recommended: ProductType[];
     additional: ProductConnection;
   }>(RECOMMENDED_PRODUCTS_QUERY, {
     variables: {productId, count: 12},
@@ -574,7 +574,7 @@ async function getRecommendedProducts(
     );
 
   const originalProduct = mergedProducts
-    .map((item: Product) => item.id)
+    .map((item: ProductType) => item.id)
     .indexOf(productId);
 
   mergedProducts.splice(originalProduct, 1);
