@@ -10,7 +10,7 @@ const common = defineConfig({
   format: ['esm', 'cjs'],
   treeshake: true,
   sourcemap: true,
-  external: ['esbuild', 'fs', 'path', 'os'],
+  external: ['esbuild'],
 });
 
 export default defineConfig([
