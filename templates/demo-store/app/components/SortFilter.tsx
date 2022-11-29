@@ -216,7 +216,18 @@ function getAppliedFilterLink(
   location: Location,
 ) {
   const paramsClone = new URLSearchParams(params);
-  paramsClone.delete(filter.urlParam);
+  if (filter.urlParam.key === 'variantOption') {
+    const variantOptions = paramsClone.getAll('variantOption');
+    const filteredVariantOptions = variantOptions.filter(
+      (options) => !options.includes(filter.urlParam.value),
+    );
+    paramsClone.delete(filter.urlParam.key);
+    for (const filteredVariantOption of filteredVariantOptions) {
+      paramsClone.append(filter.urlParam.key, filteredVariantOption);
+    }
+  } else {
+    paramsClone.delete(filter.urlParam.key);
+  }
   return `${location.pathname}?${paramsClone.toString()}`;
 }
 
@@ -329,9 +340,11 @@ function filterInputToParams(
           params.set(key, value.toString());
         } else {
           const {name, value: val} = value as {name: string; value: string};
-          const newInput = {[name]: val};
-
-          filterInputToParams(type, newInput, params);
+          const allVariants = params.getAll(`variantOption`);
+          const newVariant = `${name}:${val}`;
+          if (!allVariants.includes(newVariant)) {
+            params.append('variantOption', newVariant);
+          }
         }
       });
       break;
