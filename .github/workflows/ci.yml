@@ -83,18 +83,6 @@ jobs:
           cache: 'npm'
           cache-dependency-path: '**/package-lock.json'
 
-      - name: Get installed Playwright version
-        id: playwright-version
-        run: echo "::set-output name=version::$(npm ls @playwright/test | grep @playwright -m 1 | sed 's/.*@//')" 
-
-      - name: 💾 Cache Playwright binaries
-        uses: actions/cache@v3
-        id: playwright-cache
-        with:
-          path: |
-            ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
-
       - name: 📥 Install dependencies
         run: npm ci
 
@@ -111,6 +99,18 @@ jobs:
 
       - name: 📦 Build packages
         run: npm run build
+
+      - name: Get installed Playwright version
+        id: playwright-version
+        run: echo "::set-output name=version::$(npm ls @playwright/test | grep @playwright -m 1 | sed 's/.*@//')" 
+
+      - name: 💾 Cache Playwright binaries
+        uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
 
       - name: 💽 Install Playwright Browsers (all)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
