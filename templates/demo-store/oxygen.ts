@@ -9,11 +9,7 @@ declare const process: {env: {NODE_ENV: string}};
 const requestHandler = createRequestHandler({
   build: remixBuild,
   mode: process.env.NODE_ENV,
-  // shouldProxyAsset: () => false,
-  // TODO: Remove example
-  shouldProxyAsset(url) {
-    return url.includes('party-town-babay.json');
-  },
+  shouldProxyAsset: () => false,
 });
 
 export default {
