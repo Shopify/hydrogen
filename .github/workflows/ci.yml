@@ -6,10 +6,10 @@ jobs:
   lint:
     name: ⬣ ESLint
     runs-on: shopify-ubuntu-latest
+    concurrency:
+      group: ci-lint-${{ github.ref }}
+      cancel-in-progress: true
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
@@ -29,10 +29,10 @@ jobs:
   typecheck:
     name: Typescript
     runs-on: shopify-ubuntu-latest
+    concurrency:
+      group: ci-typecheck-${{ github.ref }}
+      cancel-in-progress: true
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
@@ -56,10 +56,10 @@ jobs:
     name: ⚫️ Playwright tests
     timeout-minutes: 60
     runs-on: shopify-ubuntu-latest
+    concurrency:
+      group: ci-test-${{ github.ref }}
+      cancel-in-progress: true
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
