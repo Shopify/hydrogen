@@ -75,7 +75,7 @@ async function getAnalyticDataByPageType<PageTypeGeneric extends PageType>({
 
     // unfortunately, TS itself seems limited in being able to infer this, so we have to cast it ourselves - instead of being able to do the following:
     // const {handle, selectedOptions} = payload;
-    const {handle, selectedOptions} = payload as Product;
+    const {handle, selectedOptions} = payload as PageToPayloadMap['product'];
 
     const data = await storefront.query<{
       product: Product & {selectedVariant?: ProductVariant};
@@ -90,6 +90,7 @@ async function getAnalyticDataByPageType<PageTypeGeneric extends PageType>({
     // 'as any' is required for TS to work here, it seems. It's a limitation of TS itself
     return data.product as any;
   }
+  // 'as any' is required for TS to work here, it seems. It's a limitation of TS itself
   return {} as any;
 }
 
