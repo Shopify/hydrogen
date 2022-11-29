@@ -21,7 +21,7 @@ import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
 const PAGINATION_SIZE = 48;
 
-type VariantFilterParam = Record<string, string>;
+type VariantFilterParam = Record<string, string | boolean>;
 type PriceFiltersQueryParam = Record<'price', {max?: number; min?: number}>;
 type VariantOptionFiltersQueryParam = Record<
   'variantOption',
@@ -30,7 +30,10 @@ type VariantOptionFiltersQueryParam = Record<
 
 export type AppliedFilter = {
   label: string;
-  urlParam: string;
+  urlParam: {
+    key: string;
+    value: string;
+  };
 };
 
 type FiltersQueryParams = Array<
@@ -54,8 +57,9 @@ export async function loader({
   invariant(collectionHandle, 'Missing collectionHandle param');
 
   const searchParams = new URL(request.url).searchParams;
-  const knownFilters = ['cursor', 'productVendor', 'productType', 'available'];
-  const priceFilters = ['minPrice', 'maxPrice'];
+  const knownFilters = ['cursor', 'productVendor', 'productType'];
+  const available = 'available';
+  const variantOption = 'variantOption';
   const {sortKey, reverse} = getSortValuesFromParam(
     searchParams.get('sort') as SortParam,
   );
@@ -63,12 +67,23 @@ export async function loader({
   const appliedFilters: AppliedFilter[] = [];
 
   for (const [key, value] of searchParams.entries()) {
-    if (knownFilters.includes(key)) {
+    if (available === key) {
+      filters.push({available: value === 'true'});
+      appliedFilters.push({
+        label: value === 'true' ? 'In stock' : 'Out of stock',
+        urlParam: {
+          key: available,
+          value,
+        },
+      });
+    } else if (knownFilters.includes(key)) {
       filters.push({[key]: value});
-    } else if (!priceFilters.includes(key)) {
-      filters.push({variantOption: {name: key, value}});
+      appliedFilters.push({label: value, urlParam: {key, value}});
+    } else if (key.includes(variantOption)) {
+      const [name, val] = value.split(':');
+      filters.push({variantOption: {name, value: val}});
+      appliedFilters.push({label: val, urlParam: {key, value}});
     }
-    appliedFilters.push({label: value, urlParam: key});
   }
 
   // Builds min and max price filter since we can't stack them separately into
@@ -78,9 +93,17 @@ export async function loader({
     const price: {min?: number; max?: number} = {};
     if (searchParams.has('minPrice')) {
       price.min = Number(searchParams.get('minPrice')) || 0;
+      appliedFilters.push({
+        label: `Min: $${price.min}`,
+        urlParam: {key: 'minPrice', value: searchParams.get('minPrice')!},
+      });
     }
     if (searchParams.has('maxPrice')) {
       price.max = Number(searchParams.get('maxPrice')) || 0;
+      appliedFilters.push({
+        label: `Max: $${price.max}`,
+        urlParam: {key: 'maxPrice', value: searchParams.get('maxPrice')!},
+      });
     }
     filters.push({
       price,
