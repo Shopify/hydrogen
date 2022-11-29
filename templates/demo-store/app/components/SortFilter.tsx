@@ -23,7 +23,7 @@ type Props = {
   filters: Filter[];
   appliedFilters?: AppliedFilter[];
   children: React.ReactNode;
-  collections: Collection[];
+  collections?: Collection[];
 };
 
 export function SortFilter({
