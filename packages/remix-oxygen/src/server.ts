@@ -32,7 +32,7 @@ export function createRequestHandler<Context = unknown>({
    * @example
    * ```ts
    * shouldProxyAsset(url) {
-   *  return url === '/robots.txt';
+   *  return new URL(url).pathname === '/robots.txt';
    * }
    * ```
    */
@@ -51,18 +51,23 @@ export function createRequestHandler<Context = unknown>({
         build.publicPath !== undefined &&
         shouldProxyAsset?.(request.url)
       ) {
-        const url = new URL(
-          request.url,
-          /**
-           * Use the assetPrefix (publicPath) as the origin. Note that Remix expects client assets to be
-           * prefixed with `/build/*`, and as such, `/build/` is included in the Oxygen-created `assetPrefix`.
-           * However, we need strip out the leading `/build/` for this use case, as developers may wish to
-           * serve a static asset from the root `/public` folder (one level up from `/build`).
-           */
-          (build.publicPath || '').replace(/\/build\/$/, ''),
+        const url = new URL(request.url);
+
+        /**
+         * Use the assetPrefix (publicPath) as the origin. Note that Remix expects client assets to be
+         * prefixed with `/build/*`, and as such, `/build/` is included in the Oxygen-created `assetPrefix`.
+         * However, we need strip out the leading `/build/` for this use case, as developers may wish to
+         * serve a static asset from the root `/public` folder (one level up from `/build`).
+         */
+        const newOriginAndPathPrefix = (build.publicPath || '').replace(
+          /\/build\/$/,
+          '',
         );
 
-        return fetch(url, request);
+        return fetch(
+          request.url.replace(url.origin, newOriginAndPathPrefix),
+          request,
+        );
       }
 
       return await handleRequest(request, {
