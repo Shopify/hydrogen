@@ -6,6 +6,7 @@ jobs:
   lint:
     name: ⬣ ESLint
     runs-on: shopify-ubuntu-latest
+    timeout-minutes: 15 
     concurrency:
       group: ci-lint-${{ github.ref }}
       cancel-in-progress: true
@@ -29,6 +30,7 @@ jobs:
   typecheck:
     name: Typescript
     runs-on: shopify-ubuntu-latest
+    timeout-minutes: 15 
     concurrency:
       group: ci-typecheck-${{ github.ref }}
       cancel-in-progress: true
@@ -54,8 +56,8 @@ jobs:
 
   test:
     name: ⚫️ Playwright tests
-    timeout-minutes: 60
     runs-on: shopify-ubuntu-latest
+    timeout-minutes: 15 
     concurrency:
       group: ci-test-${{ github.ref }}
       cancel-in-progress: true
