@@ -8,7 +8,7 @@ export default function CartRoute() {
   return (
     <div className="grid w-full gap-8 p-6 py-8 md:p-8 lg:p-12 justify-items-start">
       <Suspense fallback={<CartLoading />}>
-        <Await resolve={root.data.cart}>
+        <Await resolve={root.data?.cart}>
           {(cart) => <Cart layout="page" cart={cart} />}
         </Await>
       </Suspense>
