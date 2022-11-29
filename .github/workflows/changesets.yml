@@ -32,11 +32,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v2
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
         with:
           node-version: 18
           cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: Install the packages
         run: npm install --frozen-lockfile --ignore-engines
