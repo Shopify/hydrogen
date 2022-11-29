@@ -9,12 +9,6 @@ declare const process: {env: {NODE_ENV: string}};
 const requestHandler = createRequestHandler({
   build: remixBuild,
   mode: process.env.NODE_ENV,
-  /**
-   * By default, Hydrogen will prefix all static assets with a CDN url.
-   * If you need to serve static assets from the same domain or from the root,
-   * update the `shouldProxyAsset: (url: string) => boolean` function below
-   * to return `true` when the url (pathname) matches your asset.
-   */
   // shouldProxyAsset: () => false,
   // TODO: Remove example
   shouldProxyAsset(url) {
