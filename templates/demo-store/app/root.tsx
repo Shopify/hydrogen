@@ -26,6 +26,7 @@ import favicon from '../public/favicon.svg';
 import {DEFAULT_LOCALE, getLocaleFromRequest} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
+import {Analytics} from './components/Analytics';
 
 export const handle = {
   // @todo - remove any and type the seo callback
@@ -91,6 +92,7 @@ export default function App() {
         <Debugger />
         <ScrollRestoration />
         <Scripts />
+        <Analytics />
       </body>
     </html>
   );

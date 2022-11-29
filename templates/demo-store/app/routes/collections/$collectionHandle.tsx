@@ -103,7 +103,14 @@ export async function loader({
     throw new Response('Not found', {status: 404});
   }
 
-  return json({collection, appliedFilters});
+  return json({
+    collection,
+    appliedFilters,
+    analytics: {
+      pageType: 'collection',
+      handle: collectionHandle,
+    },
+  });
 }
 
 export const meta: MetaFunction = ({

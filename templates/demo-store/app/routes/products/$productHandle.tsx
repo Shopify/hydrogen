@@ -74,6 +74,10 @@ export async function loader({
     product,
     shop,
     recommended,
+    analytics: {
+      pageType: 'product',
+      handle: productHandle,
+    },
   });
 }
 

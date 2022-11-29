@@ -22,7 +22,12 @@ export const loader = async ({context: {storefront}}: LoaderArgs) => {
     },
   });
 
-  return json({collections: collections.nodes});
+  return json({
+    collections: collections.nodes,
+    analytics: {
+      pageType: 'collection-list',
+    },
+  });
 };
 
 export const meta: MetaFunction = () => {
