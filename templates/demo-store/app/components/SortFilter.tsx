@@ -15,6 +15,7 @@ import {Disclosure} from '@headlessui/react';
 import type {
   FilterType,
   Filter,
+  Collection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {AppliedFilter, SortParam} from '~/routes/collections/$collectionHandle';
 
@@ -22,9 +23,15 @@ type Props = {
   filters: Filter[];
   appliedFilters?: AppliedFilter[];
   children: React.ReactNode;
+  collections: Collection[];
 };
 
-export function SortFilter({filters, appliedFilters = [], children}: Props) {
+export function SortFilter({
+  filters,
+  appliedFilters = [],
+  children,
+  collections,
+}: Props) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <>
@@ -47,7 +54,11 @@ export function SortFilter({filters, appliedFilters = [], children}: Props) {
               : 'opacity-0 md:min-w-[0px] md:w-[0px] pr-0 max-h-0 md:max-h-full'
           }`}
         >
-          <FiltersDrawer filters={filters} appliedFilters={appliedFilters} />
+          <FiltersDrawer
+            collections={collections}
+            filters={filters}
+            appliedFilters={appliedFilters}
+          />
         </div>
         <div className="flex-1">{children}</div>
       </div>
@@ -58,9 +69,11 @@ export function SortFilter({filters, appliedFilters = [], children}: Props) {
 export function FiltersDrawer({
   filters = [],
   appliedFilters = [],
+  collections = [],
 }: {
   filters: Filter[];
   appliedFilters: AppliedFilter[];
+  collections: Collection[];
 }) {
   const [params] = useSearchParams();
   const location = useLocation();
@@ -99,6 +112,21 @@ export function FiltersDrawer({
     }
   };
 
+  const collectionsMarkup = collections.map((collection) => {
+    return (
+      <li key={collection.handle} className="pb-4">
+        <Link
+          to={`/collections/${collection.handle}`}
+          className="focus:underline hover:underline"
+          key={collection.handle}
+          prefetch="intent"
+        >
+          {collection.title}
+        </Link>
+      </li>
+    );
+  });
+
   return (
     <>
       <nav className="py-8">
@@ -107,6 +135,20 @@ export function FiltersDrawer({
             <AppliedFilters filters={appliedFilters} />
           </div>
         ) : null}
+
+        <Disclosure as="div" className="w-full">
+          {({open}) => (
+            <>
+              <Disclosure.Button className="py-4 w-full flex justify-between">
+                <Text size="lead">Collection</Text>
+                <IconCaret direction={open ? 'up' : 'down'} />
+              </Disclosure.Button>
+              <Disclosure.Panel>
+                <ul className="py-2">{collectionsMarkup}</ul>
+              </Disclosure.Panel>
+            </>
+          )}
+        </Disclosure>
         <Heading as="h4" size="lead" className="pb-4">
           Filter By
         </Heading>

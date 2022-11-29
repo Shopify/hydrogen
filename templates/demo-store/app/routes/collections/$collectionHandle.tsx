@@ -4,11 +4,10 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@shopify/hydrogen-remix';
-import {useLoaderData, useMatches, Link} from '@remix-run/react';
+import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
   CollectionConnection,
-  MetafieldReferenceEdge,
   MetafieldReference,
   Filter,
 } from '@shopify/hydrogen-react/storefront-api-types';
@@ -104,10 +103,9 @@ export async function loader({
     throw new Response('Not found', {status: 404});
   }
 
-  const categories = collections;
+  const collectionNodes = flattenConnection(collections);
 
-  // console.log(categories);
-  return json({collection, appliedFilters});
+  return json({collection, appliedFilters, collections: collectionNodes});
 }
 
 export const meta: MetaFunction = ({
@@ -122,7 +120,8 @@ export const meta: MetaFunction = ({
 };
 
 export default function Collection() {
-  const {collection, appliedFilters} = useLoaderData<typeof loader>();
+  const {collection, collections, appliedFilters} =
+    useLoaderData<typeof loader>();
   const breadcrumbs =
     collection.metafield?.references &&
     flattenConnection<MetafieldReference>(collection.metafield.references)
@@ -148,6 +147,7 @@ export default function Collection() {
         <SortFilter
           filters={collection.products.filters as Filter[]}
           appliedFilters={appliedFilters}
+          collections={collections}
         >
           <ProductGrid
             key={collection.id}
@@ -232,12 +232,12 @@ const COLLECTION_QUERY = `#graphql
           endCursor
         }
       }
-      collections(first: 100) {
-        edges {
-          node {
-            title
-            handle
-          }
+    }
+    collections(first: 100) {
+      edges {
+        node {
+          title
+          handle
         }
       }
     }
