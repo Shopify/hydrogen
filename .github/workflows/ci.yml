@@ -100,9 +100,8 @@ jobs:
       - name: 📦 Build packages
         run: npm run build
 
-      - name: Get installed Playwright version
-        id: playwright-version
-        run: echo "::set-output name=version::$(npm ls @playwright/test | grep @playwright -m 1 | sed 's/.*@//')" 
+      - name: 📄 Get installed Playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(npm ls @playwright/test | grep @playwright -m 1 | sed 's/.*@//')"  >> $GITHUB_ENV
 
       - name: 💾 Cache Playwright binaries
         uses: actions/cache@v3
@@ -110,7 +109,7 @@ jobs:
         with:
           path: |
             ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.version }}
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
 
       - name: 💽 Install Playwright Browsers (all)
         if: steps.playwright-cache.outputs.cache-hit != 'true'
