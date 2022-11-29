@@ -44,6 +44,7 @@ export function ProductGrid({
     if (!fetcher.data) return;
 
     const {collection} = fetcher.data;
+
     setProducts((prev: Product[]) => [...prev, ...collection.products.nodes]);
     setNextPage(collection.products.pageInfo.hasNextPage);
     setEndCursor(collection.products.pageInfo.endCursor);
