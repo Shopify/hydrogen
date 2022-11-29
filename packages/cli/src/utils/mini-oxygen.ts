@@ -1,5 +1,5 @@
+import path from 'path';
 import miniOxygen from '@shopify/mini-oxygen';
-import {readEnv} from './env.js';
 
 const miniOxygenPreview =
   miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
@@ -33,6 +33,7 @@ export async function startMiniOxygen({
     buildCommand: watch ? buildCommand : undefined,
     buildWatchPaths,
     modules: true,
-    env: await readEnv(root),
+    env: process.env,
+    envPath: path.resolve(root, '.env'),
   });
 }
