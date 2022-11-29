@@ -58,7 +58,7 @@ jobs:
           commit_timestamp: ${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
           oxygen_health_check: true
 
-      - name: 🐈‍⬛ Create GitHub deployment
+      - name: 🐙 Create GitHub deployment
         uses: shopify/github-deployment-action@v1
         if: always()
         with:
