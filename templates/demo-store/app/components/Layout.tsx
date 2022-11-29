@@ -470,14 +470,15 @@ function FooterMenu({menu}: {menu?: EnhancedMenu}) {
                       open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
                     } overflow-hidden transition-all duration-300`}
                   >
-                    {/* @todo: the `static` prop causes a Suspense warning */}
-                    <Disclosure.Panel static>
-                      <nav className={styles.nav}>
-                        {item.items.map((subItem) => (
-                          <FooterLink key={subItem.id} item={subItem} />
-                        ))}
-                      </nav>
-                    </Disclosure.Panel>
+                    <Suspense data-comment="This suspense fixes a hydration bug in Disclosure.Panel with static prop">
+                      <Disclosure.Panel static>
+                        <nav className={styles.nav}>
+                          {item.items.map((subItem) => (
+                            <FooterLink key={subItem.id} item={subItem} />
+                          ))}
+                        </nav>
+                      </Disclosure.Panel>
+                    </Suspense>
                   </div>
                 ) : null}
               </>

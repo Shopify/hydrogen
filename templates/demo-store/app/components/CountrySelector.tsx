@@ -28,6 +28,11 @@ export function CountrySelector() {
     triggerOnce: true,
   });
 
+  const observerRef = useRef(null);
+  useEffect(() => {
+    ref(observerRef.current);
+  }, [ref, observerRef]);
+
   // Get available countries list when in view
   useEffect(() => {
     if (!inView || fetcher.data || fetcher.state === 'loading') return;
@@ -40,7 +45,7 @@ export function CountrySelector() {
 
   return (
     <section
-      ref={ref}
+      ref={observerRef}
       className="grid gap-4 w-full md:max-w-[335px] md:ml-auto"
       onMouseLeave={closeDropdown}
     >
