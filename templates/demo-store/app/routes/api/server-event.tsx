@@ -1,6 +1,7 @@
 import {type LoaderArgs, json} from '@shopify/hydrogen-remix';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import {
+  Collection,
   Product,
   ProductConnection,
   ProductVariant,
@@ -10,6 +11,27 @@ import invariant from 'tiny-invariant';
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
   const url = new URL(request.url);
+
+  const data = await getAnalyticDataByPageType({
+    pageType: 'product',
+    payload: {} as Product,
+    storefront,
+    queries: {} as AnalyticsQueries,
+  });
+
+  const data2 = await getAnalyticDataByPageType({
+    pageType: 'collection',
+    payload: {} as Collection,
+    storefront,
+    queries: {} as AnalyticsQueries,
+  });
+
+  const data3 = await getAnalyticDataByPageType({
+    pageType: 'home',
+    payload: null,
+    storefront,
+    queries: {} as AnalyticsQueries,
+  });
 
   return json({
     ga: ['event', 'page_view'],
@@ -27,24 +49,34 @@ type ProductPayload = {
   [key: string]: unknown;
 };
 
+type PageToPayloadMap = {
+  product: Product;
+  collection: Collection;
+  home: null;
+};
+
 // Function supplied by Hydrogen (hydrogen-remix or maybe even hydrogen-react)
-async function getAnalyticDataByPageType({
+async function getAnalyticDataByPageType<T extends PageType>({
   pageType,
   payload,
   storefront,
   queries,
 }: {
-  pageType: string;
-  payload: unknown;
+  pageType: T;
+  payload: PageToPayloadMap[T];
   storefront: LoaderArgs['context']['storefront'];
   queries: AnalyticsQueries;
-}) {
+}): Promise<PageToPayloadMap[T]> {
   // Default cache time for analytics queries
   const cache = storefront.CacheLong();
 
   if (pageType === 'product') {
     // Do checks for required payload vars
-    const {handle, selectedOptions} = payload as ProductPayload;
+
+    // unfortunately, TS itself seems limited in being able to infer this, so we have to cast it ourselves - instead of being able to do the following:
+    // const {handle, selectedOptions} = payload;
+    const {handle, selectedOptions} = payload as Product;
+
     const data = await storefront.query<{
       product: Product & {selectedVariant?: ProductVariant};
     }>(queries[pageType], {
@@ -55,9 +87,10 @@ async function getAnalyticDataByPageType({
       cache,
     });
     // Propagate data.errors check
-    return data.product;
+    // 'as any' is required for TS to work here, it seems. It's a limitation of TS itself
+    return data.product as any;
   }
-  return {};
+  return {} as any;
 }
 
 // Queries supplied by developer
