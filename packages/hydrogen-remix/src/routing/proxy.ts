@@ -6,24 +6,12 @@ export async function proxyLiquidRoute(
   const clientIP = request.headers.get('X-Shopify-Client-IP');
   const clientIPSig = request.headers.get('X-Shopify-Client-IP-Sig');
 
-  const headers = new Headers();
-  const host = `${storefrontDomain}.myshopify.com`;
-
   // @todo - filter out google bot user agents when proxying
 
-  const headersToFilterOut = ['connection'];
+  const newHost = `${storefrontDomain}.myshopify.com`;
+  const host = new URL(request.url).host;
 
-  for (const [key, value] of request.headers.entries()) {
-    if (!headersToFilterOut.includes(key)) {
-      headers.append(
-        key,
-        swapHostname(value, {
-          hostname: new URL(request.url).host,
-          newHostname: host,
-        }),
-      );
-    }
-  }
+  const headers = swapHeaderHostname(request.headers, host, newHost);
 
   if (!clientIP || !clientIPSig) {
     console.warn(
@@ -32,20 +20,31 @@ export async function proxyLiquidRoute(
   }
 
   return fetch(
-    `https://${host}${
+    `https://${newHost}${
       destinationPath.startsWith('/') ? destinationPath : '/' + destinationPath
     }`,
     {headers},
   ).then((resp) => {
-    const headers = new Headers(resp.headers);
+    const headers = swapHeaderHostname(resp.headers, newHost, host);
     headers.delete('content-encoding');
     return new Response(resp.body, {headers});
   });
 }
 
-function swapHostname(
-  str: string,
-  {hostname, newHostname}: {hostname: string; newHostname: string},
+function swapHeaderHostname(
+  headers: Headers,
+  hostname: string,
+  newHostname: string,
 ) {
-  return str.replaceAll(hostname, newHostname);
+  const newHeaders = new Headers();
+
+  const headersToFilterOut = ['connection'];
+
+  for (const [key, value] of headers.entries()) {
+    if (!headersToFilterOut.includes(key)) {
+      newHeaders.append(key, value.replaceAll(hostname, newHostname));
+    }
+  }
+
+  return newHeaders;
 }
