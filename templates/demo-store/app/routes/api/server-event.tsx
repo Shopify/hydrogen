@@ -56,17 +56,17 @@ type PageToPayloadMap = {
 };
 
 // Function supplied by Hydrogen (hydrogen-remix or maybe even hydrogen-react)
-async function getAnalyticDataByPageType<T extends PageType>({
+async function getAnalyticDataByPageType<PageTypeGeneric extends PageType>({
   pageType,
   payload,
   storefront,
   queries,
 }: {
-  pageType: T;
-  payload: PageToPayloadMap[T];
+  pageType: PageTypeGeneric;
+  payload: PageToPayloadMap[PageTypeGeneric];
   storefront: LoaderArgs['context']['storefront'];
   queries: AnalyticsQueries;
-}): Promise<PageToPayloadMap[T]> {
+}): Promise<PageToPayloadMap[PageTypeGeneric]> {
   // Default cache time for analytics queries
   const cache = storefront.CacheLong();
 
