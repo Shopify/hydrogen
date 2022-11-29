@@ -4,13 +4,13 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@shopify/hydrogen-remix';
-import {useLoaderData, useMatches, Link} from '@remix-run/react';
+import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
   CollectionConnection,
-  MetafieldReferenceEdge,
   MetafieldReference,
   Filter,
+  Collection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import invariant from 'tiny-invariant';
@@ -87,8 +87,9 @@ export async function loader({
     });
   }
 
-  const {collection} = await storefront.query<{
+  const {collection, collections} = await storefront.query<{
     collection: CollectionType;
+    collections: CollectionConnection;
   }>(COLLECTION_QUERY, {
     variables: {
       handle: collectionHandle,
@@ -103,7 +104,9 @@ export async function loader({
     throw new Response('Not found', {status: 404});
   }
 
-  return json({collection, appliedFilters});
+  const collectionNodes = flattenConnection(collections);
+
+  return json({collection, appliedFilters, collections: collectionNodes});
 }
 
 export const meta: MetaFunction = ({
@@ -118,7 +121,8 @@ export const meta: MetaFunction = ({
 };
 
 export default function Collection() {
-  const {collection, appliedFilters} = useLoaderData<typeof loader>();
+  const {collection, collections, appliedFilters} =
+    useLoaderData<typeof loader>();
   const breadcrumbs =
     collection.metafield?.references &&
     flattenConnection<MetafieldReference>(collection.metafield.references)
@@ -144,6 +148,7 @@ export default function Collection() {
         <SortFilter
           filters={collection.products.filters as Filter[]}
           appliedFilters={appliedFilters}
+          collections={collections as Collection[]}
         >
           <ProductGrid
             key={collection.id}
@@ -226,6 +231,14 @@ const COLLECTION_QUERY = `#graphql
         pageInfo {
           hasNextPage
           endCursor
+        }
+      }
+    }
+    collections(first: 100) {
+      edges {
+        node {
+          title
+          handle
         }
       }
     }
