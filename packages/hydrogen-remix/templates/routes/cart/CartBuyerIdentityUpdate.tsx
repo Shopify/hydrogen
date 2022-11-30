@@ -1,6 +1,7 @@
-import React, {forwardRef, useCallback, useEffect, useId} from 'react';
+import React, {forwardRef, useCallback, useEffect, useId, useRef} from 'react';
 import {useFetcher, useFetchers, useLocation} from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
+import type {PartialDeep} from 'type-fest';
 import type {
   Cart,
   CartBuyerIdentityInput,
@@ -13,21 +14,25 @@ import {
   json,
 } from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
-import {usePrefixPathWithLocale, withoutFalsyProps} from '~/lib/utils';
-import {cartCreate} from './LinesAdd';
+import {
+  isLocalPath,
+  usePrefixPathWithLocale,
+  withoutFalsyProps,
+} from '~/lib/utils';
+import {cartCreate} from './CartLinesAdd';
 
 interface BuyerIdentityUpdateProps {
   buyerIdentity?: CartBuyerIdentityInput;
   withCustomerAccessToken?: boolean | undefined;
   redirectTo?: string | undefined;
+  className?: string;
   children: ({
     state,
-    error,
+    errors,
   }: {
     state: 'idle' | 'submitting' | 'loading';
-    error: string;
+    errors: PartialDeep<UserError>[];
   }) => React.ReactNode;
-  className?: string;
   onSuccess?: (event: BuyerIdentityUpdateEvent) => void;
 }
 
@@ -42,7 +47,7 @@ interface BuyerIdentityUpdateEvent {
   payload: BuyerIdentityUpdateEventPayload;
 }
 
-const ACTION_PATH = `/cart/BuyerIdentityUpdate`;
+const ACTION_PATH = `/cart/CartBuyerIdentityUpdate`;
 
 /**
  * action that handles the cart buyer identity update mutation
@@ -82,7 +87,7 @@ async function action({request, context}: ActionArgs) {
 
   // if we have an existing cart, we update the identity,
   // else we create a new cart with the passed identity
-  const {cart, errors} = cartId
+  const {cart, errors: graphqlErrors} = cartId
     ? await cartBuyerIdentityUpdate({
         cartId,
         buyerIdentity,
@@ -93,32 +98,33 @@ async function action({request, context}: ActionArgs) {
         context,
       });
 
-  if (errors?.length) {
-    const errorMessage = errors.map(({message}) => message).join('\n');
-    return json({error: errorMessage});
+  if (graphqlErrors?.length) {
+    return json({errors: graphqlErrors});
   }
 
   session.set('cartId', cart.id);
   headers.set('Set-Cookie', await session.commit());
 
   // if no js, we essentially reload to avoid being routed to the actions route
-  if (formData.get('redirectTo')) {
-    return redirect(String(formData.get('redirectTo')), {headers});
+  // or if user passes redirectTo we use that
+  const redirectTo = formData.get('redirectTo') ?? null;
+  if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
+    return redirect(redirectTo, {headers});
   }
 
-  const {event, error} = instrumentEvent({
+  const {event, errors} = instrumentEvent({
     addingBuyerIdentity: buyerIdentity,
     updatedBuyerIdentity: cart.buyerIdentity,
   });
 
-  return json({event, error}, {headers});
+  return json({event, errors}, {headers});
 }
 
 /**
  * Helper function to instrument buyer_identity_update | buyer_identity_update_error events
  * @param prevBuyerIdentity the applied discounts before the update mutation
  * @param updatedBuyerIdentity the applied discounts after the update mutation
- * @returns {event, error}
+ * @returns {event, errors}
  */
 function instrumentEvent({
   addingBuyerIdentity,
@@ -127,7 +133,7 @@ function instrumentEvent({
   addingBuyerIdentity: CartBuyerIdentityInput;
   updatedBuyerIdentity: Cart['buyerIdentity'];
 }): {
-  error: string | null;
+  errors: UserError[] | null;
   event: BuyerIdentityUpdateEvent;
 } {
   const event: BuyerIdentityUpdateEvent = {
@@ -140,9 +146,9 @@ function instrumentEvent({
   };
 
   // we are not diffing buyerIdentity updates
-  const error = null;
+  const errors = null;
 
-  return {event, error};
+  return {event, errors};
 }
 
 const UPDATE_CART_BUYER_COUNTRY = `#graphql
@@ -171,10 +177,10 @@ const UPDATE_CART_BUYER_COUNTRY = `#graphql
 
 /**
  * Mutation to update a cart buyerIdentity
- * @see: https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
  * @param cartId  Cart['id']
  * @param buyerIdentity CartBuyerIdentityInput
  * @returns {cart: Cart; errors: UserError[]}
+ * @see API https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
  */
 async function cartBuyerIdentityUpdate({
   cartId,
@@ -211,7 +217,7 @@ async function cartBuyerIdentityUpdate({
  * @param redirectTo? (optional) url to redirect to after the form is submitted. Defaults to the current path.
  * @param onSuccess? a callback that gets executed after a successful form submit
  */
-const BuyerIdentityUpdateForm = forwardRef<
+const CartBuyerIdentityUpdateForm = forwardRef<
   HTMLFormElement,
   BuyerIdentityUpdateProps
 >(
@@ -227,24 +233,26 @@ const BuyerIdentityUpdateForm = forwardRef<
     ref,
   ) => {
     const buyerIdentityInProps = typeof buyerIdentity !== 'undefined';
-    const redirectToInProps = typeof redirectTo !== 'undefined';
+    const redirectToInProps = typeof redirectTo === 'string';
     const formId = useId();
+    const lastEventId = useRef<string | undefined>();
     const isHydrated = useIsHydrated();
     const fetcher = useFetcher();
-    const {pathname, search} = useLocation();
-    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
-
     const eventId = fetcher.data?.event?.id;
     const event = fetcher.data?.event;
-    const error = fetcher.data?.error;
+    const errors = fetcher.data?.errors;
+    const {pathname, search} = useLocation();
+    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
+    const localizedCurrentPath = usePrefixPathWithLocale(
+      `${pathname}${search}`,
+    );
 
-    // Adding onSuccess or event causes the event to fire multiple times
-    // despite no change
     useEffect(() => {
       if (!eventId) return;
+      if (eventId === lastEventId.current) return;
       onSuccess?.(event);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [eventId]);
+      lastEventId.current = eventId;
+    }, [eventId, event, onSuccess]);
 
     return (
       <fetcher.Form
@@ -254,16 +262,13 @@ const BuyerIdentityUpdateForm = forwardRef<
         ref={ref}
         className={className}
       >
-        {/* used to trigger a redirect back to the same url when JS is disabled */}
         {redirectToInProps ? (
           <input type="hidden" name="redirectTo" defaultValue={redirectTo} />
         ) : isHydrated ? null : (
           <input
             type="hidden"
             name="redirectTo"
-            defaultValue={
-              redirectToInProps ? redirectTo : `${pathname}${search}`
-            }
+            defaultValue={redirectToInProps ? redirectTo : localizedCurrentPath}
           />
         )}
         {typeof withCustomerAccessToken !== 'undefined' && (
@@ -276,14 +281,13 @@ const BuyerIdentityUpdateForm = forwardRef<
         {buyerIdentityInProps &&
           Object.entries(buyerIdentity).map(([key, value], i) => (
             <input
-              // eslint-disable-next-line react/no-array-index-key
               key={`${key}-${i}`}
               type="hidden"
               name={key}
               defaultValue={`${value}`}
             />
           ))}
-        {children({state: fetcher.state, error})}
+        {children({state: fetcher.state, errors})}
       </fetcher.Form>
     );
   },
@@ -304,15 +308,16 @@ function useBuyerIdentityUpdateFetcher() {
 /*
   Programmatically update a cart's buyerIdentity
   @see: https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
-  returns { buyerIdentityUpdate, buyerIdentityUpdateFetcher }
+  returns { cartBuyerIdentityUpdate, fetcher }
 */
-function useBuyerIdentityUpdate(
+function useCartBuyerIdentityUpdate(
   onSuccess: (event: BuyerIdentityUpdateEvent) => void = () => {},
 ) {
   const fetcher = useFetcher();
+  const lastEventId = useRef<string | undefined>();
   const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
-  const buyerIdentityUpdate = useCallback(
+  const cartBuyerIdentityUpdate = useCallback(
     ({
       buyerIdentity,
       withCustomerAccessToken,
@@ -344,21 +349,19 @@ function useBuyerIdentityUpdate(
 
   useEffect(() => {
     if (!fetcher?.data?.event) return;
+    if (lastEventId.current === fetcher?.data?.event?.id) return;
     onSuccess?.(fetcher.data.event);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetcher?.data?.event]);
+    lastEventId.current = fetcher.data.event.id;
+  }, [fetcher?.data?.event, onSuccess]);
 
-  return {
-    buyerIdentityUpdate,
-    buyerIdentityUpdateFetcher: fetcher,
-  };
+  return {cartBuyerIdentityUpdate, fetcher};
 }
 
 /**
  * Utility hook to retrieve the buyerIdentity currently being updated
  * @returns {buyerIdentityUpdating}
  */
-function useBuyerIdentityUpdating() {
+function useCartBuyerIdentityUpdating() {
   const buyerIdentityUpdateFetcher = useBuyerIdentityUpdateFetcher();
   let buyerIdentityUpdating: CartBuyerIdentityInput | null = null;
   const formData = buyerIdentityUpdateFetcher?.submission?.formData;
@@ -367,8 +370,8 @@ function useBuyerIdentityUpdating() {
   if (formData) {
     buyerIdentityUpdating = withoutFalsyProps({
       countryCode: formData.get('countryCode'),
-      email: formData.get('email'),
       phone: formData.get('phone'),
+      email: formData.get('email'),
       deliveryAddressPreferences: formData
         .getAll('deliveryAddressPreferences')
         .map((address) =>
@@ -382,8 +385,8 @@ function useBuyerIdentityUpdating() {
 
 export {
   action,
-  BuyerIdentityUpdateForm,
   cartBuyerIdentityUpdate,
-  useBuyerIdentityUpdate,
-  useBuyerIdentityUpdating,
+  CartBuyerIdentityUpdateForm,
+  useCartBuyerIdentityUpdate,
+  useCartBuyerIdentityUpdating,
 };
