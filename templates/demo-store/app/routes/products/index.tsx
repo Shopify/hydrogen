@@ -114,8 +114,10 @@ const ALL_PRODUCTS_QUERY = `#graphql
     $startCursor: String
     $endCursor: String
     $sortKey: ProductSortKeys
+    $query: String
+    $reverse: Boolean
   ) @inContext(country: $country, language: $language) {
-    products(first: $first, last: $last, before: $startCursor, after: $endCursor, sortKey: $sortKey) {
+    products(first: $first, last: $last, before: $startCursor, after: $endCursor, sortKey: $sortKey, query: $query, reverse: $reverse) {
       nodes {
         ...ProductCard
       }
