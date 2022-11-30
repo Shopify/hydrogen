@@ -13,13 +13,11 @@ See [H2 Multiple Storefronts & Routing Problems](https://docs.google.com/documen
 Hydrogen comes with built-in routes automatically available. These are defined with a custom route function within `remix.config.js`:
 
 ```ts
-import {hydrogenRoutes} from '@shopify/hydrogen';
+import {hydrogenRoutes} from '@shopify/hydrogen/build';
 
 module.exports = {
-  routes: async (defineRoutes) => {
-    return defineRoutes((route) => {
-      hydrogenRoutes(route, {});
-    });
+  async routes(defineRoutes) {
+    return await hydrogenRoutes(defineRoutes, {});
   },
 };
 ```
@@ -27,31 +25,9 @@ module.exports = {
 Some of the built in routes are specific to the framework, and include:
 
 1. `/__health` - used by Oxygen to verify the health of the application
-1. `/routeManifest.json` - Manifest describing all available routes in the Hydrogen app. See below for more details.
+1. `/route-manifest.json` - Manifest describing all available routes in the Hydrogen app. See below for more details.
 1. `/graphiql` - Dev-mode UI for querying GraphQL
 1. `/admin` - A redirect to the admin for the shop
-
-Other routes are specific to Shopify, and include:
-
-1. `/discounts/DISCOUNT?redirect-to=/redirect/path/name` - Apply discount by a link:
-1. `/cart/:variantID:quantity,anotherVariantId:quantity` - Checkout link
-
-Only the Shopify specific routes can be disabled with an option:
-
-```ts
-import {hydrogenRoutes} from '@shopify/hydrogen';
-
-module.exports = {
-  routes: async (defineRoutes) => {
-    return defineRoutes((route) => {
-      hydrogenRoutes(route, {
-        includeDiscounts: false,
-        includeCart: false,
-      });
-    });
-  },
-};
-```
 
 ### Packaging Built-in Routes
 
@@ -86,19 +62,25 @@ The `.hydrogen` directory is generated _each_ time the app builds. The files wit
 
 The route override when the path exactly matches. Alternatively the route could override based on route name (see below).
 
+#### Built-in full-stack components
+
+Some built-in routes, like the cart, include pre-built components that interact with the routes. These components are imported from `.hydrogen`:
+
+```ts
+import {BuyerIdentityUpdateForm} from '.hydrogen';
+```
+
 ## Backlink Redirects
 
 Merchants migrating onto Hydrogen may not be aware of all the existing routes within the Online Store. We make it easy to automatically redirect online store routes to new custom routes within Hydrogen. This can also be disabled by an option:
 
 ```ts
-import {hydrogenRoutes} from '@shopify/hydrogen';
+import {hydrogenRoutes} from '@shopify/hydrogen/build';
 
 module.exports = {
-  routes: async (defineRoutes) => {
-    return defineRoutes((route) => {
-      hydrogenRoutes(route, {
-        onlineStoreRedirects: true,
-      });
+  async routes(defineRoutes) {
+    return await hydrogenRoutes(defineRoutes, {
+      onlineStoreRedirects: true,
     });
   },
 };
@@ -106,38 +88,43 @@ module.exports = {
 
 ## Custom redirects
 
-The merchant may define custom redirects within the admin. Optionally Hydrogen can automatically route those custom redirects:
+The merchant may define custom redirects within the admin. Optionally Hydrogen can automatically route those custom redirects with the `notFoundMaybeRedirect` function. Call this function whenever you might need to 404. If a redirect exists for the URL, the function will return a 302, else it returns a normal 404.
 
 ```ts
-import {hydrogenRoutes} from '@shopify/hydrogen';
+import {notFoundMaybeRedirect} from '@shopify/hydrogen';
 
-module.exports = {
-  routes: async (defineRoutes) => {
-    return defineRoutes((route) => {
-      hydrogenRoutes(route, {
-        customRedirects: true,
-      });
-    });
-  },
-};
+export async function loader({params, request, context}: LoaderArgs) {
+  const {productHandle} = params;
+
+  const {product} = await context.storefront.query(PRODUCT_QUERY, {
+    variables: {
+      handle: productHandle,
+    },
+  });
+
+  if (!product) {
+    throw await notFoundMaybeRedirect(request, context);
+  }
+}
 ```
+
+The `notFoundMaybeRedirect` function also automatically handles a `redirect_to` query parameter. For example, given the URL: `https://wwww.hydrogen.shop/products/oldsnowboard?redirect_to=/products/hydrogen`, the main URL doesn't exist, but instead of returning a 404, Hydrogen will return a 302 to `/products/hydrogen`.
 
 ## Online-store Proxying
 
-It is easy to migrate from the online store to a Hydrogen custom storefront. Hydrogen can host some routes while proxying other routes to the online store. All URLs that match the provided pattern(s) are proxied to the online store:
+It is easy to migrate from the online store to a Hydrogen custom storefront. Hydrogen can host some routes while proxying other routes to the online store. _Proxying is only supported on Oxygen, because proxying relies on privileged signed headers._ Configuring proxying is done within the oxygen.ts:
 
 ```ts
-import {hydrogenRoutes} from '@shopify/hydrogen';
+import {createRequestHandler} from '@shopify/hydrogen-remix';
 
-module.exports = {
-  routes: async (defineRoutes) => {
-    return defineRoutes((route) => {
-      hydrogenRoutes(route, {
-        proxy: [.+/products\/.+/],
-      });
-    });
-  },
-};
+const requestHandler = createRequestHandler({
+  // Before Hydrogen renders each request, it is tested if it should be proxied.
+  // Return a string for the proxy destination. Return null or undefined to not proxy.
+  // This example would proxy https://hydrogen.shop/proxy -> https://hydrogen-preview.myshopify.com/pages/about
+  shouldProxyOnlineStore: (request: Request) =>
+    new URL(request.url).pathname === '/proxy' ? '/pages/about' : null,
+});
+
 ```
 
 ## Named Routes
@@ -194,7 +181,7 @@ Notes:
 
 ## Route manifest
 
-A built-in resource route is available that contains a manifest of all routes defined within the Hydrogen app. All routes of a given resource type are within the `resourceRoutes` property. All other routes are defined within the `customRoutes` property:
+A built-in resource route is available at `/route-manifest.json` and contains a manifest of all routes defined within the Hydrogen app. All routes of a given resource type are within the `resourceRoutes` property. All other routes are defined within the `customRoutes` property:
 
 ```ts
 {
