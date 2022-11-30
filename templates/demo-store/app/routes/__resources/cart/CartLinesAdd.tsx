@@ -158,7 +158,7 @@ async function action({request, context}: ActionArgs) {
 
 /**
  * Helper function to handle linesAdd action responses
- * @returns action response
+ * @returns json {errors, event}
  */
 function linesAddResponse({
   prevCart,
@@ -190,7 +190,7 @@ function linesAddResponse({
  * @param addingLines - line inputs being added
  * @param prevLines - lines before the mutation
  * @param currentLines - lines after the mutation
- * @returns {event, error}
+ * @returns json {event, error}
  */
 function instrumentEvent({
   addingLines,
@@ -227,12 +227,12 @@ function instrumentEvent({
 /**
  * Diff prev lines with current lines to determine what was added
  * This is a temporary workaround for analytics until we land
- * @see: https://github.com/Shopify/storefront-api-feedback/discussions/151
  * @todo: remove when storefront api releases this feature
  * @param addingLines - line inputs being added
  * @param prevLines - lines before the mutation
  * @param currentLines - lines after the mutation
- * @returns {linesAdded, linesNotAdded}
+ * @returns object {linesAdded, linesNotAdded}
+ * @see https://github.com/Shopify/storefront-api-feedback/discussions/151
  */
 function diffLines({addingLines, prevLines, currentLines}: DiffLinesProps) {
   const prev: DiffingLine[] =
@@ -347,7 +347,7 @@ const ADD_LINES_MUTATION = `#graphql
  * Fetch the current cart lines
  * @param cartId
  * @see https://shopify.dev/api/storefront/2022-01/queries/cart
- * @returns cart query result
+ * @returns object cart
  */
 async function getCartLines({
   cartId,
@@ -374,7 +374,7 @@ async function getCartLines({
  * Create a cart with line(s) mutation
  * @param input CartInput https://shopify.dev/api/storefront/2022-01/input-objects/CartInput
  * @see https://shopify.dev/api/storefront/2022-01/mutations/cartcreate
- * @returns mutated cart
+ * @returns result {cart, errors}
  */
 async function cartCreate({
   input,
@@ -406,7 +406,7 @@ async function cartCreate({
  * @param cartId
  * @param lines [CartLineInput!]! https://shopify.dev/api/storefront/2022-01/input-objects/CartLineInput
  * @see https://shopify.dev/api/storefront/2022-01/mutations/cartLinesAdd
- * @returns mutated cart
+ * @returns result {cart, errors}
  */
 async function cartLinesAdd({
   cartId,
@@ -553,7 +553,7 @@ const CartLinesAddForm = forwardRef<HTMLFormElement, CartLinesAddFormProps>(
 /**
  * A hook version of CartLinesAddForm to add cart line(s) programmatically
  * @param onSuccess callback function that executes on success
- * @returns { cartLinesAdd, fetcher }
+ * @returns object { cartLinesAdd, fetcher }
  */
 function useCartLinesAdd(
   onSuccess: (event: LinesAddEvent) => void = () => {},
@@ -615,7 +615,7 @@ function useCartLinesAdd(
 
 /**
  * Utility hook to get an active lines adding fetcher
- * @returns fetcher
+ * @returns result fetcher or undefined
  */
 function useCartLinesAddingFetcher() {
   const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
@@ -629,7 +629,7 @@ function useCartLinesAddingFetcher() {
 /**
  * A utility hook to get the current lines being added
  * @param onSuccess callback function that executes on success
- * @returns { linesAdding, fetcher }
+ * @returns object { linesAdding, fetcher }
  * @example
  * Toggle a cart drawer when adding to cart
  * ```
@@ -649,6 +649,7 @@ function useCartLinesAddingFetcher() {
  *     </div>
  *   );
  * }
+ * ```
  */
 function useCartLinesAdding() {
   const fetcher = useCartLinesAddingFetcher();
@@ -670,7 +671,7 @@ function useCartLinesAdding() {
 /**
  * A utility hook to get the optimistic lines being added
  * @param lines CartLine[] | undefined
- * @returns {optimisticLines: [], optimisticLinesNew: []}
+ * @returns object {optimisticLines: [], optimisticLinesNew: []}
  */
 function useOptimisticCartLinesAdding(
   lines?: PartialDeep<CartLine, {recurseIntoArrays: true}>[] | unknown,

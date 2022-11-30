@@ -177,10 +177,10 @@ const UPDATE_CART_BUYER_COUNTRY = `#graphql
 
 /**
  * Mutation to update a cart buyerIdentity
- * @see: https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
  * @param cartId  Cart['id']
  * @param buyerIdentity CartBuyerIdentityInput
  * @returns {cart: Cart; errors: UserError[]}
+ * @see API https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
  */
 async function cartBuyerIdentityUpdate({
   cartId,

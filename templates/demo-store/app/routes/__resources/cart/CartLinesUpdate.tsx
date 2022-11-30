@@ -223,7 +223,7 @@ async function cartLinesUpdate({
  * @param lines [CartLineUpdateInput!]! an array of cart lines to update
  * @param children render submit button
  * @param onSuccess? callback that runs after each form submission
- * @see: https://shopify.dev/api/storefront/2022-10/mutations/cartLinesUpdate
+ * @see https://shopify.dev/api/storefront/2022-10/mutations/cartLinesUpdate
  */
 const CartLinesUpdateForm = forwardRef(
   (
