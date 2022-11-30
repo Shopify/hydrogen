@@ -77,6 +77,7 @@ export async function loader({
     analytics: {
       pageType: 'product',
       handle: productHandle,
+      selectedOptions,
     },
   });
 }

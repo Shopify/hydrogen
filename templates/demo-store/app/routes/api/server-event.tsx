@@ -1,66 +1,82 @@
-import {type LoaderArgs, json} from '@shopify/hydrogen-remix';
-import {flattenConnection} from '@shopify/hydrogen-react';
-import {
-  Product,
-  ProductConnection,
-  ProductVariant,
-  SelectedOptionInput,
-} from '@shopify/hydrogen-react/storefront-api-types';
+import {type ActionArgs} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
+import {sentToShopifyAnalytics} from '~/lib/analytics/shopifyAnalytics';
+import {getAnalyticDataByPageType} from '~/lib/analytics';
 
-export async function loader({request, context: {storefront}}: LoaderArgs) {
-  const url = new URL(request.url);
+export async function action({request, context}: ActionArgs) {
+  const {session} = context;
+  const [cartId, customerAccessToken] = await Promise.all([
+    session.get('cartId'),
+    session.get('customerAccessToken'),
+  ]);
+  const requestData = await request.json();
 
-  return json({
-    ga: ['event', 'page_view'],
+  // console.log('server-event', requestData);
+
+  // payload
+  const analyticsData = await getAnalyticDataByPageType({
+    payload: requestData.payload,
+    storefront: context.storefront,
+    queries: ANALYTICS_QUERIES,
   });
+
+  sentToShopifyAnalytics({
+    request,
+    requestData,
+    analyticsData: formatAnalyticsData(analyticsData),
+  });
+
+  return new Response(
+    JSON.stringify({
+      ga: ['event', 'page_view'],
+    }),
+    {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    },
+  );
 }
 
-// Types supplied by Hydrogen (hydrogen-remix or maybe even hydrogen-react)
-type PageType = 'home' | 'collection' | 'product';
-type AnalyticsQueries = Record<PageType, string>;
+function formatAnalyticsData(data: any) {
+  const formattedData: any = {};
 
-// Type for expected variables when making a product query
-type ProductPayload = {
-  handle: string;
-  selectedOptions?: SelectedOptionInput[];
-  [key: string]: unknown;
-};
-
-// Function supplied by Hydrogen (hydrogen-remix or maybe even hydrogen-react)
-async function getAnalyticDataByPageType({
-  pageType,
-  payload,
-  storefront,
-  queries,
-}: {
-  pageType: string;
-  payload: unknown;
-  storefront: LoaderArgs['context']['storefront'];
-  queries: AnalyticsQueries;
-}) {
-  // Default cache time for analytics queries
-  const cache = storefront.CacheLong();
-
-  if (pageType === 'product') {
-    // Do checks for required payload vars
-    const {handle, selectedOptions} = payload as ProductPayload;
-    const data = await storefront.query<{
-      product: Product & {selectedVariant?: ProductVariant};
-    }>(queries[pageType], {
-      variables: {
-        handle,
-        selectedOptions,
-      },
-      cache,
-    });
-    // Propagate data.errors check
-    return data.product;
+  if (data?.shop?.id) {
+    formattedData.shopId = data.shop.id;
   }
-  return {};
+
+  if (data?.localization?.country?.currency?.isoCode) {
+    formattedData.currency = data.localization.country.currency.isoCode;
+  }
+
+  if (data?.product) {
+    const {variants, selectedVariant, ...restOfData} = data.product;
+    formattedData.product = {
+      ...restOfData,
+      variant: selectedVariant || variants.nodes[0],
+    };
+  }
+
+  return formattedData;
 }
 
 // Queries supplied by developer
+const SHOP_QUERY = `#graphql
+  query shopAnalytics($country: CountryCode = ZZ)
+  @inContext(country: $country) {
+    shop {
+      id
+    }
+    localization {
+      country {
+        currency {
+          isoCode
+        }
+      }
+    }
+  }
+`;
+
 const PRODUCT_QUERY = `#graphql
   fragment ProductVariantFragment on ProductVariant {
     id
@@ -84,7 +100,6 @@ const PRODUCT_QUERY = `#graphql
     product(handle: $handle) {
       id
       title
-      handle
       selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
         ...ProductVariantFragment
       }
@@ -98,10 +113,6 @@ const PRODUCT_QUERY = `#graphql
 `;
 
 const ANALYTICS_QUERIES = {
+  shop: SHOP_QUERY,
   product: PRODUCT_QUERY,
 };
-
-export default function ServerAnalyticsRoute() {
-  // We can also handle <noscript> analytics here
-  return null;
-}
