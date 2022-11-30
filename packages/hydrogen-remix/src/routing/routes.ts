@@ -54,6 +54,8 @@ async function buildLangRoutes() {
   const routesDir = path.resolve(appDir, 'routes');
   const langDir = path.resolve(routesDir, '$lang');
 
+  fs.rmdirSync(langDir, {recursive: true});
+
   const files = await readDir(routesDir, [
     (file) => {
       return !!file.replace(/\\/g, '/').match(/routes\/\$lang\//);
@@ -97,6 +99,7 @@ async function buildLangRoutes() {
  * https://github.com/remix-run/remix/blob/09296128ca2f2d5e8932c631e777fbe8baaa192d/packages/remix-dev/config/routesConvention.ts#L116
  */
 function createRoutePath(partialRouteId: string): string | undefined {
+  // remove file extension
   partialRouteId = partialRouteId.substring(0, partialRouteId.lastIndexOf('.'));
   let escapeStart = '[';
   let escapeEnd = ']';
