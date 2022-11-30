@@ -13,6 +13,7 @@ import {
   useFetcher,
   useFetchers,
   useLocation,
+  useMatches,
 } from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
@@ -29,6 +30,7 @@ import type {
   CartLineInput,
   CartUserError,
   UserError,
+  CartBuyerIdentityInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import React from 'react';
 import {isLocalPath, usePrefixPathWithLocale} from '~/lib/utils';
@@ -111,10 +113,14 @@ async function action({request, context}: ActionArgs) {
     : ([] as CartLineInput[]);
   invariant(lines.length, 'No lines to add');
 
+  const countryCode = formData.get('countryCode')
+    ? (formData.get('countryCode') as CartBuyerIdentityInput['countryCode'])
+    : null;
+
   // Flow A — no previous cart, create and add line(s)
   if (!cartId) {
     const {cart, errors: graphqlErrors} = await cartCreate({
-      input: {lines},
+      input: countryCode ? {lines, buyerIdentity: {countryCode}} : {lines},
       context,
     });
 
@@ -491,6 +497,8 @@ async function cartLinesAdd({
 const CartLinesAddForm = forwardRef<HTMLFormElement, CartLinesAddFormProps>(
   ({children, lines = [], optimisticLines = [], onSuccess, className}, ref) => {
     const formId = useId();
+    const [root] = useMatches();
+    const selectedLocale = root?.data?.selectedLocale;
     const lastEventId = useRef<string | undefined>();
     const {pathname, search} = useLocation();
     const fetcher = useFetcher();
@@ -498,7 +506,6 @@ const CartLinesAddForm = forwardRef<HTMLFormElement, CartLinesAddFormProps>(
     const errors = fetcher?.data?.errors;
     const event = fetcher?.data?.event;
     const eventId = fetcher?.data?.event?.id;
-    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
     const localizedCurrentPath = usePrefixPathWithLocale(
       `${pathname}${search}`,
     );
@@ -518,10 +525,17 @@ const CartLinesAddForm = forwardRef<HTMLFormElement, CartLinesAddFormProps>(
       <fetcher.Form
         id={formId}
         method="post"
-        action={localizedActionPath}
+        action={ACTION_PATH}
         className={className}
         ref={ref}
       >
+        {selectedLocale?.country && (
+          <input
+            type="hidden"
+            name="countryCode"
+            defaultValue={selectedLocale.country}
+          />
+        )}
         {Array.isArray(lines) && (
           <input
             type="hidden"
@@ -560,7 +574,6 @@ function useCartLinesAdd(
 ): UseCartLinesAddReturnType {
   const fetcher = useFetcher();
   const lastEventId = useRef<string | undefined>();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
   /**
    * Add line(s) programmatically
@@ -596,11 +609,11 @@ function useCartLinesAdd(
 
       fetcher.submit(form, {
         method: 'post',
-        action: localizedActionPath,
+        action: ACTION_PATH,
         replace: false,
       });
     },
-    [fetcher, localizedActionPath],
+    [fetcher, ACTION_PATH],
   );
 
   useEffect(() => {
@@ -618,11 +631,9 @@ function useCartLinesAdd(
  * @returns result fetcher or undefined
  */
 function useCartLinesAddingFetcher() {
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
-
   const fetchers = useFetchers();
   return fetchers.find(
-    (fetcher) => fetcher?.submission?.action === localizedActionPath,
+    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
   );
 }
 

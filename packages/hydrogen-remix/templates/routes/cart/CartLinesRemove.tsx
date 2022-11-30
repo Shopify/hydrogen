@@ -279,7 +279,6 @@ const CartLinesRemoveForm = forwardRef(
     const event = fetcher.data?.event;
     const eventId = event?.id;
     const errors = fetcher.data?.errors;
-    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
     const localizedCurrentPath = usePrefixPathWithLocale(
       `${pathname}${search}`,
     );
@@ -295,7 +294,7 @@ const CartLinesRemoveForm = forwardRef(
       <fetcher.Form
         id={formId}
         method="post"
-        action={localizedActionPath}
+        action={ACTION_PATH}
         className={className}
         ref={ref}
       >
@@ -331,7 +330,6 @@ const CartLinesRemoveForm = forwardRef(
 function useCartLinesRemove(
   onSuccess: (event: LinesRemoveEvent) => void = () => {},
 ) {
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
   const lastEventId = useRef<string | undefined>();
   const fetcher = useFetcher();
 
@@ -363,11 +361,11 @@ function useCartLinesRemove(
       Array.isArray(lineIds) && form.set('lineIds', JSON.stringify(lineIds));
       fetcher.submit(form, {
         method: 'post',
-        action: localizedActionPath,
+        action: ACTION_PATH,
         replace: false,
       });
     },
-    [fetcher, localizedActionPath],
+    [fetcher, ACTION_PATH],
   );
 
   useEffect(() => {
@@ -386,9 +384,8 @@ function useCartLinesRemove(
  */
 function useCartLinesRemoveFetcher() {
   const fetchers = useFetchers();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
   const fetcher = fetchers.find(
-    (fetcher) => fetcher?.submission?.action === localizedActionPath,
+    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
   );
   return fetcher;
 }
