@@ -2,4 +2,3 @@ build
 node_modules
 bin
 *.d.ts
-app/routes/\$lang
