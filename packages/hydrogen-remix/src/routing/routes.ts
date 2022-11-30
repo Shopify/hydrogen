@@ -21,40 +21,30 @@ export async function hydrogenRoutes(
   const hydrogenRouteFiles = await readDir(hydrogenRoutesPath);
   return defineRoutes((route: any) => {
     for (const hydrogenRoute of hydrogenRouteFiles) {
-      const hydrogenRoutePath = path.relative(process.cwd(), hydrogenRoute);
+      const routeFilePath = path.relative(process.cwd(), hydrogenRoute);
 
-      const hydrogenRouteUrl = hydrogenRoutePath.substring(
-        hydrogenRoutePath.lastIndexOf('/'),
-        hydrogenRoutePath.lastIndexOf('.'),
+      const routeUrlPath = createRoutePath(
+        path.relative(hydrogenRoutesPath, routeFilePath),
       );
 
-      route(hydrogenRouteUrl, '../' + hydrogenRoutePath);
-
-      console.log(hydrogenRouteUrl, createRoutePath(hydrogenRouteUrl));
+      route(routeUrlPath, '../' + routeFilePath);
     }
   });
 }
 
 async function copyTemplates() {
-  const templates = await readDir(path.resolve(__dirname, '../../templates'));
-
+  const templateDirectory = path.resolve(__dirname, '../../templates');
+  const templates = await readDir(templateDirectory);
   const hydrogenDirectory = path.resolve(process.cwd(), '.hydrogen');
-  const hydrogenRoutesPath = path.resolve(process.cwd(), '.hydrogen/routes');
-
-  if (!fs.existsSync(hydrogenDirectory)) {
-    fs.mkdirSync(hydrogenDirectory);
-  }
-
-  if (!fs.existsSync(hydrogenRoutesPath)) {
-    fs.mkdirSync(hydrogenRoutesPath);
-  }
 
   for (const template of templates) {
     const destination = path.resolve(
       hydrogenDirectory,
-      path.basename(path.dirname(template)),
+      path.relative(templateDirectory, path.dirname(template)),
       path.basename(template),
     );
+
+    fs.mkdirSync(path.dirname(destination), {recursive: true});
     fs.copyFileSync(template, destination);
   }
 }
@@ -107,6 +97,7 @@ async function buildLangRoutes() {
  * https://github.com/remix-run/remix/blob/09296128ca2f2d5e8932c631e777fbe8baaa192d/packages/remix-dev/config/routesConvention.ts#L116
  */
 function createRoutePath(partialRouteId: string): string | undefined {
+  partialRouteId = partialRouteId.substring(0, partialRouteId.lastIndexOf('.'));
   let escapeStart = '[';
   let escapeEnd = ']';
   let result = '';
