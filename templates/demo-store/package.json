@@ -4,9 +4,9 @@
   "scripts": {
     "build": "npm run build:css && shopify hydrogen build --entry oxygen.ts",
     "build:css": "postcss styles --base styles --dir app/styles --env production",
-    "dev": "SESSION_SECRET=foobar concurrently -g -r npm:dev:css \"shopify hydrogen dev --entry oxygen.ts\"",
+    "dev": "concurrently -g -r npm:dev:css \"shopify hydrogen dev --entry oxygen.ts\"",
     "dev:css": "postcss styles --base styles --dir app/styles -w",
-    "preview": "npm run build && SESSION_SECRET=foobar shopify hydrogen preview",
+    "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "format": "prettier --write --ignore-unknown .",
     "typecheck": "tsc --noEmit"

@@ -94,6 +94,11 @@ export function createStorefrontClient(
     requestGroupId = generateUUID(),
   }: CreateStorefrontClientOptions = {},
 ) {
+  clientOptions.storeDomain = clientOptions.storeDomain.replace(
+    '.myshopify.com',
+    '',
+  );
+
   const {getPublicTokenHeaders, getPrivateTokenHeaders, getStorefrontApiUrl} =
     createStorefrontUtilities(clientOptions);
 
