@@ -9,21 +9,29 @@ import type {
   Collection,
   CollectionConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {Grid, Heading, PageHeader, Section, Link} from '~/components';
+import {
+  Grid,
+  Heading,
+  PageHeader,
+  Section,
+  Link,
+  Pagination,
+  getPaginationVariables,
+  Button,
+} from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
 
 const PAGINATION_SIZE = 8;
 
-export const loader = async ({context: {storefront}}: LoaderArgs) => {
+export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
+  const variables = getPaginationVariables(request, PAGINATION_SIZE);
   const {collections} = await storefront.query<{
     collections: CollectionConnection;
   }>(COLLECTIONS_QUERY, {
-    variables: {
-      pageBy: PAGINATION_SIZE,
-    },
+    variables,
   });
 
-  return json({collections: collections.nodes});
+  return json({collections});
 };
 
 export const handle = {
@@ -45,18 +53,77 @@ export default function Collections() {
     <>
       <PageHeader heading="Collections" />
       <Section>
-        <Grid
-          items={collections.length === 3 ? 3 : 2}
-          data-test="collection-grid"
-        >
-          {collections.map((collection, i) => (
-            <CollectionCard
-              collection={collection as Collection}
-              key={collection.id}
-              loading={getImageLoadingPriority(i, 2)}
-            />
-          ))}
-        </Grid>
+        <Pagination connection={collections}>
+          {({
+            endCursor,
+            hasNextPage,
+            hasPreviousPage,
+            nextPageUrl,
+            nodes,
+            prevPageUrl,
+            startCursor,
+            nextLinkRef,
+            isLoading,
+          }) => (
+            <>
+              {hasPreviousPage && (
+                <div className="flex items-center justify-center mt-6">
+                  <Button
+                    to={prevPageUrl}
+                    variant="secondary"
+                    width="full"
+                    prefetch="intent"
+                    disabled={!isLoading}
+                    state={{
+                      pageInfo: {
+                        endCursor,
+                        hasNextPage,
+                        startCursor,
+                      },
+                      nodes,
+                    }}
+                  >
+                    {isLoading ? 'Loading...' : 'Previous products'}
+                  </Button>
+                </div>
+              )}
+              <Grid
+                items={nodes.length === 3 ? 3 : 2}
+                data-test="collection-grid"
+              >
+                {nodes.map((collection, i) => (
+                  <CollectionCard
+                    collection={collection as Collection}
+                    key={collection.id}
+                    loading={getImageLoadingPriority(i, 2)}
+                  />
+                ))}
+              </Grid>
+              {hasNextPage && (
+                <div className="flex items-center justify-center mt-6">
+                  <Button
+                    ref={nextLinkRef}
+                    to={nextPageUrl}
+                    variant="secondary"
+                    width="full"
+                    prefetch="intent"
+                    disabled={!isLoading}
+                    state={{
+                      pageInfo: {
+                        endCursor,
+                        hasPreviousPage,
+                        startCursor,
+                      },
+                      nodes,
+                    }}
+                  >
+                    {isLoading ? 'Loading...' : 'Next products'}
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
+        </Pagination>
       </Section>
     </>
   );
@@ -94,9 +161,12 @@ const COLLECTIONS_QUERY = `#graphql
   query Collections(
     $country: CountryCode
     $language: LanguageCode
-    $pageBy: Int!
+    $first: Int
+    $last: Int
+    $startCursor: String
+    $endCursor: String
   ) @inContext(country: $country, language: $language) {
-    collections(first: $pageBy) {
+    collections(first: $first, last: $last, before: $startCursor, after: $endCursor) {
       nodes {
         id
         title
@@ -113,6 +183,12 @@ const COLLECTIONS_QUERY = `#graphql
           height
           altText
         }
+      }
+      pageInfo {
+        hasPreviousPage
+        hasNextPage
+        startCursor
+        endCursor
       }
     }
   }

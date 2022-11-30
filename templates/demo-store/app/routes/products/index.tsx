@@ -6,38 +6,22 @@ import {
 import {useLoaderData} from '@remix-run/react';
 import type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {PageHeader, Section, ProductCard, Grid, Pagination} from '~/components';
+import {
+  PageHeader,
+  Section,
+  ProductCard,
+  Grid,
+  Pagination,
+  getPaginationVariables,
+  Button,
+} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getImageLoadingPriority} from '~/lib/const';
-const PAGE_BY = 4;
 
-function getPaginationVariables(
-  searchParams = new URLSearchParams(),
-  pageBy: number,
-) {
-  const cursor = searchParams.get('cursor') ?? undefined;
-  const direction =
-    searchParams.get('direction') === 'previous' ? 'previous' : 'next';
-  const isNext = direction === 'next';
-
-  const prevPage = {
-    last: pageBy,
-    startCursor: cursor ?? null,
-  };
-
-  const nextPage = {
-    first: pageBy,
-    endCursor: cursor ?? null,
-  };
-
-  const variables = isNext ? nextPage : prevPage;
-
-  return variables;
-}
+const PAGE_BY = 8;
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
-  const searchParams = new URLSearchParams(new URL(request.url).search);
-  const variables = getPaginationVariables(searchParams, PAGE_BY);
+  const variables = getPaginationVariables(request, PAGE_BY);
 
   const data = await storefront.query<{
     products: ProductConnection;
@@ -71,7 +55,17 @@ export default function AllProducts() {
       <PageHeader heading="All Products" variant="allCollections" />
       <Section>
         <Pagination connection={products}>
-          {({nodes}) => {
+          {({
+            endCursor,
+            hasNextPage,
+            hasPreviousPage,
+            nextPageUrl,
+            nodes,
+            prevPageUrl,
+            startCursor,
+            nextLinkRef,
+            isLoading,
+          }) => {
             const itemsMarkup = nodes.map((product, i) => (
               <ProductCard
                 key={product.id}
@@ -80,7 +74,54 @@ export default function AllProducts() {
               />
             ));
 
-            return <Grid data-test="product-grid">{itemsMarkup}</Grid>;
+            return (
+              <>
+                {hasPreviousPage && (
+                  <div className="flex items-center justify-center mt-6">
+                    <Button
+                      to={prevPageUrl}
+                      variant="secondary"
+                      prefetch="intent"
+                      width="full"
+                      disabled={!isLoading}
+                      state={{
+                        pageInfo: {
+                          endCursor,
+                          hasNextPage,
+                          startCursor,
+                        },
+                        nodes,
+                      }}
+                    >
+                      {isLoading ? 'Loading...' : 'Previous'}
+                    </Button>
+                  </div>
+                )}
+                <Grid data-test="product-grid">{itemsMarkup}</Grid>
+                {hasNextPage && (
+                  <div className="flex items-center justify-center mt-6">
+                    <Button
+                      ref={nextLinkRef}
+                      to={nextPageUrl}
+                      variant="secondary"
+                      prefetch="intent"
+                      width="full"
+                      disabled={!isLoading}
+                      state={{
+                        pageInfo: {
+                          endCursor,
+                          hasPreviousPage,
+                          startCursor,
+                        },
+                        nodes,
+                      }}
+                    >
+                      {isLoading ? 'Loading...' : 'Next'}
+                    </Button>
+                  </div>
+                )}
+              </>
+            );
           }}
         </Pagination>
       </Section>
