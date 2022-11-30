@@ -4,6 +4,8 @@ import {
   type SerializeFrom,
   type LoaderArgs,
   type LinksFunction,
+  RESOURCE_TYPES,
+  notFoundMaybeRedirect,
 } from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen-react';
@@ -21,18 +23,18 @@ export const handle = {
     title: 'Journal',
     description: 'A description',
   },
+
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.BLOG,
+  },
 };
 
-export async function loader({
-  params,
-  request,
-  context: {storefront},
-}: LoaderArgs) {
+export async function loader({params, request, context}: LoaderArgs) {
   const {language, country} = getLocaleFromRequest(request);
 
   invariant(params.journalHandle, 'Missing journal handle');
 
-  const {blog} = await storefront.query<{
+  const {blog} = await context.storefront.query<{
     blog: Blog;
   }>(ARTICLE_QUERY, {
     variables: {
@@ -42,7 +44,7 @@ export async function loader({
   });
 
   if (!blog?.articleByHandle) {
-    throw new Response('Not found', {status: 404});
+    throw await notFoundMaybeRedirect(request, context);
   }
 
   const article = blog.articleByHandle;
@@ -51,7 +53,7 @@ export async function loader({
     year: 'numeric',
     month: 'long',
     day: 'numeric',
-  }).format(new Date(article.publishedAt));
+  }).format(new Date(article?.publishedAt!));
 
   return json(
     {article, formattedDate},
