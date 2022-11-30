@@ -1,5 +1,6 @@
+import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, type LoaderArgs} from '@shopify/hydrogen-remix';
+import {type LoaderArgs, defer} from '@shopify/hydrogen-remix';
 import {
   useLoaderData,
   Await,
@@ -8,7 +9,6 @@ import {
   useTransition,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-react';
-import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {
   Heading,
   IconCaret,
@@ -22,7 +22,7 @@ import {
   Link,
   Button,
 } from '~/components';
-import {getExcerpt} from '~/lib/utils';
+import {getExcerpt, variantToCartLine} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import {
@@ -37,7 +37,7 @@ import {
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data'; /* @todo: we move these to app/graphql ? */
-import {LinesAddForm} from '~/routes/__resources/cart/LinesAdd';
+import {CartLinesAddForm} from '~/routes/__resources/cart/CartLinesAdd';
 
 export async function loader({
   params,
@@ -344,16 +344,23 @@ function AddToCartButton({
     selectedVariant?.compareAtPrice?.amount &&
     selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
 
+  const lines = [
+    {
+      merchandiseId: selectedVariant.id,
+      quantity: 1,
+    },
+  ];
+
+  const optimisticLines = [
+    variantToCartLine({
+      quantity: 1,
+      variant: selectedVariant,
+    }),
+  ];
+
   return (
-    <LinesAddForm
-      lines={[
-        {
-          variant: selectedVariant,
-          quantity: 1,
-        },
-      ]}
-    >
-      {({state, error}) => {
+    <CartLinesAddForm lines={lines} optimisticLines={optimisticLines}>
+      {({state, errors}) => {
         const disabled = isOutOfStock || selectingVariant || state !== 'idle';
         return (
           <>
@@ -392,11 +399,17 @@ function AddToCartButton({
                 </Text>
               )}
             </Button>
-            {error ? <Text>{error}</Text> : null}
+            {errors?.length ? (
+              <div className="flex flex-col">
+                {errors.map((error) => (
+                  <Text key={error.message}>{error.message}</Text>
+                ))}
+              </div>
+            ) : null}
           </>
         );
       }}
-    </LinesAddForm>
+    </CartLinesAddForm>
   );
 }
 

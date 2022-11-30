@@ -2,7 +2,7 @@ import {useFetcher, useLocation, useMatches} from '@remix-run/react';
 import {Heading, Button, IconCheck} from '~/components';
 import {useCallback, useEffect, useRef} from 'react';
 import {useInView} from 'react-intersection-observer';
-import {BuyerIdentityUpdateForm} from '~/routes/__resources/cart/BuyerIdentityUpdate';
+import {CartBuyerIdentityUpdateForm} from '~/routes/__resources/cart/CartBuyerIdentityUpdate';
 import type {Localizations, Locale} from '~/lib/type';
 import clsx from 'clsx';
 
@@ -102,7 +102,7 @@ function Country({
   const redirectTo = `${countryPrefixPath}${pathWithoutLocale}`;
 
   return (
-    <BuyerIdentityUpdateForm
+    <CartBuyerIdentityUpdateForm
       key={countryLocale.country}
       redirectTo={redirectTo}
       buyerIdentity={{
@@ -128,6 +128,6 @@ function Country({
           ) : null}
         </Button>
       )}
-    </BuyerIdentityUpdateForm>
+    </CartBuyerIdentityUpdateForm>
   );
 }
