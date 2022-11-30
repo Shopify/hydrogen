@@ -7,6 +7,8 @@ import {
   Shop,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useMatches} from '@remix-run/react';
+import invariant from 'tiny-invariant';
+import {getPrefixFromUrl} from '../utils';
 
 // Types supplied by Hydrogen (hydrogen-remix or maybe even hydrogen-react)
 type PageType = 'shop' | 'product';
@@ -96,10 +98,18 @@ export function getAnalyticsData({
   onSuccess?: (data: unknown) => void;
   onError?: (err: any) => void;
 }) {
+  invariant(
+    window,
+    'getAnalyticsData must be uses inside an useEffect or an event handler',
+  );
+
+  const apiEndpointWithPrefix =
+    getPrefixFromUrl(window.location.href) + apiEndpoint;
+
   // Make sure this function only runs on client side
   // * Implement analytic fallbacks (use sendBeacon / fetch / XHR)
   // * Implement leaky bucket before fetch
-  fetch(apiEndpoint, {
+  fetch(apiEndpointWithPrefix, {
     method: 'post',
     headers: {
       'Content-Type': 'application/json',

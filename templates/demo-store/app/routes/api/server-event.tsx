@@ -1,6 +1,6 @@
 import {type ActionArgs} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
-import {sentToShopifyAnalytics} from '~/lib/analytics/shopifyAnalytics';
+import {sentToShopifyAnalytics} from '~/lib/analytics/shopify-analytics';
 import {getAnalyticDataByPageType} from '~/lib/analytics';
 
 export async function action({request, context}: ActionArgs) {

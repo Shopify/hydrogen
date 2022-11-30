@@ -1,4 +1,4 @@
-import {useLocation, useMatches} from '@remix-run/react';
+import {useActionData, useLocation, useMatches} from '@remix-run/react';
 import {useEffect} from 'react';
 import {
   getAnalyticsData,
@@ -9,18 +9,17 @@ import {usePrefixPathWithLocale} from '~/lib/utils';
 const API_ENDPOINT = '/api/server-event';
 
 export function Analytics() {
-  const prefixApiEndpoint = usePrefixPathWithLocale(API_ENDPOINT);
   const location = useLocation();
   const payload = useExtractAnalyticsFromMatches();
 
   // Navigation events
   useEffect(() => {
     getAnalyticsData({
-      apiEndpoint: prefixApiEndpoint,
+      apiEndpoint: '/api/server-event',
       eventType: 'pageview',
       payload,
       onSuccess: (data) => {
-        console.log('Formatted analytics', data);
+        console.log('Formatted page view analytics', data);
       },
       onError: (err) => {
         console.error(err);

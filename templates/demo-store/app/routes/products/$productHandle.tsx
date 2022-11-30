@@ -22,7 +22,7 @@ import {
   Link,
   Button,
 } from '~/components';
-import {getExcerpt} from '~/lib/utils';
+import {getExcerpt, usePrefixPathWithLocale} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import type {
@@ -38,6 +38,7 @@ import {
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data'; /* @todo: we move these to app/graphql ? */
 import {LinesAddForm} from '~/routes/__resources/cart/LinesAdd';
+import {getAnalyticsData} from '~/lib/analytics';
 
 export async function loader({
   params,
@@ -357,6 +358,19 @@ function AddToCartButton({
           quantity: 1,
         },
       ]}
+      onSuccess={(event) => {
+        getAnalyticsData({
+          apiEndpoint: '/api/server-event',
+          eventType: 'addToCart',
+          payload: event,
+          onSuccess: (data) => {
+            console.log('Formatted add to cart analytics', data);
+          },
+          onError: (err) => {
+            console.error(err);
+          },
+        });
+      }}
     >
       {({state, error}) => {
         const disabled = isOutOfStock || selectingVariant || state !== 'idle';

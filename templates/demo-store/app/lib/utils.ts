@@ -254,6 +254,13 @@ export const DEFAULT_LOCALE: Locale & {pathPrefix: string} = Object.freeze({
   pathPrefix: '',
 });
 
+export function getPrefixFromUrl(urlString: string) {
+  const url = new URL(urlString);
+  const firstPathPart =
+    '/' + url.pathname.substring(1).split('/')[0].toLowerCase();
+  return countries[firstPathPart] ? firstPathPart : '';
+}
+
 export function getLocaleFromRequest(request: Request): Locale & {
   pathPrefix: string;
 } {
