@@ -1,5 +1,4 @@
 import fs from 'fs';
-import esbuild from 'esbuild';
 import readDir from 'recursive-readdir';
 import path from 'path';
 
