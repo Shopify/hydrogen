@@ -281,7 +281,6 @@ const CartDiscountCodesUpdateForm = forwardRef<
   const eventId = fetcher.data?.event?.id;
   const event = fetcher.data?.event;
   const errors = fetcher.data?.errors;
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
   const localizedCurrentPath = usePrefixPathWithLocale(`${pathname}${search}`);
 
   useEffect(() => {
@@ -295,7 +294,7 @@ const CartDiscountCodesUpdateForm = forwardRef<
     <fetcher.Form
       id={formId}
       method="post"
-      action={localizedActionPath}
+      action={ACTION_PATH}
       className={className}
       ref={ref}
     >
@@ -330,7 +329,6 @@ function useCartDiscountCodesUpdate(
   onSuccess: (event: DiscountCodesUpdateEvent) => void = () => {},
 ) {
   const fetcher = useFetcher();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
   const lastEventId = useRef<string | undefined>();
 
   const cartDiscountCodesUpdate = useCallback(
@@ -340,11 +338,11 @@ function useCartDiscountCodesUpdate(
         form.set('discountCodes', JSON.stringify(discountCodes));
       fetcher.submit(form, {
         method: 'post',
-        action: localizedActionPath,
+        action: ACTION_PATH,
         replace: false,
       });
     },
-    [fetcher, localizedActionPath],
+    [fetcher, ACTION_PATH],
   );
 
   useEffect(() => {
@@ -363,9 +361,8 @@ function useCartDiscountCodesUpdate(
  */
 function useCartDiscountCodesUpdateFetcher() {
   const fetchers = useFetchers();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
   return fetchers.find(
-    (fetcher) => fetcher?.submission?.action === localizedActionPath,
+    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
   );
 }
 
