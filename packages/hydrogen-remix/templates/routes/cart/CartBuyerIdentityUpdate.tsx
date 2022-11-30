@@ -151,6 +151,9 @@ function instrumentEvent({
   return {event, errors};
 }
 
+/**
+ * @see https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
+ */
 const UPDATE_CART_BUYER_COUNTRY = `#graphql
   mutation(
     $cartId: ID!
@@ -160,6 +163,7 @@ const UPDATE_CART_BUYER_COUNTRY = `#graphql
   ) @inContext(country: $country, language: $language) {
     cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
+        id
         buyerIdentity {
           email
           phone
@@ -305,7 +309,7 @@ function useBuyerIdentityUpdateFetcher() {
 
 /*
   Programmatically update a cart's buyerIdentity
-  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
+  @see https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
   returns { cartBuyerIdentityUpdate, fetcher }
 */
 function useCartBuyerIdentityUpdate(
