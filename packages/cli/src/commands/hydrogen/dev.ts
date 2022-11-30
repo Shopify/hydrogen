@@ -12,6 +12,9 @@ import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
+const LOG_REBUILDING = '🧱 Rebuilding...';
+const LOG_REBUILT = '🚀 Rebuilt';
+
 // @ts-ignore
 export default class Dev extends Command {
   static description =
@@ -77,6 +80,8 @@ export async function runDev({
   const buildWoker = () =>
     runBuild({entry, path: appPath, minify: false, workerOnly: true});
 
+  console.time('\n🏁 Initial build');
+
   remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
     onFileCreated(file: string) {
@@ -93,6 +98,7 @@ export async function runDev({
     },
     async onInitialBuild() {
       await buildWoker();
+      console.timeEnd('\n🏁 Initial build');
 
       startMiniOxygen({
         root,
@@ -112,15 +118,21 @@ export async function runDev({
           },
         })
         .on('change', async (file) => {
+          console.log(`\n📄 File changed: ${path.relative(root, file)}`);
+          console.log(LOG_REBUILDING);
+          console.time(LOG_REBUILT);
           await buildWoker();
+          console.timeEnd(LOG_REBUILT);
         });
     },
     onRebuildStart() {
       // eslint-disable-next-line no-console
-      console.log('Rebuilding...');
+      console.log(LOG_REBUILDING);
+      console.time(LOG_REBUILT);
     },
     async onRebuildFinish() {
       await buildWoker();
+      console.timeEnd(LOG_REBUILT);
     },
   });
 }
