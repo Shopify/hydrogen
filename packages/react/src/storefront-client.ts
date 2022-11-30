@@ -1,5 +1,13 @@
 import {SFAPI_VERSION} from './storefront-api-constants.js';
 
+const warnings = new Set<string>();
+const warnOnce = (string: string) => {
+  if (!warnings.has(string)) {
+    console.warn(string);
+    warnings.add(string);
+  }
+};
+
 /**
  * The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.
  *
@@ -13,21 +21,21 @@ export function createStorefrontClient({
   contentType,
 }: StorefrontClientProps): StorefrontClientReturn {
   if (storefrontApiVersion !== SFAPI_VERSION) {
-    console.warn(
+    warnOnce(
       `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen-UI is targeting. You may run into unexpected errors if these versions don't match. Received verion: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`
     );
   }
 
   // only warn if not in a browser environment
   if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {
-    console.warn(
-      `StorefrontClient: Using a private storefront token is recommended for server environments.  Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details. `
+    warnOnce(
+      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`
     );
   }
 
   // only warn if in a browser environment and you're using the privateStorefrontToken
   if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis) {
-    console.warn(
+    warnOnce(
       `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`
     );
   }
@@ -53,7 +61,7 @@ export function createStorefrontClient({
       }
 
       if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {
-        console.warn(
+        warnOnce(
           `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`
         );
       }
