@@ -87,8 +87,8 @@ async function action({request, context}: ActionArgs) {
   }
 
   // if no js, we essentially reload to avoid being routed to the actions route
-  const redirectTo = JSON.parse(String(formData.get('redirectTo')));
-  if (redirectTo && isLocalPath(redirectTo)) {
+  const redirectTo = formData.get('redirectTo') ?? null;
+  if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
     return redirect(redirectTo);
   }
 
