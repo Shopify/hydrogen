@@ -6,6 +6,7 @@ import {
   createStorefrontClient,
   type StorefrontClientProps,
 } from '@shopify/hydrogen';
+import {proxyLiquidRoute} from './routing/proxy';
 
 type HydrogenHandlerParams = {
   storefront: StorefrontClientProps;
@@ -13,7 +14,9 @@ type HydrogenHandlerParams = {
 };
 
 export function createRequestHandler(
-  oxygenHandlerParams: Parameters<typeof createOxygenRequestHandler>[0],
+  oxygenHandlerParams: Parameters<typeof createOxygenRequestHandler>[0] & {
+    shouldProxyOnlineStore?: (request: Request) => string | null | undefined;
+  },
 ) {
   const handleRequest = createOxygenRequestHandler(oxygenHandlerParams);
 
@@ -28,6 +31,16 @@ export function createRequestHandler(
       HydrogenHandlerParams,
     customContext?: Record<string, any>,
   ) => {
+    const onlineStoreProxy =
+      oxygenHandlerParams?.shouldProxyOnlineStore?.(request);
+
+    if (onlineStoreProxy)
+      return proxyLiquidRoute(
+        request,
+        storefront.storeDomain,
+        onlineStoreProxy,
+      );
+
     try {
       if (!cache && !!globalThis.caches) {
         cache = await caches.open('hydrogen');
