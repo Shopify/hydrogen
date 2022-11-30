@@ -19,20 +19,36 @@ function getPaginationVariables(
   const direction =
     searchParams.get('direction') === 'previous' ? 'previous' : 'next';
   const isNext = direction === 'next';
+  const sortKey = searchParams.get('sortKey') ?? 'BEST_SELLING';
+  const query = searchParams.get('query') ?? '';
 
-  const prevPage = {
-    last: pageBy,
-    startCursor: cursor ?? null,
+  let reverse = false;
+  try {
+    const _reverse = searchParams.get('reverse');
+    if (_reverse === 'true') {
+      reverse = true;
+    }
+  } catch (_) {
+    // noop
+  }
+
+  let count = pageBy;
+  try {
+    const _count = searchParams.get('count');
+    if (typeof _count === 'string') {
+      count = parseInt(_count);
+    }
+  } catch (_) {
+    // noop
+  }
+
+  return {
+    [isNext ? 'first' : 'last']: count,
+    [isNext ? 'endCursor' : 'startCursor']: cursor ?? null,
+    sortKey,
+    query,
+    reverse,
   };
-
-  const nextPage = {
-    first: pageBy,
-    endCursor: cursor ?? null,
-  };
-
-  const variables = isNext ? nextPage : prevPage;
-
-  return variables;
 }
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
@@ -97,8 +113,9 @@ const ALL_PRODUCTS_QUERY = `#graphql
     $last: Int
     $startCursor: String
     $endCursor: String
+    $sortKey: ProductSortKeys
   ) @inContext(country: $country, language: $language) {
-    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {
+    products(first: $first, last: $last, before: $startCursor, after: $endCursor, sortKey: $sortKey) {
       nodes {
         ...ProductCard
       }

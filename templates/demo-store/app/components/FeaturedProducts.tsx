@@ -14,7 +14,7 @@ interface FeaturedProductsProps {
   onClose?: () => void;
   query?: string;
   reverse?: boolean;
-  sortKey: ProductSortKeys;
+  sortKey?: ProductSortKeys;
 }
 
 /**
@@ -37,17 +37,21 @@ export function FeaturedProducts({
   sortKey = 'BEST_SELLING',
 }: FeaturedProductsProps) {
   const {load, data} = useFetcher();
+
   const queryString = useMemo(
     () =>
-      Object.entries({count, sortKey, query, reverse})
-        .map(([key, val]) => (val ? `${key}=${val}` : null))
-        .filter(Boolean)
-        .join('&'),
+      new URLSearchParams({
+        count: count ? count + '' : '',
+        sortKey: sortKey || '',
+        query: query || '',
+        reverse: reverse ? reverse + '' : '',
+        index: '',
+      }).toString(),
     [count, sortKey, query, reverse],
   );
 
   useEffect(() => {
-    load(`/api/products?${queryString}`);
+    load(`/products?${queryString}`);
   }, [load, queryString]);
 
   return (
@@ -64,7 +68,7 @@ export function FeaturedProducts({
         <FeatureProductsContent
           count={count}
           onClick={onClose}
-          products={data?.products as Product[]}
+          products={data?.nodes as Product[]}
         />
       </div>
     </>

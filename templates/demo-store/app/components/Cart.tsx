@@ -469,7 +469,6 @@ export function CartEmpty({
           heading="Shop Best Sellers"
           layout={layout}
           onClose={onClose}
-          sortKey="BEST_SELLING"
         />
       </section>
     </div>
