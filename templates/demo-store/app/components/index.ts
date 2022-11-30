@@ -22,6 +22,6 @@ export {SortFilter} from './SortFilter';
 export {Breadcrumbs} from './Breadcrumbs';
 export {Grid} from './Grid';
 export {FeaturedProducts} from './FeaturedProducts';
-export {Pagination} from './Pagination';
+export {Pagination, getPaginationVariables, usePagination} from './Pagination';
 // Sue me
 export * from './Icon';
