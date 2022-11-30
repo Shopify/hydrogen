@@ -435,11 +435,58 @@ async function cartLinesAdd({
 }
 
 /**
- * Form that adds line(s) to the cart
+ * Form component to add line(s) to the cart
  * @param lines an array of line(s) to add. CartLineInput[]
- * @param optimisticLines an array of cart line(s) being added. CartLine[]
- * @param children render submit button
- * @param onSuccess? callback that runs after each form submission
+ * @param optimisticLines (optional) CartLine[] an array of cart line(s) being added.
+ * @param children render submit button.
+ * @param onSuccess (optional) callback that runs after each form submission
+ * @example
+ * Basic example:
+ * ```ts
+ * function AddToCartButton({selectedVariant, quantity}) {
+ *   return (
+ *     <CartLinesAddForm
+ *       lines={[
+ *         {
+ *           merchandiseId: selectedVariant.id,
+ *           quantity,
+ *         }
+ *       ]}
+ *     >
+ *       {() => <button>Add to Cart</button>}
+ *     </CartLinesAddForm>
+ *   );
+ * }
+ * ```
+ * @example
+ * Advanced example:
+ * ```ts
+ * function AddToCartButton({selectedVariant, quantity}) {
+ *   const line = {
+ *     merchandiseId: selectedVariant.id,
+ *     quantity,
+ *   }
+ *   const optimisticLine = variantToLine({
+ *     quantity,
+ *     variant: selectedVariant
+ *   })
+ *
+ *   return (
+ *     <CartLinesAddForm
+ *       lines={[line]}
+ *       optimisticLines={[optimisticLine]}
+ *       onSuccess={(event) => {
+ *         navigator.sendBeacon('/events', JSON.stringify(event))
+ *       }}
+ *     >
+ *       {(state, errors) => (
+ *         <button>{state === 'idle' ? 'Add to Bag' : 'Adding to Bag'}</button>
+ *         {errors ? <p>{error[0].message}</p>}
+ *       )}
+ *     </CartLinesAddForm>
+ *   )
+ * }
+ * ```
  */
 const CartLinesAddForm = forwardRef<HTMLFormElement, CartLinesAddFormProps>(
   ({children, lines = [], optimisticLines = [], onSuccess, className}, ref) => {
@@ -515,6 +562,31 @@ function useCartLinesAdd(
   const lastEventId = useRef<string | undefined>();
   const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
+  /**
+   * Add line(s) programmatically
+   * @param lines CartLineInput[]
+   * @param optimisticLines (optional) CartLine[]
+   * @example
+   * A hook that programmatically adds a free gift variant to the cart if there are 3 or more items in the cart
+   * ```ts
+   * function useAddFreeGift({cart}) {
+   *   const {cartLinesAdd} = useLinesAdd();
+   *   const giftInCart = cart.lines.filter...
+   *   const freeGiftProductVariant = {...}
+   *   const shouldAddGift = !linesAdding && !giftInCart && cart.lines.edges.length >= 3;
+   *
+   *   useEffect(() => {
+   *     if (!shouldAddGift) return;
+   *     cartLinesAdd({
+   *       lines: [{
+   *         quantity: 1,
+   *         variant: freeGiftProductVariant
+   *       }]
+   *     })
+   *   }, [shouldAddGift, freeGiftProductVariant])
+   * }
+   * ```
+   */
   const cartLinesAdd = useCallback(
     ({lines = [], optimisticLines = []}: LinesOptimisticLinesProps) => {
       const form = new FormData();
@@ -558,6 +630,25 @@ function useCartLinesAddingFetcher() {
  * A utility hook to get the current lines being added
  * @param onSuccess callback function that executes on success
  * @returns { linesAdding, fetcher }
+ * @example
+ * Toggle a cart drawer when adding to cart
+ * ```
+ * function Layout() {
+ *   const {linesAdding} = useCartLinesAdding();
+ *   const [drawer, setDrawer] = useState(false);
+ *
+ *   useEffect(() => {
+ *     if (drawer || !linesAdding?.length) return;
+ *     setDrawer(true);
+ *   }, [linesAdding, drawer, setDrawer]);
+ *
+ *   return (
+ *     <div>
+ *       <Header />
+ *       <CartDrawer className={drawer ? '' : 'hidden'} setDrawer={setDrawer} />
+ *     </div>
+ *   );
+ * }
  */
 function useCartLinesAdding() {
   const fetcher = useCartLinesAddingFetcher();
