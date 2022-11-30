@@ -1,10 +1,9 @@
-/** @type {import('@remix-run/dev').AppConfig} */
-
 const fs = require('fs');
 const path = require('path');
 const esbuild = require('esbuild');
 const recursive = require('recursive-readdir');
 
+/** @type {import('@remix-run/dev').AppConfig} */
 module.exports = {
   ignoredRouteFiles: ['**/.*'],
   async routes() {
