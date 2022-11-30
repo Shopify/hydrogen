@@ -171,6 +171,8 @@ function diffLines({
   mutation -----------------------------------------------------------------------------------------
 */
 const LINES_UPDATE_MUTATION = `#graphql
+  ${LINES_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
   mutation ($cartId: ID!, $lines: [CartLineUpdateInput!]!, $language: LanguageCode, $country: CountryCode)
   @inContext(country: $country, language: $language) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
@@ -182,8 +184,6 @@ const LINES_UPDATE_MUTATION = `#graphql
       }
     }
   }
-  ${LINES_CART_FRAGMENT}
-  ${USER_ERROR_FRAGMENT}
 `;
 
 /**
