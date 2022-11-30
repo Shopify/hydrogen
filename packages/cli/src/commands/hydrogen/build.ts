@@ -8,6 +8,8 @@ import {flags} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 
+const LOG_WORKER_BUILT = '📦 Worker built';
+
 // @ts-ignore
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production';
@@ -62,11 +64,12 @@ export async function runBuild({
   } = getProjectPaths(appPath, entry);
 
   if (!workerOnly) {
+    console.time(LOG_WORKER_BUILT);
     const remixConfig = await getRemixConfig(root);
     await fsExtra.rm(buildPath, {force: true, recursive: true});
 
     // eslint-disable-next-line no-console
-    console.log(`Building app in ${process.env.NODE_ENV} mode...`);
+    console.log(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
     await remix.build(remixConfig, {
       mode: process.env.NODE_ENV as any,
@@ -100,12 +103,13 @@ export async function runBuild({
   ]);
 
   if (process.env.NODE_ENV !== 'development') {
+    !workerOnly && console.timeEnd(LOG_WORKER_BUILT);
     const {size} = await fsExtra.stat(buildPathWorkerFile);
     const sizeMB = size / (1024 * 1024);
 
     // eslint-disable-next-line no-console
     console.log(
-      '\n' + path.relative(root, buildPathWorkerFile),
+      '   ' + path.relative(root, buildPathWorkerFile),
       '  ',
       Number(sizeMB.toFixed(2)),
       'MB',
