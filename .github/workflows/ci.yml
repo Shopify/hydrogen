@@ -1,0 +1,91 @@
+name: 🚀 CI
+on:
+  push:
+
+jobs:
+  lint:
+    name: ⬣ ESLint
+    runs-on: shopify-ubuntu-latest
+    steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: false
+
+      - name: 🔬 Lint
+        run: npm run lint
+
+  typecheck:
+    name: Typescript
+    runs-on: shopify-ubuntu-latest
+    steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 📥 Download deps
+        uses: bahmutov/npm-install@v1
+        with:
+          useLockFile: false
+
+      - name: 📦 Build packages
+        run: npm run build
+
+      - name: ✅ Typecheck
+        run: npm run typecheck
+
+  test:
+    name: ⚫️ Playwright tests
+    timeout-minutes: 60
+    runs-on: shopify-ubuntu-latest
+    steps:
+      - name: 🛑 Cancel Previous Runs
+        uses: styfle/cancel-workflow-action@0.11.0
+
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 📦 Build packages
+        run: npm run build
+
+      - name: 💽 Install Playwright Browsers
+        run: npx playwright install --with-deps
+        working-directory: ./templates/demo-store
+
+      - name: 🍄 Run Playwright tests
+        run: npx playwright test
+        working-directory: ./templates/demo-store
+
+      - name: 🗒 Report
+        uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: playwright-report
+          path: ./templates/demo-store/playwright-report/
+          retention-days: 30

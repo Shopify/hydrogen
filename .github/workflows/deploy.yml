@@ -1,26 +1,56 @@
-name: Deploy
+# This Action is responsible for deploying the default Hydrogen template to Oxygen.
+# It is split out from deployments.yml because Oxygen checks for the presence of this specific workflow in the repo.
+# TODO: Merge the workflow if/when Oxygen is more lenient.
 
-on:
-  push:
-    branches:
-      - main
+# Don't change the line below!
+#! oxygen_storefront_id: 28966968
+
+name: Oxygen Deployment
+
+on: [push, workflow_dispatch]
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
-    name: Deploy
+    name: Deploy to Oxygen
+    if: ${{ github.repository_owner == 'shopify' }}
+    timeout-minutes: 30
+    runs-on: shopify-ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - name: Check out the code
+        uses: actions/checkout@v2
+
       - name: Setup Node.js
         uses: actions/setup-node@v2
         with:
           node-version: 18
+
       - name: Install dependencies
         run: |
           CI=true npm i
-      - name: Publish
-        uses: cloudflare/wrangler-action@2.0.0
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CF_ACCOUNT_ID }}
+
+      - name: Build packages
+        run: |
+          CI=true npm run build
+
+      - name: Build and Publish to Oxygen
+        id: deploy
+        uses: shopify/oxygenctl-action@v4
         with:
-          apiToken: ${{ secrets.CF_API_TOKEN }}
+          path: ./templates/demo-store
+          oxygen_deployment_token: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_28966968 }}
+          oxygen_worker_dir: build/worker
+          oxygen_client_dir: build/client
+          build_command: 'HYDROGEN_ASSET_BASE_URL=$OXYGEN_ASSET_BASE_URL npm run build'
+          # Hardcode message and timestamp if manual dispatch
+          commit_message: ${{ github.event.head_commit.message || 'Manual deployment' }}
+          commit_timestamp: ${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
+          oxygen_health_check: true
+
+      - name: Create GitHub Deployment
+        uses: shopify/github-deployment-action@v1
+        if: always()
+        with:
+          token: ${{ github.token }}
+          environment: 'preview'
+          preview_url: ${{ steps.deploy.outputs.url }}
+          description: ${{ github.event.head_commit.message }}

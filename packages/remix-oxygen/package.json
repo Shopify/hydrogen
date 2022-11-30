@@ -1,0 +1,45 @@
+{
+  "name": "@remix-run/oxygen",
+  "private": true,
+  "type": "module",
+  "version": "0.0.1",
+  "main": "dist/index.cjs",
+  "module": "dist/production/index.js",
+  "types": "dist/production/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup --clean --config ../../tsup.config.ts",
+    "dev": "tsup --watch --config ../../tsup.config.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/production/index.d.ts",
+      "module": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      },
+      "require": "./dist/index.cjs",
+      "import": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      },
+      "default": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "dependencies": {
+    "@remix-run/server-runtime": "0.0.0-experimental-e18af792a"
+  },
+  "devDependencies": {
+    "@shopify/oxygen-workers-types": "^3.17.2"
+  },
+  "peerDependencies": {
+    "@shopify/oxygen-workers-types": "^3.17.2"
+  }
+}

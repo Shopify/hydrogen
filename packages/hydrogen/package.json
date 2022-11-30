@@ -1,0 +1,42 @@
+{
+  "name": "@shopify/hydrogen",
+  "private": true,
+  "type": "module",
+  "version": "2.0.0-alpha.1",
+  "main": "dist/index.cjs",
+  "module": "dist/production/index.js",
+  "types": "dist/production/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup --clean --config ../../tsup.config.ts",
+    "dev": "tsup --watch --config ../../tsup.config.ts"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/production/index.d.ts",
+      "module": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      },
+      "require": "./dist/index.cjs",
+      "import": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      },
+      "default": {
+        "development": "./dist/development/index.js",
+        "default": "./dist/production/index.js"
+      }
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist"
+  ],
+  "peerDependencies": {
+    "@shopify/hydrogen-react": "*"
+  },
+  "devDependencies": {
+    "@shopify/hydrogen-react": "*"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://turborepo.org/schema.json",
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts", "./tsup.config.ts"]
+    },
+    "dev": {
+      "dependsOn": [
+        "@shopify/cli-hydrogen#build",
+        "@shopify/hydrogen-remix#build"
+      ],
+      "cache": false
+    },
+    "lint": {
+      "outputs": []
+    },
+    "test": {
+      "outputs": [],
+      "dependsOn": ["build"]
+    },
+    "@shopify/hydrogen-remix#build": {
+      "dependsOn": ["@shopify/hydrogen#build", "@remix-run/oxygen#build"]
+    },
+    "demo-store#build": {
+      "dependsOn": [
+        "@shopify/cli-hydrogen#build",
+        "@shopify/hydrogen-remix#build"
+      ]
+    }
+  }
+}
