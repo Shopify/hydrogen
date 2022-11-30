@@ -42,7 +42,7 @@ export function Hero({
       >
         <div className="absolute inset-0 grid flex-grow grid-flow-col pointer-events-none auto-cols-fr -z-10 content-stretch overflow-clip">
           {spread?.reference && (
-            <div className="">
+            <div>
               <SpreadMedia
                 scale={2}
                 sizes={
@@ -110,6 +110,7 @@ function SpreadMedia({
   return (
     <MediaFile
       data={data}
+      alt={data.alt}
       className="block object-cover w-full h-full"
       // @ts-expect-error Need to update the types in H-UI to allow optional properties on this object
       mediaOptions={{
