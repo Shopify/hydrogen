@@ -13,9 +13,6 @@ export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production';
   static flags = {
     ...flags,
-    devReload: Flags.boolean({
-      env: 'SHOPIFY_HYDROGEN_FLAG_DEV_RELOAD',
-    }),
     sourcemap: Flags.boolean({
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
     }),
@@ -40,19 +37,19 @@ export default class Build extends Command {
 
 export async function runBuild({
   entry,
-  devReload = false,
+  workerOnly = false,
+  minify = !workerOnly,
   sourcemap = true,
-  minify = !devReload,
   path: appPath,
 }: {
   entry: string;
-  devReload?: boolean;
+  workerOnly?: boolean;
   sourcemap?: boolean;
   minify?: boolean;
   path?: string;
 }) {
   if (!process.env.NODE_ENV) {
-    process.env.NODE_ENV = devReload ? 'development' : 'production';
+    process.env.NODE_ENV = workerOnly ? 'development' : 'production';
   }
 
   const {
@@ -64,7 +61,7 @@ export async function runBuild({
     publicPath,
   } = getProjectPaths(appPath, entry);
 
-  if (!devReload) {
+  if (!workerOnly) {
     const remixConfig = await getRemixConfig(root);
     await fsExtra.rm(buildPath, {force: true, recursive: true});
 
@@ -82,23 +79,25 @@ export async function runBuild({
     });
   }
 
-  await fsExtra.copy(publicPath, buildPathClient, {
-    recursive: true,
-    overwrite: true,
-  });
-
-  await esbuild.build({
-    entryPoints: [entryFile],
-    bundle: true,
-    outfile: buildPathWorkerFile,
-    format: 'esm',
-    define: {
-      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
-    },
-    sourcemap,
-    minify,
-    conditions: ['worker', process.env.NODE_ENV],
-  });
+  await Promise.all([
+    fsExtra.copy(publicPath, buildPathClient, {
+      recursive: true,
+      overwrite: true,
+    }),
+    esbuild.build({
+      entryPoints: [entryFile],
+      bundle: true,
+      outfile: buildPathWorkerFile,
+      format: 'esm',
+      define: {
+        'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV),
+      },
+      sourcemap,
+      minify,
+      incremental: workerOnly,
+      conditions: ['worker', process.env.NODE_ENV],
+    }),
+  ]);
 
   if (process.env.NODE_ENV !== 'development') {
     const {size} = await fsExtra.stat(buildPathWorkerFile);
