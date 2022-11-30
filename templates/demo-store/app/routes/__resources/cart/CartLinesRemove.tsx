@@ -234,7 +234,37 @@ async function cartLinesRemove({
  * @param lineIds [ID!]! an array of cart line ids to remove
  * @param children render submit button
  * @param onSuccess? callback that runs after each form submission
- * @see: https://shopify.dev/api/storefront/2022-10/mutations/cartLinesRemove
+ * @see API https://shopify.dev/api/storefront/2022-10/mutations/cartLinesRemove
+ * @example
+ * Basic example
+ * ```
+ * function RemoveFromCart({lindeIds}) {
+ *   return (
+ *     <CartLinesRemoveForm lineIds={lindeIds}>
+ *       {(state, error) => <button>Remove</button>}
+ *     </CartLinesRemoveForm>
+ *   );
+ * }
+ * ```
+ * @example
+ * Advanced example
+ * ```
+ * function RemoveFromCart({lindeIds}) {
+ *   return (
+ *     <CartLinesRemoveForm
+ *       lineIds={lindeIds}
+ *       onSuccess={(event) => {
+ *         navigator.sendBeacon('/events', JSON.stringify(event))
+ *       }}
+ *     >
+ *       {(state, error) => (
+ *         <button>{state === 'idle' ? 'Remove' : 'Removing'}</button>
+ *         {errors ? <p>{errors[0].message}</p>}
+ *       )}
+ *     </CartLinesRemoveForm>
+ *   )
+ * }
+ * ```
  */
 const CartLinesRemoveForm = forwardRef(
   (
@@ -287,9 +317,16 @@ const CartLinesRemoveForm = forwardRef(
 );
 
 /**
- * A hook version of CartLinesRemoveForm to remove cart line(s) programmatically
+ * A hook to remove cart line(s) programmatically
  * @param onSuccess callback function that executes on success
- * @returns { cartLinesRemove, fetcher, }
+ * @returns object {cartLinesRemove, fetcher}
+ * @example
+ * ```ts
+ * function onSuccess(event) {
+ *  console.log('line(s) removed');
+ * }
+ * const {cartLinesRemove, fetcher} = useLinesRemove(onSuccess);
+ * ```
  */
 function useCartLinesRemove(
   onSuccess: (event: LinesRemoveEvent) => void = () => {},
@@ -298,6 +335,28 @@ function useCartLinesRemove(
   const lastEventId = useRef<string | undefined>();
   const fetcher = useFetcher();
 
+  /**
+   * A hook to remove cart line(s) programmatically
+   * @param lineIds An array of cart line ids
+   * @example
+   * ```ts
+   * function useRemoveFreeGift({cart}) {
+   *   const {linesRemove} = useLinesRemove();
+   *   const {linesRemoving} = useLinesRemoving();
+   *   const freeGiftLineId = cart.lines.filter;
+   *   const shouldRemoveGift = !linesRemoving &&
+   *      freeGiftLineId &&
+   *      cart.lines.edges.length < 3 ;
+   *
+   *   useEffect(() => {
+   *     if (!shouldRemoveGift) return;
+   *     linesRemove({
+   *       lineIds: [freeGiftLineId],
+   *     });
+   *   }, [shouldRemoveGift, freeGiftLineId]);
+   * }
+   * ```
+   */
   const cartLinesRemove = useCallback(
     ({lineIds}: {lineIds: CartLine['id'][]}) => {
       const form = new FormData();
@@ -336,7 +395,24 @@ function useCartLinesRemoveFetcher() {
 
 /**
  * A utility hook to retrieve the line(s) being removed
- * @returns {linesRemoving, fetcher}
+ * @returns object {linesRemoving, fetcher}
+ * @example
+ * ```
+ * function Cart({cart}) {
+ *   const {lines} = cart;
+ *   const linesCount = cart?.lines?.edges?.length || 0;
+ *   const {linesRemoving} = useCartLinesRemoving();
+ *   const removingLastLine = Boolean(linesCount === 1 && linesRemoving.length);
+ *   const cartEmpty = lines.length === 0 || removingLastLine;
+ *
+ *   return (
+ *     <div>
+ *       <CartEmpty hidden={!cartEmpty} />
+ *       <CartLines lines={lines}>
+ *     </div>
+ *   );
+ * }
+ * ```
  */
 function useCartLinesRemoving() {
   const fetcher = useCartLinesRemoveFetcher();
