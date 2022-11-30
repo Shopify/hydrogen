@@ -25,7 +25,7 @@ export async function notFoundMaybeRedirect(
       },
     });
   } else {
-    const redirectPath = new URLSearchParams(search).get('redirect_to');
+    const redirectPath = new URLSearchParams(search).get('return_to');
 
     if (redirectPath && isLocalPath(redirectPath)) {
       return redirect(redirectPath);
