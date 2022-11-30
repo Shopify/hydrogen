@@ -42,7 +42,7 @@ import {
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data'; /* @todo: we move these to app/graphql ? */
-import {CartLinesAddForm} from '~/routes/__resources/cart/CartLinesAdd';
+import {CartLinesAddForm} from '.hydrogen/cart';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;

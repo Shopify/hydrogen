@@ -281,7 +281,6 @@ const CartBuyerIdentityUpdateForm = forwardRef<
         {buyerIdentityInProps &&
           Object.entries(buyerIdentity).map(([key, value], i) => (
             <input
-              // eslint-disable-next-line react/no-array-index-key
               key={`${key}-${i}`}
               type="hidden"
               name={key}
