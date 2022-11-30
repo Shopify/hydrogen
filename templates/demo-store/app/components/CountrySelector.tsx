@@ -36,7 +36,7 @@ export function CountrySelector() {
   // Get available countries list when in view
   useEffect(() => {
     if (!inView || fetcher.data || fetcher.state === 'loading') return;
-    fetcher.load('/api/countries');
+    fetcher.load('/countries');
   }, [inView, fetcher]);
 
   const closeDropdown = useCallback(() => {
