@@ -32,7 +32,7 @@ export async function getAnalyticDataByPageType({
   storefront,
   queries,
 }: {
-  payload: RootPayload;
+  payload: unknown;
   storefront: ActionArgs['context']['storefront'];
   queries: AnalyticsQueries;
 }) {
@@ -42,7 +42,7 @@ export async function getAnalyticDataByPageType({
     staleWhileRevalidate: 3600,
   });
   let analyticsData: any = {};
-  const pageType = payload.pageType;
+  const {pageType} = payload as RootPayload;
 
   const shopData = await storefront.query<{
     shop: Shop;

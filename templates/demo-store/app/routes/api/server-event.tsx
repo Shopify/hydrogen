@@ -2,6 +2,7 @@ import {type ActionArgs} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {sentToShopifyAnalytics} from '~/lib/analytics/shopify-analytics';
 import {getAnalyticDataByPageType} from '~/lib/analytics';
+import type {RequestData} from '~/lib/analytics/types';
 
 export async function action({request, context}: ActionArgs) {
   const {session} = context;
@@ -22,7 +23,7 @@ export async function action({request, context}: ActionArgs) {
 
   sentToShopifyAnalytics({
     request,
-    requestData,
+    requestData: requestData as RequestData,
     analyticsData: formatAnalyticsData(analyticsData),
   });
 

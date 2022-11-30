@@ -1,12 +1,5 @@
+import type {RequestData} from '../types';
 import {trackCustomerPageView} from './customer-events';
-
-type RequestData = {
-  eventType: string;
-  payload?: unknown;
-  location: string;
-  referrer: string;
-  pageTitle: string;
-};
 
 export function sentToShopifyAnalytics({
   request,
@@ -33,7 +26,7 @@ export function sentToShopifyAnalytics({
 }
 
 function sentToShopify(request: Request, data: any[]) {
-  // Set x-forward-for to request id
+  // Set x-forward-for to request ip
   console.log('Shopify Analytics', {
     events: data,
     metadata: {

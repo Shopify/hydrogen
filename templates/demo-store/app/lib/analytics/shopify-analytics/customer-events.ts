@@ -1,47 +1,47 @@
 import {buildUUID} from './utils';
 import {
   SHOPIFY_ANALYTICS_SOURCE,
-  ShopifyAnalyticsConstants,
+  // ShopifyAnalyticsConstants,
   PAGE_RENDERED_EVENT_NAME,
-  COLLECTION_PAGE_RENDERED_EVENT_NAME,
-  PRODUCT_PAGE_RENDERED_EVENT_NAME,
-  PRODUCT_ADDED_TO_CART_EVENT_NAME,
-  SEARCH_SUBMITTED_EVENT_NAME,
+  // COLLECTION_PAGE_RENDERED_EVENT_NAME,
+  // PRODUCT_PAGE_RENDERED_EVENT_NAME,
+  // PRODUCT_ADDED_TO_CART_EVENT_NAME,
+  // SEARCH_SUBMITTED_EVENT_NAME,
 } from './const';
 import {stripGId, stripId, addDataIf} from '../utils';
-import {
-  CartLine,
-  CartLineInput,
-} from '@shopify/hydrogen-react/storefront-api-types';
+// import {
+//   CartLine,
+//   CartLineInput,
+// } from '@shopify/hydrogen-react/storefront-api-types';
 
-const DOC_URL =
-  'https://shopify.dev/api/hydrogen/components/framework/shopifyanalytics';
-const requiredProductFields: Record<string, string>[] = [
-  {
-    column: 'product_gid',
-    gqlField: 'product.id',
-  },
-  {
-    column: 'variant_gid',
-    gqlField: 'variant.id',
-  },
-  {
-    column: 'name',
-    gqlField: 'product.title',
-  },
-  {
-    column: 'variant',
-    gqlField: 'variant.title',
-  },
-  {
-    column: 'brand',
-    gqlField: 'product.vendor',
-  },
-  {
-    column: 'price',
-    gqlField: 'variant.priceV2.amount',
-  },
-];
+// const DOC_URL =
+//   'https://shopify.dev/api/hydrogen/components/framework/shopifyanalytics';
+// const requiredProductFields: Record<string, string>[] = [
+//   {
+//     column: 'product_gid',
+//     gqlField: 'product.id',
+//   },
+//   {
+//     column: 'variant_gid',
+//     gqlField: 'variant.id',
+//   },
+//   {
+//     column: 'name',
+//     gqlField: 'product.title',
+//   },
+//   {
+//     column: 'variant',
+//     gqlField: 'variant.title',
+//   },
+//   {
+//     column: 'brand',
+//     gqlField: 'product.vendor',
+//   },
+//   {
+//     column: 'price',
+//     gqlField: 'variant.priceV2.amount',
+//   },
+// ];
 
 export function trackCustomerPageView(
   payload: any,
@@ -91,20 +91,20 @@ export function trackCustomerPageView(
   // }
 }
 
-export function trackCustomerAddToCart(
-  payload: any,
-  sendToServer: (payload: any) => void,
-) {
-  const {totalValue, addedProducts} = getAddedProducts(payload);
+// export function trackCustomerAddToCart(
+//   payload: any,
+//   sendToServer: (payload: any) => void,
+// ) {
+//   const {totalValue, addedProducts} = getAddedProducts(payload);
 
-  sendToServer(
-    customerEventSchema(payload, PRODUCT_ADDED_TO_CART_EVENT_NAME, {
-      total_value: totalValue,
-      products: formatProductsJSON(addedProducts),
-      cart_token: stripId(payload.cart.id),
-    }),
-  );
-}
+//   sendToServer(
+//     customerEventSchema(payload, PRODUCT_ADDED_TO_CART_EVENT_NAME, {
+//       total_value: totalValue,
+//       products: formatProductsJSON(addedProducts),
+//       cart_token: stripId(payload.cart.id),
+//     }),
+//   );
+// }
 
 function customerEventSchema(
   payload: any,
@@ -177,87 +177,87 @@ function buildCustomerPayload(payload: any, extraData: any = {}): any {
   return formattedData;
 }
 
-function formatProductsJSON(products: any[]) {
-  if (!products || products.length === 0) {
-    throw Error(
-      `Make sure useServerAnalytics returns "products"\n More details at ${DOC_URL}#product\n`,
-    );
-  }
+// function formatProductsJSON(products: any[]) {
+//   if (!products || products.length === 0) {
+//     throw Error(
+//       `Make sure useServerAnalytics returns "products"\n More details at ${DOC_URL}#product\n`,
+//     );
+//   }
 
-  const formattedProducts = products.map((p) => {
-    validateProductData(p, 'useServerAnalytics', 'column', 'product-page');
+//   const formattedProducts = products.map((p) => {
+//     validateProductData(p, 'useServerAnalytics', 'column', 'product-page');
 
-    return JSON.stringify({
-      ...p,
-      product_id: stripGId(p.product_gid),
-      variant_id: stripGId(p.variant_gid),
-      quantity: Number(p.quantity || 0),
-    });
-  });
-  return formattedProducts;
-}
+//     return JSON.stringify({
+//       ...p,
+//       product_id: stripGId(p.product_gid),
+//       variant_id: stripGId(p.variant_gid),
+//       quantity: Number(p.quantity || 0),
+//     });
+//   });
+//   return formattedProducts;
+// }
 
-function getAddedProducts(payload: any) {
-  const addedLines = payload.addedCartLines as CartLineInput[];
-  const cartLines = formatCartLinesByProductVariant(payload.cart.lines);
-  let totalValue = 0;
+// function getAddedProducts(payload: any) {
+//   const addedLines = payload.addedCartLines as CartLineInput[];
+//   const cartLines = formatCartLinesByProductVariant(payload.cart.lines);
+//   let totalValue = 0;
 
-  const addedProducts = addedLines.map((line) => {
-    const item = cartLines[line.merchandiseId];
-    totalValue += parseFloat(item.price) * (line.quantity || 0);
-    return {
-      ...item,
-      quantity: line.quantity,
-    };
-  });
+//   const addedProducts = addedLines.map((line) => {
+//     const item = cartLines[line.merchandiseId];
+//     totalValue += parseFloat(item.price) * (line.quantity || 0);
+//     return {
+//       ...item,
+//       quantity: line.quantity,
+//     };
+//   });
 
-  return {
-    totalValue,
-    addedProducts,
-  };
-}
+//   return {
+//     totalValue,
+//     addedProducts,
+//   };
+// }
 
-function formatCartLinesByProductVariant(lines: any) {
-  const cartLines = flattenConnection(lines) as CartLine[];
-  const cartItems: Record<string, any> = {};
+// function formatCartLinesByProductVariant(lines: any) {
+//   const cartLines = flattenConnection(lines) as CartLine[];
+//   const cartItems: Record<string, any> = {};
 
-  cartLines.forEach((line) => {
-    const product = line.merchandise.product;
-    const variant = line.merchandise;
+//   cartLines.forEach((line) => {
+//     const product = line.merchandise.product;
+//     const variant = line.merchandise;
 
-    cartItems[line.merchandise.id] = {
-      product_gid: product.id,
-      variant_gid: variant.id,
-      name: product.title,
-      variant: variant.title,
-      brand: product.vendor,
-      category: product.productType,
-      price: variant.priceV2.amount,
-      sku: variant.sku,
-    };
+//     cartItems[line.merchandise.id] = {
+//       product_gid: product.id,
+//       variant_gid: variant.id,
+//       name: product.title,
+//       variant: variant.title,
+//       brand: product.vendor,
+//       category: product.productType,
+//       price: variant.priceV2.amount,
+//       sku: variant.sku,
+//     };
 
-    validateProductData(
-      cartItems[line.merchandise.id],
-      'cart fragment',
-      'gqlField',
-      'cart-fragment',
-    );
-  });
+//     validateProductData(
+//       cartItems[line.merchandise.id],
+//       'cart fragment',
+//       'gqlField',
+//       'cart-fragment',
+//     );
+//   });
 
-  return cartItems;
-}
+//   return cartItems;
+// }
 
-function validateProductData(
-  product: any,
-  source: string,
-  requireKey: string,
-  docAnchor: string,
-) {
-  requiredProductFields.forEach((field) => {
-    if (!product[field.column] || product[field.column] === '') {
-      throw Error(
-        `Make sure ${source} returns "${field[requireKey]}"\n More details at ${DOC_URL}#${docAnchor}\n`,
-      );
-    }
-  });
-}
+// function validateProductData(
+//   product: any,
+//   source: string,
+//   requireKey: string,
+//   docAnchor: string,
+// ) {
+//   requiredProductFields.forEach((field) => {
+//     if (!product[field.column] || product[field.column] === '') {
+//       throw Error(
+//         `Make sure ${source} returns "${field[requireKey]}"\n More details at ${DOC_URL}#${docAnchor}\n`,
+//       );
+//     }
+//   });
+// }
