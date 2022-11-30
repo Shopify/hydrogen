@@ -1,6 +1,11 @@
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {type LoaderArgs, defer} from '@shopify/hydrogen-remix';
+import {
+  defer,
+  notFoundMaybeRedirect,
+  RESOURCE_TYPES,
+  type LoaderArgs,
+} from '@shopify/hydrogen-remix';
 import {
   useLoaderData,
   Await,
@@ -39,11 +44,7 @@ import {
 } from '~/data'; /* @todo: we move these to app/graphql ? */
 import {CartLinesAddForm} from '~/routes/__resources/cart/CartLinesAdd';
 
-export async function loader({
-  params,
-  request,
-  context: {storefront},
-}: LoaderArgs) {
+export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
 
@@ -54,7 +55,7 @@ export async function loader({
     selectedOptions.push({name, value});
   });
 
-  const {shop, product} = await storefront.query<{
+  const {shop, product} = await context.storefront.query<{
     product: ProductType & {selectedVariant?: ProductVariant};
     shop: Shop;
   }>(PRODUCT_QUERY, {
@@ -65,10 +66,10 @@ export async function loader({
   });
 
   if (!product?.id) {
-    throw new Error('product not found');
+    throw await notFoundMaybeRedirect(request, context);
   }
 
-  const recommended = getRecommendedProducts(storefront, product.id);
+  const recommended = getRecommendedProducts(context.storefront, product.id);
 
   return defer({
     product,
@@ -76,6 +77,12 @@ export async function loader({
     recommended,
   });
 }
+
+export const handle = {
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.PRODUCT,
+  },
+};
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();
