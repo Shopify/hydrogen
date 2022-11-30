@@ -2,6 +2,8 @@ import {
   json,
   LoaderArgs,
   MetaFunction,
+  notFoundMaybeRedirect,
+  RESOURCE_TYPES,
   SerializeFrom,
 } from '@shopify/hydrogen-remix';
 import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
@@ -9,17 +11,17 @@ import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import {PageHeader} from '~/components';
 
-export async function loader({params, context: {storefront}}: LoaderArgs) {
+export async function loader({request, params, context}: LoaderArgs) {
   invariant(params.pageHandle, 'Missing page handle');
 
-  const {page} = await storefront.query<{page: PageType}>(PAGE_QUERY, {
+  const {page} = await context.storefront.query<{page: PageType}>(PAGE_QUERY, {
     variables: {
       handle: params.pageHandle,
     },
   });
 
   if (!page) {
-    throw new Response('Not found', {status: 404});
+    throw await notFoundMaybeRedirect(request, context);
   }
 
   return json(
@@ -41,6 +43,12 @@ export const meta: MetaFunction = ({
     title: data?.page?.seo?.title ?? 'Page',
     description: data?.page?.seo?.description,
   };
+};
+
+export const handle = {
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.PAGE,
+  },
 };
 
 export default function Page() {

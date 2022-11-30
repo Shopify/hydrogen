@@ -1,5 +1,6 @@
 import {
   json,
+  RESOURCE_TYPES,
   type LoaderArgs,
   type MetaFunction,
 } from '@shopify/hydrogen-remix';
@@ -23,6 +24,12 @@ export const loader = async ({context: {storefront}}: LoaderArgs) => {
   });
 
   return json({collections: collections.nodes});
+};
+
+export const handle = {
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.COLLECTIONS,
+  },
 };
 
 export const meta: MetaFunction = () => {
