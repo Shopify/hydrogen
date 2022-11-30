@@ -167,9 +167,9 @@ function linesAddResponse({
   formData,
   headers,
 }: LinesAddResponseProps) {
-  // if JS is disabled, this will redirect back to the referer
-  const redirectTo = JSON.parse(String(formData.get('redirectTo')));
-  if (redirectTo && isLocalPath(redirectTo)) {
+  // if no js, we essentially reload to avoid being routed to the actions route
+  const redirectTo = formData.get('redirectTo') ?? null;
+  if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
     return redirect(redirectTo, {headers});
   }
 

@@ -106,8 +106,9 @@ async function action({request, context}: ActionArgs) {
   headers.set('Set-Cookie', await session.commit());
 
   // if no js, we essentially reload to avoid being routed to the actions route
-  const redirectTo = JSON.parse(String(formData.get('redirectTo')));
-  if (redirectTo && isLocalPath(redirectTo)) {
+  // or if user passes redirectTo we use that
+  const redirectTo = formData.get('redirectTo') ?? null;
+  if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
     return redirect(redirectTo, {headers});
   }
 
@@ -232,20 +233,19 @@ const CartBuyerIdentityUpdateForm = forwardRef<
     ref,
   ) => {
     const buyerIdentityInProps = typeof buyerIdentity !== 'undefined';
-    const redirectToInProps = typeof redirectTo !== 'undefined';
+    const redirectToInProps = typeof redirectTo === 'string';
     const formId = useId();
     const lastEventId = useRef<string | undefined>();
     const isHydrated = useIsHydrated();
     const fetcher = useFetcher();
+    const eventId = fetcher.data?.event?.id;
+    const event = fetcher.data?.event;
+    const errors = fetcher.data?.errors;
     const {pathname, search} = useLocation();
     const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
     const localizedCurrentPath = usePrefixPathWithLocale(
       `${pathname}${search}`,
     );
-
-    const eventId = fetcher.data?.event?.id;
-    const event = fetcher.data?.event;
-    const errors = fetcher.data?.errors;
 
     useEffect(() => {
       if (!eventId) return;
