@@ -108,7 +108,7 @@ export async function loader({params, request, context}: LoaderArgs) {
 }
 ```
 
-The `notFoundMaybeRedirect` function also automatically handles a `redirect_to` query parameter. For example, given the URL: `https://wwww.hydrogen.shop/products/oldsnowboard?redirect_to=/products/hydrogen`, the main URL doesn't exist, but instead of returning a 404, Hydrogen will return a 302 to `/products/hydrogen`.
+The `notFoundMaybeRedirect` function also automatically handles a `return_to` query parameter. For example, given the URL: `https://wwww.hydrogen.shop/products/oldsnowboard?return_to=/products/hydrogen`, the main URL doesn't exist, but instead of returning a 404, Hydrogen will return a 302 to `/products/hydrogen`.
 
 ## Online-store Proxying
 
@@ -124,7 +124,6 @@ const requestHandler = createRequestHandler({
   shouldProxyOnlineStore: (request: Request) =>
     new URL(request.url).pathname === '/proxy' ? '/pages/about' : null,
 });
-
 ```
 
 ## Named Routes
