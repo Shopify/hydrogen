@@ -10,7 +10,7 @@
     "typecheck": "tsc --noEmit && npm run typecheck -w demo-store && npm run typecheck -w @shopify/cli-h2-test",
     "version": "changeset version && node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "changeset": "changeset",
-    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/hydrogen-remix/dist && rimraf packages/cli/dist"
+    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/hydrogen-remix/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache && rimraf templates/demo-store/.hydrogen"
   },
   "workspaces": [
     "templates/demo-store",
