@@ -26,7 +26,7 @@ import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
-import {useCartLinesAdding} from '~/routes/__resources/cart/CartLinesAdd';
+import {useCartLinesAdding} from '.hydrogen/cart';
 
 export function Layout({
   children,

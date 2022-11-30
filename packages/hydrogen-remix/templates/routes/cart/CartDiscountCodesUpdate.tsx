@@ -310,7 +310,6 @@ const CartDiscountCodesUpdateForm = forwardRef<
       {discountCodesInProps &&
         discountCodes.map((code, i) => (
           <input
-            // eslint-disable-next-line react/no-array-index-key
             key={`${code}-${i}`}
             type="hidden"
             name="discountCodes"

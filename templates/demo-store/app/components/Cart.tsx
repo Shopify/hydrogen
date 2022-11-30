@@ -2,32 +2,31 @@ import clsx from 'clsx';
 import {useRef, useState} from 'react';
 import {useScroll} from 'react-use';
 import {flattenConnection, Image, Money} from '@shopify/hydrogen-react';
-import {Button, Heading, IconRemove, Text, Link} from '~/components';
+import {
+  Button,
+  Heading,
+  IconRemove,
+  Text,
+  Link,
+  FeaturedProducts,
+} from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
 import type {
   Cart as CartType,
   CartCost,
   CartLine,
 } from '@shopify/hydrogen-react/storefront-api-types';
-
-import {
-  useCartLinesAdding,
-  useOptimisticCartLinesAdding,
-} from '~/routes/__resources/cart/CartLinesAdd';
-import {
-  CartLinesRemoveForm,
-  useCartLinesRemoving,
-  useCartLineRemoving,
-} from '~/routes/__resources/cart/CartLinesRemove';
-import {FeaturedProducts} from '~/components/FeaturedProducts';
-import {
-  useCartLineUpdating,
-  CartLinesUpdateForm,
-} from '~/routes/__resources/cart/CartLinesUpdate';
 import {
   CartDiscountCodesUpdateForm,
+  CartLinesRemoveForm,
+  CartLinesUpdateForm,
   useCartDiscountCodesUpdating,
-} from '~/routes/__resources/cart/CartDiscountCodesUpdate';
+  useCartLineRemoving,
+  useCartLinesAdding,
+  useCartLinesRemoving,
+  useCartLineUpdating,
+  useOptimisticCartLinesAdding,
+} from '.hydrogen/cart';
 
 type Layouts = 'page' | 'drawer';
 
