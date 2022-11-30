@@ -1,4 +1,4 @@
-import {createRequestHandler, proxyLiquidRoute} from '@shopify/hydrogen-remix';
+import {createRequestHandler} from '@shopify/hydrogen-remix';
 // The build remix app provided by remix build
 import * as remixBuild from 'remix-build';
 import {getLocaleFromRequest} from '~/lib/utils';
@@ -10,6 +10,8 @@ const requestHandler = createRequestHandler({
   build: remixBuild,
   mode: process.env.NODE_ENV,
   shouldProxyAsset: () => false,
+  shouldProxyOnlineStore: (request: Request) =>
+    new URL(request.url).pathname === '/proxy' ? '/pages/about' : null,
 });
 
 export default {
@@ -32,14 +34,6 @@ export default {
       storefrontApiVersion: '2022-10',
       i18n: getLocaleFromRequest(request),
     };
-
-    if (new URL(request.url).pathname === '/proxy') {
-      return await proxyLiquidRoute(
-        request,
-        storefrontConfig.storeDomain,
-        '/pages/about',
-      );
-    }
 
     try {
       return await requestHandler(
