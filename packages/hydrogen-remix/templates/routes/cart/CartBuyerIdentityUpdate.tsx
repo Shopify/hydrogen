@@ -151,6 +151,9 @@ function instrumentEvent({
   return {event, errors};
 }
 
+/**
+ * @see https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
+ */
 const UPDATE_CART_BUYER_COUNTRY = `#graphql
   mutation(
     $cartId: ID!
@@ -160,6 +163,7 @@ const UPDATE_CART_BUYER_COUNTRY = `#graphql
   ) @inContext(country: $country, language: $language) {
     cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
+        id
         buyerIdentity {
           email
           phone
@@ -242,7 +246,6 @@ const CartBuyerIdentityUpdateForm = forwardRef<
     const event = fetcher.data?.event;
     const errors = fetcher.data?.errors;
     const {pathname, search} = useLocation();
-    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
     const localizedCurrentPath = usePrefixPathWithLocale(
       `${pathname}${search}`,
     );
@@ -258,7 +261,7 @@ const CartBuyerIdentityUpdateForm = forwardRef<
       <fetcher.Form
         id={formId}
         method="post"
-        action={localizedActionPath}
+        action={ACTION_PATH}
         ref={ref}
         className={className}
       >
@@ -299,15 +302,14 @@ const CartBuyerIdentityUpdateForm = forwardRef<
  */
 function useBuyerIdentityUpdateFetcher() {
   const fetchers = useFetchers();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
   return fetchers.find(
-    (fetcher) => fetcher?.submission?.action === localizedActionPath,
+    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
   );
 }
 
 /*
   Programmatically update a cart's buyerIdentity
-  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
+  @see https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
   returns { cartBuyerIdentityUpdate, fetcher }
 */
 function useCartBuyerIdentityUpdate(
@@ -315,7 +317,6 @@ function useCartBuyerIdentityUpdate(
 ) {
   const fetcher = useFetcher();
   const lastEventId = useRef<string | undefined>();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
   const cartBuyerIdentityUpdate = useCallback(
     ({
@@ -340,11 +341,11 @@ function useCartBuyerIdentityUpdate(
       }
       fetcher.submit(form, {
         method: 'post',
-        action: localizedActionPath,
+        action: ACTION_PATH,
         replace: false,
       });
     },
-    [fetcher, localizedActionPath],
+    [fetcher, ACTION_PATH],
   );
 
   useEffect(() => {
