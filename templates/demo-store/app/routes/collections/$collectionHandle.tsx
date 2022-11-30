@@ -3,14 +3,16 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LoaderArgs,
+  RESOURCE_TYPES,
+  notFoundMaybeRedirect,
 } from '@shopify/hydrogen-remix';
-import {useLoaderData, useMatches, Link} from '@remix-run/react';
+import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
   CollectionConnection,
-  MetafieldReferenceEdge,
   MetafieldReference,
   Filter,
+  Collection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import invariant from 'tiny-invariant';
@@ -21,7 +23,7 @@ import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
 const PAGINATION_SIZE = 48;
 
-type VariantFilterParam = Record<string, string>;
+type VariantFilterParam = Record<string, string | boolean>;
 type PriceFiltersQueryParam = Record<'price', {max?: number; min?: number}>;
 type VariantOptionFiltersQueryParam = Record<
   'variantOption',
@@ -30,7 +32,10 @@ type VariantOptionFiltersQueryParam = Record<
 
 export type AppliedFilter = {
   label: string;
-  urlParam: string;
+  urlParam: {
+    key: string;
+    value: string;
+  };
 };
 
 type FiltersQueryParams = Array<
@@ -44,18 +49,21 @@ export type SortParam =
   | 'newest'
   | 'featured';
 
-export async function loader({
-  params,
-  request,
-  context: {storefront},
-}: LoaderArgs) {
+export const handle = {
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.COLLECTION,
+  },
+};
+
+export async function loader({params, request, context}: LoaderArgs) {
   const {collectionHandle} = params;
 
   invariant(collectionHandle, 'Missing collectionHandle param');
 
   const searchParams = new URL(request.url).searchParams;
-  const knownFilters = ['cursor', 'productVendor', 'productType', 'available'];
-  const priceFilters = ['minPrice', 'maxPrice'];
+  const knownFilters = ['cursor', 'productVendor', 'productType'];
+  const available = 'available';
+  const variantOption = 'variantOption';
   const {sortKey, reverse} = getSortValuesFromParam(
     searchParams.get('sort') as SortParam,
   );
@@ -63,12 +71,23 @@ export async function loader({
   const appliedFilters: AppliedFilter[] = [];
 
   for (const [key, value] of searchParams.entries()) {
-    if (knownFilters.includes(key)) {
+    if (available === key) {
+      filters.push({available: value === 'true'});
+      appliedFilters.push({
+        label: value === 'true' ? 'In stock' : 'Out of stock',
+        urlParam: {
+          key: available,
+          value,
+        },
+      });
+    } else if (knownFilters.includes(key)) {
       filters.push({[key]: value});
-    } else if (!priceFilters.includes(key)) {
-      filters.push({variantOption: {name: key, value}});
+      appliedFilters.push({label: value, urlParam: {key, value}});
+    } else if (key.includes(variantOption)) {
+      const [name, val] = value.split(':');
+      filters.push({variantOption: {name, value: val}});
+      appliedFilters.push({label: val, urlParam: {key, value}});
     }
-    appliedFilters.push({label: value, urlParam: key});
   }
 
   // Builds min and max price filter since we can't stack them separately into
@@ -78,17 +97,26 @@ export async function loader({
     const price: {min?: number; max?: number} = {};
     if (searchParams.has('minPrice')) {
       price.min = Number(searchParams.get('minPrice')) || 0;
+      appliedFilters.push({
+        label: `Min: $${price.min}`,
+        urlParam: {key: 'minPrice', value: searchParams.get('minPrice')!},
+      });
     }
     if (searchParams.has('maxPrice')) {
       price.max = Number(searchParams.get('maxPrice')) || 0;
+      appliedFilters.push({
+        label: `Max: $${price.max}`,
+        urlParam: {key: 'maxPrice', value: searchParams.get('maxPrice')!},
+      });
     }
     filters.push({
       price,
     });
   }
 
-  const {collection} = await storefront.query<{
+  const {collection, collections} = await context.storefront.query<{
     collection: CollectionType;
+    collections: CollectionConnection;
   }>(COLLECTION_QUERY, {
     variables: {
       handle: collectionHandle,
@@ -100,10 +128,12 @@ export async function loader({
   });
 
   if (!collection) {
-    throw new Response('Not found', {status: 404});
+    throw await notFoundMaybeRedirect(request, context);
   }
 
-  return json({collection, appliedFilters});
+  const collectionNodes = flattenConnection(collections);
+
+  return json({collection, appliedFilters, collections: collectionNodes});
 }
 
 export const meta: MetaFunction = ({
@@ -112,13 +142,14 @@ export const meta: MetaFunction = ({
   data: SerializeFrom<typeof loader> | undefined;
 }) => {
   return {
-    title: data?.collection.seo?.title ?? 'Collection',
-    description: data?.collection.seo?.description,
+    title: data?.collection?.seo?.title ?? 'Collection',
+    description: data?.collection?.seo?.description,
   };
 };
 
 export default function Collection() {
-  const {collection, appliedFilters} = useLoaderData<typeof loader>();
+  const {collection, collections, appliedFilters} =
+    useLoaderData<typeof loader>();
   const breadcrumbs =
     collection.metafield?.references &&
     flattenConnection<MetafieldReference>(collection.metafield.references)
@@ -144,6 +175,7 @@ export default function Collection() {
         <SortFilter
           filters={collection.products.filters as Filter[]}
           appliedFilters={appliedFilters}
+          collections={collections as Collection[]}
         >
           <ProductGrid
             key={collection.id}
@@ -226,6 +258,14 @@ const COLLECTION_QUERY = `#graphql
         pageInfo {
           hasNextPage
           endCursor
+        }
+      }
+    }
+    collections(first: 100) {
+      edges {
+        node {
+          title
+          handle
         }
       }
     }

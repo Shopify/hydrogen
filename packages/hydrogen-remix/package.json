@@ -31,14 +31,37 @@
         "default": "./dist/production/index.js"
       }
     },
+    "./build": {
+      "types": "./dist/production/build.d.ts",
+      "module": {
+        "development": "./dist/development/build.js",
+        "default": "./dist/production/build.js"
+      },
+      "require": "./dist/build.cjs",
+      "import": {
+        "development": "./dist/development/build.js",
+        "default": "./dist/production/build.js"
+      },
+      "default": {
+        "development": "./dist/development/build.js",
+        "default": "./dist/production/build.js"
+      }
+    },
     "./package.json": "./package.json"
   },
   "files": [
-    "dist"
+    "dist",
+    "templates"
   ],
   "peerDependencies": {
     "@shopify/h2-test-remix-oxygen": "^0.0.1",
     "@remix-run/react": "*",
     "@shopify/h2-test-hydrogen": "^2.0.0-alpha.1"
+  },
+  "dependencies": {
+    "recursive-readdir": "^2.2.3"
+  },
+  "devDependencies": {
+    "@types/recursive-readdir": "^2.2.1"
   }
 }

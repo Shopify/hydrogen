@@ -1,4 +1,4 @@
-import React, {forwardRef, useCallback, useEffect, useId} from 'react';
+import React, {forwardRef, useCallback, useEffect, useId, useRef} from 'react';
 import {useFetcher, useLocation, useFetchers} from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import type {PartialDeep} from 'type-fest';
@@ -15,17 +15,18 @@ import {
   json,
 } from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
-import {getCartLines} from './LinesAdd';
-import {usePrefixPathWithLocale} from '~/lib/utils';
+import {getCartLines} from './CartLinesAdd';
+import {isLocalPath, usePrefixPathWithLocale} from '~/lib/utils';
 
 interface LinesRemoveProps {
   lineIds: CartLine['id'][];
+  className?: string;
   children: ({
     state,
-    error,
+    errors,
   }: {
     state: 'idle' | 'submitting' | 'loading';
-    error: string;
+    errors: PartialDeep<UserError>[];
   }) => React.ReactNode;
   onSuccess?: (event: LinesRemoveEvent) => void;
 }
@@ -40,7 +41,7 @@ interface LinesRemoveEventPayload extends LinesRemove {
 }
 
 interface LinesRemoveEvent {
-  type: 'lines_remove' | 'lines_remove_error';
+  type: 'lines_remove';
   id: string;
   payload: LinesRemoveEventPayload;
 }
@@ -51,7 +52,7 @@ interface DiffLinesProps {
   removingLineIds: CartLine['id'][];
 }
 
-const ACTION_PATH = '/cart/LinesRemove';
+const ACTION_PATH = '/cart/CartLinesRemove';
 
 /**
  * action that handles the line(s) remove mutation
@@ -71,29 +72,29 @@ async function action({request, context}: ActionArgs) {
   // what was really added or not for analytics
   const prevCart = await getCartLines({cartId, context});
 
-  const {cart, errors} = await linesRemoveMutation({
+  const {cart, errors: graphqlErrors} = await cartLinesRemove({
     cartId,
     lineIds,
     context,
   });
 
-  if (errors.length) {
-    const errorMessage = errors?.map(({message}) => message).join('/n') || '';
-    return json({error: errorMessage});
+  if (graphqlErrors.length) {
+    return json({errors: graphqlErrors});
   }
 
-  const redirectTo = JSON.parse(String(formData.get('redirectTo')));
-  if (redirectTo) {
+  // if no js, we essentially reload to avoid being routed to the actions route
+  const redirectTo = formData.get('redirectTo') ?? null;
+  if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
     return redirect(redirectTo);
   }
 
-  const {event, error} = instrumentEvent({
+  const {event, errors} = instrumentEvent({
     removingLineIds: lineIds,
     prevLines: prevCart.lines,
     currentLines: cart.lines,
   });
 
-  return json({event, error});
+  return json({event, errors});
 }
 
 /**
@@ -125,19 +126,15 @@ function instrumentEvent({
     },
   };
 
-  let error = null;
+  let errors = null;
   if (linesNotRemoved?.length) {
-    event.type = 'lines_remove_error';
-    event.payload.linesNotRemoved = linesNotRemoved;
-
-    error = linesNotRemoved.length
-      ? `Failed to remove line ids ${linesNotRemoved
-          .map(({id}: CartLine) => id)
-          .join(',')}`
-      : null;
+    errors = linesNotRemoved.map((line) => ({
+      code: 'LINE_NOT_REMOVED',
+      message: line.merchandise.id,
+    }));
   }
 
-  return {event, error};
+  return {event, errors};
 }
 
 /**
@@ -207,7 +204,7 @@ const REMOVE_LINE_ITEMS_MUTATION = `#graphql
  * @see https://shopify.dev/api/storefront/2022-07/mutations/cartlinesremove
  * @returns mutated cart
  */
-async function linesRemoveMutation({
+async function cartLinesRemove({
   cartId,
   lineIds,
   context,
@@ -237,80 +234,133 @@ async function linesRemoveMutation({
  * @param lineIds [ID!]! an array of cart line ids to remove
  * @param children render submit button
  * @param onSuccess? callback that runs after each form submission
- * @see: https://shopify.dev/api/storefront/2022-10/mutations/cartLinesRemove
+ * @see API https://shopify.dev/api/storefront/2022-10/mutations/cartLinesRemove
+ * @example
+ * Basic example
+ * ```
+ * function RemoveFromCart({lindeIds}) {
+ *   return (
+ *     <CartLinesRemoveForm lineIds={lindeIds}>
+ *       {(state, error) => <button>Remove</button>}
+ *     </CartLinesRemoveForm>
+ *   );
+ * }
+ * ```
+ * @example
+ * Advanced example
+ * ```
+ * function RemoveFromCart({lindeIds}) {
+ *   return (
+ *     <CartLinesRemoveForm
+ *       lineIds={lindeIds}
+ *       onSuccess={(event) => {
+ *         navigator.sendBeacon('/events', JSON.stringify(event))
+ *       }}
+ *     >
+ *       {(state, error) => (
+ *         <button>{state === 'idle' ? 'Remove' : 'Removing'}</button>
+ *         {errors ? <p>{errors[0].message}</p>}
+ *       )}
+ *     </CartLinesRemoveForm>
+ *   )
+ * }
+ * ```
  */
-const LinesRemoveForm = forwardRef(
+const CartLinesRemoveForm = forwardRef(
   (
-    {lineIds, children, onSuccess}: LinesRemoveProps,
+    {lineIds, children, onSuccess, className}: LinesRemoveProps,
     ref: React.Ref<HTMLFormElement>,
   ) => {
     const formId = useId();
     const isHydrated = useIsHydrated();
     const fetcher = useFetcher();
-    const location = useLocation();
-    const currentUrl = `${location.pathname}${location.search}`;
-    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
-
+    const {pathname, search} = useLocation();
+    const lastEventId = useRef<string | undefined>();
     const event = fetcher.data?.event;
-    const error = fetcher.data?.error;
+    const eventId = event?.id;
+    const errors = fetcher.data?.errors;
+    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
+    const localizedCurrentPath = usePrefixPathWithLocale(
+      `${pathname}${search}`,
+    );
 
     useEffect(() => {
-      if (!event) return;
+      if (!eventId) return;
+      if (eventId === lastEventId.current) return;
       onSuccess?.(event);
-    }, [event, onSuccess]);
+      lastEventId.current = eventId;
+    }, [eventId, event, onSuccess]);
 
     return (
       <fetcher.Form
         id={formId}
         method="post"
         action={localizedActionPath}
+        className={className}
         ref={ref}
       >
-        <input type="hidden" name="lineIds" value={JSON.stringify(lineIds)} />
+        {Array.isArray(lineIds) && (
+          <input type="hidden" name="lineIds" value={JSON.stringify(lineIds)} />
+        )}
         {/* used to trigger a redirect back to the same url when JS is disabled */}
         {isHydrated ? null : (
-          <input type="hidden" name="redirectTo" defaultValue={currentUrl} />
+          <input
+            type="hidden"
+            name="redirectTo"
+            defaultValue={localizedCurrentPath}
+          />
         )}
-        {children({state: fetcher.state, error})}
+        {children({state: fetcher.state, errors})}
       </fetcher.Form>
     );
   },
 );
 
 /**
- * A hook version of LinesRemoveForm to remove cart line(s) programmatically
+ * A hook to remove cart line(s) programmatically
  * @param onSuccess callback function that executes on success
- * @returns { linesRemove, linesRemoveFetcher, linesRemoving, }
+ * @returns object {cartLinesRemove, fetcher}
+ * @example
+ * ```ts
+ * function onSuccess(event) {
+ *  console.log('line(s) removed');
+ * }
+ * const {cartLinesRemove, fetcher} = useLinesRemove(onSuccess);
+ * ```
  */
-function useLinesRemove(
+function useCartLinesRemove(
   onSuccess: (event: LinesRemoveEvent) => void = () => {},
 ) {
   const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
+  const lastEventId = useRef<string | undefined>();
   const fetcher = useFetcher();
-  const fetchers = useFetchers();
-  const linesRemoveFetcher = fetchers.find(
-    (fetcher) => fetcher?.submission?.action === localizedActionPath,
-  );
 
-  let linesRemoving = [];
-
-  // set linesRemoving
-  if (linesRemoveFetcher?.submission) {
-    const deletingLineIdsStr =
-      linesRemoveFetcher?.submission?.formData?.get('lineIds');
-    if (deletingLineIdsStr && typeof deletingLineIdsStr === 'string') {
-      try {
-        linesRemoving = JSON.parse(deletingLineIdsStr);
-      } catch (_) {
-        // noop
-      }
-    }
-  }
-
-  const linesRemove = useCallback(
+  /**
+   * A hook to remove cart line(s) programmatically
+   * @param lineIds An array of cart line ids
+   * @example
+   * ```ts
+   * function useRemoveFreeGift({cart}) {
+   *   const {linesRemove} = useLinesRemove();
+   *   const {linesRemoving} = useLinesRemoving();
+   *   const freeGiftLineId = cart.lines.filter;
+   *   const shouldRemoveGift = !linesRemoving &&
+   *      freeGiftLineId &&
+   *      cart.lines.edges.length < 3 ;
+   *
+   *   useEffect(() => {
+   *     if (!shouldRemoveGift) return;
+   *     linesRemove({
+   *       lineIds: [freeGiftLineId],
+   *     });
+   *   }, [shouldRemoveGift, freeGiftLineId]);
+   * }
+   * ```
+   */
+  const cartLinesRemove = useCallback(
     ({lineIds}: {lineIds: CartLine['id'][]}) => {
       const form = new FormData();
-      form.set('lineIds', JSON.stringify(lineIds));
+      Array.isArray(lineIds) && form.set('lineIds', JSON.stringify(lineIds));
       fetcher.submit(form, {
         method: 'post',
         action: localizedActionPath,
@@ -322,41 +372,52 @@ function useLinesRemove(
 
   useEffect(() => {
     if (!fetcher?.data?.event) return;
+    if (lastEventId.current === fetcher?.data?.event?.id) return;
     onSuccess?.(fetcher.data.event);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetcher?.data?.event]);
+    lastEventId.current = fetcher.data.event.id;
+  }, [fetcher?.data?.event, onSuccess]);
 
-  return {
-    linesRemove,
-    linesRemoveFetcher,
-    linesRemoving,
-  };
+  return {cartLinesRemove, fetcher};
 }
 
 /**
- * A utility hook to implement optimistic lines removal
- * @param lines CartLine[]
- * @returns {optimisticLastLineRemove, linesRemoving}
+ * Utility hook to retrieve an active lines remove fetcher
+ * @returns fetcher | undefined
  */
-function useOptimisticLinesRemove(
-  lines?: PartialDeep<CartLine, {recurseIntoArrays: true}>[] | CartLine[],
-) {
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
-
+function useCartLinesRemoveFetcher() {
   const fetchers = useFetchers();
-  const linesRemoveFetcher = fetchers.find(
+  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
+  const fetcher = fetchers.find(
     (fetcher) => fetcher?.submission?.action === localizedActionPath,
   );
+  return fetcher;
+}
 
+/**
+ * A utility hook to retrieve the line(s) being removed
+ * @returns object {linesRemoving, fetcher}
+ * @example
+ * ```
+ * function Cart({cart}) {
+ *   const {lines} = cart;
+ *   const linesCount = cart?.lines?.edges?.length || 0;
+ *   const {linesRemoving} = useCartLinesRemoving();
+ *   const removingLastLine = Boolean(linesCount === 1 && linesRemoving.length);
+ *   const cartEmpty = lines.length === 0 || removingLastLine;
+ *
+ *   return (
+ *     <div>
+ *       <CartEmpty hidden={!cartEmpty} />
+ *       <CartLines lines={lines}>
+ *     </div>
+ *   );
+ * }
+ * ```
+ */
+function useCartLinesRemoving() {
+  const fetcher = useCartLinesRemoveFetcher();
   let linesRemoving: CartLine['id'][] = [];
-  let optimisticLastLineRemove = false;
-
-  if (!linesRemoveFetcher?.submission) {
-    return {optimisticLastLineRemove, linesRemoving};
-  }
-
-  const linesRemoveStr =
-    linesRemoveFetcher?.submission?.formData?.get('lineIds');
+  const linesRemoveStr = fetcher?.submission?.formData?.get('lineIds');
   if (linesRemoveStr && typeof linesRemoveStr === 'string') {
     try {
       linesRemoving = JSON.parse(linesRemoveStr);
@@ -364,12 +425,7 @@ function useOptimisticLinesRemove(
       // noop
     }
   }
-
-  if (lines?.length && linesRemoving?.length) {
-    optimisticLastLineRemove = linesRemoving.length === lines.length;
-  }
-
-  return {optimisticLastLineRemove, linesRemoving};
+  return {linesRemoving, fetcher};
 }
 
 /**
@@ -377,22 +433,22 @@ function useOptimisticLinesRemove(
  * @param line? optional CartLine
  * @returns {optimisticLineRemove, linesRemoving}
  */
-function useOptimisticLineRemove(line?: CartLine) {
-  const {linesRemoving} = useOptimisticLinesRemove();
+function useCartLineRemoving(line: CartLine) {
+  const {linesRemoving} = useCartLinesRemoving();
 
-  const optimisticLineRemove =
+  const lineRemoving =
     line && linesRemoving?.length
       ? Boolean(linesRemoving.includes(line.id))
       : false;
 
-  return {optimisticLineRemove, linesRemoving};
+  return {lineRemoving, linesRemoving};
 }
 
 export {
   action,
-  LinesRemoveForm,
-  linesRemoveMutation,
-  useLinesRemove,
-  useOptimisticLineRemove,
-  useOptimisticLinesRemove,
+  cartLinesRemove,
+  CartLinesRemoveForm,
+  useCartLineRemoving,
+  useCartLinesRemove,
+  useCartLinesRemoving,
 };

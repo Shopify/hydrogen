@@ -1,6 +1,6 @@
 import invariant from 'tiny-invariant';
 import type {PartialDeep} from 'type-fest';
-import {forwardRef, useCallback, useEffect, useId} from 'react';
+import {forwardRef, useCallback, useEffect, useId, useRef} from 'react';
 import {useFetcher, useLocation, useFetchers} from '@remix-run/react';
 import type {
   Cart,
@@ -20,17 +20,18 @@ import {
   getCartLines,
   LINES_CART_FRAGMENT,
   USER_ERROR_FRAGMENT,
-} from './LinesAdd';
-import {usePrefixPathWithLocale} from '~/lib/utils';
+} from './CartLinesAdd';
+import {isLocalPath, usePrefixPathWithLocale} from '~/lib/utils';
 
 interface UpdateCartLineProps {
   lines: CartLineUpdateInput[];
+  className?: string;
   children: ({
     state,
-    error,
+    errors,
   }: {
     state: 'idle' | 'submitting' | 'loading';
-    error?: string;
+    errors: PartialDeep<UserError>[];
   }) => React.ReactNode;
   onSuccess?: (event: LinesUpdateEvent) => void;
 }
@@ -42,7 +43,7 @@ interface LinesUpdateEventPayload {
 }
 
 interface LinesUpdateEvent {
-  type: 'lines_update' | 'lines_update_error';
+  type: 'lines_update';
   id: string;
   payload: LinesUpdateEventPayload;
 }
@@ -53,7 +54,7 @@ interface InstrumentLinesProps {
   currentLines: CartLineConnection;
 }
 
-const ACTION_PATH = '/cart/LinesUpdate';
+const ACTION_PATH = '/cart/CartLinesUpdate';
 
 /**
  * action that handles the line(s) update mutation
@@ -75,34 +76,33 @@ async function action({request, context}: ActionArgs) {
   // what was really updated or not for analytics :(
   const prevCart = await getCartLines({cartId, context});
 
-  const {cart, errors} = await linesUpdateMutation({
+  const {cart, errors: graphqlErrors} = await cartLinesUpdate({
     cartId,
     lines,
     context,
   });
 
-  if (errors.length) {
-    const errorMessage = errors?.map(({message}) => message).join('/n') || '';
-    return json({error: errorMessage});
+  if (graphqlErrors.length) {
+    return json({errors: graphqlErrors});
   }
 
   // if no js, we essentially reload to avoid being routed to the actions route
-  const redirectTo = JSON.parse(String(formData.get('redirectTo')));
-  if (redirectTo) {
+  const redirectTo = formData.get('redirectTo') ?? null;
+  if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
     return redirect(redirectTo);
   }
 
-  const {event, error} = instrumentEvent({
+  const {event, errors} = instrumentEvent({
     updatingLines: lines,
     currentLines: cart.lines,
     prevLines: prevCart.lines,
   });
 
-  return json({event, error});
+  return json({event, errors});
 }
 
 /**
- * Helper function to instrument lines_update | lines_update_error events
+ * Helper function to instrument lines_update
  * @param updatingLines the line ids being updated
  * @param prevLines the line(s) available before removing
  * @param currentLines the line(s) still available after removing
@@ -126,16 +126,15 @@ function instrumentEvent({
     },
   };
 
-  let error = null;
+  let errors = null;
   if (linesNotUpdated.length) {
-    event.type = 'lines_update_error';
-    event.payload.linesNotUpdated = linesNotUpdated;
-    error = `Failed to update line ids ${linesNotUpdated
-      .map(({id}: CartLine) => id)
-      .join(',')}`;
+    errors = linesNotUpdated.map((line) => ({
+      code: 'LINE_NOT_UPDATED',
+      message: line.merchandise.id,
+    }));
   }
 
-  return {event, error};
+  return {event, errors};
 }
 
 /**
@@ -172,6 +171,8 @@ function diffLines({
   mutation -----------------------------------------------------------------------------------------
 */
 const LINES_UPDATE_MUTATION = `#graphql
+  ${LINES_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
   mutation ($cartId: ID!, $lines: [CartLineUpdateInput!]!, $language: LanguageCode, $country: CountryCode)
   @inContext(country: $country, language: $language) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
@@ -183,8 +184,6 @@ const LINES_UPDATE_MUTATION = `#graphql
       }
     }
   }
-  ${LINES_CART_FRAGMENT}
-  ${USER_ERROR_FRAGMENT}
 `;
 
 /**
@@ -194,7 +193,7 @@ const LINES_UPDATE_MUTATION = `#graphql
  * @see https://shopify.dev/api/storefront/2022-07/mutations/cartlinesremove
  * @returns mutated cart
  */
-async function linesUpdateMutation({
+async function cartLinesUpdate({
   cartId,
   lines,
   context,
@@ -224,27 +223,32 @@ async function linesUpdateMutation({
  * @param lines [CartLineUpdateInput!]! an array of cart lines to update
  * @param children render submit button
  * @param onSuccess? callback that runs after each form submission
- * @see: https://shopify.dev/api/storefront/2022-10/mutations/cartLinesUpdate
+ * @see https://shopify.dev/api/storefront/2022-10/mutations/cartLinesUpdate
  */
-const LinesUpdateForm = forwardRef(
+const CartLinesUpdateForm = forwardRef(
   (
-    {lines = [], children, onSuccess}: UpdateCartLineProps,
+    {lines = [], children, onSuccess, className}: UpdateCartLineProps,
     ref: React.Ref<HTMLFormElement>,
   ) => {
     const formId = useId();
+    const lastEventId = useRef<string | undefined>();
     const isHydrated = useIsHydrated();
     const fetcher = useFetcher();
     const {pathname, search} = useLocation();
     const event = fetcher.data?.event;
     const eventId = fetcher.data?.event?.id;
-    const error = fetcher.data?.error;
+    const errors = fetcher.data?.errors;
     const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
+    const localizedCurrentPath = usePrefixPathWithLocale(
+      `${pathname}${search}`,
+    );
 
     useEffect(() => {
       if (!eventId) return;
+      if (eventId === lastEventId.current) return;
       onSuccess?.(event);
-      // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [eventId]);
+      lastEventId.current = eventId;
+    }, [eventId, event, onSuccess]);
 
     if (!lines.length) return null;
 
@@ -253,66 +257,45 @@ const LinesUpdateForm = forwardRef(
         id={formId}
         method="post"
         action={localizedActionPath}
+        className={className}
         ref={ref}
       >
-        {/* used to trigger a redirect back to the same url when JS is disabled */}
+        {Array.isArray(lines) && (
+          <input
+            type="hidden"
+            name="lines"
+            defaultValue={JSON.stringify(lines)}
+          />
+        )}
         {isHydrated ? null : (
           <input
             type="hidden"
             name="redirectTo"
-            defaultValue={`${pathname}${search}`}
+            defaultValue={localizedCurrentPath}
           />
         )}
-        <input type="hidden" name="lines" value={JSON.stringify(lines)} />
-        {children({state: fetcher.state, error})}
+        {children({state: fetcher.state, errors})}
       </fetcher.Form>
     );
   },
 );
 
 /**
- * Utility hook to get the active LinesUpdate fetcher
- * @returns fetcher
- */
-function useLinesUpdatingFetcher() {
-  const fetchers = useFetchers();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
-  return fetchers.find(
-    (fetcher) => fetcher?.submission?.action === localizedActionPath,
-  );
-}
-
-/**
  * A hook version of LinesUpdateForm to update cart line(s) programmatically
  * @param onSuccess callback function that executes on success
- * @returns { linesUpdate, linesUpdateFetcher, linesUpdating, }
+ * @returns { cartLinesUpdate, fetcher}
  */
-function useLinesUpdate(
+function useCartLinesUpdate(
   onSuccess: (event: LinesUpdateEvent) => void = () => {},
 ) {
   const fetcher = useFetcher();
-  const linesUpdateFetcher = useLinesUpdatingFetcher();
+  const lastEventId = useRef<string | undefined>();
   const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
-  let linesUpdating;
-
-  // set linesUpdating
-  if (linesUpdateFetcher?.submission) {
-    const updatingLinesStr =
-      linesUpdateFetcher?.submission?.formData?.get('lines');
-    if (updatingLinesStr && typeof updatingLinesStr === 'string') {
-      try {
-        linesUpdating = JSON.parse(updatingLinesStr);
-      } catch (_) {
-        // noop
-      }
-    }
-  }
-
-  const linesUpdate = useCallback(
+  const cartLinesUpdate = useCallback(
     ({lines}: {lines: CartLineUpdateInput}) => {
       const form = new FormData();
-      form.set('lines', JSON.stringify(lines));
+      Array.isArray(lines) && form.set('lines', JSON.stringify(lines));
       fetcher.submit(form, {
         method: 'post',
         action: localizedActionPath,
@@ -324,49 +307,68 @@ function useLinesUpdate(
 
   useEffect(() => {
     if (!fetcher?.data?.event) return;
+    if (lastEventId.current === fetcher?.data?.event?.id) return;
     onSuccess?.(fetcher.data.event);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetcher?.data?.event]);
+    lastEventId.current = fetcher.data.event.id;
+  }, [fetcher?.data?.event, onSuccess]);
 
-  return {
-    linesUpdate,
-    linesUpdateFetcher,
-    linesUpdating,
-  };
+  return {cartLinesUpdate, fetcher};
 }
 
 /**
- * A utility hook to implement optimistic line updates
+ * Utility hook to get the active LinesUpdate fetcher
+ * @returns fetcher
+ */
+function useCartLinesUpdatingFetcher() {
+  const fetchers = useFetchers();
+  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
+  return fetchers.find(
+    (fetcher) => fetcher?.submission?.action === localizedActionPath,
+  );
+}
+
+/**
+ * Utility hook to retrieve all cart lines being updated
+ * @returns {linesUpdating, fetcher}
+ */
+function useCartLinesUpdating() {
+  const fetcher = useCartLinesUpdatingFetcher();
+  let linesUpdating: PartialDeep<CartLine>[] = [];
+  // set linesUpdating
+  if (fetcher?.submission) {
+    const linesStr = fetcher?.submission?.formData?.get('lines');
+    if (linesStr && typeof linesStr === 'string') {
+      try {
+        linesUpdating = JSON.parse(linesStr);
+      } catch (_) {
+        // noop
+      }
+    }
+  }
+
+  return {linesUpdating, fetcher};
+}
+
+/**
+ * A utility hook to implement individual line optimistic updates
  * @param line CartLine
  * @returns {lineUpdating, linesUpdating}
  */
-function useLineUpdating(
+function useCartLineUpdating(
   line: CartLine | PartialDeep<CartLine, {recurseIntoArrays: true}>,
 ) {
-  const linesUpdateFetcher = useLinesUpdatingFetcher();
+  const {linesUpdating, fetcher} = useCartLinesUpdating();
+  let lineUpdating: PartialDeep<CartLine> | null = null;
 
-  let linesUpdating: CartLine[] = [];
-  let lineUpdating: CartLine | null = null;
-
-  if (!linesUpdateFetcher?.submission) {
+  if (!fetcher?.submission) {
     return {lineUpdating, linesUpdating};
-  }
-
-  // parse updating lines
-  const linesUpdatingStr =
-    linesUpdateFetcher?.submission?.formData?.get('lines');
-  if (linesUpdatingStr && typeof linesUpdatingStr === 'string') {
-    try {
-      linesUpdating = JSON.parse(linesUpdatingStr);
-    } catch (_) {
-      // noop
-    }
   }
 
   // filter updating line
   if (line && linesUpdating?.length) {
     lineUpdating =
-      linesUpdating.find((updatingLine) => updatingLine.id === line.id) || null;
+      linesUpdating.find((updatingLine) => updatingLine?.id === line?.id) ||
+      null;
   }
 
   return {lineUpdating, linesUpdating};
@@ -374,8 +376,8 @@ function useLineUpdating(
 
 export {
   action,
-  LinesUpdateForm,
-  linesUpdateMutation,
-  useLinesUpdate,
-  useLineUpdating,
+  cartLinesUpdate,
+  CartLinesUpdateForm,
+  useCartLinesUpdate,
+  useCartLineUpdating,
 };

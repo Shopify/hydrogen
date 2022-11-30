@@ -1,6 +1,7 @@
 import {
   json,
   LoaderArgs,
+  RESOURCE_TYPES,
   type MetaFunction,
   type SerializeFrom,
 } from '@shopify/hydrogen-remix';
@@ -43,6 +44,12 @@ export const meta: MetaFunction = ({
     title: 'Policies',
     description: 'Policies',
   };
+};
+
+export const handle = {
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.POLICIES,
+  },
 };
 
 export default function Policies() {

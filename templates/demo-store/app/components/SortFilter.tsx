@@ -15,6 +15,7 @@ import {Disclosure} from '@headlessui/react';
 import type {
   FilterType,
   Filter,
+  Collection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {AppliedFilter, SortParam} from '~/routes/collections/$collectionHandle';
 
@@ -22,9 +23,15 @@ type Props = {
   filters: Filter[];
   appliedFilters?: AppliedFilter[];
   children: React.ReactNode;
+  collections?: Collection[];
 };
 
-export function SortFilter({filters, appliedFilters = [], children}: Props) {
+export function SortFilter({
+  filters,
+  appliedFilters = [],
+  children,
+  collections = [],
+}: Props) {
   const [isOpen, setIsOpen] = useState(false);
   return (
     <>
@@ -39,17 +46,21 @@ export function SortFilter({filters, appliedFilters = [], children}: Props) {
         </button>
         <SortMenu />
       </div>
-      <div className="flex">
+      <div className="flex flex-wrap flex-col md:flex-row">
         <div
           className={`transition-all duration-200 ${
             isOpen
-              ? 'opacity-100 min-w-[240px] w-[240px] pr-4 md:pr-8'
-              : 'opacity-0 min-w-[0px] w-[0px] pr-0'
+              ? 'opacity-100 min-w-full md:min-w-[240px] md:w-[240px] md:pr-8 max-h-full'
+              : 'opacity-0 md:min-w-[0px] md:w-[0px] pr-0 max-h-0 md:max-h-full'
           }`}
         >
-          <FiltersDrawer filters={filters} appliedFilters={appliedFilters} />
+          <FiltersDrawer
+            collections={collections}
+            filters={filters}
+            appliedFilters={appliedFilters}
+          />
         </div>
-        <div>{children}</div>
+        <div className="flex-1">{children}</div>
       </div>
     </>
   );
@@ -58,9 +69,11 @@ export function SortFilter({filters, appliedFilters = [], children}: Props) {
 export function FiltersDrawer({
   filters = [],
   appliedFilters = [],
+  collections = [],
 }: {
   filters: Filter[];
   appliedFilters: AppliedFilter[];
+  collections: Collection[];
 }) {
   const [params] = useSearchParams();
   const location = useLocation();
@@ -99,6 +112,21 @@ export function FiltersDrawer({
     }
   };
 
+  const collectionsMarkup = collections.map((collection) => {
+    return (
+      <li key={collection.handle} className="pb-4">
+        <Link
+          to={`/collections/${collection.handle}`}
+          className="focus:underline hover:underline"
+          key={collection.handle}
+          prefetch="intent"
+        >
+          {collection.title}
+        </Link>
+      </li>
+    );
+  });
+
   return (
     <>
       <nav className="py-8">
@@ -107,6 +135,20 @@ export function FiltersDrawer({
             <AppliedFilters filters={appliedFilters} />
           </div>
         ) : null}
+
+        <Disclosure as="div" className="w-full">
+          {({open}) => (
+            <>
+              <Disclosure.Button className="py-4 w-full flex justify-between">
+                <Text size="lead">Collection</Text>
+                <IconCaret direction={open ? 'up' : 'down'} />
+              </Disclosure.Button>
+              <Disclosure.Panel>
+                <ul className="py-2">{collectionsMarkup}</ul>
+              </Disclosure.Panel>
+            </>
+          )}
+        </Disclosure>
         <Heading as="h4" size="lead" className="pb-4">
           Filter By
         </Heading>
@@ -174,7 +216,18 @@ function getAppliedFilterLink(
   location: Location,
 ) {
   const paramsClone = new URLSearchParams(params);
-  paramsClone.delete(filter.urlParam);
+  if (filter.urlParam.key === 'variantOption') {
+    const variantOptions = paramsClone.getAll('variantOption');
+    const filteredVariantOptions = variantOptions.filter(
+      (options) => !options.includes(filter.urlParam.value),
+    );
+    paramsClone.delete(filter.urlParam.key);
+    for (const filteredVariantOption of filteredVariantOptions) {
+      paramsClone.append(filter.urlParam.key, filteredVariantOption);
+    }
+  } else {
+    paramsClone.delete(filter.urlParam.key);
+  }
   return `${location.pathname}?${paramsClone.toString()}`;
 }
 
@@ -287,9 +340,11 @@ function filterInputToParams(
           params.set(key, value.toString());
         } else {
           const {name, value: val} = value as {name: string; value: string};
-          const newInput = {[name]: val};
-
-          filterInputToParams(type, newInput, params);
+          const allVariants = params.getAll(`variantOption`);
+          const newVariant = `${name}:${val}`;
+          if (!allVariants.includes(newVariant)) {
+            params.append('variantOption', newVariant);
+          }
         }
       });
       break;
