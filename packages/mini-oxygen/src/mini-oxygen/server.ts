@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-misused-promises */
 import path from 'path';
 import http from 'http';
 import type {IncomingMessage} from 'http';
@@ -7,7 +8,7 @@ import mime from 'mime';
 import {Request} from '@miniflare/core';
 import connect from 'connect';
 import type {NextHandleFunction} from 'connect';
-import bodyParser from 'body-parser';
+// import bodyParser from 'body-parser';
 
 import type {MiniOxygen} from './core';
 
@@ -33,6 +34,76 @@ const autoReloadScript = `<script defer type="application/javascript">
 })();
 </script>`;
 const autoReloadScriptLength = Buffer.byteLength(autoReloadScript);
+
+async function serveResponse(
+  mf: MiniOxygen,
+  req: connect.IncomingMessage,
+  res: http.ServerResponse,
+  autoReload: boolean,
+) {
+  let response;
+  let status = 500;
+  const headers: http.OutgoingHttpHeaders = {};
+
+  const reqHeaders: {[key: string]: string} = {};
+  // eslint-disable-next-line guard-for-in
+  for (const key in req.headers) {
+    const val = req.headers[key];
+    if (Array.isArray(val)) {
+      reqHeaders[key] = val.join(',');
+    } else if (val !== undefined) {
+      reqHeaders[key] = val;
+    }
+  }
+  const request = new Request(urlFromRequest(req), {
+    method: req.method,
+    headers: reqHeaders,
+    body:
+      req.method !== 'GET' && req.method !== 'HEAD' ? (req as any).body : null,
+  });
+
+  try {
+    response = await mf.dispatchFetch(request);
+    status = response.status;
+
+    for (const key of response.headers.keys()) {
+      const val =
+        key.toLowerCase() === 'set-cookie'
+          ? (response.headers as any).getAll(key)
+          : response.headers.get(key);
+      headers[key] = val;
+    }
+
+    const shouldAutoreload =
+      autoReload && response.headers.get('content-type') === 'text/html';
+
+    if (shouldAutoreload) {
+      const contentLength = response.headers.get('content-length');
+      if (contentLength) {
+        headers['content-length'] =
+          parseInt(contentLength, 10) + autoReloadScriptLength;
+      }
+    }
+
+    res.writeHead(status, headers);
+
+    if (response.body) {
+      for await (const chunk of response.body) {
+        res.write(chunk);
+      }
+
+      if (shouldAutoreload) {
+        res.write(autoReloadScript);
+      }
+    }
+
+    res.end();
+  } catch (err: any) {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    res.writeHead(status, {'Content-Type': 'text/plain; charset=UTF-8'});
+    res.end(err.stack, 'utf8');
+  }
+}
 
 function createAssetMiddleware({
   assetsDir,
@@ -119,21 +190,31 @@ function createRequestMiddleware(
     onResponseError,
   }: MiniOxygenServerHooks & Pick<MiniOxygenServerOptions, 'autoReload'>,
 ): NextHandleFunction {
-  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async (req, res) => {
-    let response;
-    let status = 500;
-    const headers: http.OutgoingHttpHeaders = {};
+    return serveResponse(mf, req, res, autoReload);
+  };
+}
 
-    const reqHeaders: {[key: string]: string} = {};
-    // eslint-disable-next-line guard-for-in
-    for (const key in req.headers) {
-      const val = req.headers[key];
-      if (Array.isArray(val)) {
-        reqHeaders[key] = val.join(',');
-      } else if (val !== undefined) {
-        reqHeaders[key] = val;
-      }
+function useProxy(mf: MiniOxygen): NextHandleFunction {
+  return async (req, res) => {
+    if (req.headers['mini-oxygen-proxy']) {
+      return serveResponse(mf, req, res, false);
+    } else {
+      const url = urlFromRequest(req);
+      const headers = req.headers;
+      headers['mini-Oxygen-Proxy'] = 'true';
+      const options = {
+        host: '127.0.0.1',
+        port: 8080,
+        path: `${url.protocol}//${url.host}${url.pathname}`,
+        headers,
+      };
+      http.get(options, (response) => {
+        const statusCode: number = response.statusCode || 0;
+        res.writeHead(statusCode, response.statusMessage);
+        response.pipe(res);
+        return response;
+      });
     }
     const request = new Request(urlFromRequest(req), {
       method: req.method,
@@ -204,13 +285,13 @@ export function createServer(
 ) {
   const app = connect();
 
-  if (assetsDir) {
-    app.use(createAssetMiddleware({assetsDir, publicPath}));
-  }
+  // if (assetsDir) {
+  //   app.use(createAssetMiddleware({assetsDir, publicPath}));
+  // }
 
-  if (autoReload) {
-    app.use(SSEUrl, createAutoReloadMiddleware(mf));
-  }
+  // if (autoReload) {
+  //   app.use(SSEUrl, createAutoReloadMiddleware(mf));
+  // }
 
   app.use(bodyParser.raw({type: '*/*'}));
   app.use(createRequestMiddleware(mf, {autoReload, ...hooks}));
