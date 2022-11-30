@@ -20,11 +20,12 @@ interface FeaturedProductsProps {
 /**
  * Display a grid of products and a heading based on some options.
  * This components uses the storefront API products query
- * @see: https://shopify.dev/api/storefront/2023-01/queries/products
  * @param count number of products to display
- * @param query a filtering query @see: https://shopify.dev/api/storefront/2023-01/queries/products#argument-products-query
+ * @param query a filtering query
  * @param reverse wether to reverse the product results
  * @param sortKey Sort the underlying list by the given key.
+ * @see query https://shopify.dev/api/storefront/2023-01/queries/products
+ * @see filters https://shopify.dev/api/storefront/2023-01/queries/products#argument-products-query
  */
 export function FeaturedProducts({
   count = 4,
