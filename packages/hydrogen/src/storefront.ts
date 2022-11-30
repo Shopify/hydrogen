@@ -99,8 +99,12 @@ export function createStorefrontClient(
     '',
   );
 
-  const {getPublicTokenHeaders, getPrivateTokenHeaders, getStorefrontApiUrl} =
-    createStorefrontUtilities(clientOptions);
+  const {
+    getPublicTokenHeaders,
+    getPrivateTokenHeaders,
+    getStorefrontApiUrl,
+    getShopifyDomain,
+  } = createStorefrontUtilities(clientOptions);
 
   const getHeaders = clientOptions.privateStorefrontToken
     ? getPrivateTokenHeaders
@@ -199,6 +203,7 @@ export function createStorefrontClient(
       getPublicTokenHeaders,
       getPrivateTokenHeaders,
       getStorefrontApiUrl,
+      getShopifyDomain,
       cache,
       CacheNone,
       CacheLong,
