@@ -93,7 +93,7 @@ Example use: programmatic add to cart
 // A hook that programmatically adds a free gift variant to the cart,
 // if there are 3 or more items in the cart
 function useAddFreeGift({cart}) {
-  const {cartLinesAdd} = useLinesAdd();
+  const {cartLinesAdd} = useCartLinesAdd();
   const giftInCart = cart.lines.filter...
   const freeGiftProductVariant = {...}
   const shouldAddGift = !linesAdding && !giftInCart && cart.lines.edges.length >= 3;
@@ -130,7 +130,7 @@ Example use: reacting to add to cart event
 ```jsx
 // Toggle a cart drawer when adding to cart
 function Layout() {
-  const {linesAdding} = useLinesAdding();
+  const {linesAdding} = useCartLinesAdding();
   const [drawer, setDrawer] = useState(false);
 
   useEffect(() => {
