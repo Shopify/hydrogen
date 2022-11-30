@@ -18,7 +18,7 @@ Basic use:
 ```jsx
 function AddToCartButton({selectedVariant, quantity}) {
   return (
-    <LinesAddForm
+    <CartLinesAddForm
       lines={[
         {
           merchandiseId: selectedVariant.id,
@@ -27,7 +27,7 @@ function AddToCartButton({selectedVariant, quantity}) {
       ]}
     >
       {() => <button>Add to Cart</button>}
-    </LinesAddForm>
+    </CartLinesAddForm>
   );
 }
 ```
@@ -48,7 +48,7 @@ function AddToCartButton({selectedVariant, quantity}) {
   })
 
   return (
-    <LinesAddForm
+    <CartLinesAddForm
       lines={[line]}
       optimisticLines={[optimisticLine]}
       onSuccess={(event) => {
@@ -59,7 +59,7 @@ function AddToCartButton({selectedVariant, quantity}) {
         <button>{state === 'idle' ? 'Add to Bag' : 'Adding to Bag'}</button>
         {errors ? <p>{error[0].message}</p>}
       )}
-    </LinesAddForm>
+    </CartLinesAddForm>
   )
 }
 ```
