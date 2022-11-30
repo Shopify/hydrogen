@@ -42,7 +42,6 @@ export function Pagination<Resource extends Connection>({
   const params = new URLSearchParams(search);
   const direction = params.get('direction');
   const isPrevious = direction === 'previous';
-  const q = params.get('q') || '';
 
   const {ref, inView} = useInView({
     threshold: 0,
@@ -54,25 +53,19 @@ export function Pagination<Resource extends Connection>({
       pageInfo: connection.pageInfo,
     });
 
-  const prevPageUrl = useMemo(
-    () =>
-      `?${new URLSearchParams({
-        q,
-        cursor: startCursor || '',
-        direction: 'previous',
-      }).toString()}`,
-    [startCursor, q],
-  );
+  const prevPageUrl = useMemo(() => {
+    const params = new URLSearchParams(search);
+    params.set('direction', 'previous');
+    startCursor && params.set('cursor', startCursor);
+    return `?${params.toString()}`;
+  }, [search, startCursor]);
 
-  const nextPageUrl = useMemo(
-    () =>
-      `?${new URLSearchParams({
-        q,
-        cursor: endCursor || '',
-        direction: 'next',
-      }).toString()}`,
-    [endCursor, q],
-  );
+  const nextPageUrl = useMemo(() => {
+    const params = new URLSearchParams(search);
+    params.set('direction', 'next');
+    endCursor && params.set('cursor', endCursor);
+    return `?${params.toString()}`;
+  }, [search, endCursor]);
 
   // auto load next page if in view
   useLoadMoreWhenInView({
