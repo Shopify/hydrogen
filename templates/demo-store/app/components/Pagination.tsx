@@ -5,7 +5,7 @@ import type {
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
-import {useInView, IntersectionOptions} from 'react-intersection-observer';
+import {useInView, type IntersectionOptions} from 'react-intersection-observer';
 import {useTransition, useLocation, useNavigate} from '@remix-run/react';
 
 type Connection = {
