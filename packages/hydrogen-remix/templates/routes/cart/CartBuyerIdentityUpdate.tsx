@@ -242,7 +242,6 @@ const CartBuyerIdentityUpdateForm = forwardRef<
     const event = fetcher.data?.event;
     const errors = fetcher.data?.errors;
     const {pathname, search} = useLocation();
-    const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
     const localizedCurrentPath = usePrefixPathWithLocale(
       `${pathname}${search}`,
     );
@@ -258,7 +257,7 @@ const CartBuyerIdentityUpdateForm = forwardRef<
       <fetcher.Form
         id={formId}
         method="post"
-        action={localizedActionPath}
+        action={ACTION_PATH}
         ref={ref}
         className={className}
       >
@@ -299,9 +298,8 @@ const CartBuyerIdentityUpdateForm = forwardRef<
  */
 function useBuyerIdentityUpdateFetcher() {
   const fetchers = useFetchers();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
   return fetchers.find(
-    (fetcher) => fetcher?.submission?.action === localizedActionPath,
+    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
   );
 }
 
@@ -315,7 +313,6 @@ function useCartBuyerIdentityUpdate(
 ) {
   const fetcher = useFetcher();
   const lastEventId = useRef<string | undefined>();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
 
   const cartBuyerIdentityUpdate = useCallback(
     ({
@@ -340,11 +337,11 @@ function useCartBuyerIdentityUpdate(
       }
       fetcher.submit(form, {
         method: 'post',
-        action: localizedActionPath,
+        action: ACTION_PATH,
         replace: false,
       });
     },
-    [fetcher, localizedActionPath],
+    [fetcher, ACTION_PATH],
   );
 
   useEffect(() => {
