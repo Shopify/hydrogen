@@ -5,9 +5,8 @@ import {
   Money,
   useMoney,
 } from '@shopify/hydrogen-react';
-
 import {Text, Link} from '~/components';
-import {isDiscounted, isNewArrival} from '~/lib/utils';
+import {isDiscounted, isNewArrival, variantToCartLine} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
 import type {
   MoneyV2,
@@ -16,7 +15,7 @@ import type {
   ProductVariantConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {SerializeFrom} from '@remix-run/server-runtime';
-import {LinesAddForm} from '~/routes/__resources/cart/LinesAdd';
+import {CartLinesAddForm} from '.hydrogen/cart';
 
 export function ProductCard({
   product,
@@ -105,17 +104,23 @@ export function ProductCard({
           </div>
         </div>
       </Link>
-      {firstVariant && (
-        <LinesAddForm
+      {firstVariant?.id && (
+        <CartLinesAddForm
           lines={[
             {
               quantity: 1,
-              variant: firstVariant,
+              merchandiseId: firstVariant.id,
             },
+          ]}
+          optimisticLines={[
+            variantToCartLine({
+              variant: firstVariant,
+              quantity: 1,
+            }),
           ]}
         >
           {() => <button type="submit">Add to Cart</button>}
-        </LinesAddForm>
+        </CartLinesAddForm>
       )}
     </div>
   );

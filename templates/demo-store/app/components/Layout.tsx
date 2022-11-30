@@ -26,7 +26,7 @@ import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
-import {useLinesAdd} from '~/routes/__resources/cart/LinesAdd';
+import {useCartLinesAdding} from '.hydrogen/cart';
 
 export function Layout({
   children,
@@ -58,7 +58,7 @@ export function Layout({
 
 function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
-  const {linesAdding} = useLinesAdd();
+  const {linesAdding} = useCartLinesAdding();
 
   const {
     isOpen: isCartOpen,

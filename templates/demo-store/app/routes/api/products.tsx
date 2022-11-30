@@ -5,12 +5,12 @@ import invariant from 'tiny-invariant';
 
 /**
  * Fetch a given set of products from the storefront API
- * @see: https://shopify.dev/api/storefront/2023-01/queries/products
  * @param count
  * @param query
  * @param reverse
  * @param sortKey
  * @returns Product[]
+ * @see https://shopify.dev/api/storefront/2023-01/queries/products
  */
 export async function loader({request, context: {storefront}}: LoaderArgs) {
   const url = new URL(request.url);
