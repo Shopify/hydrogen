@@ -5,6 +5,6 @@ const {hydrogenRoutes} = require('@shopify/hydrogen-remix/build');
 module.exports = {
   ignoredRouteFiles: ['**/.*'],
   async routes(defineRoutes) {
-    return await hydrogenRoutes(defineRoutes, {prefixLocalizedRoutes: true});
+    return await hydrogenRoutes(defineRoutes, {});
   },
 };
