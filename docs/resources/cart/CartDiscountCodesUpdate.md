@@ -18,9 +18,9 @@ Basic use:
 ```jsx
 function FreeShippingDiscount() {
   return (
-    <DiscountCodesUpdateForm discountCodes={['FREESHIPPING']}>
+    <CartDiscountCodesUpdateForm discountCodes={['FREESHIPPING']}>
       {() => <button>Apply Discount</button>}
-    </DiscountCodesUpdateForm>
+    </CartDiscountCodesUpdateForm>
   );
 }
 ```
@@ -30,7 +30,7 @@ Advanced use:
 ```jsx
 function FreeShippingDiscount({line}) {
   return (
-    <DiscountCodesUpdateForm
+    <CartDiscountCodesUpdateForm
       onSuccess={(event) => {
         navigator.sendBeacon('/events', JSON.stringify(event))
       }}
@@ -44,7 +44,7 @@ function FreeShippingDiscount({line}) {
         </div>
         {errors ? <p>{errors[0].message}</p>}
       )}
-    </DiscountCodesUpdateForm>
+    </CartDiscountCodesUpdateForm>
   )
 }
 ```

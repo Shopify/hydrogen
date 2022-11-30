@@ -19,9 +19,9 @@ Basic use:
 ```jsx
 function SwitchToCAD() {
   return (
-    <BuyerIdentityUpdateForm buyerIdentity={{countryCode: 'CA'}}>
+    <CartBuyerIdentityUpdateForm buyerIdentity={{countryCode: 'CA'}}>
       {(state, errors) => <button>CAD</button>}
-    </BuyerIdentityUpdateForm>
+    </CartBuyerIdentityUpdateForm>
   );
 }
 ```
@@ -32,7 +32,7 @@ Advanced use:
 // Advanced example
 function UpdateCartBuyerInfo() {
   return (
-    <BuyerIdentityUpdateForm
+    <CartBuyerIdentityUpdateForm
       onSuccess={(event) => {
         navigator.sendBeacon('/events', JSON.stringify(event));
       }}
@@ -50,7 +50,7 @@ function UpdateCartBuyerInfo() {
           {errors ? <p>{error[0].message}</p> : null}
         </>
       )}
-    </BuyerIdentityUpdateForm>
+    </CartBuyerIdentityUpdateForm>
   );
 }
 ```

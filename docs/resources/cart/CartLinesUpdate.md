@@ -19,7 +19,7 @@ Basic use:
 function IncreaseLineQuantity({line}) {
   const nextQuantity = Number((line.quantity + 1).toFixed(0));
   return (
-    <LinesUpdateForm
+    <CartLinesUpdateForm
       lines={[
         {
           lineId
@@ -28,7 +28,7 @@ function IncreaseLineQuantity({line}) {
       ]}
     >
       {() => <button>+</button>}
-    </LinesUpdateForm>
+    </CartLinesUpdateForm>
   );
 }
 ```
@@ -39,7 +39,7 @@ Advanced use:
 function DecreaseLineQuantity({line}) {
   const prevQuantity = Number(Math.max(0, line.quantity - 1).toFixed(0));
   return (
-    <LinesUpdateForm
+    <CartLinesUpdateForm
       lines={[
         {
           lineId
@@ -54,7 +54,7 @@ function DecreaseLineQuantity({line}) {
         <button>{state === 'idle' ? '-' : '...'}</button>
         {errors ? <p>{errors[0].message}</p>}
       )}
-    </LinesUpdateForm>
+    </CartLinesUpdateForm>
   )
 }
 ```

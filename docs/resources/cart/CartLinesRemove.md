@@ -18,9 +18,9 @@ Basic use:
 ```jsx
 function RemoveFromCart({lindeIds}) {
   return (
-    <LinesRemoveForm lineIds={lindeIds}>
+    <CartLinesRemoveForm lineIds={lindeIds}>
       {(state, error) => <button>Remove</button>}
-    </LinesRemoveForm>
+    </CartLinesRemoveForm>
   );
 }
 ```
@@ -31,7 +31,7 @@ Advanced use:
 // Advanced example
 function RemoveFromCart({lindeIds}) {
   return (
-    <LinesRemoveForm
+    <CartLinesRemoveForm
       lineIds={lindeIds}
       onSuccess={(event) => {
         navigator.sendBeacon('/events', JSON.stringify(event))
@@ -41,7 +41,7 @@ function RemoveFromCart({lindeIds}) {
         <button>{state === 'idle' ? 'Remove' : 'Removing'}</button>
         {errors ? <p>{errors[0].message}</p>}
       )}
-    </LinesRemoveForm>
+    </CartLinesRemoveForm>
   )
 }
 ```
