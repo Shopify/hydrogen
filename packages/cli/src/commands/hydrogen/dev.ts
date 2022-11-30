@@ -6,6 +6,7 @@ import {muteDevLogs} from '../../utils/log.js';
 import {flags} from '../../utils/flags.js';
 import fs from 'fs-extra';
 import {createRequire} from 'module';
+import chokidar from 'chokidar';
 
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
@@ -55,21 +56,23 @@ export async function runDev({
 
   muteDevLogs();
 
-  // if (process.env.LOCAL_DEV) {
-  //   // Watch local packages when developing in Hydrogen repo
-  //   const require = createRequire(import.meta.url);
-  //   const packagesPath = path.resolve(
-  //     path.dirname(require.resolve('@shopify/hydrogen')),
-  //     '..',
-  //     '..',
-  //   );
+  const extraFilesToWatch = [entryFile];
 
-  //   const packages = (await fs.readdir(packagesPath)).map((pkg) =>
-  //     path.resolve(packagesPath, pkg, 'dist'),
-  //   );
+  if (process.env.LOCAL_DEV) {
+    // Watch local packages when developing in Hydrogen repo
+    const require = createRequire(import.meta.url);
+    const packagesPath = path.resolve(
+      path.dirname(require.resolve('@shopify/hydrogen')),
+      '..',
+      '..',
+    );
 
-  //   buildWatchPaths.push(...packages);
-  // }
+    const packages = (await fs.readdir(packagesPath)).map((pkg) =>
+      path.resolve(packagesPath, pkg, 'dist'),
+    );
+
+    extraFilesToWatch.push(...packages);
+  }
 
   const buildWoker = () =>
     runBuild({entry, path: appPath, minify: false, workerOnly: true});
@@ -98,6 +101,19 @@ export async function runDev({
         buildPathWorkerFile,
         buildPathClient,
       });
+
+      chokidar
+        .watch(extraFilesToWatch, {
+          persistent: true,
+          ignoreInitial: true,
+          awaitWriteFinish: {
+            stabilityThreshold: 100,
+            pollInterval: 100,
+          },
+        })
+        .on('change', async (file) => {
+          await buildWoker();
+        });
     },
     onRebuildStart() {
       // eslint-disable-next-line no-console
