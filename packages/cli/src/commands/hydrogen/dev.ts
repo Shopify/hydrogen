@@ -1,17 +1,15 @@
 import path from 'path';
 import * as remix from '@remix-run/dev/dist/compiler.js';
-import {runBuild} from './build.js';
+import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
 import {flags} from '../../utils/flags.js';
-import fs from 'fs-extra';
-import {createRequire} from 'module';
-import chokidar from 'chokidar';
 
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
+const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
 
@@ -52,35 +50,15 @@ export async function runDev({
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-  const {root, entryFile, buildPathWorkerFile, buildPathClient} =
+  const {root, entryFile, buildPathWorkerFile, buildPathClient, publicPath} =
     getProjectPaths(appPath, entry);
 
-  const remixConfig = await getRemixConfig(root);
+  const remixConfig = await getRemixConfig(root, entryFile);
 
   muteDevLogs();
 
-  const extraFilesToWatch = [entryFile];
-
-  if (process.env.LOCAL_DEV) {
-    // Watch local packages when developing in Hydrogen repo
-    const require = createRequire(import.meta.url);
-    const packagesPath = path.resolve(
-      path.dirname(require.resolve('@shopify/hydrogen')),
-      '..',
-      '..',
-    );
-
-    const packages = (await fs.readdir(packagesPath)).map((pkg) =>
-      path.resolve(packagesPath, pkg, 'dist'),
-    );
-
-    extraFilesToWatch.push(...packages);
-  }
-
-  const buildWoker = () =>
-    runBuild({entry, path: appPath, minify: false, workerOnly: true});
-
-  console.time('\n🏁 Initial build');
+  console.time(LOG_INITIAL_BUILD);
+  const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
   remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
@@ -97,8 +75,8 @@ export async function runDev({
       console.log(`\n📄 File deleted: ${path.relative(root, file)}`);
     },
     async onInitialBuild() {
-      await buildWoker();
-      console.timeEnd('\n🏁 Initial build');
+      await copyingFiles;
+      console.timeEnd(LOG_INITIAL_BUILD);
 
       startMiniOxygen({
         root,
@@ -107,23 +85,6 @@ export async function runDev({
         buildPathWorkerFile,
         buildPathClient,
       });
-
-      chokidar
-        .watch(extraFilesToWatch, {
-          persistent: true,
-          ignoreInitial: true,
-          awaitWriteFinish: {
-            stabilityThreshold: 100,
-            pollInterval: 100,
-          },
-        })
-        .on('change', async (file) => {
-          console.log(`\n📄 File changed: ${path.relative(root, file)}`);
-          console.log(LOG_REBUILDING);
-          console.time(LOG_REBUILT);
-          await buildWoker();
-          console.timeEnd(LOG_REBUILT);
-        });
     },
     onRebuildStart() {
       // eslint-disable-next-line no-console
@@ -131,7 +92,6 @@ export async function runDev({
       console.time(LOG_REBUILT);
     },
     async onRebuildFinish() {
-      await buildWoker();
       console.timeEnd(LOG_REBUILT);
     },
   });
