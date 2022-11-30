@@ -16,6 +16,7 @@
     "types": ["@shopify/oxygen-workers-types"],
     "paths": {
       "~/*": ["app/*"],
+      ".hydrogen/*": [".hydrogen/*"],
       "remix-build": ["./build/server/index.js"]
     },
 

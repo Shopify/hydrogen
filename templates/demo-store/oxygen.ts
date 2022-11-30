@@ -10,6 +10,8 @@ const requestHandler = createRequestHandler({
   build: remixBuild,
   mode: process.env.NODE_ENV,
   shouldProxyAsset: () => false,
+  shouldProxyOnlineStore: (request: Request) =>
+    new URL(request.url).pathname === '/proxy' ? '/pages/about' : null,
 });
 
 export default {
