@@ -28,13 +28,6 @@ export default {
 
     const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
 
-    const storefrontConfig = {
-      publicStorefrontToken: '3b580e70970c4528da70c98e097c2fa0',
-      storeDomain: 'hydrogen-preview',
-      storefrontApiVersion: '2022-10',
-      i18n: getLocaleFromRequest(request),
-    };
-
     try {
       return await requestHandler(
         request,
