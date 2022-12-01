@@ -1,5 +1,11 @@
 # @shopify/cli-h2-test
 
+## 4.0.1
+
+### Patch Changes
+
+- Build project dist files before publishing by [@jplhomer](https://github.com/jplhomer)
+
 ## 4.0.0
 
 ### Patch Changes
