@@ -1,5 +1,11 @@
 # @shopify/cli-h2-test
 
+## 4.0.3
+
+### Patch Changes
+
+- Fix changeset workflow ([#282](https://github.com/Shopify/h2/pull/282)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 4.0.2
 
 ### Patch Changes

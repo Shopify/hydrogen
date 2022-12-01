@@ -1,5 +1,15 @@
 # @shopify/h2-test-hydrogen-remix
 
+## 0.0.4
+
+### Patch Changes
+
+- Fix changeset workflow ([#282](https://github.com/Shopify/h2/pull/282)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`5f5b7bb`](https://github.com/Shopify/h2/commit/5f5b7bb6120e6b20b9a55f83b1fb4cbb4415aeb5)]:
+  - @shopify/h2-test-hydrogen@2.0.2
+  - @shopify/h2-test-remix-oxygen@0.0.4
+
 ## 0.0.3
 
 ### Patch Changes

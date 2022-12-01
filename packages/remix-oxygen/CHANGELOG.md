@@ -1,5 +1,11 @@
 # @shopify/h2-test-remix-oxygen
 
+## 0.0.4
+
+### Patch Changes
+
+- Fix changeset workflow ([#282](https://github.com/Shopify/h2/pull/282)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 0.0.3
 
 ### Patch Changes
