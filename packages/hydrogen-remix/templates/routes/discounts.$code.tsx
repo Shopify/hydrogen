@@ -18,7 +18,8 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
-  const redirectUrl = searchParams.get('redirect') || '/';
+  const redirectUrl =
+    searchParams.get('redirect') || searchParams.get('return_to') || '/';
 
   const headers = new Headers();
 
