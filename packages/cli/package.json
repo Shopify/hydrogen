@@ -1,7 +1,10 @@
 {
-  "private": true,
-  "name": "@shopify/cli-hydrogen",
-  "version": "4.0.0-alpha.1",
+  "name": "@shopify/cli-h2-test",
+  "publishConfig": {
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org"
+  },
+  "version": "4.0.2",
   "type": "module",
   "scripts": {
     "build": "rm -rf dist && tsc",
