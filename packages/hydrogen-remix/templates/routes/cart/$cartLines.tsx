@@ -5,8 +5,8 @@ import {cartCreate, cartLinesAdd, cartDiscountCodesUpdate} from '../../cart';
 /**
  * Creates or update a cart with the passed encoded cart line inputs and redirects to checkout
  * @param $encondedLines a route param including cart line inputs encoded as /$variantId:$quantity,$variantId:$quantity
- * @param ?discount ((optional) discount to apply to the cart
- * @param ?payment=shop_pay (optional if set it redirects to shop pay checkout
+ * @param ?discount (optional) discount to apply to the cart
+ * @param ?payment=shop_pay (optional) if set it redirects to shop pay checkout, otherwise to standard checkout
  * @see https://help.shopify.com/en/manual/products/details/checkout-link
  * @example Adds one line item and redirects to standard checkout
  * ```ts
@@ -20,7 +20,7 @@ import {cartCreate, cartLinesAdd, cartDiscountCodesUpdate} from '../../cart';
  * ```
  * @example Adds multiple line items with different quantities, a discount code and redirects to shop pay checkout
  * ```ts
- * /cart/36485954240671:2,42562624913464:1?payment=shop_pay&discount=FREESHIPPING
+ * /cart/42562624913464:2,42562624913464:1?payment=shop_pay&discount=FREESHIPPING
  *
  * ```
  */
@@ -32,23 +32,27 @@ export async function loader({request, context, params}: LoaderArgs) {
   const payment = searchParams.get('payment') || null;
   const discount = searchParams.get('discount') || null;
   const checkoutViaShopPay = payment === 'shop_pay';
-  const {encondedLines = ''} = params;
+  const {cartLines = ''} = params;
 
-  if (!encondedLines || typeof url?.search !== 'string') {
-    redirect('/cart');
+  if (!cartLines || typeof url?.search !== 'string') {
+    redirect('/');
   }
 
-  const shopPayCheckoutUrl = `https://${env.SHOPIFY_STORE_DOMAIN}/cart/${encondedLines}${url.search}`;
+  const lines = parseEncodedLines(cartLines);
+
+  if (!lines?.length) {
+    console.error('/cart/$cartLines: failed no valid lines to add');
+    console.error({cartLines, lines});
+    redirect('/');
+  }
+
+  const shopPayCheckoutUrl = `https://${env.SHOPIFY_STORE_DOMAIN}/cart/${cartLines}${url.search}`;
   let standardCheckoutUrl;
-
-  const lines = parseEncodedLines(encondedLines);
-
   let cartId = await session.get('cartId');
-  let checkoutUrl;
 
   // no existing cart create one
   if (!cartId) {
-    const {cart} = await cartCreate({
+    const {cart, errors} = await cartCreate({
       context,
       input: {
         lines,
@@ -56,7 +60,9 @@ export async function loader({request, context, params}: LoaderArgs) {
       },
     });
 
-    if (!cart) {
+    if (!cart || errors?.length) {
+      console.error('/cart/$cartLines: failed to create cart');
+      console.error({lines, errors});
       return redirect('/');
     }
 
@@ -66,9 +72,12 @@ export async function loader({request, context, params}: LoaderArgs) {
     headers.set('Set-Cookie', await session.commit());
   } else {
     // have an existing cart, add lines
-    const {cart} = await cartLinesAdd({context, cartId, lines});
+    const {cart, errors} = await cartLinesAdd({context, cartId, lines});
 
-    if (!cart) {
+    if (!cart || errors.length) {
+      // Adding console.errors for debugging because we are silently redirecting on errors
+      console.error('/cart/$cartLines: failed to add lines to the cart');
+      console.error({lines, errors});
       return redirect('/', {headers});
     }
 
@@ -81,6 +90,9 @@ export async function loader({request, context, params}: LoaderArgs) {
       });
 
       if (!cart || errors?.length) {
+        // Adding console.errors for debugging because we are silently redirecting on errors
+        console.error('/cart/$cartLines: failed to apply discount');
+        console.error({discount});
         return redirect('/', {headers});
       }
 
@@ -99,9 +111,9 @@ export async function loader({request, context, params}: LoaderArgs) {
  * @see https://stackoverflow.com/questions/8648892/how-to-convert-url-parameters-to-a-javascript-object
  * @returns CartLineInput[]
  */
-function parseEncodedLines(encondedLines: string | undefined): CartLineInput[] {
-  if (typeof encondedLines === 'undefined') return [];
-  return encondedLines
+function parseEncodedLines(encodedLines: string | undefined): CartLineInput[] {
+  if (typeof encodedLines === 'undefined') return [];
+  return encodedLines
     .split(',')
     .map((encodedLine) => {
       const [variantId, quantity] = encodedLine.split(':');
