@@ -122,7 +122,7 @@ function parseEncodedLines(encodedLines: string | undefined): CartLineInput[] {
           return null;
 
         const isValidVariantId = /^[0-9]{0,12}/.test(variantId);
-        const isValidQuantity = /^[0-9]{0,1}$/.test(quantity);
+        const isValidQuantity = /^\d+$/.test(quantity);
 
         if (!isValidVariantId || !isValidQuantity) return null;
 
