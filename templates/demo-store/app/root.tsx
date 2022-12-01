@@ -31,9 +31,9 @@ import {Analytics} from './components/Analytics';
 export const handle = {
   // @todo - remove any and type the seo callback
   seo: (data: any) => ({
-    title: data?.layout.shop.name,
+    title: data?.layout?.shop?.name,
     bypassTitleTemplate: true,
-    titleTemplate: `%s | ${data?.layout.shop.name}`,
+    titleTemplate: `%s | ${data?.layout?.shop?.name}`,
   }),
 };
 
@@ -113,7 +113,7 @@ export function CatchBoundary() {
       </head>
       <body>
         <Layout
-          layout={root.data.layout}
+          layout={root?.data?.layout}
           key={`${locale.language}-${locale.country}`}
         >
           {isNotFound ? (
@@ -132,7 +132,7 @@ export function CatchBoundary() {
 
 export function ErrorBoundary({error}: {error: Error}) {
   const [root] = useMatches();
-  const locale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
+  const locale = root?.data?.selectedLocale ?? DEFAULT_LOCALE;
 
   return (
     <html lang={locale.language}>
@@ -142,7 +142,7 @@ export function ErrorBoundary({error}: {error: Error}) {
         <Links />
       </head>
       <body>
-        <Layout layout={root.data?.layout}>
+        <Layout layout={root?.data?.layout}>
           <GenericError error={error} />
         </Layout>
         <Scripts />

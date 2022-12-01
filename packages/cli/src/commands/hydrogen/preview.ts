@@ -1,11 +1,8 @@
 import {muteDevLogs} from '../../utils/log.js';
 import {getProjectPaths} from '../../utils/config.js';
 import {flags} from '../../utils/flags.js';
-import miniOxygen from '@shopify/mini-oxygen';
 import Command from '@shopify/cli-kit/node/base-command';
-
-const miniOxygenPreview =
-  miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
+import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
 // @ts-ignore
 export default class Preview extends Command {
@@ -33,17 +30,14 @@ export async function runPreview({
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
-  const {buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
+  const {root, buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
 
   muteDevLogs({workerReload: false});
 
-  // Run MiniOxygen and watch worker build
-  miniOxygenPreview({
-    workerFile: buildPathWorkerFile,
+  startMiniOxygen({
+    root,
     port,
-    assetsDir: buildPathClient,
-    publicPath: '',
-    modules: true,
-    env: process.env,
+    buildPathClient,
+    buildPathWorkerFile,
   });
 }

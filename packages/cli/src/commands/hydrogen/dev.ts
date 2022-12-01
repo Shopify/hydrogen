@@ -1,19 +1,17 @@
 import path from 'path';
 import * as remix from '@remix-run/dev/dist/compiler.js';
-import miniOxygen from '@shopify/mini-oxygen';
-import {runBuild} from './build.js';
+import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
 import {flags} from '../../utils/flags.js';
-import fs from 'fs-extra';
-import {fileURLToPath} from 'url';
-import {createRequire} from 'module';
 
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
+import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
-const miniOxygenPreview =
-  miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
+const LOG_INITIAL_BUILD = '\n🏁 Initial build';
+const LOG_REBUILDING = '🧱 Rebuilding...';
+const LOG_REBUILT = '🚀 Rebuilt';
 
 // @ts-ignore
 export default class Dev extends Command {
@@ -52,79 +50,49 @@ export async function runDev({
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-  // Initial build
-  await runBuild({entry, path: appPath, minify: false});
-
-  const {root, entryFile, buildPathWorkerFile, buildPathClient} =
+  const {root, entryFile, buildPathWorkerFile, buildPathClient, publicPath} =
     getProjectPaths(appPath, entry);
 
-  const remixConfig = await getRemixConfig(root);
+  const remixConfig = await getRemixConfig(root, entryFile);
 
   muteDevLogs();
 
-  // Watch server build
+  console.time(LOG_INITIAL_BUILD);
+  const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
+
   remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
-    onRebuildStart() {
-      // eslint-disable-next-line no-console
-      console.log('Rebuilding...');
-    },
     onFileCreated(file: string) {
       // eslint-disable-next-line no-console
-      console.log(`File created: ${path.relative(root, file)}`);
+      console.log(`\n📄 File created: ${path.relative(root, file)}`);
     },
     onFileChanged(file: string) {
       // eslint-disable-next-line no-console
-      console.log(`File changed: ${path.relative(root, file)}`);
+      console.log(`\n📄 File changed: ${path.relative(root, file)}`);
     },
     onFileDeleted(file: string) {
       // eslint-disable-next-line no-console
-      console.log(`File deleted: ${path.relative(root, file)}`);
+      console.log(`\n📄 File deleted: ${path.relative(root, file)}`);
     },
-  });
+    async onInitialBuild() {
+      await copyingFiles;
+      console.timeEnd(LOG_INITIAL_BUILD);
 
-  const buildWatchPaths = [
-    entryFile,
-    path.resolve(root, remixConfig.serverBuildPath),
-  ];
-
-  if (process.env.LOCAL_DEV) {
-    // Watch local packages when developing in Hydrogen repo
-    const require = createRequire(import.meta.url);
-    const packagesPath = path.resolve(
-      path.dirname(require.resolve('@shopify/hydrogen')),
-      '..',
-      '..',
-    );
-
-    const packages = (await fs.readdir(packagesPath)).map((pkg) =>
-      path.resolve(packagesPath, pkg, 'dist'),
-    );
-
-    buildWatchPaths.push(...packages);
-  }
-
-  const devReloadPath = path.resolve(
-    fileURLToPath(import.meta.url),
-    '..',
-    '..',
-    '..',
-    '..',
-    'bin',
-    'dev-reload.mjs',
-  );
-
-  // Run MiniOxygen and watch worker build
-  miniOxygenPreview({
-    workerFile: buildPathWorkerFile,
-    port,
-    assetsDir: buildPathClient,
-    publicPath: '',
-    buildCommand: `${devReloadPath} ${entry}`,
-    watch: true,
-    buildWatchPaths,
-    autoReload: true,
-    modules: true,
-    env: process.env,
+      startMiniOxygen({
+        root,
+        port,
+        watch: true,
+        buildPathWorkerFile,
+        buildPathClient,
+      });
+    },
+    onRebuildStart() {
+      // eslint-disable-next-line no-console
+      console.log(LOG_REBUILDING);
+      console.time(LOG_REBUILT);
+    },
+    async onRebuildFinish() {
+      console.timeEnd(LOG_REBUILT);
+    },
   });
 }

@@ -8,7 +8,6 @@ export {ProductSwimlane} from './ProductSwimlane';
 export {ProductGrid} from './ProductGrid';
 export {Skeleton} from './Skeleton';
 export {Button} from './Button';
-export {Grid} from './Grid';
 export {CountrySelector} from './CountrySelector';
 export {Cart} from './Cart';
 export {CartLoading} from './CartLoading';
@@ -21,4 +20,8 @@ export {FeaturedCollections} from './FeaturedCollections';
 export {Hero} from './Hero';
 export {SortFilter} from './SortFilter';
 export {Breadcrumbs} from './Breadcrumbs';
+export {Grid} from './Grid';
+export {FeaturedProducts} from './FeaturedProducts';
+export {Pagination, getPaginationVariables, usePagination} from './Pagination';
+// Sue me
 export * from './Icon';

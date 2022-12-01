@@ -1,7 +1,8 @@
 import {diff} from 'fast-array-diff';
-import React, {forwardRef, useCallback, useEffect, useId} from 'react';
+import React, {forwardRef, useCallback, useEffect, useId, useRef} from 'react';
 import {useFetcher, useFetchers, useLocation} from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
+import type {PartialDeep} from 'type-fest';
 import type {
   Cart,
   CartDiscountCode,
@@ -14,18 +15,18 @@ import {
   json,
 } from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
-import {usePrefixPathWithLocale} from '~/lib/utils';
+import {isLocalPath, usePrefixPathWithLocale} from '~/lib/utils';
 
 interface DiscountCodesUpdateProps {
   discountCodes?: string[];
+  className?: string;
   children: ({
     state,
-    error,
+    errors,
   }: {
     state: 'idle' | 'submitting' | 'loading';
-    error: string;
+    errors: PartialDeep<UserError>[];
   }) => React.ReactNode;
-  className?: string;
   onSuccess?: (event: DiscountCodesUpdateEvent) => void;
 }
 
@@ -37,7 +38,7 @@ interface DiscountCodesUpdateEventPayload {
 }
 
 interface DiscountCodesUpdateEvent {
-  type: 'discount_codes_update' | 'discount_codes_update_error';
+  type: 'discount_codes_update';
   id: string;
   payload: DiscountCodesUpdateEventPayload;
 }
@@ -54,7 +55,7 @@ interface PrevCurrentDiscountCodes {
   currentDiscountCodes: Cart['discountCodes'];
 }
 
-const ACTION_PATH = `/cart/DiscountCodesUpdate`;
+const ACTION_PATH = `/cart/CartDiscountCodesUpdate`;
 
 /**
  * action that handles the discountCodes update mutation
@@ -77,29 +78,29 @@ async function action({request, context}: ActionArgs) {
   // diff them after mutating for analytics
   const prevCart = await getCartDiscounts({cartId, context});
 
-  const {cart, errors} = await discountCodesUpdateMutation({
+  const {cart, errors: graphqlErrors} = await cartDiscountCodesUpdate({
     cartId,
     discountCodes,
     context,
   });
 
-  if (errors?.length) {
-    const errorMessage = errors.map(({message}) => message).join('\n');
-    return json({error: errorMessage});
+  if (graphqlErrors?.length) {
+    return json({errors: graphqlErrors});
   }
 
   // if no js, we essentially reload to avoid being routed to the actions route
-  if (formData.get('redirectTo')) {
-    return redirect(String(formData.get('redirectTo')));
+  const redirectTo = formData.get('redirectTo') ?? null;
+  if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
+    return redirect(redirectTo);
   }
 
-  const {event, error} = instrumentEvent({
+  const {event, errors} = instrumentEvent({
     addingDiscountCodes: discountCodes,
     currentDiscountCodes: cart.discountCodes,
     prevDiscountCodes: prevCart.discountCodes,
   });
 
-  return json({event, error});
+  return json({event, errors});
 }
 
 /**
@@ -112,10 +113,7 @@ function instrumentEvent({
   addingDiscountCodes,
   prevDiscountCodes,
   currentDiscountCodes,
-}: PrevCurrentDiscountCodes): {
-  error: string | null;
-  event: DiscountCodesUpdateEvent;
-} {
+}: PrevCurrentDiscountCodes) {
   const {codesAdded, codesNotAdded, codesRemoved} = diffDiscountCodes({
     addingDiscountCodes,
     prevDiscountCodes,
@@ -133,14 +131,15 @@ function instrumentEvent({
     },
   };
 
+  let errors = null;
   if (codesNotAdded?.length) {
-    event.type = 'discount_codes_update_error';
+    errors = codesNotAdded.map((code) => ({
+      code: 'DISCOUNT_CODE_NOT_ADDED',
+      message: code,
+    }));
   }
 
-  // How can we determine there was an error
-  const error = null;
-
-  return {error, event};
+  return {event, errors};
 }
 
 /**
@@ -218,7 +217,7 @@ async function getCartDiscounts({
   context: HydrogenContext;
 }) {
   const {storefront} = context;
-  invariant(storefront, 'missing storefront client in cart create mutation');
+  invariant(storefront, 'missing storefront client in cart discounts query');
 
   const {cart} = await storefront.query<{cart: Cart}>(CART_DISCOUNTS_QUERY, {
     variables: {cartId},
@@ -233,7 +232,7 @@ async function getCartDiscounts({
  * @param discountCodes Array of discount codes
  * @returns mutated cart
  */
-async function discountCodesUpdateMutation({
+async function cartDiscountCodesUpdate({
   cartId,
   discountCodes,
   context,
@@ -245,7 +244,7 @@ async function discountCodesUpdateMutation({
   const {storefront} = context;
   invariant(
     storefront,
-    'missing storefront client in discount codes update mutation',
+    'missing storefront client in cartDiscountCodesUpdate mutation',
   );
 
   const {cartDiscountCodesUpdate} = await storefront.mutate<{
@@ -259,7 +258,7 @@ async function discountCodesUpdateMutation({
 
   invariant(
     cartDiscountCodesUpdate,
-    'No data returned from update discount codes mutation',
+    'No data returned from the cartDiscountCodesUpdate mutation',
   );
 
   return cartDiscountCodesUpdate;
@@ -269,120 +268,115 @@ async function discountCodesUpdateMutation({
  * Form that updates the discount codes applied to the cart
  * @param discountCodes Array of discount codes
  */
-const DiscountCodesUpdateForm = forwardRef<
+const CartDiscountCodesUpdateForm = forwardRef<
   HTMLFormElement,
   DiscountCodesUpdateProps
 >(({discountCodes, children, onSuccess, className}, ref) => {
   const discountCodesInProps = typeof discountCodes !== 'undefined';
   const formId = useId();
+  const lastEventId = useRef<string | undefined>();
   const isHydrated = useIsHydrated();
   const fetcher = useFetcher();
   const {pathname, search} = useLocation();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
-
   const eventId = fetcher.data?.event?.id;
   const event = fetcher.data?.event;
-  const error = fetcher.data?.error;
+  const errors = fetcher.data?.errors;
+  const localizedCurrentPath = usePrefixPathWithLocale(`${pathname}${search}`);
 
-  // Adding onSuccess or event causes the event to fire multiple times
-  // despite no change
   useEffect(() => {
     if (!eventId) return;
+    if (eventId === lastEventId.current) return;
     onSuccess?.(event);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [eventId]);
+    lastEventId.current = eventId;
+  }, [eventId, event, onSuccess]);
 
   return (
     <fetcher.Form
       id={formId}
       method="post"
-      action={localizedActionPath}
-      ref={ref}
+      action={ACTION_PATH}
       className={className}
+      ref={ref}
     >
       {/* used to trigger a redirect back to the same url when JS is disabled */}
       {isHydrated ? null : (
         <input
           type="hidden"
           name="redirectTo"
-          defaultValue={`${pathname}${search}`}
+          defaultValue={localizedCurrentPath}
         />
       )}
       {discountCodesInProps &&
         discountCodes.map((code, i) => (
           <input
-            // eslint-disable-next-line react/no-array-index-key
             key={`${code}-${i}`}
             type="hidden"
             name="discountCodes"
             defaultValue={code}
           />
         ))}
-      {children({state: fetcher.state, error})}
+      {children({state: fetcher.state, errors})}
     </fetcher.Form>
   );
 });
+
+/*
+  A hook to programmatically update the discount codes applied to a cart
+  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartDiscountCodesUpdate
+  returns {cartDiscountCodesUpdate, fetcher}
+*/
+function useCartDiscountCodesUpdate(
+  onSuccess: (event: DiscountCodesUpdateEvent) => void = () => {},
+) {
+  const fetcher = useFetcher();
+  const lastEventId = useRef<string | undefined>();
+
+  const cartDiscountCodesUpdate = useCallback(
+    ({discountCodes}: {discountCodes: string[]}) => {
+      const form = new FormData();
+      Array.isArray(discountCodes) &&
+        form.set('discountCodes', JSON.stringify(discountCodes));
+      fetcher.submit(form, {
+        method: 'post',
+        action: ACTION_PATH,
+        replace: false,
+      });
+    },
+    [fetcher, ACTION_PATH],
+  );
+
+  useEffect(() => {
+    if (!fetcher?.data?.event) return;
+    if (lastEventId.current === fetcher?.data?.event?.id) return;
+    onSuccess?.(fetcher.data.event);
+    lastEventId.current = fetcher.data.event.id;
+  }, [fetcher?.data?.event, onSuccess]);
+
+  return {cartDiscountCodesUpdate, fetcher};
+}
 
 /**
  * Utility hook to get the active discountCodesUpdate fetcher
  * @returns fetcher
  */
-function useDiscountCodesUpdateFetcher() {
+function useCartDiscountCodesUpdateFetcher() {
   const fetchers = useFetchers();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
   return fetchers.find(
-    (fetcher) => fetcher?.submission?.action === localizedActionPath,
+    (fetcher) => fetcher?.submission?.action === ACTION_PATH,
   );
-}
-
-/*
-  Programmatically update the discount codes applied to the cart
-  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartDiscountCodesUpdate
-  returns { discountCodesUpdate, discountCodesUpdateFetcher }
-*/
-function useDiscountCodesUpdate(
-  onSuccess: (event: DiscountCodesUpdateEvent) => void = () => {},
-) {
-  const fetcher = useFetcher();
-  const localizedActionPath = usePrefixPathWithLocale(ACTION_PATH);
-
-  const discountCodesUpdate = useCallback(
-    ({discountCodes}: {discountCodes: string[]}) => {
-      const form = new FormData();
-      form.set('discountCodes', JSON.stringify(discountCodes));
-      fetcher.submit(form, {
-        method: 'post',
-        action: localizedActionPath,
-        replace: false,
-      });
-    },
-    [fetcher, localizedActionPath],
-  );
-
-  useEffect(() => {
-    if (!fetcher?.data?.event) return;
-    onSuccess?.(fetcher.data.event);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [fetcher?.data?.event]);
-
-  return {
-    discountCodesUpdate,
-    discountCodesUpdateFetcher: fetcher,
-  };
 }
 
 /**
  * Utility hook to retrieve the discountCodes currently being updated
- * @returns {discountCodesUpdating}
+ * @returns {discountCodesUpdating, fetcher}
  */
-function useDiscountCodesUpdating() {
-  const discountCodesUpdateFetcher = useDiscountCodesUpdateFetcher();
+function useCartDiscountCodesUpdating() {
+  const fetcher = useCartDiscountCodesUpdateFetcher();
   let discountCodesUpdating: CartDiscountCode[] | null = null;
 
-  // set linesRemoving
-  if (discountCodesUpdateFetcher?.submission) {
+  if (fetcher?.submission) {
     const discountCodesStr =
-      discountCodesUpdateFetcher?.submission?.formData?.get('discountCodes');
+      fetcher?.submission?.formData?.get('discountCodes');
     if (discountCodesStr && typeof discountCodesStr === 'string') {
       try {
         const codesUpdating = JSON.parse(discountCodesStr) as string[];
@@ -397,13 +391,13 @@ function useDiscountCodesUpdating() {
     }
   }
 
-  return {discountCodesUpdating};
+  return {discountCodesUpdating, fetcher};
 }
 
 export {
   action,
-  DiscountCodesUpdateForm,
-  discountCodesUpdateMutation,
-  useDiscountCodesUpdate,
-  useDiscountCodesUpdating,
+  cartDiscountCodesUpdate,
+  CartDiscountCodesUpdateForm,
+  useCartDiscountCodesUpdate,
+  useCartDiscountCodesUpdating,
 };

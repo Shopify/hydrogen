@@ -1,8 +1,11 @@
 import {useLocation, useMatches} from '@remix-run/react';
+import type {PartialDeep} from 'type-fest';
 import type {
   MenuItem,
   Menu,
   MoneyV2,
+  ProductVariant,
+  CartLine,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 // @ts-expect-error types not available
@@ -305,4 +308,69 @@ export function withoutFalsyProps(obj: object) {
   return Object.fromEntries(
     Object.entries(obj).filter(([key, value]) => value),
   );
+}
+
+/**
+ * Convert a ProductVariant to a CartLine
+ * @param variant ProductVariant
+ * @param quantity quantity being added to cart
+ * @returns PartialDeep<CartLine>
+ */
+export function variantToCartLine({
+  variant,
+  quantity,
+}: {
+  variant: PartialDeep<ProductVariant>;
+  quantity: number;
+}): PartialDeep<CartLine> {
+  const cartLine = {
+    id: crypto.randomUUID(),
+    quantity,
+    merchandise: {
+      id: variant.id,
+      image: variant.image,
+      product: variant.product,
+      selectedOptions: variant.selectedOptions,
+    },
+  } as PartialDeep<CartLine>;
+
+  const {price, compareAtPrice} = variant;
+
+  if (price && price?.amount && price?.currencyCode) {
+    const lineTotalAmount = String(parseFloat(price.amount) * (quantity || 1));
+    cartLine.cost = {
+      totalAmount: {
+        amount: lineTotalAmount,
+        currencyCode: price.currencyCode,
+      },
+      amountPerQuantity: price,
+    };
+  }
+  if (compareAtPrice) {
+    if (cartLine?.cost) {
+      cartLine.cost.compareAtAmountPerQuantity = compareAtPrice;
+    }
+  }
+
+  return cartLine;
+}
+
+/**
+ * Validates that a url is local
+ * @param url
+ * @returns `true` if local `false`if external domain
+ */
+export function isLocalPath(url: string) {
+  try {
+    // We don't want to redirect cross domain,
+    // doing so could create fishing vulnerability
+    // If `new URL()` succeeds, it's a fully qualified
+    // url which is cross domain. If it fails, it's just
+    // a path, which will be the current domain.
+    new URL(url);
+  } catch (e) {
+    return true;
+  }
+
+  return false;
 }

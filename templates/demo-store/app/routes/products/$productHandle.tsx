@@ -1,5 +1,11 @@
+import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, type LoaderArgs} from '@shopify/hydrogen-remix';
+import {
+  defer,
+  notFoundMaybeRedirect,
+  RESOURCE_TYPES,
+  type LoaderArgs,
+} from '@shopify/hydrogen-remix';
 import {
   useLoaderData,
   Await,
@@ -8,7 +14,6 @@ import {
   useTransition,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-react';
-import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {
   Heading,
   IconCaret,
@@ -22,7 +27,7 @@ import {
   Link,
   Button,
 } from '~/components';
-import {getExcerpt, usePrefixPathWithLocale} from '~/lib/utils';
+import {getExcerpt, variantToCartLine} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import type {
@@ -37,14 +42,10 @@ import {
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data'; /* @todo: we move these to app/graphql ? */
-import {LinesAddForm} from '~/routes/__resources/cart/LinesAdd';
+import {CartLinesAddForm} from '.hydrogen/cart';
 import {getAnalyticsData} from '~/lib/analytics';
 
-export async function loader({
-  params,
-  request,
-  context: {storefront},
-}: LoaderArgs) {
+export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
 
@@ -55,7 +56,7 @@ export async function loader({
     selectedOptions.push({name, value});
   });
 
-  const {shop, product} = await storefront.query<{
+  const {shop, product} = await context.storefront.query<{
     product: ProductType & {selectedVariant?: ProductVariant};
     shop: Shop;
   }>(PRODUCT_QUERY, {
@@ -66,10 +67,10 @@ export async function loader({
   });
 
   if (!product?.id) {
-    throw new Error('product not found');
+    throw await notFoundMaybeRedirect(request, context);
   }
 
-  const recommended = getRecommendedProducts(storefront, product.id);
+  const recommended = getRecommendedProducts(context.storefront, product.id);
 
   return defer({
     product,
@@ -82,6 +83,12 @@ export async function loader({
     },
   });
 }
+
+export const handle = {
+  hydrogen: {
+    resourceType: RESOURCE_TYPES.PRODUCT,
+  },
+};
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();
@@ -350,14 +357,24 @@ function AddToCartButton({
     selectedVariant?.compareAtPrice?.amount &&
     selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
 
+  const lines = [
+    {
+      merchandiseId: selectedVariant.id,
+      quantity: 1,
+    },
+  ];
+
+  const optimisticLines = [
+    variantToCartLine({
+      quantity: 1,
+      variant: selectedVariant,
+    }),
+  ];
+
   return (
-    <LinesAddForm
-      lines={[
-        {
-          variant: selectedVariant,
-          quantity: 1,
-        },
-      ]}
+    <CartLinesAddForm
+      lines={lines}
+      optimisticLines={optimisticLines}
       onSuccess={(event) => {
         getAnalyticsData({
           apiEndpoint: '/api/server-event',
@@ -372,7 +389,7 @@ function AddToCartButton({
         });
       }}
     >
-      {({state, error}) => {
+      {({state, errors}) => {
         const disabled = isOutOfStock || selectingVariant || state !== 'idle';
         return (
           <>
@@ -411,11 +428,17 @@ function AddToCartButton({
                 </Text>
               )}
             </Button>
-            {error ? <Text>{error}</Text> : null}
+            {errors?.length ? (
+              <div className="flex flex-col">
+                {errors.map((error) => (
+                  <Text key={error.message}>{error.message}</Text>
+                ))}
+              </div>
+            ) : null}
           </>
         );
       }}
-    </LinesAddForm>
+    </CartLinesAddForm>
   );
 }
 

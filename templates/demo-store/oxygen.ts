@@ -1,6 +1,6 @@
+// Virtual entry point for the app
+import * as remixBuild from '@remix-run/dev/server-build';
 import {createRequestHandler} from '@shopify/hydrogen-remix';
-// The build remix app provided by remix build
-import * as remixBuild from 'remix-build';
 import {getLocaleFromRequest} from '~/lib/utils';
 import {HydrogenSession} from '~/lib/session.server';
 
@@ -10,6 +10,8 @@ const requestHandler = createRequestHandler({
   build: remixBuild,
   mode: process.env.NODE_ENV,
   shouldProxyAsset: () => false,
+  shouldProxyOnlineStore: (request: Request) =>
+    new URL(request.url).pathname === '/proxy' ? '/pages/about' : null,
 });
 
 export default {
@@ -33,8 +35,8 @@ export default {
           env,
           context,
           storefront: {
-            publicStorefrontToken: '3b580e70970c4528da70c98e097c2fa0',
-            storeDomain: 'hydrogen-preview',
+            publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
+            storeDomain: env.SHOPIFY_STORE_DOMAIN,
             storefrontApiVersion: '2022-10',
             i18n: getLocaleFromRequest(request),
           },

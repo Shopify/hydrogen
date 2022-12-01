@@ -26,7 +26,7 @@ import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
-import {useLinesAdd} from '~/routes/__resources/cart/LinesAdd';
+import {useCartLinesAdding} from '.hydrogen/cart';
 
 export function Layout({
   children,
@@ -58,7 +58,7 @@ export function Layout({
 
 function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
-  const {linesAdding} = useLinesAdd();
+  const {linesAdding} = useCartLinesAdding();
 
   const {
     isOpen: isCartOpen,
@@ -470,14 +470,15 @@ function FooterMenu({menu}: {menu?: EnhancedMenu}) {
                       open ? `max-h-48 h-fit` : `max-h-0 md:max-h-fit`
                     } overflow-hidden transition-all duration-300`}
                   >
-                    {/* @todo: the `static` prop causes a Suspense warning */}
-                    <Disclosure.Panel static>
-                      <nav className={styles.nav}>
-                        {item.items.map((subItem) => (
-                          <FooterLink key={subItem.id} item={subItem} />
-                        ))}
-                      </nav>
-                    </Disclosure.Panel>
+                    <Suspense data-comment="This suspense fixes a hydration bug in Disclosure.Panel with static prop">
+                      <Disclosure.Panel static>
+                        <nav className={styles.nav}>
+                          {item.items.map((subItem) => (
+                            <FooterLink key={subItem.id} item={subItem} />
+                          ))}
+                        </nav>
+                      </Disclosure.Panel>
+                    </Suspense>
                   </div>
                 ) : null}
               </>
