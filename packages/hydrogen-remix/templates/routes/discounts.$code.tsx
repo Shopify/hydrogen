@@ -37,7 +37,7 @@ export async function loader({request, context, params}: LoaderArgs) {
     });
 
     if (graphqlCartErrors?.length) {
-      return json({errors: graphqlCartErrors});
+      return redirect(redirectUrl);
     }
 
     // cart created - we only need a Set-Cookie header if we're creating
@@ -47,15 +47,11 @@ export async function loader({request, context, params}: LoaderArgs) {
   }
 
   // apply discount to the cart
-  const {errors: graphqlDiscountErrors} = await cartDiscountCodesUpdate({
+  await cartDiscountCodesUpdate({
     cartId,
     discountCodes: [code],
     context,
   });
-
-  if (graphqlDiscountErrors?.length) {
-    return json({errors: graphqlDiscountErrors}, {headers});
-  }
 
   return redirect(redirectUrl, {headers});
 }
