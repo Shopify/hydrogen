@@ -10,27 +10,7 @@ import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import {getLocaleFromRequest} from '~/lib/utils';
-import type {Metafield} from '@shopify/hydrogen-react/storefront-api-types';
 import type * as Generated from './index.generated';
-
-interface HomeSeoData {
-  shop: {
-    name: string;
-    description: string;
-  };
-}
-
-interface CollectionHero {
-  byline: Metafield;
-  cta: Metafield;
-  handle: string;
-  heading: Metafield;
-  height?: 'full';
-  loading?: 'eager' | 'lazy';
-  spread: Metafield;
-  spreadSecondary: Metafield;
-  top?: boolean;
-}
 
 export const handle = {
   hydrogen: {
