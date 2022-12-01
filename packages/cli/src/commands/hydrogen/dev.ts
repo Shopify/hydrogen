@@ -1,5 +1,6 @@
 import path from 'path';
 import * as remix from '@remix-run/dev/dist/compiler.js';
+import {output} from '@shopify/cli-kit';
 import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
@@ -63,16 +64,21 @@ export async function runDev({
   remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
     onFileCreated(file: string) {
-      // eslint-disable-next-line no-console
-      console.log(`\n📄 File created: ${path.relative(root, file)}`);
+      `\n📄 File created ${path.relative(root, file)}`;
     },
     onFileChanged(file: string) {
-      // eslint-disable-next-line no-console
-      console.log(`\n📄 File changed: ${path.relative(root, file)}`);
+      output.info(
+        output.content`\n📄 ${output.token.cyan(
+          `File changed ${path.relative(root, file)}`,
+        )}`,
+      );
     },
     onFileDeleted(file: string) {
-      // eslint-disable-next-line no-console
-      console.log(`\n📄 File deleted: ${path.relative(root, file)}`);
+      output.info(
+        output.content`\n📄 ${output.token.errorText(
+          `File deleted ${path.relative(root, file)}`,
+        )}`,
+      );
     },
     async onInitialBuild() {
       await copyingFiles;
@@ -87,8 +93,7 @@ export async function runDev({
       });
     },
     onRebuildStart() {
-      // eslint-disable-next-line no-console
-      console.log(LOG_REBUILDING);
+      output.info(output.content`${output.token.italic(LOG_REBUILDING)}`);
       console.time(LOG_REBUILT);
     },
     async onRebuildFinish() {
