@@ -1,5 +1,11 @@
 # @shopify/cli-h2-test
 
+## 4.0.4
+
+### Patch Changes
+
+- Change build folder name to dist ([#292](https://github.com/Shopify/h2/pull/292)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 4.0.3
 
 ### Patch Changes
