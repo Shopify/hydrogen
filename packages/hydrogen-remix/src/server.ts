@@ -19,6 +19,7 @@ export function createRequestHandler(
   },
 ) {
   const handleRequest = createOxygenRequestHandler(oxygenHandlerParams);
+  const {mode} = oxygenHandlerParams;
 
   return async (
     request: Request,
@@ -34,14 +35,19 @@ export function createRequestHandler(
     const onlineStoreProxy =
       oxygenHandlerParams?.shouldProxyOnlineStore?.(request);
 
-    if (onlineStoreProxy)
-      return proxyLiquidRoute(
-        request,
-        storefront.storeDomain,
-        onlineStoreProxy,
-      );
-
     try {
+      if (onlineStoreProxy) {
+        const response = await proxyLiquidRoute(
+          request,
+          storefront.storeDomain,
+          onlineStoreProxy,
+        );
+
+        logResponse(request, response, mode);
+
+        return response;
+      }
+
       if (!cache && !!globalThis.caches) {
         cache = await caches.open('hydrogen');
       }
@@ -60,22 +66,52 @@ export function createRequestHandler(
         },
       });
 
-      if (oxygenHandlerParams.mode !== 'production') {
-        // eslint-disable-next-line no-console
-        console.log(
-          request.method,
-          request.url.replace(new URL(request.url).origin, ''),
-          response.status,
-          request.headers.get('purpose') === 'prefetch' ? `(prefetch)` : '',
-        );
-      }
+      logResponse(request, response, mode);
 
       return response;
     } catch (e) {
-      // eslint-disable-next-line no-console
       console.error(e);
 
       return new Response('Internal Error', {status: 500});
     }
   };
+}
+
+export function logResponse(
+  request: Request,
+  response: Response,
+  mode?: string,
+) {
+  if (mode === 'development') {
+    const url = new URL(request.url);
+    const isProxy = !!response.url && response.url !== request.url;
+    const isDataRequest = !isProxy && url.searchParams.has('_data');
+    let type = 'Render';
+    let info = request.url.replace(url.origin, '');
+
+    if (isProxy) {
+      type = 'Proxy';
+      info += ` [${response.url}]`;
+    }
+
+    if (isDataRequest) {
+      type = request.method === 'POST' ? 'Action' : 'Loader';
+      const dataParam = url.searchParams.get('_data')?.replace('routes/', '');
+      info =
+        url.pathname +
+        ` [${
+          dataParam?.includes('/.hydrogen/')
+            ? dataParam.replace(/^.*(\.hydrogen\/)/, '$1')
+            : dataParam
+        }]`;
+    }
+
+    console.log(
+      response.status + ' ',
+      type.padEnd(7, ' '),
+      // status + '  - ',
+      info + '  ',
+      request.headers.get('purpose') === 'prefetch' ? `(prefetch)` : '',
+    );
+  }
 }
