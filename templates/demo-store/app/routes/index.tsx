@@ -7,7 +7,7 @@ import {
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
-import {COLLECTION_CONTENT_FRAGMENT} from '~/data';
+import {COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import {getLocaleFromRequest} from '~/lib/utils';
 import type {Metafield} from '@shopify/hydrogen-react/storefront-api-types';
@@ -202,43 +202,6 @@ const COLLECTION_HERO_QUERY = /* GraphQL */ `
   ) @inContext(country: $country, language: $language) {
     hero: collection(handle: $handle) {
       ...CollectionContent
-    }
-  }
-`;
-
-// TODO: for some reason, importing the fragment doesn't work. Maybe it's a race condition and when it's imported, it's resolved too late?
-const PRODUCT_CARD_FRAGMENT = /* GraphQL */ `
-  fragment ProductCard on Product {
-    id
-    title
-    publishedAt
-    handle
-    variants(first: 1) {
-      nodes {
-        id
-        image {
-          url
-          altText
-          width
-          height
-        }
-        price: priceV2 {
-          amount
-          currencyCode
-        }
-        compareAtPrice: compareAtPriceV2 {
-          amount
-          currencyCode
-        }
-        selectedOptions {
-          name
-          value
-        }
-        product {
-          handle
-          title
-        }
-      }
     }
   }
 `;
