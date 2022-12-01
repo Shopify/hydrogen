@@ -1,5 +1,11 @@
 # @shopify/h2-test-remix-oxygen
 
+## 0.0.3
+
+### Patch Changes
+
+- Build project dist files before publishing by [@jplhomer](https://github.com/jplhomer)
+
 ## 0.0.2
 
 ### Patch Changes
