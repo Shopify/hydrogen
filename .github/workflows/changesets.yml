@@ -82,7 +82,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Install the packages
-        run: npm install --frozen-lockfile --ignore-engines --network-timeout 36000
+        run: npm install --frozen-lockfile --ignore-engines
 
       # - name: Compile hello-world
       #   run: |
