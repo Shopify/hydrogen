@@ -10,8 +10,7 @@
     "build": "rm -rf dist && tsc",
     "dev:no-turbo": "tsc --watch --preserveWatchOutput",
     "typecheck": "tsc --noEmit",
-    "postinstall": "./bin/postinstall.mjs",
-    "prepack": "npm run build"
+    "postinstall": "./bin/postinstall.mjs"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13"
