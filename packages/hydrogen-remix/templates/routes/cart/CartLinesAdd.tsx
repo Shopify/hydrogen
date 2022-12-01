@@ -290,6 +290,7 @@ const LINES_CART_FRAGMENT = `#graphql
   fragment CartLinesFragment on Cart {
     id
     totalQuantity
+    checkoutUrl
     lines(first: 100) {
       edges {
         node {

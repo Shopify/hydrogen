@@ -180,6 +180,7 @@ const DISCOUNT_CODES_UPDATE = `#graphql
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
       cart {
         id
+        checkoutUrl
         discountCodes {
           code
         }
