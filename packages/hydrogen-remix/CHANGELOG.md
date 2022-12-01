@@ -1,5 +1,15 @@
 # @shopify/h2-test-hydrogen-remix
 
+## 0.0.3
+
+### Patch Changes
+
+- Build project dist files before publishing by [@jplhomer](https://github.com/jplhomer)
+
+- Updated dependencies [[`71d6756`](https://github.com/Shopify/h2/commit/71d67565c4ab15f0ba5d1dfcbc64778d64ebc725)]:
+  - @shopify/h2-test-hydrogen@2.0.1
+  - @shopify/h2-test-remix-oxygen@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes
