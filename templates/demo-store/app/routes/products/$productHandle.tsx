@@ -211,8 +211,12 @@ export function ProductForm() {
             />
             {!isOutOfStock && (
               <ShopPayCheckoutButton
-                selectedVariant={selectedVariant}
-                quantity={1}
+                lines={[
+                  {
+                    merchandiseId: selectedVariant.id,
+                    quantity: 1,
+                  },
+                ]}
               />
             )}
           </div>

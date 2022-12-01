@@ -1,14 +1,24 @@
 import {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
-import {useEffect, useRef, useState} from 'react';
+import {useEffect, useMemo, useRef, useState} from 'react';
 
 /**
  * React wrapper for Shopify's shop pay web component
  * @param lines an array of CartLineInput[] to add to the cart
- * @returns
  */
 export function ShopPayCheckoutButton({lines}: {lines: CartLineInput[]}) {
   const appended = useRef(false);
   const [loaded, setLoaded] = useState(false);
+
+  // map lines to variants the web component can understand
+  const variants = useMemo(() => {
+    return lines
+      .map((line) => {
+        if (!line?.merchandiseId) return null;
+        return `${line.merchandiseId.split('/').pop()}:${line?.quantity || 1}`;
+      })
+      .filter(Boolean)
+      .join(',');
+  }, [lines]);
 
   useEffect(() => {
     if (appended.current) return;
@@ -36,7 +46,7 @@ export function ShopPayCheckoutButton({lines}: {lines: CartLineInput[]}) {
       {loaded ? (
         <shop-pay-button
           store-url="https://hydrogen-preview.myshopify.com"
-          variants={`${variant.id.split('/').pop()}:${quantity}`}
+          variants={variants}
         />
       ) : (
         <p>Loading...</p>
