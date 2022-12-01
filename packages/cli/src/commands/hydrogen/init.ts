@@ -14,6 +14,11 @@ export default class Init extends Command {
       description: 'The template to use',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
       default: '../../templates/demo-store',
+      required: true,
+    }),
+    token: Flags.string({
+      description:
+        'A GitHub token used to access access private repository templates',
     }),
   };
 
@@ -28,15 +33,18 @@ export default class Init extends Command {
 function runInit({
   template,
   typescript,
+  token,
 }: {
   template: string;
   typescript?: Boolean;
+  token?: string;
 }) {
   const defaults = [
     '--template',
     template,
     '--install',
     typescript ? '--typescript' : '',
+    token ? `--token ${token}` : '',
   ];
 
   remixCli.run(['create', ...defaults]);
