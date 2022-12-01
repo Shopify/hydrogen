@@ -1,6 +1,8 @@
 import * as path from 'path';
 import * as fs from 'fs';
 
+import getPort from 'get-port';
+
 import {MiniOxygen} from './mini-oxygen/core';
 
 class WorkerNotFoundError extends Error {
@@ -80,13 +82,19 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     autoReload,
   });
 
+  const actualPort = await getPort({port});
+  if (actualPort !== port) {
+    log(`Port ${port} is not available. Using ${actualPort} instead.`);
+  }
+
   // eslint-disable-next-line promise/param-names
-  await new Promise<void>((res) =>
-    app.listen(port, () => {
+  return new Promise<{port: number}>((res) => {
+    app.listen(actualPort, () => {
       log(
-        `\nStarted miniOxygen server. Listening at http://localhost:${port}\n`,
+        `\nStarted miniOxygen server. Listening at http://localhost:${actualPort}\n`,
       );
-      res();
-    }),
-  );
+
+      res({port: actualPort});
+    });
+  });
 }

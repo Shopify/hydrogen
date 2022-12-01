@@ -1,7 +1,6 @@
 import {join, resolve} from 'path';
 
 import {writeFile, ensureDir, remove} from 'fs-extra';
-import getPort from 'get-port';
 
 export interface Fixture {
   destroy(): Promise<void>;
@@ -23,13 +22,15 @@ export async function createFixture(name: string): Promise<Fixture> {
     assets: join(directory, 'assets'),
   };
 
+  const port = 1337;
+
   await ensureDir(directory);
   await writeFile(join(directory, '.gitignore'), '*');
   await writeFile(
     join(directory, 'mini-oxygen.config.json'),
     JSON.stringify(
       {
-        port: 3000,
+        port,
         workerFile: 'worker.mjs',
         watch: true,
         env: {TESTING: 123, HELLO: 12345},
@@ -77,7 +78,7 @@ export default {
 
   return {
     paths,
-    port: await getPort(),
+    port,
     destroy: async () => {
       await remove(directory);
     },
