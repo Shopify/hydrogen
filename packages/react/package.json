@@ -64,8 +64,9 @@
       ]
     }
   },
-  "main": "./dist/prod/index.js",
-  "module": "./dist/prod/index.mjs",
+  "main": "./dist/node-prod/index.js",
+  "module": "./dist/node-prod/index.mjs",
+  "browser": "./dist/browser-prod/index.mjs",
   "types": "./dist/types/index.d.ts",
   "unpkg": "./dist/umd/hydrogen-react.prod.js",
   "jsdelivr": "./dist/umd/hydrogen-react.prod.js",
