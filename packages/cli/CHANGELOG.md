@@ -1,5 +1,11 @@
 # @shopify/cli-h2-test
 
+## 4.0.2
+
+### Patch Changes
+
+- Allow a `--template` to be passed to `hydrogen init` ([#280](https://github.com/Shopify/h2/pull/280)) by [@jplhomer](https://github.com/jplhomer)
+
 ## 4.0.1
 
 ### Patch Changes
