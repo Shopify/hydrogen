@@ -1,5 +1,11 @@
 # @shopify/h2-test-hydrogen
 
+## 2.0.1
+
+### Patch Changes
+
+- Build project dist files before publishing by [@jplhomer](https://github.com/jplhomer)
+
 ## 2.0.0
 
 ### Patch Changes
