@@ -92,6 +92,20 @@ const DEFAULTS: Required<
         },
       },
       {
+        name: 'proxyServer',
+        message:
+          'Proxy server address and port to proxy requests to (<address>:<port>)',
+        validate(input) {
+          if (input === '' || input === undefined) {
+            return true;
+          }
+          return (
+            input.split(':').length === 2 &&
+            !isNaN(parseInt(input.split(':')[1], 10))
+          );
+        },
+      },
+      {
         name: 'buildCommand',
         message: 'Command to run that will trigger the build for your project',
         default: DEFAULTS.buildCommand,

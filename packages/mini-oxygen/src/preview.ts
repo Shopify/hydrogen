@@ -47,7 +47,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     autoReload = false,
     modules = true,
     sourceMap = true,
-    proxyServer = '127.0.0.1:8080',
+    proxyServer = '',
     envPath,
     env = {},
     onRequest,

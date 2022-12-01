@@ -205,22 +205,36 @@ function sendProxyRequest(
   res: http.ServerResponse,
   proxyServer: string,
 ) {
-  const url = urlFromRequest(req);
-  const headers = req.headers;
-  headers['mini-Oxygen-Proxy'] = 'true';
-  const proxyHost = proxyServer.split(':')[0];
-  const proxyPort = parseInt(proxyServer.split(':')[1], 10);
-  const options = {
-    host: proxyHost,
-    port: proxyPort,
-    path: `${url.protocol}//${url.host}${url.pathname}`,
-    headers,
-  };
-  http.get(options, (response) => {
-    const statusCode: number = response.statusCode || 0;
-    res.writeHead(statusCode, response.statusMessage);
-    response.pipe(res);
-    return response;
+  const proxyRequest = new Promise(function (_resolve, reject) {
+    const url = urlFromRequest(req);
+    const headers = req.headers;
+    headers['mini-Oxygen-Proxy'] = 'true';
+    const proxyHost = proxyServer.split(':')[0];
+    const proxyPort = parseInt(proxyServer.split(':')[1], 10);
+    const options = {
+      host: proxyHost,
+      port: proxyPort,
+      path: `${url.protocol}//${url.host}${url.pathname}`,
+      headers,
+      timeout: 3000,
+    };
+    const request = http.get(options, (response) => {
+      const statusCode: number = response.statusCode || 0;
+      res.writeHead(statusCode, response.statusMessage);
+      response.pipe(res);
+      return response;
+    });
+    request.on('timeout', () => {
+      request.destroy();
+      const error = new Error('connection to proxy timed out');
+      reject(error);
+    });
+  });
+  proxyRequest.catch((err) => {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    res.writeHead(500, {'Content-Type': 'text/plain; charset=UTF-8'});
+    res.end(err.stack, 'utf8');
+    return res;
   });
 }
 
