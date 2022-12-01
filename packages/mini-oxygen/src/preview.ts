@@ -1,5 +1,6 @@
 import * as path from 'path';
 import * as fs from 'fs';
+import type {Socket} from 'net';
 
 import getPort from 'get-port';
 
@@ -87,14 +88,29 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     log(`Port ${port} is not available. Using ${actualPort} instead.`);
   }
 
+  const sockets = new Set<Socket>();
+  app.on('connection', (socket) => {
+    sockets.add(socket);
+    socket.once('close', () => sockets.delete(socket));
+  });
+
   // eslint-disable-next-line promise/param-names
-  return new Promise<{port: number}>((res) => {
+  return new Promise<{port: number; close: () => Promise<void>}>((res) => {
     app.listen(actualPort, () => {
       log(
         `\nStarted miniOxygen server. Listening at http://localhost:${actualPort}\n`,
       );
 
-      res({port: actualPort});
+      res({
+        port: actualPort,
+        close() {
+          return new Promise((resolve) => {
+            app.close(() => resolve());
+            sockets.forEach((socket) => socket.destroy());
+            sockets.clear();
+          });
+        },
+      });
     });
   });
 }
