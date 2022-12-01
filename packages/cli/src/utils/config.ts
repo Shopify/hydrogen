@@ -4,9 +4,9 @@ import {createRequire} from 'module';
 import path from 'path';
 import fs from 'fs-extra';
 
-const BUILD_DIR = 'build';
+const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
-const WORKER_SUBDIR = 'worker'; // Harcoded in Oxygen
+const WORKER_SUBDIR = 'worker'; // Hardcoded in Oxygen
 
 export function getProjectPaths(appPath?: string, entry?: string) {
   const root = appPath ?? process.cwd();
