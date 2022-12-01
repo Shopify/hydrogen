@@ -146,7 +146,7 @@ Example use:
 ```jsx
 export async function action({request, context}) {
   const {session} = context;
-  const cartId = await session.get('cartId');
+  const cartId = await session.getCartId();
   const discountCodes = formData.get('discountCodes')
     ? JSON.parse(formData.get('discountCodes'))
     : [];

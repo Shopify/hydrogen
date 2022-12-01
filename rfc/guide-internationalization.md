@@ -656,7 +656,7 @@ export function getLocaleFromRequest(request: Request): Locale {
      const path = formData.get('path');
      const toLocale = countries[`${languageCode}-${countryCode}`.toLowerCase()];
 
-     const cartId = await session.get('cartId');
+     const cartId = await session.getCartId();
 
      // Update cart buyer's country code if we have a cart id
      if (cartId) {

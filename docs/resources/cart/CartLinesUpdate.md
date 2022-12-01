@@ -167,7 +167,7 @@ Example use:
 ```jsx
 export async function action({request, context}) {
   const {session} = context;
-  const cartId = await session.get('cartId');
+  const cartId = await session.getCartId();
   const lines = formData.get('lines') ? JSON.parse(formData.get('lines')) : [];
 
   // update cart lines

@@ -58,7 +58,7 @@ export const meta: MetaFunction = () => ({
 
 export async function loader({context, request}: LoaderArgs) {
   const [cartId, layout, selectedLocale] = await Promise.all([
-    context.session.get('cartId'),
+    context.session.getCartId(),
     getLayoutData(context),
     getLocaleFromRequest(request),
   ]);

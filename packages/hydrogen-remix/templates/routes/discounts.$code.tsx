@@ -27,7 +27,7 @@ export async function loader({request, context, params}: LoaderArgs) {
     return redirect(redirectUrl);
   }
 
-  let cartId = await session.get('cartId');
+  let cartId = await session.getCartId();
 
   // if no existing cart, create one
   if (!cartId) {

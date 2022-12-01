@@ -64,7 +64,7 @@ async function action({request, context}: ActionArgs) {
   const formData = await request.formData();
 
   // 1. Grab the cart ID from the session
-  const cartId = await session.get('cartId');
+  const cartId = await session.getCartId();
   invariant(cartId, 'Missing cartId');
 
   invariant(formData.get('lines'), 'Missing lines');

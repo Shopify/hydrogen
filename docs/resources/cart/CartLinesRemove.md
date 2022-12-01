@@ -183,7 +183,7 @@ Example use:
 ```jsx
 export async function action({request, context}) {
   const {session} = context;
-  const cartId = await session.get('cartId');
+  const cartId = await session.getCartId();
   const lineIds = formData.get('lineIds')
     ? JSON.parse(formData.get('lineIds'))
     : [];

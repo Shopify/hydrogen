@@ -60,7 +60,7 @@ const ACTION_PATH = '/cart/CartLinesRemove';
 async function action({request, context}: ActionArgs) {
   const formData = await request.formData();
 
-  const cartId = await context.session.get('cartId');
+  const cartId = await context.session.getCartId();
   invariant(cartId, 'Missing cartId');
 
   invariant(formData.get('lineIds'), 'Missing lineIds');

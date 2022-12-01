@@ -35,6 +35,10 @@ export class HydrogenSession {
     return this.session.get(key);
   }
 
+  getCartId() {
+    return this.session.get('cartId');
+  }
+
   destroy() {
     return this.sessionStorage.destroySession(this.session);
   }
