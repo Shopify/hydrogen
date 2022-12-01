@@ -102,7 +102,7 @@ const LAYOUT_QUERY = `#graphql
   }
 `;
 
-export const MEDIA_FRAGMENT = `#graphql
+export const MEDIA_FRAGMENT = /* GraphQL */ `
   fragment Media on Media {
     __typename
     mediaContentType
@@ -134,8 +134,9 @@ export const MEDIA_FRAGMENT = `#graphql
     }
     ... on ExternalVideo {
       id
-      embedUrl
-      host
+      # I don't know why these two fields break the codegen tool
+      # embedUrl
+      # host
     }
   }
 `;
@@ -333,7 +334,7 @@ const SHOP_PRIMARY_DOMAIN_QUERY = `#graphql
   }
 `;
 
-export const COLLECTION_CONTENT_FRAGMENT = `#graphql
+export const COLLECTION_CONTENT_FRAGMENT = /* GraphQL */ `
   ${MEDIA_FRAGMENT}
   fragment CollectionContent on Collection {
     id

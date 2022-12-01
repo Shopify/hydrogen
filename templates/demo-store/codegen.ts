@@ -5,7 +5,7 @@ const config: CodegenConfig = {
   overwrite: true,
   // schema needs a relative path. In a template, we would need to remove the `../../` part since it's not part of a monorepo
   schema: '../../node_modules/@shopify/hydrogen-react/storefront.schema.json',
-  documents: './app/**/*.{gql,graphql,tsx,ts}',
+  documents: './app/{routes,data}/*.{gql,graphql,tsx,ts}',
   generates: {
     'app/': {
       preset: 'near-operation-file',
