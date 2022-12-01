@@ -12,7 +12,8 @@
   "sideEffects": false,
   "scripts": {
     "build": "tsup --clean --config ../../tsup.config.ts",
-    "dev": "tsup --watch --config ../../tsup.config.ts"
+    "dev": "tsup --watch --config ../../tsup.config.ts",
+    "prepack": "npm run build"
   },
   "exports": {
     ".": {
