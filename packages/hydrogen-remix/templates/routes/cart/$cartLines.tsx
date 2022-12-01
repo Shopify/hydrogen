@@ -35,7 +35,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   const {cartLines = ''} = params;
 
   if (!cartLines || typeof url?.search !== 'string') {
-    redirect('/');
+    return redirect('/');
   }
 
   const lines = parseEncodedLines(cartLines);
@@ -43,7 +43,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   if (!lines?.length) {
     console.error('/cart/$cartLines: failed no valid lines to add');
     console.error({cartLines, lines});
-    redirect('/');
+    return redirect('/');
   }
 
   const shopPayCheckoutUrl = `https://${env.SHOPIFY_STORE_DOMAIN}/cart/${cartLines}${url.search}`;
@@ -116,13 +116,23 @@ function parseEncodedLines(encodedLines: string | undefined): CartLineInput[] {
   return encodedLines
     .split(',')
     .map((encodedLine) => {
-      const [variantId, quantity] = encodedLine.split(':');
-      if (typeof variantId !== 'string' || typeof quantity !== 'string')
+      try {
+        const [variantId, quantity] = encodedLine.split(':');
+        if (typeof variantId !== 'string' || typeof quantity !== 'string')
+          return null;
+
+        const isValidVariantId = /^[0-9]{0,12}/.test(variantId);
+        const isValidQuantity = /^[0-9]{0,1}$/.test(quantity);
+
+        if (!isValidVariantId || !isValidQuantity) return null;
+
+        return {
+          merchandiseId: `gid://shopify/ProductVariant/${variantId}`,
+          quantity: parseInt(quantity),
+        };
+      } catch (error) {
         return null;
-      return {
-        merchandiseId: `gid://shopify/ProductVariant/${variantId}`,
-        quantity: parseInt(quantity),
-      };
+      }
     })
     .filter(Boolean) as CartLineInput[];
 }
