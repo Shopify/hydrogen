@@ -3,7 +3,7 @@ import {redirect, type LoaderArgs} from '@shopify/hydrogen-remix';
 import {cartCreate, cartLinesAdd, cartDiscountCodesUpdate} from '../../cart';
 
 /**
- * Creates or update a cart with the passed encoded cart line inputs and redirects to checkout
+ * Creates or updates a cart with the passed encoded cart line inputs and redirects to checkout
  * @param $encondedLines a route param including cart line inputs encoded as /$variantId:$quantity,$variantId:$quantity
  * @param ?discount (optional) discount to apply to the cart
  * @param ?payment=shop_pay (optional) if set it redirects to shop pay checkout, otherwise to standard checkout
