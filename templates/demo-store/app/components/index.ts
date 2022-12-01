@@ -23,5 +23,6 @@ export {Breadcrumbs} from './Breadcrumbs';
 export {Grid} from './Grid';
 export {FeaturedProducts} from './FeaturedProducts';
 export {Pagination, getPaginationVariables, usePagination} from './Pagination';
+export {ShopPayCheckoutButton} from './ShopPayCheckoutButton';
 // Sue me
 export * from './Icon';

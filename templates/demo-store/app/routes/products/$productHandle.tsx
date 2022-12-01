@@ -26,6 +26,7 @@ import {
   Text,
   Link,
   Button,
+  ShopPayCheckoutButton,
 } from '~/components';
 import {getExcerpt, variantToCartLine} from '~/lib/utils';
 import invariant from 'tiny-invariant';
@@ -209,7 +210,10 @@ export function ProductForm() {
               isOutOfStock={isOutOfStock}
             />
             {!isOutOfStock && (
-              <ShopPayButton variantIds={[selectedVariant?.id!]} />
+              <ShopPayCheckoutButton
+                selectedVariant={selectedVariant}
+                quantity={1}
+              />
             )}
           </div>
         )}
