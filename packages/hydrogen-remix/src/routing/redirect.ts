@@ -1,5 +1,5 @@
-import {redirect} from '@remix-run/oxygen';
-import type {HydrogenContext} from '@shopify/hydrogen';
+import {redirect} from '@shopify/h2-test-remix-oxygen';
+import type {HydrogenContext} from '@shopify/h2-test-hydrogen';
 
 export async function notFoundMaybeRedirect(
   request: Request,

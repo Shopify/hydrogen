@@ -1,6 +1,9 @@
 {
-  "name": "@remix-run/oxygen",
-  "private": true,
+  "name": "@shopify/h2-test-remix-oxygen",
+  "publishConfig": {
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org"
+  },
   "type": "module",
   "version": "0.0.1",
   "main": "dist/index.cjs",

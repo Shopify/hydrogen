@@ -12,7 +12,6 @@ import type {
   CollectionConnection,
   MetafieldReference,
   Filter,
-  Collection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import invariant from 'tiny-invariant';
@@ -175,7 +174,7 @@ export default function Collection() {
         <SortFilter
           filters={collection.products.filters as Filter[]}
           appliedFilters={appliedFilters}
-          collections={collections as Collection[]}
+          collections={collections as CollectionType[]}
         >
           <ProductGrid
             key={collection.id}
