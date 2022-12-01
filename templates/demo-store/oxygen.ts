@@ -1,6 +1,6 @@
+// Virtual entry point for the app
+import * as remixBuild from '@remix-run/dev/server-build';
 import {createRequestHandler} from '@shopify/hydrogen-remix';
-// The build remix app provided by remix build
-import * as remixBuild from 'remix-build';
 import {getLocaleFromRequest} from '~/lib/utils';
 import {HydrogenSession} from '~/lib/session.server';
 
