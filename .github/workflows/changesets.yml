@@ -23,8 +23,8 @@ jobs:
         id: flags
         run: |
           # IMPORTANT: Update this variable whenever we move to a new major version:
-          latest_branch=v0.x-2022-10
-          echo "::set-output name=latest::${{ github.ref_name == 'v0.x-2022-10' }}"
+          is_latest_branch=${{ github.ref_name == 'v0.x-2022-10' }}
+          echo "::set-output name=latest::$is_latest_branch"
 
       - name: Checkout the code
         uses: actions/checkout@v2
