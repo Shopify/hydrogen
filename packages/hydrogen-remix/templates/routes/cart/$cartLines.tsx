@@ -15,12 +15,12 @@ import {cartCreate, cartLinesAdd, cartDiscountCodesUpdate} from '../../cart';
  * ```
  * @example Adds one line item and redirects to shop pay checkout
  * ```ts
- * /cart/42562624913464:1?payment=shop_pay
+ * /cart/42562624847928:1?payment=shop_pay
  *
  * ```
  * @example Adds multiple line items with different quantities, a discount code and redirects to shop pay checkout
  * ```ts
- * /cart/42562624913464:2,42562624913464:1?payment=shop_pay&discount=FREESHIPPING
+ * /cart/42562624847928:2,42562624913464:1?payment=shop_pay&discount=FREESHIPPING
  *
  * ```
  */
