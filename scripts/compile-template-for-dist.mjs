@@ -15,6 +15,9 @@ import {createApp} from "@remix-run/dev";
 
   await fixConfig(tsTemplateDir, 'tsconfig.json');
   await fixConfig(jsTemplateDir, 'jsconfig.json');
+
+  // .hydrogen folder resulted from createApp
+  fs.removeSync('.hydrogen');
 })();
 
 async function createNewApp(srcDir, destDir, useTypeScript) {
