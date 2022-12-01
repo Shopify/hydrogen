@@ -8,7 +8,7 @@ import mime from 'mime';
 import {Request, Response} from '@miniflare/core';
 import connect from 'connect';
 import type {NextHandleFunction} from 'connect';
-// import bodyParser from 'body-parser';
+import bodyParser from 'body-parser';
 
 import type {MiniOxygen} from './core';
 
@@ -22,9 +22,8 @@ export interface MiniOxygenServerOptions extends MiniOxygenServerHooks {
   assetsDir?: string;
   autoReload?: boolean;
   publicPath?: string;
+  proxyServer: string;
 }
-
-const useProxy = true;
 
 const SSEUrl = '/events';
 const autoReloadScript = `<script defer type="application/javascript">
@@ -37,28 +36,23 @@ const autoReloadScript = `<script defer type="application/javascript">
 </script>`;
 const autoReloadScriptLength = Buffer.byteLength(autoReloadScript);
 
-async function serveResponse(
-  mf: MiniOxygen,
-  req: connect.IncomingMessage,
-  res: http.ServerResponse,
-  autoReload: boolean,
-) {
-  
-}
-
 function createAssetMiddleware({
   assetsDir,
   publicPath,
+  proxyServer,
 }: Pick<
   MiniOxygenServerOptions,
-  'assetsDir' | 'publicPath'
+  'assetsDir' | 'publicPath' | 'proxyServer'
 >): NextHandleFunction {
+  const useProxy = Boolean(proxyServer);
   return (req, res, next) => {
     if (assetsDir === undefined) {
       return next();
     }
 
-    if (!useProxy || (req.headers['mini-oxygen-proxy'])) {
+    if (useProxy && !req.headers['mini-oxygen-proxy']) {
+      return sendProxyRequest(req, res, proxyServer);
+    } else {
       const url = new URL(req.url || '/', `http://${req.headers.host}`);
       let filePath: string;
 
@@ -92,11 +86,8 @@ function createAssetMiddleware({
 
         return rs.pipe(res);
       }
-
-      next();
-    } else {
-      return sendProxyRequest(req, res);
     }
+    next();
   };
 }
 
@@ -130,14 +121,18 @@ function createRequestMiddleware(
   mf: MiniOxygen,
   {
     autoReload,
+    proxyServer: string,
     onRequest,
     onResponse,
     onResponseError,
   }: MiniOxygenServerHooks & Pick<MiniOxygenServerOptions, 'autoReload'>,
 ): NextHandleFunction {
+  const useProxy = Boolean(proxyServer);
   return async (req, res) => {
-    if (!useProxy || (req.headers['mini-oxygen-proxy'])) {
-      let response: Response<unknown[]>;
+    if (useProxy && !req.headers['mini-oxygen-proxy']) {
+      return sendProxyRequest(req, res, proxyServer);
+    } else {
+      let response: Response;
       let status = 500;
       const headers: http.OutgoingHttpHeaders = {};
 
@@ -155,7 +150,9 @@ function createRequestMiddleware(
         method: req.method,
         headers: reqHeaders,
         body:
-          req.method !== 'GET' && req.method !== 'HEAD' ? (req as any).body : null,
+          req.method !== 'GET' && req.method !== 'HEAD'
+            ? (req as any).body
+            : null,
       });
 
       try {
@@ -199,20 +196,23 @@ function createRequestMiddleware(
         res.writeHead(status, {'Content-Type': 'text/plain; charset=UTF-8'});
         res.end(err.stack, 'utf8');
       }
-    } else {
-      return sendProxyRequest(req, res);
     }
   };
 }
 
-function sendProxyRequest(req: connect.IncomingMessage, res: http.ServerResponse) {
+function sendProxyRequest(
+  req: connect.IncomingMessage,
+  res: http.ServerResponse,
+  proxyServer: string,
+) {
   const url = urlFromRequest(req);
   const headers = req.headers;
   headers['mini-Oxygen-Proxy'] = 'true';
+  const proxyHost = proxyServer.split(':')[0];
+  const proxyPort = parseInt(proxyServer.split(':')[1], 10);
   const options = {
-    // TODO: change these values
-    host: '127.0.0.1',
-    port: 8080,
+    host: proxyHost,
+    port: proxyPort,
     path: `${url.protocol}//${url.host}${url.pathname}`,
     headers,
   };
@@ -230,21 +230,22 @@ export function createServer(
     assetsDir,
     publicPath,
     autoReload = false,
+    proxyServer,
     ...hooks
   }: MiniOxygenServerOptions,
 ) {
   const app = connect();
 
   if (assetsDir) {
-    app.use(createAssetMiddleware({assetsDir, publicPath}));
+    app.use(createAssetMiddleware({assetsDir, publicPath, proxyServer}));
   }
 
-  // if (autoReload) {
-  //   app.use(SSEUrl, createAutoReloadMiddleware(mf));
-  // }
+  if (autoReload) {
+    app.use(SSEUrl, createAutoReloadMiddleware(mf));
+  }
 
   app.use(bodyParser.raw({type: '*/*'}));
-  app.use(createRequestMiddleware(mf, {autoReload, ...hooks}));
+  app.use(createRequestMiddleware(mf, {autoReload, proxyServer,...hooks}));
 
   const server = http.createServer(app);
 

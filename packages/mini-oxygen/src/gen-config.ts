@@ -24,6 +24,7 @@ const DEFAULTS: Required<
   autoReload: true,
   modules: true,
   sourceMap: true,
+  proxyServer: '',
   env: {},
 };
 

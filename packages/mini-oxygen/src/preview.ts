@@ -25,6 +25,7 @@ export type MiniOxygenPreviewOptions = Partial<{
   buildWatchPaths: string[];
   autoReload: boolean;
   sourceMap: boolean;
+  proxyServer: string;
   envPath: string;
   env: {[key: string]: unknown};
 }> &
@@ -46,6 +47,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     autoReload = false,
     modules = true,
     sourceMap = true,
+    proxyServer = '127.0.0.1:8080',
     envPath,
     env = {},
     onRequest,
@@ -93,6 +95,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     assetsDir: assetsDir ? path.resolve(root, assetsDir) : undefined,
     publicPath,
     autoReload,
+    proxyServer,
     onRequest,
     onResponse,
     onResponseError,
