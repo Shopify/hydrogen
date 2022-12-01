@@ -51,7 +51,7 @@ jobs:
         uses: changesets/action@v1
         with:
           version: npm run version
-          publish: npm run changeset publish
+          publish: npm run build && npm run changeset publish
           commit: '[ci] release ${{ github.ref_name }}'
           title: '[ci] release ${{ github.ref_name }}'
         env:
