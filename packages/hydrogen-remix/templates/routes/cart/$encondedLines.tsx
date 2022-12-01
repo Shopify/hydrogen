@@ -38,7 +38,7 @@ export async function loader({request, context, params}: LoaderArgs) {
     redirect('/cart');
   }
 
-  const shopPayCheckoutUrl = `https://${env.SHOPIFY_STORE_DOMAIN}.myshopify.com/cart/${encondedLines}${url.search}`;
+  const shopPayCheckoutUrl = `https://${env.SHOPIFY_STORE_DOMAIN}/cart/${encondedLines}${url.search}`;
   let standardCheckoutUrl;
 
   const lines = parseEncodedLines(encondedLines);
