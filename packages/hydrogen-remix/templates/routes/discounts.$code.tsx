@@ -4,11 +4,12 @@ import {cartCreate, cartDiscountCodesUpdate} from '../cart';
 /**
  * Automatically applies a discount found on the url
  * If a cart exists it's updated with the discount, otherwise a cart is created with the discount already applied
- * @param param ?redirect an optional path to return to otherwise return to the home page
+ * @param ?redirect an optional path to return to otherwise return to the home page
  * @example
  * Example path applying a discount and redirecting
  * ```ts
  * /discounts/FREESHIPPING?redirect=/products
+ *
  * ```
  */
 export async function loader({request, context, params}: LoaderArgs) {
