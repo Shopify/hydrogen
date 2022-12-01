@@ -44,13 +44,12 @@ function createAssetMiddleware({
   MiniOxygenServerOptions,
   'assetsDir' | 'publicPath' | 'proxyServer'
 >): NextHandleFunction {
-  const useProxy = Boolean(proxyServer);
   return (req, res, next) => {
     if (assetsDir === undefined) {
       return next();
     }
 
-    if (useProxy && !req.headers['mini-oxygen-proxy']) {
+    if (proxyServer !== '' && !req.headers['mini-oxygen-proxy']) {
       return sendProxyRequest(req, res, proxyServer);
     } else {
       const url = new URL(req.url || '/', `http://${req.headers.host}`);
@@ -127,9 +126,8 @@ function createRequestMiddleware(
     onResponseError,
   }: MiniOxygenServerHooks & Pick<MiniOxygenServerOptions, 'autoReload'>,
 ): NextHandleFunction {
-  const useProxy = Boolean(proxyServer);
   return async (req, res) => {
-    if (useProxy && !req.headers['mini-oxygen-proxy']) {
+    if (proxyServer !== '' && !req.headers['mini-oxygen-proxy']) {
       return sendProxyRequest(req, res, proxyServer);
     } else {
       let response: Response;
