@@ -9,7 +9,7 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
     if (typeof first === 'string' && first.includes('[mf:')) {
       if (workerReload !== false && first.includes('Worker reloaded')) {
         if (isFirstWorkerReload) isFirstWorkerReload = false;
-        else return log(first.replace('[mf:inf] ', ''), ...rest);
+        else return log(first.replace('[mf:inf] ', '🔄 ') + '\n', ...rest);
       }
 
       if (!first.includes('[mf:err]')) {
