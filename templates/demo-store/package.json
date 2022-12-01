@@ -9,7 +9,8 @@
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "format": "prettier --write --ignore-unknown .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "codegen": "graphql-codegen --config codegen.ts"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
@@ -33,6 +34,9 @@
     "typographic-base": "^1.0.4"
   },
   "devDependencies": {
+    "@graphql-codegen/cli": "^2.15.0",
+    "@graphql-codegen/near-operation-file-preset": "^2.4.4",
+    "@graphql-codegen/typescript-operations": "^2.5.7",
     "@playwright/test": "^1.27.1",
     "@remix-run/dev": "0.0.0-experimental-e18af792a",
     "@remix-run/eslint-config": "0.0.0-experimental-e18af792a",

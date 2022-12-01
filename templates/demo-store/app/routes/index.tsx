@@ -7,7 +7,7 @@ import {
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
-import {COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data';
+import {COLLECTION_CONTENT_FRAGMENT} from '~/data';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import {getLocaleFromRequest} from '~/lib/utils';
 import type {
@@ -15,6 +15,7 @@ import type {
   Metafield,
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {type HomepageFeaturedCollectionsQuery} from './index.generated';
 
 interface HomeSeoData {
   shop: {
@@ -79,9 +80,10 @@ export async function loader({request, params, context}: LoaderArgs) {
         },
       },
     ),
-    featuredCollections: context.storefront.query<{
-      collections: CollectionConnection;
-    }>(FEATURED_COLLECTIONS_QUERY),
+    featuredCollections:
+      context.storefront.query<HomepageFeaturedCollectionsQuery>(
+        FEATURED_COLLECTIONS_QUERY,
+      ),
     tertiaryHero: context.storefront.query<{hero: CollectionHero}>(
       COLLECTION_HERO_QUERY,
       {
@@ -200,8 +202,45 @@ const COLLECTION_HERO_QUERY = `#graphql
   }
 `;
 
+// TODO: for some reason, importing the fragment doesn't work. Maybe it's a race condition and when it's imported, it's resolved too late?
+const PRODUCT_CARD_FRAGMENT = /* GraphQL */ `
+  fragment ProductCard on Product {
+    id
+    title
+    publishedAt
+    handle
+    variants(first: 1) {
+      nodes {
+        id
+        image {
+          url
+          altText
+          width
+          height
+        }
+        price: priceV2 {
+          amount
+          currencyCode
+        }
+        compareAtPrice: compareAtPriceV2 {
+          amount
+          currencyCode
+        }
+        selectedOptions {
+          name
+          value
+        }
+        product {
+          handle
+          title
+        }
+      }
+    }
+  }
+`;
+
 // @see: https://shopify.dev/api/storefront/latest/queries/products
-export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
+export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = /* GraphQL */ `
   ${PRODUCT_CARD_FRAGMENT}
   query homepageFeaturedProducts($country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
@@ -214,13 +253,12 @@ export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
 `;
 
 // @see: https://shopify.dev/api/storefront/latest/queries/collections
-export const FEATURED_COLLECTIONS_QUERY = `#graphql
-  query homepageFeaturedCollections($country: CountryCode, $language: LanguageCode)
-  @inContext(country: $country, language: $language) {
-    collections(
-      first: 4,
-      sortKey: UPDATED_AT
-    ) {
+export const FEATURED_COLLECTIONS_QUERY = /* GraphQL */ `
+  query homepageFeaturedCollections(
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    collections(first: 4, sortKey: UPDATED_AT) {
       nodes {
         id
         title

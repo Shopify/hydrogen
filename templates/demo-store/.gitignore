@@ -12,3 +12,5 @@ node_modules
 /playwright-report/
 /playwright/.cache/
 .hydrogen
+*.generated.ts
+app/__generated/
