@@ -3,7 +3,8 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**/*.ts", "./tsup.config.ts"]
+      "inputs": ["src/**/*.ts", "./tsup.config.ts"],
+      "outputs": ["dist/**", "build/**", ".hydrogen/**"]
     },
     "dev": {
       "dependsOn": [
