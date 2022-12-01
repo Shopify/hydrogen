@@ -15,6 +15,7 @@ import type {
   Metafield,
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {graphql} from '~/gql/index';
 
 interface HomeSeoData {
   shop: {
@@ -175,6 +176,15 @@ export default function Homepage() {
     </>
   );
 }
+
+const TEST = graphql(`
+  query Test {
+    shop {
+      name
+      description
+    }
+  }
+`);
 
 const HOMEPAGE_SEO_QUERY = `#graphql
   ${COLLECTION_CONTENT_FRAGMENT}
