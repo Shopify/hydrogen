@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import * as remix from '@remix-run/dev/dist/compiler.js';
-import {copyPublicFiles} from './build.js';
+import {copyPublicFiles, runBuild} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
 import {flags} from '../../utils/flags.js';
@@ -57,24 +57,22 @@ export async function runDev({
 
   muteDevLogs();
 
-  console.time(LOG_INITIAL_BUILD);
-
-  compileAndWatch(remixConfig, projectPaths, {port});
+  await compileAndWatch(remixConfig, projectPaths, {port});
 }
 
-function compileAndWatch(
+async function compileAndWatch(
   remixConfig: Awaited<ReturnType<typeof getRemixConfig>>,
-  {
-    root,
-    publicPath,
-    buildPathClient,
-    buildPathWorkerFile,
-  }: ReturnType<typeof getProjectPaths>,
-  {port}: {port?: number} = {},
+  projectPaths: ReturnType<typeof getProjectPaths>,
+  options: {port?: number} = {},
+  isInit = true,
 ) {
+  isInit && console.time(LOG_INITIAL_BUILD);
+
+  const {root, entryFile, publicPath, buildPathClient, buildPathWorkerFile} =
+    projectPaths;
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
-  remix.watch(remixConfig, {
+  const stopCompileWatcher = await remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
     async onFileCreated(file: string) {
       console.log(`\n📄 File created: ${path.relative(root, file)}`);
@@ -93,6 +91,15 @@ function compileAndWatch(
           path.resolve(buildPathClient, path.basename(file)),
         );
       }
+
+      if (file.startsWith(path.resolve(root, 'remix.config.'))) {
+        const [newRemixConfig] = await Promise.all([
+          getRemixConfig(root, entryFile, publicPath, file),
+          stopCompileWatcher(),
+        ]);
+
+        compileAndWatch(newRemixConfig, projectPaths, options, false);
+      }
     },
     async onFileDeleted(file: string) {
       console.log(`\n📄 File deleted: ${path.relative(root, file)}`);
@@ -102,15 +109,18 @@ function compileAndWatch(
     },
     async onInitialBuild() {
       await copyingFiles;
-      console.timeEnd(LOG_INITIAL_BUILD);
 
-      await startMiniOxygen({
-        root,
-        port,
-        watch: true,
-        buildPathWorkerFile,
-        buildPathClient,
-      });
+      if (isInit) {
+        console.timeEnd(LOG_INITIAL_BUILD);
+
+        await startMiniOxygen({
+          root,
+          port: options.port,
+          watch: true,
+          buildPathWorkerFile,
+          buildPathClient,
+        });
+      }
     },
     onRebuildStart() {
       // eslint-disable-next-line no-console

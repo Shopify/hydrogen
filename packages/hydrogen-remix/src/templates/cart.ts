@@ -1,5 +1,4 @@
 // @ts-nocheck
-console.log('JIOOO');
 export {
   cartBuyerIdentityUpdate,
   CartBuyerIdentityUpdateForm,
