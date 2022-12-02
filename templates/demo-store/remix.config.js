@@ -4,7 +4,6 @@ const {hydrogenRoutes} = require('@shopify/h2-test-hydrogen-remix/build');
 /** @type {import('@remix-run/dev').AppConfig} */
 module.exports = {
   ignoredRouteFiles: ['**/.*'],
-  serverBuildDirectory: 'dist',
   async routes(defineRoutes) {
     return await hydrogenRoutes(defineRoutes, {});
   },
