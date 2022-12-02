@@ -87,9 +87,20 @@ export async function getRemixConfig(
       );
 
       config.watchPaths.push(
-        ...(await fs.readdir(packagesPath)).map((pkg) =>
-          path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
-        ),
+        ...(await fs.readdir(packagesPath)).flatMap((pkg) => {
+          const files = [
+            path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
+          ];
+
+          if (pkg === 'hydrogen-remix') {
+            files.push(
+              path.resolve(packagesPath, pkg, 'dist', 'production', 'build.js'),
+              path.resolve(packagesPath, pkg, 'src', 'templates', '**', '*'),
+            );
+          }
+
+          return files;
+        }),
       );
     }
 
