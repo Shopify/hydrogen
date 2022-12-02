@@ -5,6 +5,7 @@ import type {Socket} from 'net';
 import getPort from 'get-port';
 
 import {MiniOxygen} from './mini-oxygen/core';
+import type {MiniOxygenServerHooks} from './mini-oxygen/server';
 
 class WorkerNotFoundError extends Error {
   name = 'WorkerNotFoundError';
@@ -26,7 +27,8 @@ export type MiniOxygenPreviewOptions = Partial<{
   sourceMap: boolean;
   envPath: string;
   env: {[key: string]: unknown};
-}>;
+}> &
+  MiniOxygenServerHooks;
 
 export const configFileName = 'mini-oxygen.config.json';
 
@@ -46,6 +48,9 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     sourceMap = true,
     envPath,
     env = {},
+    onRequest,
+    onResponse,
+    onResponseError,
   } = opts;
   const root = process.cwd();
 
@@ -81,6 +86,9 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     assetsDir: assetsDir ? path.resolve(root, assetsDir) : undefined,
     publicPath,
     autoReload,
+    onRequest,
+    onResponse,
+    onResponseError,
   });
 
   const actualPort = await getPort({port});

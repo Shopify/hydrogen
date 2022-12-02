@@ -8,7 +8,12 @@ import {resolve} from 'path';
 
 import {MiniOxygenPreviewOptions, configFileName} from './preview';
 
-const DEFAULTS: Required<Omit<MiniOxygenPreviewOptions, 'log' | 'envPath'>> = {
+const DEFAULTS: Required<
+  Omit<
+    MiniOxygenPreviewOptions,
+    'log' | 'envPath' | 'onRequest' | 'onResponse' | 'onResponseError'
+  >
+> = {
   port: 3000,
   workerFile: 'dist/worker/index.js',
   assetsDir: 'dist/client',

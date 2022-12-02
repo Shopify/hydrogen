@@ -11,7 +11,13 @@ import bodyParser from 'body-parser';
 
 import type {MiniOxygen} from './core';
 
-export interface MiniOxygenServerOptions {
+export interface MiniOxygenServerHooks {
+  onRequest?: (request: Request) => void;
+  onResponse?: (request: Request, response: Response) => void;
+  onResponseError?: (request: Request, error: Error) => void;
+}
+
+export interface MiniOxygenServerOptions extends MiniOxygenServerHooks {
   assetsDir?: string;
   autoReload?: boolean;
   publicPath?: string;
@@ -106,7 +112,12 @@ function createAutoReloadMiddleware(mf: MiniOxygen): NextHandleFunction {
 
 function createRequestMiddleware(
   mf: MiniOxygen,
-  autoReload: boolean,
+  {
+    autoReload,
+    onRequest,
+    onResponse,
+    onResponseError,
+  }: MiniOxygenServerHooks & Pick<MiniOxygenServerOptions, 'autoReload'>,
 ): NextHandleFunction {
   // eslint-disable-next-line @typescript-eslint/no-misused-promises
   return async (req, res) => {
@@ -134,7 +145,9 @@ function createRequestMiddleware(
     });
 
     try {
+      onRequest?.(request);
       response = await mf.dispatchFetch(request);
+      onResponse?.(request, response as Response);
       status = response.status;
 
       for (const key of response.headers.keys()) {
@@ -170,6 +183,7 @@ function createRequestMiddleware(
 
       res.end();
     } catch (err: any) {
+      onResponseError?.(request, err as Error);
       // eslint-disable-next-line @typescript-eslint/naming-convention
       res.writeHead(status, {'Content-Type': 'text/plain; charset=UTF-8'});
       res.end(err.stack, 'utf8');
@@ -181,7 +195,12 @@ function createRequestMiddleware(
 
 export function createServer(
   mf: MiniOxygen,
-  {assetsDir, publicPath, autoReload = false}: MiniOxygenServerOptions,
+  {
+    assetsDir,
+    publicPath,
+    autoReload = false,
+    ...hooks
+  }: MiniOxygenServerOptions,
 ) {
   const app = connect();
 
@@ -194,7 +213,7 @@ export function createServer(
   }
 
   app.use(bodyParser.raw({type: '*/*'}));
-  app.use(createRequestMiddleware(mf, autoReload));
+  app.use(createRequestMiddleware(mf, {autoReload, ...hooks}));
 
   const server = http.createServer(app);
 
