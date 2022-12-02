@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.json",
   "include": ["src"],
   "compilerOptions": {
-    "jsx": "react-jsx",
+    "jsx": "preserve",
     "paths": {
       "@shopify/hydrogen-remix": ["./src"]
     }

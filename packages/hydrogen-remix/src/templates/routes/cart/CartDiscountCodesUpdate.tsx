@@ -59,6 +59,7 @@ const ACTION_PATH = `/cart/CartDiscountCodesUpdate`;
 
 /**
  * action that handles the discountCodes update mutation
+ * @preserve
  */
 async function action({request, context}: ActionArgs) {
   const {session} = context;
@@ -74,8 +75,8 @@ async function action({request, context}: ActionArgs) {
   invariant(formDiscountCodes, 'Missing discountCodes');
   const discountCodes = (formDiscountCodes || []) as string[];
 
-  // we fetch teh previous discountCodes to
-  // diff them after mutating for analytics
+  //! we fetch teh previous discountCodes to
+  //! diff them after mutating for analytics
   const prevCart = await getCartDiscounts({cartId, context});
 
   const {cart, errors: graphqlErrors} = await cartDiscountCodesUpdate({
@@ -88,7 +89,7 @@ async function action({request, context}: ActionArgs) {
     return json({errors: graphqlErrors});
   }
 
-  // if no js, we essentially reload to avoid being routed to the actions route
+  //! if no js, we essentially reload to avoid being routed to the actions route
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
     return redirect(redirectTo);
@@ -108,6 +109,7 @@ async function action({request, context}: ActionArgs) {
  * @param prevDiscountCodes the applied discounts before the update mutation
  * @param currentDiscountCodes the applied discounts after the update mutation
  * @returns {event, error}
+ * @preserve
  */
 function instrumentEvent({
   addingDiscountCodes,
@@ -147,6 +149,7 @@ function instrumentEvent({
  * @param prevDiscountCodes an array of discountCodes before the mutation
  * @param currentDiscountCodes an array of discountCodes after the mutation
  * @returns
+ * @preserve
  */
 function diffDiscountCodes({
   addingDiscountCodes,
@@ -208,6 +211,7 @@ const CART_DISCOUNTS_QUERY = `#graphql
  * @see https://shopify.dev/api/storefront/2022-01/objects/Cart#field-cart-discountcodes
  * @param param0
  * @returns
+ * @preserve
  */
 async function getCartDiscounts({
   cartId,
@@ -231,6 +235,7 @@ async function getCartDiscounts({
  * Mutation that updates the cart discounts
  * @param discountCodes Array of discount codes
  * @returns mutated cart
+ * @preserve
  */
 async function cartDiscountCodesUpdate({
   cartId,
@@ -267,6 +272,7 @@ async function cartDiscountCodesUpdate({
 /**
  * Form that updates the discount codes applied to the cart
  * @param discountCodes Array of discount codes
+ * @preserve
  */
 const CartDiscountCodesUpdateForm = forwardRef<
   HTMLFormElement,
@@ -320,11 +326,12 @@ const CartDiscountCodesUpdateForm = forwardRef<
   );
 });
 
-/*
-  A hook to programmatically update the discount codes applied to a cart
-  @see: https://shopify.dev/api/storefront/2022-10/mutations/cartDiscountCodesUpdate
-  returns {cartDiscountCodesUpdate, fetcher}
-*/
+/**
+ * A hook to programmatically update the discount codes applied to a cart
+ * @see: https://shopify.dev/api/storefront/2022-10/mutations/cartDiscountCodesUpdate
+ * @returns {cartDiscountCodesUpdate, fetcher}
+ * @preserve
+ */
 function useCartDiscountCodesUpdate(
   onSuccess: (event: DiscountCodesUpdateEvent) => void = () => {},
 ) {
@@ -358,6 +365,7 @@ function useCartDiscountCodesUpdate(
 /**
  * Utility hook to get the active discountCodesUpdate fetcher
  * @returns fetcher
+ * @preserve
  */
 function useCartDiscountCodesUpdateFetcher() {
   const fetchers = useFetchers();
@@ -369,6 +377,7 @@ function useCartDiscountCodesUpdateFetcher() {
 /**
  * Utility hook to retrieve the discountCodes currently being updated
  * @returns {discountCodesUpdating, fetcher}
+ * @preserve
  */
 function useCartDiscountCodesUpdating() {
   const fetcher = useCartDiscountCodesUpdateFetcher();

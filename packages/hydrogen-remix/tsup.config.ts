@@ -21,7 +21,14 @@ export default [
     minify: false,
     bundle: false,
     sourcemap: false,
-    splitting: true,
-    treeshake: true,
+    splitting: false,
+    // Rollup fails due to JSX syntax with this option:
+    treeshake: false,
+    // Force .jsx extension for compiled templates:
+    outExtension: () => ({js: '.jsx'}),
+    // Avoid dropping comments in ESBuild:
+    esbuildOptions: (options) => {
+      options.legalComments = 'inline';
+    },
   }),
 ];
