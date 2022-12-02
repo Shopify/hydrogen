@@ -77,9 +77,7 @@ async function compileAndWatch(
     file.startsWith(path.resolve(root, 'remix.config.')) ||
     (process.env.LOCAL_DEV &&
       (file.includes(path.resolve('/hydrogen-remix/src/templates/')) ||
-        file.includes(
-          path.resolve('/hydrogen-remix/dist/production/build.js'),
-        )));
+        file.includes(path.resolve('/hydrogen-remix/dist/build/index.js'))));
 
   const stopCompileWatcher = await remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
