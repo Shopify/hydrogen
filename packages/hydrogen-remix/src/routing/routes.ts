@@ -42,6 +42,8 @@ async function copyTemplates() {
   const templates = await readDir(templateDirectory);
   const hydrogenDirectory = path.resolve(process.cwd(), '.hydrogen');
 
+  fs.rmSync(hydrogenDirectory, {recursive: true, force: true});
+
   for (const template of templates) {
     const destination = path.resolve(
       hydrogenDirectory,
