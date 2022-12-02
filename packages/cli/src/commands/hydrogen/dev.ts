@@ -72,6 +72,15 @@ async function compileAndWatch(
     projectPaths;
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
+  // Changing these files requires re-running `remix.config.js`
+  const shouldReloadRemixApp = (file: string) =>
+    file.startsWith(path.resolve(root, 'remix.config.')) ||
+    (process.env.LOCAL_DEV &&
+      (file.includes(path.resolve('/hydrogen-remix/src/templates/')) ||
+        file.includes(
+          path.resolve('/hydrogen-remix/dist/production/build.js'),
+        )));
+
   const stopCompileWatcher = await remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
     async onFileCreated(file: string) {
@@ -81,6 +90,10 @@ async function compileAndWatch(
           file,
           path.resolve(buildPathClient, path.basename(file)),
         );
+      }
+
+      if (shouldReloadRemixApp(file)) {
+        await reloadRemixApp(file);
       }
     },
     async onFileChanged(file: string) {
@@ -92,19 +105,18 @@ async function compileAndWatch(
         );
       }
 
-      if (file.startsWith(path.resolve(root, 'remix.config.'))) {
-        const [newRemixConfig] = await Promise.all([
-          getRemixConfig(root, entryFile, publicPath, file),
-          stopCompileWatcher(),
-        ]);
-
-        compileAndWatch(newRemixConfig, projectPaths, options, false);
+      if (shouldReloadRemixApp(file)) {
+        await reloadRemixApp(file);
       }
     },
     async onFileDeleted(file: string) {
       console.log(`\n📄 File deleted: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await fs.unlink(file.replace(publicPath, buildPathClient));
+      }
+
+      if (shouldReloadRemixApp(file)) {
+        await reloadRemixApp(file);
       }
     },
     async onInitialBuild() {
@@ -123,7 +135,6 @@ async function compileAndWatch(
       }
     },
     onRebuildStart() {
-      // eslint-disable-next-line no-console
       console.log(LOG_REBUILDING);
       console.time(LOG_REBUILT);
     },
@@ -131,4 +142,13 @@ async function compileAndWatch(
       console.timeEnd(LOG_REBUILT);
     },
   });
+
+  async function reloadRemixApp(cacheBust: string) {
+    const [newRemixConfig] = await Promise.all([
+      getRemixConfig(root, entryFile, publicPath, cacheBust),
+      stopCompileWatcher(),
+    ]);
+
+    compileAndWatch(newRemixConfig, projectPaths, options, false);
+  }
 }
