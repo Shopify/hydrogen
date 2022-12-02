@@ -1,5 +1,13 @@
 # @shopify/hydrogen-react
 
+## 2022.10.5
+
+### Patch Changes
+
+- b1989c9: Fix issue with `package.json`'s `main` and `module` fields that were not updated to point to the new output directory structure.
+- a776e01: Update the TypeScript types for `<Money/>` so that the default rendered element is a `"div"`.
+- f1ffd57: Show storefront development warnings only once.
+
 ## 2022.10.4
 
 ### Patch Changes
