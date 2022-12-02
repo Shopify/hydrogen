@@ -41,7 +41,7 @@
   },
   "files": [
     "dist",
-    "templates"
+    "src/templates"
   ],
   "peerDependencies": {
     "@shopify/h2-test-remix-oxygen": "^0.0.4",
