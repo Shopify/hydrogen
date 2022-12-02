@@ -58,7 +58,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     publicPath.length > 0 &&
     !publicPath.endsWith('/')
   ) {
-    log(`WARNING: publicPath must end with a trailing slash`);
+    log(`\nWARNING: publicPath must end with a trailing slash`);
   }
 
   const mf = new MiniOxygen(
@@ -85,7 +85,9 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
 
   const actualPort = await getPort({port});
   if (actualPort !== port) {
-    log(`Port ${port} is not available. Using ${actualPort} instead.`);
+    log(
+      `\nWARNING: Port ${port} is not available. Using ${actualPort} instead.`,
+    );
   }
 
   const sockets = new Set<Socket>();
