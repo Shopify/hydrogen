@@ -1,0 +1,19 @@
+# @shopify/h2-test-remix-oxygen
+
+## 0.0.4
+
+### Patch Changes
+
+- Fix changeset workflow ([#282](https://github.com/Shopify/h2/pull/282)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 0.0.3
+
+### Patch Changes
+
+- Build project dist files before publishing by [@jplhomer](https://github.com/jplhomer)
+
+## 0.0.2
+
+### Patch Changes
+
+- Fix changeset release to build before publishing to NPM ([#277](https://github.com/Shopify/h2/pull/277)) by [@jplhomer](https://github.com/jplhomer)

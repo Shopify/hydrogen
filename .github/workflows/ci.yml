@@ -6,10 +6,11 @@ jobs:
   lint:
     name: ⬣ ESLint
     runs-on: shopify-ubuntu-latest
+    timeout-minutes: 15 
+    concurrency:
+      group: ci-lint-${{ github.ref }}
+      cancel-in-progress: true
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
@@ -17,11 +18,11 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
-      - name: 📥 Download deps
-        uses: bahmutov/npm-install@v1
-        with:
-          useLockFile: false
+      - name: 📥 Install dependencies
+        run: npm ci
 
       - name: 🔬 Lint
         run: npm run lint
@@ -29,10 +30,11 @@ jobs:
   typecheck:
     name: Typescript
     runs-on: shopify-ubuntu-latest
+    timeout-minutes: 15 
+    concurrency:
+      group: ci-typecheck-${{ github.ref }}
+      cancel-in-progress: true
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
@@ -40,11 +42,22 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
-      - name: 📥 Download deps
-        uses: bahmutov/npm-install@v1
+      - name: 📥 Install dependencies
+        run: npm ci
+
+      - name: 💾 Turbo cache
+        id: turbo-cache
+        uses: actions/cache@v3
         with:
-          useLockFile: false
+          path: |
+            node_modules/.cache/turbo
+            **/.turbo
+          key: turbo-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ github.job }}-${{ github.ref_name }}-
 
       - name: 📦 Build packages
         run: npm run build
@@ -54,12 +67,12 @@ jobs:
 
   test:
     name: ⚫️ Playwright tests
-    timeout-minutes: 60
     runs-on: shopify-ubuntu-latest
+    timeout-minutes: 15 
+    concurrency:
+      group: ci-test-${{ github.ref }}
+      cancel-in-progress: true
     steps:
-      - name: 🛑 Cancel Previous Runs
-        uses: styfle/cancel-workflow-action@0.11.0
-
       - name: ⬇️ Checkout repo
         uses: actions/checkout@v3
 
@@ -67,15 +80,45 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
       - name: 📥 Install dependencies
         run: npm ci
 
+      - name: 💾 Turbo cache
+        id: turbo-cache
+        uses: actions/cache@v3
+        with:
+          path: |
+            node_modules/.cache/turbo
+            **/.turbo
+          key: turbo-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
+          restore-keys: |
+            turbo-${{ github.job }}-${{ github.ref_name }}-
+
       - name: 📦 Build packages
         run: npm run build
 
-      - name: 💽 Install Playwright Browsers
+      - name: 📄 Get installed Playwright version
+        run: echo "PLAYWRIGHT_VERSION=$(npm ls @playwright/test | grep @playwright -m 1 | sed 's/.*@//')"  >> $GITHUB_ENV
+
+      - name: 💾 Cache Playwright binaries
+        uses: actions/cache@v3
+        id: playwright-cache
+        with:
+          path: |
+            ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ env.PLAYWRIGHT_VERSION }}
+
+      - name: 💽 Install Playwright Browsers (all)
+        if: steps.playwright-cache.outputs.cache-hit != 'true'
         run: npx playwright install --with-deps
+        working-directory: ./templates/demo-store
+
+      - name: 💽 Install Playwright (only system deps)
+        if: steps.playwright-cache.outputs.cache-hit == 'true'
+        run: npx playwright install-deps
         working-directory: ./templates/demo-store
 
       - name: 🍄 Run Playwright tests

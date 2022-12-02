@@ -9,10 +9,13 @@ import fs from 'fs/promises';
 import {fileURLToPath} from 'url';
 
 try {
-  const cliPkgPath = fileURLToPath(await import.meta.resolve('@shopify/cli'));
+  // @shopify/cli/dist/
+  const cliPkgPath = path.dirname(
+    fileURLToPath(await import.meta.resolve('@shopify/cli')),
+  );
 
-  // @shopify/cli/dist/xyz => @shopify/cli/bin/run.js
-  const cliFilePath = path.join(cliPkgPath, '..', '..', 'bin', 'run.js');
+  // @shopify/cli/bin/run.js
+  const cliFilePath = path.join(cliPkgPath, '..', 'bin', 'run.js');
 
   const content = await fs.readFile(cliFilePath, 'utf-8');
   await fs.writeFile(
@@ -22,6 +25,17 @@ try {
       '#!/usr/bin/env node',
       '#!/usr/bin/env -S node --experimental-vm-modules\n',
     ),
+    'utf-8',
+  );
+
+  // --- Add temporary CLI plugin name to package.json
+  // @shopify/cli/package.json
+  const pkgFilePath = path.join(cliPkgPath, '..', 'package.json');
+  const pkgContent = await fs.readFile(pkgFilePath, 'utf-8');
+  await fs.writeFile(
+    pkgFilePath,
+    // Add flag at the end of the shebang and -S param to support Linux (CI)
+    pkgContent.replace('"@shopify/cli-hydrogen"', '"@shopify/cli-h2-test"'),
     'utf-8',
   );
 } catch (error) {

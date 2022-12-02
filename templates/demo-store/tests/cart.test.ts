@@ -52,8 +52,19 @@ test.describe('Cart', () => {
       .textContent();
 
     await expect(
-      priceInCheckout?.trim(),
+      normalizePrice(priceInCheckout),
       'should show the same price in checkout',
-    ).toEqual(priceInStore?.trim());
+    ).toEqual(normalizePrice(priceInStore));
   });
 });
+
+function normalizePrice(price: string | null) {
+  if (!price) throw new Error('Price was not found');
+
+  return price
+    .replace('$', '')
+    .trim()
+    .replace(/[.,](\d\d)$/, '-$1')
+    .replace(/[.,]/g, '')
+    .replace('-', '.');
+}
