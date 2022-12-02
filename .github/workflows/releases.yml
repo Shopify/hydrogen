@@ -7,19 +7,19 @@ on:
 
 jobs:
   Releases:
-    runs-on: ubuntu-latest
+    runs-on: shopify-ubuntu-latest
     if: github.repository_owner == 'shopify'
     name: Releases and PR for changesets
     outputs:
       published: ${{ steps.changesets.outputs.published }}
-      latest: ${{ steps.flags.outputs.latest }}
+      latest: ${{ env.latest }}
     steps:
       - name: Flags
         id: flags
         run: |
           # IMPORTANT: Update this variable whenever we move to a new major version:
           latest_branch=2022-10
-          echo "::set-output name=latest::${{ github.ref_name == '2022-10' }}"
+          echo "latest=${{ github.ref_name == '2022-10' }}" >> $GITHUB_ENV
 
       - name: Checkout the code
         uses: actions/checkout@v3
@@ -37,7 +37,7 @@ jobs:
         run: yarn install --frozen-lockfile --ignore-engines
 
       - name: (latest) Create Release Pull Request or Publish
-        if: steps.flags.outputs.latest == 'true'
+        if: env.latest == 'true'
         id: changesets
         uses: changesets/action@v1
         with:
@@ -49,7 +49,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: (legacy) Create Release Pull Request or Publish
-        if: steps.flags.outputs.latest != 'true'
+        if: env.latest != 'true'
         id: changesets_legacy
         uses: changesets/action@v1
         with:
@@ -61,7 +61,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # note that this runs on every PR that's merged.
-      - name: (next) Create Release Pull Request or Publish
+      - name: (next) Publish
         id: release_next
         run: |
           echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
