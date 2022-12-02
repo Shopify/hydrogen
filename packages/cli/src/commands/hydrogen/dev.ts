@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import * as remix from '@remix-run/dev/dist/compiler.js';
-import {copyPublicFiles, runBuild} from './build.js';
+import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
 import {flags} from '../../utils/flags.js';
@@ -83,6 +83,21 @@ async function compileAndWatch(
 
   const stopCompileWatcher = await remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
+    async onInitialBuild() {
+      await copyingFiles;
+
+      if (isInit) {
+        console.timeEnd(LOG_INITIAL_BUILD);
+
+        await startMiniOxygen({
+          root,
+          port: options.port,
+          watch: true,
+          buildPathWorkerFile,
+          buildPathClient,
+        });
+      }
+    },
     async onFileCreated(file: string) {
       console.log(`\n📄 File created: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
@@ -117,21 +132,6 @@ async function compileAndWatch(
 
       if (shouldReloadRemixApp(file)) {
         await reloadRemixApp(file);
-      }
-    },
-    async onInitialBuild() {
-      await copyingFiles;
-
-      if (isInit) {
-        console.timeEnd(LOG_INITIAL_BUILD);
-
-        await startMiniOxygen({
-          root,
-          port: options.port,
-          watch: true,
-          buildPathWorkerFile,
-          buildPathClient,
-        });
       }
     },
     onRebuildStart() {
