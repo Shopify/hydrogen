@@ -49,8 +49,15 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     envPath,
     env = {},
     onRequest,
-    onResponse,
     onResponseError,
+    onResponse = (req, res) => {
+      log(
+        `${req.method}  ${res.status}  ${req.url.replace(
+          new URL(req.url).origin,
+          '',
+        )}`,
+      );
+    },
   } = opts;
   const root = process.cwd();
 
