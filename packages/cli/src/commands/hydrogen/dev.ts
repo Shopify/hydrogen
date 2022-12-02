@@ -51,14 +51,27 @@ export async function runDev({
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-  const {root, entryFile, buildPathWorkerFile, buildPathClient, publicPath} =
-    getProjectPaths(appPath, entry);
-
+  const projectPaths = getProjectPaths(appPath, entry);
+  const {root, entryFile, publicPath} = projectPaths;
   const remixConfig = await getRemixConfig(root, entryFile, publicPath);
 
   muteDevLogs();
 
   console.time(LOG_INITIAL_BUILD);
+
+  compileAndWatch(remixConfig, projectPaths, {port});
+}
+
+function compileAndWatch(
+  remixConfig: Awaited<ReturnType<typeof getRemixConfig>>,
+  {
+    root,
+    publicPath,
+    buildPathClient,
+    buildPathWorkerFile,
+  }: ReturnType<typeof getProjectPaths>,
+  {port}: {port?: number} = {},
+) {
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
   remix.watch(remixConfig, {
