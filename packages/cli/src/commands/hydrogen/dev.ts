@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs-extra';
 import * as remix from '@remix-run/dev/dist/compiler.js';
 import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
@@ -53,7 +54,7 @@ export async function runDev({
   const {root, entryFile, buildPathWorkerFile, buildPathClient, publicPath} =
     getProjectPaths(appPath, entry);
 
-  const remixConfig = await getRemixConfig(root, entryFile);
+  const remixConfig = await getRemixConfig(root, entryFile, publicPath);
 
   muteDevLogs();
 
@@ -62,17 +63,29 @@ export async function runDev({
 
   remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
-    onFileCreated(file: string) {
-      // eslint-disable-next-line no-console
+    async onFileCreated(file: string) {
       console.log(`\n📄 File created: ${path.relative(root, file)}`);
+      if (file.startsWith(publicPath)) {
+        await copyPublicFiles(
+          file,
+          path.resolve(buildPathClient, path.basename(file)),
+        );
+      }
     },
-    onFileChanged(file: string) {
-      // eslint-disable-next-line no-console
+    async onFileChanged(file: string) {
       console.log(`\n📄 File changed: ${path.relative(root, file)}`);
+      if (file.startsWith(publicPath)) {
+        await copyPublicFiles(
+          file,
+          path.resolve(buildPathClient, path.basename(file)),
+        );
+      }
     },
-    onFileDeleted(file: string) {
-      // eslint-disable-next-line no-console
+    async onFileDeleted(file: string) {
       console.log(`\n📄 File deleted: ${path.relative(root, file)}`);
+      if (file.startsWith(publicPath)) {
+        await fs.unlink(file.replace(publicPath, buildPathClient));
+      }
     },
     async onInitialBuild() {
       await copyingFiles;

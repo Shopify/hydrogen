@@ -30,6 +30,7 @@ let cachedConfig: RemixConfig;
 export async function getRemixConfig(
   root: string,
   entryFile: string,
+  publicPath: string,
   mode = process.env.NODE_ENV as ServerMode,
 ) {
   if (!cachedConfig) {
@@ -60,6 +61,8 @@ export async function getRemixConfig(
       config.relativeAssetsBuildDirectory,
     );
 
+    config.watchPaths = [publicPath];
+
     if (process.env.LOCAL_DEV) {
       // Watch local packages when developing in Hydrogen repo
       const require = createRequire(import.meta.url);
@@ -70,8 +73,10 @@ export async function getRemixConfig(
         '..',
       );
 
-      config.watchPaths = (await fs.readdir(packagesPath)).map((pkg) =>
-        path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
+      config.watchPaths.push(
+        ...(await fs.readdir(packagesPath)).map((pkg) =>
+          path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
+        ),
       );
     }
 
