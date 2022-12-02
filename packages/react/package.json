@@ -101,16 +101,16 @@
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
     "@graphql-codegen/add": "^3.2.1",
-    "@graphql-codegen/cli": "^2.13.12",
+    "@graphql-codegen/cli": "^2.15.0",
     "@graphql-codegen/introspection": "2.2.1",
-    "@graphql-codegen/typescript": "^2.8.2",
+    "@graphql-codegen/typescript": "^2.8.3",
     "@ladle/react": "^2.4.5",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
     "@types/jest": "^29.2.3",
     "@vitejs/plugin-react": "^2.2.0",
-    "@vitest/coverage-c8": "^0.25.2",
+    "@vitest/coverage-c8": "^0.25.3",
     "c8": "^7.12.0",
     "happy-dom": "7.7.0",
     "react": "^18.0.0",
@@ -130,7 +130,7 @@
     "@xstate/fsm": "^2.0.0",
     "@xstate/react": "^3.0.1",
     "graphql": "^16.6.0",
-    "type-fest": "^3.2.0",
+    "type-fest": "^3.3.0",
     "worktop": "^0.7.3"
   },
   "repository": {

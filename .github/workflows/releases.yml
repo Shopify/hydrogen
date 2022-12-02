@@ -7,7 +7,7 @@ on:
 
 jobs:
   Releases:
-    runs-on: shopify-ubuntu-latest
+    runs-on: ubuntu-latest
     if: github.repository_owner == 'shopify'
     name: Releases and PR for changesets
     outputs:

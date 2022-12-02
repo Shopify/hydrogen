@@ -14,18 +14,18 @@
   "dependencies": {
     "@shopify/hydrogen-react": "*",
     "graphql-request": "^5.0.0",
-    "next": "13.0.3",
+    "next": "13.0.6",
     "react": "18.2.0",
     "react-dom": "18.2.0"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "2.13.12",
-    "@graphql-codegen/client-preset": "1.1.4",
-    "@types/node": "18.11.9",
-    "@types/react": "18.0.25",
+    "@graphql-codegen/cli": "2.15.0",
+    "@graphql-codegen/client-preset": "1.2.1",
+    "@types/node": "18.11.10",
+    "@types/react": "18.0.26",
     "@types/react-dom": "18.0.9",
-    "eslint": "8.27.0",
-    "eslint-config-next": "13.0.3",
+    "eslint": "8.28.0",
+    "eslint-config-next": "13.0.6",
     "typescript": "4.9.3"
   }
 }
