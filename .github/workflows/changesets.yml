@@ -17,14 +17,13 @@ jobs:
     name: Changelog PR or Release
     outputs:
       published: ${{ steps.changesets.outputs.published }}
-      latest: ${{ steps.flags.outputs.latest }}
+      latest: ${{ env.latest }}
     steps:
       - name: Flags
         id: flags
         run: |
           # IMPORTANT: Update this variable whenever we move to a new major version:
-          is_latest_branch=${{ github.ref_name == 'v0.x-2022-10' }}
-          echo "::set-output name=latest::$is_latest_branch"
+          echo "latest=${{ github.ref_name == 'v0.x-2022-10' }}" >> $GITHUB_ENV
 
       - name: Checkout the code
         uses: actions/checkout@v3
@@ -49,7 +48,7 @@ jobs:
         run: npm run build
 
       - name: Create Release Pull Request or Publish (for latest release)
-        if: steps.flags.outputs.latest == 'true'
+        if: env.latest == 'true'
         id: changesets
         uses: changesets/action@v1
         with:
@@ -62,7 +61,7 @@ jobs:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # - name: Create Release Pull Request or Publish (for legacy patch release)
-      #   if: steps.flags.outputs.latest != 'true'
+      #   if: env.latest != 'true'
       #   id: changesets_legacy
       #   uses: changesets/action@v1
       #   with:
@@ -78,7 +77,7 @@ jobs:
     needs: changelog
     # Only compile templates if a release was published, and we're on the "latest" release branch
     if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
-    runs-on: ubuntu-latest
+    runs-on: shopify-ubuntu-latest
     name: Compile the typescript templates and push them to main
     steps:
       - name: Checkout the code
@@ -112,7 +111,7 @@ jobs:
   #   needs: changelog
   #   # Only announce if a release was published, and we're on the "latest" release branch
   #   if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
-  #   runs-on: ubuntu-latest
+  #   runs-on: shopify-ubuntu-latest
   #   steps:
   #     - name: Check out the code
   #       uses: actions/checkout@v3
