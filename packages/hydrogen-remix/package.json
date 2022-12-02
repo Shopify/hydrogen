@@ -1,8 +1,11 @@
 {
-  "name": "@shopify/hydrogen-remix",
-  "private": true,
+  "name": "@shopify/h2-test-hydrogen-remix",
+  "publishConfig": {
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org"
+  },
   "type": "module",
-  "version": "0.0.1",
+  "version": "0.0.4",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
@@ -41,9 +44,9 @@
     "templates"
   ],
   "peerDependencies": {
-    "@remix-run/oxygen": "*",
+    "@shopify/h2-test-remix-oxygen": "^0.0.4",
     "@remix-run/react": "*",
-    "@shopify/hydrogen": "*"
+    "@shopify/h2-test-hydrogen": "^2.0.2"
   },
   "dependencies": {
     "recursive-readdir": "^2.2.3"

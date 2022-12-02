@@ -10,6 +10,11 @@ export default class Init extends Command {
       description: 'Use TypeScript',
       env: 'SHOPIFY_HYDROGEN_FLAG_TYPESCRIPT',
     }),
+    template: Flags.string({
+      description: 'The template to use',
+      env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
+      default: '../../templates/demo-store',
+    }),
   };
 
   async run(): Promise<void> {
@@ -20,10 +25,16 @@ export default class Init extends Command {
   }
 }
 
-function runInit({typescript}: {typescript?: Boolean}) {
+function runInit({
+  template,
+  typescript,
+}: {
+  template: string;
+  typescript?: Boolean;
+}) {
   const defaults = [
     '--template',
-    '../../templates/demo-store',
+    template,
     '--install',
     typescript ? '--typescript' : '',
   ];

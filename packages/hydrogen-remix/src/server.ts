@@ -1,11 +1,11 @@
 import {
   createRequestHandler as createOxygenRequestHandler,
   getBuyerIp,
-} from '@remix-run/oxygen';
+} from '@shopify/h2-test-remix-oxygen';
 import {
   createStorefrontClient,
   type StorefrontClientProps,
-} from '@shopify/hydrogen';
+} from '@shopify/h2-test-hydrogen';
 import {proxyLiquidRoute} from './routing/proxy';
 
 type HydrogenHandlerParams = {

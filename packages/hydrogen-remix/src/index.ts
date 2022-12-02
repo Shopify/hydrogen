@@ -1,10 +1,10 @@
-import type {HydrogenContext} from '@shopify/hydrogen';
-import type {AppData, DataFunctionArgs} from '@remix-run/oxygen';
+import type {HydrogenContext} from '@shopify/h2-test-hydrogen';
+import type {AppData, DataFunctionArgs} from '@shopify/h2-test-remix-oxygen';
 import type {Params} from '@remix-run/react';
 
-export * from '@remix-run/oxygen';
+export * from '@shopify/h2-test-remix-oxygen';
 export {createRequestHandler} from './server';
-export * from '@shopify/hydrogen';
+export * from '@shopify/h2-test-hydrogen';
 
 export {RESOURCE_TYPES, REQUIRED_RESOURCES} from './routing/types';
 export {notFoundMaybeRedirect} from './routing/redirect';
