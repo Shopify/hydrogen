@@ -14,7 +14,7 @@ import type {MiniOxygen} from './core';
 export interface MiniOxygenServerHooks {
   onRequest?: (request: Request) => void | Promise<void>;
   onResponse?: (request: Request, response: Response) => void | Promise<void>;
-  onResponseError?: (request: Request, error: Error) => void;
+  onResponseError?: (request: Request, error: unknown) => void;
 }
 
 export interface MiniOxygenServerOptions extends MiniOxygenServerHooks {
@@ -183,7 +183,7 @@ function createRequestMiddleware(
 
       res.end();
     } catch (err: any) {
-      onResponseError?.(request, err as Error);
+      onResponseError?.(request, err as unknown);
       // eslint-disable-next-line @typescript-eslint/naming-convention
       res.writeHead(status, {'Content-Type': 'text/plain; charset=UTF-8'});
       res.end(err.stack, 'utf8');
