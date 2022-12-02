@@ -60,7 +60,7 @@ jobs:
             turbo-${{ github.job }}-${{ github.ref_name }}-
 
       - name: 📦 Build packages
-        run: npm run build
+        run: npm run build:pkg
 
       - name: ✅ Typecheck
         run: npm run typecheck
@@ -98,7 +98,7 @@ jobs:
             turbo-${{ github.job }}-${{ github.ref_name }}-
 
       - name: 📦 Build packages
-        run: npm run build
+        run: npm run build:pkg
 
       - name: 📄 Get installed Playwright version
         run: echo "PLAYWRIGHT_VERSION=$(npm ls @playwright/test | grep @playwright -m 1 | sed 's/.*@//')"  >> $GITHUB_ENV
