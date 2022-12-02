@@ -5,9 +5,6 @@
   "compilerOptions": {
     "moduleResolution": "NodeNext",
     "rootDir": "src",
-    "composite": true,
-    "sourceMap": true,
-    "inlineSources": true,
     "noUncheckedIndexedAccess": true,
     "outDir": "dist"
   }

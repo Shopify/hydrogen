@@ -60,7 +60,7 @@ jobs:
             turbo-${{ github.job }}-${{ github.ref_name }}-
 
       - name: 📦 Build packages
-        run: npm run build:pkg
+        run: npm run build
 
       - name: ✅ Typecheck
         run: npm run typecheck
