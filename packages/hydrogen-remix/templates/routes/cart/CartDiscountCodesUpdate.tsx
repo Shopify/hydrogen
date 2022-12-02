@@ -74,7 +74,7 @@ async function action({request, context}: ActionArgs) {
   invariant(formDiscountCodes, 'Missing discountCodes');
   const discountCodes = (formDiscountCodes || []) as string[];
 
-  let cart;
+  let cart: Cart;
 
   // we fetch teh previous discountCodes to
   // diff them after mutating for analytics
@@ -93,17 +93,20 @@ async function action({request, context}: ActionArgs) {
 
   cart = firstCart;
 
+  const sortedDiscountCodes: {applicables: string[]; notApplicables: string[]} =
+    {applicables: [], notApplicables: []};
+
   // after the first mutation we find which discounts are actually applicable vs which ones are not
   const {applicables, notApplicables} = cart.discountCodes.reduce(
     (sort, discount) => {
       if (discount.applicable) {
-        sort.applicables = [...sort.applicables, discount.code];
+        sort.applicables.push(discount.code);
       } else {
-        sort.notApplicables = [...sort.notApplicables, discount.code];
+        sort.notApplicables.push(discount.code);
       }
       return sort;
     },
-    {applicables: [], notApplicables: []},
+    sortedDiscountCodes,
   );
 
   if (notApplicables?.length) {
