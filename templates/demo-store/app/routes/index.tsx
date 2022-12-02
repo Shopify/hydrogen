@@ -136,6 +136,7 @@ export default function Homepage() {
       )}
 
       {secondaryHero && (
+        // @ts-expect-error @TODO: fix the type for collection
         <Suspense fallback={<Hero {...skeletons[1]} />}>
           <Await resolve={secondaryHero}>
             {({hero}) => {
@@ -163,6 +164,7 @@ export default function Homepage() {
       )}
 
       {tertiaryHero && (
+        // @ts-expect-error @TODO: fix the types
         <Suspense fallback={<Hero {...skeletons[2]} />}>
           <Await resolve={tertiaryHero}>
             {({hero}) => {

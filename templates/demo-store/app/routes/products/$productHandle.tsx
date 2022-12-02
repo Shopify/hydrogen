@@ -590,9 +590,7 @@ async function getRecommendedProducts(
   const mergedProducts = products.recommended
     .concat(products.additional.nodes)
     .filter(
-      // @ts-expect-error @TODO: add actual types here
       (value, index, array) =>
-        // @ts-expect-error @TODO: add actual types here
         array.findIndex((value2) => value2.id === value.id) === index,
     );
 

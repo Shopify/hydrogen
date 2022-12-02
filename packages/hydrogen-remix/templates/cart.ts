@@ -1,3 +1,6 @@
+// These files don't live on their own, they're copied over, so things won't resolve correctly here.
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
 export {
   cartBuyerIdentityUpdate,
   CartBuyerIdentityUpdateForm,

@@ -68,7 +68,9 @@ export default function AllProducts() {
           }) => {
             const itemsMarkup = nodes.map((product, i) => (
               <ProductCard
+                // @ts-expect-error @TODO: fix the type for product
                 key={product.id}
+                // @ts-expect-error @TODO: fix the type for product
                 product={product}
                 loading={getImageLoadingPriority(i)}
               />
@@ -101,6 +103,7 @@ export default function AllProducts() {
                 {hasNextPage && (
                   <div className="flex items-center justify-center mt-6">
                     <Button
+                      // @ts-expect-error @TODO: fix the type for nextLinkRef
                       ref={nextLinkRef}
                       to={nextPageUrl}
                       variant="secondary"

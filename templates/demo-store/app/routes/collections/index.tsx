@@ -94,6 +94,7 @@ export default function Collections() {
                 {nodes.map((collection, i) => (
                   <CollectionCard
                     collection={collection as Collection}
+                    // @ts-expect-error @TODO: fix the type for collection
                     key={collection.id}
                     loading={getImageLoadingPriority(i, 2)}
                   />
@@ -102,6 +103,7 @@ export default function Collections() {
               {hasNextPage && (
                 <div className="flex items-center justify-center mt-6">
                   <Button
+                    // @ts-expect-error @TODO: fix the type for nextLinkRef
                     ref={nextLinkRef}
                     to={nextPageUrl}
                     variant="secondary"

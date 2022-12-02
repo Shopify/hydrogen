@@ -72,7 +72,7 @@ export function Debugger() {
         <span className="font-bold block text-sm py-4 px-4">Tags</span>
 
         {Object.entries(tags).map(([label, entries]) => {
-          if (entries.length < 1) {
+          if (!Array.isArray(entries) || entries.length < 1) {
             return null;
           }
           return (
@@ -84,6 +84,7 @@ export function Debugger() {
                 {label === 'LdJson'
                   ? JSON.stringify(entries, null, 2)
                   : entries.map(
+                      // @ts-expect-error types are wrong here
                       (entry: React.ReactElement, index: number) =>
                         renderToString(entry) + '\n',
                     )}
