@@ -11,6 +11,7 @@ import {cartCreate, cartDiscountCodesUpdate} from '../cart';
  * /discounts/FREESHIPPING?redirect=/products
  *
  * ```
+ * @preserve
  */
 export async function loader({request, context, params}: LoaderArgs) {
   const {session} = context;
@@ -29,7 +30,7 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   let cartId = await session.get('cartId');
 
-  // if no existing cart, create one
+  //! if no existing cart, create one
   if (!cartId) {
     const {cart, errors: graphqlCartErrors} = await cartCreate({
       input: {},
@@ -40,13 +41,13 @@ export async function loader({request, context, params}: LoaderArgs) {
       return redirect(redirectUrl);
     }
 
-    // cart created - we only need a Set-Cookie header if we're creating
+    //! cart created - we only need a Set-Cookie header if we're creating
     cartId = cart.id;
     session.set('cartId', cartId);
     headers.set('Set-Cookie', await session.commit());
   }
 
-  // apply discount to the cart
+  //! apply discount to the cart
   await cartDiscountCodesUpdate({
     cartId,
     discountCodes: [code],
