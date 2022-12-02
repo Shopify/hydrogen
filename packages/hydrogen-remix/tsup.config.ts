@@ -8,8 +8,9 @@ export default [
   prodConfig,
   defineConfig({
     ...prodConfig,
-    entry: [buildEntry],
-    dts: buildEntry,
+    outDir: `${outDir}/build`,
+    entry: {index: buildEntry},
+    dts: true,
     onSuccess: undefined,
     minify: false,
   }),
