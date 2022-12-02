@@ -78,7 +78,7 @@ export async function runDev({
       await copyingFiles;
       console.timeEnd(LOG_INITIAL_BUILD);
 
-      startMiniOxygen({
+      await startMiniOxygen({
         root,
         port,
         watch: true,
