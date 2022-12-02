@@ -23,7 +23,7 @@ export const devConfig = defineConfig({
 export const prodConfig = defineConfig({
   ...commonConfig,
   env: {NODE_ENV: 'production'},
-  dts: entry,
+  dts: true,
   outDir: path.join(outDir, 'production'),
   minify: true,
   onSuccess: () => fs.writeFile(cjsEntryFile, cjsEntryContent, 'utf-8'),

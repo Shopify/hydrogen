@@ -32,10 +32,10 @@
       }
     },
     "./build": {
-      "types": "./dist/production/build.d.ts",
-      "require": "./dist/production/build.cjs",
-      "import": "./dist/production/build.js",
-      "default": "./dist/production/build.js"
+      "types": "./dist/build/index.d.ts",
+      "require": "./dist/build/index.cjs",
+      "import": "./dist/build/index.js",
+      "default": "./dist/build/index.js"
     },
     "./package.json": "./package.json"
   },
