@@ -19,7 +19,7 @@ export function Text({
   size?: 'lead' | 'copy' | 'fine';
   width?: 'default' | 'narrow' | 'wide';
   children: React.ReactNode;
-  [key: string]: any;
+  [key: string]: unknown;
 }) {
   const colors: Record<string, string> = {
     default: 'inherit',
@@ -115,7 +115,7 @@ export function Section({
   display?: 'grid' | 'flex';
   heading?: string;
   padding?: 'x' | 'y' | 'swimlane' | 'all';
-  [key: string]: any;
+  [key: string]: unknown;
 }) {
   const paddings = {
     x: 'px-6 md:px-8 lg:px-12',
@@ -167,7 +167,7 @@ export function PageHeader({
   className?: string;
   heading?: string;
   variant?: 'default' | 'blogPost' | 'allCollections';
-  [key: string]: any;
+  [key: string]: unknown;
 }) {
   const variants: Record<string, string> = {
     default: 'grid w-full gap-8 p-6 py-8 md:p-8 lg:p-12 justify-items-start',

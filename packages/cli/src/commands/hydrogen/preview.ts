@@ -4,7 +4,7 @@ import {flags} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
-// @ts-ignore
+// @ts-expect-error the 'parser' property doesn't match
 export default class Preview extends Command {
   static description =
     'Runs an existing Hydrogen storefront build in a MiniOxygen worker';
@@ -14,7 +14,7 @@ export default class Preview extends Command {
   };
 
   async run(): Promise<void> {
-    // @ts-ignore
+    // @ts-expect-error see above about 'parser'
     const {flags} = await this.parse(Preview);
 
     await runPreview({...flags});

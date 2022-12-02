@@ -89,13 +89,13 @@ export default function Authenticated() {
       return (
         <>
           <Modal cancelLink="/account">
-            <Outlet context={{customer: data.customer} as any} />
+            <Outlet context={{customer: data.customer}} />
           </Modal>
           <Account {...data} />
         </>
       );
     } else {
-      return <Outlet context={{customer: data.customer} as any} />;
+      return <Outlet context={{customer: data.customer}} />;
     }
   }
 
@@ -107,6 +107,7 @@ interface Account {
   orders: Order[];
   heading: string;
   addresses: MailingAddress[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   featuredData: any; // @todo: help please
 }
 

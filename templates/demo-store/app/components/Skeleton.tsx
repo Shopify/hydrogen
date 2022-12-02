@@ -14,7 +14,7 @@ export function Skeleton({
   width?: string;
   height?: string;
   className?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }) {
   const styles = clsx('rounded bg-primary/10', className);
 

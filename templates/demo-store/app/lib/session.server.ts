@@ -39,7 +39,7 @@ export class HydrogenSession {
     return this.sessionStorage.destroySession(this.session);
   }
 
-  flash(key: string, value: any) {
+  flash(key: string, value: unknown) {
     this.session.flash(key, value);
   }
 
@@ -47,7 +47,7 @@ export class HydrogenSession {
     this.session.unset(key);
   }
 
-  set(key: string, value: any) {
+  set(key: string, value: unknown) {
     this.session.set(key, value);
   }
 

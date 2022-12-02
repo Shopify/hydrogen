@@ -65,7 +65,7 @@ export const action: ActionFunction = async ({
         'Set-Cookie': await session.commit(),
       },
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     if (isStorefrontApiError(error)) {
       return badRequest({
         formError: 'Something went wrong. Please try again later.',

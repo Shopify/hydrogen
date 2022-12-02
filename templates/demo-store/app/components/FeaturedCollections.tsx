@@ -10,7 +10,7 @@ export function FeaturedCollections({
 }: {
   collections: SerializeFrom<Collection[]>;
   title?: string;
-  [key: string]: any;
+  [key: string]: unknown;
 }) {
   const items = collections.filter((item) => item.image).length;
   const haveCollections = collections.length > 0;

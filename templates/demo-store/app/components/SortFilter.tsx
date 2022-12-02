@@ -242,7 +242,7 @@ function getSortLink(
 
 function getFilterLink(
   filter: Filter,
-  rawInput: string | Record<string, any>,
+  rawInput: string | Record<string, unknown>,
   params: URLSearchParams,
   location: ReturnType<typeof useLocation>,
 ) {
@@ -323,7 +323,7 @@ function PriceRangeFilter({max, min}: {max?: number; min?: number}) {
 
 function filterInputToParams(
   type: FilterType,
-  rawInput: string | Record<string, any>,
+  rawInput: string | Record<string, unknown>,
   params: URLSearchParams,
 ) {
   const input = typeof rawInput === 'string' ? JSON.parse(rawInput) : rawInput;

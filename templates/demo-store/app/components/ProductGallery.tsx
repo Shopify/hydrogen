@@ -21,7 +21,7 @@ export function ProductGallery({
       className={`swimlane md:grid-flow-row hiddenScroll md:p-0 md:overflow-x-auto md:grid-cols-2 ${className}`}
     >
       {media.map((med, i) => {
-        let mediaProps: Record<string, any> = {};
+        let mediaProps: Record<string, unknown> = {};
         const isFirst = i === 0;
         const isFourth = i === 3;
         const isFullWidth = i % 3 === 0;
@@ -29,7 +29,7 @@ export function ProductGallery({
         const data = {
           ...med,
           image: {
-            // @ts-ignore
+            // @ts-expect-error @TODO: add real types here
             ...med.image,
             altText: med.alt || 'Product image',
           },
@@ -79,7 +79,7 @@ export function ProductGallery({
         return (
           <div
             className={style}
-            // @ts-ignore
+            // @ts-expect-error @TODO: add real types here
             key={med.id || med.image.id}
           >
             {/* TODO: Replace with MediaFile when it's available */}

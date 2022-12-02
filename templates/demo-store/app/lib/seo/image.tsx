@@ -1,7 +1,7 @@
 import {renderToString} from 'react-dom/server';
 
 export async function getShareableImage(
-  component: React.ReactElement<any, 'svg'>,
+  component: React.ReactElement<unknown, 'svg'>,
 ) {
   try {
     const svg = renderToString(component);

@@ -189,13 +189,14 @@ const PLACEHOLDERS = {
  * @see https://github.com/Shopify/hydrogen/discussions/1790
  */
 
-export function getHeroPlaceholder(heros: any[]) {
+export function getHeroPlaceholder(heros: unknown[]) {
   if (!heros?.length) return [];
 
   // when we pass a collection without metafields,
   // we merge it with placeholder data
   return heros.map((hero, index) => {
     // assume passed hero has metafields data already
+    // @ts-expect-error the types need to be fixed here to be actual types at some point
     if (hero?.heading?.value) {
       return hero;
     }
@@ -206,21 +207,29 @@ export function getHeroPlaceholder(heros: any[]) {
     // prioritize metafield data if available, else the hero hero values
     // otherwise the placeholder values
     const byLine =
+      // @ts-expect-error the types need to be fixed here to be actual types at some point
       hero?.byLine || hero?.descriptionHtml
-        ? {value: hero.descriptionHtml}
+        ? // @ts-expect-error the types need to be fixed here to be actual types at some point
+          {value: hero.descriptionHtml}
         : placeholder.byline;
 
     const heading =
+      // @ts-expect-error the types need to be fixed here to be actual types at some point
       hero?.heading || hero?.title ? {value: hero.title} : placeholder.heading;
 
     // merge hero placeholder with hero data
     return {
       heading,
       byLine,
+      // @ts-expect-error the types need to be fixed here to be actual types at some point
       cta: hero?.cta || placeholder.cta,
+      // @ts-expect-error the types need to be fixed here to be actual types at some point
       handle: hero?.handle || placeholder.handle,
+      // @ts-expect-error the types need to be fixed here to be actual types at some point
       id: hero?.id || index,
+      // @ts-expect-error the types need to be fixed here to be actual types at some point
       spread: hero?.spread || placeholder.spread,
+      // @ts-expect-error the types need to be fixed here to be actual types at some point
       spreadSecondary: hero?.spreadSecondary || placeholder.spreadSecondary,
       height: placeholder?.height || undefined,
       top: placeholder?.top || undefined,
@@ -230,7 +239,7 @@ export function getHeroPlaceholder(heros: any[]) {
 
 // get product info placeholder data
 export function getProductInfoPlaceholder() {
-  function getMultipleRandom(arr: any[], infos: number) {
+  function getMultipleRandom(arr: unknown[], infos: number) {
     const shuffled = [...arr].sort(() => 0.5 - Math.random());
     return shuffled.slice(0, infos);
   }

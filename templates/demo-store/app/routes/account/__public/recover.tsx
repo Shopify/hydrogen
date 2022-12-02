@@ -42,7 +42,7 @@ export const action: ActionFunction = async ({request, context}) => {
     await sendPasswordResetEmail(context, {email});
 
     return json({resetRequested: true});
-  } catch (error: any) {
+  } catch (error: unknown) {
     return badRequest({
       formError: 'Something went wrong. Please try again later.',
     });

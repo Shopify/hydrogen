@@ -8,7 +8,10 @@ import type {Page, Request} from '@playwright/test';
  * @param page Page
  * @param action Fn
  */
-export async function waitForLoaders(page: Page, action: () => Promise<any>) {
+export async function waitForLoaders(
+  page: Page,
+  action: () => Promise<unknown>,
+) {
   return waitForNetworkSettled(
     page,
     action,
@@ -21,7 +24,7 @@ export async function waitForLoaders(page: Page, action: () => Promise<any>) {
 const DEBUG = false;
 export async function waitForNetworkSettled(
   page: Page,
-  action: () => Promise<any>,
+  action: () => Promise<unknown>,
   requestFilter?: (request: Request) => boolean,
   minimumRequests = 0,
 ) {

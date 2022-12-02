@@ -397,7 +397,7 @@ function CartLinePrice({
 }: {
   line: CartLine;
   priceType?: 'regular' | 'compareAt';
-  [key: string]: any;
+  [key: string]: unknown;
 }) {
   const {lineUpdating} = useCartLineUpdating(line);
 

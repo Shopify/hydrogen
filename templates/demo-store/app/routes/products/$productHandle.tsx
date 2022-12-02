@@ -431,7 +431,7 @@ function ProductOptionLink({
   optionValue: string;
   searchParams: URLSearchParams;
   children?: ReactNode;
-  [key: string]: any;
+  [key: string]: unknown;
 }) {
   const {pathname} = useLocation();
   const isLangPathname = /\/[a-zA-Z]{2}-[a-zA-Z]{2}\//g.test(pathname);
@@ -590,7 +590,9 @@ async function getRecommendedProducts(
   const mergedProducts = products.recommended
     .concat(products.additional.nodes)
     .filter(
+      // @ts-expect-error @TODO: add actual types here
       (value, index, array) =>
+        // @ts-expect-error @TODO: add actual types here
         array.findIndex((value2) => value2.id === value.id) === index,
     );
 

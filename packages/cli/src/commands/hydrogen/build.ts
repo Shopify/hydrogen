@@ -9,7 +9,7 @@ import {Flags} from '@oclif/core';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
-// @ts-ignore
+// @ts-expect-error the 'parser' property doesn't match
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production';
   static flags = {
@@ -28,7 +28,7 @@ export default class Build extends Command {
   };
 
   async run(): Promise<void> {
-    // @ts-ignore
+    // @ts-expect-error see above about parser
     const {flags} = await this.parse(Build);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 

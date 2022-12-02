@@ -46,8 +46,9 @@ export const action: ActionFunction = async ({request, context, params}) => {
       });
 
       return redirect(params.lang ? `${params.lang}/account` : '/account');
-    } catch (error: any) {
-      return badRequest({formError: error.message});
+    } catch (error: unknown) {
+      // @ts-expect-error @TODO: We don't have any guarantee that this is an error object or not
+      return badRequest({formError: error?.message});
     }
   }
 
@@ -90,8 +91,9 @@ export const action: ActionFunction = async ({request, context, params}) => {
       }
 
       return redirect(params.lang ? `${params.lang}/account` : '/account');
-    } catch (error: any) {
-      return badRequest({formError: error.message});
+    } catch (error: unknown) {
+      // @ts-expect-error @TODO: We don't have any guarantee that this is an error object or not
+      return badRequest({formError: error?.message});
     }
   } else {
     try {
@@ -109,8 +111,9 @@ export const action: ActionFunction = async ({request, context, params}) => {
       }
 
       return redirect(params.lang ? `${params.lang}/account` : '/account');
-    } catch (error: any) {
-      return badRequest({formError: error.message});
+    } catch (error: unknown) {
+      // @ts-expect-error @TODO: We don't have any guarantee that this is an error object or not
+      return badRequest({formError: error?.message});
     }
   }
 };

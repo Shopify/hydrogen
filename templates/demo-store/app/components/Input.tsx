@@ -9,7 +9,7 @@ export function Input({
   className?: string;
   type?: string;
   variant: 'search' | 'minisearch';
-  [key: string]: any;
+  [key: string]: unknown;
 }) {
   const variants = {
     search:

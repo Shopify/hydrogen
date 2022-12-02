@@ -144,7 +144,7 @@ function parseItem(customPrefixes = {}) {
     if (!item?.url || !item?.type) {
       // eslint-disable-next-line no-console
       console.warn('Invalid menu item.  Must include a url and type.');
-      // @ts-ignore
+      // @ts-expect-error @TODO: fix return value for correct typing
       return;
     }
 
@@ -189,7 +189,7 @@ export function parseMenu(menu: Menu, customPrefixes = {}): EnhancedMenu {
   if (!menu?.items) {
     // eslint-disable-next-line no-console
     console.warn('Invalid menu passed to parseMenu');
-    // @ts-ignore
+    // @ts-expect-error @TODO: the types here are wrong
     return menu;
   }
 
@@ -245,7 +245,10 @@ export function statusMessage(status: string) {
 /**
  * Errors can exist in an errors object, or nested in a data field.
  */
-export function assertApiErrors(data: Record<string, any> | null | undefined) {
+export function assertApiErrors(
+  data: Record<string, unknown> | null | undefined,
+) {
+  // @ts-expect-error @TODO: add the actual type
   const errorMessage = data?.customerUserErrors?.[0]?.message;
   if (errorMessage) {
     throw new Error(errorMessage);

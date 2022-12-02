@@ -28,10 +28,12 @@ import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 
 export const handle = {
-  // @todo - remove any and type the seo callback
-  seo: (data: any) => ({
+  // @todo - type the seo callback
+  seo: (data: unknown) => ({
+    // @ts-expect-error @TODO: add the actual type
     title: data?.layout?.shop?.name,
     bypassTitleTemplate: true,
+    // @ts-expect-error @TODO: add the actual type
     titleTemplate: `%s | ${data?.layout?.shop?.name}`,
   }),
 };

@@ -2,7 +2,7 @@ import {cli as remixCli} from '@remix-run/dev';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 
-// @ts-ignore
+// @ts-expect-error the 'parser' property doesn't match
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront project';
   static flags = {
@@ -18,7 +18,7 @@ export default class Init extends Command {
   };
 
   async run(): Promise<void> {
-    // @ts-ignore
+    // @ts-expect-error see above about 'parser'
     const {flags} = await this.parse(Init);
 
     await runInit({...flags});

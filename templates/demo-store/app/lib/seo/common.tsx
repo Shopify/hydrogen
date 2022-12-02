@@ -31,7 +31,7 @@ export function getTitle({
   return finalTitle || '';
 }
 
-export function recursivelyInvokeOrReturn<T, R extends any[]>(
+export function recursivelyInvokeOrReturn<T, R extends unknown[]>(
   value: T | ((...rest: R) => T),
   ...rest: R
 ): T | Record<string, T> {
@@ -53,7 +53,7 @@ export function recursivelyInvokeOrReturn<T, R extends any[]>(
     const entries = Object.entries(value);
 
     entries.forEach(([key, val]) => {
-      // @ts-expect-error
+      // @ts-expect-error @TODO: add real types here
       result[key] = recursivelyInvokeOrReturn<T, R>(val, ...rest);
     });
 
@@ -63,7 +63,7 @@ export function recursivelyInvokeOrReturn<T, R extends any[]>(
   return value;
 }
 
-function getSeoDefaults(data: any, match: RouteMatch): SeoDescriptor {
+function getSeoDefaults(data: unknown, match: RouteMatch): SeoDescriptor {
   const {id, params, pathname} = match;
 
   let type: SeoDescriptor['type'] = 'page';
@@ -91,8 +91,11 @@ function getSeoDefaults(data: any, match: RouteMatch): SeoDescriptor {
 
   const defaults = {
     type,
+    // @ts-expect-error @TODO: add concrete types
     site: data?.shop?.name,
+    // @ts-expect-error @TODO: add concrete types
     defaultTitle: data?.shop?.name,
+    // @ts-expect-error @TODO: add concrete types
     titleTemplate: `%s | ${data?.shop?.name}`,
     alternates: [],
     robots: {},
@@ -103,7 +106,9 @@ function getSeoDefaults(data: any, match: RouteMatch): SeoDescriptor {
     openGraph: {},
     url: pathname,
     tags: [],
+    // @ts-expect-error @TODO: add concrete types
     title: data?.layout?.shop?.title,
+    // @ts-expect-error @TODO: add concrete types
     description: data?.layout?.shop?.description,
   };
 
@@ -143,8 +148,10 @@ export function useHeadTags(seo: SeoDescriptor) {
   const ogTags: React.ReactNode[] = [];
   const twitterTags: React.ReactNode[] = [];
   const links: React.ReactNode[] = [];
-  const LdJson: WithContext<any> = {
+  // @ts-expect-error @TODO: add actual types here
+  const LdJson: WithContext<unknown> = {
     '@context': 'https://schema.org',
+    // @ts-expect-error @TODO: add actual types here
     '@type': 'Thing',
   };
 
@@ -174,6 +181,7 @@ export function useHeadTags(seo: SeoDescriptor) {
             tags.push(
               <meta key="keywords" name="keywords" content={keywords} />,
             );
+            // @ts-expect-error @TODO: add actual types here
             LdJson.keywords = keywords;
           }
 
@@ -282,6 +290,7 @@ export function useHeadTags(seo: SeoDescriptor) {
           />,
         );
 
+        // @ts-expect-error @TODO: add actual types here
         LdJson.name = value;
 
         break;

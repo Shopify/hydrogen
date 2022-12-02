@@ -153,7 +153,10 @@ export default function Collection() {
     collection.metafield?.references &&
     flattenConnection<MetafieldReference>(collection.metafield.references)
       .reverse()
-      .reduce<any[]>((acc, collection) => [collection, ...acc], [collection]);
+      .reduce<unknown[]>(
+        (acc, collection) => [collection, ...acc],
+        [collection],
+      );
 
   return (
     <>
@@ -168,6 +171,7 @@ export default function Collection() {
           </div>
         )}
 
+        {/* @ts-expect-error @TODO: add actual types here */}
         <Breadcrumbs breadcrumbs={breadcrumbs} />
       </PageHeader>
       <Section>

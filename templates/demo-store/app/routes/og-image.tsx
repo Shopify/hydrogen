@@ -1,7 +1,8 @@
 import {getShareableImage} from '~/lib/seo/image';
 import type {LoaderFunction} from '@shopify/hydrogen-remix';
 
-function SharableImage(props: any) {
+function SharableImage(props: unknown) {
+  // @ts-expect-error @TODO: add actual types here
   const {title} = props;
   return (
     <svg>

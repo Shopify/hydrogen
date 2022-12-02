@@ -17,7 +17,7 @@ export const Button = forwardRef(
       className?: string;
       variant?: 'primary' | 'secondary' | 'inline';
       width?: 'auto' | 'full';
-      [key: string]: any;
+      [key: string]: unknown;
     },
     ref,
   ) => {

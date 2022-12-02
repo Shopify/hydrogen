@@ -9,12 +9,12 @@ import {useInView, type IntersectionOptions} from 'react-intersection-observer';
 import {useTransition, useLocation, useNavigate} from '@remix-run/react';
 
 type Connection = {
-  nodes: ProductConnection['nodes'] | any[];
+  nodes: ProductConnection['nodes'] | unknown[];
   pageInfo: PageInfo;
 };
 
 type PaginationState = {
-  nodes: ProductConnection['nodes'] | any[];
+  nodes: ProductConnection['nodes'] | unknown[];
   pageInfo: PageInfo | null;
 };
 
@@ -28,9 +28,9 @@ interface PaginationInfo {
   hasNextPage: boolean;
   hasPreviousPage: boolean;
   isLoading: boolean;
-  nextLinkRef: any;
+  nextLinkRef: unknown;
   nextPageUrl: string;
-  nodes: ProductConnection['nodes'] | any[];
+  nodes: ProductConnection['nodes'] | unknown[];
   prevPageUrl: string;
   startCursor: Maybe<string> | undefined;
 }

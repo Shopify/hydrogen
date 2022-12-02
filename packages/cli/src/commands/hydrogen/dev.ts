@@ -13,7 +13,7 @@ const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
 
-// @ts-ignore
+// @ts-expect-error the 'parser' property doesn't match
 export default class Dev extends Command {
   static description =
     'Runs Hydrogen storefront in a MiniOxygen worker in development';
@@ -31,7 +31,7 @@ export default class Dev extends Command {
   };
 
   async run(): Promise<void> {
-    // @ts-ignore
+    // @ts-expect-error see above about parser
     const {flags} = await this.parse(Dev);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
