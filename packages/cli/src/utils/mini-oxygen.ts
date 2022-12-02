@@ -19,7 +19,7 @@ export async function startMiniOxygen({
   buildPathWorkerFile,
   buildPathClient,
 }: MiniOxygenOptions) {
-  miniOxygenPreview({
+  await miniOxygenPreview({
     workerFile: buildPathWorkerFile,
     assetsDir: buildPathClient,
     publicPath: '',
@@ -29,8 +29,11 @@ export async function startMiniOxygen({
     modules: true,
     env: process.env,
     envPath: path.resolve(root, '.env'),
+    log: () => {},
     buildWatchPaths: watch
       ? [path.resolve(root, buildPathWorkerFile)]
       : undefined,
   });
+
+  console.log(`🚥 MiniOxygen server started at http://localhost:${port}\n`);
 }

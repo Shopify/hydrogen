@@ -88,13 +88,13 @@ export async function runBuild({
       '   ' + path.relative(root, buildPathWorkerFile),
       '  ',
       Number(sizeMB.toFixed(2)),
-      'MB',
+      'MB\n',
     );
 
     if (sizeMB >= 1) {
       // eslint-disable-next-line no-console
       console.warn(
-        '\n-- Worker bundle exceeds 1 MB! This can delay your worker response.',
+        '\n-- Worker bundle exceeds 1 MB! This can delay your worker response.\n',
       );
     }
   }
