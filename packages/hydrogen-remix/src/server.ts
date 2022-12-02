@@ -86,20 +86,20 @@ export function logResponse(
     const url = new URL(request.url);
     const isProxy = !!response.url && response.url !== request.url;
     const isDataRequest = !isProxy && url.searchParams.has('_data');
-    let type = 'Render';
+    let type = 'render';
     let info = request.url.replace(url.origin, '');
 
     if (isProxy) {
-      type = 'Proxy';
-      info += ` [${response.url}]`;
+      type = 'proxy';
+      info += `  [${response.url}]`;
     }
 
     if (isDataRequest) {
-      type = request.method === 'POST' ? 'Action' : 'Loader';
+      type = request.method === 'GET' ? 'loader' : 'action';
       const dataParam = url.searchParams.get('_data')?.replace('routes/', '');
       info =
         url.pathname +
-        ` [${
+        `  [${
           dataParam?.includes('/.hydrogen/')
             ? dataParam.replace(/^.*(\.hydrogen\/)/, '$1')
             : dataParam
@@ -107,10 +107,10 @@ export function logResponse(
     }
 
     console.log(
-      response.status + ' ',
-      type.padEnd(7, ' '),
-      // status + '  - ',
-      info + '  ',
+      request.method.padStart(6) + ' ',
+      response.status,
+      ' ' + type.padEnd(7, ' '),
+      info + ' ',
       request.headers.get('purpose') === 'prefetch' ? `(prefetch)` : '',
     );
   }
