@@ -59,7 +59,7 @@ export async function runBuild({
   } = getProjectPaths(appPath, entry);
 
   console.time(LOG_WORKER_BUILT);
-  const remixConfig = await getRemixConfig(root, entryFile);
+  const remixConfig = await getRemixConfig(root, entryFile, publicPath);
   await fsExtra.rm(buildPath, {force: true, recursive: true});
 
   // eslint-disable-next-line no-console
