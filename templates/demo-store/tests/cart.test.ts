@@ -37,9 +37,7 @@ test.describe('Cart', () => {
       'should have the correct item quantities',
     ).toEqual(4);
 
-    const priceInStore = await page
-      .locator('[data-test=subtotal]')
-      .textContent();
+    const priceInStore = await page.locator('[data-test=total]').textContent();
 
     await page.locator('a :text("Checkout")').click();
 
