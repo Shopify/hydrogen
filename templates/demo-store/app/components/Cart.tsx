@@ -106,19 +106,20 @@ function CartDiscounts({
   const {discountCodesUpdating} = useCartDiscountCodesUpdating();
   const [hovered, setHovered] = useState(false);
 
-  const discounts = discountCodesUpdating
-    ? discountCodesUpdating
-    : discountCodes;
-
-  const optimisticDiscounts =
-    discounts?.map(({code}) => code).join(', ') || null;
+  const optimisticDiscounts = (
+    discountCodesUpdating
+      ? discountCodesUpdating
+      : discountCodes?.length
+      ? discountCodes.map(({code}) => code)
+      : []
+  ) as string[];
 
   return (
     <>
       {/* Have existing discount, display it with a remove option */}
-      <dl className={clsx(optimisticDiscounts ? 'grid' : 'hidden')}>
+      <dl className={clsx(optimisticDiscounts?.length ? 'grid' : 'hidden')}>
         <div className="flex items-center justify-between font-medium">
-          <Text as="dt">Discount(s)</Text>
+          <Text as="dt">Discount</Text>
           <div
             className="flex items-center justify-between"
             onMouseEnter={() => setHovered(true)}
@@ -129,7 +130,7 @@ function CartDiscounts({
               discountCodes={[]}
             >
               {() => (
-                <button>
+                <button className="mt-1">
                   <IconRemove
                     aria-hidden="true"
                     style={{height: 18, marginRight: 4}}
@@ -137,7 +138,10 @@ function CartDiscounts({
                 </button>
               )}
             </CartDiscountCodesUpdateForm>
-            <Text as="dd">{optimisticDiscounts}</Text>
+            {/* @todo: support multiple discounts display/remove */}
+            <Text as="dd">
+              {optimisticDiscounts?.length ? optimisticDiscounts[0] : ''}
+            </Text>
           </div>
         </div>
       </dl>
@@ -147,7 +151,7 @@ function CartDiscounts({
         {() => (
           <div
             className={clsx(
-              optimisticDiscounts ? 'hidden' : 'flex',
+              optimisticDiscounts?.length ? 'hidden' : 'flex',
               'items-center justify-between',
             )}
           >

@@ -247,6 +247,7 @@ const CART_QUERY = `#graphql
     }
     discountCodes {
       code
+      applicable
     }
     discountAllocations {
       discountedAmount {

@@ -74,18 +74,52 @@ async function action({request, context}: ActionArgs) {
   invariant(formDiscountCodes, 'Missing discountCodes');
   const discountCodes = (formDiscountCodes || []) as string[];
 
+  let cart;
+
   // we fetch teh previous discountCodes to
   // diff them after mutating for analytics
   const prevCart = await getCartDiscounts({cartId, context});
 
-  const {cart, errors: graphqlErrors} = await cartDiscountCodesUpdate({
-    cartId,
-    discountCodes,
-    context,
-  });
+  const {cart: firstCart, errors: graphqlErrors} =
+    await cartDiscountCodesUpdate({
+      cartId,
+      discountCodes,
+      context,
+    });
 
   if (graphqlErrors?.length) {
     return json({errors: graphqlErrors});
+  }
+
+  cart = firstCart;
+
+  // after the first mutation we find which discounts are actually applicable vs which ones are not
+  const {applicables, notApplicables} = cart.discountCodes.reduce(
+    (sort, discount) => {
+      if (discount.applicable) {
+        sort.applicables = [...sort.applicables, discount.code];
+      } else {
+        sort.notApplicables = [...sort.notApplicables, discount.code];
+      }
+      return sort;
+    },
+    {applicables: [], notApplicables: []},
+  );
+
+  if (notApplicables?.length) {
+    // update cart with just the applicable discounts
+    const {cart: secondCart, errors: graphqlErrors} =
+      await cartDiscountCodesUpdate({
+        cartId,
+        discountCodes: applicables,
+        context,
+      });
+
+    if (graphqlErrors?.length) {
+      return json({errors: graphqlErrors});
+    }
+
+    cart = secondCart;
   }
 
   // if no js, we essentially reload to avoid being routed to the actions route
@@ -114,6 +148,7 @@ function instrumentEvent({
   prevDiscountCodes,
   currentDiscountCodes,
 }: PrevCurrentDiscountCodes) {
+  // diff codes being updated with codes that existed before the mutation
   const {codesAdded, codesNotAdded, codesRemoved} = diffDiscountCodes({
     addingDiscountCodes,
     prevDiscountCodes,
@@ -131,7 +166,7 @@ function instrumentEvent({
     },
   };
 
-  let errors = null;
+  let errors: null | UserError[] = null;
   if (codesNotAdded?.length) {
     errors = codesNotAdded.map((code) => ({
       code: 'DISCOUNT_CODE_NOT_ADDED',
@@ -182,6 +217,7 @@ const DISCOUNT_CODES_UPDATE = `#graphql
         id
         discountCodes {
           code
+          applicable
         }
       }
       errors: userErrors {
@@ -198,6 +234,7 @@ const CART_DISCOUNTS_QUERY = `#graphql
     cart(id: $cartId) {
       discountCodes {
         code
+        applicable
       }
     }
   }
@@ -230,6 +267,7 @@ async function getCartDiscounts({
 /**
  * Mutation that updates the cart discounts
  * @param discountCodes Array of discount codes
+ * @see https://shopify.dev/api/storefront/2022-10/mutations/cartDiscountCodesUpdate
  * @returns mutated cart
  */
 async function cartDiscountCodesUpdate({
@@ -375,19 +413,12 @@ function useCartDiscountCodesUpdating() {
   let discountCodesUpdating: CartDiscountCode[] | null = null;
 
   if (fetcher?.submission) {
-    const discountCodesStr =
-      fetcher?.submission?.formData?.get('discountCodes');
-    if (discountCodesStr && typeof discountCodesStr === 'string') {
-      try {
-        const codesUpdating = JSON.parse(discountCodesStr) as string[];
-        if (Array.isArray(codesUpdating)) {
-          discountCodesUpdating = codesUpdating.map((code) => ({
-            code,
-          })) as CartDiscountCode[];
-        }
-      } catch (_) {
-        // noop
-      }
+    const discountCodes =
+      fetcher?.submission?.formData?.getAll('discountCodes');
+
+    if (discountCodes && Array.isArray(discountCodes)) {
+      // @ts-ignore help me
+      discountCodesUpdating = discountCodes as CartDiscountCode[];
     }
   }
 
