@@ -28,11 +28,17 @@ export async function hydrogenRoutes(
 
 async function copyTemplates() {
   const require = createRequire(import.meta.url);
+  const isTs = isTSProject(require);
   const pkgPath = path.dirname(
     require.resolve('@shopify/h2-test-hydrogen-remix/package.json'),
   );
 
-  const templateDirectory = path.resolve(pkgPath, 'src', 'templates');
+  const templateDirectory = path.resolve(
+    pkgPath,
+    isTs ? 'src' : 'dist',
+    'templates',
+  );
+
   const templates = await readDir(templateDirectory);
   const hydrogenDirectory = path.resolve(process.cwd(), '.hydrogen');
 
@@ -134,4 +140,13 @@ function createRoutePath(partialRouteId: string): string | undefined {
   }
 
   return result || undefined;
+}
+
+function isTSProject(require: NodeRequire) {
+  try {
+    require.resolve(path.resolve(process.cwd(), 'tsconfig.json'));
+    return true;
+  } catch {
+    return false;
+  }
 }
