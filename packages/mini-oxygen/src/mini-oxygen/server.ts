@@ -12,8 +12,8 @@ import bodyParser from 'body-parser';
 import type {MiniOxygen} from './core';
 
 export interface MiniOxygenServerHooks {
-  onRequest?: (request: Request) => void;
-  onResponse?: (request: Request, response: Response) => void;
+  onRequest?: (request: Request) => void | Promise<void>;
+  onResponse?: (request: Request, response: Response) => void | Promise<void>;
   onResponseError?: (request: Request, error: Error) => void;
 }
 
@@ -145,9 +145,9 @@ function createRequestMiddleware(
     });
 
     try {
-      onRequest?.(request);
+      if (onRequest) await onRequest(request);
       response = await mf.dispatchFetch(request);
-      onResponse?.(request, response as Response);
+      if (onResponse) await onResponse(request, response as Response);
       status = response.status;
 
       for (const key of response.headers.keys()) {
