@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import {useRef, useState} from 'react';
+import {useMemo, useRef, useState} from 'react';
 import {useScroll} from 'react-use';
 import {flattenConnection, Image, Money} from '@shopify/hydrogen-react';
 import {
@@ -14,7 +14,10 @@ import {getInputStyleClasses} from '~/lib/utils';
 import type {
   Cart as CartType,
   CartCost,
+  CartDiscountAllocation,
   CartLine,
+  DiscountAllocation,
+  MoneyV2,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {
   CartDiscountCodesUpdateForm,
@@ -79,6 +82,10 @@ export function CartDetails({
       {!isZeroCost && (
         <CartSummary cost={cart.cost} layout={layout}>
           <CartDiscounts discountCodes={cart.discountCodes} />
+          <CartTotals
+            cost={cart.cost}
+            discountAllocations={cart.discountAllocations}
+          />
           <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
         </CartSummary>
       )}
@@ -230,6 +237,52 @@ function CartSummary({
       <h2 id="summary-heading" className="sr-only">
         Order summary
       </h2>
+      {children}
+    </section>
+  );
+}
+
+function CartTotals({
+  cost,
+  discountAllocations,
+}: {
+  cost: CartCost;
+  discountAllocations: CartDiscountAllocation[];
+}) {
+  // calculate the total discount amount
+  const totalDiscountAmount = useMemo(() => {
+    if (!discountAllocations?.length) return null;
+
+    const baseTotal = {amount: '0.00', currencyCode: 'USD'};
+
+    return discountAllocations?.reduce((total, {discountedAmount}) => {
+      const {amount, currencyCode} = discountedAmount;
+      total.amount = String(parseFloat(amount) + parseFloat(total.amount));
+      total.currencyCode = currencyCode;
+      return total;
+    }, baseTotal);
+  }, [discountAllocations]) as MoneyV2 | null;
+
+  if (!totalDiscountAmount) {
+    return (
+      <dl className="grid">
+        <div className="flex items-center justify-between font-medium">
+          <Text as="dt">Total</Text>
+          <Text as="dd" data-test="total">
+            {cost?.totalAmount?.amount ? (
+              <Money data={cost?.totalAmount} />
+            ) : (
+              '-'
+            )}
+          </Text>
+        </div>
+      </dl>
+    );
+  }
+
+  // Discount applied
+  return (
+    <>
       <dl className="grid">
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Subtotal</Text>
@@ -242,8 +295,31 @@ function CartSummary({
           </Text>
         </div>
       </dl>
-      {children}
-    </section>
+      <dl className="grid">
+        <div className="flex items-center justify-between font-medium">
+          <Text as="dt">Discount</Text>
+          <Text as="dd" data-test="discount">
+            {totalDiscountAmount?.amount ? (
+              <Money data={totalDiscountAmount} />
+            ) : (
+              '-'
+            )}
+          </Text>
+        </div>
+      </dl>
+      <dl className="grid">
+        <div className="flex items-center justify-between font-medium">
+          <Text as="dt">Total</Text>
+          <Text as="dd" data-test="total">
+            {cost?.totalAmount?.amount ? (
+              <Money data={cost?.totalAmount} />
+            ) : (
+              '-'
+            )}
+          </Text>
+        </div>
+      </dl>
+    </>
   );
 }
 
