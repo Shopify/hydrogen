@@ -3,8 +3,9 @@ import {storefrontApiCustomScalars} from '@shopify/hydrogen-react';
 
 const config: CodegenConfig = {
   overwrite: true,
-  // schema needs a relative path. In a template, we would need to remove the `../../` part since it's not part of a monorepo
-  schema: '../../node_modules/@shopify/hydrogen-react/storefront.schema.json',
+  // schema needs a relative path, so we use require.resolve() to generate that for us nicely.
+  // @ts-expect-error TS complains about install the node types here, but it doesn't make sense to configure this whole project to use node types when only this file does.
+  schema: require.resolve('@shopify/hydrogen-react/storefront.schema.json'),
   documents: './app/{routes,data}/*.{gql,graphql,tsx,ts}',
   generates: {
     'app/': {
