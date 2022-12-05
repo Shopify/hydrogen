@@ -102,18 +102,8 @@ function Panel({children}: {children?: React.ReactNode}) {
   return (
     <div className="overflow-y-scroll height max-h-full z-40 fixed w-96 bottom-5 top-5 right-5 divide-y rounded-md bg-white  text-gray-600">
       <div className="flex items-center px-4 py-3  ">
-        <Link
-          to=""
-          reloadDocument
-          className="flex-1 text-sm font-bold text-gray-600"
-        >
-          SEO
-        </Link>
-        <Link
-          to="?debug=false"
-          reloadDocument
-          className="text-sm font-bold text-gray-600"
-        >
+        <span className="flex-1 text-sm font-bold text-gray-600">SEO</span>
+        <Link to="?" reloadDocument className="text-sm font-bold text-gray-600">
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 20 20"
