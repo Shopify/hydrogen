@@ -51,26 +51,20 @@ export async function runDev({
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-  const projectPaths = getProjectPaths(appPath, entry);
-  const {root, entryFile, publicPath} = projectPaths;
-  const remixConfig = await getRemixConfig(root, entryFile, publicPath);
-
   muteDevLogs();
 
-  await compileAndWatch(remixConfig, projectPaths, {port});
+  await compileAndWatch(getProjectPaths(appPath, entry), {port});
 }
 
 async function compileAndWatch(
-  remixConfig: Awaited<ReturnType<typeof getRemixConfig>>,
   projectPaths: ReturnType<typeof getProjectPaths>,
-  options: {port?: number} = {},
+  options: {port?: number; cacheBust?: string} = {},
   isInit = true,
 ) {
   isInit && console.time(LOG_INITIAL_BUILD);
 
   const {root, entryFile, publicPath, buildPathClient, buildPathWorkerFile} =
     projectPaths;
-  const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
   // Changing these files requires re-running `remix.config.js`
   const shouldReloadRemixApp = (file: string) =>
@@ -78,6 +72,15 @@ async function compileAndWatch(
     (process.env.LOCAL_DEV &&
       (file.includes(path.resolve('/hydrogen-remix/src/templates/')) ||
         file.includes(path.resolve('/hydrogen-remix/dist/build/index.js'))));
+
+  const remixConfig = await getRemixConfig(
+    root,
+    entryFile,
+    publicPath,
+    options.cacheBust,
+  );
+
+  const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
   const stopCompileWatcher = await remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
@@ -99,10 +102,7 @@ async function compileAndWatch(
     async onFileCreated(file: string) {
       console.log(`\n📄 File created: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
-        await copyPublicFiles(
-          file,
-          path.resolve(buildPathClient, path.basename(file)),
-        );
+        await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
       }
 
       if (shouldReloadRemixApp(file)) {
@@ -112,10 +112,7 @@ async function compileAndWatch(
     async onFileChanged(file: string) {
       console.log(`\n📄 File changed: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
-        await copyPublicFiles(
-          file,
-          path.resolve(buildPathClient, path.basename(file)),
-        );
+        await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
       }
 
       if (shouldReloadRemixApp(file)) {
@@ -142,11 +139,7 @@ async function compileAndWatch(
   });
 
   async function reloadRemixApp(cacheBust: string) {
-    const [newRemixConfig] = await Promise.all([
-      getRemixConfig(root, entryFile, publicPath, cacheBust),
-      stopCompileWatcher(),
-    ]);
-
-    compileAndWatch(newRemixConfig, projectPaths, options, false);
+    await stopCompileWatcher();
+    compileAndWatch(projectPaths, {...options, cacheBust}, false);
   }
 }
