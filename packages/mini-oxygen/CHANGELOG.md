@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 1.3.1
+
+### Patch Changes
+
+- 0530ad2: Downgrade get-port to a non esm version
+
 ## 0.2.0
 
 ### Minor Changes
