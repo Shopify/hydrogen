@@ -58,12 +58,13 @@ const ACTION_PATH = '/cart/CartLinesUpdate';
 
 /**
  * action that handles the line(s) update mutation
+ * @preserve
  */
 async function action({request, context}: ActionArgs) {
   const {session} = context;
   const formData = await request.formData();
 
-  // 1. Grab the cart ID from the session
+  //! 1. Grab the cart ID from the session
   const cartId = await session.get('cartId');
   invariant(cartId, 'Missing cartId');
 
@@ -72,8 +73,8 @@ async function action({request, context}: ActionArgs) {
     ? (JSON.parse(String(formData.get('lines'))) as CartLineUpdateInput[])
     : ([] as CartLineUpdateInput[]);
 
-  // we need to query the prevCart lines, so we can validate
-  // what was really updated or not for analytics :(
+  //! we need to query the prevCart lines, so we can validate
+  //! what was really updated or not for analytics :(
   const prevCart = await getCartLines({cartId, context});
 
   const {cart, errors: graphqlErrors} = await cartLinesUpdate({
@@ -86,7 +87,7 @@ async function action({request, context}: ActionArgs) {
     return json({errors: graphqlErrors});
   }
 
-  // if no js, we essentially reload to avoid being routed to the actions route
+  //! if no js, we essentially reload to avoid being routed to the actions route
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
     return redirect(redirectTo);
@@ -107,13 +108,14 @@ async function action({request, context}: ActionArgs) {
  * @param prevLines the line(s) available before removing
  * @param currentLines the line(s) still available after removing
  * @returns {event, error}
+ * @preserve
  */
 function instrumentEvent({
   updatingLines,
   currentLines,
   prevLines,
 }: InstrumentLinesProps) {
-  // determine what line(s) were removed or not
+  //! determine what line(s) were removed or not
   const {linesUpdated, linesNotUpdated} = diffLines({prevLines, currentLines});
 
   const event: LinesUpdateEvent = {
@@ -143,6 +145,7 @@ function instrumentEvent({
  * @param prevLines the line(s) available before removing
  * @param currentLines the line(s) still available after removing
  * @returns
+ * @preserve
  */
 function diffLines({
   prevLines,
@@ -167,7 +170,7 @@ function diffLines({
   ) as Omit<LinesUpdateEventPayload, 'lines'>;
 }
 
-/*
+/*!
   mutation -----------------------------------------------------------------------------------------
 */
 const LINES_UPDATE_MUTATION = `#graphql
@@ -192,6 +195,7 @@ const LINES_UPDATE_MUTATION = `#graphql
  * @param lineIds [ID!]! an array of cart line ids to remove
  * @see https://shopify.dev/api/storefront/2022-07/mutations/cartlinesremove
  * @returns mutated cart
+ * @preserve
  */
 async function cartLinesUpdate({
   cartId,
@@ -224,6 +228,7 @@ async function cartLinesUpdate({
  * @param children render submit button
  * @param onSuccess? callback that runs after each form submission
  * @see https://shopify.dev/api/storefront/2022-10/mutations/cartLinesUpdate
+ * @preserve
  */
 const CartLinesUpdateForm = forwardRef(
   (
@@ -284,6 +289,7 @@ const CartLinesUpdateForm = forwardRef(
  * A hook version of LinesUpdateForm to update cart line(s) programmatically
  * @param onSuccess callback function that executes on success
  * @returns { cartLinesUpdate, fetcher}
+ * @preserve
  */
 function useCartLinesUpdate(
   onSuccess: (event: LinesUpdateEvent) => void = () => {},
@@ -318,6 +324,7 @@ function useCartLinesUpdate(
 /**
  * Utility hook to get the active LinesUpdate fetcher
  * @returns fetcher
+ * @preserve
  */
 function useCartLinesUpdatingFetcher() {
   const fetchers = useFetchers();
@@ -330,6 +337,7 @@ function useCartLinesUpdatingFetcher() {
 /**
  * Utility hook to retrieve all cart lines being updated
  * @returns {linesUpdating, fetcher}
+ * @preserve
  */
 function useCartLinesUpdating() {
   const fetcher = useCartLinesUpdatingFetcher();
@@ -353,6 +361,7 @@ function useCartLinesUpdating() {
  * A utility hook to implement individual line optimistic updates
  * @param line CartLine
  * @returns {lineUpdating, linesUpdating}
+ * @preserve
  */
 function useCartLineUpdating(
   line: CartLine | PartialDeep<CartLine, {recurseIntoArrays: true}>,
@@ -364,7 +373,7 @@ function useCartLineUpdating(
     return {lineUpdating, linesUpdating};
   }
 
-  // filter updating line
+  //! filter updating line
   if (line && linesUpdating?.length) {
     lineUpdating =
       linesUpdating.find((updatingLine) => updatingLine?.id === line?.id) ||

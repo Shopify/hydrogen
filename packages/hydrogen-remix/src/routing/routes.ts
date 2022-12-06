@@ -1,6 +1,7 @@
 import fs from 'fs';
 import readDir from 'recursive-readdir';
 import path from 'path';
+import {createRequire} from 'module';
 
 export type HydrogenRouteOptions = {};
 
@@ -26,9 +27,22 @@ export async function hydrogenRoutes(
 }
 
 async function copyTemplates() {
-  const templateDirectory = path.resolve(__dirname, '../../templates');
+  const require = createRequire(import.meta.url);
+  const isTs = isTSProject(require);
+  const pkgPath = path.dirname(
+    require.resolve('@shopify/h2-test-hydrogen-remix/package.json'),
+  );
+
+  const templateDirectory = path.resolve(
+    pkgPath,
+    isTs ? 'src' : 'dist',
+    'templates',
+  );
+
   const templates = await readDir(templateDirectory);
   const hydrogenDirectory = path.resolve(process.cwd(), '.hydrogen');
+
+  fs.rmSync(hydrogenDirectory, {recursive: true, force: true});
 
   for (const template of templates) {
     const destination = path.resolve(
@@ -128,4 +142,13 @@ function createRoutePath(partialRouteId: string): string | undefined {
   }
 
   return result || undefined;
+}
+
+function isTSProject(require: NodeRequire) {
+  try {
+    require.resolve(path.resolve(process.cwd(), 'tsconfig.json'));
+    return true;
+  } catch {
+    return false;
+  }
 }

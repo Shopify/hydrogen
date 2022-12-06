@@ -3,6 +3,8 @@
  *
  * It is generated each time Hydrogen is built. Instead, override this file by copying it to the
  * `app/routes` directory in your project.
+ *
+ * @preserve
  */
 
 import {LoaderArgs} from '@shopify/hydrogen-remix';

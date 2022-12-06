@@ -56,6 +56,7 @@ const ACTION_PATH = '/cart/CartLinesRemove';
 
 /**
  * action that handles the line(s) remove mutation
+ * @preserve
  */
 async function action({request, context}: ActionArgs) {
   const formData = await request.formData();
@@ -68,8 +69,8 @@ async function action({request, context}: ActionArgs) {
     ? (JSON.parse(String(formData.get('lineIds'))) as CartLine['id'][])
     : ([] as CartLine['id'][]);
 
-  // we need to query the prevCart so we can validate
-  // what was really added or not for analytics
+  //! we need to query the prevCart so we can validate
+  //! what was really added or not for analytics
   const prevCart = await getCartLines({cartId, context});
 
   const {cart, errors: graphqlErrors} = await cartLinesRemove({
@@ -82,7 +83,7 @@ async function action({request, context}: ActionArgs) {
     return json({errors: graphqlErrors});
   }
 
-  // if no js, we essentially reload to avoid being routed to the actions route
+  //! if no js, we essentially reload to avoid being routed to the actions route
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
     return redirect(redirectTo);
@@ -103,13 +104,14 @@ async function action({request, context}: ActionArgs) {
  * @param prevLines the line(s) available before removing
  * @param currentLines the line(s) still available after removing
  * @returns {event, error}
+ * @preserve
  */
 function instrumentEvent({
   removingLineIds,
   prevLines,
   currentLines,
 }: DiffLinesProps) {
-  // determine what line(s) were actually removed or not
+  //! determine what line(s) were actually removed or not
   const {linesRemoved, linesNotRemoved} = diffLines({
     removingLineIds,
     prevLines,
@@ -144,6 +146,7 @@ function instrumentEvent({
  * @param prevLines the line(s) available before removing
  * @param currentLines the line(s) still available after removing
  * @returns
+ * @preserve
  */
 function diffLines({removingLineIds, prevLines, currentLines}: DiffLinesProps) {
   return prevLines?.edges?.reduce(
@@ -164,7 +167,7 @@ function diffLines({removingLineIds, prevLines, currentLines}: DiffLinesProps) {
   ) as LinesRemove;
 }
 
-/*
+/*!
   Mutation -----------------------------------------------------------------------------------------
 */
 const REMOVE_LINE_ITEMS_MUTATION = `#graphql
@@ -203,6 +206,7 @@ const REMOVE_LINE_ITEMS_MUTATION = `#graphql
  * @param lineIds [ID!]! an array of cart line ids to remove
  * @see https://shopify.dev/api/storefront/2022-07/mutations/cartlinesremove
  * @returns mutated cart
+ * @preserve
  */
 async function cartLinesRemove({
   cartId,
@@ -265,6 +269,7 @@ async function cartLinesRemove({
  *   )
  * }
  * ```
+ * @preserve
  */
 const CartLinesRemoveForm = forwardRef(
   (
@@ -326,6 +331,7 @@ const CartLinesRemoveForm = forwardRef(
  * }
  * const {cartLinesRemove, fetcher} = useLinesRemove(onSuccess);
  * ```
+ * @preserve
  */
 function useCartLinesRemove(
   onSuccess: (event: LinesRemoveEvent) => void = () => {},
@@ -354,6 +360,7 @@ function useCartLinesRemove(
    *   }, [shouldRemoveGift, freeGiftLineId]);
    * }
    * ```
+   * @preserve
    */
   const cartLinesRemove = useCallback(
     ({lineIds}: {lineIds: CartLine['id'][]}) => {
@@ -381,6 +388,7 @@ function useCartLinesRemove(
 /**
  * Utility hook to retrieve an active lines remove fetcher
  * @returns fetcher | undefined
+ * @preserve
  */
 function useCartLinesRemoveFetcher() {
   const fetchers = useFetchers();
@@ -410,6 +418,7 @@ function useCartLinesRemoveFetcher() {
  *   );
  * }
  * ```
+ * @preserve
  */
 function useCartLinesRemoving() {
   const fetcher = useCartLinesRemoveFetcher();
@@ -419,7 +428,7 @@ function useCartLinesRemoving() {
     try {
       linesRemoving = JSON.parse(linesRemoveStr);
     } catch (_) {
-      // noop
+      //! noop
     }
   }
   return {linesRemoving, fetcher};
@@ -429,6 +438,7 @@ function useCartLinesRemoving() {
  * A utility hook to implement optimistic single line removal
  * @param line? optional CartLine
  * @returns {optimisticLineRemove, linesRemoving}
+ * @preserve
  */
 function useCartLineRemoving(line: CartLine) {
   const {linesRemoving} = useCartLinesRemoving();

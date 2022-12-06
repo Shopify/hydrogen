@@ -51,6 +51,7 @@ const ACTION_PATH = `/cart/CartBuyerIdentityUpdate`;
 
 /**
  * action that handles the cart buyer identity update mutation
+ * @preserve
  */
 async function action({request, context}: ActionArgs) {
   const {session} = context;
@@ -85,8 +86,8 @@ async function action({request, context}: ActionArgs) {
     'No buyerIdentity properties to update',
   );
 
-  // if we have an existing cart, we update the identity,
-  // else we create a new cart with the passed identity
+  //! if we have an existing cart, we update the identity,
+  //! else we create a new cart with the passed identity
   const {cart, errors: graphqlErrors} = cartId
     ? await cartBuyerIdentityUpdate({
         cartId,
@@ -105,8 +106,8 @@ async function action({request, context}: ActionArgs) {
   session.set('cartId', cart.id);
   headers.set('Set-Cookie', await session.commit());
 
-  // if no js, we essentially reload to avoid being routed to the actions route
-  // or if user passes redirectTo we use that
+  //! if no js, we essentially reload to avoid being routed to the actions route
+  //! or if user passes redirectTo we use that
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
     return redirect(redirectTo, {headers});
@@ -125,6 +126,7 @@ async function action({request, context}: ActionArgs) {
  * @param prevBuyerIdentity the applied discounts before the update mutation
  * @param updatedBuyerIdentity the applied discounts after the update mutation
  * @returns {event, errors}
+ * @preserve
  */
 function instrumentEvent({
   addingBuyerIdentity,
@@ -145,7 +147,7 @@ function instrumentEvent({
     },
   };
 
-  // we are not diffing buyerIdentity updates
+  //! we are not diffing buyerIdentity updates
   const errors = null;
 
   return {event, errors};
@@ -153,6 +155,7 @@ function instrumentEvent({
 
 /**
  * @see https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
+ * @preserve
  */
 const UPDATE_CART_BUYER_COUNTRY = `#graphql
   mutation(
@@ -185,6 +188,7 @@ const UPDATE_CART_BUYER_COUNTRY = `#graphql
  * @param buyerIdentity CartBuyerIdentityInput
  * @returns {cart: Cart; errors: UserError[]}
  * @see API https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
+ * @preserve
  */
 async function cartBuyerIdentityUpdate({
   cartId,
@@ -220,6 +224,7 @@ async function cartBuyerIdentityUpdate({
  * @param withCustomerAccessToken? (optional) a prop to apply/not apply the customerAccessToken to the buyerIdentity if available
  * @param redirectTo? (optional) url to redirect to after the form is submitted. Defaults to the current path.
  * @param onSuccess? a callback that gets executed after a successful form submit
+ * @preserve
  */
 const CartBuyerIdentityUpdateForm = forwardRef<
   HTMLFormElement,
@@ -299,6 +304,7 @@ const CartBuyerIdentityUpdateForm = forwardRef<
 /**
  * Utility hook to get the active buyerIdentityUpdate fetcher
  * @returns fetcher
+ * @preserve
  */
 function useBuyerIdentityUpdateFetcher() {
   const fetchers = useFetchers();
@@ -307,11 +313,12 @@ function useBuyerIdentityUpdateFetcher() {
   );
 }
 
-/*
-  Programmatically update a cart's buyerIdentity
-  @see https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
-  returns { cartBuyerIdentityUpdate, fetcher }
-*/
+/**
+ * Programmatically update a cart's buyerIdentity
+ * @see https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
+ * @returns { cartBuyerIdentityUpdate, fetcher }
+ * @preserve
+ */
 function useCartBuyerIdentityUpdate(
   onSuccess: (event: BuyerIdentityUpdateEvent) => void = () => {},
 ) {
@@ -361,6 +368,7 @@ function useCartBuyerIdentityUpdate(
 /**
  * Utility hook to retrieve the buyerIdentity currently being updated
  * @returns {buyerIdentityUpdating}
+ * @preserve
  */
 function useCartBuyerIdentityUpdating() {
   const buyerIdentityUpdateFetcher = useBuyerIdentityUpdateFetcher();
