@@ -1,5 +1,5 @@
 import {test, expect} from '@playwright/test';
-import {waitForLoaders, waitForNetworkSettled} from './utils';
+import {waitForLoaders} from './utils';
 
 test.describe('Cart', () => {
   test('From home to checkout flow', async ({page}) => {
@@ -11,13 +11,13 @@ test.describe('Cart', () => {
     await page.locator(`[data-test=add-to-cart]`).click();
 
     await waitForLoaders(page, () =>
-      page.locator(`button :text-is("+")`).click({clickCount: 2, delay: 100}),
+      page.locator(`button :text-is("+")`).click({clickCount: 1, delay: 600}),
     );
 
     await expect(
       page.locator('[data-test=item-quantity]'),
       'should increase quantity',
-    ).toContainText('3');
+    ).toContainText('2');
 
     // Close cart drawer => Products => First product
     await page.locator('[data-test=close-cart]').click();
@@ -35,7 +35,7 @@ test.describe('Cart', () => {
     await expect(
       quantities.reduce((a, b) => a + Number(b), 0),
       'should have the correct item quantities',
-    ).toEqual(4);
+    ).toEqual(3);
 
     const priceInStore = await page
       .locator('[data-test=subtotal]')
