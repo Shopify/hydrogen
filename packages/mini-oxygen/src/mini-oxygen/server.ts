@@ -120,11 +120,11 @@ function createRequestMiddleware(
   mf: MiniOxygen,
   {
     autoReload,
-    proxyServer: string,
+    proxyServer,
     onRequest,
     onResponse,
     onResponseError,
-  }: MiniOxygenServerHooks & Pick<MiniOxygenServerOptions, 'autoReload'>,
+  }: MiniOxygenServerHooks & Pick<MiniOxygenServerOptions, 'autoReload' | 'proxyServer'>,
 ): NextHandleFunction {
   return async (req, res) => {
     if (proxyServer !== '' && !req.headers['mini-oxygen-proxy']) {
