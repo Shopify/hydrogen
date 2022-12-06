@@ -20,12 +20,6 @@ import {
   CartDiscountCodesUpdateForm,
   CartLinesRemoveForm,
   CartLinesUpdateForm,
-  useCartDiscountCodesUpdating,
-  useCartLineRemoving,
-  useCartLinesAdding,
-  useCartLinesRemoving,
-  useCartLineUpdating,
-  useOptimisticCartLinesAdding,
 } from '.hydrogen/cart';
 
 type Layouts = 'page' | 'drawer';
@@ -39,20 +33,11 @@ export function Cart({
   onClose?: () => void;
   cart: CartType | null;
 }) {
-  const linesCount = cart?.lines?.edges?.length || 0;
-  const {linesAdding} = useCartLinesAdding();
-  const {linesRemoving} = useCartLinesRemoving();
-  const addingFirstLine = Boolean(linesCount === 0 && linesAdding.length);
-  const removingLastLine = Boolean(linesCount === 1 && linesRemoving.length);
-
-  // a lines condition based on optimistic lines
-  const hasLines = Boolean(
-    (linesCount || addingFirstLine) && !removingLastLine,
-  );
+  const linesCount = Boolean(cart?.lines?.edges?.length || 0);
 
   return (
     <>
-      <CartEmpty hidden={hasLines} onClose={onClose} layout={layout} />
+      <CartEmpty hidden={linesCount} onClose={onClose} layout={layout} />
       <CartDetails cart={cart} layout={layout} />
     </>
   );
@@ -96,20 +81,13 @@ function CartDiscounts({
 }: {
   discountCodes: CartType['discountCodes'];
 }) {
-  const {discountCodesUpdating} = useCartDiscountCodesUpdating();
   const [hovered, setHovered] = useState(false);
-
-  const discounts = discountCodesUpdating
-    ? discountCodesUpdating
-    : discountCodes;
-
-  const optimisticDiscounts =
-    discounts?.map(({code}) => code).join(', ') || null;
+  const codes = discountCodes?.map(({code}) => code).join(', ') || null;
 
   return (
     <>
       {/* Have existing discount, display it with a remove option */}
-      <dl className={clsx(optimisticDiscounts ? 'grid' : 'hidden')}>
+      <dl className={clsx(codes ? 'grid' : 'hidden')}>
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Discount(s)</Text>
           <div
@@ -130,7 +108,7 @@ function CartDiscounts({
                 </button>
               )}
             </CartDiscountCodesUpdateForm>
-            <Text as="dd">{optimisticDiscounts}</Text>
+            <Text as="dd">{codes}</Text>
           </div>
         </div>
       </dl>
@@ -140,7 +118,7 @@ function CartDiscounts({
         {() => (
           <div
             className={clsx(
-              optimisticDiscounts ? 'hidden' : 'flex',
+              codes ? 'hidden' : 'flex',
               'items-center justify-between',
             )}
           >
@@ -167,7 +145,6 @@ function CartLines({
   lines: CartType['lines'] | undefined;
 }) {
   const currentLines = cartLines ? flattenConnection(cartLines) : [];
-  const {optimisticLinesNew} = useOptimisticCartLinesAdding(currentLines);
   const scrollRef = useRef(null);
   const {y} = useScroll(scrollRef);
 
@@ -185,9 +162,6 @@ function CartLines({
       className={className}
     >
       <ul className="grid gap-6 md:gap-10">
-        {optimisticLinesNew.map((line) => (
-          <CartLineItem key={line.id} line={line as CartLine} optimistic />
-        ))}
         {currentLines.map((line) => (
           <CartLineItem key={line.id} line={line as CartLine} />
         ))}
@@ -254,8 +228,6 @@ function CartLineItem({
   line: CartLine;
   optimistic?: boolean;
 }) {
-  const {lineRemoving} = useCartLineRemoving(line);
-
   if (!line?.id) return null;
 
   const {id, quantity, merchandise} = line;
@@ -263,7 +235,7 @@ function CartLineItem({
   if (typeof quantity === 'undefined' || !merchandise?.product) return null;
 
   return (
-    <li key={id} className={clsx(['flex gap-4', lineRemoving ? 'hidden' : ''])}>
+    <li key={id} className="flex gap-4">
       <div className="flex-shrink">
         {merchandise.image && (
           <Image
@@ -337,14 +309,8 @@ function CartLineQuantityAdjust({
   optimistic: boolean;
   line: CartLine;
 }) {
-  const {lineUpdating} = useCartLineUpdating(line);
   if (!line || typeof line?.quantity === 'undefined') return null;
-  const {id: lineId, quantity: actualQuantity} = line;
-  const quantity =
-    typeof lineUpdating?.quantity !== 'undefined'
-      ? lineUpdating.quantity
-      : actualQuantity;
-
+  const {id: lineId, quantity} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
   const nextQuantity = Number((quantity + 1).toFixed(0));
 
@@ -399,27 +365,11 @@ function CartLinePrice({
   priceType?: 'regular' | 'compareAt';
   [key: string]: any;
 }) {
-  const {lineUpdating} = useCartLineUpdating(line);
-
   if (!line?.cost?.amountPerQuantity || !line?.cost?.totalAmount) return null;
-
-  // optimistic line item price
-  const optimisticTotalAmount =
-    typeof lineUpdating?.quantity !== 'undefined'
-      ? {
-          amount: String(
-            (
-              lineUpdating.quantity *
-              parseFloat(line.cost.amountPerQuantity.amount)
-            ).toFixed(2),
-          ),
-          currencyCode: line.cost.amountPerQuantity.currencyCode,
-        }
-      : line.cost.totalAmount;
 
   const moneyV2 =
     priceType === 'regular'
-      ? optimisticTotalAmount
+      ? line.cost.totalAmount
       : line.cost.compareAtAmountPerQuantity;
 
   if (moneyV2 == null) {
