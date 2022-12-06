@@ -43,7 +43,7 @@
     "body-parser": "1.20.1",
     "connect": "^3.7.0",
     "fs-extra": "^10.1.0",
-    "get-port": "^6.1.2",
+    "get-port": "^5.1.1",
     "inquirer": "^9.0.0",
     "mime": "^3.0.0",
     "semiver": "^1.1.0",
