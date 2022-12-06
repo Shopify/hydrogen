@@ -30,10 +30,24 @@ let cachedConfig: RemixConfig;
 export async function getRemixConfig(
   root: string,
   entryFile: string,
+  publicPath: string,
+  bustCacheFile?: string,
   mode = process.env.NODE_ENV as ServerMode,
 ) {
-  if (!cachedConfig) {
+  if (!cachedConfig || bustCacheFile) {
+    let env = process.env.NODE_ENV;
+
+    if (bustCacheFile) {
+      // Force using `require` in Remix instead
+      // of `import` and and bust the cache to
+      // load a fresh config file.
+      const require = createRequire(import.meta.url);
+      delete require.cache[bustCacheFile];
+      process.env.NODE_ENV = 'test';
+    }
+
     const config = await readConfig(root, mode);
+    process.env.NODE_ENV = env;
 
     const hydrogenAssetBase = process.env.HYDROGEN_ASSET_BASE_URL;
     if (hydrogenAssetBase) {
@@ -60,6 +74,8 @@ export async function getRemixConfig(
       config.relativeAssetsBuildDirectory,
     );
 
+    config.watchPaths = [publicPath, path.resolve(root, 'remix.config.*')];
+
     if (process.env.LOCAL_DEV) {
       // Watch local packages when developing in Hydrogen repo
       const require = createRequire(import.meta.url);
@@ -70,8 +86,21 @@ export async function getRemixConfig(
         '..',
       );
 
-      config.watchPaths = (await fs.readdir(packagesPath)).map((pkg) =>
-        path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
+      config.watchPaths.push(
+        ...(await fs.readdir(packagesPath)).flatMap((pkg) => {
+          const files = [
+            path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
+          ];
+
+          if (pkg === 'hydrogen-remix') {
+            files.push(
+              path.resolve(packagesPath, pkg, 'dist', 'build', 'index.js'),
+              path.resolve(packagesPath, pkg, 'src', 'templates', '**', '*'),
+            );
+          }
+
+          return files;
+        }),
       );
     }
 

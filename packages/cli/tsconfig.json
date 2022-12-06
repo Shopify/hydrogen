@@ -5,11 +5,7 @@
   "compilerOptions": {
     "moduleResolution": "NodeNext",
     "rootDir": "src",
-    "composite": true,
-    "sourceMap": true,
-    "inlineSources": true,
     "noUncheckedIndexedAccess": true,
-    "outDir": "dist",
-    "tsBuildInfoFile": "dist/tsconfig.tsbuildinfo"
+    "outDir": "dist"
   }
 }

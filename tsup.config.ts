@@ -1,41 +1,32 @@
-import {defineConfig} from 'tsup';
-import fs from 'fs/promises';
 import path from 'path';
+import fs from 'fs/promises';
+import {defineConfig} from 'tsup';
 
-const entry = 'src/index.ts';
-const outDir = 'dist';
+export const entry = 'src/index.ts';
+export const outDir = 'dist';
+export const cjsEntryContent = `module.exports = process.env.NODE_ENV === 'development' ? require('./development/index.cjs') : require('./production/index.cjs');`;
+export const cjsEntryFile = path.resolve(process.cwd(), outDir, 'index.cjs');
 
-const common = defineConfig({
-  entryPoints: [entry, 'src/build.ts'],
+export const commonConfig = defineConfig({
+  entryPoints: [entry],
   format: ['esm', 'cjs'],
   treeshake: true,
   sourcemap: true,
-  external: ['esbuild'],
 });
 
-export default defineConfig([
-  {
-    ...common,
-    env: {NODE_ENV: 'development'},
-    outDir: path.join(outDir, 'development'),
-  },
-  {
-    ...common,
-    env: {NODE_ENV: 'production'},
-    dts: entry,
-    outDir: path.join(outDir, 'production'),
-    minify: true,
-    async onSuccess() {
-      await fs.writeFile(
-        path.resolve(process.cwd(), outDir, 'index.cjs'),
-        `module.exports = process.env.NODE_ENV === 'development' ? require('./development/index.cjs') : require('./production/index.cjs');`,
-        'utf-8',
-      );
-      await fs.writeFile(
-        path.resolve(process.cwd(), outDir, 'build.cjs'),
-        `module.exports = process.env.NODE_ENV === 'development' ? require('./development/build.cjs') : require('./production/build.cjs');`,
-        'utf-8',
-      );
-    },
-  },
-]);
+export const devConfig = defineConfig({
+  ...commonConfig,
+  env: {NODE_ENV: 'development'},
+  outDir: path.join(outDir, 'development'),
+});
+
+export const prodConfig = defineConfig({
+  ...commonConfig,
+  env: {NODE_ENV: 'production'},
+  dts: true,
+  outDir: path.join(outDir, 'production'),
+  minify: true,
+  onSuccess: () => fs.writeFile(cjsEntryFile, cjsEntryContent, 'utf-8'),
+});
+
+export default [devConfig, prodConfig];

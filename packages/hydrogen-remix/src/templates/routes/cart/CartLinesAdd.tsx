@@ -93,11 +93,12 @@ interface UseCartLinesAddReturnType {
   fetcher: Fetcher<any> | undefined;
 }
 
-// should match the path of the file
+//! should match the path of the file
 const ACTION_PATH = '/cart/CartLinesAdd';
 
 /**
  * action that handles cart create (with lines) and lines add
+ * @preserve
  */
 async function action({request, context}: ActionArgs) {
   const {session} = context;
@@ -117,7 +118,7 @@ async function action({request, context}: ActionArgs) {
     ? (formData.get('countryCode') as CartBuyerIdentityInput['countryCode'])
     : null;
 
-  // Flow A — no previous cart, create and add line(s)
+  //! Flow A — no previous cart, create and add line(s)
   if (!cartId) {
     const {cart, errors: graphqlErrors} = await cartCreate({
       input: countryCode ? {lines, buyerIdentity: {countryCode}} : {lines},
@@ -141,14 +142,14 @@ async function action({request, context}: ActionArgs) {
     });
   }
 
-  /*
+  /*!
     for analytics we need to query the previous cart lines,
     so we can diff what was really added or not :(
     although it's slower, we now have optimistic lines add
   */
   const prevCart = await getCartLines({cartId, context});
 
-  // Flow B — add line(s) to existing cart
+  //! Flow B — add line(s) to existing cart
   const {cart, errors: graphqlErrors} = await cartLinesAdd({
     cartId,
     lines,
@@ -165,6 +166,7 @@ async function action({request, context}: ActionArgs) {
 /**
  * Helper function to handle linesAdd action responses
  * @returns json {errors, event}
+ * @preserve
  */
 function linesAddResponse({
   prevCart,
@@ -197,6 +199,7 @@ function linesAddResponse({
  * @param prevLines - lines before the mutation
  * @param currentLines - lines after the mutation
  * @returns json {event, error}
+ * @preserve
  */
 function instrumentEvent({
   addingLines,
@@ -239,6 +242,7 @@ function instrumentEvent({
  * @param currentLines - lines after the mutation
  * @returns object {linesAdded, linesNotAdded}
  * @see https://github.com/Shopify/storefront-api-feedback/discussions/151
+ * @preserve
  */
 function diffLines({addingLines, prevLines, currentLines}: DiffLinesProps) {
   const prev: DiffingLine[] =
@@ -275,7 +279,7 @@ function diffLines({addingLines, prevLines, currentLines}: DiffLinesProps) {
   return {linesAdded, linesNotAdded};
 }
 
-/*
+/*!
   action mutations & queries -----------------------------------------------------------------------------------------
 */
 const USER_ERROR_FRAGMENT = `#graphql
@@ -316,7 +320,7 @@ const CART_LINES_QUERY = `#graphql
   ${LINES_CART_FRAGMENT}
 `;
 
-// @see: https://shopify.dev/api/storefront/2022-01/mutations/cartcreate
+//! @see: https://shopify.dev/api/storefront/2022-01/mutations/cartcreate
 const CREATE_CART_MUTATION = `#graphql
   mutation ($input: CartInput!, $country: CountryCode = ZZ, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
@@ -354,6 +358,7 @@ const ADD_LINES_MUTATION = `#graphql
  * @param cartId
  * @see https://shopify.dev/api/storefront/2022-01/queries/cart
  * @returns object cart
+ * @preserve
  */
 async function getCartLines({
   cartId,
@@ -381,6 +386,7 @@ async function getCartLines({
  * @param input CartInput https://shopify.dev/api/storefront/2022-01/input-objects/CartInput
  * @see https://shopify.dev/api/storefront/2022-01/mutations/cartcreate
  * @returns result {cart, errors}
+ * @preserve
  */
 async function cartCreate({
   input,
@@ -413,6 +419,7 @@ async function cartCreate({
  * @param lines [CartLineInput!]! https://shopify.dev/api/storefront/2022-01/input-objects/CartLineInput
  * @see https://shopify.dev/api/storefront/2022-01/mutations/cartLinesAdd
  * @returns result {cart, errors}
+ * @preserve
  */
 async function cartLinesAdd({
   cartId,
@@ -493,6 +500,7 @@ async function cartLinesAdd({
  *   )
  * }
  * ```
+ * @preserve
  */
 const CartLinesAddForm = forwardRef<HTMLFormElement, CartLinesAddFormProps>(
   ({children, lines = [], optimisticLines = [], onSuccess, className}, ref) => {
@@ -568,6 +576,7 @@ const CartLinesAddForm = forwardRef<HTMLFormElement, CartLinesAddFormProps>(
  * A hook version of CartLinesAddForm to add cart line(s) programmatically
  * @param onSuccess callback function that executes on success
  * @returns object { cartLinesAdd, fetcher }
+ * @preserve
  */
 function useCartLinesAdd(
   onSuccess: (event: LinesAddEvent) => void = () => {},
@@ -599,6 +608,7 @@ function useCartLinesAdd(
    *   }, [shouldAddGift, freeGiftProductVariant])
    * }
    * ```
+   * @preserve
    */
   const cartLinesAdd = useCallback(
     ({lines = [], optimisticLines = []}: LinesOptimisticLinesProps) => {
@@ -629,6 +639,7 @@ function useCartLinesAdd(
 /**
  * Utility hook to get an active lines adding fetcher
  * @returns result fetcher or undefined
+ * @preserve
  */
 function useCartLinesAddingFetcher() {
   const fetchers = useFetchers();
@@ -661,6 +672,7 @@ function useCartLinesAddingFetcher() {
  *   );
  * }
  * ```
+ * @preserve
  */
 function useCartLinesAdding() {
   const fetcher = useCartLinesAddingFetcher();
@@ -672,7 +684,7 @@ function useCartLinesAdding() {
     try {
       linesAdding = JSON.parse(linesStr);
     } catch (_) {
-      // no-op
+      //! no-op
     }
   }
 
@@ -683,6 +695,7 @@ function useCartLinesAdding() {
  * A utility hook to get the optimistic lines being added
  * @param lines CartLine[] | undefined
  * @returns object {optimisticLines: [], optimisticLinesNew: []}
+ * @preserve
  */
 function useOptimisticCartLinesAdding(
   lines?: PartialDeep<CartLine, {recurseIntoArrays: true}>[] | unknown,
@@ -691,34 +704,34 @@ function useOptimisticCartLinesAdding(
   const optimisticLinesStr =
     fetcher?.submission?.formData?.get('optimisticLines');
 
-  // parse all lines currently added and filter new ones
+  //! parse all lines currently added and filter new ones
   return useMemo(() => {
     let optimisticLines: PartialDeep<CartLine>[] | [] = [];
     const optimisticLinesNew: PartialDeep<CartLine>[] | [] = [];
 
-    // get optimistic lines currently being added
+    //! get optimistic lines currently being added
     if (optimisticLinesStr && typeof optimisticLinesStr === 'string') {
       optimisticLines = JSON.parse(optimisticLinesStr);
     } else {
       return {optimisticLines, optimisticLinesNew};
     }
 
-    // default return
+    //! default return
     const result: OptimisticLinesAddingReturnType = {
       optimisticLines,
       optimisticLinesNew,
     };
 
-    // not adding optimistic lines
+    //! not adding optimistic lines
     if (!optimisticLines?.length) return result;
 
-    // no existing lines, all adding are new
+    //! no existing lines, all adding are new
     if (!Array.isArray(lines) || !lines?.length) {
       result.optimisticLinesNew = optimisticLines;
       return result;
     }
 
-    // lines comparison function
+    //! lines comparison function
     function comparer(
       prevLine: PartialDeep<CartLine>,
       line: PartialDeep<CartLine>,

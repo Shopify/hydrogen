@@ -1,4 +1,5 @@
 import path from 'path';
+import fs from 'fs-extra';
 import * as remix from '@remix-run/dev/dist/compiler.js';
 import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
@@ -50,44 +51,85 @@ export async function runDev({
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
-  const {root, entryFile, buildPathWorkerFile, buildPathClient, publicPath} =
-    getProjectPaths(appPath, entry);
-
-  const remixConfig = await getRemixConfig(root, entryFile);
-
   muteDevLogs();
 
-  console.time(LOG_INITIAL_BUILD);
+  await compileAndWatch(getProjectPaths(appPath, entry), {port});
+}
+
+async function compileAndWatch(
+  projectPaths: ReturnType<typeof getProjectPaths>,
+  options: {port?: number; cacheBust?: string} = {},
+  isInit = true,
+) {
+  isInit && console.time(LOG_INITIAL_BUILD);
+
+  const {root, entryFile, publicPath, buildPathClient, buildPathWorkerFile} =
+    projectPaths;
+
+  // Changing these files requires re-running `remix.config.js`
+  const shouldReloadRemixApp = (file: string) =>
+    file.startsWith(path.resolve(root, 'remix.config.')) ||
+    (process.env.LOCAL_DEV &&
+      (file.includes(path.resolve('/hydrogen-remix/src/templates/')) ||
+        file.includes(path.resolve('/hydrogen-remix/dist/build/index.js'))));
+
+  const remixConfig = await getRemixConfig(
+    root,
+    entryFile,
+    publicPath,
+    options.cacheBust,
+  );
+
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
-  remix.watch(remixConfig, {
+  const stopCompileWatcher = await remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
-    onFileCreated(file: string) {
-      // eslint-disable-next-line no-console
-      console.log(`\n📄 File created: ${path.relative(root, file)}`);
-    },
-    onFileChanged(file: string) {
-      // eslint-disable-next-line no-console
-      console.log(`\n📄 File changed: ${path.relative(root, file)}`);
-    },
-    onFileDeleted(file: string) {
-      // eslint-disable-next-line no-console
-      console.log(`\n📄 File deleted: ${path.relative(root, file)}`);
-    },
     async onInitialBuild() {
       await copyingFiles;
-      console.timeEnd(LOG_INITIAL_BUILD);
 
-      await startMiniOxygen({
-        root,
-        port,
-        watch: true,
-        buildPathWorkerFile,
-        buildPathClient,
-      });
+      if (isInit) {
+        console.timeEnd(LOG_INITIAL_BUILD);
+
+        await startMiniOxygen({
+          root,
+          port: options.port,
+          watch: true,
+          buildPathWorkerFile,
+          buildPathClient,
+        });
+      }
+    },
+    async onFileCreated(file: string) {
+      console.log(`\n📄 File created: ${path.relative(root, file)}`);
+      if (file.startsWith(publicPath)) {
+        await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
+      }
+
+      if (shouldReloadRemixApp(file)) {
+        await reloadRemixApp(file);
+      }
+    },
+    async onFileChanged(file: string) {
+      console.log(`\n📄 File changed: ${path.relative(root, file)}`);
+      if (file.startsWith(publicPath)) {
+        await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
+      }
+
+      if (shouldReloadRemixApp(file)) {
+        await reloadRemixApp(file);
+      }
+    },
+    async onFileDeleted(file: string) {
+      console.log(`\n📄 File deleted: ${path.relative(root, file)}`);
+      if (file.startsWith(publicPath)) {
+        await fs.unlink(file.replace(publicPath, buildPathClient));
+      }
+
+      if (shouldReloadRemixApp(file)) {
+        await reloadRemixApp(file);
+      }
     },
     onRebuildStart() {
-      // eslint-disable-next-line no-console
       console.log(LOG_REBUILDING);
       console.time(LOG_REBUILT);
     },
@@ -95,4 +137,9 @@ export async function runDev({
       console.timeEnd(LOG_REBUILT);
     },
   });
+
+  async function reloadRemixApp(cacheBust: string) {
+    await stopCompileWatcher();
+    compileAndWatch(projectPaths, {...options, cacheBust}, false);
+  }
 }

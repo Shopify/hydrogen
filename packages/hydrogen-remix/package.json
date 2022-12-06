@@ -11,8 +11,8 @@
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup --clean --config ../../tsup.config.ts",
-    "dev": "tsup --watch --config ../../tsup.config.ts"
+    "build": "tsup --clean --config ./tsup.config.ts",
+    "dev": "tsup --watch --config ./tsup.config.ts"
   },
   "exports": {
     ".": {
@@ -32,26 +32,16 @@
       }
     },
     "./build": {
-      "types": "./dist/production/build.d.ts",
-      "module": {
-        "development": "./dist/development/build.js",
-        "default": "./dist/production/build.js"
-      },
-      "require": "./dist/build.cjs",
-      "import": {
-        "development": "./dist/development/build.js",
-        "default": "./dist/production/build.js"
-      },
-      "default": {
-        "development": "./dist/development/build.js",
-        "default": "./dist/production/build.js"
-      }
+      "types": "./dist/build/index.d.ts",
+      "require": "./dist/build/index.cjs",
+      "import": "./dist/build/index.js",
+      "default": "./dist/build/index.js"
     },
     "./package.json": "./package.json"
   },
   "files": [
     "dist",
-    "templates"
+    "src/templates"
   ],
   "peerDependencies": {
     "@shopify/h2-test-remix-oxygen": "^0.0.4",
