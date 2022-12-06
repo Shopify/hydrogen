@@ -11,7 +11,7 @@ test.describe('Cart', () => {
     await page.locator(`[data-test=add-to-cart]`).click();
 
     await waitForLoaders(page, () =>
-      page.locator(`button :text-is("+")`).click({clickCount: 2, delay: 100}),
+      page.locator(`button :text-is("+")`).click({clickCount: 2, delay: 600}),
     );
 
     await expect(
