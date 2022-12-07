@@ -1,10 +1,5 @@
-import {
-  defer,
-  type LinksFunction,
-  type MetaFunction,
-  type LoaderArgs,
-  HydrogenContext,
-} from '@shopify/hydrogen-remix';
+import {defer, type LinksFunction, type MetaFunction} from '@remix-run/oxygen';
+import type {LoaderArgs} from '@shopify/hydrogen-remix';
 import {
   Links,
   Meta,
