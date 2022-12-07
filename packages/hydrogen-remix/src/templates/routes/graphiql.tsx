@@ -7,7 +7,7 @@
  * @preserve
  */
 
-import {LoaderArgs} from '@shopify/hydrogen-remix';
+import type {LoaderArgs} from '@shopify/hydrogen-remix';
 
 export async function loader({context}: LoaderArgs) {
   const url = context.storefront.getStorefrontApiUrl();

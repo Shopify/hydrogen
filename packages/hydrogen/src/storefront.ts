@@ -37,14 +37,8 @@ export type StorefrontClientProps = Parameters<
   };
 };
 
-export type Storefront = ReturnType<
-  typeof createStorefrontClient
->['storefront'];
-
-export type HydrogenContext = {
-  storefront: Storefront;
-  [key: string]: unknown;
-};
+export type StorefrontClient = ReturnType<typeof createStorefrontClient>;
+export type Storefront = StorefrontClient['storefront'];
 
 export type CreateStorefrontClientOptions = {
   cache?: Cache;
