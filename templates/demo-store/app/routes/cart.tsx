@@ -6,10 +6,14 @@ import {type ActionArgs, json} from '@shopify/hydrogen-remix';
 import type {
   CartLineInput,
   CartBuyerIdentityInput,
+  Cart as CartType,
+  UserError,
+  CartUserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {cartCreate, cartAdd} from '~/data';
+import {cartCreate, cartAdd, cartDiscountCodesUpdate, cartRemove} from '~/data';
+import {isLocalPath} from '~/lib/utils';
 
-type CartAction = 'ADD_TO_CART' | 'REMOVE_FROM_CART';
+type CartAction = 'ADD_TO_CART' | 'REMOVE_FROM_CART' | 'UPDATE_DISCOUNT';
 
 export async function action({request, context}: ActionArgs) {
   const {session, storefront} = context;
@@ -23,42 +27,78 @@ export async function action({request, context}: ActionArgs) {
   const cartAction = formData.get('cartAction') as CartAction;
   invariant(cartAction, 'No cartAction defined');
 
-  const lines = formData.get('lines')
-    ? (JSON.parse(String(formData.get('lines'))) as CartLineInput[])
-    : ([] as CartLineInput[]);
-  invariant(lines.length, 'No lines to add');
-
   const countryCode = formData.get('countryCode')
     ? (formData.get('countryCode') as CartBuyerIdentityInput['countryCode'])
     : null;
 
+  let result: {
+    cart: CartType;
+    errors?: CartUserError[] | UserError[];
+  };
+
   switch (cartAction) {
     case 'ADD_TO_CART':
+      const lines = formData.get('lines')
+        ? (JSON.parse(String(formData.get('lines'))) as CartLineInput[])
+        : ([] as CartLineInput[]);
+      invariant(lines.length, 'No lines to add');
+
       //! Flow A — no previous cart, create and add line(s)
       if (!cartId) {
-        const {cart, errors} = await cartCreate({
+        result = await cartCreate({
           input: countryCode ? {lines, buyerIdentity: {countryCode}} : {lines},
           storefront,
         });
 
         // cart created - we only need a Set-Cookie header if we're creating
-        session.set('cartId', cart.id);
+        session.set('cartId', result.cart.id);
         headers.set('Set-Cookie', await session.commit());
-
-        return json({cart, errors}, {headers});
+      } else {
+        //! Flow B — add line(s) to existing cart
+        result = await cartAdd({
+          cartId,
+          lines,
+          storefront,
+        });
       }
+      break;
+    case 'REMOVE_FROM_CART':
+      const lineIds = formData.get('linesIds')
+        ? (JSON.parse(String(formData.get('linesIds'))) as CartType['id'][])
+        : ([] as CartType['id'][]);
+      invariant(lineIds.length, 'No lines to remove');
 
-      //! Flow B — add line(s) to existing cart
-      const {cart, errors} = await cartAdd({
+      result = await cartRemove({
         cartId,
-        lines,
+        lineIds,
         storefront,
       });
 
-      return json({cart, errors}, {headers});
       break;
+    case 'UPDATE_DISCOUNT':
+      invariant(cartId, 'Missing cartId');
+
+      const formDiscountCodes = formData.getAll('discountCodes');
+      invariant(formDiscountCodes, 'Missing discountCodes');
+      const discountCodes = (formDiscountCodes || []) as string[];
+
+      result = await cartDiscountCodesUpdate({
+        cartId,
+        discountCodes,
+        storefront,
+      });
+      break;
+    default:
+      invariant(false, `${cartAction} action is not defined`);
   }
-  invariant(false, `${cartAction} action is not defined`);
+
+  const redirectTo = formData.get('redirectTo') ?? null;
+  if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
+    headers.set('Location', redirectTo);
+  }
+
+  const {cart, errors} = result;
+  return json({cart, errors}, {headers});
 }
 
 export default function CartRoute() {

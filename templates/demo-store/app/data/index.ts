@@ -492,6 +492,66 @@ export async function cartAdd({
   return cartLinesAdd;
 }
 
+const REMOVE_LINE_ITEMS_MUTATION = `#graphql
+  mutation ($cartId: ID!, $lineIds: [ID!]!, $language: LanguageCode, $country: CountryCode)
+  @inContext(country: $country, language: $language) {
+    cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+      cart {
+        id
+        totalQuantity
+        lines(first: 100) {
+          edges {
+            node {
+              id
+              quantity
+              merchandise {
+                ...on ProductVariant {
+                  id
+                }
+              }
+            }
+          }
+        }
+      }
+      errors: userErrors {
+        message
+        field
+        code
+      }
+    }
+  }
+`;
+
+/**
+ * Create a cart with line(s) mutation
+ * @param cartId the current cart id
+ * @param lineIds [ID!]! an array of cart line ids to remove
+ * @see https://shopify.dev/api/storefront/2022-07/mutations/cartlinesremove
+ * @returns mutated cart
+ * @preserve
+ */
+export async function cartRemove({
+  cartId,
+  lineIds,
+  storefront,
+}: {
+  cartId: string;
+  lineIds: Cart['id'][];
+  storefront: HydrogenContext['storefront'];
+}) {
+  const {cartLinesRemove} = await storefront.mutate<{
+    cartLinesRemove: {cart: Cart; errors: UserError[]};
+  }>(REMOVE_LINE_ITEMS_MUTATION, {
+    variables: {
+      cartId,
+      lineIds,
+    },
+  });
+
+  invariant(cartLinesRemove, 'No data returned from remove lines mutation');
+  return cartLinesRemove;
+}
+
 const DISCOUNT_CODES_UPDATE = `#graphql
   mutation cartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!], $country: CountryCode = ZZ)
     @inContext(country: $country) {

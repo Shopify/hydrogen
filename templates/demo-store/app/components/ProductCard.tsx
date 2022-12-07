@@ -5,17 +5,18 @@ import {
   Money,
   useMoney,
 } from '@shopify/hydrogen-react';
-import {Text, Link} from '~/components';
+import {Text, Link, Button} from '~/components';
 import {isDiscounted, isNewArrival, variantToCartLine} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
 import type {
+  CartLineInput,
   MoneyV2,
   Product,
   ProductVariant,
   ProductVariantConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {SerializeFrom} from '@remix-run/server-runtime';
-// import {CartLinesAddForm} from '.hydrogen/cart';
+import {useFetcher, useMatches} from '@remix-run/react';
 
 export function ProductCard({
   product,
@@ -104,25 +105,36 @@ export function ProductCard({
           </div>
         </div>
       </Link>
-      {/* {firstVariant?.id && (
-        <CartLinesAddForm
+      {firstVariant?.id && (
+        <AddToCartButton
           lines={[
             {
               quantity: 1,
               merchandiseId: firstVariant.id,
             },
           ]}
-          optimisticLines={[
-            variantToCartLine({
-              variant: firstVariant,
-              quantity: 1,
-            }),
-          ]}
-        >
-          {() => <button type="submit">Add to Cart</button>}
-        </CartLinesAddForm>
-      )} */}
+        />
+      )}
     </div>
+  );
+}
+
+export function AddToCartButton({lines}: {lines: CartLineInput[]}) {
+  const [root] = useMatches();
+  const selectedLocale = root?.data?.selectedLocale;
+  const fetcher = useFetcher();
+
+  return (
+    <fetcher.Form action="/cart" method="post">
+      <input type="hidden" name="cartAction" value="ADD_TO_CART" />
+      <input type="hidden" name="countryCode" value={selectedLocale.country} />
+      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+      <Button as="button" width="full" type="submit" variant="secondary">
+        <Text as="span" className="flex items-center justify-center gap-2">
+          Add to Bag
+        </Text>
+      </Button>
+    </fetcher.Form>
   );
 }
 

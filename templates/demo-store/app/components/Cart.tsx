@@ -14,8 +14,10 @@ import {getInputStyleClasses} from '~/lib/utils';
 import type {
   Cart as CartType,
   CartCost,
+  CartDiscountCode,
   CartLine,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {useFetcher, useMatches} from '@remix-run/react';
 // import {
 //   CartDiscountCodesUpdateForm,
 //   CartLinesRemoveForm,
@@ -136,6 +138,31 @@ function CartDiscounts({
     </>
   );
 }
+
+// function RemoveDiscountForm(discountCode: CartDiscountCode, discountCodes: CartType['discountCodes']) {
+//   const fetcher = useFetcher();
+//   const keepCodes = discountCodes.filter(c => c.code !== discountCode.code)
+//   return (
+//     <fetcher.Form action="/cart" method="post">
+//       <input type="hidden" name="cartAction" value="UPDATE_DISCOUNT" />
+//       <input
+//         type="hidden"
+//         name="discountCodes"
+//         value={JSON.stringify(keepCodes)}
+//       />
+//       <Button
+//         as="button"
+//         width="full"
+//         type="submit"
+//         variant="secondary"
+//       >
+//         <Text as="span" className="flex items-center justify-center gap-2">
+//           Add to Bag
+//         </Text>
+//       </Button>
+//     </fetcher.Form>
+//   );
+// }
 
 function CartLines({
   layout = 'drawer',
@@ -284,23 +311,21 @@ function CartLineItem({
 }
 
 function CartLineRemove({lineIds}: {lineIds: CartLine['id'][]}) {
-  return null;
-  // return (
-  // <CartLinesRemoveForm lineIds={lineIds}>
-  //   {({state}) => (
-  //     <button
-  //       className="flex items-center justify-center w-10 h-10 border rounded"
-  //       type="submit"
-  //       disabled={state !== 'idle'}
-  //     >
-  //       <span className="sr-only">
-  //         {state === 'loading' ? 'Removing' : 'Remove'}
-  //       </span>
-  //       <IconRemove aria-hidden="true" />
-  //     </button>
-  //   )}
-  // </CartLinesRemoveForm>
-  // );
+  const fetcher = useFetcher();
+
+  return (
+    <fetcher.Form action="/cart" method="post">
+      <input type="hidden" name="cartAction" value="REMOVE_FROM_CART" />
+      <input type="hidden" name="linesIds" value={JSON.stringify(lineIds)} />
+      <button
+        className="flex items-center justify-center w-10 h-10 border rounded"
+        type="submit"
+      >
+        <span className="sr-only">Remove</span>
+        <IconRemove aria-hidden="true" />
+      </button>
+    </fetcher.Form>
+  );
 }
 
 function CartLineQuantityAdjust({
