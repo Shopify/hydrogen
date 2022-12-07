@@ -9,8 +9,14 @@ import {
   type Session,
 } from '@remix-run/oxygen';
 
+/**
+ * A global `process` object is only available during build to access NODE_ENV.
+ */
 declare const process: {env: {NODE_ENV: string}};
 
+/**
+ * Export a fetch handler in module format.
+ */
 export default {
   async fetch(
     request: Request,
@@ -18,20 +24,28 @@ export default {
     executionContext: ExecutionContext,
   ): Promise<Response> {
     try {
+      /**
+       * Open a cache instance in the worker and a custom session instance.
+       */
       if (!env?.SESSION_SECRET) {
         throw new Error('SESSION_SECRET environment variable is not set');
       }
 
-      const waitUntil = executionContext.waitUntil.bind(executionContext);
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),
         HydrogenSession.init(request, [env.SESSION_SECRET]),
       ]);
 
+      /**
+       * Create a Remix request handler and pass
+       * Hydrogen's Storefront client to the loader context.
+       */
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
         getLoadContext(request) {
+          const waitUntil = executionContext.waitUntil.bind(executionContext);
+
           const {storefront, fetch} = createStorefrontClient(
             {
               publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
