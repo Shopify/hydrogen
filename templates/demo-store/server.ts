@@ -60,11 +60,12 @@ export default {
             waitUntil,
             storefront,
             fetch,
+            env,
           };
         },
       });
 
-      return await handleRequest(request, {env, context: executionContext});
+      return await handleRequest(request);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
