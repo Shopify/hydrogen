@@ -21,7 +21,7 @@ export default class Build extends Command {
     }),
     entry: Flags.string({
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
-      default: 'oxygen.ts',
+      default: 'server.ts',
     }),
     minify: Flags.boolean({
       description: 'Minify the build output',
