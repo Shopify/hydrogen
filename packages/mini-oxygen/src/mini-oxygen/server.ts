@@ -50,41 +50,41 @@ function createAssetMiddleware({
     }
 
     if (proxyServer !== '' && !req.headers['mini-oxygen-proxy']) {
-      return sendProxyRequest(req, res, proxyServer);
+      return next();
+    }
+
+    const url = new URL(req.url || '/', `http://${req.headers.host}`);
+    let filePath: string;
+
+    if (publicPath === undefined || publicPath === '') {
+      const pathname = url.pathname.substring(1);
+      if (pathname === '') {
+        return next();
+      }
+
+      filePath = path.join(assetsDir, pathname);
     } else {
-      const url = new URL(req.url || '/', `http://${req.headers.host}`);
-      let filePath: string;
-
-      if (publicPath === undefined || publicPath === '') {
-        const pathname = url.pathname.substring(1);
-        if (pathname === '') {
-          return next();
-        }
-
+      let pathname = url.pathname;
+      // publicPath must always have a trailing slash
+      if (pathname.startsWith(publicPath)) {
+        pathname = pathname.substring(publicPath.length);
         filePath = path.join(assetsDir, pathname);
       } else {
-        let pathname = url.pathname;
-        // publicPath must always have a trailing slash
-        if (pathname.startsWith(publicPath)) {
-          pathname = pathname.substring(publicPath.length);
-          filePath = path.join(assetsDir, pathname);
-        } else {
-          return next();
-        }
+        return next();
       }
+    }
 
-      if (fs.lstatSync(filePath, {throwIfNoEntry: false})?.isFile()) {
-        const rs = fs.createReadStream(filePath);
-        const {size} = fs.statSync(filePath);
+    if (fs.lstatSync(filePath, {throwIfNoEntry: false})?.isFile()) {
+      const rs = fs.createReadStream(filePath);
+      const {size} = fs.statSync(filePath);
 
-        res.setHeader(
-          'Content-Type',
-          mime.getType(filePath) || 'application/octet-stream',
-        );
-        res.setHeader('Content-Length', size);
+      res.setHeader(
+        'Content-Type',
+        mime.getType(filePath) || 'application/octet-stream',
+      );
+      res.setHeader('Content-Length', size);
 
-        return rs.pipe(res);
-      }
+      return rs.pipe(res);
     }
     next();
   };
@@ -124,7 +124,8 @@ function createRequestMiddleware(
     onRequest,
     onResponse,
     onResponseError,
-  }: MiniOxygenServerHooks & Pick<MiniOxygenServerOptions, 'autoReload' | 'proxyServer'>,
+  }: MiniOxygenServerHooks &
+    Pick<MiniOxygenServerOptions, 'autoReload' | 'proxyServer'>,
 ): NextHandleFunction {
   return async (req, res) => {
     if (proxyServer !== '' && !req.headers['mini-oxygen-proxy']) {
@@ -228,10 +229,11 @@ function sendProxyRequest(
       reject(error);
     });
   });
-  proxyRequest.catch((err) => {
+  proxyRequest.catch((err: Error) => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     res.writeHead(500, {'Content-Type': 'text/plain; charset=UTF-8'});
-    res.end(err.stack, 'utf8');
+    const errorMessage = err.stack ? err.stack : err.message;
+    res.end(errorMessage, 'utf8');
     return res;
   });
 }
@@ -257,7 +259,7 @@ export function createServer(
   }
 
   app.use(bodyParser.raw({type: '*/*'}));
-  app.use(createRequestMiddleware(mf, {autoReload, proxyServer,...hooks}));
+  app.use(createRequestMiddleware(mf, {autoReload, proxyServer, ...hooks}));
 
   const server = http.createServer(app);
 

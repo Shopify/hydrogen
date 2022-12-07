@@ -100,6 +100,7 @@ const DEFAULTS: Required<
             return true;
           }
           return (
+            !/^https?:\/\//.test(input) &&
             input.split(':').length === 2 &&
             !isNaN(parseInt(input.split(':')[1], 10))
           );
