@@ -6,7 +6,7 @@ const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
 
 const hook: Hook<'init'> = async function (options) {
   if (
-    options.id &&
+    !options.id ||
     !['hydrogen:dev', 'hydrogen:preview'].includes(options.id)
   ) {
     return;
