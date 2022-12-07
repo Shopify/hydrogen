@@ -1,48 +1,63 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
-import {createRequestHandler} from '@shopify/hydrogen-remix';
+import {createStorefrontClient} from '@shopify/hydrogen-remix';
+import {
+  createRequestHandler,
+  getBuyerIp,
+  createCookieSessionStorage,
+  type SessionStorage,
+  type Session,
+} from '@remix-run/oxygen';
 
 declare const process: {env: {NODE_ENV: string}};
-
-const requestHandler = createRequestHandler({
-  build: remixBuild,
-  mode: process.env.NODE_ENV,
-  shouldProxyAsset: () => false,
-  shouldProxyOnlineStore: (request: Request) =>
-    new URL(request.url).pathname === '/proxy' ? '/pages/about' : null,
-});
 
 export default {
   async fetch(
     request: Request,
-    env: Env,
-    context: ExecutionContext,
+    env: Record<string, string>,
+    executionContext: ExecutionContext,
   ): Promise<Response> {
-    if (!env?.SESSION_SECRET) {
-      // eslint-disable-next-line no-console
-      console.error('SESSION_SECRET environment variable is not set');
-      return new Response('Internal Server Error', {status: 500});
-    }
-
-    const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
-
     try {
-      return await requestHandler(
-        request,
-        {
-          env,
-          context,
-          storefront: {
-            publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
-            storeDomain: env.SHOPIFY_STORE_DOMAIN,
-            storefrontApiVersion: '2022-10',
-            i18n: {language: 'EN', country: 'US'},
-          },
+      if (!env?.SESSION_SECRET) {
+        throw new Error('SESSION_SECRET environment variable is not set');
+      }
+
+      const waitUntil = executionContext.waitUntil.bind(executionContext);
+      const [cache, session] = await Promise.all([
+        caches.open('hydrogen'),
+        HydrogenSession.init(request, [env.SESSION_SECRET]),
+      ]);
+
+      const handleRequest = createRequestHandler({
+        build: remixBuild,
+        mode: process.env.NODE_ENV,
+        getLoadContext(request) {
+          const {storefront, fetch} = createStorefrontClient(
+            {
+              publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
+              storeDomain: env.SHOPIFY_STORE_DOMAIN,
+              storefrontApiVersion: '2022-10',
+              i18n: {language: 'EN', country: 'US'},
+            },
+            {
+              cache,
+              waitUntil,
+              buyerIp: getBuyerIp(request),
+            },
+          );
+
+          return {
+            cache,
+            session,
+            waitUntil,
+            storefront,
+            fetch,
+            env,
+          };
         },
-        {
-          session,
-        },
-      );
+      });
+
+      return await handleRequest(request);
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
@@ -51,18 +66,12 @@ export default {
   },
 };
 
-import {
-  createCookieSessionStorage,
-  type SessionStorage,
-  type Session,
-} from '@shopify/hydrogen-remix';
-
 /**
  * This is a custom session implementation for your Hydrogen shop.
  * Feel free to customize it to your needs, add helper methods, or
  * swap out the cookie-based implementation with something else!
  */
-export class HydrogenSession {
+class HydrogenSession {
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,

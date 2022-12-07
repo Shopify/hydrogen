@@ -1,4 +1,4 @@
-import type {EntryContext} from '@remix-run/cloudflare';
+import type {EntryContext} from '@remix-run/oxygen';
 import {RemixServer} from '@remix-run/react';
 import {renderToString} from 'react-dom/server';
 
