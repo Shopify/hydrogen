@@ -16,11 +16,11 @@ import type {
   CartCost,
   CartLine,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {
-  CartDiscountCodesUpdateForm,
-  CartLinesRemoveForm,
-  CartLinesUpdateForm,
-} from '.hydrogen/cart';
+// import {
+//   CartDiscountCodesUpdateForm,
+//   CartLinesRemoveForm,
+//   CartLinesUpdateForm,
+// } from '.hydrogen/cart';
 
 type Layouts = 'page' | 'drawer';
 
@@ -95,7 +95,7 @@ function CartDiscounts({
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
           >
-            <CartDiscountCodesUpdateForm
+            {/* <CartDiscountCodesUpdateForm
               className={hovered ? 'block' : 'hidden'}
               discountCodes={[]}
             >
@@ -107,14 +107,14 @@ function CartDiscounts({
                   />
                 </button>
               )}
-            </CartDiscountCodesUpdateForm>
+            </CartDiscountCodesUpdateForm> */}
             <Text as="dd">{codes}</Text>
           </div>
         </div>
       </dl>
 
       {/* No discounts, show an input to apply a discount */}
-      <CartDiscountCodesUpdateForm>
+      {/* <CartDiscountCodesUpdateForm>
         {() => (
           <div
             className={clsx(
@@ -132,7 +132,7 @@ function CartDiscounts({
             </button>
           </div>
         )}
-      </CartDiscountCodesUpdateForm>
+      </CartDiscountCodesUpdateForm> */}
     </>
   );
 }
@@ -284,22 +284,23 @@ function CartLineItem({
 }
 
 function CartLineRemove({lineIds}: {lineIds: CartLine['id'][]}) {
-  return (
-    <CartLinesRemoveForm lineIds={lineIds}>
-      {({state}) => (
-        <button
-          className="flex items-center justify-center w-10 h-10 border rounded"
-          type="submit"
-          disabled={state !== 'idle'}
-        >
-          <span className="sr-only">
-            {state === 'loading' ? 'Removing' : 'Remove'}
-          </span>
-          <IconRemove aria-hidden="true" />
-        </button>
-      )}
-    </CartLinesRemoveForm>
-  );
+  return null;
+  // return (
+  // <CartLinesRemoveForm lineIds={lineIds}>
+  //   {({state}) => (
+  //     <button
+  //       className="flex items-center justify-center w-10 h-10 border rounded"
+  //       type="submit"
+  //       disabled={state !== 'idle'}
+  //     >
+  //       <span className="sr-only">
+  //         {state === 'loading' ? 'Removing' : 'Remove'}
+  //       </span>
+  //       <IconRemove aria-hidden="true" />
+  //     </button>
+  //   )}
+  // </CartLinesRemoveForm>
+  // );
 }
 
 function CartLineQuantityAdjust({
@@ -320,7 +321,7 @@ function CartLineQuantityAdjust({
         Quantity, {quantity}
       </label>
       <div className="flex items-center border rounded">
-        <CartLinesUpdateForm lines={[{id: lineId, quantity: prevQuantity}]}>
+        {/* <CartLinesUpdateForm lines={[{id: lineId, quantity: prevQuantity}]}>
           {() => (
             <button
               name="decrease-quantity"
@@ -332,13 +333,13 @@ function CartLineQuantityAdjust({
               <span>&#8722;</span>
             </button>
           )}
-        </CartLinesUpdateForm>
+        </CartLinesUpdateForm> */}
 
         <div className="px-2 text-center" data-test="item-quantity">
           {quantity}
         </div>
 
-        <CartLinesUpdateForm lines={[{id: lineId, quantity: nextQuantity}]}>
+        {/* <CartLinesUpdateForm lines={[{id: lineId, quantity: nextQuantity}]}>
           {() => (
             <button
               className="w-10 h-10 transition text-primary/50 hover:text-primary"
@@ -350,7 +351,7 @@ function CartLineQuantityAdjust({
               <span>&#43;</span>
             </button>
           )}
-        </CartLinesUpdateForm>
+        </CartLinesUpdateForm> */}
       </div>
     </>
   );

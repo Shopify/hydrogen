@@ -1,5 +1,5 @@
 import {redirect, json, type LoaderArgs} from '@shopify/hydrogen-remix';
-import {cartCreate, cartDiscountCodesUpdate} from '../cart';
+import {cartCreate, cartDiscountCodesUpdate} from '~/data';
 
 /**
  * Automatically applies a discount found on the url
@@ -14,7 +14,7 @@ import {cartCreate, cartDiscountCodesUpdate} from '../cart';
  * @preserve
  */
 export async function loader({request, context, params}: LoaderArgs) {
-  const {session} = context;
+  const {session, storefront} = context;
   const {code} = params;
 
   const url = new URL(request.url);
@@ -34,7 +34,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   if (!cartId) {
     const {cart, errors: graphqlCartErrors} = await cartCreate({
       input: {},
-      context,
+      storefront,
     });
 
     if (graphqlCartErrors?.length) {
@@ -51,7 +51,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   await cartDiscountCodesUpdate({
     cartId,
     discountCodes: [code],
-    context,
+    storefront,
   });
 
   return redirect(redirectUrl, {headers});

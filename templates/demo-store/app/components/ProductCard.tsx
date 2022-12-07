@@ -15,7 +15,7 @@ import type {
   ProductVariantConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {SerializeFrom} from '@remix-run/server-runtime';
-import {CartLinesAddForm} from '.hydrogen/cart';
+// import {CartLinesAddForm} from '.hydrogen/cart';
 
 export function ProductCard({
   product,
@@ -104,7 +104,7 @@ export function ProductCard({
           </div>
         </div>
       </Link>
-      {firstVariant?.id && (
+      {/* {firstVariant?.id && (
         <CartLinesAddForm
           lines={[
             {
@@ -121,7 +121,7 @@ export function ProductCard({
         >
           {() => <button type="submit">Add to Cart</button>}
         </CartLinesAddForm>
-      )}
+      )} */}
     </div>
   );
 }

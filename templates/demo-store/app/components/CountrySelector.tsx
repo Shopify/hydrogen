@@ -2,7 +2,7 @@ import {useFetcher, useLocation, useMatches} from '@remix-run/react';
 import {Heading, Button, IconCheck} from '~/components';
 import {useCallback, useEffect, useRef} from 'react';
 import {useInView} from 'react-intersection-observer';
-import {CartBuyerIdentityUpdateForm} from '.hydrogen/cart';
+// import {CartBuyerIdentityUpdateForm} from '.hydrogen/cart';
 import type {Localizations, Locale} from '~/lib/type';
 import {DEFAULT_LOCALE} from '~/lib/utils';
 import clsx from 'clsx';
@@ -103,35 +103,36 @@ function Country({
   countryUrlPath: string;
   isSelected: boolean;
 }) {
-  return (
-    <CartBuyerIdentityUpdateForm
-      key={countryLocale.country}
-      redirectTo={countryUrlPath}
-      buyerIdentity={{
-        countryCode: countryLocale.country,
-      }}
-    >
-      {() => (
-        <Button
-          className={clsx([
-            'text-contrast dark:text-primary',
-            'bg-primary dark:bg-contrast w-full p-2 transition rounded flex justify-start',
-            'items-center text-left cursor-pointer py-2 px-4',
-          ])}
-          type="submit"
-          variant="primary"
-          onClick={closeDropdown}
-        >
-          {countryLocale.label}
-          {isSelected ? (
-            <span className="ml-2">
-              <IconCheck />
-            </span>
-          ) : null}
-        </Button>
-      )}
-    </CartBuyerIdentityUpdateForm>
-  );
+  return null;
+  // return (
+  //   <CartBuyerIdentityUpdateForm
+  //     key={countryLocale.country}
+  //     redirectTo={countryUrlPath}
+  //     buyerIdentity={{
+  //       countryCode: countryLocale.country,
+  //     }}
+  //   >
+  //     {() => (
+  //       <Button
+  //         className={clsx([
+  //           'text-contrast dark:text-primary',
+  //           'bg-primary dark:bg-contrast w-full p-2 transition rounded flex justify-start',
+  //           'items-center text-left cursor-pointer py-2 px-4',
+  //         ])}
+  //         type="submit"
+  //         variant="primary"
+  //         onClick={closeDropdown}
+  //       >
+  //         {countryLocale.label}
+  //         {isSelected ? (
+  //           <span className="ml-2">
+  //             <IconCheck />
+  //           </span>
+  //         ) : null}
+  //       </Button>
+  //     )}
+  //   </CartBuyerIdentityUpdateForm>
+  // );
 }
 
 function getCountryUrlPath({

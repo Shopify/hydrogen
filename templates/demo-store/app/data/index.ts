@@ -1,6 +1,11 @@
 import type {
   Cart,
-  CartLineUpdateInput,
+  CartInput,
+  CartLine,
+  CartLineInput,
+  CartUserError,
+  UserError,
+  CartBuyerIdentityInput,
   Shop,
   Order,
   CustomerAccessTokenCreatePayload,
@@ -361,6 +366,181 @@ export const COLLECTION_CONTENT_FRAGMENT = `#graphql
     }
   }
 `;
+
+/*
+  Cart ------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+*/
+
+const USER_ERROR_FRAGMENT = `#graphql
+  fragment ErrorFragment on CartUserError {
+    message
+    field
+    code
+  }
+`;
+
+const LINES_CART_FRAGMENT = `#graphql
+  fragment CartLinesFragment on Cart {
+    id
+    totalQuantity
+    lines(first: 100) {
+      edges {
+        node {
+          id
+          quantity
+          merchandise {
+            ...on ProductVariant {
+              id
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+//! @see: https://shopify.dev/api/storefront/2022-01/mutations/cartcreate
+const CREATE_CART_MUTATION = `#graphql
+  mutation ($input: CartInput!, $country: CountryCode = ZZ, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    cartCreate(input: $input) {
+      cart {
+        ...CartLinesFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+  ${LINES_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
+`;
+
+/**
+ * Create a cart with line(s) mutation
+ * @param input CartInput https://shopify.dev/api/storefront/2022-01/input-objects/CartInput
+ * @see https://shopify.dev/api/storefront/2022-01/mutations/cartcreate
+ * @returns result {cart, errors}
+ * @preserve
+ */
+export async function cartCreate({
+  input,
+  storefront,
+}: {
+  input: CartInput;
+  storefront: HydrogenContext['storefront'];
+}) {
+  const {cartCreate} = await storefront.mutate<{
+    cartCreate: {
+      cart: Cart;
+      errors: CartUserError[];
+    };
+    errors: UserError[];
+  }>(CREATE_CART_MUTATION, {
+    variables: {input},
+  });
+
+  invariant(cartCreate, 'No data returned from cartCreate mutation');
+
+  return cartCreate;
+}
+
+const ADD_LINES_MUTATION = `#graphql
+  mutation ($cartId: ID!, $lines: [CartLineInput!]!, $country: CountryCode = ZZ, $language: LanguageCode)
+  @inContext(country: $country, language: $language) {
+    cartLinesAdd(cartId: $cartId, lines: $lines) {
+      cart {
+        ...CartLinesFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+  ${LINES_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
+`;
+
+/**
+ * Storefront API cartLinesAdd mutation
+ * @param cartId
+ * @param lines [CartLineInput!]! https://shopify.dev/api/storefront/2022-01/input-objects/CartLineInput
+ * @see https://shopify.dev/api/storefront/2022-01/mutations/cartLinesAdd
+ * @returns result {cart, errors}
+ * @preserve
+ */
+export async function cartAdd({
+  cartId,
+  lines,
+  storefront,
+}: {
+  cartId: string;
+  lines: CartLineInput[];
+  storefront: HydrogenContext['storefront'];
+}) {
+  const {cartLinesAdd} = await storefront.mutate<{
+    cartLinesAdd: {
+      cart: Cart;
+      errors: CartUserError[];
+    };
+  }>(ADD_LINES_MUTATION, {
+    variables: {cartId, lines},
+  });
+
+  invariant(cartLinesAdd, 'No data returned from cartLinesAdd mutation');
+
+  return cartLinesAdd;
+}
+
+const DISCOUNT_CODES_UPDATE = `#graphql
+  mutation cartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!], $country: CountryCode = ZZ)
+    @inContext(country: $country) {
+    cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
+      cart {
+        id
+        discountCodes {
+          code
+        }
+      }
+      errors: userErrors {
+        field
+        message
+      }
+    }
+  }
+`;
+
+/**
+ * Mutation that updates the cart discounts
+ * @param discountCodes Array of discount codes
+ * @returns mutated cart
+ * @preserve
+ */
+export async function cartDiscountCodesUpdate({
+  cartId,
+  discountCodes,
+  storefront,
+}: {
+  cartId: string;
+  discountCodes: string[];
+  storefront: HydrogenContext['storefront'];
+}) {
+  const {cartDiscountCodesUpdate} = await storefront.mutate<{
+    cartDiscountCodesUpdate: {cart: Cart; errors: UserError[]};
+  }>(DISCOUNT_CODES_UPDATE, {
+    variables: {
+      cartId,
+      discountCodes,
+    },
+  });
+
+  invariant(
+    cartDiscountCodesUpdate,
+    'No data returned from the cartDiscountCodesUpdate mutation',
+  );
+
+  return cartDiscountCodesUpdate;
+}
 
 /*
   Account ------------------------------------------------------------------------------------------------------------------------------------------------------------------------

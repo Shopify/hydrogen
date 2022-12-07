@@ -12,6 +12,9 @@ import {
   useSearchParams,
   useLocation,
   useTransition,
+  Form,
+  useMatches,
+  useFetcher,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-react';
 import {
@@ -42,7 +45,6 @@ import {
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data'; /* @todo: we move these to app/graphql ? */
-import {CartLinesAddForm} from '.hydrogen/cart';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -340,12 +342,13 @@ function ProductOptions({
 function AddToCartButton({
   isOutOfStock,
   selectedVariant,
-  selectingVariant,
 }: {
   isOutOfStock: boolean;
   selectedVariant: ProductVariant;
-  selectingVariant: boolean;
 }) {
+  const [root] = useMatches();
+  const selectedLocale = root?.data?.selectedLocale;
+  const fetcher = useFetcher();
   const isOnSale =
     selectedVariant?.price?.amount &&
     selectedVariant?.compareAtPrice?.amount &&
@@ -358,65 +361,40 @@ function AddToCartButton({
     },
   ];
 
-  const optimisticLines = [
-    variantToCartLine({
-      quantity: 1,
-      variant: selectedVariant,
-    }),
-  ];
-
   return (
-    <CartLinesAddForm lines={lines} optimisticLines={optimisticLines}>
-      {({state, errors}) => {
-        const disabled = isOutOfStock || selectingVariant || state !== 'idle';
-        return (
-          <>
-            <Button
-              as="button"
-              width="full"
-              type="submit"
-              variant={isOutOfStock ? 'secondary' : 'primary'}
-              disabled={disabled}
-              data-test="add-to-cart"
-            >
-              {isOutOfStock ? (
-                <Text>Sold out</Text>
-              ) : (
-                <Text
-                  as="span"
-                  className="flex items-center justify-center gap-2"
-                >
-                  <span>
-                    {state === 'idle' ? 'Add to Bag' : 'Adding to Bag'}
-                  </span>{' '}
-                  <span>·</span>{' '}
-                  <Money
-                    withoutTrailingZeros
-                    data={selectedVariant?.price!}
-                    as="span"
-                  />
-                  {isOnSale && (
-                    <Money
-                      withoutTrailingZeros
-                      data={selectedVariant?.compareAtPrice!}
-                      as="span"
-                      className="opacity-50 strike"
-                    />
-                  )}
-                </Text>
-              )}
-            </Button>
-            {errors?.length ? (
-              <div className="flex flex-col">
-                {errors.map((error) => (
-                  <Text key={error.message}>{error.message}</Text>
-                ))}
-              </div>
-            ) : null}
-          </>
-        );
-      }}
-    </CartLinesAddForm>
+    <fetcher.Form action="/cart" method="post">
+      <input type="hidden" name="cartAction" value="ADD_TO_CART" />
+      <input type="hidden" name="countryCode" value={selectedLocale.country} />
+      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+      <Button
+        as="button"
+        width="full"
+        type="submit"
+        variant={isOutOfStock ? 'secondary' : 'primary'}
+        data-test="add-to-cart"
+      >
+        {isOutOfStock ? (
+          <Text>Sold out</Text>
+        ) : (
+          <Text as="span" className="flex items-center justify-center gap-2">
+            <span>Add to Bag</span> <span>·</span>{' '}
+            <Money
+              withoutTrailingZeros
+              data={selectedVariant?.price!}
+              as="span"
+            />
+            {isOnSale && (
+              <Money
+                withoutTrailingZeros
+                data={selectedVariant?.compareAtPrice!}
+                as="span"
+                className="opacity-50 strike"
+              />
+            )}
+          </Text>
+        )}
+      </Button>
+    </fetcher.Form>
   );
 }
 

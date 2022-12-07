@@ -26,7 +26,6 @@ import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
-import {useCartLinesAdding} from '.hydrogen/cart';
 
 export function Layout({
   children,
@@ -58,7 +57,6 @@ export function Layout({
 
 function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   const isHome = useIsHomePath();
-  const {linesAdding} = useCartLinesAdding();
 
   const {
     isOpen: isCartOpen,
@@ -73,10 +71,10 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   } = useDrawer();
 
   // toggle cart drawer when adding to cart
-  useEffect(() => {
-    if (isCartOpen || !linesAdding?.length) return;
-    openCart();
-  }, [linesAdding, isCartOpen, openCart]);
+  // useEffect(() => {
+  //   if (isCartOpen || !linesAdding?.length) return;
+  //   openCart();
+  // }, [linesAdding, isCartOpen, openCart]);
 
   return (
     <>
