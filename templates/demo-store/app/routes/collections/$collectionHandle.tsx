@@ -1,7 +1,5 @@
+import {json, type MetaFunction, type SerializeFrom} from '@remix-run/oxygen';
 import {
-  json,
-  type MetaFunction,
-  type SerializeFrom,
   type LoaderArgs,
   RESOURCE_TYPES,
   notFoundMaybeRedirect,

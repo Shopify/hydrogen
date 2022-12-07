@@ -1,8 +1,5 @@
-import {
-  type ActionFunction,
-  type AppLoadContext,
-  redirect,
-} from '@shopify/hydrogen-remix';
+import {redirect} from '@remix-run/oxygen';
+import type {ActionFunction, AppLoadContext} from '@shopify/hydrogen-remix';
 import {LoaderArgs} from '@remix-run/server-runtime';
 import {getLocaleFromRequest} from '~/lib/utils';
 

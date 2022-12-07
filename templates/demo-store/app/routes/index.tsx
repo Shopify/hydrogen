@@ -1,6 +1,6 @@
+import {defer} from '@remix-run/oxygen';
 import {
   type LoaderArgs,
-  defer,
   RESOURCE_TYPES,
   notFoundMaybeRedirect,
 } from '@shopify/hydrogen-remix';
