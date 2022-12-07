@@ -1,5 +1,5 @@
-import {MetaFunction} from '@remix-run/oxygen';
-import {type LoaderArgs, RESOURCE_TYPES} from '@shopify/hydrogen-remix';
+import {type MetaFunction, type LoaderArgs} from '@remix-run/oxygen';
+import {RESOURCE_TYPES} from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';

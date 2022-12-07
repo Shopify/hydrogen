@@ -3,12 +3,9 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LinksFunction,
-} from '@remix-run/oxygen';
-import {
-  RESOURCE_TYPES,
-  notFoundMaybeRedirect,
   type LoaderArgs,
-} from '@shopify/hydrogen-remix';
+} from '@remix-run/oxygen';
+import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen-react';
 import {Blog} from '@shopify/hydrogen-react/storefront-api-types';

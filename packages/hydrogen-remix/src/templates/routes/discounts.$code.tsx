@@ -15,6 +15,7 @@ import {cartCreate, cartDiscountCodesUpdate} from '../cart';
  * @preserve
  */
 export async function loader({request, context, params}: LoaderArgs) {
+  // N.B. This route will probably be removed in the future.
   const session = context.session as any;
   const {code} = params;
 
