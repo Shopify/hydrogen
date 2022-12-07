@@ -232,8 +232,7 @@ function sendProxyRequest(
   proxyRequest.catch((err: Error) => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     res.writeHead(500, {'Content-Type': 'text/plain; charset=UTF-8'});
-    const errorMessage = err.stack ? err.stack : err.message;
-    res.end(errorMessage, 'utf8');
+    res.end(err.stack, 'utf8');
     return res;
   });
 }
