@@ -7,7 +7,6 @@ import {HydrogenSession} from '~/lib/session.server';
 
 /**
  * Declare local additions to `AppLoadContext` to include the session utilities we injected in `server.ts`.
- * Note that additional `HydrogenContext` properties are already included via `@shopify/hydrogen-remix`.
  */
 declare module '@shopify/hydrogen-remix' {
   export interface AppLoadContext {
