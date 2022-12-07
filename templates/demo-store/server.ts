@@ -1,8 +1,11 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
 import {createRequestHandler, getBuyerIp} from '@remix-run/oxygen';
-import {createStorefrontClient} from '@shopify/hydrogen';
-import {proxyLiquidRoute} from '@shopify/hydrogen-remix';
+import {
+  type AppLoadContext,
+  createStorefrontClient,
+  proxyLiquidRoute,
+} from '@shopify/hydrogen-remix';
 import {getLocaleFromRequest} from '~/lib/utils';
 import {HydrogenSession} from '~/lib/session.server';
 
@@ -61,7 +64,7 @@ export default {
             storefront,
             fetch,
             env,
-          };
+          } as AppLoadContext;
         },
       });
 
