@@ -1,5 +1,6 @@
 import {redirect} from '@shopify/h2-test-remix-oxygen';
 import type {HydrogenContext} from '@shopify/h2-test-hydrogen';
+import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api-types';
 
 export async function notFoundMaybeRedirect(
   request: Request,
@@ -7,9 +8,7 @@ export async function notFoundMaybeRedirect(
 ): Promise<Response> {
   const {pathname, search} = new URL(request.url);
   const {urlRedirects} = await context.storefront.query<{
-    urlRedirects: {
-      edges: Array<{node: {target: string}}>;
-    };
+    urlRedirects: UrlRedirectConnection;
   }>(REDIRECT_QUERY, {
     variables: {
       url: pathname + search,
