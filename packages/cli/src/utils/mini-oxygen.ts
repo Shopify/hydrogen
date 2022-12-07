@@ -1,5 +1,7 @@
 import path from 'path';
 import miniOxygen from '@shopify/mini-oxygen';
+import {output} from '@shopify/cli-kit';
+import colors from '@shopify/cli-kit/node/colors';
 
 const miniOxygenPreview =
   miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
@@ -19,7 +21,7 @@ export async function startMiniOxygen({
   buildPathWorkerFile,
   buildPathClient,
 }: MiniOxygenOptions) {
-  await miniOxygenPreview({
+  const {port: actualPort} = await miniOxygenPreview({
     workerFile: buildPathWorkerFile,
     assetsDir: buildPathClient,
     publicPath: '',
@@ -35,5 +37,7 @@ export async function startMiniOxygen({
       : undefined,
   });
 
-  console.log(`🚥 MiniOxygen server started at http://localhost:${port}\n`);
+  console.log(
+    `🚥 MiniOxygen server started at http://localhost:${actualPort}\n`,
+  );
 }

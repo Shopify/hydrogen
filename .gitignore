@@ -4,6 +4,7 @@ node_modules
 .env
 .vscode
 .turbo
+.cache
 /test-results/
 /playwright-report/
 /playwright/.cache/
