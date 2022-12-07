@@ -3,7 +3,6 @@ import type {AppData, DataFunctionArgs} from '@shopify/h2-test-remix-oxygen';
 import type {Params} from '@remix-run/react';
 
 export * from '@shopify/h2-test-remix-oxygen';
-export {createRequestHandler} from './server';
 export * from '@shopify/h2-test-hydrogen';
 
 export {RESOURCE_TYPES, REQUIRED_RESOURCES} from './routing/types';
