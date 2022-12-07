@@ -7,7 +7,5 @@
   "access": "public",
   "baseBranch": "v0.x-2022-10",
   "updateInternalDependencies": "patch",
-  "ignore": [
-    "demo-store"
-  ]
+  "ignore": ["demo-store", "hello-world"]
 }
