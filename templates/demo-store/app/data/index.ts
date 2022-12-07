@@ -599,6 +599,69 @@ export async function cartUpdate({
   return cartLinesUpdate;
 }
 
+/**
+ * @see https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
+ * @preserve
+ */
+const UPDATE_CART_BUYER_COUNTRY = `#graphql
+ mutation(
+   $cartId: ID!
+   $buyerIdentity: CartBuyerIdentityInput!
+   $country: CountryCode = ZZ
+   $language: LanguageCode
+ ) @inContext(country: $country, language: $language) {
+   cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
+     cart {
+       id
+       buyerIdentity {
+         email
+         phone
+         countryCode
+       }
+     }
+     errors: userErrors {
+       message
+       field
+       code
+     }
+   }
+ }
+`;
+
+/**
+ * Mutation to update a cart buyerIdentity
+ * @param cartId  Cart['id']
+ * @param buyerIdentity CartBuyerIdentityInput
+ * @returns {cart: Cart; errors: UserError[]}
+ * @see API https://shopify.dev/api/storefront/2022-10/mutations/cartBuyerIdentityUpdate
+ * @preserve
+ */
+export async function cartUpdateBuyerIdentity({
+  cartId,
+  buyerIdentity,
+  storefront,
+}: {
+  cartId: string;
+  buyerIdentity: CartBuyerIdentityInput;
+  storefront: HydrogenContext['storefront'];
+}) {
+  const {cartBuyerIdentityUpdate} = await storefront.mutate<{
+    cartBuyerIdentityUpdate: {cart: Cart; errors: UserError[]};
+  }>(UPDATE_CART_BUYER_COUNTRY, {
+    variables: {
+      cartId,
+      buyerIdentity,
+    },
+  });
+
+  invariant(
+    cartBuyerIdentityUpdate,
+    'No data returned from cart buyer identity update mutation',
+  );
+
+  return cartBuyerIdentityUpdate;
+}
+
 const DISCOUNT_CODES_UPDATE = `#graphql
   mutation cartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!], $country: CountryCode = ZZ)
     @inContext(country: $country) {

@@ -26,6 +26,7 @@ import {Disclosure} from '@headlessui/react';
 import type {LayoutData} from '~/data';
 import {Suspense, useEffect, useMemo} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
+import {useCartFetchers} from '~/hooks/useCartFetchers';
 
 export function Layout({
   children,
@@ -70,11 +71,13 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
     closeDrawer: closeMenu,
   } = useDrawer();
 
+  const addToCartFetchers = useCartFetchers('ADD_TO_CART');
+
   // toggle cart drawer when adding to cart
-  // useEffect(() => {
-  //   if (isCartOpen || !linesAdding?.length) return;
-  //   openCart();
-  // }, [linesAdding, isCartOpen, openCart]);
+  useEffect(() => {
+    if (isCartOpen || !addToCartFetchers.length) return;
+    openCart();
+  }, [addToCartFetchers, isCartOpen, openCart]);
 
   return (
     <>

@@ -17,22 +17,25 @@ import {
   cartDiscountCodesUpdate,
   cartRemove,
   cartUpdate,
+  cartUpdateBuyerIdentity,
 } from '~/data';
-import {isLocalPath} from '~/lib/utils';
+import {isLocalPath, withoutFalsyProps} from '~/lib/utils';
 
 type CartAction =
   | 'ADD_TO_CART'
   | 'REMOVE_FROM_CART'
   | 'UPDATE_CART'
-  | 'UPDATE_DISCOUNT';
+  | 'UPDATE_DISCOUNT'
+  | 'UPDATE_BUYER_IDENTITY';
 
 export async function action({request, context}: ActionArgs) {
   const {session, storefront} = context;
   const headers = new Headers();
 
-  const [formData, cartId] = await Promise.all([
+  const [formData, cartId, customerAccessToken] = await Promise.all([
     request.formData(),
     session.get('cartId'),
+    session.get('customerAccessToken'),
   ]);
 
   const cartAction = formData.get('cartAction') as CartAction;
@@ -42,6 +45,7 @@ export async function action({request, context}: ActionArgs) {
     ? (formData.get('countryCode') as CartBuyerIdentityInput['countryCode'])
     : null;
 
+  let status = 200;
   let result: {
     cart: CartType;
     errors?: CartUserError[] | UserError[];
@@ -112,17 +116,42 @@ export async function action({request, context}: ActionArgs) {
         storefront,
       });
       break;
+    case 'UPDATE_BUYER_IDENTITY':
+      const buyerIdentity = formData.get('buyerIdentity')
+        ? (JSON.parse(
+            String(formData.get('buyerIdentity')),
+          ) as CartBuyerIdentityInput)
+        : ({} as CartBuyerIdentityInput);
+
+      //! if we have an existing cart, we update the identity,
+      //! else we create a new cart with the passed identity
+      result = cartId
+        ? await cartUpdateBuyerIdentity({
+            cartId,
+            buyerIdentity,
+            storefront,
+          })
+        : await cartCreate({
+            input: {buyerIdentity},
+            storefront,
+          });
+
+      session.set('cartId', result.cart.id);
+      headers.set('Set-Cookie', await session.commit());
+
+      break;
     default:
-      invariant(false, `${cartAction} action is not defined`);
+      invariant(false, `${cartAction} cart action is not defined`);
   }
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
+    status = 303;
     headers.set('Location', redirectTo);
   }
 
   const {cart, errors} = result;
-  return json({cart, errors}, {headers});
+  return json({cart, errors}, {status, headers});
 }
 
 export default function CartRoute() {

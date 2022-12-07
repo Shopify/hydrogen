@@ -6,6 +6,7 @@ import {useInView} from 'react-intersection-observer';
 import type {Localizations, Locale} from '~/lib/type';
 import {DEFAULT_LOCALE} from '~/lib/utils';
 import clsx from 'clsx';
+import {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 export function CountrySelector() {
   const [root] = useMatches();
@@ -103,36 +104,58 @@ function Country({
   countryUrlPath: string;
   isSelected: boolean;
 }) {
-  return null;
-  // return (
-  //   <CartBuyerIdentityUpdateForm
-  //     key={countryLocale.country}
-  //     redirectTo={countryUrlPath}
-  //     buyerIdentity={{
-  //       countryCode: countryLocale.country,
-  //     }}
-  //   >
-  //     {() => (
-  //       <Button
-  //         className={clsx([
-  //           'text-contrast dark:text-primary',
-  //           'bg-primary dark:bg-contrast w-full p-2 transition rounded flex justify-start',
-  //           'items-center text-left cursor-pointer py-2 px-4',
-  //         ])}
-  //         type="submit"
-  //         variant="primary"
-  //         onClick={closeDropdown}
-  //       >
-  //         {countryLocale.label}
-  //         {isSelected ? (
-  //           <span className="ml-2">
-  //             <IconCheck />
-  //           </span>
-  //         ) : null}
-  //       </Button>
-  //     )}
-  //   </CartBuyerIdentityUpdateForm>
-  // );
+  return (
+    <ChangeLocaleForm
+      key={countryLocale.country}
+      redirectTo={countryUrlPath}
+      buyerIdentity={{
+        countryCode: countryLocale.country,
+      }}
+    >
+      <Button
+        className={clsx([
+          'text-contrast dark:text-primary',
+          'bg-primary dark:bg-contrast w-full p-2 transition rounded flex justify-start',
+          'items-center text-left cursor-pointer py-2 px-4',
+        ])}
+        type="submit"
+        variant="primary"
+        onClick={closeDropdown}
+      >
+        {countryLocale.label}
+        {isSelected ? (
+          <span className="ml-2">
+            <IconCheck />
+          </span>
+        ) : null}
+      </Button>
+    </ChangeLocaleForm>
+  );
+}
+
+function ChangeLocaleForm({
+  children,
+  buyerIdentity,
+  redirectTo,
+}: {
+  children: React.ReactNode;
+  buyerIdentity: CartBuyerIdentityInput;
+  redirectTo: string;
+}) {
+  const fetcher = useFetcher();
+
+  return (
+    <fetcher.Form action="/cart" method="post">
+      <input type="hidden" name="cartAction" value="UPDATE_BUYER_IDENTITY" />
+      <input
+        type="hidden"
+        name="buyerIdentity"
+        value={JSON.stringify(buyerIdentity)}
+      />
+      <input type="hidden" name="redirectTo" value={redirectTo} />
+      {children}
+    </fetcher.Form>
+  );
 }
 
 function getCountryUrlPath({
