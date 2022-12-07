@@ -16,11 +16,12 @@ import type {
   CartCost,
   CartDiscountCode,
   CartLine,
+  CartLineInput,
+  CartLineUpdateInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useFetcher, useMatches} from '@remix-run/react';
 // import {
 //   CartDiscountCodesUpdateForm,
-//   CartLinesRemoveForm,
 //   CartLinesUpdateForm,
 // } from '.hydrogen/cart';
 
@@ -248,13 +249,7 @@ function CartSummary({
   );
 }
 
-function CartLineItem({
-  line,
-  optimistic = false,
-}: {
-  line: CartLine;
-  optimistic?: boolean;
-}) {
+function CartLineItem({line}: {line: CartLine}) {
   if (!line?.id) return null;
 
   const {id, quantity, merchandise} = line;
@@ -297,9 +292,9 @@ function CartLineItem({
 
           <div className="flex items-center gap-2">
             <div className="flex justify-start text-copy">
-              <CartLineQuantityAdjust line={line} optimistic={optimistic} />
+              <CartLineQuantityAdjust line={line} />
             </div>
-            <CartLineRemove lineIds={[id]} />
+            <ItemRemoveButton lineIds={[id]} />
           </div>
         </div>
         <Text>
@@ -310,7 +305,7 @@ function CartLineItem({
   );
 }
 
-function CartLineRemove({lineIds}: {lineIds: CartLine['id'][]}) {
+function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
   const fetcher = useFetcher();
 
   return (
@@ -328,13 +323,7 @@ function CartLineRemove({lineIds}: {lineIds: CartLine['id'][]}) {
   );
 }
 
-function CartLineQuantityAdjust({
-  line,
-  optimistic,
-}: {
-  optimistic: boolean;
-  line: CartLine;
-}) {
+function CartLineQuantityAdjust({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
@@ -346,39 +335,52 @@ function CartLineQuantityAdjust({
         Quantity, {quantity}
       </label>
       <div className="flex items-center border rounded">
-        {/* <CartLinesUpdateForm lines={[{id: lineId, quantity: prevQuantity}]}>
-          {() => (
-            <button
-              name="decrease-quantity"
-              aria-label="Decrease quantity"
-              className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
-              value={prevQuantity}
-              disabled={quantity <= 1 || optimistic}
-            >
-              <span>&#8722;</span>
-            </button>
-          )}
-        </CartLinesUpdateForm> */}
+        <UpdateCartButton lines={[{id: lineId, quantity: prevQuantity}]}>
+          <button
+            name="decrease-quantity"
+            aria-label="Decrease quantity"
+            className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
+            value={prevQuantity}
+            disabled={quantity <= 1}
+          >
+            <span>&#8722;</span>
+          </button>
+        </UpdateCartButton>
 
         <div className="px-2 text-center" data-test="item-quantity">
           {quantity}
         </div>
 
-        {/* <CartLinesUpdateForm lines={[{id: lineId, quantity: nextQuantity}]}>
-          {() => (
-            <button
-              className="w-10 h-10 transition text-primary/50 hover:text-primary"
-              name="increase-quantity"
-              value={nextQuantity}
-              aria-label="Increase quantity"
-              disabled={optimistic}
-            >
-              <span>&#43;</span>
-            </button>
-          )}
-        </CartLinesUpdateForm> */}
+        <UpdateCartButton lines={[{id: lineId, quantity: nextQuantity}]}>
+          <button
+            className="w-10 h-10 transition text-primary/50 hover:text-primary"
+            name="increase-quantity"
+            value={nextQuantity}
+            aria-label="Increase quantity"
+          >
+            <span>&#43;</span>
+          </button>
+        </UpdateCartButton>
       </div>
     </>
+  );
+}
+
+function UpdateCartButton({
+  children,
+  lines,
+}: {
+  children: React.ReactNode;
+  lines: CartLineUpdateInput[];
+}) {
+  const fetcher = useFetcher();
+
+  return (
+    <fetcher.Form action="/cart" method="post">
+      <input type="hidden" name="cartAction" value="UPDATE_CART" />
+      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+      {children}
+    </fetcher.Form>
   );
 }
 

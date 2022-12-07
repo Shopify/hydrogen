@@ -3,6 +3,7 @@ import type {
   CartInput,
   CartLine,
   CartLineInput,
+  CartLineUpdateInput,
   CartUserError,
   UserError,
   CartBuyerIdentityInput,
@@ -550,6 +551,52 @@ export async function cartRemove({
 
   invariant(cartLinesRemove, 'No data returned from remove lines mutation');
   return cartLinesRemove;
+}
+
+const LINES_UPDATE_MUTATION = `#graphql
+  ${LINES_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
+  mutation ($cartId: ID!, $lines: [CartLineUpdateInput!]!, $language: LanguageCode, $country: CountryCode)
+  @inContext(country: $country, language: $language) {
+    cartLinesUpdate(cartId: $cartId, lines: $lines) {
+      cart {
+        ...CartLinesFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+`;
+
+/**
+ * Update cart line(s) mutation
+ * @param cartId the current cart id
+ * @param lineIds [ID!]! an array of cart line ids to remove
+ * @see https://shopify.dev/api/storefront/2022-07/mutations/cartlinesremove
+ * @returns mutated cart
+ * @preserve
+ */
+export async function cartUpdate({
+  cartId,
+  lines,
+  storefront,
+}: {
+  cartId: string;
+  lines: CartLineUpdateInput[];
+  storefront: HydrogenContext['storefront'];
+}) {
+  const {cartLinesUpdate} = await storefront.mutate<{
+    cartLinesUpdate: {cart: Cart; errors: UserError[]};
+  }>(LINES_UPDATE_MUTATION, {
+    variables: {cartId, lines},
+  });
+
+  invariant(
+    cartLinesUpdate,
+    'No data returned from update lines items mutation',
+  );
+  return cartLinesUpdate;
 }
 
 const DISCOUNT_CODES_UPDATE = `#graphql

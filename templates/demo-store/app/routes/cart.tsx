@@ -9,11 +9,22 @@ import type {
   Cart as CartType,
   UserError,
   CartUserError,
+  CartLineUpdateInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {cartCreate, cartAdd, cartDiscountCodesUpdate, cartRemove} from '~/data';
+import {
+  cartCreate,
+  cartAdd,
+  cartDiscountCodesUpdate,
+  cartRemove,
+  cartUpdate,
+} from '~/data';
 import {isLocalPath} from '~/lib/utils';
 
-type CartAction = 'ADD_TO_CART' | 'REMOVE_FROM_CART' | 'UPDATE_DISCOUNT';
+type CartAction =
+  | 'ADD_TO_CART'
+  | 'REMOVE_FROM_CART'
+  | 'UPDATE_CART'
+  | 'UPDATE_DISCOUNT';
 
 export async function action({request, context}: ActionArgs) {
   const {session, storefront} = context;
@@ -71,6 +82,19 @@ export async function action({request, context}: ActionArgs) {
       result = await cartRemove({
         cartId,
         lineIds,
+        storefront,
+      });
+
+      break;
+    case 'UPDATE_CART':
+      const updateLines = formData.get('lines')
+        ? (JSON.parse(String(formData.get('lines'))) as CartLineUpdateInput[])
+        : ([] as CartLineUpdateInput[]);
+      invariant(updateLines.length, 'No lines to update');
+
+      result = await cartUpdate({
+        cartId,
+        lines: updateLines,
         storefront,
       });
 
