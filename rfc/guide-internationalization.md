@@ -2,7 +2,7 @@
 
 ## Change your default localization
 
-1. In your `oxygen.ts`, update `i18n`'s `language` and `country` to your locale preference
+1. In your `server.ts`, update `i18n`'s `language` and `country` to your locale preference
 
    ```jsx
    return await requestHandler(
@@ -104,7 +104,7 @@
    }
    ```
 
-2. In your `oxygen.ts`, update `i18n` to the result of the utilities function
+2. In your `server.ts`, update `i18n` to the result of the utilities function
 
    ```jsx
    return await requestHandler(
