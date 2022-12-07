@@ -28,6 +28,9 @@
   ],
   "oclif": {
     "commands": "dist/commands",
+    "hooks": {
+      "init": "./dist/hooks/init.js"
+    },
     "topics": {
       "hydrogen": {
         "description": "Hydrogen commands"
