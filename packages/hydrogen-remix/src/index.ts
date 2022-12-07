@@ -1,13 +1,16 @@
-import type {HydrogenContext} from '@shopify/h2-test-hydrogen';
-import type {AppData, DataFunctionArgs} from '@shopify/h2-test-remix-oxygen';
+import type {StorefrontClient} from '@shopify/h2-test-hydrogen';
+import type {AppData, DataFunctionArgs} from '@remix-run/server-runtime';
 import type {Params} from '@remix-run/react';
 
-export * from '@shopify/h2-test-remix-oxygen';
 export * from '@shopify/h2-test-hydrogen';
 
 export {RESOURCE_TYPES, REQUIRED_RESOURCES} from './routing/types';
 export {notFoundMaybeRedirect} from './routing/redirect';
 export {proxyLiquidRoute} from './routing/proxy';
+
+export type HydrogenContext = StorefrontClient & {
+  [key: string]: unknown;
+};
 
 export type LoaderArgs = DataFunctionArgs & {
   request: Request;
