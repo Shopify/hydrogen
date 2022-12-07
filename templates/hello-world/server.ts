@@ -1,7 +1,6 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
 import {createRequestHandler} from '@shopify/hydrogen-remix';
-import {getLocaleFromRequest} from './app/lib/i18n';
 
 declare const process: {env: {NODE_ENV: string}};
 
@@ -37,7 +36,7 @@ export default {
             publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
             storeDomain: env.SHOPIFY_STORE_DOMAIN,
             storefrontApiVersion: '2022-10',
-            i18n: getLocaleFromRequest(request),
+            i18n: {language: 'EN', country: 'US'},
           },
         },
         {

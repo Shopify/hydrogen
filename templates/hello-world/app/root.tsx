@@ -17,7 +17,6 @@ import {Layout} from '~/components';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
-import {DEFAULT_LOCALE, getLocaleFromRequest} from './lib/i18n';
 import {Cart, Shop} from '@shopify/hydrogen-react/storefront-api-types';
 
 export const links: LinksFunction = () => {
@@ -43,7 +42,7 @@ export const meta: MetaFunction = (data) => ({
 export async function loader({context, request}: LoaderArgs) {
   const cartId = await context.session.get('cartId');
 
-  const [cart, layout, selectedLocale] = await Promise.all([
+  const [cart, layout] = await Promise.all([
     cartId
       ? (
           await context.storefront.query<{cart: Cart}>(CART_QUERY, {
@@ -53,13 +52,11 @@ export async function loader({context, request}: LoaderArgs) {
         ).cart
       : null,
     await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY),
-    getLocaleFromRequest(request),
   ]);
 
   return defer({
     cart,
     layout,
-    selectedLocale,
   });
 }
 
@@ -69,7 +66,7 @@ export default function App() {
   const {name, description} = data.layout.shop;
 
   return (
-    <html lang={DEFAULT_LOCALE.label}>
+    <html lang="en">
       <head>
         <Meta />
         <Links />
@@ -86,8 +83,7 @@ export default function App() {
 }
 
 const CART_QUERY = `#graphql
-  query CartQuery($cartId: ID!, $country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
+  query CartQuery($cartId: ID!) {
     cart(id: $cartId) {
       ...CartFragment
     }
@@ -200,13 +196,10 @@ const CART_QUERY = `#graphql
 `;
 
 const LAYOUT_QUERY = `#graphql
-  query layout(
-    $language: LanguageCode
-  ) @inContext(language: $language) {
+  query layout {
     shop {
       name
       description
     }
-
   }
 `;
