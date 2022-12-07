@@ -3,8 +3,8 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "shopify hydrogen build",
-    "dev": "shopify hydrogen dev",
+    "build": "shopify hydrogen build --entry ./server",
+    "dev": "shopify hydrogen dev --entry ./server",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit"
