@@ -2,7 +2,6 @@
 import * as remixBuild from '@remix-run/dev/server-build';
 import {createRequestHandler, getBuyerIp} from '@remix-run/oxygen';
 import {
-  type AppLoadContext,
   createStorefrontClient,
   proxyLiquidRoute,
 } from '@shopify/hydrogen-remix';
@@ -81,7 +80,7 @@ export default {
             storefront,
             fetch,
             env,
-          } as AppLoadContext;
+          };
         },
       });
 

@@ -1,9 +1,11 @@
-import {type MetaFunction, redirect, json} from '@remix-run/oxygen';
 import {
+  type MetaFunction,
+  redirect,
+  json,
   type ActionFunction,
   type LoaderArgs,
-  isStorefrontApiError,
-} from '@shopify/hydrogen-remix';
+} from '@remix-run/oxygen';
+import {isStorefrontApiError} from '@shopify/hydrogen-remix';
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
 import {login, registerCustomer} from '~/data';

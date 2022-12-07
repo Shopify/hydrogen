@@ -1,9 +1,10 @@
-import {json, type MetaFunction, type SerializeFrom} from '@remix-run/oxygen';
 import {
+  json,
+  type MetaFunction,
+  type SerializeFrom,
   type LoaderArgs,
-  RESOURCE_TYPES,
-  notFoundMaybeRedirect,
-} from '@shopify/hydrogen-remix';
+} from '@remix-run/oxygen';
+import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
