@@ -115,15 +115,28 @@ The `notFoundMaybeRedirect` function also automatically handles a `return_to` qu
 It is easy to migrate from the online store to a Hydrogen custom storefront. Hydrogen can host some routes while proxying other routes to the online store. _Proxying is only supported on Oxygen, because proxying relies on privileged signed headers._ Configuring proxying is done within the `server.ts`:
 
 ```ts
-import {createRequestHandler} from '@shopify/hydrogen-remix';
+import {proxyLiquidRoute} from '@shopify/hydrogen-remix';
 
-const requestHandler = createRequestHandler({
-  // Before Hydrogen renders each request, it is tested if it should be proxied.
-  // Return a string for the proxy destination. Return null or undefined to not proxy.
-  // This example would proxy https://hydrogen.shop/proxy -> https://hydrogen-preview.myshopify.com/pages/about
-  shouldProxyOnlineStore: (request: Request) =>
-    new URL(request.url).pathname === '/proxy' ? '/pages/about' : null,
-});
+export default {
+  fetch(request, env, executionContext) {
+    // Before Hydrogen renders each request, it is tested if it should be proxied.
+    // Return a string for the proxy destination. Return null or undefined to not proxy.
+    // This example would proxy https://hydrogen.shop/proxy -> https://hydrogen-preview.myshopify.com/pages/about
+    const onlineStoreProxy =
+      new URL(request.url).pathname === '/proxy' ? '/pages/about' : null;
+
+    if (onlineStoreProxy) {
+      return proxyLiquidRoute(
+        request,
+        env.SHOPIFY_STORE_DOMAIN,
+        onlineStoreProxy,
+      );
+    }
+
+    // ...
+    return handleRequest(request);
+  },
+};
 ```
 
 ## Named Routes
