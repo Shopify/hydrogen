@@ -28,7 +28,7 @@ export default class Dev extends Command {
     }),
     entry: Flags.string({
       env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
-      default: 'server.ts',
+      required: true,
     }),
   };
 
