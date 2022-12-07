@@ -1,50 +1,70 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
-import {createRequestHandler} from '@shopify/hydrogen-remix';
+import {createRequestHandler, getBuyerIp} from '@remix-run/oxygen';
+import {createStorefrontClient} from '@shopify/hydrogen';
+import {proxyLiquidRoute} from '@shopify/hydrogen-remix';
 import {getLocaleFromRequest} from '~/lib/utils';
 import {HydrogenSession} from '~/lib/session.server';
 
 declare const process: {env: {NODE_ENV: string}};
 
-const requestHandler = createRequestHandler({
-  build: remixBuild,
-  mode: process.env.NODE_ENV,
-  shouldProxyAsset: () => false,
-  shouldProxyOnlineStore: (request: Request) =>
-    new URL(request.url).pathname === '/proxy' ? '/pages/about' : null,
-});
-
 export default {
   async fetch(
     request: Request,
     env: Env,
-    context: ExecutionContext,
+    executionContext: ExecutionContext,
   ): Promise<Response> {
-    if (!env?.SESSION_SECRET) {
-      // eslint-disable-next-line no-console
-      console.error('SESSION_SECRET environment variable is not set');
-      return new Response('Internal Server Error', {status: 500});
-    }
-
-    const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
-
     try {
-      return await requestHandler(
-        request,
-        {
-          env,
-          context,
-          storefront: {
-            publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
-            storeDomain: env.SHOPIFY_STORE_DOMAIN,
-            storefrontApiVersion: '2022-10',
-            i18n: getLocaleFromRequest(request),
-          },
+      const onlineStoreProxy =
+        new URL(request.url).pathname === '/proxy' ? '/pages/about' : null;
+
+      if (onlineStoreProxy) {
+        return await proxyLiquidRoute(
+          request,
+          env.SHOPIFY_STORE_DOMAIN,
+          onlineStoreProxy,
+        );
+      }
+
+      if (!env?.SESSION_SECRET) {
+        throw new Error('SESSION_SECRET environment variable is not set');
+      }
+
+      const waitUntil = executionContext.waitUntil.bind(executionContext);
+      const [cache, session] = await Promise.all([
+        caches.open('hydrogen'),
+        HydrogenSession.init(request, [env.SESSION_SECRET]),
+      ]);
+
+      const handleRequest = createRequestHandler({
+        build: remixBuild,
+        mode: process.env.NODE_ENV,
+        getLoadContext(request) {
+          const {storefront, fetch} = createStorefrontClient(
+            {
+              publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
+              storeDomain: env.SHOPIFY_STORE_DOMAIN,
+              storefrontApiVersion: '2022-10',
+              i18n: getLocaleFromRequest(request),
+            },
+            {
+              cache,
+              waitUntil,
+              buyerIp: getBuyerIp(request),
+            },
+          );
+
+          return {
+            cache,
+            session,
+            waitUntil,
+            storefront,
+            fetch,
+          };
         },
-        {
-          session,
-        },
-      );
+      });
+
+      return await handleRequest(request, {env, context: executionContext});
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
