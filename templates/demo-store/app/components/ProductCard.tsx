@@ -129,7 +129,13 @@ export function AddToCartButton({lines}: {lines: CartLineInput[]}) {
       <input type="hidden" name="cartAction" value="ADD_TO_CART" />
       <input type="hidden" name="countryCode" value={selectedLocale.country} />
       <input type="hidden" name="lines" value={JSON.stringify(lines)} />
-      <Button as="button" width="full" type="submit" variant="secondary">
+      <Button
+        as="button"
+        width="full"
+        type="submit"
+        variant="secondary"
+        className="mt-2"
+      >
         <Text as="span" className="flex items-center justify-center gap-2">
           Add to Bag
         </Text>

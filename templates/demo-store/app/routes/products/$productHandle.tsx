@@ -155,7 +155,6 @@ export function ProductForm() {
 
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
-  const selectingVariant = transition.state === 'loading';
 
   /**
    * We update `searchParams` with in-flight request data from `transition` (if available)
@@ -163,10 +162,10 @@ export function ProductForm() {
    * request has completed.
    */
   const searchParams = useMemo(() => {
-    return selectingVariant && transition.location
+    return transition.location
       ? new URLSearchParams(transition.location.search)
       : currentSearchParams;
-  }, [selectingVariant, currentSearchParams, transition]);
+  }, [currentSearchParams, transition]);
 
   const firstVariant = product.variants.nodes[0];
 
@@ -207,7 +206,6 @@ export function ProductForm() {
           <div className="grid items-stretch gap-4">
             <AddToCartButton
               selectedVariant={selectedVariant}
-              selectingVariant={selectingVariant}
               isOutOfStock={isOutOfStock}
             />
             {!isOutOfStock && (
