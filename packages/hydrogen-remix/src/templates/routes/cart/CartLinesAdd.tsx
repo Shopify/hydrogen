@@ -18,7 +18,7 @@ import {
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
 import {redirect, json} from '@remix-run/server-runtime';
-import type {ActionArgs, HydrogenContext} from '@shopify/hydrogen-remix';
+import type {ActionArgs, AppLoadContext} from '@shopify/hydrogen-remix';
 import type {
   Cart,
   CartInput,
@@ -361,7 +361,7 @@ async function getCartLines({
   context,
 }: {
   cartId: string;
-  context: HydrogenContext;
+  context: AppLoadContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cart create mutation');
@@ -389,7 +389,7 @@ async function cartCreate({
   context,
 }: {
   input: CartInput;
-  context: HydrogenContext;
+  context: AppLoadContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cartCreate mutation');
@@ -424,7 +424,7 @@ async function cartLinesAdd({
 }: {
   cartId: string;
   lines: CartLineInput[];
-  context: HydrogenContext;
+  context: AppLoadContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cartLinesAdd mutation');

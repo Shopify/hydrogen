@@ -11,7 +11,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {redirect, json} from '@remix-run/server-runtime';
 
-import type {ActionArgs, HydrogenContext} from '@shopify/hydrogen-remix';
+import type {ActionArgs, AppLoadContext} from '@shopify/hydrogen-remix';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {
   getCartLines,
@@ -201,7 +201,7 @@ async function cartLinesUpdate({
 }: {
   cartId: string;
   lines: CartLineUpdateInput[];
-  context: HydrogenContext;
+  context: AppLoadContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in lines update mutation');

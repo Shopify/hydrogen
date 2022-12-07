@@ -9,7 +9,7 @@ import type {
   UserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {redirect, json} from '@remix-run/server-runtime';
-import type {ActionArgs, HydrogenContext} from '@shopify/hydrogen-remix';
+import type {ActionArgs, AppLoadContext} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {getCartLines} from './CartLinesAdd';
 import {isLocalPath, usePrefixPathWithLocale} from '~/lib/utils';
@@ -211,7 +211,7 @@ async function cartLinesRemove({
 }: {
   cartId: string;
   lineIds: Cart['id'][];
-  context: HydrogenContext;
+  context: AppLoadContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in lines remove mutation');
