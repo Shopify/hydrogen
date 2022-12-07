@@ -1,10 +1,8 @@
+import {json, MetaFunction, SerializeFrom} from '@remix-run/oxygen';
 import {
-  json,
-  LoaderArgs,
-  MetaFunction,
   notFoundMaybeRedirect,
   RESOURCE_TYPES,
-  SerializeFrom,
+  type LoaderArgs,
 } from '@shopify/hydrogen-remix';
 import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
 import {useLoaderData} from '@remix-run/react';

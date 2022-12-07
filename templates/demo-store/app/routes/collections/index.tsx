@@ -1,9 +1,5 @@
-import {
-  json,
-  RESOURCE_TYPES,
-  type LoaderArgs,
-  type MetaFunction,
-} from '@shopify/hydrogen-remix';
+import {json, type MetaFunction} from '@remix-run/oxygen';
+import {RESOURCE_TYPES, type LoaderArgs} from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection,

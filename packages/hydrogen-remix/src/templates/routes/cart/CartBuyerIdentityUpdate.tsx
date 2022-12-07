@@ -7,12 +7,8 @@ import type {
   CartBuyerIdentityInput,
   UserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {
-  type ActionArgs,
-  type HydrogenContext,
-  redirect,
-  json,
-} from '@shopify/hydrogen-remix';
+import {redirect, json} from '@remix-run/server-runtime';
+import type {ActionArgs, HydrogenContext} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {
   isLocalPath,
