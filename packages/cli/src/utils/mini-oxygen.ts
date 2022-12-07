@@ -96,7 +96,7 @@ export function logResponse(request: Request, response: Response) {
     );
   } catch {
     if (request && response) {
-      console.log(`${request.method} ${response.status} ${request.url}`);
+      output.info(`${request.method} ${response.status} ${request.url}`);
     }
   }
 }

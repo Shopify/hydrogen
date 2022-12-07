@@ -1,7 +1,7 @@
+import Command from '@shopify/cli-kit/node/base-command';
 import {muteDevLogs} from '../../utils/log.js';
 import {getProjectPaths} from '../../utils/config.js';
 import {flags} from '../../utils/flags.js';
-import Command from '@shopify/cli-kit/node/base-command';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
 // @ts-ignore
@@ -33,7 +33,6 @@ export async function runPreview({
   const {root, buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
 
   muteDevLogs({workerReload: false});
-  console.log(''); // New line
 
   await startMiniOxygen({
     root,
