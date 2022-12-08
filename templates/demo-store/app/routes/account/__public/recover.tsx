@@ -1,10 +1,10 @@
 import {
   type MetaFunction,
-  redirect,
-  json,
   type ActionFunction,
   type LoaderArgs,
-} from '@shopify/hydrogen-remix';
+  redirect,
+  json,
+} from '@remix-run/oxygen';
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
 import {sendPasswordResetEmail} from '~/data';

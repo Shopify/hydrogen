@@ -1,9 +1,5 @@
-import {
-  json,
-  notFoundMaybeRedirect,
-  type LoaderArgs,
-  type MetaFunction,
-} from '@shopify/hydrogen-remix';
+import {json, type MetaFunction, type LoaderArgs} from '@remix-run/oxygen';
+import {notFoundMaybeRedirect} from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 
 import {PageHeader, Section, Button} from '~/components';

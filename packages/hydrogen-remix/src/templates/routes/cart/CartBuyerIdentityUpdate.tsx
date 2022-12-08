@@ -7,12 +7,8 @@ import type {
   CartBuyerIdentityInput,
   UserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {
-  type ActionArgs,
-  type HydrogenContext,
-  redirect,
-  json,
-} from '@shopify/hydrogen-remix';
+import {redirect, json} from '@remix-run/server-runtime';
+import type {ActionArgs, AppLoadContext} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {
   isLocalPath,
@@ -197,7 +193,7 @@ async function cartBuyerIdentityUpdate({
 }: {
   cartId: string;
   buyerIdentity: CartBuyerIdentityInput;
-  context: HydrogenContext;
+  context: AppLoadContext;
 }) {
   const {storefront} = context;
 

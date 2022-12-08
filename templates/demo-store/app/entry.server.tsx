@@ -1,4 +1,4 @@
-import type {EntryContext} from '@shopify/hydrogen-remix';
+import type {EntryContext} from '@remix-run/oxygen';
 import {RemixServer} from '@remix-run/react';
 import {renderToReadableStream} from 'react-dom/server';
 import isbot from 'isbot';

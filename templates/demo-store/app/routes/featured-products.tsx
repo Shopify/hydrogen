@@ -1,4 +1,4 @@
-import {json, type LoaderArgs} from '@shopify/hydrogen-remix';
+import {json, type LoaderArgs} from '@remix-run/oxygen';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import type {
   CollectionConnection,

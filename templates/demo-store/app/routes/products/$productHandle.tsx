@@ -1,11 +1,7 @@
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {
-  defer,
-  notFoundMaybeRedirect,
-  RESOURCE_TYPES,
-  type LoaderArgs,
-} from '@shopify/hydrogen-remix';
+import {defer, type LoaderArgs} from '@remix-run/oxygen';
+import {notFoundMaybeRedirect, RESOURCE_TYPES} from '@shopify/hydrogen-remix';
 import {
   useLoaderData,
   Await,

@@ -8,12 +8,8 @@ import type {
   CartDiscountCode,
   UserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {
-  type ActionArgs,
-  type HydrogenContext,
-  redirect,
-  json,
-} from '@shopify/hydrogen-remix';
+import {redirect, json} from '@remix-run/server-runtime';
+import type {ActionArgs, AppLoadContext} from '@shopify/hydrogen-remix';
 import invariant from 'tiny-invariant';
 import {isLocalPath, usePrefixPathWithLocale} from '~/lib/utils';
 
@@ -218,7 +214,7 @@ async function getCartDiscounts({
   context,
 }: {
   cartId: string;
-  context: HydrogenContext;
+  context: AppLoadContext;
 }) {
   const {storefront} = context;
   invariant(storefront, 'missing storefront client in cart discounts query');
@@ -244,7 +240,7 @@ async function cartDiscountCodesUpdate({
 }: {
   cartId: string;
   discountCodes: string[];
-  context: HydrogenContext;
+  context: AppLoadContext;
 }) {
   const {storefront} = context;
   invariant(

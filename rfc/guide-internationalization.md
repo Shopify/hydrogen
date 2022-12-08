@@ -2,7 +2,7 @@
 
 ## Change your default localization
 
-1. In your `oxygen.ts`, update `i18n`'s `language` and `country` to your locale preference
+1. In your `server.ts`, update `i18n`'s `language` and `country` to your locale preference
 
    ```jsx
    return await requestHandler(
@@ -104,7 +104,7 @@
    }
    ```
 
-2. In your `oxygen.ts`, update `i18n` to the result of the utilities function
+2. In your `server.ts`, update `i18n` to the result of the utilities function
 
    ```jsx
    return await requestHandler(
@@ -635,7 +635,7 @@ export function getLocaleFromRequest(request: Request): Locale {
      CountryCode,
      LanguageCode,
    } from '@shopify/hydrogen-react/storefront-api-types';
-   import {type ActionFunction, redirect} from '@shopify/hydrogen-remix';
+   import {redirect, type AppLoadContext, type ActionFunction} from '@remix-run/oxygen';
    import invariant from 'tiny-invariant';
    import {updateCartBuyerIdentity} from '~/data';
    import {countries} from '~/data/countries';
@@ -672,7 +672,7 @@ export function getLocaleFromRequest(request: Request): Locale {
    };
 
    function updateCartBuyerIdentity(
-     {storefront}: HydrogenContext,
+     {storefront}: AppLoadContext,
      {
        cartId,
        buyerIdentity,

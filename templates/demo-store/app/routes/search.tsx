@@ -1,4 +1,5 @@
-import {defer, RESOURCE_TYPES, type LoaderArgs} from '@shopify/hydrogen-remix';
+import {defer, type LoaderArgs} from '@remix-run/oxygen';
+import {RESOURCE_TYPES} from '@shopify/hydrogen-remix';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import {Await, Form, useLoaderData} from '@remix-run/react';
 import type {

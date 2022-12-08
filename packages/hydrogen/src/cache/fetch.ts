@@ -33,7 +33,7 @@ export const checkGraphQLErrors = (body: any) => !body?.errors;
 /**
  * `fetch` equivalent that stores responses in cache.
  * Useful for calling third-party APIs that need to be cached.
- * @public
+ * @private
  */
 export async function fetchWithServerCache(
   url: string,

@@ -3,15 +3,14 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "shopify hydrogen build --entry server.ts",
-    "dev": "shopify hydrogen dev --entry server.ts",
+    "build": "shopify hydrogen build --entry ./server",
+    "dev": "shopify hydrogen dev --entry ./server",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
-    "@cloudflare/kv-asset-handler": "^0.2.0",
     "@remix-run/react": "0.0.0-experimental-e18af792a",
     "@shopify/cli": "^3.23.0",
     "@shopify/cli-h2-test": "^4.0.4",
