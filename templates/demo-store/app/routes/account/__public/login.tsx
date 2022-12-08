@@ -5,7 +5,6 @@ import {
   redirect,
   json,
 } from '@remix-run/oxygen';
-import {isStorefrontApiError} from '@shopify/hydrogen-remix';
 import {Form, useActionData, useLoaderData} from '@remix-run/react';
 import {useState} from 'react';
 import {login} from '~/data';
@@ -50,9 +49,10 @@ export const action: ActionFunction = async ({request, context, params}) => {
     });
   }
 
+  const {session, storefront} = context;
+
   try {
     const customerAccessToken = await login(context, {email, password});
-    const {session} = context;
     session.set('customerAccessToken', customerAccessToken);
 
     return redirect(params.lang ? `${params.lang}/account` : '/account', {
@@ -61,7 +61,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       },
     });
   } catch (error: any) {
-    if (isStorefrontApiError(error)) {
+    if (storefront.isStorefrontApiError(error)) {
       return badRequest({
         formError: 'Something went wrong. Please try again later.',
       });

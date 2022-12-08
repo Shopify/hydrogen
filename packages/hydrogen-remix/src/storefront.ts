@@ -3,11 +3,7 @@ import {
   type StorefrontApiResponseOk,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
-import {
-  FetchCacheOptions,
-  fetchWithServerCache,
-  checkGraphQLErrors,
-} from './cache/fetch';
+import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
   STOREFRONT_API_BUYER_IP_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
@@ -17,6 +13,7 @@ import {
   CacheLong,
   CacheShort,
   CacheCustom,
+  generateCacheControlHeader,
   type CachingStrategy,
 } from './cache/strategies';
 import {generateUUID} from './utils/uuid';
@@ -224,15 +221,20 @@ export function createStorefrontClient({
 
         return callStorefrontApi<T>({...payload, mutation});
       },
-      getPublicTokenHeaders,
-      getPrivateTokenHeaders,
-      getStorefrontApiUrl,
-      getShopifyDomain,
       cache,
       CacheNone,
       CacheLong,
       CacheShort,
       CacheCustom,
+      generateCacheControlHeader,
+      getPublicTokenHeaders,
+      getPrivateTokenHeaders,
+      getStorefrontApiUrl,
+      getShopifyDomain,
+      /**
+       * Wether it's a GraphQL error returned in the Storefront API response.
+       */
+      isStorefrontApiError,
     },
   };
 }
