@@ -1,3 +1,8 @@
+/**
+ * TODO: Remove this file after packaged routes are removed or refactored to accept an argument
+ * which injects the StorefrontClient, session, etc.
+ */
+
 import type {StorefrontClient} from '@shopify/h2-test-hydrogen';
 import type {Params} from '@remix-run/react';
 import type {
