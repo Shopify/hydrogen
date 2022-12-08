@@ -3,13 +3,13 @@
  * which injects the StorefrontClient, session, etc.
  */
 
-import type {StorefrontClient} from '@shopify/h2-test-hydrogen';
-import type {Params} from '@remix-run/react';
 import type {
   AppData,
   AppLoadContext as RemixAppLoadContext,
   DataFunctionArgs,
 } from '@remix-run/server-runtime';
+import type {Params} from '@remix-run/react';
+import type {StorefrontClient} from './storefront';
 
 export interface AppLoadContext extends RemixAppLoadContext, StorefrontClient {}
 

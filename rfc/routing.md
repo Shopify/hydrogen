@@ -91,7 +91,7 @@ module.exports = {
 The merchant may define custom redirects within the admin. Optionally Hydrogen can automatically route those custom redirects with the `notFoundMaybeRedirect` function. Call this function whenever you might need to 404. If a redirect exists for the URL, the function will return a 302, else it returns a normal 404.
 
 ```ts
-import {notFoundMaybeRedirect} from '@shopify/hydrogen';
+import {notFoundMaybeRedirect} from '@shopify/hydrogen-remix';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -146,7 +146,7 @@ Routes in Hydrogen can be defined in completely custom ways. Other services need
 The `/routes/productos/$handle.tsx` file should include `handle` meta-data that describes this route as a `PRODUCT` route:
 
 ```ts
-import {RESOURCE_TYPES} from '@shopify/hydrogen';
+import {RESOURCE_TYPES} from '@shopify/hydrogen-remix';
 
 export const handle = {
   hydrogen: {
