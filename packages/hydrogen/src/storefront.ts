@@ -46,7 +46,10 @@ export type CreateStorefrontClientOptions = Parameters<
 };
 
 type StorefrontCommonOptions = {
-  variables?: ExecutionArgs['variableValues'];
+  variables?: ExecutionArgs['variableValues'] & {
+    country?: CountryCode;
+    language?: LanguageCode;
+  };
   headers?: HeadersInit;
   storefrontApiVersion?: string;
 };
