@@ -304,6 +304,7 @@ fragment CartFragment on Cart {
   }
   discountCodes {
     code
+    applicable
   }
 }
 

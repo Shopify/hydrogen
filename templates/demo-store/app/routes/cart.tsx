@@ -38,8 +38,6 @@ export async function action({request, context}: ActionArgs) {
     session.get('customerAccessToken'),
   ]);
 
-  console.log(cartId);
-
   const cartAction = formData.get('cartAction') as CartAction;
   invariant(cartAction, 'No cartAction defined');
 
@@ -109,7 +107,7 @@ export async function action({request, context}: ActionArgs) {
       invariant(cartId, 'Missing cartId');
 
       const formDiscountCode = formData.get('discountCode');
-      const discountCodes = ([formDiscountCode] || []) as string[];
+      const discountCodes = ([formDiscountCode] || ['']) as string[];
 
       result = await cartDiscountCodesUpdate({
         cartId,
