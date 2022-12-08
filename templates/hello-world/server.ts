@@ -20,7 +20,7 @@ declare const process: {env: {NODE_ENV: string}};
 export default {
   async fetch(
     request: Request,
-    env: Record<string, string>,
+    env: Env,
     executionContext: ExecutionContext,
   ): Promise<Response> {
     try {
@@ -43,7 +43,7 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext(request) {
+        getLoadContext() {
           const waitUntil = executionContext.waitUntil.bind(executionContext);
 
           const {storefront, fetch} = createStorefrontClient(
