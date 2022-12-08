@@ -1,9 +1,9 @@
 import {
+  redirect,
   type ActionFunction,
   type AppLoadContext,
-  redirect,
-} from '@shopify/hydrogen-remix';
-import {LoaderArgs} from '@remix-run/server-runtime';
+  type LoaderArgs,
+} from '@remix-run/oxygen';
 import {getLocaleFromRequest} from '~/lib/utils';
 
 export async function logout(request: Request, context: AppLoadContext) {

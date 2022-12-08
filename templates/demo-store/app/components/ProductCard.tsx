@@ -5,6 +5,7 @@ import {
   Money,
   useMoney,
 } from '@shopify/hydrogen-react';
+import type {SerializeFrom} from '@remix-run/oxygen';
 import {Text, Link} from '~/components';
 import {isDiscounted, isNewArrival, variantToCartLine} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
@@ -14,7 +15,6 @@ import type {
   ProductVariant,
   ProductVariantConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {SerializeFrom} from '@remix-run/server-runtime';
 import {CartLinesAddForm} from '.hydrogen/cart';
 
 export function ProductCard({

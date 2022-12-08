@@ -1,12 +1,12 @@
 import {
   json,
-  LoaderArgs,
-  RESOURCE_TYPES,
   type MetaFunction,
   type SerializeFrom,
-} from '@shopify/hydrogen-remix';
+  type LoaderArgs,
+} from '@remix-run/oxygen';
+import {RESOURCE_TYPES} from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
-import {ShopPolicy} from '@shopify/hydrogen-react/storefront-api-types';
+import type {ShopPolicy} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 
 import {PageHeader, Section, Heading, Link} from '~/components';

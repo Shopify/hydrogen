@@ -1,13 +1,12 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
-import {createStorefrontClient} from '@shopify/hydrogen-remix';
+import {createRequestHandler, getBuyerIp} from '@remix-run/oxygen';
 import {
-  createRequestHandler,
-  getBuyerIp,
-  createCookieSessionStorage,
-  type SessionStorage,
-  type Session,
-} from '@remix-run/oxygen';
+  createStorefrontClient,
+  proxyLiquidRoute,
+} from '@shopify/hydrogen-remix';
+import {HydrogenSession} from '~/lib/session.server';
+import {getLocaleFromRequest} from '~/lib/utils';
 
 /**
  * A global `process` object is only available during build to access NODE_ENV.
@@ -24,6 +23,20 @@ export default {
     executionContext: ExecutionContext,
   ): Promise<Response> {
     try {
+      /**
+       * Proxy to the Online Store if needed.
+       */
+      const onlineStoreProxy =
+        new URL(request.url).pathname === '/proxy' ? '/pages/about' : null;
+
+      if (onlineStoreProxy) {
+        return await proxyLiquidRoute(
+          request,
+          env.SHOPIFY_STORE_DOMAIN,
+          onlineStoreProxy,
+        );
+      }
+
       /**
        * Open a cache instance in the worker and a custom session instance.
        */
@@ -50,7 +63,7 @@ export default {
             cache,
             waitUntil,
             buyerIp: getBuyerIp(request),
-            i18n: {language: 'EN', country: 'US'},
+            i18n: getLocaleFromRequest(request),
             publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
             storeDomain: env.SHOPIFY_STORE_DOMAIN,
             storefrontApiVersion:
@@ -58,7 +71,9 @@ export default {
           });
 
           return {
+            cache,
             session,
+            waitUntil,
             storefront,
             env,
           };
@@ -73,55 +88,3 @@ export default {
     }
   },
 };
-
-/**
- * This is a custom session implementation for your Hydrogen shop.
- * Feel free to customize it to your needs, add helper methods, or
- * swap out the cookie-based implementation with something else!
- */
-class HydrogenSession {
-  constructor(
-    private sessionStorage: SessionStorage,
-    private session: Session,
-  ) {}
-
-  static async init(request: Request, secrets: string[]) {
-    const storage = createCookieSessionStorage({
-      cookie: {
-        name: 'session',
-        httpOnly: true,
-        path: '/',
-        sameSite: 'lax',
-        secrets,
-      },
-    });
-
-    const session = await storage.getSession(request.headers.get('Cookie'));
-
-    return new this(storage, session);
-  }
-
-  get(key: string) {
-    return this.session.get(key);
-  }
-
-  destroy() {
-    return this.sessionStorage.destroySession(this.session);
-  }
-
-  flash(key: string, value: any) {
-    this.session.flash(key, value);
-  }
-
-  unset(key: string) {
-    this.session.unset(key);
-  }
-
-  set(key: string, value: any) {
-    this.session.set(key, value);
-  }
-
-  commit() {
-    return this.sessionStorage.commitSession(this.session);
-  }
-}

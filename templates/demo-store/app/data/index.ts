@@ -20,7 +20,7 @@ import type {
 import {type EnhancedMenu, parseMenu, assertApiErrors} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/account/__private/logout';
-import type {AppLoadContext, HydrogenContext} from '@shopify/hydrogen-remix';
+import type {AppLoadContext} from '@remix-run/oxygen';
 
 export interface LayoutData {
   headerMenu: EnhancedMenu;
@@ -29,7 +29,7 @@ export interface LayoutData {
   cart?: Promise<Cart>;
 }
 
-export async function getLayoutData({storefront}: HydrogenContext) {
+export async function getLayoutData({storefront}: AppLoadContext) {
   const HEADER_MENU_HANDLE = 'main-menu';
   const FOOTER_MENU_HANDLE = 'footer';
 
@@ -315,7 +315,7 @@ fragment ImageFragment on Image {
 `;
 
 // shop primary domain url for /admin
-export async function getPrimaryShopDomain({storefront}: HydrogenContext) {
+export async function getPrimaryShopDomain({storefront}: AppLoadContext) {
   const data = await storefront.query<{shop: Shop}>(SHOP_PRIMARY_DOMAIN_QUERY);
 
   invariant(data?.shop?.primaryDomain, 'Primary domain not found');
@@ -383,7 +383,7 @@ const LOGIN_MUTATION = `#graphql
 `;
 
 export async function login(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {
     email,
     password,
@@ -431,7 +431,7 @@ const CUSTOMER_CREATE_MUTATION = `#graphql
 `;
 
 export async function registerCustomer(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {
     email,
     password,
@@ -474,7 +474,7 @@ const CUSTOMER_RECOVER_MUTATION = `#graphql
 `;
 
 export async function sendPasswordResetEmail(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {email}: {email: string},
 ) {
   await storefront.mutate<{
@@ -504,7 +504,7 @@ const CUSTOMER_RESET_MUTATION = `#graphql
 `;
 
 export async function resetPassword(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {
     id,
     resetToken,
@@ -554,7 +554,7 @@ const CUSTOMER_ACTIVATE_MUTATION = `#graphql
 `;
 
 export async function activateAccount(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {
     id,
     password,
@@ -780,7 +780,7 @@ const CUSTOMER_ORDER_QUERY = `#graphql
 `;
 
 export async function getCustomerOrder(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {
     orderId,
   }: {
@@ -799,7 +799,7 @@ export async function getCustomerOrder(
 }
 
 export async function getCustomer(
-  context: AppLoadContext & HydrogenContext,
+  context: AppLoadContext,
   {
     request,
     customerAccessToken,
@@ -841,7 +841,7 @@ const CUSTOMER_UPDATE_MUTATION = `#graphql
   `;
 
 export async function updateCustomer(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {
     customerAccessToken,
     customer,
@@ -883,7 +883,7 @@ const UPDATE_ADDRESS_MUTATION = `#graphql
 `;
 
 export async function updateCustomerAddress(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {
     customerAccessToken,
     addressId,
@@ -921,7 +921,7 @@ const DELETE_ADDRESS_MUTATION = `#graphql
 `;
 
 export async function deleteCustomerAddress(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {
     customerAccessToken,
     addressId,
@@ -961,7 +961,7 @@ const UPDATE_DEFAULT_ADDRESS_MUTATION = `#graphql
 `;
 
 export async function updateCustomerDefaultAddress(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {
     customerAccessToken,
     addressId,
@@ -1004,7 +1004,7 @@ const CREATE_ADDRESS_MUTATION = `#graphql
 `;
 
 export async function createCustomerAddress(
-  {storefront}: HydrogenContext,
+  {storefront}: AppLoadContext,
   {
     customerAccessToken,
     address,

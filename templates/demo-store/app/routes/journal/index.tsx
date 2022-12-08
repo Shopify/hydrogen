@@ -1,8 +1,4 @@
-import {
-  json,
-  type LoaderArgs,
-  type MetaFunction,
-} from '@shopify/hydrogen-remix';
+import {json, type MetaFunction, type LoaderArgs} from '@remix-run/oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {flattenConnection, Image} from '@shopify/hydrogen-react';
 import type {Article, Blog} from '@shopify/hydrogen-react/storefront-api-types';

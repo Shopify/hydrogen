@@ -25,32 +25,24 @@ import {
   CountryCode,
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {warnOnce} from './utils/warning';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
-export type StorefrontClientProps = Parameters<
+export type StorefrontClient = ReturnType<typeof createStorefrontClient>;
+export type Storefront = StorefrontClient['storefront'];
+
+export type CreateStorefrontClientOptions = Parameters<
   typeof createStorefrontUtilities
 >[0] & {
-  i18n: {
-    language: LanguageCode;
-    country: CountryCode;
-  };
-};
-
-export type Storefront = ReturnType<
-  typeof createStorefrontClient
->['storefront'];
-
-export type HydrogenContext = {
-  storefront: Storefront;
-  [key: string]: unknown;
-};
-
-export type CreateStorefrontClientOptions = {
   cache?: Cache;
   buyerIp?: string;
   requestGroupId?: string;
   waitUntil?: ExecutionContext['waitUntil'];
+  i18n?: {
+    language: LanguageCode;
+    country: CountryCode;
+  };
 };
 
 type StorefrontCommonOptions = {
@@ -85,15 +77,21 @@ function minifyQuery(string: string) {
     .trim();
 }
 
-export function createStorefrontClient(
-  clientOptions: StorefrontClientProps,
-  {
-    cache,
-    waitUntil,
-    buyerIp,
-    requestGroupId = generateUUID(),
-  }: CreateStorefrontClientOptions = {},
-) {
+export function createStorefrontClient({
+  cache,
+  waitUntil,
+  buyerIp,
+  i18n,
+  requestGroupId = generateUUID(),
+  ...clientOptions
+}: CreateStorefrontClientOptions) {
+  if (!cache) {
+    // TODO: should only warn in development
+    warnOnce(
+      'Storefront API client created without a cache instance. This may slow down your sub-requests.',
+    );
+  }
+
   clientOptions.storeDomain = clientOptions.storeDomain.replace(
     '.myshopify.com',
     '',
@@ -134,12 +132,14 @@ export function createStorefrontClient(
 
     const queryVariables = {...variables};
 
-    if (!variables?.country && /\$country/.test(query)) {
-      queryVariables.country = clientOptions.i18n.country;
-    }
+    if (i18n) {
+      if (!variables?.country && /\$country/.test(query)) {
+        queryVariables.country = i18n.country;
+      }
 
-    if (!variables?.language && /\$language/.test(query)) {
-      queryVariables.language = clientOptions.i18n.language;
+      if (!variables?.language && /\$language/.test(query)) {
+        queryVariables.language = i18n.language;
+      }
     }
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
@@ -182,6 +182,30 @@ export function createStorefrontClient(
   }
 
   return {
+    /**
+     * GraphQL client for querying the Storefront API.
+     *
+     * Examples:
+     *
+     * ```ts
+     * const {storefront} = createStorefrontClient(...);
+     *
+     * // Query with cache:
+     * async function() {
+     *   const data = await storefront.query('query { ... }', {
+     *     variables: {},
+     *     cache: storefront.CacheLong()
+     *   });
+     * }
+     *
+     * // Mutate data:
+     * async function () {
+     *   await storefront.mutate('mutation { ... }', {
+     *     variables: {},
+     *   });
+     * }
+     * ```
+     */
     storefront: {
       query: <T>(
         query: string,
@@ -210,21 +234,6 @@ export function createStorefrontClient(
       CacheShort,
       CacheCustom,
     },
-    fetch: (
-      url: string,
-      {
-        hydrogen,
-        ...requestInit
-      }: RequestInit & {
-        hydrogen?: Omit<FetchCacheOptions, 'cacheInstance' | 'waitUntil'>;
-      },
-    ) =>
-      fetchWithServerCache(url, requestInit, {
-        waitUntil,
-        cacheKey: [url, requestInit],
-        cacheInstance: cache,
-        ...hydrogen,
-      }),
   };
 }
 
