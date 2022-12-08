@@ -44,7 +44,11 @@ export async function loader({context, request}: LoaderArgs) {
     cartId
       ? (
           await context.storefront.query<{cart: Cart}>(CART_QUERY, {
-            variables: {cartId},
+            variables: {
+              cartId,
+              country: context.storefront.i18n?.country,
+              language: context.storefront.i18n?.language,
+            },
             cache: context.storefront.CacheNone(),
           })
         ).cart

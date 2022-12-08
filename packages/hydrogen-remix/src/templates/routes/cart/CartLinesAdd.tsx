@@ -369,6 +369,8 @@ async function getCartLines({
   const {cart} = await storefront.query<{cart: Cart}>(CART_LINES_QUERY, {
     variables: {
       cartId,
+      country: context.storefront.i18n?.country,
+      language: context.storefront.i18n?.language,
     },
     cache: storefront.CacheNone(),
   });

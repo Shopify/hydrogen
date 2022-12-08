@@ -55,6 +55,8 @@ export async function loader({request, params, context}: LoaderArgs) {
   }>(HOMEPAGE_SEO_QUERY, {
     variables: {
       handle: 'freestyle',
+      country: context.storefront.i18n?.country,
+      language: context.storefront.i18n?.language,
     },
   });
 
@@ -66,23 +68,37 @@ export async function loader({request, params, context}: LoaderArgs) {
     // Should there be fallback rendering while deferred?
     featuredProducts: context.storefront.query<{
       products: ProductConnection;
-    }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY),
+    }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
+      variables: {
+        country: context.storefront.i18n?.country,
+        language: context.storefront.i18n?.language,
+      },
+    }),
     secondaryHero: context.storefront.query<{hero: CollectionHero}>(
       COLLECTION_HERO_QUERY,
       {
         variables: {
           handle: 'backcountry',
+          country: context.storefront.i18n?.country,
+          language: context.storefront.i18n?.language,
         },
       },
     ),
     featuredCollections: context.storefront.query<{
       collections: CollectionConnection;
-    }>(FEATURED_COLLECTIONS_QUERY),
+    }>(FEATURED_COLLECTIONS_QUERY, {
+      variables: {
+        country: context.storefront.i18n?.country,
+        language: context.storefront.i18n?.language,
+      },
+    }),
     tertiaryHero: context.storefront.query<{hero: CollectionHero}>(
       COLLECTION_HERO_QUERY,
       {
         variables: {
           handle: 'winter-2022',
+          country: context.storefront.i18n?.country,
+          language: context.storefront.i18n?.language,
         },
       },
     ),

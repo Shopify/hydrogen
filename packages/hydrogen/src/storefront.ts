@@ -233,6 +233,7 @@ export function createStorefrontClient({
       CacheLong,
       CacheShort,
       CacheCustom,
+      i18n,
     },
   };
 }
