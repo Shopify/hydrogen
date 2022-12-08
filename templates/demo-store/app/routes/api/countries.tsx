@@ -1,15 +1,16 @@
-import {json} from '@remix-run/oxygen';
-import {CacheLong, generateCacheControlHeader} from '@shopify/hydrogen-remix';
+import {json, type LoaderArgs} from '@remix-run/oxygen';
 import {countries} from '~/data/countries';
 
-export async function loader() {
+export async function loader({context: {storefront}}: LoaderArgs) {
   return json(
     {
       ...countries,
     },
     {
       headers: {
-        'cache-control': generateCacheControlHeader(CacheLong()),
+        'cache-control': storefront.generateCacheControlHeader(
+          storefront.CacheLong(),
+        ),
       },
     },
   );
