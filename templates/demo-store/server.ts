@@ -59,20 +59,16 @@ export default {
         getLoadContext() {
           const waitUntil = executionContext.waitUntil.bind(executionContext);
 
-          const {storefront, fetch} = createStorefrontClient(
-            {
-              publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
-              storeDomain: env.SHOPIFY_STORE_DOMAIN,
-              storefrontApiVersion:
-                env.SHOPIFY_STOREFRONT_API_VERSION || '2022-10',
-              i18n: getLocaleFromRequest(request),
-            },
-            {
-              cache,
-              waitUntil,
-              buyerIp: getBuyerIp(request),
-            },
-          );
+          const {storefront, fetch} = createStorefrontClient({
+            cache,
+            waitUntil,
+            buyerIp: getBuyerIp(request),
+            i18n: getLocaleFromRequest(request),
+            publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
+            storeDomain: env.SHOPIFY_STORE_DOMAIN,
+            storefrontApiVersion:
+              env.SHOPIFY_STOREFRONT_API_VERSION || '2022-10',
+          });
 
           return {
             cache,

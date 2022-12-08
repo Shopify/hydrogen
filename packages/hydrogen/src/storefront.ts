@@ -28,23 +28,20 @@ import {
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
-export type StorefrontClientProps = Parameters<
-  typeof createStorefrontUtilities
->[0] & {
-  i18n: {
-    language: LanguageCode;
-    country: CountryCode;
-  };
-};
-
 export type StorefrontClient = ReturnType<typeof createStorefrontClient>;
 export type Storefront = StorefrontClient['storefront'];
 
-export type CreateStorefrontClientOptions = {
+export type CreateStorefrontClientOptions = Parameters<
+  typeof createStorefrontUtilities
+>[0] & {
   cache?: Cache;
   buyerIp?: string;
   requestGroupId?: string;
   waitUntil?: ExecutionContext['waitUntil'];
+  i18n?: {
+    language: LanguageCode;
+    country: CountryCode;
+  };
 };
 
 type StorefrontCommonOptions = {
@@ -79,15 +76,14 @@ function minifyQuery(string: string) {
     .trim();
 }
 
-export function createStorefrontClient(
-  clientOptions: StorefrontClientProps,
-  {
-    cache,
-    waitUntil,
-    buyerIp,
-    requestGroupId = generateUUID(),
-  }: CreateStorefrontClientOptions = {},
-) {
+export function createStorefrontClient({
+  cache,
+  waitUntil,
+  buyerIp,
+  i18n,
+  requestGroupId = generateUUID(),
+  ...clientOptions
+}: CreateStorefrontClientOptions) {
   clientOptions.storeDomain = clientOptions.storeDomain.replace(
     '.myshopify.com',
     '',
@@ -128,12 +124,14 @@ export function createStorefrontClient(
 
     const queryVariables = {...variables};
 
-    if (!variables?.country && /\$country/.test(query)) {
-      queryVariables.country = clientOptions.i18n.country;
-    }
+    if (i18n) {
+      if (!variables?.country && /\$country/.test(query)) {
+        queryVariables.country = i18n.country;
+      }
 
-    if (!variables?.language && /\$language/.test(query)) {
-      queryVariables.language = clientOptions.i18n.language;
+      if (!variables?.language && /\$language/.test(query)) {
+        queryVariables.language = i18n.language;
+      }
     }
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
