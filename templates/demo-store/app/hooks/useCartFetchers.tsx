@@ -5,11 +5,9 @@ export function useCartFetchers(actionName: string) {
   const cartFetchers = [];
 
   for (const fetcher of fetchers) {
-    if (fetcher.type === 'actionReload' && fetcher.state === 'loading') {
-      const {formData} = fetcher.submission;
-      if (formData.get('cartAction') === actionName) {
-        cartFetchers.push(fetcher);
-      }
+    const formData = fetcher.submission?.formData;
+    if (formData && formData.get('cartAction') === actionName) {
+      cartFetchers.push(fetcher);
     }
   }
   return cartFetchers;
