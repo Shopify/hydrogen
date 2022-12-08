@@ -1,5 +1,11 @@
 # @shopify/cli-h2-test
 
+## 4.0.5
+
+### Patch Changes
+
+- Allow a `token` to be passed to `init` to support private GitHub repo templates ([#283](https://github.com/Shopify/h2/pull/283)) by [@jplhomer](https://github.com/jplhomer)
+
 ## 4.0.4
 
 ### Patch Changes
