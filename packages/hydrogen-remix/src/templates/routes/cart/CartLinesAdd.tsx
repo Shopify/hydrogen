@@ -17,8 +17,12 @@ import {
 } from '@remix-run/react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import invariant from 'tiny-invariant';
-import {redirect, json} from '@remix-run/server-runtime';
-import type {ActionArgs, AppLoadContext} from '@shopify/hydrogen-remix';
+import {
+  redirect,
+  json,
+  type ActionArgs,
+  type AppLoadContext,
+} from '@remix-run/server-runtime';
 import type {
   Cart,
   CartInput,
