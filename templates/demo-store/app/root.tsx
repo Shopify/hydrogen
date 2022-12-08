@@ -3,8 +3,8 @@ import {
   type LinksFunction,
   type MetaFunction,
   type LoaderArgs,
+  type AppLoadContext,
 } from '@remix-run/oxygen';
-import type {Storefront} from '@shopify/hydrogen-remix';
 import {
   Links,
   Meta,
@@ -66,7 +66,7 @@ export async function loader({context, request}: LoaderArgs) {
   return defer({
     layout,
     selectedLocale,
-    cart: cartId ? getCart(context.storefront, cartId) : undefined,
+    cart: cartId ? getCart(context, cartId) : undefined,
   });
 }
 
@@ -264,7 +264,7 @@ const CART_QUERY = `#graphql
   }
 `;
 
-export async function getCart(storefront: Storefront, cartId: string) {
+export async function getCart({storefront}: AppLoadContext, cartId: string) {
   invariant(storefront, 'missing storefront client in cart query');
 
   const {cart} = await storefront.query<{cart: Cart}>(CART_QUERY, {

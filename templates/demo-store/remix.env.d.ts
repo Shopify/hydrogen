@@ -2,7 +2,8 @@
 /// <reference types="@remix-run/oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
-import type {StorefrontClient} from '@shopify/h2-test-hydrogen';
+import type {StorefrontClient} from '@shopify/hydrogen-remix';
+import type {HydrogenSession} from '~/lib/session.server';
 
 /**
  * Declare expected Env parameter in fetch handler.
@@ -18,10 +19,10 @@ declare global {
 /**
  * Declare local additions to `AppLoadContext` to include the session utilities we injected in `server.ts`.
  */
-declare module '@remix-run/server-runtime' {
+declare module '@remix-run/oxygen' {
   export interface AppLoadContext {
     waitUntil: ExecutionContext['waitUntil'];
-    session: import('~/lib/session.server').HydrogenSession;
+    session: HydrogenSession;
     storefront: StorefrontClient['storefront'];
     fetch: StorefrontClient['fetch'];
     cache: Cache;
