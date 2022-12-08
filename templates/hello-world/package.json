@@ -16,7 +16,6 @@
     "@shopify/cli-h2-test": "^4.0.4",
     "@shopify/hydrogen-react": "^2022.10.3",
     "@shopify/h2-test-remix-oxygen": "^0.0.4",
-    "@shopify/h2-test-hydrogen": "^2.0.2",
     "@shopify/h2-test-hydrogen-remix": "^0.0.4",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",

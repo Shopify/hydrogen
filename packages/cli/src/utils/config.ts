@@ -81,7 +81,7 @@ export async function getRemixConfig(
       const require = createRequire(import.meta.url);
       const packagesPath = path.resolve(
         // TODO: Change package name when we have one
-        path.dirname(require.resolve('@shopify/h2-test-hydrogen')),
+        path.dirname(require.resolve('@shopify/h2-test-hydrogen-remix')),
         '..',
         '..',
       );

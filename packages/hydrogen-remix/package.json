@@ -46,12 +46,13 @@
   "peerDependencies": {
     "@remix-run/react": "*",
     "@remix-run/server-runtime": "0.0.0-experimental-e18af792a",
-    "@shopify/h2-test-hydrogen": "^2.0.2"
+    "@shopify/hydrogen-react": "*"
   },
   "dependencies": {
     "recursive-readdir": "^2.2.3"
   },
   "devDependencies": {
+    "@shopify/hydrogen-react": "*",
     "@types/recursive-readdir": "^2.2.1"
   }
 }

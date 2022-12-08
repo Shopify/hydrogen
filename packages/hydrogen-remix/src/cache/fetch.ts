@@ -4,7 +4,7 @@ import {
   getItemFromCache,
   isStale,
   setItemInCache,
-} from './subrequest';
+} from './sub-request';
 
 export type FetchCacheOptions = {
   cache?: CachingStrategy;
