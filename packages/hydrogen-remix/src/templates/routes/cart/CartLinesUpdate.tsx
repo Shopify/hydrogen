@@ -9,9 +9,12 @@ import type {
   CartLineUpdateInput,
   UserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {redirect, json} from '@remix-run/server-runtime';
-
-import type {ActionArgs, AppLoadContext} from '@shopify/hydrogen-remix';
+import {
+  redirect,
+  json,
+  type ActionArgs,
+  type AppLoadContext,
+} from '@remix-run/server-runtime';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {
   getCartLines,
