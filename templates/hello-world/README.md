@@ -8,6 +8,7 @@ A minimal setup of components, queries and tooling to get started with Hydrogen.
 - Prettier
 - Typescript
 - Oxygen
+- i18n
 
 ## TODO
 
