@@ -1,11 +1,11 @@
-import {path, output, file} from '@shopify/cli-kit';
+import {path, output, file, error} from '@shopify/cli-kit';
 import url from 'url';
 import {flags} from '../../../utils/flags.js';
 import {Flags} from '@oclif/core';
 
 // @ts-expect-error `@types/jscodeshift` doesn't have types for this
 // import * as jscodeshift from 'jscodeshift/src/Runner.js';
-import {createRequire} from 'module';
+// import {createRequire} from 'module';
 import Command from '@shopify/cli-kit/node/base-command';
 
 // const __filename = url.fileURLToPath(import.meta.url);
@@ -44,48 +44,46 @@ export async function runScaffold({
   transform,
   dry,
 }: ScaffoldOptions) {
-  const remixConfigPath = await path.findUp('remix-config.js', {cwd: appPath});
   const transformFile = path.join(
     __dirname,
     `./transforms/${transform}/${transform}.js`,
   );
 
   if (!(await file.exists(transformFile))) {
-    throw new Error(`No migration found for ${transform}`);
+    throw new error.Abort(`No transform module found for ${transform}`);
   }
 
-  if (!remixConfigPath) {
-    output.warn('Could not find a remix-config.js file in this directory');
-  }
+  const mod = await import(transformFile);
+  mod.default({path: appPath});
 
-  const options = {
-    babel: true,
-    dry,
-    extensions: 'tsx,ts,jsx,js',
-    failOnError: false,
-    ignorePattern: ['**/node_modules/**', '**/.cache/**', '**/build/**'],
-    parser: 'tsx',
-    print: true,
-    runInBand: true,
-    silent: false,
-    stdin: false,
-    verbose: 2,
-  };
+  // const options = {
+  //   babel: true,
+  //   dry,
+  //   extensions: 'tsx,ts,jsx,js',
+  //   failOnError: false,
+  //   ignorePattern: ['**/node_modules/**', '**/.cache/**', '**/build/**'],
+  //   parser: 'tsx',
+  //   print: true,
+  //   runInBand: true,
+  //   silent: false,
+  //   stdin: false,
+  //   verbose: 2,
+  // };
 
-  const filepaths = await path.glob([`${appPath}/**/*`]);
+  // const filepaths = await path.glob([`${appPath}/**/*`]);
 
-  if (filepaths.length === 0) {
-    throw new Error(`No files found for ${appPath}`);
-  }
+  // if (filepaths.length === 0) {
+  //   throw new Error(`No files found for ${appPath}`);
+  // }
 
-  try {
-    const require = createRequire(import.meta.url);
-    const jscodeshift = require('jscodeshift/src/Runner.js');
-    const {error} = await jscodeshift.run(transformFile, filepaths, options);
-    console.log(error);
-  } catch (error) {
-    // eslint-disable-next-line no-console
-    console.error(error);
-    process.exit(1);
-  }
+  // try {
+  //   const require = createRequire(import.meta.url);
+  //   const jscodeshift = require('jscodeshift/src/Runner.js');
+  //   // const {error} = await jscodeshift.run(transformFile, filepaths, options);
+  //   // console.log(error);
+  // } catch (error) {
+  //   // eslint-disable-next-line no-console
+  //   console.error(error);
+  //   process.exit(1);
+  // }
 }

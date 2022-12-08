@@ -1,19 +1,50 @@
-import {addOxygen} from './steps/add-oxygen.js';
-import {addConfig} from './steps/add-config.js';
+import {ui, npm} from '@shopify/cli-kit';
 
-export default function installHydrogen(
-  file: any,
-  {jscodeshift: j}: any,
-  options: any,
-) {
-  const source = j(file.source);
+export default async function installHydrogen({path: appPath}: {path: string}) {
+  let tasks: ui.ListrTasks = [
+    {
+      title: `Install dependencies`,
+      task: async () => {
+        const packageJSON = await npm.readPackageJSON(appPath);
 
-  if (false) {
-    return file.source;
-  }
+        packageJSON.dependencies = {
+          ...packageJSON.dependencies,
+          '@shopify/cli': '^3.23.0',
+          '@shopify/cli-h2-test': '^4.0.4',
+          '@shopify/hydrogen-react': '^2022.10.3',
+          '@shopify/h2-test-remix-oxygen': '^0.0.4',
+          '@shopify/h2-test-hydrogen': '^2.0.2',
+          '@shopify/h2-test-hydrogen-remix': '^0.0.4',
+        };
 
-  addOxygen();
-  addConfig();
+        packageJSON.devDependencies = {
+          ...packageJSON.devDependencies,
+          '@shopify/oxygen-workers-types': '^3.17.2',
+        };
 
-  return source.toSource();
+        packageJSON.scripts = {
+          build: 'shopify hydrogen build --entry server.ts',
+          dev: 'shopify hydrogen dev --entry server.ts',
+          preview: 'npm run build && shopify hydrogen preview',
+        };
+
+        await npm.writePackageJSON(appPath, packageJSON);
+      },
+    },
+    {
+      title: `Add Oxygen server`,
+      task: async () => {},
+    },
+    {
+      title: `Fetch storefront data in root loader`,
+      task: async () => {},
+    },
+  ];
+
+  const list = ui.newListr(tasks, {
+    concurrent: false,
+    rendererOptions: {collapse: false},
+  });
+
+  await list.run();
 }
