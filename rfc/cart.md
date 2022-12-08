@@ -1,5 +1,3 @@
-Bulk of this RFC is from Ryan's gist: https://gist.github.com/ryanflorence/66278df97b6feb149b13563181b61048
-
 # How to implement Shopify cart with Remix
 
 ## 1. Make sure you have `storefront` in `context`
@@ -8,103 +6,141 @@ Whatever this integration ending up looking like but it would be the stuff in `o
 
 ## 2. Define your cart routes
 
-Basic developer code:
-
 ```jsx
-// app/routes/my-cart.tsx
-import {cartAction} from '@shopify/hydrogen';
-export {cartAction as action};
-```
+// app/routes/cart.jsx
+export async function action({request, context}: ActionArgs) {
+  const {session, storefront} = context;
 
-Developer can extend the cart route however they want:
+  const [formData, cartId, customerAccessToken] = await Promise.all([
+    request.formData(),
+    session.get('cartId'),
+    session.get('customerAccessToken'),
+  ]);
 
-```jsx
-// app/routes/my-cart.tsx
-import {cartAction} from '@shopify/hydrogen';
-export async function action() {
-  // do something extra with ActionArgs or the returning Response from cartAction
-  return cartAction({...})
-};
-```
+  const cartAction = formData.get('cartAction');
+  invariant(cartAction, 'No cartAction defined');
 
-This api interface of `cartAction` should be exactly the same (or closely) as defined for
-Online Store's [Cart API](https://shopify.dev/api/ajax/reference/cart) with some extra
-form inputs to work with Remix better (ie. the required `cartAction` hidden form input
-so we can allow for better search from fetchers).
+  switch (cartAction) {
+    case 'ADD_TO_CART':
+      // Business logic for adding an item to cart
 
-Extra hidden form inputs:
+      // Validate form data
+      const lines = formData.get('lines')
+        ? JSON.parse(String(formData.get('lines')))
+        : [];
+      invariant(lines.length, 'No lines to add');
 
-- `cartAction` - Basic foundation for using `useFetchers` to implement reactive behaviors
-  like closing the cart pop-over or optimistic UI.
-- `redirectTo` - (Optional) Default to `location.pathname`
-- `country` - (Optional) Default to storefront client
-- `language` - (Optional) Default to storefront client
+      if (!cartId) {
+        // cartCreate is a function wrapper for the graphql cartCreate mutation
+        result = await cartCreate({
+          input: {lines},
+          storefront,
+        });
 
-The output of `cartAction` should be typed to:
+        // Cart created - we only need a Set-Cookie header if we're creating
+        session.set('cartId', result.cart.id);
+        headers.set('Set-Cookie', await session.commit());
+      } else {
+        // Add line(s) to existing cart
+        result = await cartAdd({
+          cartId,
+          lines,
+          storefront,
+        });
+      }
 
-```tsx
-type CartActionResponse = {
-  cartAction: 'ADD_TO_CART' | 'REMOVE_FROM_CART' | ... ;
-  id: string;
-  status: number;
-  errors?: [
-    ... // TBD
-  ];
-  lineItems?: CartLineItem[]
-  [key: string]: unknown; // Anything else developers would like to add
+      break;
+    // Define other cart operations
+    default:
+      invariant(false, `${cartAction} cart action is not defined`);
+  }
+
+  // Cart operation completes
+  return json({});
 }
 ```
 
-## 3. Make a `POST` request to your cart endpoint
+## 3. Make a form request to your cart action
 
 ```jsx
-import {Form, actionData} from '@remix-run/react';
+import {useFetcher, useMatches} from '@remix-run/react';
+import {flattenConnection} from '@shopify/hydrogen-react';
 
 export function ProductCard({product}) {
+  const firstVariant = flattenConnection(product?.variants)[0];
+
   return (
     <div>
       <h2>{product.title}</h2>
-      <AddToCartButton product={product} />
+      <AddToCartButton
+        lines={[
+          {
+            quantity: 1,
+            merchandiseId: firstVariant.id,
+          },
+        ]}
+      />
     </div>
   );
 }
 
-// Developer can create the useFetcher equivalent following Remix doc
-function AddToCartButton({product, ...props}) {
-  let location = useLocation();
-  let {formData} = useNavigation();
-  let isPending =
-    formData &&
-    formData.get('cartAction') === 'ADD_TO_CART' &&
-    formData.get('merchandiseId') === product.variantId;
+function AddToCartButton({lines}) {
+  const [root] = useMatches();
+  const fetcher = useFetcher();
 
   return (
-    <Form method="post" action="/my-cart">
+    <fetcher.Form action="/cart" method="post">
       <input type="hidden" name="cartAction" value="ADD_TO_CART" />
-      <input type="hidden" name="merchandiseId" value={product.variantId} />
-      <input type="hidden" name="quantity" value="1" />
-      <input type="hidden" name="customNotes" value="1" />
-      <input type="hidden" name="redirectTo" value={location.pathname} />
-      <button type="submit" {...props} disabled={isPending}>
-        {isPending ? 'Adding...' : 'Add to Cart'}
-      </button>
-    </Form>
+      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+      <button type="submit">Add to Bag</button>
+    </fetcher.Form>
   );
 }
 ```
 
-**Note:** Don't supply an `<AddToCartButton />` component in `@shopify/hydrogen`. It is an
-instant drop off the moment developer needs to do something else (ie. add selling plan).
-
-## 4. (Docs only) Add optimistic UI on cart actions
+If you want to accept other form data, such as `sellingPlanId`, update your
+action and form for the new input.
 
 ```jsx
-// `@shopify/hydrogen` supplied hook
-export function useCartFetchers(actionName) {
-  let fetchers = useFetchers();
-  let cartFetchers = [];
-  for (let fetcher of fetchers) {
-    if (fetcher.formData.get('cartAction') === actionName) {
+// app/routes/cart.jsx
+switch (cartAction) {
+  case 'ADD_TO_CART':
+    // Business logic for adding an item to cart
+
+    // Validate form data
+    const lines = formData.get('lines')
+      ? JSON.parse(String(formData.get('lines')))
+      : [];
+    invariant(lines.length, 'No lines to add');
+
+    const sellingPlanId = formData.get('sellingPlanId') || null;
+```
+
+```jsx
+// ProductCard
+<fetcher.Form action="/cart" method="post">
+  <input type="hidden" name="cartAction" value="ADD_TO_CART" />
+  <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+  <input type="hidden" name="sellingPlanId" value={sellingPlanId} />
+  <button type="submit">Add to Bag</button>
+</fetcher.Form>
+```
+
+## 4. Open cart drawer on add to cart operation
+
+We can use `useFetchers` to know when a cart operation happens by
+looking for a form request with form data named `cartAction`.
+
+```jsx
+import {useFetchers} from '@remix-run/react';
+
+export function useCartFetchers(actionName: string) {
+  const fetchers = useFetchers();
+  const cartFetchers = [];
+
+  for (const fetcher of fetchers) {
+    const formData = fetcher.submission?.formData;
+    if (formData && formData.get('cartAction') === actionName) {
       cartFetchers.push(fetcher);
     }
   }
@@ -112,62 +148,26 @@ export function useCartFetchers(actionName) {
 }
 ```
 
-Developer code:
+Anywhere in the app, you can target these cart specific requests.
 
 ```jsx
-import {useCartFetchers} from '@shopify/hydrogen';
+// app/components/Layout.jsx
 
-function Cart() {
-  const {cart} = useLoaderData();
-  const addingToCartFetchers = useCartFetchers('ADD_TO_CART');
-  const updatingToCartFetcher = useCartFetchers('UPDATE_TO_CART');
+function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
+  const isHome = useIsHomePath();
 
-  return (
-    <div>
-      {addingToCartFetchers.map((fetcher) => (
-        <div>
-          <div>{fetcher.formData.get('_title')}</div>
-          <img src={fetcher.formData.get('_image')} />
-        </div>
-      ))}
-      {cart.items.map((item) => (
-        <div>
-          <LineItem
-            item={item}
-            quantity={updatingToCartFetcher[item.id] | item.quantiy}
-          />
-        </div>
-      ))}
-    </div>
-  );
-}
-```
+  const {
+    isOpen: isCartOpen,
+    openDrawer: openCart,
+    closeDrawer: closeCart,
+  } = useDrawer();
 
-## 5. (Docs only) Track analytics on cart actions
+  // Detect any add to cart form request
+  const addToCartFetchers = useCartFetchers('ADD_TO_CART');
 
-```jsx
-// /app/routes/my-cart.tsx
-import {cartAction} from '@shopify/hydrogen';
-import {useActionData} from '@remix-run/react';
-
-export {cartAction as action};
-
-function Cart() {
-  let {cart} = useLoaderData();
-
-  const actionData = useActionData<ActionData>();
-  if (actionData.cartAction === 'ADD_TO_CART') {
-    // send add to cart analytics
-  }
-
-  return (
-    <div>
-      {cart.items.map((item) => (
-        <div>
-          <LineItem item={item} />
-        </div>
-      ))}
-    </div>
-  );
-}
+  // toggle cart drawer when adding to cart
+  useEffect(() => {
+    if (isCartOpen || !addToCartFetchers.length) return;
+    openCart();
+  }, [addToCartFetchers, isCartOpen, openCart]);
 ```
