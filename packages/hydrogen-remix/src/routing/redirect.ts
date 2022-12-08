@@ -1,4 +1,4 @@
-import {redirect} from '@shopify/h2-test-remix-oxygen';
+import {redirect} from '@remix-run/server-runtime';
 import type {AppLoadContext} from '../types';
 
 export async function notFoundMaybeRedirect(
