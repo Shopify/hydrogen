@@ -1,6 +1,7 @@
 import path from 'path';
 import fs from 'fs-extra';
 import * as remix from '@remix-run/dev/dist/compiler.js';
+import {output} from '@shopify/cli-kit';
 import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
@@ -27,7 +28,7 @@ export default class Dev extends Command {
     }),
     entry: Flags.string({
       env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
-      default: 'oxygen.ts',
+      required: true,
     }),
   };
 
@@ -100,7 +101,7 @@ async function compileAndWatch(
       }
     },
     async onFileCreated(file: string) {
-      console.log(`\n📄 File created: ${path.relative(root, file)}`);
+      output.info(`\n📄 File created: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
       }
@@ -110,7 +111,7 @@ async function compileAndWatch(
       }
     },
     async onFileChanged(file: string) {
-      console.log(`\n📄 File changed: ${path.relative(root, file)}`);
+      output.info(`\n📄 File changed: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
       }
@@ -120,7 +121,7 @@ async function compileAndWatch(
       }
     },
     async onFileDeleted(file: string) {
-      console.log(`\n📄 File deleted: ${path.relative(root, file)}`);
+      output.info(`\n📄 File deleted: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await fs.unlink(file.replace(publicPath, buildPathClient));
       }
@@ -130,7 +131,7 @@ async function compileAndWatch(
       }
     },
     onRebuildStart() {
-      console.log(LOG_REBUILDING);
+      output.info(LOG_REBUILDING);
       console.time(LOG_REBUILT);
     },
     async onRebuildFinish() {

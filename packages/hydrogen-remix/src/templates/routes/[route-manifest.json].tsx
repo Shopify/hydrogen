@@ -8,7 +8,7 @@
  */
 
 import * as build from '@remix-run/dev/server-build';
-import {RESOURCE_TYPES, REQUIRED_RESOURCES} from '@shopify/hydrogen-remix';
+import {RESOURCE_TYPES} from '@shopify/hydrogen-remix';
 
 type RESOURCE_TYPE = keyof typeof RESOURCE_TYPES;
 

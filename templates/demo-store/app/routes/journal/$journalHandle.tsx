@@ -2,11 +2,10 @@ import {
   json,
   type MetaFunction,
   type SerializeFrom,
-  type LoaderArgs,
   type LinksFunction,
-  RESOURCE_TYPES,
-  notFoundMaybeRedirect,
-} from '@shopify/hydrogen-remix';
+  type LoaderArgs,
+} from '@remix-run/oxygen';
+import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen-remix';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen-react';
 import {Blog} from '@shopify/hydrogen-react/storefront-api-types';

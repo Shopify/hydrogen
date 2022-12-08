@@ -1,6 +1,8 @@
 import path from 'path';
 import * as remix from '@remix-run/dev/dist/compiler.js';
 import fsExtra from 'fs-extra';
+import {output} from '@shopify/cli-kit';
+import colors from '@shopify/cli-kit/node/colors';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {flags} from '../../utils/flags.js';
 
@@ -19,7 +21,7 @@ export default class Build extends Command {
     }),
     entry: Flags.string({
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
-      default: 'oxygen.ts',
+      required: true,
     }),
     minify: Flags.boolean({
       description: 'Minify the build output',
@@ -62,8 +64,7 @@ export async function runBuild({
   const remixConfig = await getRemixConfig(root, entryFile, publicPath);
   await fsExtra.rm(buildPath, {force: true, recursive: true});
 
-  // eslint-disable-next-line no-console
-  console.log(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
+  output.info(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
   await Promise.all([
     copyPublicFiles(publicPath, buildPathClient),
@@ -83,18 +84,15 @@ export async function runBuild({
     const {size} = await fsExtra.stat(buildPathWorkerFile);
     const sizeMB = size / (1024 * 1024);
 
-    // eslint-disable-next-line no-console
-    console.log(
-      '   ' + path.relative(root, buildPathWorkerFile),
-      '  ',
-      Number(sizeMB.toFixed(2)),
-      'MB\n',
+    output.info(
+      output.content`   ${colors.dim(
+        path.relative(root, buildPathWorkerFile),
+      )}  ${output.token.yellow(sizeMB.toFixed(2))} MB\n`,
     );
 
     if (sizeMB >= 1) {
-      // eslint-disable-next-line no-console
-      console.warn(
-        '\n-- Worker bundle exceeds 1 MB! This can delay your worker response.\n',
+      output.warn(
+        '🚨 Worker bundle exceeds 1 MB! This can delay your worker response.\n',
       );
     }
   }

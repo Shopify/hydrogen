@@ -1,4 +1,4 @@
-import {json} from '@remix-run/server-runtime';
+import {json} from '@remix-run/oxygen';
 import {CacheLong, generateCacheControlHeader} from '@shopify/hydrogen-remix';
 import {countries} from '~/data/countries';
 

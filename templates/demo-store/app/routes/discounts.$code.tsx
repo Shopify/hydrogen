@@ -1,4 +1,4 @@
-import {redirect, json, type LoaderArgs} from '@shopify/hydrogen-remix';
+import {redirect, type LoaderArgs} from '@shopify/hydrogen-remix';
 import {cartCreate, cartDiscountCodesUpdate} from '~/data';
 
 /**
@@ -14,7 +14,9 @@ import {cartCreate, cartDiscountCodesUpdate} from '~/data';
  * @preserve
  */
 export async function loader({request, context, params}: LoaderArgs) {
-  const {session, storefront} = context;
+  const {storefront} = context;
+  // N.B. This route will probably be removed in the future.
+  const session = context.session as any;
   const {code} = params;
 
   const url = new URL(request.url);

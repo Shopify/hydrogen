@@ -1,11 +1,11 @@
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import {
-  type LoaderArgs,
-  type MetaFunction,
   redirect,
   json,
-} from '@shopify/hydrogen-remix';
+  type MetaFunction,
+  type LoaderArgs,
+} from '@remix-run/oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen-react';
 import {statusMessage} from '~/lib/utils';

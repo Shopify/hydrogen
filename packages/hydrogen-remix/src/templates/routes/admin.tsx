@@ -7,7 +7,8 @@
  * @preserve
  */
 
-import {LoaderArgs, redirect} from '@shopify/hydrogen-remix';
+import type {LoaderArgs} from '@shopify/hydrogen-remix';
+import {redirect} from '@remix-run/server-runtime';
 
 export async function loader({context}: LoaderArgs) {
   const domain = context.storefront.getShopifyDomain();

@@ -1,5 +1,14 @@
 # @shopify/h2-test-hydrogen-remix
 
+## 0.0.5
+
+### Patch Changes
+
+- Refactor the API for the server entrypoint by [@jplhomer](https://github.com/jplhomer)
+
+- Updated dependencies [[`c1c821d`](https://github.com/Shopify/h2/commit/c1c821d16cc99902ce9eddbd282dfbfb20886dcd)]:
+  - @shopify/h2-test-hydrogen@2.0.3
+
 ## 0.0.4
 
 ### Patch Changes
