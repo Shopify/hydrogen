@@ -234,41 +234,6 @@ export function createStorefrontClient({
       CacheShort,
       CacheCustom,
     },
-    /**
-     * A `fetch` equivalent that stores responses in cache.
-     * Useful for calling third-party APIs that need to be cached.
-     *
-     * Example:
-     *
-     * ```ts
-     * const {storefront, fetch} = createStorefrontClient(...);
-     *
-     * async function() {
-     *   const [body, response] = await fetch('https://example.com/api/', {
-     *     method: 'GET',
-     *     headers: {},
-     *     hydrogen: {
-     *       cache: storefront.CacheLong();
-     *     }
-     *   });
-     * }
-     * ```
-     */
-    fetch: (
-      url: string,
-      {
-        hydrogen,
-        ...requestInit
-      }: RequestInit & {
-        hydrogen?: Omit<FetchCacheOptions, 'cacheInstance' | 'waitUntil'>;
-      },
-    ) =>
-      fetchWithServerCache(url, requestInit, {
-        waitUntil,
-        cacheKey: [url, requestInit],
-        cacheInstance: cache,
-        ...hydrogen,
-      }),
   };
 }
 
