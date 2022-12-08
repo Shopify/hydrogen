@@ -50,7 +50,8 @@ export default {
             {
               publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
               storeDomain: env.SHOPIFY_STORE_DOMAIN,
-              storefrontApiVersion: '2022-10',
+              storefrontApiVersion:
+                env.SHOPIFY_STOREFRONT_API_VERSION || '2022-10',
               i18n: {language: 'EN', country: 'US'},
             },
             {
