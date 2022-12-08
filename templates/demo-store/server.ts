@@ -59,7 +59,7 @@ export default {
         getLoadContext() {
           const waitUntil = executionContext.waitUntil.bind(executionContext);
 
-          const {storefront, fetch} = createStorefrontClient({
+          const {storefront} = createStorefrontClient({
             cache,
             waitUntil,
             buyerIp: getBuyerIp(request),
@@ -75,7 +75,6 @@ export default {
             session,
             waitUntil,
             storefront,
-            fetch,
             env,
           };
         },

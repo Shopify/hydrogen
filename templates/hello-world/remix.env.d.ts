@@ -24,6 +24,6 @@ declare module '@remix-run/oxygen' {
   export interface AppLoadContext {
     session: HydrogenSession;
     storefront: StorefrontClient['storefront'];
-    fetch: StorefrontClient['fetch'];
+    env: Env;
   }
 }

@@ -25,7 +25,6 @@ declare module '@remix-run/oxygen' {
     waitUntil: ExecutionContext['waitUntil'];
     session: HydrogenSession;
     storefront: StorefrontClient['storefront'];
-    fetch: StorefrontClient['fetch'];
     cache: Cache;
     env: Env;
   }
