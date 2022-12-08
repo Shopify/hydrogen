@@ -138,7 +138,6 @@ function UpdateDiscountForm({children}: {children: React.ReactNode}) {
   return (
     <fetcher.Form action="/cart" method="post">
       <input type="hidden" name="cartAction" value="UPDATE_DISCOUNT" />
-      <input type="hidden" name="discountCodes" value={JSON.stringify([])} />
       {children}
     </fetcher.Form>
   );
