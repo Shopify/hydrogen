@@ -98,72 +98,51 @@ function CartDiscounts({
             onMouseEnter={() => setHovered(true)}
             onMouseLeave={() => setHovered(false)}
           >
-            {/* <CartDiscountCodesUpdateForm
-              className={hovered ? 'block' : 'hidden'}
-              discountCodes={[]}
-            >
-              {() => (
-                <button>
-                  <IconRemove
-                    aria-hidden="true"
-                    style={{height: 18, marginRight: 4}}
-                  />
-                </button>
-              )}
-            </CartDiscountCodesUpdateForm> */}
+            <UpdateDiscountForm>
+              <button className={hovered ? 'block' : 'hidden'}>
+                <IconRemove
+                  aria-hidden="true"
+                  style={{height: 18, marginRight: 4}}
+                />
+              </button>
+            </UpdateDiscountForm>
             <Text as="dd">{codes}</Text>
           </div>
         </div>
       </dl>
 
       {/* No discounts, show an input to apply a discount */}
-      {/* <CartDiscountCodesUpdateForm>
-        {() => (
-          <div
-            className={clsx(
-              codes ? 'hidden' : 'flex',
-              'items-center justify-between',
-            )}
-          >
-            <input
-              className={getInputStyleClasses()}
-              type="text"
-              name="discountCodes"
-            />
-            <button className="w-[150px] flex justify-end">
-              <Text size="fine">Apply Discount</Text>
-            </button>
-          </div>
-        )}
-      </CartDiscountCodesUpdateForm> */}
+      <UpdateDiscountForm>
+        <div
+          className={clsx(
+            codes ? 'hidden' : 'flex',
+            'items-center justify-between',
+          )}
+        >
+          <input
+            className={getInputStyleClasses()}
+            type="text"
+            name="discountCode"
+          />
+          <button className="w-[150px] flex justify-end">
+            <Text size="fine">Apply Discount</Text>
+          </button>
+        </div>
+      </UpdateDiscountForm>
     </>
   );
 }
 
-// function RemoveDiscountForm(discountCode: CartDiscountCode, discountCodes: CartType['discountCodes']) {
-//   const fetcher = useFetcher();
-//   const keepCodes = discountCodes.filter(c => c.code !== discountCode.code)
-//   return (
-//     <fetcher.Form action="/cart" method="post">
-//       <input type="hidden" name="cartAction" value="UPDATE_DISCOUNT" />
-//       <input
-//         type="hidden"
-//         name="discountCodes"
-//         value={JSON.stringify(keepCodes)}
-//       />
-//       <Button
-//         as="button"
-//         width="full"
-//         type="submit"
-//         variant="secondary"
-//       >
-//         <Text as="span" className="flex items-center justify-center gap-2">
-//           Add to Bag
-//         </Text>
-//       </Button>
-//     </fetcher.Form>
-//   );
-// }
+function UpdateDiscountForm({children}: {children: React.ReactNode}) {
+  const fetcher = useFetcher();
+  return (
+    <fetcher.Form action="/cart" method="post">
+      <input type="hidden" name="cartAction" value="UPDATE_DISCOUNT" />
+      <input type="hidden" name="discountCodes" value={JSON.stringify([])} />
+      {children}
+    </fetcher.Form>
+  );
+}
 
 function CartLines({
   layout = 'drawer',
