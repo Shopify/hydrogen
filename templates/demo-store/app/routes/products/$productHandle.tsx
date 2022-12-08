@@ -8,7 +8,6 @@ import {
   useSearchParams,
   useLocation,
   useTransition,
-  Form,
   useMatches,
   useFetcher,
 } from '@remix-run/react';
@@ -26,7 +25,7 @@ import {
   Link,
   Button,
 } from '~/components';
-import {getExcerpt, variantToCartLine} from '~/lib/utils';
+import {getExcerpt} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import type {

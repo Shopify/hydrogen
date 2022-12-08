@@ -14,16 +14,10 @@ import {getInputStyleClasses} from '~/lib/utils';
 import type {
   Cart as CartType,
   CartCost,
-  CartDiscountCode,
   CartLine,
-  CartLineInput,
   CartLineUpdateInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {useFetcher, useMatches} from '@remix-run/react';
-// import {
-//   CartDiscountCodesUpdateForm,
-//   CartLinesUpdateForm,
-// } from '.hydrogen/cart';
+import {useFetcher} from '@remix-run/react';
 
 type Layouts = 'page' | 'drawer';
 

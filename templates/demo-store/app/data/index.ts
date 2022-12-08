@@ -1,7 +1,6 @@
 import type {
   Cart,
   CartInput,
-  CartLine,
   CartLineInput,
   CartLineUpdateInput,
   CartUserError,

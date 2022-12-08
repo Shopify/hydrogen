@@ -7,7 +7,7 @@ import {
 } from '@shopify/hydrogen-react';
 import type {SerializeFrom} from '@remix-run/oxygen';
 import {Text, Link, Button} from '~/components';
-import {isDiscounted, isNewArrival, variantToCartLine} from '~/lib/utils';
+import {isDiscounted, isNewArrival} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
 import type {
   CartLineInput,
