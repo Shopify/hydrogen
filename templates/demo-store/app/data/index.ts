@@ -430,7 +430,7 @@ export async function cartCreate({
   storefront,
 }: {
   input: CartInput;
-  storefront: HydrogenContext['storefront'];
+  storefront: AppLoadContext['storefront'];
 }) {
   const {cartCreate} = await storefront.mutate<{
     cartCreate: {
@@ -478,7 +478,7 @@ export async function cartAdd({
 }: {
   cartId: string;
   lines: CartLineInput[];
-  storefront: HydrogenContext['storefront'];
+  storefront: AppLoadContext['storefront'];
 }) {
   const {cartLinesAdd} = await storefront.mutate<{
     cartLinesAdd: {
@@ -539,7 +539,7 @@ export async function cartRemove({
 }: {
   cartId: string;
   lineIds: Cart['id'][];
-  storefront: HydrogenContext['storefront'];
+  storefront: AppLoadContext['storefront'];
 }) {
   const {cartLinesRemove} = await storefront.mutate<{
     cartLinesRemove: {cart: Cart; errors: UserError[]};
@@ -585,7 +585,7 @@ export async function cartUpdate({
 }: {
   cartId: string;
   lines: CartLineUpdateInput[];
-  storefront: HydrogenContext['storefront'];
+  storefront: AppLoadContext['storefront'];
 }) {
   const {cartLinesUpdate} = await storefront.mutate<{
     cartLinesUpdate: {cart: Cart; errors: UserError[]};
@@ -644,7 +644,7 @@ export async function cartUpdateBuyerIdentity({
 }: {
   cartId: string;
   buyerIdentity: CartBuyerIdentityInput;
-  storefront: HydrogenContext['storefront'];
+  storefront: AppLoadContext['storefront'];
 }) {
   const {cartBuyerIdentityUpdate} = await storefront.mutate<{
     cartBuyerIdentityUpdate: {cart: Cart; errors: UserError[]};
@@ -694,7 +694,7 @@ export async function cartDiscountCodesUpdate({
 }: {
   cartId: string;
   discountCodes: string[];
-  storefront: HydrogenContext['storefront'];
+  storefront: AppLoadContext['storefront'];
 }) {
   const {cartDiscountCodesUpdate} = await storefront.mutate<{
     cartDiscountCodesUpdate: {cart: Cart; errors: UserError[]};
