@@ -99,11 +99,15 @@ const DEFAULTS: Required<
           if (input === '' || input === undefined) {
             return true;
           }
-          return (
+
+          const validProxyFormat =
             !/^https?:\/\//.test(input) &&
             input.split(':').length === 2 &&
-            !isNaN(parseInt(input.split(':')[1], 10))
-          );
+            !isNaN(parseInt(input.split(':')[1], 10));
+
+          return validProxyFormat
+            ? true
+            : `Enter a HTTP proxy server hostname/IP address and port without a protocol, e.g. 127.0.0.1:8080`;
         },
       },
       {
