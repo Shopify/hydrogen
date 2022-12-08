@@ -171,3 +171,48 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
     openCart();
   }, [addToCartFetchers, isCartOpen, openCart]);
 ```
+
+## 5. Adding optimistic UI
+
+Optimistic UI gives an immediate feedback to your visitors
+
+```jsx
+function AddToCartButton({lines}) {
+  const [root] = useMatches();
+  const fetcher = useFetcher();
+
+  // Create an unique id for our form
+  const eventId = useId();
+  const eventIdFetchers = useEventIdFetchers(eventId);
+  const isAdding = !!eventIdFetchers.length;
+
+  return (
+    <fetcher.Form action="/cart" method="post">
+      <input type="hidden" name="cartAction" value="ADD_TO_CART" />
+      <input type="hidden" name="eventId" value={eventId} />
+      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+      <button type="submit" disabled={isAdding}>
+        {isAdding ? 'Adding ...' : 'Add to Bag'}
+      </button>
+    </fetcher.Form>
+  );
+}
+```
+
+Just like how we use `useFetchers` to know a cart operation has occurred.
+We can do the same to search for the exact form that initiated the form request.
+
+```jsx
+export function useEventIdFetchers(eventId: string) {
+  const fetchers = useFetchers();
+  const cartFetchers = [];
+
+  for (const fetcher of fetchers) {
+    const formData = fetcher.submission?.formData;
+    if (formData && formData.get('eventId') === eventId) {
+      cartFetchers.push(fetcher);
+    }
+  }
+  return cartFetchers;
+}
+```
