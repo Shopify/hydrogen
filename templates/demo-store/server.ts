@@ -1,7 +1,7 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
 import {createRequestHandler, getBuyerIp} from '@shopify/remix-oxygen';
-import {createStorefrontClient, proxyLiquidRoute} from '@shopify/hydrogen';
+import {createStorefrontClient} from '@shopify/hydrogen';
 import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
 
@@ -20,20 +20,6 @@ export default {
     executionContext: ExecutionContext,
   ): Promise<Response> {
     try {
-      /**
-       * Proxy to the Online Store if needed.
-       */
-      const onlineStoreProxy =
-        new URL(request.url).pathname === '/proxy' ? '/pages/about' : null;
-
-      if (onlineStoreProxy) {
-        return await proxyLiquidRoute(
-          request,
-          env.SHOPIFY_STORE_DOMAIN,
-          onlineStoreProxy,
-        );
-      }
-
       /**
        * Open a cache instance in the worker and a custom session instance.
        */
