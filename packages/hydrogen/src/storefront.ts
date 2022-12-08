@@ -25,6 +25,7 @@ import {
   CountryCode,
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {warnOnce} from './utils/warning';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -84,6 +85,13 @@ export function createStorefrontClient({
   requestGroupId = generateUUID(),
   ...clientOptions
 }: CreateStorefrontClientOptions) {
+  if (!cache) {
+    // TODO: should only warn in development
+    warnOnce(
+      'Storefront API client created without a cache instance. This may slow down your sub-requests.',
+    );
+  }
+
   clientOptions.storeDomain = clientOptions.storeDomain.replace(
     '.myshopify.com',
     '',
