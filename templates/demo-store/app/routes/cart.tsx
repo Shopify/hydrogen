@@ -2,7 +2,7 @@ import {CartLoading, Cart} from '~/components';
 import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
-import {type ActionArgs, json} from '@shopify/hydrogen-remix';
+import {json, type ActionArgs} from '@remix-run/oxygen';
 import type {
   CartLineInput,
   CartBuyerIdentityInput,
@@ -19,7 +19,7 @@ import {
   cartUpdate,
   cartUpdateBuyerIdentity,
 } from '~/data';
-import {isLocalPath, withoutFalsyProps} from '~/lib/utils';
+import {isLocalPath} from '~/lib/utils';
 
 type CartAction =
   | 'ADD_TO_CART'

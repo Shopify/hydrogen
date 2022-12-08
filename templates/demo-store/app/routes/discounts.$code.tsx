@@ -1,4 +1,4 @@
-import {redirect, type LoaderArgs} from '@shopify/hydrogen-remix';
+import {redirect, type LoaderArgs} from '@remix-run/oxygen';
 import {cartCreate, cartDiscountCodesUpdate} from '~/data';
 
 /**
