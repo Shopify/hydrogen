@@ -58,20 +58,6 @@ jobs:
           commit_timestamp: ${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
           oxygen_health_check: true
 
-      # - name: 📤 Build and publish the Hello world template to Oxygen
-      #   id: deploy
-      #   uses: shopify/oxygenctl-action@v4
-      #   with:
-      #     path: ./templates/hello-world
-      #     oxygen_deployment_token: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_28966968 }}
-      #     oxygen_worker_dir: dist/worker
-      #     oxygen_client_dir: dist/client
-      #     build_command: 'HYDROGEN_ASSET_BASE_URL=$OXYGEN_ASSET_BASE_URL npm run build'
-      #     # Hardcode message and timestamp if manual dispatch
-      #     commit_message: ${{ github.event.head_commit.message || 'Manual deployment' }}
-      #     commit_timestamp: ${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
-      #     oxygen_health_check: true
-
       - name: 🐙 Create GitHub deployment
         uses: shopify/github-deployment-action@v1
         if: always()
