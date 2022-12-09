@@ -17,6 +17,8 @@ import type {
   ProductVariantConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useFetcher, useMatches} from '@remix-run/react';
+import {useId} from 'react';
+import {useEventIdFetchers} from '~/hooks/useEventIdFetchers';
 
 export function ProductCard({
   product,
@@ -124,9 +126,14 @@ export function AddToCartButton({lines}: {lines: CartLineInput[]}) {
   const selectedLocale = root?.data?.selectedLocale;
   const fetcher = useFetcher();
 
+  const eventId = useId();
+  const eventIdFetchers = useEventIdFetchers(eventId);
+  const isAdding = !!eventIdFetchers.length;
+
   return (
     <fetcher.Form action="/cart" method="post">
       <input type="hidden" name="cartAction" value="ADD_TO_CART" />
+      <input type="hidden" name="eventId" value={eventId} />
       <input type="hidden" name="countryCode" value={selectedLocale.country} />
       <input type="hidden" name="lines" value={JSON.stringify(lines)} />
       <Button
@@ -135,9 +142,10 @@ export function AddToCartButton({lines}: {lines: CartLineInput[]}) {
         type="submit"
         variant="secondary"
         className="mt-2"
+        disabled={isAdding}
       >
         <Text as="span" className="flex items-center justify-center gap-2">
-          Add to Bag
+          {isAdding ? 'Adding ...' : 'Add to Bag'}
         </Text>
       </Button>
     </fetcher.Form>

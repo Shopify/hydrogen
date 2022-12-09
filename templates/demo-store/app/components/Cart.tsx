@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import {useRef, useState} from 'react';
+import {useId, useRef, useState} from 'react';
 import {useScroll} from 'react-use';
 import {flattenConnection, Image, Money} from '@shopify/hydrogen-react';
 import {
@@ -18,6 +18,7 @@ import type {
   CartLineUpdateInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useFetcher} from '@remix-run/react';
+import {useEventIdFetchers} from '~/hooks/useEventIdFetchers';
 
 type Layouts = 'page' | 'drawer';
 
@@ -296,34 +297,53 @@ function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
 }
 
 function CartLineQuantityAdjust({line}: {line: CartLine}) {
+  const eventId = useId();
+  const eventIdFetchers = useEventIdFetchers(eventId);
+
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity} = line;
-  const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
-  const nextQuantity = Number((quantity + 1).toFixed(0));
+
+  let optimisticQuantity = quantity;
+
+  if (
+    eventIdFetchers.length &&
+    eventIdFetchers[0].submission?.formData.get('quantity')
+  ) {
+    optimisticQuantity = parseInt(
+      String(eventIdFetchers[0].submission?.formData.get('quantity')),
+    );
+  }
+
+  const prevQuantity = Number(Math.max(0, optimisticQuantity - 1).toFixed(0));
+  const nextQuantity = Number((optimisticQuantity + 1).toFixed(0));
 
   return (
     <>
       <label htmlFor={`quantity-${lineId}`} className="sr-only">
-        Quantity, {quantity}
+        Quantity, {optimisticQuantity}
       </label>
       <div className="flex items-center border rounded">
         <UpdateCartButton lines={[{id: lineId, quantity: prevQuantity}]}>
+          <input type="hidden" name="eventId" value={eventId} />
+          <input type="hidden" name="quantity" value={prevQuantity} />
           <button
             name="decrease-quantity"
             aria-label="Decrease quantity"
             className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
             value={prevQuantity}
-            disabled={quantity <= 1}
+            disabled={optimisticQuantity <= 1}
           >
             <span>&#8722;</span>
           </button>
         </UpdateCartButton>
 
         <div className="px-2 text-center" data-test="item-quantity">
-          {quantity}
+          {optimisticQuantity}
         </div>
 
         <UpdateCartButton lines={[{id: lineId, quantity: nextQuantity}]}>
+          <input type="hidden" name="eventId" value={eventId} />
+          <input type="hidden" name="quantity" value={nextQuantity} />
           <button
             className="w-10 h-10 transition text-primary/50 hover:text-primary"
             name="increase-quantity"
