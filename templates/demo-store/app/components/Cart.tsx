@@ -1,5 +1,5 @@
 import clsx from 'clsx';
-import {useId, useRef, useState} from 'react';
+import {useId, useRef} from 'react';
 import {useScroll} from 'react-use';
 import {flattenConnection, Image, Money} from '@shopify/hydrogen-react';
 import {
@@ -19,6 +19,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useFetcher} from '@remix-run/react';
 import {useEventIdFetchers} from '~/hooks/useEventIdFetchers';
+import {CartAction} from '~/lib/type';
 
 type Layouts = 'page' | 'drawer';
 
@@ -79,7 +80,6 @@ function CartDiscounts({
 }: {
   discountCodes: CartType['discountCodes'];
 }) {
-  const [hovered, setHovered] = useState(false);
   const codes = discountCodes?.map(({code}) => code).join(', ') || null;
 
   return (
@@ -88,13 +88,9 @@ function CartDiscounts({
       <dl className={clsx(codes ? 'grid' : 'hidden')}>
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Discount(s)</Text>
-          <div
-            className="flex items-center justify-between"
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-          >
+          <div className="flex items-center justify-between">
             <UpdateDiscountForm>
-              <button className={hovered ? 'block' : 'hidden'}>
+              <button>
                 <IconRemove
                   aria-hidden="true"
                   style={{height: 18, marginRight: 4}}
@@ -132,7 +128,11 @@ function UpdateDiscountForm({children}: {children: React.ReactNode}) {
   const fetcher = useFetcher();
   return (
     <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value="UPDATE_DISCOUNT" />
+      <input
+        type="hidden"
+        name="cartAction"
+        value={CartAction.UPDATE_DISCOUNT}
+      />
       {children}
     </fetcher.Form>
   );
@@ -283,7 +283,11 @@ function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
 
   return (
     <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value="REMOVE_FROM_CART" />
+      <input
+        type="hidden"
+        name="cartAction"
+        value={CartAction.REMOVE_FROM_CART}
+      />
       <input type="hidden" name="linesIds" value={JSON.stringify(lineIds)} />
       <button
         className="flex items-center justify-center w-10 h-10 border rounded"
@@ -369,7 +373,7 @@ function UpdateCartButton({
 
   return (
     <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value="UPDATE_CART" />
+      <input type="hidden" name="cartAction" value={CartAction.UPDATE_CART} />
       <input type="hidden" name="lines" value={JSON.stringify(lines)} />
       {children}
     </fetcher.Form>

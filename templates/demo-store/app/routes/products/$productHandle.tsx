@@ -24,6 +24,7 @@ import {
   Text,
   Link,
   Button,
+  AddToCartButton,
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
 import invariant from 'tiny-invariant';
@@ -59,6 +60,8 @@ export async function loader({params, request, context}: LoaderArgs) {
     variables: {
       handle: productHandle,
       selectedOptions,
+      country: context.storefront.i18n?.country,
+      language: context.storefront.i18n?.language,
     },
   });
 
@@ -190,6 +193,18 @@ export function ProductForm() {
   const selectedVariant = product.selectedVariant ?? firstVariant;
   const isOutOfStock = !selectedVariant?.availableForSale;
 
+  const isOnSale =
+    selectedVariant?.price?.amount &&
+    selectedVariant?.compareAtPrice?.amount &&
+    selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
+
+  const lines = [
+    {
+      merchandiseId: selectedVariant.id,
+      quantity: 1,
+    },
+  ];
+
   return (
     <div className="grid gap-10">
       <div className="grid gap-4">
@@ -200,9 +215,39 @@ export function ProductForm() {
         {selectedVariant && (
           <div className="grid items-stretch gap-4">
             <AddToCartButton
-              selectedVariant={selectedVariant}
-              isOutOfStock={isOutOfStock}
-            />
+              lines={[
+                {
+                  merchandiseId: selectedVariant.id,
+                  quantity: 1,
+                },
+              ]}
+              variant={isOutOfStock ? 'secondary' : 'primary'}
+              data-test="add-to-cart"
+            >
+              {isOutOfStock ? (
+                <Text>Sold out</Text>
+              ) : (
+                <Text
+                  as="span"
+                  className="flex items-center justify-center gap-2"
+                >
+                  <span>Add to Bag</span> <span>·</span>{' '}
+                  <Money
+                    withoutTrailingZeros
+                    data={selectedVariant?.price!}
+                    as="span"
+                  />
+                  {isOnSale && (
+                    <Money
+                      withoutTrailingZeros
+                      data={selectedVariant?.compareAtPrice!}
+                      as="span"
+                      className="opacity-50 strike"
+                    />
+                  )}
+                </Text>
+              )}
+            </AddToCartButton>
             {!isOutOfStock && (
               <ShopPayButton variantIds={[selectedVariant?.id!]} />
             )}
@@ -329,65 +374,6 @@ function ProductOptions({
           </div>
         ))}
     </>
-  );
-}
-
-function AddToCartButton({
-  isOutOfStock,
-  selectedVariant,
-}: {
-  isOutOfStock: boolean;
-  selectedVariant: ProductVariant;
-}) {
-  const [root] = useMatches();
-  const selectedLocale = root?.data?.selectedLocale;
-  const fetcher = useFetcher();
-  const isOnSale =
-    selectedVariant?.price?.amount &&
-    selectedVariant?.compareAtPrice?.amount &&
-    selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
-
-  const lines = [
-    {
-      merchandiseId: selectedVariant.id,
-      quantity: 1,
-    },
-  ];
-
-  return (
-    <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value="ADD_TO_CART" />
-      <input type="hidden" name="countryCode" value={selectedLocale.country} />
-      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
-      <Button
-        as="button"
-        width="full"
-        type="submit"
-        variant={isOutOfStock ? 'secondary' : 'primary'}
-        data-test="add-to-cart"
-      >
-        {isOutOfStock ? (
-          <Text>Sold out</Text>
-        ) : (
-          <Text as="span" className="flex items-center justify-center gap-2">
-            <span>Add to Bag</span> <span>·</span>{' '}
-            <Money
-              withoutTrailingZeros
-              data={selectedVariant?.price!}
-              as="span"
-            />
-            {isOnSale && (
-              <Money
-                withoutTrailingZeros
-                data={selectedVariant?.compareAtPrice!}
-                as="span"
-                className="opacity-50 strike"
-              />
-            )}
-          </Text>
-        )}
-      </Button>
-    </fetcher.Form>
   );
 }
 
