@@ -6,19 +6,15 @@ import {
   useMoney,
 } from '@shopify/hydrogen-react';
 import type {SerializeFrom} from '@remix-run/oxygen';
-import {Text, Link, Button, AddToCartButton} from '~/components';
+import {Text, Link, AddToCartButton} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
 import type {
-  CartLineInput,
   MoneyV2,
   Product,
   ProductVariant,
   ProductVariantConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {useFetcher, useMatches} from '@remix-run/react';
-import {useId} from 'react';
-import {useEventIdFetchers} from '~/hooks/useEventIdFetchers';
 
 export function ProductCard({
   product,
