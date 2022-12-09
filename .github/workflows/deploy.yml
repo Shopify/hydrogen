@@ -46,7 +46,7 @@ jobs:
 
       - name: 📤 Build and publish the Demo store template to Oxygen
         id: deploy
-        uses: shopify/oxygenctl-action@v4.1.1
+        uses: shopify/oxygenctl-action@v4
         with:
           path: ./templates/demo-store
           oxygen_deployment_token: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_28966968 }}
