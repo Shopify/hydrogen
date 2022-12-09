@@ -8,14 +8,16 @@ Whatever this integration ending up looking like but it would be the stuff in `s
 
 ```jsx
 // app/routes/cart.jsx
+import invariant from 'tiny-invariant';
+import {json} from '@remix-run/oxygen';
+
 export async function action({request, context}) {
   const {session, storefront} = context;
   const headers = new Headers();
 
-  const [formData, cartId, customerAccessToken] = await Promise.all([
+  const [formData, cartId] = await Promise.all([
     request.formData(),
     session.get('cartId'),
-    session.get('customerAccessToken'),
   ]);
 
   const cartAction = formData.get('cartAction');
@@ -25,7 +27,7 @@ export async function action({request, context}) {
   let result = {};
 
   switch (cartAction) {
-    case CartAction.ADD_TO_CART:
+    case 'ADD_TO_CART':
       // Business logic for adding an item to cart
 
       // Validate form data
