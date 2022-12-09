@@ -18,6 +18,7 @@ import type {
   CartLineUpdateInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {useFetcher} from '@remix-run/react';
+import {CartAction} from '~/lib/type';
 
 type Layouts = 'page' | 'drawer';
 
@@ -131,7 +132,11 @@ function UpdateDiscountForm({children}: {children: React.ReactNode}) {
   const fetcher = useFetcher();
   return (
     <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value="UPDATE_DISCOUNT" />
+      <input
+        type="hidden"
+        name="cartAction"
+        value={CartAction.UPDATE_DISCOUNT}
+      />
       {children}
     </fetcher.Form>
   );
@@ -282,7 +287,11 @@ function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
 
   return (
     <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value="REMOVE_FROM_CART" />
+      <input
+        type="hidden"
+        name="cartAction"
+        value={CartAction.REMOVE_FROM_CART}
+      />
       <input type="hidden" name="linesIds" value={JSON.stringify(lineIds)} />
       <button
         className="flex items-center justify-center w-10 h-10 border rounded"
@@ -349,7 +358,7 @@ function UpdateCartButton({
 
   return (
     <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value="UPDATE_CART" />
+      <input type="hidden" name="cartAction" value={CartAction.UPDATE_CART} />
       <input type="hidden" name="lines" value={JSON.stringify(lines)} />
       {children}
     </fetcher.Form>

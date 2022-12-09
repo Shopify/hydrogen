@@ -1,5 +1,5 @@
 import {redirect, type LoaderArgs} from '@remix-run/oxygen';
-import {cartCreate, cartDiscountCodesUpdate} from '~/data';
+import {cartCreate, cartDiscountCodesUpdate} from './cart';
 
 /**
  * Automatically applies a discount found on the url

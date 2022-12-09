@@ -6,7 +6,7 @@ import {
   useMoney,
 } from '@shopify/hydrogen-react';
 import type {SerializeFrom} from '@remix-run/oxygen';
-import {Text, Link, Button} from '~/components';
+import {Text, Link, Button, AddToCartButton} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
 import type {
@@ -113,34 +113,15 @@ export function ProductCard({
               merchandiseId: firstVariant.id,
             },
           ]}
-        />
+          variant="secondary"
+          className="mt-2"
+        >
+          <Text as="span" className="flex items-center justify-center gap-2">
+            Add to Bag
+          </Text>
+        </AddToCartButton>
       )}
     </div>
-  );
-}
-
-export function AddToCartButton({lines}: {lines: CartLineInput[]}) {
-  const [root] = useMatches();
-  const selectedLocale = root?.data?.selectedLocale;
-  const fetcher = useFetcher();
-
-  return (
-    <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value="ADD_TO_CART" />
-      <input type="hidden" name="countryCode" value={selectedLocale.country} />
-      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
-      <Button
-        as="button"
-        width="full"
-        type="submit"
-        variant="secondary"
-        className="mt-2"
-      >
-        <Text as="span" className="flex items-center justify-center gap-2">
-          Add to Bag
-        </Text>
-      </Button>
-    </fetcher.Form>
   );
 }
 

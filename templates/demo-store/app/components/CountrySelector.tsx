@@ -2,7 +2,7 @@ import {useFetcher, useLocation, useMatches} from '@remix-run/react';
 import {Heading, Button, IconCheck} from '~/components';
 import {useCallback, useEffect, useRef} from 'react';
 import {useInView} from 'react-intersection-observer';
-import type {Localizations, Locale} from '~/lib/type';
+import {Localizations, Locale, CartAction} from '~/lib/type';
 import {DEFAULT_LOCALE} from '~/lib/utils';
 import clsx from 'clsx';
 import {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
@@ -145,7 +145,11 @@ function ChangeLocaleForm({
 
   return (
     <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value="UPDATE_BUYER_IDENTITY" />
+      <input
+        type="hidden"
+        name="cartAction"
+        value={CartAction.UPDATE_BUYER_IDENTITY}
+      />
       <input
         type="hidden"
         name="buyerIdentity"

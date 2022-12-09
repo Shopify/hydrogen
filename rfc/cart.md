@@ -2,13 +2,13 @@
 
 ## 1. Make sure you have `storefront` in `context`
 
-Whatever this integration ending up looking like but it would be the stuff in `oxygen.ts`
+Whatever this integration ending up looking like but it would be the stuff in `server.ts`
 
 ## 2. Define your cart routes
 
 ```jsx
 // app/routes/cart.jsx
-export async function action({request, context}: ActionArgs) {
+export async function action({request, context}) {
   const {session, storefront} = context;
 
   const [formData, cartId, customerAccessToken] = await Promise.all([
