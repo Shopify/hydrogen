@@ -170,7 +170,7 @@ export function usePagination(
 
   // the only way to prevent hydration mismatches
   useEffect(() => {
-    if (!state) {
+    if (!state || !state?.nodes) {
       setNodes(connection.nodes);
       return;
     }
