@@ -46,7 +46,7 @@ jobs:
 
       - name: 📤 Build and publish the Demo store template to Oxygen
         id: deploy
-        uses: shopify/oxygenctl-action@v4
+        uses: shopify/oxygenctl-action@v4.2.2
         with:
           path: ./templates/demo-store
           oxygen_deployment_token: ${{ secrets.OXYGEN_DEPLOYMENT_TOKEN_28966968 }}
@@ -56,7 +56,7 @@ jobs:
           # Hardcode message and timestamp if manual dispatch
           commit_message: ${{ github.event.head_commit.message || 'Manual deployment' }}
           commit_timestamp: ${{ github.event.head_commit.timestamp || github.event.repository.updated_at }}
-          oxygen_health_check: false
+          oxygen_health_check: true
 
       - name: 🐙 Create GitHub deployment
         uses: shopify/github-deployment-action@v1
