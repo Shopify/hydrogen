@@ -91,7 +91,7 @@ module.exports = {
 The merchant may define custom redirects within the admin. Optionally Hydrogen can automatically route those custom redirects with the `notFoundMaybeRedirect` function. Call this function whenever you might need to 404. If a redirect exists for the URL, the function will return a 302, else it returns a normal 404.
 
 ```ts
-import {notFoundMaybeRedirect} from '@shopify/hydrogen-remix';
+import {notFoundMaybeRedirect} from '@shopify/hydrogen';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -115,7 +115,7 @@ The `notFoundMaybeRedirect` function also automatically handles a `return_to` qu
 It is easy to migrate from the online store to a Hydrogen custom storefront. Hydrogen can host some routes while proxying other routes to the online store. _Proxying is only supported on Oxygen, because proxying relies on privileged signed headers._ Configuring proxying is done within the `server.ts`:
 
 ```ts
-import {proxyLiquidRoute} from '@shopify/hydrogen-remix';
+import {proxyLiquidRoute} from '@shopify/hydrogen';
 
 export default {
   fetch(request, env, executionContext) {
@@ -146,7 +146,7 @@ Routes in Hydrogen can be defined in completely custom ways. Other services need
 The `/routes/productos/$handle.tsx` file should include `handle` meta-data that describes this route as a `PRODUCT` route:
 
 ```ts
-import {RESOURCE_TYPES} from '@shopify/hydrogen-remix';
+import {RESOURCE_TYPES} from '@shopify/hydrogen';
 
 export const handle = {
   hydrogen: {

@@ -1,5 +1,5 @@
 import {defer, type LoaderArgs} from '@remix-run/oxygen';
-import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen-remix';
+import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
