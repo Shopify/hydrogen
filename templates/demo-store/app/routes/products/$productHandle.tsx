@@ -222,6 +222,7 @@ export function ProductForm() {
                 },
               ]}
               variant={isOutOfStock ? 'secondary' : 'primary'}
+              data-test="add-to-cart"
             >
               {isOutOfStock ? (
                 <Text>Sold out</Text>
