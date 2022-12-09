@@ -17,7 +17,12 @@ export async function getFeaturedData(
   const data = await storefront.query<{
     featuredCollections: CollectionConnection;
     featuredProducts: ProductConnection;
-  }>(FEATURED_QUERY);
+  }>(FEATURED_QUERY, {
+    variables: {
+      country: storefront.i18n?.country,
+      language: storefront.i18n?.language,
+    },
+  });
 
   invariant(data, 'No data returned from Shopify API');
 

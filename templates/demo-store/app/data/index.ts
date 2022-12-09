@@ -37,6 +37,7 @@ export async function getLayoutData({storefront}: AppLoadContext) {
     variables: {
       headerMenuHandle: HEADER_MENU_HANDLE,
       footerMenuHandle: FOOTER_MENU_HANDLE,
+      language: storefront.i18n?.language,
     },
   });
 
@@ -792,6 +793,8 @@ export async function getCustomerOrder(
   }>(CUSTOMER_ORDER_QUERY, {
     variables: {
       orderId,
+      country: storefront.i18n?.country,
+      language: storefront.i18n?.language,
     },
   });
 
@@ -815,6 +818,8 @@ export async function getCustomer(
   }>(CUSTOMER_QUERY, {
     variables: {
       customerAccessToken,
+      country: context.storefront.i18n?.country,
+      language: context.storefront.i18n?.language,
     },
   });
 

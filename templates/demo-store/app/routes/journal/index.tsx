@@ -22,6 +22,7 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
     variables: {
       blogHandle: BLOG_HANDLE,
       pageBy: PAGINATION_SIZE,
+      language: storefront.i18n?.language,
     },
   });
 

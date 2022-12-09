@@ -23,6 +23,7 @@ export async function loader({request, params, context}: LoaderArgs) {
       termsOfService: false,
       refundPolicy: false,
       [policyName]: true,
+      language: context.storefront.i18n?.language,
     },
   });
 

@@ -24,7 +24,11 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   const {collections} = await storefront.query<{
     collections: CollectionConnection;
   }>(COLLECTIONS_QUERY, {
-    variables,
+    variables: {
+      ...variables,
+      country: storefront.i18n?.country,
+      language: storefront.i18n?.language,
+    },
   });
 
   return json({collections});

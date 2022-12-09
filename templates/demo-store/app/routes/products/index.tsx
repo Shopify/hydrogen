@@ -23,7 +23,11 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
   const data = await storefront.query<{
     products: ProductConnection;
   }>(ALL_PRODUCTS_QUERY, {
-    variables,
+    variables: {
+      ...variables,
+      country: storefront.i18n?.country,
+      language: storefront.i18n?.language,
+    },
   });
 
   invariant(data, 'No data returned from Shopify API');
