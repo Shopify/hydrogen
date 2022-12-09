@@ -110,7 +110,7 @@ export function createStorefrontClient({
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] = requestGroupId;
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
 
-  async function callStorefrontApi<T>({
+  async function fetchStorefrontApi<T>({
     query,
     mutation,
     variables,
@@ -212,14 +212,14 @@ export function createStorefrontClient({
         if (isMutationRE.test(query))
           throw new Error('storefront.query cannot execute mutations');
 
-        return callStorefrontApi<T>({...payload, query});
+        return fetchStorefrontApi<T>({...payload, query});
       },
       mutate: <T>(mutation: string, payload?: StorefrontCommonOptions) => {
         mutation = minifyQuery(mutation);
         if (isQueryRE.test(mutation))
           throw new Error('storefront.mutate cannot execute queries');
 
-        return callStorefrontApi<T>({...payload, mutation});
+        return fetchStorefrontApi<T>({...payload, mutation});
       },
       cache,
       CacheNone,
@@ -229,12 +229,12 @@ export function createStorefrontClient({
       generateCacheControlHeader,
       getPublicTokenHeaders,
       getPrivateTokenHeaders,
-      getStorefrontApiUrl,
       getShopifyDomain,
+      getApiUrl: getStorefrontApiUrl,
       /**
        * Wether it's a GraphQL error returned in the Storefront API response.
        */
-      isStorefrontApiError,
+      isApiError: isStorefrontApiError,
     },
   };
 }
