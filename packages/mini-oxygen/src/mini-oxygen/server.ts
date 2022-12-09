@@ -130,71 +130,71 @@ function createRequestMiddleware(
   return async (req, res) => {
     if (proxyServer !== '' && !req.headers['mini-oxygen-proxy']) {
       return sendProxyRequest(req, res, proxyServer);
-    } else {
-      let response: Response;
-      let status = 500;
-      const headers: http.OutgoingHttpHeaders = {};
+    }
 
-      const reqHeaders: {[key: string]: string} = {};
-      // eslint-disable-next-line guard-for-in
-      for (const key in req.headers) {
-        const val = req.headers[key];
-        if (Array.isArray(val)) {
-          reqHeaders[key] = val.join(',');
-        } else if (val !== undefined) {
-          reqHeaders[key] = val;
+    let response: Response;
+    let status = 500;
+    const headers: http.OutgoingHttpHeaders = {};
+
+    const reqHeaders: {[key: string]: string} = {};
+    // eslint-disable-next-line guard-for-in
+    for (const key in req.headers) {
+      const val = req.headers[key];
+      if (Array.isArray(val)) {
+        reqHeaders[key] = val.join(',');
+      } else if (val !== undefined) {
+        reqHeaders[key] = val;
+      }
+    }
+    const request = new Request(urlFromRequest(req), {
+      method: req.method,
+      headers: reqHeaders,
+      body:
+        req.method !== 'GET' && req.method !== 'HEAD'
+          ? (req as any).body
+          : null,
+    });
+
+    try {
+      response = await mf.dispatchFetch(request);
+      status = response.status;
+
+      for (const key of response.headers.keys()) {
+        const val =
+          key.toLowerCase() === 'set-cookie'
+            ? (response.headers as any).getAll(key)
+            : response.headers.get(key);
+        headers[key] = val;
+      }
+
+      const shouldAutoreload =
+        autoReload && response.headers.get('content-type') === 'text/html';
+
+      if (shouldAutoreload) {
+        const contentLength = response.headers.get('content-length');
+        if (contentLength) {
+          headers['content-length'] =
+            parseInt(contentLength, 10) + autoReloadScriptLength;
         }
       }
-      const request = new Request(urlFromRequest(req), {
-        method: req.method,
-        headers: reqHeaders,
-        body:
-          req.method !== 'GET' && req.method !== 'HEAD'
-            ? (req as any).body
-            : null,
-      });
 
-      try {
-        response = await mf.dispatchFetch(request);
-        status = response.status;
+      res.writeHead(status, headers);
 
-        for (const key of response.headers.keys()) {
-          const val =
-            key.toLowerCase() === 'set-cookie'
-              ? (response.headers as any).getAll(key)
-              : response.headers.get(key);
-          headers[key] = val;
+      if (response.body) {
+        for await (const chunk of response.body) {
+          res.write(chunk);
         }
-
-        const shouldAutoreload =
-          autoReload && response.headers.get('content-type') === 'text/html';
 
         if (shouldAutoreload) {
-          const contentLength = response.headers.get('content-length');
-          if (contentLength) {
-            headers['content-length'] =
-              parseInt(contentLength, 10) + autoReloadScriptLength;
-          }
+          res.write(autoReloadScript);
         }
-
-        res.writeHead(status, headers);
-
-        if (response.body) {
-          for await (const chunk of response.body) {
-            res.write(chunk);
-          }
-
-          if (shouldAutoreload) {
-            res.write(autoReloadScript);
-          }
-        }
-
-        res.end();
-      } catch (err: any) {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
-        res.writeHead(status, {'Content-Type': 'text/plain; charset=UTF-8'});
-        res.end(err.stack, 'utf8');
       }
+
+      res.end();
+    } catch (err: any) {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      res.writeHead(status, {'Content-Type': 'text/plain; charset=UTF-8'});
+      res.end(err.stack, 'utf8');
     }
   };
 }
