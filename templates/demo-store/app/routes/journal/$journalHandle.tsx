@@ -39,6 +39,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     variables: {
       blogHandle: BLOG_HANDLE,
       articleHandle: params.journalHandle,
+      language: context.storefront.i18n?.language,
     },
   });
 

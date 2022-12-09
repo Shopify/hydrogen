@@ -44,7 +44,16 @@ export async function loader({context, request}: LoaderArgs) {
     cartId
       ? (
           await context.storefront.query<{cart: Cart}>(CART_QUERY, {
-            variables: {cartId},
+            variables: {
+              cartId,
+              /**
+              Country and language properties are automatically injected
+              into all queries. Passing them is unnecessary unless you
+              want to override them from the following default:
+              */
+              country: context.storefront.i18n?.country,
+              language: context.storefront.i18n?.language,
+            },
             cache: context.storefront.CacheNone(),
           })
         ).cart
