@@ -79,7 +79,6 @@ function CartDiscounts({
 }: {
   discountCodes: CartType['discountCodes'];
 }) {
-  const [hovered, setHovered] = useState(false);
   const codes = discountCodes?.map(({code}) => code).join(', ') || null;
 
   return (
@@ -88,13 +87,9 @@ function CartDiscounts({
       <dl className={clsx(codes ? 'grid' : 'hidden')}>
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Discount(s)</Text>
-          <div
-            className="flex items-center justify-between"
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-          >
+          <div className="flex items-center justify-between">
             <UpdateDiscountForm>
-              <button className={hovered ? 'block' : 'hidden'}>
+              <button>
                 <IconRemove
                   aria-hidden="true"
                   style={{height: 18, marginRight: 4}}

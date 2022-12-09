@@ -198,7 +198,7 @@ switch (cartAction) {
 </fetcher.Form>
 ```
 
-## 4. Open cart drawer on add to cart operation
+## 4. Open cart drawer on add to cart action
 
 We can use `useFetchers` to know when a cart operation happens by
 looking for a form request with form data named `cartAction`.
