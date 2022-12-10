@@ -3,12 +3,8 @@ import url from 'url';
 import {flags} from '../../../utils/flags.js';
 import {Flags} from '@oclif/core';
 
-// @ts-expect-error `@types/jscodeshift` doesn't have types for this
-// import * as jscodeshift from 'jscodeshift/src/Runner.js';
-// import {createRequire} from 'module';
 import Command from '@shopify/cli-kit/node/base-command';
 
-// const __filename = url.fileURLToPath(import.meta.url);
 const __dirname = url.fileURLToPath(new URL('.', import.meta.url));
 
 interface ScaffoldOptions {
@@ -49,41 +45,43 @@ export async function runScaffold({
     `./transforms/${transform}/${transform}.js`,
   );
 
+  console.log(transformFile);
+
   if (!(await file.exists(transformFile))) {
     throw new error.Abort(`No transform module found for ${transform}`);
   }
 
-  const mod = await import(transformFile);
-  mod.default({path: appPath});
+  // @ts-expect-error `@types/jscodeshift` doesn't have types for this
+  const applyTransform = (await import('jscodeshift/dist/testUtils.js'))
+    .applyTransform;
+  const transforms = await import(transformFile);
+  const transformOptions = {
+    babel: true,
+    dry,
+    extensions: 'tsx,ts,jsx,js',
+    failOnError: false,
+    ignorePattern: ['**/node_modules/**', '**/.cache/**', '**/build/**'],
+    parser: 'tsx',
+    print: true,
+    runInBand: true,
+    silent: false,
+    stdin: false,
+    verbose: 2,
+  };
 
-  // const options = {
-  //   babel: true,
-  //   dry,
-  //   extensions: 'tsx,ts,jsx,js',
-  //   failOnError: false,
-  //   ignorePattern: ['**/node_modules/**', '**/.cache/**', '**/build/**'],
-  //   parser: 'tsx',
-  //   print: true,
-  //   runInBand: true,
-  //   silent: false,
-  //   stdin: false,
-  //   verbose: 2,
-  // };
+  const filepaths = await path.glob([`${appPath}/**/*`]);
 
-  // const filepaths = await path.glob([`${appPath}/**/*`]);
+  if (filepaths.length === 0) {
+    throw new Error(`No files found for ${appPath}`);
+  }
 
-  // if (filepaths.length === 0) {
-  //   throw new Error(`No files found for ${appPath}`);
-  // }
+  try {
+    const output = applyTransform(transforms, transformOptions, 'input');
 
-  // try {
-  //   const require = createRequire(import.meta.url);
-  //   const jscodeshift = require('jscodeshift/src/Runner.js');
-  //   // const {error} = await jscodeshift.run(transformFile, filepaths, options);
-  //   // console.log(error);
-  // } catch (error) {
-  //   // eslint-disable-next-line no-console
-  //   console.error(error);
-  //   process.exit(1);
-  // }
+    console.log(output);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(error);
+    process.exit(1);
+  }
 }

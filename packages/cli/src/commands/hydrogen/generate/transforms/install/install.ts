@@ -36,6 +36,10 @@ export default async function installHydrogen({path: appPath}: {path: string}) {
       task: async () => {},
     },
     {
+      title: `Replace imports to oxygen adaptor`,
+      task: async () => {},
+    },
+    {
       title: `Fetch storefront data in root loader`,
       task: async () => {},
     },
