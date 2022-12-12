@@ -4,7 +4,7 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@remix-run/oxygen';
-import {RESOURCE_TYPES} from '@shopify/hydrogen-remix';
+import {RESOURCE_TYPES} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import type {ShopPolicy} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';

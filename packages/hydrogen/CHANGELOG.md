@@ -1,4 +1,4 @@
-# @shopify/h2-test-hydrogen-remix
+# @shopify/h2-test-hydrogen
 
 ## 0.0.4
 

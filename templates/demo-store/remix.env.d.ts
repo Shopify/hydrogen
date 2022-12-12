@@ -2,7 +2,7 @@
 /// <reference types="@remix-run/oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
-import type {StorefrontClient} from '@shopify/hydrogen-remix';
+import type {StorefrontClient} from '@shopify/hydrogen';
 import type {HydrogenSession} from '~/lib/session.server';
 
 /**

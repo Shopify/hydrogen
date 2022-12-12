@@ -544,10 +544,7 @@ export function getLocaleFromRequest(request: Request): Locale {
    ```jsx
    // routes/api/countries
    import {json} from '@remix-run/server-runtime';
-   import {
-     CacheLong,
-     generateCacheControlHeader,
-   } from '@shopify/hydrogen-remix';
+   import {CacheLong, generateCacheControlHeader} from '@shopify/hydrogen';
    import {countries} from '~/data/countries';
 
    export async function loader() {
