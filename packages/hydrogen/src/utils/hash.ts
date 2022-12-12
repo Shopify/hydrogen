@@ -1,4 +1,4 @@
-export type QueryKey = string | readonly unknown[];
+type QueryKey = string | readonly unknown[];
 
 export function hashKey(queryKey: QueryKey): string {
   const rawKeys = Array.isArray(queryKey) ? queryKey : [queryKey];
