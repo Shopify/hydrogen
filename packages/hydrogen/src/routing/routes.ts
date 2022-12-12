@@ -30,7 +30,7 @@ async function copyTemplates() {
   const require = createRequire(import.meta.url);
   const isTs = isTSProject(require);
   const pkgPath = path.dirname(
-    require.resolve('@shopify/h2-test-hydrogen-remix/package.json'),
+    require.resolve('@shopify/h2-test-hydrogen/package.json'),
   );
 
   const templateDirectory = path.resolve(

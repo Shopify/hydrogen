@@ -5,7 +5,7 @@
   "compilerOptions": {
     "jsx": "preserve",
     "paths": {
-      "@shopify/hydrogen-remix": ["./src"]
+      "@shopify/hydrogen": ["./src"]
     }
   }
 }
