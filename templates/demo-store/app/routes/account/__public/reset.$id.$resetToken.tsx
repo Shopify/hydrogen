@@ -65,7 +65,7 @@ export const action: ActionFunction = async ({
       },
     });
   } catch (error: any) {
-    if (storefront.isStorefrontApiError(error)) {
+    if (storefront.isApiError(error)) {
       return badRequest({
         formError: 'Something went wrong. Please try again later.',
       });
