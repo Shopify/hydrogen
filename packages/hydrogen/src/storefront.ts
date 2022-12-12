@@ -43,7 +43,10 @@ export type CreateStorefrontClientOptions = Parameters<
 };
 
 type StorefrontCommonOptions = {
-  variables?: ExecutionArgs['variableValues'];
+  variables?: ExecutionArgs['variableValues'] & {
+    country?: CountryCode;
+    language?: LanguageCode;
+  };
   headers?: HeadersInit;
   storefrontApiVersion?: string;
 };
@@ -235,6 +238,7 @@ export function createStorefrontClient({
        * Wether it's a GraphQL error returned in the Storefront API response.
        */
       isApiError: isStorefrontApiError,
+      i18n,
     },
   };
 }

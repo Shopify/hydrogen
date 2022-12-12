@@ -14,20 +14,6 @@ try {
     fileURLToPath(await import.meta.resolve('@shopify/cli')),
   );
 
-  // @shopify/cli/bin/run.js
-  const cliFilePath = path.join(cliPkgPath, '..', 'bin', 'run.js');
-
-  const content = await fs.readFile(cliFilePath, 'utf-8');
-  await fs.writeFile(
-    cliFilePath,
-    // Add flag at the end of the shebang and -S param to support Linux (CI)
-    content.replace(
-      '#!/usr/bin/env node',
-      '#!/usr/bin/env -S node --experimental-vm-modules\n',
-    ),
-    'utf-8',
-  );
-
   // --- Add temporary CLI plugin name to package.json
   // @shopify/cli/package.json
   const pkgFilePath = path.join(cliPkgPath, '..', 'package.json');
