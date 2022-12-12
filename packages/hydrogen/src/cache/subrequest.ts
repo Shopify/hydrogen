@@ -1,4 +1,3 @@
-import {hashKey, type QueryKey} from '../utils/hash.js';
 import {CacheAPI} from './api';
 import {
   CacheShort,
@@ -37,10 +36,10 @@ export function generateSubRequestCacheControlHeader(
  */
 export async function getItemFromCache(
   cache: Cache,
-  key: QueryKey,
+  key: string,
 ): Promise<undefined | [any, Response]> {
   if (!cache) return;
-  const url = getKeyUrl(hashKey(key));
+  const url = getKeyUrl(key);
   const request = new Request(url);
 
   const response = await CacheAPI.get(cache, request);
@@ -58,13 +57,13 @@ export async function getItemFromCache(
  */
 export async function setItemInCache(
   cache: Cache,
-  key: QueryKey,
+  key: string,
   value: any,
   userCacheOptions?: CachingStrategy,
 ) {
   if (!cache) return;
 
-  const url = getKeyUrl(hashKey(key));
+  const url = getKeyUrl(key);
   const request = new Request(url);
   const response = new Response(JSON.stringify(value));
 
@@ -80,10 +79,10 @@ export async function setItemInCache(
  *
  * @private
  */
-export async function deleteItemFromCache(cache: Cache, key: QueryKey) {
+export async function deleteItemFromCache(cache: Cache, key: string) {
   if (!cache) return;
 
-  const url = getKeyUrl(hashKey(key));
+  const url = getKeyUrl(key);
   const request = new Request(url);
 
   await CacheAPI.delete(cache, request);
@@ -93,6 +92,6 @@ export async function deleteItemFromCache(cache: Cache, key: QueryKey) {
  * Manually check the response to see if it's stale.
  * @private
  */
-export function isStale(key: QueryKey, response: Response) {
-  return CacheAPI.isStale(new Request(getKeyUrl(hashKey(key))), response);
+export function isStale(key: string, response: Response) {
+  return CacheAPI.isStale(new Request(getKeyUrl(key)), response);
 }
