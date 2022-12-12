@@ -182,31 +182,21 @@ export function createStorefrontClient({
   }
 
   return {
-    /**
-     * GraphQL client for querying the Storefront API.
-     *
-     * Examples:
-     *
-     * ```ts
-     * const {storefront} = createStorefrontClient(...);
-     *
-     * // Query with cache:
-     * async function() {
-     *   const data = await storefront.query('query { ... }', {
-     *     variables: {},
-     *     cache: storefront.CacheLong()
-     *   });
-     * }
-     *
-     * // Mutate data:
-     * async function () {
-     *   await storefront.mutate('mutation { ... }', {
-     *     variables: {},
-     *   });
-     * }
-     * ```
-     */
     storefront: {
+      /**
+       * Sends a GraphQL query to the Storefront API.
+       *
+       * Example:
+       *
+       * ```js
+       * async function loader ({context: {storefront}}) {
+       *   const data = await storefront.query('query { ... }', {
+       *     variables: {},
+       *     cache: storefront.CacheLong()
+       *   });
+       * }
+       * ```
+       */
       query: <T>(
         query: string,
         payload?: StorefrontCommonOptions & {cache?: CachingStrategy},
@@ -217,6 +207,19 @@ export function createStorefrontClient({
 
         return fetchStorefrontApi<T>({...payload, query});
       },
+      /**
+       * Sends a GraphQL mutation to the Storefront API.
+       *
+       * Example:
+       *
+       * ```js
+       * async function loader ({context: {storefront}}) {
+       *   await storefront.mutate('mutation { ... }', {
+       *     variables: {},
+       *   });
+       * }
+       * ```
+       */
       mutate: <T>(mutation: string, payload?: StorefrontCommonOptions) => {
         mutation = minifyQuery(mutation);
         if (isQueryRE.test(mutation))
@@ -236,6 +239,22 @@ export function createStorefrontClient({
       getApiUrl: getStorefrontApiUrl,
       /**
        * Wether it's a GraphQL error returned in the Storefront API response.
+       *
+       * Example:
+       *
+       * ```js
+       * async function loader ({context: {storefront}}) {
+       *   try {
+       *     await storefront.query(...);
+       *   } catch(error) {
+       *     if (storefront.isApiError(error)) {
+       *       // ...
+       *     }
+       *
+       *     throw error;
+       *   }
+       * }
+       * ```
        */
       isApiError: isStorefrontApiError,
       i18n,
