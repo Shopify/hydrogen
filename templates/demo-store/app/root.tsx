@@ -268,7 +268,11 @@ export async function getCart({storefront}: AppLoadContext, cartId: string) {
   invariant(storefront, 'missing storefront client in cart query');
 
   const {cart} = await storefront.query<{cart: Cart}>(CART_QUERY, {
-    variables: {cartId},
+    variables: {
+      cartId,
+      country: storefront.i18n?.country,
+      language: storefront.i18n?.language,
+    },
     cache: storefront.CacheNone(),
   });
 

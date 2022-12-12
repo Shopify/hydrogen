@@ -224,7 +224,10 @@ async function getCartDiscounts({
   invariant(storefront, 'missing storefront client in cart discounts query');
 
   const {cart} = await storefront.query<{cart: Cart}>(CART_DISCOUNTS_QUERY, {
-    variables: {cartId},
+    variables: {
+      cartId,
+      country: context.storefront.i18n?.country,
+    },
   });
 
   invariant(cart, 'No data returned from cart discounts query');

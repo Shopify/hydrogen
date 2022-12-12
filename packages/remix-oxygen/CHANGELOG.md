@@ -1,5 +1,11 @@
 # @shopify/h2-test-remix-oxygen
 
+## 0.0.5
+
+### Patch Changes
+
+- Refactor the API for the server entrypoint by [@jplhomer](https://github.com/jplhomer)
+
 ## 0.0.4
 
 ### Patch Changes
