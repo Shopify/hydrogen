@@ -22,7 +22,7 @@ export interface MiniOxygenServerOptions extends MiniOxygenServerHooks {
   assetsDir?: string;
   autoReload?: boolean;
   publicPath?: string;
-  proxyServer: string;
+  proxyServer?: string;
 }
 
 const SSEUrl = '/events';
@@ -128,8 +128,12 @@ function createRequestMiddleware(
     Pick<MiniOxygenServerOptions, 'autoReload' | 'proxyServer'>,
 ): NextHandleFunction {
   return async (req, res) => {
-    if (proxyServer !== '' && !req.headers['mini-oxygen-proxy']) {
-      return sendProxyRequest(req, res, proxyServer);
+    if (
+      typeof proxyServer !== 'undefined' &&
+      proxyServer !== '' &&
+      !req.headers['mini-oxygen-proxy']
+    ) {
+      return sendProxyRequest(req, res, proxyServer!);
     }
 
     let response: Response;

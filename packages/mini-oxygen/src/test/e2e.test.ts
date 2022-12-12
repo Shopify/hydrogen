@@ -3,7 +3,12 @@ import EventSource from 'eventsource';
 
 import {preview, MiniOxygenPreviewOptions} from '../preview';
 
-import {createFixture, Fixture, sendRequest} from './utils';
+import {
+  createFixture,
+  Fixture,
+  sendRequest,
+  createMockProxyServer,
+} from './utils';
 
 const testPort = 1337;
 
@@ -117,5 +122,32 @@ describe('preview()', () => {
     expect(eventsCaught[0].data).toBe('connected');
     expect(eventsCaught[1].data).toBe('reload');
     await miniOxygen.close();
+  });
+
+  it('proxies requests to a proxy server', async () => {
+    const mockLogger = vi.fn();
+    const proxyPort = 1338;
+    const proxyServer = createMockProxyServer(proxyPort);
+
+    proxyServer.on('connection', () => {
+      mockLogger('Proxy request received');
+    });
+
+    const miniOxygen = await preview({
+      ...defaultOptions,
+      port: testPort,
+      workerFile: fixture.paths.workerFile,
+      proxyServer: `localhost:${proxyPort}`,
+    });
+
+    let receivedData;
+    await sendRequest(testPort, '/html').then((response: any) => {
+      receivedData = response.data;
+    });
+
+    expect(mockLogger).toHaveBeenLastCalledWith(`Proxy request received`);
+    expect(receivedData).toBe('bogus content');
+    await miniOxygen.close();
+    proxyServer.close();
   });
 });

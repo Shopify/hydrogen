@@ -47,7 +47,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     autoReload = false,
     modules = true,
     sourceMap = true,
-    proxyServer = '',
+    proxyServer,
     envPath,
     env = {},
     onRequest,
@@ -61,6 +61,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
       );
     },
   } = opts;
+
   const root = process.cwd();
 
   if (!workerFile || !fs.existsSync(workerFile)) {
@@ -120,14 +121,13 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
       log(
         `\nStarted miniOxygen server. Listening at http://localhost:${actualPort}\n`,
       );
-
       res({
         port: actualPort,
         close() {
           return new Promise((resolve) => {
-            app.close(() => resolve());
             sockets.forEach((socket) => socket.destroy());
             sockets.clear();
+            app.close(() => resolve());
           });
         },
       });

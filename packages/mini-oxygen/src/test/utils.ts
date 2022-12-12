@@ -1,6 +1,8 @@
 import {join, resolve} from 'path';
 import http from 'http';
+import type {IncomingMessage} from 'http';
 
+import {Mock} from 'vitest';
 import {writeFile, ensureDir, remove} from 'fs-extra';
 
 export interface Fixture {
@@ -26,18 +28,6 @@ export async function createFixture(name: string): Promise<Fixture> {
   await ensureDir(directory);
   await ensureDir(paths.assets);
   await writeFile(join(directory, '.gitignore'), '*');
-  await writeFile(
-    join(directory, 'mini-oxygen.config.json'),
-    JSON.stringify(
-      {
-        workerFile: 'worker.mjs',
-        watch: true,
-        env: {TESTING: 123, HELLO: 12345},
-      },
-      null,
-      2,
-    ),
-  );
 
   await writeFile(
     join(directory, 'package.json'),
@@ -82,8 +72,8 @@ export default {
   return {
     paths,
     destroy: async () => {
-      await remove(paths.assets);
-      await remove(directory);
+      //await remove(paths.assets);
+      //await remove(directory);
     },
     updateWorker: () => {
       return writeFile(
@@ -118,4 +108,14 @@ export async function sendRequest(port: number, path: string) {
         });
     });
   });
+}
+
+export function createMockProxyServer(port: number): http.Server {
+  const onRequest = (_req: IncomingMessage, res: any) => {
+    // eslint-disable-next-line @typescript-eslint/naming-convention
+    res.writeHead(200, {'Content-Type': 'text/plain; charset=UTF-8'});
+    res.end('bogus content', 'utf8');
+  };
+
+  return http.createServer(onRequest).listen(port);
 }
