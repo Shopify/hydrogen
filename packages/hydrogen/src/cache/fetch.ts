@@ -1,6 +1,6 @@
 import {hashKey} from '../utils/hash.js';
 import {CacheShort, CachingStrategy} from './strategies';
-import {getItemFromCache, setItemInCache, isStale} from './subrequest';
+import {getItemFromCache, setItemInCache, isStale} from './sub-request';
 
 export type FetchCacheOptions = {
   cache?: CachingStrategy;

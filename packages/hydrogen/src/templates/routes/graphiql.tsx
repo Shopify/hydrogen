@@ -7,10 +7,10 @@
  * @preserve
  */
 
-import type {LoaderArgs} from '@shopify/hydrogen-remix';
+import type {LoaderArgs} from '@remix-run/server-runtime';
 
 export async function loader({context}: LoaderArgs) {
-  const url = context.storefront.getStorefrontApiUrl();
+  const url = context.storefront.getApiUrl();
   const privateToken =
     context.storefront.getPublicTokenHeaders()[
       'X-Shopify-Storefront-Access-Token'

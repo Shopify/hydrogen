@@ -1,9 +1,9 @@
-import {redirect} from '@shopify/h2-test-remix-oxygen';
-import type {AppLoadContext} from '../types';
+import {redirect} from '@remix-run/server-runtime';
+import type {Storefront} from '../storefront';
 
 export async function notFoundMaybeRedirect(
   request: Request,
-  context: AppLoadContext,
+  context: {storefront: Storefront},
 ): Promise<Response> {
   const {pathname, search} = new URL(request.url);
   const {urlRedirects} = await context.storefront.query<{

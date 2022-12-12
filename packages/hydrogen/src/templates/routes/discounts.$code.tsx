@@ -1,5 +1,4 @@
-import type {LoaderArgs} from '@shopify/hydrogen-remix';
-import {redirect} from '@remix-run/server-runtime';
+import {redirect, type LoaderArgs} from '@remix-run/server-runtime';
 import {cartCreate, cartDiscountCodesUpdate} from '../cart';
 
 /**

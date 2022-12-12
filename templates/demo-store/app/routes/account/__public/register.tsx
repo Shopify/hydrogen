@@ -5,7 +5,6 @@ import {
   type ActionFunction,
   type LoaderArgs,
 } from '@remix-run/oxygen';
-import {isStorefrontApiError} from '@shopify/hydrogen-remix';
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
 import {login, registerCustomer} from '~/data';
@@ -29,7 +28,7 @@ type ActionData = {
 const badRequest = (data: ActionData) => json(data, {status: 400});
 
 export const action: ActionFunction = async ({request, context, params}) => {
-  const {session} = context;
+  const {session, storefront} = context;
   const formData = await request.formData();
 
   const email = formData.get('email');
@@ -57,7 +56,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       },
     });
   } catch (error: any) {
-    if (isStorefrontApiError(error)) {
+    if (storefront.isApiError(error)) {
       return badRequest({
         formError: 'Something went wrong. Please try again later.',
       });
