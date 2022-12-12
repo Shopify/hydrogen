@@ -13,6 +13,7 @@ export default [
     dts: true,
     onSuccess: undefined,
     minify: false,
+    publicDir: 'src/routing/dev-routes',
   }),
   defineConfig({
     entry: ['src/templates/**/*.ts', 'src/templates/**/*.tsx'],

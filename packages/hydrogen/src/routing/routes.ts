@@ -3,17 +3,32 @@ import readDir from 'recursive-readdir';
 import path from 'path';
 import {createRequire} from 'module';
 
-export type HydrogenRouteOptions = {};
+export type HydrogenRouteOptions = {graphiql?: boolean};
 
 export async function hydrogenRoutes(
   defineRoutes: any,
   options: HydrogenRouteOptions = {},
 ) {
-  await copyTemplates();
+  const require = createRequire(import.meta.url);
+  await copyTemplates(require);
 
   const hydrogenRoutesPath = path.resolve(process.cwd(), '.hydrogen/routes');
   const hydrogenRouteFiles = await readDir(hydrogenRoutesPath);
   return defineRoutes((route: any) => {
+    if (options.graphiql) {
+      const graphiqlPath = path.join(
+        getHydrogenPkgPath(require),
+        'dist',
+        'build',
+        'graphiql.js',
+      );
+
+      route(
+        '/graphiql',
+        path.relative(path.join(process.cwd(), 'app'), graphiqlPath),
+      );
+    }
+
     for (const hydrogenRoute of hydrogenRouteFiles) {
       const routeFilePath = path.relative(process.cwd(), hydrogenRoute);
 
@@ -26,12 +41,9 @@ export async function hydrogenRoutes(
   });
 }
 
-async function copyTemplates() {
-  const require = createRequire(import.meta.url);
+async function copyTemplates(require: NodeRequire) {
   const isTs = isTSProject(require);
-  const pkgPath = path.dirname(
-    require.resolve('@shopify/h2-test-hydrogen/package.json'),
-  );
+  const pkgPath = getHydrogenPkgPath(require);
 
   const templateDirectory = path.resolve(
     pkgPath,
@@ -151,4 +163,10 @@ function isTSProject(require: NodeRequire) {
   } catch {
     return false;
   }
+}
+
+function getHydrogenPkgPath(require: NodeRequire) {
+  return path.dirname(
+    require.resolve('@shopify/h2-test-hydrogen/package.json'),
+  );
 }
