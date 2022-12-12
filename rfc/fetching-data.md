@@ -43,7 +43,6 @@ To load data into your Hydrogen app, use a Remix `loader` and write a GraphQL qu
 ```ts
 import type {ProductType} from '@shopify/hydrogen-react/storefront-api-types';
 import {json, useLoaderData, type LoaderArgs} from '@remix-run/oxygen';
-import invariant from 'tiny-invariant';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   const productQuery = storefront.query<ProductType>(
@@ -61,14 +60,6 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
        */
       variables: {
         handle: params.handle,
-      },
-      /**
-       * Optionally filter your data before it is returned from the loader.
-       */
-      filter(data, errors) {
-        invariant(data.product, 'No product found');
-
-        return data.product;
       },
       /**
        * Cache your server-side query with a built-in best practice default (SWR).
@@ -125,11 +116,6 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
       variables: {
         handle: params.handle,
       },
-      filter(data, errors) {
-        invariant(data.productReviews, 'No product found');
-
-        return data.productReviews;
-      },
     },
   );
 
@@ -182,19 +168,10 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     },
   );
 
-  return defer(
-    {
-      product: await productQuery,
-      reviews: reviewsQuery,
-    },
-    {
-      // TODO: Do we want full-page cache?
-      // See implications on caching errored defer data, etc
-      headers: {
-        'Cache-Control': 'max-age=1; stale-while-revalidate=9',
-      },
-    },
-  );
+  return defer({
+    product: await productQuery,
+    reviews: reviewsQuery,
+  });
 }
 ```
 
