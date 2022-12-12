@@ -96,8 +96,12 @@ export async function fetchWithServerCache(
               cacheOptions,
             );
           }
-        } catch (e: any) {
-          console.error(`Error in sub-request SWR: ${e.message}`);
+        } catch (error: any) {
+          if (error.message) {
+            error.message = 'SWR in sub-request failed: ' + error.message;
+          }
+
+          console.error(error);
         } finally {
           swrLock.delete(key);
         }
