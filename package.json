@@ -4,22 +4,21 @@
   "scripts": {
     "build": "turbo build --parallel",
     "build:pkg": "npm run build -- --filter=./packages/*",
-    "dev": "cross-env LOCAL_DEV=true turbo dev --parallel",
+    "dev": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=!./templates/hello-world",
     "dev:pkg": "npm run dev -- --filter=./packages/*",
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
-    "typecheck": "tsc --noEmit && npm run typecheck -w demo-store && npm run typecheck -w @shopify/cli-h2-test",
+    "typecheck": "turbo typecheck --parallel",
     "version": "changeset version && node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "changeset": "changeset",
-    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/hydrogen-remix/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache && rimraf templates/demo-store/.hydrogen"
+    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache && rimraf templates/demo-store/.hydrogen"
   },
   "workspaces": [
     "templates/hello-world",
     "templates/demo-store",
     "packages/remix-oxygen",
     "packages/hydrogen",
-    "packages/hydrogen-remix",
     "packages/cli"
   ],
   "prettier": "@shopify/prettier-config",

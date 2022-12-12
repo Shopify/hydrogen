@@ -17,9 +17,6 @@
     "paths": {
       "~/*": ["app/*"],
       "@shopify/hydrogen": ["../../node_modules/@shopify/h2-test-hydrogen"],
-      "@shopify/hydrogen-remix": [
-        "../../node_modules/@shopify/h2-test-hydrogen-remix"
-      ],
       "@remix-run/oxygen": ["../../node_modules/@shopify/h2-test-remix-oxygen"]
     },
 

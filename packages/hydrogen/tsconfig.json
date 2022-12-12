@@ -1,3 +1,11 @@
 {
-  "extends": "../../tsconfig.json"
+  "extends": "../../tsconfig.json",
+  "include": ["src"],
+  "exclude": ["src/templates"],
+  "compilerOptions": {
+    "jsx": "preserve",
+    "paths": {
+      "@shopify/hydrogen": ["./src"]
+    }
+  }
 }
