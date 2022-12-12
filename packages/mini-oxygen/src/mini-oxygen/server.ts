@@ -49,7 +49,11 @@ function createAssetMiddleware({
       return next();
     }
 
-    if (proxyServer !== '' && !req.headers['mini-oxygen-proxy']) {
+    if (
+      typeof proxyServer !== 'undefined' &&
+      proxyServer !== '' &&
+      !req.headers['mini-oxygen-proxy']
+    ) {
       return next();
     }
 
