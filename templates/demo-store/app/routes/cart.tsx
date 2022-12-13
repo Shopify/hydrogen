@@ -1,6 +1,6 @@
 import {CartLoading, Cart} from '~/components';
-import {Await, useMatches} from '@remix-run/react';
-import {Suspense} from 'react';
+import {Await, useFetcher, useMatches} from '@remix-run/react';
+import {Suspense, useEffect} from 'react';
 import invariant from 'tiny-invariant';
 import {json, type ActionArgs, type AppLoadContext} from '@remix-run/oxygen';
 import type {
@@ -134,6 +134,36 @@ export async function action({request, context}: ActionArgs) {
       headers.set('Set-Cookie', await session.commit());
 
       break;
+    case CartAction.ENSURE_NOT_EVICTED:
+      /**
+       * Check whether the cartId is still valid.
+       */
+      if (cartId) {
+        const {cart} = await storefront.query<{cart?: CartType}>(
+          `#graphql
+            query CartVerification ($cartId: ID!) {
+              cart(id: $cartId) {
+                id
+              }
+            }
+          `,
+          {
+            variables: {
+              cartId,
+            },
+            cache: storefront.CacheNone(),
+          },
+        );
+
+        /**
+         * If we couldn't find a cart, we unset the cartId from the session.
+         */
+        if (!cart?.id) {
+          session.unset('cartId');
+          headers.set('set-cookie', await session.commit());
+        }
+      }
+      return new Response(null, {status, headers});
     default:
       invariant(false, `${cartAction} cart action is not defined`);
   }
@@ -144,8 +174,7 @@ export async function action({request, context}: ActionArgs) {
     headers.set('Location', redirectTo);
   }
 
-  const {cart, errors} = result;
-  return json({cart, errors}, {status, headers});
+  return json(result, {status, headers});
 }
 
 export default function CartRoute() {
@@ -491,4 +520,36 @@ export async function cartDiscountCodesUpdate({
   );
 
   return cartDiscountCodesUpdate;
+}
+
+/**
+ * Once at the beginning of the session, check to see if there is a stale or evicted cartId
+ * stored in our session. If there is, then we need to purge it from the session so a buyer
+ * can add new items to the cart, etc. We store this check in session storage so we don't
+ * make this call on every page load.
+ */
+export function usePurgeEvictedCart() {
+  const evictedCartKey = 'checked-for-evicted-cart';
+  const fetcher = useFetcher();
+
+  useEffect(() => {
+    const hasCheckedForEvictedCartThisSession =
+      sessionStorage.getItem(evictedCartKey);
+
+    if (hasCheckedForEvictedCartThisSession) {
+      return;
+    }
+
+    fetcher.submit(
+      {
+        cartAction: CartAction.ENSURE_NOT_EVICTED,
+      },
+      {
+        method: 'post',
+        action: '/cart',
+      },
+    );
+    sessionStorage.setItem(evictedCartKey, 'true');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }

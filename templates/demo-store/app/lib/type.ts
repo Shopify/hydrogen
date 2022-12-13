@@ -17,5 +17,6 @@ export enum CartAction {
   UPDATE_CART = 'UPDATE_CART',
   UPDATE_DISCOUNT = 'UPDATE_DISCOUNT',
   UPDATE_BUYER_IDENTITY = 'UPDATE_BUYER_IDENTITY',
+  ENSURE_NOT_EVICTED = 'ENSURE_NOT_EVICTED',
 }
 export type CartActions = keyof typeof CartAction;

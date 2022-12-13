@@ -26,6 +26,7 @@ import favicon from '../public/favicon.svg';
 import {DEFAULT_LOCALE, getLocaleFromRequest} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
+import {usePurgeEvictedCart} from './routes/cart';
 
 export const handle = {
   // @todo - remove any and type the seo callback
@@ -73,6 +74,7 @@ export async function loader({context, request}: LoaderArgs) {
 export default function App() {
   const data = useLoaderData<typeof loader>();
   const locale = data.selectedLocale ?? DEFAULT_LOCALE;
+  usePurgeEvictedCart();
 
   return (
     <html lang={locale.language}>
@@ -267,7 +269,10 @@ const CART_QUERY = `#graphql
 export async function getCart({storefront}: AppLoadContext, cartId: string) {
   invariant(storefront, 'missing storefront client in cart query');
 
-  const {cart} = await storefront.query<{cart: Cart}>(CART_QUERY, {
+  /**
+   * Cart might be `null` if it has been evicted from the API (too old).
+   */
+  const {cart} = await storefront.query<{cart?: Cart}>(CART_QUERY, {
     variables: {
       cartId,
       country: storefront.i18n?.country,
@@ -275,8 +280,6 @@ export async function getCart({storefront}: AppLoadContext, cartId: string) {
     },
     cache: storefront.CacheNone(),
   });
-
-  invariant(cart, 'No data returned from Shopify API');
 
   return cart;
 }
