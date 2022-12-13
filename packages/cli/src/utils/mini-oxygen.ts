@@ -54,6 +54,8 @@ export async function startMiniOxygen({
 export function logResponse(request: Request, response: Response) {
   try {
     const url = new URL(request.url);
+    if (['/graphiql'].includes(url.pathname)) return;
+
     const isProxy = !!response.url && response.url !== request.url;
     const isDataRequest = !isProxy && url.searchParams.has('_data');
     let route = request.url.replace(url.origin, '');
