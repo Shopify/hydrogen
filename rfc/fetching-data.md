@@ -130,8 +130,8 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
 
 Data that is not updated often can be cached to speed up subsequent queries. Hydrogen supports caching at the sub-request level:
 
-```ts
-import {defer, type LoaderArgs} from '@remix-run/oxygen';
+```tsx
+import {defer, useLoaderData, type LoaderArgs} from '@remix-run/oxygen';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   const productQuery = storefront.query(
@@ -147,7 +147,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
       variables: {
         handle: params.handle,
       },
-      cache: storefront.CacheShort(),
+      cache: storefront.CacheLong(),
     },
   );
 
@@ -165,6 +165,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
       variables: {
         handle: params.handle,
       },
+      cache: storefront.CacheShort(),
     },
   );
 
@@ -172,6 +173,21 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     product: await productQuery,
     reviews: reviewsQuery,
   });
+}
+
+export default PageComponent() {
+  const {product, reviews} = useLoaderData<typeof loader>();
+
+  return (
+    <div>
+      <Product value={product} />
+      <Suspense fallback={<Spinner />}>
+        <Await resolve={reviews}>
+          {({productReviews}) => <ProductReviews value={productReviews.nodes}>}
+        </Await>
+      </Suspense>
+    </div>
+  );
 }
 ```
 
