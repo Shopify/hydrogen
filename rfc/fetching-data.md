@@ -83,7 +83,7 @@ export default function Product() {
 Sometimes, you will want to prioritize critical data, like product information, while deferring comments or reviews.
 
 ```ts
-import {defer, type LoaderArgs} from '@remix-run/oxygen';
+import {defer, useLoaderData, type LoaderArgs} from '@remix-run/oxygen';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   const productQuery = storefront.query(
@@ -124,6 +124,21 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     reviews: reviewsQuery,
   });
 }
+
+export default PageComponent() {
+  const {product, reviews} = useLoaderData<typeof loader>();
+
+  return (
+    <div>
+      <Product value={product} />
+      <Suspense fallback={<Spinner />}>
+        <Await resolve={reviews}>
+          {({productReviews}) => <ProductReviews value={productReviews.nodes}>}
+        </Await>
+      </Suspense>
+    </div>
+  );
+}
 ```
 
 ### Caching data
@@ -131,7 +146,7 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
 Data that is not updated often can be cached to speed up subsequent queries. Hydrogen supports caching at the sub-request level:
 
 ```tsx
-import {defer, useLoaderData, type LoaderArgs} from '@remix-run/oxygen';
+import {defer, type LoaderArgs} from '@remix-run/oxygen';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   const productQuery = storefront.query(
@@ -174,22 +189,9 @@ export async function loader({params, context: {storefront}}: LoaderArgs) {
     reviews: reviewsQuery,
   });
 }
-
-export default PageComponent() {
-  const {product, reviews} = useLoaderData<typeof loader>();
-
-  return (
-    <div>
-      <Product value={product} />
-      <Suspense fallback={<Spinner />}>
-        <Await resolve={reviews}>
-          {({productReviews}) => <ProductReviews value={productReviews.nodes}>}
-        </Await>
-      </Suspense>
-    </div>
-  );
-}
 ```
+
+By default, Hydrogen adds the equivalent to `storefront.CacheShort()` to every query. Sometimes, when data can be mutated by the user in the same page, you may want to disable caching manually by passing `storefront.cacheNone()`. This will prevent serving stale data when Remix refreshes the loaders after a mutation.
 
 ## Mutating data
 
