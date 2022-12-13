@@ -1,16 +1,18 @@
 import {join, resolve} from 'path';
+import http from 'http';
 
+import EventSource from 'eventsource';
 import {writeFile, ensureDir, remove} from 'fs-extra';
 
 export interface Fixture {
   destroy(): Promise<void>;
-  port: number;
   paths: {
     root: string;
     config: string;
     assets: string;
     workerFile: string;
   };
+  updateWorker: () => Promise<void>;
 }
 
 export async function createFixture(name: string): Promise<Fixture> {
@@ -22,19 +24,16 @@ export async function createFixture(name: string): Promise<Fixture> {
     assets: join(directory, 'assets'),
   };
 
-  const port = 1337;
-
   await ensureDir(directory);
+  await ensureDir(paths.assets);
   await writeFile(join(directory, '.gitignore'), '*');
   await writeFile(
     join(directory, 'mini-oxygen.config.json'),
     JSON.stringify(
       {
-        port,
         workerFile: 'worker.mjs',
         watch: true,
         env: {TESTING: 123, HELLO: 12345},
-        autoReload: true,
       },
       null,
       2,
@@ -76,11 +75,66 @@ export default {
     `.trim(),
   );
 
+  await writeFile(
+    join(paths.assets, 'star.svg'),
+    `<svg><polygon points="100,10 40,198 190,78 10,78 160,198" style="fill:gold;"/></svg>`.trim(),
+  );
+
   return {
     paths,
-    port,
     destroy: async () => {
+      await remove(paths.assets);
       await remove(directory);
     },
+    updateWorker: () => {
+      return writeFile(
+        join(directory, 'worker.mjs'),
+        `
+export default {
+  async fetch(request, environment, context) {
+    return new Response('<html><body><q>Forty-two</q> said Deep Thought, with infinite majesty and calm.</body>', {
+      headers: {"Content-Type": "text/html"}
+    });
+  }
+}
+        `,
+      );
+    },
   };
+}
+
+export async function sendRequest(port: number, path: string) {
+  return new Promise((resolve, _reject) => {
+    http.get(`http://localhost:${port}${path}`, (response) => {
+      let data = '';
+      response
+        .on('data', (chunk) => {
+          data += chunk;
+        })
+        .on('end', () => {
+          resolve({
+            mimeType: response.headers['content-type'],
+            data,
+          });
+        });
+    });
+  });
+}
+
+export async function checkAutoReload(port: number, fixture: Fixture) {
+  return new Promise((resolve, _reject) => {
+    const event = new EventSource(`http://localhost:${port}/events`);
+    event.addEventListener('message', (event) => {
+      console.log(event);
+    });
+
+    console.log('I am updating the worker now');
+    const vincent = new Promise((resolve, _reject) => {
+      setTimeout(() => {
+        fixture.updateWorker();
+        console.log('I updated the worker now');
+        resolve(null);
+      }, 2000)
+    }); 
+  });
 }

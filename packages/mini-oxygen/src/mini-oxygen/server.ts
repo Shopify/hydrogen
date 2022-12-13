@@ -54,7 +54,6 @@ function createAssetMiddleware({
       if (pathname === '') {
         return next();
       }
-
       filePath = path.join(assetsDir, pathname);
     } else {
       let pathname = url.pathname;
@@ -93,8 +92,11 @@ function writeSSE(res: http.ServerResponse, data: string) {
 function createAutoReloadMiddleware(mf: MiniOxygen): NextHandleFunction {
   return (req, res) => {
     if (req.headers.accept && req.headers.accept === 'text/event-stream') {
-      mf.addEventListener('reload', () => writeSSE(res, 'reload'));
-
+      console.log('added listener');
+      mf.addEventListener('reload', () => {
+        console.log('we do reloading this');
+        writeSSE(res, 'reload');
+      });
       res.writeHead(200, {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         'Content-Type': 'text/event-stream',
@@ -102,7 +104,6 @@ function createAutoReloadMiddleware(mf: MiniOxygen): NextHandleFunction {
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
       });
-
       return writeSSE(res, 'connected');
     } else {
       res.writeHead(400).end('Bad Request');
