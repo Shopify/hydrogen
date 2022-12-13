@@ -8,6 +8,8 @@ import {
   useSearchParams,
   useLocation,
   useTransition,
+  useMatches,
+  useFetcher,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-react';
 import {
@@ -22,8 +24,9 @@ import {
   Text,
   Link,
   Button,
+  AddToCartButton,
 } from '~/components';
-import {getExcerpt, variantToCartLine} from '~/lib/utils';
+import {getExcerpt} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import type {
@@ -38,7 +41,6 @@ import {
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data'; /* @todo: we move these to app/graphql ? */
-import {CartLinesAddForm} from '.hydrogen/cart';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -151,7 +153,6 @@ export function ProductForm() {
 
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
-  const selectingVariant = transition.state === 'loading';
 
   /**
    * We update `searchParams` with in-flight request data from `transition` (if available)
@@ -159,10 +160,10 @@ export function ProductForm() {
    * request has completed.
    */
   const searchParams = useMemo(() => {
-    return selectingVariant && transition.location
+    return transition.location
       ? new URLSearchParams(transition.location.search)
       : currentSearchParams;
-  }, [selectingVariant, currentSearchParams, transition]);
+  }, [currentSearchParams, transition]);
 
   const firstVariant = product.variants.nodes[0];
 
@@ -192,6 +193,18 @@ export function ProductForm() {
   const selectedVariant = product.selectedVariant ?? firstVariant;
   const isOutOfStock = !selectedVariant?.availableForSale;
 
+  const isOnSale =
+    selectedVariant?.price?.amount &&
+    selectedVariant?.compareAtPrice?.amount &&
+    selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
+
+  const lines = [
+    {
+      merchandiseId: selectedVariant.id,
+      quantity: 1,
+    },
+  ];
+
   return (
     <div className="grid gap-10">
       <div className="grid gap-4">
@@ -202,10 +215,39 @@ export function ProductForm() {
         {selectedVariant && (
           <div className="grid items-stretch gap-4">
             <AddToCartButton
-              selectedVariant={selectedVariant}
-              selectingVariant={selectingVariant}
-              isOutOfStock={isOutOfStock}
-            />
+              lines={[
+                {
+                  merchandiseId: selectedVariant.id,
+                  quantity: 1,
+                },
+              ]}
+              variant={isOutOfStock ? 'secondary' : 'primary'}
+              data-test="add-to-cart"
+            >
+              {isOutOfStock ? (
+                <Text>Sold out</Text>
+              ) : (
+                <Text
+                  as="span"
+                  className="flex items-center justify-center gap-2"
+                >
+                  <span>Add to Bag</span> <span>·</span>{' '}
+                  <Money
+                    withoutTrailingZeros
+                    data={selectedVariant?.price!}
+                    as="span"
+                  />
+                  {isOnSale && (
+                    <Money
+                      withoutTrailingZeros
+                      data={selectedVariant?.compareAtPrice!}
+                      as="span"
+                      className="opacity-50 strike"
+                    />
+                  )}
+                </Text>
+              )}
+            </AddToCartButton>
             {!isOutOfStock && (
               <ShopPayButton variantIds={[selectedVariant?.id!]} />
             )}
@@ -332,89 +374,6 @@ function ProductOptions({
           </div>
         ))}
     </>
-  );
-}
-
-function AddToCartButton({
-  isOutOfStock,
-  selectedVariant,
-  selectingVariant,
-}: {
-  isOutOfStock: boolean;
-  selectedVariant: ProductVariant;
-  selectingVariant: boolean;
-}) {
-  const isOnSale =
-    selectedVariant?.price?.amount &&
-    selectedVariant?.compareAtPrice?.amount &&
-    selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
-
-  const lines = [
-    {
-      merchandiseId: selectedVariant.id,
-      quantity: 1,
-    },
-  ];
-
-  const optimisticLines = [
-    variantToCartLine({
-      quantity: 1,
-      variant: selectedVariant,
-    }),
-  ];
-
-  return (
-    <CartLinesAddForm lines={lines} optimisticLines={optimisticLines}>
-      {({state, errors}) => {
-        const disabled = isOutOfStock || selectingVariant || state !== 'idle';
-        return (
-          <>
-            <Button
-              as="button"
-              width="full"
-              type="submit"
-              variant={isOutOfStock ? 'secondary' : 'primary'}
-              disabled={disabled}
-              data-test="add-to-cart"
-            >
-              {isOutOfStock ? (
-                <Text>Sold out</Text>
-              ) : (
-                <Text
-                  as="span"
-                  className="flex items-center justify-center gap-2"
-                >
-                  <span>
-                    {state === 'idle' ? 'Add to Bag' : 'Adding to Bag'}
-                  </span>{' '}
-                  <span>·</span>{' '}
-                  <Money
-                    withoutTrailingZeros
-                    data={selectedVariant?.price!}
-                    as="span"
-                  />
-                  {isOnSale && (
-                    <Money
-                      withoutTrailingZeros
-                      data={selectedVariant?.compareAtPrice!}
-                      as="span"
-                      className="opacity-50 strike"
-                    />
-                  )}
-                </Text>
-              )}
-            </Button>
-            {errors?.length ? (
-              <div className="flex flex-col">
-                {errors.map((error) => (
-                  <Text key={error.message}>{error.message}</Text>
-                ))}
-              </div>
-            ) : null}
-          </>
-        );
-      }}
-    </CartLinesAddForm>
   );
 }
 

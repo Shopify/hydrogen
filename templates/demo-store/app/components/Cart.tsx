@@ -15,12 +15,10 @@ import type {
   Cart as CartType,
   CartCost,
   CartLine,
+  CartLineUpdateInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {
-  CartDiscountCodesUpdateForm,
-  CartLinesRemoveForm,
-  CartLinesUpdateForm,
-} from '.hydrogen/cart';
+import {useFetcher} from '@remix-run/react';
+import {CartAction} from '~/lib/type';
 
 type Layouts = 'page' | 'drawer';
 
@@ -81,7 +79,6 @@ function CartDiscounts({
 }: {
   discountCodes: CartType['discountCodes'];
 }) {
-  const [hovered, setHovered] = useState(false);
   const codes = discountCodes?.map(({code}) => code).join(', ') || null;
 
   return (
@@ -90,50 +87,53 @@ function CartDiscounts({
       <dl className={clsx(codes ? 'grid' : 'hidden')}>
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Discount(s)</Text>
-          <div
-            className="flex items-center justify-between"
-            onMouseEnter={() => setHovered(true)}
-            onMouseLeave={() => setHovered(false)}
-          >
-            <CartDiscountCodesUpdateForm
-              className={hovered ? 'block' : 'hidden'}
-              discountCodes={[]}
-            >
-              {() => (
-                <button>
-                  <IconRemove
-                    aria-hidden="true"
-                    style={{height: 18, marginRight: 4}}
-                  />
-                </button>
-              )}
-            </CartDiscountCodesUpdateForm>
+          <div className="flex items-center justify-between">
+            <UpdateDiscountForm>
+              <button>
+                <IconRemove
+                  aria-hidden="true"
+                  style={{height: 18, marginRight: 4}}
+                />
+              </button>
+            </UpdateDiscountForm>
             <Text as="dd">{codes}</Text>
           </div>
         </div>
       </dl>
 
       {/* No discounts, show an input to apply a discount */}
-      <CartDiscountCodesUpdateForm>
-        {() => (
-          <div
-            className={clsx(
-              codes ? 'hidden' : 'flex',
-              'items-center justify-between',
-            )}
-          >
-            <input
-              className={getInputStyleClasses()}
-              type="text"
-              name="discountCodes"
-            />
-            <button className="w-[150px] flex justify-end">
-              <Text size="fine">Apply Discount</Text>
-            </button>
-          </div>
-        )}
-      </CartDiscountCodesUpdateForm>
+      <UpdateDiscountForm>
+        <div
+          className={clsx(
+            codes ? 'hidden' : 'flex',
+            'items-center justify-between',
+          )}
+        >
+          <input
+            className={getInputStyleClasses()}
+            type="text"
+            name="discountCode"
+          />
+          <button className="w-[150px] flex justify-end">
+            <Text size="fine">Apply Discount</Text>
+          </button>
+        </div>
+      </UpdateDiscountForm>
     </>
+  );
+}
+
+function UpdateDiscountForm({children}: {children: React.ReactNode}) {
+  const fetcher = useFetcher();
+  return (
+    <fetcher.Form action="/cart" method="post">
+      <input
+        type="hidden"
+        name="cartAction"
+        value={CartAction.UPDATE_DISCOUNT}
+      />
+      {children}
+    </fetcher.Form>
   );
 }
 
@@ -221,13 +221,7 @@ function CartSummary({
   );
 }
 
-function CartLineItem({
-  line,
-  optimistic = false,
-}: {
-  line: CartLine;
-  optimistic?: boolean;
-}) {
+function CartLineItem({line}: {line: CartLine}) {
   if (!line?.id) return null;
 
   const {id, quantity, merchandise} = line;
@@ -270,9 +264,9 @@ function CartLineItem({
 
           <div className="flex items-center gap-2">
             <div className="flex justify-start text-copy">
-              <CartLineQuantityAdjust line={line} optimistic={optimistic} />
+              <CartLineQuantityAdjust line={line} />
             </div>
-            <CartLineRemove lineIds={[id]} />
+            <ItemRemoveButton lineIds={[id]} />
           </div>
         </div>
         <Text>
@@ -283,32 +277,29 @@ function CartLineItem({
   );
 }
 
-function CartLineRemove({lineIds}: {lineIds: CartLine['id'][]}) {
+function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
+  const fetcher = useFetcher();
+
   return (
-    <CartLinesRemoveForm lineIds={lineIds}>
-      {({state}) => (
-        <button
-          className="flex items-center justify-center w-10 h-10 border rounded"
-          type="submit"
-          disabled={state !== 'idle'}
-        >
-          <span className="sr-only">
-            {state === 'loading' ? 'Removing' : 'Remove'}
-          </span>
-          <IconRemove aria-hidden="true" />
-        </button>
-      )}
-    </CartLinesRemoveForm>
+    <fetcher.Form action="/cart" method="post">
+      <input
+        type="hidden"
+        name="cartAction"
+        value={CartAction.REMOVE_FROM_CART}
+      />
+      <input type="hidden" name="linesIds" value={JSON.stringify(lineIds)} />
+      <button
+        className="flex items-center justify-center w-10 h-10 border rounded"
+        type="submit"
+      >
+        <span className="sr-only">Remove</span>
+        <IconRemove aria-hidden="true" />
+      </button>
+    </fetcher.Form>
   );
 }
 
-function CartLineQuantityAdjust({
-  line,
-  optimistic,
-}: {
-  optimistic: boolean;
-  line: CartLine;
-}) {
+function CartLineQuantityAdjust({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
@@ -320,39 +311,52 @@ function CartLineQuantityAdjust({
         Quantity, {quantity}
       </label>
       <div className="flex items-center border rounded">
-        <CartLinesUpdateForm lines={[{id: lineId, quantity: prevQuantity}]}>
-          {() => (
-            <button
-              name="decrease-quantity"
-              aria-label="Decrease quantity"
-              className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
-              value={prevQuantity}
-              disabled={quantity <= 1 || optimistic}
-            >
-              <span>&#8722;</span>
-            </button>
-          )}
-        </CartLinesUpdateForm>
+        <UpdateCartButton lines={[{id: lineId, quantity: prevQuantity}]}>
+          <button
+            name="decrease-quantity"
+            aria-label="Decrease quantity"
+            className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
+            value={prevQuantity}
+            disabled={quantity <= 1}
+          >
+            <span>&#8722;</span>
+          </button>
+        </UpdateCartButton>
 
         <div className="px-2 text-center" data-test="item-quantity">
           {quantity}
         </div>
 
-        <CartLinesUpdateForm lines={[{id: lineId, quantity: nextQuantity}]}>
-          {() => (
-            <button
-              className="w-10 h-10 transition text-primary/50 hover:text-primary"
-              name="increase-quantity"
-              value={nextQuantity}
-              aria-label="Increase quantity"
-              disabled={optimistic}
-            >
-              <span>&#43;</span>
-            </button>
-          )}
-        </CartLinesUpdateForm>
+        <UpdateCartButton lines={[{id: lineId, quantity: nextQuantity}]}>
+          <button
+            className="w-10 h-10 transition text-primary/50 hover:text-primary"
+            name="increase-quantity"
+            value={nextQuantity}
+            aria-label="Increase quantity"
+          >
+            <span>&#43;</span>
+          </button>
+        </UpdateCartButton>
       </div>
     </>
+  );
+}
+
+function UpdateCartButton({
+  children,
+  lines,
+}: {
+  children: React.ReactNode;
+  lines: CartLineUpdateInput[];
+}) {
+  const fetcher = useFetcher();
+
+  return (
+    <fetcher.Form action="/cart" method="post">
+      <input type="hidden" name="cartAction" value={CartAction.UPDATE_CART} />
+      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+      {children}
+    </fetcher.Form>
   );
 }
 

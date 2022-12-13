@@ -1,5 +1,5 @@
-import {redirect, type LoaderArgs} from '@remix-run/server-runtime';
-import {cartCreate, cartDiscountCodesUpdate} from '../cart';
+import {redirect, type LoaderArgs} from '@remix-run/oxygen';
+import {cartCreate, cartDiscountCodesUpdate} from './cart';
 
 /**
  * Automatically applies a discount found on the url
@@ -14,6 +14,7 @@ import {cartCreate, cartDiscountCodesUpdate} from '../cart';
  * @preserve
  */
 export async function loader({request, context, params}: LoaderArgs) {
+  const {storefront} = context;
   // N.B. This route will probably be removed in the future.
   const session = context.session as any;
   const {code} = params;
@@ -35,7 +36,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   if (!cartId) {
     const {cart, errors: graphqlCartErrors} = await cartCreate({
       input: {},
-      context,
+      storefront,
     });
 
     if (graphqlCartErrors?.length) {
@@ -52,7 +53,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   await cartDiscountCodesUpdate({
     cartId,
     discountCodes: [code],
-    context,
+    storefront,
   });
 
   return redirect(redirectUrl, {headers});

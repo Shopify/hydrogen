@@ -1,6 +1,5 @@
 import type {
   Cart,
-  CartLineUpdateInput,
   Shop,
   Order,
   CustomerAccessTokenCreatePayload,

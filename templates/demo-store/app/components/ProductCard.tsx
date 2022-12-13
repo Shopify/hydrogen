@@ -6,16 +6,17 @@ import {
   useMoney,
 } from '@shopify/hydrogen-react';
 import type {SerializeFrom} from '@remix-run/oxygen';
-import {Text, Link} from '~/components';
-import {isDiscounted, isNewArrival, variantToCartLine} from '~/lib/utils';
+import {Text, Link, Button, AddToCartButton} from '~/components';
+import {isDiscounted, isNewArrival} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
 import type {
+  CartLineInput,
   MoneyV2,
   Product,
   ProductVariant,
   ProductVariantConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {CartLinesAddForm} from '.hydrogen/cart';
+import {useFetcher, useMatches} from '@remix-run/react';
 
 export function ProductCard({
   product,
@@ -105,22 +106,20 @@ export function ProductCard({
         </div>
       </Link>
       {firstVariant?.id && (
-        <CartLinesAddForm
+        <AddToCartButton
           lines={[
             {
               quantity: 1,
               merchandiseId: firstVariant.id,
             },
           ]}
-          optimisticLines={[
-            variantToCartLine({
-              variant: firstVariant,
-              quantity: 1,
-            }),
-          ]}
+          variant="secondary"
+          className="mt-2"
         >
-          {() => <button type="submit">Add to Cart</button>}
-        </CartLinesAddForm>
+          <Text as="span" className="flex items-center justify-center gap-2">
+            Add to Bag
+          </Text>
+        </AddToCartButton>
       )}
     </div>
   );
