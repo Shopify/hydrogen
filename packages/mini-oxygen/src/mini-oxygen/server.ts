@@ -92,11 +92,7 @@ function writeSSE(res: http.ServerResponse, data: string) {
 function createAutoReloadMiddleware(mf: MiniOxygen): NextHandleFunction {
   return (req, res) => {
     if (req.headers.accept && req.headers.accept === 'text/event-stream') {
-      console.log('added listener');
-      mf.addEventListener('reload', () => {
-        console.log('we do reloading this');
-        writeSSE(res, 'reload');
-      });
+      mf.addEventListener('reload', () => writeSSE(res, 'reload'));
       res.writeHead(200, {
         // eslint-disable-next-line @typescript-eslint/naming-convention
         'Content-Type': 'text/event-stream',

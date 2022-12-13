@@ -1,7 +1,6 @@
 import {join, resolve} from 'path';
 import http from 'http';
 
-import EventSource from 'eventsource';
 import {writeFile, ensureDir, remove} from 'fs-extra';
 
 export interface Fixture {
@@ -118,23 +117,5 @@ export async function sendRequest(port: number, path: string) {
           });
         });
     });
-  });
-}
-
-export async function checkAutoReload(port: number, fixture: Fixture) {
-  return new Promise((resolve, _reject) => {
-    const event = new EventSource(`http://localhost:${port}/events`);
-    event.addEventListener('message', (event) => {
-      console.log(event);
-    });
-
-    console.log('I am updating the worker now');
-    const vincent = new Promise((resolve, _reject) => {
-      setTimeout(() => {
-        fixture.updateWorker();
-        console.log('I updated the worker now');
-        resolve(null);
-      }, 2000)
-    }); 
   });
 }

@@ -1,8 +1,9 @@
 import {it, vi, describe, beforeEach, expect, afterEach} from 'vitest';
+import EventSource from 'eventsource';
 
 import {preview, MiniOxygenPreviewOptions} from '../preview';
 
-import {createFixture, Fixture, sendRequest, checkAutoReload} from './utils';
+import {createFixture, Fixture, sendRequest} from './utils';
 
 const testPort = 1337;
 const testTimeout = 9000;
@@ -85,13 +86,14 @@ describe('preview()', () => {
     );
   });
 
-  it('include the auto-reload script', async () => {
+  it('include the auto-reload script and send reload event on worker change', async () => {
     const miniOxygen = await preview({
       ...defaultOptions,
       log: mockLogger,
       port: testPort,
       workerFile: fixture.paths.workerFile,
       autoReload: true,
+      watch: true,
     });
 
     let receivedData;
@@ -100,9 +102,21 @@ describe('preview()', () => {
     });
     expect(receivedData).toContain('// MiniOxygen Auto Reload');
 
-    await checkAutoReload(testPort, fixture).then(async (response: any) => {
-      console.log('xena', response);
-      await miniOxygen.close();
+    const eventStream = new EventSource(`http://localhost:${testPort}/events`);
+    const eventsCaught: MessageEvent[] = [];
+    eventStream.addEventListener('message', (event) =>
+      eventsCaught.push(event),
+    );
+    fixture.updateWorker();
+
+    // we need a short timeout to allow the "reload" on the MiniOxygen instance to fire
+    await new Promise((resolve, _reject) => {
+      setTimeout(() => resolve(null), 500);
     });
+
+    expect(eventsCaught.length).toBe(2);
+    expect(eventsCaught[0].data).toBe('connected');
+    expect(eventsCaught[1].data).toBe('reload');
+    await miniOxygen.close();
   });
 });
