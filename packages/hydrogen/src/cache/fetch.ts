@@ -1,10 +1,6 @@
+import {hashKey} from '../utils/hash.js';
 import {CacheShort, CachingStrategy} from './strategies';
-import {
-  deleteItemFromCache,
-  getItemFromCache,
-  isStale,
-  setItemInCache,
-} from './subrequest';
+import {getItemFromCache, setItemInCache, isStale} from './sub-request';
 
 export type FetchCacheOptions = {
   cache?: CachingStrategy;
@@ -29,6 +25,13 @@ function serializeResponse(body: any, response: Response) {
 // Check if the response body has GraphQL errors
 // https://spec.graphql.org/June2018/#sec-Response-Format
 export const checkGraphQLErrors = (body: any) => !body?.errors;
+
+// Lock to prevent revalidating the same sub-request
+// in the same isolate. Note that different isolates
+// in the same colo could duplicate the revalidation
+// since this is only an in-memory lock.
+// https://github.com/Shopify/oxygen-platform/issues/625
+const swrLock = new Set<string>();
 
 /**
  * `fetch` equivalent that stores responses in cache.
@@ -66,66 +69,49 @@ export async function fetchWithServerCache(
 
   if (!cacheInstance || !cacheKey || !cacheOptions) return doFetch();
 
-  const key = [
+  const key = hashKey([
     // '__HYDROGEN_CACHE_ID__', // TODO purgeQueryCacheOnBuild
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
-  ];
+  ]);
 
   const cachedItem = await getItemFromCache(cacheInstance, key);
   // console.log('--- Cache', cachedItem ? 'HIT' : 'MISS');
 
   if (cachedItem) {
-    const [value, cacheResponse] = cachedItem;
+    const [cachedValue, cacheInfo] = cachedItem;
 
-    // collectQueryCacheControlHeaders(
-    //   request,
-    //   key,
-    //   response.headers.get('cache-control'),
-    // );
+    if (!swrLock.has(key) && isStale(key, cacheInfo)) {
+      swrLock.add(key);
 
-    /**
-     * Important: Do this async
-     */
-    if (isStale(key, cacheResponse)) {
-      const lockKey = ['lock', ...(typeof key === 'string' ? [key] : key)];
+      // Important: Run revalidation asynchronously.
+      const revalidatingPromise = Promise.resolve().then(async () => {
+        try {
+          const [body, response] = await doFetch();
 
-      // Run revalidation asynchronously
-      const revalidatingPromise = getItemFromCache(cacheInstance, lockKey).then(
-        async (lockExists) => {
-          if (lockExists) return;
-
-          await setItemInCache(
-            cacheInstance,
-            lockKey,
-            true,
-            CacheShort({maxAge: 10}),
-          );
-
-          try {
-            const [body, response] = await doFetch();
-
-            if (shouldCacheResponse(body, response)) {
-              await setItemInCache(
-                cacheInstance,
-                key,
-                serializeResponse(body, response),
-                cacheOptions,
-              );
-            }
-          } catch (e: any) {
-            // eslint-disable-next-line no-console
-            console.error(`Error generating async response: ${e.message}`);
-          } finally {
-            await deleteItemFromCache(cacheInstance, lockKey);
+          if (shouldCacheResponse(body, response)) {
+            await setItemInCache(
+              cacheInstance,
+              key,
+              serializeResponse(body, response),
+              cacheOptions,
+            );
           }
-        },
-      );
+        } catch (error: any) {
+          if (error.message) {
+            error.message = 'SWR in sub-request failed: ' + error.message;
+          }
+
+          console.error(error);
+        } finally {
+          swrLock.delete(key);
+        }
+      });
 
       // Asynchronously wait for it in workers
       waitUntil?.(revalidatingPromise);
     }
 
-    const [body, init] = value;
+    const [body, init] = cachedValue;
     return [body, new Response(body, init)];
   }
 
@@ -144,12 +130,6 @@ export async function fetchWithServerCache(
 
     waitUntil?.(setItemInCachePromise);
   }
-
-  //   collectQueryCacheControlHeaders(
-  //     request,
-  //     key,
-  //     generateSubRequestCacheControlHeader(resolvedQueryOptions?.cache)
-  //   );
 
   return [body, response];
 }

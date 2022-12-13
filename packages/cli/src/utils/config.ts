@@ -92,7 +92,7 @@ export async function getRemixConfig(
             path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
           ];
 
-          if (pkg === 'hydrogen-remix') {
+          if (pkg === 'hydrogen') {
             files.push(
               path.resolve(packagesPath, pkg, 'dist', 'build', 'index.js'),
               path.resolve(packagesPath, pkg, 'src', 'templates', '**', '*'),

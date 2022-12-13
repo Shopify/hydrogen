@@ -4,7 +4,6 @@ import {
   redirect,
   json,
 } from '@remix-run/oxygen';
-import {isStorefrontApiError} from '@shopify/hydrogen-remix';
 import {Form, useActionData} from '@remix-run/react';
 import {useRef, useState} from 'react';
 import {resetPassword} from '~/data';
@@ -49,14 +48,14 @@ export const action: ActionFunction = async ({
     });
   }
 
+  const {session, storefront} = context;
+
   try {
     const {accessToken} = await resetPassword(context, {
       id,
       resetToken,
       password,
     });
-
-    const {session} = context;
 
     session.set('customerAccessToken', accessToken);
 
@@ -66,7 +65,7 @@ export const action: ActionFunction = async ({
       },
     });
   } catch (error: any) {
-    if (isStorefrontApiError(error)) {
+    if (storefront.isApiError(error)) {
       return badRequest({
         formError: 'Something went wrong. Please try again later.',
       });
