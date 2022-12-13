@@ -6,7 +6,6 @@ import {preview, MiniOxygenPreviewOptions} from '../preview';
 import {createFixture, Fixture, sendRequest} from './utils';
 
 const testPort = 1337;
-const testTimeout = 9000;
 
 // get-port does not detect a released port correctly in the testing environment
 vi.mock('get-port', () => {
