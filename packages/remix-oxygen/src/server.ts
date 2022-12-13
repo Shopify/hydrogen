@@ -31,13 +31,19 @@ export function createRequestHandler<Context = unknown>({
   const handleRequest = createRemixRequestHandler(build, mode);
 
   return async (request: Request) => {
+    const url = new URL(request.url);
+
+    if (url.pathname === '/__health') {
+      // This is temporary until Oxygen implements a way to verify deployments.
+      // https://github.com/Shopify/oxygen-platform/issues/778
+      return new Response(null, {status: 200});
+    }
+
     if (
       mode === 'production' &&
       build.publicPath !== undefined &&
       shouldProxyAsset?.(request.url)
     ) {
-      const url = new URL(request.url);
-
       /**
        * Use the assetPrefix (publicPath) as the origin. Note that Remix expects client assets to be
        * prefixed with `/build/*`, and as such, `/build/` is included in the Oxygen-created `assetPrefix`.
