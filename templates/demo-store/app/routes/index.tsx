@@ -1,4 +1,4 @@
-import {defer, type LoaderArgs} from '@remix-run/oxygen';
+import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';

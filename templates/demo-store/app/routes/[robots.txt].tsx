@@ -1,4 +1,4 @@
-import {type LoaderArgs} from '@remix-run/oxygen';
+import {type LoaderArgs} from '@shopify/remix-oxygen';
 
 export const loader = ({request}: LoaderArgs) => {
   const url = new URL(request.url);

@@ -1,4 +1,4 @@
-import {json, redirect, type ActionFunction} from '@remix-run/oxygen';
+import {json, redirect, type ActionFunction} from '@shopify/remix-oxygen';
 import {
   useActionData,
   Form,

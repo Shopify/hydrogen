@@ -3,7 +3,7 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LoaderArgs,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 import {notFoundMaybeRedirect, RESOURCE_TYPES} from '@shopify/hydrogen';
 import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
 import {useLoaderData} from '@remix-run/react';
