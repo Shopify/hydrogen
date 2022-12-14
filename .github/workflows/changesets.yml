@@ -63,7 +63,7 @@ jobs:
           mv packages/cli/dist/templates/hello-world/.env packages/cli/dist/templates/hello-world/_env
 
           # Remove unused template outputs since Changesets will commit the working directory
-          rm templates/demo-store-js templates/hello-world-js
+          rm -rf templates/demo-store-js templates/hello-world-js
 
       - name: Create Release Pull Request or Publish (for latest release)
         if: env.latest == 'true'
