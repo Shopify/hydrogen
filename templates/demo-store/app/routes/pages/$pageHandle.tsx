@@ -4,7 +4,7 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {notFoundMaybeRedirect, RESOURCE_TYPES} from '@shopify/hydrogen';
+import {notFoundMaybeRedirect} from '@shopify/hydrogen';
 import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
@@ -43,12 +43,6 @@ export const meta: MetaFunction = ({
     title: data?.page?.seo?.title ?? 'Page',
     description: data?.page?.seo?.description,
   };
-};
-
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.PAGE,
-  },
 };
 
 export default function Page() {

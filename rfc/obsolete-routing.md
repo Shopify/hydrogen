@@ -4,6 +4,12 @@ _Date: Nov 7, 2022_
 
 ---
 
+## Update
+
+This RFC and corresponding code has been removed. There is a chance that we revisit some of the topics found here in the future, but for now this is no longer valid.
+
+---
+
 Hydrogen will provide built-in support for Shopify routes to make it easier to build a custom storefront.
 
 See [H2 Multiple Storefronts & Routing Problems](https://docs.google.com/document/d/1v0qV3wqAl3wsYvVmJhqBXAqHTX9JdSLjBJ75FJnyW0M/edit#) for a detailed motiviation.

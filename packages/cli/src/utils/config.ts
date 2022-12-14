@@ -89,7 +89,6 @@ export async function getRemixConfig(
           if (pkg === 'hydrogen') {
             files.push(
               path.resolve(packagesPath, pkg, 'dist', 'build', 'index.js'),
-              path.resolve(packagesPath, pkg, 'src', 'templates', '**', '*'),
             );
           }
 
