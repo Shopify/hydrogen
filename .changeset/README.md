@@ -7,7 +7,7 @@ Below is the temporary npm packages names that we are releasing to:
 
 | Package folder | Test NPM release name             | Future NPM release name | Notes                      |
 | -------------- | --------------------------------- | ----------------------- | -------------------------- |
-| `cli`          | `@shopify/cli-h2-test`            | `@shopify/cli-hydrogen` | Needs to start with `cli-` |
+| `cli`          | `@shopify/cli-hydrogen`           | `@shopify/cli-hydrogen` | Needs to start with `cli-` |
 | `hydrogen`     | `@shopify/h2-test-hydrogen`       | `@shopify/hydrogen`     |                            |
 | `remix-oxygen` | `@shopify/h2-test-remix-oxygen` . | `@remix-run/oxygen`     |                            |
 
