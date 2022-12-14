@@ -28,6 +28,18 @@ export async function createFixture(name: string): Promise<Fixture> {
   await ensureDir(directory);
   await ensureDir(paths.assets);
   await writeFile(join(directory, '.gitignore'), '*');
+  await writeFile(
+    join(directory, 'mini-oxygen.config.json'),
+    JSON.stringify(
+      {
+        workerFile: 'worker.mjs',
+        watch: true,
+        env: {TESTING: 123, HELLO: 12345},
+      },
+      null,
+      2,
+    ),
+  );
 
   await writeFile(
     join(directory, 'package.json'),
@@ -72,8 +84,8 @@ export default {
   return {
     paths,
     destroy: async () => {
-      //await remove(paths.assets);
-      //await remove(directory);
+      await remove(paths.assets);
+      await remove(directory);
     },
     updateWorker: () => {
       return writeFile(
