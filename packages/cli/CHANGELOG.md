@@ -1,4 +1,12 @@
+# @shopify/cli-hydrogen
+
+## 4.0.0-alpha.0
+
+Package renaming. Similar to `@shopify/cli-h2-test@4.0.5`.
+
 # @shopify/cli-h2-test
+
+> Deprecated package used during early development
 
 ## 4.0.5
 
