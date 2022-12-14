@@ -4,26 +4,22 @@ import {
   type AppLoadContext,
   type LoaderArgs,
 } from '@remix-run/oxygen';
-import {getLocaleFromRequest} from '~/lib/utils';
 
-export async function logout(request: Request, context: AppLoadContext) {
+export async function logout(context: AppLoadContext) {
   const {session} = context;
   session.unset('customerAccessToken');
 
-  const {pathPrefix} = getLocaleFromRequest(request);
-
-  return redirect(`${pathPrefix}/account/login`, {
+  return redirect(`${context.storefront.i18n!.pathPrefix}/account/login`, {
     headers: {
       'Set-Cookie': await session.commit(),
     },
   });
 }
 
-export async function loader({request}: LoaderArgs) {
-  const {pathPrefix} = getLocaleFromRequest(request);
-  return redirect(pathPrefix);
+export async function loader({context}: LoaderArgs) {
+  return redirect(context.storefront.i18n!.pathPrefix);
 }
 
-export const action: ActionFunction = async ({request, context}) => {
-  return logout(request, context);
+export const action: ActionFunction = async ({context}) => {
+  return logout(context);
 };
