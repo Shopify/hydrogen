@@ -1,9 +1,10 @@
 import {resolve} from 'path';
 import fs from 'fs-extra';
-import {createApp} from "@remix-run/dev";
+import {createApp} from '@remix-run/dev';
 
 (async () => {
-  const [template] = process.argv.slice(2);
+  const [template, ...flags] = process.argv.slice(2);
+  const shouldKeepOriginalTemplate = flags.includes('--keep');
   const source = resolve(process.cwd(), 'templates');
   const templateDir = `${source}/${template}`;
   const tsTemplateDir = `${templateDir}-ts`;
@@ -11,7 +12,9 @@ import {createApp} from "@remix-run/dev";
 
   await createNewApp(templateDir, tsTemplateDir, true);
   await createNewApp(templateDir, jsTemplateDir, false);
-  fs.removeSync(templateDir);
+  if (!shouldKeepOriginalTemplate) {
+    fs.removeSync(templateDir);
+  }
 
   await fixConfig(tsTemplateDir, 'tsconfig.json');
   await fixConfig(jsTemplateDir, 'jsconfig.json');
