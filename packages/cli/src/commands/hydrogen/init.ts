@@ -30,7 +30,7 @@ export default class Init extends Command {
   }
 }
 
-function runInit({
+export function runInit({
   template,
   typescript,
   token,
