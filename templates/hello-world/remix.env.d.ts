@@ -14,6 +14,8 @@ declare global {
     SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN: string;
     SHOPIFY_STOREFRONT_API_VERSION: string;
     SHOPIFY_STORE_DOMAIN: string;
+    /** This env variable should only be set to the string 'true' in development; don't add to your production environments as it will enable the GraphIQL route. */
+    SHOPIFY_DEV_GRAPHIQL: 'true' | undefined;
   }
 }
 
