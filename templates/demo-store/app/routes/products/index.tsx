@@ -1,5 +1,4 @@
 import {type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
-import {RESOURCE_TYPES} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
@@ -40,12 +39,6 @@ export const meta: MetaFunction = () => {
     title: 'All Products',
     description: 'All Products',
   };
-};
-
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.CATALOG,
-  },
 };
 
 export default function AllProducts() {
