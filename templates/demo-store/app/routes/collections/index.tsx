@@ -1,5 +1,4 @@
 import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
-import {RESOURCE_TYPES} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection,
@@ -32,12 +31,6 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   });
 
   return json({collections});
-};
-
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.COLLECTIONS,
-  },
 };
 
 export const meta: MetaFunction = () => {

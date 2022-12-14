@@ -4,7 +4,7 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen';
+import {notFoundMaybeRedirect} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
@@ -46,12 +46,6 @@ export type SortParam =
   | 'best-selling'
   | 'newest'
   | 'featured';
-
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.COLLECTION,
-  },
-};
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {collectionHandle} = params;

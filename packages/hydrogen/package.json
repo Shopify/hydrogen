@@ -41,8 +41,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
-    "src/templates"
+    "dist"
   ],
   "peerDependencies": {
     "@remix-run/react": "*",
