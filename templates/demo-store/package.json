@@ -1,6 +1,7 @@
 {
   "name": "demo-store",
   "private": true,
+  "version": "0.0.0",
   "scripts": {
     "build": "npm run build:css && shopify hydrogen build --entry ./server",
     "build:css": "postcss styles --base styles --dir app/styles --env production",

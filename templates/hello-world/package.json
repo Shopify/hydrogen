@@ -2,6 +2,7 @@
   "name": "hello-world",
   "private": true,
   "sideEffects": false,
+  "version": "0.0.0",
   "scripts": {
     "build": "shopify hydrogen build --entry ./server",
     "dev": "shopify hydrogen dev --entry ./server",
