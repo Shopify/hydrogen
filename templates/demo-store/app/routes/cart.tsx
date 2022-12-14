@@ -2,7 +2,11 @@ import {CartLoading, Cart} from '~/components';
 import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
-import {json, type ActionArgs, type AppLoadContext} from '@remix-run/oxygen';
+import {
+  json,
+  type ActionArgs,
+  type AppLoadContext,
+} from '@shopify/remix-oxygen';
 import type {
   Cart as CartType,
   CartInput,

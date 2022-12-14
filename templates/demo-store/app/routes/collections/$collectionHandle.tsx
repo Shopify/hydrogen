@@ -3,7 +3,7 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LoaderArgs,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import type {

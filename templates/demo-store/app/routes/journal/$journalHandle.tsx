@@ -4,7 +4,7 @@ import {
   type SerializeFrom,
   type LinksFunction,
   type LoaderArgs,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen-react';

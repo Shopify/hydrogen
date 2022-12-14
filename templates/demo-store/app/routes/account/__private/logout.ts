@@ -3,7 +3,7 @@ import {
   type ActionFunction,
   type AppLoadContext,
   type LoaderArgs,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 import {getLocaleFromRequest} from '~/lib/utils';
 
 export async function logout(request: Request, context: AppLoadContext) {

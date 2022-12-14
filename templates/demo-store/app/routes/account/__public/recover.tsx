@@ -4,7 +4,7 @@ import {
   type LoaderArgs,
   redirect,
   json,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
 import {sendPasswordResetEmail} from '~/data';

@@ -1,5 +1,5 @@
 import {Image} from '@shopify/hydrogen-react';
-import type {SerializeFrom} from '@remix-run/oxygen';
+import type {SerializeFrom} from '@shopify/remix-oxygen';
 import type {Collection} from '@shopify/hydrogen-react/storefront-api-types';
 import {Heading, Section, Grid, Link} from '~/components';
 

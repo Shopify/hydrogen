@@ -1,4 +1,4 @@
-import {type MetaFunction, type LoaderArgs} from '@remix-run/oxygen';
+import {type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {RESOURCE_TYPES} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';

@@ -18,7 +18,7 @@
     "@shopify/cli": "^3.23.0",
     "@shopify/cli-h2-test": "^4.0.5",
     "@shopify/hydrogen-react": "^2022.10.3",
-    "@shopify/h2-test-remix-oxygen": "^0.0.5",
+    "@shopify/remix-oxygen": "^0.0.0-alpha.0",
     "@shopify/h2-test-hydrogen": "^2.0.3",
     "clsx": "^1.2.1",
     "concurrently": "^7.5.0",
