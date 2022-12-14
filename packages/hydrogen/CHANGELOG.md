@@ -1,5 +1,13 @@
 # @shopify/hydrogen
 
+## 2.0.0-alpha.1
+
+### Patch Changes
+
+- Refactor cart ([#311](https://github.com/Shopify/h2/pull/311)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix a pagination bug on country change ([#317](https://github.com/Shopify/h2/pull/317)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2.0.0-alpha.0
 
 Package renaming. Similar to `@shopify/h2-test-hydrogen@2.0.3`.
