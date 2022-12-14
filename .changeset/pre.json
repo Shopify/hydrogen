@@ -1,0 +1,10 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@shopify/cli-hydrogen": "4.0.0-alpha.0",
+    "@shopify/hydrogen": "2.0.0-alpha.0",
+    "@shopify/remix-oxygen": "1.0.0-alpha.0"
+  },
+  "changesets": []
+}
