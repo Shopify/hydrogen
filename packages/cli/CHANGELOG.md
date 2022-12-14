@@ -1,4 +1,4 @@
-# @shopify/cli-h2-test
+# @shopify/cli-hydrogen
 
 ## 4.0.5
 
