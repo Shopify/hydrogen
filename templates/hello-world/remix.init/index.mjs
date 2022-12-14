@@ -1,7 +1,7 @@
 /* eslint-disable no-console */
 import fs from 'fs';
 
-const run = ({rootDirectory}: {rootDirectory: string}) => {
+const run = ({rootDirectory}) => {
   // TEMPORARY during dev preview:
   // If _env and _gitignore exist, rename them as .env and .gitignore
   if (fs.existsSync(`${rootDirectory}/_env`)) {
