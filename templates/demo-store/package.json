@@ -16,7 +16,7 @@
     "@headlessui/react": "^1.7.2",
     "@remix-run/react": "0.0.0-experimental-e18af792a",
     "@shopify/cli": "^3.23.0",
-    "@shopify/cli-hydrogen": "^4.0.5",
+    "@shopify/cli-hydrogen": "^4.0.0-alpha.0",
     "@shopify/hydrogen-react": "^2022.10.3",
     "@shopify/h2-test-remix-oxygen": "^0.0.5",
     "@shopify/h2-test-hydrogen": "^2.0.3",
