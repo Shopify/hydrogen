@@ -9,7 +9,7 @@ Whatever this integration ending up looking like but it would be the stuff in `s
 ```jsx
 // app/routes/cart.jsx
 import invariant from 'tiny-invariant';
-import {json} from '@remix-run/oxygen';
+import {json} from '@shopify/remix-oxygen';
 
 export async function action({request, context}) {
   const {session, storefront} = context;

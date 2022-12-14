@@ -3,7 +3,7 @@ import {
   type LinksFunction,
   type MetaFunction,
   type LoaderArgs,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,

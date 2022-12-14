@@ -17,8 +17,7 @@
     "paths": {
       "~/*": ["app/*"],
       ".hydrogen/*": [".hydrogen/*"],
-      "@shopify/hydrogen": ["../../node_modules/@shopify/h2-test-hydrogen"],
-      "@remix-run/oxygen": ["../../node_modules/@shopify/h2-test-remix-oxygen"]
+      "@shopify/hydrogen": ["../../node_modules/@shopify/h2-test-hydrogen"]
     },
 
     // Remix takes care of building everything in `./app` with `remix build`.

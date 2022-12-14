@@ -635,7 +635,7 @@ export function getLocaleFromRequest(request: Request): Locale {
      CountryCode,
      LanguageCode,
    } from '@shopify/hydrogen-react/storefront-api-types';
-   import {redirect, type AppLoadContext, type ActionFunction} from '@remix-run/oxygen';
+   import {redirect, type AppLoadContext, type ActionFunction} from '@shopify/remix-oxygen';
    import invariant from 'tiny-invariant';
    import {updateCartBuyerIdentity} from '~/data';
    import {countries} from '~/data/countries';
