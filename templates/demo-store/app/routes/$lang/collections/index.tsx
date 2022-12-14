@@ -1,1 +1,1 @@
-export {default, handle, loader, meta} from '~/routes/collections/index';
+export {default, loader, meta} from '~/routes/collections/index';
