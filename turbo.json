@@ -10,7 +10,7 @@
       "dependsOn": [
         "@shopify/cli-hydrogen#build",
         "@shopify/h2-test-hydrogen#build",
-        "@shopify/h2-test-remix-oxygen#build"
+        "@shopify/remix-oxygen#build"
       ],
       "cache": false
     },
@@ -29,7 +29,7 @@
       "dependsOn": [
         "@shopify/cli-hydrogen#build",
         "@shopify/h2-test-hydrogen#build",
-        "@shopify/h2-test-remix-oxygen#build"
+        "@shopify/remix-oxygen#build"
       ],
       "outputs": ["dist/**", ".hydrogen/**"]
     },
@@ -37,7 +37,7 @@
       "dependsOn": [
         "@shopify/cli-hydrogen#build",
         "@shopify/h2-test-hydrogen#build",
-        "@shopify/h2-test-remix-oxygen#build"
+        "@shopify/remix-oxygen#build"
       ],
       "outputs": ["dist/**"]
     }

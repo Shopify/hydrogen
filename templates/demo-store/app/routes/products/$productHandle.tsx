@@ -1,6 +1,6 @@
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, type LoaderArgs} from '@remix-run/oxygen';
+import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {notFoundMaybeRedirect, RESOURCE_TYPES} from '@shopify/hydrogen';
 import {
   useLoaderData,

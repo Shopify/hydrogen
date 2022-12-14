@@ -4,7 +4,7 @@ import {
   type MetaFunction,
   type LoaderArgs,
   type AppLoadContext,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,

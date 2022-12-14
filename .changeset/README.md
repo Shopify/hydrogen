@@ -9,7 +9,7 @@ Below is the temporary npm packages names that we are releasing to:
 | -------------- | --------------------------------- | ----------------------- | -------------------------- |
 | `cli`          | `@shopify/cli-hydrogen`           | `@shopify/cli-hydrogen` | Needs to start with `cli-` |
 | `hydrogen`     | `@shopify/h2-test-hydrogen`       | `@shopify/hydrogen`     |                            |
-| `remix-oxygen` | `@shopify/h2-test-remix-oxygen` . | `@remix-run/oxygen`     |                            |
+| `remix-oxygen` | `@shopify/h2-test-remix-oxygen` . | `@shopify/remix-oxygen` |                            |
 
 Before switching to officially releases, make sure all package names and versions are set properly,
 including the `package.json` for the `demo-store`. (Do a search for the test npm names)

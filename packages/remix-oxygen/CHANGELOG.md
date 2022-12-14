@@ -1,4 +1,12 @@
+# @shopify/remix-oxygen
+
+## 0.0.0-alpha.0
+
+Package renaming. Similar to `@shopify/h2-test-remix-oxygen@0.0.5`.
+
 # @shopify/h2-test-remix-oxygen
+
+> Deprecated package used during early development
 
 ## 0.0.5
 
