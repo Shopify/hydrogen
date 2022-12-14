@@ -1,6 +1,1 @@
-export {
-  default,
-  handle,
-  loader,
-  meta,
-} from '~/routes/collections/$collectionHandle';
+export {default, loader, meta} from '~/routes/collections/$collectionHandle';

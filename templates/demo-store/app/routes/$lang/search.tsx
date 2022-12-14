@@ -1,6 +1,1 @@
-export {
-  default,
-  getNoResultRecommendations,
-  handle,
-  loader,
-} from '~/routes/search';
+export {default, getNoResultRecommendations, loader} from '~/routes/search';
