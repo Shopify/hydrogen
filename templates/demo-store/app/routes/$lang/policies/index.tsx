@@ -1,1 +1,1 @@
-export {default, handle, loader, meta} from '~/routes/policies/index';
+export {default, loader, meta} from '~/routes/policies/index';
