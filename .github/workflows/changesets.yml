@@ -55,6 +55,7 @@ jobs:
           mkdir -p packages/cli/dist/templates
           mv templates/demo-store-ts packages/cli/dist/templates/demo-store
           mv templates/hello-world-ts packages/cli/dist/templates/hello-world
+          rm templates/demo-store-js templates/hello-world-js
 
       - name: Create Release Pull Request or Publish (for latest release)
         if: env.latest == 'true'
