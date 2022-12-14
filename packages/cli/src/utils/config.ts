@@ -78,13 +78,7 @@ export async function getRemixConfig(
 
     if (process.env.LOCAL_DEV) {
       // Watch local packages when developing in Hydrogen repo
-      const require = createRequire(import.meta.url);
-      const packagesPath = path.resolve(
-        // TODO: Change package name when we have one
-        path.dirname(require.resolve('@shopify/h2-test-hydrogen')),
-        '..',
-        '..',
-      );
+      const packagesPath = new URL('../../..', import.meta.url).pathname;
 
       config.watchPaths.push(
         ...(await fs.readdir(packagesPath)).flatMap((pkg) => {
