@@ -14,10 +14,10 @@
   "dependencies": {
     "@remix-run/react": "0.0.0-experimental-e18af792a",
     "@shopify/cli": "^3.23.0",
-    "@shopify/cli-hydrogen": "^4.0.0-alpha.0",
+    "@shopify/cli-hydrogen": "^4.0.0-alpha.1",
     "@shopify/hydrogen-react": "^2022.10.3",
-    "@shopify/hydrogen": "^2.0.0-alpha.0",
-    "@shopify/remix-oxygen": "^1.0.0-alpha.0",
+    "@shopify/hydrogen": "^2.0.0-alpha.1",
+    "@shopify/remix-oxygen": "^1.0.0-alpha.1",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "react": "^18.2.0",

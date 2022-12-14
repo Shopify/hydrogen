@@ -1,0 +1,36 @@
+{
+  "name": "hello-world",
+  "version": "0.0.0",
+  "private": true,
+  "sideEffects": false,
+  "scripts": {
+    "build": "shopify hydrogen build --entry ./server",
+    "dev": "shopify hydrogen dev --entry ./server",
+    "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
+    "preview": "npm run build && shopify hydrogen preview"
+  },
+  "prettier": "@shopify/prettier-config",
+  "dependencies": {
+    "@remix-run/react": "0.0.0-experimental-e18af792a",
+    "@shopify/cli": "^3.23.0",
+    "@shopify/cli-hydrogen": "^4.0.0-alpha.0",
+    "@shopify/hydrogen": "^2.0.0-alpha.0",
+    "@shopify/hydrogen-react": "^2022.10.3",
+    "@shopify/remix-oxygen": "^1.0.0-alpha.0",
+    "graphql": "^16.6.0",
+    "graphql-tag": "^2.12.6",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@remix-run/dev": "0.0.0-experimental-e18af792a",
+    "@shopify/oxygen-workers-types": "^3.17.2",
+    "@shopify/prettier-config": "^1.1.2",
+    "eslint": "^8.20.0",
+    "eslint-plugin-hydrogen": "0.12.2",
+    "prettier": "^2.7.1"
+  },
+  "engines": {
+    "node": ">=16.13"
+  }
+}

@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.0.0-alpha.1
+
+### Patch Changes
+
+- Initial release of @shopify/remix-oxygen by [@jplhomer](https://github.com/jplhomer)
+
 ## 0.0.0-alpha.0
 
 Package renaming. Similar to `@shopify/h2-test-remix-oxygen@0.0.5`.
