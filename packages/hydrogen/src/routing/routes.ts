@@ -166,7 +166,5 @@ function isTSProject(require: NodeRequire) {
 }
 
 function getHydrogenPkgPath(require: NodeRequire) {
-  return path.dirname(
-    require.resolve('@shopify/h2-test-hydrogen/package.json'),
-  );
+  return path.dirname(require.resolve('@shopify/hydrogen/package.json'));
 }
