@@ -85,7 +85,7 @@ describe('preview()', () => {
     );
   });
 
-  it('include the auto-reload script and send reload event on worker change', async () => {
+  it('includes the auto-reload script and sends reload event on worker change', async () => {
     const miniOxygen = await preview({
       ...defaultOptions,
       log: mockLogger,
@@ -108,7 +108,7 @@ describe('preview()', () => {
     );
     fixture.updateWorker();
 
-    // we need a short timeout to allow the "reload" on the MiniOxygen instance to fire
+    // we need a short timeout to allow the "reload" event on the MiniOxygen instance to fire
     await new Promise((resolve, _reject) => {
       setTimeout(() => resolve(null), 500);
     });
