@@ -1,6 +1,14 @@
+# @shopify/hydrogen
+
+## 2.0.0-alpha.0
+
+Package renaming. Similar to `@shopify/h2-test-hydrogen@2.0.3`.
+
 # @shopify/h2-test-hydrogen
 
 ## 2.0.3
+
+> Deprecated package used during early development
 
 ### Patch Changes
 
