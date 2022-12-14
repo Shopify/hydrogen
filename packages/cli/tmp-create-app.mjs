@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import {runInit} from './dist/commands/hydrogen/init.js';
 import fs from 'fs/promises';
 
@@ -13,7 +15,11 @@ const [template] = process.argv.slice(2);
 const templates = await fs.readdir(
   new URL('./dist/templates', import.meta.url).pathname,
 );
-console.log(`\nAvailable templates: \n- ${templates.join('\n -')}\n`);
+console.log(
+  `\nAvailable templates: \n- ${templates
+    .map((t) => new URL(`./dist/templates/${t}`, import.meta.url).pathname)
+    .join('\n- ')}\n`,
+);
 
 const defaultTemplate = new URL('./dist/templates/demo-store', import.meta.url)
   .pathname;
