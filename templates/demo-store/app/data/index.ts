@@ -826,7 +826,7 @@ export async function getCustomer(
    * If the customer failed to load, we assume their access token is invalid.
    */
   if (!data || !data.customer) {
-    throw await logout(request, context);
+    throw await logout(context);
   }
 
   return data.customer;
