@@ -1,3 +1,5 @@
+#!/usr/bin/env node
+
 import {runInit} from './dist/commands/hydrogen/init.js';
 import fs from 'fs/promises';
 
