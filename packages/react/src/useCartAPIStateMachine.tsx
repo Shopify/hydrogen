@@ -28,6 +28,9 @@ function invokeCart(
   return {
     entry: [
       ...(options?.entryActions || []),
+      assign({
+        lastValidCart: (context) => context?.cart,
+      }),
       'onCartActionEntry',
       'onCartActionOptimisticUI',
       action,
@@ -37,7 +40,7 @@ function invokeCart(
         target: options?.resolveTarget || 'idle',
         actions: [
           assign({
-            prevCart: (context) => context?.cart,
+            prevCart: (context) => context?.lastValidCart,
             cart: (_, event) => event?.payload?.cart,
             rawCartResult: (_, event) => event?.payload?.rawCartResult,
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -49,7 +52,7 @@ function invokeCart(
         target: options?.errorTarget || 'error',
         actions: [
           assign({
-            prevCart: (context) => context?.cart,
+            prevCart: (context) => context?.lastValidCart,
             cart: (context) => context?.lastValidCart,
             errors: (_, event) => event?.payload?.errors,
           }),
@@ -64,6 +67,8 @@ function invokeCart(
           cart: (_) => undefined,
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           lastValidCart: (_) => undefined,
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+          rawCartResult: (_) => undefined,
           // eslint-disable-next-line @typescript-eslint/no-unused-vars
           errors: (_) => undefined,
         }),

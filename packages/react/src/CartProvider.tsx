@@ -158,12 +158,11 @@ export function CartProvider({
       }
     },
     onCartActionOptimisticUI(context, event) {
-      if (!context?.cart) return {cart: undefined};
+      if (!context.cart) return {...context};
       switch (event.type) {
         case 'CARTLINE_REMOVE':
           return {
             ...context,
-            lastValidCart: context.cart,
             cart: {
               ...context.cart,
               lines: context?.cart?.lines?.filter(
@@ -174,7 +173,6 @@ export function CartProvider({
         case 'CARTLINE_UPDATE':
           return {
             ...context,
-            lastValidCart: context.cart,
             cart: {
               ...context.cart,
               lines: context?.cart?.lines?.map((line) => {
@@ -194,7 +192,7 @@ export function CartProvider({
             },
           };
       }
-      return {cart: context.cart ? {...context.cart} : undefined};
+      return {...context};
     },
     onCartActionComplete(context, event) {
       const cartActionEvent = event.payload.cartActionEvent;
