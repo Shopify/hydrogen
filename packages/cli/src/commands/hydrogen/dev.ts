@@ -71,8 +71,7 @@ async function compileAndWatch(
   const shouldReloadRemixApp = (file: string) =>
     file.startsWith(path.resolve(root, 'remix.config.')) ||
     (process.env.LOCAL_DEV &&
-      (file.includes(path.resolve('/hydrogen/src/templates/')) ||
-        file.includes(path.resolve('/hydrogen/dist/build/index.js'))));
+      file.includes(path.resolve('/hydrogen/dist/build/index.js')));
 
   const remixConfig = await getRemixConfig(
     root,
