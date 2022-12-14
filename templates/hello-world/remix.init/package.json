@@ -1,0 +1,7 @@
+{
+  "name": "remix.init",
+  "private": true,
+  "main": "index.mjs",
+  "license": "MIT",
+  "dependencies": {}
+}
