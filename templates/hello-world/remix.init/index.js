@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-import fs from 'fs';
+const fs = require('fs');
 
 const run = ({rootDirectory}) => {
   // TEMPORARY during dev preview:
@@ -20,6 +20,6 @@ const run = ({rootDirectory}) => {
   console.log();
 };
 
-export default run;
+module.exports = run;
 
 /* eslint-enable no-console */
