@@ -39,6 +39,7 @@ export type CreateStorefrontClientOptions = Parameters<
   i18n?: {
     language: LanguageCode;
     country: CountryCode;
+    pathPrefix?: string;
   };
 };
 
@@ -257,7 +258,8 @@ export function createStorefrontClient({
        * ```
        */
       isApiError: isStorefrontApiError,
-      i18n,
+      // Add default value for pathPefix.
+      i18n: i18n && {pathPrefix: '', ...i18n},
     },
   };
 }

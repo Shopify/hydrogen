@@ -15,14 +15,14 @@ export const handle = {
 };
 
 export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
-  const {language, country} = getLocaleFromRequest(request);
+  const {language, country} = storefront.i18n!;
   const {blog} = await storefront.query<{
     blog: Blog;
   }>(BLOGS_QUERY, {
     variables: {
       blogHandle: BLOG_HANDLE,
       pageBy: PAGINATION_SIZE,
-      language: storefront.i18n?.language,
+      language,
     },
   });
 
