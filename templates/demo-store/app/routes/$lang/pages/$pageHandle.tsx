@@ -1,1 +1,1 @@
-export {default, handle, loader, meta} from '~/routes/pages/$pageHandle';
+export {default, loader, meta} from '~/routes/pages/$pageHandle';
