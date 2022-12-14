@@ -4,7 +4,7 @@ import {
   json,
   type ActionFunction,
   type LoaderArgs,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
 import {login, registerCustomer} from '~/data';

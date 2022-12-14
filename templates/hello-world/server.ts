@@ -7,7 +7,7 @@ import {
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 
 /**
  * A global `process` object is only available during build to access NODE_ENV.

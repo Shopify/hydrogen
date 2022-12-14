@@ -15,8 +15,7 @@
     "baseUrl": ".",
     "types": ["@shopify/oxygen-workers-types"],
     "paths": {
-      "~/*": ["app/*"],
-      "@remix-run/oxygen": ["../../node_modules/@shopify/h2-test-remix-oxygen"]
+      "~/*": ["app/*"]
     },
 
     // Remix takes care of building everything in `./app` with `remix build`.

@@ -1,4 +1,4 @@
-import {json, type MetaFunction, type LoaderArgs} from '@remix-run/oxygen';
+import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {notFoundMaybeRedirect} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 
