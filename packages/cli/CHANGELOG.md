@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 4.0.0-alpha.4
+
+### Patch Changes
+
+- Improve output of tmp CLI ([#339](https://github.com/Shopify/h2/pull/339)) by [@jplhomer](https://github.com/jplhomer)
+
 ## 4.0.0-alpha.3
 
 ### Patch Changes
