@@ -1,4 +1,30 @@
+# @shopify/cli-hydrogen
+
+## 4.0.0-alpha.3
+
+### Patch Changes
+
+- Fix remix.init in templates ([#334](https://github.com/Shopify/h2/pull/334)) by [@jplhomer](https://github.com/jplhomer)
+
+## 4.0.0-alpha.2
+
+### Patch Changes
+
+- Fix various issues scaffolding new apps ([#332](https://github.com/Shopify/h2/pull/332)) by [@jplhomer](https://github.com/jplhomer)
+
+## 4.0.0-alpha.1
+
+### Patch Changes
+
+- Update CLI to be executable and bundle templates in dist folder ([#326](https://github.com/Shopify/h2/pull/326)) by [@jplhomer](https://github.com/jplhomer)
+
+## 4.0.0-alpha.0
+
+Package renaming. Similar to `@shopify/cli-h2-test@4.0.5`.
+
 # @shopify/cli-h2-test
+
+> Deprecated package used during early development
 
 ## 4.0.5
 

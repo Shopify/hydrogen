@@ -1,4 +1,4 @@
-import type {EntryContext} from '@remix-run/oxygen';
+import type {EntryContext} from '@shopify/remix-oxygen';
 import {RemixServer} from '@remix-run/react';
 import {renderToString} from 'react-dom/server';
 

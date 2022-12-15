@@ -8,9 +8,9 @@
     },
     "dev": {
       "dependsOn": [
-        "@shopify/cli-h2-test#build",
-        "@shopify/h2-test-hydrogen#build",
-        "@shopify/h2-test-remix-oxygen#build"
+        "@shopify/hydrogen#build",
+        "@shopify/cli-hydrogen#build",
+        "@shopify/remix-oxygen#build"
       ],
       "cache": false
     },
@@ -27,17 +27,17 @@
     },
     "demo-store#build": {
       "dependsOn": [
-        "@shopify/cli-h2-test#build",
-        "@shopify/h2-test-hydrogen#build",
-        "@shopify/h2-test-remix-oxygen#build"
+        "@shopify/hydrogen#build",
+        "@shopify/cli-hydrogen#build",
+        "@shopify/remix-oxygen#build"
       ],
       "outputs": ["dist/**", ".hydrogen/**"]
     },
     "hello-world#build": {
       "dependsOn": [
-        "@shopify/cli-h2-test#build",
-        "@shopify/h2-test-hydrogen#build",
-        "@shopify/h2-test-remix-oxygen#build"
+        "@shopify/hydrogen#build",
+        "@shopify/cli-hydrogen#build",
+        "@shopify/remix-oxygen#build"
       ],
       "outputs": ["dist/**"]
     }

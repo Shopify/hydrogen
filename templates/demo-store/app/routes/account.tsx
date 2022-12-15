@@ -24,7 +24,7 @@ import {
   ProductSwimlane,
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
-import {redirect, json, defer, type LoaderArgs} from '@remix-run/oxygen';
+import {redirect, json, defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import {getCustomer} from '~/data';
 import {getFeaturedData} from './featured-products';

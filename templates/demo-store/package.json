@@ -1,6 +1,7 @@
 {
   "name": "demo-store",
   "private": true,
+  "version": "0.0.0",
   "scripts": {
     "build": "npm run build:css && shopify hydrogen build --entry ./server",
     "build:css": "postcss styles --base styles --dir app/styles --env production",
@@ -16,10 +17,10 @@
     "@headlessui/react": "^1.7.2",
     "@remix-run/react": "0.0.0-experimental-e18af792a",
     "@shopify/cli": "^3.23.0",
-    "@shopify/cli-h2-test": "^4.0.5",
+    "@shopify/cli-hydrogen": "^4.0.0-alpha.3",
     "@shopify/hydrogen-react": "^2022.10.3",
-    "@shopify/h2-test-remix-oxygen": "^0.0.5",
-    "@shopify/h2-test-hydrogen": "^2.0.3",
+    "@shopify/hydrogen": "^2.0.0-alpha.1",
+    "@shopify/remix-oxygen": "^1.0.0-alpha.1",
     "clsx": "^1.2.1",
     "concurrently": "^7.5.0",
     "cross-env": "^7.0.3",
