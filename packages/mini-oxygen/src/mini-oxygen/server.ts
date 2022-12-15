@@ -49,11 +49,7 @@ function createAssetMiddleware({
       return next();
     }
 
-    if (
-      typeof proxyServer !== 'undefined' &&
-      proxyServer !== '' &&
-      !req.headers['mini-oxygen-proxy']
-    ) {
+    if (shouldProxy(req, proxyServer)) {
       return next();
     }
 
@@ -132,11 +128,7 @@ function createRequestMiddleware(
     Pick<MiniOxygenServerOptions, 'autoReload' | 'proxyServer'>,
 ): NextHandleFunction {
   return async (req, res) => {
-    if (
-      typeof proxyServer !== 'undefined' &&
-      proxyServer !== '' &&
-      !req.headers['mini-oxygen-proxy']
-    ) {
+    if (shouldProxy(req, proxyServer)) {
       return sendProxyRequest(req, res, proxyServer!);
     }
 
@@ -214,29 +206,32 @@ function sendProxyRequest(
 ) {
   const proxyRequest = new Promise(function (_resolve, reject) {
     const url = urlFromRequest(req);
-    const headers = req.headers;
-    headers['mini-Oxygen-Proxy'] = 'true';
-    const proxyHost = proxyServer.split(':')[0];
-    const proxyPort = parseInt(proxyServer.split(':')[1], 10);
     const options = {
-      host: proxyHost,
-      port: proxyPort,
+      host: proxyServer.split(':')[0],
+      port: parseInt(proxyServer.split(':')[1], 10),
       path: `${url.protocol}//${url.host}${url.pathname}`,
-      headers,
+      headers: {
+        ...req.headers,
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        'mini-Oxygen-Proxy': 'true',
+      },
       timeout: 3000,
     };
+
     const request = http.get(options, (response) => {
       const statusCode: number = response.statusCode || 0;
       res.writeHead(statusCode, response.statusMessage);
       response.pipe(res);
       return response;
     });
+
     request.on('timeout', () => {
       request.destroy();
       const error = new Error('connection to proxy timed out');
       reject(error);
     });
   });
+
   proxyRequest.catch((err: Error) => {
     // eslint-disable-next-line @typescript-eslint/naming-convention
     res.writeHead(500, {'Content-Type': 'text/plain; charset=UTF-8'});
@@ -279,4 +274,12 @@ function urlFromRequest(req: IncomingMessage) {
   const url = new URL(req.url ?? '', origin);
 
   return url;
+}
+
+function shouldProxy(req: IncomingMessage, proxyServer: string | undefined) {
+  return (
+    typeof proxyServer !== 'undefined' &&
+    proxyServer !== '' &&
+    !req.headers['mini-oxygen-proxy']
+  );
 }
