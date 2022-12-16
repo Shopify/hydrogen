@@ -9,10 +9,13 @@
   "scripts": {
     "build": "tsup --clean --config ./tsup.config.ts",
     "dev": "tsup --watch --config ./tsup.config.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "generate:manifest": "oclif manifest",
+    "check:manifest": ""
   },
   "devDependencies": {
-    "@types/fs-extra": "^9.0.13"
+    "@types/fs-extra": "^9.0.13",
+    "oclif": "^3.4.2"
   },
   "dependencies": {
     "@oclif/core": "^1.20.4",
@@ -23,7 +26,8 @@
   },
   "bin": "dist/tmp-create-app.js",
   "files": [
-    "dist"
+    "dist",
+    "oclif.manifest.json"
   ],
   "oclif": {
     "commands": "dist/commands",
