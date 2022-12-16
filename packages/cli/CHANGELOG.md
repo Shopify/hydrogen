@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 4.0.0-alpha.5
+
+### Patch Changes
+
+- Properly use JS if specified in the temp init script ([#342](https://github.com/Shopify/h2/pull/342)) by [@jplhomer](https://github.com/jplhomer)
+
 ## 4.0.0-alpha.4
 
 ### Patch Changes
