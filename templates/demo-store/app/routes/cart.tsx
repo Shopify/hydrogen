@@ -52,7 +52,7 @@ export async function action({request, context}: ActionArgs) {
       invariant(lines.length, 'No lines to add');
 
       /**
-       * If not previous cart exists, create one with the lines.
+       * If no previous cart exists, create one with the lines.
        */
       if (!cartId) {
         result = await cartCreate({
