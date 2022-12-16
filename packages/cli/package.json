@@ -10,8 +10,7 @@
     "build": "tsup --clean --config ./tsup.config.ts",
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
-    "generate:manifest": "oclif manifest",
-    "check:manifest": ""
+    "generate:manifest": "oclif manifest"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
