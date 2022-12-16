@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 4.0.0-alpha.6
+
+### Patch Changes
+
+- Update demo-store template to remove `remix.config.js`, which fixes teh TS-JS conversion process ([#347](https://github.com/Shopify/h2/pull/347)) by [@jplhomer](https://github.com/jplhomer)
+
 ## 4.0.0-alpha.5
 
 ### Patch Changes
