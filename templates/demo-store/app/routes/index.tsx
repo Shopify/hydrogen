@@ -19,7 +19,7 @@ interface HomeSeoData {
   };
 }
 
-interface CollectionHero {
+export interface CollectionHeroType {
   byline: Metafield;
   cta: Metafield;
   handle: string;
@@ -50,61 +50,46 @@ export async function loader({request, params, context}: LoaderArgs) {
   }
 
   const {shop, hero} = await context.storefront.query<{
-    hero: CollectionHero;
+    hero: CollectionHeroType;
     shop: HomeSeoData;
   }>(HOMEPAGE_SEO_QUERY, {
-    variables: {
-      handle: 'freestyle',
-      country: context.storefront.i18n?.country,
-      language: context.storefront.i18n?.language,
-    },
+    variables: {handle: 'freestyle'},
   });
 
   return defer({
     shop,
     primaryHero: hero,
     // @feedback
-    // Should these all be deferred? Can any of them be combined?
+    // These different queries are separated to illustrate how 3rd party content fetching can be optimized for both above and below the fold.
     // Should there be fallback rendering while deferred?
     featuredProducts: context.storefront.query<{
       products: ProductConnection;
     }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
       variables: {
         /**
-        Country and language properties are automatically injected
-        into all queries. Passing them is unnecessary unless you
-        want to override them from the following default:
+          Country and language properties are automatically injected
+          into all queries. Passing them is unnecessary unless you
+          want to override them from the following default:
         */
         country: context.storefront.i18n?.country,
         language: context.storefront.i18n?.language,
       },
     }),
-    secondaryHero: context.storefront.query<{hero: CollectionHero}>(
+    secondaryHero: context.storefront.query<{hero: CollectionHeroType}>(
       COLLECTION_HERO_QUERY,
       {
-        variables: {
-          handle: 'backcountry',
-          country: context.storefront.i18n?.country,
-          language: context.storefront.i18n?.language,
-        },
+        variables: {handle: 'backcountry'},
       },
     ),
     featuredCollections: context.storefront.query<{
       collections: CollectionConnection;
     }>(FEATURED_COLLECTIONS_QUERY, {
-      variables: {
-        country: context.storefront.i18n?.country,
-        language: context.storefront.i18n?.language,
-      },
+      variables: {},
     }),
-    tertiaryHero: context.storefront.query<{hero: CollectionHero}>(
+    tertiaryHero: context.storefront.query<{hero: CollectionHeroType}>(
       COLLECTION_HERO_QUERY,
       {
-        variables: {
-          handle: 'winter-2022',
-          country: context.storefront.i18n?.country,
-          language: context.storefront.i18n?.language,
-        },
+        variables: {handle: 'winter-2022'},
       },
     ),
   });
