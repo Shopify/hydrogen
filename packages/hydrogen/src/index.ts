@@ -10,4 +10,3 @@ export {InMemoryCache} from './cache/in-memory';
 
 export {RESOURCE_TYPES, REQUIRED_RESOURCES} from './routing/types';
 export {notFoundMaybeRedirect} from './routing/redirect';
-export {proxyLiquidRoute} from './routing/proxy';
