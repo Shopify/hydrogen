@@ -23,11 +23,13 @@ export async function action({request, context}: ActionArgs) {
   const {session, storefront} = context;
   const headers = new Headers();
 
-  const [formData, cartId, customerAccessToken] = await Promise.all([
+  const [formData, storedCartId, customerAccessToken] = await Promise.all([
     request.formData(),
     session.get('cartId'),
     session.get('customerAccessToken'),
   ]);
+
+  let cartId = storedCartId;
 
   const cartAction = formData.get('cartAction') as CartActions;
   invariant(cartAction, 'No cartAction defined');
@@ -49,18 +51,17 @@ export async function action({request, context}: ActionArgs) {
         : ([] as CartLineInput[]);
       invariant(lines.length, 'No lines to add');
 
-      //! Flow A — no previous cart, create and add line(s)
+      /**
+       * If not previous cart exists, create one with the lines.
+       */
       if (!cartId) {
         result = await cartCreate({
           input: countryCode ? {lines, buyerIdentity: {countryCode}} : {lines},
           storefront,
         });
 
-        // cart created - we only need a Set-Cookie header if we're creating
-        session.set('cartId', result.cart.id);
-        headers.set('Set-Cookie', await session.commit());
+        cartId = result.cart.id;
       } else {
-        //! Flow B — add line(s) to existing cart
         result = await cartAdd({
           cartId,
           lines,
@@ -80,6 +81,8 @@ export async function action({request, context}: ActionArgs) {
         storefront,
       });
 
+      cartId = result.cart.id;
+
       break;
     case CartAction.UPDATE_CART:
       const updateLines = formData.get('lines')
@@ -93,6 +96,8 @@ export async function action({request, context}: ActionArgs) {
         storefront,
       });
 
+      cartId = result.cart.id;
+
       break;
     case CartAction.UPDATE_DISCOUNT:
       invariant(cartId, 'Missing cartId');
@@ -105,6 +110,9 @@ export async function action({request, context}: ActionArgs) {
         discountCodes,
         storefront,
       });
+
+      cartId = result.cart.id;
+
       break;
     case CartAction.UPDATE_BUYER_IDENTITY:
       const buyerIdentity = formData.get('buyerIdentity')
@@ -113,8 +121,6 @@ export async function action({request, context}: ActionArgs) {
           ) as CartBuyerIdentityInput)
         : ({} as CartBuyerIdentityInput);
 
-      //! if we have an existing cart, we update the identity,
-      //! else we create a new cart with the passed identity
       result = cartId
         ? await cartUpdateBuyerIdentity({
             cartId,
@@ -134,13 +140,18 @@ export async function action({request, context}: ActionArgs) {
             storefront,
           });
 
-      session.set('cartId', result.cart.id);
-      headers.set('Set-Cookie', await session.commit());
+      cartId = result.cart.id;
 
       break;
     default:
       invariant(false, `${cartAction} cart action is not defined`);
   }
+
+  /**
+   * The Cart ID may change after each mutation. We need to update it each time in the session.
+   */
+  session.set('cartId', cartId);
+  headers.set('Set-Cookie', await session.commit());
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
