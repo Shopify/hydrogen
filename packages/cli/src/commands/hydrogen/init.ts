@@ -43,7 +43,7 @@ export function runInit({
     '--template',
     template,
     '--install',
-    typescript ? '--typescript' : '',
+    typescript ? '--typescript' : '--no-typescript',
     token ? `--token ${token}` : '',
   ];
 
