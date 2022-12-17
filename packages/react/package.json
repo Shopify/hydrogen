@@ -22,13 +22,11 @@
         "require": {
           "types": "./dist/types/index.d.cts",
           "development": "./dist/node-dev/index.js",
-          "production": "./dist/node-prod/index.js",
           "default": "./dist/node-prod/index.js"
         },
         "import": {
           "types": "./dist/types/index.d.ts",
           "development": "./dist/node-dev/index.mjs",
-          "production": "./dist/node-prod/index.mjs",
           "default": "./dist/node-prod/index.mjs"
         },
         "default": "./dist/node-prod/index.js"
@@ -36,20 +34,17 @@
       "module": {
         "types": "./dist/types/index.d.ts",
         "development": "./dist/browser-dev/index.mjs",
-        "production": "./dist/browser-prod/index.mjs",
         "default": "./dist/browser-prod/index.mjs"
       },
       "import": {
         "types": "./dist/types/index.d.ts",
         "development": "./dist/browser-dev/index.mjs",
-        "production": "./dist/browser-prod/index.mjs",
         "default": "./dist/browser-prod/index.mjs"
       },
       "require": {
         "types": "./dist/types/index.d.cts",
-        "development": "./dist/browser-dev/index.js",
-        "production": "./dist/browser-prod/index.js",
-        "default": "./dist/browser-prod/index.js"
+        "development": "./dist/node-dev/index.js",
+        "default": "./dist/node-prod/index.js"
       },
       "default": "./dist/browser-prod/index.mjs"
     },
