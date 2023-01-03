@@ -67,7 +67,7 @@ export async function action({request, context}) {
   }
 
   // The Cart ID may change after each mutation. We need to update it each time in the session.
-  session.set('cartId', result.cart.id);
+  session.set('cartId', cartId);
   headers.set('Set-Cookie', await session.commit());
 
   const {cart, errors} = result;
