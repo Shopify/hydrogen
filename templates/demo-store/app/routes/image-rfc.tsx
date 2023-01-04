@@ -1,7 +1,7 @@
 import {type LoaderArgs} from '@remix-run/server-runtime';
 import {useLoaderData} from '@remix-run/react';
 import {json} from '@shopify/remix-oxygen';
-import {Image} from '@shopify/hydrogen-react';
+import {Image} from '@shopify/hydrogen';
 
 /* @TODO: 
   - [ ] Support original aspect ratio

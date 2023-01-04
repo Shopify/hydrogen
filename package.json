@@ -10,6 +10,7 @@
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
     "typecheck": "turbo typecheck --parallel",
+    "test": "turbo test",
     "version": "changeset version && node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache && rimraf templates/demo-store/.hydrogen"
