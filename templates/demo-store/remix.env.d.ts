@@ -11,9 +11,10 @@ import type {HydrogenSession} from '~/lib/session.server';
 declare global {
   interface Env {
     SESSION_SECRET: string;
-    SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN: string;
-    SHOPIFY_STOREFRONT_API_VERSION: string;
-    SHOPIFY_STORE_DOMAIN: string;
+    PUBLIC_STOREFRONT_API_TOKEN: string;
+    PRIVATE_STOREFRONT_API_TOKEN: string;
+    PUBLIC_STOREFRONT_API_VERSION: string;
+    PUBLIC_STORE_DOMAIN: string;
   }
 }
 
