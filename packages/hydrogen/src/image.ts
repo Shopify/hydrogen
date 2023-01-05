@@ -1,17 +1,5 @@
 import React from 'react';
 
-/* @TODO: 
-  - [x] Support original aspect ratio
-  - [x] Support for non-100% widths
-  - [ ] Create guide/docs
-  - [ ] Picture element
-  - [ ] Support for third party data loaders
-  - [ ] Consider `loaded` render prop, for blurred placeholder
-  - [ ] Write tests
-  - [ ] Bikeshed on prop names
-  - [ ] Improve types / intellisense support
-*/
-
 /*
  * An optional prop you can use to change the
  * default srcSet generation behaviour
