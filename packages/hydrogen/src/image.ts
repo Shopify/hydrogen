@@ -191,6 +191,19 @@ function unitsMatch(
     getUnitValueParts(width.toString()).unit ===
     getUnitValueParts(height.toString()).unit
   );
+  /*
+      Given:
+        width = '100px'
+        height = 'auto'
+      Returns:
+        false
+
+      Given:
+        width = '100px'
+        height = '50px'
+      Returns:
+        true
+   */
 }
 
 function getUnitValueParts(value: string) {
@@ -201,6 +214,15 @@ function getUnitValueParts(value: string) {
     unit: unit === '' ? (number === undefined ? 'auto' : 'px') : unit,
     number,
   };
+  /*
+      Given:
+        value = '100px'
+      Returns:
+        {
+          unit: 'px',
+          number: 100
+        }
+   */
 }
 
 function getNormalizedFixedUnit(value?: string | number) {
@@ -222,6 +244,17 @@ function getNormalizedFixedUnit(value?: string | number) {
     default:
       return;
   }
+  /*
+      Given:
+        value = 16px | 1rem | 1em | 16
+      Returns:
+        16
+
+      Given:
+        value = 100%
+      Returns:
+        undefined
+   */
 }
 
 function isFixedWidth(width: string | number) {
@@ -230,6 +263,12 @@ function isFixedWidth(width: string | number) {
     typeof width === 'number' ||
     (typeof width === 'string' && fixedEndings.test(width))
   );
+  /*
+    Given:
+      width = 100 | '100px' | '100em' | '100rem'
+    Returns:
+      true
+  */
 }
 
 export function generateShopifySrcSet(
