@@ -45,6 +45,13 @@ export default function ImageRFC() {
   return (
     <>
       <Image src={url} alt={altText} aspectRatio="1/1" sizes="100vw" />
+      <Image
+        src={url}
+        alt={altText}
+        aspectRatio="4/3"
+        width="50vw"
+        sizes="50vw"
+      />
       <Image src={url} alt={altText} width={100} height={200} />
       <Image src={url} alt={altText} width="5rem" />
     </>

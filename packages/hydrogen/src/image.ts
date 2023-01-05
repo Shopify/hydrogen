@@ -42,6 +42,16 @@ export function Image({
   alt = 'Test Alt Tag',
   ...passthroughProps
 }: ImageComponent) {
+  let normalizedWidth: string =
+    getUnitValueParts(width.toString()).number +
+    getUnitValueParts(width.toString()).unit;
+
+  let normalizedHeight: string =
+    height === undefined
+      ? 'auto'
+      : getUnitValueParts(height.toString()).number +
+        getUnitValueParts(height.toString()).unit;
+
   if (!isFixedWidth(width)) {
     const {intervals, startingWidth, incrementSize, placeholderWidth} = config;
 
@@ -59,12 +69,15 @@ export function Image({
       src: generateImagerySrc(
         src,
         placeholderWidth,
-        parseAspectRatio(aspectRatio) * placeholderWidth,
+        placeholderWidth * parseAspectRatio(aspectRatio),
       ),
       alt,
-      width,
       sizes,
-      style: {aspectRatio},
+      style: {
+        width: normalizedWidth,
+        height: normalizedHeight,
+        aspectRatio,
+      },
       ...passthroughProps,
     });
   } else {
@@ -72,22 +85,12 @@ export function Image({
     let intWidth: number | undefined = getNormalizedFixedUnit(width);
     let intHeight: number | undefined = getNormalizedFixedUnit(height);
 
-    let normalizedWidth: string =
-      getUnitValueParts(width.toString()).number +
-      getUnitValueParts(width.toString()).unit;
-
-    let normalizedHeight: string =
-      height === undefined
-        ? 'auto'
-        : getUnitValueParts(height.toString()).number +
-          getUnitValueParts(height.toString()).unit;
-
     return React.createElement(Component, {
       src: generateImagerySrc(
         src,
         intWidth,
         (aspectRatio && intWidth
-          ? parseAspectRatio(aspectRatio) * intWidth
+          ? intWidth * parseAspectRatio(aspectRatio)
           : intHeight) ?? undefined,
         normalizedHeight === 'auto' ? undefined : crop,
       ),
@@ -95,6 +98,7 @@ export function Image({
       style: {
         width: normalizedWidth,
         height: normalizedHeight,
+        aspectRatio,
       },
       ...passthroughProps,
     });
@@ -181,50 +185,22 @@ export function generateImageWidths(
     (_, i) => (i * incrementSize + startingWidth) * scale,
   );
 
-  if (typeof width === 'string') {
-    if (width === '100%') {
-      return responsive;
-    } else if (width.endsWith('%') && width !== '100%') {
-      // width is set in percent
-      return responsive;
-    } else if (width.endsWith('px')) {
-      // width is set in pixels
-    } else if (width.endsWith('em')) {
-      // width is set in ems
-    } else if (width.endsWith('rem')) {
-      // width is set in rems
-    } else if (width == 'auto') {
-      // width is set to auto
-    } else {
-      // width is set using some other unit of measurement
-    }
-  }
-
-  if (width === '100%') {
-    return;
-    /* 
-      Given: 
-        width = '100%'
-        intervals = 10
-        startingWidth = 100
-        incrementSize = 100
-      Returns: 
-        [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
-    */
-  }
-  // @TODO: if width !== 100% handle relative/fixed sizes: vw/em/rem/px
-  return [1000];
+  return isFixedWidth(width) ? [getNormalizedFixedUnit(width)] : responsive;
 }
 
 // Simple utility function to convert 1/1 to [1, 1]
 export function parseAspectRatio(aspectRatio: string) {
   const [width, height] = aspectRatio.split('/');
-  return Number(width) / Number(height);
+  return 1 / (Number(width) / Number(height));
   /* 
     Given: 
       '1/1'
     Returns: 
-      0.5
+      0.5,
+    Given:
+      '4/3'
+    Returns:
+      0.75
   */
 }
 
@@ -259,8 +235,8 @@ export function generateImagerySrc(
   crop?: Crop,
 ) {
   const url = new URL(src);
-  width && url.searchParams.append('width', width.toString());
-  height && url.searchParams.append('height', height.toString());
+  width && url.searchParams.append('width', Math.round(width).toString());
+  height && url.searchParams.append('height', Math.round(height).toString());
   crop && url.searchParams.append('crop', crop);
   return url.href;
   /*
