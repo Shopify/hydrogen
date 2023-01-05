@@ -306,7 +306,7 @@ function getPageTypeFromPath(pathname: string): SeoDescriptor['type'] | null {
   const routes: {type: SeoDescriptor['type']; pattern: RegExp | string}[] = [
     {
       type: 'home',
-      pattern: '/',
+      pattern: '^/$',
     },
     {
       type: 'cart',
@@ -314,7 +314,7 @@ function getPageTypeFromPath(pathname: string): SeoDescriptor['type'] | null {
     },
     {
       type: 'product',
-      pattern: '/products/*',
+      pattern: '/products/.*',
     },
     {
       type: 'collections',
@@ -322,19 +322,19 @@ function getPageTypeFromPath(pathname: string): SeoDescriptor['type'] | null {
     },
     {
       type: 'collection',
-      pattern: /\/collections\/(\w+)/,
+      pattern: /\/collections\/([^\/]+)/,
     },
     {
       type: 'page',
-      pattern: /\/pages\/(\w+)/,
+      pattern: /\/pages\/([^\/]+)/,
     },
     {
       type: 'blog',
-      pattern: /\/blogs\/(\w+)/,
+      pattern: /\/blogs\/([^\/]+)/,
     },
     {
       type: 'article',
-      pattern: /\/blogs\/(\w+)\/(\w+)/,
+      pattern: /\/blogs\/([^\/]+)\/([^\/]+)/,
     },
     {
       type: 'policies',
@@ -342,7 +342,7 @@ function getPageTypeFromPath(pathname: string): SeoDescriptor['type'] | null {
     },
     {
       type: 'policy',
-      pattern: /\/policies\/(\w+)/,
+      pattern: /\/policies\/([^\/]+)/,
     },
     {
       type: 'search',
