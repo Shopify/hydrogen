@@ -19,7 +19,7 @@ interface HomeSeoData {
   };
 }
 
-export interface CollectionHeroType {
+export interface CollectionHero {
   byline: Metafield;
   cta: Metafield;
   handle: string;
@@ -50,7 +50,7 @@ export async function loader({request, params, context}: LoaderArgs) {
   }
 
   const {shop, hero} = await context.storefront.query<{
-    hero: CollectionHeroType;
+    hero: CollectionHero;
     shop: HomeSeoData;
   }>(HOMEPAGE_SEO_QUERY, {
     variables: {handle: 'freestyle'},
@@ -59,9 +59,10 @@ export async function loader({request, params, context}: LoaderArgs) {
   return defer({
     shop,
     primaryHero: hero,
-    // @feedback
-    // These different queries are separated to illustrate how 3rd party content fetching can be optimized for both above and below the fold.
-    // Should there be fallback rendering while deferred?
+    /**
+      These different queries are separated to illustrate how 3rd party content
+      fetching can be optimized for both above and below the fold.
+    **/
     featuredProducts: context.storefront.query<{
       products: ProductConnection;
     }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
@@ -75,21 +76,32 @@ export async function loader({request, params, context}: LoaderArgs) {
         language: context.storefront.i18n?.language,
       },
     }),
-    secondaryHero: context.storefront.query<{hero: CollectionHeroType}>(
+    secondaryHero: context.storefront.query<{hero: CollectionHero}>(
       COLLECTION_HERO_QUERY,
       {
-        variables: {handle: 'backcountry'},
+        variables: {
+          handle: 'backcountry',
+          country: context.storefront.i18n?.country,
+          language: context.storefront.i18n?.language,
+        },
       },
     ),
     featuredCollections: context.storefront.query<{
       collections: CollectionConnection;
     }>(FEATURED_COLLECTIONS_QUERY, {
-      variables: {},
+      variables: {
+        country: context.storefront.i18n?.country,
+        language: context.storefront.i18n?.language,
+      },
     }),
-    tertiaryHero: context.storefront.query<{hero: CollectionHeroType}>(
+    tertiaryHero: context.storefront.query<{hero: CollectionHero}>(
       COLLECTION_HERO_QUERY,
       {
-        variables: {handle: 'winter-2022'},
+        variables: {
+          handle: 'winter-2022',
+          country: context.storefront.i18n?.country,
+          language: context.storefront.i18n?.language,
+        },
       },
     ),
   });
