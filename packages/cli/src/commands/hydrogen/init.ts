@@ -1,6 +1,5 @@
-import {cli as remixCli} from '@remix-run/dev';
 import Command from '@shopify/cli-kit/node/base-command';
-import {Flags} from '@oclif/core';
+import Flags from '@oclif/core/lib/flags.js';
 
 // @ts-ignore
 export default class Init extends Command {
@@ -30,7 +29,7 @@ export default class Init extends Command {
   }
 }
 
-export function runInit({
+export async function runInit({
   template,
   typescript,
   token,
@@ -47,5 +46,6 @@ export function runInit({
     token ? `--token ${token}` : '',
   ];
 
-  remixCli.run(['create', ...defaults]);
+  const {cli} = await import('@remix-run/dev');
+  cli.run(['create', ...defaults]);
 }
