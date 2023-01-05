@@ -1,5 +1,13 @@
 # @shopify/cli-hydrogen
 
+## 4.0.0-alpha.7
+
+### Patch Changes
+
+- Change environment variable names to use what Oxygen will populate. ([#354](https://github.com/Shopify/h2/pull/354)) by [@jplhomer](https://github.com/jplhomer)
+
+- Defer CJS imports to improve CLI start up ([#352](https://github.com/Shopify/h2/pull/352)) by [@frandiox](https://github.com/frandiox)
+
 ## 4.0.0-alpha.6
 
 ### Patch Changes
