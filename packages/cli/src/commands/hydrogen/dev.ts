@@ -1,14 +1,12 @@
 import path from 'path';
-import fs from 'fs-extra';
-import * as remix from '@remix-run/dev/dist/compiler.js';
+import fs from 'fs/promises';
 import {output} from '@shopify/cli-kit';
 import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
-import {flags} from '../../utils/flags.js';
-
+import {commonFlags} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {Flags} from '@oclif/core';
+import Flags from '@oclif/core/lib/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
@@ -20,7 +18,7 @@ export default class Dev extends Command {
   static description =
     'Runs Hydrogen storefront in a MiniOxygen worker in development';
   static flags = {
-    ...flags,
+    ...commonFlags,
     port: Flags.integer({
       description: 'Port to run the preview server on',
       env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
@@ -83,6 +81,7 @@ async function compileAndWatch(
 
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
+  const remix = await import('@remix-run/dev/dist/compiler.js');
   const stopCompileWatcher = await remix.watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
     async onInitialBuild() {
