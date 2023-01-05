@@ -1,5 +1,21 @@
 import React from 'react';
 
+/* @TODO: 
+  - [x] Support original aspect ratio
+  - [x] Support for non-100% widths
+  - [ ] Create guide/docs
+  - [ ] Picture element
+  - [ ] Support for third party data loaders
+  - [ ] Consider `loaded` render prop, for blurred placeholder
+  - [ ] Write tests
+  - [ ] Bikeshed on prop names
+  - [ ] Improve types / intellisense support
+*/
+
+/*
+ * An optional prop you can use to change the
+ * default srcSet generation behaviour
+ */
 interface ImageConfig {
   intervals: number;
   startingWidth: number;
@@ -7,41 +23,64 @@ interface ImageConfig {
   placeholderWidth: number;
 }
 
-type ImageComponent = {
-  as?: 'img' | 'source';
-  src: string;
-  width?: string | number;
-  height?: string | number;
-  crop: Crop;
-  sizes: string;
-  aspectRatio: string;
-  scale?: number;
-  priority?: boolean;
-  config?: ImageConfig;
-  alt: string;
-};
+/*
+ * TODO: Expand to include focal point support;
+ * or switch this to be an SF API type
+ */
 
-type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right' | undefined;
+type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right';
 
 export function Image({
   as: Component = 'img',
-  src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg',
+  src,
+  /*
+   * Supports third party loaders, which are expected to provide
+   * a function that can generate a URL string
+   */
+  loader = shopifyLoader,
+  /*
+   * The default behaviour is a responsive image that fills
+   * the width of its container.
+   */
   width = '100%',
   height,
+  /*
+   * The default crop is center, in the event that AspectRatio is set,
+   * without specifying a crop, Imagery won't return the expected image.
+   */
   crop = 'center',
-  sizes = '(min-width: 768px) 50vw, 100vw',
+  sizes,
+  /*
+   * aspectRatio is a string in the format of 'width/height'
+   * it's used to generate the srcSet URLs, and to set the
+   * aspect ratio of the image element to prevent CLS.
+   */
   aspectRatio,
-  scale,
-  priority,
   config = {
     intervals: 10,
     startingWidth: 300,
     incrementSize: 300,
     placeholderWidth: 100,
   },
-  alt = 'Test Alt Tag',
+  alt,
+  loading = 'lazy',
   ...passthroughProps
-}: ImageComponent) {
+}: {
+  as?: 'img' | 'source';
+  src: string;
+  loader?: Function;
+  width?: string | number;
+  height?: string | number;
+  crop?: Crop;
+  sizes?: string;
+  aspectRatio?: string;
+  config?: ImageConfig;
+  alt?: string;
+  loading?: 'lazy' | 'eager';
+}) {
+  /*
+   * Sanitizes width and height inputs to account for 'number' type
+   */
   let normalizedWidth: string =
     getUnitValueParts(width.toString()).number +
     getUnitValueParts(width.toString()).unit;
@@ -52,24 +91,84 @@ export function Image({
       : getUnitValueParts(height.toString()).number +
         getUnitValueParts(height.toString()).unit;
 
-  if (!isFixedWidth(width)) {
-    const {intervals, startingWidth, incrementSize, placeholderWidth} = config;
+  const {intervals, startingWidth, incrementSize, placeholderWidth} = config;
 
-    const widths = generateImageWidths(
-      width,
-      intervals,
-      startingWidth,
-      incrementSize,
-    );
+  /*
+   * This function creates an array of widths to be used in srcSet
+   */
+  const widths = generateImageWidths(
+    width,
+    intervals,
+    startingWidth,
+    incrementSize,
+  );
 
-    const sizesArray = generateSizes(widths, aspectRatio, crop);
+  /*
+   * We check to see whether the image is fixed width or not,
+   * if fixed, we still provide a srcSet, but only to account for
+   * different pixel densities.
+   */
+  if (isFixedWidth(width)) {
+    let intWidth: number | undefined = getNormalizedFixedUnit(width);
+    let intHeight: number | undefined = getNormalizedFixedUnit(height);
+
+    /*
+     * The aspect ratio for fixed with images is taken from the explicitly
+     * set prop, but if that's not present, and both width and height are
+     * set, we calculate the aspect ratio from the width and height — as
+     * long as they share the same unit type (e.g. both are 'px').
+     */
+    const fixedAspectRatio = aspectRatio
+      ? aspectRatio
+      : unitsMatch(width, height)
+      ? `${intWidth}/${intHeight}`
+      : undefined;
+
+    /*
+     * The Sizes Array generates an array of all of the parts
+     * that make up the srcSet, including the width, height, and crop
+     */
+    const sizesArray =
+      widths === undefined
+        ? undefined
+        : generateSizes(widths, fixedAspectRatio, crop);
 
     return React.createElement(Component, {
       srcSet: generateShopifySrcSet(src, sizesArray),
-      src: generateImagerySrc(
+      src: loader(
+        src,
+        intWidth,
+        intHeight
+          ? intHeight
+          : aspectRatio && intWidth
+          ? intWidth * (parseAspectRatio(aspectRatio) ?? 1)
+          : undefined,
+        normalizedHeight === 'auto' ? undefined : crop,
+      ),
+      alt,
+      sizes: sizes || normalizedWidth,
+      style: {
+        width: normalizedWidth,
+        height: normalizedHeight,
+        aspectRatio,
+      },
+      loading,
+      ...passthroughProps,
+    });
+  } else {
+    const sizesArray =
+      widths === undefined
+        ? undefined
+        : generateSizes(widths, aspectRatio, crop);
+
+    return React.createElement(Component, {
+      srcSet: generateShopifySrcSet(src, sizesArray),
+      src: loader(
         src,
         placeholderWidth,
-        placeholderWidth * parseAspectRatio(aspectRatio),
+        aspectRatio && placeholderWidth
+          ? placeholderWidth * (parseAspectRatio(aspectRatio) ?? 1)
+          : undefined,
       ),
       alt,
       sizes,
@@ -78,31 +177,20 @@ export function Image({
         height: normalizedHeight,
         aspectRatio,
       },
-      ...passthroughProps,
-    });
-  } else {
-    // width is fixed
-    let intWidth: number | undefined = getNormalizedFixedUnit(width);
-    let intHeight: number | undefined = getNormalizedFixedUnit(height);
-
-    return React.createElement(Component, {
-      src: generateImagerySrc(
-        src,
-        intWidth,
-        (aspectRatio && intWidth
-          ? intWidth * parseAspectRatio(aspectRatio)
-          : intHeight) ?? undefined,
-        normalizedHeight === 'auto' ? undefined : crop,
-      ),
-      alt,
-      style: {
-        width: normalizedWidth,
-        height: normalizedHeight,
-        aspectRatio,
-      },
+      loading,
       ...passthroughProps,
     });
   }
+}
+
+function unitsMatch(
+  width: string | number = '100%',
+  height: string | number = 'auto',
+) {
+  return (
+    getUnitValueParts(width.toString()).unit ===
+    getUnitValueParts(height.toString()).unit
+  );
 }
 
 function getUnitValueParts(value: string) {
@@ -115,9 +203,9 @@ function getUnitValueParts(value: string) {
   };
 }
 
-function getNormalizedFixedUnit(value: string | number | undefined) {
+function getNormalizedFixedUnit(value?: string | number) {
   if (value === undefined) {
-    return undefined;
+    return;
   }
 
   const {unit, number} = getUnitValueParts(value.toString());
@@ -132,7 +220,7 @@ function getNormalizedFixedUnit(value: string | number | undefined) {
     case '':
       return number;
     default:
-      return undefined;
+      return;
   }
 }
 
@@ -145,8 +233,8 @@ function isFixedWidth(width: string | number) {
 }
 
 export function generateShopifySrcSet(
-  src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg',
-  sizesArray: Array<{width: number; height: number; crop: Crop}> | undefined,
+  src: string,
+  sizesArray?: Array<{width?: number; height?: number; crop?: Crop}>,
 ) {
   if (sizesArray?.length === 0 || !sizesArray) {
     return src;
@@ -155,7 +243,7 @@ export function generateShopifySrcSet(
   return sizesArray
     .map(
       (size) =>
-        generateImagerySrc(src, size.width, size.height, size.crop) +
+        shopifyLoader(src, size.width, size.height, size.crop) +
         ' ' +
         size.width +
         'w',
@@ -175,21 +263,26 @@ export function generateShopifySrcSet(
 
 export function generateImageWidths(
   width: string | number = '100%',
-  intervals = 20,
-  startingWidth = 200,
-  incrementSize = 100,
-  scale = 1,
+  intervals: number = 20,
+  startingWidth: number = 200,
+  incrementSize: number = 100,
 ) {
   const responsive = Array.from(
     {length: intervals},
-    (_, i) => (i * incrementSize + startingWidth) * scale,
+    (_, i) => i * incrementSize + startingWidth,
   );
 
-  return isFixedWidth(width) ? [getNormalizedFixedUnit(width)] : responsive;
+  const fixed = Array.from(
+    {length: 3},
+    (_, i) => (i + 1) * (getNormalizedFixedUnit(width) ?? 0),
+  );
+
+  return isFixedWidth(width) ? fixed : responsive;
 }
 
 // Simple utility function to convert 1/1 to [1, 1]
-export function parseAspectRatio(aspectRatio: string) {
+export function parseAspectRatio(aspectRatio?: string) {
+  if (!aspectRatio) return;
   const [width, height] = aspectRatio.split('/');
   return 1 / (Number(width) / Number(height));
   /* 
@@ -206,15 +299,17 @@ export function parseAspectRatio(aspectRatio: string) {
 
 // Generate data needed for Imagery loader
 export function generateSizes(
-  widths: number[] | undefined,
-  aspectRatio: string,
+  widths?: number[],
+  aspectRatio?: string,
   crop: Crop = 'center',
 ) {
   if (!widths) return;
   const sizes = widths.map((width: number) => {
     return {
       width,
-      height: width * parseAspectRatio(aspectRatio),
+      height: aspectRatio
+        ? width * (parseAspectRatio(aspectRatio) ?? 1)
+        : undefined,
       crop,
     };
   });
@@ -228,7 +323,13 @@ export function generateSizes(
   */
 }
 
-export function generateImagerySrc(
+/*
+ * The shopifyLoader function is a simple utility function that takes a src, width,
+ * height, and crop and returns a string that can be used as the src for an image.
+ * It can be used with the Hydrogen Image component or with the next/image component.
+ * (or any others that accept equivalent configuration)
+ */
+export function shopifyLoader(
   src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg',
   width?: number,
   height?: number,
