@@ -1,8 +1,8 @@
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
-import {readConfig, type RemixConfig} from '@remix-run/dev/dist/config.js';
+import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {createRequire} from 'module';
 import path from 'path';
-import fs from 'fs-extra';
+import fs from 'fs/promises';
 
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
@@ -46,6 +46,7 @@ export async function getRemixConfig(
       process.env.NODE_ENV = 'test';
     }
 
+    const {readConfig} = await import('@remix-run/dev/dist/config.js');
     const config = await readConfig(root, mode);
     process.env.NODE_ENV = env;
 
