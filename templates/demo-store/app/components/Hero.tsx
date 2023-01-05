@@ -7,7 +7,7 @@ import type {
   Video as MediaVideo,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {Heading, Text, Link} from '~/components';
-import type {CollectionHeroType} from '~/routes/index';
+import type {CollectionHero} from '~/routes/index';
 
 /**
  * Hero component that renders metafields attached to collection resources
@@ -22,7 +22,7 @@ export function Hero({
   spread,
   spreadSecondary,
   top,
-}: SerializeFrom<CollectionHeroType>) {
+}: SerializeFrom<CollectionHero>) {
   return (
     <Link to={`/collections/${handle}`}>
       <section
