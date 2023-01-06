@@ -59,19 +59,15 @@ export async function loader({request, params, context}: LoaderArgs) {
   return defer({
     shop,
     primaryHero: hero,
-    /**
-      These different queries are separated to illustrate how 3rd party content
-      fetching can be optimized for both above and below the fold.
-    **/
+    // These different queries are separated to illustrate how 3rd party content
+    // fetching can be optimized for both above and below the fold.
     featuredProducts: context.storefront.query<{
       products: ProductConnection;
     }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
       variables: {
-        /**
-          Country and language properties are automatically injected
-          into all queries. Passing them is unnecessary unless you
-          want to override them from the following default:
-        */
+        // Country and language properties are automatically injected
+        // into all queries. Passing them is unnecessary unless you
+        // want to override them from the following default:
         country: context.storefront.i18n?.country,
         language: context.storefront.i18n?.language,
       },
