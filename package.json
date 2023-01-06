@@ -12,7 +12,8 @@
     "typecheck": "turbo typecheck --parallel",
     "version": "changeset version && node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "changeset": "changeset",
-    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache && rimraf templates/demo-store/.hydrogen"
+    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache && rimraf templates/demo-store/.hydrogen",
+    "start": "npm run dev"
   },
   "workspaces": [
     "templates/hello-world",
