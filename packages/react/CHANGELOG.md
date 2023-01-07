@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2022.10.8
+
+### Patch Changes
+
+- c1359eb: Actually add content to the READMEs so that they're seen when published to NPM.
+
 ## 2022.10.7
 
 ### Patch Changes
