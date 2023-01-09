@@ -29,7 +29,7 @@ type CartResponse = PartialDeep<CartType, {recurseIntoArrays: true}>;
 /**
  * The `useCartActions` hook returns helper graphql functions for Storefront Cart API
  *
- * See [cart API graphql mutations](https://shopify.dev/api/storefront/2022-10/objects/Cart)
+ * See [cart API graphql mutations](https://shopify.dev/api/storefront/2023-01/objects/Cart)
  */
 export function useCartActions({
   numCartLines,

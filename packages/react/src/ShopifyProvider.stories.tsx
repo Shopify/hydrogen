@@ -56,5 +56,5 @@ export const Default = Template.bind({});
 Default.args = {
   storeDomain: 'notashop.myshopify.com',
   storefrontToken: 'abc123',
-  version: '2022-10',
+  version: '2023-01',
 };

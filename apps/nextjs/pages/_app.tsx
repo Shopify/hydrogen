@@ -8,7 +8,7 @@ export default function App({Component, pageProps}: AppProps) {
       shopifyConfig={{
         storeDomain: `hydrogen-preview`,
         storefrontToken: '3b580e70970c4528da70c98e097c2fa0',
-        storefrontApiVersion: '2022-10',
+        storefrontApiVersion: '2023-01',
         locale: 'EN-US',
       }}
     >
