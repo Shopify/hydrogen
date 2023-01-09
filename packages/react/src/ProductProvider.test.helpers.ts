@@ -8,7 +8,7 @@ import type {
 } from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import {faker} from '@faker-js/faker';
-import {getRawMetafield} from './Metafield.test.helpers.js';
+import {getRawMetafield} from './parse-metafield.test.helpers.js';
 import {getUnitPriceMeasurement, getPrice} from './Money.test.helpers.js';
 import {getPreviewImage} from './Image.test.helpers.js';
 import {getMedia} from './MediaFile.test.helpers.js';

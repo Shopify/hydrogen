@@ -8,7 +8,6 @@ import type {
   ProductVariant,
 } from './storefront-api-types.js';
 import type {PartialDeep, Simplify} from 'type-fest';
-import {parseJSON} from './Metafield.js';
 import {flattenConnection} from './flatten-connection.js';
 
 /**
@@ -19,16 +18,14 @@ import {flattenConnection} from './flatten-connection.js';
  * TypeScript developers can use the type `ParsedMetafields` from this package to get the returned object's type correct. For example:
  *
  * ```
- * metafieldParser<ParsedMetafields['boolean']>({type: 'boolean', value: 'false'}
+ * parseMetafield<ParsedMetafields['boolean']>({type: 'boolean', value: 'false'}
  * ```
  */
-export function metafieldParser<ReturnGeneric>(
+export function parseMetafield<ReturnGeneric>(
   metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>
 ): ReturnGeneric {
-  // @deprecated this function will be renamed to 'parseMetafield()'
-
   if (!metafield.type) {
-    const noTypeError = `metafieldParser(): The 'type' field is required in order to parse the Metafield.`;
+    const noTypeError = `parseMetafield(): The 'type' field is required in order to parse the Metafield.`;
     if (__HYDROGEN_DEV__) {
       throw new Error(noTypeError);
     } else {
@@ -86,7 +83,7 @@ export function metafieldParser<ReturnGeneric>(
       try {
         parsedValue = parseJSON(metafield.value ?? '');
       } catch (err) {
-        const parseError = `metafieldParser(): attempted to JSON.parse the 'metafield.value' property, but failed.`;
+        const parseError = `parseMetafield(): attempted to JSON.parse the 'metafield.value' property, but failed.`;
         if (__HYDROGEN_DEV__) {
           throw new Error(parseError);
         } else {
@@ -134,7 +131,7 @@ export function metafieldParser<ReturnGeneric>(
       } as ReturnGeneric;
 
     default: {
-      const typeNotFoundError = `metafieldParser(): the 'metafield.type' you passed in is not supported. Your type: "${metafield.type}". If you believe this is an error, please open an issue on GitHub.`;
+      const typeNotFoundError = `parseMetafield(): the 'metafield.type' you passed in is not supported. Your type: "${metafield.type}". If you believe this is an error, please open an issue on GitHub.`;
       if (__HYDROGEN_DEV__) {
         throw new Error(typeNotFoundError);
       } else {
@@ -148,6 +145,18 @@ export function metafieldParser<ReturnGeneric>(
       }
     }
   }
+}
+
+/**
+ * Parses a JSON string while preventing prototype injection attacks.
+ */
+export function parseJSON(json: string) {
+  if (String(json).includes('__proto__')) {
+    return JSON.parse(json, (k, v) => {
+      if (k !== '__proto__') return v;
+    });
+  }
+  return JSON.parse(json);
 }
 
 // taken from https://shopify.dev/apps/metafields/types
@@ -195,11 +204,11 @@ export const allMetafieldTypesArray = [
 export type MetafieldTypeTypes = typeof allMetafieldTypesArray[number];
 
 /**
- * A mapping of a Metafield's `type` to the TypeScript type that is returned from `metafieldParser()`
- * For example, when using `metafieldParser()`, the type will be correctly returned when used like the following:
+ * A mapping of a Metafield's `type` to the TypeScript type that is returned from `parseMetafield()`
+ * For example, when using `parseMetafield()`, the type will be correctly returned when used like the following:
  *
  * ```
- * const parsedMetafield = metafieldParser<ParsedMetafields['boolean']>(metafield);`
+ * const parsedMetafield = parseMetafield<ParsedMetafields['boolean']>(metafield);`
  * ```
  * `parsedMetafield.parsedValue`'s type is now `boolean`
  */

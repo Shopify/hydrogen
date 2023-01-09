@@ -4,7 +4,7 @@ import type {PartialDeep} from 'type-fest';
 import {
   type MetafieldTypeTypes,
   allMetafieldTypesArray,
-} from './metafield-parser.js';
+} from './parse-metafield.js';
 
 export function getRawMetafield(
   metafield: PartialDeep<MetafieldType, {recurseIntoArrays: true}> & {

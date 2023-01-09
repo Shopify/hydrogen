@@ -1,11 +1,11 @@
 import {
-  metafieldParser,
+  parseMetafield,
   type ParsedMetafields,
   type Measurement,
   type Rating,
   type MetafieldTypeTypes,
-} from './metafield-parser.js';
-import {getRawMetafield} from './Metafield.test.helpers.js';
+} from './parse-metafield.js';
+import {getRawMetafield} from './parse-metafield.test.helpers.js';
 import {TypeEqual, expectType} from 'ts-expect';
 import type {
   Collection,
@@ -22,20 +22,20 @@ import {faker} from '@faker-js/faker';
  * The advantage of doing it this way for this test suite is that it helps ensure that the TS types are correct for the returned value
  * In most other situations, the second way is probably better though
  */
-describe(`metafieldParser`, () => {
+describe(`parseMetafield`, () => {
   describe(`base metafields`, () => {
     it(`boolean`, () => {
       const meta = getRawMetafield({
         type: 'boolean',
         value: 'false',
       });
-      const parsed = metafieldParser<ParsedMetafields['boolean']>(meta);
+      const parsed = parseMetafield<ParsedMetafields['boolean']>(meta);
       expect(parsed.parsedValue === false).toBe(true);
       expectType<null | boolean>(parsed?.parsedValue);
     });
 
     it(`collection_reference`, () => {
-      const parsed = metafieldParser<ParsedMetafields['collection_reference']>({
+      const parsed = parseMetafield<ParsedMetafields['collection_reference']>({
         type: 'collection_reference',
         reference: {
           __typename: 'Collection',
@@ -46,7 +46,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`color`, () => {
-      const parsed = metafieldParser<ParsedMetafields['color']>({
+      const parsed = parseMetafield<ParsedMetafields['color']>({
         type: 'color',
         value: '#f0f0f0',
       });
@@ -56,7 +56,7 @@ describe(`metafieldParser`, () => {
 
     it(`date`, () => {
       const dateStamp = '2022-10-13';
-      const parsed = metafieldParser<ParsedMetafields['date']>({
+      const parsed = parseMetafield<ParsedMetafields['date']>({
         type: 'date',
         value: dateStamp,
       });
@@ -68,7 +68,7 @@ describe(`metafieldParser`, () => {
 
     it(`date_time`, () => {
       const dateStamp = '2022-10-13';
-      const parsed = metafieldParser<ParsedMetafields['date_time']>({
+      const parsed = parseMetafield<ParsedMetafields['date_time']>({
         type: 'date_time',
         value: dateStamp,
       });
@@ -79,7 +79,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`dimension`, () => {
-      const parsed = metafieldParser<ParsedMetafields['dimension']>({
+      const parsed = parseMetafield<ParsedMetafields['dimension']>({
         type: 'dimension',
         value: JSON.stringify({unit: 'mm', value: 2}),
       });
@@ -89,7 +89,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`file_reference`, () => {
-      const parsed = metafieldParser<ParsedMetafields['file_reference']>({
+      const parsed = parseMetafield<ParsedMetafields['file_reference']>({
         type: 'file_reference',
         reference: {
           __typename: 'GenericFile',
@@ -114,7 +114,7 @@ describe(`metafieldParser`, () => {
       };
 
       // without an extra generic, we just mark it as "unknown"
-      const parsed = metafieldParser<ParsedMetafields['json']>(myJson);
+      const parsed = parseMetafield<ParsedMetafields['json']>(myJson);
       // note that with "unknown", you have to cast it as something
       expect((parsed?.parsedValue as {test: string})?.test === 'testing').toBe(
         true
@@ -123,7 +123,7 @@ describe(`metafieldParser`, () => {
 
       // with an extra generic, we can use that as the type instead
       const parsedOtherType =
-        metafieldParser<ParsedMetafields<MyJson>['json']>(myJson);
+        parseMetafield<ParsedMetafields<MyJson>['json']>(myJson);
       expect(parsedOtherType.type === 'json').toBe(true);
       expect(parsedOtherType.parsedValue?.test === 'testing').toBe(true);
       expect(parsedOtherType.parsedValue?.bool === false).toBe(true);
@@ -132,7 +132,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`money`, () => {
-      const parsed = metafieldParser<ParsedMetafields['money']>({
+      const parsed = parseMetafield<ParsedMetafields['money']>({
         type: 'money',
         value: JSON.stringify({amount: '12', currencyCode: 'USD'}),
       });
@@ -142,29 +142,27 @@ describe(`metafieldParser`, () => {
     });
 
     it(`multi_line_text_field`, () => {
-      const parsed = metafieldParser<ParsedMetafields['multi_line_text_field']>(
-        {
-          type: 'multi_line_text_field',
-          value: 'blah\nblah\nblah',
-        }
-      );
+      const parsed = parseMetafield<ParsedMetafields['multi_line_text_field']>({
+        type: 'multi_line_text_field',
+        value: 'blah\nblah\nblah',
+      });
       expect(parsed?.parsedValue === 'blah\nblah\nblah').toBe(true);
       expectType<null | string>(parsed?.parsedValue);
     });
 
     it(`single_line_text_field`, () => {
-      const parsed = metafieldParser<
-        ParsedMetafields['single_line_text_field']
-      >({
-        type: 'single_line_text_field',
-        value: 'blah',
-      });
+      const parsed = parseMetafield<ParsedMetafields['single_line_text_field']>(
+        {
+          type: 'single_line_text_field',
+          value: 'blah',
+        }
+      );
       expect(parsed?.parsedValue === 'blah').toBe(true);
       expectType<null | string>(parsed?.parsedValue);
     });
 
     it(`url`, () => {
-      const parsed = metafieldParser<ParsedMetafields['url']>({
+      const parsed = parseMetafield<ParsedMetafields['url']>({
         type: 'url',
         value: 'https://www.shopify.com',
       });
@@ -173,7 +171,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`number_decimal`, () => {
-      const parsed = metafieldParser<ParsedMetafields['number_decimal']>({
+      const parsed = parseMetafield<ParsedMetafields['number_decimal']>({
         type: 'number_decimal',
         value: '2.2',
       });
@@ -182,7 +180,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`number_integer`, () => {
-      const parsed = metafieldParser<ParsedMetafields['number_integer']>({
+      const parsed = parseMetafield<ParsedMetafields['number_integer']>({
         type: 'number_integer',
         value: '2',
       });
@@ -191,7 +189,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`page_reference`, () => {
-      const parsed = metafieldParser<ParsedMetafields['page_reference']>({
+      const parsed = parseMetafield<ParsedMetafields['page_reference']>({
         type: 'page_reference',
         reference: {
           __typename: 'Page',
@@ -202,7 +200,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`product_reference`, () => {
-      const parsed = metafieldParser<ParsedMetafields['product_reference']>({
+      const parsed = parseMetafield<ParsedMetafields['product_reference']>({
         type: 'product_reference',
         reference: {
           __typename: 'Product',
@@ -213,7 +211,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`rating`, () => {
-      const parsed = metafieldParser<ParsedMetafields['rating']>({
+      const parsed = parseMetafield<ParsedMetafields['rating']>({
         type: 'rating',
         value: JSON.stringify({value: 3, scale_min: 1, scale_max: 5}),
       });
@@ -224,7 +222,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`variant_reference`, () => {
-      const parsed = metafieldParser<ParsedMetafields['variant_reference']>({
+      const parsed = parseMetafield<ParsedMetafields['variant_reference']>({
         type: 'variant_reference',
         reference: {
           __typename: 'ProductVariant',
@@ -235,7 +233,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`volume`, () => {
-      const parsed = metafieldParser<ParsedMetafields['volume']>({
+      const parsed = parseMetafield<ParsedMetafields['volume']>({
         type: 'volume',
         value: JSON.stringify({unit: 'us_pt', value: 2}),
       });
@@ -245,7 +243,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`weight`, () => {
-      const parsed = metafieldParser<ParsedMetafields['weight']>({
+      const parsed = parseMetafield<ParsedMetafields['weight']>({
         type: 'weight',
         value: JSON.stringify({unit: 'lbs', value: 2}),
       });
@@ -257,7 +255,7 @@ describe(`metafieldParser`, () => {
 
   describe(`list metafields`, () => {
     it(`list.collection_reference`, () => {
-      const parsed = metafieldParser<
+      const parsed = parseMetafield<
         ParsedMetafields['list.collection_reference']
       >({
         type: 'list.collection_reference',
@@ -283,7 +281,7 @@ describe(`metafieldParser`, () => {
 
     it(`list.color`, () => {
       const listOfColors = [faker.color.rgb(), faker.color.rgb()];
-      const parsed = metafieldParser<ParsedMetafields['list.color']>({
+      const parsed = parseMetafield<ParsedMetafields['list.color']>({
         type: 'list.color',
         value: JSON.stringify(listOfColors),
       });
@@ -296,7 +294,7 @@ describe(`metafieldParser`, () => {
     it(`list.date`, () => {
       const listOfDates = ['2022-10-24', '2022-10-25'];
       const listOfParsedDates = listOfDates.map((date) => new Date(date));
-      const parsed = metafieldParser<ParsedMetafields['list.date']>({
+      const parsed = parseMetafield<ParsedMetafields['list.date']>({
         type: 'list.date',
         value: JSON.stringify(listOfDates),
       });
@@ -312,7 +310,7 @@ describe(`metafieldParser`, () => {
     it(`list.date_time`, () => {
       const listOfDates = ['2022-10-04T22:30:00Z', '2022-10-05T22:30:00Z'];
       const listOfParsedDates = listOfDates.map((date) => new Date(date));
-      const parsed = metafieldParser<ParsedMetafields['list.date']>({
+      const parsed = parseMetafield<ParsedMetafields['list.date']>({
         type: 'list.date',
         value: JSON.stringify(listOfDates),
       });
@@ -330,7 +328,7 @@ describe(`metafieldParser`, () => {
         {unit: 'mm', value: faker.datatype.number()},
         {unit: 'mm', value: faker.datatype.number()},
       ];
-      const parsed = metafieldParser<ParsedMetafields['list.dimension']>({
+      const parsed = parseMetafield<ParsedMetafields['list.dimension']>({
         type: 'list.dimension',
         value: JSON.stringify(listDimensions),
       });
@@ -342,7 +340,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`list.file_reference`, () => {
-      const parsed = metafieldParser<ParsedMetafields['list.file_reference']>({
+      const parsed = parseMetafield<ParsedMetafields['list.file_reference']>({
         type: 'list.file_reference',
         references: {
           nodes: [
@@ -366,7 +364,7 @@ describe(`metafieldParser`, () => {
 
     it(`list.number_integer`, () => {
       const listOfNumbers = [faker.datatype.number(), faker.datatype.number()];
-      const parsed = metafieldParser<ParsedMetafields['list.number_integer']>({
+      const parsed = parseMetafield<ParsedMetafields['list.number_integer']>({
         type: 'list.number_integer',
         value: JSON.stringify(listOfNumbers),
       });
@@ -378,7 +376,7 @@ describe(`metafieldParser`, () => {
 
     it(`list.number_decimal`, () => {
       const listOfNumbers = [faker.datatype.float(), faker.datatype.float()];
-      const parsed = metafieldParser<ParsedMetafields['list.number_decimal']>({
+      const parsed = parseMetafield<ParsedMetafields['list.number_decimal']>({
         type: 'list.number_decimal',
         value: JSON.stringify(listOfNumbers),
       });
@@ -389,7 +387,7 @@ describe(`metafieldParser`, () => {
     });
 
     it(`list.page_reference`, () => {
-      const parsed = metafieldParser<ParsedMetafields['list.page_reference']>({
+      const parsed = parseMetafield<ParsedMetafields['list.page_reference']>({
         type: 'list.page_reference',
         references: {
           nodes: [
@@ -412,23 +410,23 @@ describe(`metafieldParser`, () => {
     });
 
     it(`list.product_reference`, () => {
-      const parsed = metafieldParser<
-        ParsedMetafields['list.product_reference']
-      >({
-        type: 'list.product_reference',
-        references: {
-          nodes: [
-            {
-              __typename: 'Product',
-              id: '0',
-            },
-            {
-              __typename: 'Product',
-              id: '1',
-            },
-          ],
-        },
-      });
+      const parsed = parseMetafield<ParsedMetafields['list.product_reference']>(
+        {
+          type: 'list.product_reference',
+          references: {
+            nodes: [
+              {
+                __typename: 'Product',
+                id: '0',
+              },
+              {
+                __typename: 'Product',
+                id: '1',
+              },
+            ],
+          },
+        }
+      );
       parsed.parsedValue?.forEach((coll, index) => {
         expect(coll.__typename === 'Product').toBe(true);
         expect(index.toString() === coll.id).toBe(true);
@@ -441,7 +439,7 @@ describe(`metafieldParser`, () => {
         {scale_min: 0, scale_max: 5, value: faker.datatype.number()},
         {scale_min: 0, scale_max: 5, value: faker.datatype.number()},
       ];
-      const parsed = metafieldParser<ParsedMetafields['list.rating']>({
+      const parsed = parseMetafield<ParsedMetafields['list.rating']>({
         type: 'list.rating',
         value: JSON.stringify(listOfRatings),
       });
@@ -453,7 +451,7 @@ describe(`metafieldParser`, () => {
 
     it(`list.single_line_text_field`, () => {
       const listOfStrings = [faker.random.words(), faker.random.words()];
-      const parsed = metafieldParser<
+      const parsed = parseMetafield<
         ParsedMetafields['list.single_line_text_field']
       >({
         type: 'list.single_line_text_field',
@@ -467,7 +465,7 @@ describe(`metafieldParser`, () => {
 
     it(`list.url`, () => {
       const listOfStrings = [faker.internet.url(), faker.internet.url()];
-      const parsed = metafieldParser<ParsedMetafields['list.url']>({
+      const parsed = parseMetafield<ParsedMetafields['list.url']>({
         type: 'list.url',
         value: JSON.stringify(listOfStrings),
       });
@@ -478,23 +476,23 @@ describe(`metafieldParser`, () => {
     });
 
     it(`list.variant_reference`, () => {
-      const parsed = metafieldParser<
-        ParsedMetafields['list.variant_reference']
-      >({
-        type: 'list.variant_reference',
-        references: {
-          nodes: [
-            {
-              __typename: 'ProductVariant',
-              id: '0',
-            },
-            {
-              __typename: 'ProductVariant',
-              id: '1',
-            },
-          ],
-        },
-      });
+      const parsed = parseMetafield<ParsedMetafields['list.variant_reference']>(
+        {
+          type: 'list.variant_reference',
+          references: {
+            nodes: [
+              {
+                __typename: 'ProductVariant',
+                id: '0',
+              },
+              {
+                __typename: 'ProductVariant',
+                id: '1',
+              },
+            ],
+          },
+        }
+      );
       parsed.parsedValue?.forEach((coll, index) => {
         expect(coll.__typename === 'ProductVariant').toBe(true);
         expect(index.toString() === coll.id).toBe(true);
@@ -507,7 +505,7 @@ describe(`metafieldParser`, () => {
         {unit: 'us_pt', value: 2},
         {unit: 'us_pt', value: 2},
       ];
-      const parsed = metafieldParser<ParsedMetafields['list.volume']>({
+      const parsed = parseMetafield<ParsedMetafields['list.volume']>({
         type: 'volume',
         value: JSON.stringify(volumes),
       });
@@ -524,7 +522,7 @@ describe(`metafieldParser`, () => {
         {unit: 'lbs', value: 2},
         {unit: 'lbs', value: 2},
       ];
-      const parsed = metafieldParser<ParsedMetafields['list.weight']>({
+      const parsed = parseMetafield<ParsedMetafields['list.weight']>({
         type: 'volume',
         value: JSON.stringify(weights),
       });
