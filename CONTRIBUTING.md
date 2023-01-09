@@ -53,6 +53,7 @@ Processes that need to happen:
   - However, don't replace documentation unless it makes sense.
   - Also be careful that some versions of the Storefront API don't exactly match code here: for example, SFAPI `2022-07` could be both `2022-07` and `2022-7` in this codebase.
 - Run the `graphql-types` NPM script to generate the new types.
+  - Look through the new schema and see if there are any breaking changes
   - If there are new scalars, or scalars are removed, update the `codegen.yml` file's custom scalar settings and run the command again.
 - Search for all instances of `@deprecated` and see if it is time to make that breaking change
 - Run the `ci:checks` NPM script and fix any issues that may come up.
