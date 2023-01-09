@@ -89,10 +89,7 @@ export function ShopPayButton({
   return (
     <div className={className} style={style}>
       {shopPayLoadedStatus === 'done' && (
-        <shop-pay-button
-          store-url={`https://${storeDomain}`}
-          variants={ids.join(',')}
-        />
+        <shop-pay-button store-url={storeDomain} variants={ids.join(',')} />
       )}
     </div>
   );

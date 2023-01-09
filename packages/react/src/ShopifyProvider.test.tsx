@@ -7,7 +7,7 @@ import {
 import type {PartialDeep} from 'type-fest';
 
 const SHOPIFY_CONFIG: ShopifyContextProps = {
-  storeDomain: 'notashop.myshopify.com',
+  storeDomain: 'https://notashop.myshopify.com',
   storefrontToken: 'abc123',
   storefrontApiVersion: '2023-01',
   country: {
@@ -28,23 +28,6 @@ describe('<ShopifyProvider/>', () => {
     );
 
     expect(screen.getByText('child')).toBeInTheDocument();
-  });
-
-  it(`contains 'storeDomain' without https:// prefix`, () => {
-    const {result} = renderHook(() => useShop(), {
-      wrapper: ({children}) => (
-        <ShopifyProvider
-          shopifyConfig={{
-            ...SHOPIFY_CONFIG,
-            storeDomain: 'https://notashop.myshopify.com',
-          }}
-        >
-          {children}
-        </ShopifyProvider>
-      ),
-    });
-
-    expect(result.current.storeDomain).toBe('notashop.myshopify.com');
   });
 
   describe(`getStorefrontApiUrl()`, () => {
@@ -83,7 +66,7 @@ describe('<ShopifyProvider/>', () => {
 
       expect(
         result.current.getStorefrontApiUrl({
-          storeDomain: 'override.myshopify.com',
+          storeDomain: 'https://override.myshopify.com',
           storefrontApiVersion: '2022-07',
         })
       ).toBe('https://override.myshopify.com/api/2022-07/graphql.json');
@@ -145,53 +128,14 @@ describe('<ShopifyProvider/>', () => {
     });
   });
 
-  describe(`storeDomain`, () => {
-    it(`works with just the subdomain`, () => {
-      const {result} = renderHook(() => useShop(), {
-        wrapper: ({children}) => (
-          <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'notashop',
-            }}
-          >
-            {children}
-          </ShopifyProvider>
-        ),
-      });
-
-      expect(result.current.storeDomain).toBe('notashop');
-    });
-  });
-
   describe(`getShopifyDomain()`, () => {
-    it(`works with just the subdomain`, () => {
-      const {result} = renderHook(() => useShop(), {
-        wrapper: ({children}) => (
-          <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'notashop',
-            }}
-          >
-            {children}
-          </ShopifyProvider>
-        ),
-      });
-
-      expect(result.current.getShopifyDomain()).toBe(
-        'https://notashop.myshopify.com'
-      );
-    });
-
     it(`works with the domain`, () => {
-      // @deprecated to be removed when we no longer support passing in '.myshopify.com' for domainName
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
             shopifyConfig={{
               ...SHOPIFY_CONFIG,
-              storeDomain: 'notashop.myshopify.com',
+              storeDomain: 'https://notashop.myshopify.com',
             }}
           >
             {children}
@@ -201,36 +145,16 @@ describe('<ShopifyProvider/>', () => {
 
       expect(result.current.getShopifyDomain()).toBe(
         'https://notashop.myshopify.com'
-      );
-    });
-
-    it(`works with just the subdomain as override`, () => {
-      const {result} = renderHook(() => useShop(), {
-        wrapper: ({children}) => (
-          <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'notashop',
-            }}
-          >
-            {children}
-          </ShopifyProvider>
-        ),
-      });
-
-      expect(result.current.getShopifyDomain({storeDomain: 'test'})).toBe(
-        'https://test.myshopify.com'
       );
     });
 
     it(`works with the domain as override`, () => {
-      // @deprecated to be removed when we no longer support passing in '.myshopify.com' for domainName
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
             shopifyConfig={{
               ...SHOPIFY_CONFIG,
-              storeDomain: 'notashop.myshopify.com',
+              storeDomain: 'https://notashop.myshopify.com',
             }}
           >
             {children}
@@ -239,7 +163,9 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(
-        result.current.getShopifyDomain({storeDomain: 'test.myshopify.com'})
+        result.current.getShopifyDomain({
+          storeDomain: 'https://test.myshopify.com',
+        })
       ).toBe('https://test.myshopify.com');
     });
   });
@@ -256,7 +182,7 @@ export function getShopifyConfig(
       isoCode: config.language?.isoCode ?? 'EN',
     },
     locale: config.locale ?? 'EN-US',
-    storeDomain: config.storeDomain ?? 'notashop.myshopify.io',
+    storeDomain: config.storeDomain ?? 'https://notashop.myshopify.io',
     storefrontToken: config.storefrontToken ?? 'abc123',
     storefrontApiVersion: config.storefrontApiVersion ?? '2023-01',
   };

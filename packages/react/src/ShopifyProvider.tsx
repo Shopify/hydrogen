@@ -48,27 +48,12 @@ export function ShopifyProvider({
   }
 
   const finalConfig = useMemo<ShopifyContextValue>(() => {
-    const storeDomain = shopifyConfig.storeDomain.replace(/^https?:\/\//, '');
-
-    // @deprecated remove the ability to pass in '.myshopify.com' strings in the future
-    if (storeDomain.includes('.myshopify.com')) {
-      if (__HYDROGEN_DEV__) {
-        console.warn(
-          `<ShopifyProvider/>: passing a 'storeDomain' prop that includes '.myshopify.com' will be unsupported in the future. Passing only the subdomain (for example, if the URL is 'test.myshopify.com', passing in 'test') will be the supported way going forward.`
-        );
-      }
-    }
-
     function getShopifyDomain(overrideProps?: {storeDomain?: string}) {
-      let subDomain = overrideProps?.storeDomain ?? storeDomain;
-      subDomain = subDomain.replace('.myshopify.com', '');
-
-      return `https://${subDomain}.myshopify.com`;
+      return overrideProps?.storeDomain ?? shopifyConfig.storeDomain;
     }
 
     return {
       ...shopifyConfig,
-      storeDomain,
       getPublicTokenHeaders(overrideProps) {
         return getPublicTokenHeadersRaw(
           overrideProps.contentType,
@@ -86,7 +71,7 @@ export function ShopifyProvider({
           }
         }
         return `${getShopifyDomain({
-          storeDomain: overrideProps?.storeDomain ?? storeDomain,
+          storeDomain: overrideProps?.storeDomain ?? shopifyConfig.storeDomain,
         })}/api/${
           overrideProps?.storefrontApiVersion ??
           shopifyConfig.storefrontApiVersion
@@ -119,7 +104,7 @@ export function useShop() {
 export type ShopifyContextProps = {
   /** The globally-unique identifier for the Shop */
   storefrontId?: string;
-  /** The subdomain of your Shopify storefront URL (eg: `{subdomain}.myshopify.com`). */
+  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */
   storeDomain: string;
   /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
   storefrontToken: string;

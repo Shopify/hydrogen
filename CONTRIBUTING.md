@@ -49,6 +49,7 @@ Processes that need to happen:
 
 - Create a new branch for the version, e.g. `2022-10`.
 - Comment out the "Create release pull request or publish" job in `releases.yml` so that it won't auto-publish a new version of the branch until you're ready
+- Create a new changeset. Use this changeset to add notes and guides to important things that are changed as part of this update.
 - Do a find & replace in the code to replace nearly all instances of the old version with the new version.
   - However, don't replace documentation unless it makes sense.
   - Also be careful that some versions of the Storefront API don't exactly match code here: for example, SFAPI `2022-07` could be both `2022-07` and `2022-7` in this codebase.

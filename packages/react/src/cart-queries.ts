@@ -190,15 +190,7 @@ export const defaultCartFragment = /* GraphQL */ `
               compareAtPrice {
                 ...MoneyFragment
               }
-              # @deprecated remove in next major
-              compareAtPriceV2 {
-                ...MoneyFragment
-              }
               price {
-                ...MoneyFragment
-              }
-              # @deprecated remove in next major
-              priceV2 {
                 ...MoneyFragment
               }
               requiresShipping

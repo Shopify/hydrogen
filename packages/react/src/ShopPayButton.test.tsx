@@ -1,4 +1,3 @@
-import * as React from 'react';
 import {vi} from 'vitest';
 import {render} from '@testing-library/react';
 import {ShopifyProvider} from './ShopifyProvider.js';
