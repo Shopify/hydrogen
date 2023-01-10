@@ -4,7 +4,7 @@
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts", "./tsup.config.ts"],
-      "outputs": ["dist/**", "build/**", ".hydrogen/**"]
+      "outputs": ["dist/**", "build/**"]
     },
     "dev": {
       "dependsOn": [
@@ -31,7 +31,7 @@
         "@shopify/cli-hydrogen#build",
         "@shopify/remix-oxygen#build"
       ],
-      "outputs": ["dist/**", ".hydrogen/**"]
+      "outputs": ["dist/**"]
     },
     "hello-world#build": {
       "dependsOn": [
