@@ -1,4 +1,11 @@
-export function loader({context} = {}) {
+import type {LoaderArgs} from '@remix-run/server-runtime';
+import type {StorefrontClient} from '../storefront';
+
+export function graphiqlLoader(
+  {context} = {} as LoaderArgs & {
+    context: LoaderArgs['context'] & StorefrontClient;
+  },
+) {
   if (!context?.storefront) {
     throw new Error(
       `GraphiQL: Hydrogen's storefront client must be injected in the loader context.`,
