@@ -1,6 +1,6 @@
 # Hydrogen 2.0
 
-[Roadmap (Github Project)](https://github.com/orgs/Shopify/projects/5093/views/1)
+[Roadmap (Github Project)](https://github.com/orgs/Shopify/projects/5093/views/5)
 
 [Demo Store on Oxygen](https://h2-demo-store-f1f4fa724b7467f41f07.o2.myshopify.dev/)
 
