@@ -19,7 +19,7 @@ interface HomeSeoData {
   };
 }
 
-interface CollectionHero {
+export interface CollectionHero {
   byline: Metafield;
   cta: Metafield;
   handle: string;
@@ -47,28 +47,21 @@ export async function loader({request, params, context}: LoaderArgs) {
     hero: CollectionHero;
     shop: HomeSeoData;
   }>(HOMEPAGE_SEO_QUERY, {
-    variables: {
-      handle: 'freestyle',
-      country: context.storefront.i18n?.country,
-      language: context.storefront.i18n?.language,
-    },
+    variables: {handle: 'freestyle'},
   });
 
   return defer({
     shop,
     primaryHero: hero,
-    // @feedback
-    // Should these all be deferred? Can any of them be combined?
-    // Should there be fallback rendering while deferred?
+    // These different queries are separated to illustrate how 3rd party content
+    // fetching can be optimized for both above and below the fold.
     featuredProducts: context.storefront.query<{
       products: ProductConnection;
     }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
       variables: {
-        /**
-        Country and language properties are automatically injected
-        into all queries. Passing them is unnecessary unless you
-        want to override them from the following default:
-        */
+        // Country and language properties are automatically injected
+        // into all queries. Passing them is unnecessary unless you
+        // want to override them from the following default:
         country: context.storefront.i18n?.country,
         language: context.storefront.i18n?.language,
       },

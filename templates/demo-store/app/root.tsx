@@ -267,7 +267,7 @@ const CART_QUERY = `#graphql
 export async function getCart({storefront}: AppLoadContext, cartId: string) {
   invariant(storefront, 'missing storefront client in cart query');
 
-  const {cart} = await storefront.query<{cart: Cart}>(CART_QUERY, {
+  const {cart} = await storefront.query<{cart?: Cart}>(CART_QUERY, {
     variables: {
       cartId,
       country: storefront.i18n?.country,
@@ -275,8 +275,6 @@ export async function getCart({storefront}: AppLoadContext, cartId: string) {
     },
     cache: storefront.CacheNone(),
   });
-
-  invariant(cart, 'No data returned from Shopify API');
 
   return cart;
 }

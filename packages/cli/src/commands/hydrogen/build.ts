@@ -1,13 +1,10 @@
 import path from 'path';
-import * as remix from '@remix-run/dev/dist/compiler.js';
-import fsExtra from 'fs-extra';
 import {output} from '@shopify/cli-kit';
 import colors from '@shopify/cli-kit/node/colors';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
-import {flags} from '../../utils/flags.js';
-
+import {commonFlags} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {Flags} from '@oclif/core';
+import Flags from '@oclif/core/lib/flags.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -15,7 +12,7 @@ const LOG_WORKER_BUILT = '📦 Worker built';
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production';
   static flags = {
-    ...flags,
+    ...commonFlags,
     sourcemap: Flags.boolean({
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
     }),
@@ -61,10 +58,17 @@ export async function runBuild({
   } = getProjectPaths(appPath, entry);
 
   console.time(LOG_WORKER_BUILT);
-  const remixConfig = await getRemixConfig(root, entryFile, publicPath);
-  await fsExtra.rm(buildPath, {force: true, recursive: true});
+
+  const {default: fsExtra} = await import('fs-extra');
+
+  const [remixConfig] = await Promise.all([
+    getRemixConfig(root, entryFile, publicPath),
+    fsExtra.rm(buildPath, {force: true, recursive: true}),
+  ]);
 
   output.info(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
+
+  const remix = await import('@remix-run/dev/dist/compiler.js');
 
   await Promise.all([
     copyPublicFiles(publicPath, buildPathClient),
@@ -98,7 +102,11 @@ export async function runBuild({
   }
 }
 
-export function copyPublicFiles(publicPath: string, buildPathClient: string) {
+export async function copyPublicFiles(
+  publicPath: string,
+  buildPathClient: string,
+) {
+  const {default: fsExtra} = await import('fs-extra');
   return fsExtra.copy(publicPath, buildPathClient, {
     recursive: true,
     overwrite: true,
