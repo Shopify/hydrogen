@@ -8,8 +8,6 @@ import {
   useSearchParams,
   useLocation,
   useTransition,
-  useMatches,
-  useFetcher,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-react';
 import {
@@ -23,7 +21,6 @@ import {
   Skeleton,
   Text,
   Link,
-  Button,
   AddToCartButton,
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
@@ -40,7 +37,7 @@ import {
   MEDIA_FRAGMENT,
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
-} from '~/data'; /* @todo: we move these to app/graphql ? */
+} from '~/data';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;

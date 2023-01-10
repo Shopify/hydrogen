@@ -1,7 +1,7 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {muteDevLogs} from '../../utils/log.js';
 import {getProjectPaths} from '../../utils/config.js';
-import {flags} from '../../utils/flags.js';
+import {commonFlags} from '../../utils/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
 // @ts-ignore
@@ -9,8 +9,8 @@ export default class Preview extends Command {
   static description =
     'Runs an existing Hydrogen storefront build in a MiniOxygen worker';
   static flags = {
-    paths: flags.path,
-    port: flags.port,
+    paths: commonFlags.path,
+    port: commonFlags.port,
   };
 
   async run(): Promise<void> {
@@ -30,9 +30,9 @@ export async function runPreview({
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
-  const {root, buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
-
   muteDevLogs({workerReload: false});
+
+  const {root, buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
 
   await startMiniOxygen({
     root,

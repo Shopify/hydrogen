@@ -51,10 +51,11 @@ export default {
             waitUntil,
             buyerIp: getBuyerIp(request),
             i18n: {language: 'EN', country: 'US'},
-            publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
-            storeDomain: env.SHOPIFY_STORE_DOMAIN,
+            publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+            privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
+            storeDomain: env.PUBLIC_STORE_DOMAIN,
             storefrontApiVersion:
-              env.SHOPIFY_STOREFRONT_API_VERSION || '2022-10',
+              env.PUBLIC_STOREFRONT_API_VERSION || '2022-10',
           });
 
           return {
