@@ -82,19 +82,9 @@ export async function getRemixConfig(
       const packagesPath = new URL('../../..', import.meta.url).pathname;
 
       config.watchPaths.push(
-        ...(await fs.readdir(packagesPath)).flatMap((pkg) => {
-          const files = [
-            path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
-          ];
-
-          if (pkg === 'hydrogen') {
-            files.push(
-              path.resolve(packagesPath, pkg, 'dist', 'build', 'index.js'),
-            );
-          }
-
-          return files;
-        }),
+        ...(await fs.readdir(packagesPath)).map((pkg) =>
+          path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
+        ),
       );
     }
 
