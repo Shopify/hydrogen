@@ -1,18 +1,13 @@
-import type {Hook} from '@oclif/core';
 import {spawnSync} from 'child_process';
 import {output} from '@shopify/cli-kit';
+import type {Hook} from '@oclif/core';
 
 const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
 
 const hook: Hook<'init'> = async function (options) {
   if (
-    !options.id ||
-    !['hydrogen:dev', 'hydrogen:preview'].includes(options.id)
-  ) {
-    return;
-  }
-
-  if (
+    options.id &&
+    ['hydrogen:dev', 'hydrogen:preview'].includes(options.id) &&
     !process.execArgv.includes(EXPERIMENTAL_VM_MODULES_FLAG) &&
     !(process.env.NODE_OPTIONS ?? '').includes(EXPERIMENTAL_VM_MODULES_FLAG)
   ) {

@@ -1,13 +1,17 @@
 import clsx from 'clsx';
+import type {SerializeFrom} from '@shopify/remix-oxygen';
 import {MediaFile} from '@shopify/hydrogen-react';
 import type {
   MediaImage,
   Media,
   Video as MediaVideo,
-  Metafield,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {Heading, Text, Link} from '~/components';
+import type {CollectionHero} from '~/routes/index';
 
+/**
+ * Hero component that renders metafields attached to collection resources
+ **/
 export function Hero({
   byline,
   cta,
@@ -18,17 +22,7 @@ export function Hero({
   spread,
   spreadSecondary,
   top,
-}: {
-  byline: Metafield;
-  cta: Metafield;
-  handle: string;
-  heading: Metafield;
-  height?: 'full';
-  loading?: 'eager' | 'lazy';
-  spread: Metafield;
-  spreadSecondary: Metafield;
-  top?: boolean;
-}) {
+}: SerializeFrom<CollectionHero>) {
   return (
     <Link to={`/collections/${handle}`}>
       <section
