@@ -66,28 +66,7 @@ export function recursivelyInvokeOrReturn<T, R extends any[]>(
 function getSeoDefaults(data: any, match: RouteMatch): SeoDescriptor {
   const {id, params, pathname} = match;
 
-  let type: SeoDescriptor['type'] = 'page';
-
-  // TODO: Add support for other types
-
-  if (id.includes('products')) {
-    type = 'product';
-  }
-
-  if (id.includes('journal')) {
-    type = 'blog';
-    if (params?.journalHandle) {
-      type = 'article';
-    }
-  }
-
-  if (id.includes('collection')) {
-    type = 'collection';
-  }
-
-  if (id.includes('root')) {
-    type = 'root';
-  }
+  const type = getPageTypeFromPath(pathname);
 
   const defaults = {
     type,
@@ -321,4 +300,68 @@ export function useHeadTags(seo: SeoDescriptor) {
     links,
     LdJson,
   };
+}
+
+function getPageTypeFromPath(pathname: string): SeoDescriptor['type'] | null {
+  const routes: {type: SeoDescriptor['type']; pattern: RegExp | string}[] = [
+    {
+      type: 'home',
+      pattern: '^/$',
+    },
+    {
+      type: 'cart',
+      pattern: '/cart',
+    },
+    {
+      type: 'product',
+      pattern: '/products/.*',
+    },
+    {
+      type: 'collections',
+      pattern: '/collections',
+    },
+    {
+      type: 'collection',
+      pattern: /\/collections\/([^\/]+)/,
+    },
+    {
+      type: 'page',
+      pattern: /\/pages\/([^\/]+)/,
+    },
+    {
+      type: 'blog',
+      pattern: /\/blogs\/([^\/]+)/,
+    },
+    {
+      type: 'article',
+      pattern: /\/blogs\/([^\/]+)\/([^\/]+)/,
+    },
+    {
+      type: 'policies',
+      pattern: '/policies',
+    },
+    {
+      type: 'policy',
+      pattern: /\/policies\/([^\/]+)/,
+    },
+    {
+      type: 'search',
+      pattern: '/search',
+    },
+    {
+      type: 'account',
+      pattern: '/account',
+    },
+  ];
+
+  const typeMatches = routes.filter((route) => {
+    const {pattern} = route;
+
+    const regex = new RegExp(pattern);
+    return regex.test(pathname);
+  });
+
+  return typeMatches.length > 0
+    ? typeMatches[typeMatches.length - 1].type
+    : null;
 }

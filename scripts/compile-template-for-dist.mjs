@@ -18,9 +18,6 @@ import {createApp} from '@remix-run/dev';
 
   removeUnwantedFiles(tsTemplateDir);
   removeUnwantedFiles(jsTemplateDir);
-
-  // .hydrogen folder resulted from createApp
-  fs.removeSync('.hydrogen');
 })();
 
 async function createNewApp(srcDir, destDir, useTypeScript) {
