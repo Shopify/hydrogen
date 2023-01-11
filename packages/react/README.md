@@ -8,7 +8,7 @@
 
 </div>
 
-**IMPORTANT:** This is an experimental version of `@shopify/hydrogen-react` and functionality is subject to change. Refer to how this package is [versioned](../../README.md#versioning).
+**IMPORTANT:** Refer to how this package is [versioned](../../README.md#versioning).
 
 This document contains the following topics:
 
