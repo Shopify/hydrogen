@@ -9,4 +9,4 @@ export {
 export {InMemoryCache} from './cache/in-memory';
 
 export {RESOURCE_TYPES, REQUIRED_RESOURCES} from './routing/types';
-export {maybeRedirect} from './routing/redirect';
+export {storefrontRedirect} from './routing/redirect';
