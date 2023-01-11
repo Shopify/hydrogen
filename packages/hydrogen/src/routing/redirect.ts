@@ -25,7 +25,9 @@ export async function notFoundMaybeRedirect(
       },
     });
   } else {
-    const redirectPath = new URLSearchParams(search).get('return_to');
+    const searchParams = new URLSearchParams(search);
+    const redirectPath =
+      searchParams.get('return_to') || searchParams.get('redirect');
 
     if (redirectPath && isLocalPath(redirectPath)) {
       return redirect(redirectPath);
@@ -52,7 +54,7 @@ function isLocalPath(url: string) {
 
 const REDIRECT_QUERY = `#graphql
   query redirects($url:String) {
-    urlRedirects(first:1, query:$url) {
+    urlRedirects(first: 1, query: $url) {
       edges {
         node {
           target
