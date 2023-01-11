@@ -1,7 +1,7 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
 import {createRequestHandler, getBuyerIp} from '@shopify/remix-oxygen';
-import {createStorefrontClient, maybeRedirect} from '@shopify/hydrogen';
+import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
 import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
 
@@ -60,7 +60,7 @@ export default {
       const response = await handleRequest(request);
 
       if (response.status === 404) {
-        return await maybeRedirect({request, response, storefront});
+        return storefrontRedirect({request, response, storefront});
       }
 
       return response;
