@@ -1,12 +1,17 @@
 import {redirect} from '@remix-run/server-runtime';
 import type {Storefront} from '../storefront';
 
-export async function notFoundMaybeRedirect(
-  request: Request,
-  context: {storefront: Storefront},
-): Promise<Response> {
+export async function maybeRedirect({
+  request,
+  response,
+  storefront,
+}: {
+  request: Request;
+  response: Response;
+  storefront: Storefront;
+}): Promise<Response> {
   const {pathname, search} = new URL(request.url);
-  const {urlRedirects} = await context.storefront.query<{
+  const {urlRedirects} = await storefront.query<{
     urlRedirects: {
       edges: Array<{node: {target: string}}>;
     };
@@ -33,7 +38,7 @@ export async function notFoundMaybeRedirect(
       return redirect(redirectPath);
     }
 
-    return new Response('Not found', {status: 404});
+    return response;
   }
 }
 
