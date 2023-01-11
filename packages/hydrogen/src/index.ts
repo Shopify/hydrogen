@@ -9,3 +9,4 @@ export {
 export {InMemoryCache} from './cache/in-memory';
 
 export {notFoundMaybeRedirect} from './routing/redirect';
+export {graphiqlLoader} from './routing/graphiql';
