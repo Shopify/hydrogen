@@ -33,12 +33,6 @@ export function createRequestHandler<Context = unknown>({
   return async (request: Request) => {
     const url = new URL(request.url);
 
-    if (url.pathname === '/__health') {
-      // This is temporary until Oxygen implements a way to verify deployments.
-      // https://github.com/Shopify/oxygen-platform/issues/778
-      return new Response(null, {status: 200});
-    }
-
     if (
       mode === 'production' &&
       build.publicPath !== undefined &&
