@@ -5,7 +5,7 @@ import {
   type LinksFunction,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen';
+import {RESOURCE_TYPES} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen-react';
 import {Blog} from '@shopify/hydrogen-react/storefront-api-types';
@@ -44,7 +44,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   if (!blog?.articleByHandle) {
-    throw await notFoundMaybeRedirect(request, context);
+    throw new Response(null, {status: 404});
   }
 
   const article = blog.articleByHandle;

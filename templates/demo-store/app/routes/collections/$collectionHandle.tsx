@@ -4,7 +4,7 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen';
+import {RESOURCE_TYPES} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
@@ -128,7 +128,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   if (!collection) {
-    throw await notFoundMaybeRedirect(request, context);
+    throw new Response(null, {status: 404});
   }
 
   const collectionNodes = flattenConnection(collections);

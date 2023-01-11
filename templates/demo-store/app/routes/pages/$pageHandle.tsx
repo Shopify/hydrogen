@@ -4,7 +4,7 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {notFoundMaybeRedirect, RESOURCE_TYPES} from '@shopify/hydrogen';
+import {RESOURCE_TYPES} from '@shopify/hydrogen';
 import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
@@ -21,7 +21,7 @@ export async function loader({request, params, context}: LoaderArgs) {
   });
 
   if (!page) {
-    throw await notFoundMaybeRedirect(request, context);
+    throw new Response(null, {status: 404});
   }
 
   return json(
