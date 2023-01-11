@@ -31,10 +31,25 @@ export default {
         throw new Error('SESSION_SECRET environment variable is not set');
       }
 
+      const waitUntil = (p: Promise<any>) => executionContext.waitUntil(p);
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),
         HydrogenSession.init(request, [env.SESSION_SECRET]),
       ]);
+
+      /**
+       * Create Hydrogen's Storefront client
+       */
+      const {storefront} = createStorefrontClient({
+        cache,
+        waitUntil,
+        buyerIp: getBuyerIp(request),
+        i18n: {language: 'EN', country: 'US'},
+        publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+        privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
+        storeDomain: env.PUBLIC_STORE_DOMAIN,
+        storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2022-10',
+      });
 
       /**
        * Create a Remix request handler and pass
@@ -43,30 +58,12 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext() {
-          const waitUntil = executionContext.waitUntil.bind(executionContext);
-
-          const {storefront} = createStorefrontClient({
-            cache,
-            waitUntil,
-            buyerIp: getBuyerIp(request),
-            i18n: {language: 'EN', country: 'US'},
-            publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-            privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
-            storeDomain: env.PUBLIC_STORE_DOMAIN,
-            storefrontApiVersion:
-              env.PUBLIC_STOREFRONT_API_VERSION || '2022-10',
-          });
-
-          return {
-            session,
-            storefront,
-            env,
-          };
-        },
+        getLoadContext: () => ({session, storefront, env}),
       });
 
-      return await handleRequest(request);
+      const response = await handleRequest(request);
+
+      return response;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
