@@ -1,5 +1,4 @@
-import {defer, type LoaderArgs} from '@remix-run/oxygen';
-import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen';
+import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
@@ -19,7 +18,7 @@ interface HomeSeoData {
   };
 }
 
-interface CollectionHero {
+export interface CollectionHero {
   byline: Metafield;
   cta: Metafield;
   handle: string;
@@ -31,12 +30,6 @@ interface CollectionHero {
   top?: boolean;
 }
 
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.FRONT_PAGE,
-  },
-};
-
 export async function loader({request, params, context}: LoaderArgs) {
   const {language, country} = context.storefront.i18n!;
 
@@ -46,35 +39,30 @@ export async function loader({request, params, context}: LoaderArgs) {
   ) {
     // If the lang URL param is defined, yet we still are on `EN-US`
     // the the lang param must be invalid, send to the 404 page
-    throw await notFoundMaybeRedirect(request, context);
+    throw new Response(null, {status: 404});
   }
 
   const {shop, hero} = await context.storefront.query<{
     hero: CollectionHero;
     shop: HomeSeoData;
   }>(HOMEPAGE_SEO_QUERY, {
-    variables: {
-      handle: 'freestyle',
-      country,
-      language,
-    },
+    variables: {handle: 'freestyle'},
   });
 
   return defer({
     shop,
     primaryHero: hero,
-    // @feedback
-    // Should these all be deferred? Can any of them be combined?
-    // Should there be fallback rendering while deferred?
+    // These different queries are separated to illustrate how 3rd party content
+    // fetching can be optimized for both above and below the fold.
     featuredProducts: context.storefront.query<{
       products: ProductConnection;
     }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
       variables: {
         /**
-        Country and language properties are automatically injected
-        into all queries. Passing them is unnecessary unless you
-        want to override them from the following default:
-        */
+         * Country and language properties are automatically injected
+         * into all queries. Passing them is unnecessary unless you
+         * want to override them from the following default:
+         */
         country,
         language,
       },

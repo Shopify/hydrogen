@@ -3,7 +3,7 @@ import {
   type ActionFunction,
   type AppLoadContext,
   type LoaderArgs,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 
 export async function logout(context: AppLoadContext) {
   const {session} = context;

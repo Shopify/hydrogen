@@ -5,12 +5,11 @@ import {
   Money,
   useMoney,
 } from '@shopify/hydrogen-react';
-import type {SerializeFrom} from '@remix-run/oxygen';
-import {Text, Link, Button, AddToCartButton} from '~/components';
+import type {SerializeFrom} from '@shopify/remix-oxygen';
+import {Text, Link, AddToCartButton} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
 import type {
-  CartLineInput,
   MoneyV2,
   Product,
   ProductVariant,

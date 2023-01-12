@@ -1,5 +1,4 @@
-import {json, type MetaFunction, type LoaderArgs} from '@remix-run/oxygen';
-import {notFoundMaybeRedirect} from '@shopify/hydrogen';
+import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 
 import {PageHeader, Section, Button} from '~/components';
@@ -31,7 +30,7 @@ export async function loader({request, params, context}: LoaderArgs) {
   const policy = data.shop?.[policyName];
 
   if (!policy) {
-    throw await notFoundMaybeRedirect(request, context);
+    throw new Response(null, {status: 404});
   }
 
   return json(

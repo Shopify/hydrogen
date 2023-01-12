@@ -1,5 +1,5 @@
 ---
-'@shopify/h2-test-hydrogen': patch
+'@shopify/hydrogen': patch
 ---
 
-Fix cart
+Refactor cart

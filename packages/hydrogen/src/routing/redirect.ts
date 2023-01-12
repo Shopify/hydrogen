@@ -1,38 +1,64 @@
 import {redirect} from '@remix-run/server-runtime';
+import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import type {Storefront} from '../storefront';
 
-export async function notFoundMaybeRedirect(
-  request: Request,
-  context: {storefront: Storefront},
-): Promise<Response> {
+type StorefrontRedirect = {
+  storefront: Storefront;
+  request: Request;
+  response?: Response;
+};
+
+/**
+ * Queries the Storefront API to see if there is any redirect
+ * created for the current route and performs it. Otherwise,
+ * it returns the response passed in the parameters. Useful for
+ * conditionally redirecting after a 404 response.
+ *
+ * @see {@link https://help.shopify.com/en/manual/online-store/menus-and-links/url-redirect Creating URL redirects in Shopify}
+ */
+export async function storefrontRedirect({
+  storefront,
+  request,
+  response = new Response('Not Found', {status: 404}),
+}: StorefrontRedirect): Promise<Response> {
   const {pathname, search} = new URL(request.url);
-  const {urlRedirects} = await context.storefront.query<{
-    urlRedirects: {
-      edges: Array<{node: {target: string}}>;
-    };
-  }>(REDIRECT_QUERY, {
-    variables: {
-      url: pathname + search,
-    },
-    storefrontApiVersion: '2023-01',
-  });
+  const redirectFrom = pathname + search;
 
-  if (urlRedirects?.edges?.length) {
-    return new Response(null, {
-      status: 302,
-      headers: {
-        location: urlRedirects.edges[0]?.node?.target!,
-      },
+  try {
+    const {urlRedirects} = await storefront.query<{
+      urlRedirects: UrlRedirectConnection;
+    }>(REDIRECT_QUERY, {
+      variables: {query: 'path:' + redirectFrom},
+      storefrontApiVersion: '2023-01',
     });
-  } else {
-    const redirectPath = new URLSearchParams(search).get('return_to');
 
-    if (redirectPath && isLocalPath(redirectPath)) {
-      return redirect(redirectPath);
+    const location = urlRedirects?.edges?.[0]?.node?.target;
+
+    if (location) {
+      return new Response(null, {status: 302, headers: {location}});
     }
 
-    return new Response('Not found', {status: 404});
+    const searchParams = new URLSearchParams(search);
+    const redirectTo =
+      searchParams.get('return_to') || searchParams.get('redirect');
+
+    if (redirectTo) {
+      if (isLocalPath(redirectTo)) {
+        return redirect(redirectTo);
+      } else {
+        console.warn(
+          `Cross-domain redirects are not supported. Tried to redirect from ${redirectFrom} to ${redirectTo}`,
+        );
+      }
+    }
+  } catch (error) {
+    console.error(
+      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,
+      error,
+    );
   }
+
+  return response;
 }
 
 function isLocalPath(url: string) {
@@ -51,8 +77,8 @@ function isLocalPath(url: string) {
 }
 
 const REDIRECT_QUERY = `#graphql
-  query redirects($url:String) {
-    urlRedirects(first:1, query:$url) {
+  query redirects($query: String) {
+    urlRedirects(first: 1, query: $query) {
       edges {
         node {
           target

@@ -3,8 +3,7 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LoaderArgs,
-} from '@remix-run/oxygen';
-import {notFoundMaybeRedirect, RESOURCE_TYPES} from '@shopify/hydrogen';
+} from '@shopify/remix-oxygen';
 import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
@@ -21,7 +20,7 @@ export async function loader({request, params, context}: LoaderArgs) {
   });
 
   if (!page) {
-    throw await notFoundMaybeRedirect(request, context);
+    throw new Response(null, {status: 404});
   }
 
   return json(
@@ -43,12 +42,6 @@ export const meta: MetaFunction = ({
     title: data?.page?.seo?.title ?? 'Page',
     description: data?.page?.seo?.description,
   };
-};
-
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.PAGE,
-  },
 };
 
 export default function Page() {

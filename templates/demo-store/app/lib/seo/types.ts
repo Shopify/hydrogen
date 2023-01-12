@@ -1,5 +1,19 @@
 export type SeoDescriptor = {
-  type: 'product' | 'article' | 'page' | 'collection' | 'blog' | 'root';
+  type:
+    | 'account'
+    | 'article'
+    | 'blog'
+    | 'cart'
+    | 'collection'
+    | 'collections'
+    | 'home'
+    | 'page'
+    | 'policies'
+    | 'policy'
+    | 'product'
+    | 'root'
+    | 'search'
+    | null;
   site: string;
   title: string;
   titleTemplate?: string;

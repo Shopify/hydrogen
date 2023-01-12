@@ -1,15 +1,12 @@
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, type LoaderArgs} from '@remix-run/oxygen';
-import {notFoundMaybeRedirect, RESOURCE_TYPES} from '@shopify/hydrogen';
+import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
   useLoaderData,
   Await,
   useSearchParams,
   useLocation,
   useTransition,
-  useMatches,
-  useFetcher,
 } from '@remix-run/react';
 import {Money, ShopPayButton} from '@shopify/hydrogen-react';
 import {
@@ -23,7 +20,6 @@ import {
   Skeleton,
   Text,
   Link,
-  Button,
   AddToCartButton,
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
@@ -40,7 +36,7 @@ import {
   MEDIA_FRAGMENT,
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
-} from '~/data'; /* @todo: we move these to app/graphql ? */
+} from '~/data';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -66,7 +62,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   if (!product?.id) {
-    throw await notFoundMaybeRedirect(request, context);
+    throw new Response(null, {status: 404});
   }
 
   const recommended = getRecommendedProducts(context.storefront, product.id);
@@ -77,12 +73,6 @@ export async function loader({params, request, context}: LoaderArgs) {
     recommended,
   });
 }
-
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.PRODUCT,
-  },
-};
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();

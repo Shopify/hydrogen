@@ -1,18 +1,18 @@
 {
-  "name": "@shopify/h2-test-hydrogen",
+  "name": "@shopify/hydrogen",
   "publishConfig": {
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2.0.3",
+  "version": "2.0.0-alpha.1",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup --clean --config ./tsup.config.ts",
-    "dev": "tsup --watch --config ./tsup.config.ts",
+    "build": "tsup --clean --config ../../tsup.config.ts",
+    "dev": "tsup --watch --config ../../tsup.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "exports": {
@@ -41,8 +41,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
-    "src/templates"
+    "dist"
   ],
   "peerDependencies": {
     "@remix-run/react": "*",

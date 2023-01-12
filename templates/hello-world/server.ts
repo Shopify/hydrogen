@@ -1,18 +1,13 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
-import {createStorefrontClient} from '@shopify/hydrogen';
+import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
 import {
   createRequestHandler,
   getBuyerIp,
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
-} from '@remix-run/oxygen';
-
-/**
- * A global `process` object is only available during build to access NODE_ENV.
- */
-declare const process: {env: {NODE_ENV: string}};
+} from '@shopify/remix-oxygen';
 
 /**
  * Export a fetch handler in module format.
@@ -31,10 +26,25 @@ export default {
         throw new Error('SESSION_SECRET environment variable is not set');
       }
 
+      const waitUntil = (p: Promise<any>) => executionContext.waitUntil(p);
       const [cache, session] = await Promise.all([
         caches.open('hydrogen'),
         HydrogenSession.init(request, [env.SESSION_SECRET]),
       ]);
+
+      /**
+       * Create Hydrogen's Storefront client.
+       */
+      const {storefront} = createStorefrontClient({
+        cache,
+        waitUntil,
+        buyerIp: getBuyerIp(request),
+        i18n: {language: 'EN', country: 'US'},
+        publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+        privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
+        storeDomain: env.PUBLIC_STORE_DOMAIN,
+        storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2022-10',
+      });
 
       /**
        * Create a Remix request handler and pass
@@ -43,29 +53,21 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext() {
-          const waitUntil = executionContext.waitUntil.bind(executionContext);
-
-          const {storefront} = createStorefrontClient({
-            cache,
-            waitUntil,
-            buyerIp: getBuyerIp(request),
-            i18n: {language: 'EN', country: 'US'},
-            publicStorefrontToken: env.SHOPIFY_STOREFRONT_API_PUBLIC_TOKEN,
-            storeDomain: env.SHOPIFY_STORE_DOMAIN,
-            storefrontApiVersion:
-              env.SHOPIFY_STOREFRONT_API_VERSION || '2022-10',
-          });
-
-          return {
-            session,
-            storefront,
-            env,
-          };
-        },
+        getLoadContext: () => ({session, storefront, env}),
       });
 
-      return await handleRequest(request);
+      const response = await handleRequest(request);
+
+      if (response.status === 404) {
+        /**
+         * Check for redirects only when there's a 404 from the app.
+         * If the redirect doesn't exist, then `storefrontRedirect`
+         * will pass through the 404 response.
+         */
+        return storefrontRedirect({request, response, storefront});
+      }
+
+      return response;
     } catch (error) {
       // eslint-disable-next-line no-console
       console.error(error);
