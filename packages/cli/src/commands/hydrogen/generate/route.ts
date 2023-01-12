@@ -9,7 +9,18 @@ const ROUTE_MAP = {
   cart: '/cart',
   product: '/products/$productHandle',
   collection: '/collections/$collectionHandle',
+  collections: '/collections/index',
+  page: '/pages/$pageHandle',
+  policies: '/policies/index',
+  policy: '/policies/$policyHandle',
+  robots: '/[robots.txt]',
+  sitemap: '/[sitemap.xml]',
+  discounts: '/discounts/$discountHandle',
+  search: '/search',
+  account: '/account',
 };
+
+const RESOURCES = Object.keys(ROUTE_MAP);
 
 export default class GenerateRoute extends Command {
   static flags = {
@@ -21,37 +32,28 @@ export default class GenerateRoute extends Command {
   };
 
   static args = [
-    {name: 'resource', required: true, options: Object.keys(ROUTE_MAP)},
+    {
+      name: 'resource',
+      description: `The resource to generate a route for.`,
+      required: true,
+      options: RESOURCES,
+    },
   ];
 
   async run(): Promise<void> {
     // @ts-ignore
     const {flags, args} = await this.parse(GenerateRoute);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+
     const {resource} = args;
+    const resourcePath = ROUTE_MAP[resource as keyof typeof ROUTE_MAP];
+
     const isTypescript = await file.exists(
       path.join(directory, 'tsconfig.json'),
     );
-    const resourcePath = ROUTE_MAP[resource as keyof typeof ROUTE_MAP];
     const extension = isTypescript ? '.tsx' : '.jsx';
-
-    // @todo use findup util from cli-kit
-    // copy the template file to the routes folder
     const distPath = new URL('../../../', import.meta.url).pathname;
 
-    console.log(
-      await path.findUp(
-        async (directory) => {
-          const hasUnicorns = await file.exists(
-            path.join(directory, 'templates'),
-          );
-          return hasUnicorns ? directory : '';
-        },
-        {type: 'directory'},
-      ),
-    );
-
-    console.log(distPath);
     const templatePath = path.join(
       distPath,
       'templates',
@@ -66,6 +68,9 @@ export default class GenerateRoute extends Command {
 
     let templateContent = await file.read(templatePath);
 
+    // If the project is not using TypeScript, we need to compile the template
+    // to JavaScript. We try to read the project's jsconfig.json, but if it
+    // doesn't exist, we use a default configuration.
     if (!isTypescript) {
       const config = (await file.exists(path.join(directory, 'jsconfig.json')))
         ? await import(path.join(directory, 'jsconfig.json'))
@@ -80,12 +85,28 @@ export default class GenerateRoute extends Command {
             forceConsistentCasingInFileNames: true,
             skipLibCheck: true,
           };
+      // We need to escape new lines in the template because TypeScript
+      // will remove them when compiling.
       const withArtificialNewLines = escapeNewLines(templateContent);
+
+      // We compile the template to JavaScript.
       const compiled = compile(withArtificialNewLines, config);
 
+      ts.transpileModule(withArtificialNewLines, {
+        reportDiagnostics: false,
+        compilerOptions: {
+          ...config,
+          jsx: 1,
+          removeComments: false,
+        },
+      });
+
+      // Here we restore the new lines that were removed by TypeScript.
       templateContent = restoreNewLines(compiled.outputText);
     }
 
+    // If the command was run with an adaptor flag, we replace the default
+    // import with the adaptor that was passed.
     if (flags.adaptor) {
       templateContent = templateContent.replace(
         /@shopify\/remix-oxygen/g,
@@ -93,12 +114,11 @@ export default class GenerateRoute extends Command {
       );
     }
 
-    await file.write(
-      destinationPath,
-      await format(templateContent, destinationPath),
-    );
+    // We format the template content with Prettier.
+    templateContent = await format(templateContent, destinationPath);
 
-    console.log('done');
+    // Write the final file to the user's project.
+    await file.write(destinationPath, templateContent);
   }
 }
 
@@ -112,6 +132,7 @@ function compile(code: string, options: ts.CompilerOptions = {}) {
     reportDiagnostics: false,
     compilerOptions: {
       ...options,
+      // '1' tells TypeScript to preserve the JSX syntax.
       jsx: 1,
       removeComments: false,
     },
@@ -119,8 +140,11 @@ function compile(code: string, options: ts.CompilerOptions = {}) {
 }
 
 async function format(content: string, filePath: string) {
+  // Try to read a prettier config file from the project.
   const config = (await prettier.resolveConfig(filePath)) || {};
   const formattedContent = await prettier.format(content, {
+    // We need to use the babel parser because the default parser
+    // Otherwise prettier will print a warning.
     parser: 'babel',
     ...config,
   });
