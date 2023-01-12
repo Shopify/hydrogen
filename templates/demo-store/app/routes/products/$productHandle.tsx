@@ -1,7 +1,6 @@
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {notFoundMaybeRedirect} from '@shopify/hydrogen';
 import {
   useLoaderData,
   Await,
@@ -63,7 +62,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   if (!product?.id) {
-    throw await notFoundMaybeRedirect(request, context);
+    throw new Response(null, {status: 404});
   }
 
   const recommended = getRecommendedProducts(context.storefront, product.id);
