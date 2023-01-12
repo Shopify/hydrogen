@@ -51,8 +51,8 @@ export async function loader({context, request}: LoaderArgs) {
               into all queries. Passing them is unnecessary unless you
               want to override them from the following default:
               */
-              country: context.storefront.i18n?.country,
-              language: context.storefront.i18n?.language,
+              country: context.storefront.i18n.country,
+              language: context.storefront.i18n.language,
             },
             cache: context.storefront.CacheNone(),
           })

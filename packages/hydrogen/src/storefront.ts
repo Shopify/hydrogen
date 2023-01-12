@@ -82,7 +82,7 @@ export function createStorefrontClient({
   cache,
   waitUntil,
   buyerIp,
-  i18n,
+  i18n = {language: 'EN', country: 'US'},
   requestGroupId = generateUUID(),
   ...clientOptions
 }: CreateStorefrontClientOptions) {
@@ -259,7 +259,7 @@ export function createStorefrontClient({
        */
       isApiError: isStorefrontApiError,
       // Add default value for pathPefix.
-      i18n: i18n && {pathPrefix: '', ...i18n},
+      i18n: {pathPrefix: '', ...i18n},
     },
   };
 }

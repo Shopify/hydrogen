@@ -9,7 +9,7 @@ export async function logout(context: AppLoadContext) {
   const {session} = context;
   session.unset('customerAccessToken');
 
-  return redirect(`${context.storefront.i18n!.pathPrefix}/account/login`, {
+  return redirect(`${context.storefront.i18n.pathPrefix}/account/login`, {
     headers: {
       'Set-Cookie': await session.commit(),
     },
@@ -17,7 +17,7 @@ export async function logout(context: AppLoadContext) {
 }
 
 export async function loader({context}: LoaderArgs) {
-  return redirect(context.storefront.i18n!.pathPrefix);
+  return redirect(context.storefront.i18n.pathPrefix);
 }
 
 export const action: ActionFunction = async ({context}) => {
