@@ -45,10 +45,7 @@ export async function loader({request, context, params}: LoaderArgs) {
     return redirect(loginPath);
   }
 
-  const customer = await getCustomer(context, {
-    customerAccessToken,
-    request,
-  });
+  const customer = await getCustomer(context, customerAccessToken);
 
   const heading = customer
     ? customer.firstName

@@ -798,7 +798,7 @@ export async function getCustomerOrder(
 
 export async function getCustomer(
   context: AppLoadContext,
-  {customerAccessToken}: {customerAccessToken: string},
+  customerAccessToken: string,
 ) {
   const {storefront} = context;
 
