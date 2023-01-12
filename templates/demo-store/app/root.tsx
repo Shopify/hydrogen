@@ -269,8 +269,8 @@ export async function getCart({storefront}: AppLoadContext, cartId: string) {
   const {cart} = await storefront.query<{cart?: Cart}>(CART_QUERY, {
     variables: {
       cartId,
-      country: storefront.i18n?.country,
-      language: storefront.i18n?.language,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
     },
     cache: storefront.CacheNone(),
   });

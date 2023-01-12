@@ -47,8 +47,8 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
       query,
       reverse,
       sortKey,
-      country: storefront.i18n?.country,
-      language: storefront.i18n?.language,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
     },
     cache: storefront.CacheLong(),
   });

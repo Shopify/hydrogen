@@ -24,8 +24,8 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
   }>(ALL_PRODUCTS_QUERY, {
     variables: {
       ...variables,
-      country: storefront.i18n?.country,
-      language: storefront.i18n?.language,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
     },
   });
 

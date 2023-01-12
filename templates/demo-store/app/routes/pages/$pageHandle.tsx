@@ -15,7 +15,7 @@ export async function loader({request, params, context}: LoaderArgs) {
   const {page} = await context.storefront.query<{page: PageType}>(PAGE_QUERY, {
     variables: {
       handle: params.pageHandle,
-      language: context.storefront.i18n?.language,
+      language: context.storefront.i18n.language,
     },
   });
 

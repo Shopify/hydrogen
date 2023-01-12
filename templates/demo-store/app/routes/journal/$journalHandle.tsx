@@ -22,8 +22,8 @@ export const handle = {
   },
 };
 
-export async function loader({params, request, context}: LoaderArgs) {
-  const {language, country} = context.storefront.i18n!;
+export async function loader({params, context}: LoaderArgs) {
+  const {language, country} = context.storefront.i18n;
 
   invariant(params.journalHandle, 'Missing journal handle');
 

@@ -36,7 +36,7 @@ export async function getLayoutData({storefront}: AppLoadContext) {
     variables: {
       headerMenuHandle: HEADER_MENU_HANDLE,
       footerMenuHandle: FOOTER_MENU_HANDLE,
-      language: storefront.i18n?.language,
+      language: storefront.i18n.language,
     },
   });
 
@@ -781,19 +781,15 @@ const CUSTOMER_ORDER_QUERY = `#graphql
 
 export async function getCustomerOrder(
   {storefront}: AppLoadContext,
-  {
-    orderId,
-  }: {
-    orderId: string;
-  },
+  {orderId}: {orderId: string},
 ): Promise<Order | undefined> {
   const data = await storefront.query<{
     node: Order;
   }>(CUSTOMER_ORDER_QUERY, {
     variables: {
       orderId,
-      country: storefront.i18n?.country,
-      language: storefront.i18n?.language,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
     },
   });
 
@@ -802,13 +798,7 @@ export async function getCustomerOrder(
 
 export async function getCustomer(
   context: AppLoadContext,
-  {
-    request,
-    customerAccessToken,
-  }: {
-    request: Request;
-    customerAccessToken: string;
-  },
+  {customerAccessToken}: {customerAccessToken: string},
 ) {
   const {storefront} = context;
 
@@ -817,8 +807,8 @@ export async function getCustomer(
   }>(CUSTOMER_QUERY, {
     variables: {
       customerAccessToken,
-      country: context.storefront.i18n?.country,
-      language: context.storefront.i18n?.language,
+      country: context.storefront.i18n.country,
+      language: context.storefront.i18n.language,
     },
   });
 

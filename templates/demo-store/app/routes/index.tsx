@@ -29,8 +29,8 @@ export interface CollectionHero {
   top?: boolean;
 }
 
-export async function loader({request, params, context}: LoaderArgs) {
-  const {language, country} = context.storefront.i18n!;
+export async function loader({params, context}: LoaderArgs) {
+  const {language, country} = context.storefront.i18n;
 
   if (
     params.lang &&

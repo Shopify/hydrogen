@@ -13,8 +13,8 @@ export const handle = {
   },
 };
 
-export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
-  const {language, country} = storefront.i18n!;
+export const loader = async ({context: {storefront}}: LoaderArgs) => {
+  const {language, country} = storefront.i18n;
   const {blog} = await storefront.query<{
     blog: Blog;
   }>(BLOGS_QUERY, {

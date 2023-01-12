@@ -100,8 +100,8 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
       pageBy: PAGINATION_SIZE,
       searchTerm,
       cursor,
-      country: storefront.i18n?.country,
-      language: storefront.i18n?.language,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
     },
   });
 
@@ -156,8 +156,8 @@ export async function getNoResultRecommendations(
   }>(SEARCH_NO_RESULTS_QUERY, {
     variables: {
       pageBy: PAGINATION_SIZE,
-      country: storefront.i18n?.country,
-      language: storefront.i18n?.language,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
     },
   });
 
