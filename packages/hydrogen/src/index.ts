@@ -8,5 +8,5 @@ export {
 } from './cache/strategies';
 export {InMemoryCache} from './cache/in-memory';
 
-export {notFoundMaybeRedirect} from './routing/redirect';
+export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
