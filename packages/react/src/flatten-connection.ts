@@ -6,27 +6,60 @@ import type {PartialDeep} from 'type-fest';
  *
  * If `connection` is null or undefined, will return an empty array instead in production. In development, an error will be thrown.
  */
-export function flattenConnection<T>(
-  connection?: PartialDeep<GraphQLConnection<T>, {recurseIntoArrays: true}>
-): PartialDeep<T, {recurseIntoArrays: true}>[] {
+export function flattenConnection<
+  ConnectionGeneric extends
+    | PartialDeep<ConnectionEdges, {recurseIntoArrays: true}>
+    | PartialDeep<ConnectionNodes, {recurseIntoArrays: true}>
+    | ConnectionEdges
+    | ConnectionNodes
+>(
+  connection?: ConnectionGeneric
+): ConnectionGeneric extends
+  | {
+      edges: {node: Array<infer ConnectionBaseType>};
+    }
+  | {
+      nodes: Array<infer ConnectionBaseType>;
+    }
+  ? // if it's not a PartialDeep, then return the infered type
+    ConnectionBaseType[]
+  : ConnectionGeneric extends
+      | PartialDeep<
+          {edges: {node: Array<infer ConnectionBaseType>}},
+          {recurseIntoArrays: true}
+        >
+      | PartialDeep<
+          {
+            nodes: Array<infer ConnectionBaseType>;
+          },
+          {recurseIntoArrays: true}
+        >
+  ? // if it is a PartialDeep, return a PartialDeep inferred type
+    PartialDeep<ConnectionBaseType[], {recurseIntoArrays: true}>
+  : never {
   if (!connection) {
-    const noConnectionErr = `flattenConnection(): needs a 'connection' to flatten, but received '${connection}' instead`;
+    const noConnectionErr = `flattenConnection(): needs a 'connection' to flatten, but received '${connection}' instead.`;
     if (__HYDROGEN_DEV__) {
       throw new Error(noConnectionErr);
     } else {
-      console.error(noConnectionErr);
+      console.error(noConnectionErr + ` Returning an empty array`);
+      // @ts-expect-error We don't want to crash prod, so return an empty array
       return [];
     }
   }
 
-  if (connection.nodes) {
-    return connection.nodes as PartialDeep<T, {recurseIntoArrays: true}>[];
+  if ('nodes' in connection) {
+    // @ts-expect-error return type is failing
+    return connection.nodes;
   }
 
-  if (connection.edges) {
+  if ('edges' in connection && Array.isArray(connection.edges)) {
+    // @ts-expect-error return type is failing
     return connection.edges.map((edge) => {
       if (!edge?.node) {
-        throw new Error('Connection edges must contain nodes');
+        throw new Error(
+          'flattenConnection(): Connection edges must contain nodes'
+        );
       }
       return edge.node;
     });
@@ -34,14 +67,18 @@ export function flattenConnection<T>(
 
   if (__HYDROGEN_DEV__) {
     console.warn(
-      `The connection did not contain either "nodes" or "edges.node". A empty array will be returned in its place.`
+      `flattenConnection(): The connection did not contain either "nodes" or "edges.node". Returning an empty array.`
     );
   }
 
+  // @ts-expect-error We don't want to crash prod, so return an empty array
   return [];
 }
 
-interface GraphQLConnection<T> {
-  edges?: {node: T}[];
-  nodes?: T[];
-}
+type ConnectionEdges = {
+  edges: {node: Array<unknown>};
+};
+
+type ConnectionNodes = {
+  nodes: Array<unknown>;
+};

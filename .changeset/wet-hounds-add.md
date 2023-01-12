@@ -35,3 +35,7 @@ The Storefront API changelog can be viewed [here](https://shopify.dev/api/releas
     ```
 
 - The `<Metafield/>` component has been removed; use `parseMetafield().parsedValue` to have control over what you want to render
+
+### Other Changes
+
+- The TypeScript types for the returned value of `flattenConnection()` should now be friendlier: if you are using a `PartialDeep` object, you'll still get a `PartialDeep` object in return; if you're NOT using a `PartialDeep` object, then the returned type will not be wrapped in `PartialDeep`.
