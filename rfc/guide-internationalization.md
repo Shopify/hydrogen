@@ -340,7 +340,7 @@ We want to have urls to look like the following:
      params,
      context: {storefront},
    }: LoaderArgs) {
-     const {language} = getLocaleFromRequest(request);
+     const {language} = storefront.i18n;
 
      if (
        params.lang &&
