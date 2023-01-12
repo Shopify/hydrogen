@@ -1,6 +1,1 @@
-export {
-  ProductForm,
-  default,
-  handle,
-  loader,
-} from '~/routes/products/$productHandle';
+export {ProductForm, default, loader} from '~/routes/products/$productHandle';

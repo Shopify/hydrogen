@@ -71,11 +71,7 @@ export function logResponse(request: Request, response: Response) {
       type = request.method === 'GET' ? 'loader' : 'action';
       const dataParam = url.searchParams.get('_data')?.replace('routes/', '');
       route = url.pathname;
-      info = `[${
-        dataParam?.includes('/.hydrogen/')
-          ? dataParam.replace(/^.*(\.hydrogen\/)/, '$1')
-          : dataParam
-      }]`;
+      info = `[${dataParam}]`;
     }
 
     const colorizeStatus =

@@ -6,11 +6,6 @@ import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
 
 /**
- * A global `process` object is only available during build to access NODE_ENV.
- */
-declare const process: {env: {NODE_ENV: string}};
-
-/**
  * Export a fetch handler in module format.
  */
 export default {

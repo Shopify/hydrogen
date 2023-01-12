@@ -5,7 +5,6 @@ import {
   type LinksFunction,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {RESOURCE_TYPES} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen-react';
 import {Blog} from '@shopify/hydrogen-react/storefront-api-types';
@@ -21,10 +20,6 @@ export const handle = {
   seo: {
     title: 'Journal',
     description: 'A description',
-  },
-
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.BLOG,
   },
 };
 
