@@ -38,7 +38,7 @@
     "dist"
   ],
   "dependencies": {
-    "@remix-run/server-runtime": "0.0.0-experimental-e62492b8b"
+    "@remix-run/server-runtime": "0.0.0-experimental-d3a06f6e6"
   },
   "devDependencies": {
     "@shopify/oxygen-workers-types": "^3.17.2"
