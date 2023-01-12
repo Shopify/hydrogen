@@ -178,11 +178,31 @@ GraphQL autocompletion and validation will now work in `.graphql` files and in [
 
 If you're having trouble getting it to work, then consult our [troubleshooting section](#graphql-autocompletion).
 
-## Set TypeScript types
+## TypeScript
 
-Improve your development experience by adding strong typing to Storefront API responses. The following are some options for doing this.
+Improve your development experience by using storefront-kit's generated Types and helpers.
 
-## GraphQL CodeGen
+### Storefront API types
+
+Storefront-Kit ships with generated TypeScript types that match the Storefront API and its objects. Import them from the `/storefront-api-types` package path:
+
+```ts
+import type {Product} from '@shopify/hydrogen-react/storefront-api-types';
+
+const product: Product = {};
+```
+
+You can also use TypeScript's built-in helpers to create your own Types to fit your needs:
+
+```ts
+const partialProduct: Partial<Product> = {};
+
+const productTitle: Pick<Product, 'title'> = '';
+
+const productExceptTitle: Omit<Product, 'title'> = {};
+```
+
+### GraphQL CodeGen
 
 To use GraphQL CodeGen, follow [their guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation) to get started. Then, when you have a `codegen.ts` file, you can modify the following lines in the codegen object to improve the CodgeGen experience:
 
@@ -205,7 +225,7 @@ const config: CodegenConfig = {
 };
 ```
 
-### Use the `StorefrontApiResponseError` and `StorefrontApiResponseOk` helpers
+### The `StorefrontApiResponseError` and `StorefrontApiResponseOk` helpers
 
 The following is an example:
 
@@ -228,32 +248,6 @@ async function FetchApi<DataGeneric>() {
 
   // You can now access 'graphqlResponse.data' and 'graphqlResponse.errors'
 }
-```
-
-### Use the `StorefrontApiResponse` helper
-
-If you're using a library that handles 400/500 level errors for you, then you can use `StorefrontApiResponse`. To add typing to objects that are trying to match a Storefront API object shape, you can import the shape.
-
-The following is an example:
-
-```ts
-import type {Product} from '@shopify/hydrogen-react/storefront-api-types';
-
-const product: Product = {};
-```
-
-### Use TypeScript's helpers
-
-To create your own object shapes, you can use TypeScript's built-in helpers.
-
-The following is an example:
-
-```ts
-const partialProduct: Partial<Product> = {};
-
-const productTitle: Pick<Product, 'title'> = '';
-
-const productExceptTitle: Omit<Product, 'title'> = {};
 ```
 
 ## Troubleshooting
