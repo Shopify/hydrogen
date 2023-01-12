@@ -3,7 +3,7 @@ import {
   type ActionFunction,
   redirect,
   json,
-} from '@remix-run/oxygen';
+} from '@shopify/remix-oxygen';
 import {Form, useActionData} from '@remix-run/react';
 import {useRef, useState} from 'react';
 import {resetPassword} from '~/data';

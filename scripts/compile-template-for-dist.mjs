@@ -1,9 +1,10 @@
 import {resolve} from 'path';
 import fs from 'fs-extra';
-import {createApp} from "@remix-run/dev";
+import {createApp} from '@remix-run/dev';
 
 (async () => {
-  const [template] = process.argv.slice(2);
+  const [template, ...flags] = process.argv.slice(2);
+  const shouldKeepOriginalTemplate = flags.includes('--keep');
   const source = resolve(process.cwd(), 'templates');
   const templateDir = `${source}/${template}`;
   const tsTemplateDir = `${templateDir}-ts`;
@@ -11,13 +12,12 @@ import {createApp} from "@remix-run/dev";
 
   await createNewApp(templateDir, tsTemplateDir, true);
   await createNewApp(templateDir, jsTemplateDir, false);
-  fs.removeSync(templateDir);
+  if (!shouldKeepOriginalTemplate) {
+    fs.removeSync(templateDir);
+  }
 
-  await fixConfig(tsTemplateDir, 'tsconfig.json');
-  await fixConfig(jsTemplateDir, 'jsconfig.json');
-
-  // .hydrogen folder resulted from createApp
-  fs.removeSync('.hydrogen');
+  removeUnwantedFiles(tsTemplateDir);
+  removeUnwantedFiles(jsTemplateDir);
 })();
 
 async function createNewApp(srcDir, destDir, useTypeScript) {
@@ -29,9 +29,16 @@ async function createNewApp(srcDir, destDir, useTypeScript) {
   });
 }
 
-async function fixConfig(dir, filename) {
-  // Update node_modules override for dist
-  let config = await fs.readFile(resolve(dir, filename), 'utf8');
-  config = config.replaceAll('../../node_modules', 'node_modules');
-  await fs.writeFile(resolve(dir, filename), config);
+function removeUnwantedFiles(dir) {
+  const filesAndDirs = [
+    // Only used in monorepo
+    '.turbo',
+  ];
+
+  for (const fileOrDir of filesAndDirs) {
+    const filePath = resolve(dir, fileOrDir);
+    if (fs.existsSync(filePath)) {
+      fs.removeSync(filePath);
+    }
+  }
 }

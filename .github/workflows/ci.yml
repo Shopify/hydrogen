@@ -6,7 +6,7 @@ jobs:
   lint:
     name: ⬣ ESLint
     runs-on: shopify-ubuntu-latest
-    timeout-minutes: 15 
+    timeout-minutes: 15
     concurrency:
       group: ci-lint-${{ github.ref }}
       cancel-in-progress: true
@@ -30,7 +30,7 @@ jobs:
   typecheck:
     name: Typescript
     runs-on: shopify-ubuntu-latest
-    timeout-minutes: 15 
+    timeout-minutes: 15
     concurrency:
       group: ci-typecheck-${{ github.ref }}
       cancel-in-progress: true
@@ -65,10 +65,13 @@ jobs:
       - name: ✅ Typecheck
         run: npm run typecheck
 
+      - name: 🧑‍💻 CLI manifest check
+        run: 'test -z "$(git status --porcelain "packages/cli/oclif.manifest.json" )" || { echo -e "Run npm generate:manifest in packages/cli before pushing new commands or flags. Diff here:\n\n$(git diff)" ; exit 1; }'
+
   test:
     name: ⚫️ Playwright tests
     runs-on: shopify-ubuntu-latest
-    timeout-minutes: 15 
+    timeout-minutes: 15
     concurrency:
       group: ci-test-${{ github.ref }}
       cancel-in-progress: true

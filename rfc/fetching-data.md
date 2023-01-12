@@ -8,7 +8,7 @@ First of all, it's necessary to create and inject the Hydrogen `storefront` clie
 
 ```ts
 import {createStorefrontClient} from '@shopify/hydrogen';
-import {createRequestHandler, getBuyerIp} from '@remix-run/oxygen';
+import {createRequestHandler, getBuyerIp} from '@shopify/remix-oxygen';
 
 export default {
   async fetch(request: Request, env: Env, executionContext: ExecutionContext) {
@@ -42,7 +42,7 @@ To load data into your Hydrogen app, use a Remix `loader` and write a GraphQL qu
 
 ```ts
 import type {ProductType} from '@shopify/hydrogen-react/storefront-api-types';
-import {json, useLoaderData, type LoaderArgs} from '@remix-run/oxygen';
+import {json, useLoaderData, type LoaderArgs} from '@shopify/remix-oxygen';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   const productQuery = storefront.query<ProductType>(
@@ -83,7 +83,7 @@ export default function Product() {
 Sometimes, you will want to prioritize critical data, like product information, while deferring comments or reviews.
 
 ```ts
-import {defer, useLoaderData, type LoaderArgs} from '@remix-run/oxygen';
+import {defer, useLoaderData, type LoaderArgs} from '@shopify/remix-oxygen';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   const productQuery = storefront.query(
@@ -146,7 +146,7 @@ export default PageComponent() {
 Data that is not updated often can be cached to speed up subsequent queries. Hydrogen supports caching at the sub-request level:
 
 ```tsx
-import {defer, type LoaderArgs} from '@remix-run/oxygen';
+import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
   const productQuery = storefront.query(

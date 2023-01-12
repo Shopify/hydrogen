@@ -1,0 +1,24 @@
+{
+  "mode": "pre",
+  "tag": "alpha",
+  "initialVersions": {
+    "@shopify/cli-hydrogen": "4.0.0-alpha.0",
+    "@shopify/hydrogen": "2.0.0-alpha.0",
+    "@shopify/remix-oxygen": "1.0.0-alpha.0",
+    "demo-store": "0.0.0",
+    "hello-world": "0.0.0"
+  },
+  "changesets": [
+    "big-planes-warn",
+    "bright-lemons-promise",
+    "brown-spiders-tickle",
+    "curvy-apes-yawn",
+    "dull-windows-enjoy",
+    "empty-seals-arrive",
+    "four-snakes-provide",
+    "loud-birds-talk",
+    "loud-otters-act",
+    "odd-monkeys-doubt",
+    "twenty-cheetahs-return"
+  ]
+}

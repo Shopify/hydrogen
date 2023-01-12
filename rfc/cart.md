@@ -9,16 +9,18 @@ Whatever this integration ending up looking like but it would be the stuff in `s
 ```jsx
 // app/routes/cart.jsx
 import invariant from 'tiny-invariant';
-import {json} from '@remix-run/oxygen';
+import {json} from '@shopify/remix-oxygen';
 
 export async function action({request, context}) {
   const {session, storefront} = context;
   const headers = new Headers();
 
-  const [formData, cartId] = await Promise.all([
+  const [formData, storedCartId] = await Promise.all([
     request.formData(),
     session.get('cartId'),
   ]);
+
+  let cartId = storedCartId;
 
   const cartAction = formData.get('cartAction');
   invariant(cartAction, 'No cartAction defined');
@@ -42,10 +44,6 @@ export async function action({request, context}) {
           input: {lines},
           storefront,
         });
-
-        // cart created - we only need a Set-Cookie header if we're creating
-        session.set('cartId', result.cart.id);
-        headers.set('Set-Cookie', await session.commit());
       } else {
         // Add line(s) to existing cart
         result = await cartAdd({
@@ -54,6 +52,9 @@ export async function action({request, context}) {
           storefront,
         });
       }
+
+      cartId = result.cart.id;
+
       break;
     default:
       invariant(false, `${cartAction} cart action is not defined`);
@@ -64,6 +65,10 @@ export async function action({request, context}) {
     status = 303;
     headers.set('Location', redirectTo);
   }
+
+  // The Cart ID may change after each mutation. We need to update it each time in the session.
+  session.set('cartId', cartId);
+  headers.set('Set-Cookie', await session.commit());
 
   const {cart, errors} = result;
   return json({cart, errors}, {status, headers});

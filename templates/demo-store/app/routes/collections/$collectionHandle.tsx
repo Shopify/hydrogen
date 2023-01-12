@@ -3,8 +3,7 @@ import {
   type MetaFunction,
   type SerializeFrom,
   type LoaderArgs,
-} from '@remix-run/oxygen';
-import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen';
+} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
@@ -46,12 +45,6 @@ export type SortParam =
   | 'best-selling'
   | 'newest'
   | 'featured';
-
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.COLLECTION,
-  },
-};
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {collectionHandle} = params;
@@ -128,7 +121,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   if (!collection) {
-    throw await notFoundMaybeRedirect(request, context);
+    throw new Response(null, {status: 404});
   }
 
   const collectionNodes = flattenConnection(collections);

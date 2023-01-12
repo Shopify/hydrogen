@@ -1,5 +1,5 @@
 import {getShareableImage} from '~/lib/seo/image';
-import type {LoaderFunction} from '@remix-run/oxygen';
+import type {LoaderFunction} from '@shopify/remix-oxygen';
 
 function SharableImage(props: any) {
   const {title} = props;
