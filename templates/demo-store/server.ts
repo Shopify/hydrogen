@@ -29,7 +29,7 @@ export default {
       ]);
 
       /**
-       * Create Hydrogen's Storefront client
+       * Create Hydrogen's Storefront client.
        */
       const {storefront} = createStorefrontClient({
         cache,
@@ -55,8 +55,11 @@ export default {
       const response = await handleRequest(request);
 
       if (response.status === 404) {
-        // Check for redirects only when there's a 404 from the app. If the redirect doesn't
-        // exist, then `storefrontRedirect` will pass through the 404 response
+        /**
+         * Check for redirects only when there's a 404 from the app.
+         * If the redirect doesn't exist, then `storefrontRedirect`
+         * will pass through the 404 response.
+         */
         return storefrontRedirect({request, response, storefront});
       }
 

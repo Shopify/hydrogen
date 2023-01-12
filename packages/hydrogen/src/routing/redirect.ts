@@ -1,4 +1,5 @@
 import {redirect} from '@remix-run/server-runtime';
+import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api-types';
 import type {Storefront} from '../storefront';
 
 type StorefrontRedirect = {
@@ -24,34 +25,30 @@ export async function storefrontRedirect({
   const redirectFrom = pathname + search;
 
   try {
-    const {urlRedirects} = await storefront.query<RedirectQueryType>(
-      REDIRECT_QUERY,
-      {
-        variables: {redirectFrom: 'path:' + redirectFrom},
-        storefrontApiVersion: '2023-01',
-      },
-    );
+    const {urlRedirects} = await storefront.query<{
+      urlRedirects: UrlRedirectConnection;
+    }>(REDIRECT_QUERY, {
+      variables: {query: 'path:' + redirectFrom},
+      storefrontApiVersion: '2023-01',
+    });
 
-    if (urlRedirects?.edges?.length && urlRedirects.edges[0]?.node?.target) {
-      return new Response(null, {
-        status: 302,
-        headers: {
-          location: urlRedirects.edges[0]?.node?.target!,
-        },
-      });
-    } else {
-      const searchParams = new URLSearchParams(search);
-      const redirectTo =
-        searchParams.get('return_to') || searchParams.get('redirect');
+    const location = urlRedirects?.edges?.[0]?.node?.target;
 
-      if (redirectTo) {
-        if (isLocalPath(redirectTo)) {
-          return redirect(redirectTo);
-        } else {
-          console.warn(
-            `Cross-domain redirects are not supported. Tried to redirect from ${redirectFrom} to ${redirectTo}`,
-          );
-        }
+    if (location) {
+      return new Response(null, {status: 302, headers: {location}});
+    }
+
+    const searchParams = new URLSearchParams(search);
+    const redirectTo =
+      searchParams.get('return_to') || searchParams.get('redirect');
+
+    if (redirectTo) {
+      if (isLocalPath(redirectTo)) {
+        return redirect(redirectTo);
+      } else {
+        console.warn(
+          `Cross-domain redirects are not supported. Tried to redirect from ${redirectFrom} to ${redirectTo}`,
+        );
       }
     }
   } catch (error) {
@@ -79,15 +76,9 @@ function isLocalPath(url: string) {
   return false;
 }
 
-type RedirectQueryType = {
-  urlRedirects: {
-    edges: Array<{node: {target: string}}>;
-  };
-};
-
 const REDIRECT_QUERY = `#graphql
-  query redirects($redirectFrom: String) {
-    urlRedirects(first: 1, query: $redirectFrom) {
+  query redirects($query: String) {
+    urlRedirects(first: 1, query: $query) {
       edges {
         node {
           target
