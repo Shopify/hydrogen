@@ -11,7 +11,6 @@ import {Blog} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
-import {getLocaleFromRequest} from '~/lib/utils';
 import styles from '../../styles/custom-font.css';
 
 const BLOG_HANDLE = 'journal';

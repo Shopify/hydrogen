@@ -4,7 +4,6 @@ import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getHeroPlaceholder} from '~/lib/placeholders';
-import {DEFAULT_LOCALE} from '~/lib/utils';
 import type {
   CollectionConnection,
   Metafield,

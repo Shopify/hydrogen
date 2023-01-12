@@ -4,7 +4,6 @@ import {flattenConnection, Image} from '@shopify/hydrogen-react';
 import type {Article, Blog} from '@shopify/hydrogen-react/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
-import {getLocaleFromRequest} from '~/lib/utils';
 
 const BLOG_HANDLE = 'Journal';
 
