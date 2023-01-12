@@ -10,14 +10,10 @@ const ROUTE_MAP = {
   product: '/products/$productHandle',
   collection: '/collections/$collectionHandle',
   collections: '/collections/index',
-  page: '/pages/$pageHandle',
   policies: '/policies/index',
   policy: '/policies/$policyHandle',
   robots: '/[robots.txt]',
   sitemap: '/[sitemap.xml]',
-  discounts: '/discounts/$discountHandle',
-  search: '/search',
-  account: '/account',
 };
 
 const RESOURCES = Object.keys(ROUTE_MAP);
