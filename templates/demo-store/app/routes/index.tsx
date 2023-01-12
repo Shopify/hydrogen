@@ -1,5 +1,5 @@
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {RESOURCE_TYPES, notFoundMaybeRedirect} from '@shopify/hydrogen';
+import {notFoundMaybeRedirect} from '@shopify/hydrogen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
@@ -30,12 +30,6 @@ export interface CollectionHero {
   spreadSecondary: Metafield;
   top?: boolean;
 }
-
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.FRONT_PAGE,
-  },
-};
 
 export async function loader({request, params, context}: LoaderArgs) {
   const {language, country} = getLocaleFromRequest(request);

@@ -11,8 +11,8 @@
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup --clean --config ./tsup.config.ts",
-    "dev": "tsup --watch --config ./tsup.config.ts",
+    "build": "tsup --clean --config ../../tsup.config.ts",
+    "dev": "tsup --watch --config ../../tsup.config.ts",
     "typecheck": "tsc --noEmit"
   },
   "exports": {
@@ -41,8 +41,7 @@
     "./package.json": "./package.json"
   },
   "files": [
-    "dist",
-    "src/templates"
+    "dist"
   ],
   "peerDependencies": {
     "@remix-run/react": "*",
