@@ -4,7 +4,6 @@ import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data';
 import {getHeroPlaceholder} from '~/lib/placeholders';
-import {getLocaleFromRequest} from '~/lib/utils';
 import type {
   CollectionConnection,
   Metafield,
@@ -30,8 +29,8 @@ export interface CollectionHero {
   top?: boolean;
 }
 
-export async function loader({request, params, context}: LoaderArgs) {
-  const {language, country} = getLocaleFromRequest(request);
+export async function loader({params, context}: LoaderArgs) {
+  const {language, country} = context.storefront.i18n;
 
   if (
     params.lang &&
@@ -58,11 +57,13 @@ export async function loader({request, params, context}: LoaderArgs) {
       products: ProductConnection;
     }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
       variables: {
-        // Country and language properties are automatically injected
-        // into all queries. Passing them is unnecessary unless you
-        // want to override them from the following default:
-        country: context.storefront.i18n?.country,
-        language: context.storefront.i18n?.language,
+        /**
+         * Country and language properties are automatically injected
+         * into all queries. Passing them is unnecessary unless you
+         * want to override them from the following default:
+         */
+        country,
+        language,
       },
     }),
     secondaryHero: context.storefront.query<{hero: CollectionHero}>(
@@ -70,8 +71,8 @@ export async function loader({request, params, context}: LoaderArgs) {
       {
         variables: {
           handle: 'backcountry',
-          country: context.storefront.i18n?.country,
-          language: context.storefront.i18n?.language,
+          country,
+          language,
         },
       },
     ),
@@ -79,8 +80,8 @@ export async function loader({request, params, context}: LoaderArgs) {
       collections: CollectionConnection;
     }>(FEATURED_COLLECTIONS_QUERY, {
       variables: {
-        country: context.storefront.i18n?.country,
-        language: context.storefront.i18n?.language,
+        country,
+        language,
       },
     }),
     tertiaryHero: context.storefront.query<{hero: CollectionHero}>(
@@ -88,8 +89,8 @@ export async function loader({request, params, context}: LoaderArgs) {
       {
         variables: {
           handle: 'winter-2022',
-          country: context.storefront.i18n?.country,
-          language: context.storefront.i18n?.language,
+          country,
+          language,
         },
       },
     ),

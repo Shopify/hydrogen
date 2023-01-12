@@ -56,8 +56,8 @@ export async function loader({params, request, context}: LoaderArgs) {
     variables: {
       handle: productHandle,
       selectedOptions,
-      country: context.storefront.i18n?.country,
-      language: context.storefront.i18n?.language,
+      country: context.storefront.i18n.country,
+      language: context.storefront.i18n.language,
     },
   });
 

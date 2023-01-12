@@ -30,7 +30,7 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
   const data = await storefront.query<SitemapQueryData>(SITEMAP_QUERY, {
     variables: {
       urlLimits: MAX_URLS,
-      language: storefront.i18n?.language,
+      language: storefront.i18n.language,
     },
   });
 

@@ -19,8 +19,8 @@ export async function getFeaturedData(
     featuredProducts: ProductConnection;
   }>(FEATURED_QUERY, {
     variables: {
-      country: storefront.i18n?.country,
-      language: storefront.i18n?.language,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
     },
   });
 
