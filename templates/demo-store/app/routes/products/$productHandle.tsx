@@ -1,7 +1,6 @@
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {RESOURCE_TYPES} from '@shopify/hydrogen';
 import {
   useLoaderData,
   Await,
@@ -74,12 +73,6 @@ export async function loader({params, request, context}: LoaderArgs) {
     recommended,
   });
 }
-
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.PRODUCT,
-  },
-};
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();

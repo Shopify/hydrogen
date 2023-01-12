@@ -10,11 +10,6 @@ import {
 } from '@shopify/remix-oxygen';
 
 /**
- * A global `process` object is only available during build to access NODE_ENV.
- */
-declare const process: {env: {NODE_ENV: string}};
-
-/**
  * Export a fetch handler in module format.
  */
 export default {
