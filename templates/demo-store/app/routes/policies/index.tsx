@@ -4,7 +4,6 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {RESOURCE_TYPES} from '@shopify/hydrogen';
 import {useLoaderData} from '@remix-run/react';
 import type {ShopPolicy} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
@@ -44,12 +43,6 @@ export const meta: MetaFunction = ({
     title: 'Policies',
     description: 'Policies',
   };
-};
-
-export const handle = {
-  hydrogen: {
-    resourceType: RESOURCE_TYPES.POLICIES,
-  },
 };
 
 export default function Policies() {
