@@ -23,7 +23,7 @@ import {Seo, Debugger} from './lib/seo';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
-import {DEFAULT_LOCALE, getLocaleFromRequest} from './lib/utils';
+import {DEFAULT_LOCALE} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 
@@ -56,16 +56,15 @@ export const meta: MetaFunction = () => ({
   viewport: 'width=device-width,initial-scale=1',
 });
 
-export async function loader({context, request}: LoaderArgs) {
-  const [cartId, layout, selectedLocale] = await Promise.all([
+export async function loader({context}: LoaderArgs) {
+  const [cartId, layout] = await Promise.all([
     context.session.get('cartId'),
     getLayoutData(context),
-    getLocaleFromRequest(request),
   ]);
 
   return defer({
     layout,
-    selectedLocale,
+    selectedLocale: context.storefront.i18n,
     cart: cartId ? getCart(context, cartId) : undefined,
   });
 }
@@ -270,8 +269,8 @@ export async function getCart({storefront}: AppLoadContext, cartId: string) {
   const {cart} = await storefront.query<{cart?: Cart}>(CART_QUERY, {
     variables: {
       cartId,
-      country: storefront.i18n?.country,
-      language: storefront.i18n?.language,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
     },
     cache: storefront.CacheNone(),
   });

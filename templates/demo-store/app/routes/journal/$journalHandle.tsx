@@ -11,7 +11,6 @@ import {Blog} from '@shopify/hydrogen-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
-import {getLocaleFromRequest} from '~/lib/utils';
 import styles from '../../styles/custom-font.css';
 
 const BLOG_HANDLE = 'journal';
@@ -23,8 +22,8 @@ export const handle = {
   },
 };
 
-export async function loader({params, request, context}: LoaderArgs) {
-  const {language, country} = getLocaleFromRequest(request);
+export async function loader({params, context}: LoaderArgs) {
+  const {language, country} = context.storefront.i18n;
 
   invariant(params.journalHandle, 'Missing journal handle');
 
@@ -34,7 +33,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     variables: {
       blogHandle: BLOG_HANDLE,
       articleHandle: params.journalHandle,
-      language: context.storefront.i18n?.language,
+      language,
     },
   });
 
