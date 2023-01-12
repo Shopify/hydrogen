@@ -1,5 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {path, file, error, output} from '@shopify/cli-kit';
+import {path, file, error, output, ui} from '@shopify/cli-kit';
 import {commonFlags} from '../../../utils/flags.js';
 import Flags from '@oclif/core/lib/flags.js';
 import ts from 'typescript';
@@ -28,6 +28,10 @@ export default class GenerateRoute extends Command {
     adaptor: Flags.string({
       description:
         'The Remix adaptor for imports in the template (default: @shopify/remix-oxygen)',
+    }),
+    force: Flags.boolean({
+      char: 'f',
+      description: 'Overwrite existing files',
     }),
   };
 
@@ -65,6 +69,34 @@ export default class GenerateRoute extends Command {
       'routes',
       `${resourcePath}${extension}`,
     );
+    const relativeDestinationPath = path.relative(directory, destinationPath);
+
+    if (!flags.force && (await file.exists(destinationPath))) {
+      const options = [
+        {name: 'No', value: 'abort'},
+        {name: `Yes`, value: 'overwrite'},
+      ];
+
+      const choice = await ui.prompt([
+        {
+          type: 'select',
+          name: 'value',
+          message: `The file ${path.relative(
+            process.cwd(),
+            relativeDestinationPath,
+          )} already exists. Do you want to overwrite it?`,
+          choices: options,
+        },
+      ]);
+
+      if (choice.value === 'abort') {
+        throw new error.Abort(
+          output.content`The file route file ${relativeDestinationPath} already exists. Either delete it or re-run this command with ${output.token.genericShellCommand(
+            `--force`,
+          )}.`,
+        );
+      }
+    }
 
     let templateContent = await file.read(templatePath);
 
@@ -92,15 +124,6 @@ export default class GenerateRoute extends Command {
       // We compile the template to JavaScript.
       const compiled = compile(withArtificialNewLines, config);
 
-      ts.transpileModule(withArtificialNewLines, {
-        reportDiagnostics: false,
-        compilerOptions: {
-          ...config,
-          jsx: 1,
-          removeComments: false,
-        },
-      });
-
       // Here we restore the new lines that were removed by TypeScript.
       templateContent = restoreNewLines(compiled.outputText);
     }
@@ -115,10 +138,18 @@ export default class GenerateRoute extends Command {
     }
 
     // We format the template content with Prettier.
+    // TODO use @shopify/cli-kit's format function once it supports TypeScript
+    // templateContent = await file.format(templateContent, destinationPath);
     templateContent = await format(templateContent, destinationPath);
 
+    // Create the directory if it doesn't exist.
+    if (!(await file.exists(path.dirname(destinationPath)))) {
+      await file.mkdir(path.dirname(destinationPath));
+    }
     // Write the final file to the user's project.
     await file.write(destinationPath, templateContent);
+
+    output.success(`Created ${resource} at ${relativeDestinationPath}`);
   }
 }
 
@@ -142,10 +173,13 @@ function compile(code: string, options: ts.CompilerOptions = {}) {
 async function format(content: string, filePath: string) {
   // Try to read a prettier config file from the project.
   const config = (await prettier.resolveConfig(filePath)) || {};
+  const ext = path.extname(filePath);
+
   const formattedContent = await prettier.format(content, {
-    // We need to use the babel parser because the default parser
+    // Specify the TypeScript parser for ts/tsx files. Otherwise
+    // we need to use the babel parser because the default parser
     // Otherwise prettier will print a warning.
-    parser: 'babel',
+    parser: ext === '.tsx' || ext === '.ts' ? 'typescript' : 'babel',
     ...config,
   });
 
