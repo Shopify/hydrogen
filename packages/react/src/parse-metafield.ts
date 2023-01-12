@@ -201,7 +201,7 @@ export const allMetafieldTypesArray = [
 ] as const;
 
 /** A union of all the supported `metafield.type`s */
-export type MetafieldTypeTypes = typeof allMetafieldTypesArray[number];
+export type MetafieldTypeTypes = (typeof allMetafieldTypesArray)[number];
 
 /**
  * A mapping of a Metafield's `type` to the TypeScript type that is returned from `parseMetafield()`
