@@ -27,12 +27,12 @@ export async function storefrontRedirect({
     const {urlRedirects} = await storefront.query<RedirectQueryType>(
       REDIRECT_QUERY,
       {
-        variables: {redirectFrom},
+        variables: {redirectFrom: 'path:' + redirectFrom},
         storefrontApiVersion: '2023-01',
       },
     );
 
-    if (urlRedirects?.edges?.length) {
+    if (urlRedirects?.edges?.length && urlRedirects.edges[0]?.node?.target) {
       return new Response(null, {
         status: 302,
         headers: {
