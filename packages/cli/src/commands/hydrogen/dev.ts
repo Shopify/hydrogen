@@ -78,8 +78,8 @@ async function compileAndWatch(
 
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
-  const remix = await import('@remix-run/dev/dist/compiler.js');
-  const stopCompileWatcher = await remix.watch(remixConfig, {
+  const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
+  const stopCompileWatcher = await watch(remixConfig, {
     mode: process.env.NODE_ENV as any,
     async onInitialBuild() {
       await copyingFiles;
