@@ -1,5 +1,13 @@
 # @shopify/cli-hydrogen
 
+## 4.0.0-alpha.8
+
+### Patch Changes
+
+- Removed magic routes and `.hydrogen` template routes. See `rfc/obsolete-routing.md` for details of what used to be in the package but has now been removed. ([#336](https://github.com/Shopify/h2/pull/336)) by [@frehner](https://github.com/frehner)
+
+  `/__health` still exists for the moment, though at some point it will probably be removed as well.
+
 ## 4.0.0-alpha.7
 
 ### Patch Changes
