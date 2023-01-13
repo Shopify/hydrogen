@@ -87,7 +87,7 @@ export default class GenerateRoute extends Command {
 
       if (choice.value === 'abort') {
         throw new error.Abort(
-          output.content`The file route file ${relativeDestinationPath} already exists. Either delete it or re-run this command with ${output.token.genericShellCommand(
+          output.content`The route file ${relativeDestinationPath} already exists. Either delete it or re-run this command with ${output.token.genericShellCommand(
             `--force`,
           )}.`,
         );
