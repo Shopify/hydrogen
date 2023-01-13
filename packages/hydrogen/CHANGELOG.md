@@ -1,5 +1,17 @@
 # @shopify/hydrogen
 
+## 2.0.0-alpha.2
+
+### Patch Changes
+
+- Add a default value for `context.storefront.i18n` and improve types. ([#330](https://github.com/Shopify/h2/pull/330)) by [@frandiox](https://github.com/frandiox)
+
+- Rename the `notFoundMaybeRedirect` utility to `storefrontRedirect` and call it only in the server entry file. ([#362](https://github.com/Shopify/h2/pull/362)) by [@frandiox](https://github.com/frandiox)
+
+- Removed magic routes and `.hydrogen` template routes. See `rfc/obsolete-routing.md` for details of what used to be in the package but has now been removed. ([#336](https://github.com/Shopify/h2/pull/336)) by [@frehner](https://github.com/frehner)
+
+  `/__health` still exists for the moment, though at some point it will probably be removed as well.
+
 ## 2.0.0-alpha.1
 
 ### Patch Changes
