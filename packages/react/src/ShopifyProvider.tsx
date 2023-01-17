@@ -43,7 +43,7 @@ export function ShopifyProvider({
 
   if (shopifyConfig.storefrontApiVersion !== SFAPI_VERSION) {
     console.warn(
-      `<ShopifyProvider/>: This version of Hydrogen-UI is built for Shopify's Storefront API version ${SFAPI_VERSION}, but it looks like you're using version ${shopifyConfig.storefrontApiVersion}. There may be issues or bugs if you use a mismatched version of Hydrogen-UI and the Storefront API.`
+      `<ShopifyProvider/>: This version of React Storefront Kit is built for Shopify's Storefront API version ${SFAPI_VERSION}, but it looks like you're using version ${shopifyConfig.storefrontApiVersion}. There may be issues or bugs if you use a mismatched version of React Storefront Kit and the Storefront API.`
     );
   }
 
@@ -99,7 +99,7 @@ export function useShop() {
 }
 
 /**
- * Shopify-specific values that are used in various Hydrogen-UI components and hooks.
+ * Shopify-specific values that are used in various React Storefront Kit components and hooks.
  */
 export type ShopifyContextProps = {
   /** The globally-unique identifier for the Shop */
@@ -108,7 +108,7 @@ export type ShopifyContextProps = {
   storeDomain: string;
   /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
   storefrontToken: string;
-  /** The Storefront API version. This should almost always be the same as the version Hydrogen-UI was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
+  /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
   storefrontApiVersion: string;
   country?: {
     /**
@@ -140,7 +140,7 @@ export type ShopifyContextValue = ShopifyContextProps & {
   getStorefrontApiUrl: (props?: {
     /** The host name of the domain (eg: `{shop}.myshopify.com`). */
     storeDomain?: string;
-    /** The Storefront API version. This should almost always be the same as the version Hydrogen-UI was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details. */
+    /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details. */
     storefrontApiVersion?: string;
   }) => string;
   /**

@@ -94,7 +94,7 @@ describe(`createStorefrontClient`, () => {
 
       expect(client.getPrivateTokenHeaders()).toEqual({
         'Shopify-Storefront-Private-Token': 'privateToken',
-        'X-SDK-Variant': 'hydrogen-ui',
+        'X-SDK-Variant': 'storefront-kit',
         'X-SDK-Variant-Source': 'react',
         'X-SDK-Version': '2023-01',
         'content-type': 'application/json',
@@ -115,7 +115,7 @@ describe(`createStorefrontClient`, () => {
       ).toEqual({
         'Shopify-Storefront-Buyer-IP': '1.1.1.1',
         'Shopify-Storefront-Private-Token': 'newPrivate',
-        'X-SDK-Variant': 'hydrogen-ui',
+        'X-SDK-Variant': 'storefront-kit',
         'X-SDK-Variant-Source': 'react',
         'X-SDK-Version': '2023-01',
         'content-type': 'application/graphql',
@@ -132,7 +132,7 @@ describe(`createStorefrontClient`, () => {
       expect(client.getPublicTokenHeaders()).toEqual({
         'X-Shopify-Storefront-Access-Token': 'publicToken',
         'X-SDK-Version': '2023-01',
-        'X-SDK-Variant': 'hydrogen-ui',
+        'X-SDK-Variant': 'storefront-kit',
         'X-SDK-Variant-Source': 'react',
         'content-type': 'application/json',
       });
@@ -151,7 +151,7 @@ describe(`createStorefrontClient`, () => {
       ).toEqual({
         'X-Shopify-Storefront-Access-Token': 'newPublic',
         'X-SDK-Version': '2023-01',
-        'X-SDK-Variant': 'hydrogen-ui',
+        'X-SDK-Variant': 'storefront-kit',
         'X-SDK-Variant-Source': 'react',
         'content-type': 'application/graphql',
       });

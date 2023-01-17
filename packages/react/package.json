@@ -1,8 +1,8 @@
 {
-  "name": "@shopify/hydrogen-react",
+  "name": "@shopify/storefront-kit-react",
   "version": "2023.1.0",
   "description": "React components, hooks, and utilities for creating custom Shopify storefronts",
-  "homepage": "https://github.com/Shopify/hydrogen-ui/tree/main/packages/react",
+  "homepage": "https://github.com/Shopify/storefront-kit/tree/main/packages/react",
   "license": "MIT",
   "engines": {
     "node": ">=14"
@@ -63,8 +63,8 @@
   "module": "./dist/node-prod/index.mjs",
   "browser": "./dist/browser-prod/index.mjs",
   "types": "./dist/types/index.d.ts",
-  "unpkg": "./dist/umd/hydrogen-react.prod.js",
-  "jsdelivr": "./dist/umd/hydrogen-react.prod.js",
+  "unpkg": "./dist/umd/storefront-kit-react.prod.js",
+  "jsdelivr": "./dist/umd/storefront-kit-react.prod.js",
   "sideEffects": [
     "dist/*/node_modules/use-sync-external-store/shim/with-selector.*js"
   ],
@@ -130,8 +130,8 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shopify/hydrogen-ui.git",
-    "directory": "packages/hydrogen-react"
+    "url": "https://github.com/shopify/storefront-kit.git",
+    "directory": "packages/react"
   },
-  "bugs": "https://github.com/shopify/hydrogen-ui/issues"
+  "bugs": "https://github.com/shopify/storefront-kit/issues"
 }

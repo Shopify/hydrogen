@@ -12,7 +12,7 @@
     "start": "next start"
   },
   "dependencies": {
-    "@shopify/hydrogen-react": "*",
+    "@shopify/storefront-kit-react": "*",
     "graphql-request": "^5.1.0",
     "next": "13.1.2",
     "react": "18.2.0",

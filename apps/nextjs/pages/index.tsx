@@ -10,7 +10,7 @@ import {
   Image as ShopifyImage,
   type StorefrontApiResponseOk,
   useShop,
-} from '@shopify/hydrogen-react';
+} from '@shopify/storefront-kit-react';
 
 export const getServerSideProps: GetServerSideProps = async () => {
   // @TODO figure out how to get the client's IP address correctly and accurately.
@@ -56,7 +56,7 @@ export default function Home({
       <main className={styles.main}>
         <h1>Welcome to {data?.shop.name} on NextJS</h1>
 
-        {/* @TODO Using hydrogen-react's <Image/> is nice, but we should also provide our 'loader' so you can used NextJS' Image component as well */}
+        {/* @TODO Using storefront-kit-react's <Image/> is nice, but we should also provide our 'loader' so you can used NextJS' Image component as well */}
         <ShopifyImage
           data={data.products.nodes[0].variants.nodes[0].image ?? {}}
           width={500}
@@ -67,7 +67,7 @@ export default function Home({
 
       <footer className={styles.footer}>
         <a
-          href="https://vercel.com?utm_source=hydrogen-react-monorepo"
+          href="https://vercel.com?utm_source=storefront-kit-react-monorepo"
           target="_blank"
           rel="noopener noreferrer"
         >

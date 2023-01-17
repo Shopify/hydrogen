@@ -1,9 +1,9 @@
-## Working on Hydrogen-UI
+## Working on React Storefront Kit
 
-There are two ways you can develop Hydrogen-UI components:
+There are two ways you can develop React Storefront Kit components:
 
 - Develop components in isolation (faster & easier):
-  1. Run `yarn dev:story` in the hydrogen-ui directory to spin up an instance of [Ladle](https://ladle.dev/)
+  1. Run `yarn dev:story` in the `packages/react` directory to spin up an instance of [Ladle](https://ladle.dev/)
   2. Edit the component or the component's story `[ComponentName].stories.tsx`
 - Develop components in a demo app (good for testing out the ecosystem support)
   1. Run `yarn dev`
@@ -41,7 +41,7 @@ If you need a helper function that is shared between the tests and stories files
 
 ## Package Exports Notes:
 
-- Until ESLint can resolve package.exports, we added hydrogen-ui to `.eslintrc.js`->`node/no-missing-import.allowModules`
+- Until ESLint can resolve package.exports, we added `storefront-kit` to `.eslintrc.js`->`node/no-missing-import.allowModules`
 
 ## Updating the Storefront API version
 
