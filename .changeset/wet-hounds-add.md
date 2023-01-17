@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen-react': patch
+'@shopify/storefront-kit-react': patch
 ---
 
 Updated to Storefront API version `2023-01`
