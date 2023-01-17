@@ -4,8 +4,6 @@ import type {Model3d} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import type {ModelViewerElement} from '@google/model-viewer/lib/model-viewer.js';
 
-type PropsWeControl = 'src';
-
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace JSX {
@@ -20,8 +18,11 @@ declare global {
 
 type ModelViewerProps = Omit<
   PartialDeep<JSX.IntrinsicElements['model-viewer'], {recurseIntoArrays: true}>,
-  PropsWeControl
-> & {
+  'src'
+> &
+  ModelViewerBaseProps;
+
+type ModelViewerBaseProps = {
   /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/latest/objects/model3d). */
   data: PartialDeep<Model3d, {recurseIntoArrays: true}>;
   /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */

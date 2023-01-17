@@ -69,6 +69,7 @@
     "dist/*/node_modules/use-sync-external-store/shim/with-selector.*js"
   ],
   "scripts": {
+    "build-docs": "sh ./docs/build-docs.sh && yarn format",
     "clean-dist": "rimraf ./dist",
     "dev": "run-s clean-dist dev:demo",
     "dev:story": "ladle serve",
@@ -86,12 +87,14 @@
     "build:tsc:cjs": "cpy ./dist/types/index.d.ts ./dist/types/ --rename='index.d.cts' --flat",
     "build:tsc:es": "tsc --emitDeclarationOnly --project tsconfig.typeoutput.json",
     "copy-storefront-types": "cpy ./src/storefront-api-types.d.ts ./dist/types/ --flat",
-    "format": "prettier --write \"src/**/*\"",
+    "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
     "graphql-types": "graphql-codegen --config codegen.ts && yarn format",
     "prepack": "yarn build",
     "test": "vitest",
     "test:ci": "vitest run --coverage",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "run-p typecheck:*",
+    "typecheck:code": "tsc --noEmit",
+    "typecheck:examples": "tsc --noEmit --project tsconfig.examples.json"
   },
   "devDependencies": {
     "@faker-js/faker": "^7.6.0",
@@ -100,6 +103,7 @@
     "@graphql-codegen/introspection": "2.2.3",
     "@graphql-codegen/typescript": "^2.8.7",
     "@ladle/react": "^2.4.5",
+    "@shopify/generate-docs": "0.4",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",

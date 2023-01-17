@@ -2,10 +2,13 @@
   "extends": "./tsconfig.json",
   "include": ["src/**/*", "globals.d.ts"],
   "exclude": [
-    // when generating types for the library, only include these files instead of the tests/stories
+    // when generating types for the library, only include these files instead of the tests/stories/examples
     "src/**/*.test.tsx",
     "src/**/*.test.ts",
     "src/**/*.stories.tsx",
-    "src/**/*.test.helpers.ts"
+    "src/**/*.test.helpers.ts",
+    "src/**/*.doc.ts",
+    "src/**/*.example.jsx",
+    "src/**/*.example.tsx"
   ]
 }

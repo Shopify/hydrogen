@@ -13,12 +13,7 @@ interface BaseProps {
   options?: YouTube | Vimeo;
 }
 
-type PropsWeControl = 'src';
-
-export type ExternalVideoProps = Omit<
-  JSX.IntrinsicElements['iframe'],
-  PropsWeControl
-> &
+export type ExternalVideoProps = Omit<JSX.IntrinsicElements['iframe'], 'src'> &
   BaseProps;
 
 /**

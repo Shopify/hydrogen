@@ -25,16 +25,18 @@ const ShopifyContext = createContext<ShopifyContextValue>({
   },
 });
 
+type ShopifyProviderProps = {
+  children: ReactNode;
+  shopifyConfig: ShopifyContextProps;
+};
+
 /**
  * The `<ShopifyProvider/>` component enables use of the `useShop()` hook. The component should wrap your app.
  */
 export function ShopifyProvider({
   children,
   shopifyConfig,
-}: {
-  children: ReactNode;
-  shopifyConfig: ShopifyContextProps;
-}) {
+}: ShopifyProviderProps) {
   if (!shopifyConfig) {
     throw new Error(
       `The 'shopifyConfig' prop must be passed to '<ShopifyProvider/>'`
@@ -110,25 +112,31 @@ export type ShopifyContextProps = {
   storefrontToken: string;
   /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
   storefrontApiVersion: string;
-  country?: {
-    /**
-     * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.
-     */
-    isoCode: CountryCode;
-  };
-  language?: {
-    /**
-     * `ISO 369` language codes supported by Shopify.
-     */
-    isoCode: LanguageCode;
-  };
+  country?: ContextCountry;
+  language?: ContextLanguage;
   /**
    * The locale string based on `country` and `language`.
    */
   locale?: string;
 };
 
-export type ShopifyContextValue = ShopifyContextProps & {
+type ContextCountry = {
+  /**
+   * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.
+   */
+  isoCode: CountryCode;
+};
+
+type ContextLanguage = {
+  /**
+   * `ISO 369` language codes supported by Shopify.
+   */
+  isoCode: LanguageCode;
+};
+
+export type ShopifyContextValue = ShopifyContextProps & ShopifyContextReturn;
+
+type ShopifyContextReturn = {
   /**
    * Creates the fully-qualified URL to your store's GraphQL endpoint.
    *
@@ -137,12 +145,7 @@ export type ShopifyContextValue = ShopifyContextProps & {
    * - `storeDomain`
    * - `storefrontApiVersion`
    */
-  getStorefrontApiUrl: (props?: {
-    /** The host name of the domain (eg: `{shop}.myshopify.com`). */
-    storeDomain?: string;
-    /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details. */
-    storefrontApiVersion?: string;
-  }) => string;
+  getStorefrontApiUrl: (props?: GetStorefrontApiUrlProps) => string;
   /**
    * Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. This uses the public Storefront API token.
    *
@@ -152,14 +155,9 @@ export type ShopifyContextValue = ShopifyContextProps & {
    * - `storefrontToken`
    *
    */
-  getPublicTokenHeaders: (props: {
-    /**
-     * Customizes which `"content-type"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `"json"`. When fetching with a `body` that is a plain string, use `"graphql"`. Defaults to `"json"`
-     */
-    contentType: 'json' | 'graphql';
-    /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
-    storefrontToken?: string;
-  }) => Record<string, string>;
+  getPublicTokenHeaders: (
+    props: GetPublicTokenHeadersProps
+  ) => Record<string, string>;
   /**
    * Creates the fully-qualified URL to your myshopify.com domain.
    *
@@ -167,5 +165,23 @@ export type ShopifyContextValue = ShopifyContextProps & {
    *
    * - `storeDomain`
    */
-  getShopifyDomain: (props?: {storeDomain?: string}) => string;
+  getShopifyDomain: (props?: GetShopifyDomainProps) => string;
 };
+
+type GetStorefrontApiUrlProps = {
+  /** The host name of the domain (eg: `{shop}.myshopify.com`). */
+  storeDomain?: string;
+  /** The Storefront API version. This should almost always be the same as the version Hydrogen-UI was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details. */
+  storefrontApiVersion?: string;
+};
+
+type GetPublicTokenHeadersProps = {
+  /**
+   * Customizes which `"content-type"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `"json"`. When fetching with a `body` that is a plain string, use `"graphql"`. Defaults to `"json"`
+   */
+  contentType: 'json' | 'graphql';
+  /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
+  storefrontToken?: string;
+};
+
+type GetShopifyDomainProps = {storeDomain?: string};

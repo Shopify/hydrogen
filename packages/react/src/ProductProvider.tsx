@@ -26,7 +26,7 @@ const ProductOptionsContext = createContext<ProductHookValue | null>(null);
 type InitialVariantId = ProductVariantType['id'] | null;
 
 interface ProductProviderProps {
-  /** A [Product object](https://shopify.dev/api/storefront/reference/products/product). */
+  /** A Storefront API [Product object](https://shopify.dev/api/storefront/reference/products/product). */
   data: PartialDeep<Product, {recurseIntoArrays: true}>;
   /** A `ReactNode` element. */
   children: React.ReactNode;

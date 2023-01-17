@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "include": ["src/*.example.?(t|j)sx", "globals.d.ts"],
+  "exclude": [],
+  "compilerOptions": {
+    "jsx": "react-jsx",
+    "baseUrl": "src",
+    "paths": {
+      "@shopify/hydrogen-react": ["index.ts"],
+      "@shopify/hydrogen-react/storefront-api-types": [
+        "storefront-api-types.d.ts"
+      ]
+    }
+  }
+}

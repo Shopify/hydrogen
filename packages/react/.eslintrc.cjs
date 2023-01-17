@@ -14,4 +14,13 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'error',
     'react-hooks/exhaustive-deps': 'error',
   },
+  overrides: [
+    {
+      // for .example.tsx files, we want to show the import for our own package, so we turn off the eslint rules for extraneous imports
+      files: ['src/*.example.?(j|t)sx'],
+      rules: {
+        'node/no-extraneous-import': 'off',
+      },
+    },
+  ],
 };

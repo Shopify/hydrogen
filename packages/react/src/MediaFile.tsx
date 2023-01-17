@@ -12,21 +12,23 @@ type BaseProps = React.HTMLAttributes<
 export interface MediaFileProps extends BaseProps {
   /** An object with fields that correspond to the Storefront API's [Media object](https://shopify.dev/api/storefront/reference/products/media). */
   data: PartialDeep<MediaEdgeType['node'], {recurseIntoArrays: true}>;
-  /** The options for the `Image`, `Video`, or `ExternalVideo` components. */
-  mediaOptions?: {
-    /** Props that will only apply when an `<Image />` is rendered */
-    image?: Omit<ShopifyImageProps, 'data'>;
-    /** Props that will only apply when a `<Video />` is rendered */
-    video?: Omit<React.ComponentProps<typeof Video>, 'data'>;
-    /** Props that will only apply when an `<ExternalVideo />` is rendered */
-    externalVideo?: Omit<
-      React.ComponentProps<typeof ExternalVideo>['options'],
-      'data'
-    >;
-    /** Props that will only apply when a `<ModelViewer />` is rendered */
-    modelViewer?: Omit<typeof ModelViewer, 'data'>;
-  };
+  /** The options for the `Image`, `Video`, `ExternalVideo`, or `ModelViewer` components. */
+  mediaOptions?: MediaOptions;
 }
+
+type MediaOptions = {
+  /** Props that will only apply when an `<Image />` is rendered */
+  image?: Omit<ShopifyImageProps, 'data'>;
+  /** Props that will only apply when a `<Video />` is rendered */
+  video?: Omit<React.ComponentProps<typeof Video>, 'data'>;
+  /** Props that will only apply when an `<ExternalVideo />` is rendered */
+  externalVideo?: Omit<
+    React.ComponentProps<typeof ExternalVideo>['options'],
+    'data'
+  >;
+  /** Props that will only apply when a `<ModelViewer />` is rendered */
+  modelViewer?: Omit<typeof ModelViewer, 'data'>;
+};
 
 /**
  * The `MediaFile` component renders the media for the Storefront API's

@@ -16,12 +16,16 @@ export type ShopifyLoaderOptions = {
   width?: HtmlImageProps['width'] | ImageType['width'];
   height?: HtmlImageProps['height'] | ImageType['height'];
 };
-export type ShopifyLoaderParams = Simplify<
-  ShopifyLoaderOptions & {
-    src: ImageType['url'];
-  }
->;
-export type ShopifyImageProps = Omit<HtmlImageProps, 'src'> & {
+export type ShopifyLoaderParams = Simplify<ShopifyLoaderOptions & ImageSrc>;
+
+type ImageSrc = {
+  src: ImageType['url'];
+};
+
+export type ShopifyImageProps = Omit<HtmlImageProps, 'src'> &
+  ShopifyImageBaseProps;
+
+type ShopifyImageBaseProps = {
   /** An object with fields that correspond to the Storefront API's
    * [Image object](https://shopify.dev/api/storefront/reference/common-objects/image).
    * The `data` prop is required.
