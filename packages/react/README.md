@@ -1,5 +1,3 @@
-**IMPORTANT** This package is being renamed to `@shopify/storefront-kit-react`. All future updates will be published to that package.
-
 <div style="text-align:center">
 
 # React Storefront Kit
