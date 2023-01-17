@@ -1,5 +1,5 @@
 import {defineConfig} from 'tsup';
-import {file} from '@shopify/cli-kit';
+import {file, output} from '@shopify/cli-kit';
 
 export default defineConfig({
   entry: ['src/**/*.ts'],
@@ -19,5 +19,9 @@ export default defineConfig({
     // These files need to be packaged/distributed with the CLI
     // so that we can use them in the `generate` command.
     await file.copy('../../templates/skeleton/app/routes', 'dist/templates');
+
+    output.newline();
+    output.completed('Copied generator template files to build directory');
+    output.newline();
   },
 });
