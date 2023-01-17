@@ -2,7 +2,7 @@
 
 ## 2023.1.1
 
-### Patch Changes
+### Changes
 
 - 9bff83c: Updated to Storefront API version `2023-01`
 
@@ -26,7 +26,7 @@
       console.log(metafield.parsedValue);
       ```
 
-    - Additionally, a new TypeScript type called `ParsedMetafields` is provided to help the `parseMetafield` function return the correct TypeScript types, by passing the type of metafield into the `ParsedMetafield` type. For example:
+    - Additionally, a new TypeScript type called `ParsedMetafield` is provided to help the `parseMetafield` function return the correct TypeScript types, by passing the type of metafield into the `ParsedMetafield` type. For example:
 
       ```ts
       const metafield =
