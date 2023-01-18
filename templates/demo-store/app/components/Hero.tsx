@@ -104,9 +104,7 @@ function SpreadMedia({
   return (
     <MediaFile
       data={data}
-      alt={data.alt}
       className="block object-cover w-full h-full"
-      // @ts-expect-error Need to update the types in H-UI to allow optional properties on this object
       mediaOptions={{
         video: {
           controls: false,
@@ -123,6 +121,7 @@ function SpreadMedia({
           widths,
           sizes,
           width,
+          alt: data.alt || '',
         },
       }}
     />
