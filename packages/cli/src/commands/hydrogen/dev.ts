@@ -52,54 +52,38 @@ export async function runDev({
 
   muteDevLogs();
 
-  await compileAndWatch(getProjectPaths(appPath, entry), {port});
+  await compileAndWatch(entry, appPath, port);
 }
 
-async function compileAndWatch(
-  projectPaths: ReturnType<typeof getProjectPaths>,
-  options: {port?: number; cacheBust?: string} = {},
-  isInit = true,
-) {
-  isInit && console.time(LOG_INITIAL_BUILD);
+async function compileAndWatch(entry: string, appPath?: string, port?: number) {
+  console.time(LOG_INITIAL_BUILD);
 
   const {root, entryFile, publicPath, buildPathClient, buildPathWorkerFile} =
-    projectPaths;
+    getProjectPaths(appPath, entry);
 
-  // Changing these files requires re-running `remix.config.js`
-  const shouldReloadRemixApp = (file: string) =>
-    file.startsWith(path.resolve(root, 'remix.config.'));
-
-  const remixConfigGetter = () =>
-    getRemixConfig(root, entryFile, publicPath, options.cacheBust);
-
+  const remixConfigGetter = () => getRemixConfig(root, entryFile, publicPath);
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
   const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
-  const stopCompileWatcher = await watch(remixConfigGetter, {
+  await watch(remixConfigGetter, {
     mode: process.env.NODE_ENV as any,
     async onInitialBuild() {
       await copyingFiles;
 
-      if (isInit) {
-        console.timeEnd(LOG_INITIAL_BUILD);
+      console.timeEnd(LOG_INITIAL_BUILD);
 
-        await startMiniOxygen({
-          root,
-          port: options.port,
-          watch: true,
-          buildPathWorkerFile,
-          buildPathClient,
-        });
-      }
+      await startMiniOxygen({
+        root,
+        port,
+        watch: true,
+        buildPathWorkerFile,
+        buildPathClient,
+      });
     },
     async onFileCreated(file: string) {
       output.info(`\n📄 File created: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
-      }
-
-      if (shouldReloadRemixApp(file)) {
-        await reloadRemixApp(file);
       }
     },
     async onFileChanged(file: string) {
@@ -107,19 +91,11 @@ async function compileAndWatch(
       if (file.startsWith(publicPath)) {
         await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
       }
-
-      if (shouldReloadRemixApp(file)) {
-        await reloadRemixApp(file);
-      }
     },
     async onFileDeleted(file: string) {
       output.info(`\n📄 File deleted: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await fs.unlink(file.replace(publicPath, buildPathClient));
-      }
-
-      if (shouldReloadRemixApp(file)) {
-        await reloadRemixApp(file);
       }
     },
     onRebuildStart() {
@@ -130,9 +106,4 @@ async function compileAndWatch(
       console.timeEnd(LOG_REBUILT);
     },
   });
-
-  async function reloadRemixApp(cacheBust: string) {
-    await stopCompileWatcher();
-    compileAndWatch(projectPaths, {...options, cacheBust}, false);
-  }
 }
