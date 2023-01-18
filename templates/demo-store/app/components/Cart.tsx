@@ -1,7 +1,7 @@
 import clsx from 'clsx';
 import {useRef} from 'react';
 import {useScroll} from 'react-use';
-import {flattenConnection, Image, Money} from '@shopify/hydrogen-react';
+import {flattenConnection, Image, Money} from '@shopify/storefront-kit-react';
 import {
   Button,
   Heading,
@@ -16,7 +16,7 @@ import type {
   CartCost,
   CartLine,
   CartLineUpdateInput,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import {useFetcher} from '@remix-run/react';
 import {CartAction} from '~/lib/type';
 

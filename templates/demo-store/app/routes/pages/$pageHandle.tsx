@@ -4,7 +4,7 @@ import {
   type SerializeFrom,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Page as PageType} from '@shopify/storefront-kit-react/storefront-api-types';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import {PageHeader} from '~/components';

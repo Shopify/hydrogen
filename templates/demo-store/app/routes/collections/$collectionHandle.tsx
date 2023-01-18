@@ -10,8 +10,8 @@ import type {
   CollectionConnection,
   MetafieldReference,
   Filter,
-} from '@shopify/hydrogen-react/storefront-api-types';
-import {flattenConnection} from '@shopify/hydrogen-react';
+} from '@shopify/storefront-kit-react/storefront-api-types';
+import {flattenConnection} from '@shopify/storefront-kit-react';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';

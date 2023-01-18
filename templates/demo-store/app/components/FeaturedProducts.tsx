@@ -5,7 +5,7 @@ import {Heading, ProductCard, Skeleton, Text} from '~/components';
 import type {
   Product,
   ProductSortKeys,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 
 interface FeaturedProductsProps {
   count: number;

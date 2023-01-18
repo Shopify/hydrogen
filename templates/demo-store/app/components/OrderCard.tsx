@@ -1,8 +1,8 @@
-import {flattenConnection} from '@shopify/hydrogen-react';
+import {flattenConnection} from '@shopify/storefront-kit-react';
 import type {
   Order,
   OrderLineItem,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import {Heading, Text, Link} from '~/components';
 import {statusMessage} from '~/lib/utils';
 

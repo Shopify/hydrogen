@@ -3,7 +3,7 @@ import {useFetcher} from '@remix-run/react';
 import type {
   Collection,
   Product,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import {FeaturedCollections} from './FeaturedCollections';
 import {ProductSwimlane} from './ProductSwimlane';
 import {usePrefixPathWithLocale} from '~/lib/utils';

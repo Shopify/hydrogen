@@ -1,5 +1,5 @@
 import {redirect} from '@remix-run/server-runtime';
-import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api-types';
+import type {UrlRedirectConnection} from '@shopify/storefront-kit-react/storefront-api-types';
 import type {Storefront} from '../storefront';
 
 type StorefrontRedirect = {
