@@ -69,17 +69,13 @@ async function compileAndWatch(
   const shouldReloadRemixApp = (file: string) =>
     file.startsWith(path.resolve(root, 'remix.config.'));
 
-  const remixConfig = await getRemixConfig(
-    root,
-    entryFile,
-    publicPath,
-    options.cacheBust,
-  );
+  const remixConfigGetter = () =>
+    getRemixConfig(root, entryFile, publicPath, options.cacheBust);
 
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
 
   const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
-  const stopCompileWatcher = await watch(remixConfig, {
+  const stopCompileWatcher = await watch(remixConfigGetter, {
     mode: process.env.NODE_ENV as any,
     async onInitialBuild() {
       await copyingFiles;
