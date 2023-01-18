@@ -68,7 +68,7 @@
    import {
      CountryCode,
      LanguageCode,
-   } from '@shopify/hydrogen-react/storefront-api-types';
+   } from '@shopify/storefront-kit-react/storefront-api-types';
 
    export type Locale = {
      language: LanguageCode,
@@ -634,7 +634,7 @@ export function getLocaleFromRequest(request: Request): Locale {
    import {
      CountryCode,
      LanguageCode,
-   } from '@shopify/hydrogen-react/storefront-api-types';
+   } from '@shopify/storefront-kit-react/storefront-api-types';
    import {redirect, type AppLoadContext, type ActionFunction} from '@shopify/remix-oxygen';
    import invariant from 'tiny-invariant';
    import {updateCartBuyerIdentity} from '~/data';

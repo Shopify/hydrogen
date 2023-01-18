@@ -1,15 +1,12 @@
-import {flattenConnection} from '@shopify/hydrogen-react';
-import type {
-  Order,
-  OrderLineItem,
-} from '@shopify/hydrogen-react/storefront-api-types';
+import {flattenConnection} from '@shopify/storefront-kit-react';
+import type {Order} from '@shopify/storefront-kit-react/storefront-api-types';
 import {Heading, Text, Link} from '~/components';
 import {statusMessage} from '~/lib/utils';
 
 export function OrderCard({order}: {order: Order}) {
   if (!order?.id) return null;
   const [legacyOrderId, key] = order!.id!.split('/').pop()!.split('?');
-  const lineItems = flattenConnection<OrderLineItem>(order?.lineItems);
+  const lineItems = flattenConnection(order?.lineItems);
 
   return (
     <li className="grid text-center border rounded">

@@ -25,7 +25,7 @@ import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 import {DEFAULT_LOCALE} from './lib/utils';
 import invariant from 'tiny-invariant';
-import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
+import {Cart} from '@shopify/storefront-kit-react/storefront-api-types';
 
 export const handle = {
   // @todo - remove any and type the seo callback

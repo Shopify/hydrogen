@@ -7,13 +7,13 @@ import {
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import {Money, Image, flattenConnection} from '@shopify/hydrogen-react';
+import {Money, Image, flattenConnection} from '@shopify/storefront-kit-react';
 import {statusMessage} from '~/lib/utils';
 import type {
   DiscountApplication,
   DiscountApplicationConnection,
   OrderLineItem,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import {Link, Heading, PageHeader, Text} from '~/components';
 import {getCustomerOrder} from '~/data';
 
@@ -47,11 +47,9 @@ export async function loader({request, context, params}: LoaderArgs) {
     throw new Response('Order not found', {status: 404});
   }
 
-  const lineItems = flattenConnection<OrderLineItem>(
-    order.lineItems!,
-  ) as Array<OrderLineItem>;
+  const lineItems = flattenConnection(order.lineItems!) as Array<OrderLineItem>;
 
-  const discountApplications = flattenConnection<DiscountApplication>(
+  const discountApplications = flattenConnection(
     order.discountApplications as DiscountApplicationConnection,
   );
 
@@ -164,7 +162,7 @@ export default function OrderRoute() {
                           <dt className="sr-only">Price</dt>
                           <dd className="truncate sm:hidden">
                             <Text size="fine" className="mt-4">
-                              <Money data={lineItem.variant!.priceV2!} />
+                              <Money data={lineItem.variant!.price!} />
                             </Text>
                           </dd>
                           <dt className="sr-only">Quantity</dt>
@@ -177,7 +175,7 @@ export default function OrderRoute() {
                       </div>
                     </td>
                     <td className="hidden px-3 py-4 text-right align-top sm:align-middle sm:table-cell">
-                      <Money data={lineItem.variant!.priceV2!} />
+                      <Money data={lineItem.variant!.price!} />
                     </td>
                     <td className="hidden px-3 py-4 text-right align-top sm:align-middle sm:table-cell">
                       {lineItem.quantity}

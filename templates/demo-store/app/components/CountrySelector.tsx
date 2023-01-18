@@ -5,7 +5,7 @@ import {useInView} from 'react-intersection-observer';
 import {Localizations, Locale, CartAction} from '~/lib/type';
 import {DEFAULT_LOCALE} from '~/lib/utils';
 import clsx from 'clsx';
-import {CartBuyerIdentityInput} from '@shopify/hydrogen-react/storefront-api-types';
+import {CartBuyerIdentityInput} from '@shopify/storefront-kit-react/storefront-api-types';
 
 export function CountrySelector() {
   const [root] = useMatches();

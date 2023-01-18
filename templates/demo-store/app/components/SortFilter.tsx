@@ -16,7 +16,7 @@ import type {
   FilterType,
   Filter,
   Collection,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import {
   AppliedFilter,
   SortParam,

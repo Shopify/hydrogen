@@ -1,11 +1,11 @@
 import clsx from 'clsx';
 import type {SerializeFrom} from '@shopify/remix-oxygen';
-import {MediaFile} from '@shopify/hydrogen-react';
+import {MediaFile} from '@shopify/storefront-kit-react';
 import type {
   MediaImage,
   Media,
   Video as MediaVideo,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import {Heading, Text, Link} from '~/components';
 import type {CollectionHero} from '~/routes/($lang)/index';
 
@@ -104,9 +104,7 @@ function SpreadMedia({
   return (
     <MediaFile
       data={data}
-      alt={data.alt}
       className="block object-cover w-full h-full"
-      // @ts-expect-error Need to update the types in H-UI to allow optional properties on this object
       mediaOptions={{
         video: {
           controls: false,
@@ -123,6 +121,7 @@ function SpreadMedia({
           widths,
           sizes,
           width,
+          alt: data.alt || '',
         },
       }}
     />

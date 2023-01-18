@@ -1,3 +1,5 @@
+import {Product} from '@shopify/storefront-kit-react/storefront-api-types';
+
 // Demo store placeholders
 const PLACEHOLDERS = {
   HEROS: [
@@ -237,6 +239,6 @@ export function getProductInfoPlaceholder() {
   return getMultipleRandom(PLACEHOLDERS.PRODUCT_INFO, 3);
 }
 
-export function getProductPlaceholder() {
-  return PLACEHOLDERS.PRODUCT;
+export function getProductPlaceholder(): Product {
+  return PLACEHOLDERS.PRODUCT as unknown as Product;
 }
