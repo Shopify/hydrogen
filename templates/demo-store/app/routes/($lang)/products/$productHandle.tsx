@@ -8,7 +8,7 @@ import {
   useLocation,
   useTransition,
 } from '@remix-run/react';
-import {Money, ShopPayButton} from '@shopify/hydrogen-react';
+import {Money, ShopPayButton} from '@shopify/storefront-kit-react';
 import {
   Heading,
   IconCaret,
@@ -31,7 +31,7 @@ import type {
   Product as ProductType,
   Shop,
   ProductConnection,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import {
   MEDIA_FRAGMENT,
   PRODUCT_CARD_FRAGMENT,

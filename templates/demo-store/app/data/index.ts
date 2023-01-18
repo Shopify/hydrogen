@@ -15,7 +15,7 @@ import type {
   CustomerRecoverPayload,
   CustomerResetPayload,
   CustomerActivatePayload,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import {type EnhancedMenu, parseMenu, assertApiErrors} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/($lang)/account/__private/logout';
@@ -155,11 +155,11 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
           width
           height
         }
-        price: priceV2 {
+        price {
           amount
           currencyCode
         }
-        compareAtPrice: compareAtPriceV2 {
+        compareAtPrice {
           amount
           currencyCode
         }
@@ -252,10 +252,10 @@ fragment CartFragment on Cart {
           ... on ProductVariant {
             id
             availableForSale
-            compareAtPriceV2 {
+            compareAtPrice {
               ...MoneyFragment
             }
-            priceV2 {
+            price {
               ...MoneyFragment
             }
             requiresShipping
@@ -709,7 +709,7 @@ const CUSTOMER_ORDER_QUERY = `#graphql
     image {
       ...Image
     }
-    priceV2 {
+    price {
       ...Money
     }
     product {

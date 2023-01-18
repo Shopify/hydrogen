@@ -4,7 +4,7 @@ import {
   Image,
   Money,
   useMoney,
-} from '@shopify/hydrogen-react';
+} from '@shopify/storefront-kit-react';
 import type {SerializeFrom} from '@shopify/remix-oxygen';
 import {Text, Link, AddToCartButton} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
@@ -12,10 +12,7 @@ import {getProductPlaceholder} from '~/lib/placeholders';
 import type {
   MoneyV2,
   Product,
-  ProductVariant,
-  ProductVariantConnection,
-} from '@shopify/hydrogen-react/storefront-api-types';
-import {useFetcher, useMatches} from '@remix-run/react';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 
 export function ProductCard({
   product,
@@ -32,12 +29,10 @@ export function ProductCard({
 }) {
   let cardLabel;
 
-  const cartProduct = product?.variants ? product : getProductPlaceholder();
-  if (!cartProduct?.variants?.nodes?.length) return null;
+  const cardProduct = product?.variants ? product : getProductPlaceholder();
+  if (!cardProduct?.variants?.nodes?.length) return null;
 
-  const firstVariant = flattenConnection<ProductVariant>(
-    cartProduct?.variants as ProductVariantConnection,
-  )[0];
+  const firstVariant = flattenConnection(cardProduct.variants)[0];
 
   if (!firstVariant) return null;
   const {image, price, compareAtPrice} = firstVariant;

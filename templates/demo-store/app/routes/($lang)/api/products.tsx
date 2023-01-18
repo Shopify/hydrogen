@@ -1,6 +1,6 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
-import {flattenConnection} from '@shopify/hydrogen-react';
-import {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
+import {flattenConnection} from '@shopify/storefront-kit-react';
+import {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 
 /**
@@ -75,11 +75,11 @@ const PRODUCTS_QUERY = `#graphql
           width
           height
         }
-        price: priceV2 {
+        price {
           amount
           currencyCode
         }
-        compareAtPrice: compareAtPriceV2 {
+        compareAtPrice {
           amount
           currencyCode
         }

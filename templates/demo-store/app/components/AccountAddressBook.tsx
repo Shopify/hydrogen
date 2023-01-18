@@ -2,7 +2,7 @@ import {Form} from '@remix-run/react';
 import type {
   Customer,
   MailingAddress,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import {Button, Link, Text} from '~/components';
 
 export function AccountAddressBook({

@@ -1,4 +1,4 @@
-import type {Customer} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Customer} from '@shopify/storefront-kit-react/storefront-api-types';
 import {Link} from '~/components';
 
 export function AccountDetails({customer}: {customer: Customer}) {

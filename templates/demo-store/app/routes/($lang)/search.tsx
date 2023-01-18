@@ -1,12 +1,12 @@
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {flattenConnection} from '@shopify/hydrogen-react';
+import {flattenConnection} from '@shopify/storefront-kit-react';
 import {Await, Form, useLoaderData} from '@remix-run/react';
 import type {
   Collection,
   CollectionConnection,
   Product,
   ProductConnection,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
 import {

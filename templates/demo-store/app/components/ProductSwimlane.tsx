@@ -1,5 +1,5 @@
 import type {SerializeFrom} from '@shopify/remix-oxygen';
-import type {Product} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Product} from '@shopify/storefront-kit-react/storefront-api-types';
 import {ProductCard, Section} from '~/components';
 
 const mockProducts = new Array(12).fill('');

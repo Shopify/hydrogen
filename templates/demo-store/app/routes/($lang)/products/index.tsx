@@ -1,6 +1,6 @@
 import {type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
+import type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {
   PageHeader,
