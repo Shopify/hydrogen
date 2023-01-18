@@ -45,7 +45,7 @@
   ],
   "peerDependencies": {
     "@remix-run/react": "*",
-    "@remix-run/server-runtime": "1.11.0-pre.1",
+    "@remix-run/server-runtime": "1.11.0",
     "@shopify/hydrogen-react": "*"
   },
   "dependencies": {
