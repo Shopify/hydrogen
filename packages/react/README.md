@@ -1,12 +1,14 @@
-<div style="text-align:center">
+<div align="center">
 
 # React Storefront Kit
+
+React Storefront Kit provides React components, reusable functions, and utilities for interacting with the Storefront API. 
+
+**IMPORTANT:** Refer to how this package is [versioned](../../README.md#versioning).
 
 <a href="https://www.npmjs.com/package/@shopify/storefront-kit-react"><img src="https://img.shields.io/npm/v/@shopify/storefront-kit-react/latest.svg"></a> <a href="https://www.npmjs.com/package/@shopify/storefront-kit-react"><img src="https://img.shields.io/npm/v/@shopify/storefront-kit-react/next.svg"></a>
 
 </div>
-
-**IMPORTANT:** Refer to how this package is [versioned](../../README.md#versioning).
 
 This document contains the following topics:
 
@@ -15,7 +17,7 @@ This document contains the following topics:
 - [Development and production bundles](#development-and-production-bundles)
 - [React Storefront Kit in the browser](#react-storefront-kit-in-the-browser)
 - [Enabling autocompletion for the Storefront API](#enable-storefront-api-graphql-autocompletion)
-- [Setting TypeScript types for Storefront API objects](#set-typescript-types)
+- [Setting TypeScript types for Storefront API objects](#typescript)
 - [Troubleshooting](#troubleshooting)
 
 ## Getting started
