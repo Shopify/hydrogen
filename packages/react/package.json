@@ -1,6 +1,6 @@
 {
   "name": "@shopify/storefront-kit-react",
-  "version": "2023.1.2",
+  "version": "2023.1.3",
   "description": "React components, hooks, and utilities for creating custom Shopify storefronts",
   "homepage": "https://github.com/Shopify/storefront-kit/tree/main/packages/react",
   "license": "MIT",
