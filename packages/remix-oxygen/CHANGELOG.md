@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.0.0-alpha.2
+
+### Patch Changes
+
+- Remove the local `/__health` route because it's not required in Oxygen anymore. ([#361](https://github.com/Shopify/h2/pull/361)) by [@frandiox](https://github.com/frandiox)
+
 ## 1.0.0-alpha.1
 
 ### Patch Changes
