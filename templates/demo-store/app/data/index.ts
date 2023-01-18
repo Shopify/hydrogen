@@ -18,7 +18,7 @@ import type {
 } from '@shopify/storefront-kit-react/storefront-api-types';
 import {type EnhancedMenu, parseMenu, assertApiErrors} from '~/lib/utils';
 import invariant from 'tiny-invariant';
-import {logout} from '~/routes/account/__private/logout';
+import {logout} from '~/routes/($lang)/account/__private/logout';
 import type {AppLoadContext} from '@shopify/remix-oxygen';
 
 export interface LayoutData {

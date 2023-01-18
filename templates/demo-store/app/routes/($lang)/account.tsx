@@ -24,7 +24,7 @@ import {
   ProductSwimlane,
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
-import {redirect, json, defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {redirect, json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/storefront-kit-react';
 import {getCustomer} from '~/data';
 import {getFeaturedData} from './featured-products';
@@ -55,7 +55,7 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const orders = flattenConnection(customer?.orders) as Order[];
 
-  return defer({
+  return json({
     isAuthenticated,
     customer,
     heading,

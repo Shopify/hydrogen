@@ -11,7 +11,7 @@ import {Blog} from '@shopify/storefront-kit-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
-import styles from '../../styles/custom-font.css';
+import styles from '../../../styles/custom-font.css';
 
 const BLOG_HANDLE = 'journal';
 
