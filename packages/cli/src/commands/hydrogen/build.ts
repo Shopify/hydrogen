@@ -103,6 +103,11 @@ export async function runBuild({
       );
     }
   }
+
+  // The Remix compiler hangs due to a bug in ESBuild:
+  // https://github.com/evanw/esbuild/issues/2727
+  // The actual build has already finished so we can kill the process.
+  process.exit(0);
 }
 
 export async function copyPublicFiles(
