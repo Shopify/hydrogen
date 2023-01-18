@@ -4,4 +4,5 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Upgrade to the latest Remix experimental defer release, 0.0.0-experimental-2f4891673
+- Upgrade to the latest Remix experimental defer release, 1.11.0-pre.1
+- Replace redundant i18n routes with a single root optional route segment `($lang)`
