@@ -68,15 +68,18 @@ export async function runBuild({
 
   output.info(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
-  const remix = await import('@remix-run/dev/dist/compiler.js');
+  const {build} = await import('@remix-run/dev/dist/compiler/build.js');
+  const {logCompileFailure} = await import(
+    '@remix-run/dev/dist/compiler/onCompileFailure.js'
+  );
 
   await Promise.all([
     copyPublicFiles(publicPath, buildPathClient),
-    remix.build(remixConfig, {
+    build(remixConfig, {
       mode: process.env.NODE_ENV as any,
       sourcemap,
-      onBuildFailure: (failure: Error) => {
-        remix.formatBuildFailure(failure);
+      onCompileFailure: (failure: Error) => {
+        logCompileFailure(failure);
         // Stop here and prevent waterfall errors
         throw Error();
       },
@@ -100,6 +103,11 @@ export async function runBuild({
       );
     }
   }
+
+  // The Remix compiler hangs due to a bug in ESBuild:
+  // https://github.com/evanw/esbuild/issues/2727
+  // The actual build has already finished so we can kill the process.
+  process.exit(0);
 }
 
 export async function copyPublicFiles(
