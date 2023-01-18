@@ -155,11 +155,11 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
           width
           height
         }
-        price: priceV2 {
+        price {
           amount
           currencyCode
         }
-        compareAtPrice: compareAtPriceV2 {
+        compareAtPrice {
           amount
           currencyCode
         }
@@ -252,10 +252,10 @@ fragment CartFragment on Cart {
           ... on ProductVariant {
             id
             availableForSale
-            compareAtPriceV2 {
+            compareAtPrice {
               ...MoneyFragment
             }
-            priceV2 {
+            price {
               ...MoneyFragment
             }
             requiresShipping
@@ -709,7 +709,7 @@ const CUSTOMER_ORDER_QUERY = `#graphql
     image {
       ...Image
     }
-    priceV2 {
+    price {
       ...Money
     }
     product {

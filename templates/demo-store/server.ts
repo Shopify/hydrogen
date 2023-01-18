@@ -39,7 +39,7 @@ export default {
         publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
         storeDomain: env.PUBLIC_STORE_DOMAIN,
-        storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2022-10',
+        storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2023-01',
       });
 
       /**

@@ -93,11 +93,6 @@ export function createStorefrontClient({
     );
   }
 
-  clientOptions.storeDomain = clientOptions.storeDomain.replace(
-    '.myshopify.com',
-    '',
-  );
-
   const {
     getPublicTokenHeaders,
     getPrivateTokenHeaders,

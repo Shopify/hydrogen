@@ -164,7 +164,7 @@ export default function OrderRoute() {
                           <dt className="sr-only">Price</dt>
                           <dd className="truncate sm:hidden">
                             <Text size="fine" className="mt-4">
-                              <Money data={lineItem.variant!.priceV2!} />
+                              <Money data={lineItem.variant!.price!} />
                             </Text>
                           </dd>
                           <dt className="sr-only">Quantity</dt>
@@ -177,7 +177,7 @@ export default function OrderRoute() {
                       </div>
                     </td>
                     <td className="hidden px-3 py-4 text-right align-top sm:align-middle sm:table-cell">
-                      <Money data={lineItem.variant!.priceV2!} />
+                      <Money data={lineItem.variant!.price!} />
                     </td>
                     <td className="hidden px-3 py-4 text-right align-top sm:align-middle sm:table-cell">
                       {lineItem.quantity}
