@@ -21,6 +21,20 @@ const documents = {
 
 /**
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
+ *
+ *
+ * @example
+ * ```ts
+ * const query = gql(`query GetUser($id: ID!) { user(id: $id) { name } }`);
+ * ```
+ *
+ * The query argument is unknown!
+ * Please regenerate the types.
+ */
+export function graphql(source: string): unknown;
+
+/**
+ * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query Collection($handle: String!) {\n    collection(handle: $handle) {\n      id\n      handle\n      title\n      description\n    }\n  }\n"): (typeof documents)["\n  query Collection($handle: String!) {\n    collection(handle: $handle) {\n      id\n      handle\n      title\n      description\n    }\n  }\n"];
 /**
@@ -35,20 +49,6 @@ export function graphql(source: "\n  query Product {\n    shop {\n      name\n  
  * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
  */
 export function graphql(source: "\n  query Search($searchTerm: String) {\n    products(first: 1, sortKey: RELEVANCE, query: $searchTerm) {\n      pageInfo {\n        startCursor\n        endCursor\n        hasNextPage\n        hasPreviousPage\n      }\n    }\n  }\n"): (typeof documents)["\n  query Search($searchTerm: String) {\n    products(first: 1, sortKey: RELEVANCE, query: $searchTerm) {\n      pageInfo {\n        startCursor\n        endCursor\n        hasNextPage\n        hasPreviousPage\n      }\n    }\n  }\n"];
-
-/**
- * The graphql function is used to parse GraphQL queries into a document that can be used by GraphQL clients.
- *
- *
- * @example
- * ```ts
- * const query = gql(`query GetUser($id: ID!) { user(id: $id) { name } }`);
- * ```
- *
- * The query argument is unknown!
- * Please regenerate the types.
-**/
-export function graphql(source: string): unknown;
 
 export function graphql(source: string) {
   return (documents as any)[source] ?? {};

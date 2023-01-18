@@ -169,6 +169,67 @@ describe('<ShopifyProvider/>', () => {
       ).toBe('https://test.myshopify.com');
     });
   });
+
+  describe(`getStorefrontApiUrl`, () => {
+    it(`generates the API URL`, () => {
+      const {result} = renderHook(() => useShop(), {
+        wrapper: ({children}) => (
+          <ShopifyProvider
+            shopifyConfig={{
+              ...SHOPIFY_CONFIG,
+              storeDomain: 'https://notashop.myshopify.com',
+            }}
+          >
+            {children}
+          </ShopifyProvider>
+        ),
+      });
+
+      expect(result.current.getStorefrontApiUrl()).toBe(
+        'https://notashop.myshopify.com/api/2023-01/graphql.json'
+      );
+    });
+
+    it(`allows overrides`, () => {
+      const {result} = renderHook(() => useShop(), {
+        wrapper: ({children}) => (
+          <ShopifyProvider
+            shopifyConfig={{
+              ...SHOPIFY_CONFIG,
+              storeDomain: 'https://notashop.myshopify.com',
+            }}
+          >
+            {children}
+          </ShopifyProvider>
+        ),
+      });
+
+      expect(
+        result.current.getStorefrontApiUrl({
+          storeDomain: 'https://test.myshopify.com',
+        })
+      ).toBe('https://test.myshopify.com/api/2023-01/graphql.json');
+    });
+
+    it(`handles when a '/' is at the end of the url and doesn't add an extra one`, () => {
+      const {result} = renderHook(() => useShop(), {
+        wrapper: ({children}) => (
+          <ShopifyProvider
+            shopifyConfig={{
+              ...SHOPIFY_CONFIG,
+              storeDomain: 'https://notashop.myshopify.com/',
+            }}
+          >
+            {children}
+          </ShopifyProvider>
+        ),
+      });
+
+      expect(result.current.getStorefrontApiUrl()).toBe(
+        'https://notashop.myshopify.com/api/2023-01/graphql.json'
+      );
+    });
+  });
 });
 
 export function getShopifyConfig(

@@ -65,16 +65,12 @@ export function ShopifyProvider({
       },
       getShopifyDomain,
       getStorefrontApiUrl(overrideProps) {
-        if (overrideProps?.storeDomain?.includes('.myshopify.com')) {
-          if (__HYDROGEN_DEV__) {
-            console.warn(
-              `<ShopifyProvider/>: passing a 'storeDomain' prop that includes '.myshopify.com' will be unsupported in the future. Passing only the subdomain (for example, if the URL is 'test.myshopify.com', passing in 'test') will be the supported way going forward.`
-            );
-          }
-        }
-        return `${getShopifyDomain({
+        const finalDomainUrl = getShopifyDomain({
           storeDomain: overrideProps?.storeDomain ?? shopifyConfig.storeDomain,
-        })}/api/${
+        });
+        return `${finalDomainUrl}${
+          finalDomainUrl.endsWith('/') ? '' : '/'
+        }api/${
           overrideProps?.storefrontApiVersion ??
           shopifyConfig.storefrontApiVersion
         }/graphql.json`;

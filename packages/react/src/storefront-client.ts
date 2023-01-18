@@ -42,14 +42,11 @@ export function createStorefrontClient({
 
   return {
     getShopifyDomain(overrideProps) {
-      return `https://${
-        overrideProps?.storeDomain ?? storeDomain
-      }.myshopify.com`;
+      return overrideProps?.storeDomain ?? storeDomain;
     },
     getStorefrontApiUrl(overrideProps) {
-      return `https://${
-        overrideProps?.storeDomain ?? storeDomain
-      }.myshopify.com/api/${
+      const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;
+      return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
       }/graphql.json`;
     },

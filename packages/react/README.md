@@ -2,7 +2,7 @@
 
 # React Storefront Kit
 
-React Storefront Kit provides React components, reusable functions, and utilities for interacting with the Storefront API. 
+React Storefront Kit provides React components, reusable functions, and utilities for interacting with the Storefront API.
 
 **IMPORTANT:** Refer to how this package is [versioned](../../README.md#versioning).
 

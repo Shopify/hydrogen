@@ -59,7 +59,7 @@ describe(`createStorefrontClient`, () => {
 
       expect(
         client.getShopifyDomain({
-          storeDomain: 'newdomain',
+          storeDomain: 'https://newdomain.myshopify.com',
         })
       ).toBe(`https://newdomain.myshopify.com`);
     });
@@ -79,10 +79,22 @@ describe(`createStorefrontClient`, () => {
 
       expect(
         client.getStorefrontApiUrl({
-          storeDomain: 'newdomain',
+          storeDomain: 'https://newdomain.myshopify.com',
           storefrontApiVersion: '2000-01',
         })
       ).toBe(`https://newdomain.myshopify.com/api/2000-01/graphql.json`);
+    });
+
+    it(`handles when a '/' is at the end of the url and doesn't add an extra one`, () => {
+      const defaultConfig = generateConfig();
+      const client = createStorefrontClient({
+        ...defaultConfig,
+        storeDomain: defaultConfig.storeDomain + '/',
+      });
+
+      expect(client.getStorefrontApiUrl()).toBe(
+        `https://testing.myshopify.com/api/${SFAPI_VERSION}/graphql.json`
+      );
     });
   });
 
@@ -166,7 +178,7 @@ function generateConfig(
 ): StorefrontClientProps {
   return {
     storefrontApiVersion: SFAPI_VERSION,
-    storeDomain: 'testing',
+    storeDomain: 'https://testing.myshopify.com',
     ...props,
   };
 }
