@@ -5,12 +5,17 @@ import {graphql} from '../gql/gql';
 import {request} from 'graphql-request';
 import type {GetServerSideProps} from 'next';
 import {shopClient} from '../src/shopify-client';
-import type {IndexQueryQuery} from '../gql/graphql';
+import type {ProductQuery} from '../gql/graphql';
 import {
-  Image as ShopifyImage,
   type StorefrontApiResponseOk,
   useShop,
   AnalyticsPageType,
+  sendShopifyAnalytics,
+  AnalyticsEventName,
+  getClientBrowserParameters,
+  type ShopifyAddToCartPayload,
+  ShopifyAnalyticsProduct,
+  ShopifyAnalyticsPayload,
 } from '@shopify/storefront-kit-react';
 import Link from 'next/link';
 
@@ -29,13 +34,27 @@ export const getServerSideProps: GetServerSideProps = async () => {
       requestHeaders: shopClient.getPublicTokenHeaders(),
     });
 
+    const product = response.products.nodes[0];
+    const variant = product.variants.nodes[0];
+
+    const productAnalytics: ShopifyAnalyticsProduct = {
+      productGid: product.id,
+      variantGid: variant.id,
+      name: product.title,
+      variantName: variant.title,
+      brand: product.vendor,
+      price: variant.price.amount,
+    };
+
     // @TODO I don't love how we do this with 'errors' and 'data'
     return {
       props: {
         data: response,
         errors: null,
         analytics: {
-          pageType: AnalyticsPageType.home,
+          pageType: AnalyticsPageType.product,
+          resourceId: product.id,
+          products: [productAnalytics],
         },
       },
     };
@@ -45,16 +64,20 @@ export const getServerSideProps: GetServerSideProps = async () => {
   }
 };
 
-export default function Home({
+export default function Product({
   data,
   errors,
-}: StorefrontApiResponseOk<IndexQueryQuery>) {
+  analytics,
+}: StorefrontApiResponseOk<ProductQuery> & {
+  analytics: ShopifyAnalyticsPayload;
+}) {
   const {storeDomain} = useShop();
 
   if (!data || errors) {
     console.error(errors);
     return <div>Whoops there was an error! Please refresh and try again.</div>;
   }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -64,24 +87,41 @@ export default function Home({
       </Head>
 
       <main className={styles.main}>
-        <h1>Welcome to {data?.shop.name} on NextJS</h1>
-
-        {/* @TODO Using storefront-kit-react's <Image/> is nice, but we should also provide our 'loader' so you can used NextJS' Image component as well */}
-        <ShopifyImage
-          data={data.products.nodes[0].variants.nodes[0].image ?? {}}
-          width={500}
-          loading="eager"
-        />
+        <h1>Product Page</h1>
         <div>Storefront API Domain: {storeDomain}</div>
         <br />
+        <button
+          onClick={() => {
+            if (analytics.products) {
+              const payload: ShopifyAddToCartPayload = {
+                ...getClientBrowserParameters(),
+                ...analytics,
+                cartId: 'abc123',
+                products: [
+                  {
+                    ...analytics.products[0],
+                    quantity: 1,
+                  },
+                ],
+              };
+              sendShopifyAnalytics({
+                eventName: AnalyticsEventName.ADD_TO_CART,
+                payload,
+              });
+            }
+          }}
+        >
+          Analytics - Add to cart
+        </button>
+        <br />
+        <Link href="/">Back to Home</Link>
         <Link href="/collection">Go to Collection</Link>
-        <Link href="/product">Go to Product</Link>
         <Link href="/search">Go to Search</Link>
       </main>
 
       <footer className={styles.footer}>
         <a
-          href="https://vercel.com?utm_source=storefront-kit-react-monorepo"
+          href="https://vercel.com?utm_source=hydrogen-react-monorepo"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -96,7 +136,7 @@ export default function Home({
 }
 
 const query = graphql(`
-  query IndexQuery {
+  query Product {
     shop {
       name
     }
@@ -106,11 +146,16 @@ const query = graphql(`
         # blah
         id
         title
+        vendor
         publishedAt
         handle
         variants(first: 1) {
           nodes {
             id
+            title
+            price {
+              amount
+            }
             image {
               url
               altText

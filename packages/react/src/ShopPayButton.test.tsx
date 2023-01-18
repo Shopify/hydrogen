@@ -3,9 +3,9 @@ import {render} from '@testing-library/react';
 import {ShopifyProvider} from './ShopifyProvider.js';
 import {
   ShopPayButton,
-  getIdFromGid,
   DoublePropsErrorMessage,
   MissingPropsErrorMessage,
+  InvalidPropsErrorMessage,
 } from './ShopPayButton.js';
 import {getShopifyConfig} from './ShopifyProvider.test.js';
 
@@ -48,7 +48,7 @@ describe(`<ShopPayButton />`, () => {
   });
 
   it(`creates the correct attribute when using 'variantIds'`, () => {
-    const fakeId = '123';
+    const fakeId = 'gid://shopify/ProductVariant/123';
     const {container} = render(<ShopPayButton variantIds={[fakeId]} />, {
       wrapper: ({children}) => (
         <ShopifyProvider shopifyConfig={getShopifyConfig()}>
@@ -67,7 +67,7 @@ describe(`<ShopPayButton />`, () => {
   });
 
   it(`creates the correct attribute when using 'variantIdsAndQuantities'`, () => {
-    const fakeId = '123';
+    const fakeId = 'gid://shopify/ProductVariant/123';
     const fakeQuantity = 2;
     const {container} = render(
       <ShopPayButton
@@ -95,7 +95,9 @@ describe(`<ShopPayButton />`, () => {
     const {container} = render(
       <ShopPayButton
         width="100%"
-        variantIdsAndQuantities={[{id: '123', quantity: 2}]}
+        variantIdsAndQuantities={[
+          {id: 'gid://shopify/ProductVariant/123', quantity: 2},
+        ]}
       />,
       {
         wrapper: ({children}) => (
@@ -112,9 +114,16 @@ describe(`<ShopPayButton />`, () => {
     );
   });
 
-  describe(`getIdFromGid`, () => {
-    it(`should handle undefined`, () => {
-      expect(getIdFromGid()).toBe(undefined);
-    });
+  it(`throws error if invalid 'variantIds' is supplied`, () => {
+    const fakeId = '123';
+    expect(() =>
+      render(<ShopPayButton variantIds={[fakeId]} />, {
+        wrapper: ({children}) => (
+          <ShopifyProvider shopifyConfig={getShopifyConfig()}>
+            {children}
+          </ShopifyProvider>
+        ),
+      })
+    ).toThrow(InvalidPropsErrorMessage);
   });
 });

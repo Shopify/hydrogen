@@ -11,8 +11,8 @@ import {
   SHOPIFY_Y,
   SHOPIFY_S,
 } from './cart-constants.js';
-import {parse} from 'worktop/cookie';
 import type {StorefrontApiResponseOkPartial} from './storefront-api-response.types.js';
+import {getShopifyCookies} from './cookies-utils.js';
 
 export function useCartFetch() {
   const {storefrontId, getPublicTokenHeaders, getStorefrontApiUrl} = useShop();
@@ -32,11 +32,9 @@ export function useCartFetch() {
       }
 
       // Find Shopify cookies
-      const cookieData = parse(document.cookie);
-      if (cookieData[SHOPIFY_Y] && cookieData[SHOPIFY_S]) {
-        headers[SHOPIFY_STOREFRONT_Y_HEADER] = cookieData[SHOPIFY_Y];
-        headers[SHOPIFY_STOREFRONT_S_HEADER] = cookieData[SHOPIFY_S];
-      }
+      const cookieData = getShopifyCookies(document.cookie);
+      headers[SHOPIFY_STOREFRONT_Y_HEADER] = cookieData[SHOPIFY_Y];
+      headers[SHOPIFY_STOREFRONT_S_HEADER] = cookieData[SHOPIFY_S];
 
       return fetch(getStorefrontApiUrl(), {
         method: 'POST',

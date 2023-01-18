@@ -5,9 +5,8 @@ import {graphql} from '../gql/gql';
 import {request} from 'graphql-request';
 import type {GetServerSideProps} from 'next';
 import {shopClient} from '../src/shopify-client';
-import type {IndexQueryQuery} from '../gql/graphql';
+import type {CollectionQuery} from '../gql/graphql';
 import {
-  Image as ShopifyImage,
   type StorefrontApiResponseOk,
   useShop,
   AnalyticsPageType,
@@ -25,9 +24,18 @@ export const getServerSideProps: GetServerSideProps = async () => {
     const response = await request({
       url: shopClient.getStorefrontApiUrl(),
       document: query,
+      variables: {
+        handle: 'freestyle',
+      },
       // @TODO: convert to 'getPrivateTokenHeaders({buyerIp})'
       requestHeaders: shopClient.getPublicTokenHeaders(),
     });
+
+    if (!response.collection) {
+      return {props: {data: null, errors: ['No collection found']}};
+    }
+
+    const collection = response.collection;
 
     // @TODO I don't love how we do this with 'errors' and 'data'
     return {
@@ -35,7 +43,9 @@ export const getServerSideProps: GetServerSideProps = async () => {
         data: response,
         errors: null,
         analytics: {
-          pageType: AnalyticsPageType.home,
+          pageType: AnalyticsPageType.collection,
+          resourceId: collection.id,
+          collectionHandle: collection.handle,
         },
       },
     };
@@ -45,16 +55,17 @@ export const getServerSideProps: GetServerSideProps = async () => {
   }
 };
 
-export default function Home({
+export default function Collection({
   data,
   errors,
-}: StorefrontApiResponseOk<IndexQueryQuery>) {
+}: StorefrontApiResponseOk<CollectionQuery>) {
   const {storeDomain} = useShop();
 
   if (!data || errors) {
     console.error(errors);
     return <div>Whoops there was an error! Please refresh and try again.</div>;
   }
+
   return (
     <div className={styles.container}>
       <Head>
@@ -64,24 +75,19 @@ export default function Home({
       </Head>
 
       <main className={styles.main}>
-        <h1>Welcome to {data?.shop.name} on NextJS</h1>
-
-        {/* @TODO Using storefront-kit-react's <Image/> is nice, but we should also provide our 'loader' so you can used NextJS' Image component as well */}
-        <ShopifyImage
-          data={data.products.nodes[0].variants.nodes[0].image ?? {}}
-          width={500}
-          loading="eager"
-        />
+        <h1>Collection Page</h1>
         <div>Storefront API Domain: {storeDomain}</div>
         <br />
-        <Link href="/collection">Go to Collection</Link>
+
+        <br />
+        <Link href="/">Back to Home</Link>
         <Link href="/product">Go to Product</Link>
         <Link href="/search">Go to Search</Link>
       </main>
 
       <footer className={styles.footer}>
         <a
-          href="https://vercel.com?utm_source=storefront-kit-react-monorepo"
+          href="https://vercel.com?utm_source=hydrogen-react-monorepo"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -96,30 +102,12 @@ export default function Home({
 }
 
 const query = graphql(`
-  query IndexQuery {
-    shop {
-      name
-    }
-    products(first: 1) {
-      nodes {
-        # if you uncomment 'blah', it should have a GraphQL validation error in your IDE if you have a GraphQL plugin. It should also give an error during 'npm run dev'
-        # blah
-        id
-        title
-        publishedAt
-        handle
-        variants(first: 1) {
-          nodes {
-            id
-            image {
-              url
-              altText
-              width
-              height
-            }
-          }
-        }
-      }
+  query Collection($handle: String!) {
+    collection(handle: $handle) {
+      id
+      handle
+      title
+      description
     }
   }
 `);
