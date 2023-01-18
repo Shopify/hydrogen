@@ -38,7 +38,7 @@ export default {
         i18n: getLocaleFromRequest(request),
         publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
-        storeDomain: env.PUBLIC_STORE_DOMAIN,
+        storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,
         storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2023-01',
       });
 

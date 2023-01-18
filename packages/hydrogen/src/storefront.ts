@@ -98,10 +98,7 @@ export function createStorefrontClient({
     getPrivateTokenHeaders,
     getStorefrontApiUrl,
     getShopifyDomain,
-  } = createStorefrontUtilities({
-    ...clientOptions,
-    storeDomain: `https://${clientOptions.storeDomain}`,
-  });
+  } = createStorefrontUtilities(clientOptions);
 
   const getHeaders = clientOptions.privateStorefrontToken
     ? getPrivateTokenHeaders
