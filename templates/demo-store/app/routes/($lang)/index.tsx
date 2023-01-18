@@ -9,6 +9,7 @@ import type {
   Metafield,
   ProductConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import {ProductCollection} from 'schema-dts';
 
 interface HomeSeoData {
   shop: {
@@ -126,7 +127,7 @@ export default function Homepage() {
         <Suspense>
           <Await resolve={featuredProducts}>
             {({products}) => {
-              if (!products?.nodes) return null;
+              if (!products?.nodes) return <></>;
               return (
                 <ProductSwimlane
                   products={products.nodes}
@@ -143,7 +144,7 @@ export default function Homepage() {
         <Suspense fallback={<Hero {...skeletons[1]} />}>
           <Await resolve={secondaryHero}>
             {({hero}) => {
-              if (!hero) return null;
+              if (!hero) return <></>;
               return <Hero {...hero} />;
             }}
           </Await>
@@ -154,7 +155,7 @@ export default function Homepage() {
         <Suspense>
           <Await resolve={featuredCollections}>
             {({collections}) => {
-              if (!collections?.nodes) return null;
+              if (!collections?.nodes) return <></>;
               return (
                 <FeaturedCollections
                   collections={collections.nodes}
@@ -170,7 +171,7 @@ export default function Homepage() {
         <Suspense fallback={<Hero {...skeletons[2]} />}>
           <Await resolve={tertiaryHero}>
             {({hero}) => {
-              if (!hero) return null;
+              if (!hero) return <></>;
               return <Hero {...hero} />;
             }}
           </Await>

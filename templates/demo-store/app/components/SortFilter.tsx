@@ -17,7 +17,10 @@ import type {
   Filter,
   Collection,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {AppliedFilter, SortParam} from '~/routes/collections/$collectionHandle';
+import {
+  AppliedFilter,
+  SortParam,
+} from '~/routes/($lang)/collections/$collectionHandle';
 
 type Props = {
   filters: Filter[];
