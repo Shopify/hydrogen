@@ -1,10 +1,10 @@
-<div style="text-align:center">
+<div align="center">
 
 # Storefront Kit
 
 <a href="https://github.com/Shopify/storefront-kit/blob/main/LICENSE.md"><img src="https://img.shields.io/npm/l/@shopify/hydrogen.svg?sanitize=true" alt="License"></a>
 
-Storefront Kit is a library of reusable components and utilities for building Shopify-powered custom storefronts.
+Storefront Kit is a collection of libraries to accelerate building Shopify-powered custom storefronts.
 
 📚 [Docs](https://shopify.dev/custom-storefronts/react-storefront-kit) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 📝 [Changelog](https://github.com/Shopify/storefront-kit/blob/main/packages/react/CHANGELOG.md) | 🖼 [Hydrogen Framework](https://github.com/Shopify/hydrogen)
 
