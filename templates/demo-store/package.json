@@ -17,22 +17,10 @@
     "@headlessui/react": "^1.7.2",
     "@remix-run/react": "1.11.0-pre.1",
     "@shopify/cli": "^3.23.0",
-<<<<<<< HEAD
     "@shopify/cli-hydrogen": "^4.0.0-alpha.8",
     "@shopify/hydrogen-react": "^2022.10.3",
     "@shopify/hydrogen": "^2.0.0-alpha.2",
     "@shopify/remix-oxygen": "^1.0.0-alpha.2",
-||||||| parent of cd31b8d (Upgrade to latest Remix deferred experimental release 0.0.0-experimental-2f4891673)
-    "@shopify/cli-hydrogen": "^4.0.0-alpha.7",
-    "@shopify/hydrogen-react": "^2022.10.3",
-    "@shopify/hydrogen": "^2.0.0-alpha.1",
-    "@shopify/remix-oxygen": "^1.0.0-alpha.1",
-=======
-    "@shopify/cli-hydrogen": "^4.0.0-alpha.7",
-    "@shopify/hydrogen": "^2.0.0-alpha.1",
-    "@shopify/hydrogen-react": "^2022.10.3",
-    "@shopify/remix-oxygen": "^1.0.0-alpha.1",
->>>>>>> cd31b8d (Upgrade to latest Remix deferred experimental release 0.0.0-experimental-2f4891673)
     "clsx": "^1.2.1",
     "concurrently": "^7.5.0",
     "cross-env": "^7.0.3",
