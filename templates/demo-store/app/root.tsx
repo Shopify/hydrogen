@@ -13,6 +13,7 @@ import {
   ScrollRestoration,
   useCatch,
   useLoaderData,
+  useLocation,
   useMatches,
 } from '@remix-run/react';
 import {Layout} from '~/components';
@@ -26,6 +27,14 @@ import favicon from '../public/favicon.svg';
 import {DEFAULT_LOCALE} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/storefront-kit-react/storefront-api-types';
+import {
+  AnalyticsEventName,
+  getClientBrowserParameters,
+  sendShopifyAnalytics,
+  ShopifyPageViewPayload,
+  useShopifyCookies,
+} from '@shopify/storefront-kit-react';
+import {useEffect} from 'react';
 
 export const handle = {
   // @todo - remove any and type the seo callback
@@ -72,6 +81,27 @@ export async function loader({context}: LoaderArgs) {
 export default function App() {
   const data = useLoaderData<typeof loader>();
   const locale = data.selectedLocale ?? DEFAULT_LOCALE;
+
+  useShopifyCookies();
+  const location = useLocation();
+
+  // Page view analytics
+  useEffect(() => {
+    // Fix this type error and make sure ClientBrowserParameters does not return Record <string, never>
+    // @ts-ignore
+    const payload: ShopifyPageViewPayload = {
+      ...getClientBrowserParameters(),
+      hasUserConsent: false,
+      shopId: 'gid://shopify/Shop/55145660472',
+      currency: 'USD',
+      acceptedLanguage: 'en',
+    };
+
+    sendShopifyAnalytics({
+      eventName: AnalyticsEventName.PAGE_VIEW,
+      payload,
+    });
+  }, [location]);
 
   return (
     <html lang={locale.language}>
