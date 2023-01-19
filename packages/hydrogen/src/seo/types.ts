@@ -20,19 +20,26 @@ export interface Seo {
    */
   title: string;
   /**
-   * Generate the title from a template.
+   * Generate the title from a template that includes a `%s` placeholder for the
+   * title.
    *
-   * Should include a `%s` placeholder for the title, for example `%s - My
-   * Site`.
+   * @example
+   * ```js
+   * {
+   *   title: 'My Page',
+   *   titleTemplate: 'My Site - %s',
+   * }
+   * ```
    */
   titleTemplate: string | null;
   /**
    * The media associated with the given page (images, videos, etc). If you pass
-   * a string, it will be used as the `og:image` meta tag. If you pass an array
-   * of objects, it will be used as the `og:<type of media>` meta tag. The `url`
-   * property should be the URL of the media. The `height` and `width`
-   * properties are optional and should be the height and width of the media.
-   * The `alt` property is optional and should be a description of the media.
+   * a string, it will be used as the `og:image` meta tag. If you pass an object
+   * or an array of objects, that will be used to generate `og:<type of media>`
+   * meta tags. The `url` property should be the URL of the media. The `height`
+   * and `width` properties are optional and should be the height and width of
+   * the media. The `alt` property is optional and should be a description of
+   * the media.
    *
    * @example
    * ```js
@@ -132,12 +139,6 @@ export interface Seo {
    *
    * @see https://schema.org/docs/schemas.html
    * @see https://developers.google.com/search/docs/guides/intro-structured-data
-   * @see https://developers.google.com/search/docs/data-types/product
-   * @see https://developers.google.com/search/docs/data-types/itemlist
-   * @see https://developers.google.com/search/docs/data-types/organization
-   * @see https://developers.google.com/search/docs/data-types/website
-   * @see https://developers.google.com/search/docs/data-types/article
-   * @see https://developers.google.com/search/docs/data-types/thing
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
    *
    */
@@ -150,14 +151,14 @@ export type SeoMedia = {
   // The url value populates both url and secure_url and is used to infer the
   // og:<type of media>:type meta tag.
   url: string;
-  // The height in pixels of the media. This is used to generate the
-  // og:<type of media>:height meta tag.
+  // The height in pixels of the media. This is used to generate the og:<type of
+  // media>:height meta tag.
   height: number;
-  // The width in pixels of the media. This is used to generate the
-  // og:<type of media>:width meta tag/
+  // The width in pixels of the media. This is used to generate the og:<type of
+  // media>:width meta tag/
   width: number;
-  // The alt text for the media. This is used to generate the
-  // og:<type of media>:alt meta tag.
+  // The alt text for the media. This is used to generate the og:<type of
+  // media>:alt meta tag.
   alt: string;
 };
 
