@@ -2,7 +2,7 @@
   {
     "name": "ExternalVideo",
     "category": "components",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [
       {
         "name": "MediaFile",
@@ -18,12 +18,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ExternalVideo} from '@shopify/hydrogen-react';\n\nexport default function MyProductVideo({products}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n\n  if (firstMediaElement.__typename === 'ExternalVideo') {\n    return <ExternalVideo data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {ExternalVideo} from '@shopify/storefront-kit-react';\n\nexport default function MyProductVideo({products}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n\n  if (firstMediaElement.__typename === 'ExternalVideo') {\n    return <ExternalVideo data={firstMediaElement} />;\n  }\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ExternalVideo} from '@shopify/hydrogen-react';\nimport type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function MyProductVideo({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n  if (firstMediaElement.__typename === 'ExternalVideo') {\n    return <ExternalVideo data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {ExternalVideo} from '@shopify/storefront-kit-react';\nimport type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function MyProductVideo({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n  if (firstMediaElement.__typename === 'ExternalVideo') {\n    return <ExternalVideo data={firstMediaElement} />;\n  }\n}\n",
             "language": "tsx"
           }
         ],
@@ -408,7 +408,7 @@
   {
     "name": "Image",
     "category": "components",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [
       {
         "name": "MediaFile",
@@ -424,12 +424,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {Image} from '@shopify/hydrogen-react';\n\nexport default function ProductImage({product}) {\n  const image = product.featuredImage;\n\n  if (!image) {\n    return null;\n  }\n\n  return <Image data={image} />;\n}\n",
+            "code": "import {Image} from '@shopify/storefront-kit-react';\n\nexport default function ProductImage({product}) {\n  const image = product.featuredImage;\n\n  if (!image) {\n    return null;\n  }\n\n  return <Image data={image} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {Image} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function ProductImage({product}: {product: Product}) {\n  const image = product.featuredImage;\n\n  if (!image) {\n    return null;\n  }\n\n  return <Image data={image} />;\n}\n",
+            "code": "import {Image} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function ProductImage({product}: {product: Product}) {\n  const image = product.featuredImage;\n\n  if (!image) {\n    return null;\n  }\n\n  return <Image data={image} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -568,7 +568,7 @@
   {
     "name": "MediaFile",
     "category": "components",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [
       {
         "name": "Image",
@@ -599,12 +599,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {MediaFile} from '@shopify/hydrogen-react';\n\nexport function ProductsMediaFiles({products}) {\n  return (\n    <ul>\n      {products.nodes.map((product) => {\n        return <MediaFile data={product.media.nodes[0]} key={product.id} />;\n      })}\n    </ul>\n  );\n}\n",
+            "code": "import {MediaFile} from '@shopify/storefront-kit-react';\n\nexport function ProductsMediaFiles({products}) {\n  return (\n    <ul>\n      {products.nodes.map((product) => {\n        return <MediaFile data={product.media.nodes[0]} key={product.id} />;\n      })}\n    </ul>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {MediaFile} from '@shopify/hydrogen-react';\nimport type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function ProductsMediaFiles({products}: {products: ProductConnection}) {\n  return (\n    <ul>\n      {products.nodes.map((product) => {\n        return <MediaFile data={product.media.nodes[0]} key={product.id} />;\n      })}\n    </ul>\n  );\n}\n",
+            "code": "import {MediaFile} from '@shopify/storefront-kit-react';\nimport type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function ProductsMediaFiles({products}: {products: ProductConnection}) {\n  return (\n    <ul>\n      {products.nodes.map((product) => {\n        return <MediaFile data={product.media.nodes[0]} key={product.id} />;\n      })}\n    </ul>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -1941,6 +1941,22 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onRateChangeCapture",
+                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/MediaFile.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onResize",
+                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/MediaFile.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onResizeCapture",
                 "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
@@ -3342,85 +3358,9 @@
     ]
   },
   {
-    "name": "Metafield",
-    "category": "components",
-    "isVisualComponent": true,
-    "related": [
-      {
-        "name": "parseMetafield",
-        "type": "utility",
-        "url": "api/hydrogen/utilities/parsemetafield"
-      },
-      {
-        "name": "parseMetafieldValue",
-        "type": "utility",
-        "url": "api/hydrogen/utilities/parsemetafieldvalue"
-      }
-    ],
-    "description": "The `Metafield` component renders the value of a Storefront API's\n[Metafield object](https://shopify.dev/api/storefront/reference/common-objects/metafield). Relies on the `locale` property of the `useShop()` hook, so it must be a descendent of `<ShopifyProvider/>`.\nRenders a smart default of the Metafield's `value`. For more information, refer to the [Default output](#default-output) section.",
-    "type": "component",
-    "defaultExample": {
-      "description": "I am the default example",
-      "codeblock": {
-        "tabs": [
-          {
-            "title": "JavaScript",
-            "code": "import {Metafield} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  const metafield = product.metafield;\n\n  if (!metafield) {\n    return null;\n  }\n\n  return <Metafield data={metafield} />;\n}\n",
-            "language": "jsx"
-          },
-          {
-            "title": "TypeScript",
-            "code": "import {Metafield} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  const metafield = product.metafield;\n\n  if (!metafield) {\n    return null;\n  }\n\n  return <Metafield data={metafield} />;\n}\n",
-            "language": "tsx"
-          }
-        ],
-        "title": "Example code"
-      }
-    },
-    "definitions": [
-      {
-        "title": "Props",
-        "description": "",
-        "type": "MetafieldProps",
-        "typeDefinitions": {
-          "MetafieldProps": {
-            "filePath": "/Metafield.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "MetafieldProps",
-            "value": "ComponentPropsWithoutRef<ComponentGeneric> & BaseProps<ComponentGeneric>",
-            "description": ""
-          },
-          "BaseProps": {
-            "filePath": "/Metafield.tsx",
-            "name": "BaseProps",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/Metafield.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "data",
-                "value": "PartialObjectDeep<Metafield, { recurseIntoArrays: true; }>",
-                "description": "An object with fields that correspond to the Storefront API's [Metafield object](https://shopify.dev/api/storefront/reference/common-objects/metafield)."
-              },
-              {
-                "filePath": "/Metafield.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "as",
-                "value": "ComponentGeneric",
-                "description": "An HTML tag or React component to be rendered as the base element wrapper. The default value varies depending on [metafield.type](https://shopify.dev/apps/metafields/types).",
-                "isOptional": true
-              }
-            ],
-            "value": "interface BaseProps<ComponentGeneric extends ElementType> {\n  /** An object with fields that correspond to the Storefront API's [Metafield object](https://shopify.dev/api/storefront/reference/common-objects/metafield). */\n  data: PartialDeep<MetafieldType, {recurseIntoArrays: true}> | null;\n  /** An HTML tag or React component to be rendered as the base element wrapper. The default value varies depending on [metafield.type](https://shopify.dev/apps/metafields/types). */\n  as?: ComponentGeneric;\n}"
-          }
-        }
-      }
-    ]
-  },
-  {
     "name": "ModelViewer",
     "category": "components",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [
       {
         "name": "MediaFile",
@@ -3436,12 +3376,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ModelViewer} from '@shopify/hydrogen-react';\n\nexport default function MyProductModel({products}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n\n  if (firstMediaElement.__typename === 'Model3d') {\n    return <ModelViewer data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {ModelViewer} from '@shopify/storefront-kit-react';\n\nexport default function MyProductModel({products}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n\n  if (firstMediaElement.__typename === 'Model3d') {\n    return <ModelViewer data={firstMediaElement} />;\n  }\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ModelViewer} from '@shopify/hydrogen-react';\nimport type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function MyProductModel({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n  if (firstMediaElement.__typename === 'Model3d') {\n    return <ModelViewer data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {ModelViewer} from '@shopify/storefront-kit-react';\nimport type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function MyProductModel({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n  if (firstMediaElement.__typename === 'Model3d') {\n    return <ModelViewer data={firstMediaElement} />;\n  }\n}\n",
             "language": "tsx"
           }
         ],
@@ -3588,7 +3528,7 @@
   {
     "name": "money",
     "category": "components",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [
       {
         "name": "useMoney",
@@ -3604,12 +3544,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {Money} from '@shopify/hydrogen-react';\n\nexport default function ProductMoney({product}) {\n  const price = product.variants.nodes[0].price;\n\n  return <Money data={price} />;\n}\n",
+            "code": "import {Money} from '@shopify/storefront-kit-react';\n\nexport default function ProductMoney({product}) {\n  const price = product.variants.nodes[0].price;\n\n  return <Money data={price} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {Money} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function ProductMoney({product}: {product: Product}) {\n  const price = product.variants.nodes[0].price;\n\n  return <Money data={price} />;\n}\n",
+            "code": "import {Money} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function ProductMoney({product}: {product: Product}) {\n  const price = product.variants.nodes[0].price;\n\n  return <Money data={price} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -3691,7 +3631,7 @@
   {
     "name": "ProductPrice",
     "category": "components",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [
       {
         "name": "ProductProvider",
@@ -3712,12 +3652,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ProductPrice} from '@shopify/hydrogen-react';\n\nexport function ProductPricing({product}) {\n  return <ProductPrice data={product} priceType=\"compareAt\" valueType=\"max\" />;\n}\n",
+            "code": "import {ProductPrice} from '@shopify/storefront-kit-react';\n\nexport function ProductPricing({product}) {\n  return <ProductPrice data={product} priceType=\"compareAt\" valueType=\"max\" />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ProductPrice} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function ProductPricing({product}: {product: Product}) {\n  return <ProductPrice data={product} priceType=\"compareAt\" valueType=\"max\" />;\n}\n",
+            "code": "import {ProductPrice} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function ProductPricing({product}: {product: Product}) {\n  return <ProductPrice data={product} priceType=\"compareAt\" valueType=\"max\" />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -3776,7 +3716,7 @@
   {
     "name": "ProductProvider",
     "category": "components",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [
       {
         "name": "useProductOptions",
@@ -3797,12 +3737,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ProductProvider} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
+            "code": "import {ProductProvider} from '@shopify/storefront-kit-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ProductProvider} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
+            "code": "import {ProductProvider} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -3852,7 +3792,7 @@
   {
     "name": "ShopPayButton",
     "category": "components",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [
       {
         "name": "CartShopPayButton",
@@ -3868,12 +3808,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({variantId}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n\nexport function AddVariantQuantityMultiple({variantId, quantity}) {\n  return (\n    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />\n  );\n}\n",
+            "code": "import {ShopPayButton} from '@shopify/storefront-kit-react';\n\nexport function AddVariantQuantity1({variantId}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n\nexport function AddVariantQuantityMultiple({variantId, quantity}) {\n  return (\n    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n\nexport function AddVariantQuantityMultiple({\n  variantId,\n  quantity,\n}: {\n  variantId: string;\n  quantity: number;\n}) {\n  return (\n    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />\n  );\n}\n",
+            "code": "import {ShopPayButton} from '@shopify/storefront-kit-react';\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n\nexport function AddVariantQuantityMultiple({\n  variantId,\n  quantity,\n}: {\n  variantId: string;\n  quantity: number;\n}) {\n  return (\n    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -3973,7 +3913,7 @@
   {
     "name": "ShopifyProvider",
     "category": "components",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [],
     "description": "The `ShopifyProvider` component wraps your entire app and provides functionality for many components, hooks, and utilities. The `ShopifyProvider` component also provides localization data for the app. You should place it in your app's entry point component.",
     "type": "component",
@@ -3983,12 +3923,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ShopifyProvider} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      shopifyConfig={{\n        storeDomain: 'my-store',\n        storefrontToken: 'abc123',\n        storefrontApiVersion: '2022-10',\n      }}\n    >\n      {/* rest of your client-side app */}\n    </ShopifyProvider>\n  );\n}\n",
+            "code": "import {ShopifyProvider} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      shopifyConfig={{\n        storeDomain: 'my-store',\n        storefrontToken: 'abc123',\n        storefrontApiVersion: '2022-10',\n      }}\n    >\n      {/* rest of your client-side app */}\n    </ShopifyProvider>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ShopifyProvider} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      shopifyConfig={{\n        storeDomain: 'my-store',\n        storefrontToken: 'abc123',\n        storefrontApiVersion: '2022-10',\n      }}\n    >\n      {/* rest of your client-side app */}\n    </ShopifyProvider>\n  );\n}\n",
+            "code": "import {ShopifyProvider} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      shopifyConfig={{\n        storeDomain: 'my-store',\n        storefrontToken: 'abc123',\n        storefrontApiVersion: '2022-10',\n      }}\n    >\n      {/* rest of your client-side app */}\n    </ShopifyProvider>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -4028,8 +3968,8 @@
             "filePath": "/ShopifyProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyContextProps",
-            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The subdomain of your Shopify storefront URL (eg: `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version Hydrogen-UI was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  country?: ContextCountry;\n  language?: ContextLanguage;\n  /**\n   * The locale string based on `country` and `language`.\n   */\n  locale?: string;\n}",
-            "description": "Shopify-specific values that are used in various Hydrogen-UI components and hooks.",
+            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  country?: ContextCountry;\n  language?: ContextLanguage;\n  /**\n   * The locale string based on `country` and `language`.\n   */\n  locale?: string;\n}",
+            "description": "Shopify-specific values that are used in various React Storefront Kit components and hooks.",
             "members": [
               {
                 "filePath": "/ShopifyProvider.tsx",
@@ -4044,7 +3984,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storeDomain",
                 "value": "string",
-                "description": "The subdomain of your Shopify storefront URL (eg: `{subdomain}.myshopify.com`)."
+                "description": "The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`)."
               },
               {
                 "filePath": "/ShopifyProvider.tsx",
@@ -4058,7 +3998,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storefrontApiVersion",
                 "value": "string",
-                "description": "The Storefront API version. This should almost always be the same as the version Hydrogen-UI was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details."
+                "description": "The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details."
               },
               {
                 "filePath": "/ShopifyProvider.tsx",
@@ -4125,7 +4065,7 @@
   {
     "name": "video",
     "category": "components",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [
       {
         "name": "MediaFile",
@@ -4146,12 +4086,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {Video} from '@shopify/hydrogen-react';\n\nexport default function MyProductVideo({products}) {\n  const firstMediaElement = products.edges[0].node.media.edges[0].node;\n\n  if (firstMediaElement.__typename === 'Video') {\n    return <Video data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {Video} from '@shopify/storefront-kit-react';\n\nexport default function MyProductVideo({products}) {\n  const firstMediaElement = products.edges[0].node.media.edges[0].node;\n\n  if (firstMediaElement.__typename === 'Video') {\n    return <Video data={firstMediaElement} />;\n  }\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {Video} from '@shopify/hydrogen-react';\nimport type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function MyProductVideo({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.edges[0].node.media.edges[0].node;\n\n  if (firstMediaElement.__typename === 'Video') {\n    return <Video data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {Video} from '@shopify/storefront-kit-react';\nimport type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function MyProductVideo({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.edges[0].node.media.edges[0].node;\n\n  if (firstMediaElement.__typename === 'Video') {\n    return <Video data={firstMediaElement} />;\n  }\n}\n",
             "language": "tsx"
           }
         ],
@@ -4259,7 +4199,7 @@
   {
     "name": "cart",
     "category": "hooks",
-    "isVisualComponent": true,
+    "isVisualComponent": false,
     "related": [],
     "description": "",
     "type": "hook"

@@ -79,7 +79,7 @@ export default function Search({
 
       <footer className={styles.footer}>
         <a
-          href="https://vercel.com?utm_source=hydrogen-react-monorepo"
+          href="https://vercel.com?utm_source=storefront-kit-monorepo"
           target="_blank"
           rel="noopener noreferrer"
         >

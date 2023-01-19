@@ -187,7 +187,7 @@ Improve your development experience by using Storefront Kit's generated Types an
 Storefront Kit ships with generated TypeScript types that match the Storefront API and its objects. Import them from the `/storefront-api-types` package path:
 
 ```ts
-import type {Product} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Product} from '@shopify/storefront-kit-react/storefront-api-types';
 
 const product: Product = {};
 ```

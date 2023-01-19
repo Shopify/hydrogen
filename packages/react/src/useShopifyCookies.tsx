@@ -13,7 +13,7 @@ const shortTermLength = 60 * 30; // 30 mins
  * @param domain - The domain scope of the cookie
  * @example
  * ```tsx
- * import {useShopifyCookies} from '@shopify/hydrogen-react';
+ * import {useShopifyCookies} from '@shopify/storefront-kit-react';
  *
  * useShopifyCookies(true, 'my-shop.com')
  * ```

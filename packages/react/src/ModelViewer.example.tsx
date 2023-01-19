@@ -1,5 +1,5 @@
-import {ModelViewer} from '@shopify/hydrogen-react';
-import type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
+import {ModelViewer} from '@shopify/storefront-kit-react';
+import type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';
 
 export default function MyProductModel({
   products,

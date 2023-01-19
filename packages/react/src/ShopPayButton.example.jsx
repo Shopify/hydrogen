@@ -1,4 +1,4 @@
-import {ShopPayButton} from '@shopify/hydrogen-react';
+import {ShopPayButton} from '@shopify/storefront-kit-react';
 
 export function AddVariantQuantity1({variantId}) {
   return <ShopPayButton variantIds={[variantId]} />;

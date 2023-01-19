@@ -38,17 +38,17 @@
           "tabs": [
             {
               "title": "Primitive Component",
-              "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const storefrontClient = createStorefrontClient({});\n",
+              "code": "import {createStorefrontClient} from '@shopify/storefront-kit-react';\n\nexport const storefrontClient = createStorefrontClient({});\n",
               "language": "javascript"
             },
             {
               "title": "Hook Example",
-              "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const storefrontClient = createStorefrontClient({});\n",
+              "code": "import {createStorefrontClient} from '@shopify/storefront-kit-react';\n\nexport const storefrontClient = createStorefrontClient({});\n",
               "language": "javascript"
             },
             {
               "title": "Utility Function Example",
-              "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const storefrontClient = createStorefrontClient({});\n",
+              "code": "import {createStorefrontClient} from '@shopify/storefront-kit-react';\n\nexport const storefrontClient = createStorefrontClient({});\n",
               "language": "javascript"
             }
           ]

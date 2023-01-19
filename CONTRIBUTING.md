@@ -39,6 +39,19 @@ If you need a helper function that is shared between the tests and stories files
 - The function can't go into the test file, because when the story file imports it, it will also import Vitest and cause things to break
 - The function can't go into the story file, because when you export it, it shows up as a story in the storybook/ladle navigation
 
+## Writing Docs
+
+Documentation lives in the `*.doc.ts` files, and uses a Shopify library called `@shopify/generate-docs` to pull the TypeScript type info from the source code and generate the output for the Shopify website into the `docs/` folder.
+
+After adding or updating docs, you'll need to:
+
+1. `cd` into `packages/react` folder
+1. Run `yarn build-docs`
+
+Which will update the generated output, and then will be picked up by the Shopify website on a regular cadence.
+
+Docs can (and should, when possible) include two examples; one in plain JavaScript and one in TypeScript, using the format `{name}.example.(t|j)sx`.
+
 ## Package Exports Notes:
 
 - Until ESLint can resolve package.exports, we added `storefront-kit` to `.eslintrc.js`->`node/no-missing-import.allowModules`

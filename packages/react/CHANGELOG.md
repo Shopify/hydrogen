@@ -1,4 +1,4 @@
-# @shopify/hydrogen-react
+# @shopify/storefront-kit-react
 
 ## 2023.1.3
 

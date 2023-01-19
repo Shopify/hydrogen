@@ -1,4 +1,4 @@
-import {ProductProvider} from '@shopify/hydrogen-react';
+import {ProductProvider} from '@shopify/storefront-kit-react';
 
 export function Product({product}) {
   return (

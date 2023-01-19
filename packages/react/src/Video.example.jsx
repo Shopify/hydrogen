@@ -1,4 +1,4 @@
-import {Video} from '@shopify/hydrogen-react';
+import {Video} from '@shopify/storefront-kit-react';
 
 export default function MyProductVideo({products}) {
   const firstMediaElement = products.edges[0].node.media.edges[0].node;

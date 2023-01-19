@@ -30,7 +30,7 @@ import {
  * import {
  *   sendShopifyAnalytics,
  *   AnalyticsEventName,
- * } from '@shopify/hydrogen-react';
+ * } from '@shopify/storefront-kit-react';
  *
  * sendShopifyAnalytics({
  *   eventName: AnalyticsEventName.PAGE_VIEW,
