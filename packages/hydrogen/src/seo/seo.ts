@@ -3,7 +3,7 @@ import type {WithContext} from 'schema-dts';
 
 export function fillSeo<T extends BaseSeo = Seo>(input: T) {
   const output: HeadTag[] = [];
-  const LdJson: WithContext<any> = {
+  let ldJson: WithContext<any> = {
     '@context': 'https://schema.org',
     '@type': 'Thing',
   };
@@ -25,7 +25,7 @@ export function fillSeo<T extends BaseSeo = Seo>(input: T) {
             generateTag('meta', {name: 'twitter:title', content: title}),
           );
 
-          LdJson.name = title;
+          ldJson.name = title;
 
           break;
 
@@ -36,7 +36,7 @@ export function fillSeo<T extends BaseSeo = Seo>(input: T) {
             generateTag('meta', {name: 'twitter:description', content: value}),
           );
 
-          LdJson.description = value;
+          ldJson.description = value;
 
           break;
 
@@ -46,8 +46,8 @@ export function fillSeo<T extends BaseSeo = Seo>(input: T) {
             generateTag('link', {rel: 'canonical', href: value}),
           );
 
-          LdJson.url = value;
-          LdJson['@type'] = inferSchemaType(value as string);
+          ldJson.url = value;
+          ldJson['@type'] = inferSchemaType(value as string);
 
           break;
 
@@ -59,6 +59,10 @@ export function fillSeo<T extends BaseSeo = Seo>(input: T) {
 
           break;
 
+        case 'ldJson':
+          ldJson = {...ldJson, ...value};
+          break;
+
         case 'media':
           const values: any = Array.isArray(value) ? value : [value];
 
@@ -68,7 +72,7 @@ export function fillSeo<T extends BaseSeo = Seo>(input: T) {
                 generateTag('meta', {name: 'og:image', content: value}),
               );
 
-              LdJson.image = value;
+              ldJson.image = value;
             }
 
             if (media && typeof media === 'object') {
@@ -123,7 +127,7 @@ export function fillSeo<T extends BaseSeo = Seo>(input: T) {
     }),
     generateTag('script', {
       type: 'application/ld+json',
-      children: JSON.stringify(LdJson),
+      children: JSON.stringify(ldJson),
     }),
   ];
 
@@ -136,17 +140,17 @@ function generateTag<T extends HeadTag>(
 ): T | T[] {
   const tag = {tag: tagName, props: {}} as T;
 
-  tag.key = generateKey(tag);
-
   // title tags don't have props so move to children
   if (tagName === 'title') {
     tag.children = input;
+    tag.key = generateKey(tag);
 
     return tag;
   }
 
   // The rest goes on props
   tag.props = input;
+  tag.key = generateKey(tag);
 
   return tag;
 }
@@ -170,11 +174,11 @@ function generateKey(tag: HeadTag) {
 }
 
 function renderTitle<T extends HeadTag['children']>(
-  template: string | ((title?: string) => string | null) | null,
+  template?: string | ((title?: string) => string | undefined),
   title?: T,
-): string | null {
-  if (template == null) {
-    return title || null;
+): string | undefined {
+  if (!template) {
+    return title;
   }
 
   if (typeof template === 'function') {

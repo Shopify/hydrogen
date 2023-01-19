@@ -17,6 +17,7 @@ describe('fillSeo', () => {
         [
           {
             "children": "Snowdevil",
+            "key": "title",
             "props": {},
             "tag": "title",
           },
@@ -79,6 +80,7 @@ describe('fillSeo', () => {
         [
           {
             "children": "Snowdevil - A headless storefront",
+            "key": "title",
             "props": {},
             "tag": "title",
           },
@@ -97,30 +99,6 @@ describe('fillSeo', () => {
               "name": "twitter:title",
             },
             "tag": "meta",
-          },
-          {
-            "key": "meta-og:type",
-            "props": {
-              "content": "website",
-              "property": "og:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-twitter:card",
-            "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "script-application/ld+json",
-            "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil - A headless storefront\\"}",
-              "type": "application/ld+json",
-            },
-            "tag": "script",
           },
           {
             "key": "meta-og:type",
@@ -669,6 +647,183 @@ describe('fillSeo', () => {
             "key": "script-application/ld+json",
             "props": {
               "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
+              "type": "application/ld+json",
+            },
+            "tag": "script",
+          },
+        ]
+      `);
+    });
+  });
+
+  describe('handle', () => {
+    it('should fill the twitter:card and twitter:site meta tags', async () => {
+      // Given
+      const input = {
+        handle: '@shopify',
+      };
+
+      // When
+      const output = await fillSeo(input);
+
+      // Then
+      expect(output).toMatchInlineSnapshot(`
+        [
+          {
+            "key": "meta-twitter:site",
+            "props": {
+              "content": "@shopify",
+              "property": "twitter:site",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:creator",
+            "props": {
+              "content": "@shopify",
+              "property": "twitter:creator",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "script-application/ld+json",
+            "props": {
+              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
+              "type": "application/ld+json",
+            },
+            "tag": "script",
+          },
+        ]
+      `);
+    });
+  });
+
+  describe('ldJson', () => {
+    it('should infer default values from the URL', async () => {
+      // Given
+      const input = {
+        ldJson: {},
+        url: 'https://hydrogen.shopify.com/products/1234',
+      };
+
+      // When
+      const output = await fillSeo(input);
+
+      // Then
+      expect(output).toMatchInlineSnapshot(`
+        [
+          {
+            "key": "meta-og:url",
+            "props": {
+              "content": "https://hydrogen.shopify.com/products/1234",
+              "property": "og:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "link-canonical",
+            "props": {
+              "href": "https://hydrogen.shopify.com/products/1234",
+              "rel": "canonical",
+            },
+            "tag": "link",
+          },
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "script-application/ld+json",
+            "props": {
+              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"url\\":\\"https://hydrogen.shopify.com/products/1234\\"}",
+              "type": "application/ld+json",
+            },
+            "tag": "script",
+          },
+        ]
+      `);
+    });
+
+    it('should add additional ldJson values', async () => {
+      // Given
+      const input = {
+        ldJson: {
+          '@type': 'Product',
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            bestRating: '100',
+            ratingCount: '24',
+            ratingValue: '87',
+          },
+          offers: {
+            '@type': 'AggregateOffer',
+            highPrice: '$1495',
+            lowPrice: '$1250',
+            offerCount: '8',
+            offers: [
+              {
+                '@type': 'Offer',
+                url: 'hydrogen.shop/discounts/1234',
+              },
+            ],
+          },
+        },
+      };
+
+      // When
+      const output = await fillSeo(input);
+
+      // Then
+      expect(output).toMatchInlineSnapshot(`
+        [
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "script-application/ld+json",
+            "props": {
+              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"aggregateRating\\":{\\"@type\\":\\"AggregateRating\\",\\"bestRating\\":\\"100\\",\\"ratingCount\\":\\"24\\",\\"ratingValue\\":\\"87\\"},\\"offers\\":{\\"@type\\":\\"AggregateOffer\\",\\"highPrice\\":\\"$1495\\",\\"lowPrice\\":\\"$1250\\",\\"offerCount\\":\\"8\\",\\"offers\\":[{\\"@type\\":\\"Offer\\",\\"url\\":\\"hydrogen.shop/discounts/1234\\"}]}}",
               "type": "application/ld+json",
             },
             "tag": "script",
