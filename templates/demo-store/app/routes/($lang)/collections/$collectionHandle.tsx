@@ -10,7 +10,10 @@ import type {
   CollectionConnection,
   Filter,
 } from '@shopify/storefront-kit-react/storefront-api-types';
-import {flattenConnection} from '@shopify/storefront-kit-react';
+import {
+  AnalyticsPageType,
+  flattenConnection,
+} from '@shopify/storefront-kit-react';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
@@ -125,7 +128,15 @@ export async function loader({params, request, context}: LoaderArgs) {
 
   const collectionNodes = flattenConnection(collections);
 
-  return json({collection, appliedFilters, collections: collectionNodes});
+  return json({
+    collection,
+    appliedFilters,
+    collections: collectionNodes,
+    analytics: {
+      pageType: AnalyticsPageType.collection,
+      collectionHandle,
+    },
+  });
 }
 
 export const meta: MetaFunction = ({

@@ -8,7 +8,11 @@ import {
   useLocation,
   useTransition,
 } from '@remix-run/react';
-import {Money, ShopPayButton} from '@shopify/storefront-kit-react';
+import {
+  AnalyticsPageType,
+  Money,
+  ShopPayButton,
+} from '@shopify/storefront-kit-react';
 import {
   Heading,
   IconCaret,
@@ -71,6 +75,9 @@ export async function loader({params, request, context}: LoaderArgs) {
     product,
     shop,
     recommended,
+    analytics: {
+      pageType: AnalyticsPageType.product,
+    },
   });
 }
 
