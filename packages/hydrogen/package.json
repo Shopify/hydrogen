@@ -50,13 +50,13 @@
     "@shopify/storefront-kit-react": "*"
   },
   "dependencies": {
-    "recursive-readdir": "^2.2.3",
-    "schema-dts": "^1.1.0"
+    "recursive-readdir": "^2.2.3"
   },
   "devDependencies": {
     "@shopify/storefront-kit-react": "*",
     "@types/recursive-readdir": "^2.2.1",
     "@shopify/hydrogen-react": "*",
-    "vitest": "^0.27.2"
+    "vitest": "^0.27.2",
+    "schema-dts": "^1.1.0"
   }
 }
