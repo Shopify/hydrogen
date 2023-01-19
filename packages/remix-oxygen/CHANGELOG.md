@@ -1,5 +1,13 @@
 # @shopify/remix-oxygen
 
+## 1.0.0-alpha.3
+
+### Patch Changes
+
+- - Upgrade to the latest Remix experimental defer release, 1.11.0 ([#371](https://github.com/Shopify/h2/pull/371)) by [@blittle](https://github.com/blittle)
+
+  - Replace redundant i18n routes with a single root optional route segment `($lang)`
+
 ## 1.0.0-alpha.2
 
 ### Patch Changes
