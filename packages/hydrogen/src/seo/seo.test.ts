@@ -3,14 +3,14 @@ import {inferStorefrontSeo} from './seo';
 
 describe('inferStorefrontSeo', () => {
   describe('title', () => {
-    it('should fill the title', async () => {
+    it('should fill the title', () => {
       // Given
       const input = {
         title: 'Snowdevil',
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -65,7 +65,7 @@ describe('inferStorefrontSeo', () => {
       `);
     });
 
-    it('should fill the title with a template', async () => {
+    it('should fill the title with a template', () => {
       // Given
       const input = {
         title: 'Snowdevil',
@@ -73,7 +73,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -130,14 +130,14 @@ describe('inferStorefrontSeo', () => {
   });
 
   describe('description', () => {
-    it('should fill the description', async () => {
+    it('should fill the description', () => {
       // Given
       const input = {
         description: 'A headless storefront',
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -196,14 +196,14 @@ describe('inferStorefrontSeo', () => {
   });
 
   describe('url', () => {
-    it('should fill the url', async () => {
+    it('should fill the url', () => {
       // Given
       const input = {
         url: 'https://hydrogen.shop/collections',
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -254,14 +254,14 @@ describe('inferStorefrontSeo', () => {
   });
 
   describe('media', () => {
-    it('should add media tags when given only a string', async () => {
+    it('should add media tags when given only a string', () => {
       // Given
       const input = {
         media: 'https://example.com/image.jpg',
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -302,7 +302,7 @@ describe('inferStorefrontSeo', () => {
       `);
     });
 
-    it('should add media tags when given an array of strings', async () => {
+    it('should add media tags when given an array of strings', () => {
       // Given
       const input = {
         media: [
@@ -312,7 +312,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -361,7 +361,7 @@ describe('inferStorefrontSeo', () => {
       `);
     });
 
-    it('should add media tags when given an object', async () => {
+    it('should add media tags when given an object', () => {
       // Given
       const input = {
         media: {
@@ -371,7 +371,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -436,7 +436,7 @@ describe('inferStorefrontSeo', () => {
       `);
     });
 
-    it('should add media tags when given an array of objects', async () => {
+    it('should add media tags when given an array of objects', () => {
       // Given
       const input = {
         media: [
@@ -452,7 +452,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -549,7 +549,7 @@ describe('inferStorefrontSeo', () => {
       `);
     });
 
-    it('should add media tags for multiple types of media', async () => {
+    it('should add media tags for multiple types of media', () => {
       // Given
       const input = {
         media: [
@@ -566,7 +566,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -657,14 +657,14 @@ describe('inferStorefrontSeo', () => {
   });
 
   describe('handle', () => {
-    it('should fill the twitter:card and twitter:site meta tags', async () => {
+    it('should fill the twitter:card and twitter:site meta tags', () => {
       // Given
       const input = {
         handle: '@shopify',
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -715,7 +715,7 @@ describe('inferStorefrontSeo', () => {
   });
 
   describe('ldJson', () => {
-    it('should infer default values from the URL', async () => {
+    it('should infer default values from the URL', () => {
       // Given
       const input = {
         ldJson: {},
@@ -723,7 +723,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -772,7 +772,7 @@ describe('inferStorefrontSeo', () => {
       `);
     });
 
-    it('should add additional ldJson values', async () => {
+    it('should add additional ldJson values', () => {
       // Given
       const input = {
         ldJson: {
@@ -799,7 +799,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = await inferStorefrontSeo(input);
+      const output = inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
