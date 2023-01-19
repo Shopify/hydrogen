@@ -1,7 +1,7 @@
 import type {BaseSeo, Seo, HeadTag, SchemaType} from './types';
 import type {WithContext} from 'schema-dts';
 
-export function fillSeo<T extends BaseSeo = Seo>(input: T) {
+export function inferStorefrontSeo<T extends BaseSeo = Seo>(input: T) {
   const output: HeadTag[] = [];
   let ldJson: WithContext<any> = {
     '@context': 'https://schema.org',

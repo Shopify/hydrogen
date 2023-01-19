@@ -1,7 +1,7 @@
 import {expect, describe, it} from 'vitest';
-import {fillSeo} from '../seo';
+import {inferStorefrontSeo} from './seo';
 
-describe('fillSeo', () => {
+describe('inferStorefrontSeo', () => {
   describe('title', () => {
     it('should fill the title', async () => {
       // Given
@@ -10,7 +10,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -73,7 +73,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -137,7 +137,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -203,7 +203,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -261,7 +261,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -312,7 +312,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -371,7 +371,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -452,7 +452,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -566,7 +566,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -664,7 +664,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -723,7 +723,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -799,7 +799,7 @@ describe('fillSeo', () => {
       };
 
       // When
-      const output = await fillSeo(input);
+      const output = await inferStorefrontSeo(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
