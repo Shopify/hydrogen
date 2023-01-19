@@ -6,6 +6,7 @@ import {
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {
+  type FetcherWithComponents,
   Links,
   Meta,
   Outlet,
@@ -15,6 +16,7 @@ import {
   useLoaderData,
   useLocation,
   useMatches,
+  useFetchers,
 } from '@remix-run/react';
 import {Layout} from '~/components';
 import {getLayoutData, type LayoutData} from '~/data';
@@ -31,10 +33,12 @@ import {
   AnalyticsEventName,
   getClientBrowserParameters,
   sendShopifyAnalytics,
+  ShopifyAppSource,
   ShopifyPageViewPayload,
   useShopifyCookies,
 } from '@shopify/storefront-kit-react';
-import {useEffect} from 'react';
+import {useEffect, useMemo} from 'react';
+import {CartAction} from './lib/type';
 
 export const handle = {
   // @todo - remove any and type the seo callback
@@ -75,7 +79,38 @@ export async function loader({context}: LoaderArgs) {
     layout,
     selectedLocale: context.storefront.i18n,
     cart: cartId ? getCart(context, cartId) : undefined,
+    analytics: {
+      shopifyAppSource: ShopifyAppSource.hydrogen,
+      shopId: 'gid://shopify/Shop/55145660472',
+    },
   });
+}
+
+// To-do: move this to H2 package
+function useExtractAnalyticsFromMatches(): Record<string, unknown> {
+  const matches = useMatches();
+  const analytics: Record<string, unknown> = {};
+
+  matches.forEach((event) => {
+    if (event?.data?.analytics) {
+      Object.assign(analytics, event.data.analytics);
+    }
+  });
+
+  return analytics;
+}
+
+function useCartActionCompleteFetchers(actionName: string) {
+  const fetchers = useFetchers();
+  const cartFetchers = [];
+
+  for (const fetcher of fetchers) {
+    const formData = fetcher.submission?.formData;
+    if (fetcher.data && formData && formData.get('cartAction') === actionName) {
+      cartFetchers.push(fetcher);
+    }
+  }
+  return cartFetchers;
 }
 
 export default function App() {
@@ -84,17 +119,22 @@ export default function App() {
 
   useShopifyCookies();
   const location = useLocation();
+  const pageAnalytics = useExtractAnalyticsFromMatches();
+  const currency = useMemo(() => {
+    return locale.label.replace(/.*\(/, '').replace(/ .*/, '');
+  }, [locale.label]);
 
   // Page view analytics
   useEffect(() => {
+    console.log('Page view');
     // Fix this type error and make sure ClientBrowserParameters does not return Record <string, never>
     // @ts-ignore
     const payload: ShopifyPageViewPayload = {
       ...getClientBrowserParameters(),
+      ...pageAnalytics,
+      currency,
+      acceptedLanguage: locale.language.toLowerCase(),
       hasUserConsent: false,
-      shopId: 'gid://shopify/Shop/55145660472',
-      currency: 'USD',
-      acceptedLanguage: 'en',
     };
 
     sendShopifyAnalytics({
@@ -102,6 +142,12 @@ export default function App() {
       payload,
     });
   }, [location]);
+
+  // Add to cart analytics
+  const cartFetchers = useCartActionCompleteFetchers(CartAction.ADD_TO_CART);
+  if (cartFetchers.length) {
+    console.log('cartFetchers', cartFetchers);
+  }
 
   return (
     <html lang={locale.language}>

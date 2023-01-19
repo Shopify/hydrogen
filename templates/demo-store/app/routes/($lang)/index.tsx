@@ -9,6 +9,7 @@ import type {
   Metafield,
   ProductConnection,
 } from '@shopify/storefront-kit-react/storefront-api-types';
+import {AnalyticsPageType} from '@shopify/storefront-kit-react';
 
 interface HomeSeoData {
   shop: {
@@ -94,6 +95,9 @@ export async function loader({params, context}: LoaderArgs) {
         },
       },
     ),
+    analytics: {
+      pageType: AnalyticsPageType.home,
+    },
   });
 }
 
