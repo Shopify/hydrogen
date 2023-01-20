@@ -1,24 +1,78 @@
-import {useSeoConfig, useHeadTags} from './common';
+import {useMatches} from '@remix-run/react';
+import {inferStorefrontSeo} from '@shopify/hydrogen';
 
 export function Seo() {
-  const {seo} = useSeoConfig();
-  const {tags, ogTags, twitterTags, links, LdJson} = useHeadTags(seo);
-  const structuredContent = (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{
-        __html: JSON.stringify(LdJson),
-      }}
-    />
-  );
+  const matches = useMatches();
 
-  return (
-    <>
-      {tags}
-      {ogTags}
-      {twitterTags}
-      {links}
-      {structuredContent}
-    </>
-  );
+  const seoConfig = matches
+    .flatMap((match) => {
+      const {handle, data} = match;
+
+      if (handle === undefined || handle.seo === undefined) {
+        return [];
+      }
+
+      return recursivelyInvokeOrReturn(handle.seo, data);
+    })
+    .reduce((acc, current) => {
+      return {...acc, ...current};
+    }, {});
+
+  const headTags = inferStorefrontSeo(seoConfig);
+
+  /* eslint-disable react/no-children-prop */
+  const html = headTags.map((tag) => {
+    switch (tag.tag) {
+      case 'meta':
+        return <meta key={tag.key} {...tag.props} children={tag.children} />;
+
+      case 'link':
+        return <link key={tag.key} {...tag.props} children={tag.children} />;
+
+      case 'script':
+        return (
+          <script key={tag.key} {...tag.props}>
+            {tag.children}
+          </script>
+        );
+
+      case 'title':
+        return <title key={tag.key}>{tag.children}</title>;
+    }
+  });
+  /* eslint-enable react/no-children-prop */
+
+  return <>{html}</>;
+}
+
+export function recursivelyInvokeOrReturn<T, R extends any[]>(
+  value: T | ((...rest: R) => T),
+  ...rest: R
+): T | Record<string, T> {
+  if (value instanceof Function) {
+    return recursivelyInvokeOrReturn<T, R>(value(...rest), ...rest);
+  }
+
+  let result: Record<string, T> = {};
+
+  if (Array.isArray(value)) {
+    result = value.reduce((acc, item) => {
+      return [...acc, recursivelyInvokeOrReturn(item)];
+    }, []);
+
+    return result;
+  }
+
+  if (value instanceof Object) {
+    const entries = Object.entries(value);
+
+    entries.forEach(([key, val]) => {
+      // @ts-expect-error
+      result[key] = recursivelyInvokeOrReturn<T, R>(val, ...rest);
+    });
+
+    return result;
+  }
+
+  return value;
 }
