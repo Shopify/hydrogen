@@ -393,6 +393,7 @@ function ProductOptionLink({
   return (
     <Link
       {...props}
+      preventScrollReset
       prefetch="intent"
       replace
       to={`${path}?${clonedSearchParams.toString()}`}
