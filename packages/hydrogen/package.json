@@ -48,9 +48,6 @@
     "@remix-run/server-runtime": "1.11.0",
     "@shopify/storefront-kit-react": "*"
   },
-  "dependencies": {
-    "recursive-readdir": "^2.2.3"
-  },
   "devDependencies": {
     "@shopify/storefront-kit-react": "*",
     "@types/recursive-readdir": "^2.2.1"
