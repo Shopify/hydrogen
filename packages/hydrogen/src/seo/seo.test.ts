@@ -1,7 +1,7 @@
 import {expect, describe, it} from 'vitest';
-import {inferStorefrontSeo} from './seo';
+import {generateSeoTags} from './seo';
 
-describe('inferStorefrontSeo', () => {
+describe('generateSeoTags', () => {
   describe('title', () => {
     it('should fill the title', () => {
       // Given
@@ -10,7 +10,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -22,18 +22,18 @@ describe('inferStorefrontSeo', () => {
             "tag": "title",
           },
           {
-            "key": "meta-og:title",
-            "props": {
-              "content": "Snowdevil",
-              "property": "og:title",
-            },
-            "tag": "meta",
-          },
-          {
             "key": "meta-twitter:title",
             "props": {
               "content": "Snowdevil",
               "name": "twitter:title",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -46,10 +46,10 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-twitter:card",
+            "key": "meta-og:title",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "Snowdevil",
+              "property": "og:title",
             },
             "tag": "meta",
           },
@@ -73,7 +73,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -85,18 +85,18 @@ describe('inferStorefrontSeo', () => {
             "tag": "title",
           },
           {
-            "key": "meta-og:title",
-            "props": {
-              "content": "Snowdevil - A headless storefront",
-              "property": "og:title",
-            },
-            "tag": "meta",
-          },
-          {
             "key": "meta-twitter:title",
             "props": {
               "content": "Snowdevil - A headless storefront",
               "name": "twitter:title",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -109,10 +109,10 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-twitter:card",
+            "key": "meta-og:title",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "Snowdevil - A headless storefront",
+              "property": "og:title",
             },
             "tag": "meta",
           },
@@ -137,32 +137,24 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-description",
-            "props": {
-              "content": "A headless storefront",
-              "name": "description",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:description",
-            "props": {
-              "content": "A headless storefront",
-              "property": "og:description",
-            },
-            "tag": "meta",
-          },
-          {
             "key": "meta-twitter:description",
             "props": {
               "content": "A headless storefront",
               "name": "twitter:description",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -175,10 +167,18 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-twitter:card",
+            "key": "meta-og:description",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "A headless storefront",
+              "property": "og:description",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-description",
+            "props": {
+              "content": "A headless storefront",
+              "name": "description",
             },
             "tag": "meta",
           },
@@ -203,11 +203,19 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
           {
             "key": "meta-og:url",
             "props": {
@@ -215,14 +223,6 @@ describe('inferStorefrontSeo', () => {
               "property": "og:url",
             },
             "tag": "meta",
-          },
-          {
-            "key": "link-canonical",
-            "props": {
-              "href": "https://hydrogen.shop/collections",
-              "rel": "canonical",
-            },
-            "tag": "link",
           },
           {
             "key": "meta-og:type",
@@ -233,12 +233,12 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-twitter:card",
+            "key": "link-canonical",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "href": "https://hydrogen.shop/collections",
+              "rel": "canonical",
             },
-            "tag": "meta",
+            "tag": "link",
           },
           {
             "key": "script-application/ld+json",
@@ -261,16 +261,16 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-og:image",
+            "key": "meta-twitter:card",
             "props": {
-              "content": "https://example.com/image.jpg",
-              "name": "og:image",
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -283,10 +283,10 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-twitter:card",
+            "key": "meta-og:image",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "https://example.com/image.jpg",
+              "name": "og:image",
             },
             "tag": "meta",
           },
@@ -312,11 +312,27 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
+            },
+            "tag": "meta",
+          },
           {
             "key": "meta-og:image",
             "props": {
@@ -330,22 +346,6 @@ describe('inferStorefrontSeo', () => {
             "props": {
               "content": "https://example.com/image-2.jpg",
               "name": "og:image",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:type",
-            "props": {
-              "content": "website",
-              "property": "og:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-twitter:card",
-            "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -371,40 +371,16 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-og:image:url",
+            "key": "meta-twitter:card",
             "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:secure_url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:secure_url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:type",
-            "props": {
-              "content": "image/jpeg",
-              "property": "og:image:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:height",
-            "props": {
-              "content": "100",
-              "property": "og:image:height",
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -417,10 +393,34 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-twitter:card",
+            "key": "meta-og:image:url",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:image:type",
+            "props": {
+              "content": "image/jpeg",
+              "property": "og:image:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:image:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:secure_url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:image:height",
+            "props": {
+              "content": "100",
+              "property": "og:image:height",
             },
             "tag": "meta",
           },
@@ -452,72 +452,16 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-og:image:url",
+            "key": "meta-twitter:card",
             "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:secure_url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:secure_url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:type",
-            "props": {
-              "content": "image/jpeg",
-              "property": "og:image:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:height",
-            "props": {
-              "content": "100",
-              "property": "og:image:height",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:secure_url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:secure_url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:type",
-            "props": {
-              "content": "image/jpeg",
-              "property": "og:image:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:width",
-            "props": {
-              "content": "100",
-              "property": "og:image:width",
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -530,10 +474,66 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-twitter:card",
+            "key": "meta-og:image:width",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "100",
+              "property": "og:image:width",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:image:url",
+            "props": {
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:image:url",
+            "props": {
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:image:type",
+            "props": {
+              "content": "image/jpeg",
+              "property": "og:image:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:image:type",
+            "props": {
+              "content": "image/jpeg",
+              "property": "og:image:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:image:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:secure_url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:image:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:secure_url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:image:height",
+            "props": {
+              "content": "100",
+              "property": "og:image:height",
             },
             "tag": "meta",
           },
@@ -566,24 +566,24 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-og:video:url",
+            "key": "meta-twitter:card",
             "props": {
-              "content": "https://example.com/image-1.swf",
-              "property": "og:video:url",
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
           {
-            "key": "meta-og:video:secure_url",
+            "key": "meta-og:video:url",
             "props": {
               "content": "https://example.com/image-1.swf",
-              "property": "og:video:secure_url",
+              "property": "og:video:url",
             },
             "tag": "meta",
           },
@@ -596,34 +596,18 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "key": "meta-og:video:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.swf",
+              "property": "og:video:secure_url",
+            },
+            "tag": "meta",
+          },
+          {
             "key": "meta-og:video:height",
             "props": {
               "content": "100",
               "property": "og:video:height",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:audio:url",
-            "props": {
-              "content": "https://example.com/image-1.mp3",
-              "property": "og:audio:url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:audio:secure_url",
-            "props": {
-              "content": "https://example.com/image-1.mp3",
-              "property": "og:audio:secure_url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:audio:type",
-            "props": {
-              "content": "audio/mpeg",
-              "property": "og:audio:type",
             },
             "tag": "meta",
           },
@@ -636,10 +620,26 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-twitter:card",
+            "key": "meta-og:audio:url",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "https://example.com/image-1.mp3",
+              "property": "og:audio:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:audio:type",
+            "props": {
+              "content": "audio/mpeg",
+              "property": "og:audio:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:audio:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.mp3",
+              "property": "og:audio:secure_url",
             },
             "tag": "meta",
           },
@@ -664,7 +664,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -686,18 +686,18 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:type",
-            "props": {
-              "content": "website",
-              "property": "og:type",
-            },
-            "tag": "meta",
-          },
-          {
             "key": "meta-twitter:card",
             "props": {
               "content": "summary_large_image",
               "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
             },
             "tag": "meta",
           },
@@ -723,11 +723,19 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
           {
             "key": "meta-og:url",
             "props": {
@@ -735,14 +743,6 @@ describe('inferStorefrontSeo', () => {
               "property": "og:url",
             },
             "tag": "meta",
-          },
-          {
-            "key": "link-canonical",
-            "props": {
-              "href": "https://hydrogen.shopify.com/products/1234",
-              "rel": "canonical",
-            },
-            "tag": "link",
           },
           {
             "key": "meta-og:type",
@@ -753,12 +753,12 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-twitter:card",
+            "key": "link-canonical",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "href": "https://hydrogen.shopify.com/products/1234",
+              "rel": "canonical",
             },
-            "tag": "meta",
+            "tag": "link",
           },
           {
             "key": "script-application/ld+json",
@@ -799,24 +799,24 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-og:type",
-            "props": {
-              "content": "website",
-              "property": "og:type",
-            },
-            "tag": "meta",
-          },
-          {
             "key": "meta-twitter:card",
             "props": {
               "content": "summary_large_image",
               "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
             },
             "tag": "meta",
           },

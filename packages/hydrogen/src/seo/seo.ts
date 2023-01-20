@@ -1,7 +1,7 @@
 import type {BaseSeo, Seo, HeadTag, SchemaType} from './types';
 import type {WithContext} from 'schema-dts';
 
-export function inferStorefrontSeo<T extends BaseSeo = Seo>(input: T) {
+export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
   const output: HeadTag[] = [];
   let ldJson: WithContext<any> = {
     '@context': 'https://schema.org',
@@ -125,13 +125,20 @@ export function inferStorefrontSeo<T extends BaseSeo = Seo>(input: T) {
       name: 'twitter:card',
       content: 'summary_large_image',
     }),
-    generateTag('script', {
-      type: 'application/ld+json',
-      children: JSON.stringify(ldJson),
-    }),
   ];
 
-  return [...output, ...additionalTags].flat();
+  return [...output, ...additionalTags]
+    .flat()
+    .sort((a, b) => {
+      return -1 * a.key.localeCompare(b.key);
+    })
+    .concat(
+      generateTag('script', {
+        type: 'application/ld+json',
+        children: JSON.stringify(ldJson),
+      }),
+    )
+    .flat();
 }
 
 function generateTag<T extends HeadTag>(

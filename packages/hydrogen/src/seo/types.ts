@@ -168,7 +168,7 @@ export interface HeadTag {
   tag: TagKey;
   props: Record<string, any>;
   children?: string;
-  key?: string;
+  key: string;
 }
 
 export type SchemaType =

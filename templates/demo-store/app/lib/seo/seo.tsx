@@ -1,5 +1,5 @@
 import {useMatches} from '@remix-run/react';
-import {inferStorefrontSeo} from '@shopify/hydrogen';
+import {generateSeoTags} from '@shopify/hydrogen';
 
 export function Seo() {
   const matches = useMatches();
@@ -18,7 +18,7 @@ export function Seo() {
       return {...acc, ...current};
     }, {});
 
-  const headTags = inferStorefrontSeo(seoConfig);
+  const headTags = generateSeoTags(seoConfig);
 
   /* eslint-disable react/no-children-prop */
   const html = headTags.map((tag) => {
