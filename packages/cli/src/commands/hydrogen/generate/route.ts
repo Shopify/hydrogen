@@ -8,17 +8,15 @@ import prettier from 'prettier';
 const ROUTE_MAP: Record<string, string | string[]> = {
   page: '/page/$pageHandle',
   cart: '/cart',
-  product: '/products/$productHandle',
-  collection: '/collections/$collectionHandle',
-  collections: '/collections/index',
-  policies: '/policies/index',
-  policy: '/policies/$policyHandle',
+  products: '/products/$productHandle',
+  collections: '/collections/$collectionHandle',
+  policies: ['/policies/index', '/policies/$policyHandle'],
   robots: '/[robots.txt]',
   sitemap: '/[sitemap.xml]',
   account: ['/account/login', '/account/register'],
 };
 
-const RESOURCES = Object.keys(ROUTE_MAP);
+const ROUTES = Object.keys(ROUTE_MAP);
 
 export default class GenerateRoute extends Command {
   static flags = {
@@ -26,19 +24,22 @@ export default class GenerateRoute extends Command {
     adapter: Flags.string({
       description:
         'The Remix adapter for imports in the template (default: @shopify/remix-oxygen)',
+      env: 'SHOPIFY_HYDROGEN_FLAG_ADAPTER',
     }),
     force: Flags.boolean({
       char: 'f',
       description: 'Overwrite existing files',
+      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
     }),
   };
 
   static args = [
     {
-      name: 'resource',
-      description: `The resource to generate a route for.`,
+      name: 'route',
+      description: `The route to generate a route for.`,
       required: true,
-      options: RESOURCES,
+      options: ROUTES,
+      env: 'SHOPIFY_HYDROGEN_ARG_ROUTE',
     },
   ];
 
@@ -47,23 +48,22 @@ export default class GenerateRoute extends Command {
     const {flags, args} = await this.parse(GenerateRoute);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
-    const {resource} = args;
-    const resourcePath = ROUTE_MAP[resource as keyof typeof ROUTE_MAP];
+    const {route} = args;
+    const routePath = ROUTE_MAP[route as keyof typeof ROUTE_MAP];
 
+    if (!routePath) {
+      throw new error.Abort(
+        `No template generator found for ${route}. Try one of ${ROUTES.join()}`,
+      );
+    }
     const isTypescript = await file.exists(
       path.join(directory, 'tsconfig.json'),
     );
 
-    if (!resourcePath) {
-      throw new error.Abort(
-        `No template generator found for ${resource}. Try one of ${RESOURCES.join()}`,
-      );
-    }
-
     for (const item of [
-      ...(Array.isArray(resourcePath) ? resourcePath : [resourcePath]),
+      ...(Array.isArray(routePath) ? routePath : [routePath]),
     ]) {
-      runGenerate(item, {
+      await runGenerate(item, {
         directory,
         typescript: isTypescript,
         force: flags.force,
@@ -74,7 +74,7 @@ export default class GenerateRoute extends Command {
 }
 
 async function runGenerate(
-  resource: string,
+  route: string,
   {
     directory,
     typescript,
@@ -89,12 +89,12 @@ async function runGenerate(
 ) {
   const extension = typescript ? '.tsx' : '.jsx';
   const distPath = new URL('../../../', import.meta.url).pathname;
-  const templatePath = path.join(distPath, 'templates', `${resource}.tsx`);
+  const templatePath = path.join(distPath, 'templates', `${route}.tsx`);
   const destinationPath = path.join(
     directory,
     'app',
     'routes',
-    `${resource}${extension}`,
+    `${route}${extension}`,
   );
   const relativeDestinationPath = path.relative(directory, destinationPath);
 
@@ -108,8 +108,7 @@ async function runGenerate(
       {
         type: 'select',
         name: 'value',
-        message: `The file ${path.relative(
-          process.cwd(),
+        message: `The file ${path.relativize(
           relativeDestinationPath,
         )} already exists. Do you want to overwrite it?`,
         choices: options,
@@ -176,7 +175,7 @@ async function runGenerate(
   // Write the final file to the user's project.
   await file.write(destinationPath, templateContent);
 
-  output.success(`Created ${resource} at ${relativeDestinationPath}`);
+  output.success(`Created ${route} at ${relativeDestinationPath}`);
 }
 
 const escapeNewLines = (code: string) =>
