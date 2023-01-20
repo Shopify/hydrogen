@@ -61,11 +61,12 @@ async function compileAndWatch(entry: string, appPath?: string, port?: number) {
   const {root, entryFile, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath, entry);
 
-  const remixConfigGetter = () => getRemixConfig(root, entryFile, publicPath);
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
+  const reloadConfig = () => getRemixConfig(root, entryFile, publicPath);
 
   const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
-  await watch(remixConfigGetter, {
+  await watch(await reloadConfig(), {
+    reloadConfig,
     mode: process.env.NODE_ENV as any,
     async onInitialBuild() {
       await copyingFiles;
