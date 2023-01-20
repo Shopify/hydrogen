@@ -19,7 +19,7 @@ import {Layout} from '~/components';
 import {getLayoutData, type LayoutData} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
-import {Seo, Debugger} from './lib/seo';
+import {Seo} from './lib/seo';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
@@ -31,7 +31,6 @@ export const handle = {
   // @todo - remove any and type the seo callback
   seo: (data: any) => ({
     title: data?.layout?.shop?.name,
-    bypassTitleTemplate: true,
     titleTemplate: `%s | ${data?.layout?.shop?.name}`,
   }),
 };
@@ -87,7 +86,6 @@ export default function App() {
         >
           <Outlet />
         </Layout>
-        <Debugger />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -143,7 +141,6 @@ export function ErrorBoundary({error}: {error: Error}) {
           <GenericError error={error} />
         </Layout>
         <Scripts />
-        <Debugger />
       </body>
     </html>
   );
