@@ -34,7 +34,8 @@
   "bin": "dist/tmp-create-app.js",
   "files": [
     "dist",
-    "oclif.manifest.json"
+    "oclif.manifest.json",
+    "hydrogen1-oclif.manifest.json"
   ],
   "oclif": {
     "commands": "dist/commands",
