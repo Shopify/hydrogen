@@ -6,7 +6,6 @@ import {
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {
-  type FetcherWithComponents,
   Links,
   Meta,
   Outlet,
@@ -26,7 +25,7 @@ import {Seo, Debugger} from './lib/seo';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
-import {DEFAULT_LOCALE} from './lib/utils';
+import {DEFAULT_LOCALE, getLocaleFromRequest} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/storefront-kit-react/storefront-api-types';
 import {
@@ -37,7 +36,7 @@ import {
   ShopifyPageViewPayload,
   useShopifyCookies,
 } from '@shopify/storefront-kit-react';
-import {useEffect, useMemo} from 'react';
+import {useEffect} from 'react';
 import {CartAction} from './lib/type';
 
 export const handle = {
@@ -69,7 +68,7 @@ export const meta: MetaFunction = () => ({
   viewport: 'width=device-width,initial-scale=1',
 });
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({request, context}: LoaderArgs) {
   const [cartId, layout] = await Promise.all([
     context.session.get('cartId'),
     getLayoutData(context),
@@ -77,7 +76,7 @@ export async function loader({context}: LoaderArgs) {
 
   return defer({
     layout,
-    selectedLocale: context.storefront.i18n,
+    selectedLocale: getLocaleFromRequest(request),
     cart: cartId ? getCart(context, cartId) : undefined,
     analytics: {
       shopifyAppSource: ShopifyAppSource.hydrogen,
@@ -120,9 +119,6 @@ export default function App() {
   useShopifyCookies();
   const location = useLocation();
   const pageAnalytics = useExtractAnalyticsFromMatches();
-  const currency = useMemo(() => {
-    return locale.label.replace(/.*\(/, '').replace(/ .*/, '');
-  }, [locale.label]);
 
   // Page view analytics
   useEffect(() => {
@@ -132,7 +128,7 @@ export default function App() {
     const payload: ShopifyPageViewPayload = {
       ...getClientBrowserParameters(),
       ...pageAnalytics,
-      currency,
+      currency: locale.currency,
       acceptedLanguage: locale.language.toLowerCase(),
       hasUserConsent: false,
     };

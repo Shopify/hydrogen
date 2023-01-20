@@ -8,7 +8,7 @@ import type {
 // @ts-expect-error types not available
 import typographicBase from 'typographic-base';
 import {countries} from '~/data/countries';
-import {Locale} from './type';
+import {I18nLocale, Locale} from './type';
 
 export interface EnhancedMenuItem extends MenuItem {
   to: string;
@@ -254,9 +254,7 @@ export const DEFAULT_LOCALE: Locale & {pathPrefix: string} = Object.freeze({
   pathPrefix: '',
 });
 
-export function getLocaleFromRequest(request: Request): Locale & {
-  pathPrefix: string;
-} {
+export function getLocaleFromRequest(request: Request): I18nLocale {
   const url = new URL(request.url);
   const firstPathPart =
     '/' + url.pathname.substring(1).split('/')[0].toLowerCase();

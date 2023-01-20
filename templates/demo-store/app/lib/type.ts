@@ -4,12 +4,22 @@ import {
 } from '@shopify/storefront-kit-react/storefront-api-types';
 
 export type Locale = {
-  label?: string;
   language: LanguageCode;
   country: CountryCode;
+  label: string;
+  pathPrefix?: string;
+  currency: string;
 };
 
 export type Localizations = Record<string, Locale>;
+
+export type I18nLocale = {
+  language: LanguageCode;
+  country: CountryCode;
+  label: string;
+  pathPrefix: string;
+  currency: string;
+};
 
 export enum CartAction {
   ADD_TO_CART = 'ADD_TO_CART',
