@@ -30,7 +30,6 @@ export default class Dev extends Command {
     const {flags} = await this.parse(Dev);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
-    console.log('HELLO!!!!');
     await devService({directory, ...flags, commandConfig: this.config});
   }
 }

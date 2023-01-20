@@ -9,6 +9,10 @@ const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
 
 const hook: Hook<'init'> = async function (options) {
   if (isHydrogenV1()) {
+    output.warn(
+      `You are running a deprecated version of Hydrogen. Please upgrade to the latest version: https://hydrogen.shopify.dev`,
+    );
+
     if (await tryPatchCliForH1()) return restartProcessWithFlags();
   }
 
