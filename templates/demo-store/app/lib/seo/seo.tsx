@@ -32,7 +32,7 @@ export function Seo() {
       case 'script':
         return (
           <script key={tag.key} {...tag.props}>
-            {tag.props.children}
+            {tag.children}
           </script>
         );
 

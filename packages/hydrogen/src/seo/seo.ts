@@ -150,11 +150,18 @@ function generateTag<T extends HeadTag>(
 ): T | T[] {
   const tag = {tag: tagName, props: {}} as T;
 
-  // move to props.children to children
-  if (tagName === 'title' || tagName === 'script') {
+  // title tags don't have props so move to children
+  if (tagName === 'title') {
     tag.children = input;
+    tag.key = generateKey(tag);
 
-    delete tag.props.children;
+    return tag;
+  }
+
+  if (tagName === 'script') {
+    tag.children = input.children;
+
+    delete input.children;
   }
 
   // The rest goes on props

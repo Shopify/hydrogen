@@ -54,9 +54,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -117,9 +117,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil - A headless storefront\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil - A headless storefront\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -183,9 +183,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"description\\":\\"A headless storefront\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"description\\":\\"A headless storefront\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -241,9 +241,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"ItemList\\",\\"url\\":\\"https://hydrogen.shop/collections\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"ItemList\\",\\"url\\":\\"https://hydrogen.shop/collections\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -291,9 +291,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"image\\":\\"https://example.com/image.jpg\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"image\\":\\"https://example.com/image.jpg\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -350,9 +350,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"image\\":\\"https://example.com/image-2.jpg\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"image\\":\\"https://example.com/image-2.jpg\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -417,9 +417,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -514,9 +514,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -633,9 +633,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -691,9 +691,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -750,9 +750,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"url\\":\\"https://hydrogen.shopify.com/products/1234\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"url\\":\\"https://hydrogen.shopify.com/products/1234\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -810,9 +810,9 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"aggregateRating\\":{\\"@type\\":\\"AggregateRating\\",\\"bestRating\\":\\"100\\",\\"ratingCount\\":\\"24\\",\\"ratingValue\\":\\"87\\"},\\"offers\\":{\\"@type\\":\\"AggregateOffer\\",\\"highPrice\\":\\"$1495\\",\\"lowPrice\\":\\"$1250\\",\\"offerCount\\":\\"8\\",\\"offers\\":[{\\"@type\\":\\"Offer\\",\\"url\\":\\"hydrogen.shop/discounts/1234\\"}]}}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"aggregateRating\\":{\\"@type\\":\\"AggregateRating\\",\\"bestRating\\":\\"100\\",\\"ratingCount\\":\\"24\\",\\"ratingValue\\":\\"87\\"},\\"offers\\":{\\"@type\\":\\"AggregateOffer\\",\\"highPrice\\":\\"$1495\\",\\"lowPrice\\":\\"$1250\\",\\"offerCount\\":\\"8\\",\\"offers\\":[{\\"@type\\":\\"Offer\\",\\"url\\":\\"hydrogen.shop/discounts/1234\\"}]}}",
               "type": "application/ld+json",
             },
             "tag": "script",
