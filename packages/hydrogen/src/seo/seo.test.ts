@@ -678,7 +678,7 @@ describe('generateSeoTags', () => {
             "key": "meta-twitter:creator",
             "props": {
               "content": "@shopify",
-              "property": "twitter:creator",
+              "name": "twitter:creator",
             },
             "tag": "meta",
           },
@@ -686,7 +686,7 @@ describe('generateSeoTags', () => {
             "key": "meta-twitter:site",
             "props": {
               "content": "@shopify",
-              "property": "twitter:site",
+              "name": "twitter:site",
             },
             "tag": "meta",
           },

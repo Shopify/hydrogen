@@ -1,5 +1,19 @@
 import {useMatches} from '@remix-run/react';
-import {generateSeoTags} from '@shopify/hydrogen';
+import {generateSeoTags, type Seo as SeoType} from '@shopify/hydrogen';
+
+import type {
+  LoaderFunction,
+  SerializeFrom,
+  AppData,
+} from '@shopify/remix-oxygen';
+
+export interface SeoHandleFunction<
+  Loader extends LoaderFunction | unknown = unknown,
+> {
+  (
+    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData,
+  ): Partial<SeoType>;
+}
 
 export function Seo() {
   const matches = useMatches();

@@ -53,8 +53,8 @@ export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
 
         case 'handle':
           tagResults.push(
-            generateTag('meta', {property: 'twitter:site', content: value}),
-            generateTag('meta', {property: 'twitter:creator', content: value}),
+            generateTag('meta', {name: 'twitter:site', content: value}),
+            generateTag('meta', {name: 'twitter:creator', content: value}),
           );
 
           break;
