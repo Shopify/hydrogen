@@ -17,23 +17,15 @@ describe('generateSeoTags', () => {
         [
           {
             "children": "Snowdevil",
-            "key": "title",
+            "key": "0-title",
             "props": {},
             "tag": "title",
           },
           {
-            "key": "meta-twitter:title",
+            "key": "meta-og:title",
             "props": {
               "content": "Snowdevil",
-              "name": "twitter:title",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-twitter:card",
-            "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "property": "og:title",
             },
             "tag": "meta",
           },
@@ -46,10 +38,18 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:title",
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:title",
             "props": {
               "content": "Snowdevil",
-              "property": "og:title",
+              "name": "twitter:title",
             },
             "tag": "meta",
           },
@@ -80,23 +80,15 @@ describe('generateSeoTags', () => {
         [
           {
             "children": "Snowdevil - A headless storefront",
-            "key": "title",
+            "key": "0-title",
             "props": {},
             "tag": "title",
           },
           {
-            "key": "meta-twitter:title",
+            "key": "meta-og:title",
             "props": {
               "content": "Snowdevil - A headless storefront",
-              "name": "twitter:title",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-twitter:card",
-            "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "property": "og:title",
             },
             "tag": "meta",
           },
@@ -109,10 +101,18 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:title",
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:title",
             "props": {
               "content": "Snowdevil - A headless storefront",
-              "property": "og:title",
+              "name": "twitter:title",
             },
             "tag": "meta",
           },
@@ -143,26 +143,10 @@ describe('generateSeoTags', () => {
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-twitter:description",
+            "key": "meta-description",
             "props": {
               "content": "A headless storefront",
-              "name": "twitter:description",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-twitter:card",
-            "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:type",
-            "props": {
-              "content": "website",
-              "property": "og:type",
+              "name": "description",
             },
             "tag": "meta",
           },
@@ -175,10 +159,26 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-description",
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:description",
             "props": {
               "content": "A headless storefront",
-              "name": "description",
+              "name": "twitter:description",
             },
             "tag": "meta",
           },
@@ -209,10 +209,18 @@ describe('generateSeoTags', () => {
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-twitter:card",
+            "key": "link-canonical",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "href": "https://hydrogen.shop/collections",
+              "rel": "canonical",
+            },
+            "tag": "link",
+          },
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
             },
             "tag": "meta",
           },
@@ -225,20 +233,12 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:type",
+            "key": "meta-twitter:card",
             "props": {
-              "content": "website",
-              "property": "og:type",
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
-          },
-          {
-            "key": "link-canonical",
-            "props": {
-              "href": "https://hydrogen.shop/collections",
-              "rel": "canonical",
-            },
-            "tag": "link",
           },
           {
             "key": "script-application/ld+json",
@@ -267,10 +267,10 @@ describe('generateSeoTags', () => {
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-twitter:card",
+            "key": "meta-og:image",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "https://example.com/image.jpg",
+              "name": "og:image",
             },
             "tag": "meta",
           },
@@ -283,10 +283,10 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:image",
+            "key": "meta-twitter:card",
             "props": {
-              "content": "https://example.com/image.jpg",
-              "name": "og:image",
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -318,22 +318,6 @@ describe('generateSeoTags', () => {
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-twitter:card",
-            "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:type",
-            "props": {
-              "content": "website",
-              "property": "og:type",
-            },
-            "tag": "meta",
-          },
-          {
             "key": "meta-og:image",
             "props": {
               "content": "https://example.com/image-1.jpg",
@@ -346,6 +330,22 @@ describe('generateSeoTags', () => {
             "props": {
               "content": "https://example.com/image-2.jpg",
               "name": "og:image",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -377,10 +377,26 @@ describe('generateSeoTags', () => {
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-twitter:card",
+            "key": "meta-https://example.com/image-1.jpg-0-og:image:url",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.jpg-1-og:image:height",
+            "props": {
+              "content": "100",
+              "property": "og:image:height",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.jpg-1-og:image:type",
+            "props": {
+              "content": "image/jpeg",
+              "property": "og:image:type",
             },
             "tag": "meta",
           },
@@ -393,34 +409,10 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:image:url",
+            "key": "meta-twitter:card",
             "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:type",
-            "props": {
-              "content": "image/jpeg",
-              "property": "og:image:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:secure_url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:secure_url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:height",
-            "props": {
-              "content": "100",
-              "property": "og:image:height",
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -445,7 +437,7 @@ describe('generateSeoTags', () => {
             height: '100',
           },
           {
-            url: 'https://example.com/image-1.jpg',
+            url: 'https://example.com/image-2.jpg',
             width: '100',
           },
         ],
@@ -458,10 +450,50 @@ describe('generateSeoTags', () => {
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-twitter:card",
+            "key": "meta-https://example.com/image-1.jpg-0-og:image:url",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.jpg-1-og:image:height",
+            "props": {
+              "content": "100",
+              "property": "og:image:height",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.jpg-1-og:image:type",
+            "props": {
+              "content": "image/jpeg",
+              "property": "og:image:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-2.jpg-0-og:image:url",
+            "props": {
+              "content": "https://example.com/image-2.jpg",
+              "property": "og:image:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-2.jpg-1-og:image:type",
+            "props": {
+              "content": "image/jpeg",
+              "property": "og:image:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-2.jpg-1-og:image:width",
+            "props": {
+              "content": "100",
+              "property": "og:image:width",
             },
             "tag": "meta",
           },
@@ -474,66 +506,10 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:image:width",
+            "key": "meta-twitter:card",
             "props": {
-              "content": "100",
-              "property": "og:image:width",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:type",
-            "props": {
-              "content": "image/jpeg",
-              "property": "og:image:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:type",
-            "props": {
-              "content": "image/jpeg",
-              "property": "og:image:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:secure_url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:secure_url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:secure_url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:secure_url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:height",
-            "props": {
-              "content": "100",
-              "property": "og:image:height",
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -562,6 +538,11 @@ describe('generateSeoTags', () => {
             url: 'https://example.com/image-1.mp3',
             type: 'audio',
           },
+          {
+            url: 'https://example.com/image-1.jpg',
+            type: 'image',
+            height: 100,
+          },
         ],
       };
 
@@ -572,15 +553,47 @@ describe('generateSeoTags', () => {
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-twitter:card",
+            "key": "meta-https://example.com/image-1.jpg-0-og:image:url",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:url",
             },
             "tag": "meta",
           },
           {
-            "key": "meta-og:video:url",
+            "key": "meta-https://example.com/image-1.jpg-1-og:image:height",
+            "props": {
+              "content": 100,
+              "property": "og:image:height",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.jpg-1-og:image:type",
+            "props": {
+              "content": "image/jpeg",
+              "property": "og:image:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.mp3-0-og:audio:url",
+            "props": {
+              "content": "https://example.com/image-1.mp3",
+              "property": "og:audio:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.mp3-1-og:audio:type",
+            "props": {
+              "content": "audio/mpeg",
+              "property": "og:audio:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.swf-0-og:video:url",
             "props": {
               "content": "https://example.com/image-1.swf",
               "property": "og:video:url",
@@ -588,26 +601,18 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:video:type",
-            "props": {
-              "content": "application/x-shockwave-flash",
-              "property": "og:video:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:video:secure_url",
-            "props": {
-              "content": "https://example.com/image-1.swf",
-              "property": "og:video:secure_url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:video:height",
+            "key": "meta-https://example.com/image-1.swf-1-og:video:height",
             "props": {
               "content": "100",
               "property": "og:video:height",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.swf-1-og:video:type",
+            "props": {
+              "content": "application/x-shockwave-flash",
+              "property": "og:video:type",
             },
             "tag": "meta",
           },
@@ -620,26 +625,10 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:audio:url",
+            "key": "meta-twitter:card",
             "props": {
-              "content": "https://example.com/image-1.mp3",
-              "property": "og:audio:url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:audio:type",
-            "props": {
-              "content": "audio/mpeg",
-              "property": "og:audio:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:audio:secure_url",
-            "props": {
-              "content": "https://example.com/image-1.mp3",
-              "property": "og:audio:secure_url",
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },
@@ -670,18 +659,10 @@ describe('generateSeoTags', () => {
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-twitter:site",
+            "key": "meta-og:type",
             "props": {
-              "content": "@shopify",
-              "property": "twitter:site",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-twitter:creator",
-            "props": {
-              "content": "@shopify",
-              "property": "twitter:creator",
+              "content": "website",
+              "property": "og:type",
             },
             "tag": "meta",
           },
@@ -694,10 +675,18 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:type",
+            "key": "meta-twitter:creator",
             "props": {
-              "content": "website",
-              "property": "og:type",
+              "content": "@shopify",
+              "property": "twitter:creator",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:site",
+            "props": {
+              "content": "@shopify",
+              "property": "twitter:site",
             },
             "tag": "meta",
           },
@@ -729,10 +718,18 @@ describe('generateSeoTags', () => {
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-twitter:card",
+            "key": "link-canonical",
             "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
+              "href": "https://hydrogen.shopify.com/products/1234",
+              "rel": "canonical",
+            },
+            "tag": "link",
+          },
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
             },
             "tag": "meta",
           },
@@ -745,20 +742,12 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:type",
+            "key": "meta-twitter:card",
             "props": {
-              "content": "website",
-              "property": "og:type",
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
-          },
-          {
-            "key": "link-canonical",
-            "props": {
-              "href": "https://hydrogen.shopify.com/products/1234",
-              "rel": "canonical",
-            },
-            "tag": "link",
           },
           {
             "key": "script-application/ld+json",
@@ -805,18 +794,18 @@ describe('generateSeoTags', () => {
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-twitter:card",
-            "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
-            },
-            "tag": "meta",
-          },
-          {
             "key": "meta-og:type",
             "props": {
               "content": "website",
               "property": "og:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
             },
             "tag": "meta",
           },

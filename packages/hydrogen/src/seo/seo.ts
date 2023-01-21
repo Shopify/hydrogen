@@ -83,7 +83,7 @@ export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
               const normalizedMedia = media
                 ? {
                     url: media?.url,
-                    secure_url: media?.url,
+                    // secure_url: media?.url,
                     type: inferMimeType(media?.url),
                     width: media?.width,
                     height: media?.height,
@@ -94,11 +94,15 @@ export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
               for (const key of Object.keys(normalizedMedia)) {
                 if (normalizedMedia[key as keyof typeof normalizedMedia]) {
                   tagResults.push(
-                    generateTag('meta', {
-                      property: `og:${type}:${key}`,
-                      content:
-                        normalizedMedia[key as keyof typeof normalizedMedia],
-                    }),
+                    generateTag(
+                      'meta',
+                      {
+                        property: `og:${type}:${key}`,
+                        content:
+                          normalizedMedia[key as keyof typeof normalizedMedia],
+                      },
+                      normalizedMedia.url,
+                    ),
                   );
                 }
               }
@@ -129,9 +133,7 @@ export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
 
   return [...output, ...additionalTags]
     .flat()
-    .sort((a, b) => {
-      return -1 * a.key.localeCompare(b.key);
-    })
+    .sort((a, b) => a.key.localeCompare(b.key))
     .concat(
       generateTag('script', {
         type: 'application/ld+json',
@@ -144,33 +146,36 @@ export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
 function generateTag<T extends HeadTag>(
   tagName: T['tag'],
   input: any,
+  group?: string,
 ): T | T[] {
   const tag = {tag: tagName, props: {}} as T;
 
-  // title tags don't have props so move to children
-  if (tagName === 'title') {
+  // move to props.children to children
+  if (tagName === 'title' || tagName === 'script') {
     tag.children = input;
-    tag.key = generateKey(tag);
 
-    return tag;
+    delete tag.props.children;
   }
 
   // The rest goes on props
   tag.props = input;
-  tag.key = generateKey(tag);
+  tag.key = generateKey(tag, group);
 
   return tag;
 }
 
-function generateKey(tag: HeadTag) {
+function generateKey(tag: HeadTag, group?: string) {
   const {tag: tagName, props} = tag;
 
   if (tagName === 'title') {
-    return 'title';
+    return '0-title';
   }
 
   if (tagName === 'meta') {
-    return `${tagName}-${props.property || props.name}`;
+    const priority = props.content === group ? '-0-' : '-1-';
+    const groupName = group ? `-${group}${priority}` : '-';
+
+    return `${tagName}${groupName}${props.property || props.name}`;
   }
 
   if (tagName === 'link') {
