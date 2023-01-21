@@ -2,6 +2,51 @@ import {expect, describe, it} from 'vitest';
 import {generateSeoTags} from './seo';
 
 describe('generateSeoTags', () => {
+  it('removes undefined values', () => {
+    // Given
+    const input = {
+      title: undefined,
+      description: undefined,
+      url: undefined,
+      handle: undefined,
+      ldJson: undefined,
+      media: undefined,
+    };
+
+    // When
+    const output = generateSeoTags(input);
+
+    // Then
+    expect(output).toMatchInlineSnapshot(`
+      [
+        {
+          "key": "meta-og:type",
+          "props": {
+            "content": "website",
+            "property": "og:type",
+          },
+          "tag": "meta",
+        },
+        {
+          "key": "meta-twitter:card",
+          "props": {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+          "tag": "meta",
+        },
+        {
+          "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
+          "key": "script-application/ld+json",
+          "props": {
+            "type": "application/ld+json",
+          },
+          "tag": "script",
+        },
+      ]
+    `);
+  });
+
   describe('title', () => {
     it('should fill the title', () => {
       // Given

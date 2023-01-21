@@ -14,11 +14,16 @@ export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
       : [input[tag as keyof T]];
 
     const tags = values.map((value) => {
-      const tagResults = [];
+      const tagResults: any[] = [];
+
+      if (!value) {
+        return tagResults;
+      }
 
       switch (tag) {
         case 'title':
           const title = renderTitle(input.titleTemplate, value as string);
+
           tagResults.push(
             generateTag('title', title),
             generateTag('meta', {property: 'og:title', content: title}),
@@ -135,6 +140,7 @@ export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
     .flat()
     .sort((a, b) => a.key.localeCompare(b.key))
     .concat(
+      // move ld+json to the end
       generateTag('script', {
         type: 'application/ld+json',
         children: JSON.stringify(ldJson),
@@ -158,13 +164,14 @@ function generateTag<T extends HeadTag>(
     return tag;
   }
 
+  // also move the input children to children and delete it
   if (tagName === 'script') {
     tag.children = input.children;
 
     delete input.children;
   }
 
-  // The rest goes on props
+  // the rest goes on props
   tag.props = input;
   tag.key = generateKey(tag, group);
 
@@ -175,6 +182,7 @@ function generateKey(tag: HeadTag, group?: string) {
   const {tag: tagName, props} = tag;
 
   if (tagName === 'title') {
+    // leading 0 moves title to the top when sorting
     return '0-title';
   }
 

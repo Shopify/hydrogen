@@ -29,6 +29,10 @@ export function Seo() {
       return recursivelyInvokeOrReturn(handle.seo, data);
     })
     .reduce((acc, current) => {
+      Object.keys(current).forEach(
+        (key) => !current[key] && delete current[key],
+      );
+
       return {...acc, ...current};
     }, {});
 
