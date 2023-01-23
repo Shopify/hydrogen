@@ -1,3 +1,4 @@
+import {Maybe} from '@shopify/storefront-kit-react/storefront-api-types';
 import {WithContext} from 'schema-dts';
 
 export interface BaseSeo {
@@ -8,6 +9,7 @@ export interface BaseSeo {
   url?: any;
   handle?: any;
   ldJson?: any;
+  alternates?: any[];
 }
 
 export interface Seo {
@@ -18,7 +20,7 @@ export interface Seo {
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title
    */
-  title: string;
+  title: Maybe<string> | undefined;
   /**
    * Generate the title from a template that includes a `%s` placeholder for the
    * title.
@@ -31,7 +33,7 @@ export interface Seo {
    * }
    * ```
    */
-  titleTemplate: string | null;
+  titleTemplate: Maybe<string> | undefined | null;
   /**
    * The media associated with the given page (images, videos, etc). If you pass
    * a string, it will be used as the `og:image` meta tag. If you pass an object
@@ -57,14 +59,14 @@ export interface Seo {
    * ```
    *
    */
-  media: string | SeoMedia[];
+  media: Maybe<string> | undefined | SeoMedia[];
   /**
    * The description of the page. This is used in the `name="description"` meta
    * tag as well as the `og:description` meta tag.
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
    */
-  description: string;
+  description: Maybe<string> | undefined;
   /**
    * The canonical URL of the page. This is used to tell search engines which
    * URL is the canonical version of a page. This is useful when you have
@@ -73,7 +75,7 @@ export interface Seo {
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
    */
-  url: string;
+  url: Maybe<string> | undefined;
   /**
    * The handle is used to generate the `twitter:site` and `twitter:creator`
    * meta tags. Include the `@` symbol in the handle.
@@ -85,7 +87,7 @@ export interface Seo {
    * }
    * ```
    */
-  handle: string;
+  handle: Maybe<string> | undefined;
   /**
    * The `ldJson` property is used to generate the `application/ld+json` script
    * tag. This is used to provide structured data to search engines. The value
@@ -143,6 +145,51 @@ export interface Seo {
    *
    */
   ldJson: <T extends SchemaType>(type: T) => WithContext<T>;
+  /**
+   * The `alternates` property is used to specify the language and geographical targeting when you have multiple
+   * versions of the same page in different languages. The `url` property tells search engines about these variations
+   * and helps them to serve the correct version to their users.
+   *
+   * @example
+   * ```js
+   * {
+   *   alternates: [
+   *     {
+   *       language: 'en-US',
+   *       url: 'https://hydrogen.shop/en-us',
+   *       default: true,
+   *     },
+   *     {
+   *       media: 'only screen and (max-width: 640px)',
+   *       url: 'https://m.hydrogen.shop/en-ca',
+   *     },
+   *     {
+   *       language: 'fr-CA',
+   *       url: 'https://hydrogen.shop/fr-ca',
+   *     },
+   *   ]
+   * }
+   * ```
+   * @see https://support.google.com/webmasters/answer/189077?hl=en
+   */
+  alternates: (LanguageAlternate | MobileAlternate)[];
+}
+
+export interface LanguageAlternate {
+  // Language code for the alternate page. This is used to generate the hreflang meta tag property.
+  language: string;
+  // Whether or not the alternate page is the default page. This will add the `x-default`
+  // attribution to the language code.
+  default?: boolean;
+  // The url of the alternate page. This is used to generate the hreflang meta tag property.
+  url: string;
+}
+
+export interface MobileAlternate {
+  // The media attribute specifies what media/device the target url is optimized for.
+  media: string;
+  // The url of the alternate page. This is used to generate the hreflang meta tag property.
+  url: string;
 }
 
 export type SeoMedia = {
@@ -168,7 +215,7 @@ export interface HeadTag {
   tag: TagKey;
   props: Record<string, any>;
   children?: string;
-  key?: string;
+  key: string;
 }
 
 export type SchemaType =

@@ -38,6 +38,17 @@ import {
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data';
 
+import type {SeoHandleFunction} from '~/lib/seo';
+
+const seo: SeoHandleFunction<typeof loader> = (data) => ({
+  title: data?.product?.seo?.title,
+  description: data?.product?.seo?.description,
+});
+
+export const handle = {
+  seo,
+};
+
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');

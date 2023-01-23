@@ -15,6 +15,17 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 
+import type {SeoHandleFunction} from '~/lib/seo';
+
+const seo: SeoHandleFunction<typeof loader> = (data) => ({
+  title: data?.collection?.seo?.title,
+  description: data?.collection?.seo?.description,
+});
+
+export const handle = {
+  seo,
+};
+
 import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
 const PAGINATION_SIZE = 48;

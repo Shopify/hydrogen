@@ -1,1 +1,1 @@
-export {Seo} from './seo';
+export {Seo, type SeoHandleFunction} from './seo';
