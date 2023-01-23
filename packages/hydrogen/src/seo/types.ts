@@ -1,3 +1,4 @@
+import {Maybe} from '@shopify/storefront-kit-react/storefront-api-types';
 import {WithContext} from 'schema-dts';
 
 export interface BaseSeo {
@@ -19,7 +20,7 @@ export interface Seo {
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/title
    */
-  title: string;
+  title: Maybe<string> | undefined;
   /**
    * Generate the title from a template that includes a `%s` placeholder for the
    * title.
@@ -32,7 +33,7 @@ export interface Seo {
    * }
    * ```
    */
-  titleTemplate: string | null;
+  titleTemplate: Maybe<string> | undefined | null;
   /**
    * The media associated with the given page (images, videos, etc). If you pass
    * a string, it will be used as the `og:image` meta tag. If you pass an object
@@ -58,14 +59,14 @@ export interface Seo {
    * ```
    *
    */
-  media: string | SeoMedia[];
+  media: Maybe<string> | undefined | SeoMedia[];
   /**
    * The description of the page. This is used in the `name="description"` meta
    * tag as well as the `og:description` meta tag.
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/meta
    */
-  description: string;
+  description: Maybe<string> | undefined;
   /**
    * The canonical URL of the page. This is used to tell search engines which
    * URL is the canonical version of a page. This is useful when you have
@@ -74,7 +75,7 @@ export interface Seo {
    *
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/link
    */
-  url: string;
+  url: Maybe<string> | undefined;
   /**
    * The handle is used to generate the `twitter:site` and `twitter:creator`
    * meta tags. Include the `@` symbol in the handle.
@@ -86,7 +87,7 @@ export interface Seo {
    * }
    * ```
    */
-  handle: string;
+  handle: Maybe<string> | undefined;
   /**
    * The `ldJson` property is used to generate the `application/ld+json` script
    * tag. This is used to provide structured data to search engines. The value
