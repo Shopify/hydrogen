@@ -1,5 +1,19 @@
 import {useMatches} from '@remix-run/react';
-import {inferStorefrontSeo} from '@shopify/hydrogen';
+import {generateSeoTags, type Seo as SeoType} from '@shopify/hydrogen';
+
+import type {
+  LoaderFunction,
+  SerializeFrom,
+  AppData,
+} from '@shopify/remix-oxygen';
+
+export interface SeoHandleFunction<
+  Loader extends LoaderFunction | unknown = unknown,
+> {
+  (
+    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData,
+  ): Partial<SeoType>;
+}
 
 export function Seo() {
   const matches = useMatches();
@@ -15,10 +29,14 @@ export function Seo() {
       return recursivelyInvokeOrReturn(handle.seo, data);
     })
     .reduce((acc, current) => {
+      Object.keys(current).forEach(
+        (key) => !current[key] && delete current[key],
+      );
+
       return {...acc, ...current};
     }, {});
 
-  const headTags = inferStorefrontSeo(seoConfig);
+  const headTags = generateSeoTags(seoConfig);
 
   /* eslint-disable react/no-children-prop */
   const html = headTags.map((tag) => {

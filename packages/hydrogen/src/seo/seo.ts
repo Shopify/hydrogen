@@ -1,7 +1,14 @@
-import type {BaseSeo, Seo, HeadTag, SchemaType} from './types';
+import type {
+  BaseSeo,
+  Seo,
+  HeadTag,
+  SchemaType,
+  LanguageAlternate,
+  MobileAlternate,
+} from './types';
 import type {WithContext} from 'schema-dts';
 
-export function inferStorefrontSeo<T extends BaseSeo = Seo>(input: T) {
+export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
   const output: HeadTag[] = [];
   let ldJson: WithContext<any> = {
     '@context': 'https://schema.org',
@@ -14,11 +21,16 @@ export function inferStorefrontSeo<T extends BaseSeo = Seo>(input: T) {
       : [input[tag as keyof T]];
 
     const tags = values.map((value) => {
-      const tagResults = [];
+      const tagResults: any[] = [];
+
+      if (!value) {
+        return tagResults;
+      }
 
       switch (tag) {
         case 'title':
           const title = renderTitle(input.titleTemplate, value as string);
+
           tagResults.push(
             generateTag('title', title),
             generateTag('meta', {property: 'og:title', content: title}),
@@ -53,8 +65,8 @@ export function inferStorefrontSeo<T extends BaseSeo = Seo>(input: T) {
 
         case 'handle':
           tagResults.push(
-            generateTag('meta', {property: 'twitter:site', content: value}),
-            generateTag('meta', {property: 'twitter:creator', content: value}),
+            generateTag('meta', {name: 'twitter:site', content: value}),
+            generateTag('meta', {name: 'twitter:creator', content: value}),
           );
 
           break;
@@ -94,15 +106,48 @@ export function inferStorefrontSeo<T extends BaseSeo = Seo>(input: T) {
               for (const key of Object.keys(normalizedMedia)) {
                 if (normalizedMedia[key as keyof typeof normalizedMedia]) {
                   tagResults.push(
-                    generateTag('meta', {
-                      property: `og:${type}:${key}`,
-                      content:
-                        normalizedMedia[key as keyof typeof normalizedMedia],
-                    }),
+                    generateTag(
+                      'meta',
+                      {
+                        property: `og:${type}:${key}`,
+                        content:
+                          normalizedMedia[key as keyof typeof normalizedMedia],
+                      },
+                      normalizedMedia.url,
+                    ),
                   );
                 }
               }
             }
+          }
+          break;
+
+        case 'alternates':
+          const alternates = Array.isArray(value) ? value : [value];
+
+          for (const alternate of alternates) {
+            const {
+              // @ts-expect-error untyped
+              language,
+              // @ts-expect-error untyped
+              media,
+              url,
+              // @ts-expect-error untyped
+              default: defaultLang,
+            } = alternate as Seo['alternates'][0];
+
+            const hreflang = language
+              ? `${language}${defaultLang ? '-default' : ''}`
+              : undefined;
+
+            tagResults.push(
+              generateTag('link', {
+                rel: 'alternate',
+                hreflang,
+                media,
+                href: url,
+              }),
+            );
           }
 
           break;
@@ -125,18 +170,25 @@ export function inferStorefrontSeo<T extends BaseSeo = Seo>(input: T) {
       name: 'twitter:card',
       content: 'summary_large_image',
     }),
-    generateTag('script', {
-      type: 'application/ld+json',
-      children: JSON.stringify(ldJson),
-    }),
   ];
 
-  return [...output, ...additionalTags].flat();
+  return [...output, ...additionalTags]
+    .flat()
+    .sort((a, b) => a.key.localeCompare(b.key))
+    .concat(
+      // move ld+json to the end
+      generateTag('script', {
+        type: 'application/ld+json',
+        children: JSON.stringify(ldJson),
+      }),
+    )
+    .flat();
 }
 
 function generateTag<T extends HeadTag>(
   tagName: T['tag'],
   input: any,
+  group?: string,
 ): T | T[] {
   const tag = {tag: tagName, props: {}} as T;
 
@@ -148,26 +200,53 @@ function generateTag<T extends HeadTag>(
     return tag;
   }
 
-  // The rest goes on props
+  // also move the input children to children and delete it
+  if (tagName === 'script') {
+    tag.children = input.children;
+
+    delete input.children;
+  }
+
+  // the rest goes on props
   tag.props = input;
-  tag.key = generateKey(tag);
+
+  // remove empty props
+  Object.keys(tag.props).forEach(
+    (key) => !tag.props[key] && delete tag.props[key],
+  );
+
+  tag.key = generateKey(tag, group);
 
   return tag;
 }
 
-function generateKey(tag: HeadTag) {
+function generateKey(tag: HeadTag, group?: string) {
   const {tag: tagName, props} = tag;
 
   if (tagName === 'title') {
-    return 'title';
+    // leading 0 moves title to the top when sorting
+    return '0-title';
   }
 
   if (tagName === 'meta') {
-    return `${tagName}-${props.property || props.name}`;
+    // leading 0 moves meta to the top when sorting
+    // exclude secure_url from the logic because the content is the same as url
+    const priority =
+      props.content === group && !props.property.endsWith('secure_url') && '0';
+    const groupName = [group, priority];
+
+    return [tagName, ...groupName, props.property || props.name]
+      .filter((x) => x)
+      .join('-');
   }
 
   if (tagName === 'link') {
-    return `${tagName}-${props.rel}`;
+    const key = [tagName, props.rel, props.hreflang || props.media]
+      .filter((x) => x)
+      .join('-');
+
+    // replace spaces with dashes, needed for media prop
+    return key.replace(/\s+/g, '-');
   }
 
   return `${tagName}-${props.type}`;

@@ -1,7 +1,52 @@
 import {expect, describe, it} from 'vitest';
-import {inferStorefrontSeo} from './seo';
+import {generateSeoTags} from './seo';
 
-describe('inferStorefrontSeo', () => {
+describe('generateSeoTags', () => {
+  it('removes undefined values', () => {
+    // Given
+    const input = {
+      title: undefined,
+      description: undefined,
+      url: undefined,
+      handle: undefined,
+      ldJson: undefined,
+      media: undefined,
+    };
+
+    // When
+    const output = generateSeoTags(input);
+
+    // Then
+    expect(output).toMatchInlineSnapshot(`
+      [
+        {
+          "key": "meta-og:type",
+          "props": {
+            "content": "website",
+            "property": "og:type",
+          },
+          "tag": "meta",
+        },
+        {
+          "key": "meta-twitter:card",
+          "props": {
+            "content": "summary_large_image",
+            "name": "twitter:card",
+          },
+          "tag": "meta",
+        },
+        {
+          "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
+          "key": "script-application/ld+json",
+          "props": {
+            "type": "application/ld+json",
+          },
+          "tag": "script",
+        },
+      ]
+    `);
+  });
+
   describe('title', () => {
     it('should fill the title', () => {
       // Given
@@ -10,14 +55,14 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
             "children": "Snowdevil",
-            "key": "title",
+            "key": "0-title",
             "props": {},
             "tag": "title",
           },
@@ -26,14 +71,6 @@ describe('inferStorefrontSeo', () => {
             "props": {
               "content": "Snowdevil",
               "property": "og:title",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-twitter:title",
-            "props": {
-              "content": "Snowdevil",
-              "name": "twitter:title",
             },
             "tag": "meta",
           },
@@ -54,9 +91,17 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "key": "meta-twitter:title",
+            "props": {
+              "content": "Snowdevil",
+              "name": "twitter:title",
+            },
+            "tag": "meta",
+          },
+          {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -73,14 +118,14 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
             "children": "Snowdevil - A headless storefront",
-            "key": "title",
+            "key": "0-title",
             "props": {},
             "tag": "title",
           },
@@ -89,14 +134,6 @@ describe('inferStorefrontSeo', () => {
             "props": {
               "content": "Snowdevil - A headless storefront",
               "property": "og:title",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-twitter:title",
-            "props": {
-              "content": "Snowdevil - A headless storefront",
-              "name": "twitter:title",
             },
             "tag": "meta",
           },
@@ -117,9 +154,17 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "key": "meta-twitter:title",
+            "props": {
+              "content": "Snowdevil - A headless storefront",
+              "name": "twitter:title",
+            },
+            "tag": "meta",
+          },
+          {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil - A headless storefront\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil - A headless storefront\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -137,7 +182,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -159,14 +204,6 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-twitter:description",
-            "props": {
-              "content": "A headless storefront",
-              "name": "twitter:description",
-            },
-            "tag": "meta",
-          },
-          {
             "key": "meta-og:type",
             "props": {
               "content": "website",
@@ -183,9 +220,17 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "key": "meta-twitter:description",
+            "props": {
+              "content": "A headless storefront",
+              "name": "twitter:description",
+            },
+            "tag": "meta",
+          },
+          {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"description\\":\\"A headless storefront\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"description\\":\\"A headless storefront\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -203,19 +248,11 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
-          {
-            "key": "meta-og:url",
-            "props": {
-              "content": "https://hydrogen.shop/collections",
-              "property": "og:url",
-            },
-            "tag": "meta",
-          },
           {
             "key": "link-canonical",
             "props": {
@@ -233,6 +270,14 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "key": "meta-og:url",
+            "props": {
+              "content": "https://hydrogen.shop/collections",
+              "property": "og:url",
+            },
+            "tag": "meta",
+          },
+          {
             "key": "meta-twitter:card",
             "props": {
               "content": "summary_large_image",
@@ -241,9 +286,9 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"ItemList\\",\\"url\\":\\"https://hydrogen.shop/collections\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"ItemList\\",\\"url\\":\\"https://hydrogen.shop/collections\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -261,7 +306,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -291,9 +336,9 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"image\\":\\"https://example.com/image.jpg\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"image\\":\\"https://example.com/image.jpg\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -312,7 +357,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -350,9 +395,9 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"image\\":\\"https://example.com/image-2.jpg\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"image\\":\\"https://example.com/image-2.jpg\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -371,13 +416,13 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-og:image:url",
+            "key": "meta-https://example.com/image-1.jpg-0-og:image:url",
             "props": {
               "content": "https://example.com/image-1.jpg",
               "property": "og:image:url",
@@ -385,7 +430,15 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:image:secure_url",
+            "key": "meta-https://example.com/image-1.jpg-og:image:height",
+            "props": {
+              "content": "100",
+              "property": "og:image:height",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.jpg-og:image:secure_url",
             "props": {
               "content": "https://example.com/image-1.jpg",
               "property": "og:image:secure_url",
@@ -393,18 +446,10 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:image:type",
+            "key": "meta-https://example.com/image-1.jpg-og:image:type",
             "props": {
               "content": "image/jpeg",
               "property": "og:image:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:height",
-            "props": {
-              "content": "100",
-              "property": "og:image:height",
             },
             "tag": "meta",
           },
@@ -425,9 +470,9 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -445,20 +490,20 @@ describe('inferStorefrontSeo', () => {
             height: '100',
           },
           {
-            url: 'https://example.com/image-1.jpg',
+            url: 'https://example.com/image-2.jpg',
             width: '100',
           },
         ],
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-og:image:url",
+            "key": "meta-https://example.com/image-1.jpg-0-og:image:url",
             "props": {
               "content": "https://example.com/image-1.jpg",
               "property": "og:image:url",
@@ -466,23 +511,7 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:image:secure_url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:secure_url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:type",
-            "props": {
-              "content": "image/jpeg",
-              "property": "og:image:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:height",
+            "key": "meta-https://example.com/image-1.jpg-og:image:height",
             "props": {
               "content": "100",
               "property": "og:image:height",
@@ -490,15 +519,7 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:image:url",
-            "props": {
-              "content": "https://example.com/image-1.jpg",
-              "property": "og:image:url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:image:secure_url",
+            "key": "meta-https://example.com/image-1.jpg-og:image:secure_url",
             "props": {
               "content": "https://example.com/image-1.jpg",
               "property": "og:image:secure_url",
@@ -506,7 +527,7 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:image:type",
+            "key": "meta-https://example.com/image-1.jpg-og:image:type",
             "props": {
               "content": "image/jpeg",
               "property": "og:image:type",
@@ -514,7 +535,31 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:image:width",
+            "key": "meta-https://example.com/image-2.jpg-0-og:image:url",
+            "props": {
+              "content": "https://example.com/image-2.jpg",
+              "property": "og:image:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-2.jpg-og:image:secure_url",
+            "props": {
+              "content": "https://example.com/image-2.jpg",
+              "property": "og:image:secure_url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-2.jpg-og:image:type",
+            "props": {
+              "content": "image/jpeg",
+              "property": "og:image:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-2.jpg-og:image:width",
             "props": {
               "content": "100",
               "property": "og:image:width",
@@ -538,9 +583,9 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -562,49 +607,54 @@ describe('inferStorefrontSeo', () => {
             url: 'https://example.com/image-1.mp3',
             type: 'audio',
           },
+          {
+            url: 'https://example.com/image-1.jpg',
+            type: 'image',
+            height: 100,
+          },
         ],
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
           {
-            "key": "meta-og:video:url",
+            "key": "meta-https://example.com/image-1.jpg-0-og:image:url",
             "props": {
-              "content": "https://example.com/image-1.swf",
-              "property": "og:video:url",
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:url",
             },
             "tag": "meta",
           },
           {
-            "key": "meta-og:video:secure_url",
+            "key": "meta-https://example.com/image-1.jpg-og:image:height",
             "props": {
-              "content": "https://example.com/image-1.swf",
-              "property": "og:video:secure_url",
+              "content": 100,
+              "property": "og:image:height",
             },
             "tag": "meta",
           },
           {
-            "key": "meta-og:video:type",
+            "key": "meta-https://example.com/image-1.jpg-og:image:secure_url",
             "props": {
-              "content": "application/x-shockwave-flash",
-              "property": "og:video:type",
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:secure_url",
             },
             "tag": "meta",
           },
           {
-            "key": "meta-og:video:height",
+            "key": "meta-https://example.com/image-1.jpg-og:image:type",
             "props": {
-              "content": "100",
-              "property": "og:video:height",
+              "content": "image/jpeg",
+              "property": "og:image:type",
             },
             "tag": "meta",
           },
           {
-            "key": "meta-og:audio:url",
+            "key": "meta-https://example.com/image-1.mp3-0-og:audio:url",
             "props": {
               "content": "https://example.com/image-1.mp3",
               "property": "og:audio:url",
@@ -612,7 +662,7 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:audio:secure_url",
+            "key": "meta-https://example.com/image-1.mp3-og:audio:secure_url",
             "props": {
               "content": "https://example.com/image-1.mp3",
               "property": "og:audio:secure_url",
@@ -620,10 +670,42 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-og:audio:type",
+            "key": "meta-https://example.com/image-1.mp3-og:audio:type",
             "props": {
               "content": "audio/mpeg",
               "property": "og:audio:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.swf-0-og:video:url",
+            "props": {
+              "content": "https://example.com/image-1.swf",
+              "property": "og:video:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.swf-og:video:height",
+            "props": {
+              "content": "100",
+              "property": "og:video:height",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.swf-og:video:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.swf",
+              "property": "og:video:secure_url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.swf-og:video:type",
+            "props": {
+              "content": "application/x-shockwave-flash",
+              "property": "og:video:type",
             },
             "tag": "meta",
           },
@@ -644,9 +726,9 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -664,27 +746,11 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
-          {
-            "key": "meta-twitter:site",
-            "props": {
-              "content": "@shopify",
-              "property": "twitter:site",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-twitter:creator",
-            "props": {
-              "content": "@shopify",
-              "property": "twitter:creator",
-            },
-            "tag": "meta",
-          },
           {
             "key": "meta-og:type",
             "props": {
@@ -702,9 +768,25 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "key": "meta-twitter:creator",
+            "props": {
+              "content": "@shopify",
+              "name": "twitter:creator",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:site",
+            "props": {
+              "content": "@shopify",
+              "name": "twitter:site",
+            },
+            "tag": "meta",
+          },
+          {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -723,19 +805,11 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
         [
-          {
-            "key": "meta-og:url",
-            "props": {
-              "content": "https://hydrogen.shopify.com/products/1234",
-              "property": "og:url",
-            },
-            "tag": "meta",
-          },
           {
             "key": "link-canonical",
             "props": {
@@ -753,6 +827,14 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "key": "meta-og:url",
+            "props": {
+              "content": "https://hydrogen.shopify.com/products/1234",
+              "property": "og:url",
+            },
+            "tag": "meta",
+          },
+          {
             "key": "meta-twitter:card",
             "props": {
               "content": "summary_large_image",
@@ -761,9 +843,9 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"url\\":\\"https://hydrogen.shopify.com/products/1234\\"}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"url\\":\\"https://hydrogen.shopify.com/products/1234\\"}",
               "type": "application/ld+json",
             },
             "tag": "script",
@@ -799,7 +881,7 @@ describe('inferStorefrontSeo', () => {
       };
 
       // When
-      const output = inferStorefrontSeo(input);
+      const output = generateSeoTags(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -821,9 +903,92 @@ describe('inferStorefrontSeo', () => {
             "tag": "meta",
           },
           {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"aggregateRating\\":{\\"@type\\":\\"AggregateRating\\",\\"bestRating\\":\\"100\\",\\"ratingCount\\":\\"24\\",\\"ratingValue\\":\\"87\\"},\\"offers\\":{\\"@type\\":\\"AggregateOffer\\",\\"highPrice\\":\\"$1495\\",\\"lowPrice\\":\\"$1250\\",\\"offerCount\\":\\"8\\",\\"offers\\":[{\\"@type\\":\\"Offer\\",\\"url\\":\\"hydrogen.shop/discounts/1234\\"}]}}",
             "key": "script-application/ld+json",
             "props": {
-              "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"aggregateRating\\":{\\"@type\\":\\"AggregateRating\\",\\"bestRating\\":\\"100\\",\\"ratingCount\\":\\"24\\",\\"ratingValue\\":\\"87\\"},\\"offers\\":{\\"@type\\":\\"AggregateOffer\\",\\"highPrice\\":\\"$1495\\",\\"lowPrice\\":\\"$1250\\",\\"offerCount\\":\\"8\\",\\"offers\\":[{\\"@type\\":\\"Offer\\",\\"url\\":\\"hydrogen.shop/discounts/1234\\"}]}}",
+              "type": "application/ld+json",
+            },
+            "tag": "script",
+          },
+        ]
+      `);
+    });
+  });
+
+  describe('alternates', () => {
+    it('should add alternate links for each alternate', () => {
+      // Given
+      const input = {
+        alternates: [
+          {
+            url: 'https://hydrogen.shop.com/fr/products/1234',
+            language: 'fr',
+            default: true,
+          },
+          {
+            url: 'https://hydrogen.shop.com/de/products/1234',
+            language: 'de',
+          },
+          {
+            url: 'https://m.hydrogen.shop.com/es/products/1234',
+            media: 'only screen and (max-width: 640px)',
+          },
+        ],
+      };
+
+      // When
+      const output = generateSeoTags(input);
+
+      // Then
+      expect(output).toMatchInlineSnapshot(`
+        [
+          {
+            "key": "link-alternate-de",
+            "props": {
+              "href": "https://hydrogen.shop.com/de/products/1234",
+              "hreflang": "de",
+              "rel": "alternate",
+            },
+            "tag": "link",
+          },
+          {
+            "key": "link-alternate-fr-default",
+            "props": {
+              "href": "https://hydrogen.shop.com/fr/products/1234",
+              "hreflang": "fr-default",
+              "rel": "alternate",
+            },
+            "tag": "link",
+          },
+          {
+            "key": "link-alternate-only-screen-and-(max-width:-640px)",
+            "props": {
+              "href": "https://m.hydrogen.shop.com/es/products/1234",
+              "media": "only screen and (max-width: 640px)",
+              "rel": "alternate",
+            },
+            "tag": "link",
+          },
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
+            "key": "script-application/ld+json",
+            "props": {
               "type": "application/ld+json",
             },
             "tag": "script",

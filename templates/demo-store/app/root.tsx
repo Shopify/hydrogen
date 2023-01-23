@@ -19,7 +19,7 @@ import {Layout} from '~/components';
 import {getLayoutData, type LayoutData} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
-import {Seo} from './lib/seo';
+import {Seo, type SeoHandleFunction} from './lib/seo';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
@@ -27,12 +27,15 @@ import {DEFAULT_LOCALE} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Cart} from '@shopify/storefront-kit-react/storefront-api-types';
 
+const seo: SeoHandleFunction<typeof loader> = (data) => ({
+  title: data?.layout?.shop?.name,
+  description: data?.layout?.shop?.description,
+  handle: '@shopify',
+  url: 'https://hydrogen.shop',
+});
+
 export const handle = {
-  // @todo - remove any and type the seo callback
-  seo: (data: any) => ({
-    title: data?.layout?.shop?.name,
-    titleTemplate: `%s | ${data?.layout?.shop?.name}`,
-  }),
+  seo,
 };
 
 export const links: LinksFunction = () => {
