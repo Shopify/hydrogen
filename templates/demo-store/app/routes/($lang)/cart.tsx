@@ -161,7 +161,16 @@ export async function action({request, context}: ActionArgs) {
   }
 
   const {cart, errors} = result;
-  return json({cart, errors}, {status, headers});
+  return json(
+    {
+      cart,
+      errors,
+      analytics: {
+        cartId,
+      },
+    },
+    {status, headers},
+  );
 }
 
 export default function CartRoute() {

@@ -17,6 +17,7 @@ import {
   useMatches,
   useFetchers,
 } from '@remix-run/react';
+import {useDataFromMatches, useDataFromFetchers} from '@shopify/hydrogen';
 import {Layout} from '~/components';
 import {getLayoutData, type LayoutData} from '~/data';
 import {GenericError} from './components/GenericError';
@@ -85,40 +86,13 @@ export async function loader({request, context}: LoaderArgs) {
   });
 }
 
-// To-do: move this to H2 package
-function useExtractAnalyticsFromMatches(): Record<string, unknown> {
-  const matches = useMatches();
-  const analytics: Record<string, unknown> = {};
-
-  matches.forEach((event) => {
-    if (event?.data?.analytics) {
-      Object.assign(analytics, event.data.analytics);
-    }
-  });
-
-  return analytics;
-}
-
-function useCartActionCompleteFetchers(actionName: string) {
-  const fetchers = useFetchers();
-  const cartFetchers = [];
-
-  for (const fetcher of fetchers) {
-    const formData = fetcher.submission?.formData;
-    if (fetcher.data && formData && formData.get('cartAction') === actionName) {
-      cartFetchers.push(fetcher);
-    }
-  }
-  return cartFetchers;
-}
-
 export default function App() {
   const data = useLoaderData<typeof loader>();
   const locale = data.selectedLocale ?? DEFAULT_LOCALE;
 
   useShopifyCookies();
   const location = useLocation();
-  const pageAnalytics = useExtractAnalyticsFromMatches();
+  const pageAnalytics = useDataFromMatches('analytics');
 
   // Page view analytics
   useEffect(() => {
@@ -140,9 +114,13 @@ export default function App() {
   }, [location]);
 
   // Add to cart analytics
-  const cartFetchers = useCartActionCompleteFetchers(CartAction.ADD_TO_CART);
-  if (cartFetchers.length) {
-    console.log('cartFetchers', cartFetchers);
+  const cartData = useDataFromFetchers({
+    formDataKey: 'cartAction',
+    formDataValue: CartAction.ADD_TO_CART,
+    dataKey: 'analytics',
+  });
+  if (cartData) {
+    console.log('cartData', cartData);
   }
 
   return (
