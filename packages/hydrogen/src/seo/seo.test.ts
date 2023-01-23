@@ -438,6 +438,14 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "key": "meta-https://example.com/image-1.jpg-og:image:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:secure_url",
+            },
+            "tag": "meta",
+          },
+          {
             "key": "meta-https://example.com/image-1.jpg-og:image:type",
             "props": {
               "content": "image/jpeg",
@@ -511,6 +519,14 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "key": "meta-https://example.com/image-1.jpg-og:image:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:secure_url",
+            },
+            "tag": "meta",
+          },
+          {
             "key": "meta-https://example.com/image-1.jpg-og:image:type",
             "props": {
               "content": "image/jpeg",
@@ -523,6 +539,14 @@ describe('generateSeoTags', () => {
             "props": {
               "content": "https://example.com/image-2.jpg",
               "property": "og:image:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-2.jpg-og:image:secure_url",
+            "props": {
+              "content": "https://example.com/image-2.jpg",
+              "property": "og:image:secure_url",
             },
             "tag": "meta",
           },
@@ -614,6 +638,14 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
+            "key": "meta-https://example.com/image-1.jpg-og:image:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.jpg",
+              "property": "og:image:secure_url",
+            },
+            "tag": "meta",
+          },
+          {
             "key": "meta-https://example.com/image-1.jpg-og:image:type",
             "props": {
               "content": "image/jpeg",
@@ -626,6 +658,14 @@ describe('generateSeoTags', () => {
             "props": {
               "content": "https://example.com/image-1.mp3",
               "property": "og:audio:url",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.mp3-og:audio:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.mp3",
+              "property": "og:audio:secure_url",
             },
             "tag": "meta",
           },
@@ -650,6 +690,14 @@ describe('generateSeoTags', () => {
             "props": {
               "content": "100",
               "property": "og:video:height",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-https://example.com/image-1.swf-og:video:secure_url",
+            "props": {
+              "content": "https://example.com/image-1.swf",
+              "property": "og:video:secure_url",
             },
             "tag": "meta",
           },

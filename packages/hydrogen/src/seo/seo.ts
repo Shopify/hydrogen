@@ -95,7 +95,7 @@ export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
               const normalizedMedia = media
                 ? {
                     url: media?.url,
-                    // secure_url: media?.url,
+                    secure_url: media?.url,
                     type: inferMimeType(media?.url),
                     width: media?.width,
                     height: media?.height,
@@ -229,7 +229,10 @@ function generateKey(tag: HeadTag, group?: string) {
   }
 
   if (tagName === 'meta') {
-    const priority = props.content === group && '0';
+    // leading 0 moves meta to the top when sorting
+    // exclude secure_url from the logic because the content is the same as url
+    const priority =
+      props.content === group && !props.property.endsWith('secure_url') && '0';
     const groupName = [group, priority];
 
     return [tagName, ...groupName, props.property || props.name]
