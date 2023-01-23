@@ -30,8 +30,8 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
       required: true,
     }),
-    disableShadowRoutes: Flags.boolean({
-      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_SHADOW_ROUTES',
+    disableOnboardingRoutes: Flags.boolean({
+      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ONBOARDING_ROUTES',
       default: false,
     }),
   };
@@ -49,25 +49,25 @@ export async function runDev({
   entry,
   port,
   path: appPath,
-  disableShadowRoutes,
+  disableOnboardingRoutes,
 }: {
   entry: string;
   port?: number;
   path?: string;
-  disableShadowRoutes?: boolean;
+  disableOnboardingRoutes?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
 
-  await compileAndWatch(entry, appPath, port, disableShadowRoutes);
+  await compileAndWatch(entry, appPath, port, disableOnboardingRoutes);
 }
 
 async function compileAndWatch(
   entry: string,
   appPath?: string,
   port?: number,
-  disableShadowRoutes = false,
+  disableOnboardingRoutes = false,
 ) {
   console.time(LOG_INITIAL_BUILD);
 
@@ -77,7 +77,7 @@ async function compileAndWatch(
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
     const config = await getRemixConfig(root, entryFile, publicPath);
-    return disableShadowRoutes ? config : addShadowRoutes(config);
+    return disableOnboardingRoutes ? config : addOnboardingRoutes(config);
   };
 
   const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
@@ -125,16 +125,19 @@ async function compileAndWatch(
   });
 }
 
-const SHADOW_ROUTES_DIR = 'shadow-routes';
+const ONBOARDING_ROUTES_DIR = 'onboarding-routes';
 const INDEX_SUFFIX = '/index';
 
-async function addShadowRoutes(config: RemixConfig) {
+async function addOnboardingRoutes(config: RemixConfig) {
   const userRouteList = Object.values(config.routes);
   const distPath = new URL('..', path.dirname(import.meta.url)).pathname;
-  const shadowRoutesPath = path.join(distPath, SHADOW_ROUTES_DIR);
+  const onboardingRoutesPath = path.join(distPath, ONBOARDING_ROUTES_DIR);
 
-  for (const absoluteFilePath of await recursiveReaddir(shadowRoutesPath)) {
-    const relativeFilePath = path.relative(shadowRoutesPath, absoluteFilePath);
+  for (const absoluteFilePath of await recursiveReaddir(onboardingRoutesPath)) {
+    const relativeFilePath = path.relative(
+      onboardingRoutesPath,
+      absoluteFilePath,
+    );
     const routePath = new URL(`file:///${relativeFilePath}`).pathname.replace(
       /\.[jt]sx?$/,
       '',
@@ -143,7 +146,7 @@ async function addShadowRoutes(config: RemixConfig) {
     // Note: index routes has path `undefined`,
     // while frame routes such as `root.jsx` have path `''`.
     const isIndex = routePath.endsWith(INDEX_SUFFIX);
-    const normalizedShadowRoutePath = isIndex
+    const normalizedOnboardingRoutePath = isIndex
       ? routePath.slice(0, -INDEX_SUFFIX.length) || undefined
       : // TODO: support v2 flat routes?
         routePath
@@ -152,16 +155,16 @@ async function addShadowRoutes(config: RemixConfig) {
           .replace(/[\[\]]/g, '');
 
     const hasUserRoute = userRouteList.some(
-      (r) => r.parentId === 'root' && r.path === normalizedShadowRoutePath,
+      (r) => r.parentId === 'root' && r.path === normalizedOnboardingRoutePath,
     );
 
     if (!hasUserRoute) {
-      const id = SHADOW_ROUTES_DIR + routePath;
+      const id = ONBOARDING_ROUTES_DIR + routePath;
 
       config.routes[id] = {
         id,
         parentId: 'root',
-        path: normalizedShadowRoutePath,
+        path: normalizedOnboardingRoutePath,
         index: isIndex || undefined,
         caseSensitive: undefined,
         file: path.relative(config.appDirectory, absoluteFilePath),

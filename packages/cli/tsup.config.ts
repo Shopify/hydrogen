@@ -19,8 +19,8 @@ export default defineConfig([
   },
   {
     ...commonConfig,
-    entry: ['src/shadow-routes/**/*.tsx'],
-    outDir: 'dist/shadow-routes',
+    entry: ['src/onboarding-routes/**/*.tsx'],
+    outDir: 'dist/onboarding-routes',
     clean: true,
     outExtension: () => ({js: '.jsx'}),
   },
