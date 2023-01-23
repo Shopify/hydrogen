@@ -52,6 +52,8 @@ Which will update the generated output, and then will be picked up by the Shopif
 
 Docs can (and should, when possible) include two examples; one in plain JavaScript and one in TypeScript, using the format `{name}.example.(t|j)sx`.
 
+[Please read the complete documentation on this process here](https://shopify.dev/internal/development/ui-reference-docs/)
+
 ## Package Exports Notes:
 
 - Until ESLint can resolve package.exports, we added `storefront-kit` to `.eslintrc.js`->`node/no-missing-import.allowModules`

@@ -126,6 +126,7 @@
   },
   "dependencies": {
     "@google/model-viewer": "^1.12.1",
+    "@shopify/generate-docs": "^0.6.0",
     "@xstate/fsm": "^2.0.0",
     "@xstate/react": "^3.0.1",
     "graphql": "^16.6.0",

@@ -8,15 +8,6 @@ const data: LandingTemplateSchema = {
   id: 'react-storefront-kit',
   sections: [
     {
-      type: 'Libraries',
-      anchorLink: '',
-      sectionContent: '',
-      title: '',
-      codeSamples: [],
-      codeLanguages: [],
-      accordionContent: {},
-    },
-    {
       type: 'Generic',
       anchorLink: 'objects-and-functions',
       title: 'Objects and functions',
@@ -39,6 +30,7 @@ const data: LandingTemplateSchema = {
         },
       ],
       codeblock: {
+        title: 'Homepage',
         tabs: [
           {
             title: 'Primitive Component',

@@ -7,15 +7,6 @@
     "id": "react-storefront-kit",
     "sections": [
       {
-        "type": "Libraries",
-        "anchorLink": "",
-        "sectionContent": "",
-        "title": "",
-        "codeSamples": [],
-        "codeLanguages": [],
-        "accordionContent": {}
-      },
-      {
         "type": "Generic",
         "anchorLink": "objects-and-functions",
         "title": "Objects and functions",
@@ -35,6 +26,7 @@
           }
         ],
         "codeblock": {
+          "title": "Homepage",
           "tabs": [
             {
               "title": "Primitive Component",

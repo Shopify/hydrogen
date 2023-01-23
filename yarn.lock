@@ -2474,10 +2474,10 @@
   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.2.0.tgz#8be36a1f66f3265389e90b5f9c9962146758f728"
   integrity sha512-sXo/qW2/pAcmT43VoRKOJbDOfV3cYpq3szSVfIThQXNt+E4DfKj361vaAt3c88U5tPUxzEswam7GW48PJqtKAg==
 
-"@shopify/generate-docs@0.4":
-  version "0.4.2"
-  resolved "https://registry.yarnpkg.com/@shopify/generate-docs/-/generate-docs-0.4.2.tgz#d68b0685076744b76242f94d686ad8df43ec1a77"
-  integrity sha512-mwrR2WeXJ7VohOSKr0wXCXL/73Js0c8y5m+73HlC6GpwJvB4hwPQBZIOQsgYRJLsl4x0PGgiwOfhm07IhOlxqg==
+"@shopify/generate-docs@^0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@shopify/generate-docs/-/generate-docs-0.6.0.tgz#75830936b9a914673bef1b08efb91457e836fab4"
+  integrity sha512-RFcS8Mth0jkzCZ/BGDlztPUfiZXFbx8yEQBDXtAomCEKy0QZQvGrwbTVnw82fGE+IZ5wz04EZ10H8b1ez2n4SQ==
   dependencies:
     "@types/react" "^18.0.21"
     globby "^11.1.0"
