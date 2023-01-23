@@ -7,7 +7,7 @@
   "version": "4.0.0-alpha.9",
   "type": "module",
   "scripts": {
-    "build": "tsup --clean --config ./tsup.config.ts",
+    "build": "tsup --clean --config ./tsup.config.ts && oclif manifest",
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "oclif manifest"
