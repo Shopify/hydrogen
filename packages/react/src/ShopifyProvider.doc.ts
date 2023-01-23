@@ -4,13 +4,15 @@ const data: ReferenceEntityTemplateSchema = {
   name: 'ShopifyProvider',
   category: 'components',
   isVisualComponent: false,
-  related: [],
-  /* Ren note: In this topic, the related items are pages to /custom-storefronts/hydrogen, so they don't have a type. */
-
+  related: [
+    {
+      name: 'useShop',
+      type: 'hook',
+      url: '/api/react-storefront-kit/hooks/useshop',
+    },
+  ],
   description:
     "The `ShopifyProvider` component wraps your entire app and provides functionality for many components, hooks, and utilities. The `ShopifyProvider` component also provides localization data for the app. You should place it in your app's entry point component.",
-  /* Ren note: The page includes a section that's gated by a feature flag. The flag can probably be removed and this item can be updated with the content */
-
   type: 'component',
   defaultExample: {
     description: 'I am the default example',
@@ -34,7 +36,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       title: 'Props',
       type: 'ShopifyProviderProps',
-      description: 'interface description',
+      description: '',
     },
   ],
 };

@@ -6,14 +6,14 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [
     {
-      name: 'useProductOptions',
+      name: 'useProduct',
       type: 'hook',
-      url: 'api/hydrogen/hooks/product-variant/useproductoptions',
+      url: '/api/react-storefront-kit/hooks/useproduct',
     },
     {
       name: 'ProductPrice',
       type: 'component',
-      url: 'api/hydrogen/components/product-variant/productprice',
+      url: '/api/react-storefront-kit/components/productprice',
     },
   ],
   description:

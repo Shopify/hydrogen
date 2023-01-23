@@ -4,15 +4,10 @@ const data: ReferenceEntityTemplateSchema = {
   name: 'ShopPayButton',
   category: 'components',
   isVisualComponent: false,
-  related: [
-    {
-      name: 'CartShopPayButton',
-      type: 'component',
-      url: 'api/hydrogen/components/cart/cartshoppaybutton',
-    },
-  ],
-  description:
-    'The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout. You can [customize this component](https://shopify.dev/api/hydrogen/components#customizing-hydrogen-components) using passthrough props.',
+  related: [],
+  description: `The \`ShopPayButton\` component renders a button that redirects to the Shop Pay checkout.
+    It renders a [\`<shop-pay-button>\`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically.
+    It relies on the \`<ShopProvider>\` context provider.`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',

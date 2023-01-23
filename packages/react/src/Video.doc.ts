@@ -1,19 +1,19 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'video',
+  name: 'Video',
   category: 'components',
   isVisualComponent: false,
   related: [
     {
       name: 'MediaFile',
       type: 'component',
-      url: 'api/hydrogen/components/primitive/mediafile',
+      url: '/api/react-storefront-kit/hooks/mediafile',
     },
     {
       name: 'Image',
       type: 'component',
-      url: 'api/hydrogen/components/primitive/image',
+      url: '/api/react-storefront-kit/hooks/image',
     },
   ],
   description:

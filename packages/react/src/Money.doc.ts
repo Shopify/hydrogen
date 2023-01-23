@@ -1,14 +1,14 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'money',
+  name: 'Money',
   category: 'components',
   isVisualComponent: false,
   related: [
     {
       name: 'useMoney',
       type: 'hook',
-      url: 'api/hydrogen/hooks/primitive/usemoney',
+      url: '/api/react-storefront-kit/hooks/usemoney',
     },
   ],
   description:
