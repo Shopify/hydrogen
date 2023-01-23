@@ -1,4 +1,11 @@
-import type {BaseSeo, Seo, HeadTag, SchemaType} from './types';
+import type {
+  BaseSeo,
+  Seo,
+  HeadTag,
+  SchemaType,
+  LanguageAlternate,
+  MobileAlternate,
+} from './types';
 import type {WithContext} from 'schema-dts';
 
 export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
@@ -113,6 +120,35 @@ export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
               }
             }
           }
+          break;
+
+        case 'alternates':
+          const alternates = Array.isArray(value) ? value : [value];
+
+          for (const alternate of alternates) {
+            const {
+              // @ts-expect-error untyped
+              language,
+              // @ts-expect-error untyped
+              media,
+              url,
+              // @ts-expect-error untyped
+              default: defaultLang,
+            } = alternate as Seo['alternates'][0];
+
+            const hreflang = language
+              ? `${language}${defaultLang ? '-default' : ''}`
+              : undefined;
+
+            tagResults.push(
+              generateTag('link', {
+                rel: 'alternate',
+                hreflang,
+                media,
+                href: url,
+              }),
+            );
+          }
 
           break;
       }
@@ -173,6 +209,12 @@ function generateTag<T extends HeadTag>(
 
   // the rest goes on props
   tag.props = input;
+
+  // remove empty props
+  Object.keys(tag.props).forEach(
+    (key) => !tag.props[key] && delete tag.props[key],
+  );
+
   tag.key = generateKey(tag, group);
 
   return tag;
@@ -187,14 +229,21 @@ function generateKey(tag: HeadTag, group?: string) {
   }
 
   if (tagName === 'meta') {
-    const priority = props.content === group ? '-0-' : '-1-';
-    const groupName = group ? `-${group}${priority}` : '-';
+    const priority = props.content === group && '0';
+    const groupName = [group, priority];
 
-    return `${tagName}${groupName}${props.property || props.name}`;
+    return [tagName, ...groupName, props.property || props.name]
+      .filter((x) => x)
+      .join('-');
   }
 
   if (tagName === 'link') {
-    return `${tagName}-${props.rel}`;
+    const key = [tagName, props.rel, props.hreflang || props.media]
+      .filter((x) => x)
+      .join('-');
+
+    // replace spaces with dashes, needed for media prop
+    return key.replace(/\s+/g, '-');
   }
 
   return `${tagName}-${props.type}`;

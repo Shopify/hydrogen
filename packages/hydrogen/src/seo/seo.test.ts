@@ -430,7 +430,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-1.jpg-1-og:image:height",
+            "key": "meta-https://example.com/image-1.jpg-og:image:height",
             "props": {
               "content": "100",
               "property": "og:image:height",
@@ -438,7 +438,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-1.jpg-1-og:image:type",
+            "key": "meta-https://example.com/image-1.jpg-og:image:type",
             "props": {
               "content": "image/jpeg",
               "property": "og:image:type",
@@ -503,7 +503,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-1.jpg-1-og:image:height",
+            "key": "meta-https://example.com/image-1.jpg-og:image:height",
             "props": {
               "content": "100",
               "property": "og:image:height",
@@ -511,7 +511,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-1.jpg-1-og:image:type",
+            "key": "meta-https://example.com/image-1.jpg-og:image:type",
             "props": {
               "content": "image/jpeg",
               "property": "og:image:type",
@@ -527,7 +527,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-2.jpg-1-og:image:type",
+            "key": "meta-https://example.com/image-2.jpg-og:image:type",
             "props": {
               "content": "image/jpeg",
               "property": "og:image:type",
@@ -535,7 +535,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-2.jpg-1-og:image:width",
+            "key": "meta-https://example.com/image-2.jpg-og:image:width",
             "props": {
               "content": "100",
               "property": "og:image:width",
@@ -606,7 +606,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-1.jpg-1-og:image:height",
+            "key": "meta-https://example.com/image-1.jpg-og:image:height",
             "props": {
               "content": 100,
               "property": "og:image:height",
@@ -614,7 +614,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-1.jpg-1-og:image:type",
+            "key": "meta-https://example.com/image-1.jpg-og:image:type",
             "props": {
               "content": "image/jpeg",
               "property": "og:image:type",
@@ -630,7 +630,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-1.mp3-1-og:audio:type",
+            "key": "meta-https://example.com/image-1.mp3-og:audio:type",
             "props": {
               "content": "audio/mpeg",
               "property": "og:audio:type",
@@ -646,7 +646,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-1.swf-1-og:video:height",
+            "key": "meta-https://example.com/image-1.swf-og:video:height",
             "props": {
               "content": "100",
               "property": "og:video:height",
@@ -654,7 +654,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "key": "meta-https://example.com/image-1.swf-1-og:video:type",
+            "key": "meta-https://example.com/image-1.swf-og:video:type",
             "props": {
               "content": "application/x-shockwave-flash",
               "property": "og:video:type",
@@ -856,6 +856,89 @@ describe('generateSeoTags', () => {
           },
           {
             "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"aggregateRating\\":{\\"@type\\":\\"AggregateRating\\",\\"bestRating\\":\\"100\\",\\"ratingCount\\":\\"24\\",\\"ratingValue\\":\\"87\\"},\\"offers\\":{\\"@type\\":\\"AggregateOffer\\",\\"highPrice\\":\\"$1495\\",\\"lowPrice\\":\\"$1250\\",\\"offerCount\\":\\"8\\",\\"offers\\":[{\\"@type\\":\\"Offer\\",\\"url\\":\\"hydrogen.shop/discounts/1234\\"}]}}",
+            "key": "script-application/ld+json",
+            "props": {
+              "type": "application/ld+json",
+            },
+            "tag": "script",
+          },
+        ]
+      `);
+    });
+  });
+
+  describe('alternates', () => {
+    it('should add alternate links for each alternate', () => {
+      // Given
+      const input = {
+        alternates: [
+          {
+            url: 'https://hydrogen.shop.com/fr/products/1234',
+            language: 'fr',
+            default: true,
+          },
+          {
+            url: 'https://hydrogen.shop.com/de/products/1234',
+            language: 'de',
+          },
+          {
+            url: 'https://m.hydrogen.shop.com/es/products/1234',
+            media: 'only screen and (max-width: 640px)',
+          },
+        ],
+      };
+
+      // When
+      const output = generateSeoTags(input);
+
+      // Then
+      expect(output).toMatchInlineSnapshot(`
+        [
+          {
+            "key": "link-alternate-de",
+            "props": {
+              "href": "https://hydrogen.shop.com/de/products/1234",
+              "hreflang": "de",
+              "rel": "alternate",
+            },
+            "tag": "link",
+          },
+          {
+            "key": "link-alternate-fr-default",
+            "props": {
+              "href": "https://hydrogen.shop.com/fr/products/1234",
+              "hreflang": "fr-default",
+              "rel": "alternate",
+            },
+            "tag": "link",
+          },
+          {
+            "key": "link-alternate-only-screen-and-(max-width:-640px)",
+            "props": {
+              "href": "https://m.hydrogen.shop.com/es/products/1234",
+              "media": "only screen and (max-width: 640px)",
+              "rel": "alternate",
+            },
+            "tag": "link",
+          },
+          {
+            "key": "meta-og:type",
+            "props": {
+              "content": "website",
+              "property": "og:type",
+            },
+            "tag": "meta",
+          },
+          {
+            "key": "meta-twitter:card",
+            "props": {
+              "content": "summary_large_image",
+              "name": "twitter:card",
+            },
+            "tag": "meta",
+          },
+          {
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
             "key": "script-application/ld+json",
             "props": {
               "type": "application/ld+json",

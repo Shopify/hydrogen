@@ -8,6 +8,7 @@ export interface BaseSeo {
   url?: any;
   handle?: any;
   ldJson?: any;
+  alternates?: any[];
 }
 
 export interface Seo {
@@ -143,6 +144,51 @@ export interface Seo {
    *
    */
   ldJson: <T extends SchemaType>(type: T) => WithContext<T>;
+  /**
+   * The `alternates` property is used to specify the language and geographical targeting when you have multiple
+   * versions of the same page in different languages. The `url` property tells search engines about these variations
+   * and helps them to serve the correct version to their users.
+   *
+   * @example
+   * ```js
+   * {
+   *   alternates: [
+   *     {
+   *       language: 'en-US',
+   *       url: 'https://hydrogen.shop/en-us',
+   *       default: true,
+   *     },
+   *     {
+   *       media: 'only screen and (max-width: 640px)',
+   *       url: 'https://m.hydrogen.shop/en-ca',
+   *     },
+   *     {
+   *       language: 'fr-CA',
+   *       url: 'https://hydrogen.shop/fr-ca',
+   *     },
+   *   ]
+   * }
+   * ```
+   * @see https://support.google.com/webmasters/answer/189077?hl=en
+   */
+  alternates: (LanguageAlternate | MobileAlternate)[];
+}
+
+export interface LanguageAlternate {
+  // Language code for the alternate page. This is used to generate the hreflang meta tag property.
+  language: string;
+  // Whether or not the alternate page is the default page. This will add the `x-default`
+  // attribution to the language code.
+  default?: boolean;
+  // The url of the alternate page. This is used to generate the hreflang meta tag property.
+  url: string;
+}
+
+export interface MobileAlternate {
+  // The media attribute specifies what media/device the target url is optimized for.
+  media: string;
+  // The url of the alternate page. This is used to generate the hreflang meta tag property.
+  url: string;
 }
 
 export type SeoMedia = {
