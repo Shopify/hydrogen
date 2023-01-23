@@ -8,6 +8,7 @@ import {commonFlags} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
+import {checkHydrogenVersion} from '../../utils/check-version.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -69,6 +70,8 @@ async function compileAndWatch(
   const shouldReloadRemixApp = (file: string) =>
     file.startsWith(path.resolve(root, 'remix.config.'));
 
+  const checkingHydrogenVersion = checkHydrogenVersion(root);
+
   const remixConfig = await getRemixConfig(
     root,
     entryFile,
@@ -94,6 +97,9 @@ async function compileAndWatch(
           buildPathWorkerFile,
           buildPathClient,
         });
+
+        const showUpgrade = await checkingHydrogenVersion;
+        if (showUpgrade) showUpgrade();
       }
     },
     async onFileCreated(file: string) {
