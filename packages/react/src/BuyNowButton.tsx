@@ -2,7 +2,7 @@ import {useEffect, useState, useCallback} from 'react';
 import {useCart} from './CartProvider.js';
 import {BaseButton, BaseButtonProps} from './BaseButton.js';
 
-interface BuyNowButtonProps {
+interface BuyNowButtonPropsBase {
   /** The item quantity. Defaults to 1. */
   quantity?: number;
   /** The ID of the variant. */
@@ -14,9 +14,15 @@ interface BuyNowButtonProps {
   }[];
 }
 
-/** The `BuyNowButton` component renders a button that adds an item to the cart and redirects the customer to checkout. */
+type BuyNowButtonProps<AsType extends React.ElementType = 'button'> =
+  BuyNowButtonPropsBase & BaseButtonProps<AsType>;
+
+/**
+ * The `BuyNowButton` component renders a button that adds an item to the cart and redirects the customer to checkout.
+ * Must be a child of a `CartProvider` component.
+ */
 export function BuyNowButton<AsType extends React.ElementType = 'button'>(
-  props: BuyNowButtonProps & BaseButtonProps<AsType>
+  props: BuyNowButtonProps<AsType>
 ) {
   const {cartCreate, checkoutUrl} = useCart();
   const [loading, setLoading] = useState<boolean>(false);

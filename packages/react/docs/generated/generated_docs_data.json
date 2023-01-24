@@ -1,5 +1,276 @@
 [
   {
+    "name": "AddToCartButton",
+    "category": "components",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "The `AddToCartButton` component renders a button that adds an item to the cart when pressed.\n    It must be a descendent of the `CartProvider` component.",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {AddToCartButton} from '@shopify/storefront-kit-react';\n\nexport default function ProductAddToCartButton({product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <AddToCartButton data={variantId} />;\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {AddToCartButton} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function ProductAddToCartButton({product}: {product: Product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <AddToCartButton data={variantId} />;\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "AddToCartButtonProps",
+        "typeDefinitions": {
+          "AddToCartButtonProps": {
+            "filePath": "/AddToCartButton.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "AddToCartButtonProps",
+            "value": "AddToCartButtonPropsBase & BaseButtonProps<AsType>",
+            "description": ""
+          },
+          "AddToCartButtonPropsBase": {
+            "filePath": "/AddToCartButton.tsx",
+            "name": "AddToCartButtonPropsBase",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/AddToCartButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "attributes",
+                "value": "{ key: string; value: string; }[]",
+                "description": "An array of cart line attributes that belong to the item being added to the cart.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/AddToCartButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "variantId",
+                "value": "string",
+                "description": "The ID of the variant.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/AddToCartButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "quantity",
+                "value": "number",
+                "description": "The item quantity.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/AddToCartButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "accessibleAddingToCartLabel",
+                "value": "string",
+                "description": "The text that is announced by the screen reader when the item is being added to the cart. Used for accessibility purposes only and not displayed on the page.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/AddToCartButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "sellingPlanId",
+                "value": "string",
+                "description": "The selling plan ID of the subscription variant",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface AddToCartButtonPropsBase {\n  /** An array of cart line attributes that belong to the item being added to the cart. */\n  attributes?: {\n    key: string;\n    value: string;\n  }[];\n  /** The ID of the variant. */\n  variantId?: string | null;\n  /** The item quantity. */\n  quantity?: number;\n  /** The text that is announced by the screen reader when the item is being added to the cart. Used for accessibility purposes only and not displayed on the page. */\n  accessibleAddingToCartLabel?: string;\n  /** The selling plan ID of the subscription variant */\n  sellingPlanId?: string;\n}"
+          },
+          "BaseButtonProps": {
+            "filePath": "/BaseButton.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "BaseButtonProps",
+            "value": "CustomBaseButtonProps<AsType> & Omit<\n      React.ComponentPropsWithoutRef<AsType>,\n      keyof CustomBaseButtonProps<AsType>\n    >",
+            "description": ""
+          },
+          "CustomBaseButtonProps": {
+            "filePath": "/BaseButton.tsx",
+            "name": "CustomBaseButtonProps",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/BaseButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "as",
+                "value": "AsType",
+                "description": "Provide a React element or component to render as the underlying button. Note: for accessibility compliance, almost always you should use a `button` element, or a component that renders an underlying button.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/BaseButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "ReactNode",
+                "description": "Any ReactNode elements."
+              },
+              {
+                "filePath": "/BaseButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onClick",
+                "value": "(event?: MouseEvent<HTMLButtonElement, MouseEvent>) => boolean | void",
+                "description": "Click event handler. Default behaviour triggers unless prevented",
+                "isOptional": true
+              },
+              {
+                "filePath": "/BaseButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "defaultOnClick",
+                "value": "(event?: MouseEvent<HTMLButtonElement, MouseEvent>) => boolean | void",
+                "description": "A default onClick behavior",
+                "isOptional": true
+              },
+              {
+                "filePath": "/BaseButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "buttonRef",
+                "value": "Ref<HTMLButtonElement>",
+                "description": "A ref to the underlying button",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface CustomBaseButtonProps<AsType> {\n  /** Provide a React element or component to render as the underlying button. Note: for accessibility compliance, almost always you should use a `button` element, or a component that renders an underlying button. */\n  as?: AsType;\n  /** Any ReactNode elements. */\n  children: ReactNode;\n  /** Click event handler. Default behaviour triggers unless prevented */\n  onClick?: (\n    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>\n  ) => void | boolean;\n  /** A default onClick behavior */\n  defaultOnClick?: (\n    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>\n  ) => void | boolean;\n  /** A ref to the underlying button */\n  buttonRef?: Ref<HTMLButtonElement>;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "BuyNowButton",
+    "category": "components",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "The `BuyNowButton` component renders a button that adds an item to the cart and redirects the customer to checkout.\n    Must be a child of a `CartProvider` component.\n  ",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {BuyNowButton} from '@shopify/storefront-kit-react';\n\nexport default function ProductBuyNowButton({product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <BuyNowButton variantId={variantId} />;\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {BuyNowButton} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function ProductBuyNowButton({product}: {product: Product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <BuyNowButton variantId={variantId} />;\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "BuyNowButtonProps",
+        "typeDefinitions": {
+          "BuyNowButtonProps": {
+            "filePath": "/BuyNowButton.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "BuyNowButtonProps",
+            "value": "BuyNowButtonPropsBase & BaseButtonProps<AsType>",
+            "description": ""
+          },
+          "BuyNowButtonPropsBase": {
+            "filePath": "/BuyNowButton.tsx",
+            "name": "BuyNowButtonPropsBase",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/BuyNowButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "quantity",
+                "value": "number",
+                "description": "The item quantity. Defaults to 1.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/BuyNowButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "variantId",
+                "value": "string",
+                "description": "The ID of the variant."
+              },
+              {
+                "filePath": "/BuyNowButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "attributes",
+                "value": "{ key: string; value: string; }[]",
+                "description": "An array of cart line attributes that belong to the item being added to the cart.",
+                "isOptional": true
+              }
+            ],
+            "value": "interface BuyNowButtonPropsBase {\n  /** The item quantity. Defaults to 1. */\n  quantity?: number;\n  /** The ID of the variant. */\n  variantId: string;\n  /** An array of cart line attributes that belong to the item being added to the cart. */\n  attributes?: {\n    key: string;\n    value: string;\n  }[];\n}"
+          },
+          "BaseButtonProps": {
+            "filePath": "/BaseButton.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "BaseButtonProps",
+            "value": "CustomBaseButtonProps<AsType> & Omit<\n      React.ComponentPropsWithoutRef<AsType>,\n      keyof CustomBaseButtonProps<AsType>\n    >",
+            "description": ""
+          },
+          "CustomBaseButtonProps": {
+            "filePath": "/BaseButton.tsx",
+            "name": "CustomBaseButtonProps",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/BaseButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "as",
+                "value": "AsType",
+                "description": "Provide a React element or component to render as the underlying button. Note: for accessibility compliance, almost always you should use a `button` element, or a component that renders an underlying button.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/BaseButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "ReactNode",
+                "description": "Any ReactNode elements."
+              },
+              {
+                "filePath": "/BaseButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onClick",
+                "value": "(event?: MouseEvent<HTMLButtonElement, MouseEvent>) => boolean | void",
+                "description": "Click event handler. Default behaviour triggers unless prevented",
+                "isOptional": true
+              },
+              {
+                "filePath": "/BaseButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "defaultOnClick",
+                "value": "(event?: MouseEvent<HTMLButtonElement, MouseEvent>) => boolean | void",
+                "description": "A default onClick behavior",
+                "isOptional": true
+              },
+              {
+                "filePath": "/BaseButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "buttonRef",
+                "value": "Ref<HTMLButtonElement>",
+                "description": "A ref to the underlying button",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface CustomBaseButtonProps<AsType> {\n  /** Provide a React element or component to render as the underlying button. Note: for accessibility compliance, almost always you should use a `button` element, or a component that renders an underlying button. */\n  as?: AsType;\n  /** Any ReactNode elements. */\n  children: ReactNode;\n  /** Click event handler. Default behaviour triggers unless prevented */\n  onClick?: (\n    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>\n  ) => void | boolean;\n  /** A default onClick behavior */\n  defaultOnClick?: (\n    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>\n  ) => void | boolean;\n  /** A ref to the underlying button */\n  buttonRef?: Ref<HTMLButtonElement>;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "ExternalVideo",
     "category": "components",
     "isVisualComponent": false,
@@ -7,7 +278,7 @@
       {
         "name": "MediaFile",
         "type": "component",
-        "url": "api/hydrogen/components/product-variant/mediafile"
+        "url": "/api/react-storefront-kit/components/mediafile"
       }
     ],
     "description": "The `ExternalVideo` component renders an embedded video for the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).",
@@ -413,7 +684,7 @@
       {
         "name": "MediaFile",
         "type": "component",
-        "url": "api/hydrogen/components/product-variant/mediafile"
+        "url": "/api/react-storefront-kit/components/mediafile"
       }
     ],
     "description": "The `Image` component renders an image for the Storefront API's\n[Image object](https://shopify.dev/api/storefront/reference/common-objects/image) by using the `data` prop. You can [customize this component](https://shopify.dev/api/hydrogen/components#customizing-hydrogen-components) using passthrough props.\n\nAn image's width and height are determined using the following priority list:\n1. The width and height values for the `loaderOptions` prop\n2. The width and height values for bare props\n3. The width and height values for the `data` prop\n\nIf only one of `width` or `height` are defined, then the other will attempt to be calculated based on the image's aspect ratio,\nprovided that both `data.width` and `data.height` are available. If `data.width` and `data.height` aren't available, then the aspect ratio cannot be determined and the missing value will remain as `null`",
@@ -573,25 +844,25 @@
       {
         "name": "Image",
         "type": "component",
-        "url": "api/hydrogen/components/primitive/image"
+        "url": "/api/react-storefront-kit/components/image"
       },
       {
         "name": "Video",
         "type": "component",
-        "url": "api/hydrogen/components/primitive/video"
+        "url": "/api/react-storefront-kit/components/video"
       },
       {
         "name": "ExternalVideo",
         "type": "component",
-        "url": "api/hydrogen/components/primitive/externalvideo"
+        "url": "/api/react-storefront-kit/components/externalvideo"
       },
       {
         "name": "ModelViewer",
         "type": "component",
-        "url": "api/hydrogen/components/primitive/modelviewer"
+        "url": "/api/react-storefront-kit/components/modelviewer"
       }
     ],
-    "description": "The `MediaFile` component renders the media for the Storefront API's\n[Media object](https://shopify.dev/api/storefront/reference/products/media). It renders an `Image `Video`, an `ExternalVideo`, or a `ModelViewer` depending on the `__typename` of the `data` prop.",
+    "description": "The `MediaFile` component renders the media for the Storefront API's\n[Media object](https://shopify.dev/api/storefront/reference/products/media). It renders an `Image`, `Video`, an `ExternalVideo`, or a `ModelViewer` depending on the `__typename` of the `data` prop.",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -3365,7 +3636,7 @@
       {
         "name": "MediaFile",
         "type": "component",
-        "url": "api/hydrogen/components/primitive/mediafile"
+        "url": "/api/react-storefront-kit/components/mediafile"
       }
     ],
     "description": "The `ModelViewer` component renders a 3D model (with the `model-viewer` custom element) for the Storefront API's [Model3d object](https://shopify.dev/api/storefront/reference/products/model3d). The `model-viewer` custom element is lazily downloaded through a dynamically-injected `<script type='module'>` tag when the `<ModelViewer />` component is rendered. ModelViewer is using version `1.21.1` of the `@google/model-viewer` library.",
@@ -3526,14 +3797,14 @@
     ]
   },
   {
-    "name": "money",
+    "name": "Money",
     "category": "components",
     "isVisualComponent": false,
     "related": [
       {
         "name": "useMoney",
         "type": "hook",
-        "url": "api/hydrogen/hooks/primitive/usemoney"
+        "url": "/api/react-storefront-kit/hooks/usemoney"
       }
     ],
     "description": "The `Money` component renders a string of the Storefront API's[MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) according to the `locale` in the [`ShopifyProvider` component](/api/hydrogen/components/global/shopifyprovider).\nThe component outputs a `<div>`. You can [customize this component](https://api/hydrogen/components#customizing-hydrogen-components) using passthrough props.",
@@ -3636,12 +3907,12 @@
       {
         "name": "ProductProvider",
         "type": "component",
-        "url": "api/hydrogen/components/product-variant/productoptionsprovider"
+        "url": "/api/react-storefront-kit/components/productprovider"
       },
       {
         "name": "Money",
         "type": "component",
-        "url": "api/hydrogen/components/primitive/money"
+        "url": "/api/react-storefront-kit/components/money"
       }
     ],
     "description": "The `ProductPrice` component renders a `Money` component with the product [`priceRange`](https://shopify.dev/api/storefront/reference/products/productpricerange)'s `maxVariantPrice` or `minVariantPrice`, for either the regular price or compare at price range.",
@@ -3719,14 +3990,14 @@
     "isVisualComponent": false,
     "related": [
       {
-        "name": "useProductOptions",
+        "name": "useProduct",
         "type": "hook",
-        "url": "api/hydrogen/hooks/product-variant/useproductoptions"
+        "url": "/api/react-storefront-kit/hooks/useproduct"
       },
       {
         "name": "ProductPrice",
         "type": "component",
-        "url": "api/hydrogen/components/product-variant/productprice"
+        "url": "/api/react-storefront-kit/components/productprice"
       }
     ],
     "description": "`<ProductProvider />` is a context provider that enables use of the `useProduct()` hook. It helps manage selected options and variants for a product.",
@@ -3793,14 +4064,8 @@
     "name": "ShopPayButton",
     "category": "components",
     "isVisualComponent": false,
-    "related": [
-      {
-        "name": "CartShopPayButton",
-        "type": "component",
-        "url": "api/hydrogen/components/cart/cartshoppaybutton"
-      }
-    ],
-    "description": "The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout. You can [customize this component](https://shopify.dev/api/hydrogen/components#customizing-hydrogen-components) using passthrough props.",
+    "related": [],
+    "description": "The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout.\n    It renders a [`<shop-pay-button>`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically.\n    It relies on the `<ShopProvider>` context provider.",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -3914,7 +4179,13 @@
     "name": "ShopifyProvider",
     "category": "components",
     "isVisualComponent": false,
-    "related": [],
+    "related": [
+      {
+        "name": "useShop",
+        "type": "hook",
+        "url": "/api/react-storefront-kit/hooks/useshop"
+      }
+    ],
     "description": "The `ShopifyProvider` component wraps your entire app and provides functionality for many components, hooks, and utilities. The `ShopifyProvider` component also provides localization data for the app. You should place it in your app's entry point component.",
     "type": "component",
     "defaultExample": {
@@ -3938,7 +4209,7 @@
     "definitions": [
       {
         "title": "Props",
-        "description": "interface description",
+        "description": "",
         "type": "ShopifyProviderProps",
         "typeDefinitions": {
           "ShopifyProviderProps": {
@@ -4063,19 +4334,19 @@
     ]
   },
   {
-    "name": "video",
+    "name": "Video",
     "category": "components",
     "isVisualComponent": false,
     "related": [
       {
         "name": "MediaFile",
         "type": "component",
-        "url": "api/hydrogen/components/primitive/mediafile"
+        "url": "/api/react-storefront-kit/hooks/mediafile"
       },
       {
         "name": "Image",
         "type": "component",
-        "url": "api/hydrogen/components/primitive/image"
+        "url": "/api/react-storefront-kit/hooks/image"
       }
     ],
     "description": "The `Video` component renders a video for the Storefront API's [Video object](https://shopify.dev/api/storefront/reference/products/video).\nThe component outputs a `video` element. You can [customize this component](https://shopify.dev/api/hydrogen/components#customizing-hydrogen-components) using passthrough props.",

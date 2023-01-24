@@ -103,7 +103,7 @@
     "@graphql-codegen/introspection": "2.2.3",
     "@graphql-codegen/typescript": "^2.8.7",
     "@ladle/react": "^2.4.5",
-    "@shopify/generate-docs": "0.4",
+    "@shopify/generate-docs": "^0.6.0",
     "@testing-library/jest-dom": "^5.16.5",
     "@testing-library/react": "^13.4.0",
     "@testing-library/user-event": "^14.4.3",
@@ -126,7 +126,6 @@
   },
   "dependencies": {
     "@google/model-viewer": "^1.12.1",
-    "@shopify/generate-docs": "^0.6.0",
     "@xstate/fsm": "^2.0.0",
     "@xstate/react": "^3.0.1",
     "graphql": "^16.6.0",

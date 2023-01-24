@@ -1,10 +1,9 @@
 import {useCallback, useEffect, useState} from 'react';
-
 import {useCart} from './CartProvider.js';
 import {useProduct} from './ProductProvider.js';
 import {BaseButton, BaseButtonProps} from './BaseButton.js';
 
-export interface AddToCartButtonProps {
+export interface AddToCartButtonPropsBase {
   /** An array of cart line attributes that belong to the item being added to the cart. */
   attributes?: {
     key: string;
@@ -20,12 +19,15 @@ export interface AddToCartButtonProps {
   sellingPlanId?: string;
 }
 
+export type AddToCartButtonProps<AsType extends React.ElementType = 'button'> =
+  AddToCartButtonPropsBase & BaseButtonProps<AsType>;
+
 /**
  * The `AddToCartButton` component renders a button that adds an item to the cart when pressed.
  * It must be a descendent of the `CartProvider` component.
  */
 export function AddToCartButton<AsType extends React.ElementType = 'button'>(
-  props: AddToCartButtonProps & BaseButtonProps<AsType>
+  props: AddToCartButtonProps<AsType>
 ) {
   const [addingItem, setAddingItem] = useState<boolean>(false);
   const {

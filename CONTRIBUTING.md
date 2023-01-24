@@ -52,7 +52,7 @@ Which will update the generated output, and then will be picked up by the Shopif
 
 Docs can (and should, when possible) include two examples; one in plain JavaScript and one in TypeScript, using the format `{name}.example.(t|j)sx`.
 
-[Please read the complete documentation on this process here](https://shopify.dev/internal/development/ui-reference-docs/)
+For most contributions, this should be enough information to work off of. However, if you want to change the structure and layout of the docs, then [please read the complete documentation (available only to Shopify employees) on this process here](https://shopify.dev/internal/development/ui-reference-docs/).
 
 ## Package Exports Notes:
 
