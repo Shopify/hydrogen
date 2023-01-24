@@ -79,7 +79,9 @@ export default class GenerateRoute extends Command {
     const extension = isTypescript ? '.tsx' : '.jsx';
 
     renderSuccess({
-      headline: `${routesArray.length} route generated`,
+      headline: `${routesArray.length} route${
+        routesArray.length > 1 ? 's' : ''
+      } generated`,
       body: routesArray
         .map((route) => `• app/routes${route}${extension}`)
         .join('\n'),
