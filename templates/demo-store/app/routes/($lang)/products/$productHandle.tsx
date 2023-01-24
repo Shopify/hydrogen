@@ -37,8 +37,7 @@ import {
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data';
-
-import type {SeoHandleFunction} from '~/lib/seo';
+import type {SeoHandleFunction} from '@shopify/hydrogen';
 
 const seo: SeoHandleFunction<typeof loader> = (data) => ({
   title: data?.product?.seo?.title,
