@@ -22,7 +22,11 @@ const seo: SeoHandleFunction<typeof loader> = (data) => ({
   description: data?.collection?.seo?.description,
   titleTemplate: '%s | Collection',
   media: {
-    ...data?.collection?.image,
+    type: 'image',
+    url: data?.collection?.image?.originalSrc,
+    height: data?.collection?.image?.height,
+    width: data?.collection?.image?.width,
+    altText: data?.collection?.image?.altText,
   },
 });
 
@@ -142,17 +146,6 @@ export async function loader({params, request, context}: LoaderArgs) {
 
   return json({collection, appliedFilters, collections: collectionNodes});
 }
-
-export const meta: MetaFunction = ({
-  data,
-}: {
-  data: SerializeFrom<typeof loader> | undefined;
-}) => {
-  return {
-    title: data?.collection?.seo?.title ?? 'Collection',
-    description: data?.collection?.seo?.description,
-  };
-};
 
 export default function Collection() {
   const {collection, collections, appliedFilters} =
