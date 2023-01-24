@@ -206,7 +206,7 @@ export type SeoMedia = {
   width: number;
   // The alt text for the media. This is used to generate the og:<type of
   // media>:alt meta tag.
-  alt: string;
+  altText: string;
 };
 
 export type TagKey = 'title' | 'base' | 'meta' | 'link' | 'script';

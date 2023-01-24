@@ -20,6 +20,10 @@ import type {SeoHandleFunction} from '~/lib/seo';
 const seo: SeoHandleFunction<typeof loader> = (data) => ({
   title: data?.collection?.seo?.title,
   description: data?.collection?.seo?.description,
+  titleTemplate: '%s | Collection',
+  media: {
+    ...data?.collection?.image,
+  },
 });
 
 export const handle = {

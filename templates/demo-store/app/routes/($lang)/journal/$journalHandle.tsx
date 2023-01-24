@@ -12,14 +12,18 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
 import styles from '../../../styles/custom-font.css';
+import {SeoHandleFunction} from '~/lib/seo';
 
 const BLOG_HANDLE = 'journal';
 
+const seo: SeoHandleFunction<typeof loader> = (data) => ({
+  title: data?.article?.seo?.title,
+  description: data?.article?.seo?.description,
+  titleTemplate: '%s | Journal',
+});
+
 export const handle = {
-  seo: {
-    title: 'Journal',
-    description: 'A description',
-  },
+  seo,
 };
 
 export async function loader({params, context}: LoaderArgs) {
