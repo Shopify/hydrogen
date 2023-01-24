@@ -2,7 +2,7 @@
 
 # React Storefront Kit
 
-React Storefront Kit is an unopionated and performant library of Shopify-specific commerce components, hooks, and utilities. 
+React Storefront Kit is an unopionated and performant library of Shopify-specific commerce components, hooks, and utilities.
 
 It accelerates the development of Shopify-powered custom storefronts by providing business logic, data processing, and state management on top of the [Storefront API](https://shopify.dev/api/storefront).
 

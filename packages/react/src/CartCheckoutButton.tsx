@@ -2,18 +2,18 @@ import {ReactNode, useEffect, useState} from 'react';
 import {useCart} from './CartProvider.js';
 import {BaseButton, BaseButtonProps} from './BaseButton.js';
 
-type PropsWeControl = 'onClick';
+type ChildrenProps = {
+  /** A `ReactNode` element. */
+  children: ReactNode;
+};
+type CartCheckoutButtonProps = Omit<BaseButtonProps<'button'>, 'onClick'> &
+  ChildrenProps;
 
 /**
  * The `CartCheckoutButton` component renders a button that redirects to the checkout URL for the cart.
  * It must be a descendent of a `CartProvider` component.
  */
-export function CartCheckoutButton(
-  props: Omit<BaseButtonProps<'button'>, PropsWeControl> & {
-    /** A `ReactNode` element. */
-    children: ReactNode;
-  }
-) {
+export function CartCheckoutButton(props: CartCheckoutButtonProps) {
   const [requestedCheckout, setRequestedCheckout] = useState(false);
   const {status, checkoutUrl} = useCart();
   const {children, ...passthroughProps} = props;
