@@ -36,7 +36,6 @@
     "typographic-base": "^1.0.4"
   },
   "devDependencies": {
-    "@playwright/test": "^1.27.1",
     "@remix-run/dev": "1.11.0",
     "@remix-run/eslint-config": "1.11.0",
     "@shopify/eslint-plugin": "^42.0.1",
