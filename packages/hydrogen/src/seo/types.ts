@@ -59,7 +59,7 @@ export interface Seo {
    * ```
    *
    */
-  media: Maybe<string> | undefined | SeoMedia[];
+  media: Maybe<string> | undefined | SeoMedia | SeoMedia[];
   /**
    * The description of the page. This is used in the `name="description"` meta
    * tag as well as the `og:description` meta tag.
@@ -197,16 +197,16 @@ export type SeoMedia = {
   type: 'image' | 'video' | 'audio';
   // The url value populates both url and secure_url and is used to infer the
   // og:<type of media>:type meta tag.
-  url: string;
+  url: Maybe<string> | undefined;
   // The height in pixels of the media. This is used to generate the og:<type of
   // media>:height meta tag.
-  height: number;
+  height: Maybe<number> | undefined;
   // The width in pixels of the media. This is used to generate the og:<type of
   // media>:width meta tag/
-  width: number;
+  width: Maybe<number> | undefined;
   // The alt text for the media. This is used to generate the og:<type of
   // media>:alt meta tag.
-  alt: string;
+  altText: Maybe<string> | undefined;
 };
 
 export type TagKey = 'title' | 'base' | 'meta' | 'link' | 'script';

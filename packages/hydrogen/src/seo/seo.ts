@@ -99,7 +99,7 @@ export function generateSeoTags<T extends BaseSeo = Seo>(input: T) {
                     type: inferMimeType(media?.url),
                     width: media?.width,
                     height: media?.height,
-                    alt: media?.alt,
+                    alt: media?.altText,
                   }
                 : {};
 

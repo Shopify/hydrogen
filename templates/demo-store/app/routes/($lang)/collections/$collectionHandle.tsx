@@ -20,6 +20,14 @@ import type {SeoHandleFunction} from '~/lib/seo';
 const seo: SeoHandleFunction<typeof loader> = (data) => ({
   title: data?.collection?.seo?.title,
   description: data?.collection?.seo?.description,
+  titleTemplate: '%s | Collection',
+  media: {
+    type: 'image',
+    url: data?.collection?.image?.originalSrc,
+    height: data?.collection?.image?.height,
+    width: data?.collection?.image?.width,
+    altText: data?.collection?.image?.altText,
+  },
 });
 
 export const handle = {
@@ -138,17 +146,6 @@ export async function loader({params, request, context}: LoaderArgs) {
 
   return json({collection, appliedFilters, collections: collectionNodes});
 }
-
-export const meta: MetaFunction = ({
-  data,
-}: {
-  data: SerializeFrom<typeof loader> | undefined;
-}) => {
-  return {
-    title: data?.collection?.seo?.title ?? 'Collection',
-    description: data?.collection?.seo?.description,
-  };
-};
 
 export default function Collection() {
   const {collection, collections, appliedFilters} =
