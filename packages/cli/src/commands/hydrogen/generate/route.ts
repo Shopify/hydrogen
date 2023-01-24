@@ -79,13 +79,27 @@ export default class GenerateRoute extends Command {
     const extension = isTypescript ? '.tsx' : '.jsx';
 
     renderSuccess({
+      // TODO update to `customSection` when available
+      // customSections: [
+      //   {
+      //     title: `${routesArray.length} route${
+      //       routesArray.length > 1 ? 's' : ''
+      //     } generated`,
+      //     body: {
+      //       list: {
+      //         items: routesArray.map(
+      //           (route) => `app/routes${route}${extension}`,
+      //         ),
+      //       },
+      //     },
+      //   },
+      // ],
       headline: `${routesArray.length} route${
         routesArray.length > 1 ? 's' : ''
       } generated`,
       body: routesArray
         .map((route) => `• app/routes${route}${extension}`)
         .join('\n'),
-      nextSteps: ['Restart the MiniOxygen server with `npm run dev`'],
     });
   }
 }
