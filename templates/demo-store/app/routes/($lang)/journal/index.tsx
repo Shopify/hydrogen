@@ -12,7 +12,7 @@ const BLOG_HANDLE = 'Journal';
 
 export const handle = {
   seo: {
-    titleTemplate: '%s | Journal',
+    title: 'Journal',
   },
 };
 

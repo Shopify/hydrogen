@@ -34,13 +34,11 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
   return data.products;
 }
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'All Products',
-    description: 'All Products',
-  };
+export const handle = {
+  seo: {
+    title: 'Products',
+  },
 };
-
 export default function AllProducts() {
   const products = useLoaderData<typeof loader>();
 
