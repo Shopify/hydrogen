@@ -30,8 +30,8 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
       required: true,
     }),
-    disableOnboardingRoutes: Flags.boolean({
-      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ONBOARDING_ROUTES',
+    disableVirtualRoutes: Flags.boolean({
+      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
   };
@@ -49,25 +49,25 @@ export async function runDev({
   entry,
   port,
   path: appPath,
-  disableOnboardingRoutes,
+  disableVirtualRoutes,
 }: {
   entry: string;
   port?: number;
   path?: string;
-  disableOnboardingRoutes?: boolean;
+  disableVirtualRoutes?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
 
-  await compileAndWatch(entry, appPath, port, disableOnboardingRoutes);
+  await compileAndWatch(entry, appPath, port, disableVirtualRoutes);
 }
 
 async function compileAndWatch(
   entry: string,
   appPath?: string,
   port?: number,
-  disableOnboardingRoutes = false,
+  disableVirtualRoutes = false,
 ) {
   console.time(LOG_INITIAL_BUILD);
 
@@ -77,7 +77,7 @@ async function compileAndWatch(
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
     const config = await getRemixConfig(root, entryFile, publicPath);
-    return disableOnboardingRoutes ? config : addOnboardingRoutes(config);
+    return disableVirtualRoutes ? config : addVirtualRoutes(config);
   };
 
   const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
@@ -125,19 +125,16 @@ async function compileAndWatch(
   });
 }
 
-const ONBOARDING_ROUTES_DIR = 'onboarding-routes';
+const VIRTUAL_ROUTES_DIR = 'virtual-routes';
 const INDEX_SUFFIX = '/index';
 
-async function addOnboardingRoutes(config: RemixConfig) {
+async function addVirtualRoutes(config: RemixConfig) {
   const userRouteList = Object.values(config.routes);
   const distPath = new URL('..', path.dirname(import.meta.url)).pathname;
-  const onboardingRoutesPath = path.join(distPath, ONBOARDING_ROUTES_DIR);
+  const virtualRoutesPath = path.join(distPath, VIRTUAL_ROUTES_DIR);
 
-  for (const absoluteFilePath of await recursiveReaddir(onboardingRoutesPath)) {
-    const relativeFilePath = path.relative(
-      onboardingRoutesPath,
-      absoluteFilePath,
-    );
+  for (const absoluteFilePath of await recursiveReaddir(virtualRoutesPath)) {
+    const relativeFilePath = path.relative(virtualRoutesPath, absoluteFilePath);
     const routePath = new URL(`file:///${relativeFilePath}`).pathname.replace(
       /\.[jt]sx?$/,
       '',
@@ -146,7 +143,7 @@ async function addOnboardingRoutes(config: RemixConfig) {
     // Note: index routes has path `undefined`,
     // while frame routes such as `root.jsx` have path `''`.
     const isIndex = routePath.endsWith(INDEX_SUFFIX);
-    const normalizedOnboardingRoutePath = isIndex
+    const normalizedVirtualRoutePath = isIndex
       ? routePath.slice(0, -INDEX_SUFFIX.length) || undefined
       : // TODO: support v2 flat routes?
         routePath
@@ -155,16 +152,16 @@ async function addOnboardingRoutes(config: RemixConfig) {
           .replace(/[\[\]]/g, '');
 
     const hasUserRoute = userRouteList.some(
-      (r) => r.parentId === 'root' && r.path === normalizedOnboardingRoutePath,
+      (r) => r.parentId === 'root' && r.path === normalizedVirtualRoutePath,
     );
 
     if (!hasUserRoute) {
-      const id = ONBOARDING_ROUTES_DIR + routePath;
+      const id = VIRTUAL_ROUTES_DIR + routePath;
 
       config.routes[id] = {
         id,
         parentId: 'root',
-        path: normalizedOnboardingRoutePath,
+        path: normalizedVirtualRoutePath,
         index: isIndex || undefined,
         caseSensitive: undefined,
         file: path.relative(config.appDirectory, absoluteFilePath),
