@@ -48,7 +48,7 @@
     "@remix-run/react": "*",
     "@remix-run/server-runtime": "1.11.0",
     "@shopify/storefront-kit-react": "*",
-    "@shopify/remix-oxygen": "*"
+    "@shopify/remix-oxygen": "^1.0.0-alpha.3"
   },
   "dependencies": {
     "recursive-readdir": "^2.2.3"
