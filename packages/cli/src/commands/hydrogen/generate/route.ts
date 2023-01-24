@@ -1,5 +1,6 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {path, file, error, output, ui} from '@shopify/cli-kit';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../../utils/flags.js';
 import Flags from '@oclif/core/lib/flags.js';
 import ts from 'typescript';
@@ -60,16 +61,46 @@ export default class GenerateRoute extends Command {
       path.join(directory, 'tsconfig.json'),
     );
 
-    for (const item of [
-      ...(Array.isArray(routePath) ? routePath : [routePath]),
-    ]) {
-      await runGenerate(item, {
-        directory,
-        typescript: isTypescript,
-        force: flags.force,
-        adapter: flags.adapter,
-      });
+    const routesArray = Array.isArray(routePath) ? routePath : [routePath];
+
+    try {
+      for (const item of routesArray) {
+        await runGenerate(item, {
+          directory,
+          typescript: isTypescript,
+          force: flags.force,
+          adapter: flags.adapter,
+        });
+      }
+    } catch (err: unknown) {
+      throw new error.Abort((err as Error).message);
     }
+
+    const extension = isTypescript ? '.tsx' : '.jsx';
+
+    renderSuccess({
+      // TODO update to `customSection` when available
+      // customSections: [
+      //   {
+      //     title: `${routesArray.length} route${
+      //       routesArray.length > 1 ? 's' : ''
+      //     } generated`,
+      //     body: {
+      //       list: {
+      //         items: routesArray.map(
+      //           (route) => `app/routes${route}${extension}`,
+      //         ),
+      //       },
+      //     },
+      //   },
+      // ],
+      headline: `${routesArray.length} route${
+        routesArray.length > 1 ? 's' : ''
+      } generated`,
+      body: routesArray
+        .map((route) => `• app/routes${route}${extension}`)
+        .join('\n'),
+    });
   }
 }
 
@@ -174,8 +205,6 @@ async function runGenerate(
   }
   // Write the final file to the user's project.
   await file.write(destinationPath, templateContent);
-
-  output.success(`Created ${route} at ${relativeDestinationPath}`);
 }
 
 const escapeNewLines = (code: string) =>
