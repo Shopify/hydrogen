@@ -71,8 +71,8 @@ export function warnAboutMissingRoutes(routes: string[]) {
   renderWarning({
     headline: 'Missing standard routes',
     body:
-      'Shopify relies on standard routes that are required in every storefront to be compliant. ' +
-      'The following routes seem to be missing from your build:\n\n' +
+      'It seems that your build is missing some standard routes. ' +
+      'These routes\nare recommended for better compatibility with other Shopify components:\n\n' +
       routes
         .slice(0, LINE_LIMIT - (routes.length <= LINE_LIMIT ? 0 : 1))
         .map((route) => `• /${route}`)
