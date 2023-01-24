@@ -1,5 +1,4 @@
 node_modules
-
 /.cache
 /build
 /dist
@@ -8,6 +7,3 @@ node_modules
 .env
 /app/styles/app.css
 .vscode
-/test-results/
-/playwright-report/
-/playwright/.cache/
