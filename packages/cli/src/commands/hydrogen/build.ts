@@ -6,6 +6,10 @@ import {commonFlags} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {checkLockfileStatus} from '../../utils/check-lockfile.js';
+import {
+  findMissingRoutes,
+  warnAboutMissingRoutes,
+} from '../../utils/missing-routes.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -106,6 +110,9 @@ export async function runBuild({
       );
     }
   }
+
+  const missingRoutes = findMissingRoutes(remixConfig);
+  if (missingRoutes.length) warnAboutMissingRoutes(missingRoutes);
 
   // The Remix compiler hangs due to a bug in ESBuild:
   // https://github.com/evanw/esbuild/issues/2727
