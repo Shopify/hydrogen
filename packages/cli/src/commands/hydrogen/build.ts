@@ -25,9 +25,9 @@ export default class Build extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       required: true,
     }),
-    minify: Flags.boolean({
-      description: 'Minify the build output',
-      env: 'SHOPIFY_HYDROGEN_FLAG_MINIFY',
+    disableRouteWarning: Flags.boolean({
+      description: 'Disable warning about missing standard routes',
+      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
   };
 
@@ -42,12 +42,14 @@ export default class Build extends Command {
 
 export async function runBuild({
   entry,
-  sourcemap = true,
   path: appPath,
+  sourcemap = true,
+  disableRouteWarning = false,
 }: {
   entry: string;
-  sourcemap?: boolean;
   path?: string;
+  sourcemap?: boolean;
+  disableRouteWarning?: boolean;
 }) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
@@ -111,8 +113,10 @@ export async function runBuild({
     }
   }
 
-  const missingRoutes = findMissingRoutes(remixConfig);
-  if (missingRoutes.length) warnAboutMissingRoutes(missingRoutes);
+  if (!disableRouteWarning) {
+    const missingRoutes = findMissingRoutes(remixConfig);
+    if (missingRoutes.length) warnAboutMissingRoutes(missingRoutes);
+  }
 
   // The Remix compiler hangs due to a bug in ESBuild:
   // https://github.com/evanw/esbuild/issues/2727
