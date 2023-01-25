@@ -50,7 +50,8 @@
     "@shopify/storefront-kit-react": "*"
   },
   "dependencies": {
-    "recursive-readdir": "^2.2.3"
+    "recursive-readdir": "^2.2.3",
+    "@shopify/remix-oxygen": "*"
   },
   "devDependencies": {
     "@shopify/storefront-kit-react": "*",
@@ -58,6 +59,6 @@
     "@shopify/hydrogen-react": "*",
     "vitest": "^0.27.2",
     "schema-dts": "^1.1.0",
-    "@shopify/remix-oxygen": "*"
+    "@shopify/oxygen-workers-types": "^3.17.2"
   }
 }
