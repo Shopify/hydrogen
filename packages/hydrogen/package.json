@@ -47,8 +47,7 @@
   "peerDependencies": {
     "@remix-run/react": "*",
     "@remix-run/server-runtime": "1.11.0",
-    "@shopify/storefront-kit-react": "*",
-    "@shopify/remix-oxygen": "^1.0.0-alpha.3"
+    "@shopify/storefront-kit-react": "*"
   },
   "dependencies": {
     "recursive-readdir": "^2.2.3"
@@ -58,6 +57,7 @@
     "@types/recursive-readdir": "^2.2.1",
     "@shopify/hydrogen-react": "*",
     "vitest": "^0.27.2",
-    "schema-dts": "^1.1.0"
+    "schema-dts": "^1.1.0",
+    "@shopify/remix-oxygen": "*"
   }
 }
