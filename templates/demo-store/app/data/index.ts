@@ -1,5 +1,4 @@
 import type {
-  Cart,
   Shop,
   Order,
   CustomerAccessTokenCreatePayload,
@@ -16,91 +15,10 @@ import type {
   CustomerResetPayload,
   CustomerActivatePayload,
 } from '@shopify/storefront-kit-react/storefront-api-types';
-import {type EnhancedMenu, parseMenu, assertApiErrors} from '~/lib/utils';
+import {assertApiErrors} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import {logout} from '~/routes/($lang)/account/__private/logout';
 import type {AppLoadContext} from '@shopify/remix-oxygen';
-
-export interface LayoutData {
-  headerMenu: EnhancedMenu;
-  footerMenu: EnhancedMenu;
-  shop: Shop;
-  cart?: Promise<Cart>;
-}
-
-export async function getLayoutData({storefront}: AppLoadContext) {
-  const HEADER_MENU_HANDLE = 'main-menu';
-  const FOOTER_MENU_HANDLE = 'footer';
-
-  const data = await storefront.query<LayoutData>(LAYOUT_QUERY, {
-    variables: {
-      headerMenuHandle: HEADER_MENU_HANDLE,
-      footerMenuHandle: FOOTER_MENU_HANDLE,
-      language: storefront.i18n.language,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-
-  /*
-    Modify specific links/routes (optional)
-    @see: https://shopify.dev/api/storefront/unstable/enums/MenuItemType
-    e.g here we map:
-      - /blogs/news -> /news
-      - /blog/news/blog-post -> /news/blog-post
-      - /collections/all -> /products
-  */
-  const customPrefixes = {BLOG: '', CATALOG: 'products'};
-
-  const headerMenu = data?.headerMenu
-    ? parseMenu(data.headerMenu, customPrefixes)
-    : undefined;
-
-  const footerMenu = data?.footerMenu
-    ? parseMenu(data.footerMenu, customPrefixes)
-    : undefined;
-
-  return {shop: data.shop, headerMenu, footerMenu};
-}
-
-const LAYOUT_QUERY = `#graphql
-  query layoutMenus(
-    $language: LanguageCode
-    $headerMenuHandle: String!
-    $footerMenuHandle: String!
-  ) @inContext(language: $language) {
-    shop {
-      name
-      description
-    }
-    headerMenu: menu(handle: $headerMenuHandle) {
-      id
-      items {
-        ...MenuItem
-        items {
-          ...MenuItem
-        }
-      }
-    }
-    footerMenu: menu(handle: $footerMenuHandle) {
-      id
-      items {
-        ...MenuItem
-        items {
-          ...MenuItem
-        }
-      }
-    }
-  }
-  fragment MenuItem on MenuItem {
-    id
-    resourceId
-    tags
-    title
-    type
-    url
-  }
-`;
 
 export const MEDIA_FRAGMENT = `#graphql
   fragment Media on Media {
@@ -210,108 +128,6 @@ export const PRODUCT_VARIANT_FRAGMENT = `#graphql
       handle
     }
   }
-`;
-
-const CART_FRAGMENT = `#graphql
-fragment CartFragment on Cart {
-  id
-  checkoutUrl
-  totalQuantity
-  buyerIdentity {
-    countryCode
-    customer {
-      id
-      email
-      firstName
-      lastName
-      displayName
-    }
-    email
-    phone
-  }
-  lines(first: 100, reverse: true) {
-    edges {
-      node {
-        id
-        quantity
-        attributes {
-          key
-          value
-        }
-        cost {
-          totalAmount {
-            amount
-            currencyCode
-          }
-          compareAtAmountPerQuantity {
-            amount
-            currencyCode
-          }
-        }
-        merchandise {
-          ... on ProductVariant {
-            id
-            availableForSale
-            compareAtPrice {
-              ...MoneyFragment
-            }
-            price {
-              ...MoneyFragment
-            }
-            requiresShipping
-            title
-            image {
-              ...ImageFragment
-            }
-            product {
-              handle
-              title
-              id
-            }
-            selectedOptions {
-              name
-              value
-            }
-          }
-        }
-      }
-    }
-  }
-  cost {
-    subtotalAmount {
-      ...MoneyFragment
-    }
-    totalAmount {
-      ...MoneyFragment
-    }
-    totalDutyAmount {
-      ...MoneyFragment
-    }
-    totalTaxAmount {
-      ...MoneyFragment
-    }
-  }
-  note
-  attributes {
-    key
-    value
-  }
-  discountCodes {
-    code
-  }
-}
-
-fragment MoneyFragment on MoneyV2 {
-  currencyCode
-  amount
-}
-fragment ImageFragment on Image {
-  id
-  url
-  altText
-  width
-  height
-}
 `;
 
 // shop primary domain url for /admin
