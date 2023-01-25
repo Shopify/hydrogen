@@ -148,6 +148,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     analytics: {
       pageType: AnalyticsPageType.collection,
       collectionHandle,
+      resourceId: collection.id,
     },
   });
 }

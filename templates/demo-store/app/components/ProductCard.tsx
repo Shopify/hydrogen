@@ -3,6 +3,7 @@ import {
   flattenConnection,
   Image,
   Money,
+  ShopifyAnalyticsProduct,
   useMoney,
 } from '@shopify/storefront-kit-react';
 import type {SerializeFrom} from '@shopify/remix-oxygen';
@@ -29,7 +30,9 @@ export function ProductCard({
 }) {
   let cardLabel;
 
-  const cardProduct = product?.variants ? product : getProductPlaceholder();
+  const cardProduct: Product = product?.variants
+    ? product
+    : getProductPlaceholder();
   if (!cardProduct?.variants?.nodes?.length) return null;
 
   const firstVariant = flattenConnection(cardProduct.variants)[0];
@@ -44,6 +47,16 @@ export function ProductCard({
   } else if (isNewArrival(product.publishedAt)) {
     cardLabel = 'New';
   }
+
+  const productAnalytics: ShopifyAnalyticsProduct = {
+    productGid: product.id,
+    variantGid: firstVariant.id,
+    name: product.title,
+    variantName: firstVariant.title,
+    brand: product.vendor,
+    price: firstVariant.price.amount,
+    quantity: 1,
+  };
 
   return (
     <div className="flex flex-col">
@@ -109,6 +122,10 @@ export function ProductCard({
           ]}
           variant="secondary"
           className="mt-2"
+          analytics={{
+            products: [productAnalytics],
+            totalValue: parseFloat(productAnalytics.price),
+          }}
         >
           <Text as="span" className="flex items-center justify-center gap-2">
             Add to Bag

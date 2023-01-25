@@ -75,6 +75,19 @@ export function useDataFromMatches(dataKey: string): Record<string, unknown> {
  *     <fetcher.Form action="/cart" method="post">
  *       <input type="hidden" name="cartAction" value={CartAction.ADD_TO_CART} />
  *
+ * // You can add additional data as hidden form inputs and it will also be collected
+ * // As long as it is JSON parse-able.
+ * export function AddToCartButton({
+ *
+ *   const analytics = {
+ *     products: [product]
+ *   };
+ *
+ *   return (
+ *     <fetcher.Form action="/cart" method="post">
+ *       <input type="hidden" name="cartAction" value={CartAction.ADD_TO_CART} />
+ *       <input type="hidden" name="analytics" value={JSON.stringify(analytics)} />
+ *
  * // In root.tsx
  * export default function App() {
  *   const cartData = useDataFromFetchers({
@@ -86,6 +99,7 @@ export function useDataFromMatches(dataKey: string): Record<string, unknown> {
  *   console.log(cartData);
  *   // {
  *   //   cartId: 'gid://shopify/Cart/abc123',
+ *   //   products: [...]
  *   // }
  * ```
  **/
@@ -111,6 +125,15 @@ export function useDataFromFetchers({
       fetcherData[dataKey]
     ) {
       Object.assign(data, fetcherData[dataKey]);
+
+      try {
+        if (formData.get(dataKey)) {
+          const dataInForm: unknown = JSON.parse(String(formData.get(dataKey)));
+          Object.assign(data, dataInForm);
+        }
+      } catch {
+        // do nothing
+      }
     }
   }
   return Object.keys(data).length ? data : undefined;

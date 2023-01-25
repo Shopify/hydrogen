@@ -9,6 +9,7 @@ export function AddToCartButton({
   className = '',
   variant = 'primary',
   width = 'full',
+  analytics,
   ...props
 }: {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export function AddToCartButton({
   className?: string;
   variant?: 'primary' | 'secondary' | 'inline';
   width?: 'auto' | 'full';
+  analytics?: unknown;
   [key: string]: any;
 }) {
   const [root] = useMatches();
@@ -27,6 +29,7 @@ export function AddToCartButton({
       <input type="hidden" name="cartAction" value={CartAction.ADD_TO_CART} />
       <input type="hidden" name="countryCode" value={selectedLocale.country} />
       <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+      <input type="hidden" name="analytics" value={JSON.stringify(analytics)} />
       <Button
         as="button"
         type="submit"
