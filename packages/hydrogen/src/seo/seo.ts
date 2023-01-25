@@ -40,6 +40,14 @@ export function Seo() {
   const headTags = generateSeoTags(seoConfig);
 
   const html = headTags.map((tag) => {
+    if (tag.tag === 'script') {
+      return React.createElement(tag.tag, {
+        ...tag.props,
+        key: tag.key,
+        dangerouslySetInnerHTML: {__html: tag.children},
+      });
+    }
+
     return React.createElement(
       tag.tag,
       {...tag.props, key: tag.key},
