@@ -1,6 +1,6 @@
 // TODO more this whole file to a storefront-react package
-import {Maybe} from '@shopify/storefront-kit-react/storefront-api-types';
-import {WithContext} from 'schema-dts';
+import type {Maybe} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {WithContext} from 'schema-dts';
 
 export interface BaseSeo {
   description?: any;

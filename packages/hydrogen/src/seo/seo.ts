@@ -6,7 +6,7 @@ import type {
   LoaderFunction,
   SerializeFrom,
   AppData,
-} from '@shopify/remix-oxygen';
+} from '@remix-run/server-runtime';
 
 export interface SeoHandleFunction<
   Loader extends LoaderFunction | unknown = unknown,

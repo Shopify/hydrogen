@@ -50,8 +50,7 @@
     "@shopify/storefront-kit-react": "*"
   },
   "dependencies": {
-    "recursive-readdir": "^2.2.3",
-    "@shopify/remix-oxygen": "*"
+    "recursive-readdir": "^2.2.3"
   },
   "devDependencies": {
     "@shopify/storefront-kit-react": "*",
