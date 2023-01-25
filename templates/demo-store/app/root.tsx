@@ -15,7 +15,6 @@ import {
   useLoaderData,
   useLocation,
   useMatches,
-  useFetchers,
 } from '@remix-run/react';
 import {useDataFromMatches, useDataFromFetchers} from '@shopify/hydrogen';
 import {Layout} from '~/components';
@@ -33,6 +32,7 @@ import {
   AnalyticsEventName,
   getClientBrowserParameters,
   sendShopifyAnalytics,
+  ShopifyAddToCartPayload,
   ShopifyAppSource,
   ShopifyPageViewPayload,
   useShopifyCookies,
@@ -121,6 +121,22 @@ export default function App() {
   });
   if (cartData) {
     console.log('cartData', cartData);
+
+    // Fix this type error and make sure ClientBrowserParameters does not return Record <string, never>
+    // @ts-ignore
+    const addToCartPayload: ShopifyAddToCartPayload = {
+      ...getClientBrowserParameters(),
+      ...pageAnalytics,
+      ...cartData,
+      currency: locale.currency,
+      acceptedLanguage: locale.language.toLowerCase(),
+      hasUserConsent: false,
+    };
+
+    sendShopifyAnalytics({
+      eventName: AnalyticsEventName.ADD_TO_CART,
+      payload: addToCartPayload,
+    });
   }
 
   return (
