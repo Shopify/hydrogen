@@ -47,7 +47,7 @@ export function Seo() {
     );
   });
 
-  return html;
+  return React.createElement(React.Fragment, null, html);
 }
 
 export function recursivelyInvokeOrReturn<T, R extends any[]>(
