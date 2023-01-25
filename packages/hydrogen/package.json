@@ -57,7 +57,6 @@
     "@types/recursive-readdir": "^2.2.1",
     "@shopify/hydrogen-react": "*",
     "vitest": "^0.27.2",
-    "schema-dts": "^1.1.0",
-    "@shopify/oxygen-workers-types": "^3.17.2"
+    "schema-dts": "^1.1.0"
   }
 }
