@@ -83,7 +83,7 @@ export async function loader({request, context}: LoaderArgs) {
     cart: cartId ? getCart(context, cartId) : undefined,
     analytics: {
       shopifyAppSource: ShopifyAppSource.hydrogen,
-      shopId: 'gid://shopify/Shop/55145660472',
+      shopId: layout.shop.id,
     },
   });
 }
@@ -92,13 +92,12 @@ export default function App() {
   const data = useLoaderData<typeof loader>();
   const locale = data.selectedLocale ?? DEFAULT_LOCALE;
 
-  useShopifyCookies();
+  useShopifyCookies(false);
   const location = useLocation();
   const pageAnalytics = useDataFromMatches('analytics');
 
   // Page view analytics
   useEffect(() => {
-    console.log('Page view');
     // Fix this type error and make sure ClientBrowserParameters does not return Record <string, never>
     // @ts-ignore
     const payload: ShopifyPageViewPayload = {
@@ -122,8 +121,6 @@ export default function App() {
     dataKey: 'analytics',
   });
   if (cartData) {
-    console.log('cartData', cartData);
-
     // Fix this type error and make sure ClientBrowserParameters does not return Record <string, never>
     // @ts-ignore
     const addToCartPayload: ShopifyAddToCartPayload = {
