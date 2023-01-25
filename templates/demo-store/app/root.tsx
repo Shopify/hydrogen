@@ -21,7 +21,7 @@ import {Layout} from '~/components';
 import {getLayoutData, type LayoutData} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
-import {Seo, Debugger} from './lib/seo';
+import {Seo, type SeoHandleFunction} from '@shopify/hydrogen';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
@@ -40,13 +40,15 @@ import {
 import {useEffect} from 'react';
 import {CartAction} from './lib/type';
 
+const seo: SeoHandleFunction<typeof loader> = (data) => ({
+  title: data?.layout?.shop?.name,
+  description: data?.layout?.shop?.description,
+  handle: '@shopify',
+  url: 'https://hydrogen.shop',
+});
+
 export const handle = {
-  // @todo - remove any and type the seo callback
-  seo: (data: any) => ({
-    title: data?.layout?.shop?.name,
-    bypassTitleTemplate: true,
-    titleTemplate: `%s | ${data?.layout?.shop?.name}`,
-  }),
+  seo,
 };
 
 export const links: LinksFunction = () => {
@@ -153,7 +155,6 @@ export default function App() {
         >
           <Outlet />
         </Layout>
-        <Debugger />
         <ScrollRestoration />
         <Scripts />
       </body>
@@ -209,7 +210,6 @@ export function ErrorBoundary({error}: {error: Error}) {
           <GenericError error={error} />
         </Layout>
         <Scripts />
-        <Debugger />
       </body>
     </html>
   );

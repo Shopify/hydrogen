@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2.0.0-alpha.2",
+  "version": "2.0.0-alpha.3",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
@@ -13,7 +13,8 @@
   "scripts": {
     "build": "tsup --clean --config ../../tsup.config.ts",
     "dev": "tsup --watch --config ../../tsup.config.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest"
   },
   "exports": {
     ".": {
@@ -53,6 +54,9 @@
   },
   "devDependencies": {
     "@shopify/storefront-kit-react": "*",
-    "@types/recursive-readdir": "^2.2.1"
+    "@types/recursive-readdir": "^2.2.1",
+    "@shopify/hydrogen-react": "*",
+    "vitest": "^0.27.2",
+    "schema-dts": "^1.1.0"
   }
 }

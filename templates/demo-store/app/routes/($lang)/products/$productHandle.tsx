@@ -41,6 +41,16 @@ import {
   PRODUCT_CARD_FRAGMENT,
   PRODUCT_VARIANT_FRAGMENT,
 } from '~/data';
+import type {SeoHandleFunction} from '@shopify/hydrogen';
+
+const seo: SeoHandleFunction<typeof loader> = (data) => ({
+  title: data?.product?.seo?.title,
+  description: data?.product?.seo?.description,
+});
+
+export const handle = {
+  seo,
+};
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -400,6 +410,7 @@ function ProductOptionLink({
   return (
     <Link
       {...props}
+      preventScrollReset
       prefetch="intent"
       replace
       to={`${path}?${clonedSearchParams.toString()}`}
