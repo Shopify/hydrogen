@@ -88,7 +88,7 @@ export default function Authenticated() {
           <Modal cancelLink="/account">
             <Outlet context={{customer: data.customer} as any} />
           </Modal>
-          <Account {...data} />
+          <Account {...(data as Account)} />
         </>
       );
     } else {
@@ -96,7 +96,7 @@ export default function Authenticated() {
     }
   }
 
-  return <Account {...data} />;
+  return <Account {...(data as Account)} />;
 }
 
 interface Account {
