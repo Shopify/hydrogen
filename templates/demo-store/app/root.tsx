@@ -19,7 +19,7 @@ import {Layout} from '~/components';
 import {getLayoutData, type LayoutData} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
-import {Seo, type SeoHandleFunction} from './lib/seo';
+import {Seo, type SeoHandleFunction} from '@shopify/hydrogen';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';

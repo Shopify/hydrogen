@@ -1,9 +1,4 @@
-import {
-  json,
-  type MetaFunction,
-  type SerializeFrom,
-  type LoaderArgs,
-} from '@shopify/remix-oxygen';
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
@@ -14,8 +9,7 @@ import {flattenConnection} from '@shopify/storefront-kit-react';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
-
-import type {SeoHandleFunction} from '~/lib/seo';
+import type {SeoHandleFunction} from '@shopify/hydrogen';
 
 const seo: SeoHandleFunction<typeof loader> = (data) => ({
   title: data?.collection?.seo?.title,
@@ -23,7 +17,7 @@ const seo: SeoHandleFunction<typeof loader> = (data) => ({
   titleTemplate: '%s | Collection',
   media: {
     type: 'image',
-    url: data?.collection?.image?.originalSrc,
+    url: data?.collection?.image?.url,
     height: data?.collection?.image?.height,
     width: data?.collection?.image?.width,
     altText: data?.collection?.image?.altText,
