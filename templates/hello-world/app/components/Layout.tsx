@@ -1,3 +1,5 @@
+import {CartCount} from './CartCount';
+
 interface LayoutProps {
   children?: React.ReactNode;
   title?: string;
@@ -7,6 +9,7 @@ interface LayoutProps {
 export function Layout({children, title, description}: LayoutProps) {
   return (
     <div className="Layout">
+      <CartCount />
       <h1>{title}</h1>
       <h2>{description}</h2>
       {children}
