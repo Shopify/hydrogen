@@ -44,7 +44,7 @@ export async function loader({context}: LoaderArgs) {
   const cartId = await context.session.get('cartId');
   const layout = await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY);
 
-  const cartPromise = cartId
+  const cart = cartId
     ? context.storefront.query<{cart: Cart}>(CART_QUERY, {
         variables: {
           cartId,
@@ -61,15 +61,15 @@ export async function loader({context}: LoaderArgs) {
     : null;
 
   return defer({
-    cartPromise,
+    cart,
     layout,
   });
 }
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
-
   const {name, description} = data.layout.shop;
+  const cart = data.cart as Promise<{cart: Cart}> | null;
 
   return (
     <html lang="en">
@@ -78,7 +78,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout description={description} title={name}>
+        <Layout description={description} title={name} cart={cart}>
           <Outlet />
         </Layout>
         <ScrollRestoration />
