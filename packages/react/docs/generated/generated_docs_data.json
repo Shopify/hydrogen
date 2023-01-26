@@ -520,6 +520,70 @@
     ]
   },
   {
+    "name": "CartLineProvider",
+    "category": "components",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "useCartLine",
+        "type": "hooks",
+        "url": "/api/react-storefront-kit/hooks/useCartLine"
+      }
+    ],
+    "description": "\n    The `CartLineProvider` component creates a context for using a cart line.\n  ",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {CartLineProvider, useCartLine} from '@shopify/storefront-kit-react';\n\nexport function CartWrapper({cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {CartLineProvider, useCartLine} from '@shopify/storefront-kit-react';\nimport type {Cart} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function CartWrapper({cart}: {cart: Cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "CartLineProviderProps",
+        "typeDefinitions": {
+          "CartLineProviderProps": {
+            "filePath": "/CartLineProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartLineProviderProps",
+            "value": "{\n  /** Any `ReactNode` elements. */\n  children: ReactNode;\n  /** A cart line object. */\n  line: CartLine;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/CartLineProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "ReactNode",
+                "description": "Any `ReactNode` elements."
+              },
+              {
+                "filePath": "/CartLineProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "line",
+                "value": "CartLine",
+                "description": "A cart line object."
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "ExternalVideo",
     "category": "components",
     "isVisualComponent": false,
@@ -4723,5 +4787,38 @@
     "related": [],
     "description": "",
     "type": "hook"
+  },
+  {
+    "name": "useCartLine",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "CartLineProvider",
+        "type": "component",
+        "url": "/api/react-storefront-kit/components/CartLineProvider"
+      }
+    ],
+    "description": "\n    The `useCartLine` hook provides access to the cart line object. It must be a descendent of a `CartProvider` component.\n  ",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {CartLineProvider, useCartLine} from '@shopify/storefront-kit-react';\n\nexport function CartWrapper({cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {CartLineProvider, useCartLine} from '@shopify/storefront-kit-react';\nimport type {Cart} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function CartWrapper({cart}: {cart: Cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": []
   }
 ]
