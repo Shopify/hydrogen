@@ -1,8 +1,8 @@
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import {
-  redirect,
   json,
+  redirect,
   type MetaFunction,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
@@ -10,11 +10,11 @@ import {useLoaderData} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/storefront-kit-react';
 import {statusMessage} from '~/lib/utils';
 import type {
-  DiscountApplicationConnection,
+  Order,
   OrderLineItem,
+  DiscountApplicationConnection,
 } from '@shopify/storefront-kit-react/storefront-api-types';
 import {Link, Heading, PageHeader, Text} from '~/components';
-import {getCustomerOrder} from '~/data';
 
 export const meta: MetaFunction = ({data}) => ({
   title: `Order ${data?.order?.name}`,
@@ -40,7 +40,12 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const orderId = `gid://shopify/Order/${params.id}?key=${orderToken}`;
 
-  const order = await getCustomerOrder(context, {orderId});
+  const data = await context.storefront.query<{node: Order}>(
+    CUSTOMER_ORDER_QUERY,
+    {variables: {orderId}},
+  );
+
+  const order = data?.node;
 
   if (!order) {
     throw new Response('Order not found', {status: 404});
@@ -320,3 +325,118 @@ export default function OrderRoute() {
     </div>
   );
 }
+
+const CUSTOMER_ORDER_QUERY = `#graphql
+  fragment Money on MoneyV2 {
+    amount
+    currencyCode
+  }
+  fragment AddressFull on MailingAddress {
+    address1
+    address2
+    city
+    company
+    country
+    countryCodeV2
+    firstName
+    formatted
+    id
+    lastName
+    name
+    phone
+    province
+    provinceCode
+    zip
+  }
+  fragment DiscountApplication on DiscountApplication {
+    value {
+      ... on MoneyV2 {
+        amount
+        currencyCode
+      }
+      ... on PricingPercentageValue {
+        percentage
+      }
+    }
+  }
+  fragment Image on Image {
+    altText
+    height
+    src: url(transform: {crop: CENTER, maxHeight: 96, maxWidth: 96, scale: 2})
+    id
+    width
+  }
+  fragment ProductVariant on ProductVariant {
+    id
+    image {
+      ...Image
+    }
+    price {
+      ...Money
+    }
+    product {
+      handle
+    }
+    sku
+    title
+  }
+  fragment LineItemFull on OrderLineItem {
+    title
+    quantity
+    discountAllocations {
+      allocatedAmount {
+        ...Money
+      }
+      discountApplication {
+        ...DiscountApplication
+      }
+    }
+    originalTotalPrice {
+      ...Money
+    }
+    discountedTotalPrice {
+      ...Money
+    }
+    variant {
+      ...ProductVariant
+    }
+  }
+
+  query CustomerOrder(
+    $country: CountryCode
+    $language: LanguageCode
+    $orderId: ID!
+  ) @inContext(country: $country, language: $language) {
+    node(id: $orderId) {
+      ... on Order {
+        id
+        name
+        orderNumber
+        processedAt
+        fulfillmentStatus
+        totalTaxV2 {
+          ...Money
+        }
+        totalPriceV2 {
+          ...Money
+        }
+        subtotalPriceV2 {
+          ...Money
+        }
+        shippingAddress {
+          ...AddressFull
+        }
+        discountApplications(first: 100) {
+          nodes {
+            ...DiscountApplication
+          }
+        }
+        lineItems(first: 100) {
+          nodes {
+            ...LineItemFull
+          }
+        }
+      }
+    }
+  }
+`;
