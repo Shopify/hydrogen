@@ -5,7 +5,7 @@ import {
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
 
-export async function logout(context: AppLoadContext) {
+export async function doLogout(context: AppLoadContext) {
   const {session} = context;
   session.unset('customerAccessToken');
 
@@ -21,5 +21,5 @@ export async function loader({context}: LoaderArgs) {
 }
 
 export const action: ActionFunction = async ({context}) => {
-  return logout(context);
+  return doLogout(context);
 };
