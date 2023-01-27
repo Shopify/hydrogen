@@ -24,7 +24,7 @@ import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 import {DEFAULT_LOCALE, parseMenu, type EnhancedMenu} from './lib/utils';
 import invariant from 'tiny-invariant';
-import {Shop, Cart} from '@shopify/storefront-kit-react/storefront-api-types';
+import {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
 
 const seo: SeoHandleFunction<typeof loader> = (data) => ({
   title: data?.layout?.shop?.name,

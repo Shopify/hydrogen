@@ -6,14 +6,14 @@ import {
   useParams,
   useTransition,
 } from '@remix-run/react';
-import {flattenConnection} from '@shopify/storefront-kit-react';
+import {flattenConnection} from '@shopify/hydrogen';
 import type {
   MailingAddressInput,
   CustomerAddressUpdatePayload,
   CustomerAddressDeletePayload,
   CustomerDefaultAddressUpdatePayload,
   CustomerAddressCreatePayload,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {Button, Text} from '~/components';
 import {assertApiErrors, getInputStyleClasses} from '~/lib/utils';

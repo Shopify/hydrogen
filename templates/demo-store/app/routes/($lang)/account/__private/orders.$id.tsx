@@ -7,13 +7,13 @@ import {
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import {Money, Image, flattenConnection} from '@shopify/storefront-kit-react';
+import {Money, Image, flattenConnection} from '@shopify/hydrogen';
 import {statusMessage} from '~/lib/utils';
 import type {
   Order,
   OrderLineItem,
   DiscountApplicationConnection,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 import {Link, Heading, PageHeader, Text} from '~/components';
 
 export const meta: MetaFunction = ({data}) => ({

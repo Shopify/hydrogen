@@ -1,5 +1,5 @@
-import {flattenConnection} from '@shopify/storefront-kit-react';
-import type {Order} from '@shopify/storefront-kit-react/storefront-api-types';
+import {flattenConnection} from '@shopify/hydrogen';
+import type {Order} from '@shopify/hydrogen/storefront-api-types';
 import {Heading, Text, Link} from '~/components';
 import {statusMessage} from '~/lib/utils';
 

@@ -12,3 +12,19 @@ export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
 export {Seo} from './seo/seo';
 export type {SeoHandleFunction} from './seo/seo';
+
+export {
+  AddToCartButton,
+  AnalyticsEventName,
+  AnalyticsPageType,
+  ExternalVideo,
+  Image,
+  flattenConnection,
+  MediaFile,
+  Money,
+  useMoney,
+  Video,
+  ModelViewer,
+  parseMetafield,
+  ShopPayButton,
+} from '@shopify/storefront-kit-react';

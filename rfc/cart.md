@@ -144,7 +144,7 @@ export async function cartAdd({cartId, lines, storefront}) {
 
 ```jsx
 import {useFetcher} from '@remix-run/react';
-import {flattenConnection} from '@shopify/storefront-kit-react';
+import {flattenConnection} from '@shopify/hydrogen-react';
 
 export function ProductCard({product}) {
   const firstVariant = flattenConnection(product?.variants)[0];
