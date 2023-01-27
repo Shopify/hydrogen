@@ -10,6 +10,7 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
+import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
 const seo: SeoHandleFunction<typeof loader> = (data) => ({
   title: data?.collection?.seo?.title,
@@ -27,8 +28,6 @@ const seo: SeoHandleFunction<typeof loader> = (data) => ({
 export const handle = {
   seo,
 };
-
-import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
 const PAGINATION_SIZE = 48;
 

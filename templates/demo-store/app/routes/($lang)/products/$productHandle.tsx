@@ -32,12 +32,8 @@ import type {
   Shop,
   ProductConnection,
 } from '@shopify/storefront-kit-react/storefront-api-types';
-import {
-  MEDIA_FRAGMENT,
-  PRODUCT_CARD_FRAGMENT,
-  PRODUCT_VARIANT_FRAGMENT,
-} from '~/data';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
+import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
 const seo: SeoHandleFunction<typeof loader> = (data) => ({
   title: data?.product?.seo?.title,
@@ -461,6 +457,42 @@ function ProductDetail({
     </Disclosure>
   );
 }
+
+const PRODUCT_VARIANT_FRAGMENT = `#graphql
+  fragment ProductVariantFragment on ProductVariant {
+    id
+    availableForSale
+    selectedOptions {
+      name
+      value
+    }
+    image {
+      id
+      url
+      altText
+      width
+      height
+    }
+    price {
+      amount
+      currencyCode
+    }
+    compareAtPrice {
+      amount
+      currencyCode
+    }
+    sku
+    title
+    unitPrice {
+      amount
+      currencyCode
+    }
+    product {
+      title
+      handle
+    }
+  }
+`;
 
 const PRODUCT_QUERY = `#graphql
   ${MEDIA_FRAGMENT}
