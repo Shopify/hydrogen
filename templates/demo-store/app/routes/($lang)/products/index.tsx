@@ -11,7 +11,7 @@ import {
   getPaginationVariables,
   Button,
 } from '~/components';
-import {PRODUCT_CARD_FRAGMENT} from '~/data';
+import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 
 const PAGE_BY = 8;

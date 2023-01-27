@@ -23,10 +23,10 @@ import {
 import {useParams, Form, Await, useMatches} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
-import type {LayoutData} from '~/data';
 import {startTransition, Suspense, useEffect, useMemo, useState} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
+import type {LayoutData} from '../root';
 
 export function Layout({
   children,

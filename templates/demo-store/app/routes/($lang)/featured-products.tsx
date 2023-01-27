@@ -5,7 +5,7 @@ import type {
   ProductConnection,
 } from '@shopify/storefront-kit-react/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {PRODUCT_CARD_FRAGMENT} from '~/data';
+import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
 export async function loader({context: {storefront}}: LoaderArgs) {
   return json(await getFeaturedData(storefront));
