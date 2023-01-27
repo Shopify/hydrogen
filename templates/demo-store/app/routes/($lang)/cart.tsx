@@ -42,7 +42,7 @@ export async function action({request, context}: ActionArgs) {
   let result: {
     cart: CartType;
     errors?: CartUserError[] | UserError[];
-  };
+  } | null = null;
 
   switch (cartAction) {
     case CartAction.ADD_TO_CART:
@@ -51,18 +51,27 @@ export async function action({request, context}: ActionArgs) {
         : ([] as CartLineInput[]);
       invariant(lines.length, 'No lines to add');
 
-      /**
-       * If no previous cart exists, create one with the lines.
-       */
-      if (!cartId) {
-        result = await cartCreate({
-          input: countryCode ? {lines, buyerIdentity: {countryCode}} : {lines},
-          storefront,
-        });
-      } else {
+      if (cartId) {
         result = await cartAdd({
           cartId,
           lines,
+          storefront,
+        });
+
+        const error = result?.errors?.[0];
+        if (error && error.field?.includes('cartId')) {
+          // The specified cart does not exist, continue and create a new one.
+          await session.unset('cartId');
+          cartId = null;
+        }
+      }
+
+      /**
+       * If no previous cart exists, create one with the lines.
+       */
+      if (!cartId || !result) {
+        result = await cartCreate({
+          input: countryCode ? {lines, buyerIdentity: {countryCode}} : {lines},
           storefront,
         });
       }
