@@ -141,7 +141,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 };
 
 export default function EditAddress() {
-  const {addressId} = useParams();
+  const {id: addressId} = useParams();
   const isNewAddress = addressId === 'add';
   const actionData = useActionData<ActionData>();
   const transition = useTransition();

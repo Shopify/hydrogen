@@ -26,6 +26,7 @@ import {
 import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {
   json,
+  defer,
   redirect,
   type LoaderArgs,
   type AppLoadContext,
@@ -33,6 +34,10 @@ import {
 import {flattenConnection} from '@shopify/storefront-kit-react';
 import {getFeaturedData} from './featured-products';
 import {doLogout} from './account/__private/logout';
+
+// Combining json + Response + defer in a loader breaks the
+// types returned by useLoaderData. This is a temporary fix.
+type TmpRemixFix = ReturnType<typeof defer<{isAuthenticated: false}>>;
 
 export async function loader({request, context, params}: LoaderArgs) {
   const {pathname} = new URL(request.url);
@@ -43,11 +48,10 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   if (!isAuthenticated) {
     if (/\/account\/login$/.test(pathname)) {
-      return json({
-        isAuthenticated,
-      });
+      return json({isAuthenticated}) as unknown as TmpRemixFix;
     }
-    return redirect(loginPath);
+
+    return redirect(loginPath) as unknown as TmpRemixFix;
   }
 
   const customer = await getCustomer(context, customerAccessToken);
@@ -60,7 +64,7 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const orders = flattenConnection(customer.orders) as Order[];
 
-  return json({
+  return defer({
     isAuthenticated,
     customer,
     heading,
@@ -91,17 +95,17 @@ export default function Authenticated() {
       return (
         <>
           <Modal cancelLink="/account">
-            <Outlet context={{customer: data.customer} as any} />
+            <Outlet context={{customer: data.customer}} />
           </Modal>
-          <Account {...data} />
+          <Account {...(data as Account)} />
         </>
       );
     } else {
-      return <Outlet context={{customer: data.customer} as any} />;
+      return <Outlet context={{customer: data.customer}} />;
     }
   }
 
-  return <Account {...data} />;
+  return <Account {...(data as Account)} />;
 }
 
 interface Account {
