@@ -36,7 +36,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'SendShopifyAnalyticsGeneratedType',
+      type: 'UseCartGeneratedType',
       description: '',
     },
   ],

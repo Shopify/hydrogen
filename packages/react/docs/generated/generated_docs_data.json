@@ -5013,7 +5013,106 @@
     ]
   },
   {
-    "name": "CartProvider",
+    "name": "storefrontApiCustomScalars",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "storefront.schema.json",
+        "type": "utility",
+        "url": "/api/react-storefront-kit/utilities/storefront.schema.json"
+      },
+      {
+        "name": "Storefront API Types",
+        "type": "utility",
+        "url": "/api/react-storefront-kit/utilities/storefrontapitypes"
+      }
+    ],
+    "description": "\n    Meant to be used with GraphQL CodeGen to type the Storefront API's custom scalars correctly when using TypeScript.\n    By default, GraphQL CodeGen uses `any` for custom scalars; by using these definitions, GraphQL Codegen will generate the correct types for the Storefront API's custom scalars.\n\n    See more about [GraphQL CodeGen](https://graphql-code-generator.com/) and [custom scalars for TypeScript](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript#scalars).\n\n    Note that `@shopify/hydrogen-react` has already generated types for the Storefront API, so you may not need to setup GraphQL Codegen on your own.\n  ",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "Codegen Config",
+            "code": "import {storefrontApiCustomScalars} from '@shopify/storefront-kit-react';\n\nconst config = {\n  overwrite: true,\n  schema: require.resolve(\n    '@shopify/storefront-kit-react/storefront.schema.json'\n  ),\n  documents: 'pages/**/*.tsx',\n  generates: {\n    './gql/': {\n      preset: 'client',\n      plugins: [],\n      config: {\n        // defines the custom scalars used in the Storefront API\n        scalars: storefrontApiCustomScalars,\n      },\n    },\n  },\n};\n\nexport default config;\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": []
+  },
+  {
+    "name": "storefront.schema.json",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "storefrontApiCustomScalars",
+        "type": "utility",
+        "url": "/api/react-storefront-kit/utilities/storefrontApiCustomScalars"
+      },
+      {
+        "name": "Storefront API Types",
+        "type": "utility",
+        "url": "/api/react-storefront-kit/utilities/storefrontapitypes"
+      }
+    ],
+    "description": "\n    Hydrogen React ships with a pre-generated GraphQL schema for the Storefront API, which can integrate with your IDE and other GraphQL tooling (such as a [GraphQL config file](https://www.graphql-config.com/docs/user/user-usage)) to provide autocompletion and validation for your Storefront API GraphQL queries.\n\n    This schema is generated using the Storefront API's introspection query, and is available at `@shopify/hydrogen-react/storefront.schema.json`.\n\n    To get these features working in your IDE, you may need to install an extension. For example, in VSCode you can install this [GraphQL extension](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql).\n  ",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "GraphQL Config File",
+            "code": "schema: node_modules/@shopify/hydrogen-react/storefront.schema.json\n",
+            "language": "yml"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": []
+  },
+  {
+    "name": "storefront.schema.json",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "storefrontApiCustomScalars",
+        "type": "utility",
+        "url": "/api/react-storefront-kit/utilities/storefrontApiCustomScalars"
+      },
+      {
+        "name": "storefront.schema.json",
+        "type": "utility",
+        "url": "/api/react-storefront-kit/utilities/storefront.schema.json"
+      }
+    ],
+    "description": "\n    If you are using TypeScript, Hydrogen React ships with pre-generated TypeScript types that match the Storefront API's GraphQL schema.\n  ",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "Storefront API Types in TypeScript",
+            "code": "import type {\n  Product,\n  Collection,\n} from '@shopify/storefront-kit-react/storefront-api-types';\n\n// @ts-expect-error - missing required fields\nconst myProduct: Product = {id: '123'};\nconsole.log(myProduct.id);\n\n// @ts-expect-error - missing required fields\nconst myCollection: Collection = {id: '123'};\nconsole.log(myCollection.id);\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": []
+  },
+  {
+    "name": "useCart",
     "category": "hooks",
     "isVisualComponent": false,
     "related": [
@@ -5047,269 +5146,19 @@
       {
         "title": "Props",
         "description": "",
-        "type": "SendShopifyAnalyticsGeneratedType",
+        "type": "UseCartGeneratedType",
         "typeDefinitions": {
-          "SendShopifyAnalyticsGeneratedType": {
-            "filePath": "/analytics.ts",
-            "name": "SendShopifyAnalyticsGeneratedType",
-            "params": [
-              {
-                "name": "{eventName, payload}",
-                "description": "- Type of analytics event",
-                "value": "ShopifyAnalytics",
-                "filePath": "/analytics.ts"
-              },
-              {
-                "name": "shopDomain",
-                "description": "- Defaults to Shopify's analytics endpoint.\nSupply the Online Store domain so that Shopify analytics can be sent under\nthe same top level domain. (You don't need to set this if you are sending\nfrom the server side)",
-                "value": "string",
-                "filePath": "/analytics.ts"
-              }
-            ],
+          "UseCartGeneratedType": {
+            "filePath": "/CartProvider.tsx",
+            "name": "UseCartGeneratedType",
+            "params": [],
             "returns": {
-              "filePath": "/analytics.ts",
+              "filePath": "/CartProvider.tsx",
               "description": "",
-              "name": "Promise<void>",
-              "value": "Promise<void>"
+              "name": "",
+              "value": ""
             },
-            "value": "export function sendShopifyAnalytics(\n  {eventName, payload}: ShopifyAnalytics,\n  shopDomain?: string\n): Promise<void> {\n  let events: ShopifyMonorailEvent[] = [];\n\n  if (eventName === AnalyticsEventName.PAGE_VIEW) {\n    const pageViewPayload = payload as ShopifyPageViewPayload;\n    events = events.concat(\n      trekkiePageView(pageViewPayload),\n      customerPageView(pageViewPayload)\n    );\n  } else if (eventName === AnalyticsEventName.ADD_TO_CART) {\n    events = events.concat(\n      customerAddToCart(payload as ShopifyAddToCartPayload)\n    );\n  }\n\n  return sendToShopify(events, shopDomain);\n}"
-          },
-          "ShopifyAnalytics": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyAnalytics",
-            "value": "ShopifyPageView | ShopifyAddToCart",
-            "description": ""
-          },
-          "ShopifyPageView": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyPageView",
-            "value": "{\n  eventName: string;\n  payload: ShopifyPageViewPayload;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "eventName",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "payload",
-                "value": "ShopifyPageViewPayload",
-                "description": ""
-              }
-            ]
-          },
-          "ShopifyPageViewPayload": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyPageViewPayload",
-            "value": "ShopifyCommonPayload & {\n  canonicalUrl?: string;\n  pageType?: string;\n  resourceId?: string;\n  collectionHandle?: string;\n  searchString?: string;\n}",
-            "description": ""
-          },
-          "ShopifyCommonPayload": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyCommonPayload",
-            "value": "ClientBrowserParameters & {\n  shopifyAppSource?: ShopifyAppSources;\n  hasUserConsent: boolean;\n  shopId: string;\n  currency: string;\n  storefrontId?: string;\n  acceptedLanguage?: string;\n  customerId?: string;\n  totalValue?: number;\n  products?: ShopifyAnalyticsProduct[];\n}",
-            "description": ""
-          },
-          "ClientBrowserParameters": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ClientBrowserParameters",
-            "value": "{\n  uniqueToken: string;\n  visitToken: string;\n  url: string;\n  path: string;\n  search: string;\n  referrer: string;\n  title: string;\n  userAgent: string;\n  navigationType: string;\n  navigationApi: string;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "uniqueToken",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "visitToken",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "url",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "path",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "search",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "referrer",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "title",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "userAgent",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "navigationType",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "navigationApi",
-                "value": "string",
-                "description": ""
-              }
-            ]
-          },
-          "ShopifyAppSources": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyAppSources",
-            "value": "keyof typeof ShopifyAppSource",
-            "description": ""
-          },
-          "ShopifyAnalyticsProduct": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyAnalyticsProduct",
-            "value": "{\n  productGid: Product['id'];\n  variantGid?: ProductVariant['id'];\n  name: Product['title'];\n  variantName?: ProductVariant['title'];\n  brand: Product['vendor'];\n  category?: Product['productType'];\n  price: ProductVariant['price']['amount'];\n  sku?: ProductVariant['sku'];\n  quantity?: number;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "productGid",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "variantGid",
-                "value": "string",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "name",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "variantName",
-                "value": "string",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "brand",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "category",
-                "value": "string",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "price",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "sku",
-                "value": "string",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "quantity",
-                "value": "number",
-                "description": "",
-                "isOptional": true
-              }
-            ]
-          },
-          "ShopifyAddToCart": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyAddToCart",
-            "value": "{\n  eventName: string;\n  payload: ShopifyAddToCartPayload;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "eventName",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "payload",
-                "value": "ShopifyAddToCartPayload",
-                "description": ""
-              }
-            ]
-          },
-          "ShopifyAddToCartPayload": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyAddToCartPayload",
-            "value": "ShopifyCommonPayload & {\n  /** The cart's ID if it has been created through the Storefront API. */\n  cartId: string;\n}",
-            "description": ""
+            "value": "export function useCart() {\n  const context = useContext(CartContext);\n\n  if (!context) {\n    throw new Error('Expected a Cart Context, but no Cart Context was found');\n  }\n\n  return context;\n}"
           }
         }
       }

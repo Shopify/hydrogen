@@ -1,6 +1,6 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src/*.example.?(t|j)sx", "globals.d.ts"],
+  "include": ["src/*.example.?(ts|js|tsx|jsx)", "globals.d.ts"],
   "exclude": [],
   "compilerOptions": {
     "jsx": "react-jsx",
