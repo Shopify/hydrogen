@@ -23,5 +23,14 @@ module.exports = {
         'node/no-extraneous-require': 'off',
       },
     },
+    {
+      // only for the index.ts file, apply the simple-import-sort rules so that exports are sorted alphabetically.
+      // it doesn't matter for any other file, but it's good for index.ts because it helps to easily compare what's in the filesystem vs what we export
+      files: ['src/index.ts'],
+      plugins: ['simple-import-sort'],
+      rules: {
+        'simple-import-sort/exports': 'error',
+      },
+    },
   ],
 };
