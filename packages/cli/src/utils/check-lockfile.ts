@@ -1,4 +1,6 @@
-import {file, git, path} from '@shopify/cli-kit';
+import {fileExists} from '@shopify/cli-kit/node/fs';
+import {resolvePath} from '@shopify/cli-kit/node/path';
+import {gitFactory} from '@shopify/cli-kit/node/git';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {
   lockfiles,
@@ -69,7 +71,7 @@ export async function checkLockfileStatus(directory: string) {
 
   const availableLockfiles: Lockfile[] = [];
   for (const lockFileName of lockfiles) {
-    if (await file.exists(path.resolve(directory, lockFileName))) {
+    if (await fileExists(resolvePath(directory, lockFileName))) {
       availableLockfiles.push(lockFileName);
     }
   }
@@ -82,7 +84,7 @@ export async function checkLockfileStatus(directory: string) {
     return multipleLockfilesWarning(availableLockfiles);
   }
 
-  const repo = git.factory(directory);
+  const repo = gitFactory(directory);
   const lockfile = availableLockfiles[0]!;
   const ignoredLockfile = await repo.checkIgnore([lockfile]);
 
