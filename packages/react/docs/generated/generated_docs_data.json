@@ -584,6 +584,238 @@
     ]
   },
   {
+    "name": "CartProvider",
+    "category": "components",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "useCart",
+        "type": "hooks",
+        "url": "/api/react-storefront-kit/hooks/useCart"
+      }
+    ],
+    "description": "\n    The `CartProvider` component synchronizes the state of the Storefront API Cart and a customer's cart,\n    and allows you to more easily manipulate the cart by adding, removing, and updating it.\n    It could be placed at the root of your app so that your whole app is able to use the `useCart()` hook anywhere.\n\n    There are props that trigger when a call to the Storefront API is made, such as `onLineAdd={}` when a line is added to the cart.\n    There are also props that trigger when a call to the Storefront API is completed, such as `onLineAddComplete={}` when the fetch request for adding a line to the cart completes.\n  ",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {CartProvider, useCart} from '@shopify/storefront-kit-react';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {CartProvider, useCart} from '@shopify/storefront-kit-react';\nimport type {CartLineInput} from '../dist/types/storefront-api-types';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise: CartLineInput = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "CartProviderProps",
+        "typeDefinitions": {
+          "CartProviderProps": {
+            "filePath": "/CartProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartProviderProps",
+            "value": "{\n  /** Any `ReactNode` elements. */\n  children: React.ReactNode;\n  /**  Maximum number of cart lines to fetch. Defaults to 250 cart lines. */\n  numCartLines?: number;\n  /** A callback that is invoked when the process to create a cart begins, but before the cart is created in the Storefront API. */\n  onCreate?: () => void;\n  /** A callback that is invoked when the process to add a line item to the cart begins, but before the line item is added to the Storefront API. */\n  onLineAdd?: () => void;\n  /** A callback that is invoked when the process to remove a line item to the cart begins, but before the line item is removed from the Storefront API. */\n  onLineRemove?: () => void;\n  /** A callback that is invoked when the process to update a line item in the cart begins, but before the line item is updated in the Storefront API. */\n  onLineUpdate?: () => void;\n  /** A callback that is invoked when the process to add or update a note in the cart begins, but before the note is added or updated in the Storefront API. */\n  onNoteUpdate?: () => void;\n  /** A callback that is invoked when the process to update the buyer identity begins, but before the buyer identity is updated in the Storefront API. */\n  onBuyerIdentityUpdate?: () => void;\n  /** A callback that is invoked when the process to update the cart attributes begins, but before the attributes are updated in the Storefront API. */\n  onAttributesUpdate?: () => void;\n  /** A callback that is invoked when the process to update the cart discount codes begins, but before the discount codes are updated in the Storefront API. */\n  onDiscountCodesUpdate?: () => void;\n  /** A callback that is invoked when the process to create a cart completes */\n  onCreateComplete?: () => void;\n  /** A callback that is invoked when the process to add a line item to the cart completes */\n  onLineAddComplete?: () => void;\n  /** A callback that is invoked when the process to remove a line item to the cart completes */\n  onLineRemoveComplete?: () => void;\n  /** A callback that is invoked when the process to update a line item in the cart completes */\n  onLineUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to add or update a note in the cart completes */\n  onNoteUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the buyer identity completes */\n  onBuyerIdentityUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the cart attributes completes */\n  onAttributesUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the cart discount codes completes */\n  onDiscountCodesUpdateComplete?: () => void;\n  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/latest/objects/cart). */\n  data?: PartialDeep<CartType, {recurseIntoArrays: true}>;\n  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/latest/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */\n  cartFragment?: string;\n  /** A customer access token that's accessible on the server if there's a customer login. */\n  customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];\n  /** The ISO country code for i18n. */\n  countryCode?: CountryCode;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "ReactNode",
+                "description": "Any `ReactNode` elements."
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "numCartLines",
+                "value": "number",
+                "description": "Maximum number of cart lines to fetch. Defaults to 250 cart lines.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onCreate",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to create a cart begins, but before the cart is created in the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onLineAdd",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to add a line item to the cart begins, but before the line item is added to the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onLineRemove",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to remove a line item to the cart begins, but before the line item is removed from the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onLineUpdate",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to update a line item in the cart begins, but before the line item is updated in the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onNoteUpdate",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to add or update a note in the cart begins, but before the note is added or updated in the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onBuyerIdentityUpdate",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to update the buyer identity begins, but before the buyer identity is updated in the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onAttributesUpdate",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to update the cart attributes begins, but before the attributes are updated in the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onDiscountCodesUpdate",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to update the cart discount codes begins, but before the discount codes are updated in the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onCreateComplete",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to create a cart completes",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onLineAddComplete",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to add a line item to the cart completes",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onLineRemoveComplete",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to remove a line item to the cart completes",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onLineUpdateComplete",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to update a line item in the cart completes",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onNoteUpdateComplete",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to add or update a note in the cart completes",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onBuyerIdentityUpdateComplete",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to update the buyer identity completes",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onAttributesUpdateComplete",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to update the cart attributes completes",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "onDiscountCodesUpdateComplete",
+                "value": "() => void",
+                "description": "A callback that is invoked when the process to update the cart discount codes completes",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "data",
+                "value": "PartialObjectDeep<Cart, { recurseIntoArrays: true; }>",
+                "description": "An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/latest/objects/cart).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "cartFragment",
+                "value": "string",
+                "description": "A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/latest/objects/cart) for all queries and mutations. A default value is used if no argument is provided.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "customerAccessToken",
+                "value": "string",
+                "description": "A customer access token that's accessible on the server if there's a customer login.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "countryCode",
+                "value": "CountryCode",
+                "description": "The ISO country code for i18n.",
+                "isOptional": true
+              }
+            ]
+          },
+          "Cart": {
+            "filePath": "/cart-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "Cart",
+            "value": "PartialDeep<\n  {\n    /** The cart's ID if it has been created through the Storefront API. */\n    id?: string;\n    /** The cart lines. */\n    lines: CartLine[];\n    /** The checkout URL for the cart, if the cart has been created in the Storefront API. */\n    checkoutUrl?: string;\n    /** The cart's note. */\n    note?: string;\n    /** The cart's buyer identity. */\n    buyerIdentity?: CartType['buyerIdentity'];\n    /** The cart's attributes. */\n    attributes: CartType['attributes'];\n    /** The discount codes applied to the cart. */\n    discountCodes?: CartType['discountCodes'];\n    /** The cost for the cart, including the subtotal, total, taxes, and duties. */\n    cost?: CartType['cost'];\n    /** The total number of items in the cart, across all lines. If there are no lines, then the value is 0. */\n    totalQuantity: number;\n  },\n  {recurseIntoArrays: true}\n>",
+            "description": ""
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "ExternalVideo",
     "category": "components",
     "isVisualComponent": false,
@@ -4775,6 +5007,309 @@
                 "description": ""
               }
             ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "CartProvider",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "CartProvider",
+        "type": "components",
+        "url": "/api/react-storefront-kit/components/CartProvider"
+      }
+    ],
+    "description": "\n    The `useCart` hook provides access to the cart object. It must be a descendent of a `CartProvider` component.\n  ",
+    "type": "hook",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {CartProvider, useCart} from '@shopify/storefront-kit-react';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {CartProvider, useCart} from '@shopify/storefront-kit-react';\nimport type {CartLineInput} from '../dist/types/storefront-api-types';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise: CartLineInput = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "SendShopifyAnalyticsGeneratedType",
+        "typeDefinitions": {
+          "SendShopifyAnalyticsGeneratedType": {
+            "filePath": "/analytics.ts",
+            "name": "SendShopifyAnalyticsGeneratedType",
+            "params": [
+              {
+                "name": "{eventName, payload}",
+                "description": "- Type of analytics event",
+                "value": "ShopifyAnalytics",
+                "filePath": "/analytics.ts"
+              },
+              {
+                "name": "shopDomain",
+                "description": "- Defaults to Shopify's analytics endpoint.\nSupply the Online Store domain so that Shopify analytics can be sent under\nthe same top level domain. (You don't need to set this if you are sending\nfrom the server side)",
+                "value": "string",
+                "filePath": "/analytics.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics.ts",
+              "description": "",
+              "name": "Promise<void>",
+              "value": "Promise<void>"
+            },
+            "value": "export function sendShopifyAnalytics(\n  {eventName, payload}: ShopifyAnalytics,\n  shopDomain?: string\n): Promise<void> {\n  let events: ShopifyMonorailEvent[] = [];\n\n  if (eventName === AnalyticsEventName.PAGE_VIEW) {\n    const pageViewPayload = payload as ShopifyPageViewPayload;\n    events = events.concat(\n      trekkiePageView(pageViewPayload),\n      customerPageView(pageViewPayload)\n    );\n  } else if (eventName === AnalyticsEventName.ADD_TO_CART) {\n    events = events.concat(\n      customerAddToCart(payload as ShopifyAddToCartPayload)\n    );\n  }\n\n  return sendToShopify(events, shopDomain);\n}"
+          },
+          "ShopifyAnalytics": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyAnalytics",
+            "value": "ShopifyPageView | ShopifyAddToCart",
+            "description": ""
+          },
+          "ShopifyPageView": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyPageView",
+            "value": "{\n  eventName: string;\n  payload: ShopifyPageViewPayload;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "eventName",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "payload",
+                "value": "ShopifyPageViewPayload",
+                "description": ""
+              }
+            ]
+          },
+          "ShopifyPageViewPayload": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyPageViewPayload",
+            "value": "ShopifyCommonPayload & {\n  canonicalUrl?: string;\n  pageType?: string;\n  resourceId?: string;\n  collectionHandle?: string;\n  searchString?: string;\n}",
+            "description": ""
+          },
+          "ShopifyCommonPayload": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyCommonPayload",
+            "value": "ClientBrowserParameters & {\n  shopifyAppSource?: ShopifyAppSources;\n  hasUserConsent: boolean;\n  shopId: string;\n  currency: string;\n  storefrontId?: string;\n  acceptedLanguage?: string;\n  customerId?: string;\n  totalValue?: number;\n  products?: ShopifyAnalyticsProduct[];\n}",
+            "description": ""
+          },
+          "ClientBrowserParameters": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ClientBrowserParameters",
+            "value": "{\n  uniqueToken: string;\n  visitToken: string;\n  url: string;\n  path: string;\n  search: string;\n  referrer: string;\n  title: string;\n  userAgent: string;\n  navigationType: string;\n  navigationApi: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "uniqueToken",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "visitToken",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "url",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "path",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "search",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "referrer",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "title",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "userAgent",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "navigationType",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "navigationApi",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          },
+          "ShopifyAppSources": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyAppSources",
+            "value": "keyof typeof ShopifyAppSource",
+            "description": ""
+          },
+          "ShopifyAnalyticsProduct": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyAnalyticsProduct",
+            "value": "{\n  productGid: Product['id'];\n  variantGid?: ProductVariant['id'];\n  name: Product['title'];\n  variantName?: ProductVariant['title'];\n  brand: Product['vendor'];\n  category?: Product['productType'];\n  price: ProductVariant['price']['amount'];\n  sku?: ProductVariant['sku'];\n  quantity?: number;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "productGid",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "variantGid",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "name",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "variantName",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "brand",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "category",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "price",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sku",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "quantity",
+                "value": "number",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "ShopifyAddToCart": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyAddToCart",
+            "value": "{\n  eventName: string;\n  payload: ShopifyAddToCartPayload;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "eventName",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "payload",
+                "value": "ShopifyAddToCartPayload",
+                "description": ""
+              }
+            ]
+          },
+          "ShopifyAddToCartPayload": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyAddToCartPayload",
+            "value": "ShopifyCommonPayload & {\n  /** The cart's ID if it has been created through the Storefront API. */\n  cartId: string;\n}",
+            "description": ""
           }
         }
       }
