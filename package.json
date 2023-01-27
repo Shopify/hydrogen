@@ -19,6 +19,7 @@
     "templates/demo-store",
     "packages/remix-oxygen",
     "packages/hydrogen",
+    "packages/create-hydrogen",
     "packages/cli"
   ],
   "prettier": "@shopify/prettier-config",
