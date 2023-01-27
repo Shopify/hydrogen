@@ -29,6 +29,10 @@ import {flattenConnection} from '@shopify/storefront-kit-react';
 import {getCustomer} from '~/data';
 import {getFeaturedData} from './featured-products';
 
+// Combining json + Response + defer in a loader breaks the
+// types returned by useLoaderData. This is a temporary fix.
+type TmpRemixFix = ReturnType<typeof defer<{isAuthenticated: false}>>;
+
 export async function loader({request, context, params}: LoaderArgs) {
   const {pathname} = new URL(request.url);
   const lang = params.lang;
@@ -38,11 +42,10 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   if (!isAuthenticated) {
     if (/\/account\/login$/.test(pathname)) {
-      return json({
-        isAuthenticated,
-      });
+      return json({isAuthenticated}) as unknown as TmpRemixFix;
     }
-    return redirect(loginPath);
+
+    return redirect(loginPath) as unknown as TmpRemixFix;
   }
 
   const customer = await getCustomer(context, customerAccessToken);
@@ -86,13 +89,13 @@ export default function Authenticated() {
       return (
         <>
           <Modal cancelLink="/account">
-            <Outlet context={{customer: data.customer} as any} />
+            <Outlet context={{customer: data.customer}} />
           </Modal>
           <Account {...(data as Account)} />
         </>
       );
     } else {
-      return <Outlet context={{customer: data.customer} as any} />;
+      return <Outlet context={{customer: data.customer}} />;
     }
   }
 
