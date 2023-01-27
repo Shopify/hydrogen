@@ -19,7 +19,7 @@ import {
   Section,
   Text,
 } from '~/components';
-import {PRODUCT_CARD_FRAGMENT} from '~/data';
+import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {PAGINATION_SIZE} from '~/lib/const';
 
 export default function () {
