@@ -120,7 +120,14 @@ async function runGenerate(
 ) {
   const extension = typescript ? '.tsx' : '.jsx';
   const distPath = new URL('../../../', import.meta.url).pathname;
-  const templatePath = path.join(distPath, 'templates', `${route}.tsx`);
+  const templatePath = path.join(
+    distPath,
+    'templates',
+    'skeleton',
+    'app',
+    'routes',
+    `${route}.tsx`,
+  );
   const destinationPath = path.join(
     directory,
     'app',

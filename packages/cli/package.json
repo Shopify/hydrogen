@@ -26,7 +26,14 @@
     "prettier": "^2.8.2",
     "typescript": "^4.8.3"
   },
-  "bin": "dist/tmp-create-app.js",
+  "bin": "dist/create-app.js",
+  "exports": {
+    "./package.json": "./package.json",
+    "./commands/hydrogen/init": {
+      "types": "./dist/commands/hydrogen/init.d.ts",
+      "default": "./dist/commands/hydrogen/init.js"
+    }
+  },
   "files": [
     "dist",
     "oclif.manifest.json"
