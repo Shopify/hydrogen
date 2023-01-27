@@ -24,10 +24,15 @@ import {
   ProductSwimlane,
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
-import {redirect, json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  redirect,
+  type LoaderArgs,
+  type AppLoadContext,
+} from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/storefront-kit-react';
-import {getCustomer} from '~/data';
 import {getFeaturedData} from './featured-products';
+import {doLogout} from './account/__private/logout';
 
 export async function loader({request, context, params}: LoaderArgs) {
   const {pathname} = new URL(request.url);
@@ -53,7 +58,7 @@ export async function loader({request, context, params}: LoaderArgs) {
       : `Welcome to your account.`
     : 'Account Details';
 
-  const orders = flattenConnection(customer?.orders) as Order[];
+  const orders = flattenConnection(customer.orders) as Order[];
 
   return json({
     isAuthenticated,
@@ -185,4 +190,107 @@ function Orders({orders}: {orders: Order[]}) {
       ))}
     </ul>
   );
+}
+
+const CUSTOMER_QUERY = `#graphql
+  query CustomerDetails(
+    $customerAccessToken: String!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    customer(customerAccessToken: $customerAccessToken) {
+      firstName
+      lastName
+      phone
+      email
+      defaultAddress {
+        id
+        formatted
+        firstName
+        lastName
+        company
+        address1
+        address2
+        country
+        province
+        city
+        zip
+        phone
+      }
+      addresses(first: 6) {
+        edges {
+          node {
+            id
+            formatted
+            firstName
+            lastName
+            company
+            address1
+            address2
+            country
+            province
+            city
+            zip
+            phone
+          }
+        }
+      }
+      orders(first: 250, sortKey: PROCESSED_AT, reverse: true) {
+        edges {
+          node {
+            id
+            orderNumber
+            processedAt
+            financialStatus
+            fulfillmentStatus
+            currentTotalPrice {
+              amount
+              currencyCode
+            }
+            lineItems(first: 2) {
+              edges {
+                node {
+                  variant {
+                    image {
+                      url
+                      altText
+                      height
+                      width
+                    }
+                  }
+                  title
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+`;
+
+export async function getCustomer(
+  context: AppLoadContext,
+  customerAccessToken: string,
+) {
+  const {storefront} = context;
+
+  const data = await storefront.query<{
+    customer: Customer;
+  }>(CUSTOMER_QUERY, {
+    variables: {
+      customerAccessToken,
+      country: context.storefront.i18n.country,
+      language: context.storefront.i18n.language,
+    },
+  });
+
+  /**
+   * If the customer failed to load, we assume their access token is invalid.
+   */
+  if (!data || !data.customer) {
+    throw await doLogout(context);
+  }
+
+  return data.customer;
 }
