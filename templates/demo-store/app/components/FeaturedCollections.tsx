@@ -12,10 +12,10 @@ export function FeaturedCollections({
   title?: string;
   [key: string]: any;
 }) {
-  const items = collections.filter((item) => item.image).length;
-  const haveCollections = collections.length > 0;
-
+  const haveCollections = collections && collections.length > 0;
   if (!haveCollections) return null;
+
+  const items = collections.filter((item) => item.image).length;
 
   return (
     <Section {...props} heading={title}>

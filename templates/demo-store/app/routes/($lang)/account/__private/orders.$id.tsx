@@ -123,6 +123,7 @@ export default function OrderRoute() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
+                {/* @ts-ignore */}
                 {lineItems.map((lineItem: OrderLineItem) => (
                   <tr key={lineItem.variant!.id}>
                     <td className="w-full py-4 pl-0 pr-3 align-top sm:align-middle max-w-0 sm:w-auto sm:max-w-none">
