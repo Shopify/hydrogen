@@ -20,8 +20,9 @@ const ROUTE_MAP: Record<string, string | string[]> = {
 const ROUTES = [...Object.keys(ROUTE_MAP), 'all'];
 
 interface Result {
-  operation: 'created' | 'updated' | 'skipped';
+  operation: 'created' | 'overwrote' | 'skipped';
 }
+
 export default class GenerateRoute extends Command {
   static flags = {
     path: commonFlags.path,
@@ -49,6 +50,7 @@ export default class GenerateRoute extends Command {
 
   async run(): Promise<void> {
     // @ts-ignore
+    const result = new Map<string, Result>();
     const {flags, args} = await this.parse(GenerateRoute);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
@@ -71,12 +73,15 @@ export default class GenerateRoute extends Command {
 
     try {
       for (const item of routesArray) {
-        await runGenerate(item, {
-          directory,
-          typescript: isTypescript,
-          force: flags.force,
-          adapter: flags.adapter,
-        });
+        result.set(
+          item,
+          await runGenerate(item, {
+            directory,
+            typescript: isTypescript,
+            force: flags.force,
+            adapter: flags.adapter,
+          }),
+        );
       }
     } catch (err: unknown) {
       throw new error.Abort((err as Error).message);
@@ -146,7 +151,7 @@ export async function runGenerate(
 
   if (!force && (await file.exists(destinationPath))) {
     const options = [
-      {name: 'No', value: 'abort'},
+      {name: 'No', value: 'skip'},
       {name: `Yes`, value: 'overwrite'},
     ];
 
@@ -162,7 +167,7 @@ export async function runGenerate(
     ]);
 
     return {
-      operation: choice.value === 'abort' ? 'skipped' : 'updated',
+      operation: choice.value === 'skip' ? 'skipped' : 'overwrote',
     };
   }
 
