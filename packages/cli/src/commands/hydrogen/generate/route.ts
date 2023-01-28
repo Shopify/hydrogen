@@ -7,7 +7,7 @@ import ts from 'typescript';
 import prettier from 'prettier';
 
 const ROUTE_MAP: Record<string, string | string[]> = {
-  page: '/page/$pageHandle',
+  page: '/pages/$pageHandle',
   cart: '/cart',
   products: '/products/$productHandle',
   collections: '/collections/$collectionHandle',
@@ -17,8 +17,11 @@ const ROUTE_MAP: Record<string, string | string[]> = {
   account: ['/account/login', '/account/register'],
 };
 
-const ROUTES = Object.keys(ROUTE_MAP);
+const ROUTES = [...Object.keys(ROUTE_MAP), 'all'];
 
+interface Result {
+  operation: 'created' | 'updated' | 'skipped';
+}
 export default class GenerateRoute extends Command {
   static flags = {
     path: commonFlags.path,
@@ -50,7 +53,10 @@ export default class GenerateRoute extends Command {
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
     const {route} = args;
-    const routePath = ROUTE_MAP[route as keyof typeof ROUTE_MAP];
+    const routePath =
+      route === 'all'
+        ? Object.values(ROUTE_MAP).flat()
+        : ROUTE_MAP[route as keyof typeof ROUTE_MAP];
 
     if (!routePath) {
       throw new error.Abort(
@@ -78,6 +84,10 @@ export default class GenerateRoute extends Command {
 
     const extension = isTypescript ? '.tsx' : '.jsx';
 
+    const success = Array.from(result.values()).filter(
+      (result) => result.operation !== 'skipped',
+    );
+
     renderSuccess({
       // TODO update to `customSection` when available
       // customSections: [
@@ -94,11 +104,15 @@ export default class GenerateRoute extends Command {
       //     },
       //   },
       // ],
-      headline: `${routesArray.length} route${
-        routesArray.length > 1 ? 's' : ''
+      headline: `${success.length} of ${result.size} route${
+        result.size > 1 ? 's' : ''
       } generated`,
-      body: routesArray
-        .map((route) => `• app/routes${route}${extension}`)
+      body: Array.from(result.entries())
+        .map(([path, result]) => {
+          const {operation} = result;
+
+          return `• [${operation}] app/routes${path}${extension}`;
+        })
         .join('\n'),
     });
   }
@@ -119,7 +133,7 @@ export async function runGenerate(
     adapter?: string;
     templatesRoot?: string;
   },
-) {
+): Promise<Result> {
   const extension = typescript ? '.tsx' : '.jsx';
   const templatePath = path.join(templatesRoot, 'templates', `${route}.tsx`);
   const destinationPath = path.join(
@@ -147,13 +161,9 @@ export async function runGenerate(
       },
     ]);
 
-    if (choice.value === 'abort') {
-      throw new error.Abort(
-        output.content`The route file ${relativeDestinationPath} already exists. Either delete it or re-run this command with ${output.token.genericShellCommand(
-          `--force`,
-        )}.`,
-      );
-    }
+    return {
+      operation: choice.value === 'abort' ? 'skipped' : 'updated',
+    };
   }
 
   let templateContent = await file.read(templatePath);
@@ -206,6 +216,9 @@ export async function runGenerate(
   }
   // Write the final file to the user's project.
   await file.write(destinationPath, templateContent);
+  return {
+    operation: 'created',
+  };
 }
 
 const escapeNewLines = (code: string) =>
