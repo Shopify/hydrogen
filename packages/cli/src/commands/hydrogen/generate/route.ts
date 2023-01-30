@@ -111,16 +111,17 @@ export async function runGenerate(
     typescript,
     force,
     adapter,
+    templatesRoot = new URL('../../../', import.meta.url).pathname,
   }: {
     directory: string;
-    typescript: boolean;
+    typescript?: boolean;
     force?: boolean;
     adapter?: string;
+    templatesRoot?: string;
   },
 ) {
   const extension = typescript ? '.tsx' : '.jsx';
-  const distPath = new URL('../../../', import.meta.url).pathname;
-  const templatePath = path.join(distPath, 'templates', `${route}.tsx`);
+  const templatePath = path.join(templatesRoot, 'templates', `${route}.tsx`);
   const destinationPath = path.join(
     directory,
     'app',
