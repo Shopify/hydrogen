@@ -45,10 +45,27 @@ export function findMissingRoutes(config: RemixConfig) {
   const requiredRoutes = new Set(REQUIRED_ROUTES);
 
   for (const requiredRoute of requiredRoutes) {
-    for (const {path: userRoute} of userRoutes) {
-      if (!requiredRoute && !userRoute) {
+    for (const userRoute of userRoutes) {
+      if (!requiredRoute && !userRoute.path) {
         requiredRoutes.delete(requiredRoute);
-      } else if (requiredRoute && userRoute) {
+      } else if (requiredRoute && userRoute.path) {
+        const currentRoute = {
+          path: userRoute.path,
+          parentId: userRoute.parentId,
+        };
+
+        // Compose the path for nested routes:
+        while (currentRoute.parentId && currentRoute.parentId !== 'root') {
+          const parentRoute = userRoutes.find(
+            (r) => r.id === currentRoute.parentId,
+          );
+
+          if (!parentRoute) break;
+
+          currentRoute.path = `${parentRoute.path}/${currentRoute.path}`;
+          currentRoute.parentId = parentRoute.parentId;
+        }
+
         const reString =
           // Starts with optional params
           '^(:[^\\/\\?]+\\?\\/)?' +
@@ -56,7 +73,7 @@ export function findMissingRoutes(config: RemixConfig) {
           requiredRoute.replaceAll('.', '\\.').replace(/:[^/]+/g, ':[^\\/]+') +
           '$';
 
-        if (new RegExp(reString).test(userRoute)) {
+        if (new RegExp(reString).test(currentRoute.path)) {
           requiredRoutes.delete(requiredRoute);
         }
       }
