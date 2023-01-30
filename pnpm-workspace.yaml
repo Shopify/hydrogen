@@ -1,0 +1,3 @@
+packages:
+  - 'templates/*'
+  - 'packages/*'

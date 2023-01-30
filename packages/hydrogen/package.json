@@ -55,7 +55,12 @@
   "devDependencies": {
     "@shopify/storefront-kit-react": "*",
     "@types/recursive-readdir": "^2.2.1",
+    "@remix-run/react": "1.11.0",
+    "@remix-run/server-runtime": "1.11.0",
     "@shopify/hydrogen-react": "*",
+    "@types/react": "^18.0.20",
+    "graphql": "^16.6.0",
+    "react": "^18.2.0",
     "vitest": "^0.27.2",
     "schema-dts": "^1.1.0"
   }
