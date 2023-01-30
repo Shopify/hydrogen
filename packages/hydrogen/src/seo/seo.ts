@@ -1,5 +1,5 @@
 import React from 'react';
-import {useMatches, useLocation, Params, Location} from '@remix-run/react';
+import {useMatches, useLocation, type Params, type Location} from '@remix-run/react';
 import {generateSeoTags, type Seo as SeoType} from './generate-seo-tags';
 
 import type {
