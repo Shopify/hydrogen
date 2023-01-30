@@ -33,7 +33,7 @@ import {
   getClientBrowserParameters,
   sendShopifyAnalytics,
   ShopifyAddToCartPayload,
-  ShopifyAppSource,
+  ShopifySalesChannel,
   ShopifyPageViewPayload,
   useShopifyCookies,
 } from '@shopify/storefront-kit-react';
@@ -82,7 +82,7 @@ export async function loader({request, context}: LoaderArgs) {
     selectedLocale: getLocaleFromRequest(request),
     cart: cartId ? getCart(context, cartId) : undefined,
     analytics: {
-      shopifyAppSource: ShopifyAppSource.hydrogen,
+      shopifyAppSource: ShopifySalesChannel.hydrogen,
       shopId: layout.shop.id,
     },
   });
@@ -91,21 +91,22 @@ export async function loader({request, context}: LoaderArgs) {
 export default function App() {
   const data = useLoaderData<typeof loader>();
   const locale = data.selectedLocale ?? DEFAULT_LOCALE;
+  const hasUserConsent = true;
 
-  useShopifyCookies(false);
+  useShopifyCookies({hasUserConsent});
   const location = useLocation();
-  const pageAnalytics = useDataFromMatches('analytics');
+  const pageAnalytics = useDataFromMatches(
+    'analytics',
+  ) as unknown as ShopifyPageViewPayload;
 
   // Page view analytics
   useEffect(() => {
-    // Fix this type error and make sure ClientBrowserParameters does not return Record <string, never>
-    // @ts-ignore
     const payload: ShopifyPageViewPayload = {
       ...getClientBrowserParameters(),
       ...pageAnalytics,
       currency: locale.currency,
-      acceptedLanguage: locale.language.toLowerCase(),
-      hasUserConsent: false,
+      acceptedLanguage: locale.language,
+      hasUserConsent,
     };
 
     sendShopifyAnalytics({
@@ -121,15 +122,13 @@ export default function App() {
     dataKey: 'analytics',
   });
   if (cartData) {
-    // Fix this type error and make sure ClientBrowserParameters does not return Record <string, never>
-    // @ts-ignore
     const addToCartPayload: ShopifyAddToCartPayload = {
       ...getClientBrowserParameters(),
       ...pageAnalytics,
       ...cartData,
       currency: locale.currency,
-      acceptedLanguage: locale.language.toLowerCase(),
-      hasUserConsent: false,
+      acceptedLanguage: locale.language,
+      hasUserConsent,
     };
 
     sendShopifyAnalytics({

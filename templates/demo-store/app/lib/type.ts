@@ -1,5 +1,6 @@
 import {
   CountryCode,
+  CurrencyCode,
   LanguageCode,
 } from '@shopify/storefront-kit-react/storefront-api-types';
 
@@ -18,7 +19,7 @@ export type I18nLocale = {
   country: CountryCode;
   label: string;
   pathPrefix: string;
-  currency: string;
+  currency: CurrencyCode;
 };
 
 export enum CartAction {
