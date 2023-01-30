@@ -70,7 +70,27 @@ export async function loader({context, request}: LoaderArgs) {
 export default function App() {
   const data = useLoaderData<typeof loader>();
 
-  const {name, description} = data.layout.shop;
+  const {name} = data.layout.shop;
+
+  const storeNotConfigured = name === 'Hydrogen';
+
+  if (storeNotConfigured) {
+    return (
+      <html lang="en">
+        <head>
+          <Meta />
+          <Links />
+        </head>
+        <body>
+          <Layout storeName={name}>
+            <Outlet />
+          </Layout>
+          <ScrollRestoration />
+          <Scripts />
+        </body>
+      </html>
+    );
+  }
 
   return (
     <html lang="en">
@@ -79,7 +99,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout description={description} title={name}>
+        <Layout storeName={name}>
           <Outlet />
         </Layout>
         <ScrollRestoration />
