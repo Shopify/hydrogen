@@ -3,7 +3,7 @@ export {getClientBrowserParameters, sendShopifyAnalytics} from './analytics.js';
 export {
   AnalyticsEventName,
   AnalyticsPageType,
-  ShopifyAppSource,
+  ShopifySalesChannel,
 } from './analytics-constants.js';
 export type {
   ClientBrowserParameters,

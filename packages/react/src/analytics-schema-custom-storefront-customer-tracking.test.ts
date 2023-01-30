@@ -1,5 +1,5 @@
 import {expectType} from 'ts-expect';
-import {ShopifyAppSource} from './analytics-constants.js';
+import {ShopifySalesChannel} from './analytics-constants.js';
 import {
   pageView,
   addToCart,
@@ -11,6 +11,7 @@ import {
 import type {
   ShopifyAnalyticsPayload,
   ShopifyMonorailPayload,
+  ShopifyPageViewPayload,
 } from './analytics-types.js';
 
 describe(`analytics schema - custom storefront customer tracking`, () => {
@@ -30,14 +31,14 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
     });
 
     it(`base payload with non-default values`, () => {
-      const pageViewPayload = {
+      const pageViewPayload: ShopifyPageViewPayload = {
         ...BASE_PAYLOAD,
         shopId: 'gid://shopify/Shop/2',
         hasUserConsent: false,
         url: 'https://example.com/fr',
-        shopifyAppSource: ShopifyAppSource.hydrogen,
+        shopifySalesChannel: ShopifySalesChannel.hydrogen,
         storefrontId: '1',
-        acceptedLanguage: 'fr',
+        acceptedLanguage: 'FR',
         customerId: '1',
         pageType: 'index',
         resourceId: 'gid://shopify/Product/1',

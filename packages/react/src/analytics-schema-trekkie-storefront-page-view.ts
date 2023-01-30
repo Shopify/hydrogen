@@ -36,8 +36,8 @@ function formatPayload(
   payload: ShopifyPageViewPayload
 ): ShopifyMonorailPayload {
   return {
-    appClientId: payload.shopifyAppSource
-      ? ShopifyAppId[payload.shopifyAppSource]
+    appClientId: payload.shopifySalesChannel
+      ? ShopifyAppId[payload.shopifySalesChannel]
       : ShopifyAppId.headless,
     isMerchantRequest: isMerchantRequest(payload.url),
     hydrogenSubchannelId: payload.storefrontId || '0',

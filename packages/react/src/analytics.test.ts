@@ -113,6 +113,22 @@ describe('analytics', () => {
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });
 
+    it('does not do anything if payload.hasUserConsent is false', async () => {
+      const consoleErrorSpy = createConsoleErrorSpy();
+      const fetchSpy = createFetchSpy({expectEventCounts: 0});
+
+      await sendShopifyAnalytics({
+        eventName: AnalyticsEventName.PAGE_VIEW,
+        payload: {
+          ...BASE_PAYLOAD,
+          hasUserConsent: false,
+        },
+      });
+
+      expect(fetchSpy).not.toHaveBeenCalled();
+      expect(consoleErrorSpy).not.toHaveBeenCalled();
+    });
+
     it('with a page view event that has a bad payload', async () => {
       const consoleErrorSpy = createConsoleErrorSpy();
       const fetchSpy = createFetchSpy({expectEventCounts: 2});
@@ -221,7 +237,18 @@ describe('analytics', () => {
       const consoleErrorSpy = createConsoleErrorSpy();
       const browserParams = getClientBrowserParameters();
 
-      expect(browserParams).toEqual({});
+      expect(browserParams).toEqual({
+        uniqueToken: '',
+        visitToken: '',
+        url: '',
+        path: '',
+        search: '',
+        referrer: '',
+        title: '',
+        userAgent: '',
+        navigationType: '',
+        navigationApi: '',
+      });
       expect(consoleErrorSpy.mock.calls[0][0]).toBe(
         'getClientBrowserParameters should only be used within the useEffect callback or event handlers'
       );

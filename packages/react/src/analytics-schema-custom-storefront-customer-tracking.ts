@@ -6,7 +6,7 @@ import {
   ShopifyAnalyticsProduct,
   ShopifyMonorailEvent,
 } from './analytics-types.js';
-import {AnalyticsPageType, ShopifyAppSource} from './analytics-constants.js';
+import {AnalyticsPageType, ShopifySalesChannel} from './analytics-constants.js';
 import {addDataIf, schemaWrapper, parseGid} from './analytics-utils.js';
 import {buildUUID} from './cookies-utils.js';
 
@@ -120,7 +120,7 @@ function formatPayload(
   payload: ShopifyAnalyticsPayload
 ): ShopifyMonorailPayload {
   return {
-    source: payload.shopifyAppSource || ShopifyAppSource.headless,
+    source: payload.shopifySalesChannel || ShopifySalesChannel.headless,
     hydrogenSubchannelId: payload.storefrontId || '0',
 
     is_persistent_cookie: payload.hasUserConsent,
