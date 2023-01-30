@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import {output} from '@shopify/cli-kit';
+import {outputInfo} from '@shopify/cli-kit/node/output';
 import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
@@ -103,7 +103,7 @@ async function compileAndWatch(
       }
     },
     async onFileCreated(file: string) {
-      output.info(`\n📄 File created: ${path.relative(root, file)}`);
+      outputInfo(`\n📄 File created: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
       }
@@ -113,7 +113,7 @@ async function compileAndWatch(
       }
     },
     async onFileChanged(file: string) {
-      output.info(`\n📄 File changed: ${path.relative(root, file)}`);
+      outputInfo(`\n📄 File changed: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
       }
@@ -123,7 +123,7 @@ async function compileAndWatch(
       }
     },
     async onFileDeleted(file: string) {
-      output.info(`\n📄 File deleted: ${path.relative(root, file)}`);
+      outputInfo(`\n📄 File deleted: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await fs.unlink(file.replace(publicPath, buildPathClient));
       }
@@ -133,7 +133,7 @@ async function compileAndWatch(
       }
     },
     onRebuildStart() {
-      output.info(LOG_REBUILDING);
+      outputInfo(LOG_REBUILDING);
       console.time(LOG_REBUILT);
     },
     async onRebuildFinish() {
