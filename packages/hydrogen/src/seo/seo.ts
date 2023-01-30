@@ -1,5 +1,5 @@
 import React from 'react';
-import {useMatches} from '@remix-run/react';
+import {useMatches, useLocation, Params, Location} from '@remix-run/react';
 import {generateSeoTags, type Seo as SeoType} from './generate-seo-tags';
 
 import type {
@@ -11,23 +11,31 @@ import type {
 export interface SeoHandleFunction<
   Loader extends LoaderFunction | unknown = unknown,
 > {
-  (
-    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData,
-  ): Partial<SeoType>;
+  (args: {
+    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData;
+    id: string;
+    params: Params;
+    pathname: Location['pathname'];
+    search: Location['search'];
+    hash: Location['hash'];
+    key: string;
+  }): Partial<SeoType>;
 }
 
 export function Seo() {
   const matches = useMatches();
+  const location = useLocation();
 
   const seoConfig = matches
     .flatMap((match) => {
-      const {handle, data} = match;
+      const {handle, ...routeMatch} = match;
+      const routeInfo = {...routeMatch, ...location};
 
       if (handle === undefined || handle.seo === undefined) {
         return [];
       }
 
-      return recursivelyInvokeOrReturn(handle.seo, data);
+      return recursivelyInvokeOrReturn(handle.seo, routeInfo);
     })
     .reduce((acc, current) => {
       Object.keys(current).forEach(
