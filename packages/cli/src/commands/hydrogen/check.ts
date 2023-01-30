@@ -4,7 +4,7 @@ import {commonFlags} from '../../utils/flags.js';
 import {getRemixConfig} from '../../utils/config.js';
 import {
   findMissingRoutes,
-  warnAboutMissingRoutes,
+  logMissingRoutes,
 } from '../../utils/missing-routes.js';
 
 export default class GenerateRoute extends Command {
@@ -36,9 +36,5 @@ export default class GenerateRoute extends Command {
 
 async function runCheckRoutes({directory}: {directory: string}) {
   const remixConfig = await getRemixConfig(directory, '', '');
-  const missingRoutes = findMissingRoutes(remixConfig);
-
-  if (missingRoutes.length) {
-    warnAboutMissingRoutes(missingRoutes);
-  }
+  logMissingRoutes(findMissingRoutes(remixConfig));
 }
