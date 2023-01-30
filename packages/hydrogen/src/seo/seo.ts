@@ -1,6 +1,7 @@
 import React from 'react';
 import {useMatches} from '@remix-run/react';
 import {generateSeoTags, type Seo as SeoType} from './generate-seo-tags';
+import {logSeoTags} from './log-seo-tags';
 
 import type {
   LoaderFunction,
@@ -16,7 +17,11 @@ export interface SeoHandleFunction<
   ): Partial<SeoType>;
 }
 
-export function Seo() {
+interface SeoProps {
+  debug?: boolean;
+}
+
+export function Seo({debug}: SeoProps) {
   const matches = useMatches();
 
   const seoConfig = matches
@@ -38,6 +43,8 @@ export function Seo() {
     }, {});
 
   const headTags = generateSeoTags(seoConfig);
+
+  if (debug) logSeoTags(headTags);
 
   const html = headTags.map((tag) => {
     if (tag.tag === 'script') {

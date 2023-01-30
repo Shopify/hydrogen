@@ -43,13 +43,13 @@ describe('logSeoTags', () => {
 
     expectLogFixture([
       ...banner,
-      ['meta', 2],
-      ['og:type', 4],
-      ['Snowdevil', 4],
+      ['meta', 1],
+      ['og:type'],
+      ['Snowdevil'],
       lineBreak,
-      ['meta', 2],
-      ['og:description', 4],
-      ['A description', 4],
+      ['meta', 1],
+      ['og:description'],
+      ['A description'],
       lineBreak,
     ]);
   });
