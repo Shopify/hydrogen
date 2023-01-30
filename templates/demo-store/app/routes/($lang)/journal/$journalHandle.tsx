@@ -16,7 +16,7 @@ import type {SeoHandleFunction} from '@shopify/hydrogen';
 
 const BLOG_HANDLE = 'journal';
 
-const seo: SeoHandleFunction<typeof loader> = (data) => ({
+const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   title: data?.article?.seo?.title,
   description: data?.article?.seo?.description,
   titleTemplate: '%s | Journal',

@@ -26,11 +26,11 @@ import {DEFAULT_LOCALE, parseMenu, type EnhancedMenu} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Shop, Cart} from '@shopify/storefront-kit-react/storefront-api-types';
 
-const seo: SeoHandleFunction<typeof loader> = (data) => ({
+const seo: SeoHandleFunction<typeof loader> = ({data, pathname}) => ({
   title: data?.layout?.shop?.name,
   description: data?.layout?.shop?.description,
   handle: '@shopify',
-  url: 'https://hydrogen.shop',
+  url: `https://hydrogen.shop${pathname}`,
 });
 
 export const handle = {
