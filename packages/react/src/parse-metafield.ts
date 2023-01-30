@@ -11,9 +11,7 @@ import type {PartialDeep, Simplify} from 'type-fest';
 import {flattenConnection} from './flatten-connection.js';
 
 /**
- * A temporary function that will be renamed to `parseMetafield()` in a future release.
- *
- * A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `type`) and put it in `metafield.parsedValue`
+ * A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `metafield.type`) and places the result in `metafield.parsedValue`
  *
  * TypeScript developers can use the type `ParsedMetafields` from this package to get the returned object's type correct. For example:
  *

@@ -15,5 +15,10 @@
     "types": ["jest", "vitest/globals", "@testing-library/jest-dom"]
   },
   "include": ["src/**/*", "globals.d.ts"],
-  "exclude": ["src/*.example.jsx", "src/*.example.tsx"]
+  "exclude": [
+    "src/**.example.jsx",
+    "src/**.example.tsx",
+    "src/**.example.js",
+    "src/**.example.ts"
+  ]
 }

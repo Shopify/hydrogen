@@ -1,11 +1,20 @@
 import {SFAPI_VERSION} from './storefront-api-constants.js';
 
-const warnings = new Set<string>();
-const warnOnce = (string: string) => {
-  if (!warnings.has(string)) {
-    console.warn(string);
-    warnings.add(string);
-  }
+type StorefrontClientProps = {
+  /** The host name of the domain (eg: `{shop}.myshopify.com`). */
+  storeDomain: string;
+  /** The Storefront API delegate access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) and [delegate access token](https://shopify.dev/apps/auth/oauth/delegate-access-tokens) documentation for more details. */
+  privateStorefrontToken?: string;
+  /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
+  publicStorefrontToken?: string;
+  /** The Storefront API version. This should almost always be the same as the version Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
+  storefrontApiVersion: string;
+  /**
+   * Customizes which `"content-type"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `"json"`. When fetching with a `body` that is a plain string, use `"graphql"`. Defaults to `"json"`
+   *
+   * Can also be customized on a call-by-call basis by passing in `'contentType'` to both `getPrivateTokenHeaders({...})` and `getPublicTokenHeaders({...})`, for example: `getPublicTokenHeaders({contentType: 'graphql'})`
+   */
+  contentType?: 'json' | 'graphql';
 };
 
 /**
@@ -116,21 +125,12 @@ export function getPublicTokenHeadersRaw(
   };
 }
 
-type StorefrontClientProps = {
-  /** The host name of the domain (eg: `{shop}.myshopify.com`). */
-  storeDomain: string;
-  /** The Storefront API delegate access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) and [delegate access token](https://shopify.dev/apps/auth/oauth/delegate-access-tokens) documentation for more details. */
-  privateStorefrontToken?: string;
-  /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
-  publicStorefrontToken?: string;
-  /** The Storefront API version. This should almost always be the same as the version Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
-  storefrontApiVersion: string;
-  /**
-   * Customizes which `"content-type"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `"json"`. When fetching with a `body` that is a plain string, use `"graphql"`. Defaults to `"json"`
-   *
-   * Can also be customized on a call-by-call basis by passing in `'contentType'` to both `getPrivateTokenHeaders({...})` and `getPublicTokenHeaders({...})`, for example: `getPublicTokenHeaders({contentType: 'graphql'})`
-   */
-  contentType?: 'json' | 'graphql';
+const warnings = new Set<string>();
+const warnOnce = (string: string) => {
+  if (!warnings.has(string)) {
+    console.warn(string);
+    warnings.add(string);
+  }
 };
 
 type OverrideTokenHeaderProps = Partial<
