@@ -69,10 +69,10 @@ export function findMissingRoutes(config: RemixConfig) {
 const LINE_LIMIT = 6;
 export function warnAboutMissingRoutes(routes: string[]) {
   renderWarning({
-    headline: 'Missing standard routes',
+    headline: 'Standard Shopify routes missing',
     body:
-      'It seems that your build is missing some standard routes. ' +
-      'These routes\nare recommended for better compatibility with other Shopify components:\n\n' +
+      'Your Hydrogen project is missing some standard Shopify routes. ' +
+      'Including these routes improves compatibility with Shopify’s platform:\n\n' +
       routes
         .slice(0, LINE_LIMIT - (routes.length <= LINE_LIMIT ? 0 : 1))
         .map((route) => `• /${route}`)
