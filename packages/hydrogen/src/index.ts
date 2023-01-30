@@ -10,6 +10,5 @@ export {InMemoryCache} from './cache/in-memory';
 
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
-export {generateSeoTags} from './seo/seo';
-
-export * from './seo/types';
+export {Seo} from './seo/seo';
+export type {SeoHandleFunction} from './seo/seo';

@@ -16,16 +16,15 @@ import {
   useMatches,
 } from '@remix-run/react';
 import {Layout} from '~/components';
-import {getLayoutData, type LayoutData} from '~/data';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
-import {Seo, type SeoHandleFunction} from './lib/seo';
+import {Seo, type SeoHandleFunction} from '@shopify/hydrogen';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
-import {DEFAULT_LOCALE} from './lib/utils';
+import {DEFAULT_LOCALE, parseMenu, type EnhancedMenu} from './lib/utils';
 import invariant from 'tiny-invariant';
-import {Cart} from '@shopify/storefront-kit-react/storefront-api-types';
+import {Shop, Cart} from '@shopify/storefront-kit-react/storefront-api-types';
 
 const seo: SeoHandleFunction<typeof loader> = (data) => ({
   title: data?.layout?.shop?.name,
@@ -147,6 +146,87 @@ export function ErrorBoundary({error}: {error: Error}) {
       </body>
     </html>
   );
+}
+
+const LAYOUT_QUERY = `#graphql
+  query layoutMenus(
+    $language: LanguageCode
+    $headerMenuHandle: String!
+    $footerMenuHandle: String!
+  ) @inContext(language: $language) {
+    shop {
+      name
+      description
+    }
+    headerMenu: menu(handle: $headerMenuHandle) {
+      id
+      items {
+        ...MenuItem
+        items {
+          ...MenuItem
+        }
+      }
+    }
+    footerMenu: menu(handle: $footerMenuHandle) {
+      id
+      items {
+        ...MenuItem
+        items {
+          ...MenuItem
+        }
+      }
+    }
+  }
+  fragment MenuItem on MenuItem {
+    id
+    resourceId
+    tags
+    title
+    type
+    url
+  }
+`;
+
+export interface LayoutData {
+  headerMenu: EnhancedMenu;
+  footerMenu: EnhancedMenu;
+  shop: Shop;
+  cart?: Promise<Cart>;
+}
+
+async function getLayoutData({storefront}: AppLoadContext) {
+  const HEADER_MENU_HANDLE = 'main-menu';
+  const FOOTER_MENU_HANDLE = 'footer';
+
+  const data = await storefront.query<LayoutData>(LAYOUT_QUERY, {
+    variables: {
+      headerMenuHandle: HEADER_MENU_HANDLE,
+      footerMenuHandle: FOOTER_MENU_HANDLE,
+      language: storefront.i18n.language,
+    },
+  });
+
+  invariant(data, 'No data returned from Shopify API');
+
+  /*
+    Modify specific links/routes (optional)
+    @see: https://shopify.dev/api/storefront/unstable/enums/MenuItemType
+    e.g here we map:
+      - /blogs/news -> /news
+      - /blog/news/blog-post -> /news/blog-post
+      - /collections/all -> /products
+  */
+  const customPrefixes = {BLOG: '', CATALOG: 'products'};
+
+  const headerMenu = data?.headerMenu
+    ? parseMenu(data.headerMenu, customPrefixes)
+    : undefined;
+
+  const footerMenu = data?.footerMenu
+    ? parseMenu(data.footerMenu, customPrefixes)
+    : undefined;
+
+  return {shop: data.shop, headerMenu, footerMenu};
 }
 
 const CART_QUERY = `#graphql

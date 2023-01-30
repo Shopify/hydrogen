@@ -7,16 +7,16 @@ import {
   useTransition,
 } from '@remix-run/react';
 import {flattenConnection} from '@shopify/storefront-kit-react';
-import type {MailingAddressInput} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {
+  MailingAddressInput,
+  CustomerAddressUpdatePayload,
+  CustomerAddressDeletePayload,
+  CustomerDefaultAddressUpdatePayload,
+  CustomerAddressCreatePayload,
+} from '@shopify/storefront-kit-react/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {Button, Text} from '~/components';
-import {
-  createCustomerAddress,
-  deleteCustomerAddress,
-  updateCustomerAddress,
-  updateCustomerDefaultAddress,
-} from '~/data';
-import {getInputStyleClasses} from '~/lib/utils';
+import {assertApiErrors, getInputStyleClasses} from '~/lib/utils';
 import type {AccountOutletContext} from '../edit';
 
 interface ActionData {
@@ -30,9 +30,10 @@ export const handle = {
 };
 
 export const action: ActionFunction = async ({request, context, params}) => {
+  const {storefront, session} = context;
   const formData = await request.formData();
 
-  const customerAccessToken = await context.session.get('customerAccessToken');
+  const customerAccessToken = await session.get('customerAccessToken');
   invariant(customerAccessToken, 'You must be logged in to edit your account.');
 
   const addressId = formData.get('addressId');
@@ -40,10 +41,13 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   if (request.method === 'DELETE') {
     try {
-      await deleteCustomerAddress(context, {
-        customerAccessToken,
-        addressId,
+      const data = await storefront.mutate<{
+        customerAddressDelete: CustomerAddressDeletePayload;
+      }>(DELETE_ADDRESS_MUTATION, {
+        variables: {customerAccessToken, id: addressId},
       });
+
+      assertApiErrors(data.customerAddressDelete);
 
       return redirect(params.lang ? `${params.lang}/account` : '/account');
     } catch (error: any) {
@@ -77,16 +81,25 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   if (addressId === 'add') {
     try {
-      const id = await createCustomerAddress(context, {
-        customerAccessToken,
-        address,
+      const data = await storefront.mutate<{
+        customerAddressCreate: CustomerAddressCreatePayload;
+      }>(CREATE_ADDRESS_MUTATION, {
+        variables: {customerAccessToken, address},
       });
 
+      assertApiErrors(data.customerAddressCreate);
+
+      const newId = data.customerAddressCreate?.customerAddress?.id;
+      invariant(newId, 'Expected customer address to be created');
+
       if (defaultAddress) {
-        await updateCustomerDefaultAddress(context, {
-          customerAccessToken,
-          addressId: id,
+        const data = await storefront.mutate<{
+          customerDefaultAddressUpdate: CustomerDefaultAddressUpdatePayload;
+        }>(UPDATE_DEFAULT_ADDRESS_MUTATION, {
+          variables: {customerAccessToken, addressId: newId},
         });
+
+        assertApiErrors(data.customerDefaultAddressUpdate);
       }
 
       return redirect(params.lang ? `${params.lang}/account` : '/account');
@@ -95,17 +108,29 @@ export const action: ActionFunction = async ({request, context, params}) => {
     }
   } else {
     try {
-      await updateCustomerAddress(context, {
-        customerAccessToken,
-        addressId: decodeURIComponent(addressId),
-        address,
+      const data = await storefront.mutate<{
+        customerAddressUpdate: CustomerAddressUpdatePayload;
+      }>(UPDATE_ADDRESS_MUTATION, {
+        variables: {
+          address,
+          customerAccessToken,
+          id: decodeURIComponent(addressId),
+        },
       });
 
+      assertApiErrors(data.customerAddressUpdate);
+
       if (defaultAddress) {
-        await updateCustomerDefaultAddress(context, {
-          customerAccessToken,
-          addressId: decodeURIComponent(addressId),
+        const data = await storefront.mutate<{
+          customerDefaultAddressUpdate: CustomerDefaultAddressUpdatePayload;
+        }>(UPDATE_DEFAULT_ADDRESS_MUTATION, {
+          variables: {
+            customerAccessToken,
+            addressId: decodeURIComponent(addressId),
+          },
         });
+
+        assertApiErrors(data.customerDefaultAddressUpdate);
       }
 
       return redirect(params.lang ? `${params.lang}/account` : '/account');
@@ -116,7 +141,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 };
 
 export default function EditAddress() {
-  const {addressId} = useParams();
+  const {id: addressId} = useParams();
   const isNewAddress = addressId === 'add';
   const actionData = useActionData<ActionData>();
   const transition = useTransition();
@@ -318,3 +343,75 @@ export default function EditAddress() {
     </>
   );
 }
+
+const UPDATE_ADDRESS_MUTATION = `#graphql
+  mutation customerAddressUpdate(
+    $address: MailingAddressInput!
+    $customerAccessToken: String!
+    $id: ID!
+  ) {
+    customerAddressUpdate(
+      address: $address
+      customerAccessToken: $customerAccessToken
+      id: $id
+    ) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+const DELETE_ADDRESS_MUTATION = `#graphql
+  mutation customerAddressDelete($customerAccessToken: String!, $id: ID!) {
+    customerAddressDelete(customerAccessToken: $customerAccessToken, id: $id) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+      deletedCustomerAddressId
+    }
+  }
+`;
+
+const UPDATE_DEFAULT_ADDRESS_MUTATION = `#graphql
+  mutation customerDefaultAddressUpdate(
+    $addressId: ID!
+    $customerAccessToken: String!
+  ) {
+    customerDefaultAddressUpdate(
+      addressId: $addressId
+      customerAccessToken: $customerAccessToken
+    ) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
+
+const CREATE_ADDRESS_MUTATION = `#graphql
+  mutation customerAddressCreate(
+    $address: MailingAddressInput!
+    $customerAccessToken: String!
+  ) {
+    customerAddressCreate(
+      address: $address
+      customerAccessToken: $customerAccessToken
+    ) {
+      customerAddress {
+        id
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
