@@ -10,7 +10,7 @@ import {useState} from 'react';
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
 import {doLogin} from './login';
-import type {CustomerCreatePayload} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {CustomerCreatePayload} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');

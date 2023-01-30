@@ -10,7 +10,7 @@ import {Form, useActionData, useLoaderData} from '@remix-run/react';
 import {useState} from 'react';
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
-import type {CustomerAccessTokenCreatePayload} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {CustomerAccessTokenCreatePayload} from '@shopify/hydrogen/storefront-api-types';
 
 export const handle = {
   isPublic: true,
