@@ -1,5 +1,6 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {output, ui} from '@shopify/cli-kit';
+import {ui} from '@shopify/cli-kit';
+import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import {readFile, fileExists, mkdir, writeFile} from '@shopify/cli-kit/node/fs';
 import {
   dirname,
@@ -29,6 +30,7 @@ const ROUTE_MAP: Record<string, string | string[]> = {
 
 const ROUTES = Object.keys(ROUTE_MAP);
 
+// @ts-ignore TODO
 export default class GenerateRoute extends Command {
   static flags = {
     path: commonFlags.path,
@@ -163,7 +165,7 @@ async function runGenerate(
 
     if (choice.value === 'abort') {
       throw new AbortError(
-        output.content`The route file ${relativeDestinationPath} already exists. Either delete it or re-run this command with ${output.token.genericShellCommand(
+        outputContent`The route file ${relativeDestinationPath} already exists. Either delete it or re-run this command with ${outputToken.genericShellCommand(
           `--force`,
         )}.`,
       );
