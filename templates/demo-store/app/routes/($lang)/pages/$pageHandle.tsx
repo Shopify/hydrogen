@@ -10,7 +10,7 @@ import invariant from 'tiny-invariant';
 import {PageHeader} from '~/components';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
 
-const seo: SeoHandleFunction<typeof loader> = (data) => ({
+const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   title: data?.page?.seo?.title,
   description: data?.page?.seo?.description,
 });

@@ -12,7 +12,7 @@ import {ProductGrid} from '~/components/ProductGrid';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
-const seo: SeoHandleFunction<typeof loader> = (data) => ({
+const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   title: data?.collection?.seo?.title,
   description: data?.collection?.seo?.description,
   titleTemplate: '%s | Collection',
