@@ -1,5 +1,5 @@
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
-import {renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderSuccess, renderWarning} from '@shopify/cli-kit/node/ui';
 
 // Sorted by importance for better warnings.
 const REQUIRED_ROUTES = [
@@ -66,20 +66,25 @@ export function findMissingRoutes(config: RemixConfig) {
   return [...requiredRoutes];
 }
 
-const LINE_LIMIT = 6;
-export function warnAboutMissingRoutes(routes: string[]) {
-  renderWarning({
-    headline: 'Standard Shopify routes missing',
-    body:
-      'Your Hydrogen project is missing some standard Shopify routes. ' +
-      'Including these routes improves compatibility with Shopify’s platform:\n\n' +
-      routes
-        .slice(0, LINE_LIMIT - (routes.length <= LINE_LIMIT ? 0 : 1))
-        .map((route) => `• /${route}`)
-        .join('\n') +
-      (routes.length > LINE_LIMIT
-        ? `\n• ...and ${routes.length - LINE_LIMIT + 1} more`
-        : ''),
-    nextSteps: ['Add the missing routes to your project.'],
-  });
+const LINE_LIMIT = 10;
+export function logMissingRoutes(routes: string[]) {
+  if (routes.length) {
+    renderWarning({
+      headline: 'Standard Shopify routes missing',
+      body:
+        'Your Hydrogen project is missing some standard Shopify routes. ' +
+        'Including these routes improves compatibility with Shopify’s platform:\n\n' +
+        routes
+          .slice(0, LINE_LIMIT - (routes.length <= LINE_LIMIT ? 0 : 1))
+          .map((route) => `• /${route}`)
+          .join('\n') +
+        (routes.length > LINE_LIMIT
+          ? `\n• ...and ${routes.length - LINE_LIMIT + 1} more`
+          : ''),
+    });
+  } else {
+    renderSuccess({
+      headline: 'All standard Shopify routes present',
+    });
+  }
 }
