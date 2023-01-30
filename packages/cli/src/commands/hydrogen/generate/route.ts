@@ -104,7 +104,7 @@ export default class GenerateRoute extends Command {
   }
 }
 
-async function runGenerate(
+export async function runGenerate(
   route: string,
   {
     directory,
