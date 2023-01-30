@@ -10,12 +10,15 @@
     "build": "tsup --clean --config ./tsup.config.ts && oclif manifest",
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
-    "generate:manifest": "oclif manifest"
+    "generate:manifest": "oclif manifest",
+    "test": "vitest"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
     "@types/prettier": "^2.7.2",
-    "oclif": "^3.4.2"
+    "oclif": "^3.4.2",
+    "vitest": "^0.28.1",
+    "tempy": "^3.0.0"
   },
   "dependencies": {
     "@oclif/core": "^1.20.4",
