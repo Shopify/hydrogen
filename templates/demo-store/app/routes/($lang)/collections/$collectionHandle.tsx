@@ -4,8 +4,8 @@ import type {
   Collection as CollectionType,
   CollectionConnection,
   Filter,
-} from '@shopify/storefront-kit-react/storefront-api-types';
-import {flattenConnection} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen/storefront-api-types';
+import {flattenConnection} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';

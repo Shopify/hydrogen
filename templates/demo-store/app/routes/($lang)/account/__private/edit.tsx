@@ -9,7 +9,7 @@ import type {
   Customer,
   CustomerUpdateInput,
   CustomerUpdatePayload,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 import clsx from 'clsx';
 import invariant from 'tiny-invariant';
 import {Button, Text} from '~/components';

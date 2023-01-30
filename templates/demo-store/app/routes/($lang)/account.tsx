@@ -11,7 +11,7 @@ import type {
   Customer,
   MailingAddress,
   Order,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 import {Suspense} from 'react';
 import {
   Button,
@@ -31,7 +31,7 @@ import {
   type LoaderArgs,
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
-import {flattenConnection} from '@shopify/storefront-kit-react';
+import {flattenConnection} from '@shopify/hydrogen';
 import {getFeaturedData} from './featured-products';
 import {doLogout} from './account/__private/logout';
 

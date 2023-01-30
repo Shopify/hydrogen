@@ -9,7 +9,7 @@ import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
 import {Link} from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
-import type {CustomerRecoverPayload} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {CustomerRecoverPayload} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');

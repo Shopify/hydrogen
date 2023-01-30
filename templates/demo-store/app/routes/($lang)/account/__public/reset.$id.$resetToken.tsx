@@ -7,7 +7,7 @@ import {
 import {Form, useActionData} from '@remix-run/react';
 import {useRef, useState} from 'react';
 import {getInputStyleClasses} from '~/lib/utils';
-import type {CustomerResetPayload} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {CustomerResetPayload} from '@shopify/hydrogen/storefront-api-types';
 
 type ActionData = {
   formError?: string;
