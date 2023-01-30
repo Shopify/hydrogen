@@ -66,6 +66,7 @@ export function graphiqlLoader(
             }
           }),
           defaultEditorToolsVisibility: true,
+          initialTabs: [{query: '{\\n  shop {\\n    name\\n  }\\n}'}]
         }),
         document.getElementById('graphiql'),
       );
