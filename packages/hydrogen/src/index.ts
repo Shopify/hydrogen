@@ -29,7 +29,6 @@ export {
   ShopifyAppSource,
   ShopPayButton,
   storefrontApiCustomScalars,
-  useMoney,
   useShopifyCookies,
   Video,
 } from '@shopify/storefront-kit-react';
