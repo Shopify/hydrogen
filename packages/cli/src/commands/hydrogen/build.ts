@@ -6,10 +6,7 @@ import {commonFlags} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {checkLockfileStatus} from '../../utils/check-lockfile.js';
-import {
-  findMissingRoutes,
-  warnAboutMissingRoutes,
-} from '../../utils/missing-routes.js';
+import {findMissingRoutes} from '../../utils/missing-routes.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -115,7 +112,11 @@ export async function runBuild({
 
   if (!disableRouteWarning) {
     const missingRoutes = findMissingRoutes(remixConfig);
-    if (missingRoutes.length) warnAboutMissingRoutes(missingRoutes);
+    if (missingRoutes.length) {
+      output.warn(
+        '🚨 Standard Shopify routes missing; run `shopify hydrogen check routes` for more details.',
+      );
+    }
   }
 
   // The Remix compiler hangs due to a bug in ESBuild:
