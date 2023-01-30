@@ -8,8 +8,7 @@ import type {Page as PageType} from '@shopify/storefront-kit-react/storefront-ap
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import {PageHeader} from '~/components';
-
-import type {SeoHandleFunction} from '~/lib/seo';
+import type {SeoHandleFunction} from '@shopify/hydrogen';
 
 const seo: SeoHandleFunction<typeof loader> = (data) => ({
   title: data?.page?.seo?.title,

@@ -18,6 +18,12 @@ import {getImageLoadingPriority} from '~/lib/const';
 
 const PAGINATION_SIZE = 8;
 
+export const handle = {
+  seo: {
+    title: 'All Collections',
+  },
+};
+
 export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   const variables = getPaginationVariables(request, PAGINATION_SIZE);
   const {collections} = await storefront.query<{

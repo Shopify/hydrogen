@@ -25,7 +25,6 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.7",
     "@changesets/cli": "^2.25.2",
-    "@playwright/test": "^1.27.1",
     "@types/eslint": "^8.4.10",
     "cross-env": "^7.0.3",
     "eslint": "^8.20.0",
