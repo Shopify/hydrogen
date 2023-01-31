@@ -6,9 +6,11 @@ import path from 'path';
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront project';
   static flags = {
-    typescript: Flags.boolean({
-      description: 'Use TypeScript',
-      env: 'SHOPIFY_HYDROGEN_FLAG_TYPESCRIPT',
+    language: Flags.string({
+      description: 'Language to use for the project',
+      choices: ['js', 'ts'],
+      default: 'js',
+      env: 'SHOPIFY_HYDROGEN_FLAG_LANGUAGE',
     }),
     path: Flags.string({
       description: 'The path to create the project in',
@@ -39,7 +41,7 @@ export async function runInit(
   options: {
     path?: string;
     template?: string;
-    typescript?: Boolean;
+    language?: string;
     token?: string;
   } = {},
 ) {
@@ -51,48 +53,50 @@ export async function runInit(
   );
 
   const {ui} = await import('@shopify/cli-kit');
+  const {renderSuccess, renderInfo} = await import('@shopify/cli-kit/node/ui');
   const prompts: Writable<Parameters<typeof ui.prompt>[0]> = [];
-
-  if (!options.path) {
-    prompts.push({
-      type: 'input',
-      name: 'path',
-      message: '👋 Where would you like to create your Hydrogen project?',
-      default: './hydrogen-store',
-    });
-  }
 
   if (!options.template) {
     prompts.push({
       type: 'select',
       name: 'template',
-      message: 'Please select a Hydrogen template',
-      choices: ['demo-store', 'hello-world'].map((t) => ({
-        name: t,
+      message: 'Choose a template',
+      choices: ['hello-world', 'demo-store'].map((t) => ({
+        name: t.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
         value: new URL(`../../templates/${t}`, import.meta.url).pathname,
       })),
     });
   }
 
-  if (options.typescript === undefined) {
+  if (!options.language) {
     prompts.push({
       type: 'select',
-      name: 'typescript',
-      message: '⚛️ Would you like to use TypeScript?',
+      name: 'language',
+      message: 'Choose a language',
       choices: [
-        {name: 'No', value: 'false'},
-        {name: 'Yes', value: 'true'},
+        {name: 'JavaScript', value: 'js'},
+        {name: 'TypeScript', value: 'ts'},
       ],
-      default: 'false',
+      default: 'js',
+    });
+  }
+
+  if (!options.path) {
+    prompts.push({
+      type: 'input',
+      name: 'path',
+      message: 'Where would you like to create your app?',
+      default: 'hydrogen-storefront',
     });
   }
 
   const {
     path: location = options.path!,
     template: appTemplate = options.template!,
-    typescript = options.typescript!,
+    language = options.language ?? 'js',
   } = prompts.length > 0 ? await ui.prompt(prompts) : options;
 
+  const projectName = path.basename(location);
   const projectDir = path.resolve(process.cwd(), location);
 
   await validateNewProjectPath(projectDir);
@@ -106,7 +110,7 @@ export async function runInit(
     debug: !!process.env.DEBUG,
   });
 
-  if (!(typescript === true || typescript === 'true')) {
+  if (language === 'js') {
     // Supress logs in jscodeshift:
     const defaultWrite = process.stdout.write;
     // @ts-ignore
@@ -118,11 +122,18 @@ export async function runInit(
     process.stdout.write = defaultWrite;
   }
 
-  console.log();
-  console.log(`Finished creating your Hydrogen storefront in ${location}`);
-  console.log(`📚 Docs: https://shopify.dev/custom-storefronts/hydrogen`);
-  console.log(
-    `👋 Note: your project will display inventory from the Hydrogen Demo Store.`,
-  );
-  console.log();
+  renderSuccess({
+    headline: `${projectName} is ready to build.`,
+    nextSteps: [
+      '`cd hydrogen-app` and run `npm run dev` to start your local development server and start building.',
+    ],
+    reference: [
+      'Building with Hydrogen: https://shopify.dev/custom-storefronts/hydrogen',
+    ],
+  });
+
+  renderInfo({
+    headline: `Your project will display inventory from the Hydrogen Demo Store.`,
+    body: `To connect this project to your Shopify store’s inventory, update \`${projectName}/.env\` with your store ID and Storefront API key.`,
+  });
 }
