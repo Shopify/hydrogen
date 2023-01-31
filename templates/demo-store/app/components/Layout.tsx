@@ -23,10 +23,10 @@ import {
 import {useParams, Form, Await, useMatches} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
-import type {LayoutData} from '~/data';
-import {Suspense, useEffect, useMemo} from 'react';
+import {startTransition, Suspense, useEffect, useMemo, useState} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
+import type {LayoutData} from '../root';
 
 export function Layout({
   children,
@@ -142,11 +142,6 @@ function MenuMobileNav({
   menu: EnhancedMenu;
   onClose: () => void;
 }) {
-  const styles = {
-    link: 'pb-1',
-    linkActive: 'pb-1 border-b -mb-px',
-  };
-
   return (
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
       {/* Top level menu items */}
@@ -157,7 +152,7 @@ function MenuMobileNav({
             target={item.target}
             onClick={onClose}
             className={({isActive}) =>
-              isActive ? styles.linkActive : styles.link
+              isActive ? 'pb-1 border-b -mb-px' : 'pb-1'
             }
           >
             <Text as="span" size="copy">
@@ -168,6 +163,22 @@ function MenuMobileNav({
       ))}
     </nav>
   );
+}
+
+function useHeaderStyleFix(
+  style: string,
+  setStyle: (styles: string) => void,
+  isHome: boolean,
+) {
+  const {y} = useWindowScroll();
+
+  useEffect(() => {
+    if (y > 50 && !isHome) {
+      startTransition(() => setStyle(style + ' shadow-lightHeader'));
+    }
+    // Run only once:
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }
 
 function MobileHeader({
@@ -181,24 +192,23 @@ function MobileHeader({
   openCart: () => void;
   openMenu: () => void;
 }) {
-  const {y} = useWindowScroll();
-
-  const styles = {
-    button: 'relative flex items-center justify-center w-8 h-8',
-    container: `${
+  const buttonStyle = 'relative flex items-center justify-center w-8 h-8';
+  const [containerStyle, setContainerStyle] = useState(
+    `${
       isHome
         ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
         : 'bg-contrast/80 text-primary'
-    } ${
-      y > 50 && !isHome ? 'shadow-lightHeader ' : ''
-    }flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`,
-  };
+    } flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`,
+  );
+
+  useHeaderStyleFix(containerStyle, setContainerStyle, isHome);
+
   const params = useParams();
 
   return (
-    <header role="banner" className={styles.container}>
+    <header role="banner" className={containerStyle}>
       <div className="flex items-center justify-start w-full gap-4">
-        <button onClick={openMenu} className={styles.button}>
+        <button onClick={openMenu} className={buttonStyle}>
           <IconMenu />
         </button>
         <Form
@@ -206,7 +216,7 @@ function MobileHeader({
           action={params.lang ? `/${params.lang}/search` : '/search'}
           className="items-center gap-2 sm:flex"
         >
-          <button type="submit" className={styles.button}>
+          <button type="submit" className={buttonStyle}>
             <IconSearch />
           </button>
           <Input
@@ -233,7 +243,7 @@ function MobileHeader({
       </Link>
 
       <div className="flex items-center justify-end w-full gap-4">
-        <Link to="/account" className={styles.button}>
+        <Link to="/account" className={buttonStyle}>
           <IconAccount />
         </Link>
         <CartCount isHome={isHome} openCart={openCart} />
@@ -253,25 +263,22 @@ function DesktopHeader({
   menu?: EnhancedMenu;
   title: string;
 }) {
-  const {y} = useWindowScroll();
   const params = useParams();
 
-  const styles = {
-    link: 'pb-1',
-    linkActive: 'pb-1 border-b -mb-px',
-    button:
-      'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5',
-    container: `${
+  const buttonStyle =
+    'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5';
+  const [containerStyle, setContainerStyle] = useState(
+    `${
       isHome
         ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
         : 'bg-contrast/80 text-primary'
-    } ${
-      y > 50 && !isHome ? 'shadow-lightHeader ' : ''
-    }hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`,
-  };
+    } hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`,
+  );
+
+  useHeaderStyleFix(containerStyle, setContainerStyle, isHome);
 
   return (
-    <header role="banner" className={styles.container}>
+    <header role="banner" className={containerStyle}>
       <div className="flex gap-12">
         <Link className="font-bold" to="/" prefetch="intent">
           {title}
@@ -285,7 +292,7 @@ function DesktopHeader({
               target={item.target}
               prefetch="intent"
               className={({isActive}) =>
-                isActive ? styles.linkActive : styles.link
+                isActive ? 'pb-1 border-b -mb-px' : 'pb-1'
               }
             >
               {item.title}
@@ -310,11 +317,11 @@ function DesktopHeader({
             placeholder="Search"
             name="q"
           />
-          <button type="submit" className={styles.button}>
+          <button type="submit" className={buttonStyle}>
             <IconSearch />
           </button>
         </Form>
-        <Link to="/account" className={styles.button}>
+        <Link to="/account" className={buttonStyle}>
           <IconAccount />
         </Link>
         <CartCount isHome={isHome} openCart={openCart} />

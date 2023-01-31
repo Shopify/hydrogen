@@ -1,21 +1,33 @@
-import {
-  json,
-  type MetaFunction,
-  type SerializeFrom,
-  type LoaderArgs,
-} from '@shopify/remix-oxygen';
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
   CollectionConnection,
   Filter,
-} from '@shopify/storefront-kit-react/storefront-api-types';
-import {flattenConnection} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen/storefront-api-types';
+import {flattenConnection} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
+import type {SeoHandleFunction} from '@shopify/hydrogen';
+import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
-import {PRODUCT_CARD_FRAGMENT} from '~/data';
+const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
+  title: data?.collection?.seo?.title,
+  description: data?.collection?.seo?.description,
+  titleTemplate: '%s | Collection',
+  media: {
+    type: 'image',
+    url: data?.collection?.image?.url,
+    height: data?.collection?.image?.height,
+    width: data?.collection?.image?.width,
+    altText: data?.collection?.image?.altText,
+  },
+});
+
+export const handle = {
+  seo,
+};
 
 const PAGINATION_SIZE = 48;
 
@@ -127,17 +139,6 @@ export async function loader({params, request, context}: LoaderArgs) {
 
   return json({collection, appliedFilters, collections: collectionNodes});
 }
-
-export const meta: MetaFunction = ({
-  data,
-}: {
-  data: SerializeFrom<typeof loader> | undefined;
-}) => {
-  return {
-    title: data?.collection?.seo?.title ?? 'Collection',
-    description: data?.collection?.seo?.description,
-  };
-};
 
 export default function Collection() {
   const {collection, collections, appliedFilters} =

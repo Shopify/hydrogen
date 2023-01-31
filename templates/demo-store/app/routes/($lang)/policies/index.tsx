@@ -5,10 +5,16 @@ import {
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import type {ShopPolicy} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 
 import {PageHeader, Section, Heading, Link} from '~/components';
+
+export const handle = {
+  seo: {
+    title: 'Policies',
+  },
+};
 
 export async function loader({context: {storefront}}: LoaderArgs) {
   const data = await storefront.query<{
@@ -33,17 +39,6 @@ export async function loader({context: {storefront}}: LoaderArgs) {
     },
   );
 }
-
-export const meta: MetaFunction = ({
-  data,
-}: {
-  data: SerializeFrom<typeof loader> | undefined;
-}) => {
-  return {
-    title: 'Policies',
-    description: 'Policies',
-  };
-};
 
 export default function Policies() {
   const {policies} = useLoaderData<typeof loader>();

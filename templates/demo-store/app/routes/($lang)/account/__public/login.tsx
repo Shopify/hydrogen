@@ -1,15 +1,16 @@
 import {
+  json,
+  redirect,
   type MetaFunction,
   type ActionFunction,
+  type AppLoadContext,
   type LoaderArgs,
-  redirect,
-  json,
 } from '@shopify/remix-oxygen';
 import {Form, useActionData, useLoaderData} from '@remix-run/react';
 import {useState} from 'react';
-import {login} from '~/data';
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
+import type {CustomerAccessTokenCreatePayload} from '@shopify/hydrogen/storefront-api-types';
 
 export const handle = {
   isPublic: true,
@@ -52,7 +53,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
   const {session, storefront} = context;
 
   try {
-    const customerAccessToken = await login(context, {email, password});
+    const customerAccessToken = await doLogin(context, {email, password});
     session.set('customerAccessToken', customerAccessToken);
 
     return redirect(params.lang ? `${params.lang}/account` : '/account', {
@@ -193,5 +194,54 @@ export default function Login() {
         </Form>
       </div>
     </div>
+  );
+}
+
+const LOGIN_MUTATION = `#graphql
+  mutation customerAccessTokenCreate($input: CustomerAccessTokenCreateInput!) {
+    customerAccessTokenCreate(input: $input) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+      customerAccessToken {
+        accessToken
+        expiresAt
+      }
+    }
+  }
+`;
+
+export async function doLogin(
+  {storefront}: AppLoadContext,
+  {
+    email,
+    password,
+  }: {
+    email: string;
+    password: string;
+  },
+) {
+  const data = await storefront.mutate<{
+    customerAccessTokenCreate: CustomerAccessTokenCreatePayload;
+  }>(LOGIN_MUTATION, {
+    variables: {
+      input: {
+        email,
+        password,
+      },
+    },
+  });
+
+  if (data?.customerAccessTokenCreate?.customerAccessToken?.accessToken) {
+    return data.customerAccessTokenCreate.customerAccessToken.accessToken;
+  }
+
+  /**
+   * Something is wrong with the user's input.
+   */
+  throw new Error(
+    data?.customerAccessTokenCreate?.customerUserErrors.join(', '),
   );
 }

@@ -10,6 +10,7 @@ import Flags from '@oclif/core/lib/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 import recursiveReaddir from 'recursive-readdir';
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
+import {checkHydrogenVersion} from '../../utils/check-version.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -74,6 +75,8 @@ async function compileAndWatch(
   const {root, entryFile, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath, entry);
 
+  const checkingHydrogenVersion = checkHydrogenVersion(root);
+
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
     const config = await getRemixConfig(root, entryFile, publicPath);
@@ -96,6 +99,9 @@ async function compileAndWatch(
         buildPathWorkerFile,
         buildPathClient,
       });
+
+      const showUpgrade = await checkingHydrogenVersion;
+      if (showUpgrade) showUpgrade();
     },
     async onFileCreated(file: string) {
       output.info(`\n📄 File created: ${path.relative(root, file)}`);

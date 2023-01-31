@@ -7,9 +7,10 @@ import {
 } from '@shopify/remix-oxygen';
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
-import {login, registerCustomer} from '~/data';
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
+import {doLogin} from './login';
+import type {CustomerCreatePayload} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
@@ -46,8 +47,22 @@ export const action: ActionFunction = async ({request, context, params}) => {
   }
 
   try {
-    await registerCustomer(context, {email, password});
-    const customerAccessToken = await login(context, {email, password});
+    const data = await storefront.mutate<{
+      customerCreate: CustomerCreatePayload;
+    }>(CUSTOMER_CREATE_MUTATION, {
+      variables: {
+        input: {email, password},
+      },
+    });
+
+    if (!data?.customerCreate?.customer?.id) {
+      /**
+       * Something is wrong with the user's input.
+       */
+      throw new Error(data?.customerCreate?.customerUserErrors.join(', '));
+    }
+
+    const customerAccessToken = await doLogin(context, {email, password});
     session.set('customerAccessToken', customerAccessToken);
 
     return redirect(params.lang ? `${params.lang}/account` : '/account', {
@@ -182,3 +197,18 @@ export default function Register() {
     </div>
   );
 }
+
+const CUSTOMER_CREATE_MUTATION = `#graphql
+  mutation customerCreate($input: CustomerCreateInput!) {
+    customerCreate(input: $input) {
+      customer {
+        id
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;

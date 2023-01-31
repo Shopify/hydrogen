@@ -41,7 +41,7 @@ export default {
 To load data into your Hydrogen app, use a Remix `loader` and write a GraphQL query. Hydrogen provides a special `storefront` param to make queries against your Shopify storefront.
 
 ```ts
-import type {ProductType} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {ProductType} from '@shopify/hydrogen/storefront-api-types';
 import {json, useLoaderData, type LoaderArgs} from '@shopify/remix-oxygen';
 
 export async function loader({params, context: {storefront}}: LoaderArgs) {
