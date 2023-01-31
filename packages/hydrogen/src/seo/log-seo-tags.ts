@@ -1,5 +1,11 @@
 import {HeadTag} from './generate-seo-tags';
 
+export default function Logger({headTags}: {headTags: HeadTag[]}) {
+  logSeoTags(headTags);
+
+  return null;
+}
+
 export function logSeoTags(headTags: HeadTag[]) {
   const style = 'text-transform: uppercase;';
   const style2 =

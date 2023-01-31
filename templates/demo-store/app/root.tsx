@@ -65,6 +65,7 @@ export async function loader({context}: LoaderArgs) {
 
   return defer({
     layout,
+    seoDebug: process.env.NODE_ENV === 'development',
     selectedLocale: context.storefront.i18n,
     cart: cartId ? getCart(context, cartId) : undefined,
   });
@@ -77,7 +78,7 @@ export default function App() {
   return (
     <html lang={locale.language}>
       <head>
-        <Seo debug />
+        <Seo debug={data.seoDebug} />
         <Meta />
         <Links />
       </head>
