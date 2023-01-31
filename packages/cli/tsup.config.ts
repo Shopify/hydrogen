@@ -1,4 +1,5 @@
 import {defineConfig} from 'tsup';
+import fs from 'fs-extra';
 
 const commonConfig = {
   format: 'esm',
@@ -23,5 +24,8 @@ export default defineConfig([
     outDir: 'dist/virtual-routes',
     clean: true,
     outExtension: () => ({js: '.jsx'}),
+    async onSuccess() {
+      await fs.copy('src/virtual-routes/assets', 'dist/virtual-routes/assets');
+    },
   },
 ]);
