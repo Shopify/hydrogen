@@ -13,12 +13,10 @@ import {
   ScrollRestoration,
   useCatch,
   useLoaderData,
-  useLocation,
   useMatches,
 } from '@remix-run/react';
 import {
-  useDataFromMatches,
-  useDataFromFetchers,
+  ShopifySalesChannel,
   Seo,
   type SeoHandleFunction,
 } from '@shopify/hydrogen';
@@ -28,17 +26,7 @@ import {NotFound} from './components/NotFound';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
-import {
-  AnalyticsEventName,
-  getClientBrowserParameters,
-  sendShopifyAnalytics,
-  ShopifyAddToCartPayload,
-  ShopifySalesChannel,
-  ShopifyPageViewPayload,
-  useShopifyCookies,
-} from '@shopify/storefront-kit-react';
-import {useEffect} from 'react';
-import {CartAction} from './lib/type';
+
 import {
   DEFAULT_LOCALE,
   parseMenu,
@@ -47,6 +35,8 @@ import {
 } from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
+import {useAnalytics} from './hooks/useAnalytics';
+import {I18nLocale} from './lib/type';
 
 const seo: SeoHandleFunction<typeof loader> = ({data, pathname}) => ({
   title: data?.layout?.shop?.name,
@@ -98,52 +88,10 @@ export async function loader({request, context}: LoaderArgs) {
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
-  const locale = data.selectedLocale ?? DEFAULT_LOCALE;
+  const locale = (data.selectedLocale ?? DEFAULT_LOCALE) as I18nLocale;
   const hasUserConsent = true;
 
-  useShopifyCookies({hasUserConsent});
-  const location = useLocation();
-  const pageAnalytics = useDataFromMatches(
-    'analytics',
-  ) as unknown as ShopifyPageViewPayload;
-
-  // Page view analytics
-  useEffect(() => {
-    const payload: ShopifyPageViewPayload = {
-      ...getClientBrowserParameters(),
-      ...pageAnalytics,
-      currency: locale.currency,
-      acceptedLanguage: locale.language,
-      hasUserConsent,
-    };
-
-    sendShopifyAnalytics({
-      eventName: AnalyticsEventName.PAGE_VIEW,
-      payload,
-    });
-  }, [location]);
-
-  // Add to cart analytics
-  const cartData = useDataFromFetchers({
-    formDataKey: 'cartAction',
-    formDataValue: CartAction.ADD_TO_CART,
-    dataKey: 'analytics',
-  });
-  if (cartData) {
-    const addToCartPayload: ShopifyAddToCartPayload = {
-      ...getClientBrowserParameters(),
-      ...pageAnalytics,
-      ...cartData,
-      currency: locale.currency,
-      acceptedLanguage: locale.language,
-      hasUserConsent,
-    };
-
-    sendShopifyAnalytics({
-      eventName: AnalyticsEventName.ADD_TO_CART,
-      payload: addToCartPayload,
-    });
-  }
+  useAnalytics(hasUserConsent, locale);
 
   return (
     <html lang={locale.language}>
