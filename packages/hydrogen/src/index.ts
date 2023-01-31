@@ -32,6 +32,7 @@ export {
   storefrontApiCustomScalars,
   useMoney,
   useShopifyCookies,
+  useMoney,
   Video,
 } from '@shopify/storefront-kit-react';
 

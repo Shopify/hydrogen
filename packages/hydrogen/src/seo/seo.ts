@@ -6,12 +6,15 @@ import {
   type Location,
 } from '@remix-run/react';
 import {generateSeoTags, type Seo as SeoType} from './generate-seo-tags';
+import {logSeoTags} from './log-seo-tags';
 
 import type {
   LoaderFunction,
   SerializeFrom,
   AppData,
 } from '@remix-run/server-runtime';
+
+const SeoLogger = React.lazy(() => import('./log-seo-tags'));
 
 export interface SeoHandleFunction<
   Loader extends LoaderFunction | unknown = unknown,
@@ -27,7 +30,11 @@ export interface SeoHandleFunction<
   }): Partial<SeoType>;
 }
 
-export function Seo() {
+interface SeoProps {
+  debug?: boolean;
+}
+
+export function Seo({debug}: SeoProps) {
   const matches = useMatches();
   const location = useLocation();
 
@@ -52,6 +59,8 @@ export function Seo() {
 
   const headTags = generateSeoTags(seoConfig);
 
+  if (debug) logSeoTags(headTags);
+
   const html = headTags.map((tag) => {
     if (tag.tag === 'script') {
       return React.createElement(tag.tag, {
@@ -68,7 +77,13 @@ export function Seo() {
     );
   });
 
-  return React.createElement(React.Fragment, null, html);
+  const loggerMarkup = React.createElement(
+    React.Suspense,
+    {fallback: null},
+    React.createElement(SeoLogger, {headTags}),
+  );
+
+  return React.createElement(React.Fragment, null, html, debug && loggerMarkup);
 }
 
 export function recursivelyInvokeOrReturn<T, R extends any[]>(

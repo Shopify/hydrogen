@@ -66,12 +66,13 @@ export async function loader({params, request, context}: LoaderArgs) {
   invariant(collectionHandle, 'Missing collectionHandle param');
 
   const searchParams = new URL(request.url).searchParams;
-  const knownFilters = ['cursor', 'productVendor', 'productType'];
+  const knownFilters = ['productVendor', 'productType'];
   const available = 'available';
   const variantOption = 'variantOption';
   const {sortKey, reverse} = getSortValuesFromParam(
     searchParams.get('sort') as SortParam,
   );
+  const cursor = searchParams.get('cursor');
   const filters: FiltersQueryParams = [];
   const appliedFilters: AppliedFilter[] = [];
 
@@ -126,6 +127,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     variables: {
       handle: collectionHandle,
       pageBy: PAGINATION_SIZE,
+      cursor,
       filters,
       sortKey,
       reverse,

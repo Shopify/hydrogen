@@ -78,6 +78,7 @@ export async function loader({request, context}: LoaderArgs) {
   return defer({
     layout,
     selectedLocale: getLocaleFromRequest(request),
+    seoDebug: process.env.NODE_ENV === 'development',
     cart: cartId ? getCart(context, cartId) : undefined,
     analytics: {
       shopifySalesChannel: ShopifySalesChannel.hydrogen,
@@ -96,7 +97,7 @@ export default function App() {
   return (
     <html lang={locale.language}>
       <head>
-        <Seo />
+        <Seo debug={data.seoDebug} />
         <Meta />
         <Links />
       </head>
