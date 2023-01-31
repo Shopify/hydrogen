@@ -15,24 +15,31 @@ import {CartAction, I18nLocale} from '../lib/type';
 export function useAnalytics(hasUserConsent: boolean, locale: I18nLocale) {
   useShopifyCookies({hasUserConsent});
   const location = useLocation();
-  const pageAnalytics = useDataFromMatches(
+  const analyticsFromMatches = useDataFromMatches(
     'analytics',
   ) as unknown as ShopifyPageViewPayload;
 
+  const pageAnalytics = {
+    ...analyticsFromMatches,
+    currency: locale.currency,
+    acceptedLanguage: locale.language,
+    hasUserConsent,
+  };
+
   // Page view analytics
+  // We want useEffect to execute only when location changes
+  // which represents a page view
   useEffect(() => {
     const payload: ShopifyPageViewPayload = {
       ...getClientBrowserParameters(),
       ...pageAnalytics,
-      currency: locale.currency,
-      acceptedLanguage: locale.language,
-      hasUserConsent,
     };
 
     sendShopifyAnalytics({
       eventName: AnalyticsEventName.PAGE_VIEW,
       payload,
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location]);
 
   // Add to cart analytics
@@ -46,9 +53,6 @@ export function useAnalytics(hasUserConsent: boolean, locale: I18nLocale) {
       ...getClientBrowserParameters(),
       ...pageAnalytics,
       ...cartData,
-      currency: locale.currency,
-      acceptedLanguage: locale.language,
-      hasUserConsent,
     };
 
     sendShopifyAnalytics({
