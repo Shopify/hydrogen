@@ -80,7 +80,7 @@ export async function loader({request, context}: LoaderArgs) {
     selectedLocale: getLocaleFromRequest(request),
     cart: cartId ? getCart(context, cartId) : undefined,
     analytics: {
-      shopifyAppSource: ShopifySalesChannel.hydrogen,
+      shopifySalesChannel: ShopifySalesChannel.hydrogen,
       shopId: layout.shop.id,
     },
   });
