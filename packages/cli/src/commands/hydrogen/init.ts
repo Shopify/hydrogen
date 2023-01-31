@@ -1,4 +1,8 @@
 import Command from '@shopify/cli-kit/node/base-command';
+import {
+  installNodeModules,
+  packageManagerUsedForCreating,
+} from '@shopify/cli-kit/node/node-package-manager';
 import Flags from '@oclif/core/lib/flags.js';
 import {path} from '@shopify/cli-kit';
 import fs from 'fs-extra';
@@ -152,10 +156,47 @@ export async function runInit(
     process.stdout.write = defaultWrite;
   }
 
+  let depsInstalled = false;
+  let packageManager = await packageManagerUsedForCreating();
+
+  if (packageManager !== 'unknown') {
+    const {installDeps} = await ui.prompt([
+      {
+        type: 'select',
+        name: 'installDeps',
+        message: `Do you want to install dependencies with ${packageManager} for ${projectName}?`,
+        choices: [
+          {name: 'Yes, install the dependencies', value: 'true'},
+          {name: "No, I'll do it myself", value: 'false'},
+        ],
+        default: 'true',
+      },
+    ]);
+
+    if (installDeps === 'true') {
+      await installNodeModules({
+        directory: projectDir,
+        packageManager,
+        args: [],
+        stdout: process.stdout,
+        stderr: process.stderr,
+      });
+
+      depsInstalled = true;
+    }
+  } else {
+    // Assume npm for showing next steps
+    packageManager = 'npm';
+  }
+
   renderSuccess({
     headline: `${projectName} is ready to build.`,
     nextSteps: [
-      '`cd hydrogen-app` and run `npm run dev` to start your local development server and start building.',
+      `Run \`cd ${location}\`${
+        depsInstalled ? '' : `, \`${packageManager} install\`,`
+      } and \`${
+        packageManager + (packageManager === 'npm' ? ' run' : '')
+      } dev\` to start your local development server and start building.`,
     ],
     reference: [
       'Building with Hydrogen: https://shopify.dev/custom-storefronts/hydrogen',
