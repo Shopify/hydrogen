@@ -28,7 +28,7 @@ export function ProductCard({
   let cardLabel;
 
   const cardProduct: Product = product?.variants
-    ? product
+    ? (product as Product)
     : getProductPlaceholder();
   if (!cardProduct?.variants?.nodes?.length) return null;
 
