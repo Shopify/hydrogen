@@ -1,10 +1,5 @@
 import path from 'path';
-import {
-  outputInfo,
-  outputWarn,
-  outputContent,
-  outputToken,
-} from '@shopify/cli-kit/node/output';
+import {output} from '@shopify/cli-kit';
 import colors from '@shopify/cli-kit/node/colors';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {commonFlags} from '../../utils/flags.js';
@@ -74,7 +69,7 @@ export async function runBuild({
     fsExtra.rm(buildPath, {force: true, recursive: true}),
   ]);
 
-  outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
+  output.info(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
   const {build} = await import('@remix-run/dev/dist/compiler/build.js');
   const {logCompileFailure} = await import(
@@ -99,14 +94,14 @@ export async function runBuild({
     const {size} = await fsExtra.stat(buildPathWorkerFile);
     const sizeMB = size / (1024 * 1024);
 
-    outputInfo(
-      outputContent`   ${colors.dim(
+    output.info(
+      output.content`   ${colors.dim(
         path.relative(root, buildPathWorkerFile),
-      )}  ${outputToken.yellow(sizeMB.toFixed(2))} MB\n`,
+      )}  ${output.token.yellow(sizeMB.toFixed(2))} MB\n`,
     );
 
     if (sizeMB >= 1) {
-      outputWarn(
+      output.warn(
         '🚨 Worker bundle exceeds 1 MB! This can delay your worker response.\n',
       );
     }

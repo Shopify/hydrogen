@@ -1,9 +1,5 @@
 import path from 'path';
-import {
-  outputInfo,
-  outputContent,
-  outputToken,
-} from '@shopify/cli-kit/node/output';
+import {output} from '@shopify/cli-kit';
 import colors from '@shopify/cli-kit/node/colors';
 
 type MiniOxygenOptions = {
@@ -50,8 +46,8 @@ export async function startMiniOxygen({
 
   const listeningAt = `http://localhost:${actualPort}`;
 
-  outputInfo(
-    outputContent`🚥 MiniOxygen server started at ${outputToken.link(
+  output.info(
+    output.content`🚥 MiniOxygen server started at ${output.token.link(
       listeningAt,
       listeningAt,
     )}\n`,
@@ -83,25 +79,25 @@ export function logResponse(request: Request, response: Response) {
 
     const colorizeStatus =
       response.status < 300
-        ? outputToken.green
+        ? output.token.green
         : response.status < 400
-        ? outputToken.cyan
-        : outputToken.errorText;
+        ? output.token.cyan
+        : output.token.errorText;
 
-    outputInfo(
-      outputContent`${request.method.padStart(6)}  ${colorizeStatus(
+    output.info(
+      output.content`${request.method.padStart(6)}  ${colorizeStatus(
         String(response.status),
-      )}  ${outputToken.italic(type.padEnd(7, ' '))} ${route}${
+      )}  ${output.token.italic(type.padEnd(7, ' '))} ${route}${
         info ? ' ' + colors.dim(info) : ''
       } ${
         request.headers.get('purpose') === 'prefetch'
-          ? outputToken.italic('(prefetch)')
+          ? output.token.italic('(prefetch)')
           : ''
       }`,
     );
   } catch {
     if (request && response) {
-      outputInfo(`${request.method} ${response.status} ${request.url}`);
+      output.info(`${request.method} ${response.status} ${request.url}`);
     }
   }
 }
