@@ -50,7 +50,7 @@ export async function runInit(
     language?: string;
     token?: string;
     force?: boolean;
-  } = {},
+  } = getProcessFlags(),
 ) {
   const {createApp} = await import('@remix-run/dev/dist/cli/create.js');
   const {convertToJavaScript} = await import(
@@ -174,4 +174,17 @@ async function projectExists(projectDir: string) {
     (await fs.stat(projectDir)).isDirectory() &&
     (await fs.readdir(projectDir)).length > 0
   );
+}
+
+// When calling runInit from @shopify/create-hydrogen,
+// parse the flags from the process arguments:
+function getProcessFlags() {
+  const flagMap = {f: 'force'} as Record<string, string>;
+  const [, , ...flags] = process.argv;
+
+  return flags.reduce((acc, flag) => {
+    const [key, value = true] = flag.replace(/^\-+/, '').split('=');
+    const mappedKey = flagMap[key!] || key!;
+    return {...acc, [mappedKey]: value};
+  }, {});
 }
