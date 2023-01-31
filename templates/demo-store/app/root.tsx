@@ -226,6 +226,7 @@ const LAYOUT_QUERY = `#graphql
     $footerMenuHandle: String!
   ) @inContext(language: $language) {
     shop {
+      id
       name
       description
     }
