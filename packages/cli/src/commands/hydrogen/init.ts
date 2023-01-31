@@ -1,6 +1,7 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
-import path from 'path';
+import {path} from '@shopify/cli-kit';
+import fs from 'fs-extra';
 
 // @ts-ignore
 export default class Init extends Command {
@@ -25,6 +26,11 @@ export default class Init extends Command {
         'A GitHub token used to access access private repository templates',
       env: 'SHOPIFY_HYDROGEN_FLAG_TOKEN',
     }),
+    force: Flags.boolean({
+      description: 'Overwrite the destination directory if it already exists',
+      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
+      char: 'f',
+    }),
   };
 
   async run(): Promise<void> {
@@ -43,11 +49,10 @@ export async function runInit(
     template?: string;
     language?: string;
     token?: string;
+    force?: boolean;
   } = {},
 ) {
-  const {createApp, validateNewProjectPath} = await import(
-    '@remix-run/dev/dist/cli/create.js'
-  );
+  const {createApp} = await import('@remix-run/dev/dist/cli/create.js');
   const {convertToJavaScript} = await import(
     '@remix-run/dev/dist/cli/migrate/migrations/convert-to-javascript/index.js'
   );
@@ -99,7 +104,32 @@ export async function runInit(
   const projectName = path.basename(location);
   const projectDir = path.resolve(process.cwd(), location);
 
-  await validateNewProjectPath(projectDir);
+  if (await projectExists(projectDir)) {
+    if (!options.force) {
+      const {deleteFiles} = await ui.prompt([
+        {
+          type: 'select',
+          name: 'deleteFiles',
+          message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
+          choices: [
+            {name: 'Yes, delete the files', value: 'true'},
+            {name: 'No, do not delete the files', value: 'false'},
+          ],
+          default: 'false',
+        },
+      ]);
+
+      if (deleteFiles === 'false') {
+        renderInfo({
+          headline: `Destination path ${location} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to override it.`,
+        });
+
+        return;
+      }
+    }
+
+    await fs.remove(projectDir);
+  }
 
   await createApp({
     projectDir,
@@ -136,4 +166,12 @@ export async function runInit(
     headline: `Your project will display inventory from the Hydrogen Demo Store.`,
     body: `To connect this project to your Shopify store’s inventory, update \`${projectName}/.env\` with your store ID and Storefront API key.`,
   });
+}
+
+async function projectExists(projectDir: string) {
+  return (
+    (await fs.pathExists(projectDir)) &&
+    (await fs.stat(projectDir)).isDirectory() &&
+    (await fs.readdir(projectDir)).length > 0
+  );
 }
