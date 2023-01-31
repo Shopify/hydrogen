@@ -20,9 +20,11 @@ Hydrogen React is an unopionated and performant library of Shopify-specific comm
 
 Use Hydrogen React to build a custom storefront in any React-based web framework, such as Next.js or Gatsby.
 
-The following diagram illustrates two example custom storefront stacks. The first uses the [Hydrogen built on Remix](https://shopify.dev/custom-storefronts/hydrogen), and the other uses a third-party framework with Hydrogen React:
+The following diagram illustrates an example custom storefront stack using a third-party framework with Hydrogen React:
 
-![image](https://user-images.githubusercontent.com/27507835/214366331-2841b22c-eb8b-4d48-baca-8bfeaf1ef105.png)
+<div align="center">
+ <img src="https://user-images.githubusercontent.com/27507835/215843287-33c5a82a-7e19-48cb-9637-6427758c97a3.png" width="500">
+</div>
 
 ## Versioning
 
