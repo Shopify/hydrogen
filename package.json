@@ -26,6 +26,7 @@
   "devDependencies": {
     "@changesets/changelog-github": "^0.4.7",
     "@changesets/cli": "^2.25.2",
+    "@shopify/cli-hydrogen": "workspace:*",
     "@shopify/oxygen-workers-types": "^3.17.2",
     "@types/eslint": "^8.4.10",
     "@types/node": "^18.11.18",
