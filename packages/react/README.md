@@ -189,17 +189,17 @@ Storefront Kit ships with generated TypeScript types that match the Storefront A
 ```ts
 import type {Product} from '@shopify/storefront-kit-react/storefront-api-types';
 
-const product: Product = {};
+const product = {} satisfies Product;
 ```
 
 You can also use TypeScript's built-in helpers to create your own Types to fit your needs:
 
 ```ts
-const partialProduct: Partial<Product> = {};
+const partialProduct = {} satisfies Partial<Product>;
 
 const productTitle: Pick<Product, 'title'> = '';
 
-const productExceptTitle: Omit<Product, 'title'> = {};
+const productExceptTitle = {} satisfies Omit<Product, 'title'>;
 ```
 
 ### GraphQL CodeGen

@@ -3,10 +3,17 @@ import type {
   Collection,
 } from '@shopify/storefront-kit-react/storefront-api-types';
 
-// @ts-expect-error - missing required fields
-const myProduct: Product = {id: '123'};
-console.log(myProduct.id);
+const myProduct = {id: '123', title: 'My Product'} satisfies Partial<Product>;
+console.log(myProduct.title);
 
-// @ts-expect-error - missing required fields
-const myCollection: Collection = {id: '123'};
-console.log(myCollection.id);
+const myCollection = {
+  id: '456',
+  title: 'My Collection',
+} satisfies Partial<Collection>;
+console.log(myCollection.title);
+
+const myNotSatisfyingProduct: Partial<Product> = {
+  id: '789',
+  title: 'Other Product',
+};
+console.log(myNotSatisfyingProduct.title);
