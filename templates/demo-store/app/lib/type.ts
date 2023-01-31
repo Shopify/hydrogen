@@ -9,7 +9,7 @@ export type Locale = {
   country: CountryCode;
   label: string;
   pathPrefix?: string;
-  currency: string;
+  currency: CurrencyCode;
 };
 
 export type Localizations = Record<string, Locale>;
