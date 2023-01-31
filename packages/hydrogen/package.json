@@ -44,8 +44,8 @@
     "dist"
   ],
   "peerDependencies": {
-    "@remix-run/react": "*",
-    "@remix-run/server-runtime": "1.11.0",
+    "@remix-run/react": "1.12.0",
+    "@remix-run/server-runtime": "1.12.0",
     "@shopify/storefront-kit-react": "*"
   },
   "devDependencies": {
