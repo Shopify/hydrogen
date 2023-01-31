@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2.0.0-alpha.4
+
+### Patch Changes
+
+- Use the new version of GraphiQL instead of GraphQL Playground ([#410](https://github.com/Shopify/h2/pull/410)) by [@jplhomer](https://github.com/jplhomer)
+
 ## 2.0.0-alpha.3
 
 ### Patch Changes
