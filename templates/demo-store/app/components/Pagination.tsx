@@ -3,7 +3,7 @@ import type {
   Maybe,
   PageInfo,
   ProductConnection,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 
 import {useInView, type IntersectionOptions} from 'react-intersection-observer';
 import {useTransition, useLocation, useNavigate} from '@remix-run/react';

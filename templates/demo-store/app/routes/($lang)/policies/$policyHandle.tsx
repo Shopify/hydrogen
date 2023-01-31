@@ -3,7 +3,7 @@ import {useLoaderData} from '@remix-run/react';
 
 import {PageHeader, Section, Button} from '~/components';
 import invariant from 'tiny-invariant';
-import {ShopPolicy} from '@shopify/storefront-kit-react/storefront-api-types';
+import {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({request, params, context}: LoaderArgs) {
   invariant(params.policyHandle, 'Missing policy handle');
