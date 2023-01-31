@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'useMoney',
       type: 'hook',
-      url: '/api/react-storefront-kit/hooks/usemoney',
+      url: '/api/react-storefront-kit/hooks/useMoney',
     },
   ],
   description:
