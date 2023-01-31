@@ -14,7 +14,11 @@ export function logSeoTags(headTags: HeadTag[]) {
       console.log(`%c• JSON LD `, style);
 
       if (tag.children) {
-        console.table(JSON.parse(tag.children), ['name', 'content']);
+        try {
+          console.table(JSON.parse(tag.children), ['name', 'content']);
+        } catch {
+          console.log(tag.children);
+        }
       }
     } else {
       console.log(`%c• ${tag.tag} `, style);
@@ -23,9 +27,13 @@ export function logSeoTags(headTags: HeadTag[]) {
         if (typeof tag.children === 'string') {
           console.log(`↳ ${tag.children}`);
         } else {
-          Object.entries(JSON.parse(tag.children)).map(([key, val]) =>
-            console.log(`↳ ${val}`),
-          );
+          try {
+            Object.entries(JSON.parse(tag.children)).map(([key, val]) =>
+              console.log(`↳ ${val}`),
+            );
+          } catch {
+            console.log(tag.children);
+          }
         }
       }
 
