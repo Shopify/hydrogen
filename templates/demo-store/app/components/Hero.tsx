@@ -1,11 +1,11 @@
 import clsx from 'clsx';
 import type {SerializeFrom} from '@shopify/remix-oxygen';
-import {MediaFile} from '@shopify/storefront-kit-react';
+import {MediaFile} from '@shopify/hydrogen';
 import type {
   MediaImage,
   Media,
   Video as MediaVideo,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 import {Heading, Text, Link} from '~/components';
 import type {CollectionHero} from '~/routes/($lang)/index';
 

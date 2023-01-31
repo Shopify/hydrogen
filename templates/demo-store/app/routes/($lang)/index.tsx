@@ -8,7 +8,7 @@ import type {
   CollectionConnection,
   Metafield,
   ProductConnection,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 
 interface HomeSeoData {
   shop: {

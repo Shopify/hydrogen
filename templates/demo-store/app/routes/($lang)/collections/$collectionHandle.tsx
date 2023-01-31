@@ -4,15 +4,15 @@ import type {
   Collection as CollectionType,
   CollectionConnection,
   Filter,
-} from '@shopify/storefront-kit-react/storefront-api-types';
-import {flattenConnection} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen/storefront-api-types';
+import {flattenConnection} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
-const seo: SeoHandleFunction<typeof loader> = (data) => ({
+const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   title: data?.collection?.seo?.title,
   description: data?.collection?.seo?.description,
   titleTemplate: '%s | Collection',
