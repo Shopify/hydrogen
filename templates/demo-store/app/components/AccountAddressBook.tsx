@@ -2,7 +2,7 @@ import {Form} from '@remix-run/react';
 import type {
   Customer,
   MailingAddress,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 import {Button, Link, Text} from '~/components';
 
 export function AccountAddressBook({
@@ -77,7 +77,7 @@ function Address({
           address.formatted.map((line: string) => <li key={line}>{line}</li>)}
       </ul>
 
-      <div className="flex flex-row font-medium mt-6">
+      <div className="flex flex-row font-medium mt-6 items-baseline">
         <Link
           to={`/account/address/${encodeURIComponent(address.id)}`}
           className="text-left underline text-sm"

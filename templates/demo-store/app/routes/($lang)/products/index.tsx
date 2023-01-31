@@ -11,7 +11,7 @@ import {
   getPaginationVariables,
   Button,
 } from '~/components';
-import {PRODUCT_CARD_FRAGMENT} from '~/data';
+import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 
 const PAGE_BY = 8;
@@ -34,13 +34,11 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
   return data.products;
 }
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'All Products',
-    description: 'All Products',
-  };
+export const handle = {
+  seo: {
+    title: 'Products',
+  },
 };
-
 export default function AllProducts() {
   const products = useLoaderData<typeof loader>();
 

@@ -5,6 +5,7 @@ import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {commonFlags} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
+import {checkLockfileStatus} from '../../utils/check-lockfile.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -56,6 +57,8 @@ export async function runBuild({
     buildPathWorkerFile,
     publicPath,
   } = getProjectPaths(appPath, entry);
+
+  await checkLockfileStatus(root);
 
   console.time(LOG_WORKER_BUILT);
 

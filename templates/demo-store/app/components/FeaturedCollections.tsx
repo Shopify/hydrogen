@@ -1,6 +1,6 @@
-import {Image} from '@shopify/storefront-kit-react';
+import {Image} from '@shopify/hydrogen';
 import type {SerializeFrom} from '@shopify/remix-oxygen';
-import type {Collection} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {Collection} from '@shopify/hydrogen/storefront-api-types';
 import {Heading, Section, Grid, Link} from '~/components';
 
 export function FeaturedCollections({
@@ -12,10 +12,10 @@ export function FeaturedCollections({
   title?: string;
   [key: string]: any;
 }) {
-  const items = collections.filter((item) => item.image).length;
-  const haveCollections = collections.length > 0;
-
+  const haveCollections = collections && collections.length > 0;
   if (!haveCollections) return null;
+
+  const items = collections.filter((item) => item.image).length;
 
   return (
     <Section {...props} heading={title}>

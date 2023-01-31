@@ -8,7 +8,7 @@ import {
   useLocation,
   useTransition,
 } from '@remix-run/react';
-import {Money, ShopPayButton} from '@shopify/storefront-kit-react';
+import {Money, ShopPayButton} from '@shopify/hydrogen';
 import {
   Heading,
   IconCaret,
@@ -31,12 +31,18 @@ import type {
   Product as ProductType,
   Shop,
   ProductConnection,
-} from '@shopify/storefront-kit-react/storefront-api-types';
-import {
-  MEDIA_FRAGMENT,
-  PRODUCT_CARD_FRAGMENT,
-  PRODUCT_VARIANT_FRAGMENT,
-} from '~/data';
+} from '@shopify/hydrogen/storefront-api-types';
+import type {SeoHandleFunction} from '@shopify/hydrogen';
+import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
+
+const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
+  title: data?.product?.seo?.title,
+  description: data?.product?.seo?.description,
+});
+
+export const handle = {
+  seo,
+};
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -393,6 +399,7 @@ function ProductOptionLink({
   return (
     <Link
       {...props}
+      preventScrollReset
       prefetch="intent"
       replace
       to={`${path}?${clonedSearchParams.toString()}`}
@@ -450,6 +457,42 @@ function ProductDetail({
     </Disclosure>
   );
 }
+
+const PRODUCT_VARIANT_FRAGMENT = `#graphql
+  fragment ProductVariantFragment on ProductVariant {
+    id
+    availableForSale
+    selectedOptions {
+      name
+      value
+    }
+    image {
+      id
+      url
+      altText
+      width
+      height
+    }
+    price {
+      amount
+      currencyCode
+    }
+    compareAtPrice {
+      amount
+      currencyCode
+    }
+    sku
+    title
+    unitPrice {
+      amount
+      currencyCode
+    }
+    product {
+      title
+      handle
+    }
+  }
+`;
 
 const PRODUCT_QUERY = `#graphql
   ${MEDIA_FRAGMENT}

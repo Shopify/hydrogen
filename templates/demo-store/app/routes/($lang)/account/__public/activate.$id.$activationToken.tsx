@@ -1,13 +1,13 @@
 import {
-  type MetaFunction,
-  redirect,
   json,
+  redirect,
+  type MetaFunction,
   type ActionFunction,
 } from '@shopify/remix-oxygen';
 import {Form, useActionData} from '@remix-run/react';
 import {useRef, useState} from 'react';
-import {activateAccount} from '~/data';
 import {getInputStyleClasses} from '~/lib/utils';
+import type {CustomerActivatePayload} from '@shopify/hydrogen/storefront-api-types';
 
 type ActionData = {
   formError?: string;
@@ -55,11 +55,26 @@ export const action: ActionFunction = async ({
   const {session, storefront} = context;
 
   try {
-    const {accessToken} = await activateAccount(context, {
-      id,
-      activationToken,
-      password,
+    const data = await storefront.mutate<{
+      customerActivate: CustomerActivatePayload;
+    }>(CUSTOMER_ACTIVATE_MUTATION, {
+      variables: {
+        id: `gid://shopify/Customer/${id}`,
+        input: {
+          password,
+          activationToken,
+        },
+      },
     });
+
+    const {accessToken} = data?.customerActivate?.customerAccessToken ?? {};
+
+    if (!accessToken) {
+      /**
+       * Something is wrong with the user's input.
+       */
+      throw new Error(data?.customerActivate?.customerUserErrors.join(', '));
+    }
 
     session.set('customerAccessToken', accessToken);
 
@@ -216,3 +231,19 @@ export default function Activate() {
     </div>
   );
 }
+
+const CUSTOMER_ACTIVATE_MUTATION = `#graphql
+  mutation customerActivate($id: ID!, $input: CustomerActivateInput!) {
+    customerActivate(id: $id, input: $input) {
+      customerAccessToken {
+        accessToken
+        expiresAt
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
