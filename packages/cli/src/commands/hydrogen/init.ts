@@ -2,9 +2,6 @@ import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import path from 'path';
 
-// This must be imported to fix some issue with Flags
-import '@oclif/core/lib/parser/parse.js';
-
 // @ts-ignore
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront project';

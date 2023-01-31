@@ -1,15 +1,7 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {ui} from '@shopify/cli-kit';
-import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
-import {readFile, fileExists, mkdir, writeFile} from '@shopify/cli-kit/node/fs';
-import {
-  dirname,
-  extname,
-  joinPath,
-  resolvePath,
-  relativePath,
-  relativizePath,
-} from '@shopify/cli-kit/node/path';
+import {output} from '@shopify/cli-kit';
+import {file, path} from '@shopify/cli-kit';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../../utils/flags.js';
@@ -59,7 +51,7 @@ export default class GenerateRoute extends Command {
   async run(): Promise<void> {
     // @ts-ignore
     const {flags, args} = await this.parse(GenerateRoute);
-    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
+    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
     const {route} = args;
     const routePath = ROUTE_MAP[route as keyof typeof ROUTE_MAP];
@@ -69,7 +61,9 @@ export default class GenerateRoute extends Command {
         `No template generator found for ${route}. Try one of ${ROUTES.join()}`,
       );
     }
-    const isTypescript = await fileExists(joinPath(directory, 'tsconfig.json'));
+    const isTypescript = await file.exists(
+      path.join(directory, 'tsconfig.json'),
+    );
 
     const routesArray = Array.isArray(routePath) ? routePath : [routePath];
 
@@ -130,7 +124,7 @@ async function runGenerate(
 ) {
   const extension = typescript ? '.tsx' : '.jsx';
   const distPath = new URL('../../../', import.meta.url).pathname;
-  const templatePath = joinPath(
+  const templatePath = path.join(
     distPath,
     'templates',
     'skeleton',
@@ -138,15 +132,15 @@ async function runGenerate(
     'routes',
     `${route}.tsx`,
   );
-  const destinationPath = joinPath(
+  const destinationPath = path.join(
     directory,
     'app',
     'routes',
     `${route}${extension}`,
   );
-  const relativeDestinationPath = relativePath(directory, destinationPath);
+  const relativeDestinationPath = path.relative(directory, destinationPath);
 
-  if (!force && (await fileExists(destinationPath))) {
+  if (!force && (await file.exists(destinationPath))) {
     const options = [
       {name: 'No', value: 'abort'},
       {name: `Yes`, value: 'overwrite'},
@@ -156,7 +150,7 @@ async function runGenerate(
       {
         type: 'select',
         name: 'value',
-        message: `The file ${relativizePath(
+        message: `The file ${path.relativize(
           relativeDestinationPath,
         )} already exists. Do you want to overwrite it?`,
         choices: options,
@@ -165,21 +159,21 @@ async function runGenerate(
 
     if (choice.value === 'abort') {
       throw new AbortError(
-        outputContent`The route file ${relativeDestinationPath} already exists. Either delete it or re-run this command with ${outputToken.genericShellCommand(
+        output.content`The route file ${relativeDestinationPath} already exists. Either delete it or re-run this command with ${output.token.genericShellCommand(
           `--force`,
         )}.`,
       );
     }
   }
 
-  let templateContent = await readFile(templatePath);
+  let templateContent = await file.read(templatePath);
 
   // If the project is not using TypeScript, we need to compile the template
   // to JavaScript. We try to read the project's jsconfig.json, but if it
   // doesn't exist, we use a default configuration.
   if (!typescript) {
-    const config = (await fileExists(joinPath(directory, 'jsconfig.json')))
-      ? await import(joinPath(directory, 'jsconfig.json'))
+    const config = (await file.exists(path.join(directory, 'jsconfig.json')))
+      ? await import(path.join(directory, 'jsconfig.json'))
       : {
           lib: ['DOM', 'DOM.Iterable', 'ES2022'],
           isolatedModules: true,
@@ -217,11 +211,11 @@ async function runGenerate(
   templateContent = await format(templateContent, destinationPath);
 
   // Create the directory if it doesn't exist.
-  if (!(await fileExists(dirname(destinationPath)))) {
-    await mkdir(dirname(destinationPath));
+  if (!(await file.exists(path.dirname(destinationPath)))) {
+    await file.mkdir(path.dirname(destinationPath));
   }
   // Write the final file to the user's project.
-  await writeFile(destinationPath, templateContent);
+  await file.write(destinationPath, templateContent);
 }
 
 const escapeNewLines = (code: string) =>
@@ -244,7 +238,7 @@ function compile(code: string, options: ts.CompilerOptions = {}) {
 async function format(content: string, filePath: string) {
   // Try to read a prettier config file from the project.
   const config = (await prettier.resolveConfig(filePath)) || {};
-  const ext = extname(filePath);
+  const ext = path.extname(filePath);
 
   const formattedContent = await prettier.format(content, {
     // Specify the TypeScript parser for ts/tsx files. Otherwise
