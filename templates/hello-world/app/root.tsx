@@ -53,9 +53,7 @@ export default function App() {
       </head>
       <body>
         <h1>Hello {name}</h1>
-        <p>
-          Create your first route in <code>routes/index.jsx</code>
-        </p>
+        <p>This is a custom storefront powered by Hydrogen</p>
         <ScrollRestoration />
         <Scripts />
       </body>
