@@ -20,7 +20,7 @@ const ROUTE_MAP: Record<string, string | string[]> = {
 const ROUTES = [...Object.keys(ROUTE_MAP), 'all'];
 
 interface Result {
-  operation: 'created' | 'overwrote' | 'skipped';
+  operation: 'generated' | 'skipped' | 'overwritten';
 }
 
 export default class GenerateRoute extends Command {
@@ -167,7 +167,7 @@ export async function runGenerate(
     ]);
 
     return {
-      operation: choice.value === 'skip' ? 'skipped' : 'overwrote',
+      operation: choice.value === 'skip' ? 'skipped' : 'overwritten',
     };
   }
 
@@ -222,7 +222,7 @@ export async function runGenerate(
   // Write the final file to the user's project.
   await file.write(destinationPath, templateContent);
   return {
-    operation: 'created',
+    operation: 'generated',
   };
 }
 
