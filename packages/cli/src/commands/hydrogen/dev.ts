@@ -125,7 +125,7 @@ async function compileAndWatch(
   });
 }
 
-const VIRTUAL_ROUTES_DIR = 'virtual-routes';
+const VIRTUAL_ROUTES_DIR = 'virtual-routes/routes';
 const INDEX_SUFFIX = '/index';
 
 async function addVirtualRoutes(config: RemixConfig) {
@@ -160,7 +160,7 @@ async function addVirtualRoutes(config: RemixConfig) {
 
       config.routes[id] = {
         id,
-        parentId: 'root',
+        parentId: undefined,
         path: normalizedVirtualRoutePath,
         index: isIndex || undefined,
         caseSensitive: undefined,
