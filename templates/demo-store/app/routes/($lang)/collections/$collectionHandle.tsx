@@ -4,17 +4,18 @@ import type {
   Collection as CollectionType,
   CollectionConnection,
   Filter,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 import {
-  AnalyticsPageType,
   flattenConnection,
-} from '@shopify/storefront-kit-react';
+  AnalyticsPageType,
+  type SeoHandleFunction,
+} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
-import type {SeoHandleFunction} from '@shopify/hydrogen';
+import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
-const seo: SeoHandleFunction<typeof loader> = (data) => ({
+const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   title: data?.collection?.seo?.title,
   description: data?.collection?.seo?.description,
   titleTemplate: '%s | Collection',
@@ -30,8 +31,6 @@ const seo: SeoHandleFunction<typeof loader> = (data) => ({
 export const handle = {
   seo,
 };
-
-import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
 const PAGINATION_SIZE = 48;
 

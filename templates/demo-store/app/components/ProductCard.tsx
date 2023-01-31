@@ -5,15 +5,12 @@ import {
   Money,
   ShopifyAnalyticsProduct,
   useMoney,
-} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen';
 import type {SerializeFrom} from '@shopify/remix-oxygen';
 import {Text, Link, AddToCartButton} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
-import type {
-  MoneyV2,
-  Product,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {MoneyV2, Product} from '@shopify/hydrogen/storefront-api-types';
 
 export function ProductCard({
   product,

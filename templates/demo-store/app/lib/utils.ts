@@ -3,7 +3,7 @@ import type {
   MenuItem,
   Menu,
   MoneyV2,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 
 // @ts-expect-error types not available
 import typographicBase from 'typographic-base';
