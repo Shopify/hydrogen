@@ -3,8 +3,9 @@ import {
   installNodeModules,
   packageManagerUsedForCreating,
 } from '@shopify/cli-kit/node/node-package-manager';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import Flags from '@oclif/core/lib/flags.js';
-import {path} from '@shopify/cli-kit';
+import {output, path} from '@shopify/cli-kit';
 import fs from 'fs-extra';
 import {transpileProject} from '../../utils/transpile-ts.js';
 import {getLatestTemplates} from '../../utils/template-downloader.js';
@@ -59,7 +60,13 @@ export async function runInit(
 ) {
   supressNodeExperimentalWarnings();
 
-  const templatesPromise = getLatestTemplates();
+  // Start downloading templates early.
+  const templatesPromise = getLatestTemplates().catch((error) => {
+    output.info('\n\n\n');
+    renderFatalError(error);
+
+    process.exit(1);
+  });
 
   const {ui} = await import('@shopify/cli-kit');
   const {renderSuccess, renderInfo} = await import('@shopify/cli-kit/node/ui');
@@ -135,7 +142,16 @@ export async function runInit(
     await fs.remove(projectDir);
   }
 
+  // Templates might be cached or the download might be finished already.
+  // Only output progress if the download is still in progress.
+  let downloaded = false;
+  setTimeout(
+    () => !downloaded && output.info('\n📥 Downloading templates...'),
+    150,
+  );
   const {templatesDir} = await templatesPromise;
+  downloaded = true;
+
   await fs.copy(path.join(templatesDir, appTemplate), projectDir);
 
   if (language === 'js') {
