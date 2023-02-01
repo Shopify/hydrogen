@@ -15,16 +15,23 @@ import {
   useLoaderData,
   useMatches,
 } from '@remix-run/react';
+import {
+  ShopifySalesChannel,
+  Seo,
+  type SeoHandleFunction,
+} from '@shopify/hydrogen';
 import {Layout} from '~/components';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
-import {Seo, type SeoHandleFunction} from '@shopify/hydrogen';
 
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
+
 import {DEFAULT_LOCALE, parseMenu, type EnhancedMenu} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
+import {useAnalytics} from './hooks/useAnalytics';
+import {I18nLocale} from './lib/type';
 
 const seo: SeoHandleFunction<typeof loader> = ({data, pathname}) => ({
   title: data?.layout?.shop?.name,
@@ -65,15 +72,22 @@ export async function loader({context}: LoaderArgs) {
 
   return defer({
     layout,
-    seoDebug: process.env.NODE_ENV === 'development',
     selectedLocale: context.storefront.i18n,
+    seoDebug: process.env.NODE_ENV === 'development',
     cart: cartId ? getCart(context, cartId) : undefined,
+    analytics: {
+      shopifySalesChannel: ShopifySalesChannel.hydrogen,
+      shopId: layout.shop.id,
+    },
   });
 }
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
-  const locale = data.selectedLocale ?? DEFAULT_LOCALE;
+  const locale = (data.selectedLocale ?? DEFAULT_LOCALE) as I18nLocale;
+  const hasUserConsent = true;
+
+  useAnalytics(hasUserConsent, locale);
 
   return (
     <html lang={locale.language}>
@@ -156,6 +170,7 @@ const LAYOUT_QUERY = `#graphql
     $footerMenuHandle: String!
   ) @inContext(language: $language) {
     shop {
+      id
       name
       description
     }
