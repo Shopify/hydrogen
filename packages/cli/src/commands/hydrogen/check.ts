@@ -8,6 +8,9 @@ import {
 } from '../../utils/missing-routes.js';
 
 export default class GenerateRoute extends Command {
+  static description =
+    'Returns diagnostic information about a Hydrogen storefront.';
+
   static flags = {
     path: commonFlags.path,
   };

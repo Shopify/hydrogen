@@ -2,7 +2,7 @@ import Flags from '@oclif/core/lib/flags.js';
 
 export const commonFlags = {
   path: Flags.string({
-    description: 'the path to your hydrogen storefront',
+    description: 'The path to your hydrogen storefront',
     env: 'SHOPIFY_HYDROGEN_FLAG_PATH',
   }),
   port: Flags.integer({
