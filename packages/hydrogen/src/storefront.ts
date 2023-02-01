@@ -29,18 +29,19 @@ type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 export type StorefrontClient = ReturnType<typeof createStorefrontClient>;
 export type Storefront = StorefrontClient['storefront'];
 
-export type CreateStorefrontClientOptions = Parameters<
+export type I18nBase = {
+  language: LanguageCode;
+  country: CountryCode;
+};
+
+export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
   typeof createStorefrontUtilities
 >[0] & {
   cache?: Cache;
   buyerIp?: string;
   requestGroupId?: string;
   waitUntil?: ExecutionContext['waitUntil'];
-  i18n?: {
-    language: LanguageCode;
-    country: CountryCode;
-    pathPrefix?: string;
-  };
+  i18n?: TI18n;
 };
 
 type StorefrontCommonOptions = {
@@ -78,14 +79,16 @@ function minifyQuery(string: string) {
     .trim();
 }
 
-export function createStorefrontClient({
+const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
+
+export function createStorefrontClient<TI18n extends I18nBase>({
   cache,
   waitUntil,
   buyerIp,
-  i18n = {language: 'EN', country: 'US'},
+  i18n,
   requestGroupId = generateUUID(),
   ...clientOptions
-}: CreateStorefrontClientOptions) {
+}: CreateStorefrontClientOptions<TI18n>) {
   if (!cache) {
     // TODO: should only warn in development
     warnOnce(
@@ -253,8 +256,7 @@ export function createStorefrontClient({
        * ```
        */
       isApiError: isStorefrontApiError,
-      // Add default value for pathPefix.
-      i18n: {pathPrefix: '', ...i18n},
+      i18n: (i18n ?? defaultI18n) as TI18n,
     },
   };
 }

@@ -8,18 +8,13 @@ export type Locale = {
   language: LanguageCode;
   country: CountryCode;
   label: string;
-  pathPrefix?: string;
   currency: CurrencyCode;
 };
 
 export type Localizations = Record<string, Locale>;
 
-export type I18nLocale = {
-  language: LanguageCode;
-  country: CountryCode;
-  label: string;
+export type I18nLocale = Locale & {
   pathPrefix: string;
-  currency: CurrencyCode;
 };
 
 export enum CartAction {

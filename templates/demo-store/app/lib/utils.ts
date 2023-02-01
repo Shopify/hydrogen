@@ -249,7 +249,7 @@ export function assertApiErrors(data: Record<string, any> | null | undefined) {
   }
 }
 
-export const DEFAULT_LOCALE: Locale & {pathPrefix: string} = Object.freeze({
+export const DEFAULT_LOCALE: I18nLocale = Object.freeze({
   ...countries.default,
   pathPrefix: '',
 });
