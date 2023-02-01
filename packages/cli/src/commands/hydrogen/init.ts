@@ -56,8 +56,6 @@ export async function runInit(
     force?: boolean;
   } = getProcessFlags(),
 ) {
-  const {createApp} = await import('@remix-run/dev/dist/cli/create.js');
-
   const {ui} = await import('@shopify/cli-kit');
   const {renderSuccess, renderInfo} = await import('@shopify/cli-kit/node/ui');
   const prompts: Writable<Parameters<typeof ui.prompt>[0]> = [];
@@ -132,14 +130,7 @@ export async function runInit(
     await fs.remove(projectDir);
   }
 
-  await createApp({
-    projectDir,
-    appTemplate,
-    useTypeScript: true, // Transpile to JS later to avoid default logging
-    installDeps: false,
-    githubToken: options.token || undefined,
-    debug: !!process.env.DEBUG,
-  });
+  await fs.copy(appTemplate, projectDir);
 
   if (language === 'js') {
     try {
