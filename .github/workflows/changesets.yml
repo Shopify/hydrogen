@@ -46,24 +46,6 @@ jobs:
       - name: Build the dist code
         run: npm run build
 
-      # TODO: Remove this once GH repo containing these templates is public.
-      - name: Compile templates and copy them to the CLI dist folder
-        run: |
-          node scripts/compile-template-for-dist.mjs demo-store --keep
-          node scripts/compile-template-for-dist.mjs hello-world --keep
-          mkdir -p packages/cli/dist/templates
-          mv templates/demo-store-ts packages/cli/dist/templates/demo-store
-          mv templates/hello-world-ts packages/cli/dist/templates/hello-world
-
-          # These get stripped by NPM publishing; we'll rename these when remix.init runs
-          mv packages/cli/dist/templates/demo-store/.gitignore packages/cli/dist/templates/demo-store/_gitignore
-          mv packages/cli/dist/templates/demo-store/.env packages/cli/dist/templates/demo-store/_env
-          mv packages/cli/dist/templates/hello-world/.gitignore packages/cli/dist/templates/hello-world/_gitignore
-          mv packages/cli/dist/templates/hello-world/.env packages/cli/dist/templates/hello-world/_env
-
-          # Remove unused template outputs since Changesets will commit the working directory
-          rm -rf templates/demo-store-js templates/hello-world-js
-
       - name: Create Release Pull Request or Publish (for latest release)
         if: env.latest == 'true'
         id: changesets
