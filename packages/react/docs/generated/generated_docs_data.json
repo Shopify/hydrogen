@@ -4349,7 +4349,7 @@
       {
         "name": "useMoney",
         "type": "hook",
-        "url": "/api/react-storefront-kit/hooks/usemoney"
+        "url": "/api/react-storefront-kit/hooks/useMoney"
       }
     ],
     "description": "The `Money` component renders a string of the Storefront API's[MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) according to the `locale` in the [`ShopifyProvider` component](/api/hydrogen/components/global/shopifyprovider).\nThe component outputs a `<div>`. You can [customize this component](https://api/hydrogen/components#customizing-hydrogen-components) using passthrough props.",
@@ -5007,6 +5007,243 @@
                 "description": ""
               }
             ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "Analytics Constants",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "A list of constants used by Shopify's analytics system.",
+    "type": "utility",
+    "definitions": [
+      {
+        "title": "AnalyticsEventName",
+        "description": "Analytics event names accepted by Shopify analytics.",
+        "type": "AnalyticsEventName",
+        "typeDefinitions": {
+          "AnalyticsEventName": {
+            "filePath": "/analytics-constants.ts",
+            "name": "AnalyticsEventName",
+            "description": "These duplicated interface declaration is so that we can generate proper documentation\nfor these public facing constants",
+            "members": [
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "PAGE_VIEW",
+                "value": "\"PAGE_VIEW\"",
+                "description": "Page view"
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "ADD_TO_CART",
+                "value": "\"ADD_TO_CART\"",
+                "description": "Add to cart"
+              }
+            ],
+            "value": "interface AnalyticsEventName {\n  /** Page view */\n  PAGE_VIEW: 'PAGE_VIEW';\n  /** Add to cart */\n  ADD_TO_CART: 'ADD_TO_CART';\n}"
+          }
+        }
+      },
+      {
+        "title": "AnalyticsPageType",
+        "description": "Analytics page type values accepted by Shopify analytics.",
+        "type": "AnalyticsPageType",
+        "typeDefinitions": {
+          "AnalyticsPageType": {
+            "filePath": "/analytics-constants.ts",
+            "name": "AnalyticsPageType",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "article",
+                "value": "\"article\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "blog",
+                "value": "\"blog\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "captcha",
+                "value": "\"captcha\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cart",
+                "value": "\"cart\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "collection",
+                "value": "\"collection\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customersAccount",
+                "value": "\"customers/account\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customersActivateAccount",
+                "value": "\"customers/activate_account\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customersAddresses",
+                "value": "\"customers/addresses\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customersLogin",
+                "value": "\"customers/login\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customersOrder",
+                "value": "\"customers/order\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customersRegister",
+                "value": "\"customers/register\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customersResetPassword",
+                "value": "\"customers/reset_password\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "giftCard",
+                "value": "\"gift_card\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "home",
+                "value": "\"index\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "listCollections",
+                "value": "\"list-collections\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "forbidden",
+                "value": "\"403\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "notFound",
+                "value": "\"404\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "page",
+                "value": "\"page\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "password",
+                "value": "\"password\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "product",
+                "value": "\"product\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "policy",
+                "value": "\"policy\"",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "search",
+                "value": "\"search\"",
+                "description": ""
+              }
+            ],
+            "value": "interface AnalyticsPageType {\n  article: 'article';\n  blog: 'blog';\n  captcha: 'captcha';\n  cart: 'cart';\n  collection: 'collection';\n  customersAccount: 'customers/account';\n  customersActivateAccount: 'customers/activate_account';\n  customersAddresses: 'customers/addresses';\n  customersLogin: 'customers/login';\n  customersOrder: 'customers/order';\n  customersRegister: 'customers/register';\n  customersResetPassword: 'customers/reset_password';\n  giftCard: 'gift_card';\n  home: 'index';\n  listCollections: 'list-collections';\n  forbidden: '403';\n  notFound: '404';\n  page: 'page';\n  password: 'password';\n  product: 'product';\n  policy: 'policy';\n  search: 'search';\n}"
+          }
+        }
+      },
+      {
+        "title": "ShopifySalesChannel",
+        "description": "Analytics sales channel values accepted by Shopify analytics.",
+        "type": "ShopifySalesChannel",
+        "typeDefinitions": {
+          "ShopifySalesChannel": {
+            "filePath": "/analytics-constants.ts",
+            "name": "ShopifySalesChannel",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "hydrogen",
+                "value": "\"hydrogen\"",
+                "description": "Shopify Hydrogen sales channel"
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "headless",
+                "value": "\"headless\"",
+                "description": "Shopify Headless sales channel"
+              }
+            ],
+            "value": "interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
           }
         }
       }
@@ -5982,244 +6219,7 @@
     ]
   },
   {
-    "name": "Shopify constants",
-    "category": "utilities",
-    "isVisualComponent": false,
-    "related": [],
-    "description": "A list of constants used by Shopify.",
-    "type": "utility",
-    "definitions": [
-      {
-        "title": "AnalyticsEventName",
-        "description": "Analytics event names accepted by Shopify analytics.",
-        "type": "AnalyticsEventName",
-        "typeDefinitions": {
-          "AnalyticsEventName": {
-            "filePath": "/analytics-constants.ts",
-            "name": "AnalyticsEventName",
-            "description": "These duplicated interface declaration is so that we can generate proper documentation\nfor these public facing constants",
-            "members": [
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "PAGE_VIEW",
-                "value": "\"PAGE_VIEW\"",
-                "description": "Page view"
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "ADD_TO_CART",
-                "value": "\"ADD_TO_CART\"",
-                "description": "Add to cart"
-              }
-            ],
-            "value": "interface AnalyticsEventName {\n  /** Page view */\n  PAGE_VIEW: 'PAGE_VIEW';\n  /** Add to cart */\n  ADD_TO_CART: 'ADD_TO_CART';\n}"
-          }
-        }
-      },
-      {
-        "title": "AnalyticsPageType",
-        "description": "Analytics page type values accepted by Shopify analytics.",
-        "type": "AnalyticsPageType",
-        "typeDefinitions": {
-          "AnalyticsPageType": {
-            "filePath": "/analytics-constants.ts",
-            "name": "AnalyticsPageType",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "article",
-                "value": "\"article\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "blog",
-                "value": "\"blog\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "captcha",
-                "value": "\"captcha\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "cart",
-                "value": "\"cart\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "collection",
-                "value": "\"collection\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "customersAccount",
-                "value": "\"customers/account\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "customersActivateAccount",
-                "value": "\"customers/activate_account\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "customersAddresses",
-                "value": "\"customers/addresses\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "customersLogin",
-                "value": "\"customers/login\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "customersOrder",
-                "value": "\"customers/order\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "customersRegister",
-                "value": "\"customers/register\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "customersResetPassword",
-                "value": "\"customers/reset_password\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "giftCard",
-                "value": "\"gift_card\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "home",
-                "value": "\"index\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "listCollections",
-                "value": "\"list-collections\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "forbidden",
-                "value": "\"403\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "notFound",
-                "value": "\"404\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "page",
-                "value": "\"page\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "password",
-                "value": "\"password\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "product",
-                "value": "\"product\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "policy",
-                "value": "\"policy\"",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "search",
-                "value": "\"search\"",
-                "description": ""
-              }
-            ],
-            "value": "interface AnalyticsPageType {\n  article: 'article';\n  blog: 'blog';\n  captcha: 'captcha';\n  cart: 'cart';\n  collection: 'collection';\n  customersAccount: 'customers/account';\n  customersActivateAccount: 'customers/activate_account';\n  customersAddresses: 'customers/addresses';\n  customersLogin: 'customers/login';\n  customersOrder: 'customers/order';\n  customersRegister: 'customers/register';\n  customersResetPassword: 'customers/reset_password';\n  giftCard: 'gift_card';\n  home: 'index';\n  listCollections: 'list-collections';\n  forbidden: '403';\n  notFound: '404';\n  page: 'page';\n  password: 'password';\n  product: 'product';\n  policy: 'policy';\n  search: 'search';\n}"
-          }
-        }
-      },
-      {
-        "title": "ShopifySalesChannel",
-        "description": "Analytics sales channel values accepted by Shopify analytics.",
-        "type": "ShopifySalesChannel",
-        "typeDefinitions": {
-          "ShopifySalesChannel": {
-            "filePath": "/analytics-constants.ts",
-            "name": "ShopifySalesChannel",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "hydrogen",
-                "value": "\"hydrogen\"",
-                "description": "Shopify Hydrogen sales channel"
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "headless",
-                "value": "\"headless\"",
-                "description": "Shopify Headless sales channel"
-              }
-            ],
-            "value": "interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
-          }
-        }
-      }
-    ]
-  },
-  {
-    "name": "storefront.schema.json",
+    "name": "Storefront API Types",
     "category": "utilities",
     "isVisualComponent": false,
     "related": [
@@ -6234,7 +6234,7 @@
         "url": "/api/react-storefront-kit/utilities/storefront.schema.json"
       }
     ],
-    "description": "\n    If you are using TypeScript, Hydrogen React ships with pre-generated TypeScript types that match the Storefront API's GraphQL schema.\n  ",
+    "description": "\n    If you are using TypeScript, Hydrogen React ships with pre-generated TypeScript types that match the Storefront API's GraphQL schema. These types can be used when you need to manually create an object that matches a Storefront API object's shape.\n\n    These types also work really well with the new [`satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator) introduced in TypeScript 4.9, though you don't need to use `satisfies` to use these types.\n  ",
     "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
@@ -6242,8 +6242,8 @@
         "tabs": [
           {
             "title": "Storefront API Types in TypeScript",
-            "code": "import type {\n  Product,\n  Collection,\n} from '@shopify/storefront-kit-react/storefront-api-types';\n\n// @ts-expect-error - missing required fields\nconst myProduct: Product = {id: '123'};\nconsole.log(myProduct.id);\n\n// @ts-expect-error - missing required fields\nconst myCollection: Collection = {id: '123'};\nconsole.log(myCollection.id);\n",
-            "language": "tsx"
+            "code": "import type {\n  Product,\n  Collection,\n} from '@shopify/storefront-kit-react/storefront-api-types';\n\nconst myProduct = {id: '123', title: 'My Product'} satisfies Partial<Product>;\nconsole.log(myProduct.title);\n\nconst myCollection = {\n  id: '456',\n  title: 'My Collection',\n} satisfies Partial<Collection>;\nconsole.log(myCollection.title);\n\nconst myNotSatisfyingProduct: Partial<Product> = {\n  id: '789',\n  title: 'Other Product',\n};\nconsole.log(myNotSatisfyingProduct.title);\n",
+            "language": "ts"
           }
         ],
         "title": "Example code"
@@ -6252,11 +6252,17 @@
     "definitions": []
   },
   {
-    "name": "Create Storefront Client",
+    "name": "createStorefrontClient",
     "category": "utilities",
     "isVisualComponent": false,
-    "related": [],
-    "description": "\n  \n  ",
+    "related": [
+      {
+        "name": "ShopifyProvider",
+        "type": "component",
+        "url": "/api/react-storefront-kit/components/shopify-provider"
+      }
+    ],
+    "description": "\n    The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.\n  \n    When used on the server, it is recommended to use the `privateStorefrontToken` prop. When used on the client, it is recommended to use the `publicStorefrontToken` prop or consider using `<ShopifyProvider/>` instead.\n  ",
     "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
@@ -6438,14 +6444,6 @@
     ]
   },
   {
-    "name": "cart",
-    "category": "hooks",
-    "isVisualComponent": false,
-    "related": [],
-    "description": "",
-    "type": "hook"
-  },
-  {
     "name": "useCartLine",
     "category": "hooks",
     "isVisualComponent": false,
@@ -6476,7 +6474,169 @@
         "title": "Example code"
       }
     },
-    "definitions": []
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "UseCartLineGeneratedType",
+        "typeDefinitions": {
+          "UseCartLineGeneratedType": {
+            "filePath": "/CartLineProvider.tsx",
+            "name": "UseCartLineGeneratedType",
+            "params": [],
+            "returns": {
+              "filePath": "/CartLineProvider.tsx",
+              "description": "",
+              "name": "",
+              "value": ""
+            },
+            "value": "export function useCartLine() {\n  const context = useContext(CartLineContext);\n\n  if (context == null) {\n    throw new Error('Expected a cart line context but none was found');\n  }\n\n  return context;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "useMoney",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "Money",
+        "type": "component",
+        "url": "/api/react-storefront-kit/components/money"
+      }
+    ],
+    "description": "\n    The `useMoney` hook takes a [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) and returns a\n    default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by\n    [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).\n    Uses `locale` from `ShopifyProvider`\n  ",
+    "type": "hook",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';\n\nexport function App() {\n  return (\n    <ShopifyProvider shopifyConfig={{locale: 'en'}}>\n      <UsingMoney />\n    </ShopifyProvider>\n  );\n}\n\nfunction UsingMoney() {\n  const myMoney = {amount: '100', currencyCode: 'USD'};\n  const money = useMoney(myMoney);\n  return (\n    <>\n      <div>Localized money: {money.localizedString}</div>\n      <div>Money without trailing zeros: {money.withoutTrailingZeros}</div>\n    </>\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';\nimport type {MoneyV2} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function App() {\n  return (\n    // @ts-expect-error missing values for shopifyConfig\n    <ShopifyProvider shopifyConfig={{locale: 'en'}}>\n      <UsingMoney />\n    </ShopifyProvider>\n  );\n}\n\nfunction UsingMoney() {\n  const myMoney = {amount: '100', currencyCode: 'USD'} satisfies MoneyV2;\n  const money = useMoney(myMoney);\n  return (\n    <>\n      <div>Localized money: {money.localizedString}</div>\n      <div>Money without trailing zeros: {money.withoutTrailingZeros}</div>\n    </>\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "UseMoneyGeneratedType",
+        "typeDefinitions": {
+          "UseMoneyGeneratedType": {
+            "filePath": "/useMoney.tsx",
+            "name": "UseMoneyGeneratedType",
+            "params": [
+              {
+                "name": "money",
+                "description": "",
+                "value": "MoneyV2",
+                "filePath": "/useMoney.tsx"
+              }
+            ],
+            "returns": {
+              "filePath": "/useMoney.tsx",
+              "description": "",
+              "name": "UseMoneyValue",
+              "value": "UseMoneyValue"
+            },
+            "value": "export function useMoney(money: MoneyV2): UseMoneyValue {\n  const {locale} = useShop();\n\n  if (!locale) {\n    throw new Error(\n      `useMoney(): Unable to get 'locale' from 'useShop()', which means that 'locale' was not passed to '<ShopifyProvider/>'. 'locale' is required for 'useMoney()' to work`\n    );\n  }\n\n  const amount = parseFloat(money.amount);\n\n  const options = useMemo(\n    () => ({\n      style: 'currency',\n      currency: money.currencyCode,\n    }),\n    [money.currencyCode]\n  );\n\n  const defaultFormatter = useLazyFormatter(locale, options);\n\n  const nameFormatter = useLazyFormatter(locale, {\n    ...options,\n    currencyDisplay: 'name',\n  });\n\n  const narrowSymbolFormatter = useLazyFormatter(locale, {\n    ...options,\n    currencyDisplay: 'narrowSymbol',\n  });\n\n  const withoutTrailingZerosFormatter = useLazyFormatter(locale, {\n    ...options,\n    minimumFractionDigits: 0,\n    maximumFractionDigits: 0,\n  });\n\n  const withoutCurrencyFormatter = useLazyFormatter(locale);\n\n  const withoutTrailingZerosOrCurrencyFormatter = useLazyFormatter(locale, {\n    minimumFractionDigits: 0,\n    maximumFractionDigits: 0,\n  });\n\n  const isPartCurrency = (part: Intl.NumberFormatPart) =>\n    part.type === 'currency';\n\n  // By wrapping these properties in functions, we only\n  // create formatters if they are going to be used.\n  const lazyFormatters = useMemo(\n    () => ({\n      original: () => money,\n      currencyCode: () => money.currencyCode,\n\n      localizedString: () => defaultFormatter().format(amount),\n\n      parts: () => defaultFormatter().formatToParts(amount),\n\n      withoutTrailingZeros: () =>\n        amount % 1 === 0\n          ? withoutTrailingZerosFormatter().format(amount)\n          : defaultFormatter().format(amount),\n\n      withoutTrailingZerosAndCurrency: () =>\n        amount % 1 === 0\n          ? withoutTrailingZerosOrCurrencyFormatter().format(amount)\n          : withoutCurrencyFormatter().format(amount),\n\n      currencyName: () =>\n        nameFormatter().formatToParts(amount).find(isPartCurrency)?.value ??\n        money.currencyCode, // e.g. \"US dollars\"\n\n      currencySymbol: () =>\n        defaultFormatter().formatToParts(amount).find(isPartCurrency)?.value ??\n        money.currencyCode, // e.g. \"USD\"\n\n      currencyNarrowSymbol: () =>\n        narrowSymbolFormatter().formatToParts(amount).find(isPartCurrency)\n          ?.value ?? '', // e.g. \"$\"\n\n      amount: () =>\n        defaultFormatter()\n          .formatToParts(amount)\n          .filter((part) =>\n            ['decimal', 'fraction', 'group', 'integer', 'literal'].includes(\n              part.type\n            )\n          )\n          .map((part) => part.value)\n          .join(''),\n    }),\n    [\n      money,\n      amount,\n      nameFormatter,\n      defaultFormatter,\n      narrowSymbolFormatter,\n      withoutCurrencyFormatter,\n      withoutTrailingZerosFormatter,\n      withoutTrailingZerosOrCurrencyFormatter,\n    ]\n  );\n\n  // Call functions automatically when the properties are accessed\n  // to keep these functions as an implementation detail.\n  return useMemo(\n    () =>\n      new Proxy(lazyFormatters as unknown as UseMoneyValue, {\n        get: (target, key) => Reflect.get(target, key)?.call(null),\n      }),\n    [lazyFormatters]\n  );\n}"
+          },
+          "UseMoneyValue": {
+            "filePath": "/useMoney.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "UseMoneyValue",
+            "value": "{\n  /**\n   * The currency code from the `MoneyV2` object.\n   */\n  currencyCode: CurrencyCode;\n  /**\n   * The name for the currency code, returned by `Intl.NumberFormat`.\n   */\n  currencyName?: string;\n  /**\n   * The currency symbol returned by `Intl.NumberFormat`.\n   */\n  currencySymbol?: string;\n  /**\n   * The currency narrow symbol returned by `Intl.NumberFormat`.\n   */\n  currencyNarrowSymbol?: string;\n  /**\n   * The localized amount, without any currency symbols or non-number types from the `Intl.NumberFormat.formatToParts` parts.\n   */\n  amount: string;\n  /**\n   * All parts returned by `Intl.NumberFormat.formatToParts`.\n   */\n  parts: Intl.NumberFormatPart[];\n  /**\n   * A string returned by `new Intl.NumberFormat` for the amount and currency code,\n   * using the `locale` value in the [`LocalizationProvider` component](https://shopify.dev/api/hydrogen/components/localization/localizationprovider).\n   */\n  localizedString: string;\n  /**\n   * The `MoneyV2` object provided as an argument to the hook.\n   */\n  original: MoneyV2;\n  /**\n   * A string with trailing zeros removed from the fractional part, if any exist. If there are no trailing zeros, then the fractional part remains.\n   * For example, `$640.00` turns into `$640`.\n   * `$640.42` remains `$640.42`.\n   */\n  withoutTrailingZeros: string;\n  /**\n   * A string without currency and without trailing zeros removed from the fractional part, if any exist. If there are no trailing zeros, then the fractional part remains.\n   * For example, `$640.00` turns into `640`.\n   * `$640.42` turns into `640.42`.\n   */\n  withoutTrailingZerosAndCurrency: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/useMoney.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "currencyCode",
+                "value": "CurrencyCode",
+                "description": "The currency code from the `MoneyV2` object."
+              },
+              {
+                "filePath": "/useMoney.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "currencyName",
+                "value": "string",
+                "description": "The name for the currency code, returned by `Intl.NumberFormat`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/useMoney.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "currencySymbol",
+                "value": "string",
+                "description": "The currency symbol returned by `Intl.NumberFormat`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/useMoney.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "currencyNarrowSymbol",
+                "value": "string",
+                "description": "The currency narrow symbol returned by `Intl.NumberFormat`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/useMoney.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "amount",
+                "value": "string",
+                "description": "The localized amount, without any currency symbols or non-number types from the `Intl.NumberFormat.formatToParts` parts."
+              },
+              {
+                "filePath": "/useMoney.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "parts",
+                "value": "NumberFormatPart[]",
+                "description": "All parts returned by `Intl.NumberFormat.formatToParts`."
+              },
+              {
+                "filePath": "/useMoney.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "localizedString",
+                "value": "string",
+                "description": "A string returned by `new Intl.NumberFormat` for the amount and currency code,\nusing the `locale` value in the [`LocalizationProvider` component](https://shopify.dev/api/hydrogen/components/localization/localizationprovider)."
+              },
+              {
+                "filePath": "/useMoney.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "original",
+                "value": "MoneyV2",
+                "description": "The `MoneyV2` object provided as an argument to the hook."
+              },
+              {
+                "filePath": "/useMoney.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "withoutTrailingZeros",
+                "value": "string",
+                "description": "A string with trailing zeros removed from the fractional part, if any exist. If there are no trailing zeros, then the fractional part remains.\nFor example, `$640.00` turns into `$640`.\n`$640.42` remains `$640.42`."
+              },
+              {
+                "filePath": "/useMoney.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "withoutTrailingZerosAndCurrency",
+                "value": "string",
+                "description": "A string without currency and without trailing zeros removed from the fractional part, if any exist. If there are no trailing zeros, then the fractional part remains.\nFor example, `$640.00` turns into `640`.\n`$640.42` turns into `640.42`."
+              }
+            ]
+          }
+        }
+      }
+    ]
   },
   {
     "name": "useShopifyCookies",

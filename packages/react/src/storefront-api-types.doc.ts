@@ -1,7 +1,7 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'storefront.schema.json',
+  name: 'Storefront API Types',
   category: 'utilities',
   isVisualComponent: false,
   related: [

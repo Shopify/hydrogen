@@ -33,7 +33,13 @@ const data: ReferenceEntityTemplateSchema = {
       title: 'Example code',
     },
   },
-  definitions: [],
+  definitions: [
+    {
+      title: 'Props',
+      type: 'UseCartLineGeneratedType',
+      description: '',
+    },
+  ],
 };
 
 export default data;

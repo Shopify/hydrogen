@@ -1,12 +1,20 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'Create Storefront Client',
+  name: 'createStorefrontClient',
   category: 'utilities',
   isVisualComponent: false,
-  related: [],
+  related: [
+    {
+      name: 'ShopifyProvider',
+      type: 'component',
+      url: '/api/react-storefront-kit/components/shopify-provider',
+    },
+  ],
   description: `
+    The \`createStorefrontClient()\` function creates helpers that enable you to quickly query the Shopify Storefront API.
   
+    When used on the server, it is recommended to use the \`privateStorefrontToken\` prop. When used on the client, it is recommended to use the \`publicStorefrontToken\` prop or consider using \`<ShopifyProvider/>\` instead.
   `,
   type: 'gear',
   defaultExample: {

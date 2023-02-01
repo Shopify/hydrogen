@@ -1,7 +1,7 @@
 [
   {
     "title": "Hydrogen React",
-    "description": "Hydrogen React is a performant library of Shopify-specific React components, reusable functions, and utilities for interacting with the Storefront API. This guide provides a complete reference of the components, hooks, and utilities that Hydrogen React offers, and their relationships to each other.",
+    "description": "Hydrogen React is an unopiniated and performant library of Shopify-specific React components, reusable functions, and utilities for interacting with the Storefront API. This guide provides a complete reference of the components, hooks, and utilities that Hydrogen React offers, and their relationships to each other.",
     "id": "hydrogen-react",
     "sections": [
       {
@@ -25,25 +25,14 @@
         ],
         "sectionSubContent": [
           {
-            "title": "Requirements",
-            "sectionContent": "\n- You're familiar with [API authentication](/api/usage/authentication).\n- You can [make an authenticated request](/apps/auth/oauth/getting-started#make-authenticated-requests) to the Admin API for an access token.\n- You've [retrieved a parent access token](/apps/auth/oauth/getting-started#step-5-get-an-access-token) for the Admin API, which you can use to request a delegate access token for server requests.\n- You've set the parent access token to [offline](/apps/auth/oauth/access-modes#offline-access).\n            ",
+            "title": "Authentication",
+            "sectionContent": "\n          To use Hydrogen React, you need to authenticate with and make requests to the [Storefront API](/api/storefront-api). Refer to [Get started with Hydrogen React](/custom-storefronts/hydrogen-react#get-started-with-hydrogen-react) for instructions on how to get an access token and set up the Storefront API client.\n           ",
             "sectionCard": [
               {
                 "subtitle": "Navigate to",
                 "name": "Storefront API Client Authentication",
                 "url": "/custom-storefronts/react-storefront-kit#step-2-authenticate-the-storefront-api-client",
                 "type": "key"
-              }
-            ]
-          },
-          {
-            "title": "Authentication",
-            "sectionContent": "\nPrevent rate-limiting on server requests to the Storefront API using a [delegate access token](/apps/auth/oauth/delegate-access-tokens).\nYou'll need to [create an app](/apps/getting-started/create) from which you can make an authenticated request to the Admin API for a delegate access token.\n           ",
-            "sectionNotice": [
-              {
-                "title": "Caution",
-                "type": "warning",
-                "sectionContent": "Unlike public access tokens, authenticated access tokens should be treated as secret and not used client-side. We recommend only requesting the scopes that your app needs, to reduce the security risk if the token leaks."
               }
             ]
           },
@@ -69,11 +58,11 @@
           "tabs": [
             {
               "title": "npm",
-              "code": "npm i --save @shopify/storefront-kit-react\n"
+              "code": "npm i --save @shopify/hydrogen-react\n"
             },
             {
               "title": "yarn",
-              "code": "yarn add @shopify/storefront-kit-react\n"
+              "code": "yarn add @shopify/hydrogen-react\n"
             }
           ]
         }
@@ -122,11 +111,21 @@
           }
         ],
         "codeblock": {
-          "title": "Homepage",
+          "title": "Example",
           "tabs": [
             {
-              "title": "Storefront Client",
-              "code": "import {createStorefrontClient} from '@shopify/storefront-kit-react';\n\nexport const storefrontClient = createStorefrontClient({});\n",
+              "title": "Component",
+              "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function MyProduct({variantId}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n",
+              "language": "javascript"
+            },
+            {
+              "title": "Hook",
+              "code": "import {useMoney} from '@shopify/hydrogen-react';\n\nexport function MyComponent() {\n  const {currencyCode, currencySymbol, amount} = useMoney(variant.pricev2);\n\n  return (\n    <div>\n      <strong>{currencyCode}</strong>\n      <span>{currencySymbol}</span>\n      <span>{amount}</span>\n    </div>\n  );\n}\n",
+              "language": "javascript"
+            },
+            {
+              "title": "Utility",
+              "code": "import {flattenConnection, MediaFile} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  const media = flattenConnection(product.media);\n  return (\n    <>\n      {media.map((mediaFile) => {\n        return <MediaFile data={mediaFile} key={mediaFile.id} />;\n      })}\n    </>\n  );\n}\n",
               "language": "javascript"
             }
           ]
