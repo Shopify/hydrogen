@@ -189,8 +189,13 @@ export async function runGenerate(
   // to JavaScript. We try to read the project's jsconfig.json, but if it
   // doesn't exist, we use a default configuration.
   if (!typescript) {
-    const config = (await file.exists(path.join(directory, 'jsconfig.json')))
-      ? await import(path.join(directory, 'jsconfig.json'))
+    const jsConfigPath = path.join(directory, 'jsconfig.json');
+    const config = (await file.exists(jsConfigPath))
+      ? JSON.parse(
+          await (
+            await file.read(jsConfigPath, {encoding: 'utf8'})
+          ).replace(/^\s*\/\/.*$/gm, ''),
+        )
       : undefined;
 
     // We compile the template to JavaScript.
