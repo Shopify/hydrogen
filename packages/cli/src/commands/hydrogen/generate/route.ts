@@ -147,9 +147,7 @@ export async function runGenerate(
   const extension = typescript ? '.tsx' : '.jsx';
   const templatePath = path.join(
     templatesRoot,
-    'templates',
-    'skeleton',
-    'app',
+    'generator-templates',
     'routes',
     `${route}.tsx`,
   );

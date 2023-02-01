@@ -27,11 +27,15 @@ export default defineConfig([
     outExtension: () => ({js: '.jsx'}),
     async onSuccess() {
       // These files need to be packaged/distributed with the CLI
-      // so that we can use them in the `init` and `generate` commands.
-      await fs.copy('../../templates', 'dist/templates', {
-        filter: (filepath) =>
-          !/node_modules|\.cache|\.turbo|build|dist/gi.test(filepath),
-      });
+      // so that we can use them in the `generate` command.
+      await fs.copy(
+        '../../templates/skeleton/app/routes',
+        'dist/generator-templates/routes',
+        {
+          filter: (filepath) =>
+            !/node_modules|\.cache|\.turbo|build|dist/gi.test(filepath),
+        },
+      );
 
       console.log('\n', 'Copied template files to build directory', '\n');
     },
