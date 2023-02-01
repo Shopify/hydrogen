@@ -132,6 +132,7 @@ async function compileAndWatch(
 }
 
 const VIRTUAL_ROUTES_DIR = 'virtual-routes/routes';
+const VIRTUAL_ROOT = 'virtual-routes/virtual-root';
 const INDEX_SUFFIX = '/index';
 
 async function addVirtualRoutes(config: RemixConfig) {
@@ -166,12 +167,23 @@ async function addVirtualRoutes(config: RemixConfig) {
 
       config.routes[id] = {
         id,
-        parentId: undefined,
+        parentId: VIRTUAL_ROOT,
         path: normalizedVirtualRoutePath,
         index: isIndex || undefined,
         caseSensitive: undefined,
         file: path.relative(config.appDirectory, absoluteFilePath),
       };
+
+      if (!config.routes[VIRTUAL_ROOT]) {
+        config.routes[VIRTUAL_ROOT] = {
+          id: VIRTUAL_ROOT,
+          path: '',
+          file: path.relative(
+            config.appDirectory,
+            path.join(distPath, VIRTUAL_ROOT + '.jsx'),
+          ),
+        };
+      }
     }
   }
 
