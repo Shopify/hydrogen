@@ -9,12 +9,12 @@ import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 import {checkHydrogenVersion} from '../../utils/check-version.js';
+import {addVirtualRoutes} from '../../utils/virtual-routes.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
 
-// @ts-ignore
 export default class Dev extends Command {
   static description =
     'Runs Hydrogen storefront in a MiniOxygen worker in development';
@@ -28,6 +28,10 @@ export default class Dev extends Command {
     entry: Flags.string({
       env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
       required: true,
+    }),
+    disableVirtualRoutes: Flags.boolean({
+      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
+      default: false,
     }),
   };
 
@@ -44,72 +48,63 @@ export async function runDev({
   entry,
   port,
   path: appPath,
+  disableVirtualRoutes,
 }: {
   entry: string;
   port?: number;
   path?: string;
+  disableVirtualRoutes?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
 
-  await compileAndWatch(getProjectPaths(appPath, entry), {port});
+  await compileAndWatch(entry, appPath, port, disableVirtualRoutes);
 }
 
 async function compileAndWatch(
-  projectPaths: ReturnType<typeof getProjectPaths>,
-  options: {port?: number; cacheBust?: string} = {},
-  isInit = true,
+  entry: string,
+  appPath?: string,
+  port?: number,
+  disableVirtualRoutes = false,
 ) {
-  isInit && console.time(LOG_INITIAL_BUILD);
+  console.time(LOG_INITIAL_BUILD);
 
   const {root, entryFile, publicPath, buildPathClient, buildPathWorkerFile} =
-    projectPaths;
-
-  // Changing these files requires re-running `remix.config.js`
-  const shouldReloadRemixApp = (file: string) =>
-    file.startsWith(path.resolve(root, 'remix.config.'));
+    getProjectPaths(appPath, entry);
 
   const checkingHydrogenVersion = checkHydrogenVersion(root);
 
-  const remixConfig = await getRemixConfig(
-    root,
-    entryFile,
-    publicPath,
-    options.cacheBust,
-  );
-
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
+  const reloadConfig = async () => {
+    const config = await getRemixConfig(root, entryFile, publicPath);
+    return disableVirtualRoutes ? config : addVirtualRoutes(config);
+  };
 
   const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
-  const stopCompileWatcher = await watch(remixConfig, {
+  await watch(await reloadConfig(), {
+    reloadConfig,
     mode: process.env.NODE_ENV as any,
     async onInitialBuild() {
       await copyingFiles;
 
-      if (isInit) {
-        console.timeEnd(LOG_INITIAL_BUILD);
+      console.timeEnd(LOG_INITIAL_BUILD);
 
-        await startMiniOxygen({
-          root,
-          port: options.port,
-          watch: true,
-          buildPathWorkerFile,
-          buildPathClient,
-        });
+      await startMiniOxygen({
+        root,
+        port,
+        watch: true,
+        buildPathWorkerFile,
+        buildPathClient,
+      });
 
-        const showUpgrade = await checkingHydrogenVersion;
-        if (showUpgrade) showUpgrade();
-      }
+      const showUpgrade = await checkingHydrogenVersion;
+      if (showUpgrade) showUpgrade();
     },
     async onFileCreated(file: string) {
       output.info(`\n📄 File created: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
-      }
-
-      if (shouldReloadRemixApp(file)) {
-        await reloadRemixApp(file);
       }
     },
     async onFileChanged(file: string) {
@@ -117,19 +112,11 @@ async function compileAndWatch(
       if (file.startsWith(publicPath)) {
         await copyPublicFiles(file, file.replace(publicPath, buildPathClient));
       }
-
-      if (shouldReloadRemixApp(file)) {
-        await reloadRemixApp(file);
-      }
     },
     async onFileDeleted(file: string) {
       output.info(`\n📄 File deleted: ${path.relative(root, file)}`);
       if (file.startsWith(publicPath)) {
         await fs.unlink(file.replace(publicPath, buildPathClient));
-      }
-
-      if (shouldReloadRemixApp(file)) {
-        await reloadRemixApp(file);
       }
     },
     onRebuildStart() {
@@ -140,9 +127,4 @@ async function compileAndWatch(
       console.timeEnd(LOG_REBUILT);
     },
   });
-
-  async function reloadRemixApp(cacheBust: string) {
-    await stopCompileWatcher();
-    compileAndWatch(projectPaths, {...options, cacheBust}, false);
-  }
 }

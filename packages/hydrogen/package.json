@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2.0.0-alpha.3",
+  "version": "2023.1.0-alpha.1",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
@@ -54,17 +54,14 @@
   "files": [
     "dist"
   ],
-  "peerDependencies": {
-    "@remix-run/react": "*",
-    "@remix-run/server-runtime": "1.11.0"
-  },
   "dependencies": {
-    "recursive-readdir": "^2.2.3",
     "@shopify/storefront-kit-react": "^0.0.0-next-0a466fb"
   },
+  "peerDependencies": {
+    "@remix-run/react": "1.12.0",
+    "@remix-run/server-runtime": "1.12.0"
+  },
   "devDependencies": {
-    "@shopify/storefront-kit-react": "*",
-    "@types/recursive-readdir": "^2.2.1",
     "@shopify/hydrogen-react": "*",
     "vitest": "^0.27.2",
     "schema-dts": "^1.1.0"

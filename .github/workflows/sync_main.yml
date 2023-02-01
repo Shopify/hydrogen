@@ -8,7 +8,7 @@ on:
 
 jobs:
   publish:
-    runs-on: shopify-ubuntu-latest
+    runs-on: ubuntu-latest
     name: Sync the release branch to main
     steps:
       - name: Checkout the code

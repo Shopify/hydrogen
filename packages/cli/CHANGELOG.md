@@ -1,5 +1,17 @@
 # @shopify/cli-hydrogen
 
+## 4.0.0-alpha.11
+
+### Patch Changes
+
+- Introduce create-app CLI package and refactor how new Hydrogen apps are initialized ([#397](https://github.com/Shopify/h2/pull/397)) by [@frandiox](https://github.com/frandiox)
+
+## 4.0.0-alpha.10
+
+### Patch Changes
+
+- Defer and display the cart count on the hello-world template ([#392](https://github.com/Shopify/h2/pull/392)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 4.0.0-alpha.9
 
 ### Patch Changes

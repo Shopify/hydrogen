@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "4.0.0-alpha.9",
+  "version": "4.0.0-alpha.11",
   "type": "module",
   "scripts": {
     "build": "tsup --clean --config ./tsup.config.ts && oclif manifest",
@@ -15,21 +15,35 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
+    "@types/gunzip-maybe": "^1.4.0",
     "@types/prettier": "^2.7.2",
+    "@types/recursive-readdir": "^2.2.1",
+    "@types/tar-fs": "^2.0.1",
     "oclif": "^3.4.2",
     "vitest": "^0.28.1",
     "tempy": "^3.0.0"
   },
   "dependencies": {
     "@oclif/core": "^1.20.4",
-    "@remix-run/dev": "v1.11.0",
+    "@remix-run/dev": "1.12.0",
     "@shopify/cli-kit": "3.29.0",
     "@shopify/mini-oxygen": "^1.3.1",
+    "fast-glob": "^3.2.12",
     "fs-extra": "^10.1.0",
     "prettier": "^2.8.2",
+    "recursive-readdir": "^2.2.3",
+    "tar-fs": "^2.1.1",
+    "gunzip-maybe": "^1.4.2",
     "typescript": "^4.8.3"
   },
-  "bin": "dist/tmp-create-app.js",
+  "bin": "dist/create-app.js",
+  "exports": {
+    "./package.json": "./package.json",
+    "./commands/hydrogen/init": {
+      "types": "./dist/commands/hydrogen/init.d.ts",
+      "default": "./dist/commands/hydrogen/init.js"
+    }
+  },
   "files": [
     "dist",
     "oclif.manifest.json"
