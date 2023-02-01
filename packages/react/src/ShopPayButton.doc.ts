@@ -5,9 +5,7 @@ const data: ReferenceEntityTemplateSchema = {
   category: 'components',
   isVisualComponent: false,
   related: [],
-  description: `The \`ShopPayButton\` component renders a button that redirects to the Shop Pay checkout.
-    It renders a [\`<shop-pay-button>\`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically.
-    It relies on the \`<ShopProvider>\` context provider.`,
+  description: `The \`ShopPayButton\` component renders a button that redirects to the Shop Pay checkout. It renders a [\`<shop-pay-button>\`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically. It relies on the \`<ShopProvider>\` context provider.`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',

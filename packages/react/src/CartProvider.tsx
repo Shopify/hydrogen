@@ -35,7 +35,7 @@ export const CartContext = createContext<CartWithActions | null>(null);
 /**
  * The `useCart` hook provides access to the cart object. It must be a descendent of a `CartProvider` component.
  */
-export function useCart() {
+export function useCart(): CartWithActions {
   const context = useContext(CartContext);
 
   if (!context) {

@@ -5,8 +5,7 @@ const data: ReferenceEntityTemplateSchema = {
   category: 'components',
   isVisualComponent: false,
   related: [],
-  description: `The \`CartCheckoutButton\` component renders a button that redirects to the checkout URL for the cart.
-    Must be a descendent of a \`CartProvider\` component.
+  description: `The \`CartCheckoutButton\` component renders a button that redirects to the checkout URL for the cart.\n\nMust be a descendent of a \`CartProvider\` component.
   `,
   type: 'component',
   defaultExample: {

@@ -19,7 +19,7 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   description: 'Gathers client browser values commonly used for analytics',
-  type: 'utility',
+  type: 'gear',
   defaultExample: {
     description: 'I am the default example',
     codeblock: {

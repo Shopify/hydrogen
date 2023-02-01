@@ -25,7 +25,7 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   description: 'Sends analytics to Shopify.',
-  type: 'utility',
+  type: 'gear',
   defaultExample: {
     description: 'I am the default example',
     codeblock: {

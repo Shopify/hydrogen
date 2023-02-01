@@ -5,8 +5,7 @@ const data: ReferenceEntityTemplateSchema = {
   category: 'components',
   isVisualComponent: false,
   related: [],
-  description: `The \`AddToCartButton\` component renders a button that adds an item to the cart when pressed.
-    It must be a descendent of the \`CartProvider\` component.`,
+  description: `The \`AddToCartButton\` component renders a button that adds an item to the cart when pressed.\n\nIt must be a descendent of the \`CartProvider\` component.`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',

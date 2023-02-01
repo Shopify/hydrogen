@@ -6,9 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description: `
-    The \`CartCost\` component renders a \`Money\` component with the cost associated with the \`amountType\` prop. 
-    If no \`amountType\` prop is specified, then it defaults to \`totalAmount\`.
-    Depends on \`useCart()\` and must be a child of \`<CartProvider/>\`
+    The \`CartCost\` component renders a \`Money\` component with the cost associated with the \`amountType\` prop.\n\nIf no \`amountType\` prop is specified, then it defaults to \`totalAmount\`.\n\nDepends on \`useCart()\` and must be a child of \`<CartProvider/>\`
   `,
   type: 'component',
   defaultExample: {

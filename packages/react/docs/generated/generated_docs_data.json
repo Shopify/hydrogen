@@ -4,7 +4,7 @@
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "The `AddToCartButton` component renders a button that adds an item to the cart when pressed.\n    It must be a descendent of the `CartProvider` component.",
+    "description": "The `AddToCartButton` component renders a button that adds an item to the cart when pressed.\n\nIt must be a descendent of the `CartProvider` component.",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -148,7 +148,7 @@
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "The `BuyNowButton` component renders a button that adds an item to the cart and redirects the customer to checkout.\n    Must be a child of a `CartProvider` component.\n  ",
+    "description": "The `BuyNowButton` component renders a button that adds an item to the cart and redirects the customer to checkout.\n\nMust be a child of a `CartProvider` component.\n  ",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -275,7 +275,7 @@
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "The `CartCheckoutButton` component renders a button that redirects to the checkout URL for the cart.\n    Must be a descendent of a `CartProvider` component.\n  ",
+    "description": "The `CartCheckoutButton` component renders a button that redirects to the checkout URL for the cart.\n\nMust be a descendent of a `CartProvider` component.\n  ",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -387,7 +387,7 @@
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "\n    The `CartCost` component renders a `Money` component with the cost associated with the `amountType` prop. \n    If no `amountType` prop is specified, then it defaults to `totalAmount`.\n    Depends on `useCart()` and must be a child of `<CartProvider/>`\n  ",
+    "description": "\n    The `CartCost` component renders a `Money` component with the cost associated with the `amountType` prop.\n\nIf no `amountType` prop is specified, then it defaults to `totalAmount`.\n\nDepends on `useCart()` and must be a child of `<CartProvider/>`\n  ",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -594,7 +594,7 @@
         "url": "/api/react-storefront-kit/hooks/useCart"
       }
     ],
-    "description": "\n    The `CartProvider` component synchronizes the state of the Storefront API Cart and a customer's cart,\n    and allows you to more easily manipulate the cart by adding, removing, and updating it.\n    It could be placed at the root of your app so that your whole app is able to use the `useCart()` hook anywhere.\n\n    There are props that trigger when a call to the Storefront API is made, such as `onLineAdd={}` when a line is added to the cart.\n    There are also props that trigger when a call to the Storefront API is completed, such as `onLineAddComplete={}` when the fetch request for adding a line to the cart completes.\n  ",
+    "description": "\n    The `CartProvider` component synchronizes the state of the Storefront API Cart and a customer's cart, and allows you to more easily manipulate the cart by adding, removing, and updating it. It could be placed at the root of your app so that your whole app is able to use the `useCart()` hook anywhere.\n\nThere are props that trigger when a call to the Storefront API is made, such as `onLineAdd={}` when a line is added to the cart. There are also props that trigger when a call to the Storefront API is completed, such as `onLineAddComplete={}` when the fetch request for adding a line to the cart completes.\n  ",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -4610,7 +4610,7 @@
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout.\n    It renders a [`<shop-pay-button>`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically.\n    It relies on the `<ShopProvider>` context provider.",
+    "description": "The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout. It renders a [`<shop-pay-button>`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically. It relies on the `<ShopProvider>` context provider.",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -5018,7 +5018,7 @@
     "isVisualComponent": false,
     "related": [],
     "description": "A list of constants used by Shopify's analytics system.",
-    "type": "utility",
+    "type": "gear",
     "definitions": [
       {
         "title": "AnalyticsEventName",
@@ -5274,7 +5274,7 @@
       }
     ],
     "description": "Sends analytics to Shopify.",
-    "type": "utility",
+    "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -5828,17 +5828,17 @@
     "related": [
       {
         "name": "storefront.schema.json",
-        "type": "utility",
+        "type": "gear",
         "url": "/api/react-storefront-kit/utilities/storefront.schema.json"
       },
       {
         "name": "Storefront API Types",
-        "type": "utility",
+        "type": "gear",
         "url": "/api/react-storefront-kit/utilities/storefrontapitypes"
       }
     ],
-    "description": "\n    Meant to be used with GraphQL CodeGen to type the Storefront API's custom scalars correctly when using TypeScript.\n    By default, GraphQL CodeGen uses `any` for custom scalars; by using these definitions, GraphQL Codegen will generate the correct types for the Storefront API's custom scalars.\n\n    See more about [GraphQL CodeGen](https://graphql-code-generator.com/) and [custom scalars for TypeScript](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript#scalars).\n\n    Note that `@shopify/hydrogen-react` has already generated types for the Storefront API, so you may not need to setup GraphQL Codegen on your own.\n  ",
-    "type": "utility",
+    "description": "\n    Meant to be used with GraphQL CodeGen to type the Storefront API's custom scalars correctly when using TypeScript.By default, GraphQL CodeGen uses `any` for custom scalars; by using these definitions, GraphQL Codegen will generate the correct types for the Storefront API's custom scalars.\n\nSee more about [GraphQL CodeGen](https://graphql-code-generator.com/) and [custom scalars for TypeScript](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript#scalars).\n\nNote that `@shopify/hydrogen-react` has already generated types for the Storefront API, so you may not need to setup GraphQL Codegen on your own.\n  ",
+    "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -5849,7 +5849,7 @@
             "language": "js"
           }
         ],
-        "title": "Example code"
+        "title": "codegen.ts"
       }
     },
     "definitions": []
@@ -5859,8 +5859,8 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "\n    The `flattenConnection` utility transforms a connection object from the Storefront API (for example, [Product-related connections](https://shopify.dev/api/storefront/reference/products/product)) into a flat array of nodes.\n    The utility works with either `nodes` or `edges.node`.\n    \n    If `connection` is null or undefined, will return an empty array instead in production. In development, an error will be thrown.\n  ",
-    "type": "utility",
+    "description": "\n    The `flattenConnection` utility transforms a connection object from the Storefront API (for example, [Product-related connections](https://shopify.dev/api/storefront/reference/products/product)) into a flat array of nodes. The utility works with either `nodes` or `edges.node`.\n\nIf `connection` is null or undefined, will return an empty array instead in production. In development, an error will be thrown.\n  ",
+    "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -5927,7 +5927,7 @@
       }
     ],
     "description": "Gathers client browser values commonly used for analytics",
-    "type": "utility",
+    "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -6060,7 +6060,7 @@
       }
     ],
     "description": "Parses cookie string and returns Shopify cookies.",
-    "type": "utility",
+    "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -6132,45 +6132,12 @@
     ]
   },
   {
-    "name": "storefront.schema.json",
-    "category": "utilities",
-    "isVisualComponent": false,
-    "related": [
-      {
-        "name": "storefrontApiCustomScalars",
-        "type": "utility",
-        "url": "/api/react-storefront-kit/utilities/storefrontApiCustomScalars"
-      },
-      {
-        "name": "Storefront API Types",
-        "type": "utility",
-        "url": "/api/react-storefront-kit/utilities/storefrontapitypes"
-      }
-    ],
-    "description": "\n    Hydrogen React ships with a pre-generated GraphQL schema for the Storefront API, which can integrate with your IDE and other GraphQL tooling (such as a [GraphQL config file](https://www.graphql-config.com/docs/user/user-usage)) to provide autocompletion and validation for your Storefront API GraphQL queries.\n\n    This schema is generated using the Storefront API's introspection query, and is available at `@shopify/hydrogen-react/storefront.schema.json`.\n\n    To get these features working in your IDE, you may need to install an extension. For example, in VSCode you can install this [GraphQL extension](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql).\n  ",
-    "type": "utility",
-    "defaultExample": {
-      "description": "I am the default example",
-      "codeblock": {
-        "tabs": [
-          {
-            "title": "GraphQL Config File",
-            "code": "schema: node_modules/@shopify/hydrogen-react/storefront.schema.json\n",
-            "language": "yml"
-          }
-        ],
-        "title": "Example code"
-      }
-    },
-    "definitions": []
-  },
-  {
     "name": "parseMetafield",
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "\n    A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `metafield.type`) and places the result in `metafield.parsedValue`\n  \n    TypeScript developers can use the type `ParsedMetafields` from this package to get the returned object's type correct.\n  ",
-    "type": "utility",
+    "description": "\n    A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `metafield.type`) and places the result in `metafield.parsedValue`.\n\nTypeScript developers can use the type `ParsedMetafields` from this package to get the returned object's type correct.\n  ",
+    "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -6225,17 +6192,17 @@
     "related": [
       {
         "name": "storefrontApiCustomScalars",
-        "type": "utility",
+        "type": "gear",
         "url": "/api/react-storefront-kit/utilities/storefrontApiCustomScalars"
       },
       {
         "name": "storefront.schema.json",
-        "type": "utility",
+        "type": "gear",
         "url": "/api/react-storefront-kit/utilities/storefront.schema.json"
       }
     ],
-    "description": "\n    If you are using TypeScript, Hydrogen React ships with pre-generated TypeScript types that match the Storefront API's GraphQL schema. These types can be used when you need to manually create an object that matches a Storefront API object's shape.\n\n    These types also work really well with the new [`satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator) introduced in TypeScript 4.9, though you don't need to use `satisfies` to use these types.\n  ",
-    "type": "utility",
+    "description": "\n    If you are using TypeScript, Hydrogen React ships with pre-generated TypeScript types that match the Storefront API's GraphQL schema. These types can be used when you need to manually create an object that matches a Storefront API object's shape.\n\nThese types also work really well with the new [`satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator) introduced in TypeScript 4.9, though you don't need to use `satisfies` to use these types.\n  ",
+    "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -6262,7 +6229,7 @@
         "url": "/api/react-storefront-kit/components/shopify-provider"
       }
     ],
-    "description": "\n    The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.\n  \n    When used on the server, it is recommended to use the `privateStorefrontToken` prop. When used on the client, it is recommended to use the `publicStorefrontToken` prop or consider using `<ShopifyProvider/>` instead.\n  ",
+    "description": "\n    The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.\n\nWhen used on the server, it is recommended to use the `privateStorefrontToken` prop. When used on the client, it is recommended to use the `publicStorefrontToken` prop or consider using `<ShopifyProvider/>` instead.\n  ",
     "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
@@ -6391,6 +6358,39 @@
     ]
   },
   {
+    "name": "Storefront Schema",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "storefrontApiCustomScalars",
+        "type": "gear",
+        "url": "/api/react-storefront-kit/utilities/storefrontApiCustomScalars"
+      },
+      {
+        "name": "Storefront API Types",
+        "type": "gear",
+        "url": "/api/react-storefront-kit/utilities/storefrontapitypes"
+      }
+    ],
+    "description": "\n    Hydrogen React ships with a pre-generated GraphQL schema for the Storefront API, which can integrate with your IDE and other GraphQL tooling (such as a [GraphQL config file](https://www.graphql-config.com/docs/user/user-usage)) to provide autocompletion and validation for your Storefront API GraphQL queries.\n\nThis schema is generated using the Storefront API's introspection query, and is available at `@shopify/hydrogen-react/storefront.schema.json`.\n\nTo get these features working in your IDE, you may need to install an extension. For example, in VSCode you can install this [GraphQL extension](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql).\n  ",
+    "type": "gear",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "GraphQL Config File",
+            "code": "schema: node_modules/@shopify/hydrogen-react/storefront.schema.json\n",
+            "language": "yml"
+          }
+        ],
+        "title": ".graphqlrc.yml"
+      }
+    },
+    "definitions": []
+  },
+  {
     "name": "useCart",
     "category": "hooks",
     "isVisualComponent": false,
@@ -6434,10 +6434,103 @@
             "returns": {
               "filePath": "/CartProvider.tsx",
               "description": "",
-              "name": "",
-              "value": ""
+              "name": "CartWithActions",
+              "value": "CartWithActions"
             },
-            "value": "export function useCart() {\n  const context = useContext(CartContext);\n\n  if (!context) {\n    throw new Error('Expected a Cart Context, but no Cart Context was found');\n  }\n\n  return context;\n}"
+            "value": "export function useCart(): CartWithActions {\n  const context = useContext(CartContext);\n\n  if (!context) {\n    throw new Error('Expected a Cart Context, but no Cart Context was found');\n  }\n\n  return context;\n}"
+          },
+          "CartWithActions": {
+            "filePath": "/cart-types.ts",
+            "name": "CartWithActions",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "status",
+                "value": "\"uninitialized\" | \"fetching\" | \"creating\" | \"updating\" | \"idle\"",
+                "description": "The status of the cart. This returns 'uninitialized' when the cart is not yet created, `creating` when the cart is being created, `fetching` when an existing cart is being fetched, `updating` when the cart is updating, and `idle` when the cart isn't being created or updated."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "error",
+                "value": "unknown",
+                "description": "If an error occurred on the previous cart action, then `error` will exist and `cart` will be put back into the last valid status it was in.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cartCreate",
+                "value": "(cart: CartInput) => void",
+                "description": "A callback that creates a cart. Expects the same input you would provide to the Storefront API's `cartCreate` mutation."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "linesAdd",
+                "value": "(lines: CartLineInput[]) => void",
+                "description": "A callback that adds lines to the cart. Expects the same `lines` input that you would provide to the Storefront API's `cartLinesAdd` mutation. If a cart doesn't already exist, then it will create the cart for you."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "linesRemove",
+                "value": "(lines: string[]) => void",
+                "description": "A callback that removes lines from the cart. Expects the same `lines` input that you would provide to the Storefront API's `cartLinesRemove` mutation. Only lines that are included in the `lines` parameter will be in the cart afterwards."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "linesUpdate",
+                "value": "(lines: CartLineUpdateInput[]) => void",
+                "description": "A callback that updates lines in the cart. Expects the same `lines` input that you would provide to the Storefront API's `cartLinesUpdate` mutation. If a line item is not included in the `lines` parameter, it will still exist in the cart and will not be changed."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noteUpdate",
+                "value": "(note: string) => void",
+                "description": "A callback that updates the note in the cart. Expects the same `note` input that you would provide to the Storefront API's `cartNoteUpdate` mutation."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "buyerIdentityUpdate",
+                "value": "(buyerIdenity: CartBuyerIdentityInput) => void",
+                "description": "A callback that updates the buyer identity in the cart. Expects the same `buyerIdentity` input that you would provide to the Storefront API's `cartBuyerIdentityUpdate` mutation."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cartAttributesUpdate",
+                "value": "(attributes: AttributeInput[]) => void",
+                "description": "A callback that updates the cart attributes. Expects the same `attributes` input that you would provide to the Storefront API's `cartAttributesUpdate` mutation."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "discountCodesUpdate",
+                "value": "(discountCodes: string[]) => void",
+                "description": "A callback that updates the cart's discount codes. Expects the same `codes` input that you would provide to the Storefront API's `cartDiscountCodesUpdate` mutation."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "totalQuantity",
+                "value": "number",
+                "description": "The total number of items in the cart, across all lines. If there are no lines, then the value is 0."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cartFragment",
+                "value": "string",
+                "description": "The fragment used to query the cart object for all queries and mutations."
+              }
+            ],
+            "value": "export interface CartWithActions extends Cart {\n  /** The status of the cart. This returns 'uninitialized' when the cart is not yet created, `creating` when the cart is being created, `fetching` when an existing cart is being fetched, `updating` when the cart is updating, and `idle` when the cart isn't being created or updated. */\n  status: CartStatus;\n  /** If an error occurred on the previous cart action, then `error` will exist and `cart` will be put back into the last valid status it was in. */\n  error?: unknown;\n  /** A callback that creates a cart. Expects the same input you would provide to the Storefront API's `cartCreate` mutation. */\n  cartCreate: (cart: CartInput) => void;\n  /** A callback that adds lines to the cart. Expects the same `lines` input that you would provide to the Storefront API's `cartLinesAdd` mutation. If a cart doesn't already exist, then it will create the cart for you. */\n  linesAdd: (lines: CartLineInput[]) => void;\n  /** A callback that removes lines from the cart. Expects the same `lines` input that you would provide to the Storefront API's `cartLinesRemove` mutation. Only lines that are included in the `lines` parameter will be in the cart afterwards. */\n  linesRemove: (lines: string[]) => void;\n  /** A callback that updates lines in the cart. Expects the same `lines` input that you would provide to the Storefront API's `cartLinesUpdate` mutation. If a line item is not included in the `lines` parameter, it will still exist in the cart and will not be changed. */\n  linesUpdate: (lines: CartLineUpdateInput[]) => void;\n  /** A callback that updates the note in the cart. Expects the same `note` input that you would provide to the Storefront API's `cartNoteUpdate` mutation. */\n  noteUpdate: (note: MutationCartNoteUpdateArgs['note']) => void;\n  /** A callback that updates the buyer identity in the cart. Expects the same `buyerIdentity` input that you would provide to the Storefront API's `cartBuyerIdentityUpdate` mutation. */\n  buyerIdentityUpdate: (buyerIdenity: CartBuyerIdentityInput) => void;\n  /** A callback that updates the cart attributes. Expects the same `attributes` input that you would provide to the Storefront API's `cartAttributesUpdate` mutation. */\n  cartAttributesUpdate: (\n    attributes: MutationCartAttributesUpdateArgs['attributes']\n  ) => void;\n  /** A callback that updates the cart's discount codes. Expects the same `codes` input that you would provide to the Storefront API's `cartDiscountCodesUpdate` mutation. */\n  discountCodesUpdate: (discountCodes: string[]) => void;\n  /** The total number of items in the cart, across all lines. If there are no lines, then the value is 0. */\n  totalQuantity: number;\n  /** The fragment used to query the cart object for all queries and mutations. */\n  cartFragment: string;\n}"
           }
         }
       }
@@ -6487,10 +6580,10 @@
             "returns": {
               "filePath": "/CartLineProvider.tsx",
               "description": "",
-              "name": "",
-              "value": ""
+              "name": "CartLine",
+              "value": "CartLine"
             },
-            "value": "export function useCartLine() {\n  const context = useContext(CartLineContext);\n\n  if (context == null) {\n    throw new Error('Expected a cart line context but none was found');\n  }\n\n  return context;\n}"
+            "value": "export function useCartLine(): CartLine {\n  const context = useContext(CartLineContext);\n\n  if (context == null) {\n    throw new Error('Expected a cart line context but none was found');\n  }\n\n  return context;\n}"
           }
         }
       }
@@ -6507,7 +6600,7 @@
         "url": "/api/react-storefront-kit/components/money"
       }
     ],
-    "description": "\n    The `useMoney` hook takes a [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) and returns a\n    default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by\n    [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).\n    Uses `locale` from `ShopifyProvider`\n  ",
+    "description": "\n    The `useMoney` hook takes a [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) and returns a\n    default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by\n    [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).\n    Uses `locale` from `<ShopifyProvider/>`.\n  ",
     "type": "hook",
     "defaultExample": {
       "description": "I am the default example",
@@ -6663,7 +6756,7 @@
       }
     ],
     "description": "Sets Shopify user and session cookies and refreshes the expiry time.",
-    "type": "utility",
+    "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {

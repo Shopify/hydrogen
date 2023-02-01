@@ -5,8 +5,7 @@ const data: ReferenceEntityTemplateSchema = {
   category: 'components',
   isVisualComponent: false,
   related: [],
-  description: `The \`BuyNowButton\` component renders a button that adds an item to the cart and redirects the customer to checkout.
-    Must be a child of a \`CartProvider\` component.
+  description: `The \`BuyNowButton\` component renders a button that adds an item to the cart and redirects the customer to checkout.\n\nMust be a child of a \`CartProvider\` component.
   `,
   type: 'component',
   defaultExample: {

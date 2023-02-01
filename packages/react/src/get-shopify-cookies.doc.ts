@@ -13,7 +13,7 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   description: 'Parses cookie string and returns Shopify cookies.',
-  type: 'utility',
+  type: 'gear',
   defaultExample: {
     description: 'I am the default example',
     codeblock: {

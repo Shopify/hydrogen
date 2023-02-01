@@ -6,11 +6,9 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description: `
-    A function that uses \`metafield.type\` to parse the Metafield's \`value\` or \`reference\` or \`references\` (depending on the \`metafield.type\`) and places the result in \`metafield.parsedValue\`
-  
-    TypeScript developers can use the type \`ParsedMetafields\` from this package to get the returned object's type correct.
+    A function that uses \`metafield.type\` to parse the Metafield's \`value\` or \`reference\` or \`references\` (depending on the \`metafield.type\`) and places the result in \`metafield.parsedValue\`.\n\nTypeScript developers can use the type \`ParsedMetafields\` from this package to get the returned object's type correct.
   `,
-  type: 'utility',
+  type: 'gear',
   defaultExample: {
     description: 'I am the default example',
     codeblock: {

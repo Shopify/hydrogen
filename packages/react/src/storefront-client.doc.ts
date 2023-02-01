@@ -12,9 +12,7 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   description: `
-    The \`createStorefrontClient()\` function creates helpers that enable you to quickly query the Shopify Storefront API.
-  
-    When used on the server, it is recommended to use the \`privateStorefrontToken\` prop. When used on the client, it is recommended to use the \`publicStorefrontToken\` prop or consider using \`<ShopifyProvider/>\` instead.
+    The \`createStorefrontClient()\` function creates helpers that enable you to quickly query the Shopify Storefront API.\n\nWhen used on the server, it is recommended to use the \`privateStorefrontToken\` prop. When used on the client, it is recommended to use the \`publicStorefrontToken\` prop or consider using \`<ShopifyProvider/>\` instead.
   `,
   type: 'gear',
   defaultExample: {

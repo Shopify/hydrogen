@@ -1,12 +1,12 @@
 import {useContext, createContext, type ReactNode} from 'react';
-import {CartLine} from './storefront-api-types.js';
+import type {CartLine} from './storefront-api-types.js';
 
 export const CartLineContext = createContext<CartLine | null>(null);
 
 /**
  * The `useCartLine` hook provides access to the cart line object. It must be a descendent of a `CartProvider` component.
  */
-export function useCartLine() {
+export function useCartLine(): CartLine {
   const context = useContext(CartLineContext);
 
   if (context == null) {

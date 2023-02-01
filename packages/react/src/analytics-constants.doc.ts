@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description: "A list of constants used by Shopify's analytics system.",
-  type: 'utility',
+  type: 'gear',
   definitions: [
     {
       title: 'AnalyticsEventName',
