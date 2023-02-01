@@ -7,6 +7,7 @@ import Flags from '@oclif/core/lib/flags.js';
 import {path} from '@shopify/cli-kit';
 import fs from 'fs-extra';
 import {transpileProject} from '../../utils/transpile-ts.js';
+import {getLatestTemplates} from '../../utils/template-downloader.js';
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront project';
@@ -56,6 +57,8 @@ export async function runInit(
     force?: boolean;
   } = getProcessFlags(),
 ) {
+  const templatesPromise = getLatestTemplates();
+
   const {ui} = await import('@shopify/cli-kit');
   const {renderSuccess, renderInfo} = await import('@shopify/cli-kit/node/ui');
   const prompts: Writable<Parameters<typeof ui.prompt>[0]> = [];
@@ -65,9 +68,9 @@ export async function runInit(
       type: 'select',
       name: 'template',
       message: 'Choose a template',
-      choices: ['hello-world', 'demo-store'].map((t) => ({
-        name: t.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
-        value: new URL(`../../templates/${t}`, import.meta.url).pathname,
+      choices: ['hello-world', 'demo-store'].map((value) => ({
+        name: value.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+        value,
       })),
     });
   }
@@ -130,7 +133,8 @@ export async function runInit(
     await fs.remove(projectDir);
   }
 
-  await fs.copy(appTemplate, projectDir);
+  const {templatesDir} = await templatesPromise;
+  await fs.copy(path.join(templatesDir, appTemplate), projectDir);
 
   if (language === 'js') {
     try {
