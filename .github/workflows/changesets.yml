@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   changelog:
-    runs-on: shopify-ubuntu-latest
+    runs-on: ubuntu-latest
     if: github.repository_owner == 'shopify'
     name: Changelog PR or Release
     outputs:
@@ -94,7 +94,7 @@ jobs:
     needs: changelog
     # Only compile templates if a release was published, and we're on the "latest" release branch
     if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
-    runs-on: shopify-ubuntu-latest
+    runs-on: ubuntu-latest
     name: Compile the typescript templates and push them to main
     steps:
       - name: Checkout the code
@@ -128,7 +128,7 @@ jobs:
   #   needs: changelog
   #   # Only announce if a release was published, and we're on the "latest" release branch
   #   if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
-  #   runs-on: shopify-ubuntu-latest
+  #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Check out the code
   #       uses: actions/checkout@v3
