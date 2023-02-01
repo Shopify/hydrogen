@@ -14,6 +14,8 @@ import type {
   AppData,
 } from '@remix-run/server-runtime';
 
+const SeoLogger = React.lazy(() => import('./log-seo-tags'));
+
 export interface SeoHandleFunction<
   Loader extends LoaderFunction | unknown = unknown,
 > {
@@ -75,7 +77,13 @@ export function Seo({debug}: SeoProps) {
     );
   });
 
-  return React.createElement(React.Fragment, null, html);
+  const loggerMarkup = React.createElement(
+    React.Suspense,
+    {fallback: null},
+    React.createElement(SeoLogger, {headTags}),
+  );
+
+  return React.createElement(React.Fragment, null, html, debug && loggerMarkup);
 }
 
 export function recursivelyInvokeOrReturn<T, R extends any[]>(
