@@ -2,7 +2,9 @@ import GenerateRoute from './route.js';
 import Command from '@shopify/cli-kit/node/base-command';
 
 export default class GenerateRoutes extends Command {
-  static description = 'Generate routes for all supported routes.';
+  static description = 'Generate all supported routes.';
+
+  static hidden: true;
 
   static flags = GenerateRoute.flags;
 
