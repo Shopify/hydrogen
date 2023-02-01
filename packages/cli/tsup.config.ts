@@ -23,6 +23,7 @@ export default defineConfig([
     entry: ['src/virtual-routes/**/*.tsx'],
     outDir: 'dist/virtual-routes',
     clean: false, // Avoid deleting the assets folder
+    dts: false,
     outExtension: () => ({js: '.jsx'}),
     async onSuccess() {
       // These files need to be packaged/distributed with the CLI
@@ -40,5 +41,6 @@ export default defineConfig([
     entry: ['src/virtual-routes/assets/dummy.ts'],
     outDir: 'dist/virtual-routes/assets',
     publicDir: 'src/virtual-routes/assets',
+    dts: false,
   },
 ]);
