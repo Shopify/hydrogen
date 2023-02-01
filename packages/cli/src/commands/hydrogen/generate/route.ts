@@ -33,6 +33,7 @@ interface Result {
 }
 
 export default class GenerateRoute extends Command {
+  static description = 'Generate a route';
   static flags = {
     path: commonFlags.path,
     adapter: Flags.string({
@@ -44,6 +45,10 @@ export default class GenerateRoute extends Command {
       char: 'f',
       description: 'Overwrite existing files',
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
+    }),
+    typescript: Flags.boolean({
+      description: 'Generate TypeScript files',
+      env: 'SHOPIFY_HYDROGEN_FLAG_TYPESCRIPT',
     }),
   };
 
@@ -64,6 +69,7 @@ export default class GenerateRoute extends Command {
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
     const {route} = args;
+
     const routePath =
       route === 'all'
         ? Object.values(ROUTE_MAP).flat()
@@ -74,9 +80,9 @@ export default class GenerateRoute extends Command {
         `No template generator found for ${route}. Try one of ${ROUTES.join()}`,
       );
     }
-    const isTypescript = await file.exists(
-      path.join(directory, 'tsconfig.json'),
-    );
+    const isTypescript =
+      flags.typescript ||
+      (await file.exists(path.join(directory, 'tsconfig.json')));
 
     const routesArray = Array.isArray(routePath) ? routePath : [routePath];
 
@@ -103,31 +109,17 @@ export default class GenerateRoute extends Command {
     );
 
     renderSuccess({
-      // TODO update to `customSection` when available
-      // customSections: [
-      //   {
-      //     title: `${routesArray.length} route${
-      //       routesArray.length > 1 ? 's' : ''
-      //     } generated`,
-      //     body: {
-      //       list: {
-      //         items: routesArray.map(
-      //           (route) => `app/routes${route}${extension}`,
-      //         ),
-      //       },
-      //     },
-      //   },
-      // ],
       headline: `${success.length} of ${result.size} route${
         result.size > 1 ? 's' : ''
       } generated`,
-      body: Array.from(result.entries())
-        .map(([path, result]) => {
-          const {operation} = result;
-
-          return `• [${operation}] app/routes${path}${extension}`;
-        })
-        .join('\n'),
+      body: {
+        list: {
+          items: Array.from(result.entries()).map(
+            ([path, {operation}]) =>
+              `[${operation}] app/routes${path}${extension}`,
+          ),
+        },
+      },
     });
   }
 }
