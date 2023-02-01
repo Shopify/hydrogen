@@ -17,6 +17,7 @@
     "@types/fs-extra": "^9.0.13",
     "@types/prettier": "^2.7.2",
     "@types/recursive-readdir": "^2.2.1",
+    "@shopify/remix-oxygen": "1.0.0-alpha.3",
     "oclif": "^3.4.2",
     "vitest": "^0.28.1",
     "tempy": "^3.0.0"
