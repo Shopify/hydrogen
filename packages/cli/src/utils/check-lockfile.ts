@@ -1,4 +1,4 @@
-import {file, git, path} from '@shopify/cli-kit';
+import {file, path, git} from '@shopify/cli-kit';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {
   lockfiles,

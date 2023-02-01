@@ -1,10 +1,19 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {path, file, error, output, ui} from '@shopify/cli-kit';
+import {ui} from '@shopify/cli-kit';
+import {file, path} from '@shopify/cli-kit';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../../utils/flags.js';
 import Flags from '@oclif/core/lib/flags.js';
-import ts from 'typescript';
-import prettier from 'prettier';
+import {
+  format,
+  transpileFile,
+  resolvePrettierConfig,
+} from '../../../utils/transpile-ts.js';
+
+// Fix for a TypeScript bug:
+// https://github.com/microsoft/TypeScript/issues/42873
+import type {} from '@oclif/core/lib/interfaces/parser.js';
 
 const ROUTE_MAP: Record<string, string | string[]> = {
   page: '/pages/$pageHandle',
@@ -61,7 +70,7 @@ export default class GenerateRoute extends Command {
         : ROUTE_MAP[route as keyof typeof ROUTE_MAP];
 
     if (!routePath) {
-      throw new error.Abort(
+      throw new AbortError(
         `No template generator found for ${route}. Try one of ${ROUTES.join()}`,
       );
     }
@@ -84,7 +93,7 @@ export default class GenerateRoute extends Command {
         );
       }
     } catch (err: unknown) {
-      throw new error.Abort((err as Error).message);
+      throw new AbortError((err as Error).message);
     }
 
     const extension = isTypescript ? '.tsx' : '.jsx';
@@ -140,7 +149,12 @@ export async function runGenerate(
   },
 ): Promise<Result> {
   const extension = typescript ? '.tsx' : '.jsx';
-  const templatePath = path.join(templatesRoot, 'templates', `${route}.tsx`);
+  const templatePath = path.join(
+    templatesRoot,
+    'generator-templates',
+    'routes',
+    `${route}.tsx`,
+  );
   const destinationPath = path.join(
     directory,
     'app',
@@ -177,28 +191,17 @@ export async function runGenerate(
   // to JavaScript. We try to read the project's jsconfig.json, but if it
   // doesn't exist, we use a default configuration.
   if (!typescript) {
-    const config = (await file.exists(path.join(directory, 'jsconfig.json')))
-      ? await import(path.join(directory, 'jsconfig.json'))
-      : {
-          lib: ['DOM', 'DOM.Iterable', 'ES2022'],
-          isolatedModules: true,
-          esModuleInterop: true,
-          resolveJsonModule: true,
-          target: 'ES2022',
-          strict: true,
-          allowJs: true,
-          forceConsistentCasingInFileNames: true,
-          skipLibCheck: true,
-        };
-    // We need to escape new lines in the template because TypeScript
-    // will remove them when compiling.
-    const withArtificialNewLines = escapeNewLines(templateContent);
+    const jsConfigPath = path.join(directory, 'jsconfig.json');
+    const config = (await file.exists(jsConfigPath))
+      ? JSON.parse(
+          await (
+            await file.read(jsConfigPath, {encoding: 'utf8'})
+          ).replace(/^\s*\/\/.*$/gm, ''),
+        )
+      : undefined;
 
     // We compile the template to JavaScript.
-    const compiled = compile(withArtificialNewLines, config);
-
-    // Here we restore the new lines that were removed by TypeScript.
-    templateContent = restoreNewLines(compiled.outputText);
+    templateContent = transpileFile(templateContent, config?.compilerOptions);
   }
 
   // If the command was run with an adapter flag, we replace the default
@@ -213,7 +216,11 @@ export async function runGenerate(
   // We format the template content with Prettier.
   // TODO use @shopify/cli-kit's format function once it supports TypeScript
   // templateContent = await file.format(templateContent, destinationPath);
-  templateContent = await format(templateContent, destinationPath);
+  templateContent = format(
+    templateContent,
+    await resolvePrettierConfig(destinationPath),
+    destinationPath,
+  );
 
   // Create the directory if it doesn't exist.
   if (!(await file.exists(path.dirname(destinationPath)))) {
@@ -224,37 +231,4 @@ export async function runGenerate(
   return {
     operation: 'generated',
   };
-}
-
-const escapeNewLines = (code: string) =>
-  code.replace(/\n\n/g, '\n/* :newline: */');
-const restoreNewLines = (code: string) =>
-  code.replace(/\/\* :newline: \*\//g, '\n');
-
-function compile(code: string, options: ts.CompilerOptions = {}) {
-  return ts.transpileModule(code, {
-    reportDiagnostics: false,
-    compilerOptions: {
-      ...options,
-      // '1' tells TypeScript to preserve the JSX syntax.
-      jsx: 1,
-      removeComments: false,
-    },
-  });
-}
-
-async function format(content: string, filePath: string) {
-  // Try to read a prettier config file from the project.
-  const config = (await prettier.resolveConfig(filePath)) || {};
-  const ext = path.extname(filePath);
-
-  const formattedContent = await prettier.format(content, {
-    // Specify the TypeScript parser for ts/tsx files. Otherwise
-    // we need to use the babel parser because the default parser
-    // Otherwise prettier will print a warning.
-    parser: ext === '.tsx' || ext === '.ts' ? 'typescript' : 'babel',
-    ...config,
-  });
-
-  return formattedContent;
 }

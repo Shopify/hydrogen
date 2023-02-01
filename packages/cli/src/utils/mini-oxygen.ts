@@ -36,9 +36,12 @@ export async function startMiniOxygen({
       ? [path.resolve(root, buildPathWorkerFile)]
       : undefined,
     onResponse: (request, response) =>
-      // 'Request' type in MiniOxygen comes from Miniflare,
-      // which is slightly different from standard Request type.
-      logResponse(request as unknown as Request, response),
+      // 'Request' and 'Response' types in MiniOxygen comes from
+      // Miniflare and are slightly different from standard types.
+      logResponse(
+        request as unknown as Request,
+        response as unknown as Response,
+      ),
   });
 
   const listeningAt = `http://localhost:${actualPort}`;

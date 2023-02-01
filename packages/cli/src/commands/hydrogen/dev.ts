@@ -15,7 +15,6 @@ const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
 
-// @ts-ignore
 export default class Dev extends Command {
   static description =
     'Runs Hydrogen storefront in a MiniOxygen worker in development';
