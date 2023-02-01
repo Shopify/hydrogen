@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import prettier from 'prettier';
+import prettier, {type Options} from 'prettier';
 import ts, {type CompilerOptions, type ScriptTarget} from 'typescript';
 import glob from 'fast-glob';
 import {output} from '@shopify/cli-kit';
@@ -42,11 +42,16 @@ export function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
   return restoreNewLines(compiled.outputText);
 }
 
-export async function format(content: string, filePath = '') {
-  // Try to read a prettier config file from the project.
-  const config =
-    (await prettier.resolveConfig(filePath || process.cwd())) || {};
+export async function resolvePrettierConfig(filePath = process.cwd()) {
+  try {
+    // Try to read a prettier config file from the project.
+    return (await prettier.resolveConfig(filePath)) || {};
+  } catch {
+    return {};
+  }
+}
 
+export function format(content: string, config: Options, filePath = '') {
   const ext = path.extname(filePath);
 
   const formattedContent = prettier.format(content, {
@@ -117,6 +122,8 @@ export async function transpileProject(projectDir: string) {
     cwd: projectDir,
   });
 
+  const prettierConfig = await resolvePrettierConfig();
+
   for (const entry of entries) {
     if (entry.endsWith('.d.ts')) {
       await fs.rm(entry);
@@ -124,7 +131,7 @@ export async function transpileProject(projectDir: string) {
     }
 
     const tsx = await fs.readFile(entry, 'utf8');
-    const mjs = await format(transpileFile(tsx));
+    const mjs = await format(transpileFile(tsx), prettierConfig);
 
     await fs.rm(entry);
     await fs.writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs, 'utf8');
