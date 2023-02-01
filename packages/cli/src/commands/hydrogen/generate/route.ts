@@ -5,8 +5,7 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../../utils/flags.js';
 import Flags from '@oclif/core/lib/flags.js';
-import ts from 'typescript';
-import prettier from 'prettier';
+import {format, transpileFile} from '../../../utils/transpile-ts.js';
 
 // Fix for a TypeScript bug:
 // https://github.com/microsoft/TypeScript/issues/42873
@@ -192,26 +191,10 @@ export async function runGenerate(
   if (!typescript) {
     const config = (await file.exists(path.join(directory, 'jsconfig.json')))
       ? await import(path.join(directory, 'jsconfig.json'))
-      : {
-          lib: ['DOM', 'DOM.Iterable', 'ES2022'],
-          isolatedModules: true,
-          esModuleInterop: true,
-          resolveJsonModule: true,
-          target: 'ES2022',
-          strict: true,
-          allowJs: true,
-          forceConsistentCasingInFileNames: true,
-          skipLibCheck: true,
-        };
-    // We need to escape new lines in the template because TypeScript
-    // will remove them when compiling.
-    const withArtificialNewLines = escapeNewLines(templateContent);
+      : undefined;
 
     // We compile the template to JavaScript.
-    const compiled = compile(withArtificialNewLines, config);
-
-    // Here we restore the new lines that were removed by TypeScript.
-    templateContent = restoreNewLines(compiled.outputText);
+    templateContent = transpileFile(templateContent, config);
   }
 
   // If the command was run with an adapter flag, we replace the default
@@ -237,37 +220,4 @@ export async function runGenerate(
   return {
     operation: 'generated',
   };
-}
-
-const escapeNewLines = (code: string) =>
-  code.replace(/\n\n/g, '\n/* :newline: */');
-const restoreNewLines = (code: string) =>
-  code.replace(/\/\* :newline: \*\//g, '\n');
-
-function compile(code: string, options: ts.CompilerOptions = {}) {
-  return ts.transpileModule(code, {
-    reportDiagnostics: false,
-    compilerOptions: {
-      ...options,
-      // '1' tells TypeScript to preserve the JSX syntax.
-      jsx: 1,
-      removeComments: false,
-    },
-  });
-}
-
-async function format(content: string, filePath: string) {
-  // Try to read a prettier config file from the project.
-  const config = (await prettier.resolveConfig(filePath)) || {};
-  const ext = path.extname(filePath);
-
-  const formattedContent = await prettier.format(content, {
-    // Specify the TypeScript parser for ts/tsx files. Otherwise
-    // we need to use the babel parser because the default parser
-    // Otherwise prettier will print a warning.
-    parser: ext === '.tsx' || ext === '.ts' ? 'typescript' : 'babel',
-    ...config,
-  });
-
-  return formattedContent;
 }
