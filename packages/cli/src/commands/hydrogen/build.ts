@@ -10,7 +10,6 @@ import {findMissingRoutes} from '../../utils/missing-routes.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
-// @ts-ignore
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production';
   static flags = {

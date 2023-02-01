@@ -1,5 +1,5 @@
 import {defineConfig} from 'tsup';
-import {file, output} from '@shopify/cli-kit';
+import fs from 'fs-extra';
 
 const commonConfig = {
   format: 'esm',
@@ -8,9 +8,8 @@ const commonConfig = {
   splitting: true,
   treeshake: true,
   sourcemap: false,
+  dts: true,
   publicDir: 'templates',
-  // The CLI is not imported anywhere so we don't need to generate types:
-  dts: false,
 };
 
 export default defineConfig([
@@ -27,15 +26,18 @@ export default defineConfig([
     dts: false,
     outExtension: () => ({js: '.jsx'}),
     async onSuccess() {
-      // Copy the routes folder from the "skeleton" template
-      // to the dist folder of the CLI package.
       // These files need to be packaged/distributed with the CLI
       // so that we can use them in the `generate` command.
-      await file.copy('../../templates/skeleton/app/routes', 'dist/templates');
+      await fs.copy(
+        '../../templates/skeleton/app/routes',
+        'dist/generator-templates/routes',
+        {
+          filter: (filepath) =>
+            !/node_modules|\.cache|\.turbo|build|dist/gi.test(filepath),
+        },
+      );
 
-      output.newline();
-      output.completed('Copied generator template files to build directory');
-      output.newline();
+      console.log('\n', 'Copied template files to build directory', '\n');
     },
   },
   {
