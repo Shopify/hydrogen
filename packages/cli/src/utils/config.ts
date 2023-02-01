@@ -58,7 +58,7 @@ export async function getRemixConfig(
     config.relativeAssetsBuildDirectory,
   );
 
-  config.watchPaths = [publicPath, path.resolve(root, 'remix.config.*')];
+  config.watchPaths = [publicPath];
 
   if (process.env.LOCAL_DEV) {
     // Watch local packages when developing in Hydrogen repo
