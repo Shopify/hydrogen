@@ -64,7 +64,7 @@ export const meta: MetaFunction = () => ({
   viewport: 'width=device-width,initial-scale=1',
 });
 
-export async function loader({request, context}: LoaderArgs) {
+export async function loader({context}: LoaderArgs) {
   const [cartId, layout] = await Promise.all([
     context.session.get('cartId'),
     getLayoutData(context),
