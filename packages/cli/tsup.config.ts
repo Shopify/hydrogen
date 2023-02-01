@@ -23,15 +23,9 @@ export default defineConfig([
     ...commonConfig,
     entry: ['src/virtual-routes/**/*.tsx'],
     outDir: 'dist/virtual-routes',
-    clean: true,
+    clean: false, // Avoid deleting the assets folder
     outExtension: () => ({js: '.jsx'}),
     async onSuccess() {
-      // Copy virtual-files
-      await file.copy(
-        'src/virtual-routes/assets',
-        'dist/virtual-routes/assets',
-      );
-
       // Copy the routes folder from the "skeleton" template
       // to the dist folder of the CLI package.
       // These files need to be packaged/distributed with the CLI
@@ -42,5 +36,11 @@ export default defineConfig([
       output.completed('Copied generator template files to build directory');
       output.newline();
     },
+  },
+  {
+    format: 'esm',
+    entry: ['src/virtual-routes/assets/dummy.ts'],
+    outDir: 'dist/virtual-routes/assets',
+    publicDir: 'src/virtual-routes/assets',
   },
 ]);

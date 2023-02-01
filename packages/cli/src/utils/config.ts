@@ -69,6 +69,10 @@ export async function getRemixConfig(
         path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
       ),
     );
+
+    config.watchPaths.push(
+      path.join(packagesPath, 'cli', 'dist', 'virtual-routes', '**', '*'),
+    );
   }
 
   return config;
