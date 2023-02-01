@@ -11,7 +11,7 @@ concurrency:
 
 jobs:
   changelog:
-    runs-on: shopify-ubuntu-latest
+    runs-on: ubuntu-latest
     if: github.repository_owner == 'shopify'
     name: Changelog PR or Release
     outputs:
@@ -22,7 +22,7 @@ jobs:
         id: flags
         run: |
           # IMPORTANT: Update this variable whenever we move to a new major version:
-          echo "latest=${{ github.ref_name == 'v0.x-2022-10' }}" >> $GITHUB_ENV
+          echo "latest=${{ github.ref_name == '2023-01' }}" >> $GITHUB_ENV
 
       - name: Checkout the code
         uses: actions/checkout@v3
@@ -94,7 +94,7 @@ jobs:
     needs: changelog
     # Only compile templates if a release was published, and we're on the "latest" release branch
     if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
-    runs-on: shopify-ubuntu-latest
+    runs-on: ubuntu-latest
     name: Compile the typescript templates and push them to main
     steps:
       - name: Checkout the code
@@ -128,7 +128,7 @@ jobs:
   #   needs: changelog
   #   # Only announce if a release was published, and we're on the "latest" release branch
   #   if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
-  #   runs-on: shopify-ubuntu-latest
+  #   runs-on: ubuntu-latest
   #   steps:
   #     - name: Check out the code
   #       uses: actions/checkout@v3

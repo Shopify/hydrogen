@@ -5,7 +5,7 @@ on:
 jobs:
   lint:
     name: ⬣ ESLint
-    runs-on: shopify-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
       group: ci-lint-${{ github.ref }}
@@ -29,7 +29,7 @@ jobs:
 
   typecheck:
     name: Typescript
-    runs-on: shopify-ubuntu-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 15
     concurrency:
       group: ci-typecheck-${{ github.ref }}

@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 4.0.0-alpha.10
+
+### Patch Changes
+
+- Defer and display the cart count on the hello-world template ([#392](https://github.com/Shopify/h2/pull/392)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 4.0.0-alpha.9
 
 ### Patch Changes
