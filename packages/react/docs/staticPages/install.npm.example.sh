@@ -1,1 +1,1 @@
-npm i --save @shopify/storefront-kit-react
+npm i --save @shopify/hydrogen-react

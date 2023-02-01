@@ -1,1 +1,1 @@
-yarn add @shopify/storefront-kit-react
+yarn add @shopify/hydrogen-react

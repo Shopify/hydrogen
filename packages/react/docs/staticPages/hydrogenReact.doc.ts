@@ -3,7 +3,7 @@ import {LandingTemplateSchema} from '@shopify/generate-docs';
 const data: LandingTemplateSchema = {
   title: 'Hydrogen React',
   description:
-    'Hydrogen React is a performant library of Shopify-specific React components, reusable functions, and utilities for interacting with the Storefront API. This guide provides a complete reference of the components, hooks, and utilities that Hydrogen React offers, and their relationships to each other.',
+    'Hydrogen React is an unopiniated and performant library of Shopify-specific React components, reusable functions, and utilities for interacting with the Storefront API. This guide provides a complete reference of the components, hooks, and utilities that Hydrogen React offers, and their relationships to each other.',
   id: 'hydrogen-react',
   sections: [
     {
@@ -30,34 +30,16 @@ const data: LandingTemplateSchema = {
       ],
       sectionSubContent: [
         {
-          title: 'Requirements',
+          title: 'Authentication',
           sectionContent: `
-- You're familiar with [API authentication](/api/usage/authentication).
-- You can [make an authenticated request](/apps/auth/oauth/getting-started#make-authenticated-requests) to the Admin API for an access token.
-- You've [retrieved a parent access token](/apps/auth/oauth/getting-started#step-5-get-an-access-token) for the Admin API, which you can use to request a delegate access token for server requests.
-- You've set the parent access token to [offline](/apps/auth/oauth/access-modes#offline-access).
-            `,
+          To use Hydrogen React, you need to authenticate with and make requests to the [Storefront API](/api/storefront-api). Refer to [Get started with Hydrogen React](/custom-storefronts/hydrogen-react#get-started-with-hydrogen-react) for instructions on how to get an access token and set up the Storefront API client.
+           `,
           sectionCard: [
             {
               subtitle: 'Navigate to',
               name: 'Storefront API Client Authentication',
               url: '/custom-storefronts/react-storefront-kit#step-2-authenticate-the-storefront-api-client',
               type: 'key',
-            },
-          ],
-        },
-        {
-          title: 'Authentication',
-          sectionContent: `
-Prevent rate-limiting on server requests to the Storefront API using a [delegate access token](/apps/auth/oauth/delegate-access-tokens).
-You'll need to [create an app](/apps/getting-started/create) from which you can make an authenticated request to the Admin API for a delegate access token.
-           `,
-          sectionNotice: [
-            {
-              title: 'Caution',
-              type: 'warning',
-              sectionContent:
-                'Unlike public access tokens, authenticated access tokens should be treated as secret and not used client-side. We recommend only requesting the scopes that your app needs, to reduce the security risk if the token leaks.',
             },
           ],
         },
@@ -142,11 +124,21 @@ You'll need to [create an app](/apps/getting-started/create) from which you can 
         },
       ],
       codeblock: {
-        title: 'Homepage',
+        title: 'Example',
         tabs: [
           {
-            title: 'Storefront Client',
-            code: './homepage.example.tsx',
+            title: 'Component',
+            code: './component.example.jsx',
+            language: 'javascript',
+          },
+          {
+            title: 'Hook',
+            code: './hook.example.jsx',
+            language: 'javascript',
+          },
+          {
+            title: 'Utility',
+            code: './utility.example.jsx',
             language: 'javascript',
           },
         ],
