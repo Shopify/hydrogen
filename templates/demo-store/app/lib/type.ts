@@ -1,7 +1,7 @@
 import {
   CountryCode,
   LanguageCode,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 
 export type Locale = {
   label?: string;

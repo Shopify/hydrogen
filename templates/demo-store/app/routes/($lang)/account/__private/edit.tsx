@@ -8,12 +8,13 @@ import {
 import type {
   Customer,
   CustomerUpdateInput,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+  CustomerUpdatePayload,
+} from '@shopify/hydrogen/storefront-api-types';
 import clsx from 'clsx';
 import invariant from 'tiny-invariant';
 import {Button, Text} from '~/components';
-import {getCustomer, updateCustomer} from '~/data';
-import {getInputStyleClasses} from '~/lib/utils';
+import {getInputStyleClasses, assertApiErrors} from '~/lib/utils';
+import {getCustomer} from '../../account';
 
 export interface AccountOutletContext {
   customer: Customer;
@@ -97,7 +98,16 @@ export const action: ActionFunction = async ({request, context, params}) => {
     formDataHas(formData, 'newPassword') &&
       (customer.password = formData.get('newPassword') as string);
 
-    await updateCustomer(context, {customerAccessToken, customer});
+    const data = await context.storefront.mutate<{
+      customerUpdate: CustomerUpdatePayload;
+    }>(CUSTOMER_UPDATE_MUTATION, {
+      variables: {
+        customerAccessToken,
+        customer,
+      },
+    });
+
+    assertApiErrors(data.customerUpdate);
 
     return redirect(params?.lang ? `${params.lang}/account` : '/account');
   } catch (error: any) {
@@ -271,3 +281,15 @@ function Password({
     </div>
   );
 }
+
+const CUSTOMER_UPDATE_MUTATION = `#graphql
+  mutation customerUpdate($customerAccessToken: String!, $customer: CustomerUpdateInput!) {
+    customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+  `;

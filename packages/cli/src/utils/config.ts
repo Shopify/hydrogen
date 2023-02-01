@@ -1,6 +1,4 @@
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
-import type {RemixConfig} from '@remix-run/dev/dist/config.js';
-import {createRequire} from 'module';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -26,70 +24,56 @@ export function getProjectPaths(appPath?: string, entry?: string) {
   };
 }
 
-let cachedConfig: RemixConfig;
 export async function getRemixConfig(
   root: string,
   entryFile: string,
   publicPath: string,
-  bustCacheFile?: string,
   mode = process.env.NODE_ENV as ServerMode,
 ) {
-  if (!cachedConfig || bustCacheFile) {
-    let env = process.env.NODE_ENV;
+  const {readConfig} = await import('@remix-run/dev/dist/config.js');
+  const config = await readConfig(root, mode);
 
-    if (bustCacheFile) {
-      // Force using `require` in Remix instead
-      // of `import` and and bust the cache to
-      // load a fresh config file.
-      const require = createRequire(import.meta.url);
-      delete require.cache[bustCacheFile];
-      process.env.NODE_ENV = 'test';
-    }
-
-    const {readConfig} = await import('@remix-run/dev/dist/config.js');
-    const config = await readConfig(root, mode);
-    process.env.NODE_ENV = env;
-
-    const hydrogenAssetBase = process.env.HYDROGEN_ASSET_BASE_URL;
-    if (hydrogenAssetBase) {
-      const suffix = config.publicPath?.replace(/\\/g, '/').replace(/^\//, '');
-      config.publicPath = hydrogenAssetBase + suffix;
-    }
-
-    config.serverEntryPoint ??= entryFile;
-    config.serverBuildTarget = 'cloudflare-workers';
-    config.serverModuleFormat = 'esm';
-    config.serverPlatform = 'neutral';
-
-    config.serverBuildPath = path.resolve(
-      root,
-      path.join(BUILD_DIR, WORKER_SUBDIR, 'index.js'),
-    );
-    config.relativeAssetsBuildDirectory = path.join(
-      BUILD_DIR,
-      CLIENT_SUBDIR,
-      'build',
-    );
-    config.assetsBuildDirectory = path.resolve(
-      root,
-      config.relativeAssetsBuildDirectory,
-    );
-
-    config.watchPaths = [publicPath, path.resolve(root, 'remix.config.*')];
-
-    if (process.env.LOCAL_DEV) {
-      // Watch local packages when developing in Hydrogen repo
-      const packagesPath = new URL('../../..', import.meta.url).pathname;
-
-      config.watchPaths.push(
-        ...(await fs.readdir(packagesPath)).map((pkg) =>
-          path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
-        ),
-      );
-    }
-
-    cachedConfig = config;
+  const hydrogenAssetBase = process.env.HYDROGEN_ASSET_BASE_URL;
+  if (hydrogenAssetBase) {
+    const suffix = config.publicPath?.replace(/\\/g, '/').replace(/^\//, '');
+    config.publicPath = hydrogenAssetBase + suffix;
   }
 
-  return cachedConfig;
+  config.serverEntryPoint ??= entryFile;
+  config.serverBuildTarget = 'cloudflare-workers';
+  config.serverModuleFormat = 'esm';
+  config.serverPlatform = 'neutral';
+
+  config.serverBuildPath = path.resolve(
+    root,
+    path.join(BUILD_DIR, WORKER_SUBDIR, 'index.js'),
+  );
+  config.relativeAssetsBuildDirectory = path.join(
+    BUILD_DIR,
+    CLIENT_SUBDIR,
+    'build',
+  );
+  config.assetsBuildDirectory = path.resolve(
+    root,
+    config.relativeAssetsBuildDirectory,
+  );
+
+  config.watchPaths = [publicPath];
+
+  if (process.env.LOCAL_DEV) {
+    // Watch local packages when developing in Hydrogen repo
+    const packagesPath = new URL('../../..', import.meta.url).pathname;
+
+    config.watchPaths.push(
+      ...(await fs.readdir(packagesPath)).map((pkg) =>
+        path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
+      ),
+    );
+
+    config.watchPaths.push(
+      path.join(packagesPath, 'cli', 'dist', 'virtual-routes', '**', '*'),
+    );
+  }
+
+  return config;
 }

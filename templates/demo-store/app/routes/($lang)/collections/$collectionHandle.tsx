@@ -4,14 +4,15 @@ import type {
   Collection as CollectionType,
   CollectionConnection,
   Filter,
-} from '@shopify/storefront-kit-react/storefront-api-types';
-import {flattenConnection} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen/storefront-api-types';
+import {flattenConnection} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
+import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
-const seo: SeoHandleFunction<typeof loader> = (data) => ({
+const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   title: data?.collection?.seo?.title,
   description: data?.collection?.seo?.description,
   titleTemplate: '%s | Collection',
@@ -27,8 +28,6 @@ const seo: SeoHandleFunction<typeof loader> = (data) => ({
 export const handle = {
   seo,
 };
-
-import {PRODUCT_CARD_FRAGMENT} from '~/data';
 
 const PAGINATION_SIZE = 48;
 
@@ -64,12 +63,13 @@ export async function loader({params, request, context}: LoaderArgs) {
   invariant(collectionHandle, 'Missing collectionHandle param');
 
   const searchParams = new URL(request.url).searchParams;
-  const knownFilters = ['cursor', 'productVendor', 'productType'];
+  const knownFilters = ['productVendor', 'productType'];
   const available = 'available';
   const variantOption = 'variantOption';
   const {sortKey, reverse} = getSortValuesFromParam(
     searchParams.get('sort') as SortParam,
   );
+  const cursor = searchParams.get('cursor');
   const filters: FiltersQueryParams = [];
   const appliedFilters: AppliedFilter[] = [];
 
@@ -124,6 +124,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     variables: {
       handle: collectionHandle,
       pageBy: PAGINATION_SIZE,
+      cursor,
       filters,
       sortKey,
       reverse,

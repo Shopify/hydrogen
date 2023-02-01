@@ -1,6 +1,6 @@
-import type {MediaEdge} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {MediaEdge} from '@shopify/hydrogen/storefront-api-types';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
-import type {MediaImage} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {MediaImage} from '@shopify/hydrogen/storefront-api-types';
 
 /**
  * A client component that defines a media gallery for hosting images, 3D models, and videos of products

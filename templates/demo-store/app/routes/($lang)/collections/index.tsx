@@ -3,7 +3,7 @@ import {useLoaderData} from '@remix-run/react';
 import type {
   Collection,
   CollectionConnection,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 import {
   Grid,
   Heading,

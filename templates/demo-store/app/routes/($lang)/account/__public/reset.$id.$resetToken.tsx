@@ -1,13 +1,13 @@
 import {
+  json,
+  redirect,
   type MetaFunction,
   type ActionFunction,
-  redirect,
-  json,
 } from '@shopify/remix-oxygen';
 import {Form, useActionData} from '@remix-run/react';
 import {useRef, useState} from 'react';
-import {resetPassword} from '~/data';
 import {getInputStyleClasses} from '~/lib/utils';
+import type {CustomerResetPayload} from '@shopify/hydrogen/storefront-api-types';
 
 type ActionData = {
   formError?: string;
@@ -51,11 +51,27 @@ export const action: ActionFunction = async ({
   const {session, storefront} = context;
 
   try {
-    const {accessToken} = await resetPassword(context, {
-      id,
-      resetToken,
-      password,
-    });
+    const data = await storefront.mutate<{customerReset: CustomerResetPayload}>(
+      CUSTOMER_RESET_MUTATION,
+      {
+        variables: {
+          id: `gid://shopify/Customer/${id}`,
+          input: {
+            password,
+            resetToken,
+          },
+        },
+      },
+    );
+
+    const {accessToken} = data?.customerReset?.customerAccessToken ?? {};
+
+    if (!accessToken) {
+      /**
+       * Something is wrong with the user's input.
+       */
+      throw new Error(data?.customerReset?.customerUserErrors.join(', '));
+    }
 
     session.set('customerAccessToken', accessToken);
 
@@ -212,3 +228,19 @@ export default function Reset() {
     </div>
   );
 }
+
+const CUSTOMER_RESET_MUTATION = `#graphql
+  mutation customerReset($id: ID!, $input: CustomerResetInput!) {
+    customerReset(id: $id, input: $input) {
+      customerAccessToken {
+        accessToken
+        expiresAt
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;
