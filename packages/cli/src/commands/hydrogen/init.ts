@@ -7,7 +7,6 @@ import Flags from '@oclif/core/lib/flags.js';
 import {path} from '@shopify/cli-kit';
 import fs from 'fs-extra';
 
-// @ts-ignore
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront project';
   static flags = {

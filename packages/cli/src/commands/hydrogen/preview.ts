@@ -4,7 +4,6 @@ import {getProjectPaths} from '../../utils/config.js';
 import {commonFlags} from '../../utils/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
-// @ts-ignore
 export default class Preview extends Command {
   static description =
     'Runs an existing Hydrogen storefront build in a MiniOxygen worker';
