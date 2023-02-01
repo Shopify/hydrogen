@@ -7,7 +7,7 @@ name: Changelog Reminder
 jobs:
   remind:
     name: Changeset Reminder
-    runs-on: shopify-ubuntu-latest
+    runs-on: ubuntu-latest
     if: ${{ !github.event.pull_request.draft }}
     steps:
       - uses: actions/checkout@v3
