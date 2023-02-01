@@ -5,7 +5,11 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../../utils/flags.js';
 import Flags from '@oclif/core/lib/flags.js';
-import {format, transpileFile} from '../../../utils/transpile-ts.js';
+import {
+  format,
+  transpileFile,
+  resolvePrettierConfig,
+} from '../../../utils/transpile-ts.js';
 
 // Fix for a TypeScript bug:
 // https://github.com/microsoft/TypeScript/issues/42873
@@ -212,7 +216,11 @@ export async function runGenerate(
   // We format the template content with Prettier.
   // TODO use @shopify/cli-kit's format function once it supports TypeScript
   // templateContent = await file.format(templateContent, destinationPath);
-  templateContent = await format(templateContent, destinationPath);
+  templateContent = format(
+    templateContent,
+    await resolvePrettierConfig(destinationPath),
+    destinationPath,
+  );
 
   // Create the directory if it doesn't exist.
   if (!(await file.exists(path.dirname(destinationPath)))) {
