@@ -28,7 +28,8 @@ export default defineConfig([
       // These files need to be packaged/distributed with the CLI
       // so that we can use them in the `init` and `generate` commands.
       await fs.copy('../../templates', 'dist/templates', {
-        filter: (filepath) => !/node_modules|\.cache|\.turbo/gi.test(filepath),
+        filter: (filepath) =>
+          !/node_modules|\.cache|\.turbo|build|dist/gi.test(filepath),
       });
 
       console.log('\n', 'Copied template files to build directory', '\n');

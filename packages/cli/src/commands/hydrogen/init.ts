@@ -6,6 +6,7 @@ import {
 import Flags from '@oclif/core/lib/flags.js';
 import {path} from '@shopify/cli-kit';
 import fs from 'fs-extra';
+import {transpileProject} from '../../utils/transpile-ts.js';
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront project';
@@ -56,9 +57,6 @@ export async function runInit(
   } = getProcessFlags(),
 ) {
   const {createApp} = await import('@remix-run/dev/dist/cli/create.js');
-  const {convertToJavaScript} = await import(
-    '@remix-run/dev/dist/cli/migrate/migrations/convert-to-javascript/index.js'
-  );
 
   const {ui} = await import('@shopify/cli-kit');
   const {renderSuccess, renderInfo} = await import('@shopify/cli-kit/node/ui');
@@ -144,15 +142,12 @@ export async function runInit(
   });
 
   if (language === 'js') {
-    // Supress logs in jscodeshift:
-    const defaultWrite = process.stdout.write;
-    // @ts-ignore
-    process.stdout.write = () => {};
-
-    await convertToJavaScript(projectDir, {interactive: false});
-
-    // @ts-ignore
-    process.stdout.write = defaultWrite;
+    try {
+      await transpileProject(projectDir);
+    } catch (error) {
+      await fs.rmdir(projectDir);
+      throw error;
+    }
   }
 
   let depsInstalled = false;
