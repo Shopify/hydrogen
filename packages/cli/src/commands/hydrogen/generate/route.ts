@@ -1,6 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {ui} from '@shopify/cli-kit';
-import {output} from '@shopify/cli-kit';
 import {file, path} from '@shopify/cli-kit';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
@@ -8,6 +7,10 @@ import {commonFlags} from '../../../utils/flags.js';
 import Flags from '@oclif/core/lib/flags.js';
 import ts from 'typescript';
 import prettier from 'prettier';
+
+// Fix for a TypeScript bug:
+// https://github.com/microsoft/TypeScript/issues/42873
+import type {} from '@oclif/core/lib/interfaces/parser.js';
 
 const ROUTE_MAP: Record<string, string | string[]> = {
   page: '/pages/$pageHandle',
