@@ -15,7 +15,7 @@ import type {
   CartUserError,
   UserError,
   CartBuyerIdentityInput,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 import {isLocalPath} from '~/lib/utils';
 import {CartAction, type CartActions} from '~/lib/type';
 

@@ -12,10 +12,7 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from '@remix-run/react';
-import type {
-  Cart,
-  Shop,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
 import {Layout} from '~/components';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';

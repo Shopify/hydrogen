@@ -48,7 +48,7 @@ export function GenericError({
 
 function addLinksToStackTrace(stackTrace: string) {
   return stackTrace?.replace(
-    /^\s*at\s?.*?[(\s]((\/|\w\:)[^)\n]+)/gim,
+    /^\s*at\s?.*?[(\s]((\/|\w\:).+)\)\n/gim,
     (all, m1) =>
       all.replace(
         m1,

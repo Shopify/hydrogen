@@ -1,5 +1,5 @@
 import {Suspense} from 'react';
-import type {Cart} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {Cart} from '@shopify/hydrogen/storefront-api-types';
 import {Await} from '@remix-run/react';
 
 interface LayoutProps {

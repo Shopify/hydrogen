@@ -1,6 +1,12 @@
 import React from 'react';
-import {useMatches} from '@remix-run/react';
+import {
+  useMatches,
+  useLocation,
+  type Params,
+  type Location,
+} from '@remix-run/react';
 import {generateSeoTags, type Seo as SeoType} from './generate-seo-tags';
+import {logSeoTags} from './log-seo-tags';
 
 import type {
   LoaderFunction,
@@ -8,26 +14,40 @@ import type {
   AppData,
 } from '@remix-run/server-runtime';
 
+const SeoLogger = React.lazy(() => import('./log-seo-tags'));
+
 export interface SeoHandleFunction<
   Loader extends LoaderFunction | unknown = unknown,
 > {
-  (
-    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData,
-  ): Partial<SeoType>;
+  (args: {
+    data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData;
+    id: string;
+    params: Params;
+    pathname: Location['pathname'];
+    search: Location['search'];
+    hash: Location['hash'];
+    key: string;
+  }): Partial<SeoType>;
 }
 
-export function Seo() {
+interface SeoProps {
+  debug?: boolean;
+}
+
+export function Seo({debug}: SeoProps) {
   const matches = useMatches();
+  const location = useLocation();
 
   const seoConfig = matches
     .flatMap((match) => {
-      const {handle, data} = match;
+      const {handle, ...routeMatch} = match;
+      const routeInfo = {...routeMatch, ...location};
 
       if (handle === undefined || handle.seo === undefined) {
         return [];
       }
 
-      return recursivelyInvokeOrReturn(handle.seo, data);
+      return recursivelyInvokeOrReturn(handle.seo, routeInfo);
     })
     .reduce((acc, current) => {
       Object.keys(current).forEach(
@@ -38,6 +58,8 @@ export function Seo() {
     }, {});
 
   const headTags = generateSeoTags(seoConfig);
+
+  if (debug) logSeoTags(headTags);
 
   const html = headTags.map((tag) => {
     if (tag.tag === 'script') {
@@ -55,7 +77,13 @@ export function Seo() {
     );
   });
 
-  return React.createElement(React.Fragment, null, html);
+  const loggerMarkup = React.createElement(
+    React.Suspense,
+    {fallback: null},
+    React.createElement(SeoLogger, {headTags}),
+  );
+
+  return React.createElement(React.Fragment, null, html, debug && loggerMarkup);
 }
 
 export function recursivelyInvokeOrReturn<T, R extends any[]>(

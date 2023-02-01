@@ -2,13 +2,13 @@ import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
-import {COLLECTION_CONTENT_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data';
+import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import type {
   CollectionConnection,
   Metafield,
   ProductConnection,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 
 interface HomeSeoData {
   shop: {
@@ -179,6 +179,35 @@ export default function Homepage() {
     </>
   );
 }
+
+const COLLECTION_CONTENT_FRAGMENT = `#graphql
+  ${MEDIA_FRAGMENT}
+  fragment CollectionContent on Collection {
+    id
+    handle
+    title
+    descriptionHtml
+    heading: metafield(namespace: "hero", key: "title") {
+      value
+    }
+    byline: metafield(namespace: "hero", key: "byline") {
+      value
+    }
+    cta: metafield(namespace: "hero", key: "cta") {
+      value
+    }
+    spread: metafield(namespace: "hero", key: "spread") {
+      reference {
+        ...Media
+      }
+    }
+    spreadSecondary: metafield(namespace: "hero", key: "spread_secondary") {
+      reference {
+        ...Media
+      }
+    }
+  }
+`;
 
 const HOMEPAGE_SEO_QUERY = `#graphql
   ${COLLECTION_CONTENT_FRAGMENT}

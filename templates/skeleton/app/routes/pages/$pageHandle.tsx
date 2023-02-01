@@ -7,6 +7,7 @@ import {
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
+import type {SeoHandleFunction} from '@shopify/hydrogen';
 
 export async function loader({params, context}: LoaderArgs) {
   invariant(params.pageHandle, 'Missing page handle');
@@ -26,13 +27,13 @@ export async function loader({params, context}: LoaderArgs) {
   return json({page});
 }
 
+const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
+  title: data?.page?.seo?.title,
+  description: data?.page?.seo?.description,
+});
+
 export const handle = {
-  seo: (data: SerializeFrom<typeof loader> | undefined) => {
-    return {
-      title: data?.page?.seo?.title,
-      description: data?.page?.seo?.description,
-    };
-  },
+  seo,
 };
 
 export const meta: MetaFunction = ({data}) => {

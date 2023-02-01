@@ -1,15 +1,15 @@
 import {
+  json,
+  redirect,
   type MetaFunction,
   type ActionFunction,
   type LoaderArgs,
-  redirect,
-  json,
 } from '@shopify/remix-oxygen';
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
-import {sendPasswordResetEmail} from '~/data';
 import {Link} from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
+import type {CustomerRecoverPayload} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
@@ -39,7 +39,11 @@ export const action: ActionFunction = async ({request, context}) => {
   }
 
   try {
-    await sendPasswordResetEmail(context, {email});
+    await context.storefront.mutate<{
+      customerRecover: CustomerRecoverPayload;
+    }>(CUSTOMER_RECOVER_MUTATION, {
+      variables: {email},
+    });
 
     return json({resetRequested: true});
   } catch (error: any) {
@@ -142,3 +146,15 @@ export default function Recover() {
     </div>
   );
 }
+
+const CUSTOMER_RECOVER_MUTATION = `#graphql
+  mutation customerRecover($email: String!) {
+    customerRecover(email: $email) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
+  }
+`;

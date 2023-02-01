@@ -1,7 +1,8 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
-import {flattenConnection} from '@shopify/storefront-kit-react';
-import {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';
+import {flattenConnection} from '@shopify/hydrogen';
+import {ProductConnection} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
+import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
 /**
  * Fetch a given set of products from the storefront API
@@ -61,39 +62,7 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
 }
 
 const PRODUCTS_QUERY = `#graphql
-  fragment ProductCard on Product {
-    id
-    title
-    publishedAt
-    handle
-    variants(first: 1) {
-      nodes {
-        id
-        image {
-          url
-          altText
-          width
-          height
-        }
-        price {
-          amount
-          currencyCode
-        }
-        compareAtPrice {
-          amount
-          currencyCode
-        }
-        product {
-          title
-          handle
-        }
-        selectedOptions {
-          name
-          value
-        }
-      }
-    }
-  }
+  ${PRODUCT_CARD_FRAGMENT}
   query (
     $query: String
     $count: Int
