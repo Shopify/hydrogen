@@ -201,7 +201,7 @@ export async function runGenerate(
       : undefined;
 
     // We compile the template to JavaScript.
-    templateContent = transpileFile(templateContent, config);
+    templateContent = transpileFile(templateContent, config?.compilerOptions);
   }
 
   // If the command was run with an adapter flag, we replace the default
