@@ -1,15 +1,21 @@
 import {
   CountryCode,
+  CurrencyCode,
   LanguageCode,
 } from '@shopify/hydrogen/storefront-api-types';
 
 export type Locale = {
-  label?: string;
   language: LanguageCode;
   country: CountryCode;
+  label: string;
+  currency: CurrencyCode;
 };
 
 export type Localizations = Record<string, Locale>;
+
+export type I18nLocale = Locale & {
+  pathPrefix: string;
+};
 
 export enum CartAction {
   ADD_TO_CART = 'ADD_TO_CART',

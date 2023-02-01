@@ -8,7 +8,13 @@ import {
   useLocation,
   useTransition,
 } from '@remix-run/react';
-import {Money, ShopPayButton} from '@shopify/hydrogen';
+import {
+  AnalyticsPageType,
+  Money,
+  ShopifyAnalyticsProduct,
+  ShopPayButton,
+  type SeoHandleFunction,
+} from '@shopify/hydrogen';
 import {
   Heading,
   IconCaret,
@@ -32,7 +38,6 @@ import type {
   Shop,
   ProductConnection,
 } from '@shopify/hydrogen/storefront-api-types';
-import type {SeoHandleFunction} from '@shopify/hydrogen';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
 const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
@@ -72,11 +77,28 @@ export async function loader({params, request, context}: LoaderArgs) {
   }
 
   const recommended = getRecommendedProducts(context.storefront, product.id);
+  const firstVariant = product.variants.nodes[0];
+  const selectedVariant = product.selectedVariant ?? firstVariant;
+
+  const productAnalytics: ShopifyAnalyticsProduct = {
+    productGid: product.id,
+    variantGid: selectedVariant.id,
+    name: product.title,
+    variantName: selectedVariant.title,
+    brand: product.vendor,
+    price: selectedVariant.price.amount,
+  };
 
   return defer({
     product,
     shop,
     recommended,
+    analytics: {
+      pageType: AnalyticsPageType.product,
+      resourceId: product.id,
+      products: [productAnalytics],
+      totalValue: parseFloat(selectedVariant.price.amount),
+    },
   });
 }
 
@@ -145,7 +167,7 @@ export default function Product() {
 }
 
 export function ProductForm() {
-  const {product} = useLoaderData<typeof loader>();
+  const {product, analytics} = useLoaderData<typeof loader>();
 
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
@@ -194,12 +216,10 @@ export function ProductForm() {
     selectedVariant?.compareAtPrice?.amount &&
     selectedVariant?.price?.amount < selectedVariant?.compareAtPrice?.amount;
 
-  const lines = [
-    {
-      merchandiseId: selectedVariant.id,
-      quantity: 1,
-    },
-  ];
+  const productAnalytics: ShopifyAnalyticsProduct = {
+    ...analytics.products[0],
+    quantity: 1,
+  };
 
   return (
     <div className="grid gap-10">
@@ -219,6 +239,10 @@ export function ProductForm() {
               ]}
               variant={isOutOfStock ? 'secondary' : 'primary'}
               data-test="add-to-cart"
+              analytics={{
+                products: [productAnalytics],
+                totalValue: parseFloat(productAnalytics.price),
+              }}
             >
               {isOutOfStock ? (
                 <Text>Sold out</Text>

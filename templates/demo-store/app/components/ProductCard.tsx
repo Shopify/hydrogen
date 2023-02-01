@@ -1,5 +1,11 @@
 import clsx from 'clsx';
-import {flattenConnection, Image, Money, useMoney} from '@shopify/hydrogen';
+import {
+  flattenConnection,
+  Image,
+  Money,
+  ShopifyAnalyticsProduct,
+  useMoney,
+} from '@shopify/hydrogen';
 import type {SerializeFrom} from '@shopify/remix-oxygen';
 import {Text, Link, AddToCartButton} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
@@ -21,7 +27,9 @@ export function ProductCard({
 }) {
   let cardLabel;
 
-  const cardProduct = product?.variants ? product : getProductPlaceholder();
+  const cardProduct: Product = product?.variants
+    ? (product as Product)
+    : getProductPlaceholder();
   if (!cardProduct?.variants?.nodes?.length) return null;
 
   const firstVariant = flattenConnection(cardProduct.variants)[0];
@@ -36,6 +44,16 @@ export function ProductCard({
   } else if (isNewArrival(product.publishedAt)) {
     cardLabel = 'New';
   }
+
+  const productAnalytics: ShopifyAnalyticsProduct = {
+    productGid: product.id,
+    variantGid: firstVariant.id,
+    name: product.title,
+    variantName: firstVariant.title,
+    brand: product.vendor,
+    price: firstVariant.price.amount,
+    quantity: 1,
+  };
 
   return (
     <div className="flex flex-col">
@@ -101,6 +119,10 @@ export function ProductCard({
           ]}
           variant="secondary"
           className="mt-2"
+          analytics={{
+            products: [productAnalytics],
+            totalValue: parseFloat(productAnalytics.price),
+          }}
         >
           <Text as="span" className="flex items-center justify-center gap-2">
             Add to Bag

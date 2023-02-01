@@ -34,6 +34,7 @@ import {
 import {flattenConnection} from '@shopify/hydrogen';
 import {getFeaturedData} from './featured-products';
 import {doLogout} from './account/__private/logout';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 // Combining json + Response + defer in a loader breaks the
 // types returned by useLoaderData. This is a temporary fix.
@@ -44,7 +45,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   const lang = params.lang;
   const customerAccessToken = await context.session.get('customerAccessToken');
   const isAuthenticated = Boolean(customerAccessToken);
-  const loginPath = lang ? `${lang}/account/login` : '/account/login';
+  const loginPath = lang ? `/${lang}/account/login` : '/account/login';
 
   if (!isAuthenticated) {
     if (/\/account\/login$/.test(pathname)) {
@@ -126,7 +127,7 @@ function Account({
   return (
     <>
       <PageHeader heading={heading}>
-        <Form method="post" action="/account/logout">
+        <Form method="post" action={usePrefixPathWithLocale('/account/logout')}>
           <button type="submit" className="text-primary/50">
             Sign out
           </button>
@@ -178,7 +179,11 @@ function EmptyOrders() {
         You haven&apos;t placed any orders yet.
       </Text>
       <div className="w-48">
-        <Button className="text-sm mt-2 w-full" variant="secondary" to={'/'}>
+        <Button
+          className="text-sm mt-2 w-full"
+          variant="secondary"
+          to={usePrefixPathWithLocale('/')}
+        >
           Start Shopping
         </Button>
       </div>
