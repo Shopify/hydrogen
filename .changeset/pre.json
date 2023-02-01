@@ -3,7 +3,7 @@
   "tag": "alpha",
   "initialVersions": {
     "@shopify/cli-hydrogen": "4.0.0-alpha.0",
-    "@shopify/hydrogen": "2022.1.0-alpha.0",
+    "@shopify/hydrogen": "2023.1.0-alpha.0",
     "@shopify/remix-oxygen": "1.0.0-alpha.0",
     "demo-store": "0.0.0",
     "hello-world": "0.0.0"
