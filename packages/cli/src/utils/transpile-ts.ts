@@ -31,10 +31,10 @@ export function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
   const compiled = ts.transpileModule(withArtificialNewLines, {
     reportDiagnostics: false,
     compilerOptions: {
+      ...config,
       // '1' tells TypeScript to preserve the JSX syntax.
       jsx: 1,
       removeComments: false,
-      ...config,
     },
   });
 
