@@ -24,6 +24,7 @@ export default defineConfig([
     entry: ['src/virtual-routes/**/*.tsx'],
     outDir: 'dist/virtual-routes',
     clean: false, // Avoid deleting the assets folder
+    dts: false,
     outExtension: () => ({js: '.jsx'}),
     async onSuccess() {
       // Copy the routes folder from the "skeleton" template
@@ -42,5 +43,6 @@ export default defineConfig([
     entry: ['src/virtual-routes/assets/dummy.ts'],
     outDir: 'dist/virtual-routes/assets',
     publicDir: 'src/virtual-routes/assets',
+    dts: false,
   },
 ]);
