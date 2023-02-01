@@ -7,7 +7,7 @@ import ts from 'typescript';
 import prettier from 'prettier';
 
 const ROUTE_MAP: Record<string, string | string[]> = {
-  page: '/page/$pageHandle',
+  page: '/pages/$pageHandle',
   cart: '/cart',
   products: '/products/$productHandle',
   collections: '/collections/$collectionHandle',
@@ -17,7 +17,11 @@ const ROUTE_MAP: Record<string, string | string[]> = {
   account: ['/account/login', '/account/register'],
 };
 
-const ROUTES = Object.keys(ROUTE_MAP);
+const ROUTES = [...Object.keys(ROUTE_MAP), 'all'];
+
+interface Result {
+  operation: 'generated' | 'skipped' | 'overwritten';
+}
 
 export default class GenerateRoute extends Command {
   static flags = {
@@ -46,11 +50,15 @@ export default class GenerateRoute extends Command {
 
   async run(): Promise<void> {
     // @ts-ignore
+    const result = new Map<string, Result>();
     const {flags, args} = await this.parse(GenerateRoute);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
     const {route} = args;
-    const routePath = ROUTE_MAP[route as keyof typeof ROUTE_MAP];
+    const routePath =
+      route === 'all'
+        ? Object.values(ROUTE_MAP).flat()
+        : ROUTE_MAP[route as keyof typeof ROUTE_MAP];
 
     if (!routePath) {
       throw new error.Abort(
@@ -65,18 +73,25 @@ export default class GenerateRoute extends Command {
 
     try {
       for (const item of routesArray) {
-        await runGenerate(item, {
-          directory,
-          typescript: isTypescript,
-          force: flags.force,
-          adapter: flags.adapter,
-        });
+        result.set(
+          item,
+          await runGenerate(item, {
+            directory,
+            typescript: isTypescript,
+            force: flags.force,
+            adapter: flags.adapter,
+          }),
+        );
       }
     } catch (err: unknown) {
       throw new error.Abort((err as Error).message);
     }
 
     const extension = isTypescript ? '.tsx' : '.jsx';
+
+    const success = Array.from(result.values()).filter(
+      (result) => result.operation !== 'skipped',
+    );
 
     renderSuccess({
       // TODO update to `customSection` when available
@@ -94,11 +109,15 @@ export default class GenerateRoute extends Command {
       //     },
       //   },
       // ],
-      headline: `${routesArray.length} route${
-        routesArray.length > 1 ? 's' : ''
+      headline: `${success.length} of ${result.size} route${
+        result.size > 1 ? 's' : ''
       } generated`,
-      body: routesArray
-        .map((route) => `• app/routes${route}${extension}`)
+      body: Array.from(result.entries())
+        .map(([path, result]) => {
+          const {operation} = result;
+
+          return `• [${operation}] app/routes${path}${extension}`;
+        })
         .join('\n'),
     });
   }
@@ -119,7 +138,7 @@ export async function runGenerate(
     adapter?: string;
     templatesRoot?: string;
   },
-) {
+): Promise<Result> {
   const extension = typescript ? '.tsx' : '.jsx';
   const templatePath = path.join(templatesRoot, 'templates', `${route}.tsx`);
   const destinationPath = path.join(
@@ -132,7 +151,7 @@ export async function runGenerate(
 
   if (!force && (await file.exists(destinationPath))) {
     const options = [
-      {name: 'No', value: 'abort'},
+      {name: 'No', value: 'skip'},
       {name: `Yes`, value: 'overwrite'},
     ];
 
@@ -147,13 +166,9 @@ export async function runGenerate(
       },
     ]);
 
-    if (choice.value === 'abort') {
-      throw new error.Abort(
-        output.content`The route file ${relativeDestinationPath} already exists. Either delete it or re-run this command with ${output.token.genericShellCommand(
-          `--force`,
-        )}.`,
-      );
-    }
+    return {
+      operation: choice.value === 'skip' ? 'skipped' : 'overwritten',
+    };
   }
 
   let templateContent = await file.read(templatePath);
@@ -206,6 +221,9 @@ export async function runGenerate(
   }
   // Write the final file to the user's project.
   await file.write(destinationPath, templateContent);
+  return {
+    operation: 'generated',
+  };
 }
 
 const escapeNewLines = (code: string) =>
