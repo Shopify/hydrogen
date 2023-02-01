@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2022.1.0-alpha.1
+
+### Patch Changes
+
+- Use new versioning schema by [@jplhomer](https://github.com/jplhomer)
+
 ## 2.0.0-alpha.4
 
 ### Patch Changes
