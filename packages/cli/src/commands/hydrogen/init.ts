@@ -57,6 +57,8 @@ export async function runInit(
     force?: boolean;
   } = getProcessFlags(),
 ) {
+  supressNodeExperimentalWarnings();
+
   const templatesPromise = getLatestTemplates();
 
   const {ui} = await import('@shopify/cli-kit');
@@ -217,4 +219,16 @@ function getProcessFlags() {
     const mappedKey = flagMap[key!] || key!;
     return {...acc, [mappedKey]: value};
   }, {});
+}
+
+function supressNodeExperimentalWarnings() {
+  const warningListener = process.listeners('warning')[0]!;
+  if (warningListener) {
+    process.removeAllListeners('warning');
+    process.prependListener('warning', (warning) => {
+      if (warning.name != 'ExperimentalWarning') {
+        warningListener(warning);
+      }
+    });
+  }
 }
