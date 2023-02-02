@@ -33,23 +33,19 @@ interface Result {
 }
 
 export default class GenerateRoute extends Command {
-  static description = 'Generate a route';
+  static description = 'Generate a standard Shopify route';
   static flags = {
-    path: commonFlags.path,
     adapter: Flags.string({
       description:
-        'The Remix adapter for imports in the template (default: @shopify/remix-oxygen)',
+        'Remix adapter used in the route. The default is `@shopify/remix-oxygen`',
       env: 'SHOPIFY_HYDROGEN_FLAG_ADAPTER',
-    }),
-    force: Flags.boolean({
-      char: 'f',
-      description: 'Overwrite existing files',
-      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
     }),
     typescript: Flags.boolean({
       description: 'Generate TypeScript files',
       env: 'SHOPIFY_HYDROGEN_FLAG_TYPESCRIPT',
     }),
+    force: commonFlags.force,
+    path: commonFlags.path,
   };
 
   static hidden: true;
@@ -57,7 +53,7 @@ export default class GenerateRoute extends Command {
   static args = [
     {
       name: 'route',
-      description: `The route to generate a route for.`,
+      description: `The route to generate. One of ${ROUTES.join()}`,
       required: true,
       options: ROUTES,
       env: 'SHOPIFY_HYDROGEN_ARG_ROUTE',
@@ -65,8 +61,8 @@ export default class GenerateRoute extends Command {
   ];
 
   async run(): Promise<void> {
-    // @ts-ignore
     const result = new Map<string, Result>();
+    // @ts-ignore
     const {flags, args} = await this.parse(GenerateRoute);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
@@ -79,7 +75,7 @@ export default class GenerateRoute extends Command {
 
     if (!routePath) {
       throw new AbortError(
-        `No template generator found for ${route}. Try one of ${ROUTES.join()}`,
+        `No route found for ${route}. Try one of ${ROUTES.join()}`,
       );
     }
     const isTypescript =

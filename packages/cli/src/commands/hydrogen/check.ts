@@ -18,7 +18,7 @@ export default class GenerateRoute extends Command {
   static args = [
     {
       name: 'resource',
-      description: `The resource to check. Currently only 'routes' is supported.`,
+      description: `The resource to check. Currently only 'routes' is supported`,
       required: true,
       options: ['routes'],
     },
