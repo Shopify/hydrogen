@@ -13,9 +13,7 @@ export default defineConfig(({mode, ssrBuild}) => {
           entry: resolve(__dirname, 'src/index.ts'),
           name: 'storefrontkitreact',
           fileName: () =>
-            `storefront-kit-react.${
-              mode === 'umdbuilddev' ? 'dev' : 'prod'
-            }.js`,
+            `hydrogen-react.${mode === 'umdbuilddev' ? 'dev' : 'prod'}.js`,
           formats: ['umd'],
         },
         sourcemap: true,
@@ -53,7 +51,7 @@ export default defineConfig(({mode, ssrBuild}) => {
       }/`,
       lib: {
         entry: resolve(__dirname, 'src/index.ts'),
-        name: 'storefront-kit-react',
+        name: 'hydrogen-react',
         /**
          * we keep the default to commonjs (and package.json#type to "commonjs")
          * because there are issues when we try to convert to "module"; when we build, there are some files in

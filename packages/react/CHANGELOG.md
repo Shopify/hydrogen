@@ -1,4 +1,4 @@
-# @shopify/storefront-kit-react
+# @shopify/hydrogen-react
 
 ## 2023.1.3
 
@@ -51,7 +51,7 @@
 
   The Storefront API changelog can be viewed [here](https://shopify.dev/api/release-notes/2023-01#graphql-storefront-api-changes). There are not any breaking changes in the Storefront API itself.
 
-  ## Storefront Kit changes
+  ## Hydrogen React changes
 
   ### Breaking Changes
 

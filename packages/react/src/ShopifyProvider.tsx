@@ -41,7 +41,7 @@ export function ShopifyProvider({
 
   if (shopifyConfig.storefrontApiVersion !== SFAPI_VERSION) {
     console.warn(
-      `<ShopifyProvider/>: This version of React Storefront Kit is built for Shopify's Storefront API version ${SFAPI_VERSION}, but it looks like you're using version ${shopifyConfig.storefrontApiVersion}. There may be issues or bugs if you use a mismatched version of React Storefront Kit and the Storefront API.`
+      `<ShopifyProvider/>: This version of Hydrogen React is built for Shopify's Storefront API version ${SFAPI_VERSION}, but it looks like you're using version ${shopifyConfig.storefrontApiVersion}. There may be issues or bugs if you use a mismatched version of Hydrogen React and the Storefront API.`
     );
   }
 
@@ -93,7 +93,7 @@ export function useShop(): ShopifyContextValue {
 }
 
 /**
- * Shopify-specific values that are used in various React Storefront Kit components and hooks.
+ * Shopify-specific values that are used in various Hydrogen React components and hooks.
  */
 export type ShopifyProviderProps = {
   /** The globally-unique identifier for the Shop */
@@ -102,7 +102,7 @@ export type ShopifyProviderProps = {
   storeDomain: string;
   /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
   storefrontToken: string;
-  /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
+  /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
   storefrontApiVersion: string;
   /**
    * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.

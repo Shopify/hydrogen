@@ -8,12 +8,12 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'storefrontApiCustomScalars',
       type: 'gear',
-      url: '/api/react-storefront-kit/utilities/storefrontApiCustomScalars',
+      url: '/api/hydrogen-react/utilities/storefrontApiCustomScalars',
     },
     {
       name: 'storefront.schema.json',
       type: 'gear',
-      url: '/api/react-storefront-kit/utilities/storefront.schema.json',
+      url: '/api/hydrogen-react/utilities/storefront.schema.json',
     },
   ],
   description: `

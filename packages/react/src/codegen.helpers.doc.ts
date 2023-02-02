@@ -8,12 +8,12 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'storefront.schema.json',
       type: 'gear',
-      url: '/api/react-storefront-kit/utilities/storefront.schema.json',
+      url: '/api/hydrogen-react/utilities/storefront.schema.json',
     },
     {
       name: 'Storefront API Types',
       type: 'gear',
-      url: '/api/react-storefront-kit/utilities/storefrontapitypes',
+      url: '/api/hydrogen-react/utilities/storefrontapitypes',
     },
   ],
   description: `

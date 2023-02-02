@@ -1,7 +1,7 @@
 import type {
   Product,
   Collection,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 const myProduct = {id: '123', title: 'My Product'} satisfies Partial<Product>;
 console.log(myProduct.title);

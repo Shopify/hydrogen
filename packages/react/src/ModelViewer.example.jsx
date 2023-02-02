@@ -1,4 +1,4 @@
-import {ModelViewer} from '@shopify/storefront-kit-react';
+import {ModelViewer} from '@shopify/hydrogen-react';
 
 export default function MyProductModel({products}) {
   const firstMediaElement = products.nodes[0].media.nodes[0];

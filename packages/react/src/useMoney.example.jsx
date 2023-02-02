@@ -1,4 +1,4 @@
-import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';
+import {useMoney, ShopifyProvider} from '@shopify/hydrogen-react';
 
 export function App() {
   return (

@@ -8,19 +8,19 @@ const data: ReferenceEntityTemplateSchema = {
     {
       subtitle: 'Utility',
       name: 'sendShopifyAnalytics',
-      url: '/api/react-storefront-kit/utilities/sendShopifyAnalytics',
+      url: '/api/hydrogen-react/utilities/sendShopifyAnalytics',
       type: 'gear',
     },
     {
       subtitle: 'Utility',
       name: 'getClientBrowserParameters',
-      url: '/api/react-storefront-kit/utilities/getclientbrowserparameters',
+      url: '/api/hydrogen-react/utilities/getclientbrowserparameters',
       type: 'gear',
     },
     {
       subtitle: 'Utility',
       name: 'getShopifyCookies',
-      url: '/api/react-storefront-kit/utilities/getShopifyCookies',
+      url: '/api/hydrogen-react/utilities/getShopifyCookies',
       type: 'gear',
     },
   ],

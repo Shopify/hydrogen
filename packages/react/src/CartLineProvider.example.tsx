@@ -1,5 +1,5 @@
-import {CartLineProvider, useCartLine} from '@shopify/storefront-kit-react';
-import type {Cart} from '@shopify/storefront-kit-react/storefront-api-types';
+import {CartLineProvider, useCartLine} from '@shopify/hydrogen-react';
+import type {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 
 export function CartWrapper({cart}: {cart: Cart}) {
   const firstCartLine = cart.lines.nodes[0];

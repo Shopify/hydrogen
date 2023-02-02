@@ -1,4 +1,4 @@
-import {flattenConnection} from '@shopify/storefront-kit-react';
+import {flattenConnection} from '@shopify/hydrogen-react';
 
 export function ProductList({productConnection}) {
   const products = flattenConnection(productConnection);

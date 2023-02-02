@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'useShop',
       type: 'hook',
-      url: '/api/react-storefront-kit/hooks/useshop',
+      url: '/api/hydrogen-react/hooks/useshop',
     },
   ],
   description:

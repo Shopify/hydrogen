@@ -16,7 +16,7 @@ import {
   type ShopifyAddToCartPayload,
   ShopifyAnalyticsProduct,
   ShopifyAnalyticsPayload,
-} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen-react';
 import Link from 'next/link';
 
 export const getServerSideProps: GetServerSideProps = async () => {
@@ -121,7 +121,7 @@ export default function Product({
 
       <footer className={styles.footer}>
         <a
-          href="https://vercel.com?utm_source=storefront-kit-monorepo"
+          href="https://vercel.com?utm_source=hydrogen-react-monorepo"
           target="_blank"
           rel="noopener noreferrer"
         >

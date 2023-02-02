@@ -1,4 +1,4 @@
-import {MediaFile} from '@shopify/storefront-kit-react';
+import {MediaFile} from '@shopify/hydrogen-react';
 
 export function ProductsMediaFiles({products}) {
   return (

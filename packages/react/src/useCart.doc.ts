@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'CartProvider',
       type: 'components',
-      url: '/api/react-storefront-kit/components/CartProvider',
+      url: '/api/hydrogen-react/components/CartProvider',
     },
   ],
   description: `

@@ -8,12 +8,12 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'useProduct',
       type: 'hook',
-      url: '/api/react-storefront-kit/hooks/useproduct',
+      url: '/api/hydrogen-react/hooks/useproduct',
     },
     {
       name: 'ProductPrice',
       type: 'component',
-      url: '/api/react-storefront-kit/components/productprice',
+      url: '/api/hydrogen-react/components/productprice',
     },
   ],
   description:

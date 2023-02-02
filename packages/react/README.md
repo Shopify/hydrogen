@@ -1,21 +1,21 @@
 <div align="center">
 
-# React Storefront Kit
+# Hydrogen React
 
-React Storefront Kit provides React components, reusable functions, and utilities for interacting with the Storefront API.
+Hydrogen React provides React components, reusable functions, and utilities for interacting with the Storefront API.
 
 **IMPORTANT:** Refer to how this package is [versioned](../../README.md#versioning).
 
-<a href="https://www.npmjs.com/package/@shopify/storefront-kit-react"><img src="https://img.shields.io/npm/v/@shopify/storefront-kit-react/latest.svg"></a> <a href="https://www.npmjs.com/package/@shopify/storefront-kit-react"><img src="https://img.shields.io/npm/v/@shopify/storefront-kit-react/next.svg"></a>
+<a href="https://www.npmjs.com/package/@shopify/hydrogen-react"><img src="https://img.shields.io/npm/v/@shopify/hydrogen-react/latest.svg"></a> <a href="https://www.npmjs.com/package/@shopify/hydrogen-react"><img src="https://img.shields.io/npm/v/@shopify/hydrogen-react/next.svg"></a>
 
 </div>
 
 This document contains the following topics:
 
-- [Getting started with React Storefront Kit](#getting-started)
+- [Getting started with Hydrogen React](#getting-started)
 - [Authenticating the Storefront API client](#authenticating-the-storefront-client)
 - [Development and production bundles](#development-and-production-bundles)
-- [React Storefront Kit in the browser](#react-storefront-kit-in-the-browser)
+- [Hydrogen React in the browser](#hydrogen-react-in-the-browser)
 - [Enabling autocompletion for the Storefront API](#enable-storefront-api-graphql-autocompletion)
 - [Setting TypeScript types for Storefront API objects](#typescript)
 - [Troubleshooting](#troubleshooting)
@@ -27,18 +27,18 @@ This document contains the following topics:
   npm:
 
   ```bash
-  npm i --save @shopify/storefront-kit-react
+  npm i --save @shopify/hydrogen-react
   ```
 
   Yarn:
 
   ```bash
-  yarn add @shopify/storefront-kit-react
+  yarn add @shopify/hydrogen-react
   ```
 
 ## Authenticating the Storefront client
 
-To make it easier to query the Storefront API, React Storefront Kit exposes a helper function called `createStorefrontClient()`.
+To make it easier to query the Storefront API, Hydrogen React exposes a helper function called `createStorefrontClient()`.
 
 The client can take in the following tokens:
 
@@ -51,7 +51,7 @@ The following is an example:
 ```ts
 // Filename: '/shopify-client.js'
 
-import {createStorefrontClient} from '@shopify/storefront-kit-react';
+import {createStorefrontClient} from '@shopify/hydrogen-react';
 
 const client = createStorefrontClient({
   privateStorefrontToken: '...',
@@ -140,17 +140,17 @@ getPrivateTokenHeaders({contentType: 'graphql'});
 
 ## Development and production bundles
 
-React Storefront Kit has a development bundle and a production bundle. The development bundle has warnings and messages that the production bundle doesn't.
+Hydrogen React has a development bundle and a production bundle. The development bundle has warnings and messages that the production bundle doesn't.
 
-Depending on the bundler or runtime that you're using, the correct bundle might be automatically chosen following the `package.json#exports` of React Storefront Kit. If not, then you might need to configure your bundler / runtime to use the `development` and `production` conditions.
+Depending on the bundler or runtime that you're using, the correct bundle might be automatically chosen following the `package.json#exports` of Hydrogen React. If not, then you might need to configure your bundler / runtime to use the `development` and `production` conditions.
 
 **Note:** The production bundle is used by default if your bundler / runtime doesn't understand the export conditions.
 
-## React Storefront Kit in the browser
+## Hydrogen React in the browser
 
-React Storefront Kit has a development `umd` build and a production `umd` build. Both are meant to be used directly either by `<script src=""></script>` tags in HTML or by `AMD`-compatible loaders.
+Hydrogen React has a development `umd` build and a production `umd` build. Both are meant to be used directly either by `<script src=""></script>` tags in HTML or by `AMD`-compatible loaders.
 
-If you're using React Storefront Kit as a global through the `<script>` tag, then the components can be accessed through the `storefrontkitreact` global variable.
+If you're using Hydrogen React as a global through the `<script>` tag, then the components can be accessed through the `storefrontkitreact` global variable.
 
 ## Enable Storefront API GraphQL autocompletion
 
@@ -163,13 +163,13 @@ To improve your development experience, enable GraphQL autocompletion for the St
    ```
 
 1. Create a [GraphQL config file](https://www.graphql-config.com/docs/user/user-usage) at the root of your code. For example, `.graphqlrc.yml`.
-1. Add a [`schema`](https://www.graphql-config.com/docs/user/user-schema) and point it to React Storefront Kit's bundled schema for the Storefront API.
+1. Add a [`schema`](https://www.graphql-config.com/docs/user/user-schema) and point it to Hydrogen React's bundled schema for the Storefront API.
 
    For example:
 
    ```yml
    # Filename: .graphqlrc.yml
-   schema: node_modules/@shopify/storefront-kit-react/storefront.schema.json
+   schema: node_modules/@shopify/hydrogen-react/storefront.schema.json
    ```
 
 1. Install a GraphQL extension in your IDE, such as the [GraphQL extension for VSCode](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql).
@@ -180,14 +180,14 @@ If you're having trouble getting it to work, then consult our [troubleshooting s
 
 ## TypeScript
 
-Improve your development experience by using Storefront Kit's generated Types and helpers.
+Improve your development experience by using Hydrogen React's generated Types and helpers.
 
 ### Storefront API types
 
-Storefront Kit ships with generated TypeScript types that match the Storefront API and its objects. Import them from the `/storefront-api-types` package path:
+Hydrogen React ships with generated TypeScript types that match the Storefront API and its objects. Import them from the `/storefront-api-types` package path:
 
 ```ts
-import type {Product} from '@shopify/storefront-kit-react/storefront-api-types';
+import type {Product} from '@shopify/hydrogen-react/storefront-api-types';
 
 const product = {} satisfies Product;
 ```
@@ -207,17 +207,17 @@ const productExceptTitle = {} satisfies Omit<Product, 'title'>;
 To use GraphQL CodeGen, follow [their guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation) to get started. Then, when you have a `codegen.ts` file, you can modify the following lines in the codegen object to improve the CodgeGen experience:
 
 ```ts
-import {storefrontApiCustomScalars} from '@shopify/storefront-kit-react';
+import {storefrontApiCustomScalars} from '@shopify/hydrogen-react';
 
 const config: CodegenConfig = {
-  // Use the schema that's bundled with @shopify/storefront-kit-react
-  schema: './node_modules/@shopify/storefront-kit-react/storefront.schema.json',
+  // Use the schema that's bundled with @shopify/hydrogen-react
+  schema: './node_modules/@shopify/hydrogen-react/storefront.schema.json',
   generates: {
     './gql/': {
       preset: 'client',
       plugins: [],
       config: {
-        // Use the custom scalar definitions that @shopify/storefront-kit-react provides to improve the types
+        // Use the custom scalar definitions that @shopify/hydrogen-react provides to improve the types
         scalars: storefrontApiCustomScalars,
       },
     },
@@ -233,7 +233,7 @@ The following is an example:
 import {
   type StorefrontApiResponseError,
   type StorefrontApiResponseOk,
-} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen-react';
 
 async function FetchApi<DataGeneric>() {
   const apiResponse = await fetch('...');
@@ -252,7 +252,7 @@ async function FetchApi<DataGeneric>() {
 
 ## Troubleshooting
 
-The following will help you troubleshoot common problems in this version of React Storefront Kit.
+The following will help you troubleshoot common problems in this version of Hydrogen React.
 
 ### GraphQL autocompletion
 

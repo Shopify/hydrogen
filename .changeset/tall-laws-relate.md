@@ -1,5 +1,5 @@
 ---
-'@shopify/storefront-kit-react': patch
+'@shopify/hydrogen-react': patch
 ---
 
 `<ShopifyProvider />` and `useShop()` have had a breaking update:

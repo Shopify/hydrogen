@@ -1,5 +1,5 @@
-import {BuyNowButton} from '@shopify/storefront-kit-react';
-import type {Product} from '@shopify/storefront-kit-react/storefront-api-types';
+import {BuyNowButton} from '@shopify/hydrogen-react';
+import type {Product} from '@shopify/hydrogen-react/storefront-api-types';
 
 export default function ProductBuyNowButton({product}: {product: Product}) {
   const variantId = product.variants[0].id;

@@ -3,7 +3,7 @@ import {
   getClientBrowserParameters,
   AnalyticsEventName,
   useShopifyCookies,
-} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen-react';
 import {useRouter} from 'next/router';
 import {useEffect} from 'react';
 

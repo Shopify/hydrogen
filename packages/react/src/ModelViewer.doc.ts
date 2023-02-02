@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'MediaFile',
       type: 'component',
-      url: '/api/react-storefront-kit/components/mediafile',
+      url: '/api/hydrogen-react/components/mediafile',
     },
   ],
   description:

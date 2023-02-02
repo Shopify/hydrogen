@@ -1,5 +1,5 @@
-import {CartProvider, useCart} from '@shopify/storefront-kit-react';
-import type {CartLineInput} from '../dist/types/storefront-api-types';
+import {CartProvider, useCart} from '@shopify/hydrogen-react';
+import type {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 export function App() {
   <CartProvider

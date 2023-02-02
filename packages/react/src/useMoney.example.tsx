@@ -1,5 +1,5 @@
-import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';
-import type {MoneyV2} from '@shopify/storefront-kit-react/storefront-api-types';
+import {useMoney, ShopifyProvider} from '@shopify/hydrogen-react';
+import type {MoneyV2} from '@shopify/hydrogen-react/storefront-api-types';
 
 export function App() {
   return (

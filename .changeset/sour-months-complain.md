@@ -1,5 +1,5 @@
 ---
-'@shopify/storefront-kit-react': patch
+'@shopify/hydrogen-react': patch
 ---
 
 ## Breaking Changes on Shopify analytics components

@@ -7,7 +7,7 @@ type StorefrontClientProps = {
   privateStorefrontToken?: string;
   /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
   publicStorefrontToken?: string;
-  /** The Storefront API version. This should almost always be the same as the version Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
+  /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
   storefrontApiVersion: string;
   /**
    * Customizes which `"content-type"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `"json"`. When fetching with a `body` that is a plain string, use `"graphql"`. Defaults to `"json"`
@@ -31,7 +31,7 @@ export function createStorefrontClient({
 }: StorefrontClientProps): StorefrontClientReturn {
   if (storefrontApiVersion !== SFAPI_VERSION) {
     warnOnce(
-      `StorefrontClient: The Storefront API version that you're using is different than the version this build of React Storefront Kit is targeting. You may run into unexpected errors if these versions don't match. Received verion: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`
+      `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`
     );
   }
 
@@ -80,7 +80,7 @@ export function createStorefrontClient({
           finalContentType === 'graphql'
             ? 'application/graphql'
             : 'application/json',
-        'X-SDK-Variant': 'storefront-kit',
+        'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
         'X-SDK-Version': storefrontApiVersion,
         'Shopify-Storefront-Private-Token':
@@ -118,7 +118,7 @@ export function getPublicTokenHeadersRaw(
     // default to json
     'content-type':
       contentType === 'graphql' ? 'application/graphql' : 'application/json',
-    'X-SDK-Variant': 'storefront-kit',
+    'X-SDK-Variant': 'hydrogen-react',
     'X-SDK-Variant-Source': 'react',
     'X-SDK-Version': storefrontApiVersion,
     'X-Shopify-Storefront-Access-Token': accessToken,

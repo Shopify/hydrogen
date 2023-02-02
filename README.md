@@ -4,17 +4,17 @@
 
 Hydrogen React is an unopionated and performant library of Shopify-specific commerce components, hooks, and utilities. Bring the best parts of Hydrogen to more React frameworks, like Next.js and Gatsby, and accelerate headless development using Shopify’s pre-built React components including Cart, Shop Pay, and Shopify Analytics.
 
-📚 [Docs](https://shopify.dev/custom-storefronts/react-storefront-kit) | 🛍️ [Custom Storefronts at Shopify](https://shopify.dev/custom-storefronts) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 📝 [Changelog](https://github.com/Shopify/storefront-kit/blob/main/packages/react/CHANGELOG.md)
+📚 [Docs](https://shopify.dev/custom-storefronts/hydrogen-react) | 🛍️ [Custom Storefronts at Shopify](https://shopify.dev/custom-storefronts) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 📝 [Changelog](https://github.com/Shopify/hydrogen-react/blob/main/packages/react/CHANGELOG.md)
 
-<a href="https://github.com/Shopify/storefront-kit/blob/main/LICENSE.md"><img src="https://img.shields.io/npm/l/@shopify/hydrogen.svg?sanitize=true" alt="License"></a>
+<a href="https://github.com/Shopify/hydrogen-react/blob/main/LICENSE.md"><img src="https://img.shields.io/npm/l/@shopify/hydrogen.svg?sanitize=true" alt="License"></a>
 
 </div>
 
 ## Packages
 
-| Package                                             | Latest                                                                                                                                                      | Next                                                                                                                                                      |
-| --------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`@shopify/storefront-kit-react`](/packages/react/) | <a href="https://www.npmjs.com/package/@shopify/storefront-kit-react"><img src="https://img.shields.io/npm/v/@shopify/storefront-kit-react/latest.svg"></a> | <a href="https://www.npmjs.com/package/@shopify/storefront-kit-react"><img src="https://img.shields.io/npm/v/@shopify/storefront-kit-react/next.svg"></a> |
+| Package                                       | Latest                                                                                                                                          | Next                                                                                                                                          |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`@shopify/hydrogen-react`](/packages/react/) | <a href="https://www.npmjs.com/package/@shopify/hydrogen-react"><img src="https://img.shields.io/npm/v/@shopify/hydrogen-react/latest.svg"></a> | <a href="https://www.npmjs.com/package/@shopify/hydrogen-react"><img src="https://img.shields.io/npm/v/@shopify/hydrogen-react/next.svg"></a> |
 
 ## When to use Hydrogen React
 

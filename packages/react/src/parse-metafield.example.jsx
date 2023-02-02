@@ -1,4 +1,4 @@
-import {parseMetafield} from '@shopify/storefront-kit-react';
+import {parseMetafield} from '@shopify/hydrogen-react';
 
 export function DateMetafield({metafield}) {
   const parsedMetafield = parseMetafield(metafield);

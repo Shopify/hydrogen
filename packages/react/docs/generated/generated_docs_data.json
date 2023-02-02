@@ -12,12 +12,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {AddToCartButton} from '@shopify/storefront-kit-react';\n\nexport default function ProductAddToCartButton({product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <AddToCartButton data={variantId} />;\n}\n",
+            "code": "import {AddToCartButton} from '@shopify/hydrogen-react';\n\nexport default function ProductAddToCartButton({product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <AddToCartButton data={variantId} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {AddToCartButton} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function ProductAddToCartButton({product}: {product: Product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <AddToCartButton data={variantId} />;\n}\n",
+            "code": "import {AddToCartButton} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function ProductAddToCartButton({product}: {product: Product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <AddToCartButton data={variantId} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -156,12 +156,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {BuyNowButton} from '@shopify/storefront-kit-react';\n\nexport default function ProductBuyNowButton({product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <BuyNowButton variantId={variantId} />;\n}\n",
+            "code": "import {BuyNowButton} from '@shopify/hydrogen-react';\n\nexport default function ProductBuyNowButton({product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <BuyNowButton variantId={variantId} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {BuyNowButton} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function ProductBuyNowButton({product}: {product: Product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <BuyNowButton variantId={variantId} />;\n}\n",
+            "code": "import {BuyNowButton} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function ProductBuyNowButton({product}: {product: Product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <BuyNowButton variantId={variantId} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -283,12 +283,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CartCheckoutButton} from '@shopify/storefront-kit-react';\n\nexport default function ProductCartCheckoutButton() {\n  return <CartCheckoutButton />;\n}\n",
+            "code": "import {CartCheckoutButton} from '@shopify/hydrogen-react';\n\nexport default function ProductCartCheckoutButton() {\n  return <CartCheckoutButton />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {CartCheckoutButton} from '@shopify/storefront-kit-react';\n\nexport default function ProductCartCheckoutButton() {\n  return <CartCheckoutButton />;\n}\n",
+            "code": "import {CartCheckoutButton} from '@shopify/hydrogen-react';\n\nexport default function ProductCartCheckoutButton() {\n  return <CartCheckoutButton />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -395,12 +395,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CartCost} from '@shopify/storefront-kit-react';\n\nexport default function CartTotals() {\n  return (\n    <>\n      <div>\n        Subtotal: <CartCost amountType=\"subtotal\" />\n      </div>\n      <div>\n        Tax: <CartCost amountType=\"tax\" />\n      </div>\n      <div>\n        Total: <CartCost />\n      </div>\n    </>\n  );\n}\n",
+            "code": "import {CartCost} from '@shopify/hydrogen-react';\n\nexport default function CartTotals() {\n  return (\n    <>\n      <div>\n        Subtotal: <CartCost amountType=\"subtotal\" />\n      </div>\n      <div>\n        Tax: <CartCost amountType=\"tax\" />\n      </div>\n      <div>\n        Total: <CartCost />\n      </div>\n    </>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {CartCost} from '@shopify/storefront-kit-react';\n\nexport default function CartTotals() {\n  return (\n    <>\n      <div>\n        Subtotal: <CartCost amountType=\"subtotal\" />\n      </div>\n      <div>\n        Tax: <CartCost amountType=\"tax\" />\n      </div>\n      <div>\n        Total: <CartCost />\n      </div>\n    </>\n  );\n}\n",
+            "code": "import {CartCost} from '@shopify/hydrogen-react';\n\nexport default function CartTotals() {\n  return (\n    <>\n      <div>\n        Subtotal: <CartCost amountType=\"subtotal\" />\n      </div>\n      <div>\n        Tax: <CartCost amountType=\"tax\" />\n      </div>\n      <div>\n        Total: <CartCost />\n      </div>\n    </>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -456,7 +456,7 @@
       {
         "name": "Money",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/money"
+        "url": "/api/hydrogen-react/components/money"
       }
     ],
     "description": "\n    The `CartLinePrice` component renders a `Money` component for the cart line merchandise's price or compare at price.\n  ",
@@ -467,12 +467,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CartLinePrice} from '@shopify/storefront-kit-react';\n\nexport default function ProductCartLinePrice({cartLine}) {\n  return <CartLinePrice data={cartLine} priceType=\"compareAt\" />;\n}\n",
+            "code": "import {CartLinePrice} from '@shopify/hydrogen-react';\n\nexport default function ProductCartLinePrice({cartLine}) {\n  return <CartLinePrice data={cartLine} priceType=\"compareAt\" />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {CartLinePrice} from '@shopify/storefront-kit-react';\nimport type {CartLine} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function ProductCartLinePrice({cartLine}: {cartLine: CartLine}) {\n  return <CartLinePrice data={cartLine} priceType=\"compareAt\" />;\n}\n",
+            "code": "import {CartLinePrice} from '@shopify/hydrogen-react';\nimport type {CartLine} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function ProductCartLinePrice({cartLine}: {cartLine: CartLine}) {\n  return <CartLinePrice data={cartLine} priceType=\"compareAt\" />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -527,7 +527,7 @@
       {
         "name": "useCartLine",
         "type": "hooks",
-        "url": "/api/react-storefront-kit/hooks/useCartLine"
+        "url": "/api/hydrogen-react/hooks/useCartLine"
       }
     ],
     "description": "\n    The `CartLineProvider` component creates a context for using a cart line.\n  ",
@@ -538,12 +538,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CartLineProvider, useCartLine} from '@shopify/storefront-kit-react';\n\nexport function CartWrapper({cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
+            "code": "import {CartLineProvider, useCartLine} from '@shopify/hydrogen-react';\n\nexport function CartWrapper({cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {CartLineProvider, useCartLine} from '@shopify/storefront-kit-react';\nimport type {Cart} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function CartWrapper({cart}: {cart: Cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
+            "code": "import {CartLineProvider, useCartLine} from '@shopify/hydrogen-react';\nimport type {Cart} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function CartWrapper({cart}: {cart: Cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
             "language": "tsx"
           }
         ],
@@ -591,7 +591,7 @@
       {
         "name": "useCart",
         "type": "hooks",
-        "url": "/api/react-storefront-kit/hooks/useCart"
+        "url": "/api/hydrogen-react/hooks/useCart"
       }
     ],
     "description": "\n    The `CartProvider` component synchronizes the state of the Storefront API Cart and a customer's cart, and allows you to more easily manipulate the cart by adding, removing, and updating it. It could be placed at the root of your app so that your whole app is able to use the `useCart()` hook anywhere.\n\nThere are props that trigger when a call to the Storefront API is made, such as `onLineAdd={}` when a line is added to the cart. There are also props that trigger when a call to the Storefront API is completed, such as `onLineAddComplete={}` when the fetch request for adding a line to the cart completes.\n  ",
@@ -602,12 +602,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CartProvider, useCart} from '@shopify/storefront-kit-react';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
+            "code": "import {CartProvider, useCart} from '@shopify/hydrogen-react';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {CartProvider, useCart} from '@shopify/storefront-kit-react';\nimport type {CartLineInput} from '../dist/types/storefront-api-types';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise: CartLineInput = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
+            "code": "import {CartProvider, useCart} from '@shopify/hydrogen-react';\nimport type {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise: CartLineInput = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -823,7 +823,7 @@
       {
         "name": "MediaFile",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/mediafile"
+        "url": "/api/hydrogen-react/components/mediafile"
       }
     ],
     "description": "The `ExternalVideo` component renders an embedded video for the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).",
@@ -834,12 +834,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ExternalVideo} from '@shopify/storefront-kit-react';\n\nexport default function MyProductVideo({products}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n\n  if (firstMediaElement.__typename === 'ExternalVideo') {\n    return <ExternalVideo data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {ExternalVideo} from '@shopify/hydrogen-react';\n\nexport default function MyProductVideo({products}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n\n  if (firstMediaElement.__typename === 'ExternalVideo') {\n    return <ExternalVideo data={firstMediaElement} />;\n  }\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ExternalVideo} from '@shopify/storefront-kit-react';\nimport type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function MyProductVideo({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n  if (firstMediaElement.__typename === 'ExternalVideo') {\n    return <ExternalVideo data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {ExternalVideo} from '@shopify/hydrogen-react';\nimport type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function MyProductVideo({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n  if (firstMediaElement.__typename === 'ExternalVideo') {\n    return <ExternalVideo data={firstMediaElement} />;\n  }\n}\n",
             "language": "tsx"
           }
         ],
@@ -1229,7 +1229,7 @@
       {
         "name": "MediaFile",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/mediafile"
+        "url": "/api/hydrogen-react/components/mediafile"
       }
     ],
     "description": "The `Image` component renders an image for the Storefront API's\n[Image object](https://shopify.dev/api/storefront/reference/common-objects/image) by using the `data` prop. You can [customize this component](https://shopify.dev/api/hydrogen/components#customizing-hydrogen-components) using passthrough props.\n\nAn image's width and height are determined using the following priority list:\n1. The width and height values for the `loaderOptions` prop\n2. The width and height values for bare props\n3. The width and height values for the `data` prop\n\nIf only one of `width` or `height` are defined, then the other will attempt to be calculated based on the image's aspect ratio,\nprovided that both `data.width` and `data.height` are available. If `data.width` and `data.height` aren't available, then the aspect ratio cannot be determined and the missing value will remain as `null`",
@@ -1240,12 +1240,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {Image} from '@shopify/storefront-kit-react';\n\nexport default function ProductImage({product}) {\n  const image = product.featuredImage;\n\n  if (!image) {\n    return null;\n  }\n\n  return <Image data={image} />;\n}\n",
+            "code": "import {Image} from '@shopify/hydrogen-react';\n\nexport default function ProductImage({product}) {\n  const image = product.featuredImage;\n\n  if (!image) {\n    return null;\n  }\n\n  return <Image data={image} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {Image} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function ProductImage({product}: {product: Product}) {\n  const image = product.featuredImage;\n\n  if (!image) {\n    return null;\n  }\n\n  return <Image data={image} />;\n}\n",
+            "code": "import {Image} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function ProductImage({product}: {product: Product}) {\n  const image = product.featuredImage;\n\n  if (!image) {\n    return null;\n  }\n\n  return <Image data={image} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -1389,22 +1389,22 @@
       {
         "name": "Image",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/image"
+        "url": "/api/hydrogen-react/components/image"
       },
       {
         "name": "Video",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/video"
+        "url": "/api/hydrogen-react/components/video"
       },
       {
         "name": "ExternalVideo",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/externalvideo"
+        "url": "/api/hydrogen-react/components/externalvideo"
       },
       {
         "name": "ModelViewer",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/modelviewer"
+        "url": "/api/hydrogen-react/components/modelviewer"
       }
     ],
     "description": "The `MediaFile` component renders the media for the Storefront API's\n[Media object](https://shopify.dev/api/storefront/reference/products/media). It renders an `Image`, `Video`, an `ExternalVideo`, or a `ModelViewer` depending on the `__typename` of the `data` prop.",
@@ -1415,12 +1415,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {MediaFile} from '@shopify/storefront-kit-react';\n\nexport function ProductsMediaFiles({products}) {\n  return (\n    <ul>\n      {products.nodes.map((product) => {\n        return <MediaFile data={product.media.nodes[0]} key={product.id} />;\n      })}\n    </ul>\n  );\n}\n",
+            "code": "import {MediaFile} from '@shopify/hydrogen-react';\n\nexport function ProductsMediaFiles({products}) {\n  return (\n    <ul>\n      {products.nodes.map((product) => {\n        return <MediaFile data={product.media.nodes[0]} key={product.id} />;\n      })}\n    </ul>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {MediaFile} from '@shopify/storefront-kit-react';\nimport type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function ProductsMediaFiles({products}: {products: ProductConnection}) {\n  return (\n    <ul>\n      {products.nodes.map((product) => {\n        return <MediaFile data={product.media.nodes[0]} key={product.id} />;\n      })}\n    </ul>\n  );\n}\n",
+            "code": "import {MediaFile} from '@shopify/hydrogen-react';\nimport type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function ProductsMediaFiles({products}: {products: ProductConnection}) {\n  return (\n    <ul>\n      {products.nodes.map((product) => {\n        return <MediaFile data={product.media.nodes[0]} key={product.id} />;\n      })}\n    </ul>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -4181,7 +4181,7 @@
       {
         "name": "MediaFile",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/mediafile"
+        "url": "/api/hydrogen-react/components/mediafile"
       }
     ],
     "description": "The `ModelViewer` component renders a 3D model (with the `model-viewer` custom element) for the Storefront API's [Model3d object](https://shopify.dev/api/storefront/reference/products/model3d). The `model-viewer` custom element is lazily downloaded through a dynamically-injected `<script type='module'>` tag when the `<ModelViewer />` component is rendered. ModelViewer is using version `1.21.1` of the `@google/model-viewer` library.",
@@ -4192,12 +4192,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ModelViewer} from '@shopify/storefront-kit-react';\n\nexport default function MyProductModel({products}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n\n  if (firstMediaElement.__typename === 'Model3d') {\n    return <ModelViewer data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {ModelViewer} from '@shopify/hydrogen-react';\n\nexport default function MyProductModel({products}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n\n  if (firstMediaElement.__typename === 'Model3d') {\n    return <ModelViewer data={firstMediaElement} />;\n  }\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ModelViewer} from '@shopify/storefront-kit-react';\nimport type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function MyProductModel({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n  if (firstMediaElement.__typename === 'Model3d') {\n    return <ModelViewer data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {ModelViewer} from '@shopify/hydrogen-react';\nimport type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function MyProductModel({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.nodes[0].media.nodes[0];\n  if (firstMediaElement.__typename === 'Model3d') {\n    return <ModelViewer data={firstMediaElement} />;\n  }\n}\n",
             "language": "tsx"
           }
         ],
@@ -4349,7 +4349,7 @@
       {
         "name": "useMoney",
         "type": "hook",
-        "url": "/api/react-storefront-kit/hooks/useMoney"
+        "url": "/api/hydrogen-react/hooks/useMoney"
       }
     ],
     "description": "The `Money` component renders a string of the Storefront API's[MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) according to the `locale` in the [`ShopifyProvider` component](/api/hydrogen/components/global/shopifyprovider).\nThe component outputs a `<div>`. You can [customize this component](https://api/hydrogen/components#customizing-hydrogen-components) using passthrough props.",
@@ -4360,12 +4360,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {Money} from '@shopify/storefront-kit-react';\n\nexport default function ProductMoney({product}) {\n  const price = product.variants.nodes[0].price;\n\n  return <Money data={price} />;\n}\n",
+            "code": "import {Money} from '@shopify/hydrogen-react';\n\nexport default function ProductMoney({product}) {\n  const price = product.variants.nodes[0].price;\n\n  return <Money data={price} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {Money} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function ProductMoney({product}: {product: Product}) {\n  const price = product.variants.nodes[0].price;\n\n  return <Money data={price} />;\n}\n",
+            "code": "import {Money} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function ProductMoney({product}: {product: Product}) {\n  const price = product.variants.nodes[0].price;\n\n  return <Money data={price} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -4452,12 +4452,12 @@
       {
         "name": "ProductProvider",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/productprovider"
+        "url": "/api/hydrogen-react/components/productprovider"
       },
       {
         "name": "Money",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/money"
+        "url": "/api/hydrogen-react/components/money"
       }
     ],
     "description": "The `ProductPrice` component renders a `Money` component with the product [`priceRange`](https://shopify.dev/api/storefront/reference/products/productpricerange)'s `maxVariantPrice` or `minVariantPrice`, for either the regular price or compare at price range.",
@@ -4468,12 +4468,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ProductPrice} from '@shopify/storefront-kit-react';\n\nexport function ProductPricing({product}) {\n  return <ProductPrice data={product} priceType=\"compareAt\" valueType=\"max\" />;\n}\n",
+            "code": "import {ProductPrice} from '@shopify/hydrogen-react';\n\nexport function ProductPricing({product}) {\n  return <ProductPrice data={product} priceType=\"compareAt\" valueType=\"max\" />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ProductPrice} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function ProductPricing({product}: {product: Product}) {\n  return <ProductPrice data={product} priceType=\"compareAt\" valueType=\"max\" />;\n}\n",
+            "code": "import {ProductPrice} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function ProductPricing({product}: {product: Product}) {\n  return <ProductPrice data={product} priceType=\"compareAt\" valueType=\"max\" />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -4537,12 +4537,12 @@
       {
         "name": "useProduct",
         "type": "hook",
-        "url": "/api/react-storefront-kit/hooks/useproduct"
+        "url": "/api/hydrogen-react/hooks/useproduct"
       },
       {
         "name": "ProductPrice",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/productprice"
+        "url": "/api/hydrogen-react/components/productprice"
       }
     ],
     "description": "`<ProductProvider />` is a context provider that enables use of the `useProduct()` hook. It helps manage selected options and variants for a product.",
@@ -4553,12 +4553,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ProductProvider} from '@shopify/storefront-kit-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
+            "code": "import {ProductProvider} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ProductProvider} from '@shopify/storefront-kit-react';\nimport type {Product} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
+            "code": "import {ProductProvider} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -4618,12 +4618,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ShopPayButton} from '@shopify/storefront-kit-react';\n\nexport function AddVariantQuantity1({variantId}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n\nexport function AddVariantQuantityMultiple({variantId, quantity}) {\n  return (\n    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />\n  );\n}\n",
+            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({variantId}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n\nexport function AddVariantQuantityMultiple({variantId, quantity}) {\n  return (\n    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ShopPayButton} from '@shopify/storefront-kit-react';\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n\nexport function AddVariantQuantityMultiple({\n  variantId,\n  quantity,\n}: {\n  variantId: string;\n  quantity: number;\n}) {\n  return (\n    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />\n  );\n}\n",
+            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n\nexport function AddVariantQuantityMultiple({\n  variantId,\n  quantity,\n}: {\n  variantId: string;\n  quantity: number;\n}) {\n  return (\n    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -4728,7 +4728,7 @@
       {
         "name": "useShop",
         "type": "hook",
-        "url": "/api/react-storefront-kit/hooks/useshop"
+        "url": "/api/hydrogen-react/hooks/useshop"
       }
     ],
     "description": "The `ShopifyProvider` component wraps your entire app and provides functionality for many components, hooks, and utilities. The `ShopifyProvider` component also provides localization data for the app. You should place it in your app's entry point component.",
@@ -4739,12 +4739,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ShopifyProvider, useShop} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
+            "code": "import {ShopifyProvider, useShop} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ShopifyProvider, useShop} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
+            "code": "import {ShopifyProvider, useShop} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -4761,8 +4761,8 @@
             "filePath": "/ShopifyProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyProviderProps",
-            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.\n   */\n  countryIsoCode: CountryCode;\n  /**\n   * `ISO 369` language codes supported by Shopify.\n   */\n  languageIsoCode: LanguageCode;\n  /** React children to render. */\n  children?: ReactNode;\n}",
-            "description": "Shopify-specific values that are used in various React Storefront Kit components and hooks.",
+            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.\n   */\n  countryIsoCode: CountryCode;\n  /**\n   * `ISO 369` language codes supported by Shopify.\n   */\n  languageIsoCode: LanguageCode;\n  /** React children to render. */\n  children?: ReactNode;\n}",
+            "description": "Shopify-specific values that are used in various Hydrogen React components and hooks.",
             "members": [
               {
                 "filePath": "/ShopifyProvider.tsx",
@@ -4791,7 +4791,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storefrontApiVersion",
                 "value": "string",
-                "description": "The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details."
+                "description": "The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details."
               },
               {
                 "filePath": "/ShopifyProvider.tsx",
@@ -4829,12 +4829,12 @@
       {
         "name": "MediaFile",
         "type": "component",
-        "url": "/api/react-storefront-kit/hooks/mediafile"
+        "url": "/api/hydrogen-react/hooks/mediafile"
       },
       {
         "name": "Image",
         "type": "component",
-        "url": "/api/react-storefront-kit/hooks/image"
+        "url": "/api/hydrogen-react/hooks/image"
       }
     ],
     "description": "The `Video` component renders a video for the Storefront API's [Video object](https://shopify.dev/api/storefront/reference/products/video).\nThe component outputs a `video` element. You can [customize this component](https://shopify.dev/api/hydrogen/components#customizing-hydrogen-components) using passthrough props.",
@@ -4845,12 +4845,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {Video} from '@shopify/storefront-kit-react';\n\nexport default function MyProductVideo({products}) {\n  const firstMediaElement = products.edges[0].node.media.edges[0].node;\n\n  if (firstMediaElement.__typename === 'Video') {\n    return <Video data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {Video} from '@shopify/hydrogen-react';\n\nexport default function MyProductVideo({products}) {\n  const firstMediaElement = products.edges[0].node.media.edges[0].node;\n\n  if (firstMediaElement.__typename === 'Video') {\n    return <Video data={firstMediaElement} />;\n  }\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {Video} from '@shopify/storefront-kit-react';\nimport type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport default function MyProductVideo({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.edges[0].node.media.edges[0].node;\n\n  if (firstMediaElement.__typename === 'Video') {\n    return <Video data={firstMediaElement} />;\n  }\n}\n",
+            "code": "import {Video} from '@shopify/hydrogen-react';\nimport type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function MyProductVideo({\n  products,\n}: {\n  products: ProductConnection;\n}) {\n  const firstMediaElement = products.edges[0].node.media.edges[0].node;\n\n  if (firstMediaElement.__typename === 'Video') {\n    return <Video data={firstMediaElement} />;\n  }\n}\n",
             "language": "tsx"
           }
         ],
@@ -5206,13 +5206,13 @@
       {
         "subtitle": "Utility",
         "name": "useShopifyCookies",
-        "url": "/api/react-storefront-kit/utilities/useShopifyCookies",
+        "url": "/api/hydrogen-react/utilities/useShopifyCookies",
         "type": "gear"
       },
       {
         "subtitle": "Utility",
         "name": "getClientBrowserParameters",
-        "url": "/api/react-storefront-kit/utilities/getclientbrowserparameters",
+        "url": "/api/hydrogen-react/utilities/getclientbrowserparameters",
         "type": "gear"
       }
     ],
@@ -5224,12 +5224,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {\n  sendShopifyAnalytics,\n  getClientBrowserParameters,\n  AnalyticsEventName,\n  useShopifyCookies,\n} from '@shopify/storefront-kit-react';\nimport {useRouter} from 'next/router';\nimport {useEffect} from 'react';\n\nfunction sendPageView(analyticsPageData) {\n  const payload = {\n    ...getClientBrowserParameters(),\n    ...analyticsPageData,\n  };\n  sendShopifyAnalytics({\n    eventName: AnalyticsEventName.PAGE_VIEW,\n    payload,\n  });\n}\n\n// Hook into your router's page change events to fire this analytics event:\n// for example, in NextJS:\n\nconst analyticsShopData = {\n  shopId: 'gid://shopify/Shop/{your-shop-id}',\n  currency: 'USD',\n  acceptedLanguage: 'en',\n};\n\nexport default function App({Component, pageProps}) {\n  const router = useRouter();\n\n  // eslint-disable-next-line no-undef\n  const hasUserConsent = yourFunctionToDetermineIfUserHasConsent();\n\n  // eslint-disable-next-line react-hooks/exhaustive-deps\n  const analytics = {\n    hasUserConsent,\n    ...analyticsShopData,\n    ...pageProps.analytics,\n  };\n  const pagePropsWithAppAnalytics = {\n    ...pageProps,\n    analytics,\n  };\n\n  useEffect(() => {\n    const handleRouteChange = () => {\n      sendPageView(analytics);\n    };\n\n    router.events.on('routeChangeComplete', handleRouteChange);\n\n    return () => {\n      router.events.off('routeChangeComplete', handleRouteChange);\n    };\n  }, [analytics, router.events]);\n\n  useShopifyCookies();\n\n  return <Component {...pagePropsWithAppAnalytics} />;\n}\n",
+            "code": "import {\n  sendShopifyAnalytics,\n  getClientBrowserParameters,\n  AnalyticsEventName,\n  useShopifyCookies,\n} from '@shopify/hydrogen-react';\nimport {useRouter} from 'next/router';\nimport {useEffect} from 'react';\n\nfunction sendPageView(analyticsPageData) {\n  const payload = {\n    ...getClientBrowserParameters(),\n    ...analyticsPageData,\n  };\n  sendShopifyAnalytics({\n    eventName: AnalyticsEventName.PAGE_VIEW,\n    payload,\n  });\n}\n\n// Hook into your router's page change events to fire this analytics event:\n// for example, in NextJS:\n\nconst analyticsShopData = {\n  shopId: 'gid://shopify/Shop/{your-shop-id}',\n  currency: 'USD',\n  acceptedLanguage: 'en',\n};\n\nexport default function App({Component, pageProps}) {\n  const router = useRouter();\n\n  // eslint-disable-next-line no-undef\n  const hasUserConsent = yourFunctionToDetermineIfUserHasConsent();\n\n  // eslint-disable-next-line react-hooks/exhaustive-deps\n  const analytics = {\n    hasUserConsent,\n    ...analyticsShopData,\n    ...pageProps.analytics,\n  };\n  const pagePropsWithAppAnalytics = {\n    ...pageProps,\n    analytics,\n  };\n\n  useEffect(() => {\n    const handleRouteChange = () => {\n      sendPageView(analytics);\n    };\n\n    router.events.on('routeChangeComplete', handleRouteChange);\n\n    return () => {\n      router.events.off('routeChangeComplete', handleRouteChange);\n    };\n  }, [analytics, router.events]);\n\n  useShopifyCookies();\n\n  return <Component {...pagePropsWithAppAnalytics} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {\n  sendShopifyAnalytics,\n  getClientBrowserParameters,\n  AnalyticsEventName,\n  useShopifyCookies,\n} from '@shopify/storefront-kit-react';\nimport {useRouter} from 'next/router';\n\nfunction sendPageView(analyticsPageData) {\n  const payload = {\n    ...getClientBrowserParameters(),\n    ...analyticsPageData,\n  };\n  sendShopifyAnalytics({\n    eventName: AnalyticsEventName.PAGE_VIEW,\n    payload,\n  });\n}\n\n// Hook into your router's page change events to fire this analytics event:\n// for example, in NextJS:\n\nconst analyticsShopData = {\n  shopId: 'gid://shopify/Shop/{your-shop-id}',\n  currency: 'USD',\n  acceptedLanguage: 'en',\n};\n\nexport default function App({Component, pageProps}) {\n  const router = useRouter();\n\n  // @ts-expect-error - this is an example, you should implement this function\n  const hasUserConsent = yourFunctionToDetermineIfUserHasConsent();\n\n  // eslint-disable-next-line react-hooks/exhaustive-deps\n  const analytics = {\n    hasUserConsent,\n    ...analyticsShopData,\n    ...pageProps.analytics,\n  };\n  const pagePropsWithAppAnalytics = {\n    ...pageProps,\n    analytics,\n  };\n\n  useEffect(() => {\n    const handleRouteChange = () => {\n      sendPageView(analytics);\n    };\n\n    router.events.on('routeChangeComplete', handleRouteChange);\n\n    return () => {\n      router.events.off('routeChangeComplete', handleRouteChange);\n    };\n  }, [analytics, router.events]);\n\n  useShopifyCookies();\n\n  return <Component {...pagePropsWithAppAnalytics} />;\n}\n",
+            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {\n  sendShopifyAnalytics,\n  getClientBrowserParameters,\n  AnalyticsEventName,\n  useShopifyCookies,\n} from '@shopify/hydrogen-react';\nimport {useRouter} from 'next/router';\n\nfunction sendPageView(analyticsPageData) {\n  const payload = {\n    ...getClientBrowserParameters(),\n    ...analyticsPageData,\n  };\n  sendShopifyAnalytics({\n    eventName: AnalyticsEventName.PAGE_VIEW,\n    payload,\n  });\n}\n\n// Hook into your router's page change events to fire this analytics event:\n// for example, in NextJS:\n\nconst analyticsShopData = {\n  shopId: 'gid://shopify/Shop/{your-shop-id}',\n  currency: 'USD',\n  acceptedLanguage: 'en',\n};\n\nexport default function App({Component, pageProps}) {\n  const router = useRouter();\n\n  // @ts-expect-error - this is an example, you should implement this function\n  const hasUserConsent = yourFunctionToDetermineIfUserHasConsent();\n\n  // eslint-disable-next-line react-hooks/exhaustive-deps\n  const analytics = {\n    hasUserConsent,\n    ...analyticsShopData,\n    ...pageProps.analytics,\n  };\n  const pagePropsWithAppAnalytics = {\n    ...pageProps,\n    analytics,\n  };\n\n  useEffect(() => {\n    const handleRouteChange = () => {\n      sendPageView(analytics);\n    };\n\n    router.events.on('routeChangeComplete', handleRouteChange);\n\n    return () => {\n      router.events.off('routeChangeComplete', handleRouteChange);\n    };\n  }, [analytics, router.events]);\n\n  useShopifyCookies();\n\n  return <Component {...pagePropsWithAppAnalytics} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -5772,12 +5772,12 @@
       {
         "name": "storefront.schema.json",
         "type": "gear",
-        "url": "/api/react-storefront-kit/utilities/storefront.schema.json"
+        "url": "/api/hydrogen-react/utilities/storefront.schema.json"
       },
       {
         "name": "Storefront API Types",
         "type": "gear",
-        "url": "/api/react-storefront-kit/utilities/storefrontapitypes"
+        "url": "/api/hydrogen-react/utilities/storefrontapitypes"
       }
     ],
     "description": "\n    Meant to be used with GraphQL CodeGen to type the Storefront API's custom scalars correctly when using TypeScript.By default, GraphQL CodeGen uses `any` for custom scalars; by using these definitions, GraphQL Codegen will generate the correct types for the Storefront API's custom scalars.\n\nSee more about [GraphQL CodeGen](https://graphql-code-generator.com/) and [custom scalars for TypeScript](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript#scalars).\n\nNote that `@shopify/hydrogen-react` has already generated types for the Storefront API, so you may not need to setup GraphQL Codegen on your own.\n  ",
@@ -5788,7 +5788,7 @@
         "tabs": [
           {
             "title": "Codegen Config",
-            "code": "import {storefrontApiCustomScalars} from '@shopify/storefront-kit-react';\n\nconst config = {\n  overwrite: true,\n  schema: require.resolve(\n    '@shopify/storefront-kit-react/storefront.schema.json'\n  ),\n  documents: 'pages/**/*.tsx',\n  generates: {\n    './gql/': {\n      preset: 'client',\n      plugins: [],\n      config: {\n        // defines the custom scalars used in the Storefront API\n        scalars: storefrontApiCustomScalars,\n      },\n    },\n  },\n};\n\nexport default config;\n",
+            "code": "import {storefrontApiCustomScalars} from '@shopify/hydrogen-react';\n\nconst config = {\n  overwrite: true,\n  schema: require.resolve('@shopify/hydrogen-react/storefront.schema.json'),\n  documents: 'pages/**/*.tsx',\n  generates: {\n    './gql/': {\n      preset: 'client',\n      plugins: [],\n      config: {\n        // defines the custom scalars used in the Storefront API\n        scalars: storefrontApiCustomScalars,\n      },\n    },\n  },\n};\n\nexport default config;\n",
             "language": "js"
           }
         ],
@@ -5810,12 +5810,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {flattenConnection} from '@shopify/storefront-kit-react';\n\nexport function ProductList({productConnection}) {\n  const products = flattenConnection(productConnection);\n  return (\n    <ul>\n      {products.map((product) => (\n        <li key={product.id}>{product.title}</li>\n      ))}\n    </ul>\n  );\n}\n",
+            "code": "import {flattenConnection} from '@shopify/hydrogen-react';\n\nexport function ProductList({productConnection}) {\n  const products = flattenConnection(productConnection);\n  return (\n    <ul>\n      {products.map((product) => (\n        <li key={product.id}>{product.title}</li>\n      ))}\n    </ul>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {flattenConnection} from '@shopify/storefront-kit-react';\nimport type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function ProductList({\n  productConnection,\n}: {\n  productConnection: ProductConnection;\n}) {\n  const products = flattenConnection(productConnection);\n  return (\n    <ul>\n      {products.map((product) => (\n        <li key={product.id}>{product.title}</li>\n      ))}\n    </ul>\n  );\n}\n",
+            "code": "import {flattenConnection} from '@shopify/hydrogen-react';\nimport type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function ProductList({\n  productConnection,\n}: {\n  productConnection: ProductConnection;\n}) {\n  const products = flattenConnection(productConnection);\n  return (\n    <ul>\n      {products.map((product) => (\n        <li key={product.id}>{product.title}</li>\n      ))}\n    </ul>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -5859,13 +5859,13 @@
       {
         "subtitle": "Utility",
         "name": "sendShopifyAnalytics",
-        "url": "/api/react-storefront-kit/utilities/sendShopifyAnalytics",
+        "url": "/api/hydrogen-react/utilities/sendShopifyAnalytics",
         "type": "gear"
       },
       {
         "subtitle": "Utility",
         "name": "useShopifyCookies",
-        "url": "/api/react-storefront-kit/utilities/useShopifyCookies",
+        "url": "/api/hydrogen-react/utilities/useShopifyCookies",
         "type": "gear"
       }
     ],
@@ -5877,12 +5877,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {getClientBrowserParameters} from '@shopify/storefront-kit-react';\n\nexport default function App({Component, pageProps}) {\n  useEffect(() => {\n    getClientBrowserParameters();\n  });\n\n  return <Component {...pageProps} />;\n}\n",
+            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {getClientBrowserParameters} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useEffect(() => {\n    getClientBrowserParameters();\n  });\n\n  return <Component {...pageProps} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {getClientBrowserParameters} from '@shopify/storefront-kit-react';\n\nexport default function App({Component, pageProps}) {\n  useEffect(() => {\n    getClientBrowserParameters();\n  });\n\n  return <Component {...pageProps} />;\n}\n",
+            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {getClientBrowserParameters} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useEffect(() => {\n    getClientBrowserParameters();\n  });\n\n  return <Component {...pageProps} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -5998,7 +5998,7 @@
       {
         "subtitle": "Utility",
         "name": "useShopifyCookies",
-        "url": "/api/react-storefront-kit/utilities/useShopifyCookies",
+        "url": "/api/hydrogen-react/utilities/useShopifyCookies",
         "type": "gear"
       }
     ],
@@ -6010,12 +6010,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {getShopifyCookies} from '@shopify/storefront-kit-react';\n\nexport default function App({Component, pageProps}) {\n  useEffect(() => {\n    getShopifyCookies(document.cookie);\n  });\n\n  return <Component {...pageProps} />;\n}\n",
+            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {getShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useEffect(() => {\n    getShopifyCookies(document.cookie);\n  });\n\n  return <Component {...pageProps} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {getShopifyCookies} from '@shopify/storefront-kit-react';\n\nexport default function App({Component, pageProps}) {\n  useEffect(() => {\n    getShopifyCookies(document.cookie);\n  });\n\n  return <Component {...pageProps} />;\n}\n",
+            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {getShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useEffect(() => {\n    getShopifyCookies(document.cookie);\n  });\n\n  return <Component {...pageProps} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -6087,12 +6087,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {parseMetafield} from '@shopify/storefront-kit-react';\n\nexport function DateMetafield({metafield}) {\n  const parsedMetafield = parseMetafield(metafield);\n\n  return <div>Date: {parsedMetafield.parsedValue?.toDateString()}</div>;\n}\n\nexport function VariantReferenceMetafield({metafield}) {\n  const parsedMetafield = parseMetafield(metafield);\n\n  return <div>Variant title: {parsedMetafield.parsedValue?.title}</div>;\n}\n\nexport function ListCollectionReferenceMetafield({metafield}) {\n  const parsedMetafield = parseMetafield(metafield);\n\n  return (\n    <div>\n      The first collection title: {parsedMetafield.parsedValue?.[0].title}\n    </div>\n  );\n}\n",
+            "code": "import {parseMetafield} from '@shopify/hydrogen-react';\n\nexport function DateMetafield({metafield}) {\n  const parsedMetafield = parseMetafield(metafield);\n\n  return <div>Date: {parsedMetafield.parsedValue?.toDateString()}</div>;\n}\n\nexport function VariantReferenceMetafield({metafield}) {\n  const parsedMetafield = parseMetafield(metafield);\n\n  return <div>Variant title: {parsedMetafield.parsedValue?.title}</div>;\n}\n\nexport function ListCollectionReferenceMetafield({metafield}) {\n  const parsedMetafield = parseMetafield(metafield);\n\n  return (\n    <div>\n      The first collection title: {parsedMetafield.parsedValue?.[0].title}\n    </div>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  parseMetafield,\n  type ParsedMetafields,\n} from '@shopify/storefront-kit-react';\nimport type {Metafield} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function DateMetafield({metafield}: {metafield: Metafield}) {\n  const parsedMetafield = parseMetafield<ParsedMetafields['date']>(metafield);\n\n  return <div>Date: {parsedMetafield.parsedValue?.toDateString()}</div>;\n}\n\nexport function VariantReferenceMetafield({metafield}: {metafield: Metafield}) {\n  const parsedMetafield =\n    parseMetafield<ParsedMetafields['variant_reference']>(metafield);\n\n  return <div>Variant title: {parsedMetafield.parsedValue?.title}</div>;\n}\n\nexport function ListCollectionReferenceMetafield({\n  metafield,\n}: {\n  metafield: Metafield;\n}) {\n  const parsedMetafield =\n    parseMetafield<ParsedMetafields['list.collection_reference']>(metafield);\n\n  return (\n    <div>\n      The first collection title: {parsedMetafield.parsedValue?.[0].title}\n    </div>\n  );\n}\n",
+            "code": "import {parseMetafield, type ParsedMetafields} from '@shopify/hydrogen-react';\nimport type {Metafield} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function DateMetafield({metafield}: {metafield: Metafield}) {\n  const parsedMetafield = parseMetafield<ParsedMetafields['date']>(metafield);\n\n  return <div>Date: {parsedMetafield.parsedValue?.toDateString()}</div>;\n}\n\nexport function VariantReferenceMetafield({metafield}: {metafield: Metafield}) {\n  const parsedMetafield =\n    parseMetafield<ParsedMetafields['variant_reference']>(metafield);\n\n  return <div>Variant title: {parsedMetafield.parsedValue?.title}</div>;\n}\n\nexport function ListCollectionReferenceMetafield({\n  metafield,\n}: {\n  metafield: Metafield;\n}) {\n  const parsedMetafield =\n    parseMetafield<ParsedMetafields['list.collection_reference']>(metafield);\n\n  return (\n    <div>\n      The first collection title: {parsedMetafield.parsedValue?.[0].title}\n    </div>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -6136,12 +6136,12 @@
       {
         "name": "storefrontApiCustomScalars",
         "type": "gear",
-        "url": "/api/react-storefront-kit/utilities/storefrontApiCustomScalars"
+        "url": "/api/hydrogen-react/utilities/storefrontApiCustomScalars"
       },
       {
         "name": "storefront.schema.json",
         "type": "gear",
-        "url": "/api/react-storefront-kit/utilities/storefront.schema.json"
+        "url": "/api/hydrogen-react/utilities/storefront.schema.json"
       }
     ],
     "description": "\n    If you are using TypeScript, Hydrogen React ships with pre-generated TypeScript types that match the Storefront API's GraphQL schema. These types can be used when you need to manually create an object that matches a Storefront API object's shape.\n\nThese types also work really well with the new [`satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator) introduced in TypeScript 4.9, though you don't need to use `satisfies` to use these types.\n  ",
@@ -6152,7 +6152,7 @@
         "tabs": [
           {
             "title": "Storefront API Types in TypeScript",
-            "code": "import type {\n  Product,\n  Collection,\n} from '@shopify/storefront-kit-react/storefront-api-types';\n\nconst myProduct = {id: '123', title: 'My Product'} satisfies Partial<Product>;\nconsole.log(myProduct.title);\n\nconst myCollection = {\n  id: '456',\n  title: 'My Collection',\n} satisfies Partial<Collection>;\nconsole.log(myCollection.title);\n\nconst myNotSatisfyingProduct: Partial<Product> = {\n  id: '789',\n  title: 'Other Product',\n};\nconsole.log(myNotSatisfyingProduct.title);\n",
+            "code": "import type {\n  Product,\n  Collection,\n} from '@shopify/hydrogen-react/storefront-api-types';\n\nconst myProduct = {id: '123', title: 'My Product'} satisfies Partial<Product>;\nconsole.log(myProduct.title);\n\nconst myCollection = {\n  id: '456',\n  title: 'My Collection',\n} satisfies Partial<Collection>;\nconsole.log(myCollection.title);\n\nconst myNotSatisfyingProduct: Partial<Product> = {\n  id: '789',\n  title: 'Other Product',\n};\nconsole.log(myNotSatisfyingProduct.title);\n",
             "language": "ts"
           }
         ],
@@ -6169,7 +6169,7 @@
       {
         "name": "ShopifyProvider",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/shopify-provider"
+        "url": "/api/hydrogen-react/components/shopify-provider"
       }
     ],
     "description": "\n    The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.\n\nWhen used on the server, it is recommended to use the `privateStorefrontToken` prop. When used on the client, it is recommended to use the `publicStorefrontToken` prop or consider using `<ShopifyProvider/>` instead.\n  ",
@@ -6180,7 +6180,7 @@
         "tabs": [
           {
             "title": "Client Example in NextJS",
-            "code": "import {createStorefrontClient} from '@shopify/storefront-kit-react';\n\nexport const client = createStorefrontClient({\n  storeDomain: 'https://{store-name}.myshopify.com',\n  storefrontApiVersion: '2023-01',\n  privateStorefrontToken: '{private token for server-side requests}',\n});\n\n// in another file where you need to make queries, for example in NextJS server-side:\n\n// a Storefront API query\nconst GRAPHQL_QUERY = `\n  query {\n    shop {\n      name\n    }\n  }\n`;\n\n// make the request\nexport async function getServerSideProps() {\n  // Get the Storefront API url\n  const response = await fetch(client.getStorefrontApiUrl(), {\n    body: GRAPHQL_QUERY,\n    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address to help prevent bad actors from overloading your store.\n    headers: client.getPrivateTokenHeaders({buyerIp: '...'}),\n    method: 'POST',\n  });\n\n  if (!response.ok) {\n    throw new Error(response.statusText);\n  }\n\n  const json = await response.json();\n\n  return {props: json};\n}\n",
+            "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  storeDomain: 'https://{store-name}.myshopify.com',\n  storefrontApiVersion: '2023-01',\n  privateStorefrontToken: '{private token for server-side requests}',\n});\n\n// in another file where you need to make queries, for example in NextJS server-side:\n\n// a Storefront API query\nconst GRAPHQL_QUERY = `\n  query {\n    shop {\n      name\n    }\n  }\n`;\n\n// make the request\nexport async function getServerSideProps() {\n  // Get the Storefront API url\n  const response = await fetch(client.getStorefrontApiUrl(), {\n    body: GRAPHQL_QUERY,\n    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address to help prevent bad actors from overloading your store.\n    headers: client.getPrivateTokenHeaders({buyerIp: '...'}),\n    method: 'POST',\n  });\n\n  if (!response.ok) {\n    throw new Error(response.statusText);\n  }\n\n  const json = await response.json();\n\n  return {props: json};\n}\n",
             "language": "js"
           }
         ],
@@ -6210,13 +6210,13 @@
               "name": "StorefrontClientReturn",
               "value": "StorefrontClientReturn"
             },
-            "value": "export function createStorefrontClient({\n  storeDomain,\n  privateStorefrontToken,\n  publicStorefrontToken,\n  storefrontApiVersion,\n  contentType,\n}: StorefrontClientProps): StorefrontClientReturn {\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `StorefrontClient: The Storefront API version that you're using is different than the version this build of React Storefront Kit is targeting. You may run into unexpected errors if these versions don't match. Received verion: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {\n    warnOnce(\n      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis) {\n    warnOnce(\n      `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`\n    );\n  }\n\n  return {\n    getShopifyDomain(overrideProps) {\n      return overrideProps?.storeDomain ?? storeDomain;\n    },\n    getStorefrontApiUrl(overrideProps) {\n      const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;\n      return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps) {\n      if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'storefront-kit',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps) {\n      if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? ''\n      );\n    },\n  };\n}"
+            "value": "export function createStorefrontClient({\n  storeDomain,\n  privateStorefrontToken,\n  publicStorefrontToken,\n  storefrontApiVersion,\n  contentType,\n}: StorefrontClientProps): StorefrontClientReturn {\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {\n    warnOnce(\n      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis) {\n    warnOnce(\n      `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`\n    );\n  }\n\n  return {\n    getShopifyDomain(overrideProps) {\n      return overrideProps?.storeDomain ?? storeDomain;\n    },\n    getStorefrontApiUrl(overrideProps) {\n      const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;\n      return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps) {\n      if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps) {\n      if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? ''\n      );\n    },\n  };\n}"
           },
           "StorefrontClientProps": {
             "filePath": "/storefront-client.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontClientProps",
-            "value": "{\n  /** The host name of the domain (eg: `{shop}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API delegate access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) and [delegate access token](https://shopify.dev/apps/auth/oauth/delegate-access-tokens) documentation for more details. */\n  privateStorefrontToken?: string;\n  /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  publicStorefrontToken?: string;\n  /** The Storefront API version. This should almost always be the same as the version Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * Customizes which `\"content-type\"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `\"json\"`. When fetching with a `body` that is a plain string, use `\"graphql\"`. Defaults to `\"json\"`\n   *\n   * Can also be customized on a call-by-call basis by passing in `'contentType'` to both `getPrivateTokenHeaders({...})` and `getPublicTokenHeaders({...})`, for example: `getPublicTokenHeaders({contentType: 'graphql'})`\n   */\n  contentType?: 'json' | 'graphql';\n}",
+            "value": "{\n  /** The host name of the domain (eg: `{shop}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API delegate access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) and [delegate access token](https://shopify.dev/apps/auth/oauth/delegate-access-tokens) documentation for more details. */\n  privateStorefrontToken?: string;\n  /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  publicStorefrontToken?: string;\n  /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * Customizes which `\"content-type\"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `\"json\"`. When fetching with a `body` that is a plain string, use `\"graphql\"`. Defaults to `\"json\"`\n   *\n   * Can also be customized on a call-by-call basis by passing in `'contentType'` to both `getPrivateTokenHeaders({...})` and `getPublicTokenHeaders({...})`, for example: `getPublicTokenHeaders({contentType: 'graphql'})`\n   */\n  contentType?: 'json' | 'graphql';\n}",
             "description": "",
             "members": [
               {
@@ -6247,7 +6247,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storefrontApiVersion",
                 "value": "string",
-                "description": "The Storefront API version. This should almost always be the same as the version Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details."
+                "description": "The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details."
               },
               {
                 "filePath": "/storefront-client.ts",
@@ -6308,12 +6308,12 @@
       {
         "name": "storefrontApiCustomScalars",
         "type": "gear",
-        "url": "/api/react-storefront-kit/utilities/storefrontApiCustomScalars"
+        "url": "/api/hydrogen-react/utilities/storefrontApiCustomScalars"
       },
       {
         "name": "Storefront API Types",
         "type": "gear",
-        "url": "/api/react-storefront-kit/utilities/storefrontapitypes"
+        "url": "/api/hydrogen-react/utilities/storefrontapitypes"
       }
     ],
     "description": "\n    Hydrogen React ships with a pre-generated GraphQL schema for the Storefront API, which can integrate with your IDE and other GraphQL tooling (such as a [GraphQL config file](https://www.graphql-config.com/docs/user/user-usage)) to provide autocompletion and validation for your Storefront API GraphQL queries.\n\nThis schema is generated using the Storefront API's introspection query, and is available at `@shopify/hydrogen-react/storefront.schema.json`.\n\nTo get these features working in your IDE, you may need to install an extension. For example, in VSCode you can install this [GraphQL extension](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql).\n  ",
@@ -6341,7 +6341,7 @@
       {
         "name": "CartProvider",
         "type": "components",
-        "url": "/api/react-storefront-kit/components/CartProvider"
+        "url": "/api/hydrogen-react/components/CartProvider"
       }
     ],
     "description": "\n    The `useCart` hook provides access to the cart object. It must be a descendent of a `CartProvider` component.\n  ",
@@ -6352,12 +6352,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CartProvider, useCart} from '@shopify/storefront-kit-react';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
+            "code": "import {CartProvider, useCart} from '@shopify/hydrogen-react';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {CartProvider, useCart} from '@shopify/storefront-kit-react';\nimport type {CartLineInput} from '../dist/types/storefront-api-types';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise: CartLineInput = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
+            "code": "import {CartProvider, useCart} from '@shopify/hydrogen-react';\nimport type {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function App() {\n  <CartProvider\n    onLineAdd={() => {\n      console.log('a line is being added');\n    }}\n    onLineAddComplete={() => {\n      console.log('a line has been added');\n    }}\n  >\n    <CartComponent />\n  </CartProvider>;\n}\n\nfunction CartComponent() {\n  const {linesAdd, status} = useCart();\n\n  const merchandise: CartLineInput = {merchandiseId: '{id-here}'};\n\n  return (\n    <div>\n      Cart Status: {status}\n      <button onClick={() => linesAdd([merchandise])}>Add Line</button>\n    </div>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -6487,7 +6487,7 @@
       {
         "name": "CartLineProvider",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/CartLineProvider"
+        "url": "/api/hydrogen-react/components/CartLineProvider"
       }
     ],
     "description": "\n    The `useCartLine` hook provides access to the cart line object. It must be a descendent of a `CartProvider` component.\n  ",
@@ -6498,12 +6498,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {CartLineProvider, useCartLine} from '@shopify/storefront-kit-react';\n\nexport function CartWrapper({cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
+            "code": "import {CartLineProvider, useCartLine} from '@shopify/hydrogen-react';\n\nexport function CartWrapper({cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {CartLineProvider, useCartLine} from '@shopify/storefront-kit-react';\nimport type {Cart} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function CartWrapper({cart}: {cart: Cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
+            "code": "import {CartLineProvider, useCartLine} from '@shopify/hydrogen-react';\nimport type {Cart} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function CartWrapper({cart}: {cart: Cart}) {\n  const firstCartLine = cart.lines.nodes[0];\n  return (\n    <CartLineProvider line={firstCartLine}>\n      <CartLineQuantity />\n    </CartLineProvider>\n  );\n}\n\nfunction CartLineQuantity() {\n  const cartLine = useCartLine();\n\n  return <div>{cartLine.quantity}</div>;\n}\n",
             "language": "tsx"
           }
         ],
@@ -6540,7 +6540,7 @@
       {
         "name": "Money",
         "type": "component",
-        "url": "/api/react-storefront-kit/components/money"
+        "url": "/api/hydrogen-react/components/money"
       }
     ],
     "description": "\n    The `useMoney` hook takes a [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) and returns a\n    default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by\n    [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).\n    Uses `locale` from `<ShopifyProvider/>`.\n  ",
@@ -6551,12 +6551,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';\n\nexport function App() {\n  return (\n    <ShopifyProvider languageIsoCode=\"EN\" countryIsoCode=\"US\">\n      <UsingMoney />\n    </ShopifyProvider>\n  );\n}\n\nfunction UsingMoney() {\n  const myMoney = {amount: '100', currencyCode: 'USD'};\n  const money = useMoney(myMoney);\n  return (\n    <>\n      <div>Localized money: {money.localizedString}</div>\n      <div>Money without trailing zeros: {money.withoutTrailingZeros}</div>\n    </>\n  );\n}\n",
+            "code": "import {useMoney, ShopifyProvider} from '@shopify/hydrogen-react';\n\nexport function App() {\n  return (\n    <ShopifyProvider languageIsoCode=\"EN\" countryIsoCode=\"US\">\n      <UsingMoney />\n    </ShopifyProvider>\n  );\n}\n\nfunction UsingMoney() {\n  const myMoney = {amount: '100', currencyCode: 'USD'};\n  const money = useMoney(myMoney);\n  return (\n    <>\n      <div>Localized money: {money.localizedString}</div>\n      <div>Money without trailing zeros: {money.withoutTrailingZeros}</div>\n    </>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';\nimport type {MoneyV2} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function App() {\n  return (\n    // @ts-expect-error intentionally missing the rest of the props\n    <ShopifyProvider countryIsoCode=\"US\" languageIsoCode=\"EN\">\n      <UsingMoney />\n    </ShopifyProvider>\n  );\n}\n\nfunction UsingMoney() {\n  const myMoney = {amount: '100', currencyCode: 'USD'} satisfies MoneyV2;\n  const money = useMoney(myMoney);\n  return (\n    <>\n      <div>Localized money: {money.localizedString}</div>\n      <div>Money without trailing zeros: {money.withoutTrailingZeros}</div>\n    </>\n  );\n}\n",
+            "code": "import {useMoney, ShopifyProvider} from '@shopify/hydrogen-react';\nimport type {MoneyV2} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function App() {\n  return (\n    // @ts-expect-error intentionally missing the rest of the props\n    <ShopifyProvider countryIsoCode=\"US\" languageIsoCode=\"EN\">\n      <UsingMoney />\n    </ShopifyProvider>\n  );\n}\n\nfunction UsingMoney() {\n  const myMoney = {amount: '100', currencyCode: 'USD'} satisfies MoneyV2;\n  const money = useMoney(myMoney);\n  return (\n    <>\n      <div>Localized money: {money.localizedString}</div>\n      <div>Money without trailing zeros: {money.withoutTrailingZeros}</div>\n    </>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -6682,7 +6682,7 @@
       {
         "name": "ShopifyProvider",
         "type": "components",
-        "url": "/api/react-storefront-kit/components/ShopifyProvider"
+        "url": "/api/hydrogen-react/components/ShopifyProvider"
       }
     ],
     "description": "\n    Provides access to the `shopifyConfig` prop of `<ShopifyProvider/>`. Must be a descendent of `<ShopifyProvider/>`.\n  ",
@@ -6693,12 +6693,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ShopifyProvider, useShop} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
+            "code": "import {ShopifyProvider, useShop} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ShopifyProvider, useShop} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
+            "code": "import {ShopifyProvider, useShop} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -6734,8 +6734,8 @@
             "filePath": "/ShopifyProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyProviderProps",
-            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.\n   */\n  countryIsoCode: CountryCode;\n  /**\n   * `ISO 369` language codes supported by Shopify.\n   */\n  languageIsoCode: LanguageCode;\n  /** React children to render. */\n  children?: ReactNode;\n}",
-            "description": "Shopify-specific values that are used in various React Storefront Kit components and hooks.",
+            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.\n   */\n  countryIsoCode: CountryCode;\n  /**\n   * `ISO 369` language codes supported by Shopify.\n   */\n  languageIsoCode: LanguageCode;\n  /** React children to render. */\n  children?: ReactNode;\n}",
+            "description": "Shopify-specific values that are used in various Hydrogen React components and hooks.",
             "members": [
               {
                 "filePath": "/ShopifyProvider.tsx",
@@ -6764,7 +6764,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storefrontApiVersion",
                 "value": "string",
-                "description": "The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details."
+                "description": "The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details."
               },
               {
                 "filePath": "/ShopifyProvider.tsx",
@@ -6898,19 +6898,19 @@
       {
         "subtitle": "Utility",
         "name": "sendShopifyAnalytics",
-        "url": "/api/react-storefront-kit/utilities/sendShopifyAnalytics",
+        "url": "/api/hydrogen-react/utilities/sendShopifyAnalytics",
         "type": "gear"
       },
       {
         "subtitle": "Utility",
         "name": "getClientBrowserParameters",
-        "url": "/api/react-storefront-kit/utilities/getclientbrowserparameters",
+        "url": "/api/hydrogen-react/utilities/getclientbrowserparameters",
         "type": "gear"
       },
       {
         "subtitle": "Utility",
         "name": "getShopifyCookies",
-        "url": "/api/react-storefront-kit/utilities/getShopifyCookies",
+        "url": "/api/hydrogen-react/utilities/getShopifyCookies",
         "type": "gear"
       }
     ],
@@ -6922,12 +6922,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/storefront-kit-react';\n\nexport default function App({Component, pageProps}) {\n  useShopifyCookies();\n\n  return <Component {...pageProps} />;\n}\n",
+            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useShopifyCookies();\n\n  return <Component {...pageProps} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/storefront-kit-react';\n\nexport default function App({Component, pageProps}) {\n  useShopifyCookies();\n\n  return <Component {...pageProps} />;\n}\n",
+            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useShopifyCookies();\n\n  return <Component {...pageProps} />;\n}\n",
             "language": "tsx"
           }
         ],

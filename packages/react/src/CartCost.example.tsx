@@ -1,4 +1,4 @@
-import {CartCost} from '@shopify/storefront-kit-react';
+import {CartCost} from '@shopify/hydrogen-react';
 
 export default function CartTotals() {
   return (

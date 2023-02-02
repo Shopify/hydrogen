@@ -1,4 +1,4 @@
-import {CartProvider, useCart} from '@shopify/storefront-kit-react';
+import {CartProvider, useCart} from '@shopify/hydrogen-react';
 
 export function App() {
   <CartProvider

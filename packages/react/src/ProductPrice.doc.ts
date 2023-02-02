@@ -8,12 +8,12 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'ProductProvider',
       type: 'component',
-      url: '/api/react-storefront-kit/components/productprovider',
+      url: '/api/hydrogen-react/components/productprovider',
     },
     {
       name: 'Money',
       type: 'component',
-      url: '/api/react-storefront-kit/components/money',
+      url: '/api/hydrogen-react/components/money',
     },
   ],
   description:

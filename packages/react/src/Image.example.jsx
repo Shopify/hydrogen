@@ -1,4 +1,4 @@
-import {Image} from '@shopify/storefront-kit-react';
+import {Image} from '@shopify/hydrogen-react';
 
 export default function ProductImage({product}) {
   const image = product.featuredImage;

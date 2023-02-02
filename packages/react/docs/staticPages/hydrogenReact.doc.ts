@@ -18,13 +18,13 @@ const data: LandingTemplateSchema = {
         {
           subtitle: 'Navigate to',
           name: 'Getting Started Guide',
-          url: '/custom-storefronts/react-storefront-kit#get-started-with-react-storefront-kit',
+          url: '/custom-storefronts/hydrogen-react#get-started-with-hydrogen-react',
           type: 'tutorial',
         },
         {
           subtitle: 'Navigate to',
           name: 'Objects and resources',
-          url: 'react-storefront-kit/objects-and-functions',
+          url: 'hydrogen-react/objects-and-functions',
           type: 'resource',
         },
       ],
@@ -38,7 +38,7 @@ const data: LandingTemplateSchema = {
             {
               subtitle: 'Navigate to',
               name: 'Storefront API Client Authentication',
-              url: '/custom-storefronts/react-storefront-kit#step-2-authenticate-the-storefront-api-client',
+              url: '/custom-storefronts/hydrogen-react#step-2-authenticate-the-storefront-api-client',
               type: 'key',
             },
           ],
@@ -91,7 +91,7 @@ const data: LandingTemplateSchema = {
             {
               subtitle: 'Navigate to',
               name: 'All Hydrogen React Components',
-              url: 'react-storefront-kit/components',
+              url: 'hydrogen-react/components',
               type: 'library',
             },
           ],
@@ -104,7 +104,7 @@ const data: LandingTemplateSchema = {
             {
               subtitle: 'Navigate to',
               name: 'All Hydrogen React hooks',
-              url: 'react-storefront-kit/hooks',
+              url: 'hydrogen-react/hooks',
               type: 'library',
             },
           ],
@@ -117,7 +117,7 @@ const data: LandingTemplateSchema = {
             {
               subtitle: 'Navigate to',
               name: 'All Hydrogen React utility functions',
-              url: 'react-storefront-kit/utilities',
+              url: 'hydrogen-react/utilities',
               type: 'library',
             },
           ],
@@ -160,7 +160,7 @@ const data: LandingTemplateSchema = {
           name: 'Getting started guide',
           subtitle:
             'Follow this tutorial to start making requests to the Storefront API in no time.',
-          url: '/custom-storefronts/react-storefront-kit#get-started-with-react-storefront-kit',
+          url: '/custom-storefronts/hydrogen-react#get-started-with-hydrogen-react',
           type: 'quickstart',
         },
         {

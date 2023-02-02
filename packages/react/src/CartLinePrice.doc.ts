@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'Money',
       type: 'component',
-      url: '/api/react-storefront-kit/components/money',
+      url: '/api/hydrogen-react/components/money',
     },
   ],
   description: `

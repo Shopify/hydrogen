@@ -1,4 +1,4 @@
-import {AddToCartButton} from '@shopify/storefront-kit-react';
+import {AddToCartButton} from '@shopify/hydrogen-react';
 
 export default function ProductAddToCartButton({product}) {
   const variantId = product.variants[0].id;

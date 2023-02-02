@@ -8,22 +8,22 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'Image',
       type: 'component',
-      url: '/api/react-storefront-kit/components/image',
+      url: '/api/hydrogen-react/components/image',
     },
     {
       name: 'Video',
       type: 'component',
-      url: '/api/react-storefront-kit/components/video',
+      url: '/api/hydrogen-react/components/video',
     },
     {
       name: 'ExternalVideo',
       type: 'component',
-      url: '/api/react-storefront-kit/components/externalvideo',
+      url: '/api/hydrogen-react/components/externalvideo',
     },
     {
       name: 'ModelViewer',
       type: 'component',
-      url: '/api/react-storefront-kit/components/modelviewer',
+      url: '/api/hydrogen-react/components/modelviewer',
     },
   ],
   description:

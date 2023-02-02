@@ -14,13 +14,13 @@ const data: ReferenceEntityTemplateSchema = {
     {
       subtitle: 'Utility',
       name: 'useShopifyCookies',
-      url: '/api/react-storefront-kit/utilities/useShopifyCookies',
+      url: '/api/hydrogen-react/utilities/useShopifyCookies',
       type: 'gear',
     },
     {
       subtitle: 'Utility',
       name: 'getClientBrowserParameters',
-      url: '/api/react-storefront-kit/utilities/getclientbrowserparameters',
+      url: '/api/hydrogen-react/utilities/getclientbrowserparameters',
       type: 'gear',
     },
   ],

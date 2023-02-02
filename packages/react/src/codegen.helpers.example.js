@@ -1,10 +1,8 @@
-import {storefrontApiCustomScalars} from '@shopify/storefront-kit-react';
+import {storefrontApiCustomScalars} from '@shopify/hydrogen-react';
 
 const config = {
   overwrite: true,
-  schema: require.resolve(
-    '@shopify/storefront-kit-react/storefront.schema.json'
-  ),
+  schema: require.resolve('@shopify/hydrogen-react/storefront.schema.json'),
   documents: 'pages/**/*.tsx',
   generates: {
     './gql/': {

@@ -1,6 +1,6 @@
-## Working on React Storefront Kit
+## Working on Hydrogen React
 
-There are two ways you can develop React Storefront Kit components:
+There are two ways you can develop Hydrogen React components:
 
 - Develop components in isolation (faster & easier):
   1. Run `yarn dev:story` in the `packages/react` directory to spin up an instance of [Ladle](https://ladle.dev/)
@@ -54,9 +54,13 @@ Docs can (and should, when possible) include two examples; one in plain JavaScri
 
 For most contributions, this should be enough information to work off of. However, if you want to change the structure and layout of the docs, then [please read the complete documentation (available only to Shopify employees) on this process here](https://shopify.dev/internal/development/ui-reference-docs/).
 
+## Running CI Checks Locally
+
+Every PR must pass certain CI checks in order to be merged; you can run these checks locally yourself by running `yarn ci:checks` from the root of the repo.
+
 ## Package Exports Notes:
 
-- Until ESLint can resolve package.exports, we added `storefront-kit` to `.eslintrc.js`->`node/no-missing-import.allowModules`
+- Until ESLint can resolve package.exports, we added `hydrogen-react` to `.eslintrc.js`->`node/no-missing-import.allowModules`
 
 ## Updating the Storefront API version
 

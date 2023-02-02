@@ -1,5 +1,5 @@
-import {MediaFile} from '@shopify/storefront-kit-react';
-import type {ProductConnection} from '@shopify/storefront-kit-react/storefront-api-types';
+import {MediaFile} from '@shopify/hydrogen-react';
+import type {ProductConnection} from '@shopify/hydrogen-react/storefront-api-types';
 
 export function ProductsMediaFiles({products}: {products: ProductConnection}) {
   return (
