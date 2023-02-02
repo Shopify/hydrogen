@@ -52,6 +52,8 @@ export default class GenerateRoute extends Command {
     }),
   };
 
+  static hidden: true;
+
   static args = [
     {
       name: 'route',
