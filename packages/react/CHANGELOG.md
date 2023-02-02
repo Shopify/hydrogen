@@ -1,5 +1,201 @@
 # @shopify/hydrogen-react
 
+## 2023.1.4
+
+### Major Changes
+
+This is admittedly a strange release.
+
+It has been decided to rename the repo back to `@shopify/hydrogen-react`, and with that we're abandoning the name `@shopify/storefront-kit-react`. Sorry about that, and hopefully it isn't too big of an inconvenience.
+
+Additionally, the renaming offered an opportunity to introduce a couple of breaking changes that normally we wouldn't do in a `patch` release. This is the one and only time that we'll do this, so again, we apologize for the strangeness and inconvenience.
+
+Depending on your upgrade path, here's a summary of the changes you need to be aware of:
+
+- If upgrading from `@shopify/storefront-kit-react`
+  - Please note the breaking changes below to [`<ShopifyProvider />`](#shopifyprovider) and [`useShop()`](#useshop)
+  - Please note the breaking changes below to the Analytics components
+- If upgrading from an older release of `@shopify/hydrogen-react`
+  - Please note the breaking changes below to [`<ShopifyProvider />`](#shopifyprovider) and [`useShop()`](#useshop)
+  - Analytics components were [added in 2023.1.2](#202312), and then were updated in this release
+  - Please note the breaking changes in the [`2023.1.1`](#202311) release below
+
+---
+
+The detailed changelog now follows:
+
+- 8d8ab13: ## Breaking Changes on Shopify analytics components
+
+  - `useShopifyCookies` - if hasUserConsent is `false`, no cookies will be set
+  - `sendShopifyAnalytics` - if `hasUserConsent` is false, no analytics will be sent
+  - `ShopifyAppSource` got rename to `ShopifySalesChannel`
+  - `getClientBrowserParameters` returns empty string for each field key if run on server
+  - Added documents on analytics components
+
+- 6184517: Added the following components and hooks, which have been a part of this package for a while but weren't actually able to be used/imported.
+
+  - `<CartCost />`
+  - `<CartLinePrice />`
+  - `<CartLineProvider />`
+  - `useCartLine()`
+
+- 3309706: `<ShopifyProvider />` and `useShop()` have had a breaking update:
+
+  ## `ShopifyProvider`
+
+  - `<ShopifyProvider />` previously accepted a single `shopifyConfig` object as a prop; now, each of the keys in this object are their own separate props.
+  - We also removed `country` and `language` as objects, and they are now strings with the names `countryIsoCode` and `languageIsoCode`, respectively.
+  - The `locale` prop has been removed completely; this was a duplicative prop that was a combination of `countryIsoCode` and `languageIsoCode`, so it made no sense to have to include it as well.
+
+  An example:
+
+  ```tsx
+  // previously:
+
+  <ShopifyProvider
+    shopifyConfig={{
+      storeDomain: 'my-store',
+      storefrontToken: 'abc123',
+      storefrontApiVersion: '2022-10',
+      country: {
+        isoCode: 'CA',
+      },
+      language: {
+        isoCode: 'EN',
+      },
+      locale: 'EN-CA',
+    }}
+  >
+    {/* rest of your client-side app */}
+  </ShopifyProvider>
+  ```
+
+  ```tsx
+  // now
+
+  <ShopifyProvider
+    storeDomain="my-store"
+    storefrontToken="abc123"
+    storefrontApiVersion="2022-10"
+    countryIsoCode="CA"
+    languageIsoCode="EN"
+  >
+    {/* rest of your client-side app */}
+  </ShopifyProvider>
+  ```
+
+  ## `useShop()`
+
+  As noted above, `locale` was removed from the `<ShopifyProvider />` component, and `countryIsoCode` and `languageIsoCode` were renamed. Here's an example of how the return value of `useShop()` was affected
+
+  ```tsx
+  // before
+
+  const {country, language, locale} = useShop();
+
+  console.log(country.isoCode);
+  console.log(language.isoCode);
+  console.log(locale);
+  ```
+
+  ```tsx
+  // after
+
+  const {countryIsoCode, languageIsoCode} = useShop();
+
+  console.log(countryIsoCode);
+  console.log(languageIsoCode);
+  console.log(`${languageIsoCode}-${countryIsoCode}`);
+  ```
+
+  Note that `locale` can be replicated by combining `languageIsoCode` and `countryIsoCode` with a hypthen (`-`) between them.
+
+- 8d8ab13: ## Breaking Changes on Shopify analytics components
+
+  - `useShopifyCookies` - if hasUserConsent is `false`, no cookies will be set
+  - `sendShopifyAnalytics` - if `hasUserConsent` is false, no analytics will be sent
+  - `ShopifyAppSource` got rename to `ShopifySalesChannel`
+  - `getClientBrowserParameters` returns empty string for each field key if run on server
+  - Added documents on analytics components
+
+- 6184517: Added the following components and hooks, which have been a part of this package for awhile but weren't actually able to be used/imported.
+
+  - `<CartCost />`
+  - `<CartLinePrice />`
+  - `<CartLineProvider />`
+  - `useCartLine()`
+
+- 3309706: `<ShopifyProvider />` and `useShop()` have had a breaking update:
+
+  ## `ShopifyProvider`
+
+  - `<ShopifyProvider />` previously accepted a single `shopifyConfig` object as a prop; now, each of the keys in this object are their own separate props.
+  - We also removed `country` and `language` as objects, and they are now strings with the names `countryIsoCode` and `languageIsoCode`, respectively.
+  - The `locale` prop has been removed completely; this was a duplicative prop that was a combination of `countryIsoCode` and `languageIsoCode`, so it made no sense to have to include it as well.
+
+  An example:
+
+  ```tsx
+  // previously:
+
+  <ShopifyProvider
+    shopifyConfig={{
+      storeDomain: 'my-store',
+      storefrontToken: 'abc123',
+      storefrontApiVersion: '2022-10',
+      country: {
+        isoCode: 'CA',
+      },
+      language: {
+        isoCode: 'EN',
+      },
+      locale: 'EN-CA',
+    }}
+  >
+    {/* rest of your client-side app */}
+  </ShopifyProvider>
+  ```
+
+  ```tsx
+  // now
+
+  <ShopifyProvider
+    storeDomain="my-store"
+    storefrontToken="abc123"
+    storefrontApiVersion="2022-10"
+    countryIsoCode="CA"
+    languageIsoCode="EN"
+  >
+    {/* rest of your client-side app */}
+  </ShopifyProvider>
+  ```
+
+  ## `useShop()`
+
+  As noted above, `locale` was removed from the `<ShopifyProvider />` component, and `countryIsoCode` and `languageIsoCode` were renamed. Here's an example of how the return value of `useShop()` was affected
+
+  ```tsx
+  // before
+
+  const {country, language, locale} = useShop();
+
+  console.log(country.isoCode);
+  console.log(language.isoCode);
+  console.log(locale);
+  ```
+
+  ```tsx
+  // after
+
+  const {countryIsoCode, languageIsoCode} = useShop();
+
+  console.log(countryIsoCode);
+  console.log(languageIsoCode);
+  console.log(`${languageIsoCode}-${countryIsoCode}`);
+  ```
+
+  Note that `locale` can be replicated by combining `languageIsoCode` and `countryIsoCode` with a hypthen (`-`) between them.
+
 ## 2023.1.3
 
 ### Patch Changes
