@@ -31,7 +31,7 @@ import {DEFAULT_LOCALE, parseMenu, type EnhancedMenu} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
 import {useAnalytics} from './hooks/useAnalytics';
-import {I18nLocale} from './lib/type';
+import type {StorefrontContext} from './lib/type';
 
 const seo: SeoHandleFunction<typeof loader> = ({data, pathname}) => ({
   title: data?.layout?.shop?.name,
@@ -84,7 +84,7 @@ export async function loader({context}: LoaderArgs) {
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
-  const locale = (data.selectedLocale ?? DEFAULT_LOCALE) as I18nLocale;
+  const locale = data.selectedLocale ?? DEFAULT_LOCALE;
   const hasUserConsent = true;
 
   useAnalytics(hasUserConsent, locale);
@@ -359,7 +359,7 @@ const CART_QUERY = `#graphql
   }
 `;
 
-export async function getCart({storefront}: AppLoadContext, cartId: string) {
+export async function getCart({storefront}: StorefrontContext, cartId: string) {
   invariant(storefront, 'missing storefront client in cart query');
 
   const {cart} = await storefront.query<{cart?: Cart}>(CART_QUERY, {

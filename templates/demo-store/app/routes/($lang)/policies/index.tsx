@@ -1,14 +1,10 @@
-import {
-  json,
-  type MetaFunction,
-  type SerializeFrom,
-  type LoaderArgs,
-} from '@shopify/remix-oxygen';
+import {json} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 
 import {PageHeader, Section, Heading, Link} from '~/components';
+import {StorefrontLoaderArgs} from '~/lib/type';
 
 export const handle = {
   seo: {
@@ -16,7 +12,7 @@ export const handle = {
   },
 };
 
-export async function loader({context: {storefront}}: LoaderArgs) {
+export async function loader({context: {storefront}}: StorefrontLoaderArgs) {
   const data = await storefront.query<{
     shop: Record<string, ShopPolicy>;
   }>(POLICIES_QUERY);

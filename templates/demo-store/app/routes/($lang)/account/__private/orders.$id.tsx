@@ -291,7 +291,7 @@ export default function OrderRoute() {
                     </Text>
                   </li>
                   {order?.shippingAddress?.formatted ? (
-                    order.shippingAddress.formatted.map((line) => (
+                    order.shippingAddress.formatted.map((line: string) => (
                       <li key={line}>
                         <Text>{line}</Text>
                       </li>
