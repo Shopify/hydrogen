@@ -150,7 +150,7 @@ Depending on the bundler or runtime that you're using, the correct bundle might 
 
 Hydrogen React has a development `umd` build and a production `umd` build. Both are meant to be used directly either by `<script src=""></script>` tags in HTML or by `AMD`-compatible loaders.
 
-If you're using Hydrogen React as a global through the `<script>` tag, then the components can be accessed through the `storefrontkitreact` global variable.
+If you're using Hydrogen React as a global through the `<script>` tag, then the components can be accessed through the `hydrogenreact` global variable.
 
 ## Enable Storefront API GraphQL autocompletion
 
