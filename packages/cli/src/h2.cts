@@ -25,6 +25,16 @@ cliPath = path.join(cliPath.replace(/package\.json$/, ''), 'bin', 'run.js');
 
 const [, , ...args] = process.argv;
 
+const shortcuts = {
+  g: ['generate'],
+  gr: ['generate', 'route'],
+} as Record<string, string[]>;
+
+const expanded = shortcuts[args[0]!];
+if (expanded) {
+  args.splice(0, 1, ...expanded);
+}
+
 args.unshift('--experimental-vm-modules', cliPath, 'hydrogen');
 
 spawnSync('node', args, {
