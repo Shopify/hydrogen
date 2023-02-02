@@ -15,7 +15,7 @@ const commonConfig = {
 export default defineConfig([
   {
     ...commonConfig,
-    entry: ['src/**/*.ts'],
+    entry: ['src/**/*.ts', '!src/virtual-routes/**/*'],
     outDir: 'dist',
   },
   {
@@ -45,6 +45,12 @@ export default defineConfig([
     entry: ['src/virtual-routes/assets/dummy.ts'],
     outDir: 'dist/virtual-routes/assets',
     publicDir: 'src/virtual-routes/assets',
+    dts: false,
+  },
+  {
+    format: 'cjs',
+    entry: ['src/h2.cts'],
+    outDir: 'dist',
     dts: false,
   },
 ]);
