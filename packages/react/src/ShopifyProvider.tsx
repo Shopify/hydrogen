@@ -7,13 +7,8 @@ const ShopifyContext = createContext<ShopifyContextValue>({
   storeDomain: 'test',
   storefrontToken: 'abc123',
   storefrontApiVersion: SFAPI_VERSION,
-  country: {
-    isoCode: 'US',
-  },
-  language: {
-    isoCode: 'EN',
-  },
-  locale: 'EN-US',
+  countryIsoCode: 'US',
+  languageIsoCode: 'EN',
   getStorefrontApiUrl() {
     return '';
   },
@@ -25,21 +20,22 @@ const ShopifyContext = createContext<ShopifyContextValue>({
   },
 });
 
-type ShopifyProviderProps = {
-  children: ReactNode;
-  shopifyConfig: ShopifyContextProps;
-};
-
 /**
  * The `<ShopifyProvider/>` component enables use of the `useShop()` hook. The component should wrap your app.
  */
 export function ShopifyProvider({
   children,
-  shopifyConfig,
+  ...shopifyConfig
 }: ShopifyProviderProps) {
-  if (!shopifyConfig) {
+  if (
+    !shopifyConfig.countryIsoCode ||
+    !shopifyConfig.languageIsoCode ||
+    !shopifyConfig.storeDomain ||
+    !shopifyConfig.storefrontToken ||
+    !shopifyConfig.storefrontApiVersion
+  ) {
     throw new Error(
-      `The 'shopifyConfig' prop must be passed to '<ShopifyProvider/>'`
+      `Please provide the necessary props to '<ShopifyProvider/>'`
     );
   }
 
@@ -88,7 +84,7 @@ export function ShopifyProvider({
 /**
  * Provides access to the `shopifyConfig` prop of `<ShopifyProvider/>`. Must be a descendent of `<ShopifyProvider/>`.
  */
-export function useShop() {
+export function useShop(): ShopifyContextValue {
   const shopContext = useContext(ShopifyContext);
   if (!shopContext) {
     throw new Error(`'useShop()' must be a descendent of <ShopifyProvider/>`);
@@ -99,7 +95,7 @@ export function useShop() {
 /**
  * Shopify-specific values that are used in various React Storefront Kit components and hooks.
  */
-export type ShopifyContextProps = {
+export type ShopifyProviderProps = {
   /** The globally-unique identifier for the Shop */
   storefrontId?: string;
   /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */
@@ -108,29 +104,20 @@ export type ShopifyContextProps = {
   storefrontToken: string;
   /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
   storefrontApiVersion: string;
-  country?: ContextCountry;
-  language?: ContextLanguage;
-  /**
-   * The locale string based on `country` and `language`.
-   */
-  locale?: string;
-};
-
-type ContextCountry = {
   /**
    * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.
    */
-  isoCode: CountryCode;
-};
-
-type ContextLanguage = {
+  countryIsoCode: CountryCode;
   /**
    * `ISO 369` language codes supported by Shopify.
    */
-  isoCode: LanguageCode;
+  languageIsoCode: LanguageCode;
+  /** React children to render. */
+  children?: ReactNode;
 };
 
-export type ShopifyContextValue = ShopifyContextProps & ShopifyContextReturn;
+export type ShopifyContextValue = Omit<ShopifyProviderProps, 'children'> &
+  ShopifyContextReturn;
 
 type ShopifyContextReturn = {
   /**

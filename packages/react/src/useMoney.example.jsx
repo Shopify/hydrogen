@@ -2,7 +2,7 @@ import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';
 
 export function App() {
   return (
-    <ShopifyProvider shopifyConfig={{locale: 'en'}}>
+    <ShopifyProvider languageIsoCode="EN" countryIsoCode="US">
       <UsingMoney />
     </ShopifyProvider>
   );

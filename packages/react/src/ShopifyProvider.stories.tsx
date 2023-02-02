@@ -2,7 +2,7 @@ import type {Story} from '@ladle/react';
 import {
   ShopifyProvider,
   useShop,
-  type ShopifyContextProps,
+  type ShopifyProviderProps,
 } from './ShopifyProvider.js';
 
 const Template: Story<{
@@ -10,20 +10,15 @@ const Template: Story<{
   storefrontToken: string;
   version: string;
 }> = ({storeDomain, storefrontToken, version}) => {
-  const config: ShopifyContextProps = {
+  const config: ShopifyProviderProps = {
     storeDomain,
     storefrontToken,
     storefrontApiVersion: version,
-    country: {
-      isoCode: 'CA',
-    },
-    language: {
-      isoCode: 'EN',
-    },
-    locale: 'en-CA',
+    countryIsoCode: 'CA',
+    languageIsoCode: 'EN',
   };
   return (
-    <ShopifyProvider shopifyConfig={config}>
+    <ShopifyProvider {...config}>
       <TemplateChildren />
     </ShopifyProvider>
   );

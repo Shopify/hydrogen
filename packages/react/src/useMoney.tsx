@@ -57,7 +57,8 @@ export type UseMoneyValue = {
  * Uses `locale` from `ShopifyProvider`
  */
 export function useMoney(money: MoneyV2): UseMoneyValue {
-  const {locale} = useShop();
+  const {countryIsoCode, languageIsoCode} = useShop();
+  const locale = `${languageIsoCode}-${countryIsoCode}`;
 
   if (!locale) {
     throw new Error(

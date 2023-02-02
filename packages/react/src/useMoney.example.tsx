@@ -3,8 +3,8 @@ import type {MoneyV2} from '@shopify/storefront-kit-react/storefront-api-types';
 
 export function App() {
   return (
-    // @ts-expect-error missing values for shopifyConfig
-    <ShopifyProvider shopifyConfig={{locale: 'en'}}>
+    // @ts-expect-error intentionally missing the rest of the props
+    <ShopifyProvider countryIsoCode="US" languageIsoCode="EN">
       <UsingMoney />
     </ShopifyProvider>
   );

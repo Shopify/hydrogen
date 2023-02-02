@@ -13,7 +13,7 @@ function ShopifyCartProvider(
 ) {
   return function Wrapper({children}: PropsWithChildren) {
     return (
-      <ShopifyProvider shopifyConfig={getShopifyConfig()}>
+      <ShopifyProvider {...getShopifyConfig()}>
         <CartProvider {...props}>{children}</CartProvider>
       </ShopifyProvider>
     );

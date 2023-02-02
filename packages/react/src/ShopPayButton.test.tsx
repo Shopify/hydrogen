@@ -26,9 +26,7 @@ describe(`<ShopPayButton />`, () => {
       // @ts-expect-error Purposely not passing the correct props
       render(<ShopPayButton />, {
         wrapper: ({children}) => (
-          <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-            {children}
-          </ShopifyProvider>
+          <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
       })
     ).toThrow(MissingPropsErrorMessage);
@@ -39,9 +37,7 @@ describe(`<ShopPayButton />`, () => {
       // @ts-expect-error Purposely passing in both props when they shouyldn't be
       render(<ShopPayButton variantIds={[]} variantIdsAndQuantities={[]} />, {
         wrapper: ({children}) => (
-          <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-            {children}
-          </ShopifyProvider>
+          <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
       })
     ).toThrow(DoublePropsErrorMessage);
@@ -51,9 +47,7 @@ describe(`<ShopPayButton />`, () => {
     const fakeId = 'gid://shopify/ProductVariant/123';
     const {container} = render(<ShopPayButton variantIds={[fakeId]} />, {
       wrapper: ({children}) => (
-        <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-          {children}
-        </ShopifyProvider>
+        <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
       ),
     });
 
@@ -75,9 +69,7 @@ describe(`<ShopPayButton />`, () => {
       />,
       {
         wrapper: ({children}) => (
-          <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-            {children}
-          </ShopifyProvider>
+          <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
       }
     );
@@ -101,9 +93,7 @@ describe(`<ShopPayButton />`, () => {
       />,
       {
         wrapper: ({children}) => (
-          <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-            {children}
-          </ShopifyProvider>
+          <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
       }
     );
@@ -119,9 +109,7 @@ describe(`<ShopPayButton />`, () => {
     expect(() =>
       render(<ShopPayButton variantIds={[fakeId]} />, {
         wrapper: ({children}) => (
-          <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-            {children}
-          </ShopifyProvider>
+          <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
       })
     ).toThrow(InvalidPropsErrorMessage);

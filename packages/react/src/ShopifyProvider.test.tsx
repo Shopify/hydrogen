@@ -2,27 +2,22 @@ import {render, screen, renderHook} from '@testing-library/react';
 import {
   ShopifyProvider,
   useShop,
-  type ShopifyContextProps,
+  type ShopifyProviderProps,
 } from './ShopifyProvider.js';
 import type {PartialDeep} from 'type-fest';
 
-const SHOPIFY_CONFIG: ShopifyContextProps = {
+const SHOPIFY_CONFIG: ShopifyProviderProps = {
   storeDomain: 'https://notashop.myshopify.com',
   storefrontToken: 'abc123',
   storefrontApiVersion: '2023-01',
-  country: {
-    isoCode: 'CA',
-  },
-  language: {
-    isoCode: 'EN',
-  },
-  locale: 'en-CA',
+  countryIsoCode: 'CA',
+  languageIsoCode: 'EN',
 };
 
 describe('<ShopifyProvider/>', () => {
   it('renders its children', () => {
     render(
-      <ShopifyProvider shopifyConfig={SHOPIFY_CONFIG}>
+      <ShopifyProvider {...SHOPIFY_CONFIG}>
         <div>child</div>;
       </ShopifyProvider>
     );
@@ -35,10 +30,8 @@ describe('<ShopifyProvider/>', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'https://notashop.myshopify.com',
-            }}
+            {...SHOPIFY_CONFIG}
+            storeDomain="https://notashop.myshopify.com"
           >
             {children}
           </ShopifyProvider>
@@ -54,10 +47,8 @@ describe('<ShopifyProvider/>', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'https://notashop.myshopify.com',
-            }}
+            {...SHOPIFY_CONFIG}
+            storeDomain="https://notashop.myshopify.com"
           >
             {children}
           </ShopifyProvider>
@@ -78,10 +69,8 @@ describe('<ShopifyProvider/>', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'https://notashop.myshopify.com',
-            }}
+            {...SHOPIFY_CONFIG}
+            storeDomain="https://notashop.myshopify.com"
           >
             {children}
           </ShopifyProvider>
@@ -103,10 +92,8 @@ describe('<ShopifyProvider/>', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'https://notashop.myshopify.com',
-            }}
+            {...SHOPIFY_CONFIG}
+            storeDomain="https://notashop.myshopify.com"
           >
             {children}
           </ShopifyProvider>
@@ -133,10 +120,8 @@ describe('<ShopifyProvider/>', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'https://notashop.myshopify.com',
-            }}
+            {...SHOPIFY_CONFIG}
+            storeDomain="https://notashop.myshopify.com"
           >
             {children}
           </ShopifyProvider>
@@ -152,10 +137,8 @@ describe('<ShopifyProvider/>', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'https://notashop.myshopify.com',
-            }}
+            {...SHOPIFY_CONFIG}
+            storeDomain="https://notashop.myshopify.com"
           >
             {children}
           </ShopifyProvider>
@@ -175,10 +158,8 @@ describe('<ShopifyProvider/>', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'https://notashop.myshopify.com',
-            }}
+            {...SHOPIFY_CONFIG}
+            storeDomain="https://notashop.myshopify.com"
           >
             {children}
           </ShopifyProvider>
@@ -194,10 +175,8 @@ describe('<ShopifyProvider/>', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'https://notashop.myshopify.com',
-            }}
+            {...SHOPIFY_CONFIG}
+            storeDomain="https://notashop.myshopify.com"
           >
             {children}
           </ShopifyProvider>
@@ -215,10 +194,8 @@ describe('<ShopifyProvider/>', () => {
       const {result} = renderHook(() => useShop(), {
         wrapper: ({children}) => (
           <ShopifyProvider
-            shopifyConfig={{
-              ...SHOPIFY_CONFIG,
-              storeDomain: 'https://notashop.myshopify.com/',
-            }}
+            {...SHOPIFY_CONFIG}
+            storeDomain="https://notashop.myshopify.com/"
           >
             {children}
           </ShopifyProvider>
@@ -233,16 +210,11 @@ describe('<ShopifyProvider/>', () => {
 });
 
 export function getShopifyConfig(
-  config: PartialDeep<ShopifyContextProps, {recurseIntoArrays: true}> = {}
+  config: PartialDeep<ShopifyProviderProps, {recurseIntoArrays: true}> = {}
 ) {
   return {
-    country: {
-      isoCode: config.country?.isoCode ?? 'US',
-    },
-    language: {
-      isoCode: config.language?.isoCode ?? 'EN',
-    },
-    locale: config.locale ?? 'EN-US',
+    countryIsoCode: config.countryIsoCode ?? 'US',
+    languageIsoCode: config.languageIsoCode ?? 'EN',
     storeDomain: config.storeDomain ?? 'https://notashop.myshopify.io',
     storefrontToken: config.storefrontToken ?? 'abc123',
     storefrontApiVersion: config.storefrontApiVersion ?? '2023-01',

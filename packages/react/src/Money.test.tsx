@@ -9,9 +9,7 @@ describe('<Money />', () => {
     const money = getPrice({currencyCode: 'USD'});
     render(<Money data={money} />, {
       wrapper: ({children}) => (
-        <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-          {children}
-        </ShopifyProvider>
+        <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
       ),
     });
 
@@ -24,9 +22,7 @@ describe('<Money />', () => {
     });
     render(<Money data={money} />, {
       wrapper: ({children}) => (
-        <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-          {children}
-        </ShopifyProvider>
+        <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
       ),
     });
 
@@ -37,9 +33,7 @@ describe('<Money />', () => {
     const money = getPrice();
     render(<Money data={money} className="money" />, {
       wrapper: ({children}) => (
-        <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-          {children}
-        </ShopifyProvider>
+        <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
       ),
     });
 
@@ -51,9 +45,7 @@ describe('<Money />', () => {
 
     render(<Money data={money} as="button" disabled />, {
       wrapper: ({children}) => (
-        <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-          {children}
-        </ShopifyProvider>
+        <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
       ),
     });
 
@@ -71,9 +63,7 @@ describe('<Money />', () => {
     });
     render(<Money data={money} withoutTrailingZeros />, {
       wrapper: ({children}) => (
-        <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-          {children}
-        </ShopifyProvider>
+        <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
       ),
     });
 
@@ -87,9 +77,7 @@ describe('<Money />', () => {
     });
     render(<Money data={money} withoutCurrency />, {
       wrapper: ({children}) => (
-        <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-          {children}
-        </ShopifyProvider>
+        <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
       ),
     });
 
@@ -104,9 +92,7 @@ describe('<Money />', () => {
     });
     render(<Money data={money} withoutCurrency withoutTrailingZeros />, {
       wrapper: ({children}) => (
-        <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-          {children}
-        </ShopifyProvider>
+        <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
       ),
     });
 
@@ -124,9 +110,7 @@ describe('<Money />', () => {
     const measurement = getUnitPriceMeasurement();
     render(<Money data={money} measurement={measurement} />, {
       wrapper: ({children}) => (
-        <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-          {children}
-        </ShopifyProvider>
+        <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
       ),
     });
 
@@ -152,9 +136,7 @@ describe('<Money />', () => {
       />,
       {
         wrapper: ({children}) => (
-          <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-            {children}
-          </ShopifyProvider>
+          <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
       }
     );
@@ -182,9 +164,7 @@ describe('<Money />', () => {
       />,
       {
         wrapper: ({children}) => (
-          <ShopifyProvider shopifyConfig={getShopifyConfig()}>
-            {children}
-          </ShopifyProvider>
+          <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
       }
     );

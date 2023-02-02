@@ -4739,12 +4739,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ShopifyProvider} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      shopifyConfig={{\n        storeDomain: 'my-store',\n        storefrontToken: 'abc123',\n        storefrontApiVersion: '2022-10',\n      }}\n    >\n      {/* rest of your client-side app */}\n    </ShopifyProvider>\n  );\n}\n",
+            "code": "import {ShopifyProvider, useShop} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ShopifyProvider} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      shopifyConfig={{\n        storeDomain: 'my-store',\n        storefrontToken: 'abc123',\n        storefrontApiVersion: '2022-10',\n      }}\n    >\n      {/* rest of your client-side app */}\n    </ShopifyProvider>\n  );\n}\n",
+            "code": "import {ShopifyProvider, useShop} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -4761,30 +4761,7 @@
             "filePath": "/ShopifyProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyProviderProps",
-            "value": "{\n  children: ReactNode;\n  shopifyConfig: ShopifyContextProps;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/ShopifyProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "children",
-                "value": "ReactNode",
-                "description": ""
-              },
-              {
-                "filePath": "/ShopifyProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "shopifyConfig",
-                "value": "ShopifyContextProps",
-                "description": ""
-              }
-            ]
-          },
-          "ShopifyContextProps": {
-            "filePath": "/ShopifyProvider.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyContextProps",
-            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  country?: ContextCountry;\n  language?: ContextLanguage;\n  /**\n   * The locale string based on `country` and `language`.\n   */\n  locale?: string;\n}",
+            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.\n   */\n  countryIsoCode: CountryCode;\n  /**\n   * `ISO 369` language codes supported by Shopify.\n   */\n  languageIsoCode: LanguageCode;\n  /** React children to render. */\n  children?: ReactNode;\n}",
             "description": "Shopify-specific values that are used in various React Storefront Kit components and hooks.",
             "members": [
               {
@@ -4819,58 +4796,24 @@
               {
                 "filePath": "/ShopifyProvider.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "country",
-                "value": "ContextCountry",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/ShopifyProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "language",
-                "value": "ContextLanguage",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/ShopifyProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "locale",
-                "value": "string",
-                "description": "The locale string based on `country` and `language`.",
-                "isOptional": true
-              }
-            ]
-          },
-          "ContextCountry": {
-            "filePath": "/ShopifyProvider.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ContextCountry",
-            "value": "{\n  /**\n   * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.\n   */\n  isoCode: CountryCode;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/ShopifyProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "isoCode",
+                "name": "countryIsoCode",
                 "value": "CountryCode",
                 "description": "The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`."
-              }
-            ]
-          },
-          "ContextLanguage": {
-            "filePath": "/ShopifyProvider.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ContextLanguage",
-            "value": "{\n  /**\n   * `ISO 369` language codes supported by Shopify.\n   */\n  isoCode: LanguageCode;\n}",
-            "description": "",
-            "members": [
+              },
               {
                 "filePath": "/ShopifyProvider.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "isoCode",
+                "name": "languageIsoCode",
                 "value": "LanguageCode",
                 "description": "`ISO 369` language codes supported by Shopify."
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "ReactNode",
+                "description": "React children to render.",
+                "isOptional": true
               }
             ]
           }
@@ -6608,12 +6551,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';\n\nexport function App() {\n  return (\n    <ShopifyProvider shopifyConfig={{locale: 'en'}}>\n      <UsingMoney />\n    </ShopifyProvider>\n  );\n}\n\nfunction UsingMoney() {\n  const myMoney = {amount: '100', currencyCode: 'USD'};\n  const money = useMoney(myMoney);\n  return (\n    <>\n      <div>Localized money: {money.localizedString}</div>\n      <div>Money without trailing zeros: {money.withoutTrailingZeros}</div>\n    </>\n  );\n}\n",
+            "code": "import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';\n\nexport function App() {\n  return (\n    <ShopifyProvider languageIsoCode=\"EN\" countryIsoCode=\"US\">\n      <UsingMoney />\n    </ShopifyProvider>\n  );\n}\n\nfunction UsingMoney() {\n  const myMoney = {amount: '100', currencyCode: 'USD'};\n  const money = useMoney(myMoney);\n  return (\n    <>\n      <div>Localized money: {money.localizedString}</div>\n      <div>Money without trailing zeros: {money.withoutTrailingZeros}</div>\n    </>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';\nimport type {MoneyV2} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function App() {\n  return (\n    // @ts-expect-error missing values for shopifyConfig\n    <ShopifyProvider shopifyConfig={{locale: 'en'}}>\n      <UsingMoney />\n    </ShopifyProvider>\n  );\n}\n\nfunction UsingMoney() {\n  const myMoney = {amount: '100', currencyCode: 'USD'} satisfies MoneyV2;\n  const money = useMoney(myMoney);\n  return (\n    <>\n      <div>Localized money: {money.localizedString}</div>\n      <div>Money without trailing zeros: {money.withoutTrailingZeros}</div>\n    </>\n  );\n}\n",
+            "code": "import {useMoney, ShopifyProvider} from '@shopify/storefront-kit-react';\nimport type {MoneyV2} from '@shopify/storefront-kit-react/storefront-api-types';\n\nexport function App() {\n  return (\n    // @ts-expect-error intentionally missing the rest of the props\n    <ShopifyProvider countryIsoCode=\"US\" languageIsoCode=\"EN\">\n      <UsingMoney />\n    </ShopifyProvider>\n  );\n}\n\nfunction UsingMoney() {\n  const myMoney = {amount: '100', currencyCode: 'USD'} satisfies MoneyV2;\n  const money = useMoney(myMoney);\n  return (\n    <>\n      <div>Localized money: {money.localizedString}</div>\n      <div>Money without trailing zeros: {money.withoutTrailingZeros}</div>\n    </>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -6643,7 +6586,7 @@
               "name": "UseMoneyValue",
               "value": "UseMoneyValue"
             },
-            "value": "export function useMoney(money: MoneyV2): UseMoneyValue {\n  const {locale} = useShop();\n\n  if (!locale) {\n    throw new Error(\n      `useMoney(): Unable to get 'locale' from 'useShop()', which means that 'locale' was not passed to '<ShopifyProvider/>'. 'locale' is required for 'useMoney()' to work`\n    );\n  }\n\n  const amount = parseFloat(money.amount);\n\n  const options = useMemo(\n    () => ({\n      style: 'currency',\n      currency: money.currencyCode,\n    }),\n    [money.currencyCode]\n  );\n\n  const defaultFormatter = useLazyFormatter(locale, options);\n\n  const nameFormatter = useLazyFormatter(locale, {\n    ...options,\n    currencyDisplay: 'name',\n  });\n\n  const narrowSymbolFormatter = useLazyFormatter(locale, {\n    ...options,\n    currencyDisplay: 'narrowSymbol',\n  });\n\n  const withoutTrailingZerosFormatter = useLazyFormatter(locale, {\n    ...options,\n    minimumFractionDigits: 0,\n    maximumFractionDigits: 0,\n  });\n\n  const withoutCurrencyFormatter = useLazyFormatter(locale);\n\n  const withoutTrailingZerosOrCurrencyFormatter = useLazyFormatter(locale, {\n    minimumFractionDigits: 0,\n    maximumFractionDigits: 0,\n  });\n\n  const isPartCurrency = (part: Intl.NumberFormatPart) =>\n    part.type === 'currency';\n\n  // By wrapping these properties in functions, we only\n  // create formatters if they are going to be used.\n  const lazyFormatters = useMemo(\n    () => ({\n      original: () => money,\n      currencyCode: () => money.currencyCode,\n\n      localizedString: () => defaultFormatter().format(amount),\n\n      parts: () => defaultFormatter().formatToParts(amount),\n\n      withoutTrailingZeros: () =>\n        amount % 1 === 0\n          ? withoutTrailingZerosFormatter().format(amount)\n          : defaultFormatter().format(amount),\n\n      withoutTrailingZerosAndCurrency: () =>\n        amount % 1 === 0\n          ? withoutTrailingZerosOrCurrencyFormatter().format(amount)\n          : withoutCurrencyFormatter().format(amount),\n\n      currencyName: () =>\n        nameFormatter().formatToParts(amount).find(isPartCurrency)?.value ??\n        money.currencyCode, // e.g. \"US dollars\"\n\n      currencySymbol: () =>\n        defaultFormatter().formatToParts(amount).find(isPartCurrency)?.value ??\n        money.currencyCode, // e.g. \"USD\"\n\n      currencyNarrowSymbol: () =>\n        narrowSymbolFormatter().formatToParts(amount).find(isPartCurrency)\n          ?.value ?? '', // e.g. \"$\"\n\n      amount: () =>\n        defaultFormatter()\n          .formatToParts(amount)\n          .filter((part) =>\n            ['decimal', 'fraction', 'group', 'integer', 'literal'].includes(\n              part.type\n            )\n          )\n          .map((part) => part.value)\n          .join(''),\n    }),\n    [\n      money,\n      amount,\n      nameFormatter,\n      defaultFormatter,\n      narrowSymbolFormatter,\n      withoutCurrencyFormatter,\n      withoutTrailingZerosFormatter,\n      withoutTrailingZerosOrCurrencyFormatter,\n    ]\n  );\n\n  // Call functions automatically when the properties are accessed\n  // to keep these functions as an implementation detail.\n  return useMemo(\n    () =>\n      new Proxy(lazyFormatters as unknown as UseMoneyValue, {\n        get: (target, key) => Reflect.get(target, key)?.call(null),\n      }),\n    [lazyFormatters]\n  );\n}"
+            "value": "export function useMoney(money: MoneyV2): UseMoneyValue {\n  const {countryIsoCode, languageIsoCode} = useShop();\n  const locale = `${languageIsoCode}-${countryIsoCode}`;\n\n  if (!locale) {\n    throw new Error(\n      `useMoney(): Unable to get 'locale' from 'useShop()', which means that 'locale' was not passed to '<ShopifyProvider/>'. 'locale' is required for 'useMoney()' to work`\n    );\n  }\n\n  const amount = parseFloat(money.amount);\n\n  const options = useMemo(\n    () => ({\n      style: 'currency',\n      currency: money.currencyCode,\n    }),\n    [money.currencyCode]\n  );\n\n  const defaultFormatter = useLazyFormatter(locale, options);\n\n  const nameFormatter = useLazyFormatter(locale, {\n    ...options,\n    currencyDisplay: 'name',\n  });\n\n  const narrowSymbolFormatter = useLazyFormatter(locale, {\n    ...options,\n    currencyDisplay: 'narrowSymbol',\n  });\n\n  const withoutTrailingZerosFormatter = useLazyFormatter(locale, {\n    ...options,\n    minimumFractionDigits: 0,\n    maximumFractionDigits: 0,\n  });\n\n  const withoutCurrencyFormatter = useLazyFormatter(locale);\n\n  const withoutTrailingZerosOrCurrencyFormatter = useLazyFormatter(locale, {\n    minimumFractionDigits: 0,\n    maximumFractionDigits: 0,\n  });\n\n  const isPartCurrency = (part: Intl.NumberFormatPart) =>\n    part.type === 'currency';\n\n  // By wrapping these properties in functions, we only\n  // create formatters if they are going to be used.\n  const lazyFormatters = useMemo(\n    () => ({\n      original: () => money,\n      currencyCode: () => money.currencyCode,\n\n      localizedString: () => defaultFormatter().format(amount),\n\n      parts: () => defaultFormatter().formatToParts(amount),\n\n      withoutTrailingZeros: () =>\n        amount % 1 === 0\n          ? withoutTrailingZerosFormatter().format(amount)\n          : defaultFormatter().format(amount),\n\n      withoutTrailingZerosAndCurrency: () =>\n        amount % 1 === 0\n          ? withoutTrailingZerosOrCurrencyFormatter().format(amount)\n          : withoutCurrencyFormatter().format(amount),\n\n      currencyName: () =>\n        nameFormatter().formatToParts(amount).find(isPartCurrency)?.value ??\n        money.currencyCode, // e.g. \"US dollars\"\n\n      currencySymbol: () =>\n        defaultFormatter().formatToParts(amount).find(isPartCurrency)?.value ??\n        money.currencyCode, // e.g. \"USD\"\n\n      currencyNarrowSymbol: () =>\n        narrowSymbolFormatter().formatToParts(amount).find(isPartCurrency)\n          ?.value ?? '', // e.g. \"$\"\n\n      amount: () =>\n        defaultFormatter()\n          .formatToParts(amount)\n          .filter((part) =>\n            ['decimal', 'fraction', 'group', 'integer', 'literal'].includes(\n              part.type\n            )\n          )\n          .map((part) => part.value)\n          .join(''),\n    }),\n    [\n      money,\n      amount,\n      nameFormatter,\n      defaultFormatter,\n      narrowSymbolFormatter,\n      withoutCurrencyFormatter,\n      withoutTrailingZerosFormatter,\n      withoutTrailingZerosOrCurrencyFormatter,\n    ]\n  );\n\n  // Call functions automatically when the properties are accessed\n  // to keep these functions as an implementation detail.\n  return useMemo(\n    () =>\n      new Proxy(lazyFormatters as unknown as UseMoneyValue, {\n        get: (target, key) => Reflect.get(target, key)?.call(null),\n      }),\n    [lazyFormatters]\n  );\n}"
           },
           "UseMoneyValue": {
             "filePath": "/useMoney.tsx",
@@ -6724,6 +6667,222 @@
                 "name": "withoutTrailingZerosAndCurrency",
                 "value": "string",
                 "description": "A string without currency and without trailing zeros removed from the fractional part, if any exist. If there are no trailing zeros, then the fractional part remains.\nFor example, `$640.00` turns into `640`.\n`$640.42` turns into `640.42`."
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "useShop",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "ShopifyProvider",
+        "type": "components",
+        "url": "/api/react-storefront-kit/components/ShopifyProvider"
+      }
+    ],
+    "description": "\n    Provides access to the `shopifyConfig` prop of `<ShopifyProvider/>`. Must be a descendent of `<ShopifyProvider/>`.\n  ",
+    "type": "hook",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {ShopifyProvider, useShop} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {ShopifyProvider, useShop} from '@shopify/storefront-kit-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "UseShopGeneratedType",
+        "typeDefinitions": {
+          "UseShopGeneratedType": {
+            "filePath": "/ShopifyProvider.tsx",
+            "name": "UseShopGeneratedType",
+            "params": [],
+            "returns": {
+              "filePath": "/ShopifyProvider.tsx",
+              "description": "",
+              "name": "ShopifyContextValue",
+              "value": "ShopifyContextValue"
+            },
+            "value": "export function useShop(): ShopifyContextValue {\n  const shopContext = useContext(ShopifyContext);\n  if (!shopContext) {\n    throw new Error(`'useShop()' must be a descendent of <ShopifyProvider/>`);\n  }\n  return shopContext;\n}"
+          },
+          "ShopifyContextValue": {
+            "filePath": "/ShopifyProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyContextValue",
+            "value": "Omit<ShopifyProviderProps, 'children'> & ShopifyContextReturn",
+            "description": ""
+          },
+          "ShopifyProviderProps": {
+            "filePath": "/ShopifyProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyProviderProps",
+            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.\n   */\n  countryIsoCode: CountryCode;\n  /**\n   * `ISO 369` language codes supported by Shopify.\n   */\n  languageIsoCode: LanguageCode;\n  /** React children to render. */\n  children?: ReactNode;\n}",
+            "description": "Shopify-specific values that are used in various React Storefront Kit components and hooks.",
+            "members": [
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontId",
+                "value": "string",
+                "description": "The globally-unique identifier for the Shop",
+                "isOptional": true
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storeDomain",
+                "value": "string",
+                "description": "The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`)."
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontToken",
+                "value": "string",
+                "description": "The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details."
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontApiVersion",
+                "value": "string",
+                "description": "The Storefront API version. This should almost always be the same as the version React Storefront Kit was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details."
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "countryIsoCode",
+                "value": "CountryCode",
+                "description": "The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`."
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "languageIsoCode",
+                "value": "LanguageCode",
+                "description": "`ISO 369` language codes supported by Shopify."
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "ReactNode",
+                "description": "React children to render.",
+                "isOptional": true
+              }
+            ]
+          },
+          "ShopifyContextReturn": {
+            "filePath": "/ShopifyProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyContextReturn",
+            "value": "{\n  /**\n   * Creates the fully-qualified URL to your store's GraphQL endpoint.\n   *\n   * By default, it will use the config you passed in when creating `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getStorefrontApiUrl({...})`:\n   *\n   * - `storeDomain`\n   * - `storefrontApiVersion`\n   */\n  getStorefrontApiUrl: (props?: GetStorefrontApiUrlProps) => string;\n  /**\n   * Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. This uses the public Storefront API token.\n   *\n   * By default, it will use the config you passed in when creating `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getPublicTokenHeaders({...})`:\n   *\n   * - `contentType`\n   * - `storefrontToken`\n   *\n   */\n  getPublicTokenHeaders: (\n    props: GetPublicTokenHeadersProps\n  ) => Record<string, string>;\n  /**\n   * Creates the fully-qualified URL to your myshopify.com domain.\n   *\n   * By default, it will use the config you passed in when calling `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getShopifyDomain({...})`:\n   *\n   * - `storeDomain`\n   */\n  getShopifyDomain: (props?: GetShopifyDomainProps) => string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "getStorefrontApiUrl",
+                "value": "(props?: GetStorefrontApiUrlProps) => string",
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint.\n\nBy default, it will use the config you passed in when creating `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getStorefrontApiUrl({...})`:\n\n- `storeDomain`\n- `storefrontApiVersion`"
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "getPublicTokenHeaders",
+                "value": "(props: GetPublicTokenHeadersProps) => Record<string, string>",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. This uses the public Storefront API token.\n\nBy default, it will use the config you passed in when creating `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getPublicTokenHeaders({...})`:\n\n- `contentType`\n- `storefrontToken`"
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "getShopifyDomain",
+                "value": "(props?: GetShopifyDomainProps) => string",
+                "description": "Creates the fully-qualified URL to your myshopify.com domain.\n\nBy default, it will use the config you passed in when calling `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getShopifyDomain({...})`:\n\n- `storeDomain`"
+              }
+            ]
+          },
+          "GetStorefrontApiUrlProps": {
+            "filePath": "/ShopifyProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GetStorefrontApiUrlProps",
+            "value": "{\n  /** The host name of the domain (eg: `{shop}.myshopify.com`). */\n  storeDomain?: string;\n  /** The Storefront API version. This should almost always be the same as the version Hydrogen-UI was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details. */\n  storefrontApiVersion?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storeDomain",
+                "value": "string",
+                "description": "The host name of the domain (eg: `{shop}.myshopify.com`).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontApiVersion",
+                "value": "string",
+                "description": "The Storefront API version. This should almost always be the same as the version Hydrogen-UI was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.",
+                "isOptional": true
+              }
+            ]
+          },
+          "GetPublicTokenHeadersProps": {
+            "filePath": "/ShopifyProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GetPublicTokenHeadersProps",
+            "value": "{\n  /**\n   * Customizes which `\"content-type\"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `\"json\"`. When fetching with a `body` that is a plain string, use `\"graphql\"`. Defaults to `\"json\"`\n   */\n  contentType: 'json' | 'graphql';\n  /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "contentType",
+                "value": "\"json\" | \"graphql\"",
+                "description": "Customizes which `\"content-type\"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `\"json\"`. When fetching with a `body` that is a plain string, use `\"graphql\"`. Defaults to `\"json\"`"
+              },
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontToken",
+                "value": "string",
+                "description": "The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details.",
+                "isOptional": true
+              }
+            ]
+          },
+          "GetShopifyDomainProps": {
+            "filePath": "/ShopifyProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GetShopifyDomainProps",
+            "value": "{storeDomain?: string}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storeDomain",
+                "value": "string",
+                "description": "",
+                "isOptional": true
               }
             ]
           }

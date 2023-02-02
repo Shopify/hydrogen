@@ -1,7 +1,7 @@
 import {ComponentProps, useState} from 'react';
 import type {Story} from '@ladle/react';
 import {CartProvider, storageAvailable, useCart} from './CartProvider.js';
-import {type ShopifyContextProps, ShopifyProvider} from './ShopifyProvider.js';
+import {type ShopifyProviderProps, ShopifyProvider} from './ShopifyProvider.js';
 import {CART_ID_STORAGE_KEY} from './cart-constants.js';
 
 const merchandiseId = 'gid://shopify/ProductVariant/41007290482744';
@@ -208,22 +208,17 @@ function CartComponent() {
   );
 }
 
-const config: ShopifyContextProps = {
+const config: ShopifyProviderProps = {
   storeDomain: 'hydrogen-preview.myshopify.com',
   storefrontToken: '3b580e70970c4528da70c98e097c2fa0',
   storefrontApiVersion: '2023-01',
-  country: {
-    isoCode: 'CA',
-  },
-  language: {
-    isoCode: 'EN',
-  },
-  locale: 'en-CA',
+  countryIsoCode: 'CA',
+  languageIsoCode: 'EN',
 };
 
 const Template: Story<ComponentProps<typeof CartProvider>> = (props) => {
   return (
-    <ShopifyProvider shopifyConfig={config}>
+    <ShopifyProvider {...config}>
       <CartProvider {...props}>
         <CartComponent />
       </CartProvider>
