@@ -1,7 +1,7 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
   type StorefrontApiResponseOk,
-} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
@@ -21,7 +21,7 @@ import {parseJSON} from './utils/parse-json';
 import {
   CountryCode,
   LanguageCode,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {warnOnce} from './utils/warning';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;

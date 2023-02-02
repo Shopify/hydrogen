@@ -33,7 +33,7 @@ export {
   useMoney,
   useShopifyCookies,
   Video,
-} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen-react';
 
 export type {
   ClientBrowserParameters,
@@ -51,4 +51,4 @@ export type {
   StorefrontApiResponseOk,
   StorefrontApiResponseOkPartial,
   StorefrontApiResponsePartial,
-} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen-react';
