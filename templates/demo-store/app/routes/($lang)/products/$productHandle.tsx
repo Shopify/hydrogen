@@ -39,6 +39,7 @@ import type {
   ProductConnection,
 } from '@shopify/hydrogen/storefront-api-types';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
+import type {Storefront} from '~/lib/type';
 
 const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   title: data?.product?.seo?.title,
@@ -589,7 +590,7 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
 `;
 
 async function getRecommendedProducts(
-  storefront: LoaderArgs['context']['storefront'],
+  storefront: Storefront,
   productId: string,
 ) {
   const products = await storefront.query<{

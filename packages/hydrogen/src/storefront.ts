@@ -26,12 +26,46 @@ import {warnOnce} from './utils/warning';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
-export type StorefrontClient = ReturnType<typeof createStorefrontClient>;
-export type Storefront = StorefrontClient['storefront'];
-
 export type I18nBase = {
   language: LanguageCode;
   country: CountryCode;
+};
+
+export type StorefrontClient<TI18n extends I18nBase> = {
+  storefront: Storefront<TI18n>;
+};
+
+export type Storefront<TI18n extends I18nBase> = {
+  query: <T>(
+    query: string,
+    payload?: StorefrontCommonOptions & {
+      cache?: CachingStrategy;
+    },
+  ) => Promise<T>;
+  mutate: <T>(
+    mutation: string,
+    payload?: StorefrontCommonOptions,
+  ) => Promise<T>;
+  cache?: Cache;
+  CacheNone: typeof CacheNone;
+  CacheLong: typeof CacheLong;
+  CacheShort: typeof CacheShort;
+  CacheCustom: typeof CacheCustom;
+  generateCacheControlHeader: typeof generateCacheControlHeader;
+  getPublicTokenHeaders: ReturnType<
+    typeof createStorefrontUtilities
+  >['getPublicTokenHeaders'];
+  getPrivateTokenHeaders: ReturnType<
+    typeof createStorefrontUtilities
+  >['getPrivateTokenHeaders'];
+  getShopifyDomain: ReturnType<
+    typeof createStorefrontUtilities
+  >['getShopifyDomain'];
+  getApiUrl: ReturnType<
+    typeof createStorefrontUtilities
+  >['getStorefrontApiUrl'];
+  isApiError: (error: any) => boolean;
+  i18n: TI18n;
 };
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
@@ -88,7 +122,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
   i18n,
   requestGroupId = generateUUID(),
   ...clientOptions
-}: CreateStorefrontClientOptions<TI18n>) {
+}: CreateStorefrontClientOptions<TI18n>): StorefrontClient<TI18n> {
   if (!cache) {
     // TODO: should only warn in development
     warnOnce(

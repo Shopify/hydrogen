@@ -4,6 +4,7 @@ import {flattenConnection, Image} from '@shopify/hydrogen';
 import type {Article, Blog} from '@shopify/hydrogen/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
+import {StorefrontLoaderArgs} from '~/lib/type';
 
 const BLOG_HANDLE = 'Journal';
 
@@ -13,7 +14,7 @@ export const handle = {
   },
 };
 
-export const loader = async ({context: {storefront}}: LoaderArgs) => {
+export const loader = async ({context: {storefront}}: StorefrontLoaderArgs) => {
   const {language, country} = storefront.i18n;
   const {blog} = await storefront.query<{
     blog: Blog;
@@ -29,7 +30,7 @@ export const loader = async ({context: {storefront}}: LoaderArgs) => {
     throw new Response('Not found', {status: 404});
   }
 
-  const articles = flattenConnection(blog.articles).map((article) => {
+  const articles = flattenConnection(blog.articles).map((article: Article) => {
     const {publishedAt} = article;
     return {
       ...article,

@@ -1,9 +1,9 @@
 import type {LoaderArgs} from '@remix-run/server-runtime';
-import type {StorefrontClient} from '../storefront';
+import type {I18nBase, StorefrontClient} from '../storefront';
 
 export function graphiqlLoader(
   {context} = {} as LoaderArgs & {
-    context: LoaderArgs['context'] & StorefrontClient;
+    context: LoaderArgs['context'] & StorefrontClient<I18nBase>;
   },
 ) {
   if (!context?.storefront) {
