@@ -1,9 +1,9 @@
 import {redirect} from '@remix-run/server-runtime';
 import type {UrlRedirectConnection} from '@shopify/storefront-kit-react/storefront-api-types';
-import type {Storefront} from '../storefront';
+import type {I18nBase, Storefront} from '../storefront';
 
 type StorefrontRedirect = {
-  storefront: Storefront;
+  storefront: Storefront<I18nBase>;
   request: Request;
   response?: Response;
 };
