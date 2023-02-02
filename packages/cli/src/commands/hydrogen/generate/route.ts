@@ -140,6 +140,7 @@ export async function runGenerate(
     templatesRoot?: string;
   },
 ): Promise<Result> {
+  let operation;
   const extension = typescript ? '.tsx' : '.jsx';
   const templatePath = path.join(
     templatesRoot,
@@ -172,9 +173,13 @@ export async function runGenerate(
       },
     ]);
 
-    return {
-      operation: choice.value === 'skip' ? 'skipped' : 'overwritten',
-    };
+    operation = choice.value === 'skip' ? 'skipped' : 'overwritten';
+
+    if (operation === 'skipped') {
+      return {operation};
+    }
+  } else {
+    operation = 'generated';
   }
 
   let templateContent = await file.read(templatePath);
@@ -220,7 +225,8 @@ export async function runGenerate(
   }
   // Write the final file to the user's project.
   await file.write(destinationPath, templateContent);
+
   return {
-    operation: 'generated',
+    operation: operation as 'generated' | 'overwritten',
   };
 }
