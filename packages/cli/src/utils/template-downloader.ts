@@ -13,7 +13,7 @@ export async function getLatestReleaseDownloadUrl() {
   const response = await http.fetch(REPO_RELEASES_URL);
   if (!response.ok || response.status >= 400) {
     throw new Error(
-      `Failed to fetch the latest release information. Status ${response.status} ${response.statusText}}`,
+      `Failed to fetch the latest release information. Status ${response.status} ${response.statusText}`,
     );
   }
 
