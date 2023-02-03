@@ -1,7 +1,6 @@
 import {useLoaderData} from '@remix-run/react';
 import {type MetaFunction, LinksFunction} from '@shopify/remix-oxygen';
 import {type Shop} from '@shopify/storefront-kit-react/storefront-api-types';
-import {Html} from '../components/Html.jsx';
 import {HydrogenLogoBaseBW} from '../components/HydrogenLogoBaseBW.jsx';
 import {HydrogenLogoBaseColor} from '../components/HydrogenLogoBaseColor.jsx';
 import {IconDiscord} from '../components/IconDiscord.jsx';
@@ -54,7 +53,7 @@ export default function Index() {
   const configDone = shopId !== HYDROGEN_SHOP_ID;
 
   return (
-    <Html>
+    <>
       <Layout shopName={shopName}>
         {configDone ? <HydrogenLogoBaseColor /> : <HydrogenLogoBaseBW />}
         <h1>Hello, {shopName || 'Hydrogen'}</h1>
@@ -74,13 +73,13 @@ export default function Index() {
         </section>
         <ResourcesLinks />
       </Layout>
-    </Html>
+    </>
   );
 }
 
 function ErrorPage() {
   return (
-    <Html>
+    <>
       <Layout shopName="Hydrogen">
         <HydrogenLogoBaseBW />
         <h1>Hello, Hydrogen</h1>
@@ -95,7 +94,7 @@ function ErrorPage() {
         </section>
         <ResourcesLinks />
       </Layout>
-    </Html>
+    </>
   );
 }
 
