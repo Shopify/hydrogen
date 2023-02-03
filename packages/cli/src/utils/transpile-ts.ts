@@ -131,7 +131,7 @@ export async function transpileProject(projectDir: string) {
     }
 
     const tsx = await fs.readFile(entry, 'utf8');
-    const mjs = await format(transpileFile(tsx), prettierConfig);
+    const mjs = format(transpileFile(tsx), prettierConfig);
 
     await fs.rm(entry);
     await fs.writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs, 'utf8');

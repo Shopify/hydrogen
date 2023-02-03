@@ -193,9 +193,10 @@ export async function runGenerate(
     const jsConfigPath = path.join(directory, 'jsconfig.json');
     const config = (await file.exists(jsConfigPath))
       ? JSON.parse(
-          await (
-            await file.read(jsConfigPath, {encoding: 'utf8'})
-          ).replace(/^\s*\/\/.*$/gm, ''),
+          (await file.read(jsConfigPath, {encoding: 'utf8'})).replace(
+            /^\s*\/\/.*$/gm,
+            '',
+          ),
         )
       : undefined;
 
