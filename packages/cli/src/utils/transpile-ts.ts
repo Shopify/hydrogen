@@ -42,12 +42,19 @@ export function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
   return restoreNewLines(compiled.outputText);
 }
 
+const DEFAULT_PRETTIER_CONFIG = {
+  arrowParens: 'always',
+  singleQuote: true,
+  bracketSpacing: false,
+  trailingComma: 'all',
+};
+
 export async function resolvePrettierConfig(filePath = process.cwd()) {
   try {
     // Try to read a prettier config file from the project.
-    return (await prettier.resolveConfig(filePath)) || {};
+    return (await prettier.resolveConfig(filePath)) || DEFAULT_PRETTIER_CONFIG;
   } catch {
-    return {};
+    return DEFAULT_PRETTIER_CONFIG;
   }
 }
 
@@ -131,6 +138,7 @@ export async function transpileProject(projectDir: string) {
     }
 
     const tsx = await fs.readFile(entry, 'utf8');
+    console.log('jio', prettierConfig);
     const mjs = format(transpileFile(tsx), prettierConfig);
 
     await fs.rm(entry);
