@@ -11,20 +11,16 @@ import {findMissingRoutes} from '../../utils/missing-routes.js';
 const LOG_WORKER_BUILT = '📦 Worker built';
 
 export default class Build extends Command {
-  static description = 'Builds a Hydrogen storefront for production';
+  static description = 'Builds a Hydrogen storefront for production.';
   static flags = {
-    ...commonFlags,
     sourcemap: Flags.boolean({
+      description: 'Generate sourcemaps for the build.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
+      default: true,
     }),
-    entry: Flags.string({
-      env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
-      required: true,
-    }),
-    disableRouteWarning: Flags.boolean({
-      description: 'Disable warning about missing standard routes',
-      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
-    }),
+    disableRouteWarning: commonFlags.disableRouteWarning,
+    entry: commonFlags.entry,
+    path: commonFlags.path,
   };
 
   async run(): Promise<void> {
