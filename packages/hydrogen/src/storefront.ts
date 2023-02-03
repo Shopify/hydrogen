@@ -6,6 +6,7 @@ import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
   STOREFRONT_API_BUYER_IP_HEADER,
+  STOREFRONT_ID_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
 } from './constants';
 import {
@@ -74,6 +75,7 @@ export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
   cache?: Cache;
   buyerIp?: string;
   requestGroupId?: string;
+  storefrontId?: string;
   waitUntil?: ExecutionContext['waitUntil'];
   i18n?: TI18n;
 };
@@ -121,6 +123,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
   buyerIp,
   i18n,
   requestGroupId = generateUUID(),
+  storefrontId,
   ...clientOptions
 }: CreateStorefrontClientOptions<TI18n>): StorefrontClient<TI18n> {
   if (!cache) {
@@ -145,6 +148,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
 
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] = requestGroupId;
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
+  if (storefrontId) defaultHeaders[STOREFRONT_ID_HEADER] = storefrontId;
 
   async function fetchStorefrontApi<T>({
     query,
