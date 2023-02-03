@@ -1,4 +1,4 @@
-import {Money} from './Money.js';
+import {Money, type MoneyPropsBase} from './Money.js';
 import {useCart} from './CartProvider.js';
 
 interface CartCostPropsBase {
@@ -41,3 +41,8 @@ export function CartCost(props: CartCostProps) {
     </Money>
   );
 }
+
+// This is only for documenation purposes, and it is not used in the code.
+export interface CartCostPropsForDocs<AsType extends React.ElementType = 'div'>
+  extends Omit<MoneyPropsBase<AsType>, 'data'>,
+    CartCostPropsBase {}

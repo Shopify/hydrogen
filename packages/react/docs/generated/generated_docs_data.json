@@ -329,18 +329,11 @@
       {
         "title": "Props",
         "description": "",
-        "type": "CartCostProps",
+        "type": "CartCostPropsForDocs",
         "typeDefinitions": {
-          "CartCostProps": {
+          "CartCostPropsForDocs": {
             "filePath": "/CartCost.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartCostProps",
-            "value": "Omit<React.ComponentProps<typeof Money>, 'data'> & CartCostPropsBase",
-            "description": ""
-          },
-          "CartCostPropsBase": {
-            "filePath": "/CartCost.tsx",
-            "name": "CartCostPropsBase",
+            "name": "CartCostPropsForDocs",
             "description": "",
             "members": [
               {
@@ -358,9 +351,49 @@
                 "value": "ReactNode",
                 "description": "Any `ReactNode` elements.",
                 "isOptional": true
+              },
+              {
+                "filePath": "/CartCost.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "as",
+                "value": "AsType",
+                "description": "An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartCost.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "withoutCurrency",
+                "value": "boolean",
+                "description": "Whether to remove the currency symbol from the output.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartCost.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "withoutTrailingZeros",
+                "value": "boolean",
+                "description": "Whether to remove trailing zeros (fractional money) from the output.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartCost.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "measurement",
+                "value": "PartialObjectDeep<UnitPriceMeasurement, { recurseIntoArrays: true; }>",
+                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/latest/objects/unitpricemeasurement).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartCost.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "measurementSeparator",
+                "value": "ReactNode",
+                "description": "Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`.",
+                "isOptional": true
               }
             ],
-            "value": "interface CartCostPropsBase {\n  /** A string type that defines the type of cost needed. Valid values: `total`, `subtotal`, `tax`, or `duty`. */\n  amountType?: 'total' | 'subtotal' | 'tax' | 'duty';\n  /** Any `ReactNode` elements. */\n  children?: React.ReactNode;\n}"
+            "value": "export interface CartCostPropsForDocs<AsType extends React.ElementType = 'div'>\n  extends Omit<MoneyPropsBase<AsType>, 'data'>,\n    CartCostPropsBase {}"
           }
         }
       }
@@ -401,18 +434,11 @@
       {
         "title": "Props",
         "description": "",
-        "type": "CartLinePriceProps",
+        "type": "CartLinePricePropsForDocs",
         "typeDefinitions": {
-          "CartLinePriceProps": {
+          "CartLinePricePropsForDocs": {
             "filePath": "/CartLinePrice.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartLinePriceProps",
-            "value": "Omit<React.ComponentProps<typeof Money>, 'data'> & CartLinePricePropsBase",
-            "description": ""
-          },
-          "CartLinePricePropsBase": {
-            "filePath": "/CartLinePrice.tsx",
-            "name": "CartLinePricePropsBase",
+            "name": "CartLinePricePropsForDocs",
             "description": "",
             "members": [
               {
@@ -429,9 +455,49 @@
                 "value": "\"regular\" | \"compareAt\"",
                 "description": "The type of price. Valid values:`regular` (default) or `compareAt`.",
                 "isOptional": true
+              },
+              {
+                "filePath": "/CartLinePrice.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "as",
+                "value": "AsType",
+                "description": "An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartLinePrice.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "withoutCurrency",
+                "value": "boolean",
+                "description": "Whether to remove the currency symbol from the output.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartLinePrice.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "withoutTrailingZeros",
+                "value": "boolean",
+                "description": "Whether to remove trailing zeros (fractional money) from the output.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartLinePrice.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "measurement",
+                "value": "PartialObjectDeep<UnitPriceMeasurement, { recurseIntoArrays: true; }>",
+                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/latest/objects/unitpricemeasurement).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/CartLinePrice.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "measurementSeparator",
+                "value": "ReactNode",
+                "description": "Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`.",
+                "isOptional": true
               }
             ],
-            "value": "interface CartLinePricePropsBase {\n  /** A [CartLine object](https://shopify.dev/api/storefront/reference/objects/CartLine). */\n  data: PartialDeep<CartLine, {recurseIntoArrays: true}>;\n  /** The type of price. Valid values:`regular` (default) or `compareAt`. */\n  priceType?: 'regular' | 'compareAt';\n}"
+            "value": "export interface CartLinePricePropsForDocs<\n  AsType extends React.ElementType = 'div'\n> extends Omit<MoneyPropsBase<AsType>, 'data'>,\n    CartLinePricePropsBase {}"
           }
         }
       }
@@ -4294,18 +4360,11 @@
       {
         "title": "Props",
         "description": "",
-        "type": "MoneyProps",
+        "type": "MoneyPropsBase",
         "typeDefinitions": {
-          "MoneyProps": {
+          "MoneyPropsBase": {
             "filePath": "/Money.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "MoneyProps",
-            "value": "CustomProps<ComponentGeneric> & Omit<\n      React.ComponentPropsWithoutRef<ComponentGeneric>,\n      keyof CustomProps<ComponentGeneric>\n    >",
-            "description": ""
-          },
-          "CustomProps": {
-            "filePath": "/Money.tsx",
-            "name": "CustomProps",
+            "name": "MoneyPropsBase",
             "description": "",
             "members": [
               {
@@ -4356,7 +4415,7 @@
                 "isOptional": true
               }
             ],
-            "value": "interface CustomProps<ComponentGeneric extends React.ElementType> {\n  /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */\n  as?: ComponentGeneric;\n  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */\n  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;\n  /** Whether to remove the currency symbol from the output. */\n  withoutCurrency?: boolean;\n  /** Whether to remove trailing zeros (fractional money) from the output. */\n  withoutTrailingZeros?: boolean;\n  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/latest/objects/unitpricemeasurement). */\n  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;\n  /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */\n  measurementSeparator?: ReactNode;\n}"
+            "value": "export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {\n  /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */\n  as?: ComponentGeneric;\n  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */\n  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;\n  /** Whether to remove the currency symbol from the output. */\n  withoutCurrency?: boolean;\n  /** Whether to remove trailing zeros (fractional money) from the output. */\n  withoutTrailingZeros?: boolean;\n  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/latest/objects/unitpricemeasurement). */\n  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;\n  /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */\n  measurementSeparator?: ReactNode;\n}"
           }
         }
       }
@@ -4402,11 +4461,11 @@
       {
         "title": "Props",
         "description": "",
-        "type": "ProductPriceProps",
+        "type": "ProductPricePropsForDocs",
         "typeDefinitions": {
-          "ProductPriceProps": {
+          "ProductPricePropsForDocs": {
             "filePath": "/ProductPrice.tsx",
-            "name": "ProductPriceProps",
+            "name": "ProductPricePropsForDocs",
             "description": "",
             "members": [
               {
@@ -4439,9 +4498,41 @@
                 "value": "string",
                 "description": "The ID of the variant.",
                 "isOptional": true
+              },
+              {
+                "filePath": "/ProductPrice.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "as",
+                "value": "AsType",
+                "description": "An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/ProductPrice.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "withoutCurrency",
+                "value": "boolean",
+                "description": "Whether to remove the currency symbol from the output.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/ProductPrice.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "withoutTrailingZeros",
+                "value": "boolean",
+                "description": "Whether to remove trailing zeros (fractional money) from the output.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/ProductPrice.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "measurementSeparator",
+                "value": "ReactNode",
+                "description": "Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`.",
+                "isOptional": true
               }
             ],
-            "value": "export interface ProductPriceProps {\n  /** A Storefront API [Product object](https://shopify.dev/api/storefront/reference/products/product). */\n  data: PartialDeep<Product, {recurseIntoArrays: true}>;\n  /** The type of price. Valid values: `regular` (default) or `compareAt`. */\n  priceType?: 'regular' | 'compareAt';\n  /** The type of value. Valid values: `min` (default), `max` or `unit`. */\n  valueType?: 'max' | 'min' | 'unit';\n  /** The ID of the variant. */\n  variantId?: string;\n}"
+            "value": "export interface ProductPricePropsForDocs<\n  AsType extends React.ElementType = 'div'\n> extends Omit<MoneyPropsBase<AsType>, 'data' | 'measurement'>,\n    ProductPriceProps {}"
           }
         }
       }

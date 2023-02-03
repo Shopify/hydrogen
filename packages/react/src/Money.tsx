@@ -3,7 +3,7 @@ import {useMoney} from './useMoney.js';
 import type {MoneyV2, UnitPriceMeasurement} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
-interface CustomProps<ComponentGeneric extends React.ElementType> {
+export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {
   /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */
   as?: ComponentGeneric;
   /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */
@@ -20,10 +20,10 @@ interface CustomProps<ComponentGeneric extends React.ElementType> {
 
 // This article helps understand the typing here https://www.benmvp.com/blog/polymorphic-react-components-typescript/ Ben is the best :)
 export type MoneyProps<ComponentGeneric extends React.ElementType> =
-  CustomProps<ComponentGeneric> &
+  MoneyPropsBase<ComponentGeneric> &
     Omit<
       React.ComponentPropsWithoutRef<ComponentGeneric>,
-      keyof CustomProps<ComponentGeneric>
+      keyof MoneyPropsBase<ComponentGeneric>
     >;
 
 /**

@@ -3,7 +3,7 @@ import type {
   UnitPriceMeasurement,
   Product,
 } from './storefront-api-types.js';
-import {Money, type MoneyProps} from './Money.js';
+import {Money, type MoneyProps, type MoneyPropsBase} from './Money.js';
 import type {PartialDeep} from 'type-fest';
 import {flattenConnection} from './flatten-connection.js';
 
@@ -84,3 +84,9 @@ export function ProductPrice<ComponentGeneric extends React.ElementType>(
 
   return <Money {...passthroughProps} data={price} />;
 }
+
+// This is only for documenation purposes, and it is not used in the code.
+export interface ProductPricePropsForDocs<
+  AsType extends React.ElementType = 'div'
+> extends Omit<MoneyPropsBase<AsType>, 'data' | 'measurement'>,
+    ProductPriceProps {}

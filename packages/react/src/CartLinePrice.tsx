@@ -1,4 +1,4 @@
-import {Money} from './Money.js';
+import {Money, type MoneyPropsBase} from './Money.js';
 import {CartLine} from './storefront-api-types.js';
 import {PartialDeep} from 'type-fest';
 
@@ -33,3 +33,9 @@ export function CartLinePrice(props: CartLinePriceProps) {
 
   return <Money {...passthroughProps} data={moneyV2} />;
 }
+
+// This is only for documenation purposes, and it is not used in the code.
+export interface CartLinePricePropsForDocs<
+  AsType extends React.ElementType = 'div'
+> extends Omit<MoneyPropsBase<AsType>, 'data'>,
+    CartLinePricePropsBase {}
