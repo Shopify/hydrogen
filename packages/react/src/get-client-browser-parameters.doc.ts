@@ -12,10 +12,10 @@ const data: ReferenceEntityTemplateSchema = {
       type: 'gear',
     },
     {
-      subtitle: 'Utility',
+      subtitle: 'Hook',
       name: 'useShopifyCookies',
-      url: '/api/hydrogen-react/utilities/useShopifyCookies',
-      type: 'gear',
+      url: '/api/hydrogen-react/hooks/useShopifyCookies',
+      type: 'tool',
     },
   ],
   description: 'Gathers client browser values commonly used for analytics',

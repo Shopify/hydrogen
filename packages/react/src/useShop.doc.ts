@@ -11,9 +11,8 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/api/hydrogen-react/components/ShopifyProvider',
     },
   ],
-  description: `
-    Provides access to the \`shopifyConfig\` prop of \`<ShopifyProvider/>\`. Must be a descendent of \`<ShopifyProvider/>\`.
-  `,
+  description:
+    'Provides access to the `shopifyConfig` prop of `<ShopifyProvider/>`.',
   type: 'hook',
   defaultExample: {
     description: 'I am the default example',
@@ -37,7 +36,8 @@ const data: ReferenceEntityTemplateSchema = {
     {
       title: 'Props',
       type: 'UseShopGeneratedType',
-      description: '',
+      description:
+        '`useShop` must be a descendent of a `ShopifyProvider` component.',
     },
   ],
 };

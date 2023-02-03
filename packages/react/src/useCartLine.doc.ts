@@ -11,9 +11,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/api/hydrogen-react/components/CartLineProvider',
     },
   ],
-  description: `
-    The \`useCartLine\` hook provides access to the cart line object. It must be a descendent of a \`CartProvider\` component.
-  `,
+  description: 'Provides access to the cart line object.',
   type: 'component',
   defaultExample: {
     description: 'I am the default example',
@@ -37,7 +35,8 @@ const data: ReferenceEntityTemplateSchema = {
     {
       title: 'Props',
       type: 'UseCartLineGeneratedType',
-      description: '',
+      description:
+        '`useCartLine` must be a descendent of a `CartProvider` component.',
     },
   ],
 };

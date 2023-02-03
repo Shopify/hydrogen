@@ -2,7 +2,7 @@ import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
   name: 'useShopifyCookies',
-  category: 'utilities',
+  category: 'hooks',
   isVisualComponent: false,
   related: [
     {
@@ -26,7 +26,7 @@ const data: ReferenceEntityTemplateSchema = {
   ],
   description:
     'Sets Shopify user and session cookies and refreshes the expiry time.',
-  type: 'utility',
+  type: 'hooks',
   defaultExample: {
     description: 'I am the default example',
     codeblock: {

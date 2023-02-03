@@ -4677,11 +4677,17 @@
         "typeDefinitions": {
           "ShopifyProviderProps": {
             "filePath": "/ShopifyProvider.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyProviderProps",
-            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.\n   */\n  countryIsoCode: CountryCode;\n  /**\n   * `ISO 369` language codes supported by Shopify.\n   */\n  languageIsoCode: LanguageCode;\n  /** React children to render. */\n  children?: ReactNode;\n}",
             "description": "Shopify-specific values that are used in various Hydrogen React components and hooks.",
             "members": [
+              {
+                "filePath": "/ShopifyProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "ReactNode",
+                "description": "React children to render.",
+                "isOptional": true
+              },
               {
                 "filePath": "/ShopifyProvider.tsx",
                 "syntaxKind": "PropertySignature",
@@ -4724,16 +4730,9 @@
                 "name": "languageIsoCode",
                 "value": "LanguageCode",
                 "description": "`ISO 369` language codes supported by Shopify."
-              },
-              {
-                "filePath": "/ShopifyProvider.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "children",
-                "value": "ReactNode",
-                "description": "React children to render.",
-                "isOptional": true
               }
-            ]
+            ],
+            "value": "export interface ShopifyProviderProps extends ShopifyProviderBase {\n  /** React children to render. */\n  children?: ReactNode;\n}"
           }
         }
       }
@@ -4885,10 +4884,10 @@
         "type": "tutorial"
       },
       {
-        "subtitle": "Utility",
+        "subtitle": "Hook",
         "name": "useShopifyCookies",
-        "url": "/api/hydrogen-react/utilities/useShopifyCookies",
-        "type": "gear"
+        "url": "/api/hydrogen-react/hooks/useShopifyCookies",
+        "type": "tool"
       },
       {
         "subtitle": "Utility",
@@ -5771,10 +5770,10 @@
         "type": "gear"
       },
       {
-        "subtitle": "Utility",
+        "subtitle": "Hook",
         "name": "useShopifyCookies",
-        "url": "/api/hydrogen-react/utilities/useShopifyCookies",
-        "type": "gear"
+        "url": "/api/hydrogen-react/hooks/useShopifyCookies",
+        "type": "tool"
       }
     ],
     "description": "Gathers client browser values commonly used for analytics",
@@ -5904,10 +5903,10 @@
     "isVisualComponent": false,
     "related": [
       {
-        "subtitle": "Utility",
+        "subtitle": "Hook",
         "name": "useShopifyCookies",
-        "url": "/api/hydrogen-react/utilities/useShopifyCookies",
-        "type": "gear"
+        "url": "/api/hydrogen-react/hooks/useShopifyCookies",
+        "type": "tool"
       }
     ],
     "description": "Parses cookie string and returns Shopify cookies.",
@@ -6017,7 +6016,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "\n    A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `metafield.type`) and places the result in `metafield.parsedValue`.\n\nTypeScript developers can use the type `ParsedMetafields` from this package to get the returned object's type correct.\n  ",
+    "description": "\n    A function that uses `metafield.type` to parse the Metafield's `value` or `reference` or `references` (depending on the `metafield.type`) and places the result in `metafield.parsedValue`.\n  ",
     "type": "gear",
     "defaultExample": {
       "description": "I am the default example",
@@ -6040,7 +6039,7 @@
     "definitions": [
       {
         "title": "Props",
-        "description": "",
+        "description": "Use the `ParsedMetafields` type as the returned type of `parseMetafield(metafield)`",
         "type": "ParseMetafieldGeneratedType",
         "typeDefinitions": {
           "ParseMetafieldGeneratedType": {
@@ -6282,7 +6281,7 @@
         "url": "/api/hydrogen-react/components/CartProvider"
       }
     ],
-    "description": "\n    The `useCart` hook provides access to the cart object. It must be a descendent of a `CartProvider` component.\n  ",
+    "description": "Provides access to the cart object.",
     "type": "hook",
     "defaultExample": {
       "description": "I am the default example",
@@ -6305,7 +6304,7 @@
     "definitions": [
       {
         "title": "Props",
-        "description": "",
+        "description": "`useCart` hook must be a descendent of a `CartProvider` component.",
         "type": "UseCartGeneratedType",
         "typeDefinitions": {
           "UseCartGeneratedType": {
@@ -6428,7 +6427,7 @@
         "url": "/api/hydrogen-react/components/CartLineProvider"
       }
     ],
-    "description": "\n    The `useCartLine` hook provides access to the cart line object. It must be a descendent of a `CartProvider` component.\n  ",
+    "description": "Provides access to the cart line object.",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -6451,7 +6450,7 @@
     "definitions": [
       {
         "title": "Props",
-        "description": "",
+        "description": "`useCartLine` must be a descendent of a `CartProvider` component.",
         "type": "UseCartLineGeneratedType",
         "typeDefinitions": {
           "UseCartLineGeneratedType": {
@@ -6481,7 +6480,7 @@
         "url": "/api/hydrogen-react/components/money"
       }
     ],
-    "description": "\n    The `useMoney` hook takes a [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) and returns a\n    default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by\n    [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).\n    Uses `locale` from `<ShopifyProvider/>`.\n  ",
+    "description": "\n    The `useMoney` hook takes a [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2) and returns a\n    default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by\n    [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).\n  ",
     "type": "hook",
     "defaultExample": {
       "description": "I am the default example",
@@ -6504,7 +6503,7 @@
     "definitions": [
       {
         "title": "Props",
-        "description": "",
+        "description": "`useMoney` must be a descendent of a `ShopifyProvider` component.",
         "type": "UseMoneyGeneratedType",
         "typeDefinitions": {
           "UseMoneyGeneratedType": {
@@ -6623,7 +6622,7 @@
         "url": "/api/hydrogen-react/components/ShopifyProvider"
       }
     ],
-    "description": "\n    Provides access to the `shopifyConfig` prop of `<ShopifyProvider/>`. Must be a descendent of `<ShopifyProvider/>`.\n  ",
+    "description": "Provides access to the `shopifyConfig` prop of `<ShopifyProvider/>`.",
     "type": "hook",
     "defaultExample": {
       "description": "I am the default example",
@@ -6646,7 +6645,7 @@
     "definitions": [
       {
         "title": "Props",
-        "description": "",
+        "description": "`useShop` must be a descendent of a `ShopifyProvider` component.",
         "type": "UseShopGeneratedType",
         "typeDefinitions": {
           "UseShopGeneratedType": {
@@ -6663,17 +6662,8 @@
           },
           "ShopifyContextValue": {
             "filePath": "/ShopifyProvider.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyContextValue",
-            "value": "Omit<ShopifyProviderProps, 'children'> & ShopifyContextReturn",
-            "description": ""
-          },
-          "ShopifyProviderProps": {
-            "filePath": "/ShopifyProvider.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyProviderProps",
-            "value": "{\n  /** The globally-unique identifier for the Shop */\n  storefrontId?: string;\n  /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API public access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  storefrontToken: string;\n  /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * The code designating a country, which generally follows ISO 3166-1 alpha-2 guidelines. If a territory doesn't have a country code value in the `CountryCode` enum, it might be considered a subdivision of another country. For example, the territories associated with Spain are represented by the country code `ES`, and the territories associated with the United States of America are represented by the country code `US`.\n   */\n  countryIsoCode: CountryCode;\n  /**\n   * `ISO 369` language codes supported by Shopify.\n   */\n  languageIsoCode: LanguageCode;\n  /** React children to render. */\n  children?: ReactNode;\n}",
-            "description": "Shopify-specific values that are used in various Hydrogen React components and hooks.",
+            "description": "",
             "members": [
               {
                 "filePath": "/ShopifyProvider.tsx",
@@ -6721,23 +6711,6 @@
               {
                 "filePath": "/ShopifyProvider.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "children",
-                "value": "ReactNode",
-                "description": "React children to render.",
-                "isOptional": true
-              }
-            ]
-          },
-          "ShopifyContextReturn": {
-            "filePath": "/ShopifyProvider.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyContextReturn",
-            "value": "{\n  /**\n   * Creates the fully-qualified URL to your store's GraphQL endpoint.\n   *\n   * By default, it will use the config you passed in when creating `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getStorefrontApiUrl({...})`:\n   *\n   * - `storeDomain`\n   * - `storefrontApiVersion`\n   */\n  getStorefrontApiUrl: (props?: GetStorefrontApiUrlProps) => string;\n  /**\n   * Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. This uses the public Storefront API token.\n   *\n   * By default, it will use the config you passed in when creating `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getPublicTokenHeaders({...})`:\n   *\n   * - `contentType`\n   * - `storefrontToken`\n   *\n   */\n  getPublicTokenHeaders: (\n    props: GetPublicTokenHeadersProps\n  ) => Record<string, string>;\n  /**\n   * Creates the fully-qualified URL to your myshopify.com domain.\n   *\n   * By default, it will use the config you passed in when calling `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getShopifyDomain({...})`:\n   *\n   * - `storeDomain`\n   */\n  getShopifyDomain: (props?: GetShopifyDomainProps) => string;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/ShopifyProvider.tsx",
-                "syntaxKind": "PropertySignature",
                 "name": "getStorefrontApiUrl",
                 "value": "(props?: GetStorefrontApiUrlProps) => string",
                 "description": "Creates the fully-qualified URL to your store's GraphQL endpoint.\n\nBy default, it will use the config you passed in when creating `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getStorefrontApiUrl({...})`:\n\n- `storeDomain`\n- `storefrontApiVersion`"
@@ -6756,7 +6729,8 @@
                 "value": "(props?: GetShopifyDomainProps) => string",
                 "description": "Creates the fully-qualified URL to your myshopify.com domain.\n\nBy default, it will use the config you passed in when calling `<ShopifyProvider/>`. However, you can override the following settings on each invocation of `getShopifyDomain({...})`:\n\n- `storeDomain`"
               }
-            ]
+            ],
+            "value": "export interface ShopifyContextValue\n  extends ShopifyProviderBase,\n    ShopifyContextReturn {}"
           },
           "GetStorefrontApiUrlProps": {
             "filePath": "/ShopifyProvider.tsx",
@@ -6830,7 +6804,7 @@
   },
   {
     "name": "useShopifyCookies",
-    "category": "utilities",
+    "category": "hooks",
     "isVisualComponent": false,
     "related": [
       {
@@ -6853,7 +6827,7 @@
       }
     ],
     "description": "Sets Shopify user and session cookies and refreshes the expiry time.",
-    "type": "utility",
+    "type": "hooks",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {

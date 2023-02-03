@@ -92,10 +92,7 @@ export function useShop(): ShopifyContextValue {
   return shopContext;
 }
 
-/**
- * Shopify-specific values that are used in various Hydrogen React components and hooks.
- */
-export type ShopifyProviderProps = {
+export interface ShopifyProviderBase {
   /** The globally-unique identifier for the Shop */
   storefrontId?: string;
   /** The full domain of your Shopify storefront URL (eg: the complete string of `{subdomain}.myshopify.com`). */
@@ -112,12 +109,19 @@ export type ShopifyProviderProps = {
    * `ISO 369` language codes supported by Shopify.
    */
   languageIsoCode: LanguageCode;
+}
+
+/**
+ * Shopify-specific values that are used in various Hydrogen React components and hooks.
+ */
+export interface ShopifyProviderProps extends ShopifyProviderBase {
   /** React children to render. */
   children?: ReactNode;
-};
+}
 
-export type ShopifyContextValue = Omit<ShopifyProviderProps, 'children'> &
-  ShopifyContextReturn;
+export interface ShopifyContextValue
+  extends ShopifyProviderBase,
+    ShopifyContextReturn {}
 
 type ShopifyContextReturn = {
   /**
