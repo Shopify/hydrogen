@@ -1,12 +1,5 @@
-# Hydrogen 2.0
-
-[Developer Preview Guide](https://docs.google.com/document/d/1Y16QFGFIraIuzIWBB-ScTCEIf0NvlR0SCNZaHcZeYO4/edit#heading=h.gmkuifdfb86o)
-
-[Roadmap (Github Project)](https://github.com/orgs/Shopify/projects/5093/views/5)
-
-[Demo Store on Oxygen](https://h2-demo-store-f1f4fa724b7467f41f07.o2.myshopify.dev/)
-
-[Slack Channel (#hydrogen)](https://shopify.slack.com/archives/C028UNNRJAH)
+# Hydrogen
+[Demo Store on Oxygen](https://new.hydrogen.shop/)
 
 ## Development
 
