@@ -2,7 +2,7 @@ import path from 'path';
 import {output} from '@shopify/cli-kit';
 import colors from '@shopify/cli-kit/node/colors';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
-import {commonFlags} from '../../utils/flags.js';
+import {commonFlags, flagsToCamelObject} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {checkLockfileStatus} from '../../utils/check-lockfile.js';
@@ -21,7 +21,7 @@ export default class Build extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       required: true,
     }),
-    disableRouteWarning: Flags.boolean({
+    ['disable-route-warning']: Flags.boolean({
       description: 'Disable warning about missing standard routes',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
@@ -32,7 +32,7 @@ export default class Build extends Command {
     const {flags} = await this.parse(Build);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
-    await runBuild({...flags, path: directory});
+    await runBuild({...flagsToCamelObject(flags), path: directory});
   }
 }
 

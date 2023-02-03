@@ -4,7 +4,7 @@ import {output} from '@shopify/cli-kit';
 import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
-import {commonFlags} from '../../utils/flags.js';
+import {commonFlags, flagsToCamelObject} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
@@ -29,7 +29,7 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
       required: true,
     }),
-    disableVirtualRoutes: Flags.boolean({
+    ['disable-virtual-routes']: Flags.boolean({
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
@@ -40,7 +40,7 @@ export default class Dev extends Command {
     const {flags} = await this.parse(Dev);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
-    await runDev({...flags, path: directory});
+    await runDev({...flagsToCamelObject(flags), path: directory});
   }
 }
 

@@ -1,4 +1,5 @@
 import Flags from '@oclif/core/lib/flags.js';
+import {string as stringUtils} from '@shopify/cli-kit';
 
 export const commonFlags = {
   path: Flags.string({
@@ -11,3 +12,10 @@ export const commonFlags = {
     default: 3000,
   }),
 };
+
+export function flagsToCamelObject(obj: Record<string, any>) {
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    acc[stringUtils.camelize(key)] = value;
+    return acc;
+  }, {} as any);
+}

@@ -27,11 +27,6 @@ export default class Init extends Command {
       description: 'The template to use',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
-    token: Flags.string({
-      description:
-        'A GitHub token used to access access private repository templates',
-      env: 'SHOPIFY_HYDROGEN_FLAG_TOKEN',
-    }),
     force: Flags.boolean({
       description: 'Overwrite the destination directory if it already exists',
       env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
