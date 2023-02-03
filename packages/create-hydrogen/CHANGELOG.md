@@ -1,5 +1,14 @@
 # @shopify/create-hydrogen
 
+## 4.0.0-alpha.3
+
+### Patch Changes
+
+- Improve the onboarding experience for the CLI by [@jplhomer](https://github.com/jplhomer)
+
+- Updated dependencies [[`af37cf6`](https://github.com/Shopify/h2/commit/af37cf6771d503a424d2b4efc46fb99fc84a1db4)]:
+  - @shopify/cli-hydrogen@4.0.0-alpha.12
+
 ## 4.0.0-alpha.2
 
 ### Patch Changes

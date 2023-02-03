@@ -1,5 +1,15 @@
 # @shopify/hydrogen
 
+## 2023.1.0-alpha.2
+
+### Patch Changes
+
+- Update `storefront-kit-react` pacakge name to `hydrogen-react` ([#433](https://github.com/Shopify/h2/pull/433)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix `i18n` type passing to loader ([#432](https://github.com/Shopify/h2/pull/432)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add Hydrogen utils function and update demo store to send shopify analytics ([#376](https://github.com/Shopify/h2/pull/376)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2022.1.0-alpha.1
 
 ### Patch Changes
