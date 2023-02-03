@@ -7,10 +7,10 @@ import {IconDiscord} from '../components/IconDiscord.jsx';
 import {IconGithub} from '../components/IconGithub.jsx';
 import {IconTwitter} from '../components/IconTwitter.jsx';
 import favicon from '../assets/favicon.svg';
-import type {StorefrontClient} from '@shopify/hydrogen';
+import type {I18nBase, StorefrontClient} from '@shopify/hydrogen';
 
 interface AppLoadContext {
-  storefront: StorefrontClient['storefront'];
+  storefront: StorefrontClient<I18nBase>['storefront'];
 }
 
 export const meta: MetaFunction = () => {
