@@ -1,9 +1,5 @@
 import {useLoaderData} from '@remix-run/react';
-import {
-  type MetaFunction,
-  type LoaderArgs,
-  LinksFunction,
-} from '@shopify/remix-oxygen';
+import {type MetaFunction, LinksFunction} from '@shopify/remix-oxygen';
 import {type Shop} from '@shopify/storefront-kit-react/storefront-api-types';
 import {Html} from '../components/Html.jsx';
 import {HydrogenLogoBaseBW} from '../components/HydrogenLogoBaseBW.jsx';
@@ -12,6 +8,11 @@ import {IconDiscord} from '../components/IconDiscord.jsx';
 import {IconGithub} from '../components/IconGithub.jsx';
 import {IconTwitter} from '../components/IconTwitter.jsx';
 import favicon from '../assets/favicon.svg';
+import type {StorefrontClient} from '@shopify/hydrogen';
+
+interface AppLoadContext {
+  storefront: StorefrontClient['storefront'];
+}
 
 export const meta: MetaFunction = () => {
   return {
@@ -30,69 +31,106 @@ export const links: LinksFunction = () => [
   },
 ];
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({context}: {context: AppLoadContext}) {
   const layout = await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY);
   return {layout};
+}
+
+export const HYDROGEN_SHOP_ID = 'gid://shopify/Shop/55145660472';
+
+export function CatchBoundary() {
+  return <ErrorPage />;
+}
+
+export function ErrorBoundary() {
+  return <ErrorPage />;
 }
 
 export default function Index() {
   const data = useLoaderData<typeof loader>();
 
-  const {name: shopName} = data.layout.shop;
+  const {name: shopName, id: shopId} = data.layout.shop;
 
-  const configDone = !(shopName === 'Hydrogen');
+  const configDone = shopId !== HYDROGEN_SHOP_ID;
 
   return (
     <Html>
       <Layout shopName={shopName}>
-        <section>
-          {configDone ? <HydrogenLogoBaseColor /> : <HydrogenLogoBaseBW />}
-          <h1>Hello, {shopName || 'Hydrogen'}</h1>
-          <p>Welcome to your new custom storefront</p>
-          <section className="Banner">
-            <h2>Configure storefront token</h2>
-            <p>
-              You're seeing this because you have not yet configured your
-              storefront token. To get started, edit <span>.env</span>. Learn
-              more about
-              {` `}
-              <a href="https://shopify.dev/custom-storefronts/hydrogen/getting-started/quickstart">
-                connecting a storefront
-              </a>
-              .
-            </p>
-          </section>
-          <section className="Links">
-            <h2>Start building</h2>
-            <ul>
-              <li>
-                <a href="/">Collection template</a>
-              </li>
-              <li>
-                <a href="/">Product template</a>
-              </li>
-              <li>
-                <a href="/">Cart</a>
-              </li>
-            </ul>
-            <h2>Resources</h2>
-            <ul>
-              <li>
-                <a href="https://shopify.dev/custom-storefronts/hydrogen">
-                  Hydrogen docs
-                </a>
-              </li>
-              <li>
-                <a href="/">Remix and project structure</a>
-              </li>
-              <li>
-                <a href="/">Data queriers and fetching</a>
-              </li>
-            </ul>
-          </section>
+        {configDone ? <HydrogenLogoBaseColor /> : <HydrogenLogoBaseBW />}
+        <h1>Hello, {shopName || 'Hydrogen'}</h1>
+        <p>Welcome to your new custom storefront</p>
+        <section className="Banner">
+          <h2>Configure storefront token</h2>
+          <p>
+            You're seeing this because you have not yet configured your
+            storefront token. To get started, edit <span>.env</span>. Learn more
+            about
+            {` `}
+            <a href="https://shopify.dev/custom-storefronts/hydrogen/getting-started/quickstart">
+              connecting a storefront
+            </a>
+            .
+          </p>
         </section>
+        <ResourcesLinks />
       </Layout>
     </Html>
+  );
+}
+
+function ErrorPage() {
+  return (
+    <Html>
+      <Layout shopName="Hydrogen">
+        <HydrogenLogoBaseBW />
+        <h1>Hello, Hydrogen</h1>
+        <p>Welcome to your new custom storefront</p>
+        <section className="Banner ErrorBanner">
+          <h2>There’s a problem with your storefront</h2>
+          <p>
+            Check your domain and API token in your<span>.env</span> file. Read
+            the documentation on{` `}
+            <a href="">how to configure your storefront</a>.
+          </p>
+        </section>
+        <ResourcesLinks />
+      </Layout>
+    </Html>
+  );
+}
+
+function ResourcesLinks() {
+  return (
+    <>
+      <section className="Links">
+        <h2>Start building</h2>
+        <ul>
+          <li>
+            <a href="/">Collection template</a>
+          </li>
+          <li>
+            <a href="/">Product template</a>
+          </li>
+          <li>
+            <a href="/">Cart</a>
+          </li>
+        </ul>
+        <h2>Resources</h2>
+        <ul>
+          <li>
+            <a href="https://shopify.dev/custom-storefronts/hydrogen">
+              Hydrogen docs
+            </a>
+          </li>
+          <li>
+            <a href="/">Remix and project structure</a>
+          </li>
+          <li>
+            <a href="/">Data queriers and fetching</a>
+          </li>
+        </ul>
+      </section>
+    </>
   );
 }
 
@@ -134,7 +172,7 @@ const LAYOUT_QUERY = `#graphql
   query layout {
     shop {
       name
-      description
+      id
     }
   }
 `;
