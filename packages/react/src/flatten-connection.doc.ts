@@ -29,8 +29,13 @@ const data: ReferenceEntityTemplateSchema = {
   },
   definitions: [
     {
-      title: 'Props',
-      type: 'FlattenConnectionGeneratedType',
+      title: 'Parameters',
+      type: 'ConnectionGenericForDoc',
+      description: '',
+    },
+    {
+      title: 'Returns',
+      type: 'FlattenConnectionReturnForDoc',
       description: '',
     },
   ],

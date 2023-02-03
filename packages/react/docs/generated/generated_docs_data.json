@@ -5794,28 +5794,71 @@
     },
     "definitions": [
       {
-        "title": "Props",
+        "title": "Parameters",
         "description": "",
-        "type": "FlattenConnectionGeneratedType",
+        "type": "ConnectionGenericForDoc",
         "typeDefinitions": {
-          "FlattenConnectionGeneratedType": {
+          "ConnectionGenericForDoc": {
             "filePath": "/flatten-connection.ts",
-            "name": "FlattenConnectionGeneratedType",
-            "params": [
+            "name": "ConnectionGenericForDoc",
+            "description": "",
+            "members": [
               {
+                "filePath": "/flatten-connection.ts",
+                "syntaxKind": "PropertySignature",
                 "name": "connection",
+                "value": "ConnectionEdges | ConnectionNodes",
                 "description": "",
-                "value": "ConnectionGeneric",
-                "filePath": "/flatten-connection.ts"
+                "isOptional": true
               }
             ],
-            "returns": {
-              "filePath": "/flatten-connection.ts",
-              "description": "",
-              "name": "ConnectionGeneric extends\n  | {\n      edges: {node: Array<infer ConnectionBaseType>};\n    }\n  | {\n      nodes: Array<infer ConnectionBaseType>;\n    }\n  ? // if it's not a PartialDeep, then return the infered type\n    ConnectionBaseType[]\n  : ConnectionGeneric extends\n      | PartialDeep<\n          {edges: {node: Array<infer ConnectionBaseType>}},\n          {recurseIntoArrays: true}\n        >\n      | PartialDeep<\n          {\n            nodes: Array<infer ConnectionBaseType>;\n          },\n          {recurseIntoArrays: true}\n        >\n  ? // if it is a PartialDeep, return a PartialDeep inferred type\n    PartialDeep<ConnectionBaseType[], {recurseIntoArrays: true}>\n  : never",
-              "value": "ConnectionGeneric extends\n  | {\n      edges: {node: Array<infer ConnectionBaseType>};\n    }\n  | {\n      nodes: Array<infer ConnectionBaseType>;\n    }\n  ? // if it's not a PartialDeep, then return the infered type\n    ConnectionBaseType[]\n  : ConnectionGeneric extends\n      | PartialDeep<\n          {edges: {node: Array<infer ConnectionBaseType>}},\n          {recurseIntoArrays: true}\n        >\n      | PartialDeep<\n          {\n            nodes: Array<infer ConnectionBaseType>;\n          },\n          {recurseIntoArrays: true}\n        >\n  ? // if it is a PartialDeep, return a PartialDeep inferred type\n    PartialDeep<ConnectionBaseType[], {recurseIntoArrays: true}>\n  : never"
-            },
-            "value": "export function flattenConnection<\n  ConnectionGeneric extends\n    | PartialDeep<ConnectionEdges, {recurseIntoArrays: true}>\n    | PartialDeep<ConnectionNodes, {recurseIntoArrays: true}>\n    | ConnectionEdges\n    | ConnectionNodes\n>(\n  connection?: ConnectionGeneric\n): ConnectionGeneric extends\n  | {\n      edges: {node: Array<infer ConnectionBaseType>};\n    }\n  | {\n      nodes: Array<infer ConnectionBaseType>;\n    }\n  ? // if it's not a PartialDeep, then return the infered type\n    ConnectionBaseType[]\n  : ConnectionGeneric extends\n      | PartialDeep<\n          {edges: {node: Array<infer ConnectionBaseType>}},\n          {recurseIntoArrays: true}\n        >\n      | PartialDeep<\n          {\n            nodes: Array<infer ConnectionBaseType>;\n          },\n          {recurseIntoArrays: true}\n        >\n  ? // if it is a PartialDeep, return a PartialDeep inferred type\n    PartialDeep<ConnectionBaseType[], {recurseIntoArrays: true}>\n  : never {\n  if (!connection) {\n    const noConnectionErr = `flattenConnection(): needs a 'connection' to flatten, but received '${connection}' instead.`;\n    if (__HYDROGEN_DEV__) {\n      throw new Error(noConnectionErr);\n    } else {\n      console.error(noConnectionErr + ` Returning an empty array`);\n      // @ts-expect-error We don't want to crash prod, so return an empty array\n      return [];\n    }\n  }\n\n  if ('nodes' in connection) {\n    // @ts-expect-error return type is failing\n    return connection.nodes;\n  }\n\n  if ('edges' in connection && Array.isArray(connection.edges)) {\n    // @ts-expect-error return type is failing\n    return connection.edges.map((edge) => {\n      if (!edge?.node) {\n        throw new Error(\n          'flattenConnection(): Connection edges must contain nodes'\n        );\n      }\n      return edge.node;\n    });\n  }\n\n  if (__HYDROGEN_DEV__) {\n    console.warn(\n      `flattenConnection(): The connection did not contain either \"nodes\" or \"edges.node\". Returning an empty array.`\n    );\n  }\n\n  // @ts-expect-error We don't want to crash prod, so return an empty array\n  return [];\n}"
+            "value": "export interface ConnectionGenericForDoc {\n  connection?: ConnectionEdges | ConnectionNodes;\n}"
+          },
+          "ConnectionEdges": {
+            "filePath": "/flatten-connection.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ConnectionEdges",
+            "value": "{\n  edges: {node: Array<unknown>};\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/flatten-connection.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "edges",
+                "value": "{ node: unknown[]; }",
+                "description": ""
+              }
+            ]
+          },
+          "ConnectionNodes": {
+            "filePath": "/flatten-connection.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ConnectionNodes",
+            "value": "{\n  nodes: Array<unknown>;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/flatten-connection.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "nodes",
+                "value": "unknown[]",
+                "description": ""
+              }
+            ]
+          }
+        }
+      },
+      {
+        "title": "Returns",
+        "description": "",
+        "type": "FlattenConnectionReturnForDoc",
+        "typeDefinitions": {
+          "FlattenConnectionReturnForDoc": {
+            "filePath": "/flatten-connection.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "FlattenConnectionReturnForDoc",
+            "value": "Array<unknown>",
+            "description": ""
           }
         }
       }

@@ -82,3 +82,9 @@ type ConnectionEdges = {
 type ConnectionNodes = {
   nodes: Array<unknown>;
 };
+
+// This is only for documentation purposes, and it is not used in the code.
+export interface ConnectionGenericForDoc {
+  connection?: ConnectionEdges | ConnectionNodes;
+}
+export type FlattenConnectionReturnForDoc = Array<unknown>;
