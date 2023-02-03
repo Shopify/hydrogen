@@ -1,6 +1,7 @@
 import path from 'path';
-import {output} from '@shopify/cli-kit';
+import {output, file} from '@shopify/cli-kit';
 import colors from '@shopify/cli-kit/node/colors';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {commonFlags, flagsToCamelObject} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
@@ -19,7 +20,7 @@ export default class Build extends Command {
     }),
     entry: Flags.string({
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
-      required: true,
+      default: 'server',
     }),
     ['disable-route-warning']: Flags.boolean({
       description: 'Disable warning about missing standard routes',
@@ -60,11 +61,10 @@ export async function runBuild({
     publicPath,
   } = getProjectPaths(appPath, entry);
 
+  await assertEntryFileExists(entryFile);
   await checkLockfileStatus(root);
 
   console.time(LOG_WORKER_BUILT);
-
-  const {file} = await import('@shopify/cli-kit');
 
   const [remixConfig] = await Promise.all([
     getRemixConfig(root, entryFile, publicPath),
@@ -127,6 +127,32 @@ export async function copyPublicFiles(
   publicPath: string,
   buildPathClient: string,
 ) {
-  const {file} = await import('@shopify/cli-kit');
   return file.copy(publicPath, buildPathClient);
+}
+
+export async function assertEntryFileExists(filePath: string) {
+  const exists = await file.exists(filePath);
+
+  if (!exists) {
+    if (!path.extname(filePath)) {
+      const {readdir} = await import('fs/promises');
+      const files = await readdir(path.dirname(filePath));
+      const exists = files.some((file) => {
+        const {name, ext} = path.parse(file);
+        return name === path.basename(filePath) && /^\.[jt]s$/.test(ext);
+      });
+
+      if (exists) return;
+    }
+
+    renderFatalError({
+      name: 'FileNotFound',
+      type: 0,
+      message: 'Entry file not found',
+      tryMessage:
+        'Ensure the file exists and pass the correct path with the --entry flag',
+    });
+
+    process.exit(1);
+  }
 }

@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import {output} from '@shopify/cli-kit';
-import {copyPublicFiles} from './build.js';
+import {assertEntryFileExists, copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
 import {commonFlags, flagsToCamelObject} from '../../utils/flags.js';
@@ -27,7 +27,7 @@ export default class Dev extends Command {
     }),
     entry: Flags.string({
       env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
-      required: true,
+      default: 'server',
     }),
     ['disable-virtual-routes']: Flags.boolean({
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
@@ -72,6 +72,8 @@ async function compileAndWatch(
 
   const {root, entryFile, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath, entry);
+
+  await assertEntryFileExists(entryFile);
 
   const checkingHydrogenVersion = checkHydrogenVersion(root);
 
