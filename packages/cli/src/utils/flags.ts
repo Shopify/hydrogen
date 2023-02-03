@@ -1,4 +1,5 @@
 import Flags from '@oclif/core/lib/flags.js';
+import {string as stringUtils} from '@shopify/cli-kit';
 
 export const commonFlags = {
   path: Flags.string({
@@ -20,10 +21,13 @@ export const commonFlags = {
   entry: Flags.string({
     description: 'The path to the server entry file.',
     env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
-    required: true,
-  }),
-  disableRouteWarning: Flags.boolean({
-    description: 'Disable warning about missing standard routes.',
-    env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
+    default: 'server',
   }),
 };
+
+export function flagsToCamelObject(obj: Record<string, any>) {
+  return Object.entries(obj).reduce((acc, [key, value]) => {
+    acc[stringUtils.camelize(key)] = value;
+    return acc;
+  }, {} as any);
+}

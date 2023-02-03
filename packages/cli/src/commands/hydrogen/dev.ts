@@ -1,10 +1,10 @@
 import path from 'path';
 import fs from 'fs/promises';
 import {output} from '@shopify/cli-kit';
-import {copyPublicFiles} from './build.js';
+import {assertEntryFileExists, copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
-import {commonFlags} from '../../utils/flags.js';
+import {commonFlags, flagsToCamelObject} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
@@ -19,15 +19,15 @@ export default class Dev extends Command {
   static description =
     'Runs Hydrogen storefront in an Oxygen worker for development.';
   static flags = {
-    disableVirtualRoutes: Flags.boolean({
+    entry: commonFlags.entry,
+    path: commonFlags.path,
+    port: commonFlags.port,
+    ['disable-virtual-routes']: Flags.boolean({
       description:
         "Disable rendering fallback routes when a route file doesn't exist",
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
-    entry: commonFlags.entry,
-    path: commonFlags.path,
-    port: commonFlags.port,
   };
 
   async run(): Promise<void> {
@@ -35,7 +35,7 @@ export default class Dev extends Command {
     const {flags} = await this.parse(Dev);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
-    await runDev({...flags, path: directory});
+    await runDev({...flagsToCamelObject(flags), path: directory});
   }
 }
 
@@ -67,6 +67,8 @@ async function compileAndWatch(
 
   const {root, entryFile, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath, entry);
+
+  await assertEntryFileExists(entryFile);
 
   const checkingHydrogenVersion = checkHydrogenVersion(root);
 
