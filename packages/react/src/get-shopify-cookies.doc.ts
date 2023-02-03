@@ -13,7 +13,7 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   description: 'Parses cookie string and returns Shopify cookies.',
-  type: 'gear',
+  type: 'utility',
   defaultExample: {
     description: 'I am the default example',
     codeblock: {
@@ -38,6 +38,11 @@ const data: ReferenceEntityTemplateSchema = {
       type: 'GetShopifyCookiesGeneratedType',
       description:
         "If the Shopify cookies doesn't exist, this method will return empty string for each missing cookie.",
+    },
+    {
+      title: 'ShopifyCookies',
+      type: 'ShopifyCookies',
+      description: 'Shopify cookies names',
     },
   ],
 };

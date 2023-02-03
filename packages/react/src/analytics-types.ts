@@ -11,37 +11,86 @@ import {
 import {SHOPIFY_Y, SHOPIFY_S} from './cart-constants.js';
 
 export type ClientBrowserParameters = {
-  /** Shopify unique user token: Value of `_shopify_y` cookie. Use `getClientBrowserParameters()` to collect this value. */
+  /**
+   * Shopify unique user token: Value of `_shopify_y` cookie.
+   *
+   * Use `getClientBrowserParameters()` to collect this value.
+   **/
   uniqueToken: string;
-  /** Shopify session token: Value of `_shopify_s` cookie. Use `getClientBrowserParameters()` to collect this value. */
+  /**
+   * Shopify session token: Value of `_shopify_s` cookie.
+   *
+   * Use `getClientBrowserParameters()` to collect this value.
+   **/
   visitToken: string;
-  /** `window.location.href`. Use `getClientBrowserParameters()` to collect this value. */
+  /**
+   * Value of `window.location.href`.
+   *
+   * Use `getClientBrowserParameters()` to collect this value.
+   **/
   url: string;
-  /** `window.location.pathname`. Use `getClientBrowserParameters()` to collect this value. */
+  /**
+   * Value of `window.location.pathname`.
+   *
+   * Use `getClientBrowserParameters()` to collect this value.
+   **/
   path: string;
-  /** `window.location.search`. Use `getClientBrowserParameters()` to collect this value. */
+  /**
+   * Value of `window.location.search`.
+   *
+   * Use `getClientBrowserParameters()` to collect this value.
+   **/
   search: string;
-  /** `window.location.referrer`. Use `getClientBrowserParameters()` to collect this value. */
+  /**
+   * Value of `window.location.referrer`.
+   *
+   * Use `getClientBrowserParameters()` to collect this value.
+   **/
   referrer: string;
-  /** `document.title`. Use `getClientBrowserParameters()` to collect this value. */
+  /**
+   * Value of `document.title`.
+   *
+   * Use `getClientBrowserParameters()` to collect this value.
+   **/
   title: string;
-  /** `navigator.userAgent`. Use `getClientBrowserParameters()` to collect this value. */
+  /**
+   * Value of `navigator.userAgent`.
+   *
+   * Use `getClientBrowserParameters()` to collect this value.
+   **/
   userAgent: string;
-  /** Navigation type: 'navigate' | 'reload' | 'back_forward' | 'prerender' | 'unknown <number>'. Use `getClientBrowserParameters()` to collect this value. */
+  /**
+   * Navigation type: `'navigate' | 'reload' | 'back_forward' | 'prerender' | 'unknown'`.
+   *
+   * Use `getClientBrowserParameters()` to collect this value.
+   **/
   navigationType: string;
-  /** Navigation api: 'PerformanceNavigationTiming' | 'performance.navigation'. Use `getClientBrowserParameters()` to collect this value. */
+  /**
+   * Navigation api: `'PerformanceNavigationTiming' | 'performance.navigation'`.
+   *
+   * Use `getClientBrowserParameters()` to collect this value.
+   **/
   navigationApi: string;
 };
 
 export type ShopifyAnalyticsProduct = {
+  /** Product id in the form of `gid://shopify/Product/<id>`. */
   productGid: Product['id'];
+  /** Variant id in the form of `gid://shopify/ProductVariant/<id>`. */
   variantGid?: ProductVariant['id'];
+  /** Product name. */
   name: Product['title'];
+  /** Variant name. */
   variantName?: ProductVariant['title'];
+  /** Product brand or vendor. */
   brand: Product['vendor'];
+  /** Product category or type. */
   category?: Product['productType'];
+  /** Product price. */
   price: ProductVariant['price']['amount'];
+  /** Product sku. */
   sku?: ProductVariant['sku'];
+  /** Quantity of the product in this event. */
   quantity?: number;
 };
 
@@ -62,7 +111,7 @@ type ShopifyAnalyticsBase = {
   customerId?: string;
   /** Total value of products. */
   totalValue?: number;
-  /** Shopify products. */
+  /** Product list. */
   products?: ShopifyAnalyticsProduct[];
 };
 

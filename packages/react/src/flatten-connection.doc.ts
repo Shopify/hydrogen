@@ -8,7 +8,7 @@ const data: ReferenceEntityTemplateSchema = {
   description: `
     The \`flattenConnection\` utility transforms a connection object from the Storefront API (for example, [Product-related connections](https://shopify.dev/api/storefront/reference/products/product)) into a flat array of nodes. The utility works with either \`nodes\` or \`edges.node\`.\n\nIf \`connection\` is null or undefined, will return an empty array instead in production. In development, an error will be thrown.
   `,
-  type: 'gear',
+  type: 'utility',
   defaultExample: {
     description: 'I am the default example',
     codeblock: {

@@ -4956,13 +4956,575 @@
     ]
   },
   {
-    "name": "Analytics Constants",
+    "name": "sendShopifyAnalytics",
     "category": "utilities",
     "isVisualComponent": false,
-    "related": [],
-    "description": "A list of constants used by Shopify's analytics system.",
-    "type": "gear",
+    "related": [
+      {
+        "subtitle": "How to set up",
+        "name": "Shopify analytics",
+        "url": "/custom-storefronts/hydrogen/analytics/shopify-analytics",
+        "type": "tutorial"
+      },
+      {
+        "subtitle": "Utility",
+        "name": "useShopifyCookies",
+        "url": "/api/hydrogen-react/utilities/useShopifyCookies",
+        "type": "gear"
+      },
+      {
+        "subtitle": "Utility",
+        "name": "getClientBrowserParameters",
+        "url": "/api/hydrogen-react/utilities/getclientbrowserparameters",
+        "type": "gear"
+      }
+    ],
+    "description": "Sends analytics to Shopify.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {\n  sendShopifyAnalytics,\n  getClientBrowserParameters,\n  AnalyticsEventName,\n  useShopifyCookies,\n} from '@shopify/hydrogen-react';\nimport {useRouter} from 'next/router';\nimport {useEffect} from 'react';\n\nfunction sendPageView(analyticsPageData) {\n  const payload = {\n    ...getClientBrowserParameters(),\n    ...analyticsPageData,\n  };\n  sendShopifyAnalytics({\n    eventName: AnalyticsEventName.PAGE_VIEW,\n    payload,\n  });\n}\n\n// Hook into your router's page change events to fire this analytics event:\n// for example, in NextJS:\n\nconst analyticsShopData = {\n  shopId: 'gid://shopify/Shop/{your-shop-id}',\n  currency: 'USD',\n  acceptedLanguage: 'en',\n};\n\nexport default function App({Component, pageProps}) {\n  const router = useRouter();\n\n  // eslint-disable-next-line no-undef\n  const hasUserConsent = yourFunctionToDetermineIfUserHasConsent();\n\n  // eslint-disable-next-line react-hooks/exhaustive-deps\n  const analytics = {\n    hasUserConsent,\n    ...analyticsShopData,\n    ...pageProps.analytics,\n  };\n  const pagePropsWithAppAnalytics = {\n    ...pageProps,\n    analytics,\n  };\n\n  useEffect(() => {\n    const handleRouteChange = () => {\n      sendPageView(analytics);\n    };\n\n    router.events.on('routeChangeComplete', handleRouteChange);\n\n    return () => {\n      router.events.off('routeChangeComplete', handleRouteChange);\n    };\n  }, [analytics, router.events]);\n\n  useShopifyCookies();\n\n  return <Component {...pagePropsWithAppAnalytics} />;\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {\n  sendShopifyAnalytics,\n  getClientBrowserParameters,\n  AnalyticsEventName,\n  useShopifyCookies,\n} from '@shopify/hydrogen-react';\nimport {useRouter} from 'next/router';\n\nfunction sendPageView(analyticsPageData) {\n  const payload = {\n    ...getClientBrowserParameters(),\n    ...analyticsPageData,\n  };\n  sendShopifyAnalytics({\n    eventName: AnalyticsEventName.PAGE_VIEW,\n    payload,\n  });\n}\n\n// Hook into your router's page change events to fire this analytics event:\n// for example, in NextJS:\n\nconst analyticsShopData = {\n  shopId: 'gid://shopify/Shop/{your-shop-id}',\n  currency: 'USD',\n  acceptedLanguage: 'en',\n};\n\nexport default function App({Component, pageProps}) {\n  const router = useRouter();\n\n  // @ts-expect-error - this is an example, you should implement this function\n  const hasUserConsent = yourFunctionToDetermineIfUserHasConsent();\n\n  // eslint-disable-next-line react-hooks/exhaustive-deps\n  const analytics = {\n    hasUserConsent,\n    ...analyticsShopData,\n    ...pageProps.analytics,\n  };\n  const pagePropsWithAppAnalytics = {\n    ...pageProps,\n    analytics,\n  };\n\n  useEffect(() => {\n    const handleRouteChange = () => {\n      sendPageView(analytics);\n    };\n\n    router.events.on('routeChangeComplete', handleRouteChange);\n\n    return () => {\n      router.events.off('routeChangeComplete', handleRouteChange);\n    };\n  }, [analytics, router.events]);\n\n  useShopifyCookies();\n\n  return <Component {...pagePropsWithAppAnalytics} />;\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
     "definitions": [
+      {
+        "title": "sendShopifyAnalytics",
+        "description": "If `event.payload.hasUserConsent` is false, no analytics event will happen.",
+        "type": "SendShopifyAnalyticsGeneratedType",
+        "typeDefinitions": {
+          "SendShopifyAnalyticsGeneratedType": {
+            "filePath": "/analytics.ts",
+            "name": "SendShopifyAnalyticsGeneratedType",
+            "params": [
+              {
+                "name": "event",
+                "description": "- The analytics event.",
+                "value": "ShopifyAnalytics",
+                "filePath": "/analytics.ts"
+              },
+              {
+                "name": "shopDomain",
+                "description": "- The Online Store domain to sent Shopify analytics under the same\ntop level domain.",
+                "value": "string",
+                "filePath": "/analytics.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics.ts",
+              "description": "",
+              "name": "Promise<void>",
+              "value": "Promise<void>"
+            },
+            "value": "export function sendShopifyAnalytics(\n  event: ShopifyAnalytics,\n  shopDomain?: string\n): Promise<void> {\n  const {eventName, payload} = event;\n  if (!payload.hasUserConsent) return Promise.resolve();\n\n  let events: ShopifyMonorailEvent[] = [];\n\n  if (eventName === AnalyticsEventName.PAGE_VIEW) {\n    const pageViewPayload = payload as ShopifyPageViewPayload;\n    events = events.concat(\n      trekkiePageView(pageViewPayload),\n      customerPageView(pageViewPayload)\n    );\n  } else if (eventName === AnalyticsEventName.ADD_TO_CART) {\n    events = events.concat(\n      customerAddToCart(payload as ShopifyAddToCartPayload)\n    );\n  }\n\n  if (events.length) {\n    return sendToShopify(events, shopDomain);\n  } else {\n    return Promise.resolve();\n  }\n}"
+          },
+          "ShopifyAnalytics": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyAnalytics",
+            "value": "ShopifyPageView | ShopifyAddToCart",
+            "description": ""
+          },
+          "ShopifyPageView": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyPageView",
+            "value": "{\n  /** Use `AnalyticsEventName.PAGE_VIEW` constant. */\n  eventName: string;\n  payload: ShopifyPageViewPayload;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "eventName",
+                "value": "string",
+                "description": "Use `AnalyticsEventName.PAGE_VIEW` constant."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "payload",
+                "value": "ShopifyPageViewPayload",
+                "description": ""
+              }
+            ]
+          },
+          "ShopifyPageViewPayload": {
+            "filePath": "/analytics-types.ts",
+            "name": "ShopifyPageViewPayload",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "canonicalUrl",
+                "value": "string",
+                "description": "Canonical url.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "pageType",
+                "value": "string",
+                "description": "Shopify page type.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "resourceId",
+                "value": "string",
+                "description": "Shopify resource id in the form of `gid://shopify/<type>/<id>`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "collectionHandle",
+                "value": "string",
+                "description": "Shopify collection handle.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "searchString",
+                "value": "string",
+                "description": "Search term used on a search results page.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "hasUserConsent",
+                "value": "boolean",
+                "description": "If we have consent from buyer for data collection"
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "shopId",
+                "value": "string",
+                "description": "Shopify shop id in the form of `gid://shopify/Shop/<id>`."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "currency",
+                "value": "CurrencyCode",
+                "description": "Currency code."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontId",
+                "value": "string",
+                "description": "Shopify storefront id generated by Hydrogen sales channel.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "acceptedLanguage",
+                "value": "LanguageCode",
+                "description": "Language displayed to buyer.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "shopifySalesChannel",
+                "value": "keyof ShopifySalesChannel",
+                "description": "Shopify sales channel.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customerId",
+                "value": "string",
+                "description": "Shopify customer id in the form of `gid://shopify/Customer/<id>`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "totalValue",
+                "value": "number",
+                "description": "Total value of products.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "products",
+                "value": "ShopifyAnalyticsProduct[]",
+                "description": "Product list.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "uniqueToken",
+                "value": "string",
+                "description": "Shopify unique user token: Value of `_shopify_y` cookie.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "visitToken",
+                "value": "string",
+                "description": "Shopify session token: Value of `_shopify_s` cookie.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "url",
+                "value": "string",
+                "description": "Value of `window.location.href`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "path",
+                "value": "string",
+                "description": "Value of `window.location.pathname`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "search",
+                "value": "string",
+                "description": "Value of `window.location.search`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "referrer",
+                "value": "string",
+                "description": "Value of `window.location.referrer`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "title",
+                "value": "string",
+                "description": "Value of `document.title`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "userAgent",
+                "value": "string",
+                "description": "Value of `navigator.userAgent`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "navigationType",
+                "value": "string",
+                "description": "Navigation type: `'navigate' | 'reload' | 'back_forward' | 'prerender' | 'unknown'`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "navigationApi",
+                "value": "string",
+                "description": "Navigation api: `'PerformanceNavigationTiming' | 'performance.navigation'`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              }
+            ],
+            "value": "export interface ShopifyPageViewPayload\n  extends ShopifyAnalyticsBase,\n    ClientBrowserParameters {\n  /** Canonical url. */\n  canonicalUrl?: string;\n  /** Shopify page type. */\n  pageType?: string;\n  /** Shopify resource id in the form of `gid://shopify/<type>/<id>`. */\n  resourceId?: string;\n  /** Shopify collection handle. */\n  collectionHandle?: string;\n  /** Search term used on a search results page. */\n  searchString?: string;\n}"
+          },
+          "ShopifySalesChannel": {
+            "filePath": "/analytics-constants.ts",
+            "name": "ShopifySalesChannel",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "hydrogen",
+                "value": "\"hydrogen\"",
+                "description": "Shopify Hydrogen sales channel"
+              },
+              {
+                "filePath": "/analytics-constants.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "headless",
+                "value": "\"headless\"",
+                "description": "Shopify Headless sales channel"
+              }
+            ],
+            "value": "interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
+          },
+          "ShopifyAnalyticsProduct": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyAnalyticsProduct",
+            "value": "{\n  /** Product id in the form of `gid://shopify/Product/<id>`. */\n  productGid: Product['id'];\n  /** Variant id in the form of `gid://shopify/ProductVariant/<id>`. */\n  variantGid?: ProductVariant['id'];\n  /** Product name. */\n  name: Product['title'];\n  /** Variant name. */\n  variantName?: ProductVariant['title'];\n  /** Product brand or vendor. */\n  brand: Product['vendor'];\n  /** Product category or type. */\n  category?: Product['productType'];\n  /** Product price. */\n  price: ProductVariant['price']['amount'];\n  /** Product sku. */\n  sku?: ProductVariant['sku'];\n  /** Quantity of the product in this event. */\n  quantity?: number;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "productGid",
+                "value": "string",
+                "description": "Product id in the form of `gid://shopify/Product/<id>`."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "variantGid",
+                "value": "string",
+                "description": "Variant id in the form of `gid://shopify/ProductVariant/<id>`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "name",
+                "value": "string",
+                "description": "Product name."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "variantName",
+                "value": "string",
+                "description": "Variant name.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "brand",
+                "value": "string",
+                "description": "Product brand or vendor."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "category",
+                "value": "string",
+                "description": "Product category or type.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "price",
+                "value": "string",
+                "description": "Product price."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sku",
+                "value": "string",
+                "description": "Product sku.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "quantity",
+                "value": "number",
+                "description": "Quantity of the product in this event.",
+                "isOptional": true
+              }
+            ]
+          },
+          "ShopifyAddToCart": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyAddToCart",
+            "value": "{\n  /** Use `AnalyticsEventName.ADD_TO_CART` constant. */\n  eventName: string;\n  payload: ShopifyAddToCartPayload;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "eventName",
+                "value": "string",
+                "description": "Use `AnalyticsEventName.ADD_TO_CART` constant."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "payload",
+                "value": "ShopifyAddToCartPayload",
+                "description": ""
+              }
+            ]
+          },
+          "ShopifyAddToCartPayload": {
+            "filePath": "/analytics-types.ts",
+            "name": "ShopifyAddToCartPayload",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cartId",
+                "value": "string",
+                "description": "Shopify cart id in the form of `gid://shopify/Cart/<id>`."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "hasUserConsent",
+                "value": "boolean",
+                "description": "If we have consent from buyer for data collection"
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "shopId",
+                "value": "string",
+                "description": "Shopify shop id in the form of `gid://shopify/Shop/<id>`."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "currency",
+                "value": "CurrencyCode",
+                "description": "Currency code."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontId",
+                "value": "string",
+                "description": "Shopify storefront id generated by Hydrogen sales channel.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "acceptedLanguage",
+                "value": "LanguageCode",
+                "description": "Language displayed to buyer.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "shopifySalesChannel",
+                "value": "keyof ShopifySalesChannel",
+                "description": "Shopify sales channel.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customerId",
+                "value": "string",
+                "description": "Shopify customer id in the form of `gid://shopify/Customer/<id>`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "totalValue",
+                "value": "number",
+                "description": "Total value of products.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "products",
+                "value": "ShopifyAnalyticsProduct[]",
+                "description": "Product list.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "uniqueToken",
+                "value": "string",
+                "description": "Shopify unique user token: Value of `_shopify_y` cookie.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "visitToken",
+                "value": "string",
+                "description": "Shopify session token: Value of `_shopify_s` cookie.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "url",
+                "value": "string",
+                "description": "Value of `window.location.href`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "path",
+                "value": "string",
+                "description": "Value of `window.location.pathname`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "search",
+                "value": "string",
+                "description": "Value of `window.location.search`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "referrer",
+                "value": "string",
+                "description": "Value of `window.location.referrer`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "title",
+                "value": "string",
+                "description": "Value of `document.title`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "userAgent",
+                "value": "string",
+                "description": "Value of `navigator.userAgent`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "navigationType",
+                "value": "string",
+                "description": "Navigation type: `'navigate' | 'reload' | 'back_forward' | 'prerender' | 'unknown'`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "navigationApi",
+                "value": "string",
+                "description": "Navigation api: `'PerformanceNavigationTiming' | 'performance.navigation'`.\n\nUse `getClientBrowserParameters()` to collect this value."
+              }
+            ],
+            "value": "export interface ShopifyAddToCartPayload\n  extends ShopifyAnalyticsBase,\n    ClientBrowserParameters {\n  /** Shopify cart id in the form of `gid://shopify/Cart/<id>`. */\n  cartId: string;\n}"
+          }
+        }
+      },
       {
         "title": "AnalyticsEventName",
         "description": "Analytics event names accepted by Shopify analytics.",
@@ -5193,578 +5755,6 @@
     ]
   },
   {
-    "name": "sendShopifyAnalytics",
-    "category": "utilities",
-    "isVisualComponent": false,
-    "related": [
-      {
-        "subtitle": "How to set up",
-        "name": "Shopify analytics",
-        "url": "/custom-storefronts/hydrogen/analytics/shopify-analytics",
-        "type": "tutorial"
-      },
-      {
-        "subtitle": "Utility",
-        "name": "useShopifyCookies",
-        "url": "/api/hydrogen-react/utilities/useShopifyCookies",
-        "type": "gear"
-      },
-      {
-        "subtitle": "Utility",
-        "name": "getClientBrowserParameters",
-        "url": "/api/hydrogen-react/utilities/getclientbrowserparameters",
-        "type": "gear"
-      }
-    ],
-    "description": "Sends analytics to Shopify.",
-    "type": "gear",
-    "defaultExample": {
-      "description": "I am the default example",
-      "codeblock": {
-        "tabs": [
-          {
-            "title": "JavaScript",
-            "code": "import {\n  sendShopifyAnalytics,\n  getClientBrowserParameters,\n  AnalyticsEventName,\n  useShopifyCookies,\n} from '@shopify/hydrogen-react';\nimport {useRouter} from 'next/router';\nimport {useEffect} from 'react';\n\nfunction sendPageView(analyticsPageData) {\n  const payload = {\n    ...getClientBrowserParameters(),\n    ...analyticsPageData,\n  };\n  sendShopifyAnalytics({\n    eventName: AnalyticsEventName.PAGE_VIEW,\n    payload,\n  });\n}\n\n// Hook into your router's page change events to fire this analytics event:\n// for example, in NextJS:\n\nconst analyticsShopData = {\n  shopId: 'gid://shopify/Shop/{your-shop-id}',\n  currency: 'USD',\n  acceptedLanguage: 'en',\n};\n\nexport default function App({Component, pageProps}) {\n  const router = useRouter();\n\n  // eslint-disable-next-line no-undef\n  const hasUserConsent = yourFunctionToDetermineIfUserHasConsent();\n\n  // eslint-disable-next-line react-hooks/exhaustive-deps\n  const analytics = {\n    hasUserConsent,\n    ...analyticsShopData,\n    ...pageProps.analytics,\n  };\n  const pagePropsWithAppAnalytics = {\n    ...pageProps,\n    analytics,\n  };\n\n  useEffect(() => {\n    const handleRouteChange = () => {\n      sendPageView(analytics);\n    };\n\n    router.events.on('routeChangeComplete', handleRouteChange);\n\n    return () => {\n      router.events.off('routeChangeComplete', handleRouteChange);\n    };\n  }, [analytics, router.events]);\n\n  useShopifyCookies();\n\n  return <Component {...pagePropsWithAppAnalytics} />;\n}\n",
-            "language": "jsx"
-          },
-          {
-            "title": "TypeScript",
-            "code": "import * as React from 'react';\nimport {useEffect} from 'react';\nimport {\n  sendShopifyAnalytics,\n  getClientBrowserParameters,\n  AnalyticsEventName,\n  useShopifyCookies,\n} from '@shopify/hydrogen-react';\nimport {useRouter} from 'next/router';\n\nfunction sendPageView(analyticsPageData) {\n  const payload = {\n    ...getClientBrowserParameters(),\n    ...analyticsPageData,\n  };\n  sendShopifyAnalytics({\n    eventName: AnalyticsEventName.PAGE_VIEW,\n    payload,\n  });\n}\n\n// Hook into your router's page change events to fire this analytics event:\n// for example, in NextJS:\n\nconst analyticsShopData = {\n  shopId: 'gid://shopify/Shop/{your-shop-id}',\n  currency: 'USD',\n  acceptedLanguage: 'en',\n};\n\nexport default function App({Component, pageProps}) {\n  const router = useRouter();\n\n  // @ts-expect-error - this is an example, you should implement this function\n  const hasUserConsent = yourFunctionToDetermineIfUserHasConsent();\n\n  // eslint-disable-next-line react-hooks/exhaustive-deps\n  const analytics = {\n    hasUserConsent,\n    ...analyticsShopData,\n    ...pageProps.analytics,\n  };\n  const pagePropsWithAppAnalytics = {\n    ...pageProps,\n    analytics,\n  };\n\n  useEffect(() => {\n    const handleRouteChange = () => {\n      sendPageView(analytics);\n    };\n\n    router.events.on('routeChangeComplete', handleRouteChange);\n\n    return () => {\n      router.events.off('routeChangeComplete', handleRouteChange);\n    };\n  }, [analytics, router.events]);\n\n  useShopifyCookies();\n\n  return <Component {...pagePropsWithAppAnalytics} />;\n}\n",
-            "language": "tsx"
-          }
-        ],
-        "title": "Example code"
-      }
-    },
-    "definitions": [
-      {
-        "title": "sendShopifyAnalytics",
-        "description": "If `event.payload.hasUserConsent` is false, no analytics event will happen.",
-        "type": "SendShopifyAnalyticsGeneratedType",
-        "typeDefinitions": {
-          "SendShopifyAnalyticsGeneratedType": {
-            "filePath": "/analytics.ts",
-            "name": "SendShopifyAnalyticsGeneratedType",
-            "params": [
-              {
-                "name": "event",
-                "description": "- The analytics event.",
-                "value": "ShopifyAnalytics",
-                "filePath": "/analytics.ts"
-              },
-              {
-                "name": "shopDomain",
-                "description": "- The Online Store domain to sent Shopify analytics under the same\ntop level domain.",
-                "value": "string",
-                "filePath": "/analytics.ts"
-              }
-            ],
-            "returns": {
-              "filePath": "/analytics.ts",
-              "description": "",
-              "name": "Promise<void>",
-              "value": "Promise<void>"
-            },
-            "value": "export function sendShopifyAnalytics(\n  event: ShopifyAnalytics,\n  shopDomain?: string\n): Promise<void> {\n  const {eventName, payload} = event;\n  if (!payload.hasUserConsent) return Promise.resolve();\n\n  let events: ShopifyMonorailEvent[] = [];\n\n  if (eventName === AnalyticsEventName.PAGE_VIEW) {\n    const pageViewPayload = payload as ShopifyPageViewPayload;\n    events = events.concat(\n      trekkiePageView(pageViewPayload),\n      customerPageView(pageViewPayload)\n    );\n  } else if (eventName === AnalyticsEventName.ADD_TO_CART) {\n    events = events.concat(\n      customerAddToCart(payload as ShopifyAddToCartPayload)\n    );\n  }\n\n  if (events.length) {\n    return sendToShopify(events, shopDomain);\n  } else {\n    return Promise.resolve();\n  }\n}"
-          },
-          "ShopifyAnalytics": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyAnalytics",
-            "value": "ShopifyPageView | ShopifyAddToCart",
-            "description": ""
-          },
-          "ShopifyPageView": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyPageView",
-            "value": "{\n  /** Use `AnalyticsEventName.PAGE_VIEW` constant. */\n  eventName: string;\n  payload: ShopifyPageViewPayload;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "eventName",
-                "value": "string",
-                "description": "Use `AnalyticsEventName.PAGE_VIEW` constant."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "payload",
-                "value": "ShopifyPageViewPayload",
-                "description": ""
-              }
-            ]
-          },
-          "ShopifyPageViewPayload": {
-            "filePath": "/analytics-types.ts",
-            "name": "ShopifyPageViewPayload",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "canonicalUrl",
-                "value": "string",
-                "description": "Canonical url.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "pageType",
-                "value": "string",
-                "description": "Shopify page type.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "resourceId",
-                "value": "string",
-                "description": "Shopify resource id in the form of `gid://shopify/<type>/<id>`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "collectionHandle",
-                "value": "string",
-                "description": "Shopify collection handle.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "searchString",
-                "value": "string",
-                "description": "Search term used on a search results page.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "hasUserConsent",
-                "value": "boolean",
-                "description": "If we have consent from buyer for data collection"
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "shopId",
-                "value": "string",
-                "description": "Shopify shop id in the form of `gid://shopify/Shop/<id>`."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "currency",
-                "value": "CurrencyCode",
-                "description": "Currency code."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "storefrontId",
-                "value": "string",
-                "description": "Shopify storefront id generated by Hydrogen sales channel.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "acceptedLanguage",
-                "value": "LanguageCode",
-                "description": "Language displayed to buyer.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "shopifySalesChannel",
-                "value": "keyof ShopifySalesChannel",
-                "description": "Shopify sales channel.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "customerId",
-                "value": "string",
-                "description": "Shopify customer id in the form of `gid://shopify/Customer/<id>`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "totalValue",
-                "value": "number",
-                "description": "Total value of products.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "products",
-                "value": "ShopifyAnalyticsProduct[]",
-                "description": "Shopify products.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "uniqueToken",
-                "value": "string",
-                "description": "Shopify unique user token: Value of `_shopify_y` cookie. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "visitToken",
-                "value": "string",
-                "description": "Shopify session token: Value of `_shopify_s` cookie. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "url",
-                "value": "string",
-                "description": "`window.location.href`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "path",
-                "value": "string",
-                "description": "`window.location.pathname`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "search",
-                "value": "string",
-                "description": "`window.location.search`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "referrer",
-                "value": "string",
-                "description": "`window.location.referrer`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "title",
-                "value": "string",
-                "description": "`document.title`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "userAgent",
-                "value": "string",
-                "description": "`navigator.userAgent`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "navigationType",
-                "value": "string",
-                "description": "Navigation type: 'navigate' | 'reload' | 'back_forward' | 'prerender' | 'unknown <number>'. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "navigationApi",
-                "value": "string",
-                "description": "Navigation api: 'PerformanceNavigationTiming' | 'performance.navigation'. Use `getClientBrowserParameters()` to collect this value."
-              }
-            ],
-            "value": "export interface ShopifyPageViewPayload\n  extends ShopifyAnalyticsBase,\n    ClientBrowserParameters {\n  /** Canonical url. */\n  canonicalUrl?: string;\n  /** Shopify page type. */\n  pageType?: string;\n  /** Shopify resource id in the form of `gid://shopify/<type>/<id>`. */\n  resourceId?: string;\n  /** Shopify collection handle. */\n  collectionHandle?: string;\n  /** Search term used on a search results page. */\n  searchString?: string;\n}"
-          },
-          "ShopifySalesChannel": {
-            "filePath": "/analytics-constants.ts",
-            "name": "ShopifySalesChannel",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "hydrogen",
-                "value": "\"hydrogen\"",
-                "description": "Shopify Hydrogen sales channel"
-              },
-              {
-                "filePath": "/analytics-constants.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "headless",
-                "value": "\"headless\"",
-                "description": "Shopify Headless sales channel"
-              }
-            ],
-            "value": "interface ShopifySalesChannel {\n  /** Shopify Hydrogen sales channel */\n  hydrogen: 'hydrogen';\n  /** Shopify Headless sales channel */\n  headless: 'headless';\n}"
-          },
-          "ShopifyAnalyticsProduct": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyAnalyticsProduct",
-            "value": "{\n  productGid: Product['id'];\n  variantGid?: ProductVariant['id'];\n  name: Product['title'];\n  variantName?: ProductVariant['title'];\n  brand: Product['vendor'];\n  category?: Product['productType'];\n  price: ProductVariant['price']['amount'];\n  sku?: ProductVariant['sku'];\n  quantity?: number;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "productGid",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "variantGid",
-                "value": "string",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "name",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "variantName",
-                "value": "string",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "brand",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "category",
-                "value": "string",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "price",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "sku",
-                "value": "string",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "quantity",
-                "value": "number",
-                "description": "",
-                "isOptional": true
-              }
-            ]
-          },
-          "ShopifyAddToCart": {
-            "filePath": "/analytics-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyAddToCart",
-            "value": "{\n  /** Use `AnalyticsEventName.ADD_TO_CART` constant. */\n  eventName: string;\n  payload: ShopifyAddToCartPayload;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "eventName",
-                "value": "string",
-                "description": "Use `AnalyticsEventName.ADD_TO_CART` constant."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "payload",
-                "value": "ShopifyAddToCartPayload",
-                "description": ""
-              }
-            ]
-          },
-          "ShopifyAddToCartPayload": {
-            "filePath": "/analytics-types.ts",
-            "name": "ShopifyAddToCartPayload",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "cartId",
-                "value": "string",
-                "description": "Shopify cart id in the form of `gid://shopify/Cart/<id>`."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "hasUserConsent",
-                "value": "boolean",
-                "description": "If we have consent from buyer for data collection"
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "shopId",
-                "value": "string",
-                "description": "Shopify shop id in the form of `gid://shopify/Shop/<id>`."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "currency",
-                "value": "CurrencyCode",
-                "description": "Currency code."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "storefrontId",
-                "value": "string",
-                "description": "Shopify storefront id generated by Hydrogen sales channel.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "acceptedLanguage",
-                "value": "LanguageCode",
-                "description": "Language displayed to buyer.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "shopifySalesChannel",
-                "value": "keyof ShopifySalesChannel",
-                "description": "Shopify sales channel.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "customerId",
-                "value": "string",
-                "description": "Shopify customer id in the form of `gid://shopify/Customer/<id>`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "totalValue",
-                "value": "number",
-                "description": "Total value of products.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "products",
-                "value": "ShopifyAnalyticsProduct[]",
-                "description": "Shopify products.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "uniqueToken",
-                "value": "string",
-                "description": "Shopify unique user token: Value of `_shopify_y` cookie. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "visitToken",
-                "value": "string",
-                "description": "Shopify session token: Value of `_shopify_s` cookie. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "url",
-                "value": "string",
-                "description": "`window.location.href`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "path",
-                "value": "string",
-                "description": "`window.location.pathname`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "search",
-                "value": "string",
-                "description": "`window.location.search`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "referrer",
-                "value": "string",
-                "description": "`window.location.referrer`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "title",
-                "value": "string",
-                "description": "`document.title`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "userAgent",
-                "value": "string",
-                "description": "`navigator.userAgent`. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "navigationType",
-                "value": "string",
-                "description": "Navigation type: 'navigate' | 'reload' | 'back_forward' | 'prerender' | 'unknown <number>'. Use `getClientBrowserParameters()` to collect this value."
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "navigationApi",
-                "value": "string",
-                "description": "Navigation api: 'PerformanceNavigationTiming' | 'performance.navigation'. Use `getClientBrowserParameters()` to collect this value."
-              }
-            ],
-            "value": "export interface ShopifyAddToCartPayload\n  extends ShopifyAnalyticsBase,\n    ClientBrowserParameters {\n  /** Shopify cart id in the form of `gid://shopify/Cart/<id>`. */\n  cartId: string;\n}"
-          }
-        }
-      }
-    ]
-  },
-  {
     "name": "storefrontApiCustomScalars",
     "category": "utilities",
     "isVisualComponent": false,
@@ -5781,7 +5771,7 @@
       }
     ],
     "description": "\n    Meant to be used with GraphQL CodeGen to type the Storefront API's custom scalars correctly when using TypeScript.By default, GraphQL CodeGen uses `any` for custom scalars; by using these definitions, GraphQL Codegen will generate the correct types for the Storefront API's custom scalars.\n\nSee more about [GraphQL CodeGen](https://graphql-code-generator.com/) and [custom scalars for TypeScript](https://the-guild.dev/graphql/codegen/plugins/typescript/typescript#scalars).\n\nNote that `@shopify/hydrogen-react` has already generated types for the Storefront API, so you may not need to setup GraphQL Codegen on your own.\n  ",
-    "type": "gear",
+    "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -5803,7 +5793,7 @@
     "isVisualComponent": false,
     "related": [],
     "description": "\n    The `flattenConnection` utility transforms a connection object from the Storefront API (for example, [Product-related connections](https://shopify.dev/api/storefront/reference/products/product)) into a flat array of nodes. The utility works with either `nodes` or `edges.node`.\n\nIf `connection` is null or undefined, will return an empty array instead in production. In development, an error will be thrown.\n  ",
-    "type": "gear",
+    "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -5870,7 +5860,7 @@
       }
     ],
     "description": "Gathers client browser values commonly used for analytics",
-    "type": "gear",
+    "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -5911,7 +5901,7 @@
             "filePath": "/analytics-types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ClientBrowserParameters",
-            "value": "{\n  /** Shopify unique user token: Value of `_shopify_y` cookie. Use `getClientBrowserParameters()` to collect this value. */\n  uniqueToken: string;\n  /** Shopify session token: Value of `_shopify_s` cookie. Use `getClientBrowserParameters()` to collect this value. */\n  visitToken: string;\n  /** `window.location.href`. Use `getClientBrowserParameters()` to collect this value. */\n  url: string;\n  /** `window.location.pathname`. Use `getClientBrowserParameters()` to collect this value. */\n  path: string;\n  /** `window.location.search`. Use `getClientBrowserParameters()` to collect this value. */\n  search: string;\n  /** `window.location.referrer`. Use `getClientBrowserParameters()` to collect this value. */\n  referrer: string;\n  /** `document.title`. Use `getClientBrowserParameters()` to collect this value. */\n  title: string;\n  /** `navigator.userAgent`. Use `getClientBrowserParameters()` to collect this value. */\n  userAgent: string;\n  /** Navigation type: 'navigate' | 'reload' | 'back_forward' | 'prerender' | 'unknown <number>'. Use `getClientBrowserParameters()` to collect this value. */\n  navigationType: string;\n  /** Navigation api: 'PerformanceNavigationTiming' | 'performance.navigation'. Use `getClientBrowserParameters()` to collect this value. */\n  navigationApi: string;\n}",
+            "value": "{\n  /**\n   * Shopify unique user token: Value of `_shopify_y` cookie.\n   *\n   * Use `getClientBrowserParameters()` to collect this value.\n   **/\n  uniqueToken: string;\n  /**\n   * Shopify session token: Value of `_shopify_s` cookie.\n   *\n   * Use `getClientBrowserParameters()` to collect this value.\n   **/\n  visitToken: string;\n  /**\n   * Value of `window.location.href`.\n   *\n   * Use `getClientBrowserParameters()` to collect this value.\n   **/\n  url: string;\n  /**\n   * Value of `window.location.pathname`.\n   *\n   * Use `getClientBrowserParameters()` to collect this value.\n   **/\n  path: string;\n  /**\n   * Value of `window.location.search`.\n   *\n   * Use `getClientBrowserParameters()` to collect this value.\n   **/\n  search: string;\n  /**\n   * Value of `window.location.referrer`.\n   *\n   * Use `getClientBrowserParameters()` to collect this value.\n   **/\n  referrer: string;\n  /**\n   * Value of `document.title`.\n   *\n   * Use `getClientBrowserParameters()` to collect this value.\n   **/\n  title: string;\n  /**\n   * Value of `navigator.userAgent`.\n   *\n   * Use `getClientBrowserParameters()` to collect this value.\n   **/\n  userAgent: string;\n  /**\n   * Navigation type: `'navigate' | 'reload' | 'back_forward' | 'prerender' | 'unknown'`.\n   *\n   * Use `getClientBrowserParameters()` to collect this value.\n   **/\n  navigationType: string;\n  /**\n   * Navigation api: `'PerformanceNavigationTiming' | 'performance.navigation'`.\n   *\n   * Use `getClientBrowserParameters()` to collect this value.\n   **/\n  navigationApi: string;\n}",
             "description": "",
             "members": [
               {
@@ -5919,70 +5909,70 @@
                 "syntaxKind": "PropertySignature",
                 "name": "uniqueToken",
                 "value": "string",
-                "description": "Shopify unique user token: Value of `_shopify_y` cookie. Use `getClientBrowserParameters()` to collect this value."
+                "description": "Shopify unique user token: Value of `_shopify_y` cookie.\n\nUse `getClientBrowserParameters()` to collect this value."
               },
               {
                 "filePath": "/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "visitToken",
                 "value": "string",
-                "description": "Shopify session token: Value of `_shopify_s` cookie. Use `getClientBrowserParameters()` to collect this value."
+                "description": "Shopify session token: Value of `_shopify_s` cookie.\n\nUse `getClientBrowserParameters()` to collect this value."
               },
               {
                 "filePath": "/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "url",
                 "value": "string",
-                "description": "`window.location.href`. Use `getClientBrowserParameters()` to collect this value."
+                "description": "Value of `window.location.href`.\n\nUse `getClientBrowserParameters()` to collect this value."
               },
               {
                 "filePath": "/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "path",
                 "value": "string",
-                "description": "`window.location.pathname`. Use `getClientBrowserParameters()` to collect this value."
+                "description": "Value of `window.location.pathname`.\n\nUse `getClientBrowserParameters()` to collect this value."
               },
               {
                 "filePath": "/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "search",
                 "value": "string",
-                "description": "`window.location.search`. Use `getClientBrowserParameters()` to collect this value."
+                "description": "Value of `window.location.search`.\n\nUse `getClientBrowserParameters()` to collect this value."
               },
               {
                 "filePath": "/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "referrer",
                 "value": "string",
-                "description": "`window.location.referrer`. Use `getClientBrowserParameters()` to collect this value."
+                "description": "Value of `window.location.referrer`.\n\nUse `getClientBrowserParameters()` to collect this value."
               },
               {
                 "filePath": "/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "title",
                 "value": "string",
-                "description": "`document.title`. Use `getClientBrowserParameters()` to collect this value."
+                "description": "Value of `document.title`.\n\nUse `getClientBrowserParameters()` to collect this value."
               },
               {
                 "filePath": "/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "userAgent",
                 "value": "string",
-                "description": "`navigator.userAgent`. Use `getClientBrowserParameters()` to collect this value."
+                "description": "Value of `navigator.userAgent`.\n\nUse `getClientBrowserParameters()` to collect this value."
               },
               {
                 "filePath": "/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "navigationType",
                 "value": "string",
-                "description": "Navigation type: 'navigate' | 'reload' | 'back_forward' | 'prerender' | 'unknown <number>'. Use `getClientBrowserParameters()` to collect this value."
+                "description": "Navigation type: `'navigate' | 'reload' | 'back_forward' | 'prerender' | 'unknown'`.\n\nUse `getClientBrowserParameters()` to collect this value."
               },
               {
                 "filePath": "/analytics-types.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "navigationApi",
                 "value": "string",
-                "description": "Navigation api: 'PerformanceNavigationTiming' | 'performance.navigation'. Use `getClientBrowserParameters()` to collect this value."
+                "description": "Navigation api: `'PerformanceNavigationTiming' | 'performance.navigation'`.\n\nUse `getClientBrowserParameters()` to collect this value."
               }
             ]
           }
@@ -6003,7 +5993,7 @@
       }
     ],
     "description": "Parses cookie string and returns Shopify cookies.",
-    "type": "gear",
+    "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -6047,6 +6037,36 @@
             },
             "value": "export function getShopifyCookies(cookies: string): ShopifyCookies {\n  const cookieData = parse(cookies);\n  return {\n    [SHOPIFY_Y]: cookieData[SHOPIFY_Y] || '',\n    [SHOPIFY_S]: cookieData[SHOPIFY_S] || '',\n  };\n}"
           },
+          "ShopifyCookies": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyCookies",
+            "value": "{\n  /** Shopify unique user token: Value of `_shopify_y` cookie. */\n  [SHOPIFY_Y]: string;\n  /** Shopify session token: Value of `_shopify_s` cookie. */\n  [SHOPIFY_S]: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "_shopify_y",
+                "value": "string",
+                "description": "Shopify unique user token: Value of `_shopify_y` cookie."
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "_shopify_s",
+                "value": "string",
+                "description": "Shopify session token: Value of `_shopify_s` cookie."
+              }
+            ]
+          }
+        }
+      },
+      {
+        "title": "ShopifyCookies",
+        "description": "Shopify cookies names",
+        "type": "ShopifyCookies",
+        "typeDefinitions": {
           "ShopifyCookies": {
             "filePath": "/analytics-types.ts",
             "syntaxKind": "TypeAliasDeclaration",
@@ -6145,7 +6165,7 @@
       }
     ],
     "description": "\n    If you are using TypeScript, Hydrogen React ships with pre-generated TypeScript types that match the Storefront API's GraphQL schema. These types can be used when you need to manually create an object that matches a Storefront API object's shape.\n\nThese types also work really well with the new [`satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator) introduced in TypeScript 4.9, though you don't need to use `satisfies` to use these types.\n  ",
-    "type": "gear",
+    "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -6173,7 +6193,7 @@
       }
     ],
     "description": "\n    The `createStorefrontClient()` function creates helpers that enable you to quickly query the Shopify Storefront API.\n\nWhen used on the server, it is recommended to use the `privateStorefrontToken` prop. When used on the client, it is recommended to use the `publicStorefrontToken` prop or consider using `<ShopifyProvider/>` instead.\n  ",
-    "type": "gear",
+    "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -6317,7 +6337,7 @@
       }
     ],
     "description": "\n    Hydrogen React ships with a pre-generated GraphQL schema for the Storefront API, which can integrate with your IDE and other GraphQL tooling (such as a [GraphQL config file](https://www.graphql-config.com/docs/user/user-usage)) to provide autocompletion and validation for your Storefront API GraphQL queries.\n\nThis schema is generated using the Storefront API's introspection query, and is available at `@shopify/hydrogen-react/storefront.schema.json`.\n\nTo get these features working in your IDE, you may need to install an extension. For example, in VSCode you can install this [GraphQL extension](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql).\n  ",
-    "type": "gear",
+    "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
@@ -6915,19 +6935,19 @@
       }
     ],
     "description": "Sets Shopify user and session cookies and refreshes the expiry time.",
-    "type": "gear",
+    "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useShopifyCookies();\n\n  return <Component {...pageProps} />;\n}\n",
+            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useShopifyCookies({hasUserConsent: false});\n\n  return <Component {...pageProps} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useShopifyCookies();\n\n  return <Component {...pageProps} />;\n}\n",
+            "code": "import * as React from 'react';\nimport {useShopifyCookies} from '@shopify/hydrogen-react';\n\nexport default function App({Component, pageProps}) {\n  useShopifyCookies({hasUserConsent: false});\n\n  return <Component {...pageProps} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -6937,7 +6957,7 @@
     "definitions": [
       {
         "title": "useShopifyCookies",
-        "description": "",
+        "description": "Manages Shopify cookies. If `hasUserConsent` option is false, Shopify cookies will be removed.",
         "type": "UseShopifyCookiesGeneratedType",
         "typeDefinitions": {
           "UseShopifyCookiesGeneratedType": {
