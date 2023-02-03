@@ -18,7 +18,7 @@ export const commonFlags = {
     char: 'f',
   }),
   entry: Flags.string({
-    description: 'The path to server entry file',
+    description: 'The path to the server entry file',
     env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
     required: true,
   }),
