@@ -6,9 +6,9 @@ import {
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import Flags from '@oclif/core/lib/flags.js';
 import {output, path} from '@shopify/cli-kit';
-import fs from 'fs-extra';
 import {transpileProject} from '../../utils/transpile-ts.js';
 import {getLatestTemplates} from '../../utils/template-downloader.js';
+import {readdir} from 'fs/promises';
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront project';
@@ -63,7 +63,7 @@ export async function runInit(
     process.exit(1);
   });
 
-  const {ui} = await import('@shopify/cli-kit');
+  const {ui, file} = await import('@shopify/cli-kit');
   const {renderSuccess, renderInfo} = await import('@shopify/cli-kit/node/ui');
   const prompts: Writable<Parameters<typeof ui.prompt>[0]> = [];
 
@@ -134,7 +134,7 @@ export async function runInit(
       }
     }
 
-    await fs.remove(projectDir);
+    await file.rmdir(projectDir, {force: true});
   }
 
   // Templates might be cached or the download might be finished already.
@@ -147,13 +147,13 @@ export async function runInit(
   const {templatesDir} = await templatesPromise;
   downloaded = true;
 
-  await fs.copy(path.join(templatesDir, appTemplate), projectDir);
+  await file.copy(path.join(templatesDir, appTemplate), projectDir);
 
   if (language === 'js') {
     try {
       await transpileProject(projectDir);
     } catch (error) {
-      await fs.rmdir(projectDir);
+      await file.rmdir(projectDir, {force: true});
       throw error;
     }
   }
@@ -212,10 +212,11 @@ export async function runInit(
 }
 
 async function projectExists(projectDir: string) {
+  const {file} = await import('@shopify/cli-kit');
   return (
-    (await fs.pathExists(projectDir)) &&
-    (await fs.stat(projectDir)).isDirectory() &&
-    (await fs.readdir(projectDir)).length > 0
+    (await file.exists(projectDir)) &&
+    (await file.isDirectory(projectDir)) &&
+    (await readdir(projectDir)).length > 0
   );
 }
 

@@ -64,11 +64,11 @@ export async function runBuild({
 
   console.time(LOG_WORKER_BUILT);
 
-  const {default: fsExtra} = await import('fs-extra');
+  const {file} = await import('@shopify/cli-kit');
 
   const [remixConfig] = await Promise.all([
     getRemixConfig(root, entryFile, publicPath),
-    fsExtra.rm(buildPath, {force: true, recursive: true}),
+    file.rmdir(buildPath, {force: true}),
   ]);
 
   output.info(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
@@ -93,8 +93,7 @@ export async function runBuild({
 
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
-    const {size} = await fsExtra.stat(buildPathWorkerFile);
-    const sizeMB = size / (1024 * 1024);
+    const sizeMB = (await file.size(buildPathWorkerFile)) / (1024 * 1024);
 
     output.info(
       output.content`   ${colors.dim(
@@ -128,9 +127,6 @@ export async function copyPublicFiles(
   publicPath: string,
   buildPathClient: string,
 ) {
-  const {default: fsExtra} = await import('fs-extra');
-  return fsExtra.copy(publicPath, buildPathClient, {
-    recursive: true,
-    overwrite: true,
-  });
+  const {file} = await import('@shopify/cli-kit');
+  return file.copy(publicPath, buildPathClient);
 }
