@@ -1,8 +1,9 @@
 import path from 'path';
-import {output} from '@shopify/cli-kit';
+import {output, file} from '@shopify/cli-kit';
 import colors from '@shopify/cli-kit/node/colors';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
-import {commonFlags} from '../../utils/flags.js';
+import {commonFlags, flagsToCamelObject} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {checkLockfileStatus} from '../../utils/check-lockfile.js';
@@ -13,14 +14,17 @@ const LOG_WORKER_BUILT = '📦 Worker built';
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
   static flags = {
+    entry: commonFlags.entry,
+    path: commonFlags.path,
     sourcemap: Flags.boolean({
       description: 'Generate sourcemaps for the build.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       default: true,
     }),
-    disableRouteWarning: commonFlags.disableRouteWarning,
-    entry: commonFlags.entry,
-    path: commonFlags.path,
+    ['disable-route-warning']: Flags.boolean({
+      description: 'Disable warning about missing standard routes.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
+    }),
   };
 
   async run(): Promise<void> {
@@ -28,7 +32,7 @@ export default class Build extends Command {
     const {flags} = await this.parse(Build);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
-    await runBuild({...flags, path: directory});
+    await runBuild({...flagsToCamelObject(flags), path: directory});
   }
 }
 
@@ -56,15 +60,14 @@ export async function runBuild({
     publicPath,
   } = getProjectPaths(appPath, entry);
 
+  await assertEntryFileExists(entryFile);
   await checkLockfileStatus(root);
 
   console.time(LOG_WORKER_BUILT);
 
-  const {default: fsExtra} = await import('fs-extra');
-
   const [remixConfig] = await Promise.all([
     getRemixConfig(root, entryFile, publicPath),
-    fsExtra.rm(buildPath, {force: true, recursive: true}),
+    file.rmdir(buildPath, {force: true}),
   ]);
 
   output.info(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
@@ -89,8 +92,7 @@ export async function runBuild({
 
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
-    const {size} = await fsExtra.stat(buildPathWorkerFile);
-    const sizeMB = size / (1024 * 1024);
+    const sizeMB = (await file.size(buildPathWorkerFile)) / (1024 * 1024);
 
     output.info(
       output.content`   ${colors.dim(
@@ -124,9 +126,32 @@ export async function copyPublicFiles(
   publicPath: string,
   buildPathClient: string,
 ) {
-  const {default: fsExtra} = await import('fs-extra');
-  return fsExtra.copy(publicPath, buildPathClient, {
-    recursive: true,
-    overwrite: true,
-  });
+  return file.copy(publicPath, buildPathClient);
+}
+
+export async function assertEntryFileExists(filePath: string) {
+  const exists = await file.exists(filePath);
+
+  if (!exists) {
+    if (!path.extname(filePath)) {
+      const {readdir} = await import('fs/promises');
+      const files = await readdir(path.dirname(filePath));
+      const exists = files.some((file) => {
+        const {name, ext} = path.parse(file);
+        return name === path.basename(filePath) && /^\.[jt]s$/.test(ext);
+      });
+
+      if (exists) return;
+    }
+
+    renderFatalError({
+      name: 'FileNotFound',
+      type: 0,
+      message: 'Entry file not found',
+      tryMessage:
+        'Ensure the file exists and pass the correct path with the --entry flag',
+    });
+
+    process.exit(1);
+  }
 }

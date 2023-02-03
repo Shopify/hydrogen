@@ -6,14 +6,16 @@ import {
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import Flags from '@oclif/core/lib/flags.js';
 import {output, path} from '@shopify/cli-kit';
-import fs from 'fs-extra';
 import {commonFlags} from '../../utils/flags.js';
 import {transpileProject} from '../../utils/transpile-ts.js';
 import {getLatestTemplates} from '../../utils/template-downloader.js';
+import {readdir} from 'fs/promises';
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
   static flags = {
+    path: commonFlags.path,
+    force: commonFlags.force,
     language: Flags.string({
       description: 'Sets the template language to use. One of `js` or `ts`.',
       choices: ['js', 'ts'],
@@ -25,13 +27,6 @@ export default class Init extends Command {
         'Sets the template to use. One of `demo-store` or `hello-world`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
-    token: Flags.string({
-      description:
-        'A GitHub token used to access private repository templates.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_TOKEN',
-    }),
-    path: commonFlags.path,
-    force: commonFlags.force,
   };
 
   async run(): Promise<void> {
@@ -63,7 +58,7 @@ export async function runInit(
     process.exit(1);
   });
 
-  const {ui} = await import('@shopify/cli-kit');
+  const {ui, file} = await import('@shopify/cli-kit');
   const {renderSuccess, renderInfo} = await import('@shopify/cli-kit/node/ui');
   const prompts: Writable<Parameters<typeof ui.prompt>[0]> = [];
 
@@ -134,7 +129,7 @@ export async function runInit(
       }
     }
 
-    await fs.remove(projectDir);
+    await file.rmdir(projectDir, {force: true});
   }
 
   // Templates might be cached or the download might be finished already.
@@ -147,13 +142,13 @@ export async function runInit(
   const {templatesDir} = await templatesPromise;
   downloaded = true;
 
-  await fs.copy(path.join(templatesDir, appTemplate), projectDir);
+  await file.copy(path.join(templatesDir, appTemplate), projectDir);
 
   if (language === 'js') {
     try {
       await transpileProject(projectDir);
     } catch (error) {
-      await fs.rmdir(projectDir);
+      await file.rmdir(projectDir, {force: true});
       throw error;
     }
   }
@@ -166,10 +161,10 @@ export async function runInit(
       {
         type: 'select',
         name: 'installDeps',
-        message: `Do you want to install dependencies with ${packageManager} for ${projectName}?`,
+        message: `Install dependencies with ${packageManager}?`,
         choices: [
-          {name: 'Yes, install the dependencies', value: 'true'},
-          {name: "No, I'll do it myself", value: 'false'},
+          {name: 'Yes', value: 'true'},
+          {name: 'No', value: 'false'},
         ],
         default: 'true',
       },
@@ -212,10 +207,11 @@ export async function runInit(
 }
 
 async function projectExists(projectDir: string) {
+  const {file} = await import('@shopify/cli-kit');
   return (
-    (await fs.pathExists(projectDir)) &&
-    (await fs.stat(projectDir)).isDirectory() &&
-    (await fs.readdir(projectDir)).length > 0
+    (await file.exists(projectDir)) &&
+    (await file.isDirectory(projectDir)) &&
+    (await readdir(projectDir)).length > 0
   );
 }
 

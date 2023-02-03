@@ -48,6 +48,9 @@
     "dist",
     "oclif.manifest.json"
   ],
+  "engines": {
+    "node": ">=16.13"
+  },
   "oclif": {
     "commands": "dist/commands",
     "hooks": {
