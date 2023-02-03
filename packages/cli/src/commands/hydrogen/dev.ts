@@ -17,22 +17,17 @@ const LOG_REBUILT = '🚀 Rebuilt';
 
 export default class Dev extends Command {
   static description =
-    'Runs Hydrogen storefront in a MiniOxygen worker in development';
+    'Runs Hydrogen storefront in an Oxygen worker for development.';
   static flags = {
-    ...commonFlags,
-    port: Flags.integer({
-      description: 'Port to run the preview server on',
-      env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
-      default: 3000,
-    }),
-    entry: Flags.string({
-      env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
-      required: true,
-    }),
     disableVirtualRoutes: Flags.boolean({
+      description:
+        "Disable rendering fallback routes when a route file doesn't exist",
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
+    entry: commonFlags.entry,
+    path: commonFlags.path,
+    port: commonFlags.port,
   };
 
   async run(): Promise<void> {
