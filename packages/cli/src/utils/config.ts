@@ -33,30 +33,30 @@ export async function getRemixConfig(
   const {readConfig} = await import('@remix-run/dev/dist/config.js');
   const config = await readConfig(root, mode);
 
-  const hydrogenAssetBase = process.env.HYDROGEN_ASSET_BASE_URL;
-  if (hydrogenAssetBase) {
-    const suffix = config.publicPath?.replace(/\\/g, '/').replace(/^\//, '');
-    config.publicPath = hydrogenAssetBase + suffix;
-  }
+  // const hydrogenAssetBase = process.env.HYDROGEN_ASSET_BASE_URL;
+  // if (hydrogenAssetBase) {
+  //   const suffix = config.publicPath?.replace(/\\/g, '/').replace(/^\//, '');
+  //   config.publicPath = hydrogenAssetBase + suffix;
+  // }
 
-  config.serverEntryPoint ??= entryFile;
-  config.serverBuildTarget = 'cloudflare-workers';
-  config.serverModuleFormat = 'esm';
-  config.serverPlatform = 'neutral';
+  // config.serverEntryPoint ??= entryFile;
+  // config.serverBuildTarget = 'cloudflare-workers';
+  // config.serverModuleFormat = 'esm';
+  // config.serverPlatform = 'neutral';
 
-  config.serverBuildPath = path.resolve(
-    root,
-    path.join(BUILD_DIR, WORKER_SUBDIR, 'index.js'),
-  );
-  config.relativeAssetsBuildDirectory = path.join(
-    BUILD_DIR,
-    CLIENT_SUBDIR,
-    'build',
-  );
-  config.assetsBuildDirectory = path.resolve(
-    root,
-    config.relativeAssetsBuildDirectory,
-  );
+  // config.serverBuildPath = path.resolve(
+  //   root,
+  //   path.join(BUILD_DIR, WORKER_SUBDIR, 'index.js'),
+  // );
+  // config.relativeAssetsBuildDirectory = path.join(
+  //   BUILD_DIR,
+  //   CLIENT_SUBDIR,
+  //   'build',
+  // );
+  // config.assetsBuildDirectory = path.resolve(
+  //   root,
+  //   config.relativeAssetsBuildDirectory,
+  // );
 
   config.watchPaths = [publicPath];
 
