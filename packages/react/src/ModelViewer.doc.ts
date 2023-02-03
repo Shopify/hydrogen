@@ -35,7 +35,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'ModelViewerProps',
+      type: 'ModelViewerBaseProps',
       description: '',
     },
   ],

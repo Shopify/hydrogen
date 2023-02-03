@@ -1,7 +1,7 @@
 import type {ExternalVideo as ExternalVideoType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
-interface BaseProps {
+interface ExternalVideoBaseProps {
   /**
    * An object with fields that correspond to the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).
    */
@@ -14,7 +14,7 @@ interface BaseProps {
 }
 
 export type ExternalVideoProps = Omit<JSX.IntrinsicElements['iframe'], 'src'> &
-  BaseProps;
+  ExternalVideoBaseProps;
 
 /**
  * The `ExternalVideo` component renders an embedded video for the Storefront

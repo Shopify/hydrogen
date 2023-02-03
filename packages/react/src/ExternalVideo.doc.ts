@@ -37,7 +37,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'ExternalVideoProps',
+      type: 'ExternalVideoBaseProps',
       description:
         'Takes in the same props as a native `<iframe>` element, except for `src`.',
     },

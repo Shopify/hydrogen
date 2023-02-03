@@ -4,7 +4,7 @@ import type {CartLine} from './storefront-api-types.js';
 export const CartLineContext = createContext<CartLine | null>(null);
 
 /**
- * The `useCartLine` hook provides access to the cart line object. It must be a descendent of a `CartProvider` component.
+ * The `useCartLine` hook provides access to the [CartLine object](https://shopify.dev/api/storefront/unstable/objects/cartline) from the Storefront API. It must be a descendent of a `CartProvider` component.
  */
 export function useCartLine(): CartLine {
   const context = useContext(CartLineContext);

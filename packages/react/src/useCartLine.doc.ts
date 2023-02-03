@@ -11,7 +11,9 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/api/hydrogen-react/components/CartLineProvider',
     },
   ],
-  description: 'Provides access to the cart line object.',
+  description: `
+    The \`useCartLine\` hook provides access to the [CartLine object](https://shopify.dev/api/storefront/unstable/objects/cartline) from the Storefront API. It must be a descendent of a \`CartProvider\` component.
+  `,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',

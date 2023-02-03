@@ -834,18 +834,11 @@
       {
         "title": "Props",
         "description": "Takes in the same props as a native `<iframe>` element, except for `src`.",
-        "type": "ExternalVideoProps",
+        "type": "ExternalVideoBaseProps",
         "typeDefinitions": {
-          "ExternalVideoProps": {
+          "ExternalVideoBaseProps": {
             "filePath": "/ExternalVideo.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ExternalVideoProps",
-            "value": "Omit<JSX.IntrinsicElements['iframe'], 'src'> & BaseProps",
-            "description": ""
-          },
-          "BaseProps": {
-            "filePath": "/ExternalVideo.tsx",
-            "name": "BaseProps",
+            "name": "ExternalVideoBaseProps",
             "description": "",
             "members": [
               {
@@ -864,7 +857,7 @@
                 "isOptional": true
               }
             ],
-            "value": "interface BaseProps {\n  /**\n   * An object with fields that correspond to the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).\n   */\n  data: PartialDeep<ExternalVideoType, {recurseIntoArrays: true}>;\n  /** An object containing the options available for either\n   * [YouTube](https://developers.google.com/youtube/player_parameters#Parameters) or\n   * [Vimeo](https://vimeo.zendesk.com/hc/en-us/articles/360001494447-Using-Player-Parameters).\n   */\n  options?: YouTube | Vimeo;\n}"
+            "value": "interface ExternalVideoBaseProps {\n  /**\n   * An object with fields that correspond to the Storefront API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).\n   */\n  data: PartialDeep<ExternalVideoType, {recurseIntoArrays: true}>;\n  /** An object containing the options available for either\n   * [YouTube](https://developers.google.com/youtube/player_parameters#Parameters) or\n   * [Vimeo](https://vimeo.zendesk.com/hc/en-us/articles/360001494447-Using-Player-Parameters).\n   */\n  options?: YouTube | Vimeo;\n}"
           },
           "YouTube": {
             "filePath": "/ExternalVideo.tsx",
@@ -1240,22 +1233,8 @@
       {
         "title": "Props",
         "description": "",
-        "type": "ShopifyImageProps",
+        "type": "ShopifyImageBaseProps",
         "typeDefinitions": {
-          "ShopifyImageProps": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyImageProps",
-            "value": "Omit<HtmlImageProps, 'src'> & ShopifyImageBaseProps",
-            "description": ""
-          },
-          "HtmlImageProps": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "HtmlImageProps",
-            "value": "React.ImgHTMLAttributes<HTMLImageElement>",
-            "description": ""
-          },
           "ShopifyImageBaseProps": {
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
@@ -4192,15 +4171,8 @@
       {
         "title": "Props",
         "description": "",
-        "type": "ModelViewerProps",
+        "type": "ModelViewerBaseProps",
         "typeDefinitions": {
-          "ModelViewerProps": {
-            "filePath": "/ModelViewer.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ModelViewerProps",
-            "value": "Omit<\n  PartialDeep<JSX.IntrinsicElements['model-viewer'], {recurseIntoArrays: true}>,\n  'src'\n> & ModelViewerBaseProps",
-            "description": ""
-          },
           "ModelViewerBaseProps": {
             "filePath": "/ModelViewer.tsx",
             "syntaxKind": "TypeAliasDeclaration",
@@ -6518,7 +6490,7 @@
         "url": "/api/hydrogen-react/components/CartLineProvider"
       }
     ],
-    "description": "Provides access to the cart line object.",
+    "description": "\n    The `useCartLine` hook provides access to the [CartLine object](https://shopify.dev/api/storefront/unstable/objects/cartline) from the Storefront API. It must be a descendent of a `CartProvider` component.\n  ",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
