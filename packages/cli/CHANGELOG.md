@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 4.0.0-alpha.12
+
+### Patch Changes
+
+- Improve the onboarding experience for the CLI by [@jplhomer](https://github.com/jplhomer)
+
 ## 4.0.0-alpha.11
 
 ### Patch Changes
