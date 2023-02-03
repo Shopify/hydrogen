@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
-import prettier, {type Options} from 'prettier';
-import ts, {type CompilerOptions, type ScriptTarget} from 'typescript';
+import prettier, {type Options as FormatOptions} from 'prettier';
+import ts, {type CompilerOptions} from 'typescript';
 import glob from 'fast-glob';
 import {output} from '@shopify/cli-kit';
 
@@ -42,14 +42,14 @@ export function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
   return restoreNewLines(compiled.outputText);
 }
 
-const DEFAULT_PRETTIER_CONFIG = {
+const DEFAULT_PRETTIER_CONFIG: FormatOptions = {
   arrowParens: 'always',
   singleQuote: true,
   bracketSpacing: false,
   trailingComma: 'all',
 };
 
-export async function resolvePrettierConfig(filePath = process.cwd()) {
+export async function resolveFormatConfig(filePath = process.cwd()) {
   try {
     // Try to read a prettier config file from the project.
     return (await prettier.resolveConfig(filePath)) || DEFAULT_PRETTIER_CONFIG;
@@ -58,7 +58,7 @@ export async function resolvePrettierConfig(filePath = process.cwd()) {
   }
 }
 
-export function format(content: string, config: Options, filePath = '') {
+export function format(content: string, config: FormatOptions, filePath = '') {
   const ext = path.extname(filePath);
 
   const formattedContent = prettier.format(content, {
@@ -129,7 +129,7 @@ export async function transpileProject(projectDir: string) {
     cwd: projectDir,
   });
 
-  const prettierConfig = await resolvePrettierConfig();
+  const formatConfig = await resolveFormatConfig();
 
   for (const entry of entries) {
     if (entry.endsWith('.d.ts')) {
@@ -138,8 +138,7 @@ export async function transpileProject(projectDir: string) {
     }
 
     const tsx = await fs.readFile(entry, 'utf8');
-    console.log('jio', prettierConfig);
-    const mjs = format(transpileFile(tsx), prettierConfig);
+    const mjs = format(transpileFile(tsx), formatConfig);
 
     await fs.rm(entry);
     await fs.writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs, 'utf8');

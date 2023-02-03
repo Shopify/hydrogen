@@ -8,7 +8,7 @@ import Flags from '@oclif/core/lib/flags.js';
 import {
   format,
   transpileFile,
-  resolvePrettierConfig,
+  resolveFormatConfig,
 } from '../../../utils/transpile-ts.js';
 
 // Fix for a TypeScript bug:
@@ -218,7 +218,7 @@ export async function runGenerate(
   // templateContent = await file.format(templateContent, destinationPath);
   templateContent = format(
     templateContent,
-    await resolvePrettierConfig(destinationPath),
+    await resolveFormatConfig(destinationPath),
     destinationPath,
   );
 
