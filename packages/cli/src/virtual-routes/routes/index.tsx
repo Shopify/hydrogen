@@ -1,6 +1,6 @@
 import {useLoaderData} from '@remix-run/react';
 import {type MetaFunction, LinksFunction} from '@shopify/remix-oxygen';
-import {type Shop} from '@shopify/storefront-kit-react/storefront-api-types';
+import {type Shop} from '@shopify/hydrogen-react/storefront-api-types';
 import {HydrogenLogoBaseBW} from '../components/HydrogenLogoBaseBW.jsx';
 import {HydrogenLogoBaseColor} from '../components/HydrogenLogoBaseColor.jsx';
 import {IconDiscord} from '../components/IconDiscord.jsx';
