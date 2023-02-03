@@ -28,7 +28,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'AddToCartButtonProps',
+      type: 'AddToCartButtonPropsForDocs',
       description: '',
     },
   ],

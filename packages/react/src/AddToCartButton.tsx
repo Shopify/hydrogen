@@ -1,7 +1,12 @@
 import {useCallback, useEffect, useState} from 'react';
 import {useCart} from './CartProvider.js';
 import {useProduct} from './ProductProvider.js';
-import {BaseButton, BaseButtonProps} from './BaseButton.js';
+import {
+  BaseButton,
+  type CustomBaseButtonProps,
+  type BaseButtonProps,
+} from './BaseButton.js';
+import * as React from 'react';
 
 export interface AddToCartButtonPropsBase {
   /** An array of cart line attributes that belong to the item being added to the cart. */
@@ -100,3 +105,9 @@ export function AddToCartButton<AsType extends React.ElementType = 'button'>(
     </>
   );
 }
+
+// This is only for documenation purposes, and it is not used in the code.
+export interface AddToCartButtonPropsForDocs<
+  AsType extends React.ElementType = 'button'
+> extends AddToCartButtonPropsBase,
+    CustomBaseButtonProps<AsType> {}

@@ -1,6 +1,10 @@
 import {ReactNode, useEffect, useState} from 'react';
 import {useCart} from './CartProvider.js';
-import {BaseButton, BaseButtonProps} from './BaseButton.js';
+import {
+  BaseButton,
+  type BaseButtonProps,
+  type CustomBaseButtonProps,
+} from './BaseButton.js';
 
 type ChildrenProps = {
   /** A `ReactNode` element. */
@@ -34,3 +38,10 @@ export function CartCheckoutButton(props: CartCheckoutButtonProps) {
     </BaseButton>
   );
 }
+
+// This is only for documenation purposes, and it is not used in the code.
+// we ignore this issue because it makes the documentation look better than the equivalent `type` that it wants us to convert to
+// eslint-disable-next-line @typescript-eslint/no-empty-interface
+export interface CartCheckoutButtonPropsForDocs<
+  AsType extends React.ElementType = 'button'
+> extends Omit<CustomBaseButtonProps<AsType>, 'onClick'> {}

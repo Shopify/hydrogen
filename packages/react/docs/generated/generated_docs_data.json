@@ -28,18 +28,11 @@
       {
         "title": "Props",
         "description": "",
-        "type": "AddToCartButtonProps",
+        "type": "AddToCartButtonPropsForDocs",
         "typeDefinitions": {
-          "AddToCartButtonProps": {
+          "AddToCartButtonPropsForDocs": {
             "filePath": "/AddToCartButton.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "AddToCartButtonProps",
-            "value": "AddToCartButtonPropsBase & BaseButtonProps<AsType>",
-            "description": ""
-          },
-          "AddToCartButtonPropsBase": {
-            "filePath": "/AddToCartButton.tsx",
-            "name": "AddToCartButtonPropsBase",
+            "name": "AddToCartButtonPropsForDocs",
             "description": "",
             "members": [
               {
@@ -81,24 +74,9 @@
                 "value": "string",
                 "description": "The selling plan ID of the subscription variant",
                 "isOptional": true
-              }
-            ],
-            "value": "export interface AddToCartButtonPropsBase {\n  /** An array of cart line attributes that belong to the item being added to the cart. */\n  attributes?: {\n    key: string;\n    value: string;\n  }[];\n  /** The ID of the variant. */\n  variantId?: string | null;\n  /** The item quantity. */\n  quantity?: number;\n  /** The text that is announced by the screen reader when the item is being added to the cart. Used for accessibility purposes only and not displayed on the page. */\n  accessibleAddingToCartLabel?: string;\n  /** The selling plan ID of the subscription variant */\n  sellingPlanId?: string;\n}"
-          },
-          "BaseButtonProps": {
-            "filePath": "/BaseButton.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "BaseButtonProps",
-            "value": "CustomBaseButtonProps<AsType> & Omit<\n      React.ComponentPropsWithoutRef<AsType>,\n      keyof CustomBaseButtonProps<AsType>\n    >",
-            "description": ""
-          },
-          "CustomBaseButtonProps": {
-            "filePath": "/BaseButton.tsx",
-            "name": "CustomBaseButtonProps",
-            "description": "",
-            "members": [
+              },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/AddToCartButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "as",
                 "value": "AsType",
@@ -106,14 +84,14 @@
                 "isOptional": true
               },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/AddToCartButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "children",
                 "value": "ReactNode",
                 "description": "Any ReactNode elements."
               },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/AddToCartButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onClick",
                 "value": "(event?: MouseEvent<HTMLButtonElement, MouseEvent>) => boolean | void",
@@ -121,23 +99,23 @@
                 "isOptional": true
               },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/AddToCartButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "defaultOnClick",
                 "value": "(event?: MouseEvent<HTMLButtonElement, MouseEvent>) => boolean | void",
-                "description": "A default onClick behavior",
+                "description": "A default `onClick` behavior",
                 "isOptional": true
               },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/AddToCartButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "buttonRef",
                 "value": "Ref<HTMLButtonElement>",
-                "description": "A ref to the underlying button",
+                "description": "A `ref` to the underlying button",
                 "isOptional": true
               }
             ],
-            "value": "export interface CustomBaseButtonProps<AsType> {\n  /** Provide a React element or component to render as the underlying button. Note: for accessibility compliance, almost always you should use a `button` element, or a component that renders an underlying button. */\n  as?: AsType;\n  /** Any ReactNode elements. */\n  children: ReactNode;\n  /** Click event handler. Default behaviour triggers unless prevented */\n  onClick?: (\n    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>\n  ) => void | boolean;\n  /** A default onClick behavior */\n  defaultOnClick?: (\n    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>\n  ) => void | boolean;\n  /** A ref to the underlying button */\n  buttonRef?: Ref<HTMLButtonElement>;\n}"
+            "value": "export interface AddToCartButtonPropsForDocs<\n  AsType extends React.ElementType = 'button'\n> extends AddToCartButtonPropsBase,\n    CustomBaseButtonProps<AsType> {}"
           }
         }
       }
@@ -172,18 +150,11 @@
       {
         "title": "Props",
         "description": "",
-        "type": "BuyNowButtonProps",
+        "type": "BuyNowButtonPropsForDocs",
         "typeDefinitions": {
-          "BuyNowButtonProps": {
+          "BuyNowButtonPropsForDocs": {
             "filePath": "/BuyNowButton.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "BuyNowButtonProps",
-            "value": "BuyNowButtonPropsBase & BaseButtonProps<AsType>",
-            "description": ""
-          },
-          "BuyNowButtonPropsBase": {
-            "filePath": "/BuyNowButton.tsx",
-            "name": "BuyNowButtonPropsBase",
+            "name": "BuyNowButtonPropsForDocs",
             "description": "",
             "members": [
               {
@@ -208,24 +179,9 @@
                 "value": "{ key: string; value: string; }[]",
                 "description": "An array of cart line attributes that belong to the item being added to the cart.",
                 "isOptional": true
-              }
-            ],
-            "value": "interface BuyNowButtonPropsBase {\n  /** The item quantity. Defaults to 1. */\n  quantity?: number;\n  /** The ID of the variant. */\n  variantId: string;\n  /** An array of cart line attributes that belong to the item being added to the cart. */\n  attributes?: {\n    key: string;\n    value: string;\n  }[];\n}"
-          },
-          "BaseButtonProps": {
-            "filePath": "/BaseButton.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "BaseButtonProps",
-            "value": "CustomBaseButtonProps<AsType> & Omit<\n      React.ComponentPropsWithoutRef<AsType>,\n      keyof CustomBaseButtonProps<AsType>\n    >",
-            "description": ""
-          },
-          "CustomBaseButtonProps": {
-            "filePath": "/BaseButton.tsx",
-            "name": "CustomBaseButtonProps",
-            "description": "",
-            "members": [
+              },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/BuyNowButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "as",
                 "value": "AsType",
@@ -233,14 +189,14 @@
                 "isOptional": true
               },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/BuyNowButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "children",
                 "value": "ReactNode",
                 "description": "Any ReactNode elements."
               },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/BuyNowButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onClick",
                 "value": "(event?: MouseEvent<HTMLButtonElement, MouseEvent>) => boolean | void",
@@ -248,23 +204,23 @@
                 "isOptional": true
               },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/BuyNowButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "defaultOnClick",
                 "value": "(event?: MouseEvent<HTMLButtonElement, MouseEvent>) => boolean | void",
-                "description": "A default onClick behavior",
+                "description": "A default `onClick` behavior",
                 "isOptional": true
               },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/BuyNowButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "buttonRef",
                 "value": "Ref<HTMLButtonElement>",
-                "description": "A ref to the underlying button",
+                "description": "A `ref` to the underlying button",
                 "isOptional": true
               }
             ],
-            "value": "export interface CustomBaseButtonProps<AsType> {\n  /** Provide a React element or component to render as the underlying button. Note: for accessibility compliance, almost always you should use a `button` element, or a component that renders an underlying button. */\n  as?: AsType;\n  /** Any ReactNode elements. */\n  children: ReactNode;\n  /** Click event handler. Default behaviour triggers unless prevented */\n  onClick?: (\n    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>\n  ) => void | boolean;\n  /** A default onClick behavior */\n  defaultOnClick?: (\n    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>\n  ) => void | boolean;\n  /** A ref to the underlying button */\n  buttonRef?: Ref<HTMLButtonElement>;\n}"
+            "value": "export interface BuyNowButtonPropsForDocs<\n  AsType extends React.ElementType = 'button'\n> extends BuyNowButtonPropsBase,\n    CustomBaseButtonProps<AsType> {}"
           }
         }
       }
@@ -299,29 +255,15 @@
       {
         "title": "Props",
         "description": "",
-        "type": "CartCheckoutButtonProps",
+        "type": "CartCheckoutButtonPropsForDocs",
         "typeDefinitions": {
-          "CartCheckoutButtonProps": {
+          "CartCheckoutButtonPropsForDocs": {
             "filePath": "/CartCheckoutButton.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartCheckoutButtonProps",
-            "value": "Omit<BaseButtonProps<'button'>, 'onClick'> & ChildrenProps",
-            "description": ""
-          },
-          "BaseButtonProps": {
-            "filePath": "/BaseButton.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "BaseButtonProps",
-            "value": "CustomBaseButtonProps<AsType> & Omit<\n      React.ComponentPropsWithoutRef<AsType>,\n      keyof CustomBaseButtonProps<AsType>\n    >",
-            "description": ""
-          },
-          "CustomBaseButtonProps": {
-            "filePath": "/BaseButton.tsx",
-            "name": "CustomBaseButtonProps",
+            "name": "CartCheckoutButtonPropsForDocs",
             "description": "",
             "members": [
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/CartCheckoutButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "as",
                 "value": "AsType",
@@ -329,54 +271,30 @@
                 "isOptional": true
               },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/CartCheckoutButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "children",
                 "value": "ReactNode",
                 "description": "Any ReactNode elements."
               },
               {
-                "filePath": "/BaseButton.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "onClick",
-                "value": "(event?: MouseEvent<HTMLButtonElement, MouseEvent>) => boolean | void",
-                "description": "Click event handler. Default behaviour triggers unless prevented",
-                "isOptional": true
-              },
-              {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/CartCheckoutButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "defaultOnClick",
                 "value": "(event?: MouseEvent<HTMLButtonElement, MouseEvent>) => boolean | void",
-                "description": "A default onClick behavior",
+                "description": "A default `onClick` behavior",
                 "isOptional": true
               },
               {
-                "filePath": "/BaseButton.tsx",
+                "filePath": "/CartCheckoutButton.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "buttonRef",
                 "value": "Ref<HTMLButtonElement>",
-                "description": "A ref to the underlying button",
+                "description": "A `ref` to the underlying button",
                 "isOptional": true
               }
             ],
-            "value": "export interface CustomBaseButtonProps<AsType> {\n  /** Provide a React element or component to render as the underlying button. Note: for accessibility compliance, almost always you should use a `button` element, or a component that renders an underlying button. */\n  as?: AsType;\n  /** Any ReactNode elements. */\n  children: ReactNode;\n  /** Click event handler. Default behaviour triggers unless prevented */\n  onClick?: (\n    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>\n  ) => void | boolean;\n  /** A default onClick behavior */\n  defaultOnClick?: (\n    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>\n  ) => void | boolean;\n  /** A ref to the underlying button */\n  buttonRef?: Ref<HTMLButtonElement>;\n}"
-          },
-          "ChildrenProps": {
-            "filePath": "/CartCheckoutButton.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ChildrenProps",
-            "value": "{\n  /** A `ReactNode` element. */\n  children: ReactNode;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/CartCheckoutButton.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "children",
-                "value": "ReactNode",
-                "description": "A `ReactNode` element."
-              }
-            ]
+            "value": "export interface CartCheckoutButtonPropsForDocs<\n  AsType extends React.ElementType = 'button'\n> extends Omit<CustomBaseButtonProps<AsType>, 'onClick'> {}"
           }
         }
       }

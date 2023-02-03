@@ -29,7 +29,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'CartCheckoutButtonProps',
+      type: 'CartCheckoutButtonPropsForDocs',
       description: '',
     },
   ],

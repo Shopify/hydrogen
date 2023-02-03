@@ -1,6 +1,10 @@
 import {useEffect, useState, useCallback} from 'react';
 import {useCart} from './CartProvider.js';
-import {BaseButton, BaseButtonProps} from './BaseButton.js';
+import {
+  BaseButton,
+  type BaseButtonProps,
+  type CustomBaseButtonProps,
+} from './BaseButton.js';
 
 interface BuyNowButtonPropsBase {
   /** The item quantity. Defaults to 1. */
@@ -66,3 +70,9 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
     </BaseButton>
   );
 }
+
+// This is only for documenation purposes, and it is not used in the code.
+export interface BuyNowButtonPropsForDocs<
+  AsType extends React.ElementType = 'button'
+> extends BuyNowButtonPropsBase,
+    CustomBaseButtonProps<AsType> {}
