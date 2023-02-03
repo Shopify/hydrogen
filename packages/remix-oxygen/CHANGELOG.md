@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.0.0-alpha.4
+
+### Patch Changes
+
+- Remove deprecated `shouldProxyAsset` option. ([#436](https://github.com/Shopify/h2/pull/436)) by [@frandiox](https://github.com/frandiox)
+
 ## 1.0.0-alpha.3
 
 ### Patch Changes
