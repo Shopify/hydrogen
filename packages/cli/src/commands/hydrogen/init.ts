@@ -166,10 +166,10 @@ export async function runInit(
       {
         type: 'select',
         name: 'installDeps',
-        message: `Do you want to install dependencies with ${packageManager} for ${projectName}?`,
+        message: `Install dependencies with ${packageManager}?`,
         choices: [
-          {name: 'Yes, install the dependencies', value: 'true'},
-          {name: "No, I'll do it myself", value: 'false'},
+          {name: 'Yes', value: 'true'},
+          {name: 'No', value: 'false'},
         ],
         default: 'true',
       },
