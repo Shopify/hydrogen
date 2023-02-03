@@ -6,31 +6,26 @@ import {
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import Flags from '@oclif/core/lib/flags.js';
 import {output, path} from '@shopify/cli-kit';
+import {commonFlags} from '../../utils/flags.js';
 import {transpileProject} from '../../utils/transpile-ts.js';
 import {getLatestTemplates} from '../../utils/template-downloader.js';
 import {readdir} from 'fs/promises';
 
 export default class Init extends Command {
-  static description = 'Creates a new Hydrogen storefront project';
+  static description = 'Creates a new Hydrogen storefront.';
   static flags = {
+    path: commonFlags.path,
+    force: commonFlags.force,
     language: Flags.string({
-      description: 'Language to use for the project',
+      description: 'Sets the template language to use. One of `js` or `ts`.',
       choices: ['js', 'ts'],
       default: 'js',
       env: 'SHOPIFY_HYDROGEN_FLAG_LANGUAGE',
     }),
-    path: Flags.string({
-      description: 'The path to create the project in',
-      env: 'SHOPIFY_HYDROGEN_FLAG_PATH',
-    }),
     template: Flags.string({
-      description: 'The template to use',
+      description:
+        'Sets the template to use. One of `demo-store` or `hello-world`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
-    }),
-    force: Flags.boolean({
-      description: 'Overwrite the destination directory if it already exists',
-      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
-      char: 'f',
     }),
   };
 
