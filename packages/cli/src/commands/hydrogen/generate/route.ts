@@ -33,11 +33,11 @@ interface Result {
 }
 
 export default class GenerateRoute extends Command {
-  static description = 'Generate a standard Shopify route';
+  static description = 'Generates a standard Shopify route.';
   static flags = {
     adapter: Flags.string({
       description:
-        'Remix adapter used in the route. The default is `@shopify/remix-oxygen`',
+        'Remix adapter used in the route. The default is `@shopify/remix-oxygen`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ADAPTER',
     }),
     typescript: Flags.boolean({
@@ -53,7 +53,7 @@ export default class GenerateRoute extends Command {
   static args = [
     {
       name: 'route',
-      description: `The route to generate. One of ${ROUTES.join()}`,
+      description: `The route to generate. One of ${ROUTES.join()}.`,
       required: true,
       options: ROUTES,
       env: 'SHOPIFY_HYDROGEN_ARG_ROUTE',
@@ -75,7 +75,7 @@ export default class GenerateRoute extends Command {
 
     if (!routePath) {
       throw new AbortError(
-        `No route found for ${route}. Try one of ${ROUTES.join()}`,
+        `No route found for ${route}. Try one of ${ROUTES.join()}.`,
       );
     }
     const isTypescript =

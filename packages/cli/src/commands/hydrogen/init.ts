@@ -15,18 +15,19 @@ export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
   static flags = {
     language: Flags.string({
-      description: 'Sets the template language to use. One of `js` or `ts`',
+      description: 'Sets the template language to use. One of `js` or `ts`.',
       choices: ['js', 'ts'],
       default: 'js',
       env: 'SHOPIFY_HYDROGEN_FLAG_LANGUAGE',
     }),
     template: Flags.string({
       description:
-        'Sets the template to use. One of `demo-store` or `hello-world`',
+        'Sets the template to use. One of `demo-store` or `hello-world`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
     token: Flags.string({
-      description: 'A GitHub token used to access private repository templates',
+      description:
+        'A GitHub token used to access private repository templates.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TOKEN',
     }),
     path: commonFlags.path,

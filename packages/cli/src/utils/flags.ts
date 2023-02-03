@@ -13,7 +13,7 @@ export const commonFlags = {
   }),
   force: Flags.boolean({
     description:
-      'Overwrite the destination directory and files they already exist',
+      'Overwrite the destination directory and files if they already exist',
     env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
     char: 'f',
   }),
