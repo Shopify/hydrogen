@@ -17,7 +17,7 @@ const LOG_REBUILT = '🚀 Rebuilt';
 
 export default class Dev extends Command {
   static description =
-    'Runs Hydrogen storefront in an oxygen worker for development.';
+    'Runs Hydrogen storefront in an Oxygen worker for development.';
   static flags = {
     disableVirtualRoutes: Flags.boolean({
       description:
