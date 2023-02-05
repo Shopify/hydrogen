@@ -1,3 +1,3 @@
 # Hydrogen template: Skeleton
 
-This template seeds the `shopify hydrogen generate` command with templates.
+This template seeds the `shopify hydrogen generate` command from the `hydrogen cli`.

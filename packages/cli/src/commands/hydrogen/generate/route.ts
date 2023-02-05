@@ -16,6 +16,7 @@ import {
 import type {} from '@oclif/core/lib/interfaces/parser.js';
 
 const ROUTE_MAP: Record<string, string | string[]> = {
+  home: '/index',
   page: '/pages/$pageHandle',
   cart: '/cart',
   products: '/products/$productHandle',
