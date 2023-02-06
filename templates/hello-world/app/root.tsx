@@ -1,5 +1,4 @@
 import {
-  defer,
   type LinksFunction,
   type MetaFunction,
   type LoaderArgs,
@@ -12,8 +11,7 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from '@remix-run/react';
-import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
-import {Layout} from '~/components';
+import type {Shop} from '@shopify/hydrogen/storefront-api-types';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 
@@ -38,35 +36,14 @@ export const meta: MetaFunction = () => ({
 });
 
 export async function loader({context}: LoaderArgs) {
-  const cartId = await context.session.get('cartId');
   const layout = await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY);
-
-  const cart = cartId
-    ? context.storefront.query<{cart: Cart}>(CART_QUERY, {
-        variables: {
-          cartId,
-          /**
-          Country and language properties are automatically injected
-          into all queries. Passing them is unnecessary unless you
-          want to override them from the following default:
-        */
-          country: context.storefront.i18n.country,
-          language: context.storefront.i18n.language,
-        },
-        cache: context.storefront.CacheNone(),
-      })
-    : null;
-
-  return defer({
-    cart,
-    layout,
-  });
+  return {layout};
 }
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
-  const {name, description} = data.layout.shop;
-  const cart = data.cart as Promise<{cart: Cart}> | null;
+
+  const {name} = data.layout.shop;
 
   return (
     <html lang="en">
@@ -75,24 +52,15 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout description={description} title={name} cart={cart}>
-          <Outlet />
-        </Layout>
+        <h1>Hello, {name}</h1>
+        <p>This is a custom storefront powered by Hydrogen</p>
+        <Outlet />
         <ScrollRestoration />
         <Scripts />
       </body>
     </html>
   );
 }
-
-const CART_QUERY = `#graphql
-  query CartQuery($cartId: ID!) {
-    cart(id: $cartId) {
-      id
-      totalQuantity
-    }
-  }
-`;
 
 const LAYOUT_QUERY = `#graphql
   query layout {
