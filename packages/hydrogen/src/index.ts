@@ -14,6 +14,9 @@ export {useDataFromMatches, useDataFromFetchers} from './hooks/utils';
 export {Seo} from './seo/seo';
 export type {SeoHandleFunction} from './seo/seo';
 
+export {OgImage} from './og-image/og-image';
+export type {OgImageHandleFunction} from './og-image/og-image';
+
 export {
   AnalyticsEventName,
   AnalyticsPageType,

@@ -18,6 +18,7 @@ import {
 import {
   ShopifySalesChannel,
   Seo,
+  OgImage,
   type SeoHandleFunction,
 } from '@shopify/hydrogen';
 import {Layout} from '~/components';
@@ -93,6 +94,7 @@ export default function App() {
     <html lang={locale.language}>
       <head>
         <Seo debug={data.seoDebug} />
+        <OgImage />
         <Meta />
         <Links />
       </head>

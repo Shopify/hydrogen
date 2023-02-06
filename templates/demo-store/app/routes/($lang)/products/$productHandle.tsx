@@ -14,6 +14,7 @@ import {
   ShopifyAnalyticsProduct,
   ShopPayButton,
   type SeoHandleFunction,
+  type OgImageHandleFunction,
 } from '@shopify/hydrogen';
 import {
   Heading,
@@ -46,8 +47,12 @@ const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   description: data?.product?.seo?.description,
 });
 
+const ogImage: OgImageHandleFunction<typeof loader> = ({data}) =>
+  `${data?.product?.title}`;
+
 export const handle = {
   seo,
+  ogImage,
 };
 
 export async function loader({params, request, context}: LoaderArgs) {
