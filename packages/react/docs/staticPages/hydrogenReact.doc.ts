@@ -3,7 +3,7 @@ import {LandingTemplateSchema} from '@shopify/generate-docs';
 const data: LandingTemplateSchema = {
   title: 'Hydrogen React',
   description:
-    'Hydrogen React is an unopiniated and performant library of Shopify-specific React components, reusable functions, and utilities for interacting with the Storefront API. This guide provides a complete reference of the components, hooks, and utilities that Hydrogen React offers, and their relationships to each other.',
+    'Hydrogen React is an unopinionated and performant library of Shopify-specific React components, reusable functions, and utilities for interacting with the Storefront API. This guide provides a complete reference of the components, hooks, and utilities that Hydrogen React offers, and their relationships to each other.',
   id: 'hydrogen-react',
   sections: [
     {

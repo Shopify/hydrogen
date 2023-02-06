@@ -1294,7 +1294,7 @@
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "crop",
-                "value": "\"top\" | \"bottom\" | \"left\" | \"right\" | \"center\"",
+                "value": "\"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"",
                 "description": "",
                 "isOptional": true
               },
@@ -1302,7 +1302,7 @@
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "scale",
-                "value": "3 | 2",
+                "value": "2 | 3",
                 "description": "",
                 "isOptional": true
               },
@@ -1764,7 +1764,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "inputMode",
-                "value": "\"url\" | \"none\" | \"search\" | \"text\" | \"tel\" | \"email\" | \"numeric\" | \"decimal\"",
+                "value": "\"text\" | \"url\" | \"none\" | \"search\" | \"tel\" | \"email\" | \"numeric\" | \"decimal\"",
                 "description": "Hints at the type of data that might be entered by the user while editing the element or its contents",
                 "isOptional": true
               },
@@ -1852,7 +1852,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "aria-current",
-                "value": "boolean | \"true\" | \"false\" | \"page\" | \"step\" | \"location\" | \"date\" | \"time\"",
+                "value": "boolean | \"time\" | \"true\" | \"false\" | \"page\" | \"step\" | \"location\" | \"date\"",
                 "description": "Indicates the element that represents the current item within a container or set of related elements.",
                 "isOptional": true
               },
@@ -1926,7 +1926,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "aria-haspopup",
-                "value": "boolean | \"true\" | \"false\" | \"dialog\" | \"grid\" | \"listbox\" | \"menu\" | \"tree\"",
+                "value": "boolean | \"dialog\" | \"menu\" | \"true\" | \"false\" | \"grid\" | \"listbox\" | \"tree\"",
                 "description": "Indicates the availability and type of interactive popup element, such as menu or dialog, that can be triggered by an element.",
                 "isOptional": true
               },
@@ -2182,7 +2182,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCopy",
-                "value": "ClipboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ClipboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2190,7 +2190,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCopyCapture",
-                "value": "ClipboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ClipboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2198,7 +2198,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCut",
-                "value": "ClipboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ClipboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2206,7 +2206,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCutCapture",
-                "value": "ClipboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ClipboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2214,7 +2214,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPaste",
-                "value": "ClipboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ClipboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2222,7 +2222,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPasteCapture",
-                "value": "ClipboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ClipboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2230,7 +2230,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCompositionEnd",
-                "value": "CompositionEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "CompositionEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2238,7 +2238,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCompositionEndCapture",
-                "value": "CompositionEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "CompositionEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2246,7 +2246,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCompositionStart",
-                "value": "CompositionEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "CompositionEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2254,7 +2254,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCompositionStartCapture",
-                "value": "CompositionEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "CompositionEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2262,7 +2262,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCompositionUpdate",
-                "value": "CompositionEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "CompositionEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2270,7 +2270,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCompositionUpdateCapture",
-                "value": "CompositionEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "CompositionEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2278,7 +2278,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onFocus",
-                "value": "FocusEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FocusEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2286,7 +2286,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onFocusCapture",
-                "value": "FocusEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FocusEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2294,7 +2294,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onBlur",
-                "value": "FocusEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FocusEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2302,7 +2302,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onBlurCapture",
-                "value": "FocusEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FocusEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2310,7 +2310,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onChange",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2318,7 +2318,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onChangeCapture",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2326,7 +2326,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onBeforeInput",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2334,7 +2334,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onBeforeInputCapture",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2342,7 +2342,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onInput",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2350,7 +2350,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onInputCapture",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2358,7 +2358,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onReset",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2366,7 +2366,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onResetCapture",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2374,7 +2374,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onSubmit",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2382,7 +2382,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onSubmitCapture",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2390,7 +2390,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onInvalid",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2398,7 +2398,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onInvalidCapture",
-                "value": "FormEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "FormEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2406,7 +2406,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onLoad",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2414,7 +2414,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onLoadCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2422,7 +2422,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onError",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2430,7 +2430,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onErrorCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2438,7 +2438,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onKeyDown",
-                "value": "KeyboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "KeyboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2446,7 +2446,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onKeyDownCapture",
-                "value": "KeyboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "KeyboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2454,7 +2454,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onKeyPress",
-                "value": "KeyboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "KeyboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true,
                 "deprecationMessage": "Deprecated"
@@ -2463,7 +2463,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onKeyPressCapture",
-                "value": "KeyboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "KeyboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true,
                 "deprecationMessage": "Deprecated"
@@ -2472,7 +2472,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onKeyUp",
-                "value": "KeyboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "KeyboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2480,7 +2480,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onKeyUpCapture",
-                "value": "KeyboardEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "KeyboardEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2488,7 +2488,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onAbort",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2496,7 +2496,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onAbortCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2504,7 +2504,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCanPlay",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2512,7 +2512,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCanPlayCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2520,7 +2520,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCanPlayThrough",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2528,7 +2528,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onCanPlayThroughCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2536,7 +2536,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDurationChange",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2544,7 +2544,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDurationChangeCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2552,7 +2552,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onEmptied",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2560,7 +2560,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onEmptiedCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2568,7 +2568,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onEncrypted",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2576,7 +2576,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onEncryptedCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2584,7 +2584,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onEnded",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2592,7 +2592,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onEndedCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2600,7 +2600,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onLoadedData",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2608,7 +2608,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onLoadedDataCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2616,7 +2616,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onLoadedMetadata",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2624,7 +2624,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onLoadedMetadataCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2632,7 +2632,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onLoadStart",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2640,7 +2640,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onLoadStartCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2648,7 +2648,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPause",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2656,7 +2656,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPauseCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2664,7 +2664,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPlay",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2672,7 +2672,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPlayCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2680,7 +2680,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPlaying",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2688,7 +2688,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPlayingCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2696,7 +2696,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onProgress",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2704,7 +2704,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onProgressCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2712,7 +2712,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onRateChange",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2720,7 +2720,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onRateChangeCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2728,7 +2728,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onResize",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2736,7 +2736,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onResizeCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2744,7 +2744,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onSeeked",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2752,7 +2752,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onSeekedCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2760,7 +2760,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onSeeking",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2768,7 +2768,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onSeekingCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2776,7 +2776,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onStalled",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2784,7 +2784,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onStalledCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2792,7 +2792,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onSuspend",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2800,7 +2800,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onSuspendCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2808,7 +2808,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTimeUpdate",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2816,7 +2816,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTimeUpdateCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2824,7 +2824,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onVolumeChange",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2832,7 +2832,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onVolumeChangeCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2840,7 +2840,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onWaiting",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2848,7 +2848,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onWaitingCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2856,7 +2856,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onAuxClick",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2864,7 +2864,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onAuxClickCapture",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2872,7 +2872,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onClick",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2880,7 +2880,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onClickCapture",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2888,7 +2888,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onContextMenu",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2896,7 +2896,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onContextMenuCapture",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2904,7 +2904,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDoubleClick",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2912,7 +2912,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDoubleClickCapture",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2920,7 +2920,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDrag",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2928,7 +2928,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragCapture",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2936,7 +2936,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragEnd",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2944,7 +2944,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragEndCapture",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2952,7 +2952,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragEnter",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2960,7 +2960,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragEnterCapture",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2968,7 +2968,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragExit",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2976,7 +2976,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragExitCapture",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2984,7 +2984,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragLeave",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -2992,7 +2992,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragLeaveCapture",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3000,7 +3000,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragOver",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3008,7 +3008,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragOverCapture",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3016,7 +3016,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragStart",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3024,7 +3024,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDragStartCapture",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3032,7 +3032,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDrop",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3040,7 +3040,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onDropCapture",
-                "value": "DragEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "DragEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3048,7 +3048,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseDown",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3056,7 +3056,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseDownCapture",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3064,7 +3064,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseEnter",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3072,7 +3072,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseLeave",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3080,7 +3080,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseMove",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3088,7 +3088,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseMoveCapture",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3096,7 +3096,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseOut",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3104,7 +3104,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseOutCapture",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3112,7 +3112,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseOver",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3120,7 +3120,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseOverCapture",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3128,7 +3128,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseUp",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3136,7 +3136,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onMouseUpCapture",
-                "value": "MouseEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "MouseEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3144,7 +3144,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onSelect",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3152,7 +3152,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onSelectCapture",
-                "value": "ReactEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "ReactEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3160,7 +3160,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTouchCancel",
-                "value": "TouchEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "TouchEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3168,7 +3168,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTouchCancelCapture",
-                "value": "TouchEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "TouchEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3176,7 +3176,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTouchEnd",
-                "value": "TouchEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "TouchEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3184,7 +3184,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTouchEndCapture",
-                "value": "TouchEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "TouchEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3192,7 +3192,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTouchMove",
-                "value": "TouchEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "TouchEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3200,7 +3200,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTouchMoveCapture",
-                "value": "TouchEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "TouchEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3208,7 +3208,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTouchStart",
-                "value": "TouchEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "TouchEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3216,7 +3216,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTouchStartCapture",
-                "value": "TouchEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "TouchEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3224,7 +3224,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerDown",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3232,7 +3232,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerDownCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3240,7 +3240,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerMove",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3248,7 +3248,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerMoveCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3256,7 +3256,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerUp",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3264,7 +3264,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerUpCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3272,7 +3272,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerCancel",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3280,7 +3280,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerCancelCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3288,7 +3288,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerEnter",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3296,7 +3296,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerEnterCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3304,7 +3304,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerLeave",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3312,7 +3312,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerLeaveCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3320,7 +3320,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerOver",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3328,7 +3328,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerOverCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3336,7 +3336,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerOut",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3344,7 +3344,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onPointerOutCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3352,7 +3352,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onGotPointerCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3360,7 +3360,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onGotPointerCaptureCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3368,7 +3368,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onLostPointerCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3376,7 +3376,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onLostPointerCaptureCapture",
-                "value": "PointerEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "PointerEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3384,7 +3384,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onScroll",
-                "value": "UIEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "UIEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3392,7 +3392,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onScrollCapture",
-                "value": "UIEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "UIEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3400,7 +3400,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onWheel",
-                "value": "WheelEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "WheelEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3408,7 +3408,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onWheelCapture",
-                "value": "WheelEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "WheelEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3416,7 +3416,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onAnimationStart",
-                "value": "AnimationEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "AnimationEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3424,7 +3424,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onAnimationStartCapture",
-                "value": "AnimationEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "AnimationEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3432,7 +3432,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onAnimationEnd",
-                "value": "AnimationEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "AnimationEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3440,7 +3440,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onAnimationEndCapture",
-                "value": "AnimationEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "AnimationEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3448,7 +3448,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onAnimationIteration",
-                "value": "AnimationEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "AnimationEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3456,7 +3456,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onAnimationIterationCapture",
-                "value": "AnimationEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "AnimationEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3464,7 +3464,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTransitionEnd",
-                "value": "TransitionEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "TransitionEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               },
@@ -3472,7 +3472,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "onTransitionEndCapture",
-                "value": "TransitionEventHandler<HTMLImageElement | HTMLVideoElement | HTMLIFrameElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
+                "value": "TransitionEventHandler<HTMLIFrameElement | HTMLImageElement | HTMLVideoElement | (AnnotationInterface & SceneGraphInterface & StagingInterface & EnvironmentInterface & ControlsInterface & ARInterface & LoadingInterface & AnimationInterface & ModelViewerElementBase)>",
                 "description": "",
                 "isOptional": true
               }
@@ -3593,7 +3593,7 @@
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "crop",
-                "value": "\"top\" | \"bottom\" | \"left\" | \"right\" | \"center\"",
+                "value": "\"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"",
                 "description": "",
                 "isOptional": true
               },
@@ -3601,7 +3601,7 @@
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "scale",
-                "value": "3 | 2",
+                "value": "2 | 3",
                 "description": "",
                 "isOptional": true
               },
@@ -4885,7 +4885,7 @@
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "crop",
-                "value": "\"top\" | \"bottom\" | \"left\" | \"right\" | \"center\"",
+                "value": "\"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"",
                 "description": "",
                 "isOptional": true
               },
@@ -4893,7 +4893,7 @@
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "scale",
-                "value": "3 | 2",
+                "value": "2 | 3",
                 "description": "",
                 "isOptional": true
               },
@@ -4999,6 +4999,7 @@
                 "name": "shopDomain",
                 "description": "- The Online Store domain to sent Shopify analytics under the same\ntop level domain.",
                 "value": "string",
+                "isOptional": true,
                 "filePath": "/analytics.ts"
               }
             ],
@@ -6155,7 +6156,7 @@
               {
                 "name": "metafield",
                 "description": "",
-                "value": "PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>",
+                "value": "PartialObjectDeep<Metafield, { recurseIntoArrays: true; }>",
                 "filePath": "/parse-metafield.ts"
               }
             ],
@@ -6241,7 +6242,7 @@
             "name": "CreateStorefrontClientGeneratedType",
             "params": [
               {
-                "name": "{\n  storeDomain,\n  privateStorefrontToken,\n  publicStorefrontToken,\n  storefrontApiVersion,\n  contentType,\n}",
+                "name": "input1",
                 "description": "",
                 "value": "StorefrontClientProps",
                 "filePath": "/storefront-client.ts"
@@ -6966,6 +6967,7 @@
                 "name": "options",
                 "description": "",
                 "value": "UseShopifyCookiesOptions",
+                "isOptional": true,
                 "filePath": "/useShopifyCookies.tsx"
               }
             ],
