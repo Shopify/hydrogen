@@ -151,6 +151,17 @@ main {
   background: #FAFBFB;
 }
 
+.Banner div {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 16px;
+}
+
+.Banner p {
+  padding-left: 48px;
+}
+
 
 .Banner span {
   background: #F6F6F7;

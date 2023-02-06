@@ -6,6 +6,8 @@ import {HydrogenLogoBaseColor} from '../components/HydrogenLogoBaseColor.jsx';
 import {IconDiscord} from '../components/IconDiscord.jsx';
 import {IconGithub} from '../components/IconGithub.jsx';
 import {IconTwitter} from '../components/IconTwitter.jsx';
+import {IconBanner} from '../components/IconBanner.jsx';
+import {IconError} from '../components/IconError.jsx';
 import favicon from '../assets/favicon.svg';
 import type {I18nBase, StorefrontClient} from '@shopify/hydrogen';
 
@@ -59,11 +61,15 @@ export default function Index() {
         <h1>Hello, {shopName || 'Hydrogen'}</h1>
         <p>Welcome to your new custom storefront</p>
         <section className="Banner">
-          <h2>Configure storefront token</h2>
+          <div>
+            <IconBanner />
+            <h2>Configure storefront token</h2>
+          </div>
           <p>
             You're seeing this because you have not yet configured your
-            storefront token. To get started, edit <span>.env</span>. Learn more
-            about
+            storefront token. To get started, edit {` `}
+            <span>.env</span>. Then, create your first route with the file {` `}
+            <span>/app/routes/index.js</span>. Learn more about
             {` `}
             <a href="https://shopify.dev/custom-storefronts/hydrogen/getting-started/quickstart">
               connecting a storefront
@@ -85,11 +91,17 @@ function ErrorPage() {
         <h1>Hello, Hydrogen</h1>
         <p>Welcome to your new custom storefront</p>
         <section className="Banner ErrorBanner">
-          <h2>There’s a problem with your storefront</h2>
+          <div>
+            <IconError />
+            <h2>There’s a problem with your storefront</h2>
+          </div>
           <p>
             Check your domain and API token in your<span>.env</span> file. Read
             the documentation on{` `}
-            <a href="">how to configure your storefront</a>.
+            <a href="https://shopify.dev/custom-storefronts/hydrogen/getting-started/quickstart">
+              how to configure your storefront
+            </a>
+            .
           </p>
         </section>
         <ResourcesLinks />
@@ -105,13 +117,19 @@ function ResourcesLinks() {
         <h2>Start building</h2>
         <ul>
           <li>
-            <a href="/">Collection template</a>
+            <a href="https://shopify.dev/custom-storefronts/hydrogen/building/collection-page">
+              Collection template
+            </a>
           </li>
           <li>
-            <a href="/">Product template</a>
+            <a href="https://shopify.dev/custom-storefronts/hydrogen/building/product-details-page">
+              Product template
+            </a>
           </li>
           <li>
-            <a href="/">Cart</a>
+            <a href="https://shopify.dev/custom-storefronts/hydrogen/building/cart">
+              Cart
+            </a>
           </li>
         </ul>
         <h2>Resources</h2>
@@ -122,10 +140,14 @@ function ResourcesLinks() {
             </a>
           </li>
           <li>
-            <a href="/">Remix and project structure</a>
+            <a href="https://shopify.dev/custom-storefronts/hydrogen/project-structure">
+              Remix and project structure
+            </a>
           </li>
           <li>
-            <a href="/">Data queriers and fetching</a>
+            <a href="https://shopify.dev/custom-storefronts/hydrogen/data-fetching/fetch-data">
+              Data queriers and fetching
+            </a>
           </li>
         </ul>
       </section>
@@ -146,13 +168,13 @@ function Layout({
         <h1>{shopName?.toUpperCase()}</h1>
         <p>Dev Mode</p>
         <nav>
-          <a href="/">
+          <a href="https://discord.com/invite/shopifydevs">
             <IconDiscord />
           </a>
-          <a href="/">
+          <a href="https://github.com/Shopify/hydrogen">
             <IconGithub />
           </a>
-          <a href="/">
+          <a href="https://twitter.com/shopifydevs?lang=en">
             <IconTwitter />
           </a>
         </nav>
