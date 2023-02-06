@@ -66,13 +66,13 @@ export default function Index() {
             <h2>Configure storefront token</h2>
           </div>
           <p>
-            You're seeing this because you have not yet configured your
+            You&rsquo;re seeing this because you have not yet configured your
             storefront token. To get started, edit {` `}
-            <span>.env</span>. Then, create your first route with the file {` `}
-            <span>/app/routes/index.js</span>. Learn more about
+            <code>.env</code>. Then, create your first route with the file {` `}
+            <code>/app/routes/index.jsx</code>. Learn more about
             {` `}
             <a href="https://shopify.dev/custom-storefronts/hydrogen/getting-started/quickstart">
-              connecting a storefront
+              connecting a&nbsp;storefront
             </a>
             .
           </p>
@@ -93,13 +93,17 @@ function ErrorPage() {
         <section className="Banner ErrorBanner">
           <div>
             <IconError />
-            <h2>There’s a problem with your storefront</h2>
+            <h2>There&rsquo;s a problem with your storefront</h2>
           </div>
           <p>
-            Check your domain and API token in your<span>.env</span> file. Read
+            Check your domain and API token in your <code>.env</code> file. Read
             the documentation on{` `}
-            <a href="https://shopify.dev/custom-storefronts/hydrogen/getting-started/quickstart">
-              how to configure your storefront
+            <a
+              target="_blank"
+              rel="norefferer noopener"
+              href="https://shopify.dev/custom-storefronts/hydrogen/getting-started/quickstart"
+            >
+              how to configure your&nbsp;storefront
             </a>
             .
           </p>
@@ -117,17 +121,29 @@ function ResourcesLinks() {
         <h2>Start building</h2>
         <ul>
           <li>
-            <a href="https://shopify.dev/custom-storefronts/hydrogen/building/collection-page">
+            <a
+              target="_blank"
+              rel="norefferer noopener"
+              href="https://shopify.dev/custom-storefronts/hydrogen/building/collection-page"
+            >
               Collection template
             </a>
           </li>
           <li>
-            <a href="https://shopify.dev/custom-storefronts/hydrogen/building/product-details-page">
+            <a
+              target="_blank"
+              rel="norefferer noopener"
+              href="https://shopify.dev/custom-storefronts/hydrogen/building/product-details-page"
+            >
               Product template
             </a>
           </li>
           <li>
-            <a href="https://shopify.dev/custom-storefronts/hydrogen/building/cart">
+            <a
+              target="_blank"
+              rel="norefferer noopener"
+              href="https://shopify.dev/custom-storefronts/hydrogen/building/cart"
+            >
               Cart
             </a>
           </li>
@@ -135,18 +151,30 @@ function ResourcesLinks() {
         <h2>Resources</h2>
         <ul>
           <li>
-            <a href="https://shopify.dev/custom-storefronts/hydrogen">
+            <a
+              target="_blank"
+              rel="norefferer noopener"
+              href="https://shopify.dev/custom-storefronts/hydrogen"
+            >
               Hydrogen docs
             </a>
           </li>
           <li>
-            <a href="https://shopify.dev/custom-storefronts/hydrogen/project-structure">
+            <a
+              target="_blank"
+              rel="norefferer noopener"
+              href="https://shopify.dev/custom-storefronts/hydrogen/project-structure"
+            >
               Remix and project structure
             </a>
           </li>
           <li>
-            <a href="https://shopify.dev/custom-storefronts/hydrogen/data-fetching/fetch-data">
-              Data queriers and fetching
+            <a
+              target="_blank"
+              rel="norefferer noopener"
+              href="https://shopify.dev/custom-storefronts/hydrogen/data-fetching/fetch-data"
+            >
+              Data queries and fetching
             </a>
           </li>
         </ul>
@@ -166,7 +194,7 @@ function Layout({
     <>
       <header>
         <h1>{shopName?.toUpperCase()}</h1>
-        <p>Dev Mode</p>
+        <p>&nbsp;Dev Mode&nbsp;</p>
         <nav>
           <a href="https://discord.com/invite/shopifydevs">
             <IconDiscord />
@@ -182,7 +210,13 @@ function Layout({
       <main>{children}</main>
       <footer>
         <div>
-          <p>© 2023 / Shopify, Inc.</p>
+          <a
+            href="https://shopify.com"
+            target="_blank"
+            rel="noreferrer noopener"
+          >
+            Powered by Shopify
+          </a>
         </div>
       </footer>
     </>

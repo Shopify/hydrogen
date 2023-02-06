@@ -87,6 +87,11 @@ footer div {
   margin: auto;
 }
 
+footer a {
+  color: #5c5f62;
+  text-decoration: none;
+}
+
 main h1 {
   color: #202223;
 }
@@ -163,9 +168,10 @@ main {
 }
 
 
-.Banner span {
+.Banner code {
   background: #F6F6F7;
   border: 1px solid #D2D5D8;
+  font-family: monospace;
   border-radius: 4px;
   padding: 2px;
 }
@@ -203,4 +209,3 @@ main {
   font-size: 1rem;
   color: #74180C;
 }
-
