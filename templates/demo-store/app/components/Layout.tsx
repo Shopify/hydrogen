@@ -233,7 +233,7 @@ function MobileHeader({
       <div className="flex items-center justify-end w-full gap-4">
         <Link
           to="/account"
-          className={'relative flex items-center justify-center w-8 h-8'}
+          className="relative flex items-center justify-center w-8 h-8"
         >
           <IconAccount />
         </Link>
