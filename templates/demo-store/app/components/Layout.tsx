@@ -23,7 +23,7 @@ import {
 import {useParams, Form, Await, useMatches} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
-import {startTransition, Suspense, useEffect, useMemo, useState} from 'react';
+import {Suspense, useEffect, useMemo} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
 import type {LayoutData} from '../root';
