@@ -18,11 +18,6 @@ export const commonFlags = {
     env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
     char: 'f',
   }),
-  entry: Flags.string({
-    description: 'The path to the server entry file.',
-    env: 'SHOPIFY_HYDROGEN_FLAG_ENTRY',
-    default: 'server',
-  }),
 };
 
 export function flagsToCamelObject(obj: Record<string, any>) {
