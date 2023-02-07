@@ -10,7 +10,6 @@ export {InMemoryCache} from './cache/in-memory';
 
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
-export {useDataFromMatches, useDataFromFetchers} from './hooks/utils';
 export {Seo} from './seo/seo';
 export type {SeoHandleFunction} from './seo/seo';
 
