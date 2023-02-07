@@ -13,9 +13,25 @@ type CartLinePriceProps = Omit<React.ComponentProps<typeof Money>, 'data'> &
   CartLinePricePropsBase;
 
 /**
+ * @deprecated Use `Money` instead. To migrate, use the `priceType` prop that matches the corresponding property on the `CartLine` object:
+ * - `regular`: `cartLine.cost.totalAmount`
+ * - `compareAt`: `cartLine.cost.compareAtAmountPerQuantity`
+ *
+ * For example:
+ * ```
+ * // before
+ * <CartLinePrice data={cartLine} priceType="regular" />
+ * // after
+ * <Money data={cartLine.cost.totalAmount} />
+ * ```
+ *
  * The `CartLinePrice` component renders a `Money` component for the cart line merchandise's price or compare at price.
  */
 export function CartLinePrice(props: CartLinePriceProps) {
+  if (__HYDROGEN_DEV__) {
+    console.warn(`<CartLinePrice/> is deprecated; use <Money/> instead.`);
+  }
+
   const {data: cartLine, priceType = 'regular', ...passthroughProps} = props;
 
   if (cartLine == null) {

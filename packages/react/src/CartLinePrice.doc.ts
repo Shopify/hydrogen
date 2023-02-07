@@ -12,7 +12,7 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   description: `
-    The \`CartLinePrice\` component renders a \`Money\` component for the cart line merchandise's price or compare at price.
+    \`@deprecated\` Use \`Money\` instead.\n\nTo migrate, use the \`priceType\` prop that matches the corresponding property on the \`CartLine\` object:\n\n- \`regular\`: \`cartLine.cost.totalAmount\`\n\n- \`compareAt\`: \`cartLine.cost.compareAtAmountPerQuantity\`\n\nFor example\n\nBefore:\n\n\`<CartLinePrice data={cartLine} priceType="regular" />\`\n\nAfter:\n\n\`<Money data={cartLine.cost.totalAmount} />\`\n\nThe \`CartLinePrice\` component renders a \`Money\` component for the cart line merchandise's price or compare at price.
   `,
   type: 'component',
   defaultExample: {
