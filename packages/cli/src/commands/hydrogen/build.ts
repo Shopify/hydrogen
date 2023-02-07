@@ -92,7 +92,7 @@ export async function runBuild({
 
     if (sizeMB >= 1) {
       output.warn(
-        `🚨 Warning: worker bundle exceeds 1 MB! This can delay your worker response.${
+        `🚨 Worker bundle exceeds 1 MB! This can delay your worker response.${
           // @ts-ignore
           remixConfig.serverMinify
             ? ''
@@ -109,7 +109,11 @@ export async function runBuild({
       const exec = packageManager === 'npm' ? 'npx' : packageManager;
 
       output.warn(
-        `🚨 Warning: standard Shopify routes missing; run \`${exec} shopify hydrogen check routes\` for more details.\n`,
+        `Heads up: Shopify stores have a number of standard routes that aren’t set up yet.\n` +
+          `Some functionality and backlinks might not work as expected until these are created, or redirects are set up.\n` +
+          `This build is missing ${missingRoutes.length} route${
+            missingRoutes.length > 1 ? 's' : ''
+          }. For more details, run \`${exec} shopify hydrogen check routes\`.\n`,
       );
     }
   }
