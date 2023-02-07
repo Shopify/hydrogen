@@ -84,7 +84,7 @@ function CartDiscounts({
   return (
     <>
       {/* Have existing discount, display it with a remove option */}
-      <dl className={clsx(codes ? 'grid' : 'hidden')}>
+      <dl className={codes ? 'grid' : 'hidden'}>
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Discount(s)</Text>
           <div className="flex items-center justify-between">
@@ -106,16 +106,17 @@ function CartDiscounts({
         <div
           className={clsx(
             codes ? 'hidden' : 'flex',
-            'items-center justify-between',
+            'items-center gap-4 justify-between text-copy',
           )}
         >
           <input
             className={getInputStyleClasses()}
             type="text"
             name="discountCode"
+            placeholder="Discount code"
           />
-          <button className="w-[150px] flex justify-end">
-            <Text size="fine">Apply Discount</Text>
+          <button className="flex justify-end font-medium whitespace-nowrap">
+            Apply Discount
           </button>
         </div>
       </UpdateDiscountForm>
