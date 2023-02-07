@@ -307,18 +307,14 @@ function DesktopHeader({
           />
           <button
             type="submit"
-            className={
-              'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
-            }
+            className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
           >
             <IconSearch />
           </button>
         </Form>
         <Link
           to="/account"
-          className={
-            'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
-          }
+          className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
         >
           <IconAccount />
         </Link>
@@ -384,18 +380,14 @@ function Badge({
   return isHydrated ? (
     <button
       onClick={openCart}
-      className={
-        'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
-      }
+      className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
     >
       {BadgeCounter}
     </button>
   ) : (
     <Link
       to="/cart"
-      className={
-        'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
-      }
+      className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
     >
       {BadgeCounter}
     </Link>
@@ -490,7 +482,7 @@ function FooterMenu({menu}: {menu?: EnhancedMenu}) {
             )}
           </Disclosure>
         </section>
-      ))}{' '}
+      ))}
     </>
   );
 }
