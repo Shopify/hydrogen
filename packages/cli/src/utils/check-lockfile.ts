@@ -82,11 +82,15 @@ export async function checkLockfileStatus(directory: string) {
     return multipleLockfilesWarning(availableLockfiles);
   }
 
-  const repo = git.factory(directory);
-  const lockfile = availableLockfiles[0]!;
-  const ignoredLockfile = await repo.checkIgnore([lockfile]);
+  try {
+    const repo = git.factory(directory);
+    const lockfile = availableLockfiles[0]!;
+    const ignoredLockfile = await repo.checkIgnore([lockfile]);
 
-  if (ignoredLockfile.length) {
-    lockfileIgnoredWarning(lockfile);
+    if (ignoredLockfile.length) {
+      lockfileIgnoredWarning(lockfile);
+    }
+  } catch {
+    // Not a Git repository, ignore
   }
 }
