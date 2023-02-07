@@ -180,7 +180,7 @@ function EmptyOrders() {
       </Text>
       <div className="w-48">
         <Button
-          className="text-sm mt-2 w-full"
+          className="w-full mt-2 text-sm"
           variant="secondary"
           to={usePrefixPathWithLocale('/')}
         >
@@ -193,7 +193,7 @@ function EmptyOrders() {
 
 function Orders({orders}: {orders: Order[]}) {
   return (
-    <ul className="grid-flow-row grid gap-2 gap-y-6 md:gap-4 lg:gap-6 grid-cols-1 false  sm:grid-cols-3">
+    <ul className="grid grid-flow-row grid-cols-1 gap-2 gap-y-6 md:gap-4 lg:gap-6 false sm:grid-cols-3">
       {orders.map((order) => (
         <OrderCard order={order} key={order.id} />
       ))}
