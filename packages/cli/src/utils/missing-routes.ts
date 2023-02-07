@@ -84,7 +84,7 @@ export function findMissingRoutes(config: RemixConfig) {
   return [...requiredRoutes];
 }
 
-const LINE_LIMIT = 10;
+const LINE_LIMIT = 100;
 export function logMissingRoutes(routes: string[]) {
   if (routes.length) {
     renderWarning({
