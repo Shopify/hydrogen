@@ -203,7 +203,7 @@ function MobileHeader({
         >
           <button
             type="submit"
-            className={'relative flex items-center justify-center w-8 h-8'}
+            className="relative flex items-center justify-center w-8 h-8"
           >
             <IconSearch />
           </button>
