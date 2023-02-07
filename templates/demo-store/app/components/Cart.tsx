@@ -418,7 +418,7 @@ export function CartEmpty({
           <Button onClick={onClose}>Continue shopping</Button>
         </div>
       </section>
-      <section className="grid gap-8 pt-4">
+      <section className="grid gap-8 pt-16">
         <FeaturedProducts
           count={4}
           heading="Shop Best Sellers"
