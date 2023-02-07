@@ -23,7 +23,7 @@ Use Hydrogen React to build a custom storefront in any React-based web framework
 The following diagram illustrates an example custom storefront stack using a third-party framework with Hydrogen React:
 
 <div align="center">
- <img src="https://user-images.githubusercontent.com/27507835/215843287-33c5a82a-7e19-48cb-9637-6427758c97a3.png" width="500">
+<img src="https://user-images.githubusercontent.com/27507835/217329172-4056771c-66ab-41dd-9a4c-6480f72aa44a.png"/>
 </div>
 
 ## Versioning
