@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2023.1.1
+
+### Patch Changes
+
+- Bump em all by [@blittle](https://github.com/blittle)
+
 ## 2023.1.0
 
 ### Patch Changes
