@@ -1,5 +1,39 @@
 # @shopify/hydrogen
 
+## 2023.1.0
+
+### Patch Changes
+
+- Refactor cart ([#311](https://github.com/Shopify/h2/pull/311)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Update `storefront-kit-react` pacakge name to `hydrogen-react` ([#433](https://github.com/Shopify/h2/pull/433)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix a pagination bug on country change ([#317](https://github.com/Shopify/h2/pull/317)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- - Upgrade to the latest Remix experimental defer release, 1.11.0 ([#371](https://github.com/Shopify/h2/pull/371)) by [@blittle](https://github.com/blittle)
+
+  - Replace redundant i18n routes with a single root optional route segment `($lang)`
+
+- Remove useDataFromMatches and useDataFromFetchers hook from hydrogen package ([#451](https://github.com/Shopify/h2/pull/451)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Use the new version of GraphiQL instead of GraphQL Playground ([#410](https://github.com/Shopify/h2/pull/410)) by [@jplhomer](https://github.com/jplhomer)
+
+- Add a default value for `context.storefront.i18n` and improve types. ([#330](https://github.com/Shopify/h2/pull/330)) by [@frandiox](https://github.com/frandiox)
+
+- Fix `i18n` type passing to loader ([#432](https://github.com/Shopify/h2/pull/432)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add Hydrogen utils function and update demo store to send shopify analytics ([#376](https://github.com/Shopify/h2/pull/376)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Rename the `notFoundMaybeRedirect` utility to `storefrontRedirect` and call it only in the server entry file. ([#362](https://github.com/Shopify/h2/pull/362)) by [@frandiox](https://github.com/frandiox)
+
+- Removed magic routes and `.hydrogen` template routes. See `rfc/obsolete-routing.md` for details of what used to be in the package but has now been removed. ([#336](https://github.com/Shopify/h2/pull/336)) by [@frehner](https://github.com/frehner)
+
+  `/__health` still exists for the moment, though at some point it will probably be removed as well.
+
+- Use new versioning schema by [@jplhomer](https://github.com/jplhomer)
+
+- Update RSK package ([#369](https://github.com/Shopify/h2/pull/369)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2023.1.0-alpha.2
 
 ### Patch Changes

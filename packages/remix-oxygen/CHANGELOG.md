@@ -1,5 +1,19 @@
 # @shopify/remix-oxygen
 
+## 1.0.0
+
+### Patch Changes
+
+- Initial release of @shopify/remix-oxygen by [@jplhomer](https://github.com/jplhomer)
+
+- - Upgrade to the latest Remix experimental defer release, 1.11.0 ([#371](https://github.com/Shopify/h2/pull/371)) by [@blittle](https://github.com/blittle)
+
+  - Replace redundant i18n routes with a single root optional route segment `($lang)`
+
+- Remove the local `/__health` route because it's not required in Oxygen anymore. ([#361](https://github.com/Shopify/h2/pull/361)) by [@frandiox](https://github.com/frandiox)
+
+- Remove deprecated `shouldProxyAsset` option. ([#436](https://github.com/Shopify/h2/pull/436)) by [@frandiox](https://github.com/frandiox)
+
 ## 1.0.0-alpha.4
 
 ### Patch Changes
