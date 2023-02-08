@@ -74,7 +74,7 @@ export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
 >[0] & {
   cache?: Cache;
   buyerIp?: string;
-  requestGroupId?: string;
+  requestGroupId?: string | null;
   storefrontId?: string;
   waitUntil?: ExecutionContext['waitUntil'];
   i18n?: TI18n;
@@ -122,7 +122,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
   waitUntil,
   buyerIp,
   i18n,
-  requestGroupId = generateUUID(),
+  requestGroupId,
   storefrontId,
   ...clientOptions
 }: CreateStorefrontClientOptions<TI18n>): StorefrontClient<TI18n> {
@@ -146,7 +146,8 @@ export function createStorefrontClient<TI18n extends I18nBase>({
 
   const defaultHeaders = getHeaders({contentType: 'json'});
 
-  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] = requestGroupId;
+  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
+    requestGroupId || generateUUID();
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
   if (storefrontId) defaultHeaders[STOREFRONT_ID_HEADER] = storefrontId;
 

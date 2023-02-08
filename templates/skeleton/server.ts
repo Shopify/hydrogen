@@ -45,6 +45,7 @@ export default {
         storeDomain: env.PUBLIC_STORE_DOMAIN,
         storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2022-10',
         storefrontId: env.PUBLIC_STOREFRONT_ID,
+        requestGroupId: request.headers.get('request-id'),
       });
 
       /**
