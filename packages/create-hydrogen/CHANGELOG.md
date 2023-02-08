@@ -1,5 +1,14 @@
 # @shopify/create-hydrogen
 
+## 4.0.1
+
+### Patch Changes
+
+- Bump em all by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`92f6307`](https://github.com/Shopify/hydrogen/commit/92f6307222be34431a730183c08de6c96367bdaf), [`d63e48b`](https://github.com/Shopify/hydrogen/commit/d63e48b9acc363b6df6e957652408074f50cf2fe)]:
+  - @shopify/cli-hydrogen@4.0.1
+
 ## 4.0.0
 
 ### Patch Changes
