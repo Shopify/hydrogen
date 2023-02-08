@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "4.0.0-alpha.3",
+  "version": "2023.1.0-alpha.2",
   "type": "module",
   "scripts": {
     "build": "tsup --clean --config ./tsup.config.ts",
