@@ -34,12 +34,6 @@
         "default": "./dist/production/index.js"
       }
     },
-    "./build": {
-      "types": "./dist/build/index.d.ts",
-      "require": "./dist/build/index.cjs",
-      "import": "./dist/build/index.js",
-      "default": "./dist/build/index.js"
-    },
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
     "./package.json": "./package.json"
