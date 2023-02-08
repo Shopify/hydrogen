@@ -144,6 +144,21 @@ export async function transpileProject(projectDir: string) {
     await fs.writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs, 'utf8');
   }
 
+  // Change extensions in remix.config.js
+  try {
+    const remixConfigPath = path.join(projectDir, 'remix.config.js');
+    let remixConfig = await fs.readFile(remixConfigPath, 'utf8');
+
+    remixConfig = remixConfig.replace(/\/server\.ts/gim, '/server.js');
+
+    await fs.writeFile(remixConfigPath, remixConfig);
+  } catch (error) {
+    output.debug(
+      'Could not change TS extensions in remix.config.js:\n' +
+        (error as Error).stack,
+    );
+  }
+
   // Transpile tsconfig.json to jsconfig.json
   try {
     const tsConfigPath = path.join(projectDir, 'tsconfig.json');
@@ -193,17 +208,15 @@ export async function transpileProject(projectDir: string) {
 
   // Remove TS from ESLint
   try {
-    let eslintrc = await fs.readFile(
-      path.join(projectDir, '.eslintrc.js'),
-      'utf8',
-    );
+    const eslintrcPath = path.join(projectDir, '.eslintrc.js');
+    let eslintrc = await fs.readFile(eslintrcPath, 'utf8');
 
     eslintrc = eslintrc
       .replace(/\/\*\*[\s*]+@type.+\s+\*\/\s?/gim, '')
       .replace(/\s*,?\s*['"`]plugin:hydrogen\/typescript['"`]/gim, '')
       .replace(/\s+['"`]@typescript-eslint\/.+,/gim, '');
 
-    await fs.writeFile(path.join(projectDir, '.eslintrc.js'), eslintrc);
+    await fs.writeFile(eslintrcPath, eslintrc);
   } catch (error) {
     output.debug(
       'Could not remove TS rules from .eslintrc:\n' + (error as Error).stack,
