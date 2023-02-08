@@ -11,7 +11,8 @@
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "oclif manifest",
-    "test": "vitest"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
