@@ -49,7 +49,7 @@ export function SortFilter({
         </button>
         <SortMenu />
       </div>
-      <div className="flex flex-wrap flex-col md:flex-row">
+      <div className="flex flex-col flex-wrap md:flex-row">
         <div
           className={`transition-all duration-200 ${
             isOpen
@@ -139,46 +139,36 @@ export function FiltersDrawer({
           </div>
         ) : null}
 
-        <Disclosure as="div" className="w-full">
-          {({open}) => (
-            <>
-              <Disclosure.Button className="py-4 w-full flex justify-between">
-                <Text size="lead">Collection</Text>
-                <IconCaret direction={open ? 'up' : 'down'} />
-              </Disclosure.Button>
-              <Disclosure.Panel>
-                <ul className="py-2">{collectionsMarkup}</ul>
-              </Disclosure.Panel>
-            </>
-          )}
-        </Disclosure>
         <Heading as="h4" size="lead" className="pb-4">
           Filter By
         </Heading>
         <div className="divide-y">
-          {filters.map((filter: Filter) => (
-            <Disclosure as="div" key={filter.id} className="w-full">
-              {({open}) => (
-                <>
-                  <Disclosure.Button className="py-4 w-full flex justify-between">
-                    <Text size="lead">{filter.label}</Text>
-                    <IconCaret direction={open ? 'up' : 'down'} />
-                  </Disclosure.Button>
-                  <Disclosure.Panel key={filter.id}>
-                    <ul key={filter.id} className="py-2">
-                      {filter.values?.map((option) => {
-                        return (
-                          <li key={option.id} className="pb-4">
-                            {filterMarkup(filter, option)}
-                          </li>
-                        );
-                      })}
-                    </ul>
-                  </Disclosure.Panel>
-                </>
-              )}
-            </Disclosure>
-          ))}
+          {filters.map(
+            (filter: Filter) =>
+              filter.values.length > 1 && (
+                <Disclosure as="div" key={filter.id} className="w-full">
+                  {({open}) => (
+                    <>
+                      <Disclosure.Button className="flex justify-between w-full py-4">
+                        <Text size="lead">{filter.label}</Text>
+                        <IconCaret direction={open ? 'up' : 'down'} />
+                      </Disclosure.Button>
+                      <Disclosure.Panel key={filter.id}>
+                        <ul key={filter.id} className="py-2">
+                          {filter.values?.map((option) => {
+                            return (
+                              <li key={option.id} className="pb-4">
+                                {filterMarkup(filter, option)}
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </Disclosure.Panel>
+                    </>
+                  )}
+                </Disclosure>
+              ),
+          )}
         </div>
       </nav>
     </>
@@ -198,7 +188,7 @@ function AppliedFilters({filters = []}: {filters: AppliedFilter[]}) {
           return (
             <Link
               to={getAppliedFilterLink(filter, params, location)}
-              className="rounded-full border px-2 flex gap"
+              className="flex px-2 border rounded-full gap"
               key={`${filter.label}-${filter.urlParam}`}
             >
               <span className="flex-grow">{filter.label}</span>
@@ -392,7 +382,7 @@ export default function SortMenu() {
 
       <Menu.Items
         as="nav"
-        className="rounded-sm	bg-contrast flex flex-col absolute text-right right-0 p-4"
+        className="absolute right-0 flex flex-col p-4 text-right rounded-sm bg-contrast"
       >
         {items.map((item) => (
           <Menu.Item key={item.label}>

@@ -18,12 +18,14 @@ export function ProductCard({
   className,
   loading,
   onClick,
+  quickAdd,
 }: {
   product: SerializeFrom<Product>;
   label?: string;
   className?: string;
   loading?: HTMLImageElement['loading'];
   onClick?: () => void;
+  quickAdd?: boolean;
 }) {
   let cardLabel;
 
@@ -56,13 +58,13 @@ export function ProductCard({
   };
 
   return (
-    <div className="flex flex-col">
+    <div className="flex flex-col gap-2">
       <Link
         onClick={onClick}
         to={`/products/${product.handle}`}
         prefetch="intent"
       >
-        <div className={clsx('grid gap-6', className)}>
+        <div className={clsx('grid gap-4', className)}>
           <div className="card-image aspect-[4/5] bg-primary/5">
             {image && (
               <Image
@@ -109,7 +111,7 @@ export function ProductCard({
           </div>
         </div>
       </Link>
-      {firstVariant?.id && (
+      {quickAdd && (
         <AddToCartButton
           lines={[
             {

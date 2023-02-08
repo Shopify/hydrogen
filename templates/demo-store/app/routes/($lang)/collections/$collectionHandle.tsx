@@ -11,7 +11,7 @@ import {
   type SeoHandleFunction,
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
-import {PageHeader, Section, Text, SortFilter, Breadcrumbs} from '~/components';
+import {PageHeader, Section, Text, SortFilter} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
@@ -157,11 +157,6 @@ export async function loader({params, request, context}: LoaderArgs) {
 export default function Collection() {
   const {collection, collections, appliedFilters} =
     useLoaderData<typeof loader>();
-  const breadcrumbs =
-    collection.metafield?.references &&
-    flattenConnection(collection.metafield.references)
-      .reverse()
-      .reduce<any[]>((acc, collection) => [collection, ...acc], [collection]);
 
   return (
     <>
@@ -175,8 +170,6 @@ export default function Collection() {
             </div>
           </div>
         )}
-
-        <Breadcrumbs breadcrumbs={breadcrumbs} />
       </PageHeader>
       <Section>
         <SortFilter
@@ -223,23 +216,6 @@ const COLLECTION_QUERY = `#graphql
         width
         height
         altText
-      }
-      metafield(namespace: "breadcrumbs", key: "parents") {
-        id
-        value
-        references(first: 10) {
-          edges {
-            node {
-              ... on Collection {
-                id
-                handle
-                title
-              }
-            }
-          }
-        }
-        namespace
-        key
       }
       products(
         first: $pageBy,
