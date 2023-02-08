@@ -11,6 +11,8 @@ import {
   resolveFormatConfig,
 } from '../../../utils/transpile-ts.js';
 
+export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
+
 // Fix for a TypeScript bug:
 // https://github.com/microsoft/TypeScript/issues/42873
 import type {} from '@oclif/core/lib/interfaces/parser.js';
@@ -143,7 +145,7 @@ export async function runGenerate(
   const extension = typescript ? '.tsx' : '.jsx';
   const templatePath = path.join(
     templatesRoot,
-    'generator-templates',
+    GENERATOR_TEMPLATES_DIR,
     'routes',
     `${route}.tsx`,
   );
