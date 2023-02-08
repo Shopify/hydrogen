@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.0.1
+
+### Patch Changes
+
+- Bump em all by [@blittle](https://github.com/blittle)
+
 ## 1.0.0
 
 ### Patch Changes

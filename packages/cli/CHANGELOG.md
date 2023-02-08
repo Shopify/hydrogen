@@ -1,5 +1,16 @@
 # @shopify/cli-hydrogen
 
+## 4.0.1
+
+### Patch Changes
+
+- Bump em all by [@blittle](https://github.com/blittle)
+
+- Fix oclif manifest ([#461](https://github.com/Shopify/hydrogen/pull/461)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`92f6307`](https://github.com/Shopify/hydrogen/commit/92f6307222be34431a730183c08de6c96367bdaf)]:
+  - @shopify/remix-oxygen@1.0.1
+
 ## 4.0.0
 
 ### Patch Changes
