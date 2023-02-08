@@ -37,10 +37,10 @@
     "fast-glob": "^3.2.12",
     "fs-extra": "^10.1.0",
     "gunzip-maybe": "^1.4.2",
-    "prettier": "^2.8.2",
+    "prettier": "^2.8.4",
     "recursive-readdir": "^2.2.3",
     "tar-fs": "^2.1.1",
-    "typescript": "^4.8.3"
+    "typescript": "^4.9.5"
   },
   "bin": "dist/create-app.js",
   "exports": {
