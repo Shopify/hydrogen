@@ -1,13 +1,13 @@
 blank_issues_enabled: false
 contact_links:
-  - name: Get Help
+  - name: Remix questions?
+    url: https://remix.run/docs
+    about: Having issues with Remix? Visit the Remix Docs.
+  - name: Get Hydrogen help
     url: https://github.com/Shopify/h2/discussions/new?category=help
     about:
       If you can't get something to work the way you expect, open a question in
       the Hydrogen discussions.
-  - name: Remix questions?
-    url: https://remix.run/docs
-    about: Having issues with Remix? Visit the Remix Docs.
   - name: Feature Request
     url: https://github.com/Shopify/h2/discussions/new?category=ideas-feature-requests
     about:
