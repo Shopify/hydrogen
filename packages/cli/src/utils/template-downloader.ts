@@ -5,9 +5,8 @@ import gunzipMaybe from 'gunzip-maybe';
 import {extract} from 'tar-fs';
 import {http} from '@shopify/cli-kit';
 
-// TODO: Update repo name
 // Note: this skips pre-releases
-const REPO_RELEASES_URL = `https://api.github.com/repos/shopify/h2/releases/latest`;
+const REPO_RELEASES_URL = `https://api.github.com/repos/shopify/hydrogen/releases/latest`;
 
 export async function getLatestReleaseDownloadUrl() {
   const response = await http.fetch(REPO_RELEASES_URL);
