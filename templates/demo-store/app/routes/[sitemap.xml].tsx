@@ -160,16 +160,14 @@ const SITEMAP_QUERY = `#graphql
       first: $urlLimits
       query: "published_status:'online_store:visible'"
     ) {
-      edges {
-        node {
-          updatedAt
-          handle
-          onlineStoreUrl
-          title
-          featuredImage {
-            url
-            altText
-          }
+      nodes {
+        updatedAt
+        handle
+        onlineStoreUrl
+        title
+        featuredImage {
+          url
+          altText
         }
       }
     }
@@ -177,21 +175,17 @@ const SITEMAP_QUERY = `#graphql
       first: $urlLimits
       query: "published_status:'online_store:visible'"
     ) {
-      edges {
-        node {
-          updatedAt
-          handle
-          onlineStoreUrl
-        }
+      nodes {
+        updatedAt
+        handle
+        onlineStoreUrl
       }
     }
     pages(first: $urlLimits, query: "published_status:'published'") {
-      edges {
-        node {
-          updatedAt
-          handle
-          onlineStoreUrl
-        }
+      nodes {
+        updatedAt
+        handle
+        onlineStoreUrl
       }
     }
   }

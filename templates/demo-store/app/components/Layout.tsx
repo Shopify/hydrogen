@@ -23,7 +23,7 @@ import {
 import {useParams, Form, Await, useMatches} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
-import {startTransition, Suspense, useEffect, useMemo, useState} from 'react';
+import {Suspense, useEffect, useMemo} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
 import type {LayoutData} from '../root';
@@ -165,22 +165,6 @@ function MenuMobileNav({
   );
 }
 
-function useHeaderStyleFix(
-  style: string,
-  setStyle: (styles: string) => void,
-  isHome: boolean,
-) {
-  const {y} = useWindowScroll();
-
-  useEffect(() => {
-    if (y > 50 && !isHome) {
-      startTransition(() => setStyle(style + ' shadow-lightHeader'));
-    }
-    // Run only once:
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-}
-
 function MobileHeader({
   title,
   isHome,
@@ -192,23 +176,24 @@ function MobileHeader({
   openCart: () => void;
   openMenu: () => void;
 }) {
-  const buttonStyle = 'relative flex items-center justify-center w-8 h-8';
-  const [containerStyle, setContainerStyle] = useState(
-    `${
-      isHome
-        ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
-        : 'bg-contrast/80 text-primary'
-    } flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`,
-  );
-
-  useHeaderStyleFix(containerStyle, setContainerStyle, isHome);
+  // useHeaderStyleFix(containerStyle, setContainerStyle, isHome);
 
   const params = useParams();
 
   return (
-    <header role="banner" className={containerStyle}>
+    <header
+      role="banner"
+      className={`${
+        isHome
+          ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
+          : 'bg-contrast/80 text-primary'
+      } flex lg:hidden items-center h-nav sticky backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-4 px-4 md:px-8`}
+    >
       <div className="flex items-center justify-start w-full gap-4">
-        <button onClick={openMenu} className={buttonStyle}>
+        <button
+          onClick={openMenu}
+          className="relative flex items-center justify-center w-8 h-8"
+        >
           <IconMenu />
         </button>
         <Form
@@ -216,7 +201,10 @@ function MobileHeader({
           action={params.lang ? `/${params.lang}/search` : '/search'}
           className="items-center gap-2 sm:flex"
         >
-          <button type="submit" className={buttonStyle}>
+          <button
+            type="submit"
+            className="relative flex items-center justify-center w-8 h-8"
+          >
             <IconSearch />
           </button>
           <Input
@@ -243,7 +231,10 @@ function MobileHeader({
       </Link>
 
       <div className="flex items-center justify-end w-full gap-4">
-        <Link to="/account" className={buttonStyle}>
+        <Link
+          to="/account"
+          className="relative flex items-center justify-center w-8 h-8"
+        >
           <IconAccount />
         </Link>
         <CartCount isHome={isHome} openCart={openCart} />
@@ -264,21 +255,18 @@ function DesktopHeader({
   title: string;
 }) {
   const params = useParams();
-
-  const buttonStyle =
-    'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5';
-  const [containerStyle, setContainerStyle] = useState(
-    `${
-      isHome
-        ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
-        : 'bg-contrast/80 text-primary'
-    } hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`,
-  );
-
-  useHeaderStyleFix(containerStyle, setContainerStyle, isHome);
-
+  const {y} = useWindowScroll();
   return (
-    <header role="banner" className={containerStyle}>
+    <header
+      role="banner"
+      className={`${
+        isHome
+          ? 'bg-primary/80 dark:bg-contrast/60 text-contrast dark:text-primary shadow-darkHeader'
+          : 'bg-contrast/80 text-primary'
+      } ${
+        !isHome && y > 50 && ' shadow-lightHeader'
+      } hidden h-nav lg:flex items-center sticky transition duration-300 backdrop-blur-lg z-40 top-0 justify-between w-full leading-none gap-8 px-12 py-8`}
+    >
       <div className="flex gap-12">
         <Link className="font-bold" to="/" prefetch="intent">
           {title}
@@ -317,11 +305,17 @@ function DesktopHeader({
             placeholder="Search"
             name="q"
           />
-          <button type="submit" className={buttonStyle}>
+          <button
+            type="submit"
+            className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
+          >
             <IconSearch />
           </button>
         </Form>
-        <Link to="/account" className={buttonStyle}>
+        <Link
+          to="/account"
+          className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
+        >
           <IconAccount />
         </Link>
         <CartCount isHome={isHome} openCart={openCart} />
@@ -386,18 +380,14 @@ function Badge({
   return isHydrated ? (
     <button
       onClick={openCart}
-      className={
-        'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
-      }
+      className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
     >
       {BadgeCounter}
     </button>
   ) : (
     <Link
       to="/cart"
-      className={
-        'relative flex items-center justify-center w-8 h-8 focus:ring-primary/5'
-      }
+      className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
     >
       {BadgeCounter}
     </Link>
@@ -417,8 +407,7 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
       divider={isHome ? 'none' : 'top'}
       as="footer"
       role="contentinfo"
-      className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12
-        border-b md:gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-${itemsCount}
+      className={`grid min-h-[25rem] items-start grid-flow-row w-full gap-6 py-8 px-6 md:px-8 lg:px-12 md:gap-8 lg:gap-12 grid-cols-1 md:grid-cols-2 lg:grid-cols-${itemsCount}
         bg-primary dark:bg-contrast dark:text-primary text-contrast overflow-hidden`}
     >
       <FooterMenu menu={menu} />
@@ -427,7 +416,7 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
         className={`self-end pt-8 opacity-50 md:col-span-2 lg:col-span-${itemsCount}`}
       >
         &copy; {new Date().getFullYear()} / Shopify, Inc. Hydrogen is an MIT
-        Licensed Open Source project. This website is carbon&nbsp;neutral.
+        Licensed Open Source project.
       </div>
     </Section>
   );
@@ -493,7 +482,7 @@ function FooterMenu({menu}: {menu?: EnhancedMenu}) {
             )}
           </Disclosure>
         </section>
-      ))}{' '}
+      ))}
     </>
   );
 }

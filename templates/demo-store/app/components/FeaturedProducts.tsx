@@ -109,6 +109,7 @@ function FeatureProductsContent({
           product={product as Product}
           key={product.id}
           onClick={onClick}
+          quickAdd
         />
       ))}
     </>
