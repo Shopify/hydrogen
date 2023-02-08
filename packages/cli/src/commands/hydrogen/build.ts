@@ -110,7 +110,7 @@ export async function runBuild({
 
       output.warn(
         `Heads up: Shopify stores have a number of standard routes that aren’t set up yet.\n` +
-          `Some functionality and backlinks might not work as expected until these are created, or redirects are set up.\n` +
+          `Some functionality and backlinks might not work as expected until these are created or redirects are set up.\n` +
           `This build is missing ${missingRoutes.length} route${
             missingRoutes.length > 1 ? 's' : ''
           }. For more details, run \`${exec} shopify hydrogen check routes\`.\n`,
