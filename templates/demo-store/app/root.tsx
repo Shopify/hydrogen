@@ -35,6 +35,7 @@ import type {StorefrontContext} from './lib/type';
 
 const seo: SeoHandleFunction<typeof loader> = ({data, pathname}) => ({
   title: data?.layout?.shop?.name,
+  titleTemplate: '%s | Hydrogen Demo Store',
   description: data?.layout?.shop?.description,
   handle: '@shopify',
   url: `https://hydrogen.shop${pathname}`,
@@ -73,7 +74,6 @@ export async function loader({context}: LoaderArgs) {
   return defer({
     layout,
     selectedLocale: context.storefront.i18n,
-    seoDebug: process.env.NODE_ENV === 'development',
     cart: cartId ? getCart(context, cartId) : undefined,
     analytics: {
       shopifySalesChannel: ShopifySalesChannel.hydrogen,
@@ -92,7 +92,7 @@ export default function App() {
   return (
     <html lang={locale.language}>
       <head>
-        <Seo debug={data.seoDebug} />
+        <Seo />
         <Meta />
         <Links />
       </head>

@@ -1,12 +1,12 @@
-import {HeadTag} from './generate-seo-tags';
+import {CustomHeadTagObject} from './generate-seo-tags';
 
-export default function Logger({headTags}: {headTags: HeadTag[]}) {
+export default function Logger({headTags}: {headTags: CustomHeadTagObject[]}) {
   logSeoTags(headTags);
 
   return null;
 }
 
-export function logSeoTags(headTags: HeadTag[]) {
+export function logSeoTags(headTags: CustomHeadTagObject[]) {
   const style = 'text-transform: uppercase;';
   const style2 =
     'text-transform: uppercase; font-weight: bold; text-transform: uppercase;font-weight: bold';

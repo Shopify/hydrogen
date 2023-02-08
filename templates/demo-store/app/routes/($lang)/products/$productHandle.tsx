@@ -13,7 +13,9 @@ import {
   Money,
   ShopifyAnalyticsProduct,
   ShopPayButton,
+  flattenConnection,
   type SeoHandleFunction,
+  type SeoConfig,
 } from '@shopify/hydrogen';
 import {
   Heading,
@@ -37,14 +39,30 @@ import type {
   Product as ProductType,
   Shop,
   ProductConnection,
+  MediaConnection,
+  MediaImage,
 } from '@shopify/hydrogen/storefront-api-types';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
+import type {Product} from 'schema-dts';
 
-const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
-  title: data?.product?.seo?.title,
-  description: data?.product?.seo?.description,
-});
+const seo: SeoHandleFunction<typeof loader> = ({data}) => {
+  const media = flattenConnection<MediaConnection>(data.product.media).find(
+    (media) => media.mediaContentType === 'IMAGE',
+  ) as MediaImage | undefined;
+
+  return {
+    title: data?.product?.seo?.title ?? data?.product?.title,
+    media: media?.image,
+    description: data?.product?.seo?.description ?? data?.product?.description,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      brand: data?.product?.vendor,
+      name: data?.product?.title,
+    },
+  } satisfies SeoConfig<Product>;
+};
 
 export const handle = {
   seo,
@@ -534,6 +552,7 @@ const PRODUCT_QUERY = `#graphql
       vendor
       handle
       descriptionHtml
+      description
       options {
         name
         values
