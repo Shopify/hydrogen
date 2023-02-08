@@ -678,7 +678,7 @@ function validate(
 
     // TODO: Discuss consistency of logging
     // run time warnings/helpers
-    // console.warn(message);
+    console.warn(message);
 
     return data;
   }

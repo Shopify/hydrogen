@@ -4,7 +4,7 @@ import type {Product} from 'schema-dts';
 
 describe('generateSeoTags', () => {
   const consoleMock = {
-    log: vi.fn(),
+    warn: vi.fn(),
   };
 
   vi.stubGlobal('console', consoleMock);
@@ -171,7 +171,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil - A headless storefront\\"}",
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil\\"}",
             "key": "script-application/ld+json",
             "props": {
               "type": "application/ld+json",
@@ -193,7 +193,7 @@ describe('generateSeoTags', () => {
 
       // Then
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         'Error in SEO input: `title` should not be longer than 120 characters',
       );
     });
@@ -275,7 +275,7 @@ describe('generateSeoTags', () => {
 
       // Then
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         'Error in SEO input: `description` should not be longer than 155 characters',
       );
     });
@@ -349,7 +349,7 @@ describe('generateSeoTags', () => {
 
       // Then
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         'Error in SEO input: `url` should be a valid URL',
       );
     });
@@ -863,7 +863,7 @@ describe('generateSeoTags', () => {
 
       // Then
 
-      expect(console.log).toHaveBeenCalledWith(
+      expect(console.warn).toHaveBeenCalledWith(
         'Error in SEO input: `handle` should start with `@`',
       );
     });
