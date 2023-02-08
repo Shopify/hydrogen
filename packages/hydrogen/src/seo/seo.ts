@@ -7,6 +7,7 @@ import {
 } from '@remix-run/react';
 import {generateSeoTags, type Seo as SeoType} from './generate-seo-tags';
 import {logSeoTags} from './log-seo-tags';
+import {type Thing} from 'schema-dts';
 
 import type {
   LoaderFunction,
@@ -18,6 +19,7 @@ const SeoLogger = React.lazy(() => import('./log-seo-tags'));
 
 export interface SeoHandleFunction<
   Loader extends LoaderFunction | unknown = unknown,
+  StructuredDataSchema extends Thing = Thing,
 > {
   (args: {
     data: Loader extends LoaderFunction ? SerializeFrom<Loader> : AppData;
@@ -27,7 +29,7 @@ export interface SeoHandleFunction<
     search: Location['search'];
     hash: Location['hash'];
     key: string;
-  }): Partial<SeoType>;
+  }): Partial<SeoType<StructuredDataSchema>>;
 }
 
 interface SeoProps {
