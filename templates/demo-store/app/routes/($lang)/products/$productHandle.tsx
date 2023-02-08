@@ -40,6 +40,7 @@ import type {
   Shop,
   ProductConnection,
   MediaConnection,
+  MediaImage,
 } from '@shopify/hydrogen/storefront-api-types';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
@@ -48,7 +49,7 @@ import type {Product} from 'schema-dts';
 const seo: SeoHandleFunction<typeof loader> = ({data}) => {
   const media = flattenConnection<MediaConnection>(data.product.media).find(
     (media) => media.mediaContentType === 'IMAGE',
-  );
+  ) as MediaImage | undefined;
 
   return {
     title: data?.product?.seo?.title ?? data?.product?.title,
