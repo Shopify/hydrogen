@@ -15,7 +15,8 @@
     "copy-hydrogen-react": "cp ../../node_modules/@shopify/hydrogen-react/storefront.schema.json dist && cp ../../node_modules/@shopify/hydrogen-react/dist/types/storefront-api-types.d.ts dist",
     "dev": "tsup --watch --config ../../tsup.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "exports": {
     ".": {
