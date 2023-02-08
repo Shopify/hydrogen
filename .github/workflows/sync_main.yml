@@ -3,7 +3,7 @@ name: Sync to main
 on:
   push:
     branches:
-      - 'v0.x-2022-10'
+      - '2023-01'
   workflow_dispatch:
 
 jobs:
