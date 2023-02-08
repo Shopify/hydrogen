@@ -1,7 +1,7 @@
 name: 🐛 Bug Report
 description: Something is wrong with Hydrogen.
 labels:
-  - "bug:unverified"
+  - 'bug:unverified'
 body:
   - type: markdown
     attributes:
@@ -11,7 +11,7 @@ body:
         ## The best bug report is a failing test!
 
         The fastest way to get a bug fixed is to provide an example repository that reproduces the problem.
-        
+
   - type: input
     attributes:
       label: What is the location of your example repository?
@@ -27,12 +27,6 @@ body:
       label: What version of Remix are you using?
     validations:
       required: false
-  - type: checkboxes
-    attributes:
-      label: Are all your Hydrogen dependencies & dev-dependencies using the same version?
-      options:
-        - label: "Yes"
-          required: true
   - type: textarea
     attributes:
       label: Steps to Reproduce
