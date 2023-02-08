@@ -7,6 +7,7 @@ import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {checkLockfileStatus} from '../../utils/check-lockfile.js';
 import {findMissingRoutes} from '../../utils/missing-routes.js';
+import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -91,7 +92,12 @@ export async function runBuild({
 
     if (sizeMB >= 1) {
       output.warn(
-        '🚨 Worker bundle exceeds 1 MB! This can delay your worker response.\n',
+        `🚨 Worker bundle exceeds 1 MB! This can delay your worker response.${
+          // @ts-ignore
+          remixConfig.serverMinify
+            ? ''
+            : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
+        }\n`,
       );
     }
   }
@@ -99,8 +105,15 @@ export async function runBuild({
   if (!disableRouteWarning) {
     const missingRoutes = findMissingRoutes(remixConfig);
     if (missingRoutes.length) {
+      const packageManager = await getPackageManager(root);
+      const exec = packageManager === 'npm' ? 'npx' : packageManager;
+
       output.warn(
-        '🚨 Standard Shopify routes missing; run `shopify hydrogen check routes` for more details.',
+        `Heads up: Shopify stores have a number of standard routes that aren’t set up yet.\n` +
+          `Some functionality and backlinks might not work as expected until these are created or redirects are set up.\n` +
+          `This build is missing ${missingRoutes.length} route${
+            missingRoutes.length > 1 ? 's' : ''
+          }. For more details, run \`${exec} shopify hydrogen check routes\`.\n`,
       );
     }
   }

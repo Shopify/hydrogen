@@ -1,5 +1,4 @@
-import path from 'path';
-import {output} from '@shopify/cli-kit';
+import {output, path, file} from '@shopify/cli-kit';
 import colors from '@shopify/cli-kit/node/colors';
 
 type MiniOxygenOptions = {
@@ -21,6 +20,8 @@ export async function startMiniOxygen({
   const miniOxygenPreview =
     miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
 
+  const dotenvPath = path.resolve(root, '.env');
+
   const {port: actualPort} = await miniOxygenPreview({
     workerFile: buildPathWorkerFile,
     assetsDir: buildPathClient,
@@ -30,7 +31,7 @@ export async function startMiniOxygen({
     autoReload: watch,
     modules: true,
     env: process.env,
-    envPath: path.resolve(root, '.env'),
+    envPath: (await file.exists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
     buildWatchPaths: watch
       ? [path.resolve(root, buildPathWorkerFile)]
