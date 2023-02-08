@@ -31,8 +31,8 @@
     "@types/react-dom": "^18.0.6",
     "eslint": "^8.20.0",
     "eslint-plugin-hydrogen": "0.12.2",
-    "typescript": "^4.8.3",
-    "prettier": "^2.7.1"
+    "typescript": "^4.9.5",
+    "prettier": "^2.8.4"
   },
   "engines": {
     "node": ">=16.13"
