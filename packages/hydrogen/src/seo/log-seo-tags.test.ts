@@ -1,6 +1,6 @@
 import {expect, describe, it, vi} from 'vitest';
 import {logSeoTags} from './log-seo-tags';
-import {HeadTag} from './generate-seo-tags';
+import {CustomHeadTagObject} from './generate-seo-tags';
 
 describe('logSeoTags', () => {
   const consoleMock = {
@@ -19,7 +19,7 @@ describe('logSeoTags', () => {
 
   it('outputs the given meta tag objects in console logs', () => {
     // Given
-    const input: HeadTag[] = [
+    const input: CustomHeadTagObject[] = [
       {
         key: 'meta-og:title',
         tag: 'meta',
@@ -61,7 +61,7 @@ describe('logSeoTags', () => {
     };
 
     // Given
-    const input: HeadTag[] = [
+    const input: CustomHeadTagObject[] = [
       {
         key: 'ld-json',
         tag: 'script',
