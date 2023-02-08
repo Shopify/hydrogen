@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "4.0.0-alpha.3",
+  "version": "4.0.0",
   "type": "module",
   "scripts": {
     "build": "tsup --clean --config ./tsup.config.ts",
@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@shopify/cli-hydrogen": "^4.0.0-alpha.12"
+    "@shopify/cli-hydrogen": "^4.0.0"
   },
   "bin": "dist/create-app.js",
   "files": [
