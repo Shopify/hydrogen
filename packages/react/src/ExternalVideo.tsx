@@ -20,7 +20,7 @@ export type ExternalVideoProps = Omit<JSX.IntrinsicElements['iframe'], 'src'> &
  * The `ExternalVideo` component renders an embedded video for the Storefront
  * API's [ExternalVideo object](https://shopify.dev/api/storefront/reference/products/externalvideo).
  */
-export function ExternalVideo(props: ExternalVideoProps) {
+export function ExternalVideo(props: ExternalVideoProps): JSX.Element {
   const {
     data,
     options,
@@ -40,7 +40,7 @@ export function ExternalVideo(props: ExternalVideoProps) {
 
   if (options) {
     const urlObject = new URL(data.embedUrl);
-    for (const key of Object.keys(options)) {
+    for (const key of Object.keys(options) as (keyof typeof options)[]) {
       // @ts-expect-error https://github.com/microsoft/TypeScript/issues/32951
       urlObject.searchParams.set(key, options[key]);
     }

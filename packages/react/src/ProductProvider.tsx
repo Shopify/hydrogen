@@ -50,7 +50,7 @@ export function ProductProvider({
   children,
   data: product,
   initialVariantId: explicitVariantId,
-}: ProductProviderProps) {
+}: ProductProviderProps): JSX.Element {
   // The flattened variants
   const variants = useMemo(
     () => flattenConnection(product.variants ?? {}),
@@ -207,7 +207,7 @@ export function ProductProvider({
 /**
  * Provides access to the context value provided by `<ProductProvider />`. Must be a descendent of `<ProductProvider />`.
  */
-export function useProduct() {
+export function useProduct(): ProductHookValue {
   const context = useContext(ProductOptionsContext);
 
   if (!context) {
@@ -268,7 +268,10 @@ function getVariantBasedOnIdProp(
   variants: Array<
     PartialDeep<ProductVariantType, {recurseIntoArrays: true}> | undefined
   >
-) {
+):
+  | PartialDeep<ProductVariantType, {recurseIntoArrays: true}>
+  | undefined
+  | null {
   // get the initial variant based on the logic outlined in the comments for 'initialVariantId' above
   // * 1. If `initialVariantId` is provided, then it's used even if it's out of stock.
   if (explicitVariantId) {

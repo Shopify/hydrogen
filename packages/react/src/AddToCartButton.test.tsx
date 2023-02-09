@@ -173,7 +173,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>
         );
 
-        user.click(screen.getByRole('button'));
+        await user.click(screen.getByRole('button'));
 
         await waitFor(() => {
           expect(screen.getByRole('button')).toBeDisabled();
@@ -194,7 +194,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>
         );
 
-        user.click(screen.getByRole('button'));
+        await user.click(screen.getByRole('button'));
 
         await waitFor(() => {
           expect(screen.getByRole('alert')).toHaveTextContent(

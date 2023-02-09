@@ -3,6 +3,10 @@ import type {Story} from '@ladle/react';
 import {CartProvider, storageAvailable, useCart} from './CartProvider.js';
 import {type ShopifyProviderProps, ShopifyProvider} from './ShopifyProvider.js';
 import {CART_ID_STORAGE_KEY} from './cart-constants.js';
+import {
+  AttributeInput,
+  CartBuyerIdentityInput,
+} from './storefront-api-types.js';
 
 const merchandiseId = 'gid://shopify/ProductVariant/41007290482744';
 
@@ -165,7 +169,11 @@ function CartComponent() {
           />
           <button
             onClick={() => {
-              buyerIdentityUpdate(JSON.parse(`${newBuyerIdentity}`));
+              buyerIdentityUpdate(
+                JSON.parse(
+                  `${newBuyerIdentity}`
+                ) as unknown as CartBuyerIdentityInput
+              );
             }}
           >
             update Buyer Identity
@@ -181,7 +189,11 @@ function CartComponent() {
           />
           <button
             onClick={() => {
-              cartAttributesUpdate(JSON.parse(`${newCartAttributes}`));
+              cartAttributesUpdate(
+                JSON.parse(
+                  `${newCartAttributes}`
+                ) as unknown as AttributeInput[]
+              );
             }}
           >
             update cart attributes
@@ -197,7 +209,9 @@ function CartComponent() {
           />
           <button
             onClick={() => {
-              discountCodesUpdate(JSON.parse(`${newDiscount}`));
+              discountCodesUpdate(
+                JSON.parse(`${newDiscount}`) as unknown as string[]
+              );
             }}
           >
             update discounts

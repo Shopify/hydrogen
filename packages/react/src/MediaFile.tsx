@@ -39,7 +39,7 @@ export function MediaFile({
   data,
   mediaOptions,
   ...passthroughProps
-}: MediaFileProps) {
+}: MediaFileProps): JSX.Element | null {
   switch (data.__typename) {
     case 'MediaImage': {
       if (!data.image) {

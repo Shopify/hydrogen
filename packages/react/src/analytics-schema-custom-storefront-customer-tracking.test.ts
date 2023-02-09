@@ -137,11 +137,13 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           getExpectedPayload(pageViewPayload, {
             event_name: 'product_page_rendered',
             total_value: pageViewPayload.totalValue,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             products: expect.anything(),
             canonical_url: pageViewPayload.url,
           })
         );
-        const productEventPayload = events[1].payload as ShopifyMonorailPayload;
+        const productEventPayload = events[1].payload;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const product = JSON.parse(
           (productEventPayload.products && productEventPayload.products[0]) ||
             '{}'
@@ -182,11 +184,13 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           getExpectedPayload(pageViewPayload, {
             event_name: 'product_page_rendered',
             total_value: pageViewPayload.totalValue,
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             products: expect.anything(),
             canonical_url: pageViewPayload.url,
           })
         );
-        const productEventPayload = events[1].payload as ShopifyMonorailPayload;
+        const productEventPayload = events[1].payload;
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const product = JSON.parse(
           (productEventPayload.products && productEventPayload.products[0]) ||
             '{}'
@@ -250,10 +254,12 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           event_name: 'product_added_to_cart',
           cart_token: 'abc123',
           total_value: addToCartPayload.totalValue,
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           products: expect.anything(),
         })
       );
-      const productEventPayload = events[0].payload as ShopifyMonorailPayload;
+      const productEventPayload = events[0].payload;
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const product = JSON.parse(
         (productEventPayload.products && productEventPayload.products[0]) ||
           '{}'
@@ -279,6 +285,7 @@ function getExpectedPayload(
       ...extraPayload,
     },
     metadata: {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       event_created_at_ms: expect.any(Number),
     },
   };
@@ -292,7 +299,9 @@ function getForwardedPayload(initPayload: ShopifyAnalyticsPayload) {
     is_persistent_cookie: true,
     user_agent: initPayload.userAgent,
     unique_token: initPayload.uniqueToken,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     event_id: expect.any(String),
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     event_time: expect.any(Number),
     event_source_url: initPayload.url,
     referrer: initPayload.referrer,

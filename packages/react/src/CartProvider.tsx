@@ -123,7 +123,7 @@ export function CartProvider({
   cartFragment = defaultCartFragment,
   customerAccessToken,
   countryCode = 'US',
-}: CartProviderProps) {
+}: CartProviderProps): JSX.Element {
   if (countryCode) countryCode = countryCode.toUpperCase() as CountryCode;
   const [prevCountryCode, setPrevCountryCode] = useState(countryCode);
   const [prevCustomerAccessToken, setPrevCustomerAccessToken] =
@@ -361,7 +361,7 @@ export function CartProvider({
       error: cartDisplayState?.context?.errors,
       totalQuantity: cartDisplayState?.context?.cart?.totalQuantity ?? 0,
       cartCreate,
-      linesAdd(lines: CartLineInput[]) {
+      linesAdd(lines: CartLineInput[]): void {
         if (cartDisplayState?.context?.cart?.id) {
           onCartReadySend({
             type: 'CARTLINE_ADD',
@@ -371,7 +371,7 @@ export function CartProvider({
           cartCreate({lines});
         }
       },
-      linesRemove(lines: string[]) {
+      linesRemove(lines: string[]): void {
         onCartReadySend({
           type: 'CARTLINE_REMOVE',
           payload: {
@@ -379,7 +379,7 @@ export function CartProvider({
           },
         });
       },
-      linesUpdate(lines: CartLineUpdateInput[]) {
+      linesUpdate(lines: CartLineUpdateInput[]): void {
         onCartReadySend({
           type: 'CARTLINE_UPDATE',
           payload: {
@@ -387,7 +387,7 @@ export function CartProvider({
           },
         });
       },
-      noteUpdate(note: MutationCartNoteUpdateArgs['note']) {
+      noteUpdate(note: MutationCartNoteUpdateArgs['note']): void {
         onCartReadySend({
           type: 'NOTE_UPDATE',
           payload: {
@@ -395,7 +395,7 @@ export function CartProvider({
           },
         });
       },
-      buyerIdentityUpdate(buyerIdentity: CartBuyerIdentityInput) {
+      buyerIdentityUpdate(buyerIdentity: CartBuyerIdentityInput): void {
         onCartReadySend({
           type: 'BUYER_IDENTITY_UPDATE',
           payload: {
@@ -403,7 +403,7 @@ export function CartProvider({
           },
         });
       },
-      cartAttributesUpdate(attributes: AttributeInput[]) {
+      cartAttributesUpdate(attributes: AttributeInput[]): void {
         onCartReadySend({
           type: 'CART_ATTRIBUTES_UPDATE',
           payload: {
@@ -411,7 +411,7 @@ export function CartProvider({
           },
         });
       },
-      discountCodesUpdate(discountCodes: string[]) {
+      discountCodesUpdate(discountCodes: string[]): void {
         onCartReadySend({
           type: 'DISCOUNT_CODES_UPDATE',
           payload: {
@@ -467,7 +467,7 @@ function transposeStatus(
  * Delays a state update until hydration finishes. Useful for preventing suspense boundaries errors when updating a context
  * @remarks this uses startTransition and waits for it to finish.
  */
-function useDelayedStateUntilHydration<T>(state: T) {
+function useDelayedStateUntilHydration<T>(state: T): T {
   const [isPending, startTransition] = useTransition();
   const [delayedState, setDelayedState] = useState(state);
 
@@ -497,7 +497,9 @@ function useDelayedStateUntilHydration<T>(state: T) {
 /** Check for storage availability funciton obtained from
  * https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
  */
-export function storageAvailable(type: 'localStorage' | 'sessionStorage') {
+export function storageAvailable(
+  type: 'localStorage' | 'sessionStorage'
+): boolean {
   let storage;
   try {
     storage = window[type];
@@ -506,7 +508,7 @@ export function storageAvailable(type: 'localStorage' | 'sessionStorage') {
     storage.removeItem(x);
     return true;
   } catch (e) {
-    return (
+    return !!(
       e instanceof DOMException &&
       // everything except Firefox
       (e.code === 22 ||
@@ -527,8 +529,8 @@ export function storageAvailable(type: 'localStorage' | 'sessionStorage') {
 function countryCodeNotUpdated(
   context: CartMachineContext,
   event: BuyerIdentityUpdateEvent
-) {
-  return (
+): boolean {
+  return !!(
     event.payload.buyerIdentity.countryCode &&
     context.cart?.buyerIdentity?.countryCode !==
       event.payload.buyerIdentity.countryCode

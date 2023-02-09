@@ -16,7 +16,7 @@ type CartCostProps = Omit<React.ComponentProps<typeof Money>, 'data'> &
  * If no `amountType` prop is specified, then it defaults to `totalAmount`.
  * Depends on `useCart()` and must be a child of `<CartProvider/>`
  */
-export function CartCost(props: CartCostProps) {
+export function CartCost(props: CartCostProps): JSX.Element | null {
   const {cost} = useCart();
   const {amountType = 'total', children, ...passthroughProps} = props;
   let amount;

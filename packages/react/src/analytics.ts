@@ -89,7 +89,9 @@ function sendToShopify(
       })
       .then((data) => {
         if (data) {
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           const jsonResponse = JSON.parse(data);
+          // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
           jsonResponse.result.forEach((eventResponse: MonorailResponse) => {
             if (eventResponse.status !== 200) {
               console.error(ERROR_MESSAGE, '\n\n', eventResponse.message);

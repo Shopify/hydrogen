@@ -27,7 +27,7 @@ type CartLinePriceProps = Omit<React.ComponentProps<typeof Money>, 'data'> &
  *
  * The `CartLinePrice` component renders a `Money` component for the cart line merchandise's price or compare at price.
  */
-export function CartLinePrice(props: CartLinePriceProps) {
+export function CartLinePrice(props: CartLinePriceProps): JSX.Element | null {
   if (__HYDROGEN_DEV__) {
     console.warn(`<CartLinePrice/> is deprecated; use <Money/> instead.`);
   }

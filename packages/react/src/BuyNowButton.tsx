@@ -27,7 +27,7 @@ type BuyNowButtonProps<AsType extends React.ElementType = 'button'> =
  */
 export function BuyNowButton<AsType extends React.ElementType = 'button'>(
   props: BuyNowButtonProps<AsType>
-) {
+): JSX.Element {
   const {cartCreate, checkoutUrl} = useCart();
   const [loading, setLoading] = useState<boolean>(false);
 

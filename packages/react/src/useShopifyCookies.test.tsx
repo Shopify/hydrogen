@@ -67,7 +67,9 @@ describe(`useShopifyCookies`, () => {
     cookies = getShopifyCookies(document.cookie);
 
     expect(cookies).toEqual({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _shopify_s: expect.any(String),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _shopify_y: expect.any(String),
     });
     expect(cookies['_shopify_s']).not.toBe('');
@@ -106,6 +108,7 @@ describe(`useShopifyCookies`, () => {
 
     expect(cookies).toEqual({
       _shopify_s: 'abc123',
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _shopify_y: expect.any(String),
     });
     expect(cookies['_shopify_y']).not.toBe('');
@@ -119,6 +122,7 @@ describe(`useShopifyCookies`, () => {
     cookies = getShopifyCookies(document.cookie);
 
     expect(cookies).toEqual({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _shopify_s: expect.any(String),
       _shopify_y: 'def456',
     });
@@ -134,7 +138,9 @@ describe(`useShopifyCookies`, () => {
     const cookies = getShopifyCookies(document.cookie);
 
     expect(cookies).toEqual({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _shopify_s: expect.any(String),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _shopify_y: expect.any(String),
     });
     expect(cookies['_shopify_s']).not.toBe('');
@@ -156,7 +162,9 @@ describe(`useShopifyCookies`, () => {
     const cookies = getShopifyCookies(document.cookie);
 
     expect(cookies).toEqual({
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _shopify_s: expect.any(String),
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       _shopify_y: expect.any(String),
     });
     expect(cookies['_shopify_s']).not.toBe('');

@@ -14,6 +14,7 @@ import {
 import type {StorefrontApiResponseOkPartial} from './storefront-api-response.types.js';
 import {getShopifyCookies} from './cookies-utils.js';
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useCartFetch() {
   const {storefrontId, getPublicTokenHeaders, getStorefrontApiUrl} = useShop();
 
@@ -44,11 +45,15 @@ export function useCartFetch() {
           variables,
         }),
       })
-        .then((res) => res.json())
+        .then(
+          (res) =>
+            res.json() as StorefrontApiResponseOkPartial<ReturnDataGeneric>
+        )
         .catch((error) => {
           return {
             data: undefined,
-            errors: error.toString(),
+            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
+            errors: error?.toString(),
           };
         });
     },
@@ -56,6 +61,7 @@ export function useCartFetch() {
   );
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useInstantCheckout() {
   const [cart, updateCart] = useState<Cart | undefined>();
   const [checkoutUrl, updateCheckoutUrl] = useState<Cart['checkoutUrl']>();

@@ -27,7 +27,7 @@ describe('<CartCost />', () => {
     });
 
     expect(
-      screen.getByText(`CA$${CART_WITH_LINES.cost?.totalAmount?.amount}`)
+      screen.getByText(`CA$${CART_WITH_LINES.cost?.totalAmount?.amount ?? ''}`)
     ).toBeInTheDocument();
   });
 
@@ -45,7 +45,7 @@ describe('<CartCost />', () => {
     });
 
     expect(
-      screen.getByText(`CA$${CART_WITH_LINES.cost?.totalAmount?.amount}`)
+      screen.getByText(`CA$${CART_WITH_LINES.cost?.totalAmount?.amount ?? ''}`)
     ).toBeInTheDocument();
   });
 
@@ -55,7 +55,9 @@ describe('<CartCost />', () => {
     });
 
     expect(
-      screen.getByText(`CA$${CART_WITH_LINES.cost?.subtotalAmount?.amount}`)
+      screen.getByText(
+        `CA$${CART_WITH_LINES.cost?.subtotalAmount?.amount ?? ''}`
+      )
     ).toBeInTheDocument();
   });
 
@@ -65,7 +67,9 @@ describe('<CartCost />', () => {
     });
 
     expect(
-      screen.getByText(`CA$${CART_WITH_LINES.cost?.totalTaxAmount?.amount}`)
+      screen.getByText(
+        `CA$${CART_WITH_LINES.cost?.totalTaxAmount?.amount ?? ''}`
+      )
     ).toBeInTheDocument();
   });
 
@@ -75,7 +79,9 @@ describe('<CartCost />', () => {
     });
 
     expect(
-      screen.getByText(`CA$${CART_WITH_LINES.cost?.totalDutyAmount?.amount}`)
+      screen.getByText(
+        `CA$${CART_WITH_LINES.cost?.totalDutyAmount?.amount ?? ''}`
+      )
     ).toBeInTheDocument();
   });
 });

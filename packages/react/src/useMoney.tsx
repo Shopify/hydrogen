@@ -101,7 +101,7 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
     maximumFractionDigits: 0,
   });
 
-  const isPartCurrency = (part: Intl.NumberFormatPart) =>
+  const isPartCurrency = (part: Intl.NumberFormatPart): boolean =>
     part.type === 'currency';
 
   // By wrapping these properties in functions, we only
@@ -165,13 +165,17 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
   return useMemo(
     () =>
       new Proxy(lazyFormatters as unknown as UseMoneyValue, {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         get: (target, key) => Reflect.get(target, key)?.call(null),
       }),
     [lazyFormatters]
   );
 }
 
-function useLazyFormatter(locale: string, options?: Intl.NumberFormatOptions) {
+function useLazyFormatter(
+  locale: string,
+  options?: Intl.NumberFormatOptions
+): () => Intl.NumberFormat {
   return useMemo(() => {
     let memoized: Intl.NumberFormat;
     return () => (memoized ??= new Intl.NumberFormat(locale, options));

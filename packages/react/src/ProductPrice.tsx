@@ -25,7 +25,7 @@ export interface ProductPriceProps {
 export function ProductPrice<ComponentGeneric extends React.ElementType>(
   props: ProductPriceProps &
     Omit<MoneyProps<ComponentGeneric>, 'data' | 'measurement'>
-) {
+): JSX.Element | null {
   const {
     priceType = 'regular',
     variantId,

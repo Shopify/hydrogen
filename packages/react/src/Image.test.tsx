@@ -21,8 +21,8 @@ describe('<Image />', () => {
     expect(image).toHaveAttribute('src', src);
     expect(image).toHaveAttribute('id', id);
     expect(image).toHaveAttribute('alt', altText);
-    expect(image).toHaveAttribute('width', `${width}`);
-    expect(image).toHaveAttribute('height', `${height}`);
+    expect(image).toHaveAttribute('width', `${width ?? ''}`);
+    expect(image).toHaveAttribute('height', `${height ?? ''}`);
     expect(image).toHaveAttribute('loading', 'lazy');
   });
 

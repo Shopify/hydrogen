@@ -128,6 +128,7 @@ const UPDATING_CART_EVENTS: StateMachine.Machine<
   },
 };
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function createCartMachine(
   initialCart?: PartialDeep<CartType, {recurseIntoArrays: true}>
 ) {
@@ -174,6 +175,7 @@ function createCartMachine(
   });
 }
 
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useCartAPIStateMachine({
   numCartLines,
   onCartActionEntry,
@@ -227,14 +229,16 @@ export function useCartAPIStateMachine({
 
   const [state, send, service] = useMachine(cartMachine, {
     actions: {
-      cartFetchAction: async (_, event): Promise<void> => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      cartFetchAction: async (_, event) => {
         if (event.type !== 'CART_FETCH') return;
 
         const {data, errors} = await cartFetch(event?.payload?.cartId);
         const resultEvent = eventFromFetchResult(event, data?.cart, errors);
         send(resultEvent);
       },
-      cartCreateAction: async (_, event): Promise<void> => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      cartCreateAction: async (_, event) => {
         if (event.type !== 'CART_CREATE') return;
 
         const {data, errors} = await cartCreate(event?.payload);
@@ -245,7 +249,8 @@ export function useCartAPIStateMachine({
         );
         send(resultEvent);
       },
-      cartLineAddAction: async (context, event): Promise<void> => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      cartLineAddAction: async (context, event) => {
         if (event.type !== 'CARTLINE_ADD' || !context?.cart?.id) return;
 
         const {data, errors} = await cartLineAdd(
@@ -261,7 +266,8 @@ export function useCartAPIStateMachine({
 
         send(resultEvent);
       },
-      cartLineUpdateAction: async (context, event): Promise<void> => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      cartLineUpdateAction: async (context, event) => {
         if (event.type !== 'CARTLINE_UPDATE' || !context?.cart?.id) return;
         const {data, errors} = await cartLineUpdate(
           context.cart.id,
@@ -276,7 +282,8 @@ export function useCartAPIStateMachine({
 
         send(resultEvent);
       },
-      cartLineRemoveAction: async (context, event): Promise<void> => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      cartLineRemoveAction: async (context, event) => {
         if (event.type !== 'CARTLINE_REMOVE' || !context?.cart?.id) return;
         const {data, errors} = await cartLineRemove(
           context.cart.id,
@@ -291,7 +298,8 @@ export function useCartAPIStateMachine({
 
         send(resultEvent);
       },
-      noteUpdateAction: async (context, event): Promise<void> => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      noteUpdateAction: async (context, event) => {
         if (event.type !== 'NOTE_UPDATE' || !context?.cart?.id) return;
         const {data, errors} = await noteUpdate(
           context.cart.id,
@@ -306,7 +314,8 @@ export function useCartAPIStateMachine({
 
         send(resultEvent);
       },
-      buyerIdentityUpdateAction: async (context, event): Promise<void> => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      buyerIdentityUpdateAction: async (context, event) => {
         if (event.type !== 'BUYER_IDENTITY_UPDATE' || !context?.cart?.id)
           return;
         const {data, errors} = await buyerIdentityUpdate(
@@ -322,7 +331,8 @@ export function useCartAPIStateMachine({
 
         send(resultEvent);
       },
-      cartAttributesUpdateAction: async (context, event): Promise<void> => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      cartAttributesUpdateAction: async (context, event) => {
         if (event.type !== 'CART_ATTRIBUTES_UPDATE' || !context?.cart?.id)
           return;
         const {data, errors} = await cartAttributesUpdate(
@@ -338,7 +348,8 @@ export function useCartAPIStateMachine({
 
         send(resultEvent);
       },
-      discountCodesUpdateAction: async (context, event): Promise<void> => {
+      // eslint-disable-next-line @typescript-eslint/no-misused-promises
+      discountCodesUpdateAction: async (context, event) => {
         if (event.type !== 'DISCOUNT_CODES_UPDATE' || !context?.cart?.id)
           return;
         const {data, errors} = await discountCodesUpdate(
@@ -354,7 +365,7 @@ export function useCartAPIStateMachine({
         send(resultEvent);
       },
       ...(onCartActionEntry && {
-        onCartActionEntry: (context, event) => {
+        onCartActionEntry: (context, event): void => {
           if (isCartActionEvent(event)) {
             onCartActionEntry(context, event);
           }
@@ -366,7 +377,7 @@ export function useCartAPIStateMachine({
         }),
       }),
       ...(onCartActionComplete && {
-        onCartActionComplete: (context, event) => {
+        onCartActionComplete: (context, event): void => {
           if (isCartFetchResultEvent(event)) {
             onCartActionComplete(context, event);
           }

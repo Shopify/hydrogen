@@ -118,7 +118,7 @@ describe('<BuyNowButton/>', () => {
 
   describe('when a checkout URL is available', () => {
     const {location} = window;
-    const mockSetHref = vi.fn((href) => href);
+    const mockSetHref = vi.fn((href: string) => href);
 
     beforeEach(() => {
       delete (window as Partial<Window>).location;

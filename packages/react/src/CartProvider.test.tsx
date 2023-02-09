@@ -49,8 +49,8 @@ describe('<CartProvider />', () => {
   });
 
   describe('`data` prop', () => {
-    it('uses the `data` prop if provided to initialize the cart. Taking precedence over localStorage', async () => {
-      const cartFetchSpy = vi.fn(async () => ({
+    it('uses the `data` prop if provided to initialize the cart. Taking precedence over localStorage', () => {
+      const cartFetchSpy = vi.fn(() => ({
         data: {cart: cartMock},
       }));
       vi.spyOn(window.localStorage, 'getItem').mockReturnValue('cart-id');
@@ -75,7 +75,7 @@ describe('<CartProvider />', () => {
 
   describe('local storage', () => {
     it('fetches the cart with the cart id in local storage when initializing the app if no `data` prop was given', async () => {
-      const cartFetchSpy = vi.fn(async () => ({
+      const cartFetchSpy = vi.fn(() => ({
         data: {cart: cartMock},
       }));
       vi.spyOn(window.localStorage, 'getItem').mockReturnValue('cart-id');
@@ -100,7 +100,7 @@ describe('<CartProvider />', () => {
     });
 
     it('does not fetch cart if cart id is not in local storage', async () => {
-      const cartFetchSpy = vi.fn(async () => ({
+      const cartFetchSpy = vi.fn(() => ({
         data: {cart: cartMock},
       }));
       vi.spyOn(window.localStorage, 'getItem').mockReturnValue('');
@@ -120,6 +120,7 @@ describe('<CartProvider />', () => {
       expect(cartFetchSpy).not.toHaveBeenCalled();
       expect(result.current).toMatchObject({
         status: 'uninitialized',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         lines: expect.arrayContaining([]),
       });
     });
@@ -134,7 +135,7 @@ describe('<CartProvider />', () => {
     });
 
     it('deletes cart id on cart completion', async () => {
-      const cartFetchSpy = vi.fn(async () => ({
+      const cartFetchSpy = vi.fn(() => ({
         data: {cart: null},
       }));
       vi.spyOn(window.localStorage, 'getItem').mockReturnValue('cart-id');
@@ -163,7 +164,7 @@ describe('<CartProvider />', () => {
 
   describe('uninitialized cart after local storage init', () => {
     it('creates a cart when creating a cart', async () => {
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartMock}},
       }));
       mockUseCartActions.mockReturnValue({
@@ -176,7 +177,7 @@ describe('<CartProvider />', () => {
 
       expect(result.current.status).toBe('uninitialized');
 
-      act(() => {
+      void act(() => {
         result.current.cartCreate({});
       });
 
@@ -193,7 +194,7 @@ describe('<CartProvider />', () => {
     });
 
     it('runs the onCartCreate and onCartCreateComplete callbacks when creating a cart', async () => {
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartMock}},
       }));
 
@@ -211,7 +212,7 @@ describe('<CartProvider />', () => {
         }),
       });
 
-      act(() => {
+      void act(() => {
         result.current.cartCreate({});
       });
 
@@ -224,7 +225,7 @@ describe('<CartProvider />', () => {
     });
 
     it('creates a cart when adding a cart line', async () => {
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartMock}},
       }));
       mockUseCartActions.mockReturnValue({
@@ -237,7 +238,7 @@ describe('<CartProvider />', () => {
 
       expect(result.current.status).toBe('uninitialized');
 
-      act(() => {
+      void void act(() => {
         result.current.linesAdd([
           {
             merchandiseId: '123',
@@ -257,7 +258,7 @@ describe('<CartProvider />', () => {
 
     it('shows inializationError status when an error happens', async () => {
       const errorMock = new Error('Error creating cart');
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         errors: errorMock,
       }));
       mockUseCartActions.mockReturnValue({
@@ -270,7 +271,7 @@ describe('<CartProvider />', () => {
 
       expect(result.current.status).toBe('uninitialized');
 
-      act(() => {
+      void act(() => {
         result.current.linesAdd([
           {
             merchandiseId: '123',
@@ -293,11 +294,11 @@ describe('<CartProvider />', () => {
   describe('initializationError', () => {
     it('fixes on resolve', async () => {
       const errorMock = new Error('Error creating cart');
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         errors: errorMock,
       }));
 
-      const cartCreateResolveSpy = vi.fn(async () => ({
+      const cartCreateResolveSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartMock}},
       }));
 
@@ -310,7 +311,7 @@ describe('<CartProvider />', () => {
       });
 
       // First create cart should fail with error
-      act(() => {
+      void act(() => {
         result.current.linesAdd([
           {
             merchandiseId: '123',
@@ -329,11 +330,12 @@ describe('<CartProvider />', () => {
 
       expect(result.current).toMatchObject({
         status: 'uninitialized',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         error: expect.arrayContaining([]),
       });
 
       // Create cart should work now
-      act(() => {
+      void act(() => {
         result.current.linesAdd([
           {
             merchandiseId: '123',
@@ -356,7 +358,7 @@ describe('<CartProvider />', () => {
   describe('idle', () => {
     describe('adds cart line', () => {
       it('resolves', async () => {
-        const cartLineAddSpy = vi.fn(async () => ({
+        const cartLineAddSpy = vi.fn(() => ({
           data: {cartLinesAdd: {cart: cartMock}},
         }));
 
@@ -364,7 +366,7 @@ describe('<CartProvider />', () => {
           cartLineAdd: cartLineAddSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.linesAdd([
             {
               merchandiseId: '123',
@@ -385,7 +387,7 @@ describe('<CartProvider />', () => {
       });
 
       it('deletes local storage on complete', async () => {
-        const cartLineAddSpy = vi.fn(async () => ({
+        const cartLineAddSpy = vi.fn(() => ({
           data: {cartLinesAdd: {cart: null}},
         }));
 
@@ -395,7 +397,7 @@ describe('<CartProvider />', () => {
           cartLineAdd: cartLineAddSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.linesAdd([
             {
               merchandiseId: '123',
@@ -410,7 +412,7 @@ describe('<CartProvider />', () => {
       });
 
       it('runs onLineAdd and onLineAddComplete callbacks', async () => {
-        const cartLineAddSpy = vi.fn(async () => ({
+        const cartLineAddSpy = vi.fn(() => ({
           data: {cartLinesAdd: {cart: cartMock}},
         }));
 
@@ -427,7 +429,7 @@ describe('<CartProvider />', () => {
           }
         );
 
-        act(() => {
+        void act(() => {
           result.current.linesAdd([
             {
               merchandiseId: '123',
@@ -446,7 +448,7 @@ describe('<CartProvider />', () => {
 
     describe('updates cartline', () => {
       it('resolves', async () => {
-        const cartLineUpdateSpy = vi.fn(async () => ({
+        const cartLineUpdateSpy = vi.fn(() => ({
           data: {cartLinesUpdate: {cart: cartMock}},
         }));
 
@@ -454,7 +456,7 @@ describe('<CartProvider />', () => {
           cartLineUpdate: cartLineUpdateSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.linesUpdate([
             {
               id: '123',
@@ -476,7 +478,7 @@ describe('<CartProvider />', () => {
       });
 
       it('deletes local storage on complete', async () => {
-        const cartLineUpdateSpy = vi.fn(async () => ({
+        const cartLineUpdateSpy = vi.fn(() => ({
           data: {cartLinesUpdate: {cart: null}},
         }));
 
@@ -486,7 +488,7 @@ describe('<CartProvider />', () => {
           cartLineUpdate: cartLineUpdateSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.linesUpdate([
             {
               id: '123',
@@ -502,7 +504,7 @@ describe('<CartProvider />', () => {
       });
 
       it('runs onLineUpdate and onLineUpdateComplete callbacks', async () => {
-        const cartLineUpdateSpy = vi.fn(async () => ({
+        const cartLineUpdateSpy = vi.fn(() => ({
           data: {cartLinesUpdate: {cart: cartMock}},
         }));
 
@@ -519,7 +521,7 @@ describe('<CartProvider />', () => {
           }
         );
 
-        act(() => {
+        void act(() => {
           result.current.linesUpdate([
             {
               id: '123',
@@ -540,7 +542,7 @@ describe('<CartProvider />', () => {
 
     describe('removes cartline', () => {
       it('resolves', async () => {
-        const cartLineRemoveSpy = vi.fn(async () => ({
+        const cartLineRemoveSpy = vi.fn(() => ({
           data: {cartLinesRemove: {cart: cartMock}},
         }));
 
@@ -548,7 +550,7 @@ describe('<CartProvider />', () => {
           cartLineRemove: cartLineRemoveSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.linesRemove(['123']);
         });
 
@@ -565,7 +567,7 @@ describe('<CartProvider />', () => {
       });
 
       it('deletes local storage on complete', async () => {
-        const cartLineRemoveSpy = vi.fn(async () => ({
+        const cartLineRemoveSpy = vi.fn(() => ({
           data: {cartLinesRemove: {cart: null}},
         }));
 
@@ -575,7 +577,7 @@ describe('<CartProvider />', () => {
           cartLineRemove: cartLineRemoveSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.linesRemove(['123']);
         });
 
@@ -585,7 +587,7 @@ describe('<CartProvider />', () => {
       });
 
       it('runs onLineRemove and onLineRemoveComplete callbacks', async () => {
-        const cartLineRemoveSpy = vi.fn(async () => ({
+        const cartLineRemoveSpy = vi.fn(() => ({
           data: {cartLinesRemove: {cart: cartMock}},
         }));
 
@@ -602,7 +604,7 @@ describe('<CartProvider />', () => {
           }
         );
 
-        act(() => {
+        void act(() => {
           result.current.linesRemove(['123']);
         });
 
@@ -618,7 +620,7 @@ describe('<CartProvider />', () => {
 
     describe('note update', () => {
       it('resolves', async () => {
-        const noteUpdateSpy = vi.fn(async () => ({
+        const noteUpdateSpy = vi.fn(() => ({
           data: {cartNoteUpdate: {cart: cartMock}},
         }));
 
@@ -626,7 +628,7 @@ describe('<CartProvider />', () => {
           noteUpdate: noteUpdateSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.noteUpdate('test note');
         });
 
@@ -643,7 +645,7 @@ describe('<CartProvider />', () => {
       });
 
       it('deletes local storage on complete', async () => {
-        const noteUpdateSpy = vi.fn(async () => ({
+        const noteUpdateSpy = vi.fn(() => ({
           data: {cartNoteUpdate: {cart: null}},
         }));
 
@@ -653,7 +655,7 @@ describe('<CartProvider />', () => {
           noteUpdate: noteUpdateSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.noteUpdate('test note');
         });
 
@@ -663,7 +665,7 @@ describe('<CartProvider />', () => {
       });
 
       it('runs onNoteUpdate and onNoteUpdateComplete callbacks', async () => {
-        const noteUpdateSpy = vi.fn(async () => ({
+        const noteUpdateSpy = vi.fn(() => ({
           data: {cartNoteUpdate: {cart: cartMock}},
         }));
 
@@ -680,7 +682,7 @@ describe('<CartProvider />', () => {
           }
         );
 
-        act(() => {
+        void act(() => {
           result.current.noteUpdate('test note');
         });
 
@@ -696,7 +698,7 @@ describe('<CartProvider />', () => {
 
     describe('buyer identity update', () => {
       it('resolves', async () => {
-        const buyerIdentityUpdateSpy = vi.fn(async () => ({
+        const buyerIdentityUpdateSpy = vi.fn(() => ({
           data: {cartBuyerIdentityUpdate: {cart: cartMock}},
         }));
 
@@ -704,7 +706,7 @@ describe('<CartProvider />', () => {
           buyerIdentityUpdate: buyerIdentityUpdateSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.buyerIdentityUpdate({countryCode: 'US'});
         });
 
@@ -723,7 +725,7 @@ describe('<CartProvider />', () => {
       it('deletes local storage on complete', async () => {
         const spy = vi.spyOn(window.localStorage, 'removeItem');
 
-        const buyerIdentityUpdateSpy = vi.fn(async () => ({
+        const buyerIdentityUpdateSpy = vi.fn(() => ({
           data: {cartBuyerIdentityUpdate: {cart: null}},
         }));
 
@@ -731,7 +733,7 @@ describe('<CartProvider />', () => {
           buyerIdentityUpdate: buyerIdentityUpdateSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.buyerIdentityUpdate({countryCode: 'US'});
         });
 
@@ -741,7 +743,7 @@ describe('<CartProvider />', () => {
       });
 
       it('runs onBuyerIdentityUpdate and onBuyerIdentityUpdateComplete callbacks', async () => {
-        const buyerIdentityUpdateSpy = vi.fn(async () => ({
+        const buyerIdentityUpdateSpy = vi.fn(() => ({
           data: {cartBuyerIdentityUpdate: {cart: cartMock}},
         }));
 
@@ -758,7 +760,7 @@ describe('<CartProvider />', () => {
           }
         );
 
-        act(() => {
+        void act(() => {
           result.current.buyerIdentityUpdate({countryCode: 'US'});
         });
 
@@ -774,7 +776,7 @@ describe('<CartProvider />', () => {
 
     describe('cart attributes update', () => {
       it('resolves', async () => {
-        const cartAttributesUpdateSpy = vi.fn(async () => ({
+        const cartAttributesUpdateSpy = vi.fn(() => ({
           data: {cartAttributesUpdate: {cart: cartMock}},
         }));
 
@@ -782,7 +784,7 @@ describe('<CartProvider />', () => {
           cartAttributesUpdate: cartAttributesUpdateSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.cartAttributesUpdate([{key: 'key', value: 'value'}]);
         });
 
@@ -801,7 +803,7 @@ describe('<CartProvider />', () => {
       it('deletes local storage on complete', async () => {
         const spy = vi.spyOn(window.localStorage, 'removeItem');
 
-        const cartAttributesUpdateSpy = vi.fn(async () => ({
+        const cartAttributesUpdateSpy = vi.fn(() => ({
           data: {cartAttributesUpdate: {cart: null}},
         }));
 
@@ -809,7 +811,7 @@ describe('<CartProvider />', () => {
           cartAttributesUpdate: cartAttributesUpdateSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.cartAttributesUpdate([{key: 'key', value: 'value'}]);
         });
 
@@ -819,7 +821,7 @@ describe('<CartProvider />', () => {
       });
 
       it('runs onAttributesUpdate and onAttributesUpdateComplete callbacks', async () => {
-        const cartAttributesUpdateSpy = vi.fn(async () => ({
+        const cartAttributesUpdateSpy = vi.fn(() => ({
           data: {cartAttributesUpdate: {cart: cartMock}},
         }));
 
@@ -836,7 +838,7 @@ describe('<CartProvider />', () => {
           }
         );
 
-        act(() => {
+        void act(() => {
           result.current.cartAttributesUpdate([{key: 'key', value: 'value'}]);
         });
 
@@ -852,7 +854,7 @@ describe('<CartProvider />', () => {
 
     describe('discount update', () => {
       it('resolves', async () => {
-        const discountCodesUpdateSpy = vi.fn(async () => ({
+        const discountCodesUpdateSpy = vi.fn(() => ({
           data: {cartDiscountCodesUpdate: {cart: cartMock}},
         }));
 
@@ -860,7 +862,7 @@ describe('<CartProvider />', () => {
           discountCodesUpdate: discountCodesUpdateSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.discountCodesUpdate(['DiscountCode']);
         });
 
@@ -879,7 +881,7 @@ describe('<CartProvider />', () => {
       it('deletes local storage on complete', async () => {
         const spy = vi.spyOn(window.localStorage, 'removeItem');
 
-        const discountCodesUpdateSpy = vi.fn(async () => ({
+        const discountCodesUpdateSpy = vi.fn(() => ({
           data: {cartDiscountCodesUpdate: {cart: null}},
         }));
 
@@ -887,7 +889,7 @@ describe('<CartProvider />', () => {
           discountCodesUpdate: discountCodesUpdateSpy,
         });
 
-        act(() => {
+        void act(() => {
           result.current.discountCodesUpdate(['DiscountCode']);
         });
 
@@ -898,7 +900,7 @@ describe('<CartProvider />', () => {
       });
 
       it('runs onDiscountCodesUpdate and onDiscountCodesUpdateComplete callbacks', async () => {
-        const discountCodesUpdateSpy = vi.fn(async () => ({
+        const discountCodesUpdateSpy = vi.fn(() => ({
           data: {cartDiscountCodesUpdate: {cart: cartMock}},
         }));
 
@@ -915,7 +917,7 @@ describe('<CartProvider />', () => {
           }
         );
 
-        act(() => {
+        void act(() => {
           result.current.discountCodesUpdate(['DiscountCode']);
         });
 
@@ -930,7 +932,7 @@ describe('<CartProvider />', () => {
     });
 
     it('deletes local storage on complete', async () => {
-      const cartLineAddSpy = vi.fn(async () => ({
+      const cartLineAddSpy = vi.fn(() => ({
         data: {cartLinesAdd: {cart: null}},
       }));
 
@@ -940,7 +942,7 @@ describe('<CartProvider />', () => {
         cartLineAdd: cartLineAddSpy,
       });
 
-      act(() => {
+      void act(() => {
         result.current.linesAdd([
           {
             merchandiseId: '123',
@@ -957,7 +959,7 @@ describe('<CartProvider />', () => {
 
   describe('creates cart', () => {
     it('resolves', async () => {
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartMock}},
       }));
 
@@ -965,7 +967,7 @@ describe('<CartProvider />', () => {
         cartCreate: cartCreateSpy,
       });
 
-      act(() => {
+      void act(() => {
         result.current.cartCreate({});
       });
 
@@ -986,11 +988,11 @@ describe('<CartProvider />', () => {
   describe('error', () => {
     it('from idle state', async () => {
       const errorMock = new Error('Error creating cart');
-      const cartLineAddErrorSpy = vi.fn(async () => ({
+      const cartLineAddErrorSpy = vi.fn(() => ({
         errors: errorMock,
       }));
 
-      const cartCreateResolveSpy = vi.fn(async () => ({
+      const cartCreateResolveSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartMock}},
       }));
 
@@ -1004,6 +1006,7 @@ describe('<CartProvider />', () => {
       });
 
       // First create cart should be successful
+      // eslint-disable-next-line @typescript-eslint/require-await
       await act(async () => {
         result.current.linesAdd([
           {
@@ -1013,7 +1016,7 @@ describe('<CartProvider />', () => {
       });
 
       // create an error
-      act(() => {
+      void act(() => {
         result.current.linesAdd([
           {
             merchandiseId: '123',
@@ -1037,7 +1040,7 @@ describe('<CartProvider />', () => {
         ...cartMock,
         buyerIdentity: {countryCode: mockCountryCode},
       };
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartWithCountry}},
       }));
       mockUseCartActions.mockReturnValue({
@@ -1047,7 +1050,7 @@ describe('<CartProvider />', () => {
         wrapper: ShopifyCartProvider({countryCode: mockCountryCode}),
       });
 
-      act(() => {
+      void act(() => {
         result.current.cartCreate({});
       });
 
@@ -1066,11 +1069,11 @@ describe('<CartProvider />', () => {
         ...cartMock,
         buyerIdentity: {countryCode: mockCountryCode},
       };
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartWithCountry}},
       }));
 
-      const buyerIdentityUpdateSpy = vi.fn(async () => ({
+      const buyerIdentityUpdateSpy = vi.fn(() => ({
         data: {cartBuyerIdentityUpdate: {cart: cartMock}},
       }));
 
@@ -1082,7 +1085,7 @@ describe('<CartProvider />', () => {
         wrapper: ShopifyCartProvider({countryCode: mockCountryCodeServerProps}),
       });
 
-      act(() => {
+      void act(() => {
         result.current.cartCreate({
           buyerIdentity: {countryCode: mockCountryCode},
         });
@@ -1115,11 +1118,11 @@ describe('<CartProvider />', () => {
         buyerIdentity: {countryCode: mockCountryCode},
       };
 
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartWithCountryCa}},
       }));
 
-      const buyerIdentityUpdateSpy = vi.fn(async () => ({
+      const buyerIdentityUpdateSpy = vi.fn(() => ({
         data: {cartBuyerIdentityUpdate: {cart: cartWithCountryCa}},
       }));
 
@@ -1134,7 +1137,7 @@ describe('<CartProvider />', () => {
         }),
       });
 
-      act(() => {
+      void act(() => {
         result.current.cartCreate({});
       });
 
@@ -1159,7 +1162,7 @@ describe('<CartProvider />', () => {
           customer: {email: 'test@test.com'},
         },
       };
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartWithCustomer}},
       }));
       mockUseCartActions.mockReturnValue({
@@ -1171,7 +1174,7 @@ describe('<CartProvider />', () => {
         }),
       });
 
-      act(() => {
+      void act(() => {
         result.current.cartCreate({});
       });
 
@@ -1196,7 +1199,7 @@ describe('<CartProvider />', () => {
           customer: {email: 'test@test.com'},
         },
       };
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartWithCustomer}},
       }));
       mockUseCartActions.mockReturnValue({
@@ -1208,7 +1211,7 @@ describe('<CartProvider />', () => {
         }),
       });
 
-      act(() => {
+      void act(() => {
         result.current.cartCreate({
           buyerIdentity: {
             customerAccessToken: mockCustomerAccessToken,
@@ -1230,11 +1233,11 @@ describe('<CartProvider />', () => {
 
   describe('Optimistic UI cart actions', () => {
     it('removes cart line optimistically', async () => {
-      const cartLineRemoveSpy = vi.fn(async () => ({
+      const cartLineRemoveSpy = vi.fn(() => ({
         data: {cartLinesRemove: {cart: cartMock}},
       }));
 
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartMockWithLine}},
       }));
 
@@ -1247,7 +1250,7 @@ describe('<CartProvider />', () => {
         cartFromGraphQL(cartMockWithLine).lines
       );
 
-      act(() => {
+      void act(() => {
         result.current.linesRemove([
           cartMockWithLine.lines.edges[0].node.id ?? '',
         ]);
@@ -1268,11 +1271,11 @@ describe('<CartProvider />', () => {
     it('reverts optimistic UI if remove cart line fails', async () => {
       const errorMock = new Error('Error removing cart line');
 
-      const cartLineRemoveSpy = vi.fn(async () => ({
+      const cartLineRemoveSpy = vi.fn(() => ({
         errors: errorMock,
       }));
 
-      const cartCreateResolveSpy = vi.fn(async () => ({
+      const cartCreateResolveSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartMockWithLine}},
       }));
 
@@ -1281,7 +1284,7 @@ describe('<CartProvider />', () => {
         cartLineRemove: cartLineRemoveSpy,
       });
 
-      act(() => {
+      void act(() => {
         result.current.linesRemove([
           cartMockWithLine.lines.edges[0].node.id ?? '',
         ]);
@@ -1316,11 +1319,11 @@ describe('<CartProvider />', () => {
           ],
         },
       };
-      const cartLineUpdateSpy = vi.fn(async () => ({
+      const cartLineUpdateSpy = vi.fn(() => ({
         data: {cartLinesUpdate: {cart: mockCartWithUpdatedQuantity}},
       }));
 
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartMockWithLine}},
       }));
 
@@ -1333,7 +1336,7 @@ describe('<CartProvider />', () => {
         cartFromGraphQL(cartMockWithLine).lines
       );
 
-      act(() => {
+      void act(() => {
         result.current.linesUpdate([
           {
             id: cartMockWithLine.lines.edges[0].node.id ?? '',
@@ -1374,11 +1377,11 @@ describe('<CartProvider />', () => {
 
       const errorMock = new Error('Error removing cart line');
 
-      const cartLineUpdateSpy = vi.fn(async () => ({
+      const cartLineUpdateSpy = vi.fn(() => ({
         errors: errorMock,
       }));
 
-      const cartCreateSpy = vi.fn(async () => ({
+      const cartCreateSpy = vi.fn(() => ({
         data: {cartCreate: {cart: cartMockWithLine}},
       }));
 
@@ -1391,7 +1394,7 @@ describe('<CartProvider />', () => {
         cartFromGraphQL(cartMockWithLine).lines
       );
 
-      act(() => {
+      void act(() => {
         result.current.linesUpdate([
           {
             id: cartMockWithLine.lines.edges[0].node.id ?? '',
@@ -1436,7 +1439,7 @@ describe('<CartProvider />', () => {
       wrapper: ShopifyCartProvider({cartFragment: cartFragmentMock}),
     });
 
-    act(() => {
+    void act(() => {
       result.current.cartCreate({});
     });
 
@@ -1444,6 +1447,7 @@ describe('<CartProvider />', () => {
 
     expect(fetchCartSpy).toHaveBeenCalledWith(
       expect.objectContaining({
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         query: expect.stringContaining(cartFragmentMock),
       })
     );
@@ -1454,7 +1458,7 @@ async function useCartWithInitializedCart(
   cartActionsMocks = {},
   cartProviderProps: Omit<ComponentProps<typeof CartProvider>, 'children'> = {}
 ) {
-  const cartCreateSpy = vi.fn(async () => ({
+  const cartCreateSpy = vi.fn(() => ({
     data: {cartCreate: {cart: cartMock}},
   }));
 
@@ -1469,6 +1473,7 @@ async function useCartWithInitializedCart(
   });
 
   // creates a cart and wait till idle
+  // eslint-disable-next-line @typescript-eslint/require-await
   await act(async () => {
     result.current.linesAdd([
       {

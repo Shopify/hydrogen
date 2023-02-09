@@ -33,7 +33,7 @@ export type AddToCartButtonProps<AsType extends React.ElementType = 'button'> =
  */
 export function AddToCartButton<AsType extends React.ElementType = 'button'>(
   props: AddToCartButtonProps<AsType>
-) {
+): JSX.Element {
   const [addingItem, setAddingItem] = useState<boolean>(false);
   const {
     variantId: explicitVariantId,

@@ -38,7 +38,9 @@ export function flattenConnection<
     PartialDeep<ConnectionBaseType[], {recurseIntoArrays: true}>
   : never {
   if (!connection) {
-    const noConnectionErr = `flattenConnection(): needs a 'connection' to flatten, but received '${connection}' instead.`;
+    const noConnectionErr = `flattenConnection(): needs a 'connection' to flatten, but received '${
+      connection ?? ''
+    }' instead.`;
     if (__HYDROGEN_DEV__) {
       throw new Error(noConnectionErr);
     } else {
@@ -56,13 +58,15 @@ export function flattenConnection<
   if ('edges' in connection && Array.isArray(connection.edges)) {
     // @ts-expect-error return type is failing
     return connection.edges.map((edge) => {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (!edge?.node) {
         throw new Error(
           'flattenConnection(): Connection edges must contain nodes'
         );
       }
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
       return edge.node;
-    });
+    }) as Array<unknown>;
   }
 
   if (__HYDROGEN_DEV__) {

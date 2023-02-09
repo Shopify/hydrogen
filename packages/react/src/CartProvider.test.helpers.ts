@@ -144,6 +144,7 @@ function mergeDeep(
     const newSourceValue = newSource[key];
 
     if (Array.isArray(newTargetValue) && Array.isArray(newSourceValue)) {
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       newTarget[key] = [...newTargetValue, ...newSourceValue];
     } else if (
       isObject(newTargetValue) &&

@@ -45,9 +45,11 @@ describe('<BaseButton/>', () => {
 
     describe('and event preventDefault is called', () => {
       it('calls the on click event handler without calling the default on click behaviour', async () => {
-        const mockOnClick = vi.fn((event) => {
-          event.preventDefault();
-        });
+        const mockOnClick = vi.fn(
+          (event?: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+            event?.preventDefault();
+          }
+        );
         const mockDefaultOnClick = vi.fn();
         const user = userEvent.setup();
 

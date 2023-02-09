@@ -87,7 +87,7 @@ describe('<ProductProvider />', () => {
     ).toBeInTheDocument();
   });
 
-  it('computes selected options based on initial selected variant', async () => {
+  it('computes selected options based on initial selected variant', () => {
     const prod = getProduct({
       variants: VARIANTS,
     });
@@ -106,7 +106,7 @@ describe('<ProductProvider />', () => {
     });
   });
 
-  it('provides list of variants', async () => {
+  it('provides list of variants', () => {
     const prod = getProduct({variants: VARIANTS});
 
     const {result} = renderHook(() => useProduct(), {
@@ -220,7 +220,7 @@ describe('<ProductProvider />', () => {
                           setSelectedOption(option?.name ?? '', value ?? '')
                         }
                       >
-                        {`${value}${
+                        {`${value ?? ''}${
                           !isOptionInStock(option?.name ?? '', value ?? '')
                             ? ' (out of stock)'
                             : ''

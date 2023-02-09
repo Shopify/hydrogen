@@ -17,7 +17,9 @@ type CartCheckoutButtonProps = Omit<BaseButtonProps<'button'>, 'onClick'> &
  * The `CartCheckoutButton` component renders a button that redirects to the checkout URL for the cart.
  * It must be a descendent of a `CartProvider` component.
  */
-export function CartCheckoutButton(props: CartCheckoutButtonProps) {
+export function CartCheckoutButton(
+  props: CartCheckoutButtonProps
+): JSX.Element {
   const [requestedCheckout, setRequestedCheckout] = useState(false);
   const {status, checkoutUrl} = useCart();
   const {children, ...passthroughProps} = props;
@@ -32,7 +34,7 @@ export function CartCheckoutButton(props: CartCheckoutButtonProps) {
     <BaseButton
       {...passthroughProps}
       disabled={requestedCheckout || passthroughProps.disabled}
-      onClick={() => setRequestedCheckout(true)}
+      onClick={(): void => setRequestedCheckout(true)}
     >
       {children}
     </BaseButton>

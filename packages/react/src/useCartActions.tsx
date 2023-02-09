@@ -31,6 +31,7 @@ type CartResponse = PartialDeep<CartType, {recurseIntoArrays: true}>;
  *
  * See [cart API graphql mutations](https://shopify.dev/api/storefront/2023-01/objects/Cart)
  */
+// eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 export function useCartActions({
   numCartLines,
   cartFragment,

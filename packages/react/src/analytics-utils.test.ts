@@ -81,6 +81,7 @@ describe('analytic-utils', () => {
       expect(schemaWrapper(schemaId, payload)).toEqual({
         schema_id: '123',
         payload: {foo: 'bar'},
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         metadata: {event_created_at_ms: expect.any(Number)},
       });
     });

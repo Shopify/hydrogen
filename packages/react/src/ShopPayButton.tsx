@@ -55,7 +55,7 @@ export function ShopPayButton({
   className,
   variantIdsAndQuantities,
   width,
-}: ShopPayButtonProps) {
+}: ShopPayButtonProps): JSX.Element {
   const {storeDomain} = useShop();
   const shopPayLoadedStatus = useLoadScript(SHOPJS_URL);
 

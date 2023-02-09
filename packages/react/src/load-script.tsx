@@ -6,8 +6,9 @@ export function loadScript(
   src: string,
   options?: {module?: boolean; in?: 'head' | 'body'}
 ): Promise<boolean> {
-  const isScriptLoaded: Promise<boolean> = SCRIPTS_LOADED[src];
+  const isScriptLoaded = SCRIPTS_LOADED[src];
 
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises
   if (isScriptLoaded) {
     return isScriptLoaded;
   }
@@ -20,10 +21,10 @@ export function loadScript(
       script.type = 'text/javascript';
     }
     script.src = src;
-    script.onload = () => {
+    script.onload = (): void => {
       resolve(true);
     };
-    script.onerror = () => {
+    script.onerror = (): void => {
       reject(false);
     };
     if (options?.in === 'head') {
@@ -51,7 +52,7 @@ export function useLoadScript(
   const stringifiedOptions = JSON.stringify(options);
 
   useEffect(() => {
-    async function loadScriptWrapper() {
+    async function loadScriptWrapper(): Promise<void> {
       try {
         setStatus('loading');
         await loadScript(url, options);
@@ -61,7 +62,9 @@ export function useLoadScript(
       }
     }
 
-    loadScriptWrapper();
+    loadScriptWrapper().catch(() => {
+      setStatus('error');
+    });
   }, [url, stringifiedOptions, options]);
 
   return status;

@@ -25,7 +25,7 @@ export function addImageSizeParametersToUrl({
   height,
   crop,
   scale,
-}: ShopifyLoaderParams) {
+}: ShopifyLoaderParams): string {
   const newUrl = new URL(src);
 
   const multipliedScale = scale ?? 1;
@@ -54,7 +54,9 @@ export function addImageSizeParametersToUrl({
   return newUrl.toString();
 }
 
-export function shopifyImageLoader(params: ShopifyLoaderParams) {
+export function shopifyImageLoader(
+  params: ShopifyLoaderParams
+): ReturnType<typeof addImageSizeParametersToUrl> {
   const newSrc = new URL(params.src);
   const isShopifyServedImage = ALL_CDN_HOSTNAMES.some((allowedHostname) =>
     newSrc.hostname.endsWith(allowedHostname)

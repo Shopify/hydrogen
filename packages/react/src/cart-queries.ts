@@ -1,4 +1,4 @@
-export const CartLineAdd = (cartFragment: string) => /* GraphQL */ `
+export const CartLineAdd = (cartFragment: string): string => /* GraphQL */ `
   mutation CartLineAdd(
     $cartId: ID!
     $lines: [CartLineInput!]!
@@ -15,7 +15,7 @@ export const CartLineAdd = (cartFragment: string) => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartCreate = (cartFragment: string) => /* GraphQL */ `
+export const CartCreate = (cartFragment: string): string => /* GraphQL */ `
   mutation CartCreate(
     $input: CartInput!
     $numCartLines: Int = 250
@@ -31,7 +31,7 @@ export const CartCreate = (cartFragment: string) => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartLineRemove = (cartFragment: string) => /* GraphQL */ `
+export const CartLineRemove = (cartFragment: string): string => /* GraphQL */ `
   mutation CartLineRemove(
     $cartId: ID!
     $lines: [ID!]!
@@ -48,7 +48,7 @@ export const CartLineRemove = (cartFragment: string) => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartLineUpdate = (cartFragment: string) => /* GraphQL */ `
+export const CartLineUpdate = (cartFragment: string): string => /* GraphQL */ `
   mutation CartLineUpdate(
     $cartId: ID!
     $lines: [CartLineUpdateInput!]!
@@ -65,7 +65,7 @@ export const CartLineUpdate = (cartFragment: string) => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartNoteUpdate = (cartFragment: string) => /* GraphQL */ `
+export const CartNoteUpdate = (cartFragment: string): string => /* GraphQL */ `
   mutation CartNoteUpdate(
     $cartId: ID!
     $note: String
@@ -82,7 +82,9 @@ export const CartNoteUpdate = (cartFragment: string) => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartBuyerIdentityUpdate = (cartFragment: string) => /* GraphQL */ `
+export const CartBuyerIdentityUpdate = (
+  cartFragment: string
+): string => /* GraphQL */ `
   mutation CartBuyerIdentityUpdate(
     $cartId: ID!
     $buyerIdentity: CartBuyerIdentityInput!
@@ -99,7 +101,9 @@ export const CartBuyerIdentityUpdate = (cartFragment: string) => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartAttributesUpdate = (cartFragment: string) => /* GraphQL */ `
+export const CartAttributesUpdate = (
+  cartFragment: string
+): string => /* GraphQL */ `
   mutation CartAttributesUpdate(
     $attributes: [AttributeInput!]!
     $cartId: ID!
@@ -116,7 +120,9 @@ export const CartAttributesUpdate = (cartFragment: string) => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartDiscountCodesUpdate = (cartFragment: string) => /* GraphQL */ `
+export const CartDiscountCodesUpdate = (
+  cartFragment: string
+): string => /* GraphQL */ `
   mutation CartDiscountCodesUpdate(
     $cartId: ID!
     $discountCodes: [String!]
@@ -133,7 +139,7 @@ export const CartDiscountCodesUpdate = (cartFragment: string) => /* GraphQL */ `
   ${cartFragment}
 `;
 
-export const CartQuery = (cartFragment: string) => /* GraphQL */ `
+export const CartQuery = (cartFragment: string): string => /* GraphQL */ `
   query CartQuery(
     $id: ID!
     $numCartLines: Int = 250

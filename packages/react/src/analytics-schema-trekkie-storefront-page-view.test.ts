@@ -26,6 +26,7 @@ describe(`analytics schema - trekkie storefront page view`, () => {
         contentLanguage: 'en',
       },
       metadata: {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         event_created_at_ms: expect.any(Number),
       },
     });
@@ -64,6 +65,7 @@ describe(`analytics schema - trekkie storefront page view`, () => {
         resourceType: 'product',
       },
       metadata: {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         event_created_at_ms: expect.any(Number),
       },
     });
@@ -89,6 +91,7 @@ describe(`analytics schema - trekkie storefront page view`, () => {
         contentLanguage: 'en',
       },
       metadata: {
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         event_created_at_ms: expect.any(Number),
       },
     });
@@ -100,6 +103,7 @@ export function getForwardedPayload(initPayload: ShopifyAnalyticsPayload) {
     shopId: 1,
     uniqToken: initPayload.uniqueToken,
     visitToken: initPayload.visitToken,
+    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     microSessionId: expect.any(String),
     microSessionCount: 1,
     url: initPayload.url,

@@ -54,16 +54,16 @@ export function createStorefrontClient(
   }
 
   return {
-    getShopifyDomain(overrideProps) {
+    getShopifyDomain(overrideProps): string {
       return overrideProps?.storeDomain ?? storeDomain;
     },
-    getStorefrontApiUrl(overrideProps) {
+    getStorefrontApiUrl(overrideProps): string {
       const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;
       return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
       }/graphql.json`;
     },
-    getPrivateTokenHeaders(overrideProps) {
+    getPrivateTokenHeaders(overrideProps): Record<string, string> {
       if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {
         throw new Error(
           `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`
@@ -94,7 +94,7 @@ export function createStorefrontClient(
           : {}),
       };
     },
-    getPublicTokenHeaders(overrideProps) {
+    getPublicTokenHeaders(overrideProps): Record<string, string> {
       if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {
         throw new Error(
           `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`
@@ -117,7 +117,13 @@ export function getPublicTokenHeadersRaw(
   contentType: 'graphql' | 'json',
   storefrontApiVersion: string,
   accessToken: string
-) {
+): {
+  'content-type': string;
+  'X-SDK-Variant': string;
+  'X-SDK-Variant-Source': string;
+  'X-SDK-Version': string;
+  'X-Shopify-Storefront-Access-Token': string;
+} {
   return {
     // default to json
     'content-type':
@@ -130,7 +136,7 @@ export function getPublicTokenHeadersRaw(
 }
 
 const warnings = new Set<string>();
-const warnOnce = (string: string) => {
+const warnOnce = (string: string): void => {
   if (!warnings.has(string)) {
     console.warn(string);
     warnings.add(string);

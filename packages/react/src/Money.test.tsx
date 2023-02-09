@@ -115,7 +115,7 @@ describe('<Money />', () => {
     });
 
     expect(
-      screen.getByText(`/${measurement.referenceUnit}`, {exact: false})
+      screen.getByText(`/${measurement.referenceUnit ?? ''}`, {exact: false})
     ).toBeInTheDocument();
   });
 
@@ -170,9 +170,12 @@ describe('<Money />', () => {
     );
 
     expect(
-      screen.getByText(`${MeasurementSeparator}${measurement.referenceUnit}`, {
-        exact: false,
-      })
+      screen.getByText(
+        `${MeasurementSeparator}${measurement.referenceUnit ?? ''}`,
+        {
+          exact: false,
+        }
+      )
     ).toBeInTheDocument();
   });
 });

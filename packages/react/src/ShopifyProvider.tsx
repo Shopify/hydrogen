@@ -26,7 +26,7 @@ const ShopifyContext = createContext<ShopifyContextValue>({
 export function ShopifyProvider({
   children,
   ...shopifyConfig
-}: ShopifyProviderProps) {
+}: ShopifyProviderProps): JSX.Element {
   if (
     !shopifyConfig.countryIsoCode ||
     !shopifyConfig.languageIsoCode ||
@@ -46,13 +46,13 @@ export function ShopifyProvider({
   }
 
   const finalConfig = useMemo<ShopifyContextValue>(() => {
-    function getShopifyDomain(overrideProps?: {storeDomain?: string}) {
+    function getShopifyDomain(overrideProps?: {storeDomain?: string}): string {
       return overrideProps?.storeDomain ?? shopifyConfig.storeDomain;
     }
 
     return {
       ...shopifyConfig,
-      getPublicTokenHeaders(overrideProps) {
+      getPublicTokenHeaders(overrideProps): Record<string, string> {
         return getPublicTokenHeadersRaw(
           overrideProps.contentType,
           shopifyConfig.storefrontApiVersion,
@@ -60,7 +60,7 @@ export function ShopifyProvider({
         );
       },
       getShopifyDomain,
-      getStorefrontApiUrl(overrideProps) {
+      getStorefrontApiUrl(overrideProps): string {
         const finalDomainUrl = getShopifyDomain({
           storeDomain: overrideProps?.storeDomain ?? shopifyConfig.storeDomain,
         });

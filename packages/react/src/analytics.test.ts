@@ -26,11 +26,13 @@ const createFetchSpy = ({
       getShopDomainMonorailEndpoint(shopDomain);
     if (input === MONORAIL_ENDPOINT || input === shopDomainMonorailEndpoint) {
       if (init?.body) {
-        const reqData = await init.body.toString();
-        const data = JSON.parse(reqData || '{}');
+        const reqData = init.body.toString();
+        const data = JSON.parse(reqData || '{}') as unknown;
 
         // If this expect fails, it will be captured by the
         // spy function on console.error
+        // @ts-expect-error - data is unknown
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         expect(data.events.length).toEqual(expectEventCounts);
 
         if (failResponse) {
@@ -44,6 +46,8 @@ const createFetchSpy = ({
         }
 
         // Mock Monorail returning a multi-status response
+        // @ts-expect-error - data is unknown
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
         if (!data.events[0].payload.shopId && !data.events[0].payload.shop_id) {
           return new Promise((resolve) => {
             resolve(
@@ -222,6 +226,7 @@ describe('analytics', () => {
       expect(consoleErrorSpy.mock.calls[0][0]).toBe(
         'sendShopifyAnalytics request is unsuccessful'
       );
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       expect(consoleErrorSpy.mock.calls[0][1].toString()).toContain(
         'Error: Response failed'
       );
@@ -270,11 +275,14 @@ describe('analytics', () => {
       expect(browserParams).toEqual({
         uniqueToken: 'abc123',
         visitToken: 'def456',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         url: expect.any(String),
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         path: expect.any(String),
         search: '',
         referrer: 'https://www.example.com',
         title: 'test',
+        // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         userAgent: expect.any(String),
         navigationType: 'unknown',
         navigationApi: 'unknown',
