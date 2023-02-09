@@ -17,7 +17,7 @@ npm run build
 To develop against a template, open a new terminal window or tab and choose from the available templates:
 
 - templates/demo-store
-- templates/hello-world-ts
+- templates/hello-world
 
 ```bash
 cd templates/demo-store
@@ -36,7 +36,7 @@ Hydrogen is a monorepo built with [Turbo](https://turbo.build/). It consists of 
 
 - `templates`: Full working implementations of a Hydrogen storefront (including the Demo Store template)
 - `packages/hydrogen`: The hooks, components, and utilities provided by Hydrogen
-- `packages/remix-oxygen`: A [Remix]([Remix](https://remix.run) runtime adapter for [Oxygen](https://shopify.dev/custom-storefronts/oxygen)
+- `packages/remix-oxygen`: A [Remix](https://remix.run) runtime adapter for [Oxygen](https://shopify.dev/custom-storefronts/oxygen)
 
 ## Formatting and Linting
 
@@ -62,14 +62,14 @@ Hydrogen follows common React naming conventions for filenames, component names,
 - When declaring **instances** of components, always use `camelCase`.
 - When declaring **exported constants**, always use `SCREAMING_SNAKE_CASE`.
 
-| &nbsp;                       | ✅ Valid                                        | 🚫 Invalid                                                                          |
-| ---------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------- |
-| **Component filenames:**     | `ProductTitle.tsx`<br>`ProductTitle.tsx` | `productTitle.tsx`<br>`product_title.tsx`<br>`product-title.tsx`             |
-| **Non-component filenames:** | `client.ts`<br>`handle-event.ts`                | `Client.ts`<br>`handleEvent.ts`<br>`handle_event.ts`                                |
-| **Test filenames:**          | `ExternalVideo.test.tsx`                        | `ExternalVideo-test.tsx`<br>`ExternalVideo_test.tsx`<br>`ExternalVideoTest.tsx`     |
-| **Component classes:**       | `<AddToCartButton />`                           | `<addToCartButton />`                                                               |
-| **Component instances:**     | `const cartSelector = <CartSelector />`         | `const CartSelector = <CartSelector />`<br>`const cart_selector = <CartSelector />` |
-| **Exported constants:**      | `export const CART_COOKIE_TTL_DAYS = 14;`       | `export const CartCookieTTLDays = 14;`<br>`export const cart_cookie_ttl_days = 14;` |
+| &nbsp;                       | ✅ Valid                                  | 🚫 Invalid                                                                          |
+| ---------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------- |
+| **Component filenames:**     | `ProductTitle.tsx`<br>`ProductTitle.tsx`  | `productTitle.tsx`<br>`product_title.tsx`<br>`product-title.tsx`                    |
+| **Non-component filenames:** | `client.ts`<br>`handle-event.ts`          | `Client.ts`<br>`handleEvent.ts`<br>`handle_event.ts`                                |
+| **Test filenames:**          | `ExternalVideo.test.tsx`                  | `ExternalVideo-test.tsx`<br>`ExternalVideo_test.tsx`<br>`ExternalVideoTest.tsx`     |
+| **Component classes:**       | `<AddToCartButton />`                     | `<addToCartButton />`                                                               |
+| **Component instances:**     | `const cartSelector = <CartSelector />`   | `const CartSelector = <CartSelector />`<br>`const cart_selector = <CartSelector />` |
+| **Exported constants:**      | `export const CART_COOKIE_TTL_DAYS = 14;` | `export const CartCookieTTLDays = 14;`<br>`export const cart_cookie_ttl_days = 14;` |
 
 ## Changesets
 
