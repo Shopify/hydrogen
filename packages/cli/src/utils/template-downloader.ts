@@ -3,7 +3,7 @@ import {pipeline} from 'stream/promises';
 import gunzipMaybe from 'gunzip-maybe';
 import {extract} from 'tar-fs';
 import {http, file} from '@shopify/cli-kit';
-import {fileURLToPath} from 'fs';
+import {fileURLToPath} from 'url';
 
 // Note: this skips pre-releases
 const REPO_RELEASES_URL = `https://api.github.com/repos/shopify/hydrogen/releases/latest`;
