@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 4.0.3
+
+### Patch Changes
+
+- Fix initialization a new Hydrogen project on Windows ([#478](https://github.com/Shopify/hydrogen/pull/478)) by [@pepicrft](https://github.com/pepicrft)
+
 ## 4.0.2
 
 ### Patch Changes
