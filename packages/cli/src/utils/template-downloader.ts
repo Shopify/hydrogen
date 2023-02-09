@@ -1,9 +1,9 @@
-import fs from 'fs';
 import path from 'path';
 import {pipeline} from 'stream/promises';
 import gunzipMaybe from 'gunzip-maybe';
 import {extract} from 'tar-fs';
-import {http} from '@shopify/cli-kit';
+import {http, file} from '@shopify/cli-kit';
+import {fileURLToPath} from 'fs';
 
 // Note: this skips pre-releases
 const REPO_RELEASES_URL = `https://api.github.com/repos/shopify/hydrogen/releases/latest`;
@@ -58,15 +58,16 @@ export async function downloadTarball(url: string, storageDir: string) {
 export async function getLatestTemplates() {
   try {
     const {version, url} = await getLatestReleaseDownloadUrl();
-    const templateStoragePath = new URL('../starter-templates', import.meta.url)
-      .pathname;
+    const templateStoragePath = fileURLToPath(
+      new URL('../starter-templates', import.meta.url),
+    );
 
-    if (!fs.existsSync(templateStoragePath)) {
-      fs.mkdirSync(templateStoragePath);
+    if (!(await file.exists(templateStoragePath))) {
+      await file.mkdir(templateStoragePath);
     }
 
     const templateStorageVersionPath = path.join(templateStoragePath, version);
-    if (!fs.existsSync(templateStorageVersionPath)) {
+    if (!(await file.exists(templateStorageVersionPath))) {
       await downloadTarball(url, templateStorageVersionPath);
     }
 
