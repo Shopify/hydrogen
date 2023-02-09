@@ -6,12 +6,6 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [
     {
-      subtitle: 'How to set up',
-      name: 'Shopify analytics',
-      url: '/custom-storefronts/hydrogen/analytics/shopify-analytics',
-      type: 'tutorial',
-    },
-    {
       subtitle: 'Hook',
       name: 'useShopifyCookies',
       url: '/api/hydrogen-react/hooks/useShopifyCookies',

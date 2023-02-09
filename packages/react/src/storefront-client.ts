@@ -22,13 +22,17 @@ type StorefrontClientProps = {
  *
  * When used on the server, it is recommended to use the `privateStorefrontToken` prop. When used on the client, it is recommended to use the `publicStorefrontToken` prop.
  */
-export function createStorefrontClient({
-  storeDomain,
-  privateStorefrontToken,
-  publicStorefrontToken,
-  storefrontApiVersion,
-  contentType,
-}: StorefrontClientProps): StorefrontClientReturn {
+export function createStorefrontClient(
+  props: StorefrontClientProps
+): StorefrontClientReturn {
+  const {
+    storeDomain,
+    privateStorefrontToken,
+    publicStorefrontToken,
+    storefrontApiVersion,
+    contentType,
+  } = props;
+
   if (storefrontApiVersion !== SFAPI_VERSION) {
     warnOnce(
       `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`
