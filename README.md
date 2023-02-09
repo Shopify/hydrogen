@@ -15,6 +15,8 @@
 
 Hydrogen is a set of tools, utilities, and best-in-class examples for building a commerce application with [Remix](https://remix.run/). 
 
+Hydrogen legacy v1, which is not built on Remix, is available here: https://github.com/Shopify/hydrogen-v1
+
 Get started with Hydrogen with the instructions below ⬇️
 
 ## Getting Started
