@@ -1,6 +1,6 @@
 import {resolve} from 'path';
 import fs from 'fs-extra';
-import {createApp} from '@remix-run/dev';
+import {transpileProject} from '../packages/cli/dist/utils/transpile-ts.js';
 
 (async () => {
   const [template, ...flags] = process.argv.slice(2);
@@ -21,12 +21,10 @@ import {createApp} from '@remix-run/dev';
 })();
 
 async function createNewApp(srcDir, destDir, useTypeScript) {
-  await createApp({
-    appTemplate: srcDir,
-    installDeps: false,
-    useTypeScript,
-    projectDir: destDir,
-  });
+  await fs.copy(srcDir, destDir);
+  if (!useTypeScript) {
+    await transpileProject(destDir);
+  }
 }
 
 function removeUnwantedFiles(dir) {
