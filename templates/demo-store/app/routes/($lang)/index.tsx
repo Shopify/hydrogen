@@ -1,4 +1,9 @@
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  defer,
+  LoaderArgsWithMiddleware,
+  MiddlewareArgs,
+  type LoaderArgs,
+} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
@@ -10,6 +15,7 @@ import type {
   ProductConnection,
 } from '@shopify/hydrogen/storefront-api-types';
 import {AnalyticsPageType} from '@shopify/hydrogen';
+import {hydrogenContext} from '~/context';
 
 interface HomeSeoData {
   shop: {
@@ -30,7 +36,21 @@ export interface CollectionHero {
   top?: boolean;
 }
 
-export async function loader({params, context}: LoaderArgs) {
+export async function middleware({request, context}: MiddlewareArgs) {
+  const hydrogen = context.get(hydrogenContext);
+  hydrogen.storefront.query;
+  const response = await context.next();
+
+  response.headers.set('index-page', 'was here lololol');
+
+  return response;
+}
+
+export async function loader({
+  params,
+  context: loaderContext,
+}: LoaderArgsWithMiddleware) {
+  const context = loaderContext.get(hydrogenContext);
   const {language, country} = context.storefront.i18n;
 
   if (

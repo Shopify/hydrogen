@@ -6,6 +6,7 @@ export {
 } from './implementations';
 
 export {createRequestHandler, getBuyerIp} from './server';
+export type {AdapterMiddlewareFunction} from './server';
 
 export {
   createSession,
@@ -20,9 +21,13 @@ export {
   unstable_parseMultipartFormData,
 } from '@remix-run/server-runtime';
 
+export {createMiddlewareContext} from '@remix-run/router';
+
 export type {
   ActionArgs,
   ActionFunction,
+  ActionArgsWithMiddleware,
+  ActionFunctionWithMiddleware,
   AppData,
   AppLoadContext,
   Cookie,
@@ -42,10 +47,15 @@ export type {
   LinksFunction,
   LoaderFunction,
   LoaderArgs,
+  LoaderArgsWithMiddleware,
+  LoaderFunctionWithMiddleware,
   MemoryUploadHandlerFilterArgs,
   MemoryUploadHandlerOptions,
   MetaDescriptor,
   MetaFunction,
+  MiddlewareArgs,
+  MiddlewareContext,
+  MiddlewareFunction,
   PageLinkDescriptor,
   RequestHandler,
   RouteComponent,

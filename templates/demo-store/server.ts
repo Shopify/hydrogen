@@ -1,9 +1,15 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
-import {createRequestHandler, getBuyerIp} from '@shopify/remix-oxygen';
+import {
+  AdapterMiddlewareFunction,
+  createRequestHandler,
+  getBuyerIp,
+} from '@shopify/remix-oxygen';
 import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
 import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
+import {hydrogenContext} from '~/context';
+import {I18nLocale} from '~/lib/type';
 
 /**
  * Export a fetch handler in module format.
@@ -31,7 +37,7 @@ export default {
       /**
        * Create Hydrogen's Storefront client.
        */
-      const {storefront} = createStorefrontClient({
+      const {storefront} = createStorefrontClient<I18nLocale>({
         cache,
         waitUntil,
         buyerIp: getBuyerIp(request),
@@ -44,6 +50,27 @@ export default {
         requestGroupId: request.headers.get('request-id'),
       });
 
+      const adapterMiddleware: AdapterMiddlewareFunction = async ({
+        request,
+        context,
+      }) => {
+        // Set all the helpful context for route loaders, actions and middleware
+        context.set(hydrogenContext, {
+          storefront,
+          cache,
+          session,
+          waitUntil,
+          env,
+        });
+
+        // Run the request through the app (and route middlewares)
+        const fetchResponse = await context.next();
+
+        fetchResponse.headers.set('hello-middleware', 'remix is dope');
+
+        return fetchResponse;
+      };
+
       /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
@@ -51,7 +78,7 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({cache, session, waitUntil, storefront, env}),
+        adapterMiddleware,
       });
 
       const response = await handleRequest(request);

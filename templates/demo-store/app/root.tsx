@@ -2,8 +2,8 @@ import {
   defer,
   type LinksFunction,
   type MetaFunction,
-  type LoaderArgs,
   type AppLoadContext,
+  LoaderArgsWithMiddleware,
 } from '@shopify/remix-oxygen';
 import {
   Links,
@@ -32,6 +32,11 @@ import invariant from 'tiny-invariant';
 import {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
 import {useAnalytics} from './hooks/useAnalytics';
 import type {StorefrontContext} from './lib/type';
+import {
+  hydrogenContext,
+  sessionContext,
+  storefrontClientContext,
+} from './context';
 
 const seo: SeoHandleFunction<typeof loader> = ({data, pathname}) => ({
   title: data?.layout?.shop?.name,
@@ -65,7 +70,11 @@ export const meta: MetaFunction = () => ({
   viewport: 'width=device-width,initial-scale=1',
 });
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({
+  context: loaderContext,
+}: LoaderArgsWithMiddleware) {
+  const context = loaderContext.get(hydrogenContext);
+
   const [cartId, layout] = await Promise.all([
     context.session.get('cartId'),
     getLayoutData(context),

@@ -6,8 +6,13 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
+import type {LoaderArgsWithMiddleware} from '@shopify/remix-oxygen';
+import {hydrogenContext} from '~/context';
 
-export async function loader({context: {storefront}}: LoaderArgs) {
+export async function loader({
+  context: loaderContext,
+}: LoaderArgsWithMiddleware) {
+  const {storefront} = loaderContext.get(hydrogenContext);
   return json(await getFeaturedData(storefront));
 }
 
