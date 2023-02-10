@@ -1,6 +1,6 @@
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {defer, type LoaderArgsWithMiddleware} from '@shopify/remix-oxygen';
 import {
   useLoaderData,
   Await,
@@ -45,6 +45,7 @@ import type {
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
 import type {Product} from 'schema-dts';
+import {hydrogenContext} from '~/context';
 
 const seo: SeoHandleFunction<typeof loader> = ({data}) => {
   const media = flattenConnection<MediaConnection>(data.product.media).find(
@@ -68,7 +69,12 @@ export const handle = {
   seo,
 };
 
-export async function loader({params, request, context}: LoaderArgs) {
+export async function loader({
+  params,
+  request,
+  context: loaderContext,
+}: LoaderArgsWithMiddleware) {
+  const context = loaderContext.get(hydrogenContext);
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
 

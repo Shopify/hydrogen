@@ -1,4 +1,4 @@
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderArgsWithMiddleware} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
@@ -14,6 +14,7 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
+import {hydrogenContext} from '~/context';
 
 const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   title: data?.collection?.seo?.title,
@@ -60,7 +61,12 @@ export type SortParam =
   | 'newest'
   | 'featured';
 
-export async function loader({params, request, context}: LoaderArgs) {
+export async function loader({
+  params,
+  request,
+  context: loaderContext,
+}: LoaderArgsWithMiddleware) {
+  const context = loaderContext.get(hydrogenContext);
   const {collectionHandle} = params;
 
   invariant(collectionHandle, 'Missing collectionHandle param');
