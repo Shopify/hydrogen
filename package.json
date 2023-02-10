@@ -12,7 +12,9 @@
     "typecheck": "turbo typecheck --parallel",
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
-    "version": "changeset version && node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
+    "version": "changeset version && npm run version:hydrogen && npm run version:cli",
+    "version:hydrogen": "node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
+    "version:cli": "cd packages/cli && npm run generate:manifest",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache"
   },
