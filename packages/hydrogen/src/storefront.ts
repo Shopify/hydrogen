@@ -24,6 +24,7 @@ import {
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {warnOnce} from './utils/warning';
+import {LIB_VERSION} from './version';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -150,6 +151,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
     requestGroupId || generateUUID();
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
   if (storefrontId) defaultHeaders[STOREFRONT_ID_HEADER] = storefrontId;
+  if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
   async function fetchStorefrontApi<T>({
     query,

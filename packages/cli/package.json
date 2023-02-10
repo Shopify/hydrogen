@@ -12,6 +12,7 @@
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "oclif manifest",
+    "prepack": "npm run build",
     "test": "vitest run",
     "test:watch": "vitest"
   },
