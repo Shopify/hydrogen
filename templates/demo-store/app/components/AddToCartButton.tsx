@@ -9,6 +9,7 @@ export function AddToCartButton({
   className = '',
   variant = 'primary',
   width = 'full',
+  isOutOfStock,
   analytics,
   ...props
 }: {
@@ -17,6 +18,7 @@ export function AddToCartButton({
   className?: string;
   variant?: 'primary' | 'secondary' | 'inline';
   width?: 'auto' | 'full';
+  isOutOfStock?: boolean;
   analytics?: unknown;
   [key: string]: any;
 }) {
@@ -32,10 +34,11 @@ export function AddToCartButton({
       <input type="hidden" name="analytics" value={JSON.stringify(analytics)} />
       <Button
         as="button"
-        type="submit"
+        type={isOutOfStock ? 'button' : 'submit'}
         width={width}
         variant={variant}
         className={className}
+        disabled={isOutOfStock}
         {...props}
       >
         {children}

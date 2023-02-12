@@ -258,6 +258,7 @@ export function ProductForm() {
               ]}
               variant={isOutOfStock ? 'secondary' : 'primary'}
               data-test="add-to-cart"
+              isOutOfStock={isOutOfStock}
               analytics={{
                 products: [productAnalytics],
                 totalValue: parseFloat(productAnalytics.price),
