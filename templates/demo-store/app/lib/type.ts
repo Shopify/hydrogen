@@ -1,6 +1,5 @@
-import type {LoaderArgs} from '@shopify/remix-oxygen';
-import {Storefront as HydrogenStorefront} from '@shopify/hydrogen';
-import {
+import type {Storefront as HydrogenStorefront} from '@shopify/hydrogen';
+import type {
   CountryCode,
   CurrencyCode,
   LanguageCode,
@@ -20,12 +19,6 @@ export type I18nLocale = Locale & {
 };
 
 export type Storefront = HydrogenStorefront<I18nLocale>;
-export type StorefrontContext = {
-  storefront: Storefront;
-};
-export type StorefrontLoaderArgs = {
-  context: StorefrontContext;
-};
 
 export enum CartAction {
   ADD_TO_CART = 'ADD_TO_CART',
