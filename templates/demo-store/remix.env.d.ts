@@ -2,7 +2,7 @@
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
-import type {Storefront} from '@shopify/hydrogen';
+import type {Storefront} from '~/lib/type';
 import type {HydrogenSession} from '~/lib/session.server';
 
 declare global {

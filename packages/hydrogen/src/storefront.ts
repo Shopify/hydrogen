@@ -37,7 +37,7 @@ export type StorefrontClient<TI18n extends I18nBase> = {
   storefront: Storefront<TI18n>;
 };
 
-export type Storefront<TI18n extends I18nBase> = {
+export type Storefront<TI18n extends I18nBase = I18nBase> = {
   query: <T>(
     query: string,
     payload?: StorefrontCommonOptions & {
