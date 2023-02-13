@@ -8,7 +8,7 @@ const INDEX_SUFFIX = '/index';
 
 export async function addVirtualRoutes(config: RemixConfig) {
   const userRouteList = Object.values(config.routes);
-  const distPath = new URL('..', import.meta.url).pathname;
+  const distPath = new URL("..",import.meta.url.replace('file:///','')).pathname;
   const virtualRoutesPath = path.join(distPath, VIRTUAL_ROUTES_DIR);
 
   for (const absoluteFilePath of await recursiveReaddir(virtualRoutesPath)) {
