@@ -1,4 +1,5 @@
 import path from 'path';
+import {fileURLToPath} from 'url';
 import recursiveReaddir from 'recursive-readdir';
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 
@@ -8,15 +9,14 @@ const INDEX_SUFFIX = '/index';
 
 export async function addVirtualRoutes(config: RemixConfig) {
   const userRouteList = Object.values(config.routes);
-  const distPath = new URL('..', import.meta.url).pathname;
+  const distPath = fileURLToPath(new URL('..', import.meta.url));
   const virtualRoutesPath = path.join(distPath, VIRTUAL_ROUTES_DIR);
 
   for (const absoluteFilePath of await recursiveReaddir(virtualRoutesPath)) {
     const relativeFilePath = path.relative(virtualRoutesPath, absoluteFilePath);
-    const routePath = new URL(`file:///${relativeFilePath}`).pathname.replace(
-      /\.[jt]sx?$/,
-      '',
-    );
+    const routePath = fileURLToPath(
+      new URL(`file:///${relativeFilePath}`),
+    ).replace(/\.[jt]sx?$/, '');
 
     // Note: index routes has path `undefined`,
     // while frame routes such as `root.jsx` have path `''`.
