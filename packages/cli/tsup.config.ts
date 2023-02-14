@@ -38,13 +38,12 @@ export default defineConfig([
       );
 
       console.log('\n', 'Copied template files to build directory', '\n');
+
+      // For some reason, it seems that publicDir => outDir might be skipped on CI,
+      // so ensure here that asset files are copied:
+      await fs.copy('src/virtual-routes/assets', 'dist/virtual-routes/assets');
+
+      console.log('\n', 'Copied virtual route assets to build directory', '\n');
     },
-  },
-  {
-    format: 'esm',
-    entry: ['src/virtual-routes/assets/dummy.ts'],
-    outDir: 'dist/virtual-routes/assets',
-    publicDir: 'src/virtual-routes/assets',
-    dts: false,
   },
 ]);
