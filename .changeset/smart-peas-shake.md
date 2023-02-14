@@ -2,4 +2,4 @@
 '@shopify/remix-oxygen': patch
 ---
 
-export V2_MetarFunction type
+export V2_MetaFunction type
