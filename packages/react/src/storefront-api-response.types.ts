@@ -15,7 +15,8 @@ type StorefrontApiExtensions = {
     | 'ACCESS_DENIED'
     | 'SHOP_INACTIVE'
     | 'INTERNAL_SERVER_ERROR'
-    | string;
+    // eslint-disable-next-line @typescript-eslint/ban-types -- This enables autocomplete for the defined error codes we have, but also allows for any string to be used, too. https://github.com/ascorbic/unpic-img/blob/c5de1bf01abd85ef7e8ac07c40c19128a3097e69/packages/core/src/core.ts#L40 Thanks Matt Kane!
+    | (string & {});
 };
 
 /**

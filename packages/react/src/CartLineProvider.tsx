@@ -1,12 +1,15 @@
 import {useContext, createContext, type ReactNode} from 'react';
 import type {CartLine} from './storefront-api-types.js';
+import type {PartialDeep} from 'type-fest';
 
-export const CartLineContext = createContext<CartLine | null>(null);
+type CartLinePartialDeep = PartialDeep<CartLine, {recurseIntoArrays: true}>;
+
+export const CartLineContext = createContext<CartLinePartialDeep | null>(null);
 
 /**
  * The `useCartLine` hook provides access to the [CartLine object](https://shopify.dev/api/storefront/unstable/objects/cartline) from the Storefront API. It must be a descendent of a `CartProvider` component.
  */
-export function useCartLine(): CartLine {
+export function useCartLine(): CartLinePartialDeep {
   const context = useContext(CartLineContext);
 
   if (context == null) {
@@ -20,7 +23,7 @@ type CartLineProviderProps = {
   /** Any `ReactNode` elements. */
   children: ReactNode;
   /** A cart line object. */
-  line: CartLine;
+  line: CartLinePartialDeep;
 };
 
 /**

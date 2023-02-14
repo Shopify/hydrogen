@@ -21,7 +21,7 @@ const VIDEO_PROPS = {
 
 describe('<Video />', () => {
   it('renders a video tag', () => {
-    render(<Video data={VIDEO_PROPS} data-testId="video" />);
+    render(<Video data={VIDEO_PROPS} data-testid="video" />);
     const video = screen.getByTestId('video');
 
     expect(video).toHaveAttribute('id', VIDEO_PROPS.id);
@@ -49,7 +49,7 @@ describe('<Video />', () => {
 
   it('allows passthrough props', () => {
     render(
-      <Video data={VIDEO_PROPS} className="testClass" data-testId="video" />
+      <Video data={VIDEO_PROPS} className="testClass" data-testid="video" />
     );
     const video = screen.getByTestId('video');
 

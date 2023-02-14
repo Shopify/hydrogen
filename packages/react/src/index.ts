@@ -28,6 +28,8 @@ export {CartCheckoutButton} from './CartCheckoutButton.js';
 export {CartCost} from './CartCost.js';
 export {CartLinePrice} from './CartLinePrice.js';
 export {CartLineProvider, useCartLine} from './CartLineProvider.js';
+export {CartLineQuantity} from './CartLineQuantity.js';
+export {CartLineQuantityAdjustButton} from './CartLineQuantityAdjustButton.js';
 export {CartProvider, useCart} from './CartProvider.js';
 export {storefrontApiCustomScalars} from './codegen.helpers.js';
 export {getShopifyCookies} from './cookies-utils.js';

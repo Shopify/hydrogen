@@ -3,23 +3,9 @@ import {render, screen} from '@testing-library/react';
 import {vi} from 'vitest';
 import userEvent from '@testing-library/user-event';
 import {BuyNowButton} from './BuyNowButton.js';
+import {getCartWithActionsMock} from './CartProvider.test.helpers.js';
 
 vi.mock('./CartProvider');
-
-const defaultCart = {
-  buyerIdentityUpdate: vi.fn(),
-  cartAttributesUpdate: vi.fn(),
-  cartCreate: vi.fn(),
-  cartFragment: '',
-  checkoutUrl: '',
-  discountCodesUpdate: vi.fn(),
-  linesAdd: vi.fn(),
-  linesRemove: vi.fn(),
-  linesUpdate: vi.fn(),
-  noteUpdate: vi.fn(),
-  status: 'idle' as const,
-  totalQuantity: 0,
-};
 
 describe('<BuyNowButton/>', () => {
   it('renders a button', () => {
@@ -59,10 +45,11 @@ describe('<BuyNowButton/>', () => {
     it('uses useCartCreateCallback with the correct arguments', async () => {
       const mockCartCreate = vi.fn();
 
-      vi.mocked(useCart).mockImplementation(() => ({
-        ...defaultCart,
-        cartCreate: mockCartCreate,
-      }));
+      vi.mocked(useCart).mockImplementation(() =>
+        getCartWithActionsMock({
+          cartCreate: mockCartCreate,
+        })
+      );
 
       const user = userEvent.setup();
 
@@ -133,10 +120,11 @@ describe('<BuyNowButton/>', () => {
     });
 
     it('redirects to checkout', () => {
-      vi.mocked(useCart).mockImplementation(() => ({
-        ...defaultCart,
-        checkoutUrl: '/checkout?id=123',
-      }));
+      vi.mocked(useCart).mockImplementation(() =>
+        getCartWithActionsMock({
+          checkoutUrl: '/checkout?id=123',
+        })
+      );
 
       render(<BuyNowButton variantId="1">Buy now</BuyNowButton>, {
         wrapper: CartProvider,

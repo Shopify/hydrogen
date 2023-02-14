@@ -6,6 +6,7 @@ import type {
   CartLineConnection,
 } from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
+import type {CartWithActions} from './cart-types.js';
 
 export const CART_LINE: PartialDeep<CartLine, {recurseIntoArrays: true}> = {
   attributes: [{key: 'color', value: 'red'}],
@@ -115,6 +116,26 @@ export function getCartLinesMock(
   return {
     edges: nodes,
   } as CartLineConnection;
+}
+
+export function getCartWithActionsMock(
+  mockOptions?: PartialDeep<CartWithActions>
+): CartWithActions {
+  return {
+    buyerIdentityUpdate: vi.fn(),
+    cartAttributesUpdate: vi.fn(),
+    cartCreate: vi.fn(),
+    cartFragment: '',
+    checkoutUrl: '',
+    discountCodesUpdate: vi.fn(),
+    linesAdd: vi.fn(),
+    linesRemove: vi.fn(),
+    linesUpdate: vi.fn(),
+    noteUpdate: vi.fn(),
+    status: 'idle' as const,
+    totalQuantity: 0,
+    ...mockOptions,
+  };
 }
 
 /**
