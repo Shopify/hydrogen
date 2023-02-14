@@ -3,6 +3,7 @@ import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {output, file} from '@shopify/cli-kit';
 import {createRequire} from 'module';
+import {fileURLToPath} from 'url';
 import path from 'path';
 import fs from 'fs/promises';
 
@@ -134,7 +135,7 @@ export async function getRemixConfig(
 
   if (process.env.LOCAL_DEV) {
     // Watch local packages when developing in Hydrogen repo
-    const packagesPath = new URL('../../..', import.meta.url).pathname;
+    const packagesPath = fileURLToPath(new URL('../../..', import.meta.url));
     config.watchPaths ??= [];
 
     config.watchPaths.push(
