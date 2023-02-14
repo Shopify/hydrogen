@@ -1,3 +1,4 @@
+import {fileURLToPath} from 'url';
 import Command from '@shopify/cli-kit/node/base-command';
 import {ui} from '@shopify/cli-kit';
 import {file, path} from '@shopify/cli-kit';
@@ -132,7 +133,7 @@ export async function runGenerate(
     typescript,
     force,
     adapter,
-    templatesRoot = new URL('../../../', import.meta.url).pathname,
+    templatesRoot = fileURLToPath(new URL('../../../', import.meta.url)),
   }: {
     directory: string;
     typescript?: boolean;
