@@ -1,5 +1,38 @@
 # @shopify/hydrogen-react
 
+## 2023.1.5
+
+### Patch Changes
+
+- b8757bd: Fix the UMD global variable name from `storefrontkitreact` to `hydrogenreact`.
+- 6225d33: Add a deprecation notice to `<CartLinePrice/>`:
+
+  Use `Money` instead. To migrate, use the `priceType` prop that matches the corresponding property on the `CartLine` object:
+
+  - `regular`: `cartLine.cost.totalAmount`
+  - `compareAt`: `cartLine.cost.compareAtAmountPerQuantity`
+
+  For example:
+
+  ```jsx
+  // before
+  <CartLinePrice data={cartLine} priceType="regular" />
+  // after
+  <Money data={cartLine.cost.totalAmount} />
+  ```
+
+- 2bb8c81: Adding `<CartLineQuantity />` and `<CartLineQuantityAdjustButton />`
+
+  The `<CartLineQuantity />` and `<CartLineQuantityAdjustButton />` components have been added / migrated over from Hydrogen v1.
+
+  Additionally, fixed a bug when using `<CartLineQuantityAdjustButton />` that caused CartLine Attributes to be erased. CartLine Attributes should now be persisted when using that component.
+
+  ## `useCartLine()` TypeScript types update
+
+  `useCartLine()`'s TypeScript type originally returned a `CartLine`. It has now been updated to be `PartialDeep<CartLine>`, which makes all the properties optional instead of required. This matches with the rest of hydrogen-react in that we can't know or guarnatee what properties exist on certain objects so we reflect that state in the TypeScript types.
+
+- eb1656f: Update docs
+
 ## 2023.1.4
 
 ### Major Changes
