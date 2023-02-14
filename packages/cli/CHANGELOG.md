@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 4.0.5
+
+### Patch Changes
+
+- Fix missing assets in virtual routes. ([#503](https://github.com/Shopify/hydrogen/pull/503)) by [@frandiox](https://github.com/frandiox)
+
 ## 4.0.4
 
 ### Patch Changes
