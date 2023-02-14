@@ -1,5 +1,13 @@
 # @shopify/hydrogen
 
+## 2023.1.3
+
+### Patch Changes
+
+- Send Hydrogen version in Storefront API requests. ([#471](https://github.com/Shopify/hydrogen/pull/471)) by [@frandiox](https://github.com/frandiox)
+
+- Fix default Storefront type in LoaderArgs. ([#496](https://github.com/Shopify/hydrogen/pull/496)) by [@frandiox](https://github.com/frandiox)
+
 ## 2023.1.2
 
 ### Patch Changes
