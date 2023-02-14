@@ -9,12 +9,12 @@ export {createRequestHandler, getBuyerIp} from './server';
 
 export {
   createSession,
+  defer,
   isCookie,
   isSession,
   json,
   MaxPartSizeExceededError,
   redirect,
-  defer,
   unstable_composeUploadHandlers,
   unstable_createMemoryUploadHandler,
   unstable_parseMultipartFormData,
@@ -40,8 +40,8 @@ export type {
   HtmlMetaDescriptor,
   LinkDescriptor,
   LinksFunction,
-  LoaderFunction,
   LoaderArgs,
+  LoaderFunction,
   MemoryUploadHandlerFilterArgs,
   MemoryUploadHandlerOptions,
   MetaDescriptor,
@@ -60,6 +60,7 @@ export type {
   SignFunction,
   TypedResponse,
   UnsignFunction,
-  UploadHandlerPart,
   UploadHandler,
+  UploadHandlerPart,
+  V2_MetaFunction,
 } from '@remix-run/server-runtime';
