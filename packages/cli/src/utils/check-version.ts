@@ -32,7 +32,7 @@ export async function checkHydrogenVersion(
 
   if (!newVersionAvailable) return;
 
-  return (extraMessage = '') =>
+  return (extraMessage = '') => {
     renderInfo({
       headline: 'Upgrade available',
       body:
@@ -49,6 +49,9 @@ export async function checkHydrogenVersion(
         },
       ],
     });
+
+    return {currentVersion, newVersion: newVersionAvailable};
+  };
 }
 
 function locateDependency(

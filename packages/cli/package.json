@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit",
     "generate:manifest": "oclif manifest",
     "prepack": "npm run build",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
