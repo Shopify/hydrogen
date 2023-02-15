@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import {output} from '@shopify/cli-kit';
+import {output, file} from '@shopify/cli-kit';
 import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
@@ -69,6 +69,26 @@ async function runDev({
     return [fileRelative, path.resolve(root, fileRelative)] as const;
   };
 
+  const serverBundleExists = () => file.exists(buildPathWorkerFile);
+
+  let miniOxygenStarted = false;
+  async function safeStartMiniOxygen() {
+    if (miniOxygenStarted) return;
+
+    await startMiniOxygen({
+      root,
+      port,
+      watch: true,
+      buildPathWorkerFile,
+      buildPathClient,
+    });
+
+    miniOxygenStarted = true;
+
+    const showUpgrade = await checkingHydrogenVersion;
+    if (showUpgrade) showUpgrade();
+  }
+
   const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
   await watch(await reloadConfig(), {
     reloadConfig,
@@ -76,18 +96,20 @@ async function runDev({
     async onInitialBuild() {
       await copyingFiles;
 
+      if (!(await serverBundleExists())) {
+        const {renderFatalError} = await import('@shopify/cli-kit/node/ui');
+        return renderFatalError({
+          name: 'BuildError',
+          type: 0,
+          message:
+            'MiniOxygen cannot start because the server bundle has not been generated.',
+          tryMessage:
+            'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
+        });
+      }
+
       console.timeEnd(LOG_INITIAL_BUILD);
-
-      await startMiniOxygen({
-        root,
-        port,
-        watch: true,
-        buildPathWorkerFile,
-        buildPathClient,
-      });
-
-      const showUpgrade = await checkingHydrogenVersion;
-      if (showUpgrade) showUpgrade();
+      await safeStartMiniOxygen();
     },
     async onFileCreated(file: string) {
       const [relative, absolute] = getFilePaths(file);
@@ -125,6 +147,11 @@ async function runDev({
     },
     async onRebuildFinish() {
       console.timeEnd(LOG_REBUILT);
+
+      if (!miniOxygenStarted && (await serverBundleExists())) {
+        console.log(''); // New line
+        await safeStartMiniOxygen();
+      }
     },
   });
 }
