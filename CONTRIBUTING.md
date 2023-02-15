@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Hydrogen monorepo contains of multiple packages (found in `/packages/`) and templates (found in `/templates/`). This document is intended to outline some common workflows for working on these packages and templates locally. 
+The Hydrogen monorepo contains multiple packages (found in `/packages/`) and templates (found in `/templates/`). This document is intended to outline some common workflows for working on these packages and templates locally. 
 
 ### Common commands
 
