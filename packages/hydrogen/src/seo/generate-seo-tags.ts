@@ -1,4 +1,4 @@
-import type {Maybe} from '@shopify/hydrogen/storefront-api-types';
+import type {Maybe} from '@shopify/hydrogen-react/storefront-api-types';
 import type {WithContext, Thing} from 'schema-dts';
 import type {ComponentPropsWithoutRef} from 'react';
 

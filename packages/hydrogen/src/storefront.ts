@@ -22,7 +22,7 @@ import {parseJSON} from './utils/parse-json';
 import {
   CountryCode,
   LanguageCode,
-} from '@shopify/hydrogen/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
 
