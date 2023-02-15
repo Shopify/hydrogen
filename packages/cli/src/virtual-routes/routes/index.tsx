@@ -53,6 +53,7 @@ export default function Index() {
   const {name: shopName, id: shopId} = data.layout.shop;
 
   const configDone = shopId !== HYDROGEN_SHOP_ID;
+  console.log(configDone);
 
   return (
     <>
@@ -60,27 +61,40 @@ export default function Index() {
         {configDone ? <HydrogenLogoBaseColor /> : <HydrogenLogoBaseBW />}
         <h1>Hello, {shopName || 'Hydrogen'}</h1>
         <p>Welcome to your new custom storefront</p>
-        <section className="Banner">
-          <div>
-            <IconBanner />
-            <h2>Configure storefront token</h2>
-          </div>
-          <p>
-            You&rsquo;re seeing this because you have not yet configured your
-            storefront token. To get started, edit {` `}
-            <code>.env</code>. Then, create your first route with the file {` `}
-            <code>/app/routes/index.jsx</code>. Learn more about
-            {` `}
-            <a href="https://shopify.dev/docs/custom-storefronts/hydrogen/environment-variables">
-              editing environment variables
-            </a>
-            and
-            <a href="https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development#step-4-create-a-route">
-              creating routes
-            </a>
-            .
-          </p>
-        </section>
+        {configDone ? null : (
+          <section className="Banner">
+            <div>
+              <IconBanner />
+              <h2>Configure storefront token</h2>
+            </div>
+            <p>
+              You&rsquo;re seeing this because you have not yet configured your
+              storefront token. <br />
+              <br /> To get started, edit {` `}
+              <code>.env</code>. Then, create your first route with the file
+              {` `}
+              <code>/app/routes/index.jsx</code>. Learn more about
+              {` `}
+              <a
+                target="_blank"
+                rel="norefferer noopener"
+                href="https://shopify.dev/docs/custom-storefronts/hydrogen/environment-variables"
+              >
+                editing environment variables
+              </a>
+              {` `}
+              and{` `}
+              <a
+                target="_blank"
+                rel="norefferer noopener"
+                href="https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development#step-4-create-a-route"
+              >
+                creating routes
+              </a>
+              .
+            </p>
+          </section>
+        )}
         <ResourcesLinks />
       </Layout>
     </>
@@ -100,14 +114,14 @@ function ErrorPage() {
             <h2>There&rsquo;s a problem with your storefront</h2>
           </div>
           <p>
-            Check your domain and API token in your <code>.env</code> file. Read
-            the documentation on{` `}
+            Check your domain and API token in your <code>.env</code> file.
+            Learn more about
             <a
               target="_blank"
               rel="norefferer noopener"
-              href="https://shopify.dev/custom-storefronts/hydrogen/getting-started/quickstart"
+              href="https://shopify.dev/docs/custom-storefronts/hydrogen/environment-variables"
             >
-              how to configure your&nbsp;storefront
+              editing environment variables
             </a>
             .
           </p>
@@ -200,13 +214,25 @@ function Layout({
         <h1>{shopName?.toUpperCase()}</h1>
         <p>&nbsp;Dev Mode&nbsp;</p>
         <nav>
-          <a href="https://discord.com/invite/shopifydevs">
+          <a
+            target="_blank"
+            rel="norefferer noopener"
+            href="https://discord.com/invite/shopifydevs"
+          >
             <IconDiscord />
           </a>
-          <a href="https://github.com/Shopify/hydrogen">
+          <a
+            target="_blank"
+            rel="norefferer noopener"
+            href="https://github.com/Shopify/hydrogen"
+          >
             <IconGithub />
           </a>
-          <a href="https://twitter.com/shopifydevs?lang=en">
+          <a
+            target="_blank"
+            rel="norefferer noopener"
+            href="https://twitter.com/shopifydevs?lang=en"
+          >
             <IconTwitter />
           </a>
         </nav>
