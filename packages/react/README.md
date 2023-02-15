@@ -2,7 +2,9 @@
 
 # Hydrogen React
 
-Hydrogen React provides React components, reusable functions, and utilities for interacting with the Storefront API.
+Hydrogen React is an unopionated and performant library of Shopify-specific commerce components, hooks, and utilities. Bring the best parts of Hydrogen to more React frameworks, like Next.js and Gatsby, and accelerate headless development using Shopify’s pre-built React components including Cart, Shop Pay, and Shopify Analytics.
+
+📚 [Overview](https://shopify.dev/custom-storefronts/hydrogen-react) | 🛠️ [Docs](https://shopify.dev/docs/api/hydrogen-react) | 🛍️ [Custom Storefronts at Shopify](https://shopify.dev/custom-storefronts) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 📝 [Changelog](https://github.com/Shopify/hydrogen-react/blob/main/packages/react/CHANGELOG.md)
 
 **IMPORTANT:** Refer to how this package is [versioned](../../README.md#versioning).
 
@@ -13,12 +15,11 @@ Hydrogen React provides React components, reusable functions, and utilities for 
 This document contains the following topics:
 
 - [Getting started with Hydrogen React](#getting-started)
-- [Authenticating the Storefront API client](#authenticating-the-storefront-client)
+- [Improving the Developer Experience](#improving-the-developer-experience)
 - [Development and production bundles](#development-and-production-bundles)
 - [Hydrogen React in the browser](#hydrogen-react-in-the-browser)
-- [Enabling autocompletion for the Storefront API](#enable-storefront-api-graphql-autocompletion)
-- [Setting TypeScript types for Storefront API objects](#typescript)
 - [Troubleshooting](#troubleshooting)
+- [Contributing](#contributing)
 
 ## Getting started
 
@@ -36,107 +37,16 @@ This document contains the following topics:
   yarn add @shopify/hydrogen-react
   ```
 
-## Authenticating the Storefront client
+Browse our [overview](https://shopify.dev/custom-storefronts/hydrogen-react) and [docs](https://shopify.dev/docs/api/hydrogen-react) to learn more.
 
-To make it easier to query the Storefront API, Hydrogen React exposes a helper function called `createStorefrontClient()`.
+## Improving the Developer Experience
 
-The client can take in the following tokens:
+`hydrogen-react` includes several tools that improve the developer experience, such as:
 
-- **[Delegate access](https://shopify.dev/api/usage/authentication#getting-started-with-authenticated-access)**: Used for requests from a server or other private context. Set as `privateStorefrontToken`.
-
-- **[Public](https://shopify.dev/api/usage/authentication#getting-started-with-public-access)**: Used for requests from a browser or other public context. Set as `publicAccessToken`.
-
-The following is an example:
-
-```ts
-// Filename: '/shopify-client.js'
-
-import {createStorefrontClient} from '@shopify/hydrogen-react';
-
-const client = createStorefrontClient({
-  privateStorefrontToken: '...',
-  storeDomain: 'myshop',
-  storefrontApiVersion: '2023-01',
-});
-
-export const getStorefrontApiUrl = client.getStorefrontApiUrl;
-export const getPrivateTokenHeaders = client.getPrivateTokenHeaders;
-export const getShopifyDomain = client.getShopifyDomain;
-```
-
-You can then use this in your server-side queries. Here's an example of using it for [NextJS's `getServerSideProps`](https://nextjs.org/docs/basic-features/data-fetching/get-server-side-props):
-
-```ts
-// Filename: '/pages/index.js'
-
-import {
-  getStorefrontApiUrl,
-  getPrivateTokenHeaders,
-} from '../shopify-client.js';
-
-export async function getServerSideProps() {
-  const response = await fetch(getStorefrontApiUrl(), {
-    body: GRAPHQL_QUERY,
-    headers: getPrivateTokenHeaders({buyerIp: '...'}),
-    method: 'POST',
-  });
-
-  const json = await response.json();
-
-  return {props: json};
-}
-```
-
-You can also use this to proxy the liquid online store:
-
-```ts
-// Next.js API route support: https://nextjs.org/docs/api-routes/introduction
-import {getShopifyDomain} from '../shopify-client.js';
-
-export default function handler(req, res) {
-  fetch(getShopifyDomain() + '/products', {
-    headers: {
-      /** forward some of the headers from the original request **/
-    },
-  })
-    .then((resp) => resp.text())
-    .then((text) => res.status(200).send(text))
-    .catch((error) => {
-      console.error(
-        `Error proxying the online store: ${
-          error instanceof Error ? error.stack : error
-        }`
-      );
-      res.status(500).send('Server error occurred');
-    });
-}
-```
-
-### (Optional) Set the content type for the Storefront client
-
-By default, the Storefront client sends the `"content-type": "application/json"` header. Use the `json` content type when you have GraphQL variables and when the body is an object with the following shape:
-
-```json
-{
-  "query": "...",
-  "operationName": "...",
-  "variables": { "myVariable": "someValue", ... }
-}
-```
-
-However, when the body is only a query string, such as `{"..."}`, you can optionally change the default header to `application/graphql`:
-
-```ts
-createStorefrontClient({contentType: 'graphql', ...})
-```
-
-Alternatively, each time you get the headers you can customize which `"content-type"` you want, for only that one invocation:
-
-```ts
-getPrivateTokenHeaders({contentType: 'graphql'});
-```
-
-**Note:** If you're using TypeScript, then you can [improve the typing experience](#set-typescript-types).
+- Creating a [storefront client](https://shopify.dev/docs/api/hydrogen-react/utilities/createstorefrontclient) to easily make API requests to the Storefront API
+- Enabling [GraphQL validation and autocompletion](https://shopify.dev/docs/api/hydrogen-react/utilities/storefront-schema) for the Storefront API
+- Using the pre-built [TypeScript types for the Storefront API](https://shopify.dev/docs/api/hydrogen-react/utilities/storefront-api-types)
+- Correctly typing the Storefront API's custom scalars [when using GraphQL Codegen](https://shopify.dev/docs/api/hydrogen-react/utilities/storefrontapicustomscalars) and TypeScript
 
 ## Development and production bundles
 
@@ -152,104 +62,6 @@ Hydrogen React has a development `umd` build and a production `umd` build. Both 
 
 If you're using Hydrogen React as a global through the `<script>` tag, then the components can be accessed through the `hydrogenreact` global variable.
 
-## Enable Storefront API GraphQL autocompletion
-
-To improve your development experience, enable GraphQL autocompletion for the Storefront API in your integrated development environment (IDE).
-
-1. Add [`graphql`](https://www.npmjs.com/package/graphql) and [GraphQL-config](https://www.graphql-config.com/docs/user/user-installation) with the following command:
-
-   ```bash
-   yarn add --dev graphql graphql-config
-   ```
-
-1. Create a [GraphQL config file](https://www.graphql-config.com/docs/user/user-usage) at the root of your code. For example, `.graphqlrc.yml`.
-1. Add a [`schema`](https://www.graphql-config.com/docs/user/user-schema) and point it to Hydrogen React's bundled schema for the Storefront API.
-
-   For example:
-
-   ```yml
-   # Filename: .graphqlrc.yml
-   schema: node_modules/@shopify/hydrogen-react/storefront.schema.json
-   ```
-
-1. Install a GraphQL extension in your IDE, such as the [GraphQL extension for VSCode](https://marketplace.visualstudio.com/items?itemName=GraphQL.vscode-graphql).
-
-GraphQL autocompletion and validation will now work in `.graphql` files and in [`gql`](https://github.com/apollographql/graphql-tag) template literals!
-
-If you're having trouble getting it to work, then consult our [troubleshooting section](#graphql-autocompletion).
-
-## TypeScript
-
-Improve your development experience by using Hydrogen React's generated Types and helpers.
-
-### Storefront API types
-
-Hydrogen React ships with generated TypeScript types that match the Storefront API and its objects. Import them from the `/storefront-api-types` package path:
-
-```ts
-import type {Product} from '@shopify/hydrogen-react/storefront-api-types';
-
-const product = {} satisfies Product;
-```
-
-You can also use TypeScript's built-in helpers to create your own Types to fit your needs:
-
-```ts
-const partialProduct = {} satisfies Partial<Product>;
-
-const productTitle: Pick<Product, 'title'> = '';
-
-const productExceptTitle = {} satisfies Omit<Product, 'title'>;
-```
-
-### GraphQL CodeGen
-
-To use GraphQL CodeGen, follow [their guide](https://the-guild.dev/graphql/codegen/docs/getting-started/installation) to get started. Then, when you have a `codegen.ts` file, you can modify the following lines in the codegen object to improve the CodgeGen experience:
-
-```ts
-import {storefrontApiCustomScalars} from '@shopify/hydrogen-react';
-
-const config: CodegenConfig = {
-  // Use the schema that's bundled with @shopify/hydrogen-react
-  schema: './node_modules/@shopify/hydrogen-react/storefront.schema.json',
-  generates: {
-    './gql/': {
-      preset: 'client',
-      plugins: [],
-      config: {
-        // Use the custom scalar definitions that @shopify/hydrogen-react provides to improve the types
-        scalars: storefrontApiCustomScalars,
-      },
-    },
-  },
-};
-```
-
-### The `StorefrontApiResponseError` and `StorefrontApiResponseOk` helpers
-
-The following is an example:
-
-```tsx
-import {
-  type StorefrontApiResponseError,
-  type StorefrontApiResponseOk,
-} from '@shopify/hydrogen-react';
-
-async function FetchApi<DataGeneric>() {
-  const apiResponse = await fetch('...');
-
-  if (!apiResponse.ok) {
-    // 400 or 500 level error
-    return (await apiResponse.text()) as StorefrontApiResponseError; // or apiResponse.json()
-  }
-
-  const graphqlResponse: StorefrontApiResponseOk<DataGeneric> =
-    await apiResponse.json();
-
-  // You can now access 'graphqlResponse.data' and 'graphqlResponse.errors'
-}
-```
-
 ## Troubleshooting
 
 The following will help you troubleshoot common problems in this version of Hydrogen React.
@@ -263,3 +75,9 @@ For example, in VSCode do the following:
 1. Open the [command palette](https://code.visualstudio.com/docs/getstarted/userinterface#_command-palette).
 1. Type `graphql`.
 1. Select `VSCode GraphQL: Manual Restart`.
+
+## Contributing
+
+We love contributions! Contributing works best when you first confirm that something needs to be changed or fixed; please open an issue, start a discussion, or talk to us in Discord!
+
+PRs are welcome! Be sure to read the [CONTRIBUTING.md](../../CONTRIBUTING.md) for an overview and guidelines to help your PR succeed.
