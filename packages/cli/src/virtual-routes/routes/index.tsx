@@ -53,7 +53,6 @@ export default function Index() {
   const {name: shopName, id: shopId} = data.layout.shop;
 
   const configDone = shopId !== HYDROGEN_SHOP_ID;
-  console.log(configDone);
 
   return (
     <>
