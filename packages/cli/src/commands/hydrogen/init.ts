@@ -10,6 +10,7 @@ import {commonFlags} from '../../utils/flags.js';
 import {transpileProject} from '../../utils/transpile-ts.js';
 import {getLatestTemplates} from '../../utils/template-downloader.js';
 import {readdir} from 'fs/promises';
+import {checkHydrogenVersion} from '../../utils/check-version.js';
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
@@ -49,6 +50,16 @@ export async function runInit(
   } = getProcessFlags(),
 ) {
   supressNodeExperimentalWarnings();
+
+  const showUpgrade = await checkHydrogenVersion(process.cwd(), 'cli');
+  if (showUpgrade) {
+    const packageManager = await packageManagerUsedForCreating();
+    showUpgrade(
+      packageManager === 'unknown'
+        ? ''
+        : `Please use the latest version with \`${packageManager} create @shopify/hydrogen@latest\``,
+    );
+  }
 
   // Start downloading templates early.
   const templatesPromise = getLatestTemplates().catch((error) => {
