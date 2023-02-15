@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@shopify/cli-hydrogen": "^4.0.4"
+    "@shopify/cli-hydrogen": "^4.0.5"
   },
   "bin": "dist/create-app.js",
   "files": [
