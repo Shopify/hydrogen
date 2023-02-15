@@ -6,12 +6,13 @@ import {
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import Flags from '@oclif/core/lib/flags.js';
 import {output, path} from '@shopify/cli-kit';
-import {commonFlags} from '../../utils/flags.js';
+import {commonFlags, parseProcessFlags} from '../../utils/flags.js';
 import {transpileProject} from '../../utils/transpile-ts.js';
 import {getLatestTemplates} from '../../utils/template-downloader.js';
 import {readdir} from 'fs/promises';
 
 const STARTER_TEMPLATES = ['hello-world', 'demo-store'];
+const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
@@ -57,7 +58,7 @@ export async function runInit(
     token?: string;
     force?: boolean;
     installDeps?: boolean;
-  } = getProcessFlags(),
+  } = parseProcessFlags(process.argv, FLAG_MAP),
 ) {
   supressNodeExperimentalWarnings();
 
@@ -227,19 +228,6 @@ async function projectExists(projectDir: string) {
     (await file.isDirectory(projectDir)) &&
     (await readdir(projectDir)).length > 0
   );
-}
-
-// When calling runInit from @shopify/create-hydrogen,
-// parse the flags from the process arguments:
-function getProcessFlags() {
-  const flagMap = {f: 'force'} as Record<string, string>;
-  const [, , ...flags] = process.argv;
-
-  return flags.reduce((acc, flag) => {
-    const [key, value = true] = flag.replace(/^\-+/, '').split('=');
-    const mappedKey = flagMap[key!] || key!;
-    return {...acc, [mappedKey]: value};
-  }, {});
 }
 
 function supressNodeExperimentalWarnings() {

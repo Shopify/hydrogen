@@ -26,3 +26,33 @@ export function flagsToCamelObject(obj: Record<string, any>) {
     return acc;
   }, {} as any);
 }
+
+// When calling runInit from @shopify/create-hydrogen,
+// parse the flags from the process arguments:
+export function parseProcessFlags(
+  processArgv: string[],
+  flagMap: Record<string, string> = {},
+) {
+  const [, , ...args] = processArgv;
+
+  const options = {} as Record<string, string | boolean>;
+
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    const nextArg = args[i + 1];
+
+    if (arg?.startsWith('-')) {
+      let key = arg.replace(/^\-{1,2}/, '');
+      let value = !nextArg || nextArg.startsWith('-') ? true : nextArg;
+
+      if (value === true && key.startsWith('no-')) {
+        value = false;
+        key = key.replace('no-', '');
+      }
+
+      options[flagMap[key] || key] = value;
+    }
+  }
+
+  return flagsToCamelObject(options);
+}
