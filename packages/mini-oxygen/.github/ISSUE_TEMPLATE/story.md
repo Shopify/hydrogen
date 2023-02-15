@@ -1,25 +1,23 @@
 ---
 name: User Story
-about: Requirements, scope, and implementation tasks of feature deliverable.
+about: Groups a list of tasks that, upon delivery, enable the user to to do something.
 title: ''
 labels: story
 assignees: ''
 
 ---
 
-_Depends on_
-<!-- quick link to other issues using format: Shopify/{issue-repo-name}#{issue-number} -->
-- 
-
----
+_Part of: Shopify/{repo}#{issue-number} <!--link to parent epic-->_
 
 ### Story / Objective
 #### For who
 - [ ] Merchants
-- [ ] 3p devs
+- [ ] In-house dev team
+- [ ] Agency dev team
 - [ ] Buyers
-- [ ] Shopify / 1p devs
-- [ ] Internal / Oxygen team
+- [ ] Shopify devs
+- [ ] Shopify non-RnD partners
+- [ ] Oxygen team
 - [ ] Other (please specify)
 
 #### What
@@ -40,7 +38,7 @@ _Depends on_
 - 
 
 ### Tasks
-_Cross-disciplinary atomic tasks required to complete the story_
+_Cross-disciplinary atomic units of work required to complete the story_
 <!-- To be hydrated out by the implementation team. Could be turned into issues themselves for tracking. -->
 
 - [ ]
@@ -54,5 +52,4 @@ _Cross-disciplinary atomic tasks required to complete the story_
 ### Related Resources
 <!-- Any reading material, diagrams, conversations, decision logs, or related work items -->
 
-- [See `definition of ready` and `definition of done` here](https://docs.google.com/presentation/d/1uCH3vvFvdJgOHRwdTD5DCjVtk1rw8ic8dEmBn5Vdmtg/edit#slide=id.g13c58f52b17_0_207)
-- 
+-

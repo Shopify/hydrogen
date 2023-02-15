@@ -7,12 +7,7 @@ assignees: ''
 
 ---
 
-_Depends on_
-<!-- quick link to other issues using format: Shopify/{issue-repo-name}#{issue-number} -->
-
-- 
-
----
+_Part of: [GSD]() | Shopify/{repo}#{issue-number} <!--link-to GSD and/or larger tracker issue-->_
 
 ### Objective
 
@@ -21,8 +16,8 @@ _Depends on_
 
 - 
 
-### Acceptance Criteria
-<!-- A checklist of things that are possible or expected outcomes/artifacts when this work is done -->
+### Expected Artifacts
+_e.g. metrics, prototypes, trade-offs, decision log_
 
 - 
 - 
@@ -35,5 +30,4 @@ _Depends on_
 ### Related Resources
 <!-- Any reading material, diagrams, conversations, decision logs, or related work items -->
 
-- [See `definition of ready` and `definition of done` here](https://docs.google.com/presentation/d/1uCH3vvFvdJgOHRwdTD5DCjVtk1rw8ic8dEmBn5Vdmtg/edit#slide=id.g13c58f52b17_0_207)
 - 

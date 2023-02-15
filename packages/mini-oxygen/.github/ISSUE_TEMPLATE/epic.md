@@ -1,29 +1,28 @@
 ---
 name: Epic
-about: Objectives, scope, and stories that cohesively group together into a phase or roll-out target.
+about: Groups a set of work items that we generally want to rollout as one piece.
 title: ''
 labels: epic
 assignees: ''
 
 ---
 
-### Milestone / Objective
-<!-- E.g. Identify X, Unlock Y, Migrate A to B, June Edition - Deployments enhancements, etc. -->
+_Part of: [GSD]() | Shopify/{repo}#{issue-number} <!--link-to GSD and/or larger tracker issue-->_
 
-
+### Objective or User-Job-To-Be-Done
+<!-- E.g. Identify X, Unlock Y, Migrate A to B, Deployments enhancements, Feature Y MVP, etc. -->
+<!-- Read more about Job to be done (JTBD) framework here: https://www.aha.io/roadmapping/guide/release-management/what-is-the-jobs-to-be-done-framework -->
 
 ### Target Outcomes
-<!-- A checklist of things that are possible or expected outcomes/artifacts when this work is done -->
+<!-- Generally should be expressable in terms of user stories (user can do x, or as a user i can do y), exploration work -->
+<!-- The team is encouraged to run a story mapping-style session together, with the person who is driving the requirements. Read more here: https://www.aha.io/roadmapping/guide/release-management/what-is-user-story-mapping -->
 
-- 
-- 
+```[tasklist]
+### Stories
+- [ ] 
 
-### Work Items
-_User Stories, Spikes, etc._
-_To be hydrated out by the implementation team. Should be turned into issues themselves for tracking._
+```
 
-- [ ]
-- [ ]
 
 ### Out of Scope
 <!-- What things are to be ignored within this chunk of work, with a brief why -->
@@ -33,24 +32,4 @@ _To be hydrated out by the implementation team. Should be turned into issues the
 ### Related Resources
 <!-- Any reading material, diagrams, conversations, decision logs, or related work items -->
 
-- [See `definition of ready` and `definition of done` here](https://docs.google.com/presentation/d/1uCH3vvFvdJgOHRwdTD5DCjVtk1rw8ic8dEmBn5Vdmtg/edit#slide=id.g13c58f52b17_0_207)
 - 
-
----
-
-### Key Dates and Dependencies
-_Delivery dependencies (e.g. vendors, Shopify teams) or Go To Market/Marketing targets (Editions, BFCM)_
-
-- 
-
-### Key People / Groups
-#### Internal Points of Contact
-- Requirements:
-- Execution:
-
-#### Stakeholders
-- 
-
-#### Subject Matter Experts
-- 
-
