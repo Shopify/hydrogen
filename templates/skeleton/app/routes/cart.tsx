@@ -1,7 +1,7 @@
 import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
-import {flattenConnection} from '@shopify/hydrogen-react';
-import type {Cart as CartType} from '@shopify/hydrogen-react/storefront-api-types';
+import {flattenConnection} from '@shopify/hydrogen';
+import type {Cart as CartType} from '@shopify/hydrogen/storefront-api-types';
 
 export async function action() {
   // @TODO implement cart action
