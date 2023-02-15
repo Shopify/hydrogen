@@ -39,15 +39,26 @@ body {
   flex-direction: column;
 }
 
+.hydrogen-virtual-route {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+
 header {
   display: flex;
   flex-direction: row;
+  gap: 20px;
   padding: 14px 20px;
   width: 100%;
   height: 48px;
   background: #FFFFFF;
   align-items: center;
   color: #5C5F62;
+}
+
+header p {
+ white-space: nowrap;
 }
 
 header nav {
