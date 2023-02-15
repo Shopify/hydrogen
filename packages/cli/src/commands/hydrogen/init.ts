@@ -11,20 +11,25 @@ import {transpileProject} from '../../utils/transpile-ts.js';
 import {getLatestTemplates} from '../../utils/template-downloader.js';
 import {readdir} from 'fs/promises';
 
+const STARTER_TEMPLATES = ['hello-world', 'demo-store'];
+
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
   static flags = {
-    path: commonFlags.path,
     force: commonFlags.force,
+    path: Flags.string({
+      description: 'The path to the directory of the new Hydrogen storefront.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_PATH',
+    }),
     language: Flags.string({
       description: 'Sets the template language to use. One of `js` or `ts`.',
       choices: ['js', 'ts'],
-      default: 'js',
       env: 'SHOPIFY_HYDROGEN_FLAG_LANGUAGE',
     }),
     template: Flags.string({
       description:
         'Sets the template to use. One of `demo-store` or `hello-world`.',
+      choices: STARTER_TEMPLATES,
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
   };
@@ -67,7 +72,7 @@ export async function runInit(
       type: 'select',
       name: 'template',
       message: 'Choose a template',
-      choices: ['hello-world', 'demo-store'].map((value) => ({
+      choices: STARTER_TEMPLATES.map((value) => ({
         name: value.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
         value,
       })),
