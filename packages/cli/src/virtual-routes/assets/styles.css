@@ -39,6 +39,12 @@ body {
   flex-direction: column;
 }
 
+.hydrogen-virtual-route {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  min-height: 100vh;
+}
+
 header {
   display: flex;
   flex-direction: row;
