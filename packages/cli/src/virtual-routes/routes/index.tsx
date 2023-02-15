@@ -71,8 +71,12 @@ export default function Index() {
             <code>.env</code>. Then, create your first route with the file {` `}
             <code>/app/routes/index.jsx</code>. Learn more about
             {` `}
-            <a href="https://shopify.dev/custom-storefronts/hydrogen/getting-started/quickstart">
-              connecting a&nbsp;storefront
+            <a href="https://shopify.dev/docs/custom-storefronts/hydrogen/environment-variables">
+              editing environment variables
+            </a>
+            and
+            <a href="https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development#step-4-create-a-route">
+              creating routes
             </a>
             .
           </p>
