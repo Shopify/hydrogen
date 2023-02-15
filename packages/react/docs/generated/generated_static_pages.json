@@ -77,7 +77,7 @@
           "tabs": [
             {
               "title": "Hook",
-              "code": "import {useMoney} from '@shopify/hydrogen-react';\n\nexport function MyComponent() {\n  const {currencyCode, currencySymbol, amount} = useMoney(variant.pricev2);\n\n  return (\n    <div>\n      <strong>{currencyCode}</strong>\n      <span>{currencySymbol}</span>\n      <span>{amount}</span>\n    </div>\n  );\n}\n",
+              "code": "import {useMoney} from '@shopify/hydrogen-react';\n\nexport function MyComponent({variant}) {\n  const {currencyCode, currencySymbol, amount} = useMoney(variant.pricev2);\n\n  return (\n    <div>\n      <strong>{currencyCode}</strong>\n      <span>{currencySymbol}</span>\n      <span>{amount}</span>\n    </div>\n  );\n}\n",
               "language": "javascript"
             }
           ]

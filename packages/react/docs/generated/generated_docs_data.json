@@ -4738,7 +4738,7 @@
     "definitions": [
       {
         "title": "Props",
-        "description": "interface description",
+        "description": "",
         "type": "ShopPayButtonProps",
         "typeDefinitions": {
           "ShopPayButtonProps": {

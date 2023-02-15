@@ -29,7 +29,7 @@ const data: ReferenceEntityTemplateSchema = {
     {
       title: 'Props',
       type: 'ShopPayButtonProps',
-      description: 'interface description',
+      description: '',
     },
   ],
 };
