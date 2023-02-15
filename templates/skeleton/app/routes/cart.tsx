@@ -1,7 +1,7 @@
 import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
 import {flattenConnection} from '@shopify/hydrogen-react';
-import type {CartLine} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Cart as CartType} from '@shopify/hydrogen-react/storefront-api-types';
 
 export async function action() {
   // @TODO implement cart action
@@ -11,7 +11,7 @@ export default function CartRoute() {
   const [root] = useMatches();
   return (
     <Suspense fallback="loading">
-      <Await resolve={root.data?.cart}>
+      <Await resolve={root.data?.cart as CartType}>
         {(cart) => {
           const linesCount = Boolean(cart?.lines?.edges?.length || 0);
           if (!linesCount) {
@@ -20,9 +20,7 @@ export default function CartRoute() {
             );
           }
 
-          const cartLines = cart?.lines
-            ? flattenConnection<CartLine>(cart?.lines)
-            : [];
+          const cartLines = cart?.lines ? flattenConnection(cart?.lines) : [];
 
           return (
             <>

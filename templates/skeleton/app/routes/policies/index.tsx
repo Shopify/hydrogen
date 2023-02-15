@@ -26,7 +26,9 @@ export default function Policies() {
       {policies.map((policy) => {
         return (
           policy && (
-            <Link to={`/policies/${policy.handle}`}>{policy.title}</Link>
+            <Link key={policy.id} to={`/policies/${policy.handle}`}>
+              {policy.title}
+            </Link>
           )
         );
       })}
