@@ -1,7 +1,7 @@
 import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 
-import {ShopPolicy} from '@shopify/hydrogen-react/storefront-api-types';
+import {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({request, params, context}: LoaderArgs) {
   const handle = params.policyHandle;

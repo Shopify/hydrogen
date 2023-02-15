@@ -3,7 +3,7 @@ import {useLoaderData} from '@remix-run/react';
 import type {
   ProductVariant,
   Product as ProductType,
-} from '@shopify/hydrogen-react/storefront-api-types';
+} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({params, context}: LoaderArgs) {
   const {productHandle} = params;

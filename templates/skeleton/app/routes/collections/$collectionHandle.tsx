@@ -1,6 +1,6 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import type {Collection as CollectionType} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Collection as CollectionType} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 
 export async function loader({params, request, context}: LoaderArgs) {
