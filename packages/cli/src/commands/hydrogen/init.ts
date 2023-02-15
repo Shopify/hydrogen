@@ -32,6 +32,11 @@ export default class Init extends Command {
       choices: STARTER_TEMPLATES,
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
+    'install-deps': Flags.boolean({
+      description: 'Auto install dependencies using the active package manager',
+      env: 'SHOPIFY_HYDROGEN_INSTALL_DEPS',
+      allowNo: true,
+    }),
   };
 
   async run(): Promise<void> {
@@ -51,6 +56,7 @@ export async function runInit(
     language?: string;
     token?: string;
     force?: boolean;
+    installDeps?: boolean;
   } = getProcessFlags(),
 ) {
   supressNodeExperimentalWarnings();
@@ -162,18 +168,21 @@ export async function runInit(
   let packageManager = await packageManagerUsedForCreating();
 
   if (packageManager !== 'unknown') {
-    const {installDeps} = await ui.prompt([
-      {
-        type: 'select',
-        name: 'installDeps',
-        message: `Install dependencies with ${packageManager}?`,
-        choices: [
-          {name: 'Yes', value: 'true'},
-          {name: 'No', value: 'false'},
-        ],
-        default: 'true',
-      },
-    ]);
+    const {installDeps} =
+      typeof options.installDeps === 'boolean'
+        ? {installDeps: String(options.installDeps)}
+        : await ui.prompt([
+            {
+              type: 'select',
+              name: 'installDeps',
+              message: `Install dependencies with ${packageManager}?`,
+              choices: [
+                {name: 'Yes', value: 'true'},
+                {name: 'No', value: 'false'},
+              ],
+              default: 'true',
+            },
+          ]);
 
     if (installDeps === 'true') {
       await installNodeModules({
