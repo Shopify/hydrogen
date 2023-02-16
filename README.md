@@ -9,11 +9,11 @@
 
 <div align="center">
 
-📚 [Docs](https://shopify.dev/custom-storefronts/hydrogen) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 💬 [Discussions](https://github.com/Shopify/hydrogen/discussions) | 📝 [Changelog](./packages/hydrogen/CHANGELOG.md) 
+📚 [Docs](https://shopify.dev/custom-storefronts/hydrogen) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 💬 [Discussions](https://github.com/Shopify/hydrogen/discussions) | 📝 [Changelog](./packages/hydrogen/CHANGELOG.md)
 
 </div>
 
-Hydrogen is a set of tools, utilities, and best-in-class examples for building a commerce application with [Remix](https://remix.run/). 
+Hydrogen is a set of tools, utilities, and best-in-class examples for building a commerce application with [Remix](https://remix.run/).
 
 Hydrogen legacy v1, which is not built on Remix, is available here: https://github.com/Shopify/hydrogen-v1
 
@@ -23,20 +23,20 @@ Get started with Hydrogen with the instructions below ⬇️
 
 **Requirements:**
 
-- `yarn` or `npm`
 - Node.js version 16.14.0 or higher
+- `npm`, `yarn` or `pnpm`
 
 **Installation:**
 
 ```bash
-# Using `yarn`
-yarn create @shopify/hydrogen
-
 # Using `npm`
-npm init @shopify/hydrogen
+npm create @shopify/hydrogen@latest
 
-# Using `npx`
-npx @shopify/create-hydrogen
+# Using `yarn`
+yarn create @shopify/hydrogen@latest
+
+# Using `pnpm`
+pnpm create @shopify/hydrogen@latest
 ```
 
 **Running locally:**
@@ -44,13 +44,17 @@ npx @shopify/create-hydrogen
 1. Start a development server
 
 ```bash
+# Using `npm`
+npm install
+npm run dev
+
 # Using `yarn`
 yarn install
 yarn dev
 
-# Using `npm`
-npm i
-npm run dev
+# Using `pnpm`
+pnpm install
+pnpm dev
 ```
 
 2. Visit the development environment running at http://localhost:3000.
@@ -68,6 +72,5 @@ Learn more about [getting started with Hydrogen](https://shopify.dev/custom-stor
 👷‍♀️ Add `npm` packages to your project:
 
 - [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen)
-- [`@shopify/create-hydrogen`](https://www.npmjs.com/package/@shopify/create-hydrogen)
 - [`@shopify/cli-hydrogen`](https://www.npmjs.com/package/@shopify/cli-hydrogen)
 - [`@shopify/remix-oxygen`](https://www.npmjs.com/package/@shopify/remix-oxygen)
