@@ -34,6 +34,8 @@ export default defineConfig(({mode, ssrBuild}) => {
       define: {
         __HYDROGEN_DEV__: mode === 'umdbuilddev',
         __HYDROGEN_TEST__: false,
+        'process.env.NODE_ENV':
+          mode === 'umdbuilddev' ? '"development"' : '"production"',
       },
       plugins: [
         react({
