@@ -3,4 +3,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Fix pathnames in Windows when running the development server.
+Fix pathnames on Windows when running the development server.
