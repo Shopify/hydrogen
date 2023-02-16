@@ -169,23 +169,24 @@ export async function runInit(
   let packageManager = await packageManagerUsedForCreating();
 
   if (packageManager !== 'unknown') {
-    const {installDeps} =
-      typeof options.installDeps === 'boolean'
-        ? {installDeps: String(options.installDeps)}
-        : await ui.prompt([
-            {
-              type: 'select',
-              name: 'installDeps',
-              message: `Install dependencies with ${packageManager}?`,
-              choices: [
-                {name: 'Yes', value: 'true'},
-                {name: 'No', value: 'false'},
-              ],
-              default: 'true',
-            },
-          ]);
+    const installDeps =
+      options.installDeps ??
+      (
+        await ui.prompt([
+          {
+            type: 'select',
+            name: 'installDeps',
+            message: `Install dependencies with ${packageManager}?`,
+            choices: [
+              {name: 'Yes', value: 'true'},
+              {name: 'No', value: 'false'},
+            ],
+            default: 'true',
+          },
+        ])
+      ).installDeps === 'true';
 
-    if (installDeps === 'true') {
+    if (installDeps) {
       await installNodeModules({
         directory: projectDir,
         packageManager,

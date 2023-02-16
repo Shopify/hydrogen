@@ -27,8 +27,13 @@ export function flagsToCamelObject(obj: Record<string, any>) {
   }, {} as any);
 }
 
-// When calling runInit from @shopify/create-hydrogen,
-// parse the flags from the process arguments:
+/**
+ * Parse process arguments into an object for use in the cli as flags.
+ * This is used when starting the init command from create-hydrogen without Oclif.
+ * @example
+ * input: `node ./bin --force --no-install-deps --language js`
+ * output: { force: true, installDeps: false,  language: 'js' }
+ */
 export function parseProcessFlags(
   processArgv: string[],
   flagMap: Record<string, string> = {},
