@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-fix template download on windows
+Fix template download on Windows during project creation.

@@ -24,11 +24,13 @@ describe('virtual routes', () => {
 
     expect(config.routes[VIRTUAL_ROUTES_DIR + '/index']).toMatchObject({
       parentId: VIRTUAL_ROOT,
+      path: undefined,
       file: '../' + VIRTUAL_ROUTES_DIR + '/index.tsx',
     });
 
     expect(config.routes[VIRTUAL_ROUTES_DIR + '/graphiql']).toMatchObject({
       parentId: VIRTUAL_ROOT,
+      path: 'graphiql',
       file: '../' + VIRTUAL_ROUTES_DIR + '/graphiql.tsx',
     });
   });
