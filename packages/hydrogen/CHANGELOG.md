@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2023.1.4
+
+### Patch Changes
+
+- Fix template imports to only reference `@shopify/hydrogen`, not `@shopify/hydrogen-react` ([#523](https://github.com/Shopify/hydrogen/pull/523)) by [@blittle](https://github.com/blittle)
+
 ## 2023.1.3
 
 ### Patch Changes
