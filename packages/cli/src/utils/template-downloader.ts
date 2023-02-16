@@ -47,8 +47,8 @@ export async function downloadTarball(url: string, storageDir: string) {
       filter: (name) => {
         name = name.replace(storageDir, '');
         return (
-          !name.startsWith('/templates/') ||
-          name.startsWith('/templates/skeleton/')
+          !name.startsWith(path.normalize('/templates/')) ||
+          name.startsWith(path.normalize('/templates/skeleton/'))
         );
       },
     }),

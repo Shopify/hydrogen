@@ -6,7 +6,7 @@ import {
 } from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
-import type {Page as PageType} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Page as PageType} from '@shopify/hydrogen/storefront-api-types';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
 
 export async function loader({params, context}: LoaderArgs) {

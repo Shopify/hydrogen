@@ -13,8 +13,8 @@
     "typecheck": "tsc --noEmit",
     "generate:manifest": "oclif manifest",
     "prepack": "npm run build",
-    "test": "vitest run",
-    "test:watch": "vitest"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
@@ -28,7 +28,7 @@
   },
   "peerDependencies": {
     "@remix-run/react": "^1.12.0",
-    "@shopify/hydrogen-react": "^2023.1.4",
+    "@shopify/hydrogen-react": "^2023.1.5",
     "@shopify/remix-oxygen": "^1.0.2"
   },
   "dependencies": {
