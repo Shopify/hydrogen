@@ -9,6 +9,8 @@ import {IconTwitter} from '../components/IconTwitter.jsx';
 import {IconBanner} from '../components/IconBanner.jsx';
 import {IconError} from '../components/IconError.jsx';
 import favicon from '../assets/favicon.svg';
+import interVariableFont from '../assets/inter-variable-font.ttf';
+import jetbrainsmonoVariableFont from '../assets/jetbrainsmono-variable-font.ttf';
 import type {I18nBase, StorefrontClient} from '@shopify/hydrogen';
 
 interface AppLoadContext {
@@ -29,6 +31,20 @@ export const links: LinksFunction = () => [
     rel: 'icon',
     type: 'image/svg+xml',
     href: favicon,
+  },
+  {
+    rel: 'preload',
+    href: interVariableFont,
+    as: 'font',
+    type: 'font/ttf',
+    crossOrigin: 'anonymous',
+  },
+  {
+    rel: 'preload',
+    href: jetbrainsmonoVariableFont,
+    as: 'font',
+    type: 'font/ttf',
+    crossOrigin: 'anonymous',
   },
 ];
 
