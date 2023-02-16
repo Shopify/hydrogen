@@ -29,7 +29,7 @@ describe('checkLockfileStatus()', () => {
     outputMocker.mockAndCaptureOutput().clear();
   });
 
-  describe('when a lockfile present', () => {
+  describe('when a lockfile is present', () => {
     it('does not call displayLockfileWarning', async () => {
       await file.inTemporaryDirectory(async (tmpDir) => {
         await file.write(path.join(tmpDir, 'package-lock.json'), '');
