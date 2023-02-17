@@ -9,7 +9,9 @@ import {output, path} from '@shopify/cli-kit';
 import {commonFlags, parseProcessFlags} from '../../utils/flags.js';
 import {transpileProject} from '../../utils/transpile-ts.js';
 import {getLatestTemplates} from '../../utils/template-downloader.js';
+import {checkHydrogenVersion} from '../../utils/check-version.js';
 import {readdir} from 'fs/promises';
+import {fileURLToPath} from 'url';
 
 const STARTER_TEMPLATES = ['hello-world', 'demo-store'];
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
@@ -61,6 +63,23 @@ export async function runInit(
   } = parseProcessFlags(process.argv, FLAG_MAP),
 ) {
   supressNodeExperimentalWarnings();
+
+  const showUpgrade = await checkHydrogenVersion(
+    // Resolving the CLI package from a local directory might fail because
+    // this code could be run from a global dependency (e.g. on `npm create`).
+    // Therefore, pass the known path to the package.json directly from here:
+    fileURLToPath(new URL('../../../package.json', import.meta.url)),
+    'cli',
+  );
+
+  if (showUpgrade) {
+    const packageManager = await packageManagerUsedForCreating();
+    showUpgrade(
+      packageManager === 'unknown'
+        ? ''
+        : `Please use the latest version with \`${packageManager} create @shopify/hydrogen@latest\``,
+    );
+  }
 
   // Start downloading templates early.
   const templatesPromise = getLatestTemplates().catch((error) => {
