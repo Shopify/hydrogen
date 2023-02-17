@@ -262,7 +262,7 @@ export function ProductForm() {
                     quantity: 1,
                   },
                 ]}
-                variant={isOutOfStock ? 'secondary' : 'primary'}
+                variant="primary"
                 data-test="add-to-cart"
                 analytics={{
                   products: [productAnalytics],
