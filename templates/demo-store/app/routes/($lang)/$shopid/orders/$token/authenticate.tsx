@@ -3,6 +3,13 @@ import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import invariant from 'tiny-invariant';
 import {Button, PageHeader} from '~/components';
 
+/*
+ If your online store had active orders before you launched your Hydrogen storefront,
+ and the Hydrogen storefront uses the same domain formerly used by the online store,
+ then customers will receive 404 pages when they click on the old order status URLs
+ that are routing to your Hydrogen storefront. To prevent this, ensure that you redirect
+ those requests back to the online store.
+*/
 export async function loader({request, context: {storefront}}: LoaderArgs) {
   const {origin} = new URL(request.url);
   const {shop} = await storefront.query<{
