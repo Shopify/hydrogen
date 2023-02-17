@@ -8,7 +8,7 @@ import {Button, PageHeader} from '~/components';
  and the Hydrogen storefront uses the same domain formerly used by the online store,
  then customers will receive 404 pages when they click on the old order status URLs
  that are routing to your Hydrogen storefront. To prevent this, ensure that you redirect
- those requests back to the online store.
+ those requests back to Shopify.
 */
 export async function loader({request, context: {storefront}}: LoaderArgs) {
   const {origin} = new URL(request.url);
