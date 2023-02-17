@@ -8,19 +8,27 @@ const PACKAGE_NAMES = {
   cli: '@shopify/cli-hydrogen',
 } as const;
 
+/**
+ *
+ * @param resolveFrom Path to a directory to resolve from, or directly the path to a package.json file.
+ * @param pkgKey Package to check for updates.
+ * @returns A function to show the update information if any update is available.
+ */
 export async function checkHydrogenVersion(
-  directory: string,
+  resolveFrom: string,
   pkgKey: keyof typeof PACKAGE_NAMES = 'main',
 ) {
   if (process.env.LOCAL_DEV) return;
   const pkgName = PACKAGE_NAMES[pkgKey];
 
   const require = createRequire(import.meta.url);
-  const pkgJsonPath = locateDependency(
-    require,
-    directory,
-    path.join(pkgName, 'package.json'),
-  );
+  const pkgJsonPath = resolveFrom.endsWith('package.json')
+    ? locateDependency(require, resolveFrom)
+    : locateDependency(
+        require,
+        path.join(pkgName, 'package.json'),
+        resolveFrom,
+      );
 
   if (!pkgJsonPath) return;
 
@@ -56,11 +64,13 @@ export async function checkHydrogenVersion(
 
 function locateDependency(
   require: NodeRequire,
-  directory: string,
-  name: string,
+  nameToResolve: string,
+  resolveFrom?: string,
 ) {
   try {
-    return require.resolve(name, {paths: [directory]});
+    return require.resolve(nameToResolve, {
+      paths: [resolveFrom ?? process.cwd()],
+    });
   } catch {
     return;
   }

@@ -9,8 +9,9 @@ import {output, path} from '@shopify/cli-kit';
 import {commonFlags} from '../../utils/flags.js';
 import {transpileProject} from '../../utils/transpile-ts.js';
 import {getLatestTemplates} from '../../utils/template-downloader.js';
-import {readdir} from 'fs/promises';
 import {checkHydrogenVersion} from '../../utils/check-version.js';
+import {readdir} from 'fs/promises';
+import {fileURLToPath} from 'url';
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
@@ -51,7 +52,14 @@ export async function runInit(
 ) {
   supressNodeExperimentalWarnings();
 
-  const showUpgrade = await checkHydrogenVersion(process.cwd(), 'cli');
+  const showUpgrade = await checkHydrogenVersion(
+    // Resolving the CLI package from a local directory might fail because
+    // this code could be run from a global dependency (e.g. on `npm create`).
+    // Therefore, pass the known path to the package.json directly from here:
+    fileURLToPath(new URL('../../../package.json', import.meta.url)),
+    'cli',
+  );
+
   if (showUpgrade) {
     const packageManager = await packageManagerUsedForCreating();
     showUpgrade(
