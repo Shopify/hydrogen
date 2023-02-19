@@ -1,4 +1,4 @@
-import {expect, describe, it, vi} from 'vitest';
+import {expect, describe, it, vi, beforeEach, type Mock} from 'vitest';
 import {logSeoTags} from './log-seo-tags';
 import {CustomHeadTagObject} from './generate-seo-tags';
 
@@ -6,6 +6,8 @@ describe('logSeoTags', () => {
   const consoleMock = {
     log: vi.fn(),
     table: vi.fn(),
+    warn: console.warn,
+    error: console.error,
   };
 
   vi.stubGlobal('console', consoleMock);
@@ -22,6 +24,11 @@ describe('logSeoTags', () => {
     ['SEO Meta Tags', 1],
     lineBreak,
   ];
+
+  beforeEach(() => {
+    consoleMock.log.mockClear();
+    consoleMock.table.mockClear();
+  });
 
   it('outputs the given meta tag objects in console logs', () => {
     // Given
@@ -122,6 +129,7 @@ describe('logSeoTags', () => {
 function expectLogFixture(
   expectedOutput: ([string, number] | [string])[],
   styles = expect.any(String),
+  debug: boolean = false,
 ) {
   expectedOutput.forEach(([line, numStyles], index) => {
     const styleLines = numStyles
@@ -134,4 +142,10 @@ function expectLogFixture(
       ...styleLines,
     );
   });
+
+  if (debug) {
+    (console.log as Mock).mock.calls.forEach((call) => {
+      console.warn(...call);
+    });
+  }
 }
