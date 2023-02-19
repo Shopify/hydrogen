@@ -1,4 +1,3 @@
-import {useEffect} from 'react';
 import {CustomHeadTagObject} from './generate-seo-tags';
 
 export default function Logger({headTags}: {headTags: CustomHeadTagObject[]}) {
@@ -7,20 +6,18 @@ export default function Logger({headTags}: {headTags: CustomHeadTagObject[]}) {
   return null;
 }
 
-const style = 'text-transform: uppercase;';
+const headingStyle = 'text-transform: uppercase;';
+const titleStyle =
+  'text-transform: uppercase; font-weight: bold; text-transform: uppercase;font-weight: bold';
 
 export function logSeoTags(headTags: CustomHeadTagObject[]) {
-  const style2 =
-    'text-transform: uppercase; font-weight: bold; text-transform: uppercase;font-weight: bold';
-
-  console.log(headTags);
   console.log(' ');
-  console.log('%cSEO Meta Tags', `${style2}`);
+  console.log('%cSEO Meta Tags', `${titleStyle}`);
   console.log(' ');
 
   headTags.forEach((tag) => {
     if (tag.tag === 'script') {
-      console.log(`%c• JSON LD `, style);
+      console.log(`%c• JSON LD `, headingStyle);
 
       if (tag.children) {
         try {
@@ -30,7 +27,7 @@ export function logSeoTags(headTags: CustomHeadTagObject[]) {
         }
       }
     } else {
-      console.log(`%c• ${tag.tag} `, style);
+      console.log(`%c• ${tag.tag} `, headingStyle);
 
       if (tag.children) {
         if (typeof tag.children === 'string') {
@@ -49,13 +46,12 @@ export function logSeoTags(headTags: CustomHeadTagObject[]) {
       if (tag.props.property === 'og:image:url') {
         const urlKey = tag.props.content as string;
 
-        console.log(headTags);
-
         fetchImage(urlKey)
           .then((image) => {
-            console.log(`%c• Share image preview`, style);
+            const imageStyle = `font-size: 400px; padding: 10px; background: white url(${image}) no-repeat center; background-size: contain;`;
 
-            renderImageInConsole(image);
+            console.log(`%c• Share image preview`, headingStyle);
+            console.log('%c  ', imageStyle);
             console.log(`↳ ${urlKey}`);
           })
           .catch((err) => {
@@ -90,10 +86,4 @@ function arrayBufferToBase64(buffer: ArrayBuffer) {
   }
 
   return btoa(binary);
-}
-
-async function renderImageInConsole(str: string) {
-  const style3 = `font-size: 400px; padding: 10px; background: white url(${str}) no-repeat center; background-size: contain;`;
-
-  console.log('%c  ', style3);
 }
