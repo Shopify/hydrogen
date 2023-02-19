@@ -9,6 +9,12 @@ describe('logSeoTags', () => {
   };
 
   vi.stubGlobal('console', consoleMock);
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => ({
+      blob: () => new Blob(),
+    })),
+  );
 
   const lineBreak: [string] = [' '];
   const banner: ([string] | [string, number])[] = [
@@ -77,6 +83,39 @@ describe('logSeoTags', () => {
       expect.objectContaining(jsonLdContent),
       ['name', 'content'],
     );
+  });
+
+  it('outputs images in the console', async () => {
+    // Given
+    const input: CustomHeadTagObject[] = [
+      {
+        key: 'meta-og:image:url',
+        tag: 'meta',
+        props: {
+          property: 'og:image:url',
+          content: 'https://example.com/image.png',
+        },
+      },
+    ];
+
+    // When
+    logSeoTags(input);
+
+    // Wait for the image to be fetched
+    await new Promise((resolve) => setTimeout(resolve, 10));
+
+    expect(fetch).toHaveBeenCalledWith('https://example.com/image.png');
+
+    expectLogFixture([
+      ...banner,
+      ['meta', 1],
+      ['og:image:url'],
+      ['https://example.com/image.png'],
+      lineBreak,
+      ['Share image preview', 1],
+      [' ', 1], // Image
+      ['https://example.com/image.png'],
+    ]);
   });
 });
 
