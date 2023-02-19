@@ -12,18 +12,18 @@
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "oclif manifest",
-    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --passWithNoTests",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --passWithNoTests"
   },
   "devDependencies": {
+    "@types/diff": "^5.0.2",
     "@types/fs-extra": "^9.0.13",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/prettier": "^2.7.2",
     "@types/recursive-readdir": "^2.2.1",
     "@types/tar-fs": "^2.0.1",
     "oclif": "^3.4.2",
-    "vitest": "^0.28.1",
-    "tempy": "^3.0.0"
+    "vitest": "^0.29.7"
   },
   "peerDependencies": {
     "@remix-run/react": "^1.14.0",
@@ -35,11 +35,15 @@
     "@remix-run/dev": "^1.14.0",
     "@shopify/cli-kit": "3.29.0",
     "@shopify/mini-oxygen": "^1.3.1",
+    "@types/jscodeshift": "^0.11.6",
+    "diff": "^5.1.0",
     "fast-glob": "^3.2.12",
     "fs-extra": "^10.1.0",
     "gunzip-maybe": "^1.4.2",
+    "jscodeshift": "^0.14.0",
     "prettier": "^2.8.4",
     "recursive-readdir": "^2.2.3",
+    "simple-git": "^3.17.0",
     "tar-fs": "^2.1.1",
     "typescript": "^4.9.5"
   },

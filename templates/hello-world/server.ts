@@ -3,10 +3,10 @@ import * as remixBuild from '@remix-run/dev/server-build';
 import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
 import {
   createRequestHandler,
-  getStorefrontHeaders,
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
+  getStorefrontHeaders,
 } from '@shopify/remix-oxygen';
 
 /**

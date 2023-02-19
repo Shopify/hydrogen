@@ -20,7 +20,8 @@
     "version:cli": "cd packages/cli && npm run generate:manifest",
     "version:create-hydrogen": "cd packages/create-hydrogen && npm run build",
     "changeset": "changeset",
-    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache"
+    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache",
+    "generate:guide": "plop"
   },
   "workspaces": [
     "templates/hello-world",
@@ -40,10 +41,12 @@
     "cross-env": "^7.0.3",
     "eslint": "^8.20.0",
     "lint-staged": "^10.5.4",
+    "plop": "^3.1.2",
+    "plop-dir": "^0.1.0",
     "prettier": "^2.8.4",
     "rimraf": "^3.0.2",
     "tsup": "^6.5.0",
-    "turbo": "^1.8.3",
+    "turbo": "^1.8.5",
     "typescript": "^4.9.5",
     "yorkie": "^2.0.0"
   },

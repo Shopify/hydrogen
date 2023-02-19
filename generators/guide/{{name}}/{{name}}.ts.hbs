@@ -1,0 +1,21 @@
+import {ui} from '@shopify/cli-kit';
+import {runChangesets, type UpgradeOptions} from '../../utils/upgrades.js';
+import {parseGuide} from '../../utils/parse-guide.js';
+
+export default async function {{camelCase name}}(
+  directory: string,
+  options: UpgradeOptions = {},
+){
+  const changes = parseGuide(import.meta.url);
+
+  const tasks = ui.newListr(
+    await runChangesets(
+      directory,
+      changes,
+      [],
+      options,
+    ),
+  );
+
+  return tasks;
+};
