@@ -1,10 +1,10 @@
 @font-face {
   font-family: 'Inter';
-  src: url('../assets/inter-variable-font.ttf') format("truetype-variations");
+  src: url('../assets/inter-variable-font.woff2') format("woff2-variations");
 }
 @font-face {
   font-family: 'JetBrains Mono';
-  src: url('../assets/jetbrainsmono-variable-font.ttf') format("truetype-variations");
+  src: url('../assets/jetbrainsmono-variable-font.woff2') format("woff2-variations");
 }
 
 * {
@@ -219,7 +219,7 @@ main {
   background: #FEE9E8;
 }
 
-.Banner.ErrorBanner span {
+.Banner.ErrorBanner code {
   background: #FEF4F4;
   border: 1px solid #FDA9A5;
   border-radius: 4px;
