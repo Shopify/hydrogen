@@ -9,8 +9,8 @@ import {IconTwitter} from '../components/IconTwitter.jsx';
 import {IconBanner} from '../components/IconBanner.jsx';
 import {IconError} from '../components/IconError.jsx';
 import favicon from '../assets/favicon.svg';
-import interVariableFont from '../assets/inter-variable-font.ttf';
-import jetbrainsmonoVariableFont from '../assets/jetbrainsmono-variable-font.ttf';
+import interVariableFontWoff2 from '../assets/inter-variable-font.woff2';
+import jetbrainsmonoVariableFontWoff2 from '../assets/jetbrainsmono-variable-font.woff2';
 import type {I18nBase, StorefrontClient} from '@shopify/hydrogen';
 
 interface AppLoadContext {
@@ -34,14 +34,14 @@ export const links: LinksFunction = () => [
   },
   {
     rel: 'preload',
-    href: interVariableFont,
+    href: interVariableFontWoff2,
     as: 'font',
     type: 'font/ttf',
     crossOrigin: 'anonymous',
   },
   {
     rel: 'preload',
-    href: jetbrainsmonoVariableFont,
+    href: jetbrainsmonoVariableFontWoff2,
     as: 'font',
     type: 'font/ttf',
     crossOrigin: 'anonymous',
@@ -130,7 +130,7 @@ function ErrorPage() {
           </div>
           <p>
             Check your domain and API token in your <code>.env</code> file.
-            Learn more about
+            Learn more about{` `}
             <a
               target="_blank"
               rel="norefferer noopener"
