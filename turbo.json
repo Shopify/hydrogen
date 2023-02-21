@@ -21,6 +21,8 @@
       "outputs": [],
       "dependsOn": ["build"]
     },
+    "//#format": {},
+    "//#format:check": {},
     "test": {},
     "test:watch": {
       "cache": false

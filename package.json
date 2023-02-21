@@ -9,6 +9,7 @@
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
+    "format:check": "prettier --check --ignore-unknown ./packages && npm run format:check -w demo-store",
     "typecheck": "turbo typecheck --parallel",
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
