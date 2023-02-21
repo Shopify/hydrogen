@@ -1,5 +1,11 @@
 # @shopify/hydrogen
 
+## 2023.1.5
+
+### Patch Changes
+
+- Fix the latest tag ([#562](https://github.com/Shopify/hydrogen/pull/562)) by [@blittle](https://github.com/blittle)
+
 ## 2023.1.4
 
 ### Patch Changes
