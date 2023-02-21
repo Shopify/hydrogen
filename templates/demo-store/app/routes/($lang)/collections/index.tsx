@@ -1,4 +1,9 @@
-import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  type MetaFunction,
+  type LoaderArgs,
+  LoaderArgsWithMiddleware,
+} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection,
@@ -15,6 +20,7 @@ import {
   Button,
 } from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
+import {hydrogenContext} from '~/context';
 
 const PAGINATION_SIZE = 8;
 
@@ -24,7 +30,8 @@ export const handle = {
   },
 };
 
-export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
+export const loader = async ({request, context}: LoaderArgsWithMiddleware) => {
+  const {storefront} = context.get(hydrogenContext);
   const variables = getPaginationVariables(request, PAGINATION_SIZE);
   const {collections} = await storefront.query<{
     collections: CollectionConnection;

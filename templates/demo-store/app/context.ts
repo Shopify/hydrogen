@@ -7,13 +7,19 @@ export const hydrogenContext = createMiddlewareContext<{
   waitUntil: ExecutionContext['waitUntil'];
   session: HydrogenSession;
   storefront: Storefront<I18nLocale>;
+}>();
+
+export type Env = {
+  SESSION_SECRET: string;
+  PUBLIC_STOREFRONT_API_TOKEN: string;
+  PRIVATE_STOREFRONT_API_TOKEN: string;
+  PUBLIC_STOREFRONT_API_VERSION: string;
+  PUBLIC_STORE_DOMAIN: string;
+  PUBLIC_STOREFRONT_ID: string;
+};
+
+export const oxygenContext = createMiddlewareContext<{
+  waitUntil: ExecutionContext['waitUntil'];
   cache: Cache;
-  env: {
-    SESSION_SECRET: string;
-    PUBLIC_STOREFRONT_API_TOKEN: string;
-    PRIVATE_STOREFRONT_API_TOKEN: string;
-    PUBLIC_STOREFRONT_API_VERSION: string;
-    PUBLIC_STORE_DOMAIN: string;
-    PUBLIC_STOREFRONT_ID: string;
-  };
+  env: Env;
 }>();

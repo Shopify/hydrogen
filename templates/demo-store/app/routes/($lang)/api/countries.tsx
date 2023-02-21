@@ -1,7 +1,9 @@
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderArgsWithMiddleware} from '@shopify/remix-oxygen';
+import {hydrogenContext} from '~/context';
 import {countries} from '~/data/countries';
 
-export async function loader({context: {storefront}}: LoaderArgs) {
+export async function loader({context}: LoaderArgsWithMiddleware) {
+  const {storefront} = context.get(hydrogenContext);
   return json(
     {
       ...countries,

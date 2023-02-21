@@ -1,10 +1,16 @@
-import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  type MetaFunction,
+  type LoaderArgs,
+  LoaderArgsWithMiddleware,
+} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {flattenConnection, Image} from '@shopify/hydrogen';
 import type {Article, Blog} from '@shopify/hydrogen/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
 import {StorefrontLoaderArgs} from '~/lib/type';
+import {hydrogenContext} from '~/context';
 
 const BLOG_HANDLE = 'Journal';
 
@@ -14,7 +20,8 @@ export const handle = {
   },
 };
 
-export const loader = async ({context: {storefront}}: StorefrontLoaderArgs) => {
+export const loader = async ({context}: LoaderArgsWithMiddleware) => {
+  const {storefront} = context.get(hydrogenContext);
   const {language, country} = storefront.i18n;
   const {blog} = await storefront.query<{
     blog: Blog;

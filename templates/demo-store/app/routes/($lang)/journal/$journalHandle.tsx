@@ -4,6 +4,7 @@ import {
   type SerializeFrom,
   type LinksFunction,
   type LoaderArgs,
+  LoaderArgsWithMiddleware,
 } from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen';
@@ -13,6 +14,7 @@ import {PageHeader, Section} from '~/components';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
 import styles from '../../../styles/custom-font.css';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
+import {hydrogenContext} from '~/context';
 
 const BLOG_HANDLE = 'journal';
 
@@ -26,7 +28,12 @@ export const handle = {
   seo,
 };
 
-export async function loader({params, context}: LoaderArgs) {
+export async function loader({
+  params,
+  context: loaderContext,
+}: LoaderArgsWithMiddleware) {
+  const context = loaderContext.get(hydrogenContext);
+
   const {language, country} = context.storefront.i18n;
 
   invariant(params.journalHandle, 'Missing journal handle');

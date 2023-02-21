@@ -1,4 +1,8 @@
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  defer,
+  LoaderArgsWithMiddleware,
+  type LoaderArgs,
+} from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
 import {Await, Form, useLoaderData} from '@remix-run/react';
 import type {
@@ -21,6 +25,7 @@ import {
 } from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {PAGINATION_SIZE} from '~/lib/const';
+import {hydrogenContext} from '~/context';
 
 export default function () {
   const {searchTerm, products, noResultRecommendations} =
@@ -88,7 +93,8 @@ export default function () {
   );
 }
 
-export async function loader({request, context: {storefront}}: LoaderArgs) {
+export async function loader({request, context}: LoaderArgsWithMiddleware) {
+  const {storefront} = context.get(hydrogenContext);
   const searchParams = new URL(request.url).searchParams;
   const cursor = searchParams.get('cursor')!;
   const searchTerm = searchParams.get('q')!;

@@ -4,6 +4,8 @@ import {
   type MetaFunction,
   type AppLoadContext,
   LoaderArgsWithMiddleware,
+  MiddlewareArgs,
+  getBuyerIp,
 } from '@shopify/remix-oxygen';
 import {
   Links,
@@ -19,6 +21,8 @@ import {
   ShopifySalesChannel,
   Seo,
   type SeoHandleFunction,
+  createStorefrontClient,
+  storefrontRedirect,
 } from '@shopify/hydrogen';
 import {Layout} from '~/components';
 import {GenericError} from './components/GenericError';
@@ -27,16 +31,18 @@ import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 
-import {DEFAULT_LOCALE, parseMenu, type EnhancedMenu} from './lib/utils';
+import {
+  DEFAULT_LOCALE,
+  getLocaleFromRequest,
+  parseMenu,
+  type EnhancedMenu,
+} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
 import {useAnalytics} from './hooks/useAnalytics';
-import type {StorefrontContext} from './lib/type';
-import {
-  hydrogenContext,
-  sessionContext,
-  storefrontClientContext,
-} from './context';
+import type {I18nLocale, StorefrontContext} from './lib/type';
+import {hydrogenContext, oxygenContext} from './context';
+import {HydrogenSession} from './lib/session.server';
 
 const seo: SeoHandleFunction<typeof loader> = ({data, pathname}) => ({
   title: data?.layout?.shop?.name,
@@ -69,6 +75,47 @@ export const meta: MetaFunction = () => ({
   charset: 'utf-8',
   viewport: 'width=device-width,initial-scale=1',
 });
+
+export async function middleware({context, request}: MiddlewareArgs) {
+  const {waitUntil, cache, env} = context.get(oxygenContext);
+  const session = await HydrogenSession.init(request, [env.SESSION_SECRET]);
+
+  /**
+   * Create Hydrogen's Storefront client.
+   */
+  const {storefront} = createStorefrontClient<I18nLocale>({
+    cache,
+    waitUntil,
+    buyerIp: getBuyerIp(request),
+    i18n: getLocaleFromRequest(request),
+    publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
+    privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
+    storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,
+    storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2023-01',
+    storefrontId: env.PUBLIC_STOREFRONT_ID,
+    requestGroupId: request.headers.get('request-id'),
+  });
+
+  // Set helpful context for route loaders, actions, and middleware
+  context.set(hydrogenContext, {
+    storefront,
+    session,
+    waitUntil,
+  });
+
+  const response = await context.next();
+
+  if (response.status === 404) {
+    /**
+     * Check for redirects only when there's a 404 from the app.
+     * If the redirect doesn't exist, then `storefrontRedirect`
+     * will pass through the 404 response.
+     */
+    return await storefrontRedirect({request, response, storefront});
+  }
+
+  return response;
+}
 
 export async function loader({
   context: loaderContext,
