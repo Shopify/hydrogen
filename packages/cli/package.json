@@ -45,7 +45,7 @@
     "typescript": "^4.9.5"
   },
   "bin": {
-    "@shopify/cli-hydrogen": "dist/create-app.js",
+    "cli-hydrogen": "dist/create-app.js",
     "h2": "dist/h2.cjs"
   },
   "exports": {
