@@ -48,7 +48,7 @@ Fixes #0000 <!-- link to issue if one exists -->
 - [ ] I've read the [Contributing Guidelines](CONTRIBUTING.md)
 - [ ] I've considered possible cross-platform impacts (Mac, Linux, Windows)
 - [ ] I've added a [changeset](CONTRIBUTING.md#changesets) if this PR contains user-facing or noteworthy changes
-- [ ] I've have added [tests](CONTRIBUTING.md#testing) to cover my changes
+- [ ] I've added [tests](CONTRIBUTING.md#testing) to cover my changes
 
 <!--
  THANK YOU for your pull request! Members from the Hydrogen team will review these changes and provide feedback as soon as they are available.
