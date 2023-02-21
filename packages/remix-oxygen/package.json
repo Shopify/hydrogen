@@ -5,7 +5,8 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "1.0.0-alpha.3",
+  "version": "1.0.3",
+  "license": "SEE LICENSE IN LICENSE.md",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
@@ -13,6 +14,7 @@
   "scripts": {
     "build": "tsup --clean --config ../../tsup.config.ts",
     "dev": "tsup --watch --config ../../tsup.config.ts",
+    "prepack": "npm run build",
     "typecheck": "tsc --noEmit"
   },
   "exports": {

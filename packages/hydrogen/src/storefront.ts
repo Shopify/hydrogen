@@ -1,11 +1,12 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
   type StorefrontApiResponseOk,
-} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
   STOREFRONT_API_BUYER_IP_HEADER,
+  STOREFRONT_ID_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
 } from './constants';
 import {
@@ -21,17 +22,52 @@ import {parseJSON} from './utils/parse-json';
 import {
   CountryCode,
   LanguageCode,
-} from '@shopify/storefront-kit-react/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {warnOnce} from './utils/warning';
+import {LIB_VERSION} from './version';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
-
-export type StorefrontClient = ReturnType<typeof createStorefrontClient>;
-export type Storefront = StorefrontClient['storefront'];
 
 export type I18nBase = {
   language: LanguageCode;
   country: CountryCode;
+};
+
+export type StorefrontClient<TI18n extends I18nBase> = {
+  storefront: Storefront<TI18n>;
+};
+
+export type Storefront<TI18n extends I18nBase = I18nBase> = {
+  query: <T>(
+    query: string,
+    payload?: StorefrontCommonOptions & {
+      cache?: CachingStrategy;
+    },
+  ) => Promise<T>;
+  mutate: <T>(
+    mutation: string,
+    payload?: StorefrontCommonOptions,
+  ) => Promise<T>;
+  cache?: Cache;
+  CacheNone: typeof CacheNone;
+  CacheLong: typeof CacheLong;
+  CacheShort: typeof CacheShort;
+  CacheCustom: typeof CacheCustom;
+  generateCacheControlHeader: typeof generateCacheControlHeader;
+  getPublicTokenHeaders: ReturnType<
+    typeof createStorefrontUtilities
+  >['getPublicTokenHeaders'];
+  getPrivateTokenHeaders: ReturnType<
+    typeof createStorefrontUtilities
+  >['getPrivateTokenHeaders'];
+  getShopifyDomain: ReturnType<
+    typeof createStorefrontUtilities
+  >['getShopifyDomain'];
+  getApiUrl: ReturnType<
+    typeof createStorefrontUtilities
+  >['getStorefrontApiUrl'];
+  isApiError: (error: any) => boolean;
+  i18n: TI18n;
 };
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
@@ -39,7 +75,8 @@ export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
 >[0] & {
   cache?: Cache;
   buyerIp?: string;
-  requestGroupId?: string;
+  requestGroupId?: string | null;
+  storefrontId?: string;
   waitUntil?: ExecutionContext['waitUntil'];
   i18n?: TI18n;
 };
@@ -86,9 +123,10 @@ export function createStorefrontClient<TI18n extends I18nBase>({
   waitUntil,
   buyerIp,
   i18n,
-  requestGroupId = generateUUID(),
+  requestGroupId,
+  storefrontId,
   ...clientOptions
-}: CreateStorefrontClientOptions<TI18n>) {
+}: CreateStorefrontClientOptions<TI18n>): StorefrontClient<TI18n> {
   if (!cache) {
     // TODO: should only warn in development
     warnOnce(
@@ -109,8 +147,11 @@ export function createStorefrontClient<TI18n extends I18nBase>({
 
   const defaultHeaders = getHeaders({contentType: 'json'});
 
-  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] = requestGroupId;
+  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
+    requestGroupId || generateUUID();
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
+  if (storefrontId) defaultHeaders[STOREFRONT_ID_HEADER] = storefrontId;
+  if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
   async function fetchStorefrontApi<T>({
     query,

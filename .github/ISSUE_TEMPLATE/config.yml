@@ -1,0 +1,18 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Remix questions?
+    url: https://remix.run/docs
+    about: Having issues with Remix? Visit the Remix Docs.
+  - name: Get Hydrogen help
+    url: https://github.com/Shopify/hydrogen/discussions/new?category=help
+    about:
+      If you can't get something to work the way you expect, open a question in
+      the Hydrogen discussions.
+  - name: Feature Request
+    url: https://github.com/Shopify/hydrogen/discussions/new?category=ideas-feature-requests
+    about:
+      We appreciate you taking the time to improve Hydrogen with your ideas, but we
+      use the Discussions for this instead of the issues tab 🙂.
+  - name: 💬 Hydrogen Discord Channel
+    url: https://discord.gg/shopifydevs
+    about: Interact with other people using Hydrogen

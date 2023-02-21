@@ -1,4 +1,5 @@
-import {
+import type {Storefront as HydrogenStorefront} from '@shopify/hydrogen';
+import type {
   CountryCode,
   CurrencyCode,
   LanguageCode,
@@ -16,6 +17,8 @@ export type Localizations = Record<string, Locale>;
 export type I18nLocale = Locale & {
   pathPrefix: string;
 };
+
+export type Storefront = HydrogenStorefront<I18nLocale>;
 
 export enum CartAction {
   ADD_TO_CART = 'ADD_TO_CART',

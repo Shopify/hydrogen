@@ -1,11 +1,11 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@2.2.0/schema.json",
-  "changelog": ["./hydrogen-changelog-config.js", {"repo": "shopify/h2"}],
+  "changelog": ["./hydrogen-changelog-config.js", {"repo": "shopify/hydrogen"}],
   "commit": false,
   "fixed": [],
   "linked": [],
   "access": "public",
   "baseBranch": "2023-01",
   "updateInternalDependencies": "patch",
-  "ignore": ["demo-store", "hello-world"]
+  "ignore": ["demo-store", "hello-world", "skeleton"]
 }

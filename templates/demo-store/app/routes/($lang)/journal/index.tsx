@@ -29,7 +29,7 @@ export const loader = async ({context: {storefront}}: LoaderArgs) => {
     throw new Response('Not found', {status: 404});
   }
 
-  const articles = flattenConnection(blog.articles).map((article) => {
+  const articles = flattenConnection(blog.articles).map((article: Article) => {
     const {publishedAt} = article;
     return {
       ...article,

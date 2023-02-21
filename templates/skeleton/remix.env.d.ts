@@ -2,7 +2,7 @@
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
-import type {StorefrontClient} from '@shopify/hydrogen';
+import type {Storefront} from '@shopify/hydrogen';
 import type {HydrogenSession} from '../server';
 
 declare global {
@@ -20,6 +20,7 @@ declare global {
     PRIVATE_STOREFRONT_API_TOKEN: string;
     PUBLIC_STOREFRONT_API_VERSION: string;
     PUBLIC_STORE_DOMAIN: string;
+    PUBLIC_STOREFRONT_ID: string;
   }
 }
 
@@ -29,7 +30,7 @@ declare global {
 declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
     session: HydrogenSession;
-    storefront: StorefrontClient['storefront'];
+    storefront: Storefront;
     env: Env;
   }
 }

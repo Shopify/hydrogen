@@ -1,6 +1,6 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Link} from '@remix-run/react';
-import type {ShopPolicy} from '@shopify/hydrogen-react/storefront-api-types';
+import type {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({context: {storefront}}: LoaderArgs) {
   const data = await storefront.query<{
@@ -26,7 +26,9 @@ export default function Policies() {
       {policies.map((policy) => {
         return (
           policy && (
-            <Link to={`/policies/${policy.handle}`}>{policy.title}</Link>
+            <Link key={policy.id} to={`/policies/${policy.handle}`}>
+              {policy.title}
+            </Link>
           )
         );
       })}

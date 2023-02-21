@@ -1,3 +1,4 @@
+import {fileURLToPath} from 'url';
 import Command from '@shopify/cli-kit/node/base-command';
 import {ui} from '@shopify/cli-kit';
 import {file, path} from '@shopify/cli-kit';
@@ -8,14 +9,17 @@ import Flags from '@oclif/core/lib/flags.js';
 import {
   format,
   transpileFile,
-  resolvePrettierConfig,
+  resolveFormatConfig,
 } from '../../../utils/transpile-ts.js';
+
+export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 
 // Fix for a TypeScript bug:
 // https://github.com/microsoft/TypeScript/issues/42873
 import type {} from '@oclif/core/lib/interfaces/parser.js';
 
 const ROUTE_MAP: Record<string, string | string[]> = {
+  home: '/index',
   page: '/pages/$pageHandle',
   cart: '/cart',
   products: '/products/$productHandle',
@@ -33,29 +37,27 @@ interface Result {
 }
 
 export default class GenerateRoute extends Command {
-  static description = 'Generate a route';
+  static description = 'Generates a standard Shopify route.';
   static flags = {
-    path: commonFlags.path,
     adapter: Flags.string({
       description:
-        'The Remix adapter for imports in the template (default: @shopify/remix-oxygen)',
+        'Remix adapter used in the route. The default is `@shopify/remix-oxygen`.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ADAPTER',
-    }),
-    force: Flags.boolean({
-      char: 'f',
-      description: 'Overwrite existing files',
-      env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
     }),
     typescript: Flags.boolean({
       description: 'Generate TypeScript files',
       env: 'SHOPIFY_HYDROGEN_FLAG_TYPESCRIPT',
     }),
+    force: commonFlags.force,
+    path: commonFlags.path,
   };
+
+  static hidden: true;
 
   static args = [
     {
       name: 'route',
-      description: `The route to generate a route for.`,
+      description: `The route to generate. One of ${ROUTES.join()}.`,
       required: true,
       options: ROUTES,
       env: 'SHOPIFY_HYDROGEN_ARG_ROUTE',
@@ -63,8 +65,8 @@ export default class GenerateRoute extends Command {
   ];
 
   async run(): Promise<void> {
-    // @ts-ignore
     const result = new Map<string, Result>();
+    // @ts-ignore
     const {flags, args} = await this.parse(GenerateRoute);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
@@ -77,7 +79,7 @@ export default class GenerateRoute extends Command {
 
     if (!routePath) {
       throw new AbortError(
-        `No template generator found for ${route}. Try one of ${ROUTES.join()}`,
+        `No route found for ${route}. Try one of ${ROUTES.join()}.`,
       );
     }
     const isTypescript =
@@ -131,7 +133,7 @@ export async function runGenerate(
     typescript,
     force,
     adapter,
-    templatesRoot = new URL('../../../', import.meta.url).pathname,
+    templatesRoot = fileURLToPath(new URL('../../../', import.meta.url)),
   }: {
     directory: string;
     typescript?: boolean;
@@ -144,7 +146,7 @@ export async function runGenerate(
   const extension = typescript ? '.tsx' : '.jsx';
   const templatePath = path.join(
     templatesRoot,
-    'generator-templates',
+    GENERATOR_TEMPLATES_DIR,
     'routes',
     `${route}.tsx`,
   );
@@ -191,9 +193,10 @@ export async function runGenerate(
     const jsConfigPath = path.join(directory, 'jsconfig.json');
     const config = (await file.exists(jsConfigPath))
       ? JSON.parse(
-          await (
-            await file.read(jsConfigPath, {encoding: 'utf8'})
-          ).replace(/^\s*\/\/.*$/gm, ''),
+          (await file.read(jsConfigPath, {encoding: 'utf8'})).replace(
+            /^\s*\/\/.*$/gm,
+            '',
+          ),
         )
       : undefined;
 
@@ -215,7 +218,7 @@ export async function runGenerate(
   // templateContent = await file.format(templateContent, destinationPath);
   templateContent = format(
     templateContent,
-    await resolvePrettierConfig(destinationPath),
+    await resolveFormatConfig(destinationPath),
     destinationPath,
   );
 

@@ -1,24 +1,25 @@
-import fs from 'fs';
 import path from 'path';
-import {Readable} from 'stream';
 import {pipeline} from 'stream/promises';
-import type {ReadableStream} from 'stream/web';
 import gunzipMaybe from 'gunzip-maybe';
 import {extract} from 'tar-fs';
+import {http, file} from '@shopify/cli-kit';
+import {fileURLToPath} from 'url';
 
-// TODO: Update repo name
 // Note: this skips pre-releases
-const REPO_RELEASES_URL = `https://api.github.com/repos/shopify/h2/releases/latest`;
+const REPO_RELEASES_URL = `https://api.github.com/repos/shopify/hydrogen/releases/latest`;
 
 export async function getLatestReleaseDownloadUrl() {
-  const response = await fetch(REPO_RELEASES_URL);
+  const response = await http.fetch(REPO_RELEASES_URL);
   if (!response.ok || response.status >= 400) {
     throw new Error(
-      `Failed to fetch the latest release information. Status ${response.status} ${response.statusText}}`,
+      `Failed to fetch the latest release information. Status ${response.status} ${response.statusText}`,
     );
   }
 
-  const release: {name: string; tarball_url: string} = await response.json();
+  const release = (await response.json()) as {
+    name: string;
+    tarball_url: string;
+  };
 
   return {
     // @shopify/package-name@version => package-name@version
@@ -28,7 +29,7 @@ export async function getLatestReleaseDownloadUrl() {
 }
 
 export async function downloadTarball(url: string, storageDir: string) {
-  const response = await fetch(url);
+  const response = await http.fetch(url);
   if (!response.ok || response.status >= 400) {
     throw new Error(
       `Failed to download the latest release files. Status ${response.status} ${response.statusText}}`,
@@ -37,14 +38,19 @@ export async function downloadTarball(url: string, storageDir: string) {
 
   await pipeline(
     // Download
-    Readable.fromWeb(response.body as ReadableStream),
+    response.body!,
     // Decompress
     gunzipMaybe(),
     // Unpack
     extract(storageDir, {
       strip: 1,
-      filter: (name, header) =>
-        !name.replace(storageDir, '').startsWith('/templates/'),
+      filter: (name) => {
+        name = name.replace(storageDir, '');
+        return (
+          !name.startsWith(path.normalize('/templates/')) ||
+          name.startsWith(path.normalize('/templates/skeleton/'))
+        );
+      },
     }),
   );
 }
@@ -52,15 +58,16 @@ export async function downloadTarball(url: string, storageDir: string) {
 export async function getLatestTemplates() {
   try {
     const {version, url} = await getLatestReleaseDownloadUrl();
-    const templateStoragePath = new URL('../starter-templates', import.meta.url)
-      .pathname;
+    const templateStoragePath = fileURLToPath(
+      new URL('../starter-templates', import.meta.url),
+    );
 
-    if (!fs.existsSync(templateStoragePath)) {
-      fs.mkdirSync(templateStoragePath);
+    if (!(await file.exists(templateStoragePath))) {
+      await file.mkdir(templateStoragePath);
     }
 
     const templateStorageVersionPath = path.join(templateStoragePath, version);
-    if (!fs.existsSync(templateStorageVersionPath)) {
+    if (!(await file.exists(templateStorageVersionPath))) {
       await downloadTarball(url, templateStorageVersionPath);
     }
 

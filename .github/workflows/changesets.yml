@@ -38,7 +38,7 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: Install the packages
-        run: npm install --frozen-lockfile --ignore-engines
+        run: npm install --frozen-lockfile --ignore-engines --legacy-peer-deps
 
       - name: Format release with Prettier
         run: npm run format
@@ -88,9 +88,9 @@ jobs:
       - name: Build the dist code
         run: npm run build
 
-      # - name: Compile hello-world
-      #   run: |
-      #     node scripts/compile-template-for-dist.mjs hello-world
+      - name: Compile hello-world
+        run: |
+          node scripts/compile-template-for-dist.mjs hello-world
 
       - name: Compile demo-store
         run: |

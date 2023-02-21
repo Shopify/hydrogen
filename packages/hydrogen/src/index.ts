@@ -10,8 +10,8 @@ export {InMemoryCache} from './cache/in-memory';
 
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
-export {useDataFromMatches, useDataFromFetchers} from './hooks/utils';
 export {Seo} from './seo/seo';
+export {type Seo as SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 
 export {
@@ -33,7 +33,7 @@ export {
   useMoney,
   useShopifyCookies,
   Video,
-} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen-react';
 
 export type {
   ClientBrowserParameters,
@@ -51,4 +51,4 @@ export type {
   StorefrontApiResponseOk,
   StorefrontApiResponseOkPartial,
   StorefrontApiResponsePartial,
-} from '@shopify/storefront-kit-react';
+} from '@shopify/hydrogen-react';

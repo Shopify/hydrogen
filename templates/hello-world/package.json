@@ -4,8 +4,8 @@
   "sideEffects": false,
   "version": "0.0.0",
   "scripts": {
-    "build": "shopify hydrogen build --entry ./server",
-    "dev": "shopify hydrogen dev --entry ./server",
+    "build": "shopify hydrogen build",
+    "dev": "shopify hydrogen dev",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
     "typecheck": "tsc --noEmit",
@@ -15,9 +15,9 @@
   "dependencies": {
     "@remix-run/react": "1.12.0",
     "@shopify/cli": "3.29.0",
-    "@shopify/cli-hydrogen": "^4.0.0-alpha.11",
-    "@shopify/hydrogen": "^2023.1.0-alpha.1",
-    "@shopify/remix-oxygen": "^1.0.0-alpha.3",
+    "@shopify/cli-hydrogen": "^4.0.6",
+    "@shopify/hydrogen": "^2023.1.4",
+    "@shopify/remix-oxygen": "^1.0.3",
     "graphql": "^16.6.0",
     "graphql-tag": "^2.12.6",
     "react": "^18.2.0",
@@ -32,8 +32,8 @@
     "@types/react-dom": "^18.0.6",
     "eslint": "^8.20.0",
     "eslint-plugin-hydrogen": "0.12.2",
-    "prettier": "^2.7.1",
-    "typescript": "^4.8.3"
+    "prettier": "^2.8.4",
+    "typescript": "^4.9.5"
   },
   "engines": {
     "node": ">=16.13"

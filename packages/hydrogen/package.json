@@ -5,17 +5,20 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2023.1.0-alpha.1",
+  "version": "2023.1.4",
+  "license": "SEE LICENSE IN LICENSE.md",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
     "build": "tsup --clean --config ../../tsup.config.ts && npm run copy-hydrogen-react",
-    "copy-hydrogen-react": "cp ../../node_modules/@shopify/hydrogen-react/storefront.schema.json dist && cp ../../node_modules/@shopify/hydrogen-react/dist/types/storefront-api-types.d.ts dist",
+    "copy-hydrogen-react": "node ../../scripts/copy-hydrogen-react.mjs",
     "dev": "tsup --watch --config ../../tsup.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest"
+    "test": "vitest run",
+    "prepack": "npm run build",
+    "test:watch": "vitest"
   },
   "exports": {
     ".": {
@@ -34,12 +37,6 @@
         "default": "./dist/production/index.js"
       }
     },
-    "./build": {
-      "types": "./dist/build/index.d.ts",
-      "require": "./dist/build/index.cjs",
-      "import": "./dist/build/index.js",
-      "default": "./dist/build/index.js"
-    },
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
     "./package.json": "./package.json"
@@ -55,14 +52,13 @@
     "dist"
   ],
   "dependencies": {
-    "@shopify/storefront-kit-react": "0.0.0-next-0a466fb"
+    "@shopify/hydrogen-react": "2023.1.5"
   },
   "peerDependencies": {
     "@remix-run/react": "1.12.0",
     "@remix-run/server-runtime": "1.12.0"
   },
   "devDependencies": {
-    "@shopify/hydrogen-react": "*",
     "schema-dts": "^1.1.0",
     "vitest": "^0.27.2"
   }

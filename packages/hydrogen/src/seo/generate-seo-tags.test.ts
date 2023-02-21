@@ -1,15 +1,24 @@
-import {expect, describe, it} from 'vitest';
-import {generateSeoTags} from './generate-seo-tags';
+import {expect, describe, it, vi} from 'vitest';
+import {generateSeoTags, type Seo} from './generate-seo-tags';
+import type {Product} from 'schema-dts';
 
 describe('generateSeoTags', () => {
+  const consoleMock = {
+    warn: vi.fn(),
+  };
+
+  vi.stubGlobal('console', consoleMock);
+
   it('removes undefined values', () => {
     // Given
     const input = {
       title: undefined,
+      titleTemplate: undefined,
+      alternates: undefined,
       description: undefined,
       url: undefined,
       handle: undefined,
-      ldJson: undefined,
+      jsonLd: undefined,
       media: undefined,
     };
 
@@ -162,7 +171,7 @@ describe('generateSeoTags', () => {
             "tag": "meta",
           },
           {
-            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil - A headless storefront\\"}",
+            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\",\\"name\\":\\"Snowdevil\\"}",
             "key": "script-application/ld+json",
             "props": {
               "type": "application/ld+json",
@@ -171,6 +180,22 @@ describe('generateSeoTags', () => {
           },
         ]
       `);
+    });
+
+    it('should warn if the title is too long', () => {
+      // Given
+      const input = {
+        title: 'Snowdevil'.padEnd(121, '.'), // 121 characters
+      };
+
+      // When
+      generateSeoTags(input);
+
+      // Then
+
+      expect(console.warn).toHaveBeenCalledWith(
+        'Error in SEO input: `title` should not be longer than 120 characters',
+      );
     });
   });
 
@@ -238,6 +263,22 @@ describe('generateSeoTags', () => {
         ]
       `);
     });
+
+    it('should warn if the description is too long', () => {
+      // Given
+      const input = {
+        description: ''.padEnd(156, '.'), // 156 characters
+      };
+
+      // When
+      generateSeoTags(input);
+
+      // Then
+
+      expect(console.warn).toHaveBeenCalledWith(
+        'Error in SEO input: `description` should not be longer than 155 characters',
+      );
+    });
   });
 
   describe('url', () => {
@@ -295,6 +336,22 @@ describe('generateSeoTags', () => {
           },
         ]
       `);
+    });
+
+    it('should warn if the url is not a url', () => {
+      // Given
+      const input = {
+        url: 'not a url',
+      };
+
+      // When
+      generateSeoTags(input);
+
+      // Then
+
+      expect(console.warn).toHaveBeenCalledWith(
+        'Error in SEO input: `url` should be a valid URL',
+      );
     });
   });
 
@@ -411,7 +468,7 @@ describe('generateSeoTags', () => {
       const input = {
         media: {
           url: 'https://example.com/image-1.jpg',
-          height: '100',
+          height: 100,
         },
       };
 
@@ -432,7 +489,7 @@ describe('generateSeoTags', () => {
           {
             "key": "meta-https://example.com/image-1.jpg-og:image:height",
             "props": {
-              "content": "100",
+              "content": 100,
               "property": "og:image:height",
             },
             "tag": "meta",
@@ -487,11 +544,11 @@ describe('generateSeoTags', () => {
         media: [
           {
             url: 'https://example.com/image-1.jpg',
-            height: '100',
+            height: 100,
           },
           {
             url: 'https://example.com/image-2.jpg',
-            width: '100',
+            width: 100,
           },
         ],
       };
@@ -513,7 +570,7 @@ describe('generateSeoTags', () => {
           {
             "key": "meta-https://example.com/image-1.jpg-og:image:height",
             "props": {
-              "content": "100",
+              "content": 100,
               "property": "og:image:height",
             },
             "tag": "meta",
@@ -561,7 +618,7 @@ describe('generateSeoTags', () => {
           {
             "key": "meta-https://example.com/image-2.jpg-og:image:width",
             "props": {
-              "content": "100",
+              "content": 100,
               "property": "og:image:width",
             },
             "tag": "meta",
@@ -600,16 +657,16 @@ describe('generateSeoTags', () => {
         media: [
           {
             url: 'https://example.com/image-1.swf',
-            height: '100',
-            type: 'video',
+            height: 100,
+            type: 'video' as const,
           },
           {
             url: 'https://example.com/image-1.mp3',
-            type: 'audio',
+            type: 'audio' as const,
           },
           {
             url: 'https://example.com/image-1.jpg',
-            type: 'image',
+            type: 'image' as const,
             height: 100,
           },
         ],
@@ -688,7 +745,7 @@ describe('generateSeoTags', () => {
           {
             "key": "meta-https://example.com/image-1.swf-og:video:height",
             "props": {
-              "content": "100",
+              "content": 100,
               "property": "og:video:height",
             },
             "tag": "meta",
@@ -794,70 +851,30 @@ describe('generateSeoTags', () => {
         ]
       `);
     });
-  });
 
-  describe('ldJson', () => {
-    it('should infer default values from the URL', () => {
+    it('should warn if the handle is not a valid', () => {
       // Given
       const input = {
-        ldJson: {},
-        url: 'https://hydrogen.shopify.com/products/1234',
+        handle: 'shopify',
       };
 
       // When
-      const output = generateSeoTags(input);
+      generateSeoTags(input);
 
       // Then
-      expect(output).toMatchInlineSnapshot(`
-        [
-          {
-            "key": "link-canonical",
-            "props": {
-              "href": "https://hydrogen.shopify.com/products/1234",
-              "rel": "canonical",
-            },
-            "tag": "link",
-          },
-          {
-            "key": "meta-og:type",
-            "props": {
-              "content": "website",
-              "property": "og:type",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-og:url",
-            "props": {
-              "content": "https://hydrogen.shopify.com/products/1234",
-              "property": "og:url",
-            },
-            "tag": "meta",
-          },
-          {
-            "key": "meta-twitter:card",
-            "props": {
-              "content": "summary_large_image",
-              "name": "twitter:card",
-            },
-            "tag": "meta",
-          },
-          {
-            "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Product\\",\\"url\\":\\"https://hydrogen.shopify.com/products/1234\\"}",
-            "key": "script-application/ld+json",
-            "props": {
-              "type": "application/ld+json",
-            },
-            "tag": "script",
-          },
-        ]
-      `);
-    });
 
-    it('should add additional ldJson values', () => {
+      expect(console.warn).toHaveBeenCalledWith(
+        'Error in SEO input: `handle` should start with `@`',
+      );
+    });
+  });
+
+  describe('jsonLd', () => {
+    it('should add additional jsonLd values', () => {
       // Given
       const input = {
-        ldJson: {
+        jsonLd: {
+          '@context': 'https://schema.org',
           '@type': 'Product',
           aggregateRating: {
             '@type': 'AggregateRating',
@@ -878,10 +895,10 @@ describe('generateSeoTags', () => {
             ],
           },
         },
-      };
+      } satisfies Seo<Product>;
 
       // When
-      const output = generateSeoTags(input);
+      const output = generateSeoTags<Product>(input);
 
       // Then
       expect(output).toMatchInlineSnapshot(`
@@ -929,10 +946,6 @@ describe('generateSeoTags', () => {
             url: 'https://hydrogen.shop.com/de/products/1234',
             language: 'de',
           },
-          {
-            url: 'https://m.hydrogen.shop.com/es/products/1234',
-            media: 'only screen and (max-width: 640px)',
-          },
         ],
       };
 
@@ -946,7 +959,7 @@ describe('generateSeoTags', () => {
             "key": "link-alternate-de",
             "props": {
               "href": "https://hydrogen.shop.com/de/products/1234",
-              "hreflang": "de",
+              "hrefLang": "de",
               "rel": "alternate",
             },
             "tag": "link",
@@ -955,16 +968,7 @@ describe('generateSeoTags', () => {
             "key": "link-alternate-fr-default",
             "props": {
               "href": "https://hydrogen.shop.com/fr/products/1234",
-              "hreflang": "fr-default",
-              "rel": "alternate",
-            },
-            "tag": "link",
-          },
-          {
-            "key": "link-alternate-only-screen-and-(max-width:-640px)",
-            "props": {
-              "href": "https://m.hydrogen.shop.com/es/products/1234",
-              "media": "only screen and (max-width: 640px)",
+              "hrefLang": "fr-default",
               "rel": "alternate",
             },
             "tag": "link",

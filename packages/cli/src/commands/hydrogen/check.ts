@@ -8,6 +8,9 @@ import {
 } from '../../utils/missing-routes.js';
 
 export default class GenerateRoute extends Command {
+  static description =
+    'Returns diagnostic information about a Hydrogen storefront.';
+
   static flags = {
     path: commonFlags.path,
   };
@@ -35,6 +38,6 @@ export default class GenerateRoute extends Command {
 }
 
 async function runCheckRoutes({directory}: {directory: string}) {
-  const remixConfig = await getRemixConfig(directory, '', '');
+  const remixConfig = await getRemixConfig(directory);
   logMissingRoutes(findMissingRoutes(remixConfig));
 }

@@ -1,25 +1,76 @@
-# Hydrogen 2.0
+<p align="center">
+    <a href="https://hydrogen.shopify.dev"><img src="./.github/images/hydrogen-logo.svg" alt="Hydrogen Logo"/></a>
+</p>
+<p align="center">
+    <a href="https://www.npmjs.com/package/@shopify/hydrogen"><img src="https://img.shields.io/npm/v/@shopify/hydrogen.svg?sanitize=true" alt="Version"></a>
+    <a href="https://github.com/Shopify/hydrogen/blob/main/LICENSE.md"><img src="https://img.shields.io/npm/l/@shopify/hydrogen.svg?sanitize=true" alt="License"></a>
+    <a href="https://npmcharts.com/compare/@shopify/hydrogen?minimal=true"><img src="https://img.shields.io/npm/dm/@shopify/hydrogen.svg?sanitize=true" alt="Downloads"></a>
+ </p>
 
-[Developer Preview Guide](https://docs.google.com/document/d/1Y16QFGFIraIuzIWBB-ScTCEIf0NvlR0SCNZaHcZeYO4/edit#heading=h.gmkuifdfb86o)
+<div align="center">
 
-[Roadmap (Github Project)](https://github.com/orgs/Shopify/projects/5093/views/5)
+📚 [Docs](https://shopify.dev/custom-storefronts/hydrogen) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 💬 [Discussions](https://github.com/Shopify/hydrogen/discussions) | 📝 [Changelog](./packages/hydrogen/CHANGELOG.md)
 
-[Demo Store on Oxygen](https://h2-demo-store-f1f4fa724b7467f41f07.o2.myshopify.dev/)
+</div>
 
-[Slack Channel (#hydrogen)](https://shopify.slack.com/archives/C028UNNRJAH)
+Hydrogen is a set of tools, utilities, and best-in-class examples for building a commerce application with [Remix](https://remix.run/).
 
-## Development
+Hydrogen legacy v1, which is not built on Remix, is available here: https://github.com/Shopify/hydrogen-v1
 
-```sh
-npm i
+Get started with Hydrogen with the instructions below ⬇️
+
+## Getting Started
+
+**Requirements:**
+
+- Node.js version 16.14.0 or higher
+- `npm`, `yarn` or `pnpm`
+
+**Installation:**
+
+```bash
+# Using `npm`
+npm create @shopify/hydrogen@latest
+
+# Using `yarn`
+yarn create @shopify/hydrogen@latest
+
+# Using `pnpm`
+pnpm create @shopify/hydrogen@latest
+```
+
+**Running locally:**
+
+1. Start a development server
+
+```bash
+# Using `npm`
+npm install
 npm run dev
+
+# Using `yarn`
+yarn install
+yarn dev
+
+# Using `pnpm`
+pnpm install
+pnpm dev
 ```
 
-Open up [http://localhost:3000](http://localhost:3000) and you should be ready to go!
+2. Visit the development environment running at http://localhost:3000.
 
-If you want to check the production build, you can stop the dev server and run following commands:
+Learn more about [getting started with Hydrogen](https://shopify.dev/custom-storefronts/hydrogen).
 
-```sh
-npm run build
-npm start
-```
+## Contributing to Hydrogen
+
+[Read our contributing guide](./.github/contributing.md)
+
+## Other handy links
+
+[Learn more about Hydrogen](https://shopify.dev/hydrogen).
+
+👷‍♀️ Add `npm` packages to your project:
+
+- [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen)
+- [`@shopify/cli-hydrogen`](https://www.npmjs.com/package/@shopify/cli-hydrogen)
+- [`@shopify/remix-oxygen`](https://www.npmjs.com/package/@shopify/remix-oxygen)

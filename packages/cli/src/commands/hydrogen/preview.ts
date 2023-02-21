@@ -6,9 +6,9 @@ import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 
 export default class Preview extends Command {
   static description =
-    'Runs an existing Hydrogen storefront build in a MiniOxygen worker';
+    'Runs a Hydrogen storefront in an Oxygen worker for production.';
   static flags = {
-    paths: commonFlags.path,
+    path: commonFlags.path,
     port: commonFlags.port,
   };
 

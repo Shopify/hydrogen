@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
-import {runGenerate} from './route.js';
+import {runGenerate, GENERATOR_TEMPLATES_DIR} from './route.js';
 import {file, path, ui} from '@shopify/cli-kit';
 
 describe('generate/route', () => {
@@ -27,7 +27,7 @@ describe('generate/route', () => {
       const route = 'pages/$pageHandle';
       const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
         files: [],
-        templates: [[route, 'const str = "hello world"']],
+        templates: [[route, `const str = "hello world"`]],
       });
 
       // When
@@ -37,10 +37,9 @@ describe('generate/route', () => {
       });
 
       // Then
-      const extension = '.jsx';
       expect(
         await file.read(path.join(appRoot, 'app/routes', `${route}.jsx`)),
-      ).toContain('const str = "hello world"');
+      ).toContain(`const str = 'hello world'`);
     });
   });
 
@@ -61,10 +60,9 @@ describe('generate/route', () => {
       });
 
       // Then
-      const extension = '.tsx';
       expect(
         await file.read(path.join(appRoot, 'app/routes', `${route}.tsx`)),
-      ).toContain('const str = "hello typescript"');
+      ).toContain(`const str = 'hello typescript'`);
     });
   });
 
@@ -143,7 +141,12 @@ async function createHydrogen(
 
   for (const item of templates) {
     const [filePath, fileContent] = item;
-    const fullFilePath = path.join(directory, 'templates', `${filePath}.tsx`);
+    const fullFilePath = path.join(
+      directory,
+      GENERATOR_TEMPLATES_DIR,
+      'routes',
+      `${filePath}.tsx`,
+    );
     await file.mkdir(path.dirname(fullFilePath));
     await file.write(fullFilePath, fileContent);
   }

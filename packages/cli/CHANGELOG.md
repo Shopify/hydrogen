@@ -1,117 +1,55 @@
 # @shopify/cli-hydrogen
 
-## 4.0.0-alpha.11
+## 4.0.6
 
 ### Patch Changes
 
-- Introduce create-app CLI package and refactor how new Hydrogen apps are initialized ([#397](https://github.com/Shopify/h2/pull/397)) by [@frandiox](https://github.com/frandiox)
+- Fix CLI flags for init command, and add `--install-deps`. ([#516](https://github.com/Shopify/hydrogen/pull/516)) by [@frandiox](https://github.com/frandiox)
 
-## 4.0.0-alpha.10
+- Fix template download on Windows during project creation. ([#528](https://github.com/Shopify/hydrogen/pull/528)) by [@tchalabi](https://github.com/tchalabi)
 
-### Patch Changes
+- Fix template imports to only reference `@shopify/hydrogen`, not `@shopify/hydrogen-react` ([#523](https://github.com/Shopify/hydrogen/pull/523)) by [@blittle](https://github.com/blittle)
 
-- Defer and display the cart count on the hello-world template ([#392](https://github.com/Shopify/h2/pull/392)) by [@juanpprieto](https://github.com/juanpprieto)
+- Fix pathnames on Windows when running the development server. ([#520](https://github.com/Shopify/hydrogen/pull/520)) by [@frandiox](https://github.com/frandiox)
 
-## 4.0.0-alpha.9
+- Onboarding fonts and styles ([#533](https://github.com/Shopify/hydrogen/pull/533)) by [@lordofthecactus](https://github.com/lordofthecactus)
 
-### Patch Changes
+- Corrects links referred to in Onboarding Route. ([#509](https://github.com/Shopify/hydrogen/pull/509)) by [@benjaminsehl](https://github.com/benjaminsehl)
 
-- - Upgrade to the latest Remix experimental defer release, 1.11.0 ([#371](https://github.com/Shopify/h2/pull/371)) by [@blittle](https://github.com/blittle)
+- Improve onboarding style and links ([#525](https://github.com/Shopify/hydrogen/pull/525)) by [@lordofthecactus](https://github.com/lordofthecactus)
 
-  - Replace redundant i18n routes with a single root optional route segment `($lang)`
-
-## 4.0.0-alpha.8
-
-### Patch Changes
-
-- Removed magic routes and `.hydrogen` template routes. See `rfc/obsolete-routing.md` for details of what used to be in the package but has now been removed. ([#336](https://github.com/Shopify/h2/pull/336)) by [@frehner](https://github.com/frehner)
-
-  `/__health` still exists for the moment, though at some point it will probably be removed as well.
-
-## 4.0.0-alpha.7
-
-### Patch Changes
-
-- Change environment variable names to use what Oxygen will populate. ([#354](https://github.com/Shopify/h2/pull/354)) by [@jplhomer](https://github.com/jplhomer)
-
-- Defer CJS imports to improve CLI start up ([#352](https://github.com/Shopify/h2/pull/352)) by [@frandiox](https://github.com/frandiox)
-
-## 4.0.0-alpha.6
-
-### Patch Changes
-
-- Update demo-store template to remove `remix.config.js`, which fixes teh TS-JS conversion process ([#347](https://github.com/Shopify/h2/pull/347)) by [@jplhomer](https://github.com/jplhomer)
-
-## 4.0.0-alpha.5
-
-### Patch Changes
-
-- Properly use JS if specified in the temp init script ([#342](https://github.com/Shopify/h2/pull/342)) by [@jplhomer](https://github.com/jplhomer)
-
-## 4.0.0-alpha.4
-
-### Patch Changes
-
-- Improve output of tmp CLI ([#339](https://github.com/Shopify/h2/pull/339)) by [@jplhomer](https://github.com/jplhomer)
-
-## 4.0.0-alpha.3
-
-### Patch Changes
-
-- Fix remix.init in templates ([#334](https://github.com/Shopify/h2/pull/334)) by [@jplhomer](https://github.com/jplhomer)
-
-## 4.0.0-alpha.2
-
-### Patch Changes
-
-- Fix various issues scaffolding new apps ([#332](https://github.com/Shopify/h2/pull/332)) by [@jplhomer](https://github.com/jplhomer)
-
-## 4.0.0-alpha.1
-
-### Patch Changes
-
-- Update CLI to be executable and bundle templates in dist folder ([#326](https://github.com/Shopify/h2/pull/326)) by [@jplhomer](https://github.com/jplhomer)
-
-## 4.0.0-alpha.0
-
-Package renaming. Similar to `@shopify/cli-h2-test@4.0.5`.
-
-# @shopify/cli-h2-test
-
-> Deprecated package used during early development
+- Updated dependencies [[`ff9d729`](https://github.com/Shopify/hydrogen/commit/ff9d7297bf6cb814ac4593cb20402872ef7c30eb)]:
+  - @shopify/remix-oxygen@1.0.3
 
 ## 4.0.5
 
 ### Patch Changes
 
-- Allow a `token` to be passed to `init` to support private GitHub repo templates ([#283](https://github.com/Shopify/h2/pull/283)) by [@jplhomer](https://github.com/jplhomer)
+- Fix missing assets in virtual routes. ([#503](https://github.com/Shopify/hydrogen/pull/503)) by [@frandiox](https://github.com/frandiox)
 
 ## 4.0.4
 
 ### Patch Changes
 
-- Change build folder name to dist ([#292](https://github.com/Shopify/h2/pull/292)) by [@wizardlyhel](https://github.com/wizardlyhel)
+- Fix pathnames in Windows when creating projects and generating routes. ([#495](https://github.com/Shopify/hydrogen/pull/495)) by [@frandiox](https://github.com/frandiox)
 
 ## 4.0.3
 
 ### Patch Changes
 
-- Fix changeset workflow ([#282](https://github.com/Shopify/h2/pull/282)) by [@wizardlyhel](https://github.com/wizardlyhel)
+- Fix initialization a new Hydrogen project on Windows ([#478](https://github.com/Shopify/hydrogen/pull/478)) by [@pepicrft](https://github.com/pepicrft)
 
 ## 4.0.2
 
 ### Patch Changes
 
-- Allow a `--template` to be passed to `hydrogen init` ([#280](https://github.com/Shopify/h2/pull/280)) by [@jplhomer](https://github.com/jplhomer)
+- Add license files and readmes for all packages ([#463](https://github.com/Shopify/hydrogen/pull/463)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`517f0f7`](https://github.com/Shopify/hydrogen/commit/517f0f72531effbe9028e293c77aac1a20828573)]:
+  - @shopify/remix-oxygen@1.0.2
 
 ## 4.0.1
 
 ### Patch Changes
 
-- Build project dist files before publishing by [@jplhomer](https://github.com/jplhomer)
-
-## 4.0.0
-
-### Patch Changes
-
-- Fix changeset release to build before publishing to NPM ([#277](https://github.com/Shopify/h2/pull/277)) by [@jplhomer](https://github.com/jplhomer)
+- Initial release

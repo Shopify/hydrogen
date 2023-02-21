@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
-import prettier, {type Options} from 'prettier';
-import ts, {type CompilerOptions, type ScriptTarget} from 'typescript';
+import prettier, {type Options as FormatOptions} from 'prettier';
+import ts, {type CompilerOptions} from 'typescript';
 import glob from 'fast-glob';
 import {output} from '@shopify/cli-kit';
 
@@ -42,16 +42,23 @@ export function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
   return restoreNewLines(compiled.outputText);
 }
 
-export async function resolvePrettierConfig(filePath = process.cwd()) {
+const DEFAULT_PRETTIER_CONFIG: FormatOptions = {
+  arrowParens: 'always',
+  singleQuote: true,
+  bracketSpacing: false,
+  trailingComma: 'all',
+};
+
+export async function resolveFormatConfig(filePath = process.cwd()) {
   try {
     // Try to read a prettier config file from the project.
-    return (await prettier.resolveConfig(filePath)) || {};
+    return (await prettier.resolveConfig(filePath)) || DEFAULT_PRETTIER_CONFIG;
   } catch {
-    return {};
+    return DEFAULT_PRETTIER_CONFIG;
   }
 }
 
-export function format(content: string, config: Options, filePath = '') {
+export function format(content: string, config: FormatOptions, filePath = '') {
   const ext = path.extname(filePath);
 
   const formattedContent = prettier.format(content, {
@@ -122,7 +129,7 @@ export async function transpileProject(projectDir: string) {
     cwd: projectDir,
   });
 
-  const prettierConfig = await resolvePrettierConfig();
+  const formatConfig = await resolveFormatConfig();
 
   for (const entry of entries) {
     if (entry.endsWith('.d.ts')) {
@@ -131,10 +138,25 @@ export async function transpileProject(projectDir: string) {
     }
 
     const tsx = await fs.readFile(entry, 'utf8');
-    const mjs = await format(transpileFile(tsx), prettierConfig);
+    const mjs = format(transpileFile(tsx), formatConfig);
 
     await fs.rm(entry);
     await fs.writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs, 'utf8');
+  }
+
+  // Change extensions in remix.config.js
+  try {
+    const remixConfigPath = path.join(projectDir, 'remix.config.js');
+    let remixConfig = await fs.readFile(remixConfigPath, 'utf8');
+
+    remixConfig = remixConfig.replace(/\/server\.ts/gim, '/server.js');
+
+    await fs.writeFile(remixConfigPath, remixConfig);
+  } catch (error) {
+    output.debug(
+      'Could not change TS extensions in remix.config.js:\n' +
+        (error as Error).stack,
+    );
   }
 
   // Transpile tsconfig.json to jsconfig.json
@@ -186,17 +208,15 @@ export async function transpileProject(projectDir: string) {
 
   // Remove TS from ESLint
   try {
-    let eslintrc = await fs.readFile(
-      path.join(projectDir, '.eslintrc.js'),
-      'utf8',
-    );
+    const eslintrcPath = path.join(projectDir, '.eslintrc.js');
+    let eslintrc = await fs.readFile(eslintrcPath, 'utf8');
 
     eslintrc = eslintrc
       .replace(/\/\*\*[\s*]+@type.+\s+\*\/\s?/gim, '')
       .replace(/\s*,?\s*['"`]plugin:hydrogen\/typescript['"`]/gim, '')
       .replace(/\s+['"`]@typescript-eslint\/.+,/gim, '');
 
-    await fs.writeFile(path.join(projectDir, '.eslintrc.js'), eslintrc);
+    await fs.writeFile(eslintrcPath, eslintrc);
   } catch (error) {
     output.debug(
       'Could not remove TS rules from .eslintrc:\n' + (error as Error).stack,

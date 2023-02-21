@@ -4,14 +4,17 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "4.0.0-alpha.11",
+  "version": "4.0.6",
+  "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",
   "scripts": {
     "build": "tsup --clean --config ./tsup.config.ts && oclif manifest",
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "oclif manifest",
-    "test": "vitest"
+    "prepack": "npm run build",
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
@@ -23,18 +26,23 @@
     "vitest": "^0.28.1",
     "tempy": "^3.0.0"
   },
+  "peerDependencies": {
+    "@remix-run/react": "^1.12.0",
+    "@shopify/hydrogen-react": "^2023.1.5",
+    "@shopify/remix-oxygen": "^1.0.3"
+  },
   "dependencies": {
     "@oclif/core": "^1.20.4",
-    "@remix-run/dev": "1.12.0",
+    "@remix-run/dev": "^1.12.0",
     "@shopify/cli-kit": "3.29.0",
     "@shopify/mini-oxygen": "^1.3.1",
     "fast-glob": "^3.2.12",
     "fs-extra": "^10.1.0",
-    "prettier": "^2.8.2",
+    "gunzip-maybe": "^1.4.2",
+    "prettier": "^2.8.4",
     "recursive-readdir": "^2.2.3",
     "tar-fs": "^2.1.1",
-    "gunzip-maybe": "^1.4.2",
-    "typescript": "^4.8.3"
+    "typescript": "^4.9.5"
   },
   "bin": {
     "@shopify/cli-hydrogen": "dist/create-app.js",
@@ -51,6 +59,9 @@
     "dist",
     "oclif.manifest.json"
   ],
+  "engines": {
+    "node": ">=16.13"
+  },
   "oclif": {
     "commands": "dist/commands",
     "hooks": {
