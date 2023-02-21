@@ -42,13 +42,13 @@ export async function runCreateShortcut(userBinDir?: string) {
     });
   }
 
-  if (!process.env.PATH?.split(':').includes(globalBinDir)) {
+  if (!process.env.PATH?.split(isWindows ? ';' : ':').includes(globalBinDir)) {
     return renderFatalError({
       name: 'error',
       type: 0,
       message: `The path \`${globalBinDir}\` is not included in your global $PATH.`,
       tryMessage:
-        'Please add it to $PATH and run this command again. Alternatively, try passing an included path with the `--executable-path` flag.',
+        'Please add it to $PATH and run this command again. Alternatively, try passing an included path with the `--bin-path` flag.',
     });
   }
 
