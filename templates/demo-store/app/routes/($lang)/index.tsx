@@ -1,9 +1,4 @@
-import {
-  defer,
-  LoaderArgsWithMiddleware,
-  MiddlewareArgs,
-  type LoaderArgs,
-} from '@shopify/remix-oxygen';
+import {defer, LoaderArgsWithMiddleware} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
@@ -34,16 +29,6 @@ export interface CollectionHero {
   spread: Metafield;
   spreadSecondary: Metafield;
   top?: boolean;
-}
-
-export async function middleware({request, context}: MiddlewareArgs) {
-  const hydrogen = context.get(hydrogenContext);
-  hydrogen.storefront.query;
-  const response = await context.next();
-
-  response.headers.set('index-page', 'was here lololol');
-
-  return response;
 }
 
 export async function loader({
