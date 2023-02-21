@@ -1,5 +1,13 @@
 # @shopify/cli-hydrogen
 
+## 4.0.7
+
+### Patch Changes
+
+- Use woff2 format instead of ttf in onboarding routes to reduce download size of font files. ([#538](https://github.com/Shopify/hydrogen/pull/538)) by [@lordofthecactus](https://github.com/lordofthecactus)
+
+- Show available upgrades for CLI when creating new projects. ([#518](https://github.com/Shopify/hydrogen/pull/518)) by [@frandiox](https://github.com/frandiox)
+
 ## 4.0.6
 
 ### Patch Changes
