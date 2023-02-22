@@ -29,6 +29,7 @@ import {
   Text,
   Link,
   AddToCartButton,
+  Button,
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
 import invariant from 'tiny-invariant';
@@ -249,23 +250,25 @@ export function ProductForm() {
         />
         {selectedVariant && (
           <div className="grid items-stretch gap-4">
-            <AddToCartButton
-              lines={[
-                {
-                  merchandiseId: selectedVariant.id,
-                  quantity: 1,
-                },
-              ]}
-              variant={isOutOfStock ? 'secondary' : 'primary'}
-              data-test="add-to-cart"
-              analytics={{
-                products: [productAnalytics],
-                totalValue: parseFloat(productAnalytics.price),
-              }}
-            >
-              {isOutOfStock ? (
+            {isOutOfStock ? (
+              <Button variant="secondary" disabled>
                 <Text>Sold out</Text>
-              ) : (
+              </Button>
+            ) : (
+              <AddToCartButton
+                lines={[
+                  {
+                    merchandiseId: selectedVariant.id,
+                    quantity: 1,
+                  },
+                ]}
+                variant="primary"
+                data-test="add-to-cart"
+                analytics={{
+                  products: [productAnalytics],
+                  totalValue: parseFloat(productAnalytics.price),
+                }}
+              >
                 <Text
                   as="span"
                   className="flex items-center justify-center gap-2"
@@ -285,8 +288,8 @@ export function ProductForm() {
                     />
                   )}
                 </Text>
-              )}
-            </AddToCartButton>
+              </AddToCartButton>
+            )}
             {!isOutOfStock && (
               <ShopPayButton variantIds={[selectedVariant?.id!]} />
             )}
