@@ -1,5 +1,5 @@
 import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
-import {useFetcher, useMatches} from '@remix-run/react';
+import {useFetcher, useMatches, useNavigation} from '@remix-run/react';
 import {Button} from '~/components';
 import {CartAction} from '~/lib/type';
 
@@ -9,6 +9,7 @@ export function AddToCartButton({
   className = '',
   variant = 'primary',
   width = 'full',
+  disabled,
   analytics,
   ...props
 }: {
@@ -17,12 +18,14 @@ export function AddToCartButton({
   className?: string;
   variant?: 'primary' | 'secondary' | 'inline';
   width?: 'auto' | 'full';
+  disabled?: boolean;
   analytics?: unknown;
   [key: string]: any;
 }) {
   const [root] = useMatches();
   const selectedLocale = root?.data?.selectedLocale;
   const fetcher = useFetcher();
+  const fetcherIsNotIdle = fetcher.state !== 'idle';
 
   return (
     <fetcher.Form action="/cart" method="post">
@@ -36,6 +39,7 @@ export function AddToCartButton({
         width={width}
         variant={variant}
         className={className}
+        disabled={disabled ?? fetcherIsNotIdle}
         {...props}
       >
         {children}
