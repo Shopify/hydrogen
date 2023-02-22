@@ -1,5 +1,13 @@
 # @shopify/cli-hydrogen
 
+## 4.0.8
+
+### Patch Changes
+
+- Improve rate limit error messages when creating new projects. ([#553](https://github.com/Shopify/hydrogen/pull/553)) by [@frandiox](https://github.com/frandiox)
+
+- Show better errors when initial build fails, and recover when fixing it. ([#514](https://github.com/Shopify/hydrogen/pull/514)) by [@frandiox](https://github.com/frandiox)
+
 ## 4.0.7
 
 ### Patch Changes
