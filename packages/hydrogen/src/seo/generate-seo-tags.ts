@@ -3,9 +3,8 @@ import type {WithContext, Thing} from 'schema-dts';
 import type {ComponentPropsWithoutRef} from 'react';
 
 const ERROR_PREFIX = 'Error in SEO input: ';
-// TODO: Refactor this into more reusible validators
-// or use a library like zod to do this if we decide
-// to use it in other places. @cartogram
+// TODO: Refactor this into more reusible validators or use a library like zod to do this if we decide to use it in
+// other places. @cartogram
 const schema = {
   title: {
     validate: (value: unknown) => {
@@ -72,10 +71,10 @@ export interface Seo<Schema extends Thing = Thing> {
   titleTemplate?: Maybe<string> | null;
   /**
    * The media associated with the given page (images, videos, etc). If you pass a string, it will be used as the
-   * `og:image` meta tag. If you pass an object or an array of objects, that will be used to generate
-   * `og:<type of media>` meta tags. The `url` property should be the URL of the media. The `height` and `width`
-   * properties are optional and should be the height and width of the media. The `altText` property is optional and
-   * should be a description of the media.
+   * `og:image` meta tag. If you pass an object or an array of objects, that will be used to generate `og:<type of
+   * media>` meta tags. The `url` property should be the URL of the media. The `height` and `width` properties are
+   * optional and should be the height and width of the media. The `altText` property is optional and should be a
+   * description of the media.
    *
    * @example
    * ```js
@@ -204,28 +203,117 @@ export interface Seo<Schema extends Thing = Thing> {
    * @see https://support.google.com/webmasters/answer/189077?hl=en
    */
   alternates?: LanguageAlternate | LanguageAlternate[];
+  /**
+   * The `robots` property is used to specify the robots meta tag. This is used to tell search engines which pages
+   * should be indexed and which should not.
+   *
+   * @see https://developers.google.com/search/reference/robots_meta_tag
+   */
+  robots?: RobotsOptions;
+}
+
+/**
+ * @see https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag
+ */
+interface RobotsOptions {
+  /**
+   * Set the maximum size of an image preview for this page in a search results Can be one of the following:
+   *
+   * - `none` - No image preview is to be shown.
+   * - `standard` - A default image preview may be shown.
+   * - `large` - A larger image preview, up to the width of the viewport, may be shown.
+   *
+   * If no value is specified a default image preview size is used.
+   */
+  maxImagePreview?: 'none' | 'standard' | 'large';
+  /**
+   * A number representing the maximum of amount characters to use as a textual snippet for a search result. This value
+   * can also be set to one of the following special values:
+   *
+   * - 0 - No snippet is to be shown. Equivalent to nosnippet.
+   * - 1 - The Search engine will choose the snippet length that it believes is most effective to help users discover
+   *   your content and direct users to your site
+   * - -1 - No limit on the number of characters that can be shown in the snippet.
+   */
+  maxSnippet?: number;
+  /**
+   * The maximum number of seconds for videos on this page to show in search results. This value can also be set to one
+   * of the following special values:
+   *
+   * - 0 - A static image may be used with the `maxImagePreview` setting.
+   * - 1 - There is no limit to the size of the video preview.
+   *
+   * This applies to all forms of search results (at Google: web search, Google Images, Google Videos, Discover,
+   * Assistant).
+   */
+  maxVideoPreview?: number;
+  /**
+   * Do not show a cached link in search results.
+   */
+  noArchive?: boolean;
+  /**
+   * Do not follow the links on this page.
+   *
+   * @see https://developers.google.com/search/docs/advanced/guidelines/qualify-outbound-links
+   */
+  noFollow?: boolean;
+  /**
+   * Do not index images on this page.
+   */
+  noImageIndex?: boolean;
+  /**
+   * Do not show this page, media, or resource in search results.
+   */
+  noIndex?: boolean;
+  /**
+   * Do not show a text snippet or video preview in the search results for this page.
+   */
+  noSnippet?: boolean;
+  /**
+   * Do not offer translation of this page in search results.
+   */
+  noTranslate?: boolean;
+  /**
+   * Do not show this page in search results after the specified date/time.
+   */
+  unavailableAfter?: string;
 }
 
 export interface LanguageAlternate {
-  // Language code for the alternate page. This is used to generate the hreflang meta tag property.
+  /**
+   * Language code for the alternate page. This is used to generate the hreflang meta tag property.
+   */
   language: string;
-  // Whether or not the alternate page is the default page. This will add the `x-default` attribution to the language
-  // code.
+  /**
+   * Whether the alternate page is the default page. This will add the `x-default` attribution to the language code.
+   */
   default?: boolean;
-  // The url of the alternate page. This is used to generate the hreflang meta tag property.
+  /**
+   * The url of the alternate page. This is used to generate the hreflang meta tag property.
+   */
   url: string;
 }
 
 export type SeoMedia = {
-  // Used to generate og:<type of media> meta tag
+  /**
+   * Used to generate og:<type of media> meta tag
+   */
   type: 'image' | 'video' | 'audio';
-  // The url value populates both url and secure_url and is used to infer the og:<type of media>:type meta tag.
+  /**
+   * The url value populates both url and secure_url and is used to infer the og:<type of media>:type meta tag.
+   */
   url: Maybe<string> | undefined;
-  // The height in pixels of the media. This is used to generate the og:<type of media>:height meta tag.
+  /**
+   * The height in pixels of the media. This is used to generate the og:<type of media>:height meta tag.
+   */
   height: Maybe<number> | undefined;
-  // The width in pixels of the media. This is used to generate the og:<type of media>:width meta tag/
+  /**
+   * The width in pixels of the media. This is used to generate the og:<type of media>:width meta tag.
+   */
   width: Maybe<number> | undefined;
-  // The alt text for the media. This is used to generate the og:<type of media>:alt meta tag.
+  /**
+   * The alt text for the media. This is used to generate the og:<type of media>:alt meta tag.
+   */
   altText: Maybe<string> | undefined;
 };
 
@@ -412,6 +500,49 @@ export function generateSeoTags<
 
           break;
         }
+
+        case 'robots':
+          // Robots
+          const {
+            maxImagePreview,
+            maxSnippet,
+            maxVideoPreview,
+            noArchive,
+            noFollow,
+            noImageIndex,
+            noIndex,
+            noSnippet,
+            noTranslate,
+            unavailableAfter,
+          } = value as RobotsOptions;
+
+          const robotsParams = [
+            noArchive && 'noarchive',
+            noImageIndex && 'noimageindex',
+            noSnippet && 'nosnippet',
+            noTranslate && `notranslate`,
+            maxImagePreview && `max-image-preview:${maxImagePreview}`,
+            maxSnippet && `max-snippet:${maxSnippet}`,
+            maxVideoPreview && `max-video-preview:${maxVideoPreview}`,
+            unavailableAfter && `unavailable_after:${unavailableAfter}`,
+          ];
+
+          let robotsParam =
+            (noIndex ? 'noindex' : 'index') +
+            ',' +
+            (noFollow ? 'nofollow' : 'follow');
+
+          for (let param of robotsParams) {
+            if (param) {
+              robotsParam += `,${param}`;
+            }
+          }
+
+          tagResults.push(
+            generateTag('meta', {name: 'robots', content: robotsParam}),
+          );
+
+          break;
       }
 
       return tagResults;
@@ -676,8 +807,7 @@ function validate(
   } catch (error: unknown) {
     const message = (error as Error).message;
 
-    // TODO: Discuss consistency of logging
-    // run time warnings/helpers
+    // TODO: Discuss consistency of logging run time warnings/helpers
     console.warn(message);
 
     return data;
