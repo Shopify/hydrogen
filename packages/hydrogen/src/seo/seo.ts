@@ -6,7 +6,6 @@ import {
   type Location,
 } from '@remix-run/react';
 import {generateSeoTags, type Seo as SeoType} from './generate-seo-tags';
-import {logSeoTags} from './log-seo-tags';
 import {type Thing} from 'schema-dts';
 
 import type {
@@ -60,9 +59,6 @@ export function Seo({debug}: SeoProps) {
     }, {});
 
   const headTags = generateSeoTags(seoConfig);
-
-  if (debug) logSeoTags(headTags);
-
   const html = headTags.map((tag) => {
     if (tag.tag === 'script') {
       return React.createElement(tag.tag, {
