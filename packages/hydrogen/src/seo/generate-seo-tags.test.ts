@@ -1001,4 +1001,96 @@ describe('generateSeoTags', () => {
       `);
     });
   });
+
+  describe('robots', () => {
+    it('should add a robots meta tag for noIndex and noFollow', () => {
+      // Given
+      const input = {
+        robots: {
+          noIndex: true,
+          noFollow: true,
+        },
+      };
+
+      // When
+      const output = generateSeoTags(input);
+
+      // Then
+      expect(output).toEqual(
+        expect.arrayContaining([
+          {
+            key: 'meta-robots',
+            props: {
+              content: 'noindex,nofollow',
+              name: 'robots',
+            },
+            tag: 'meta',
+          },
+        ]),
+      );
+    });
+  });
+
+  it('should add a robots meta tag for index and follow', () => {
+    // Given
+    const input = {
+      robots: {
+        noIndex: false,
+        noFollow: false,
+      },
+    };
+
+    // When
+    const output = generateSeoTags(input);
+
+    // Then
+    expect(output).toEqual(
+      expect.arrayContaining([
+        {
+          key: 'meta-robots',
+          props: {
+            content: 'index,follow',
+            name: 'robots',
+          },
+          tag: 'meta',
+        },
+      ]),
+    );
+  });
+
+  it('should add all the robots meta tags', () => {
+    // Given
+    const input = {
+      robots: {
+        noIndex: true,
+        noFollow: true,
+        noArchive: true,
+        noSnippet: true,
+        noImageIndex: true,
+        noTranslate: true,
+        maxImagePreview: 'large' as const,
+        maxSnippet: 100,
+        maxVideoPreview: 100,
+        unavailableAfter: new Date('2023-01-01').toLocaleDateString(),
+      },
+    };
+
+    // When
+    const output = generateSeoTags(input);
+
+    // Then
+    expect(output).toEqual(
+      expect.arrayContaining([
+        {
+          key: 'meta-robots',
+          props: {
+            content:
+              'noindex,nofollow,noarchive,noimageindex,nosnippet,notranslate,max-image-preview:large,max-snippet:100,max-video-preview:100,unavailable_after:1/1/2023',
+            name: 'robots',
+          },
+          tag: 'meta',
+        },
+      ]),
+    );
+  });
 });

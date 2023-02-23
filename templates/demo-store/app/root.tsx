@@ -38,6 +38,10 @@ const seo: SeoHandleFunction<typeof loader> = ({data, pathname}) => ({
   description: data?.layout?.shop?.description,
   handle: '@shopify',
   url: `https://hydrogen.shop${pathname}`,
+  robots: {
+    noIndex: false,
+    noFollow: false,
+  },
 });
 
 export const handle = {
