@@ -63,7 +63,7 @@ Learn more about [getting started with Hydrogen](https://shopify.dev/custom-stor
 
 ## Contributing to Hydrogen
 
-[Read our contributing guide](./.github/contributing.md)
+[Read our contributing guide](CONTRIBUTING.md)
 
 ## Other handy links
 
