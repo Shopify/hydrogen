@@ -47,7 +47,7 @@ export function createStorefrontClient(
   }
 
   // only warn if in a browser environment and you're using the privateStorefrontToken
-  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis) {
+  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {
     warnOnce(
       `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`
     );
