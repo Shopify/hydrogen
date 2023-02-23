@@ -39,5 +39,5 @@ Default.args = {
   withoutCurrency: false,
   withoutTrailingZeros: false,
   measurementSeparator: '/',
-  'measurement.referenceUnit': '',
+  'measurement.referenceUnit': undefined,
 };
