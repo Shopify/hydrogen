@@ -212,8 +212,6 @@ export interface Seo<Schema extends Thing = Thing> {
   robots?: RobotsOptions;
 }
 
-export type Robots = 'index' | 'noindex' | 'follow' | 'nofollow';
-
 /**
  * @see https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag
  */
