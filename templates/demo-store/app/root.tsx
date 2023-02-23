@@ -91,7 +91,7 @@ export default function App() {
   return (
     <html lang={locale.language}>
       <head>
-        <Seo debug />
+        <Seo />
         <Meta />
         <Links />
       </head>
