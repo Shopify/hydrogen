@@ -1,4 +1,5 @@
 {
+  "name": "hydrogen-v2-cloudflare-edge",
   "private": true,
   "sideEffects": false,
   "scripts": {
