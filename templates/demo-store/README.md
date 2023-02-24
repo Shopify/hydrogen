@@ -25,7 +25,7 @@ Hydrogen is Shopify’s stack for headless commerce. Hydrogen is designed to dov
 - Node.js version 16.14.0 or higher
 
 ```bash
-npm create @shopify/hydrogen@latest --template demo-store
+npm create @shopify/hydrogen@latest -- --template demo-store
 ```
 
 Remember to update `.env` with your shop's domain and Storefront API token!
