@@ -3,6 +3,14 @@
 - [Hydrogen Docs](https://shopify.dev/docs/custom-storefronts/hydrogen)
 - [Remix Docs](https://remix.run/docs)
 
+## Install
+
+```sh
+npm install --legacy-peer-deps
+```
+
+Peer deps should get updated soon in Hydrogen
+
 ## Development
 
 You will be running two processes during development:
