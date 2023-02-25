@@ -22,10 +22,11 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "scripts": {
-    "test": "jest",
-    "dev": "yarn build --preserveWatchOutput -w",
-    "build": "tsc -p .",
-    "prepack": "yarn build"
+    "build": "tsup --clean --config ./tsup.config.ts && oclif manifest",
+    "dev": "tsup --watch --config ./tsup.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "repository": {
     "type": "git",
