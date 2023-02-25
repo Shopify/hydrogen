@@ -22,8 +22,8 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "scripts": {
-    "build": "tsup --clean --config ./tsup.config.ts && oclif manifest",
-    "dev": "tsup --watch --config ./tsup.config.ts",
+    "dev": "yarn build --preserveWatchOutput -w",
+    "build": "tsc -p .",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
