@@ -59,7 +59,9 @@
     "@remix-run/server-runtime": "1.12.0"
   },
   "devDependencies": {
+    "happy-dom": "^8.9.0",
     "schema-dts": "^1.1.0",
-    "vitest": "^0.27.2"
+    "vitest": "^0.27.2",
+    "@testing-library/react": "^14.0.0"
   }
 }
