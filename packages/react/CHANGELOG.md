@@ -1,5 +1,14 @@
 # @shopify/hydrogen-react
 
+## 2023.1.6
+
+### Patch Changes
+
+- 67da795: Fix issue with props on the `<CartLineQuantityAdjustButton />` being possibly overwritten.
+- 0152f3d: Update internal deps
+- 8302b55: (Internal) Migrate from `yarn` to `npm`
+- 37d036f: Fixed an issue in which the Storefront Client had a check that was meant to only run on the client, but was also running on the server.
+
 ## 2023.1.5
 
 ### Patch Changes
