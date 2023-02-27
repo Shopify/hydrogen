@@ -1,0 +1,7 @@
+.DS_Store
+/node_modules
+/.wrangler
+/.cache
+/build/*
+!/build/index.d.ts
+/public/build
