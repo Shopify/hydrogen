@@ -69,7 +69,7 @@
     "dist/*/node_modules/use-sync-external-store/shim/with-selector.*js"
   ],
   "scripts": {
-    "build-docs": "sh ./docs/build-docs.sh && yarn format",
+    "build-docs": "sh ./docs/build-docs.sh && npm run format",
     "clean-dist": "rimraf ./dist",
     "dev": "run-s clean-dist dev:demo",
     "dev:story": "ladle serve",
@@ -88,9 +88,9 @@
     "build:tsc:es": "tsc --emitDeclarationOnly --project tsconfig.typeoutput.json",
     "copy-storefront-types": "cpy ./src/storefront-api-types.d.ts ./dist/types/ --flat",
     "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown",
-    "graphql-types": "graphql-codegen --config codegen.ts && yarn format",
+    "graphql-types": "graphql-codegen --config codegen.ts && npm run format",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx src",
-    "prepack": "yarn build",
+    "prepack": "npm run build",
     "test": "vitest",
     "test:ci": "vitest run --coverage",
     "typecheck": "run-p typecheck:*",

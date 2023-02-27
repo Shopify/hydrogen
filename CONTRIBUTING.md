@@ -3,10 +3,10 @@
 There are two ways you can develop Hydrogen React components:
 
 - Develop components in isolation (faster & easier):
-  1. Run `yarn dev:story` in the `packages/react` directory to spin up an instance of [Ladle](https://ladle.dev/)
+  1. Run `npm run dev:story` in the `packages/react` directory to spin up an instance of [Ladle](https://ladle.dev/)
   2. Edit the component or the component's story `[ComponentName].stories.tsx`
 - Develop components in a demo app (good for testing out the ecosystem support)
-  1. Run `yarn dev`
+  1. Run `npm run dev`
 
 ## Authoring Components
 
@@ -46,7 +46,7 @@ Documentation lives in the `*.doc.ts` files, and uses a Shopify library called `
 After adding or updating docs, you'll need to:
 
 1. `cd` into `packages/react` folder
-1. Run `yarn build-docs`
+1. Run `npm run build-docs`
 
 Which will update the generated output, and then will be picked up by the Shopify website on a regular cadence.
 
@@ -56,7 +56,7 @@ For most contributions, this should be enough information to work off of. Howeve
 
 ## Running CI Checks Locally
 
-Every PR must pass certain CI checks in order to be merged; you can run these checks locally yourself by running `yarn ci:checks` from the root of the repo.
+Every PR must pass certain CI checks in order to be merged; you can run these checks locally yourself by running `npm run ci:checks` from the root of the repo.
 
 ## Package Exports Notes:
 

@@ -1,7 +1,7 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
  * Based on Storefront API 2023-01
- * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `yarn graphql-types`.
+ * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
 /* eslint-disable */
@@ -5253,6 +5253,7 @@ export type PageEdge = {
 /**
  * Returns information about pagination in a connection, in accordance with the
  * [Relay specification](https://relay.dev/graphql/connections.htm#sec-undefined.PageInfo).
+ * For more information, please read our [GraphQL Pagination Usage Guide](https://shopify.dev/api/usage/pagination-graphql).
  *
  */
 export type PageInfo = {

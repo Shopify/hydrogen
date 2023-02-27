@@ -1377,7 +1377,7 @@
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "loader",
-                "value": "(params: Simplify<ShopifyLoaderOptions & ImageSrc>) => string",
+                "value": "(params: { crop?: \"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"; scale?: 2 | 3; width?: string | number; height?: string | number; src: string; }) => string",
                 "description": "A custom function that generates the image URL. Parameters passed in\nare `ShopifyLoaderParams`",
                 "isOptional": true
               },
@@ -1445,22 +1445,6 @@
                 "value": "string | number",
                 "description": "",
                 "isOptional": true
-              }
-            ]
-          },
-          "ImageSrc": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ImageSrc",
-            "value": "{\n  src: ImageType['url'];\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "src",
-                "value": "string",
-                "description": ""
               }
             ]
           }
@@ -3676,7 +3660,7 @@
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "loader",
-                "value": "(params: Simplify<ShopifyLoaderOptions & ImageSrc>) => string",
+                "value": "(params: { crop?: \"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"; scale?: 2 | 3; width?: string | number; height?: string | number; src: string; }) => string",
                 "description": "A custom function that generates the image URL. Parameters passed in\nare `ShopifyLoaderParams`",
                 "isOptional": true
               },
@@ -3747,22 +3731,6 @@
               }
             ]
           },
-          "ImageSrc": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ImageSrc",
-            "value": "{\n  src: ImageType['url'];\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "src",
-                "value": "string",
-                "description": ""
-              }
-            ]
-          },
           "VideoProps": {
             "filePath": "/Video.tsx",
             "name": "VideoProps",
@@ -3779,7 +3747,7 @@
                 "filePath": "/Video.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "previewImageOptions",
-                "value": "Simplify<ShopifyLoaderOptions & ImageSrc>",
+                "value": "{ crop?: \"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"; scale?: 2 | 3; width?: string | number; height?: string | number; src: string; }",
                 "description": "An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL.",
                 "isOptional": true
               },
@@ -4983,7 +4951,7 @@
                 "filePath": "/Video.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "previewImageOptions",
-                "value": "Simplify<ShopifyLoaderOptions & ImageSrc>",
+                "value": "{ crop?: \"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"; scale?: 2 | 3; width?: string | number; height?: string | number; src: string; }",
                 "description": "An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL.",
                 "isOptional": true
               },
@@ -4997,63 +4965,6 @@
               }
             ],
             "value": "export interface VideoProps {\n  /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/latest/objects/video). */\n  data: PartialDeep<VideoType, {recurseIntoArrays: true}>;\n  /** An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL. */\n  previewImageOptions?: Parameters<typeof shopifyImageLoader>[0];\n  /** Props that will be passed to the `video` element's `source` children elements. */\n  sourceProps?: HTMLAttributes<HTMLSourceElement> & {\n    'data-testid'?: string;\n  };\n}"
-          },
-          "ShopifyLoaderOptions": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyLoaderOptions",
-            "value": "{\n  crop?: 'top' | 'bottom' | 'left' | 'right' | 'center';\n  scale?: 2 | 3;\n  width?: HtmlImageProps['width'] | ImageType['width'];\n  height?: HtmlImageProps['height'] | ImageType['height'];\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "crop",
-                "value": "\"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "scale",
-                "value": "2 | 3",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "width",
-                "value": "string | number",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "height",
-                "value": "string | number",
-                "description": "",
-                "isOptional": true
-              }
-            ]
-          },
-          "ImageSrc": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ImageSrc",
-            "value": "{\n  src: ImageType['url'];\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "src",
-                "value": "string",
-                "description": ""
-              }
-            ]
           }
         }
       }
@@ -5109,13 +5020,13 @@
             "params": [
               {
                 "name": "event",
-                "description": "- The analytics event.",
+                "description": "The analytics event.",
                 "value": "ShopifyAnalytics",
                 "filePath": "/analytics.ts"
               },
               {
                 "name": "shopDomain",
-                "description": "- The Online Store domain to sent Shopify analytics under the same\ntop level domain.",
+                "description": "The Online Store domain to sent Shopify analytics under the same\ntop level domain.",
                 "value": "string",
                 "isOptional": true,
                 "filePath": "/analytics.ts"
@@ -6372,7 +6283,7 @@
               "name": "StorefrontClientReturn",
               "value": "StorefrontClientReturn"
             },
-            "value": "export function createStorefrontClient(\n  props: StorefrontClientProps\n): StorefrontClientReturn {\n  const {\n    storeDomain,\n    privateStorefrontToken,\n    publicStorefrontToken,\n    storefrontApiVersion,\n    contentType,\n  } = props;\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {\n    warnOnce(\n      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis) {\n    warnOnce(\n      `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`\n    );\n  }\n\n  return {\n    getShopifyDomain(overrideProps): string {\n      return overrideProps?.storeDomain ?? storeDomain;\n    },\n    getStorefrontApiUrl(overrideProps): string {\n      const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;\n      return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? ''\n      );\n    },\n  };\n}"
+            "value": "export function createStorefrontClient(\n  props: StorefrontClientProps\n): StorefrontClientReturn {\n  const {\n    storeDomain,\n    privateStorefrontToken,\n    publicStorefrontToken,\n    storefrontApiVersion,\n    contentType,\n  } = props;\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {\n    warnOnce(\n      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`\n    );\n  }\n\n  return {\n    getShopifyDomain(overrideProps): string {\n      return overrideProps?.storeDomain ?? storeDomain;\n    },\n    getStorefrontApiUrl(overrideProps): string {\n      const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;\n      return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? ''\n      );\n    },\n  };\n}"
           },
           "StorefrontClientProps": {
             "filePath": "/storefront-client.ts",
