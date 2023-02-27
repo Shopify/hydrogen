@@ -47,28 +47,6 @@ import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
 import type {Product} from 'schema-dts';
 
-const seo: SeoHandleFunction<typeof loader> = ({data}) => {
-  const media = flattenConnection<MediaConnection>(data.product.media).find(
-    (media) => media.mediaContentType === 'IMAGE',
-  ) as MediaImage | undefined;
-
-  return {
-    title: data?.product?.seo?.title ?? data?.product?.title,
-    media: media?.image,
-    description: data?.product?.seo?.description ?? data?.product?.description,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      brand: data?.product?.vendor,
-      name: data?.product?.title,
-    },
-  } satisfies SeoConfig<Product>;
-};
-
-export const handle = {
-  seo,
-};
-
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
   invariant(productHandle, 'Missing productHandle param, check route filename');
@@ -109,10 +87,27 @@ export async function loader({params, request, context}: LoaderArgs) {
     price: selectedVariant.price.amount,
   };
 
+  const media = flattenConnection<MediaConnection>(product.media).find(
+    (media) => media.mediaContentType === 'IMAGE',
+  ) as MediaImage | undefined;
+
+  const seo = {
+    title: product?.seo?.title ?? product?.title,
+    media: media?.image,
+    description: product?.seo?.description ?? product?.description,
+    jsonLd: {
+      '@context': 'https://schema.org',
+      '@type': 'Product',
+      brand: product?.vendor,
+      name: product?.title,
+    },
+  } satisfies SeoConfig<Product>;
+
   return defer({
     product,
     shop,
     recommended,
+    seo,
     analytics: {
       pageType: AnalyticsPageType.product,
       resourceId: product.id,
