@@ -1,8 +1,0 @@
-# built files
-**/dist/**
-packages/react/storefront.schema.json
-**/coverage/
-
-# apps/nextjs ignored files/folders
-apps/nextjs/.next/**
-apps/nextjs/gql/**
