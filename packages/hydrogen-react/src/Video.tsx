@@ -18,7 +18,7 @@ export interface VideoProps {
  * The `Video` component renders a `video` for the Storefront API's [Video object](https://shopify.dev/api/storefront/reference/products/video).
  */
 export function Video(
-  props: JSX.IntrinsicElements['video'] & VideoProps
+  props: JSX.IntrinsicElements['video'] & VideoProps,
 ): JSX.Element {
   const {
     data,

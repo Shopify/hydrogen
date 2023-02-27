@@ -57,7 +57,7 @@ export function useCartActions({
         },
       });
     },
-    [fetchCart, cartFragment, numCartLines, countryCode]
+    [fetchCart, cartFragment, numCartLines, countryCode],
   );
 
   const cartCreate = useCallback(
@@ -71,7 +71,7 @@ export function useCartActions({
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines]
+    [cartFragment, countryCode, fetchCart, numCartLines],
   );
 
   const cartLineAdd = useCallback(
@@ -86,7 +86,7 @@ export function useCartActions({
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines]
+    [cartFragment, countryCode, fetchCart, numCartLines],
   );
 
   const cartLineUpdate = useCallback(
@@ -101,7 +101,7 @@ export function useCartActions({
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines]
+    [cartFragment, countryCode, fetchCart, numCartLines],
   );
 
   const cartLineRemove = useCallback(
@@ -116,7 +116,7 @@ export function useCartActions({
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines]
+    [cartFragment, countryCode, fetchCart, numCartLines],
   );
 
   const noteUpdate = useCallback(
@@ -131,7 +131,7 @@ export function useCartActions({
         },
       });
     },
-    [fetchCart, cartFragment, numCartLines, countryCode]
+    [fetchCart, cartFragment, numCartLines, countryCode],
   );
 
   const buyerIdentityUpdate = useCallback(
@@ -146,7 +146,7 @@ export function useCartActions({
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines]
+    [cartFragment, countryCode, fetchCart, numCartLines],
   );
 
   const cartAttributesUpdate = useCallback(
@@ -161,13 +161,13 @@ export function useCartActions({
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines]
+    [cartFragment, countryCode, fetchCart, numCartLines],
   );
 
   const discountCodesUpdate = useCallback(
     (
       cartId: string,
-      discountCodes: MutationCartDiscountCodesUpdateArgs['discountCodes']
+      discountCodes: MutationCartDiscountCodesUpdateArgs['discountCodes'],
     ) => {
       return fetchCart<{cartDiscountCodesUpdate: {cart: CartResponse}}>({
         query: CartDiscountCodesUpdate(cartFragment),
@@ -179,7 +179,7 @@ export function useCartActions({
         },
       });
     },
-    [cartFragment, countryCode, fetchCart, numCartLines]
+    [cartFragment, countryCode, fetchCart, numCartLines],
   );
 
   return useMemo(
@@ -206,6 +206,6 @@ export function useCartActions({
       cartAttributesUpdate,
       discountCodesUpdate,
       cartFragment,
-    ]
+    ],
   );
 }

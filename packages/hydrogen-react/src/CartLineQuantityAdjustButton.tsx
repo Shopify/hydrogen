@@ -10,7 +10,7 @@ interface CartLineQuantityAdjustButtonBaseProps {
 }
 
 type CartLineQuantityAdjustButtonProps<
-  AsType extends React.ElementType = 'button'
+  AsType extends React.ElementType = 'button',
 > = BaseButtonProps<AsType> & CartLineQuantityAdjustButtonBaseProps;
 
 /**
@@ -19,7 +19,7 @@ type CartLineQuantityAdjustButtonProps<
  * It must be a descendent of `<CartLineProvider/>` and `<CartProvider/>`.
  */
 export function CartLineQuantityAdjustButton<
-  AsType extends React.ElementType = 'button'
+  AsType extends React.ElementType = 'button',
 >(props: CartLineQuantityAdjustButtonProps<AsType>): JSX.Element {
   const {status, linesRemove, linesUpdate} = useCart();
   const cartLine = useCartLine();

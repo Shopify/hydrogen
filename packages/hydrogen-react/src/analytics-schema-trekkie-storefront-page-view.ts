@@ -11,7 +11,7 @@ const SCHEMA_ID = 'trekkie_storefront_page_view/1.4';
 const OXYGEN_DOMAIN = 'myshopify.dev';
 
 export function pageView(
-  payload: ShopifyPageViewPayload
+  payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
   const pageViewPayload = payload;
   const {id, resource} = parseGid(pageViewPayload.resourceId);
@@ -26,14 +26,14 @@ export function pageView(
           resourceType,
           resourceId: parseInt(id),
         },
-        formatPayload(pageViewPayload)
-      )
+        formatPayload(pageViewPayload),
+      ),
     ),
   ];
 }
 
 function formatPayload(
-  payload: ShopifyPageViewPayload
+  payload: ShopifyPageViewPayload,
 ): ShopifyMonorailPayload {
   return {
     appClientId: payload.shopifySalesChannel

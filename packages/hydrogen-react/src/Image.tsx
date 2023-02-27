@@ -92,7 +92,7 @@ export function Image({
     console.warn(
       `<Image/>: the 'data' prop should have the 'altText' property, or the 'alt' prop, and one of them should not be empty. Image: ${
         data.id ?? data.url
-      }`
+      }`,
     );
   }
 
@@ -110,7 +110,7 @@ export function Image({
     console.warn(
       `<Image/>: the 'data' prop requires either 'width' or 'data.width', and 'height' or 'data.height' properties. Image: ${
         data.id ?? data.url
-      }`
+      }`,
     );
   }
 
@@ -127,7 +127,7 @@ export function Image({
       throw new Error(
         `<Image/>: 'loader' did not return a valid string. Image: ${
           data.id ?? data.url
-        }`
+        }`,
       );
     }
   }
@@ -185,7 +185,7 @@ function internalImageSrcSet({
   const hasCustomWidths = widths && Array.isArray(widths);
   if (hasCustomWidths && widths.some((size) => isNaN(size as number))) {
     throw new Error(
-      `<Image/>: the 'widths' must be an array of numbers. Image: ${src}`
+      `<Image/>: the 'widths' must be an array of numbers. Image: ${src}`,
     );
   }
 
@@ -214,7 +214,7 @@ function internalImageSrcSet({
           height: crop ? Number(size) * aspectRatio : undefined,
           crop,
           scale,
-        })} ${size ?? ''}w`
+        })} ${size ?? ''}w`,
     )
     .join(', ');
 }

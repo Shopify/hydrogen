@@ -24,7 +24,7 @@ import {
  */
 export function sendShopifyAnalytics(
   event: ShopifyAnalytics,
-  shopDomain?: string
+  shopDomain?: string,
 ): Promise<void> {
   const {eventName, payload} = event;
   if (!payload.hasUserConsent) return Promise.resolve();
@@ -35,11 +35,11 @@ export function sendShopifyAnalytics(
     const pageViewPayload = payload as ShopifyPageViewPayload;
     events = events.concat(
       trekkiePageView(pageViewPayload),
-      customerPageView(pageViewPayload)
+      customerPageView(pageViewPayload),
     );
   } else if (eventName === AnalyticsEventName.ADD_TO_CART) {
     events = events.concat(
-      customerAddToCart(payload as ShopifyAddToCartPayload)
+      customerAddToCart(payload as ShopifyAddToCartPayload),
     );
   }
 
@@ -59,7 +59,7 @@ const ERROR_MESSAGE = 'sendShopifyAnalytics request is unsuccessful';
 
 function sendToShopify(
   events: ShopifyMonorailEvent[],
-  shopDomain?: string
+  shopDomain?: string,
 ): Promise<void> {
   const eventsToBeSent = {
     events,
@@ -79,7 +79,7 @@ function sendToShopify(
           'content-type': 'text/plain',
         },
         body: JSON.stringify(eventsToBeSent),
-      }
+      },
     )
       .then((response) => {
         if (!response.ok) {
@@ -154,7 +154,7 @@ function getNavigationTypeExperimental(): string | undefined {
       // https://developer.mozilla.org/en-US/docs/Web/API/PerformanceNavigationTiming
       const rawType = (
         window.performance.getEntriesByType(
-          'navigation'
+          'navigation',
         )[0] as PerformanceNavigationTiming
       )['type'];
       const navType = rawType && rawType.toString();

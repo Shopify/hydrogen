@@ -7,7 +7,7 @@ describe(`useMoney`, () => {
       useMoney({
         amount: '19.99',
         currencyCode: 'USD',
-      })
+      }),
     );
 
     expect(result.current).toEqual({
@@ -37,7 +37,7 @@ describe(`useMoney`, () => {
       useMoney({
         amount: '19.00',
         currencyCode: 'USD',
-      })
+      }),
     );
 
     expect(result.current).toEqual({

@@ -44,7 +44,7 @@ describe('<AddToCartButton/>', () => {
     render(
       <MockWrapper>
         <AddToCartButton variantId="123">Add to cart</AddToCartButton>
-      </MockWrapper>
+      </MockWrapper>,
     );
 
     expect(screen.getByRole('button')).toHaveTextContent('Add to cart');
@@ -56,7 +56,7 @@ describe('<AddToCartButton/>', () => {
         <AddToCartButton variantId="123" className="bg-blue-600">
           Add to cart
         </AddToCartButton>
-      </MockWrapper>
+      </MockWrapper>,
     );
 
     expect(screen.getByRole('button')).toHaveClass('bg-blue-600');
@@ -67,7 +67,7 @@ describe('<AddToCartButton/>', () => {
       render(
         <MockWrapper>
           <AddToCartButton variantId={null}>Add to cart</AddToCartButton>
-        </MockWrapper>
+        </MockWrapper>,
       );
 
       expect(screen.getByRole('button')).toBeDisabled();
@@ -80,7 +80,7 @@ describe('<AddToCartButton/>', () => {
       render(
         <MockWrapper>
           <AddToCartButton variantId={id}>Add to cart</AddToCartButton>
-        </MockWrapper>
+        </MockWrapper>,
       );
 
       await user.click(screen.getByRole('button'));
@@ -104,7 +104,7 @@ describe('<AddToCartButton/>', () => {
         render(
           <MockWrapper data={product} initialVariantId={selectedVariant?.id}>
             <AddToCartButton>Add to cart</AddToCartButton>
-          </MockWrapper>
+          </MockWrapper>,
         );
 
         await user.click(screen.getByRole('button'));
@@ -135,7 +135,7 @@ describe('<AddToCartButton/>', () => {
         render(
           <MockWrapper data={product}>
             <AddToCartButton>Add to cart</AddToCartButton>
-          </MockWrapper>
+          </MockWrapper>,
         );
 
         await user.click(screen.getByRole('button'));
@@ -156,7 +156,7 @@ describe('<AddToCartButton/>', () => {
         render(
           <MockWrapper data={product} initialVariantId={null}>
             <AddToCartButton>Add to cart</AddToCartButton>
-          </MockWrapper>
+          </MockWrapper>,
         );
 
         expect(screen.getByRole('button')).toBeDisabled();
@@ -170,7 +170,7 @@ describe('<AddToCartButton/>', () => {
         render(
           <MockWrapper>
             <AddToCartButton variantId="123">Add to cart</AddToCartButton>
-          </MockWrapper>
+          </MockWrapper>,
         );
 
         await user.click(screen.getByRole('button'));
@@ -191,14 +191,14 @@ describe('<AddToCartButton/>', () => {
             >
               Add to cart
             </AddToCartButton>
-          </MockWrapper>
+          </MockWrapper>,
         );
 
         await user.click(screen.getByRole('button'));
 
         await waitFor(() => {
           expect(screen.getByRole('alert')).toHaveTextContent(
-            'Adding product to your cart'
+            'Adding product to your cart',
           );
         });
       });

@@ -52,6 +52,6 @@ export function CartLinePrice(props: CartLinePriceProps): JSX.Element | null {
 
 // This is only for documenation purposes, and it is not used in the code.
 export interface CartLinePricePropsForDocs<
-  AsType extends React.ElementType = 'div'
+  AsType extends React.ElementType = 'div',
 > extends Omit<MoneyPropsBase<AsType>, 'data'>,
     CartLinePricePropsBase {}

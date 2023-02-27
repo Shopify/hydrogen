@@ -13,7 +13,7 @@ export function getPrice(price: Partial<MoneyV2> = {}): MoneyV2 {
 }
 
 export function getUnitPriceMeasurement(
-  unitPriceMeasurement: Partial<UnitPriceMeasurement> = {}
+  unitPriceMeasurement: Partial<UnitPriceMeasurement> = {},
 ): UnitPriceMeasurement {
   const measuredTypeToUnitMap: {
     WEIGHT: UnitPriceMeasurementMeasuredUnit[];
@@ -30,10 +30,10 @@ export function getUnitPriceMeasurement(
     keyof typeof measuredTypeToUnitMap
   >(['WEIGHT', 'VOLUME', 'AREA', 'LENGTH']);
   const quantityUnit = faker.helpers.arrayElement(
-    measuredTypeToUnitMap[measuredType]
+    measuredTypeToUnitMap[measuredType],
   );
   const referenceUnit = faker.helpers.arrayElement(
-    measuredTypeToUnitMap[measuredType]
+    measuredTypeToUnitMap[measuredType],
   );
 
   return {

@@ -7,11 +7,11 @@ export interface CustomBaseButtonProps<AsType> {
   children: ReactNode;
   /** Click event handler. Default behaviour triggers unless prevented */
   onClick?: (
-    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => void | boolean;
   /** A default `onClick` behavior */
   defaultOnClick?: (
-    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>
+    event?: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => void | boolean;
   /** A `ref` to the underlying button */
   buttonRef?: Ref<HTMLButtonElement>;
@@ -25,7 +25,7 @@ export type BaseButtonProps<AsType extends React.ElementType> =
     >;
 
 export function BaseButton<AsType extends React.ElementType = 'button'>(
-  props: BaseButtonProps<AsType>
+  props: BaseButtonProps<AsType>,
 ): JSX.Element {
   const {
     as,
@@ -50,7 +50,7 @@ export function BaseButton<AsType extends React.ElementType = 'button'>(
 
       defaultOnClick?.(event);
     },
-    [defaultOnClick, onClick]
+    [defaultOnClick, onClick],
   );
 
   const Component = as || 'button';

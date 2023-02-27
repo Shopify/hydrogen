@@ -43,7 +43,7 @@ function mockCookie(): MockCookieJar {
       } else {
         delete cookieJar[cookieName];
       }
-    }
+    },
   );
   return cookieJar;
 }
@@ -76,7 +76,7 @@ describe(`useShopifyCookies`, () => {
     expect(cookies['_shopify_y']).not.toBe('');
 
     expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value
+      cookieJar['_shopify_y'].value,
     );
     expect(cookieJar['_shopify_s'].maxage).toBe(1800);
     expect(cookieJar['_shopify_y'].maxage).toBe(31104000);
@@ -147,7 +147,7 @@ describe(`useShopifyCookies`, () => {
     expect(cookies['_shopify_y']).not.toBe('');
 
     expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value
+      cookieJar['_shopify_y'].value,
     );
     expect(cookieJar['_shopify_s'].maxage).toBe(1800);
     expect(cookieJar['_shopify_y'].maxage).toBe(31104000);
@@ -171,7 +171,7 @@ describe(`useShopifyCookies`, () => {
     expect(cookies['_shopify_y']).not.toBe('');
 
     expect(cookieJar['_shopify_s'].value).not.toBe(
-      cookieJar['_shopify_y'].value
+      cookieJar['_shopify_y'].value,
     );
     expect(cookieJar['_shopify_s']).toContain({
       domain,

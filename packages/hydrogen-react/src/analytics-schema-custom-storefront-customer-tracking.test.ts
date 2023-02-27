@@ -26,7 +26,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
         getExpectedPayload(pageViewPayload, {
           event_name: 'page_rendered',
           canonical_url: pageViewPayload.url,
-        })
+        }),
       );
     });
 
@@ -57,7 +57,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           is_persistent_cookie: false,
           customer_id: '1',
           canonical_url: pageViewPayload.canonicalUrl,
-        })
+        }),
       );
     });
 
@@ -76,14 +76,14 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           getExpectedPayload(pageViewPayload, {
             event_name: 'page_rendered',
             canonical_url: pageViewPayload.url,
-          })
+          }),
         );
         expect(events[1]).toEqual(
           getExpectedPayload(pageViewPayload, {
             event_name: 'collection_page_rendered',
             collection_name: pageViewPayload.collectionHandle,
             canonical_url: pageViewPayload.url,
-          })
+          }),
         );
       });
     });
@@ -103,7 +103,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           getExpectedPayload(pageViewPayload, {
             event_name: 'page_rendered',
             canonical_url: pageViewPayload.url,
-          })
+          }),
         );
         expect(events[1]).toEqual(
           getExpectedPayload(pageViewPayload, {
@@ -111,7 +111,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
             total_value: pageViewPayload.totalValue,
             products: [],
             canonical_url: pageViewPayload.url,
-          })
+          }),
         );
       });
 
@@ -131,7 +131,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           getExpectedPayload(pageViewPayload, {
             event_name: 'page_rendered',
             canonical_url: pageViewPayload.url,
-          })
+          }),
         );
         expect(events[1]).toEqual(
           getExpectedPayload(pageViewPayload, {
@@ -140,13 +140,13 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             products: expect.anything(),
             canonical_url: pageViewPayload.url,
-          })
+          }),
         );
         const productEventPayload = events[1].payload;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const product = JSON.parse(
           (productEventPayload.products && productEventPayload.products[0]) ||
-            '{}'
+            '{}',
         );
         expect(product).toEqual({
           ...getForwardedProductPayload(productPayload),
@@ -178,7 +178,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           getExpectedPayload(pageViewPayload, {
             event_name: 'page_rendered',
             canonical_url: pageViewPayload.url,
-          })
+          }),
         );
         expect(events[1]).toEqual(
           getExpectedPayload(pageViewPayload, {
@@ -187,13 +187,13 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             products: expect.anything(),
             canonical_url: pageViewPayload.url,
-          })
+          }),
         );
         const productEventPayload = events[1].payload;
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         const product = JSON.parse(
           (productEventPayload.products && productEventPayload.products[0]) ||
-            '{}'
+            '{}',
         );
         expect(product).toEqual({
           ...getForwardedProductPayload(productPayload),
@@ -223,14 +223,14 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           getExpectedPayload(pageViewPayload, {
             event_name: 'page_rendered',
             canonical_url: pageViewPayload.url,
-          })
+          }),
         );
         expect(events[1]).toEqual(
           getExpectedPayload(pageViewPayload, {
             event_name: 'search_submitted',
             search_string: pageViewPayload.searchString,
             canonical_url: pageViewPayload.url,
-          })
+          }),
         );
       });
     });
@@ -256,13 +256,13 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
           total_value: addToCartPayload.totalValue,
           // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
           products: expect.anything(),
-        })
+        }),
       );
       const productEventPayload = events[0].payload;
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const product = JSON.parse(
         (productEventPayload.products && productEventPayload.products[0]) ||
-          '{}'
+          '{}',
       );
       expect(product).toEqual({
         ...getForwardedProductPayload(productPayload),
@@ -276,7 +276,7 @@ describe(`analytics schema - custom storefront customer tracking`, () => {
 
 function getExpectedPayload(
   initPayload: ShopifyAnalyticsPayload,
-  extraPayload: ShopifyMonorailPayload
+  extraPayload: ShopifyMonorailPayload,
 ) {
   return {
     schema_id: 'custom_storefront_customer_tracking/1.0',

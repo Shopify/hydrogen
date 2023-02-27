@@ -22,7 +22,7 @@ describe('<BuyNowButton/>', () => {
       </BuyNowButton>,
       {
         wrapper: CartProvider,
-      }
+      },
     );
 
     expect(screen.getByRole('button')).toBeDisabled();
@@ -35,7 +35,7 @@ describe('<BuyNowButton/>', () => {
       </BuyNowButton>,
       {
         wrapper: CartProvider,
-      }
+      },
     );
 
     expect(screen.getByRole('button')).toHaveClass('fancy-button');
@@ -48,7 +48,7 @@ describe('<BuyNowButton/>', () => {
       vi.mocked(useCart).mockImplementation(() =>
         getCartWithActionsMock({
           cartCreate: mockCartCreate,
-        })
+        }),
       );
 
       const user = userEvent.setup();
@@ -66,7 +66,7 @@ describe('<BuyNowButton/>', () => {
         </BuyNowButton>,
         {
           wrapper: CartProvider,
-        }
+        },
       );
 
       await user.click(screen.getByRole('button'));
@@ -123,7 +123,7 @@ describe('<BuyNowButton/>', () => {
       vi.mocked(useCart).mockImplementation(() =>
         getCartWithActionsMock({
           checkoutUrl: '/checkout?id=123',
-        })
+        }),
       );
 
       render(<BuyNowButton variantId="1">Buy now</BuyNowButton>, {

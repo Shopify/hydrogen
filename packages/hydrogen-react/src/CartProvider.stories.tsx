@@ -38,10 +38,10 @@ function CartComponent() {
   const [lineToUpdateQuantity, setLineToUpdateQuantity] = useState(1);
   const [newNote, setNote] = useState('');
   const [newBuyerIdentity, setBuyerIdentity] = useState(
-    `{"countryCode": "DE"}`
+    `{"countryCode": "DE"}`,
   );
   const [newCartAttributes, setCartAttributes] = useState(
-    '[{"key": "foo", "value": "bar"}]'
+    '[{"key": "foo", "value": "bar"}]',
   );
   const [newDiscount, setDiscount] = useState('["H2O"]');
 
@@ -171,8 +171,8 @@ function CartComponent() {
             onClick={() => {
               buyerIdentityUpdate(
                 JSON.parse(
-                  `${newBuyerIdentity}`
-                ) as unknown as CartBuyerIdentityInput
+                  `${newBuyerIdentity}`,
+                ) as unknown as CartBuyerIdentityInput,
               );
             }}
           >
@@ -191,8 +191,8 @@ function CartComponent() {
             onClick={() => {
               cartAttributesUpdate(
                 JSON.parse(
-                  `${newCartAttributes}`
-                ) as unknown as AttributeInput[]
+                  `${newCartAttributes}`,
+                ) as unknown as AttributeInput[],
               );
             }}
           >
@@ -210,7 +210,7 @@ function CartComponent() {
           <button
             onClick={() => {
               discountCodesUpdate(
-                JSON.parse(`${newDiscount}`) as unknown as string[]
+                JSON.parse(`${newDiscount}`) as unknown as string[],
               );
             }}
           >

@@ -54,12 +54,12 @@ export function ProductProvider({
   // The flattened variants
   const variants = useMemo(
     () => flattenConnection(product.variants ?? {}),
-    [product.variants]
+    [product.variants],
   );
 
   if (!isProductVariantArray(variants)) {
     throw new Error(
-      `<ProductProvider/> requires 'product.variants.nodes' or 'product.variants.edges'`
+      `<ProductProvider/> requires 'product.variants.nodes' or 'product.variants.edges'`,
     );
   }
 
@@ -80,7 +80,7 @@ export function ProductProvider({
    * is passed, use that to select initial options.
    */
   const [selectedOptions, setSelectedOptions] = useState<SelectedOptions>(() =>
-    getSelectedOptions(selectedVariant)
+    getSelectedOptions(selectedVariant),
   );
 
   /**
@@ -92,7 +92,7 @@ export function ProductProvider({
   useEffect(() => {
     const newSelectedVariant = getVariantBasedOnIdProp(
       explicitVariantId,
-      variants
+      variants,
     );
     setSelectedVariant(newSelectedVariant);
     setSelectedOptions(getSelectedOptions(newSelectedVariant));
@@ -109,7 +109,7 @@ export function ProductProvider({
         return opts;
       });
     },
-    [setSelectedOptions, variants]
+    [setSelectedOptions, variants],
   );
 
   const isOptionInStock = useCallback(
@@ -121,7 +121,7 @@ export function ProductProvider({
 
       return proposedVariant?.availableForSale ?? true;
     },
-    [selectedOptions, variants]
+    [selectedOptions, variants],
   );
 
   const sellingPlanGroups = useMemo(
@@ -130,9 +130,9 @@ export function ProductProvider({
         (sellingPlanGroup) => ({
           ...sellingPlanGroup,
           sellingPlans: flattenConnection(sellingPlanGroup?.sellingPlans ?? {}),
-        })
+        }),
       ),
-    [product.sellingPlanGroups]
+    [product.sellingPlanGroups],
   );
 
   /**
@@ -156,12 +156,12 @@ export function ProductProvider({
       !selectedVariant.sellingPlanAllocations?.edges
     ) {
       throw new Error(
-        `<ProductProvider/>: You must include 'sellingPlanAllocations.nodes' or 'sellingPlanAllocations.edges' in your variants in order to calculate selectedSellingPlanAllocation`
+        `<ProductProvider/>: You must include 'sellingPlanAllocations.nodes' or 'sellingPlanAllocations.edges' in your variants in order to calculate selectedSellingPlanAllocation`,
       );
     }
 
     return flattenConnection(selectedVariant.sellingPlanAllocations).find(
-      (allocation) => allocation?.sellingPlan?.id === selectedSellingPlan.id
+      (allocation) => allocation?.sellingPlan?.id === selectedSellingPlan.id,
     );
   }, [selectedVariant, selectedSellingPlan]);
 
@@ -194,7 +194,7 @@ export function ProductProvider({
       sellingPlanGroups,
       setSelectedOption,
       variants,
-    ]
+    ],
   );
 
   return (
@@ -219,7 +219,7 @@ export function useProduct(): ProductHookValue {
 
 function getSelectedVariant(
   variants: PartialDeep<ProductVariantType, {recurseIntoArrays: true}>[],
-  choices: SelectedOptions
+  choices: SelectedOptions,
 ): PartialDeep<ProductVariantType, {recurseIntoArrays: true}> | undefined {
   /**
    * Ensure the user has selected all the required options, not just some.
@@ -234,14 +234,14 @@ function getSelectedVariant(
   return variants?.find((variant) => {
     return Object.entries(choices).every(([name, value]) => {
       return variant?.selectedOptions?.some(
-        (option) => option?.name === name && option?.value === value
+        (option) => option?.name === name && option?.value === value,
       );
     });
   });
 }
 
 function getOptions(
-  variants: PartialDeep<ProductVariantType, {recurseIntoArrays: true}>[]
+  variants: PartialDeep<ProductVariantType, {recurseIntoArrays: true}>[],
 ): OptionWithValues[] {
   const map = variants.reduce((memo, variant) => {
     if (!variant.selectedOptions) {
@@ -267,7 +267,7 @@ function getVariantBasedOnIdProp(
   explicitVariantId: InitialVariantId | undefined,
   variants: Array<
     PartialDeep<ProductVariantType, {recurseIntoArrays: true}> | undefined
-  >
+  >,
 ):
   | PartialDeep<ProductVariantType, {recurseIntoArrays: true}>
   | undefined
@@ -276,11 +276,11 @@ function getVariantBasedOnIdProp(
   // * 1. If `initialVariantId` is provided, then it's used even if it's out of stock.
   if (explicitVariantId) {
     const foundVariant = variants.find(
-      (variant) => variant?.id === explicitVariantId
+      (variant) => variant?.id === explicitVariantId,
     );
     if (!foundVariant) {
       console.warn(
-        `<ProductProvider/> received a 'initialVariantId' prop, but could not actually find a variant with that ID`
+        `<ProductProvider/> received a 'initialVariantId' prop, but could not actually find a variant with that ID`,
       );
     }
     return foundVariant;
@@ -300,7 +300,7 @@ function getSelectedOptions(
   selectedVariant:
     | PartialDeep<ProductVariantType, {recurseIntoArrays: true}>
     | undefined
-    | null
+    | null,
 ): SelectedOptions {
   return selectedVariant?.selectedOptions
     ? selectedVariant.selectedOptions.reduce<SelectedOptions>(
@@ -308,7 +308,7 @@ function getSelectedOptions(
           memo[optionSet?.name ?? ''] = optionSet?.value ?? '';
           return memo;
         },
-        {}
+        {},
       )
     : {};
 }
@@ -316,7 +316,7 @@ function getSelectedOptions(
 function isProductVariantArray(
   maybeVariantArray:
     | (PartialDeep<ProductVariantType, {recurseIntoArrays: true}> | undefined)[]
-    | undefined
+    | undefined,
 ): maybeVariantArray is PartialDeep<
   ProductVariantType,
   {recurseIntoArrays: true}
@@ -357,23 +357,23 @@ type ProductHookValue = PartialDeep<
 > & {
   /** A callback to set the selected variant to the variant passed as an argument. */
   setSelectedVariant: (
-    variant: PartialDeep<ProductVariantType, {recurseIntoArrays: true}> | null
+    variant: PartialDeep<ProductVariantType, {recurseIntoArrays: true}> | null,
   ) => void;
   /** A callback to set the selected option. */
   setSelectedOption: (
     name: SelectedOptionType['name'],
-    value: SelectedOptionType['value']
+    value: SelectedOptionType['value'],
   ) => void;
   /** A callback to set multiple selected options at once. */
   setSelectedOptions: (options: SelectedOptions) => void;
   /** A callback to set the selected selling plan to the one passed as an argument. */
   setSelectedSellingPlan: (
-    sellingPlan: PartialDeep<SellingPlanType, {recurseIntoArrays: true}>
+    sellingPlan: PartialDeep<SellingPlanType, {recurseIntoArrays: true}>,
   ) => void;
   /** A callback that returns a boolean indicating if the option is in stock. */
   isOptionInStock: (
     name: SelectedOptionType['name'],
-    value: SelectedOptionType['value']
+    value: SelectedOptionType['value'],
   ) => boolean;
 };
 

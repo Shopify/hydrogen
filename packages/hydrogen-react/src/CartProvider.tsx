@@ -177,7 +177,7 @@ export function CartProvider({
             cart: {
               ...context.cart,
               lines: context?.cart?.lines?.filter(
-                (line) => line?.id && !event.payload.lines.includes(line?.id)
+                (line) => line?.id && !event.payload.lines.includes(line?.id),
               ),
             },
           };
@@ -188,7 +188,7 @@ export function CartProvider({
               ...context.cart,
               lines: context?.cart?.lines?.map((line) => {
                 const updatedLine = event.payload.lines.find(
-                  ({id}) => id === line?.id
+                  ({id}) => id === line?.id,
                 );
 
                 if (updatedLine && updatedLine.quantity) {
@@ -296,7 +296,7 @@ export function CartProvider({
       }
       cartSend(cartEvent);
     },
-    [cartSend]
+    [cartSend],
   );
 
   // save cart id to local storage
@@ -305,7 +305,7 @@ export function CartProvider({
       try {
         window.localStorage.setItem(
           CART_ID_STORAGE_KEY,
-          cartState.context.cart?.id
+          cartState.context.cart?.id,
         );
       } catch (error) {
         console.warn('Failed to save cartId to localStorage', error);
@@ -347,7 +347,7 @@ export function CartProvider({
         payload: cartInput,
       });
     },
-    [countryCode, customerAccessToken, onCartReadySend]
+    [countryCode, customerAccessToken, onCartReadySend],
   );
 
   // Delays the cart state in the context if the page is hydrating
@@ -438,7 +438,7 @@ export function CartProvider({
 }
 
 function transposeStatus(
-  status: CartMachineTypeState['value']
+  status: CartMachineTypeState['value'],
 ): CartWithActions['status'] {
   switch (status) {
     case 'uninitialized':
@@ -498,7 +498,7 @@ function useDelayedStateUntilHydration<T>(state: T): T {
  * https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API/Using_the_Web_Storage_API
  */
 export function storageAvailable(
-  type: 'localStorage' | 'sessionStorage'
+  type: 'localStorage' | 'sessionStorage',
 ): boolean {
   let storage;
   try {
@@ -528,7 +528,7 @@ export function storageAvailable(
 
 function countryCodeNotUpdated(
   context: CartMachineContext,
-  event: BuyerIdentityUpdateEvent
+  event: BuyerIdentityUpdateEvent,
 ): boolean {
   return !!(
     event.payload.buyerIdentity.countryCode &&

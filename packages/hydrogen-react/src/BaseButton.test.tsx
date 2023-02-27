@@ -35,7 +35,7 @@ describe('<BaseButton/>', () => {
       render(
         <BaseButton onClick={vi.fn()} defaultOnClick={mockDefaultOnClick}>
           Base Button
-        </BaseButton>
+        </BaseButton>,
       );
 
       await user.click(screen.getByRole('button'));
@@ -48,7 +48,7 @@ describe('<BaseButton/>', () => {
         const mockOnClick = vi.fn(
           (event?: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
             event?.preventDefault();
-          }
+          },
         );
         const mockDefaultOnClick = vi.fn();
         const user = userEvent.setup();
@@ -56,7 +56,7 @@ describe('<BaseButton/>', () => {
         render(
           <BaseButton onClick={mockOnClick} defaultOnClick={mockDefaultOnClick}>
             Base Button
-          </BaseButton>
+          </BaseButton>,
         );
 
         await user.click(screen.getByRole('button'));
@@ -75,7 +75,7 @@ describe('<BaseButton/>', () => {
         render(
           <BaseButton onClick={mockOnClick} defaultOnClick={mockDefaultOnClick}>
             Base Button
-          </BaseButton>
+          </BaseButton>,
         );
 
         await user.click(screen.getByRole('button'));

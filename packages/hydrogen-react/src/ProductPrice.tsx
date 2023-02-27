@@ -24,7 +24,7 @@ export interface ProductPriceProps {
  */
 export function ProductPrice<ComponentGeneric extends React.ElementType>(
   props: ProductPriceProps &
-    Omit<MoneyProps<ComponentGeneric>, 'data' | 'measurement'>
+    Omit<MoneyProps<ComponentGeneric>, 'data' | 'measurement'>,
 ): JSX.Element | null {
   const {
     priceType = 'regular',
@@ -43,7 +43,7 @@ export function ProductPrice<ComponentGeneric extends React.ElementType>(
 
   const variant = variantId
     ? flattenConnection(product?.variants ?? {}).find(
-        (variant) => variant?.id === variantId
+        (variant) => variant?.id === variantId,
       ) ?? null
     : null;
 
@@ -87,6 +87,6 @@ export function ProductPrice<ComponentGeneric extends React.ElementType>(
 
 // This is only for documenation purposes, and it is not used in the code.
 export interface ProductPricePropsForDocs<
-  AsType extends React.ElementType = 'div'
+  AsType extends React.ElementType = 'div',
 > extends Omit<MoneyPropsBase<AsType>, 'data' | 'measurement'>,
     ProductPriceProps {}

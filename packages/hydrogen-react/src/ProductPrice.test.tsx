@@ -10,7 +10,7 @@ describe('<ProductPrice />', () => {
       render(<ProductPrice data={product} variantId={variant?.id} />);
 
       expect(
-        screen.getByText(variant?.priceV2?.amount || '', {exact: false})
+        screen.getByText(variant?.priceV2?.amount || '', {exact: false}),
       ).toBeInTheDocument();
     });
 
@@ -22,13 +22,13 @@ describe('<ProductPrice />', () => {
           data={product}
           priceType="compareAt"
           variantId={variant?.id}
-        />
+        />,
       );
 
       expect(
         screen.getByText(variant?.compareAtPriceV2?.amount || '', {
           exact: false,
-        })
+        }),
       ).toBeInTheDocument();
     });
 
@@ -36,11 +36,15 @@ describe('<ProductPrice />', () => {
       const product = getProduct();
       const variant = product?.variants?.nodes?.[0];
       render(
-        <ProductPrice data={product} valueType="unit" variantId={variant?.id} />
+        <ProductPrice
+          data={product}
+          valueType="unit"
+          variantId={variant?.id}
+        />,
       );
 
       expect(
-        screen.getByText(variant?.unitPrice?.amount || '', {exact: false})
+        screen.getByText(variant?.unitPrice?.amount || '', {exact: false}),
       ).toBeInTheDocument();
     });
   });
@@ -52,7 +56,7 @@ describe('<ProductPrice />', () => {
     expect(
       screen.getByText(product.priceRange?.minVariantPrice?.amount || '', {
         exact: false,
-      })
+      }),
     ).toBeInTheDocument();
   });
 
@@ -63,7 +67,7 @@ describe('<ProductPrice />', () => {
     expect(
       screen.getByText(product.priceRange?.maxVariantPrice?.amount || '', {
         exact: false,
-      })
+      }),
     ).toBeInTheDocument();
   });
 
@@ -74,22 +78,22 @@ describe('<ProductPrice />', () => {
     expect(
       screen.getByText(
         product.compareAtPriceRange?.minVariantPrice?.amount || '',
-        {exact: false}
-      )
+        {exact: false},
+      ),
     ).toBeInTheDocument();
   });
 
   it("renders <Money /> with the product's maximum compareAt price when `valueType` is `max` and `priceType` is `compareAt`", () => {
     const product = getProduct();
     render(
-      <ProductPrice data={product} valueType="max" priceType="compareAt" />
+      <ProductPrice data={product} valueType="max" priceType="compareAt" />,
     );
 
     expect(
       screen.getByText(
         product.compareAtPriceRange?.maxVariantPrice?.amount || '',
-        {exact: false}
-      )
+        {exact: false},
+      ),
     ).toBeInTheDocument();
   });
 
@@ -100,7 +104,7 @@ describe('<ProductPrice />', () => {
     expect(
       screen.getByText(product.priceRange?.minVariantPrice?.amount || '', {
         exact: false,
-      })
+      }),
     ).toHaveClass('emphasized');
   });
 
@@ -116,7 +120,7 @@ describe('<ProductPrice />', () => {
         priceType="regular"
         valueType="min"
         variantId="test"
-      />
+      />,
     );
 
     // @ts-expect-error should error because no 'data' prop
@@ -143,7 +147,7 @@ describe('<ProductPrice />', () => {
         withoutCurrency
         withoutTrailingZeros
         as="span"
-      />
+      />,
     );
   });
 });

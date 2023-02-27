@@ -28,7 +28,7 @@ describe(`<ShopPayButton />`, () => {
         wrapper: ({children}) => (
           <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
-      })
+      }),
     ).toThrow(MissingPropsErrorMessage);
   });
 
@@ -39,7 +39,7 @@ describe(`<ShopPayButton />`, () => {
         wrapper: ({children}) => (
           <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
-      })
+      }),
     ).toThrow(DoublePropsErrorMessage);
   });
 
@@ -55,7 +55,7 @@ describe(`<ShopPayButton />`, () => {
 
     expect(button).toHaveAttribute(
       'store-url',
-      'https://notashop.myshopify.io'
+      'https://notashop.myshopify.io',
     );
     expect(button).toHaveAttribute('variants', '123');
   });
@@ -71,14 +71,14 @@ describe(`<ShopPayButton />`, () => {
         wrapper: ({children}) => (
           <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
-      }
+      },
     );
 
     const button = container.querySelector('shop-pay-button');
 
     expect(button).toHaveAttribute(
       'store-url',
-      'https://notashop.myshopify.io'
+      'https://notashop.myshopify.io',
     );
     expect(button).toHaveAttribute('variants', '123:2');
   });
@@ -95,12 +95,12 @@ describe(`<ShopPayButton />`, () => {
         wrapper: ({children}) => (
           <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
-      }
+      },
     );
 
     expect(container.querySelector('div')).toHaveAttribute(
       'style',
-      '--shop-pay-button-width: 100%;'
+      '--shop-pay-button-width: 100%;',
     );
   });
 
@@ -111,7 +111,7 @@ describe(`<ShopPayButton />`, () => {
         wrapper: ({children}) => (
           <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
-      })
+      }),
     ).toThrow(InvalidPropsErrorMessage);
   });
 });

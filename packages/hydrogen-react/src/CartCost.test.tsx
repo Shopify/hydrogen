@@ -9,7 +9,7 @@ import {getShopifyConfig} from './ShopifyProvider.test.js';
 const testId = 'cart-cost';
 
 function ShopifyCartProvider(
-  props: Omit<ComponentProps<typeof CartProvider>, 'children'> = {}
+  props: Omit<ComponentProps<typeof CartProvider>, 'children'> = {},
 ) {
   return function Wrapper({children}: PropsWithChildren) {
     return (
@@ -27,7 +27,7 @@ describe('<CartCost />', () => {
     });
 
     expect(
-      screen.getByText(`CA$${CART_WITH_LINES.cost?.totalAmount?.amount ?? ''}`)
+      screen.getByText(`CA$${CART_WITH_LINES.cost?.totalAmount?.amount ?? ''}`),
     ).toBeInTheDocument();
   });
 
@@ -45,7 +45,7 @@ describe('<CartCost />', () => {
     });
 
     expect(
-      screen.getByText(`CA$${CART_WITH_LINES.cost?.totalAmount?.amount ?? ''}`)
+      screen.getByText(`CA$${CART_WITH_LINES.cost?.totalAmount?.amount ?? ''}`),
     ).toBeInTheDocument();
   });
 
@@ -56,8 +56,8 @@ describe('<CartCost />', () => {
 
     expect(
       screen.getByText(
-        `CA$${CART_WITH_LINES.cost?.subtotalAmount?.amount ?? ''}`
-      )
+        `CA$${CART_WITH_LINES.cost?.subtotalAmount?.amount ?? ''}`,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -68,8 +68,8 @@ describe('<CartCost />', () => {
 
     expect(
       screen.getByText(
-        `CA$${CART_WITH_LINES.cost?.totalTaxAmount?.amount ?? ''}`
-      )
+        `CA$${CART_WITH_LINES.cost?.totalTaxAmount?.amount ?? ''}`,
+      ),
     ).toBeInTheDocument();
   });
 
@@ -80,8 +80,8 @@ describe('<CartCost />', () => {
 
     expect(
       screen.getByText(
-        `CA$${CART_WITH_LINES.cost?.totalDutyAmount?.amount ?? ''}`
-      )
+        `CA$${CART_WITH_LINES.cost?.totalDutyAmount?.amount ?? ''}`,
+      ),
     ).toBeInTheDocument();
   });
 });

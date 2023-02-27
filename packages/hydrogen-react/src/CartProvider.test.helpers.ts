@@ -61,7 +61,7 @@ export const CART: PartialDeep<Cart, {recurseIntoArrays: true}> = {
 };
 
 export function getCartMock(
-  options?: PartialDeep<Cart>
+  options?: PartialDeep<Cart>,
 ): PartialDeep<Cart, {recurseIntoArrays: true}> {
   return mergeDeep({...CART}, {...options});
 }
@@ -86,7 +86,7 @@ export const CART_WITH_LINES_FLATTENED: PartialDeep<
  * @param options - The options to override the default cart line values
  */
 export function getCartLineMock(
-  options?: PartialDeep<CartLine>
+  options?: PartialDeep<CartLine>,
 ): PartialDeep<CartLine, {recurseIntoArrays: true}> {
   return mergeDeep({...CART_LINE}, {...options});
 }
@@ -102,7 +102,7 @@ export function getCartLinesMock(
   getOptions?:
     | ((index: number) => PartialDeep<CartLine>)
     | PartialDeep<CartLine>,
-  count?: number
+  count?: number,
 ): CartLineConnection {
   const nodes = Array.from({length: count ?? 1}, (_, index) => {
     const options =
@@ -119,7 +119,7 @@ export function getCartLinesMock(
 }
 
 export function getCartWithActionsMock(
-  mockOptions?: PartialDeep<CartWithActions>
+  mockOptions?: PartialDeep<CartWithActions>,
 ): CartWithActions {
   return {
     buyerIdentityUpdate: vi.fn(),
@@ -149,7 +149,7 @@ export function getCartWithActionsMock(
  */
 function mergeDeep(
   target: Partial<Record<string, unknown>>,
-  source: Partial<Record<string, unknown>>
+  source: Partial<Record<string, unknown>>,
 ): Partial<Record<string, unknown>> {
   const isObject = (obj: unknown) => obj && typeof obj === 'object';
 
@@ -174,7 +174,7 @@ function mergeDeep(
     ) {
       newTarget[key] = mergeDeep(
         Object.assign({}, newTargetValue),
-        newSourceValue
+        newSourceValue,
       );
     } else {
       newTarget[key] = newSourceValue;

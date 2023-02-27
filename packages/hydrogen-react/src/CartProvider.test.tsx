@@ -24,7 +24,7 @@ import {cartFromGraphQL} from './useCartAPIStateMachine.js';
 import {CART_ID_STORAGE_KEY} from './cart-constants.js';
 
 function ShopifyCartProvider(
-  props: Omit<ComponentProps<typeof CartProvider>, 'children'> = {}
+  props: Omit<ComponentProps<typeof CartProvider>, 'children'> = {},
 ) {
   return function Wrapper({children}: PropsWithChildren) {
     return (
@@ -426,7 +426,7 @@ describe('<CartProvider />', () => {
           {
             onLineAdd: onLineAddSpy,
             onLineAddComplete: onLineAddCompleteSpy,
-          }
+          },
         );
 
         void act(() => {
@@ -518,7 +518,7 @@ describe('<CartProvider />', () => {
           {
             onLineUpdate: onLineUpdateSpy,
             onLineUpdateComplete: onLineUpdateCompleteSpy,
-          }
+          },
         );
 
         void act(() => {
@@ -601,7 +601,7 @@ describe('<CartProvider />', () => {
           {
             onLineRemove: onLineRemoveSpy,
             onLineRemoveComplete: onLineRemoveCompleteSpy,
-          }
+          },
         );
 
         void act(() => {
@@ -679,7 +679,7 @@ describe('<CartProvider />', () => {
           {
             onNoteUpdate: onNoteUpdateSpy,
             onNoteUpdateComplete: onNoteUpdateCompleteSpy,
-          }
+          },
         );
 
         void act(() => {
@@ -757,7 +757,7 @@ describe('<CartProvider />', () => {
           {
             onBuyerIdentityUpdate: onBuyerIdentityUpdateSpy,
             onBuyerIdentityUpdateComplete: onBuyerIdentityUpdateCompleteSpy,
-          }
+          },
         );
 
         void act(() => {
@@ -835,7 +835,7 @@ describe('<CartProvider />', () => {
           {
             onAttributesUpdate: onCartAttributesUpdateSpy,
             onAttributesUpdateComplete: onCartAttributesUpdateCompleteSpy,
-          }
+          },
         );
 
         void act(() => {
@@ -914,7 +914,7 @@ describe('<CartProvider />', () => {
           {
             onDiscountCodesUpdate: onDiscountUpdateSpy,
             onDiscountCodesUpdateComplete: onDiscountUpdateCompleteSpy,
-          }
+          },
         );
 
         void act(() => {
@@ -1247,7 +1247,7 @@ describe('<CartProvider />', () => {
       });
 
       expect(result.current.lines).toEqual(
-        cartFromGraphQL(cartMockWithLine).lines
+        cartFromGraphQL(cartMockWithLine).lines,
       );
 
       void act(() => {
@@ -1333,7 +1333,7 @@ describe('<CartProvider />', () => {
       });
 
       expect(result.current.lines).toEqual(
-        cartFromGraphQL(cartMockWithLine).lines
+        cartFromGraphQL(cartMockWithLine).lines,
       );
 
       void act(() => {
@@ -1347,7 +1347,7 @@ describe('<CartProvider />', () => {
 
       expect(result.current.status).toEqual('updating');
       expect(result.current.lines).toEqual(
-        cartFromGraphQL(mockCartWithUpdatedQuantity).lines
+        cartFromGraphQL(mockCartWithUpdatedQuantity).lines,
       );
 
       // wait till idle
@@ -1391,7 +1391,7 @@ describe('<CartProvider />', () => {
       });
 
       expect(result.current.lines).toEqual(
-        cartFromGraphQL(cartMockWithLine).lines
+        cartFromGraphQL(cartMockWithLine).lines,
       );
 
       void act(() => {
@@ -1405,7 +1405,7 @@ describe('<CartProvider />', () => {
 
       expect(result.current.status).toEqual('updating');
       expect(result.current.lines).toEqual(
-        cartFromGraphQL(mockCartWithUpdatedQuantity).lines
+        cartFromGraphQL(mockCartWithUpdatedQuantity).lines,
       );
 
       // wait till idle
@@ -1430,7 +1430,7 @@ describe('<CartProvider />', () => {
     mockUseCartFetch.mockReturnValue(fetchCartSpy);
 
     const cartActions = await vi.importActual<{useCartActions: () => void}>(
-      './useCartActions.js'
+      './useCartActions.js',
     );
 
     mockUseCartActions.mockImplementation(cartActions.useCartActions);
@@ -1449,14 +1449,14 @@ describe('<CartProvider />', () => {
       expect.objectContaining({
         // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
         query: expect.stringContaining(cartFragmentMock),
-      })
+      }),
     );
   });
 });
 
 async function useCartWithInitializedCart(
   cartActionsMocks = {},
-  cartProviderProps: Omit<ComponentProps<typeof CartProvider>, 'children'> = {}
+  cartProviderProps: Omit<ComponentProps<typeof CartProvider>, 'children'> = {},
 ) {
   const cartCreateSpy = vi.fn(() => ({
     data: {cartCreate: {cart: cartMock}},

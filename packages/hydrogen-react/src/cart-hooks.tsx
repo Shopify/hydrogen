@@ -47,7 +47,7 @@ export function useCartFetch() {
       })
         .then(
           (res) =>
-            res.json() as StorefrontApiResponseOkPartial<ReturnDataGeneric>
+            res.json() as StorefrontApiResponseOkPartial<ReturnDataGeneric>,
         )
         .catch((error) => {
           return {
@@ -57,7 +57,7 @@ export function useCartFetch() {
           };
         });
     },
-    [getPublicTokenHeaders, storefrontId, getStorefrontApiUrl]
+    [getPublicTokenHeaders, storefrontId, getStorefrontApiUrl],
   );
 }
 
@@ -96,7 +96,7 @@ export function useInstantCheckout() {
         updateCheckoutUrl(dataCart.checkoutUrl);
       }
     },
-    [fetch]
+    [fetch],
   );
 
   return {cart, checkoutUrl, error, createInstantCheckout};

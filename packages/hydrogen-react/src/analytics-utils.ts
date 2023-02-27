@@ -12,7 +12,7 @@ import type {
  **/
 export function schemaWrapper(
   schemaId: string,
-  payload: ShopifyMonorailPayload
+  payload: ShopifyMonorailPayload,
 ): ShopifyMonorailEvent {
   return {
     schema_id: schemaId,
@@ -65,7 +65,7 @@ export function parseGid(gid: string | undefined): ShopifyGId {
  **/
 export function addDataIf(
   keyValuePairs: ShopifyMonorailPayload,
-  formattedData: ShopifyMonorailPayload
+  formattedData: ShopifyMonorailPayload,
 ): ShopifyMonorailPayload {
   if (typeof keyValuePairs !== 'object') {
     return {};
@@ -86,7 +86,7 @@ export function addDataIf(
 export function errorIfServer(fnName: string): boolean {
   if (typeof document === 'undefined') {
     console.error(
-      `${fnName} should only be used within the useEffect callback or event handlers`
+      `${fnName} should only be used within the useEffect callback or event handlers`,
     );
     return true;
   }

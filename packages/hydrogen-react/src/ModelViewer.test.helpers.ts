@@ -4,7 +4,7 @@ import {faker} from '@faker-js/faker';
 import {getPreviewImage} from './Image.test.helpers.js';
 
 export function getModel3d(
-  model: PartialDeep<Model3d, {recurseIntoArrays: true}> = {}
+  model: PartialDeep<Model3d, {recurseIntoArrays: true}> = {},
 ): PartialDeep<Model3d, {recurseIntoArrays: true}> {
   return {
     id: model.id ?? faker.random.words(),

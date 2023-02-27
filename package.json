@@ -27,7 +27,8 @@
     "packages/remix-oxygen",
     "packages/hydrogen",
     "packages/create-hydrogen",
-    "packages/cli"
+    "packages/cli",
+    "packages/hydrogen-react"
   ],
   "prettier": "@shopify/prettier-config",
   "devDependencies": {

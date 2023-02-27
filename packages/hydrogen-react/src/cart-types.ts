@@ -56,7 +56,7 @@ export interface CartWithActions extends Cart {
   buyerIdentityUpdate: (buyerIdenity: CartBuyerIdentityInput) => void;
   /** A callback that updates the cart attributes. Expects the same `attributes` input that you would provide to the Storefront API's `cartAttributesUpdate` mutation. */
   cartAttributesUpdate: (
-    attributes: MutationCartAttributesUpdateArgs['attributes']
+    attributes: MutationCartAttributesUpdateArgs['attributes'],
   ) => void;
   /** A callback that updates the cart's discount codes. Expects the same `codes` input that you would provide to the Storefront API's `cartDiscountCodesUpdate` mutation. */
   discountCodesUpdate: (discountCodes: string[]) => void;

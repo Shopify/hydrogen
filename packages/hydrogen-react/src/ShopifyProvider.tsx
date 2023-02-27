@@ -35,13 +35,13 @@ export function ShopifyProvider({
     !shopifyConfig.storefrontApiVersion
   ) {
     throw new Error(
-      `Please provide the necessary props to '<ShopifyProvider/>'`
+      `Please provide the necessary props to '<ShopifyProvider/>'`,
     );
   }
 
   if (shopifyConfig.storefrontApiVersion !== SFAPI_VERSION) {
     console.warn(
-      `<ShopifyProvider/>: This version of Hydrogen React is built for Shopify's Storefront API version ${SFAPI_VERSION}, but it looks like you're using version ${shopifyConfig.storefrontApiVersion}. There may be issues or bugs if you use a mismatched version of Hydrogen React and the Storefront API.`
+      `<ShopifyProvider/>: This version of Hydrogen React is built for Shopify's Storefront API version ${SFAPI_VERSION}, but it looks like you're using version ${shopifyConfig.storefrontApiVersion}. There may be issues or bugs if you use a mismatched version of Hydrogen React and the Storefront API.`,
     );
   }
 
@@ -56,7 +56,7 @@ export function ShopifyProvider({
         return getPublicTokenHeadersRaw(
           overrideProps.contentType,
           shopifyConfig.storefrontApiVersion,
-          overrideProps.storefrontToken ?? shopifyConfig.storefrontToken
+          overrideProps.storefrontToken ?? shopifyConfig.storefrontToken,
         );
       },
       getShopifyDomain,
@@ -143,7 +143,7 @@ type ShopifyContextReturn = {
    *
    */
   getPublicTokenHeaders: (
-    props: GetPublicTokenHeadersProps
+    props: GetPublicTokenHeadersProps,
   ) => Record<string, string>;
   /**
    * Creates the fully-qualified URL to your myshopify.com domain.

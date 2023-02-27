@@ -19,7 +19,7 @@ describe('<ShopifyProvider/>', () => {
     render(
       <ShopifyProvider {...SHOPIFY_CONFIG}>
         <div>child</div>;
-      </ShopifyProvider>
+      </ShopifyProvider>,
     );
 
     expect(screen.getByText('child')).toBeInTheDocument();
@@ -39,7 +39,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2023-01/graphql.json'
+        'https://notashop.myshopify.com/api/2023-01/graphql.json',
       );
     });
 
@@ -59,7 +59,7 @@ describe('<ShopifyProvider/>', () => {
         result.current.getStorefrontApiUrl({
           storeDomain: 'https://override.myshopify.com',
           storefrontApiVersion: '2022-07',
-        })
+        }),
       ).toBe('https://override.myshopify.com/api/2022-07/graphql.json');
     });
   });
@@ -78,7 +78,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(
-        result.current.getPublicTokenHeaders({contentType: 'json'})
+        result.current.getPublicTokenHeaders({contentType: 'json'}),
       ).toEqual({
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
@@ -104,7 +104,7 @@ describe('<ShopifyProvider/>', () => {
         result.current.getPublicTokenHeaders({
           contentType: 'graphql',
           storefrontToken: 'newtoken',
-        })
+        }),
       ).toEqual({
         'X-SDK-Variant': 'hydrogen-react',
         'X-SDK-Variant-Source': 'react',
@@ -129,7 +129,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getShopifyDomain()).toBe(
-        'https://notashop.myshopify.com'
+        'https://notashop.myshopify.com',
       );
     });
 
@@ -148,7 +148,7 @@ describe('<ShopifyProvider/>', () => {
       expect(
         result.current.getShopifyDomain({
           storeDomain: 'https://test.myshopify.com',
-        })
+        }),
       ).toBe('https://test.myshopify.com');
     });
   });
@@ -167,7 +167,7 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2023-01/graphql.json'
+        'https://notashop.myshopify.com/api/2023-01/graphql.json',
       );
     });
 
@@ -186,7 +186,7 @@ describe('<ShopifyProvider/>', () => {
       expect(
         result.current.getStorefrontApiUrl({
           storeDomain: 'https://test.myshopify.com',
-        })
+        }),
       ).toBe('https://test.myshopify.com/api/2023-01/graphql.json');
     });
 
@@ -203,14 +203,14 @@ describe('<ShopifyProvider/>', () => {
       });
 
       expect(result.current.getStorefrontApiUrl()).toBe(
-        'https://notashop.myshopify.com/api/2023-01/graphql.json'
+        'https://notashop.myshopify.com/api/2023-01/graphql.json',
       );
     });
   });
 });
 
 export function getShopifyConfig(
-  config: PartialDeep<ShopifyProviderProps, {recurseIntoArrays: true}> = {}
+  config: PartialDeep<ShopifyProviderProps, {recurseIntoArrays: true}> = {},
 ) {
   return {
     countryIsoCode: config.countryIsoCode ?? 'US',

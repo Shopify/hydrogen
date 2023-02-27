@@ -115,7 +115,7 @@ describe('<Money />', () => {
     });
 
     expect(
-      screen.getByText(`/${measurement.referenceUnit ?? ''}`, {exact: false})
+      screen.getByText(`/${measurement.referenceUnit ?? ''}`, {exact: false}),
     ).toBeInTheDocument();
   });
 
@@ -138,12 +138,12 @@ describe('<Money />', () => {
         wrapper: ({children}) => (
           <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
-      }
+      },
     );
 
     expect(container.querySelector('br')).toBeInTheDocument();
     expect(
-      screen.getByText(measurement.referenceUnit ?? '', {exact: false})
+      screen.getByText(measurement.referenceUnit ?? '', {exact: false}),
     ).toBeInTheDocument();
   });
 
@@ -166,7 +166,7 @@ describe('<Money />', () => {
         wrapper: ({children}) => (
           <ShopifyProvider {...getShopifyConfig()}>{children}</ShopifyProvider>
         ),
-      }
+      },
     );
 
     expect(
@@ -174,8 +174,8 @@ describe('<Money />', () => {
         `${MeasurementSeparator}${measurement.referenceUnit ?? ''}`,
         {
           exact: false,
-        }
-      )
+        },
+      ),
     ).toBeInTheDocument();
   });
 });

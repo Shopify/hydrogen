@@ -29,7 +29,7 @@ describe('analytic-utils', () => {
 
     it('returns the id and resource type from a gid with a query string and a fragment', () => {
       const {id, resource} = parseGid(
-        'gid://shopify/Order/123?namespace=123#fragment'
+        'gid://shopify/Order/123?namespace=123#fragment',
       );
       expect(id).toBe('123');
       expect(resource).toBe('Order');

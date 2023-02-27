@@ -403,7 +403,7 @@ The detailed changelog now follows:
 
   ```ts
   const parsed = metafieldParser<ParsedMetafield['list.collection']>(
-    listCollectionMetafield
+    listCollectionMetafield,
   );
 
   // type of `parsedValue` is `Array<Collection> | null`

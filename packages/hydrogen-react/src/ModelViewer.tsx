@@ -63,7 +63,7 @@ type ModelViewerBaseProps = {
  */
 export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
   const [modelViewer, setModelViewer] = useState<undefined | HTMLElement>(
-    undefined
+    undefined,
   );
   const callbackRef = useCallback((node: HTMLElement) => {
     setModelViewer(node);
@@ -74,7 +74,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
     'https://unpkg.com/@google/model-viewer@v1.12.1/dist/model-viewer.min.js',
     {
       module: true,
-    }
+    },
   );
 
   useEffect(() => {
@@ -90,7 +90,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
     if (passthroughProps.onModelVisibility)
       modelViewer.addEventListener(
         'model-visibility',
-        passthroughProps.onModelVisibility
+        passthroughProps.onModelVisibility,
       );
     if (passthroughProps.onProgress)
       modelViewer.addEventListener('progress', passthroughProps.onProgress);
@@ -99,22 +99,22 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
     if (passthroughProps.onArTracking)
       modelViewer.addEventListener(
         'ar-tracking',
-        passthroughProps.onArTracking
+        passthroughProps.onArTracking,
       );
     if (passthroughProps.onQuickLookButtonTapped)
       modelViewer.addEventListener(
         'quick-look-button-tapped',
-        passthroughProps.onQuickLookButtonTapped
+        passthroughProps.onQuickLookButtonTapped,
       );
     if (passthroughProps.onCameraChange)
       modelViewer.addEventListener(
         'camera-change',
-        passthroughProps.onCameraChange
+        passthroughProps.onCameraChange,
       );
     if (passthroughProps.onEnvironmentChange)
       modelViewer.addEventListener(
         'environment-change',
-        passthroughProps.onEnvironmentChange
+        passthroughProps.onEnvironmentChange,
       );
     if (passthroughProps.onPlay)
       modelViewer.addEventListener('play', passthroughProps.onPlay);
@@ -123,7 +123,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
     if (passthroughProps.onSceneGraphReady)
       modelViewer.addEventListener(
         'scene-graph-ready',
-        passthroughProps.onSceneGraphReady
+        passthroughProps.onSceneGraphReady,
       );
 
     return () => {
@@ -139,37 +139,37 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       if (passthroughProps.onModelVisibility)
         modelViewer.removeEventListener(
           'model-visibility',
-          passthroughProps.onModelVisibility
+          passthroughProps.onModelVisibility,
         );
       if (passthroughProps.onProgress)
         modelViewer.removeEventListener(
           'progress',
-          passthroughProps.onProgress
+          passthroughProps.onProgress,
         );
       if (passthroughProps.onArStatus)
         modelViewer.removeEventListener(
           'ar-status',
-          passthroughProps.onArStatus
+          passthroughProps.onArStatus,
         );
       if (passthroughProps.onArTracking)
         modelViewer.removeEventListener(
           'ar-tracking',
-          passthroughProps.onArTracking
+          passthroughProps.onArTracking,
         );
       if (passthroughProps.onQuickLookButtonTapped)
         modelViewer.removeEventListener(
           'quick-look-button-tapped',
-          passthroughProps.onQuickLookButtonTapped
+          passthroughProps.onQuickLookButtonTapped,
         );
       if (passthroughProps.onCameraChange)
         modelViewer.removeEventListener(
           'camera-change',
-          passthroughProps.onCameraChange
+          passthroughProps.onCameraChange,
         );
       if (passthroughProps.onEnvironmentChange)
         modelViewer.removeEventListener(
           'environment-change',
-          passthroughProps.onEnvironmentChange
+          passthroughProps.onEnvironmentChange,
         );
       if (passthroughProps.onPlay)
         modelViewer.removeEventListener('play', passthroughProps.onPlay);
@@ -178,7 +178,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
       if (passthroughProps.onSceneGraphReady)
         modelViewer.removeEventListener(
           'scene-graph-ready',
-          passthroughProps.onSceneGraphReady
+          passthroughProps.onSceneGraphReady,
         );
     };
   }, [
@@ -215,7 +215,7 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
 
   if (__HYDROGEN_DEV__ && !data.alt) {
     console.warn(
-      `<ModelViewer/> requires the 'data.alt' prop for accessibility`
+      `<ModelViewer/> requires the 'data.alt' prop for accessibility`,
     );
   }
 

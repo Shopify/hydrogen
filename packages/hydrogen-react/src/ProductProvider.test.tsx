@@ -14,7 +14,7 @@ describe('<ProductProvider />', () => {
     render(
       <ProductProvider data={prod} initialVariantId="">
         <span>Hello world</span>
-      </ProductProvider>
+      </ProductProvider>,
     );
 
     expect(screen.getByText('Hello world')).toBeInTheDocument();
@@ -77,13 +77,13 @@ describe('<ProductProvider />', () => {
     render(
       <ProductProvider data={prod}>
         <Component />
-      </ProductProvider>
+      </ProductProvider>,
     );
 
     await user.click(screen.getByRole('button', {name: 'White'}));
 
     expect(
-      screen.getByText(JSON.stringify({Color: 'White', Size: 'Small'}))
+      screen.getByText(JSON.stringify({Color: 'White', Size: 'Small'})),
     ).toBeInTheDocument();
   });
 
@@ -137,7 +137,7 @@ describe('<ProductProvider />', () => {
                 // for some reason, 'e.target.value' is always null in this testing env. So we just set it to the one we want it to be for now
                 variants?.find((v) => v?.id === e.target.value) ??
                   variants?.[1] ??
-                  null
+                  null,
               );
             }}
           >
@@ -155,11 +155,11 @@ describe('<ProductProvider />', () => {
     render(
       <ProductProvider data={getProduct({variants: VARIANTS})}>
         <Component />
-      </ProductProvider>
+      </ProductProvider>,
     );
 
     expect(
-      screen.getByText(JSON.stringify(VARIANTS.nodes?.[0]))
+      screen.getByText(JSON.stringify(VARIANTS.nodes?.[0])),
     ).toBeInTheDocument();
 
     await user.selectOptions(screen.getByTestId('variant'), [
@@ -167,7 +167,7 @@ describe('<ProductProvider />', () => {
     ]);
 
     expect(
-      screen.getByText(JSON.stringify(VARIANTS.nodes?.[1]))
+      screen.getByText(JSON.stringify(VARIANTS.nodes?.[1])),
     ).toBeInTheDocument();
   });
 
@@ -189,11 +189,11 @@ describe('<ProductProvider />', () => {
     render(
       <ProductProvider data={getProduct({variants: VARIANTS})}>
         <Component />
-      </ProductProvider>
+      </ProductProvider>,
     );
 
     expect(
-      screen.getByText(JSON.stringify(VARIANTS.nodes?.[0]))
+      screen.getByText(JSON.stringify(VARIANTS.nodes?.[0])),
     ).toBeInTheDocument();
 
     await user.click(screen.getByRole('button'));
@@ -241,18 +241,18 @@ describe('<ProductProvider />', () => {
     render(
       <ProductProvider data={prod} initialVariantId="">
         <Component />
-      </ProductProvider>
+      </ProductProvider>,
     );
 
     expect(screen.getByRole('button', {name: 'White'})).toBeInTheDocument();
     expect(
-      screen.queryByRole('button', {name: 'White (out of stock)'})
+      screen.queryByRole('button', {name: 'White (out of stock)'}),
     ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', {name: 'Large'}));
 
     expect(
-      screen.queryByRole('button', {name: 'White (out of stock)'})
+      screen.queryByRole('button', {name: 'White (out of stock)'}),
     ).toBeInTheDocument();
   });
 
@@ -319,21 +319,21 @@ describe('<ProductProvider />', () => {
         initialVariantId={VARIANTS_WITH_SELLING_PLANS.nodes?.[0]?.id}
       >
         <Component />
-      </ProductProvider>
+      </ProductProvider>,
     );
 
     expect(screen.queryByTestId('selectedSellingPlan')).not.toBeInTheDocument();
     expect(
-      screen.queryByTestId('selectedSellingPlanAllocation')
+      screen.queryByTestId('selectedSellingPlanAllocation'),
     ).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', {name: 'Deliver every week'}));
 
     const selectedSellingPlanElement = screen.getByTestId(
-      'selectedSellingPlan'
+      'selectedSellingPlan',
     );
     const selectedSellingPlanAllocationElement = screen.getByTestId(
-      'selectedSellingPlanAllocation'
+      'selectedSellingPlanAllocation',
     );
 
     expect(selectedSellingPlanElement).toBeInTheDocument();

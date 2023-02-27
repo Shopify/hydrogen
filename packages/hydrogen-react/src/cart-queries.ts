@@ -83,7 +83,7 @@ export const CartNoteUpdate = (cartFragment: string): string => /* GraphQL */ `
 `;
 
 export const CartBuyerIdentityUpdate = (
-  cartFragment: string
+  cartFragment: string,
 ): string => /* GraphQL */ `
   mutation CartBuyerIdentityUpdate(
     $cartId: ID!
@@ -102,7 +102,7 @@ export const CartBuyerIdentityUpdate = (
 `;
 
 export const CartAttributesUpdate = (
-  cartFragment: string
+  cartFragment: string,
 ): string => /* GraphQL */ `
   mutation CartAttributesUpdate(
     $attributes: [AttributeInput!]!
@@ -121,7 +121,7 @@ export const CartAttributesUpdate = (
 `;
 
 export const CartDiscountCodesUpdate = (
-  cartFragment: string
+  cartFragment: string,
 ): string => /* GraphQL */ `
   mutation CartDiscountCodesUpdate(
     $cartId: ID!

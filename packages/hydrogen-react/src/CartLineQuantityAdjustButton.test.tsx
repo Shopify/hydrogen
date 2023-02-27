@@ -20,7 +20,7 @@ describe('CartLineQuantityAdjustButton', () => {
       getCartWithActionsMock({
         linesUpdate: linesUpdateMock,
         lines: [CART_LINE],
-      })
+      }),
     );
 
     const user = userEvent.setup();
@@ -33,11 +33,11 @@ describe('CartLineQuantityAdjustButton', () => {
       </Cart>,
       {
         wrapper: CartProvider,
-      }
+      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
-      (CART_LINE?.quantity ?? 0).toString()
+      (CART_LINE?.quantity ?? 0).toString(),
     );
 
     await user.click(screen.getByRole('button'));
@@ -69,7 +69,7 @@ describe('CartLineQuantityAdjustButton', () => {
       getCartWithActionsMock({
         linesUpdate: linesUpdateMock,
         lines: [tempCartLine],
-      })
+      }),
     );
 
     render(
@@ -80,11 +80,11 @@ describe('CartLineQuantityAdjustButton', () => {
       </Cart>,
       {
         wrapper: CartProvider,
-      }
+      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
-      (tempCartLine?.quantity ?? 0).toString()
+      (tempCartLine?.quantity ?? 0).toString(),
     );
 
     await user.click(screen.getByRole('button'));
@@ -116,7 +116,7 @@ describe('CartLineQuantityAdjustButton', () => {
       getCartWithActionsMock({
         linesRemove: linesRemoveMock,
         lines: [tempCartLine],
-      })
+      }),
     );
 
     render(
@@ -127,11 +127,11 @@ describe('CartLineQuantityAdjustButton', () => {
       </Cart>,
       {
         wrapper: CartProvider,
-      }
+      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
-      (tempCartLine?.quantity ?? 0).toString()
+      (tempCartLine?.quantity ?? 0).toString(),
     );
 
     await user.click(screen.getByRole('button'));
@@ -147,7 +147,7 @@ describe('CartLineQuantityAdjustButton', () => {
       getCartWithActionsMock({
         linesRemove: linesRemoveMock,
         lines: [CART_LINE],
-      })
+      }),
     );
 
     render(
@@ -158,11 +158,11 @@ describe('CartLineQuantityAdjustButton', () => {
       </Cart>,
       {
         wrapper: CartProvider,
-      }
+      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
-      (CART_LINE?.quantity ?? 0).toString()
+      (CART_LINE?.quantity ?? 0).toString(),
     );
 
     await user.click(screen.getByRole('button'));

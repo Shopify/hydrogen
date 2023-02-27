@@ -15,15 +15,15 @@ describe(`createStorefrontClient`, () => {
           generateConfig({
             privateStorefrontToken: 'privateToken',
             publicStorefrontToken: 'public',
-          })
-        )
+          }),
+        ),
       );
 
       expect(client.getPrivateTokenHeaders()['content-type']).toBe(
-        'application/json'
+        'application/json',
       );
       expect(client.getPublicTokenHeaders()['content-type']).toBe(
-        'application/json'
+        'application/json',
       );
     });
 
@@ -34,15 +34,15 @@ describe(`createStorefrontClient`, () => {
             publicStorefrontToken: 'public',
             privateStorefrontToken: 'privateToken',
             contentType: 'graphql',
-          })
-        )
+          }),
+        ),
       );
 
       expect(client.getPrivateTokenHeaders()['content-type']).toBe(
-        'application/graphql'
+        'application/graphql',
       );
       expect(client.getPublicTokenHeaders()['content-type']).toBe(
-        'application/graphql'
+        'application/graphql',
       );
     });
   });
@@ -60,7 +60,7 @@ describe(`createStorefrontClient`, () => {
       expect(
         client.getShopifyDomain({
           storeDomain: 'https://newdomain.myshopify.com',
-        })
+        }),
       ).toBe(`https://newdomain.myshopify.com`);
     });
   });
@@ -70,7 +70,7 @@ describe(`createStorefrontClient`, () => {
       const client = createStorefrontClient(generateConfig());
 
       expect(client.getStorefrontApiUrl()).toBe(
-        `https://testing.myshopify.com/api/${SFAPI_VERSION}/graphql.json`
+        `https://testing.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
       );
     });
 
@@ -81,7 +81,7 @@ describe(`createStorefrontClient`, () => {
         client.getStorefrontApiUrl({
           storeDomain: 'https://newdomain.myshopify.com',
           storefrontApiVersion: '2000-01',
-        })
+        }),
       ).toBe(`https://newdomain.myshopify.com/api/2000-01/graphql.json`);
     });
 
@@ -93,7 +93,7 @@ describe(`createStorefrontClient`, () => {
       });
 
       expect(client.getStorefrontApiUrl()).toBe(
-        `https://testing.myshopify.com/api/${SFAPI_VERSION}/graphql.json`
+        `https://testing.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
       );
     });
   });
@@ -101,7 +101,7 @@ describe(`createStorefrontClient`, () => {
   describe(`getPrivateTokenHeaders`, () => {
     it(`generates the headers`, () => {
       const client = createStorefrontClient(
-        generateConfig({privateStorefrontToken: 'privateToken'})
+        generateConfig({privateStorefrontToken: 'privateToken'}),
       );
 
       expect(client.getPrivateTokenHeaders()).toEqual({
@@ -115,7 +115,7 @@ describe(`createStorefrontClient`, () => {
 
     it(`allows overrides`, () => {
       const client = createStorefrontClient(
-        generateConfig({privateStorefrontToken: 'privateToken'})
+        generateConfig({privateStorefrontToken: 'privateToken'}),
       );
 
       expect(
@@ -123,7 +123,7 @@ describe(`createStorefrontClient`, () => {
           privateStorefrontToken: 'newPrivate',
           buyerIp: '1.1.1.1',
           contentType: 'graphql',
-        })
+        }),
       ).toEqual({
         'Shopify-Storefront-Buyer-IP': '1.1.1.1',
         'Shopify-Storefront-Private-Token': 'newPrivate',
@@ -138,7 +138,7 @@ describe(`createStorefrontClient`, () => {
   describe(`getPublicTokenHeaders`, () => {
     it(`generates the headers`, () => {
       const client = createStorefrontClient(
-        generateConfig({publicStorefrontToken: 'publicToken'})
+        generateConfig({publicStorefrontToken: 'publicToken'}),
       );
 
       expect(client.getPublicTokenHeaders()).toEqual({
@@ -152,14 +152,14 @@ describe(`createStorefrontClient`, () => {
 
     it(`allows overrides`, () => {
       const client = createStorefrontClient(
-        generateConfig({publicStorefrontToken: 'publicToken'})
+        generateConfig({publicStorefrontToken: 'publicToken'}),
       );
 
       expect(
         client.getPublicTokenHeaders({
           publicStorefrontToken: 'newPublic',
           contentType: 'graphql',
-        })
+        }),
       ).toEqual({
         'X-Shopify-Storefront-Access-Token': 'newPublic',
         'X-SDK-Version': '2023-01',
@@ -174,7 +174,7 @@ describe(`createStorefrontClient`, () => {
 type StorefrontClientProps = Parameters<typeof createStorefrontClient>[0];
 
 function generateConfig(
-  props?: Partial<StorefrontClientProps>
+  props?: Partial<StorefrontClientProps>,
 ): StorefrontClientProps {
   return {
     storefrontApiVersion: SFAPI_VERSION,

@@ -4,7 +4,7 @@ const SCRIPTS_LOADED: Record<string, Promise<boolean>> = {};
 
 export function loadScript(
   src: string,
-  options?: {module?: boolean; in?: 'head' | 'body'}
+  options?: {module?: boolean; in?: 'head' | 'body'},
 ): Promise<boolean> {
   const isScriptLoaded = SCRIPTS_LOADED[src];
 
@@ -46,7 +46,7 @@ type LoadScriptParams = Parameters<typeof loadScript>;
  */
 export function useLoadScript(
   url: LoadScriptParams[0],
-  options?: LoadScriptParams[1]
+  options?: LoadScriptParams[1],
 ): ScriptState {
   const [status, setStatus] = useState<ScriptState>('loading');
   const stringifiedOptions = JSON.stringify(options);

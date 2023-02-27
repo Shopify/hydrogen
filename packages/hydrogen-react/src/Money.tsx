@@ -42,7 +42,7 @@ export function Money<ComponentGeneric extends React.ElementType = 'div'>({
 }: MoneyProps<ComponentGeneric>): JSX.Element {
   if (!isMoney(data)) {
     throw new Error(
-      `<Money/> needs a valid 'data' prop that has 'amount' and 'currencyCode'`
+      `<Money/> needs a valid 'data' prop that has 'amount' and 'currencyCode'`,
     );
   }
   const moneyObject = useMoney(data);
@@ -76,7 +76,7 @@ export function Money<ComponentGeneric extends React.ElementType = 'div'>({
 
 // required in order to narrow the money object down and make TS happy
 function isMoney(
-  maybeMoney: PartialDeep<MoneyV2, {recurseIntoArrays: true}>
+  maybeMoney: PartialDeep<MoneyV2, {recurseIntoArrays: true}>,
 ): maybeMoney is MoneyV2 {
   return (
     typeof maybeMoney.amount === 'string' &&

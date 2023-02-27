@@ -4,7 +4,7 @@ import {MediaFile} from './MediaFile.js';
 import {getMedia} from './MediaFile.test.helpers.js';
 
 const Template: Story<React.ComponentPropsWithoutRef<typeof MediaFile>> = (
-  props
+  props,
 ) => {
   return <MediaFile {...props} />;
 };

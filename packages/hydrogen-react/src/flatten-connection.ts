@@ -11,9 +11,9 @@ export function flattenConnection<
     | PartialDeep<ConnectionEdges, {recurseIntoArrays: true}>
     | PartialDeep<ConnectionNodes, {recurseIntoArrays: true}>
     | ConnectionEdges
-    | ConnectionNodes
+    | ConnectionNodes,
 >(
-  connection?: ConnectionGeneric
+  connection?: ConnectionGeneric,
 ): ConnectionGeneric extends
   | {
       edges: {node: Array<infer ConnectionBaseType>};
@@ -61,7 +61,7 @@ export function flattenConnection<
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
       if (!edge?.node) {
         throw new Error(
-          'flattenConnection(): Connection edges must contain nodes'
+          'flattenConnection(): Connection edges must contain nodes',
         );
       }
       // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access
@@ -71,7 +71,7 @@ export function flattenConnection<
 
   if (__HYDROGEN_DEV__) {
     console.warn(
-      `flattenConnection(): The connection did not contain either "nodes" or "edges.node". Returning an empty array.`
+      `flattenConnection(): The connection did not contain either "nodes" or "edges.node". Returning an empty array.`,
     );
   }
 

@@ -55,11 +55,11 @@ export function addImageSizeParametersToUrl({
 }
 
 export function shopifyImageLoader(
-  params: ShopifyLoaderParams
+  params: ShopifyLoaderParams,
 ): ReturnType<typeof addImageSizeParametersToUrl> {
   const newSrc = new URL(params.src);
   const isShopifyServedImage = ALL_CDN_HOSTNAMES.some((allowedHostname) =>
-    newSrc.hostname.endsWith(allowedHostname)
+    newSrc.hostname.endsWith(allowedHostname),
   );
 
   if (

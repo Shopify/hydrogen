@@ -19,7 +19,7 @@ describe('<ExternalVideo />', () => {
     expect(videoEl).toHaveAttribute('id', video.id);
     expect(videoEl).toHaveAttribute(
       'allow',
-      'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture'
+      'accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture',
     );
     expect(videoEl).toHaveAttribute('allowfullscreen');
     expect(videoEl).toHaveAttribute('frameborder', '0');
@@ -34,7 +34,7 @@ describe('<ExternalVideo />', () => {
         allow="autoplay"
         allowFullScreen={false}
         frameBorder="1"
-      />
+      />,
     );
 
     const videoEl = screen.getByTestId(testId);
@@ -57,14 +57,14 @@ describe('<ExternalVideo />', () => {
           embedUrl: 'https://www.youtube.com/embed/a2YSgfwXc9c',
         })}
         options={options}
-      />
+      />,
     );
 
     const videoEl = screen.getByTestId(testId);
 
     expect(videoEl).toHaveAttribute(
       'src',
-      'https://www.youtube.com/embed/a2YSgfwXc9c?color=red&autoplay=true'
+      'https://www.youtube.com/embed/a2YSgfwXc9c?color=red&autoplay=true',
     );
   });
 
@@ -74,7 +74,7 @@ describe('<ExternalVideo />', () => {
         data={getExternalVideoData()}
         className="fancy"
         data-testid={testId}
-      />
+      />,
     );
 
     const videoEl = screen.getByTestId(testId);
@@ -101,14 +101,14 @@ describe('<ExternalVideo />', () => {
           embedUrl: 'https://www.youtube.com/embed/a2YSgfwXc9c?autoplay=true',
         })}
         options={options}
-      />
+      />,
     );
 
     const videoEl = screen.getByTestId(testId);
 
     expect(videoEl).toHaveAttribute(
       'src',
-      'https://www.youtube.com/embed/a2YSgfwXc9c?autoplay=true&color=red'
+      'https://www.youtube.com/embed/a2YSgfwXc9c?autoplay=true&color=red',
     );
   });
 });

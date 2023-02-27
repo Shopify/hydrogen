@@ -18,7 +18,7 @@ const PRODUCT_ADDED_TO_CART_EVENT_NAME = 'product_added_to_cart';
 const SEARCH_SUBMITTED_EVENT_NAME = 'search_submitted';
 
 export function pageView(
-  payload: ShopifyPageViewPayload
+  payload: ShopifyPageViewPayload,
 ): ShopifyMonorailEvent[] {
   const pageViewPayload = payload;
   const additionalPayload = {
@@ -36,9 +36,9 @@ export function pageView(
           event_name: PAGE_RENDERED_EVENT_NAME,
           ...additionalPayload,
         },
-        formatPayload(pageViewPayload)
-      )
-    )
+        formatPayload(pageViewPayload),
+      ),
+    ),
   );
 
   switch (pageType) {
@@ -52,9 +52,9 @@ export function pageView(
               ...additionalPayload,
               collection_name: pageViewPayload.collectionHandle,
             },
-            formatPayload(pageViewPayload)
-          )
-        )
+            formatPayload(pageViewPayload),
+          ),
+        ),
       );
       break;
     case AnalyticsPageType.product:
@@ -68,9 +68,9 @@ export function pageView(
               products: formatProductPayload(pageViewPayload.products),
               total_value: pageViewPayload.totalValue,
             },
-            formatPayload(pageViewPayload)
-          )
-        )
+            formatPayload(pageViewPayload),
+          ),
+        ),
       );
       break;
     case AnalyticsPageType.search:
@@ -83,9 +83,9 @@ export function pageView(
               ...additionalPayload,
               search_string: pageViewPayload.searchString,
             },
-            formatPayload(pageViewPayload)
-          )
-        )
+            formatPayload(pageViewPayload),
+          ),
+        ),
       );
       break;
   }
@@ -94,7 +94,7 @@ export function pageView(
 }
 
 export function addToCart(
-  payload: ShopifyAddToCartPayload
+  payload: ShopifyAddToCartPayload,
 ): ShopifyMonorailEvent[] {
   const addToCartPayload = payload;
   const cartToken = parseGid(addToCartPayload.cartId);
@@ -110,14 +110,14 @@ export function addToCart(
           total_value: addToCartPayload.totalValue,
           products: formatProductPayload(addToCartPayload.products),
         },
-        formatPayload(addToCartPayload)
-      )
+        formatPayload(addToCartPayload),
+      ),
     ),
   ];
 }
 
 function formatPayload(
-  payload: ShopifyAnalyticsPayload
+  payload: ShopifyAnalyticsPayload,
 ): ShopifyMonorailPayload {
   return {
     source: payload.shopifySalesChannel || ShopifySalesChannel.headless,
@@ -159,7 +159,7 @@ function formatProductPayload(products?: ShopifyAnalyticsProduct[]): string[] {
             brand: p.brand,
             price: p.price,
             quantity: Number(p.quantity || 0),
-          }
+          },
         );
         return JSON.stringify(product);
       })

@@ -8,7 +8,7 @@ describe('<CartLineQuantity />', () => {
     render(
       <CartLineProvider line={CART_LINE}>
         <CartLineQuantity />
-      </CartLineProvider>
+      </CartLineProvider>,
     );
 
     expect(screen.getByText(CART_LINE?.quantity ?? '')).toBeInTheDocument();
@@ -18,7 +18,7 @@ describe('<CartLineQuantity />', () => {
     render(
       <CartLineProvider line={CART_LINE}>
         <CartLineQuantity as="p" />
-      </CartLineProvider>
+      </CartLineProvider>,
     );
 
     const quantity = screen.getByText(CART_LINE?.quantity ?? '');
@@ -33,7 +33,7 @@ describe('<CartLineQuantity />', () => {
       render(
         <CartLineProvider line={CART_LINE}>
           <CartLineQuantity as={FakeComponentWithRequiredProp} testing />
-        </CartLineProvider>
+        </CartLineProvider>,
       );
     });
 
@@ -46,7 +46,7 @@ describe('<CartLineQuantity />', () => {
             // @ts-expect-error Testing should be a boolean
             testing="alsdkjf"
           />
-        </CartLineProvider>
+        </CartLineProvider>,
       );
     });
   });

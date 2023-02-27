@@ -20,7 +20,7 @@ import {flattenConnection} from './flatten-connection.js';
  * ```
  */
 export function parseMetafield<ReturnGeneric>(
-  metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>
+  metafield: PartialDeep<MetafieldBaseType, {recurseIntoArrays: true}>,
 ): ReturnGeneric {
   if (!metafield.type) {
     const noTypeError = `parseMetafield(): The 'type' field is required in order to parse the Metafield.`;
@@ -134,7 +134,7 @@ export function parseMetafield<ReturnGeneric>(
         throw new Error(typeNotFoundError);
       } else {
         console.error(
-          `${typeNotFoundError}  Returning 'parsedValue' of 'null'`
+          `${typeNotFoundError}  Returning 'parsedValue' of 'null'`,
         );
         return {
           ...metafield,

@@ -7,7 +7,7 @@ import {getPreviewImage} from './Image.test.helpers.js';
 import {getModel3d} from './ModelViewer.test.helpers.js';
 
 export function getMedia(
-  type?: MediaEdge['node']['__typename']
+  type?: MediaEdge['node']['__typename'],
 ): PartialDeep<MediaEdge['node'], {recurseIntoArrays: true}> {
   const finalType: MediaEdge['node']['__typename'] =
     type ??
@@ -79,7 +79,7 @@ export function getMedia(
 }
 
 export function getMediaImage(
-  image: PartialDeep<MediaImage, {recurseIntoArrays: true}> = {}
+  image: PartialDeep<MediaImage, {recurseIntoArrays: true}> = {},
 ): PartialDeep<MediaImage, {recurseIntoArrays: true}> {
   return {
     id: image.id ?? faker.random.words(),

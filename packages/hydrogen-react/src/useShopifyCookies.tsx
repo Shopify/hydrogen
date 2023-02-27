@@ -32,13 +32,13 @@ export function useShopifyCookies(options?: UseShopifyCookiesOptions): void {
         SHOPIFY_Y,
         cookies[SHOPIFY_Y] || buildUUID(),
         longTermLength,
-        domain
+        domain,
       );
       setCookie(
         SHOPIFY_S,
         cookies[SHOPIFY_S] || buildUUID(),
         shortTermLength,
-        domain
+        domain,
       );
     } else {
       setCookie(SHOPIFY_Y, '', 0, domain);
@@ -51,7 +51,7 @@ function setCookie(
   name: string,
   value: string,
   maxage: number,
-  domain: string
+  domain: string,
 ): void {
   document.cookie = stringify(name, value, {
     maxage,

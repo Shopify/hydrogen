@@ -32,7 +32,10 @@ describe('<Video />', () => {
 
   it('renders source tags for each source', () => {
     render(
-      <Video data={VIDEO_PROPS} sourceProps={{'data-testid': 'video-screen'}} />
+      <Video
+        data={VIDEO_PROPS}
+        sourceProps={{'data-testid': 'video-screen'}}
+      />,
     );
     const screens = screen.getAllByTestId('video-screen');
 
@@ -42,14 +45,14 @@ describe('<Video />', () => {
       expect(screen).toHaveAttribute('src', VIDEO_PROPS.sources[index].url);
       expect(screen).toHaveAttribute(
         'type',
-        VIDEO_PROPS.sources[index].mimeType
+        VIDEO_PROPS.sources[index].mimeType,
       );
     });
   });
 
   it('allows passthrough props', () => {
     render(
-      <Video data={VIDEO_PROPS} className="testClass" data-testid="video" />
+      <Video data={VIDEO_PROPS} className="testClass" data-testid="video" />,
     );
     const video = screen.getByTestId('video');
 

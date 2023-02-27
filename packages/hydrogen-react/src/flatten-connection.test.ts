@@ -82,7 +82,7 @@ describe('flattenConnection', () => {
 
     // works with PartialDeep
     const type2 = flattenConnection(
-      {} as PartialDeep<ProductConnection, {recurseIntoArrays: true}>
+      {} as PartialDeep<ProductConnection, {recurseIntoArrays: true}>,
     );
     expectType<
       TypeEqual<typeof type2, PartialDeep<Product[], {recurseIntoArrays: true}>>

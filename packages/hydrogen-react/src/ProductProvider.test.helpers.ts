@@ -14,7 +14,7 @@ import {getPreviewImage} from './Image.test.helpers.js';
 import {getMedia} from './MediaFile.test.helpers.js';
 
 export function getProduct(
-  product: PartialDeep<ProductType, {recurseIntoArrays: true}> = {}
+  product: PartialDeep<ProductType, {recurseIntoArrays: true}> = {},
 ): PartialDeep<ProductType, {recurseIntoArrays: true}> {
   return {
     id: product.id ?? faker.datatype.uuid(),
@@ -54,7 +54,7 @@ export function getProduct(
 }
 
 export function getVariant(
-  variant: PartialDeep<ProductVariant, {recurseIntoArrays: true}> = {}
+  variant: PartialDeep<ProductVariant, {recurseIntoArrays: true}> = {},
 ): PartialDeep<ProductVariant, {recurseIntoArrays: true}> {
   return {
     id: variant.id ?? faker.random.words(),
@@ -63,7 +63,7 @@ export function getVariant(
     image: getPreviewImage(variant?.image ?? undefined),
     unitPrice: getPrice(variant?.unitPrice ?? undefined),
     unitPriceMeasurement: getUnitPriceMeasurement(
-      variant?.unitPriceMeasurement ?? undefined
+      variant?.unitPriceMeasurement ?? undefined,
     ),
     priceV2: getPrice(variant.priceV2),
     compareAtPriceV2: getPrice(variant?.compareAtPriceV2 ?? undefined),

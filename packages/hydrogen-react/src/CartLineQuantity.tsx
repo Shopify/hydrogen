@@ -2,7 +2,7 @@ import type {ComponentPropsWithoutRef, ElementType} from 'react';
 import {useCartLine} from './CartLineProvider.js';
 
 interface CartLineQuantityBaseProps<
-  ComponentGeneric extends ElementType = 'span'
+  ComponentGeneric extends ElementType = 'span',
 > {
   /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `span`. */
   as?: ComponentGeneric;
@@ -21,7 +21,7 @@ export type CartLineQuantityProps<ComponentGeneric extends ElementType> =
  * It must be a descendent of a `<CartLineProvider/>` component, and uses the `useCartLine()` hook internally.
  */
 export function CartLineQuantity<ComponentGeneric extends ElementType = 'span'>(
-  props: CartLineQuantityProps<ComponentGeneric>
+  props: CartLineQuantityProps<ComponentGeneric>,
 ): JSX.Element {
   const cartLine = useCartLine();
   const {as, ...passthroughProps} = props;

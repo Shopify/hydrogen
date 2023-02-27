@@ -23,7 +23,7 @@ function invokeCart(
     resolveTarget?: CartMachineTypeState['value'];
     errorTarget?: CartMachineTypeState['value'];
     exitActions?: [keyof CartMachineActions];
-  }
+  },
 ): StateMachine.Config<CartMachineContext, CartMachineEvent>['states']['on'] {
   return {
     entry: [
@@ -130,7 +130,7 @@ const UPDATING_CART_EVENTS: StateMachine.Machine<
 
 // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
 function createCartMachine(
-  initialCart?: PartialDeep<CartType, {recurseIntoArrays: true}>
+  initialCart?: PartialDeep<CartType, {recurseIntoArrays: true}>,
 ) {
   return createMachine<
     CartMachineContext,
@@ -190,17 +190,17 @@ export function useCartAPIStateMachine({
   /** A callback that is invoked just before a Cart API action executes. */
   onCartActionEntry?: (
     context: CartMachineContext,
-    event: CartMachineActionEvent
+    event: CartMachineActionEvent,
   ) => void;
   /** A callback that is invoked after executing the entry actions for optimistic UI changes.  */
   onCartActionOptimisticUI?: (
     context: CartMachineContext,
-    event: CartMachineEvent
+    event: CartMachineEvent,
   ) => Partial<CartMachineContext>;
   /** A callback that is invoked after a Cart API completes. */
   onCartActionComplete?: (
     context: CartMachineContext,
-    event: CartMachineFetchResultEvent
+    event: CartMachineFetchResultEvent,
   ) => void;
   /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/latest/objects/cart). */
   data?: PartialDeep<CartType, {recurseIntoArrays: true}>;
@@ -245,7 +245,7 @@ export function useCartAPIStateMachine({
         const resultEvent = eventFromFetchResult(
           event,
           data?.cartCreate?.cart,
-          errors
+          errors,
         );
         send(resultEvent);
       },
@@ -255,13 +255,13 @@ export function useCartAPIStateMachine({
 
         const {data, errors} = await cartLineAdd(
           context.cart.id,
-          event.payload.lines
+          event.payload.lines,
         );
 
         const resultEvent = eventFromFetchResult(
           event,
           data?.cartLinesAdd?.cart,
-          errors
+          errors,
         );
 
         send(resultEvent);
@@ -271,13 +271,13 @@ export function useCartAPIStateMachine({
         if (event.type !== 'CARTLINE_UPDATE' || !context?.cart?.id) return;
         const {data, errors} = await cartLineUpdate(
           context.cart.id,
-          event.payload.lines
+          event.payload.lines,
         );
 
         const resultEvent = eventFromFetchResult(
           event,
           data?.cartLinesUpdate?.cart,
-          errors
+          errors,
         );
 
         send(resultEvent);
@@ -287,13 +287,13 @@ export function useCartAPIStateMachine({
         if (event.type !== 'CARTLINE_REMOVE' || !context?.cart?.id) return;
         const {data, errors} = await cartLineRemove(
           context.cart.id,
-          event.payload.lines
+          event.payload.lines,
         );
 
         const resultEvent = eventFromFetchResult(
           event,
           data?.cartLinesRemove?.cart,
-          errors
+          errors,
         );
 
         send(resultEvent);
@@ -303,13 +303,13 @@ export function useCartAPIStateMachine({
         if (event.type !== 'NOTE_UPDATE' || !context?.cart?.id) return;
         const {data, errors} = await noteUpdate(
           context.cart.id,
-          event.payload.note
+          event.payload.note,
         );
 
         const resultEvent = eventFromFetchResult(
           event,
           data?.cartNoteUpdate?.cart,
-          errors
+          errors,
         );
 
         send(resultEvent);
@@ -320,13 +320,13 @@ export function useCartAPIStateMachine({
           return;
         const {data, errors} = await buyerIdentityUpdate(
           context.cart.id,
-          event.payload.buyerIdentity
+          event.payload.buyerIdentity,
         );
 
         const resultEvent = eventFromFetchResult(
           event,
           data?.cartBuyerIdentityUpdate?.cart,
-          errors
+          errors,
         );
 
         send(resultEvent);
@@ -337,13 +337,13 @@ export function useCartAPIStateMachine({
           return;
         const {data, errors} = await cartAttributesUpdate(
           context.cart.id,
-          event.payload.attributes
+          event.payload.attributes,
         );
 
         const resultEvent = eventFromFetchResult(
           event,
           data?.cartAttributesUpdate?.cart,
-          errors
+          errors,
         );
 
         send(resultEvent);
@@ -354,12 +354,12 @@ export function useCartAPIStateMachine({
           return;
         const {data, errors} = await discountCodesUpdate(
           context.cart.id,
-          event.payload.discountCodes
+          event.payload.discountCodes,
         );
         const resultEvent = eventFromFetchResult(
           event,
           data?.cartDiscountCodesUpdate?.cart,
-          errors
+          errors,
         );
 
         send(resultEvent);
@@ -390,7 +390,7 @@ export function useCartAPIStateMachine({
 }
 
 export function cartFromGraphQL(
-  cart: PartialDeep<CartType, {recurseIntoArrays: true}>
+  cart: PartialDeep<CartType, {recurseIntoArrays: true}>,
 ): Cart {
   return {
     ...cart,
@@ -402,7 +402,7 @@ export function cartFromGraphQL(
 function eventFromFetchResult(
   cartActionEvent: CartMachineActionEvent,
   cart?: PartialDeep<CartType, {recurseIntoArrays: true}> | null,
-  errors?: unknown
+  errors?: unknown,
 ): CartMachineFetchResultEvent {
   if (errors) {
     return {type: 'ERROR', payload: {errors, cartActionEvent}};
@@ -428,7 +428,7 @@ function eventFromFetchResult(
 }
 
 function isCartActionEvent(
-  event: CartMachineEvent | InitEvent
+  event: CartMachineEvent | InitEvent,
 ): event is CartMachineActionEvent {
   return (
     event.type === 'CART_CREATE' ||
@@ -443,7 +443,7 @@ function isCartActionEvent(
 }
 
 function isCartFetchResultEvent(
-  event: CartMachineEvent | InitEvent
+  event: CartMachineEvent | InitEvent,
 ): event is CartMachineFetchResultEvent {
   return (
     event.type === 'RESOLVE' ||

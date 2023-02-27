@@ -61,7 +61,7 @@ describe(`parseMetafield`, () => {
         value: dateStamp,
       });
       expect(
-        parsed?.parsedValue?.toString() === new Date(dateStamp).toString()
+        parsed?.parsedValue?.toString() === new Date(dateStamp).toString(),
       ).toBe(true);
       expectType<null | Date>(parsed?.parsedValue);
     });
@@ -73,7 +73,7 @@ describe(`parseMetafield`, () => {
         value: dateStamp,
       });
       expect(
-        parsed?.parsedValue?.toString() === new Date(dateStamp).toString()
+        parsed?.parsedValue?.toString() === new Date(dateStamp).toString(),
       ).toBe(true);
       expectType<null | Date>(parsed?.parsedValue);
     });
@@ -117,7 +117,7 @@ describe(`parseMetafield`, () => {
       const parsed = parseMetafield<ParsedMetafields['json']>(myJson);
       // note that with "unknown", you have to cast it as something
       expect((parsed?.parsedValue as {test: string})?.test === 'testing').toBe(
-        true
+        true,
       );
       expectType<null | unknown>(parsed?.parsedValue);
 
@@ -155,7 +155,7 @@ describe(`parseMetafield`, () => {
         {
           type: 'single_line_text_field',
           value: 'blah',
-        }
+        },
       );
       expect(parsed?.parsedValue === 'blah').toBe(true);
       expectType<null | string>(parsed?.parsedValue);
@@ -301,7 +301,7 @@ describe(`parseMetafield`, () => {
       parsed.parsedValue?.forEach((date, index) => {
         // worried about flakiness here with comparing dates, and having that be consistent in tests
         expect(
-          date.getUTCDate() === listOfParsedDates[index].getUTCDate()
+          date.getUTCDate() === listOfParsedDates[index].getUTCDate(),
         ).toBe(true);
       });
       expectType<null | Date[]>(parsed?.parsedValue);
@@ -317,7 +317,7 @@ describe(`parseMetafield`, () => {
       parsed.parsedValue?.forEach((date, index) => {
         // worried about flakiness here with comparing dates, and having that be consistent in tests
         expect(
-          date.toISOString() === listOfParsedDates[index].toISOString()
+          date.toISOString() === listOfParsedDates[index].toISOString(),
         ).toBe(true);
       });
       expectType<null | Date[]>(parsed?.parsedValue);
@@ -425,7 +425,7 @@ describe(`parseMetafield`, () => {
               },
             ],
           },
-        }
+        },
       );
       parsed.parsedValue?.forEach((coll, index) => {
         expect(coll.__typename === 'Product').toBe(true);
@@ -491,7 +491,7 @@ describe(`parseMetafield`, () => {
               },
             ],
           },
-        }
+        },
       );
       parsed.parsedValue?.forEach((coll, index) => {
         expect(coll.__typename === 'ProductVariant').toBe(true);

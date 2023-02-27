@@ -4,7 +4,7 @@ import {faker} from '@faker-js/faker';
 import {getPreviewImage} from './Image.test.helpers.js';
 
 export function getExternalVideoData(
-  externalVideo: Partial<ExternalVideoType> = {}
+  externalVideo: Partial<ExternalVideoType> = {},
 ): PartialDeep<ExternalVideoType, {recurseIntoArrays: true}> {
   return {
     id: externalVideo.id ?? faker.random.words(),

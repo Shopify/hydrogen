@@ -32,7 +32,7 @@ export type AddToCartButtonProps<AsType extends React.ElementType = 'button'> =
  * It must be a descendent of the `CartProvider` component.
  */
 export function AddToCartButton<AsType extends React.ElementType = 'button'>(
-  props: AddToCartButtonProps<AsType>
+  props: AddToCartButtonProps<AsType>,
 ): JSX.Element {
   const [addingItem, setAddingItem] = useState<boolean>(false);
   const {
@@ -108,6 +108,6 @@ export function AddToCartButton<AsType extends React.ElementType = 'button'>(
 
 // This is only for documenation purposes, and it is not used in the code.
 export interface AddToCartButtonPropsForDocs<
-  AsType extends React.ElementType = 'button'
+  AsType extends React.ElementType = 'button',
 > extends AddToCartButtonPropsBase,
     CustomBaseButtonProps<AsType> {}

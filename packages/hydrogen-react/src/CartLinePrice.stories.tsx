@@ -19,7 +19,7 @@ const cartLineMock = getCartLineMock({
 });
 
 const Template: Story<{priceType: CartLinePriceProps['priceType']}> = (
-  props
+  props,
 ) => <CartLinePrice data={cartLineMock} {...props} />;
 
 export const Default = Template.bind({});

@@ -9,7 +9,7 @@ import {
 export function getRawMetafield(
   metafield: PartialDeep<MetafieldType, {recurseIntoArrays: true}> & {
     type?: MetafieldTypeTypes;
-  } = {}
+  } = {},
 ): PartialDeep<MetafieldType, {recurseIntoArrays: true}> & {
   type: MetafieldTypeTypes;
 } {

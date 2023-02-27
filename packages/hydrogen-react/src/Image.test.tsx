@@ -59,7 +59,7 @@ describe('<Image />', () => {
     };
 
     vi.spyOn(utilities, 'getShopifyImageDimensions').mockReturnValue(
-      mockDimensions
+      mockDimensions,
     );
 
     render(<Image data={previewImage} loaderOptions={options} />);
@@ -82,7 +82,7 @@ describe('<Image />', () => {
     };
 
     vi.spyOn(utilities, 'getShopifyImageDimensions').mockReturnValue(
-      mockDimensions
+      mockDimensions,
     );
 
     render(<Image data={previewImage} loaderOptions={options} />);
@@ -133,7 +133,7 @@ describe('<Image />', () => {
         className="fancyImage"
         id="123"
         alt="Fancy image"
-      />
+      />,
     );
 
     const image = screen.getByRole('img');
@@ -200,7 +200,7 @@ describe('<Image />', () => {
       'srcSet',
       // height is not applied if there is no crop
       // width is not doulbe of the passed width, but instead double of the value in 'sizes_array' / '[number]w'
-      `${previewImage.url}?width=704 352w`
+      `${previewImage.url}?width=704 352w`,
     );
     expect(image).toHaveAttribute('width', '500');
     expect(image).toHaveAttribute('height', '500');
@@ -219,7 +219,7 @@ describe('<Image />', () => {
         loaderOptions={{scale: 2, crop: 'bottom'}}
         width={500}
         height={250}
-      />
+      />,
     );
 
     const image = screen.getByRole('img');
@@ -228,7 +228,7 @@ describe('<Image />', () => {
     expect(image).toHaveAttribute(
       'srcSet',
       // height is the aspect ratio (of width + height) * srcSet width, so in this case it should be half of width
-      `${previewImage.url}?width=704&height=352&crop=bottom 352w`
+      `${previewImage.url}?width=704&height=352&crop=bottom 352w`,
     );
     expect(image).toHaveAttribute('width', '500');
     expect(image).toHaveAttribute('height', '250');
@@ -242,7 +242,7 @@ describe('<Image />', () => {
     });
 
     render(
-      <Image data={previewImage} loaderOptions={{scale: 2, crop: 'bottom'}} />
+      <Image data={previewImage} loaderOptions={{scale: 2, crop: 'bottom'}} />,
     );
 
     const image = screen.getByRole('img');
@@ -251,7 +251,7 @@ describe('<Image />', () => {
     expect(image).toHaveAttribute(
       'srcSet',
       // height is the aspect ratio (of data.width + data.height) * srcSet width, so in this case it should be the same as width
-      `${previewImage.url}?width=704&height=704&crop=bottom 352w`
+      `${previewImage.url}?width=704&height=704&crop=bottom 352w`,
     );
     expect(image).toHaveAttribute('width', '500');
     expect(image).toHaveAttribute('height', '500');
@@ -265,7 +265,7 @@ describe('<Image />', () => {
     });
 
     render(
-      <Image data={previewImage} loaderOptions={{scale: 2, crop: 'bottom'}} />
+      <Image data={previewImage} loaderOptions={{scale: 2, crop: 'bottom'}} />,
     );
 
     const image = screen.getByRole('img');
@@ -274,7 +274,7 @@ describe('<Image />', () => {
     expect(image).toHaveAttribute(
       'srcSet',
       // height is the aspect ratio (of data.width + data.height) * srcSet width, so in this case it should be double the width
-      `${previewImage.url}?width=704&height=1408&crop=bottom 352w`
+      `${previewImage.url}?width=704&height=1408&crop=bottom 352w`,
     );
     expect(image).toHaveAttribute('width', '500');
     expect(image).toHaveAttribute('height', '1000');

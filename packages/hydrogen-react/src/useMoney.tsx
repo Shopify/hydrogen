@@ -62,7 +62,7 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
 
   if (!locale) {
     throw new Error(
-      `useMoney(): Unable to get 'locale' from 'useShop()', which means that 'locale' was not passed to '<ShopifyProvider/>'. 'locale' is required for 'useMoney()' to work`
+      `useMoney(): Unable to get 'locale' from 'useShop()', which means that 'locale' was not passed to '<ShopifyProvider/>'. 'locale' is required for 'useMoney()' to work`,
     );
   }
 
@@ -73,7 +73,7 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
       style: 'currency',
       currency: money.currencyCode,
     }),
-    [money.currencyCode]
+    [money.currencyCode],
   );
 
   const defaultFormatter = useLazyFormatter(locale, options);
@@ -142,8 +142,8 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
           .formatToParts(amount)
           .filter((part) =>
             ['decimal', 'fraction', 'group', 'integer', 'literal'].includes(
-              part.type
-            )
+              part.type,
+            ),
           )
           .map((part) => part.value)
           .join(''),
@@ -157,7 +157,7 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
       withoutCurrencyFormatter,
       withoutTrailingZerosFormatter,
       withoutTrailingZerosOrCurrencyFormatter,
-    ]
+    ],
   );
 
   // Call functions automatically when the properties are accessed
@@ -168,13 +168,13 @@ export function useMoney(money: MoneyV2): UseMoneyValue {
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
         get: (target, key) => Reflect.get(target, key)?.call(null),
       }),
-    [lazyFormatters]
+    [lazyFormatters],
   );
 }
 
 function useLazyFormatter(
   locale: string,
-  options?: Intl.NumberFormatOptions
+  options?: Intl.NumberFormatOptions,
 ): () => Intl.NumberFormat {
   return useMemo(() => {
     let memoized: Intl.NumberFormat;

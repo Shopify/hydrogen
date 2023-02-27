@@ -23,7 +23,7 @@ type StorefrontClientProps = {
  * When used on the server, it is recommended to use the `privateStorefrontToken` prop. When used on the client, it is recommended to use the `publicStorefrontToken` prop.
  */
 export function createStorefrontClient(
-  props: StorefrontClientProps
+  props: StorefrontClientProps,
 ): StorefrontClientReturn {
   const {
     storeDomain,
@@ -35,21 +35,21 @@ export function createStorefrontClient(
 
   if (storefrontApiVersion !== SFAPI_VERSION) {
     warnOnce(
-      `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`
+      `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: "${storefrontApiVersion}"; expected version "${SFAPI_VERSION}"`,
     );
   }
 
   // only warn if not in a browser environment
   if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {
     warnOnce(
-      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`
+      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,
     );
   }
 
   // only warn if in a browser environment and you're using the privateStorefrontToken
   if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {
     warnOnce(
-      `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`
+      `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`,
     );
   }
 
@@ -66,13 +66,13 @@ export function createStorefrontClient(
     getPrivateTokenHeaders(overrideProps): Record<string, string> {
       if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {
         throw new Error(
-          `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`
+          `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`,
         );
       }
 
       if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {
         warnOnce(
-          `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`
+          `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`,
         );
       }
 
@@ -97,7 +97,7 @@ export function createStorefrontClient(
     getPublicTokenHeaders(overrideProps): Record<string, string> {
       if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {
         throw new Error(
-          `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`
+          `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`,
         );
       }
 
@@ -107,7 +107,7 @@ export function createStorefrontClient(
       return getPublicTokenHeadersRaw(
         finalContentType,
         storefrontApiVersion,
-        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? ''
+        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',
       );
     },
   };
@@ -116,7 +116,7 @@ export function createStorefrontClient(
 export function getPublicTokenHeadersRaw(
   contentType: 'graphql' | 'json',
   storefrontApiVersion: string,
-  accessToken: string
+  accessToken: string,
 ): {
   'content-type': string;
   'X-SDK-Variant': string;
@@ -156,7 +156,7 @@ type StorefrontClientReturn = {
    * - `storeDomain`
    */
   getShopifyDomain: (
-    props?: Partial<Pick<StorefrontClientProps, 'storeDomain'>>
+    props?: Partial<Pick<StorefrontClientProps, 'storeDomain'>>,
   ) => string;
   /**
    * Creates the fully-qualified URL to your store's GraphQL endpoint.
@@ -169,7 +169,7 @@ type StorefrontClientReturn = {
   getStorefrontApiUrl: (
     props?: Partial<
       Pick<StorefrontClientProps, 'storeDomain' | 'storefrontApiVersion'>
-    >
+    >,
   ) => string;
   /**
    * Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. This method uses the private Server-to-Server token which reduces the chance of throttling but must not be exposed to clients. Server-side calls should prefer using this over `getPublicTokenHeaders()`.
@@ -189,7 +189,7 @@ type StorefrontClientReturn = {
          * The client's IP address. Passing this to the Storefront API when using a server-to-server token will help improve your store's analytics data.
          */
         buyerIp?: string;
-      }
+      },
   ) => Record<string, string>;
   /**
    * Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. This method uses the public token which increases the chance of throttling but also can be exposed to clients. Server-side calls should prefer using `getPublicTokenHeaders()`.
@@ -203,6 +203,6 @@ type StorefrontClientReturn = {
    */
   getPublicTokenHeaders: (
     props?: OverrideTokenHeaderProps &
-      Pick<StorefrontClientProps, 'publicStorefrontToken'>
+      Pick<StorefrontClientProps, 'publicStorefrontToken'>,
   ) => Record<string, string>;
 };

@@ -19,7 +19,7 @@ const createFetchSpy = ({
 }) => {
   const mockFetch = async (
     input: RequestInfo | URL,
-    init?: RequestInit
+    init?: RequestInit,
   ): Promise<Response> => {
     // Mock Monorail endpoint
     const shopDomainMonorailEndpoint =
@@ -40,7 +40,7 @@ const createFetchSpy = ({
             resolve(
               new Response('', {
                 status: 400,
-              })
+              }),
             );
           });
         }
@@ -62,8 +62,8 @@ const createFetchSpy = ({
                 }),
                 {
                   status: 207,
-                }
-              )
+                },
+              ),
             );
           });
         }
@@ -74,7 +74,7 @@ const createFetchSpy = ({
         resolve(
           new Response('', {
             status: 200,
-          })
+          }),
         );
       });
     }
@@ -148,7 +148,7 @@ describe('analytics', () => {
       expect(fetchSpy).toHaveBeenCalled();
       expect(consoleErrorSpy).toHaveBeenCalled();
       expect(consoleErrorSpy.mock.calls[0][0]).toBe(
-        'sendShopifyAnalytics request is unsuccessful'
+        'sendShopifyAnalytics request is unsuccessful',
       );
     });
 
@@ -199,7 +199,7 @@ describe('analytics', () => {
             ...BASE_PAYLOAD,
           },
         },
-        shopDomain
+        shopDomain,
       );
 
       expect(fetchSpy).toHaveBeenCalled();
@@ -220,15 +220,15 @@ describe('analytics', () => {
             payload: {
               ...BASE_PAYLOAD,
             },
-          })
+          }),
       ).rejects.toThrow();
       expect(fetchSpy).toHaveBeenCalled();
       expect(consoleErrorSpy.mock.calls[0][0]).toBe(
-        'sendShopifyAnalytics request is unsuccessful'
+        'sendShopifyAnalytics request is unsuccessful',
       );
       // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call
       expect(consoleErrorSpy.mock.calls[0][1].toString()).toContain(
-        'Error: Response failed'
+        'Error: Response failed',
       );
     });
   });
@@ -255,7 +255,7 @@ describe('analytics', () => {
         navigationApi: '',
       });
       expect(consoleErrorSpy.mock.calls[0][0]).toBe(
-        'getClientBrowserParameters should only be used within the useEffect callback or event handlers'
+        'getClientBrowserParameters should only be used within the useEffect callback or event handlers',
       );
     });
 
@@ -316,7 +316,7 @@ describe('analytics', () => {
 
       expect(browserParams.navigationType).toEqual('reload');
       expect(browserParams.navigationApi).toEqual(
-        'PerformanceNavigationTiming'
+        'PerformanceNavigationTiming',
       );
       expect(consoleErrorSpy).not.toHaveBeenCalled();
     });

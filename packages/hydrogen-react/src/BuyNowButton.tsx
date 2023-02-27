@@ -26,7 +26,7 @@ type BuyNowButtonProps<AsType extends React.ElementType = 'button'> =
  * Must be a child of a `CartProvider` component.
  */
 export function BuyNowButton<AsType extends React.ElementType = 'button'>(
-  props: BuyNowButtonProps<AsType>
+  props: BuyNowButtonProps<AsType>,
 ): JSX.Element {
   const {cartCreate, checkoutUrl} = useCart();
   const [loading, setLoading] = useState<boolean>(false);
@@ -73,6 +73,6 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
 
 // This is only for documenation purposes, and it is not used in the code.
 export interface BuyNowButtonPropsForDocs<
-  AsType extends React.ElementType = 'button'
+  AsType extends React.ElementType = 'button',
 > extends BuyNowButtonPropsBase,
     CustomBaseButtonProps<AsType> {}
