@@ -45,10 +45,7 @@ export function Seo({debug}: SeoProps) {
       const routeInfo = {...routeMatch, ...location};
 
       if (handle === undefined || handle.seo === undefined) {
-        if (
-          routeMatch.data === undefined ||
-          routeMatch.data.seo === undefined
-        ) {
+        if (!routeMatch?.data?.seo) {
           return [];
         }
 
