@@ -45,7 +45,15 @@ export function Seo({debug}: SeoProps) {
       const routeInfo = {...routeMatch, ...location};
 
       if (handle === undefined || handle.seo === undefined) {
-        return [];
+        if (!routeMatch?.data?.seo) {
+          return [];
+        }
+
+        return [
+          {
+            ...routeMatch.data.seo,
+          },
+        ];
       }
 
       return recursivelyInvokeOrReturn(handle.seo, routeInfo);
