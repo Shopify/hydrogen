@@ -1,51 +1,47 @@
-import {type ReactNode, useRef, Suspense, useMemo} from 'react';
+import {type ReactNode, Suspense, useMemo, useRef} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
-  useLoaderData,
   Await,
-  useSearchParams,
+  useLoaderData,
   useLocation,
+  useSearchParams,
   useTransition,
 } from '@remix-run/react';
 import {
   AnalyticsPageType,
   Money,
+  type SeoConfig,
   ShopifyAnalyticsProduct,
   ShopPayButton,
-  flattenConnection,
-  type SeoHandleFunction,
-  type SeoConfig,
 } from '@shopify/hydrogen';
 import {
+  AddToCartButton,
+  Button,
   Heading,
   IconCaret,
   IconCheck,
   IconClose,
+  Link,
   ProductGallery,
   ProductSwimlane,
   Section,
   Skeleton,
   Text,
-  Link,
-  AddToCartButton,
-  Button,
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import type {
+  Product as ProductType,
+  ProductConnection,
   ProductVariant,
   SelectedOptionInput,
-  Product as ProductType,
   Shop,
-  ProductConnection,
-  MediaConnection,
-  MediaImage,
 } from '@shopify/hydrogen/storefront-api-types';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
-import type {Product} from 'schema-dts';
+import type {Offer, Product as SeoProduct} from 'schema-dts';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -74,47 +70,13 @@ export async function loader({params, request, context}: LoaderArgs) {
     throw new Response(null, {status: 404});
   }
 
-  const recommended = getRecommendedProducts(context.storefront, product.id);
   const firstVariant = product.variants.nodes[0];
   const selectedVariant = product.selectedVariant ?? firstVariant;
+  const recommended = getRecommendedProducts(context.storefront, product.id);
+  const analytics = analyticsPayload({selectedVariant, product});
+  const seo = seoPayload({product, url: request.url, selectedVariant});
 
-  const productAnalytics: ShopifyAnalyticsProduct = {
-    productGid: product.id,
-    variantGid: selectedVariant.id,
-    name: product.title,
-    variantName: selectedVariant.title,
-    brand: product.vendor,
-    price: selectedVariant.price.amount,
-  };
-
-  const media = flattenConnection<MediaConnection>(product.media).find(
-    (media) => media.mediaContentType === 'IMAGE',
-  ) as MediaImage | undefined;
-
-  const seo = {
-    title: product?.seo?.title ?? product?.title,
-    media: media?.image,
-    description: product?.seo?.description ?? product?.description,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      brand: product?.vendor,
-      name: product?.title,
-    },
-  } satisfies SeoConfig<Product>;
-
-  return defer({
-    product,
-    shop,
-    recommended,
-    seo,
-    analytics: {
-      pageType: AnalyticsPageType.product,
-      resourceId: product.id,
-      products: [productAnalytics],
-      totalValue: parseFloat(selectedVariant.price.amount),
-    },
-  });
+  return defer({analytics, product, recommended, seo, shop});
 }
 
 export default function Product() {
@@ -497,6 +459,93 @@ function ProductDetail({
       )}
     </Disclosure>
   );
+}
+
+function analyticsPayload({
+  selectedVariant,
+  product,
+}: {
+  selectedVariant: ProductVariant;
+  product: ProductType;
+}) {
+  const anlyticsProduct: ShopifyAnalyticsProduct = {
+    brand: product.vendor,
+    name: product.title,
+    price: selectedVariant.price.amount,
+    productGid: product.id,
+    variantGid: selectedVariant.id,
+    variantName: selectedVariant.title,
+  };
+
+  return {
+    pageType: AnalyticsPageType.product,
+    products: [anlyticsProduct],
+    resourceId: product.id,
+    totalValue: parseFloat(selectedVariant.price.amount),
+  };
+}
+
+function jsonLdPayload({
+  product,
+  selectedVariant,
+  url,
+}: {
+  product: ProductType;
+  selectedVariant: ProductVariant;
+  url: Request['url'];
+}): SeoConfig<SeoProduct>['jsonLd'] {
+  const variants = product.variants.nodes;
+  const description = product?.seo?.description ?? product?.description;
+  const offers: Offer[] = (variants || []).map((variant) => {
+    const variantUrl = new URL(url);
+    for (const option of variant.selectedOptions) {
+      variantUrl.searchParams.set(option.name, option.value);
+    }
+    const availability = variant.availableForSale
+      ? 'https://schema.org/InStock'
+      : 'https://schema.org/OutOfStock';
+
+    return {
+      '@type': 'Offer',
+      availability,
+      price: parseFloat(variant.price.amount),
+      priceCurrency: variant.price.currencyCode,
+      sku: variant?.sku ?? '',
+      url: variantUrl.toString(),
+    };
+  });
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    brand: {
+      '@type': 'Brand',
+      name: product.vendor,
+    },
+    description,
+    image: [selectedVariant?.image?.url ?? ''],
+    name: product.title,
+    offers,
+    sku: selectedVariant?.sku ?? '',
+    url,
+  };
+}
+
+function seoPayload({
+  product,
+  url,
+  selectedVariant,
+}: {
+  product: ProductType;
+  selectedVariant: ProductVariant;
+  url: Request['url'];
+}): SeoConfig<SeoProduct> {
+  const description = product?.seo?.description;
+  return {
+    description,
+    jsonLd: jsonLdPayload({product, selectedVariant, url}),
+    media: selectedVariant?.image,
+    title: product?.seo?.title ?? product?.title,
+  };
 }
 
 const PRODUCT_VARIANT_FRAGMENT = `#graphql
