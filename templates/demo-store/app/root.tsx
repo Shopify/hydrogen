@@ -15,11 +15,7 @@ import {
   useLoaderData,
   useMatches,
 } from '@remix-run/react';
-import {
-  Seo,
-  type SeoHandleFunction,
-  ShopifySalesChannel,
-} from '@shopify/hydrogen';
+import {Seo, ShopifySalesChannel} from '@shopify/hydrogen';
 import {Layout} from '~/components';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
