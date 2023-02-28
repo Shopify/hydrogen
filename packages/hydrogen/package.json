@@ -56,7 +56,7 @@
   },
   "peerDependencies": {
     "@remix-run/react": "1.14.0-pre.2",
-    "@remix-run/server-runtime": "1.12.0"
+    "@remix-run/server-runtime": "1.14.0-pre.2"
   },
   "devDependencies": {
     "happy-dom": "^8.9.0",
