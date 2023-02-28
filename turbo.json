@@ -30,6 +30,9 @@
     "@shopify/create-hydrogen#build": {
       "dependsOn": ["@shopify/cli-hydrogen#build"]
     },
+    "@shopify/hydrogen#build": {
+      "dependsOn": ["@shopify/hydrogen-react#build"]
+    },
     "demo-store#build": {
       "dependsOn": [
         "@shopify/hydrogen#build",
