@@ -5,16 +5,6 @@ on:
     types: [opened, labeled]
 
 jobs:
-  # add everything to Runtime team board
-  # incorrect additions will be manually triaged
-  team-board:
-    name: add-to-team-board
-    runs-on: shopify-ubuntu-latest
-    steps:
-      - uses: actions/add-to-project@v0.3.0
-        with:
-          project-url: https://github.com/orgs/Shopify/projects/4554
-          github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
   # add epics to overarching Oxygen board
   oxygen-board:
     name: add-to-oxygen-board
