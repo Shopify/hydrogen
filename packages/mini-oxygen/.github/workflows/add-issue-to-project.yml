@@ -2,7 +2,7 @@ name: Conditionally add issues to project boards
 
 on:
   issues:
-    types: [opened, labeled]
+    types: [labeled]
 
 jobs:
   # add epics to overarching Oxygen board
