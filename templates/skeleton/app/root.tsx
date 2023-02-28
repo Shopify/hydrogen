@@ -1,8 +1,8 @@
 import {
   defer,
   type LinksFunction,
-  type MetaFunction,
   type LoaderArgs,
+  type MetaFunction,
 } from '@shopify/remix-oxygen';
 import {
   Links,
@@ -32,12 +32,12 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export const meta: MetaFunction = (data) => ({
+export const meta: MetaFunction = () => ({
   charset: 'utf-8',
   viewport: 'width=device-width,initial-scale=1',
 });
 
-export async function loader({context, request}: LoaderArgs) {
+export async function loader({context}: LoaderArgs) {
   const cartId = await context.session.get('cartId');
 
   const [cart, layout] = await Promise.all([
