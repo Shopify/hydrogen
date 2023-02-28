@@ -1,4 +1,4 @@
-import {expect, describe, it, vi} from 'vitest';
+import {expect, describe, afterAll, it, vi} from 'vitest';
 import {generateSeoTags, type Seo} from './generate-seo-tags';
 import type {Product} from 'schema-dts';
 
@@ -8,6 +8,10 @@ describe('generateSeoTags', () => {
   };
 
   vi.stubGlobal('console', consoleMock);
+
+  afterAll(() => {
+    vi.unstubAllGlobals();
+  });
 
   it('removes undefined values', () => {
     // Given
@@ -794,7 +798,7 @@ describe('generateSeoTags', () => {
         maxImagePreview: 'large' as const,
         maxSnippet: 100,
         maxVideoPreview: 100,
-        unavailableAfter: new Date('2023-01-01').toLocaleDateString(),
+        unavailableAfter: '2023-01-01',
       },
     };
 
@@ -808,7 +812,7 @@ describe('generateSeoTags', () => {
           key: 'meta-robots',
           props: {
             content:
-              'noindex,nofollow,noarchive,noimageindex,nosnippet,notranslate,max-image-preview:large,max-snippet:100,max-video-preview:100,unavailable_after:1/1/2023',
+              'noindex,nofollow,noarchive,noimageindex,nosnippet,notranslate,max-image-preview:large,max-snippet:100,max-video-preview:100,unavailable_after:2023-01-01',
             name: 'robots',
           },
           tag: 'meta',
