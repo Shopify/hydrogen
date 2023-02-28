@@ -1,4 +1,9 @@
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  defer,
+  HeadersFunction,
+  json,
+  type LoaderArgs,
+} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
@@ -10,6 +15,7 @@ import type {
   ProductConnection,
 } from '@shopify/hydrogen/storefront-api-types';
 import {AnalyticsPageType} from '@shopify/hydrogen';
+import {routeHeaders, CACHE_SHORT} from '~/data/cache';
 
 interface HomeSeoData {
   shop: {
@@ -30,6 +36,8 @@ export interface CollectionHero {
   top?: boolean;
 }
 
+export const headers = routeHeaders;
+
 export async function loader({params, context}: LoaderArgs) {
   const {language, country} = context.storefront.i18n;
 
@@ -49,56 +57,63 @@ export async function loader({params, context}: LoaderArgs) {
     variables: {handle: 'freestyle'},
   });
 
-  return defer({
-    shop,
-    primaryHero: hero,
-    // These different queries are separated to illustrate how 3rd party content
-    // fetching can be optimized for both above and below the fold.
-    featuredProducts: context.storefront.query<{
-      products: ProductConnection;
-    }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
-      variables: {
-        /**
-         * Country and language properties are automatically injected
-         * into all queries. Passing them is unnecessary unless you
-         * want to override them from the following default:
-         */
-        country,
-        language,
-      },
-    }),
-    secondaryHero: context.storefront.query<{hero: CollectionHero}>(
-      COLLECTION_HERO_QUERY,
-      {
+  return json(
+    {
+      shop,
+      primaryHero: hero,
+      // These different queries are separated to illustrate how 3rd party content
+      // fetching can be optimized for both above and below the fold.
+      featuredProducts: context.storefront.query<{
+        products: ProductConnection;
+      }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
         variables: {
-          handle: 'backcountry',
+          /**
+           * Country and language properties are automatically injected
+           * into all queries. Passing them is unnecessary unless you
+           * want to override them from the following default:
+           */
           country,
           language,
         },
-      },
-    ),
-    featuredCollections: context.storefront.query<{
-      collections: CollectionConnection;
-    }>(FEATURED_COLLECTIONS_QUERY, {
-      variables: {
-        country,
-        language,
-      },
-    }),
-    tertiaryHero: context.storefront.query<{hero: CollectionHero}>(
-      COLLECTION_HERO_QUERY,
-      {
+      }),
+      secondaryHero: context.storefront.query<{hero: CollectionHero}>(
+        COLLECTION_HERO_QUERY,
+        {
+          variables: {
+            handle: 'backcountry',
+            country,
+            language,
+          },
+        },
+      ),
+      featuredCollections: context.storefront.query<{
+        collections: CollectionConnection;
+      }>(FEATURED_COLLECTIONS_QUERY, {
         variables: {
-          handle: 'winter-2022',
           country,
           language,
         },
+      }),
+      tertiaryHero: context.storefront.query<{hero: CollectionHero}>(
+        COLLECTION_HERO_QUERY,
+        {
+          variables: {
+            handle: 'winter-2022',
+            country,
+            language,
+          },
+        },
+      ),
+      analytics: {
+        pageType: AnalyticsPageType.home,
       },
-    ),
-    analytics: {
-      pageType: AnalyticsPageType.home,
     },
-  });
+    {
+      headers: {
+        'Cache-Control': CACHE_SHORT,
+      },
+    },
+  );
 }
 
 export default function Homepage() {
