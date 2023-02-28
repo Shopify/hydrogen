@@ -15,17 +15,6 @@ jobs:
         with:
           project-url: https://github.com/orgs/Shopify/projects/4554
           github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
-  # add maintenance and security items on shared board for ATC/on-call visibility
-  shared-oxygen-board:
-    name: add-to-shared-oxygen-board
-    runs-on: shopify-ubuntu-latest
-    steps:
-      - uses: actions/add-to-project@v0.3.0
-        with:
-          project-url: https://github.com/orgs/Shopify/projects/4579
-          github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
-          labeled: maintenance, security
-          label-operator: OR
   # add epics to overarching Oxygen board
   oxygen-board:
     name: add-to-oxygen-board
