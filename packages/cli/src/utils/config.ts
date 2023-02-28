@@ -140,7 +140,9 @@ export async function getRemixConfig(
 
     config.watchPaths.push(
       ...(await fs.readdir(packagesPath)).map((pkg) =>
-        path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
+        pkg === 'hydrogen-react'
+          ? path.resolve(packagesPath, pkg, 'dist', 'browser-dev', 'index.mjs')
+          : path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
       ),
     );
 
