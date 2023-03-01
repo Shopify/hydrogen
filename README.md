@@ -1,12 +1,12 @@
 <p align="center">
     <a href="https://hydrogen.shopify.dev"><img src="./.github/images/hydrogen-logo.svg" alt="Hydrogen Logo"/></a>
 </p>
-<p align="center">
-    <a href="https://www.npmjs.com/package/@shopify/hydrogen"><img src="https://img.shields.io/npm/v/@shopify/hydrogen.svg?sanitize=true" alt="Version"></a>
-    <a href="https://github.com/Shopify/hydrogen/blob/main/LICENSE.md"><img src="https://img.shields.io/npm/l/@shopify/hydrogen.svg?sanitize=true" alt="License"></a>
-    <a href="https://npmcharts.com/compare/@shopify/hydrogen?minimal=true"><img src="https://img.shields.io/npm/dm/@shopify/hydrogen.svg?sanitize=true" alt="Downloads"></a>
- </p>
+<div style="text-align: center;">
 
+[![MIT License](https://img.shields.io/github/license/shopify/hydrogen)](LICENSE.md)
+[![npm downloads](https://img.shields.io/npm/dm/@shopify/hydrogen.svg?sanitize=true)](https://npmcharts.com/compare/@shopify/hydrogen?minimal=true)
+
+</div>
 <div align="center">
 
 📚 [Docs](https://shopify.dev/custom-storefronts/hydrogen) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 💬 [Discussions](https://github.com/Shopify/hydrogen/discussions) | 📝 [Changelog](./packages/hydrogen/CHANGELOG.md)
@@ -17,49 +17,41 @@ Hydrogen is a set of tools, utilities, and best-in-class examples for building a
 
 Hydrogen legacy v1, which is not built on Remix, is available here: https://github.com/Shopify/hydrogen-v1
 
-Get started with Hydrogen with the instructions below ⬇️
-
-## Getting Started
+## Getting started with Hydrogen
 
 **Requirements:**
 
 - Node.js version 16.14.0 or higher
-- `npm`, `yarn` or `pnpm`
+- `npm` version 8.3.1 (or your package manager of choice, such as `yarn` or `pnpm`)
 
-**Installation:**
+1. Install the latest version of Hydrogen:
 
-```bash
-# Using `npm`
-npm create @shopify/hydrogen@latest
+   ```bash
+   npm create @shopify/hydrogen@latest
+   ```
 
-# Using `yarn`
-yarn create @shopify/hydrogen@latest
+1. Run the local development server:
 
-# Using `pnpm`
-pnpm create @shopify/hydrogen@latest
-```
+   ```bash
+   npm install
+   npm run dev
+   ```
 
-**Running locally:**
+1. Open your new Hydrogen app running at http://localhost:3000.
 
-1. Start a development server
+See the complete [Hydrogen docs](https://shopify.dev/custom-storefronts/hydrogen).
 
-```bash
-# Using `npm`
-npm install
-npm run dev
+## Packages in this repo
 
-# Using `yarn`
-yarn install
-yarn dev
+Hydrogen is organized as a [monorepo](https://monorepo.tools/), which includes multiple packages that can be used together.
 
-# Using `pnpm`
-pnpm install
-pnpm dev
-```
-
-2. Visit the development environment running at http://localhost:3000.
-
-Learn more about [getting started with Hydrogen](https://shopify.dev/custom-storefronts/hydrogen).
+| Package                                                  | Latest version                                                                                                                              | Description                                                                                                    | Readme                                     |
+| -------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ------------------------------------------ |
+| [`@shopify/hydrogen`](/packages/hydrogen/)               | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen)               | Opinionated tools, utilities, and best-in-class examples for building a commerce application with Remix.       | [Readme](/packages/hydrogen#readme)        |
+| [`@shopify/hydrogen-react`](/packages/hydrogen-react/)   | [![Latest badge](https://img.shields.io/npm/v/@shopify/hydrogen-react/latest.svg)](https://www.npmjs.com/package/@shopify/hydrogen-react)   | Unopionated and performant library of Shopify-specific commerce components, hooks, and utilities.              | [Readme](/packages/hydrogen-react#readme)  |
+| [`@shopify/cli-hydrogen`](/packages/cli/)                | [![Latest badge](https://img.shields.io/npm/v/@shopify/cli-hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/cli-hydrogen)       | Hydrogen extension for [Shopify CLI](https://shopify.dev/docs/custom-storefronts/hydrogen/cli).                | [Readme](/packages/cli#readme)             |
+| [`@shopify/create-hydrogen`](/packages/create-hydrogen/) | [![Latest badge](https://img.shields.io/npm/v/@shopify/create-hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/create-hydrogen) | Generate a new Hydrogen project from the command line.                                                         | [Readme](/packages/create-hydrogen#readme) |
+| [`@shopify/remix-oxygen`](/packages/remix-oxygen/)       | [![Latest badge](https://img.shields.io/npm/v/@shopify/remix-oxygen/latest.svg)](https://www.npmjs.com/package/@shopify/remix-oxygen)       | Remix adapter enabling Hydrogen to run on the [Oxygen](https://shopify.dev/custom-storefronts/oxygen) runtime. | [Readme](/packages/remix-oxygen#readme)    |
 
 ## Contributing to Hydrogen
 
@@ -68,9 +60,3 @@ Learn more about [getting started with Hydrogen](https://shopify.dev/custom-stor
 ## Other handy links
 
 [Learn more about Hydrogen](https://shopify.dev/hydrogen).
-
-👷‍♀️ Add `npm` packages to your project:
-
-- [`@shopify/hydrogen`](https://www.npmjs.com/package/@shopify/hydrogen)
-- [`@shopify/cli-hydrogen`](https://www.npmjs.com/package/@shopify/cli-hydrogen)
-- [`@shopify/remix-oxygen`](https://www.npmjs.com/package/@shopify/remix-oxygen)
