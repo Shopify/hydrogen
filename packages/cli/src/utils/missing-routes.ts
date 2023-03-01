@@ -26,7 +26,7 @@ const REQUIRED_ROUTES = [
   //   'variants/:variantId',
   'search',
   //   'gift_cards/:storeId/:cardId',
-  'discounts/:discountCode',
+  'discount/:discountCode',
 
   'account',
   'account/login',
