@@ -53,6 +53,16 @@ Hydrogen is organized as a [monorepo](https://monorepo.tools/), which includes m
 | [`@shopify/create-hydrogen`](/packages/create-hydrogen/) | [![Latest badge](https://img.shields.io/npm/v/@shopify/create-hydrogen/latest.svg)](https://www.npmjs.com/package/@shopify/create-hydrogen) | Generate a new Hydrogen project from the command line.                                                         | [Readme](/packages/create-hydrogen#readme) |
 | [`@shopify/remix-oxygen`](/packages/remix-oxygen/)       | [![Latest badge](https://img.shields.io/npm/v/@shopify/remix-oxygen/latest.svg)](https://www.npmjs.com/package/@shopify/remix-oxygen)       | Remix adapter enabling Hydrogen to run on the [Oxygen](https://shopify.dev/custom-storefronts/oxygen) runtime. | [Readme](/packages/remix-oxygen#readme)    |
 
+## Versioning
+
+Hydrogen and hydrogen-react is tied to specific versions of the [Shopify Storefront API](https://shopify.dev/api/storefront), which follows [calver](https://calver.org/).
+
+For example, if you're using Storefront API version `2023-01`, then Hydrogen and hydrogen-react versions `2022.1.x` are fully compatible.
+
+If the Storefront API version update includes breaking changes, then Hydrogen and hydrogen-react may also include breaking changes. Because the API version is updated every three months, breaking changes could occur every three months.
+
+Learn more about API [release schedules](https://shopify.dev/api/usage/versioning#release-schedule) at Shopify.
+
 ## Contributing to Hydrogen
 
 [Read our contributing guide](CONTRIBUTING.md)
