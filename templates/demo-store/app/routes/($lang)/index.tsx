@@ -1,9 +1,4 @@
-import {
-  defer,
-  HeadersFunction,
-  json,
-  type LoaderArgs,
-} from '@shopify/remix-oxygen';
+import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
@@ -57,7 +52,7 @@ export async function loader({params, context}: LoaderArgs) {
     variables: {handle: 'freestyle'},
   });
 
-  return json(
+  return defer(
     {
       shop,
       primaryHero: hero,
@@ -144,7 +139,7 @@ export default function Homepage() {
       {featuredProducts && (
         <Suspense>
           <Await resolve={featuredProducts}>
-            {({products}: any) => {
+            {({products}) => {
               if (!products?.nodes) return <></>;
               return (
                 <ProductSwimlane
@@ -161,7 +156,7 @@ export default function Homepage() {
       {secondaryHero && (
         <Suspense fallback={<Hero {...skeletons[1]} />}>
           <Await resolve={secondaryHero}>
-            {({hero}: any) => {
+            {({hero}) => {
               if (!hero) return <></>;
               return <Hero {...hero} />;
             }}
@@ -172,7 +167,7 @@ export default function Homepage() {
       {featuredCollections && (
         <Suspense>
           <Await resolve={featuredCollections}>
-            {({collections}: any) => {
+            {({collections}) => {
               if (!collections?.nodes) return <></>;
               return (
                 <FeaturedCollections
@@ -188,7 +183,7 @@ export default function Homepage() {
       {tertiaryHero && (
         <Suspense fallback={<Hero {...skeletons[2]} />}>
           <Await resolve={tertiaryHero}>
-            {({hero}: any) => {
+            {({hero}) => {
               if (!hero) return <></>;
               return <Hero {...hero} />;
             }}
