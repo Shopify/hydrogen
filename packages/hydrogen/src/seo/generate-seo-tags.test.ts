@@ -656,7 +656,7 @@ describe('generateSeoTags', () => {
             offers: [
               {
                 '@type': 'Offer',
-                url: 'hydrogen.shop/discounts/1234',
+                url: 'hydrogen.shop/discount/1234',
               },
             ],
           },
