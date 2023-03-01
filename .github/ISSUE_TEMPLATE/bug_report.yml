@@ -17,9 +17,22 @@ body:
       label: What is the location of your example repository?
     validations:
       required: false
+  - type: dropdown
+    attributes:
+      label: Which package or tool is having this issue?
+      description: Which package or tool is having this issue?
+      options:
+        - Hydrogen
+        - CLI
+        - hydrogen-react
+        - Oxygen
+        - Storefront API
+        - Other / I don't know
+    validations:
+      required: true
   - type: input
     attributes:
-      label: What version of Hydrogen are you using?
+      label: What version of that package or tool are you using?
     validations:
       required: true
   - type: input
