@@ -144,7 +144,7 @@ export default function Homepage() {
       {featuredProducts && (
         <Suspense>
           <Await resolve={featuredProducts}>
-            {({products}) => {
+            {({products}: any) => {
               if (!products?.nodes) return <></>;
               return (
                 <ProductSwimlane
@@ -161,7 +161,7 @@ export default function Homepage() {
       {secondaryHero && (
         <Suspense fallback={<Hero {...skeletons[1]} />}>
           <Await resolve={secondaryHero}>
-            {({hero}) => {
+            {({hero}: any) => {
               if (!hero) return <></>;
               return <Hero {...hero} />;
             }}
@@ -172,7 +172,7 @@ export default function Homepage() {
       {featuredCollections && (
         <Suspense>
           <Await resolve={featuredCollections}>
-            {({collections}) => {
+            {({collections}: any) => {
               if (!collections?.nodes) return <></>;
               return (
                 <FeaturedCollections
@@ -188,7 +188,7 @@ export default function Homepage() {
       {tertiaryHero && (
         <Suspense fallback={<Hero {...skeletons[2]} />}>
           <Await resolve={tertiaryHero}>
-            {({hero}) => {
+            {({hero}: any) => {
               if (!hero) return <></>;
               return <Hero {...hero} />;
             }}
