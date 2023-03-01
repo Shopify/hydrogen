@@ -146,7 +146,7 @@ const data: LandingTemplateSchema = {
           name: 'Hydrogen React README',
           subtitle:
             'Get more details on how to improve your end-to-end development experience.',
-          url: 'https://github.com/Shopify/hydrogen-react/blob/main/packages/react/README.md',
+          url: 'https://github.com/Shopify/hydrogen/blob/main/packages/hydrogen-react/README.md',
           type: 'github',
         },
       ],
