@@ -9,7 +9,13 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
-import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
+import {
+  fetchWithServerCache,
+  runWithCache,
+  checkGraphQLErrors,
+  type CacheKey,
+  type WithCacheOptions,
+} from './cache/fetch';
 import {
   STOREFRONT_API_BUYER_IP_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
@@ -73,6 +79,11 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   >['getStorefrontApiUrl'];
   isApiError: (error: any) => boolean;
   i18n: TI18n;
+  withCache: (
+    cacheKey: CacheKey,
+    actionFn: () => Promise<any>,
+    options?: Pick<WithCacheOptions, 'strategy' | 'shouldCacheResult'>,
+  ) => Promise<any>;
 };
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
@@ -333,6 +344,28 @@ export function createStorefrontClient<TI18n extends I18nBase>({
        */
       isApiError: isStorefrontApiError,
       i18n: (i18n ?? defaultI18n) as TI18n,
+      /**
+       * Executes an asynchronous operation like `fetch` and caches the result
+       * according to the strategy provided. Use this to call any third-party APIs
+       * from loaders or actions. By default, it uses the `CacheShort` strategy.
+       *
+       * Example:
+       *
+       * ```js
+       * async function loader ({context: {storefront}}) {
+       *   const data = await storefront.withCache('my-unique-key', () => {
+       *     return fetch('https://example.com/api').then(res => res.json());
+       *   }, {
+       *     strategy: storefront.CacheLong(),
+       *   });
+       * ```
+       */
+      withCache: (cacheKey, actionFn, options) =>
+        runWithCache(cacheKey, actionFn, {
+          ...options,
+          cacheInstance: cache,
+          waitUntil,
+        }),
     },
   };
 }

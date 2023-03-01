@@ -2,7 +2,7 @@ import {hashKey} from '../utils/hash.js';
 import {CacheShort, CachingStrategy} from './strategies';
 import {getItemFromCache, setItemInCache, isStale} from './sub-request';
 
-type CacheKey = string | readonly unknown[];
+export type CacheKey = string | readonly unknown[];
 
 export type WithCacheOptions = {
   strategy?: CachingStrategy | null;
@@ -46,7 +46,7 @@ export const checkGraphQLErrors = (body: any) => !body?.errors;
 // https://github.com/Shopify/oxygen-platform/issues/625
 const swrLock = new Set<string>();
 
-export async function withCache<T = any>(
+export async function runWithCache<T = unknown>(
   cacheKey: CacheKey,
   actionFn: () => Promise<T>,
   {
@@ -138,7 +138,7 @@ export async function fetchWithServerCache(
     cacheOptions = CacheShort();
   }
 
-  return withCache(
+  return runWithCache(
     cacheKey,
     async () => {
       const response = await fetch(url, requestInit);
