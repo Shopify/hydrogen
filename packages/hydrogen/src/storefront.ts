@@ -79,10 +79,10 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   >['getStorefrontApiUrl'];
   isApiError: (error: any) => boolean;
   i18n: TI18n;
-  withCache: (
+  withCache: <T = unknown>(
     cacheKey: CacheKey,
-    actionFn: () => Promise<any>,
-    options?: Pick<WithCacheOptions, 'strategy' | 'shouldCacheResult'>,
+    actionFn: () => Promise<T>,
+    options?: Pick<WithCacheOptions<T>, 'strategy' | 'shouldCacheResult'>,
   ) => Promise<any>;
 };
 

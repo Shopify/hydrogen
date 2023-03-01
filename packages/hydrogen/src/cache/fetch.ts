@@ -4,10 +4,10 @@ import {getItemFromCache, setItemInCache, isStale} from './sub-request';
 
 export type CacheKey = string | readonly unknown[];
 
-export type WithCacheOptions = {
+export type WithCacheOptions<T = unknown> = {
   strategy?: CachingStrategy | null;
   cacheInstance?: Cache;
-  shouldCacheResult?: (value: any) => boolean;
+  shouldCacheResult?: (value: T) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
 };
 
@@ -54,7 +54,7 @@ export async function runWithCache<T = unknown>(
     cacheInstance,
     shouldCacheResult = () => true,
     waitUntil,
-  }: WithCacheOptions,
+  }: WithCacheOptions<T>,
 ): Promise<T> {
   if (!cacheInstance || !strategy) return actionFn();
 
