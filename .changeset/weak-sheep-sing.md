@@ -2,11 +2,9 @@
 '@shopify/hydrogen': patch
 ---
 
-Fix Add-to-cart session event in Live View
+Fix active cart session event in Live View
 
-### Breaking change
-
-`createStorefrontClient` now requires `request` to be passed in.
+In order for active cart to work, make sure to pass `request` into `createStorefrontClient`
 
 ```diff
 export default {

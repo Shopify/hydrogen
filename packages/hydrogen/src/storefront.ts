@@ -74,7 +74,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
   typeof createStorefrontUtilities
 >[0] & {
-  request: Request;
+  request?: Request;
   cache?: Cache;
   buyerIp?: string;
   requestGroupId?: string | null;
@@ -158,7 +158,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
   if (storefrontId) defaultHeaders[STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
-  if (request.headers.has('cookie')) {
+  if (request && request.headers.has('cookie')) {
     const cookies = getShopifyCookies(request.headers.get('cookie') || '');
 
     if (cookies[SHOPIFY_Y])
