@@ -4,12 +4,27 @@ import colors from '@shopify/cli-kit/node/colors';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {commonFlags, flagsToCamelObject} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import Flags from '@oclif/core/lib/flags.js';
 import {checkLockfileStatus} from '../../utils/check-lockfile.js';
 import {findMissingRoutes} from '../../utils/missing-routes.js';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
+
+const deprecated = (name: string) =>
+  Flags.custom<null>({
+    parse: () => {
+      renderInfo({
+        headline: `The ${colors.bold(
+          name,
+        )} flag is deprecated and will be removed in a future version of Shopify CLI.`,
+      });
+
+      return Promise.resolve(null);
+    },
+    hidden: true,
+  });
 
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
@@ -24,6 +39,10 @@ export default class Build extends Command {
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
+    base: deprecated('--base')(),
+    entry: deprecated('--entry')(),
+    client: deprecated('--client')(),
+    target: deprecated('--target')(),
   };
 
   async run(): Promise<void> {
