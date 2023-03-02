@@ -26,3 +26,10 @@ export function createRequestHandler<Context = unknown>({
 export function getBuyerIp(request: Request) {
   return request.headers.get('oxygen-buyer-ip') ?? undefined;
 }
+
+/**
+ * Extracts the group ID from the current request in Oxygen to improve logs.
+ */
+export function getRequestGroupId(request: Request) {
+  return request.headers.get('request-id') ?? undefined;
+}
