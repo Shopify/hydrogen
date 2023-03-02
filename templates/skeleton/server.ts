@@ -36,6 +36,7 @@ export default {
        * Create Hydrogen's Storefront client.
        */
       const {storefront} = createStorefrontClient({
+        request,
         cache,
         waitUntil,
         buyerIp: getBuyerIp(request),
