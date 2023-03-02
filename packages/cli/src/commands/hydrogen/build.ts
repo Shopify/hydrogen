@@ -2,7 +2,11 @@ import path from 'path';
 import {output, file} from '@shopify/cli-kit';
 import colors from '@shopify/cli-kit/node/colors';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
-import {commonFlags, flagsToCamelObject} from '../../utils/flags.js';
+import {
+  deprecated,
+  commonFlags,
+  flagsToCamelObject,
+} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {checkLockfileStatus} from '../../utils/check-lockfile.js';
@@ -24,6 +28,9 @@ export default class Build extends Command {
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
+    base: deprecated('--base')(),
+    entry: deprecated('--entry')(),
+    target: deprecated('--target')(),
   };
 
   async run(): Promise<void> {

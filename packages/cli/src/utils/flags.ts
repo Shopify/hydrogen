@@ -1,5 +1,7 @@
 import Flags from '@oclif/core/lib/flags.js';
 import {string as stringUtils} from '@shopify/cli-kit';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
+import colors from '@shopify/cli-kit/node/colors';
 
 export const commonFlags = {
   path: Flags.string({
@@ -60,4 +62,24 @@ export function parseProcessFlags(
   }
 
   return flagsToCamelObject(options);
+}
+
+/**
+ * Create a deprecated flag to prevent the CLI from crashing when a deprecated flag is used.
+ * Displays an info message when the flag is used.
+ * @param name The name of the flag.
+ */
+export function deprecated(name: string) {
+  return Flags.custom<unknown>({
+    parse: () => {
+      renderInfo({
+        headline: `The ${colors.bold(
+          name,
+        )} flag is deprecated and will be removed in a future version of Shopify CLI.`,
+      });
+
+      return Promise.resolve(' ');
+    },
+    hidden: true,
+  });
 }
