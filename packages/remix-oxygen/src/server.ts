@@ -4,6 +4,10 @@ import {
   type ServerBuild,
 } from '@remix-run/server-runtime';
 
+/**
+ * Returns a request handler for the Oxygen runtime that serves the
+ * Remix SSR response.
+ */
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
@@ -23,6 +27,10 @@ export function createRequestHandler<Context = unknown>({
   };
 }
 
+/**
+ * Extracts the buyer IP address (browser client) from the current request in Oxygen
+ * to avoid API rate limits.
+ */
 export function getBuyerIp(request: Request) {
   return request.headers.get('oxygen-buyer-ip') ?? undefined;
 }
