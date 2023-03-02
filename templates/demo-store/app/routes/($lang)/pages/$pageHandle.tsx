@@ -1,23 +1,9 @@
-import {
-  json,
-  type MetaFunction,
-  type SerializeFrom,
-  type LoaderArgs,
-} from '@shopify/remix-oxygen';
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import type {Page as PageType} from '@shopify/hydrogen/storefront-api-types';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import {PageHeader} from '~/components';
-import type {SeoHandleFunction} from '@shopify/hydrogen';
-
-const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
-  title: data?.page?.seo?.title,
-  description: data?.page?.seo?.description,
-});
-
-export const handle = {
-  seo,
-};
+import {seoPayload} from '~/lib/seo.server';
 
 export async function loader({request, params, context}: LoaderArgs) {
   invariant(params.pageHandle, 'Missing page handle');
@@ -33,8 +19,10 @@ export async function loader({request, params, context}: LoaderArgs) {
     throw new Response(null, {status: 404});
   }
 
+  const seo = seoPayload.page({page, url: request.url});
+
   return json(
-    {page},
+    {page, seo},
     {
       headers: {
         // TODO cacheLong()

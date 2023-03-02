@@ -1,3 +1,4 @@
+import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
 import {
   type AppLoadContext,
   defer,
@@ -15,18 +16,17 @@ import {
   useLoaderData,
   useMatches,
 } from '@remix-run/react';
-import {Seo, ShopifySalesChannel} from '@shopify/hydrogen';
+import {Seo} from '@shopify/hydrogen';
 import {Layout} from '~/components';
-import {GenericError} from './components/GenericError';
-import {NotFound} from './components/NotFound';
-
-import styles from './styles/app.css';
+import {GenericError} from '~/components/GenericError';
+import {NotFound} from '~/components/NotFound';
+import styles from '~/styles/app.css';
 import favicon from '../public/favicon.svg';
-
-import {DEFAULT_LOCALE, type EnhancedMenu, parseMenu} from './lib/utils';
 import invariant from 'tiny-invariant';
-import {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
-import {useAnalytics} from './hooks/useAnalytics';
+import {DEFAULT_LOCALE, type EnhancedMenu, parseMenu} from '~/lib/utils';
+import {analyticsPayload} from '~/lib/analytics.server';
+import {seoPayload} from '~/lib/seo.server';
+import {useAnalytics} from '~/hooks/useAnalytics';
 
 export const links: LinksFunction = () => {
   return [
@@ -54,8 +54,8 @@ export async function loader({context, request}: LoaderArgs) {
     getLayoutData(context),
   ]);
 
-  const analytics = analyticsPayload({shop: layout.shop});
-  const seo = seoPayload({shop: layout.shop, url: request.url});
+  const analytics = analyticsPayload.root({shop: layout.shop});
+  const seo = seoPayload.root({shop: layout.shop, url: request.url});
 
   return defer({
     analytics,
@@ -369,43 +369,4 @@ export async function getCart({storefront}: AppLoadContext, cartId: string) {
   });
 
   return cart;
-}
-
-function analyticsPayload({shop}: {shop: Shop}) {
-  return {
-    shopifySalesChannel: ShopifySalesChannel.hydrogen,
-    shopId: shop.id,
-  };
-}
-
-function ldJsonPayload({shop, url}: {shop: Shop; url: Request['url']}) {
-  return {
-    '@context': 'http://schema.org',
-    '@type': 'Organization',
-    name: shop.name,
-    logo: shop.brand?.logo?.image?.url,
-    sameAs: [
-      'https://twitter.com/shopify',
-      'https://facebook.com/shopify',
-      'https://instagram.com/shopify',
-      'https://youtube.com/shopify',
-      'https://tiktok.com/@shopify',
-    ],
-    url,
-  };
-}
-
-function seoPayload({shop, url}: {shop: Shop; url: Request['url']}) {
-  return {
-    title: shop?.name,
-    titleTemplate: '%s | Hydrogen Demo Store',
-    description: shop?.description,
-    handle: '@shopify',
-    url,
-    robots: {
-      noIndex: false,
-      noFollow: false,
-    },
-    ldJson: ldJsonPayload({shop, url}),
-  };
 }

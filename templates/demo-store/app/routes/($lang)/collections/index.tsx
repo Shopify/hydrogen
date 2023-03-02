@@ -1,28 +1,24 @@
-import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderArgs, type MetaFunction} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection,
   CollectionConnection,
 } from '@shopify/hydrogen/storefront-api-types';
 import {
+  Button,
+  getPaginationVariables,
   Grid,
   Heading,
-  PageHeader,
-  Section,
   Link,
+  PageHeader,
   Pagination,
-  getPaginationVariables,
-  Button,
+  Section,
 } from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
+import {analyticsPayload} from '~/lib/analytics.server';
+import {seoPayload} from '~/lib/seo.server';
 
 const PAGINATION_SIZE = 8;
-
-export const handle = {
-  seo: {
-    title: 'All Collections',
-  },
-};
 
 export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   const variables = getPaginationVariables(request, PAGINATION_SIZE);
@@ -36,7 +32,15 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
     },
   });
 
-  return json({collections});
+  const analytics = analyticsPayload.listCollections({
+    collections,
+    handle: 'all',
+  });
+  const seo = seoPayload.listCollections({
+    collections,
+    url: request.url,
+  });
+  return json({collections, analytics, seo});
 };
 
 export const meta: MetaFunction = () => {

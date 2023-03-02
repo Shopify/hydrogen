@@ -1,10 +1,4 @@
-import {
-  json,
-  type MetaFunction,
-  type SerializeFrom,
-  type LinksFunction,
-  type LoaderArgs,
-} from '@shopify/remix-oxygen';
+import {json, type LinksFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen';
 import {Blog} from '@shopify/hydrogen/storefront-api-types';
@@ -12,21 +6,16 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
 import styles from '../../../styles/custom-font.css';
-import type {SeoHandleFunction} from '@shopify/hydrogen';
+import {analyticsPayload} from '~/lib/analytics.server';
+import {seoPayload} from '~/lib/seo.server';
 
 const BLOG_HANDLE = 'journal';
 
-const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
-  title: data?.article?.seo?.title,
-  description: data?.article?.seo?.description,
-  titleTemplate: '%s | Journal',
-});
-
-export const handle = {
-  seo,
+export const links: LinksFunction = () => {
+  return [{rel: 'stylesheet', href: styles}];
 };
 
-export async function loader({params, context}: LoaderArgs) {
+export async function loader({request, params, context}: LoaderArgs) {
   const {language, country} = context.storefront.i18n;
 
   invariant(params.journalHandle, 'Missing journal handle');
@@ -53,8 +42,11 @@ export async function loader({params, context}: LoaderArgs) {
     day: 'numeric',
   }).format(new Date(article?.publishedAt!));
 
+  const analytics = analyticsPayload.article();
+  const seo = seoPayload.article({article, url: request.url});
+
   return json(
-    {article, formattedDate},
+    {article, analytics, formattedDate, seo},
     {
       headers: {
         // TODO cacheLong()
@@ -62,21 +54,6 @@ export async function loader({params, context}: LoaderArgs) {
     },
   );
 }
-
-export const meta: MetaFunction = ({
-  data,
-}: {
-  data: SerializeFrom<typeof loader> | undefined;
-}) => {
-  return {
-    title: data?.article?.seo?.title ?? 'Article',
-    description: data?.article?.seo?.description,
-  };
-};
-
-export const links: LinksFunction = () => {
-  return [{rel: 'stylesheet', href: styles}];
-};
 
 export default function Article() {
   const {article, formattedDate} = useLoaderData<typeof loader>();
@@ -123,6 +100,7 @@ const ARTICLE_QUERY = `#graphql
     blog(handle: $blogHandle) {
       articleByHandle(handle: $articleHandle) {
         title
+        excerpt
         contentHtml
         publishedAt
         author: authorV2 {

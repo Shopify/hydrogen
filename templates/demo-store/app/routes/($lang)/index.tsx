@@ -1,7 +1,7 @@
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
-import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
+import {FeaturedCollections, Hero, ProductSwimlane} from '~/components';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import type {
@@ -9,7 +9,8 @@ import type {
   Metafield,
   ProductConnection,
 } from '@shopify/hydrogen/storefront-api-types';
-import {AnalyticsPageType} from '@shopify/hydrogen';
+import {analyticsPayload} from '~/lib/analytics.server';
+import {seoPayload} from '~/lib/seo.server';
 
 interface HomeSeoData {
   shop: {
@@ -49,8 +50,13 @@ export async function loader({params, context}: LoaderArgs) {
     variables: {handle: 'freestyle'},
   });
 
+  const analytics = analyticsPayload.home();
+  const seo = seoPayload.home();
+
   return defer({
     shop,
+    analytics,
+    seo,
     primaryHero: hero,
     // These different queries are separated to illustrate how 3rd party content
     // fetching can be optimized for both above and below the fold.
@@ -95,9 +101,6 @@ export async function loader({params, context}: LoaderArgs) {
         },
       },
     ),
-    analytics: {
-      pageType: AnalyticsPageType.home,
-    },
   });
 }
 
@@ -112,13 +115,6 @@ export default function Homepage() {
 
   // TODO: skeletons vs placeholders
   const skeletons = getHeroPlaceholder([{}, {}, {}]);
-
-  // TODO: analytics
-  // useServerAnalytics({
-  //   shopify: {
-  //     pageType: ShopifyAnalyticsConstants.pageType.home,
-  //   },
-  // });
 
   return (
     <>

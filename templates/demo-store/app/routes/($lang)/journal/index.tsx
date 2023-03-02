@@ -4,16 +4,12 @@ import {flattenConnection, Image} from '@shopify/hydrogen';
 import type {Article, Blog} from '@shopify/hydrogen/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
+import {seoPayload} from '~/lib/seo.server';
+import {analyticsPayload} from '~/lib/analytics.server';
 
 const BLOG_HANDLE = 'Journal';
 
-export const handle = {
-  seo: {
-    title: 'Journal',
-  },
-};
-
-export const loader = async ({context: {storefront}}: LoaderArgs) => {
+export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   const {language, country} = storefront.i18n;
   const {blog} = await storefront.query<{
     blog: Blog;
@@ -41,8 +37,11 @@ export const loader = async ({context: {storefront}}: LoaderArgs) => {
     };
   });
 
+  const analytics = analyticsPayload.blog({blog});
+  const seo = seoPayload.blog({blog, url: request.url});
+
   return json(
-    {articles},
+    {analytics, articles, blog, seo},
     {
       headers: {
         // TODO cacheLong()
@@ -123,6 +122,11 @@ query Blog(
   $cursor: String
 ) @inContext(language: $language) {
   blog(handle: $blogHandle) {
+    title
+    seo {
+      description
+      title
+    }
     articles(first: $pageBy, after: $cursor) {
       edges {
         node {

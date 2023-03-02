@@ -8,13 +8,7 @@ import {
   useSearchParams,
   useTransition,
 } from '@remix-run/react';
-import {
-  AnalyticsPageType,
-  Money,
-  type SeoConfig,
-  ShopifyAnalyticsProduct,
-  ShopPayButton,
-} from '@shopify/hydrogen';
+import {Money, ShopifyAnalyticsProduct, ShopPayButton} from '@shopify/hydrogen';
 import {
   AddToCartButton,
   Button,
@@ -29,6 +23,8 @@ import {
   Skeleton,
   Text,
 } from '~/components';
+import {analyticsPayload} from '~/lib/analytics.server';
+import {seoPayload} from '~/lib/seo.server';
 import {getExcerpt} from '~/lib/utils';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
@@ -41,7 +37,6 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
-import type {Offer, Product as SeoProduct} from 'schema-dts';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -73,8 +68,15 @@ export async function loader({params, request, context}: LoaderArgs) {
   const firstVariant = product.variants.nodes[0];
   const selectedVariant = product.selectedVariant ?? firstVariant;
   const recommended = getRecommendedProducts(context.storefront, product.id);
-  const analytics = analyticsPayload({selectedVariant, product});
-  const seo = seoPayload({product, url: request.url, selectedVariant});
+  const analytics = analyticsPayload.product({
+    product,
+    selectedVariant,
+  });
+  const seo = seoPayload.product({
+    product,
+    selectedVariant,
+    url: request.url,
+  });
 
   return defer({analytics, product, recommended, seo, shop});
 }
@@ -459,93 +461,6 @@ function ProductDetail({
       )}
     </Disclosure>
   );
-}
-
-function analyticsPayload({
-  selectedVariant,
-  product,
-}: {
-  selectedVariant: ProductVariant;
-  product: ProductType;
-}) {
-  const anlyticsProduct: ShopifyAnalyticsProduct = {
-    brand: product.vendor,
-    name: product.title,
-    price: selectedVariant.price.amount,
-    productGid: product.id,
-    variantGid: selectedVariant.id,
-    variantName: selectedVariant.title,
-  };
-
-  return {
-    pageType: AnalyticsPageType.product,
-    products: [anlyticsProduct],
-    resourceId: product.id,
-    totalValue: parseFloat(selectedVariant.price.amount),
-  };
-}
-
-function jsonLdPayload({
-  product,
-  selectedVariant,
-  url,
-}: {
-  product: ProductType;
-  selectedVariant: ProductVariant;
-  url: Request['url'];
-}): SeoConfig<SeoProduct>['jsonLd'] {
-  const variants = product.variants.nodes;
-  const description = product?.seo?.description ?? product?.description;
-  const offers: Offer[] = (variants || []).map((variant) => {
-    const variantUrl = new URL(url);
-    for (const option of variant.selectedOptions) {
-      variantUrl.searchParams.set(option.name, option.value);
-    }
-    const availability = variant.availableForSale
-      ? 'https://schema.org/InStock'
-      : 'https://schema.org/OutOfStock';
-
-    return {
-      '@type': 'Offer',
-      availability,
-      price: parseFloat(variant.price.amount),
-      priceCurrency: variant.price.currencyCode,
-      sku: variant?.sku ?? '',
-      url: variantUrl.toString(),
-    };
-  });
-  return {
-    '@context': 'https://schema.org',
-    '@type': 'Product',
-    brand: {
-      '@type': 'Brand',
-      name: product.vendor,
-    },
-    description,
-    image: [selectedVariant?.image?.url ?? ''],
-    name: product.title,
-    offers,
-    sku: selectedVariant?.sku ?? '',
-    url,
-  };
-}
-
-function seoPayload({
-  product,
-  url,
-  selectedVariant,
-}: {
-  product: ProductType;
-  selectedVariant: ProductVariant;
-  url: Request['url'];
-}): SeoConfig<SeoProduct> {
-  const description = product?.seo?.description;
-  return {
-    description,
-    jsonLd: jsonLdPayload({product, selectedVariant, url}),
-    media: selectedVariant?.image,
-    title: product?.seo?.title ?? product?.title,
-  };
 }
 
 const PRODUCT_VARIANT_FRAGMENT = `#graphql

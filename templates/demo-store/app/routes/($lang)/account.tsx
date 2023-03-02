@@ -14,22 +14,22 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {Suspense} from 'react';
 import {
+  AccountAddressBook,
+  AccountDetails,
   Button,
+  Modal,
   OrderCard,
   PageHeader,
-  Text,
-  AccountDetails,
-  AccountAddressBook,
-  Modal,
   ProductSwimlane,
+  Text,
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {
-  json,
-  defer,
-  redirect,
-  type LoaderArgs,
   type AppLoadContext,
+  defer,
+  json,
+  type LoaderArgs,
+  redirect,
 } from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
 import {getFeaturedData} from './featured-products';

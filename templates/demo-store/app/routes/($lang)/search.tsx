@@ -21,8 +21,61 @@ import {
 } from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {PAGINATION_SIZE} from '~/lib/const';
+import {seoPayload} from '~/lib/seo.server';
 
-export default function () {
+export async function loader({request, context: {storefront}}: LoaderArgs) {
+  const searchParams = new URL(request.url).searchParams;
+  const cursor = searchParams.get('cursor')!;
+  const searchTerm = searchParams.get('q')!;
+
+  const data = await storefront.query<{
+    products: ProductConnection;
+  }>(SEARCH_QUERY, {
+    variables: {
+      pageBy: PAGINATION_SIZE,
+      searchTerm,
+      cursor,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
+    },
+  });
+
+  invariant(data, 'No data returned from Shopify API');
+  const {products} = data;
+
+  const getRecommendations = !searchTerm || products?.nodes?.length === 0;
+
+  const seoCollection = {
+    id: 'search',
+    title: 'Search',
+    handle: 'search',
+    descriptionHtml: 'Search results',
+    description: 'Search results',
+    seo: {
+      title: 'Search',
+      description: 'Search results',
+    },
+    metafields: [],
+    products,
+    updatedAt: new Date().toISOString(),
+  } satisfies Collection;
+
+  const seo = seoPayload.collection({
+    collection: seoCollection,
+    url: request.url,
+  });
+
+  return defer({
+    seo,
+    searchTerm,
+    products,
+    noResultRecommendations: getRecommendations
+      ? getNoResultRecommendations(storefront)
+      : Promise.resolve(null),
+  });
+}
+
+export default function Search() {
   const {searchTerm, products, noResultRecommendations} =
     useLoaderData<typeof loader>();
   const noResults = products?.nodes?.length === 0;
@@ -86,37 +139,6 @@ export default function () {
       )}
     </>
   );
-}
-
-export async function loader({request, context: {storefront}}: LoaderArgs) {
-  const searchParams = new URL(request.url).searchParams;
-  const cursor = searchParams.get('cursor')!;
-  const searchTerm = searchParams.get('q')!;
-
-  const data = await storefront.query<{
-    products: ProductConnection;
-  }>(SEARCH_QUERY, {
-    variables: {
-      pageBy: PAGINATION_SIZE,
-      searchTerm,
-      cursor,
-      country: storefront.i18n.country,
-      language: storefront.i18n.language,
-    },
-  });
-
-  invariant(data, 'No data returned from Shopify API');
-  const {products} = data;
-
-  const getRecommendations = !searchTerm || products?.nodes?.length === 0;
-
-  return defer({
-    searchTerm,
-    products,
-    noResultRecommendations: getRecommendations
-      ? getNoResultRecommendations(storefront)
-      : Promise.resolve(null),
-  });
 }
 
 const SEARCH_QUERY = `#graphql
