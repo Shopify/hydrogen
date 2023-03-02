@@ -73,6 +73,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
   typeof createStorefrontUtilities
 >[0] & {
+  request: Request;
   cache?: Cache;
   buyerIp?: string;
   requestGroupId?: string | null;
@@ -119,6 +120,7 @@ function minifyQuery(string: string) {
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
 export function createStorefrontClient<TI18n extends I18nBase>({
+  request,
   cache,
   waitUntil,
   buyerIp,
@@ -153,6 +155,17 @@ export function createStorefrontClient<TI18n extends I18nBase>({
   if (storefrontId) defaultHeaders[STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
+  if (request.headers.has('cookie')) {
+    const cookies = request.headers.get('cookie') || '';
+
+    if (cookies !== '') {
+      defaultHeaders['cookie'] = cookies
+        .split(';')
+        .filter((keyVal) => /^\s?_shopify_(y|s)=/.test(keyVal))
+        .join(';');
+    }
+  }
+
   async function fetchStorefrontApi<T>({
     query,
     mutation,
@@ -183,7 +196,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
     }
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
-    const requestInit = {
+    let requestInit: RequestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
       body: JSON.stringify({
@@ -191,6 +204,8 @@ export function createStorefrontClient<TI18n extends I18nBase>({
         variables: queryVariables,
       }),
     };
+
+    if (defaultHeaders['cookie']) requestInit['credentials'] = 'include';
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
