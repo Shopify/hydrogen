@@ -8,7 +8,7 @@ import {cartCreate, cartDiscountCodesUpdate} from './cart';
  * @example
  * Example path applying a discount and redirecting
  * ```ts
- * /discounts/FREESHIPPING?redirect=/products
+ * /discount/FREESHIPPING?redirect=/products
  *
  * ```
  * @preserve

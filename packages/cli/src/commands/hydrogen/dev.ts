@@ -4,7 +4,11 @@ import {output, file} from '@shopify/cli-kit';
 import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {muteDevLogs} from '../../utils/log.js';
-import {commonFlags, flagsToCamelObject} from '../../utils/flags.js';
+import {
+  deprecated,
+  commonFlags,
+  flagsToCamelObject,
+} from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import Flags from '@oclif/core/lib/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
@@ -27,6 +31,7 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
+    host: deprecated('--host')(),
   };
 
   async run(): Promise<void> {

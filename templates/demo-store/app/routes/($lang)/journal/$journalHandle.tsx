@@ -13,6 +13,7 @@ import {PageHeader, Section} from '~/components';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
 import styles from '../../../styles/custom-font.css';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
+import {routeHeaders, CACHE_LONG} from '~/data/cache';
 
 const BLOG_HANDLE = 'journal';
 
@@ -25,6 +26,8 @@ const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
 export const handle = {
   seo,
 };
+
+export const headers = routeHeaders;
 
 export async function loader({params, context}: LoaderArgs) {
   const {language, country} = context.storefront.i18n;
@@ -57,7 +60,7 @@ export async function loader({params, context}: LoaderArgs) {
     {article, formattedDate},
     {
       headers: {
-        // TODO cacheLong()
+        'Cache-Control': CACHE_LONG,
       },
     },
   );
