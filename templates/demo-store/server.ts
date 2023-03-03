@@ -52,6 +52,7 @@ export default {
         build: remixBuild,
         mode: process.env.NODE_ENV,
         getLoadContext: () => ({cache, session, waitUntil, storefront, env}),
+        waitUntil,
       });
 
       const response = await handleRequest(request);
