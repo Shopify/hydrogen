@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsup --clean --config ../../tsup.config.ts && npm run copy-hydrogen-react",
     "copy-hydrogen-react": "node ../../scripts/copy-hydrogen-react.mjs",
-    "dev": "tsup --watch --config ../../tsup.config.ts",
+    "dev": "tsup --watch --config ../../tsup.config.ts --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepack": "npm run build",
@@ -52,7 +52,7 @@
     "dist"
   ],
   "dependencies": {
-    "@shopify/hydrogen-react": "2023.1.5"
+    "@shopify/hydrogen-react": "2023.1.6"
   },
   "peerDependencies": {
     "@remix-run/react": "1.14.0",
