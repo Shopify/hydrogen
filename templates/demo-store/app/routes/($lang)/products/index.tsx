@@ -1,4 +1,4 @@
-import {type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {ProductConnection} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
@@ -13,8 +13,11 @@ import {
 } from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
+import {routeHeaders, CACHE_SHORT} from '~/data/cache';
 
 const PAGE_BY = 8;
+
+export const headers = routeHeaders;
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
   const variables = getPaginationVariables(request, PAGE_BY);
@@ -31,7 +34,11 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
 
   invariant(data, 'No data returned from Shopify API');
 
-  return data.products;
+  return json(data.products, {
+    headers: {
+      'Cache-Control': CACHE_SHORT,
+    },
+  });
 }
 
 export const handle = {

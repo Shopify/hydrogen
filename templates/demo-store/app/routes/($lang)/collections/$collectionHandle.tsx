@@ -14,6 +14,7 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
+import {CACHE_SHORT, routeHeaders} from '~/data/cache';
 
 const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   title: data?.collection?.seo?.title,
@@ -31,6 +32,8 @@ const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
 export const handle = {
   seo,
 };
+
+export const headers = routeHeaders;
 
 const PAGINATION_SIZE = 48;
 
@@ -142,16 +145,23 @@ export async function loader({params, request, context}: LoaderArgs) {
 
   const collectionNodes = flattenConnection(collections);
 
-  return json({
-    collection,
-    appliedFilters,
-    collections: collectionNodes,
-    analytics: {
-      pageType: AnalyticsPageType.collection,
-      collectionHandle,
-      resourceId: collection.id,
+  return json(
+    {
+      collection,
+      appliedFilters,
+      collections: collectionNodes,
+      analytics: {
+        pageType: AnalyticsPageType.collection,
+        collectionHandle,
+        resourceId: collection.id,
+      },
     },
-  });
+    {
+      headers: {
+        'Cache-Control': CACHE_SHORT,
+      },
+    },
+  );
 }
 
 export default function Collection() {

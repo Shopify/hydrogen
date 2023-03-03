@@ -4,6 +4,9 @@ import {useLoaderData} from '@remix-run/react';
 import {PageHeader, Section, Button} from '~/components';
 import invariant from 'tiny-invariant';
 import {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
+import {routeHeaders, CACHE_LONG} from '~/data/cache';
+
+export const headers = routeHeaders;
 
 export async function loader({request, params, context}: LoaderArgs) {
   invariant(params.policyHandle, 'Missing policy handle');
@@ -37,7 +40,7 @@ export async function loader({request, params, context}: LoaderArgs) {
     {policy},
     {
       headers: {
-        // TODO cacheLong()
+        'Cache-Control': CACHE_LONG,
       },
     },
   );

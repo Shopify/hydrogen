@@ -4,6 +4,7 @@ import {flattenConnection, Image} from '@shopify/hydrogen';
 import type {Article, Blog} from '@shopify/hydrogen/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
+import {CACHE_SHORT, routeHeaders} from '~/data/cache';
 
 const BLOG_HANDLE = 'Journal';
 
@@ -12,6 +13,8 @@ export const handle = {
     title: 'Journal',
   },
 };
+
+export const headers = routeHeaders;
 
 export const loader = async ({context: {storefront}}: LoaderArgs) => {
   const {language, country} = storefront.i18n;
@@ -45,7 +48,7 @@ export const loader = async ({context: {storefront}}: LoaderArgs) => {
     {articles},
     {
       headers: {
-        // TODO cacheLong()
+        'Cache-Control': CACHE_SHORT,
       },
     },
   );

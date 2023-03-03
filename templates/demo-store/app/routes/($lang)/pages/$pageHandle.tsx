@@ -9,11 +9,14 @@ import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import {PageHeader} from '~/components';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
+import {CACHE_LONG, routeHeaders} from '~/data/cache';
 
 const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   title: data?.page?.seo?.title,
   description: data?.page?.seo?.description,
 });
+
+export const headers = routeHeaders;
 
 export const handle = {
   seo,
@@ -37,7 +40,7 @@ export async function loader({request, params, context}: LoaderArgs) {
     {page},
     {
       headers: {
-        // TODO cacheLong()
+        'Cache-Control': CACHE_LONG,
       },
     },
   );
