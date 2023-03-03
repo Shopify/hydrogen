@@ -71,7 +71,6 @@
     ]
   },
   "dependencies": {
-    "@shopify/hydrogen-react": "^2023.1.6",
     "fast-array-diff": "^1.0.1"
   }
 }
