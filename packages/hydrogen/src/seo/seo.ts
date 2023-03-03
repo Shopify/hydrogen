@@ -38,7 +38,6 @@ interface SeoProps {
 export function Seo({debug}: SeoProps) {
   const matches = useMatches();
   const location = useLocation();
-  console.log('\n\n\n here \n\n\n');
 
   // Capture the seo and jsonLd configs from the route matches
   const seoConfig = useMemo(() => {
@@ -143,9 +142,7 @@ export function recursivelyInvokeOrReturn<T, R extends any[]>(
 
   let result: Record<string, T> = {};
 
-  console.log('value', value);
   if (Array.isArray(value)) {
-    console.log('array', value);
     result = value.reduce((acc, item) => {
       return [...acc, recursivelyInvokeOrReturn(item)];
     }, []);
