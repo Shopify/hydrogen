@@ -1,0 +1,24 @@
+{
+  "compilerOptions": {
+    "target": "ESNext",
+    "lib": ["DOM", "ESNext"],
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
+    "moduleResolution": "Node",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "declaration": true,
+    "declarationDir": "./dist/types",
+    "jsx": "react-jsx",
+    "types": ["jest", "vitest/globals", "@testing-library/jest-dom"]
+  },
+  "include": ["src/**/*", "globals.d.ts"],
+  "exclude": [
+    "src/**.example.jsx",
+    "src/**.example.tsx",
+    "src/**.example.js",
+    "src/**.example.ts"
+  ]
+}

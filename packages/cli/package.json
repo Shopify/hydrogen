@@ -27,7 +27,7 @@
   },
   "peerDependencies": {
     "@remix-run/react": "^1.14.0",
-    "@shopify/hydrogen-react": "^2023.1.5",
+    "@shopify/hydrogen-react": "^2023.1.6",
     "@shopify/remix-oxygen": "^1.0.3"
   },
   "dependencies": {

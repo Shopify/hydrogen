@@ -1,0 +1,129 @@
+[
+  {
+    "title": "Hydrogen React",
+    "description": "Hydrogen React is an unopinionated and performant library of Shopify-specific React components, reusable functions, and utilities for interacting with the Storefront API. This guide provides a complete reference of the components, hooks, and utilities that Hydrogen React offers, and their relationships to each other.",
+    "id": "hydrogen-react",
+    "sections": [
+      {
+        "type": "Generic",
+        "anchorLink": "setup",
+        "title": "Setup",
+        "sectionContent": "\n1. Run one of the example commands to install the package\n1. Import the component, hook, or utility that you want to use in your app. For more detailed instructions, see the Getting Started Guide.\n      ",
+        "sectionCard": [
+          {
+            "subtitle": "Navigate to",
+            "name": "Getting Started Guide",
+            "url": "/custom-storefronts/hydrogen-react#get-started-with-hydrogen-react",
+            "type": "tutorial"
+          }
+        ],
+        "codeblock": {
+          "title": "Install the Hydrogen React package",
+          "tabs": [
+            {
+              "title": "npm",
+              "code": "npm i --save @shopify/hydrogen-react\n"
+            },
+            {
+              "title": "yarn",
+              "code": "yarn add @shopify/hydrogen-react\n"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Generic",
+        "anchorLink": "authentication",
+        "title": "Authentication",
+        "sectionContent": "\n      To use Hydrogen React, you need to authenticate with and make requests to the [Storefront API](/api/storefront-api). Refer to [Get started with Hydrogen React](/custom-storefronts/hydrogen-react#get-started-with-hydrogen-react) for instructions on how to get an access token and set up the Storefront API client.\n       ",
+        "sectionCard": [
+          {
+            "subtitle": "Navigate to",
+            "name": "Enable Storefront API Access",
+            "url": "/custom-storefronts/hydrogen-react#step-2-enable-storefront-api-access",
+            "type": "key"
+          }
+        ]
+      },
+      {
+        "type": "Generic",
+        "anchorLink": "versioning",
+        "title": "Versioning",
+        "sectionContent": "Hydrogen React is tied to specific versions of the [Storefront API](/api/storefront). For example, if you're using Storefront API version `2023-01`, then Hydrogen React versions `2023.1.x` are fully compatible. \n\n >Caution: \n>If the Storefront API version update includes breaking changes, then Hydrogen React includes breaking changes. Because the API version is updated every three months, breaking changes to Hydrogen React could occur every three months. \n\n Learn more about [API versioning](/api/usage/versioning)."
+      },
+      {
+        "type": "Generic",
+        "anchorLink": "components",
+        "title": "Components",
+        "sectionContent": "A component encapsulates all of the business logic and data parsing/processing for the concept it represents and outputs limited, sensible markup. Components provide defaults, but allow customizations and provide no visual styles, other than those provided natively by the browser.",
+        "codeblock": {
+          "title": "Component example",
+          "tabs": [
+            {
+              "title": "Component",
+              "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function MyProduct({variantId}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n",
+              "language": "javascript"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Generic",
+        "anchorLink": "hooks",
+        "title": "Hooks",
+        "sectionContent": "Hooks are functions that provide reusable, business and/or stateful logic. These functions allow you to leverage the business logic and state management functions used in the components with more flexibility.",
+        "codeblock": {
+          "title": "Hook example",
+          "tabs": [
+            {
+              "title": "Hook",
+              "code": "import {useMoney} from '@shopify/hydrogen-react';\n\nexport function MyComponent({variant}) {\n  const {currencyCode, currencySymbol, amount} = useMoney(variant.pricev2);\n\n  return (\n    <div>\n      <strong>{currencyCode}</strong>\n      <span>{currencySymbol}</span>\n      <span>{amount}</span>\n    </div>\n  );\n}\n",
+              "language": "javascript"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Generic",
+        "anchorLink": "utilities",
+        "title": "Utilities",
+        "sectionContent": "Utilities are reusable functions for common data manipulations performed on Storefront API data.",
+        "codeblock": {
+          "title": "Utility example",
+          "tabs": [
+            {
+              "title": "Utility",
+              "code": "import {flattenConnection, MediaFile} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  const media = flattenConnection(product.media);\n  return (\n    <>\n      {media.map((mediaFile) => {\n        return <MediaFile data={mediaFile} key={mediaFile.id} />;\n      })}\n    </>\n  );\n}\n",
+              "language": "javascript"
+            }
+          ]
+        }
+      },
+      {
+        "type": "Resource",
+        "anchorLink": "resources",
+        "title": "Resources",
+        "resources": [
+          {
+            "name": "Custom Storefronts",
+            "subtitle": "Learn more about how to design, build, and manage, your custom storefront.",
+            "url": "/custom-storefronts",
+            "type": "custom-storefronts"
+          },
+          {
+            "name": "Getting started guide",
+            "subtitle": "Follow this tutorial to get started with Hydrogen React.",
+            "url": "/custom-storefronts/hydrogen-react#get-started-with-hydrogen-react",
+            "type": "quickstart"
+          },
+          {
+            "name": "Hydrogen React README",
+            "subtitle": "Get more details on how to improve your end-to-end development experience.",
+            "url": "https://github.com/Shopify/hydrogen/blob/main/packages/hydrogen-react/README.md",
+            "type": "github"
+          }
+        ]
+      }
+    ]
+  }
+]
