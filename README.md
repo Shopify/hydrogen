@@ -22,7 +22,7 @@ Hydrogen legacy v1, which is not built on Remix, is available here: https://gith
 **Requirements:**
 
 - Node.js version 16.14.0 or higher
-- `npm` version 8.3.1 (or your package manager of choice, such as `yarn` or `pnpm`)
+- `npm` (or your package manager of choice, such as `yarn` or `pnpm`)
 
 1. Install the latest version of Hydrogen:
 
