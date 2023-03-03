@@ -15,6 +15,7 @@ import {
   Button,
 } from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
+import {CACHE_SHORT, routeHeaders} from '~/data/cache';
 
 const PAGINATION_SIZE = 8;
 
@@ -23,6 +24,8 @@ export const handle = {
     title: 'All Collections',
   },
 };
+
+export const headers = routeHeaders;
 
 export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   const variables = getPaginationVariables(request, PAGINATION_SIZE);
@@ -36,7 +39,14 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
     },
   });
 
-  return json({collections});
+  return json(
+    {collections},
+    {
+      headers: {
+        'Cache-Control': CACHE_SHORT,
+      },
+    },
+  );
 };
 
 export const meta: MetaFunction = () => {

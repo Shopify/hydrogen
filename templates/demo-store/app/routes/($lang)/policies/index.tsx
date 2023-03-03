@@ -4,12 +4,15 @@ import type {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 
 import {PageHeader, Section, Heading, Link} from '~/components';
+import {routeHeaders, CACHE_LONG} from '~/data/cache';
 
 export const handle = {
   seo: {
     title: 'Policies',
   },
 };
+
+export const headers = routeHeaders;
 
 export async function loader({context: {storefront}}: LoaderArgs) {
   const data = await storefront.query<{
@@ -29,7 +32,7 @@ export async function loader({context: {storefront}}: LoaderArgs) {
     },
     {
       headers: {
-        // TODO cacheLong()
+        'Cache-Control': CACHE_LONG,
       },
     },
   );

@@ -46,6 +46,9 @@ import type {
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
 import type {Product} from 'schema-dts';
+import {routeHeaders, CACHE_SHORT} from '~/data/cache';
+
+export const headers = routeHeaders;
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -103,18 +106,25 @@ export async function loader({params, request, context}: LoaderArgs) {
     },
   } satisfies SeoConfig<Product>;
 
-  return defer({
-    product,
-    shop,
-    recommended,
-    seo,
-    analytics: {
-      pageType: AnalyticsPageType.product,
-      resourceId: product.id,
-      products: [productAnalytics],
-      totalValue: parseFloat(selectedVariant.price.amount),
+  return defer(
+    {
+      product,
+      shop,
+      recommended,
+      seo,
+      analytics: {
+        pageType: AnalyticsPageType.product,
+        resourceId: product.id,
+        products: [productAnalytics],
+        totalValue: parseFloat(selectedVariant.price.amount),
+      },
     },
-  });
+    {
+      headers: {
+        'Cache-Control': CACHE_SHORT,
+      },
+    },
+  );
 }
 
 export default function Product() {
