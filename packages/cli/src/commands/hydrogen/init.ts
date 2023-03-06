@@ -59,7 +59,7 @@ export async function runInit(
     language?: string;
     token?: string;
     force?: boolean;
-    installDeps?: boolean;
+    'install-deps'?: boolean;
   } = parseProcessFlags(process.argv, FLAG_MAP),
 ) {
   supressNodeExperimentalWarnings();
@@ -189,7 +189,7 @@ export async function runInit(
 
   if (packageManager !== 'unknown') {
     const installDeps =
-      options.installDeps ??
+      options['install-deps'] ??
       (
         await ui.prompt([
           {
