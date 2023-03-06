@@ -1,6 +1,6 @@
 import {type ReactNode, useRef, Suspense, useMemo} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {defer, type LoaderArgs, V2_MetaFunction} from '@shopify/remix-oxygen';
 import {
   useLoaderData,
   Await,
@@ -14,7 +14,7 @@ import {
   ShopifyAnalyticsProduct,
   ShopPayButton,
   flattenConnection,
-  type SeoHandleFunction,
+  tagsToMetaArray,
   type SeoConfig,
 } from '@shopify/hydrogen';
 import {
@@ -126,6 +126,10 @@ export async function loader({params, request, context}: LoaderArgs) {
     },
   );
 }
+
+export const meta: V2_MetaFunction = (data) => {
+  return tagsToMetaArray(data, {tag: 'meta'});
+};
 
 export default function Product() {
   const {product, shop, recommended} = useLoaderData<typeof loader>();
