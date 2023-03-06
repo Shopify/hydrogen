@@ -2,7 +2,7 @@
   "private": true,
   "sideEffects": false,
   "scripts": {
-    "build": "turbo build --parallel",
+    "build": "turbo build --force --parallel",
     "build:pkg": "npm run build -- --filter=./packages/*",
     "ci:checks": "turbo run lint test format:check typecheck",
     "dev": "npm run dev:pkg -- --filter=./templates/demo-store",
