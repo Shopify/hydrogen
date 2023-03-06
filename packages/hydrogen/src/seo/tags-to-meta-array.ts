@@ -1,4 +1,4 @@
-import {TagKey, CustomHeadTagObject} from './generate-seo-tags';
+import type {TagKey, CustomHeadTagObject} from './generate-seo-tags';
 
 interface TagsToMetaArrayOptions {
   tag?: TagKey[] | TagKey;
@@ -10,7 +10,7 @@ export function tagsToMetaArray(
   const filterTags = Array.isArray(options.tag) ? options.tag : [options.tag];
 
   const returnTags =
-    options.tag && filterTags.length === 0
+    options.tag && filterTags.length > 0
       ? tags.filter((tag) => filterTags.includes(tag.tag))
       : tags;
 
