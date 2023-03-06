@@ -48,7 +48,7 @@ const swrLock = new Set<string>();
 
 export async function runWithCache<T = unknown>(
   cacheKey: CacheKey,
-  actionFn: () => Promise<T>,
+  actionFn: () => T | Promise<T>,
   {
     strategy = CacheShort(),
     cacheInstance,
