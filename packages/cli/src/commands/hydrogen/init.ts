@@ -6,7 +6,11 @@ import {
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import Flags from '@oclif/core/lib/flags.js';
 import {output, path} from '@shopify/cli-kit';
-import {commonFlags, parseProcessFlags} from '../../utils/flags.js';
+import {
+  commonFlags,
+  parseProcessFlags,
+  flagsToCamelObject,
+} from '../../utils/flags.js';
 import {transpileProject} from '../../utils/transpile-ts.js';
 import {getLatestTemplates} from '../../utils/template-downloader.js';
 import {checkHydrogenVersion} from '../../utils/check-version.js';
@@ -46,7 +50,7 @@ export default class Init extends Command {
     // @ts-ignore
     const {flags} = await this.parse(Init);
 
-    await runInit({...flags});
+    await runInit(flagsToCamelObject(flags));
   }
 }
 
@@ -59,7 +63,7 @@ export async function runInit(
     language?: string;
     token?: string;
     force?: boolean;
-    'install-deps'?: boolean;
+    installDeps?: boolean;
   } = parseProcessFlags(process.argv, FLAG_MAP),
 ) {
   supressNodeExperimentalWarnings();
@@ -189,7 +193,7 @@ export async function runInit(
 
   if (packageManager !== 'unknown') {
     const installDeps =
-      options['install-deps'] ??
+      options.installDeps ??
       (
         await ui.prompt([
           {
