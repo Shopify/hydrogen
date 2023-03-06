@@ -70,6 +70,12 @@ export default function Index() {
 
   const configDone = shopId !== HYDROGEN_SHOP_ID;
 
+  const doStuffInNode = () =>
+    fetch('/_h2-setup', {
+      method: 'POST',
+      body: JSON.stringify({action: 'doStuffInNode'}),
+    });
+
   return (
     <>
       <Layout shopName={shopName}>
@@ -110,6 +116,9 @@ export default function Index() {
             </p>
           </section>
         )}
+        <div>
+          <button onClick={doStuffInNode}>Do Stuff In Node</button>
+        </div>
         <ResourcesLinks />
       </Layout>
     </>

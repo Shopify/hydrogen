@@ -36,13 +36,34 @@ export async function startMiniOxygen({
     buildWatchPaths: watch
       ? [path.resolve(root, buildPathWorkerFile)]
       : undefined,
-    onResponse: (request, response) =>
+    onResponse: (request, response) => {
+      if (request.url.endsWith('/_h2-setup')) {
+        return new Promise(async (resolve) => {
+          const data = await request.clone().json();
+          console.log('DO STUFF IN NODE WITH', data);
+          Object.defineProperty(response, 'body', {
+            value: new ReadableStream({
+              start(controller) {
+                controller.enqueue(
+                  JSON.stringify({
+                    message: 'Hello from Node',
+                  }),
+                );
+                controller.close();
+              },
+            }),
+          });
+          resolve();
+        });
+      }
+
       // 'Request' and 'Response' types in MiniOxygen comes from
       // Miniflare and are slightly different from standard types.
       logResponse(
         request as unknown as Request,
         response as unknown as Response,
-      ),
+      );
+    },
   });
 
   const listeningAt = `http://localhost:${actualPort}`;
