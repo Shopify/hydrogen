@@ -1,17 +1,28 @@
 import {ShopPayButton} from '@shopify/hydrogen-react';
 
-export function AddVariantQuantity1({variantId}: {variantId: string}) {
-  return <ShopPayButton variantIds={[variantId]} />;
+export function AddVariantQuantity1({
+  variantId,
+  storeDomain,
+}: {
+  variantId: string;
+  storeDomain: String;
+}) {
+  return <ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} />;
 }
 
 export function AddVariantQuantityMultiple({
   variantId,
   quantity,
+  storeDomain,
 }: {
   variantId: string;
   quantity: number;
+  storeDomain: string;
 }) {
   return (
-    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />
+    <ShopPayButton
+      variantIdsAndQuantities={[{id: variantId, quantity}]}
+      storeDomain={storeDomain}
+    />
   );
 }

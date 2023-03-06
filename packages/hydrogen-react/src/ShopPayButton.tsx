@@ -1,16 +1,22 @@
-import {useShop} from './ShopifyProvider.js';
+import {defaultShopifyContext, useShop} from './ShopifyProvider.js';
 import {useLoadScript} from './load-script.js';
 import {parseGid} from './analytics-utils.js';
 
 // By using 'never' in the "or" cases below, it makes these props "exclusive" and means that you cannot pass both of them; you must pass either one OR the other.
 type ShopPayButtonProps = ShopPayButtonStyleProps &
-  (ShopPayVariantIds | ShopPayVariantAndQuantities);
+  (ShopPayVariantIds | ShopPayVariantAndQuantities) &
+  ShopPayDomainProps;
 
 type ShopPayButtonStyleProps = {
   /** A string of classes to apply to the `div` that wraps the Shop Pay button. */
   className?: string;
   /** A string that's applied to the [CSS custom property (variable)](https://developer.mozilla.org/en-US/docs/Web/CSS/--*) `--shop-pay-button-width` for the [Buy with Shop Pay component](https://shopify.dev/custom-storefronts/tools/web-components#buy-with-shop-pay-component). */
   width?: string;
+};
+
+type ShopPayDomainProps = {
+  /** The domain of your Shopify storefront URL (eg: `your-store.myshopify.com`). */
+  storeDomain?: string;
 };
 
 type ShopPayVariantIds = {
@@ -55,14 +61,24 @@ export function ShopPayButton({
   className,
   variantIdsAndQuantities,
   width,
+  storeDomain: _storeDomain,
 }: ShopPayButtonProps): JSX.Element {
-  const {storeDomain} = useShop();
+  const shop = useShop();
+  const storeDomain = _storeDomain || shop?.storeDomain;
   const shopPayLoadedStatus = useLoadScript(SHOPJS_URL);
 
   let ids: string[] = [];
 
+  if (!storeDomain || storeDomain === defaultShopifyContext.storeDomain) {
+    throw new Error(MissingStoreDomainErrorMessage);
+  }
+
   if (variantIds && variantIdsAndQuantities) {
     throw new Error(DoublePropsErrorMessage);
+  }
+
+  if (!variantIds && !variantIdsAndQuantities) {
+    throw new Error(MissingPropsErrorMessage);
   }
 
   if (variantIds) {
@@ -104,6 +120,8 @@ export function ShopPayButton({
   );
 }
 
+export const MissingStoreDomainErrorMessage =
+  'You must pass a "storeDomain" prop to the "ShopPayButton" component, or wrap it in a "ShopifyProvider" component.';
 export const InvalidPropsErrorMessage = `You must pass in "variantIds" in the form of ["gid://shopify/ProductVariant/1"]`;
 export const MissingPropsErrorMessage = `You must pass in either "variantIds" or "variantIdsAndQuantities" to ShopPayButton`;
 export const DoublePropsErrorMessage = `You must provide either a variantIds or variantIdsAndQuantities prop, but not both in the ShopPayButton component`;

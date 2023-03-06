@@ -6,6 +6,7 @@ import {
   DoublePropsErrorMessage,
   MissingPropsErrorMessage,
   InvalidPropsErrorMessage,
+  MissingStoreDomainErrorMessage,
 } from './ShopPayButton.js';
 import {getShopifyConfig} from './ShopifyProvider.test.js';
 
@@ -113,5 +114,54 @@ describe(`<ShopPayButton />`, () => {
         ),
       }),
     ).toThrow(InvalidPropsErrorMessage);
+  });
+
+  it(`throws error if no 'storeDomain' is supplied`, () => {
+    const fakeId = 'gid://shopify/ProductVariant/123';
+    expect(() => render(<ShopPayButton variantIds={[fakeId]} />)).toThrow(
+      MissingStoreDomainErrorMessage,
+    );
+  });
+
+  it(`allows to use 'storeDomain' props without ShopifyProvider`, () => {
+    const fakeId = 'gid://shopify/ProductVariant/123';
+    const {container} = render(
+      <ShopPayButton
+        variantIds={[fakeId]}
+        storeDomain="https://notashop.myshopify.com"
+      />,
+    );
+    const button = container.querySelector('shop-pay-button');
+
+    expect(button).toHaveAttribute(
+      'store-url',
+      'https://notashop.myshopify.com',
+    );
+  });
+
+  it(`uses 'storeDomain' props over 'ShopifyProvider'`, () => {
+    const fakeId = 'gid://shopify/ProductVariant/123';
+    const {container} = render(
+      <ShopPayButton
+        variantIds={[fakeId]}
+        storeDomain="https://notashop.myshopify.com"
+      />,
+      {
+        wrapper: ({children}) => (
+          <ShopifyProvider
+            {...getShopifyConfig()}
+            storeDomain="https://diffshop.myshopify.com"
+          >
+            {children}
+          </ShopifyProvider>
+        ),
+      },
+    );
+    const button = container.querySelector('shop-pay-button');
+
+    expect(button).toHaveAttribute(
+      'store-url',
+      'https://notashop.myshopify.com',
+    );
   });
 });
