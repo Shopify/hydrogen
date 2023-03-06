@@ -2,7 +2,7 @@
 
 # Hydrogen React
 
-Hydrogen React is an unopionated and performant library of Shopify-specific commerce components, hooks, and utilities. Bring the best parts of Hydrogen to more React frameworks, like Next.js and Gatsby, and accelerate headless development using Shopify’s pre-built React components including Cart, Shop Pay, and Shopify Analytics.
+Hydrogen React is an unopinionated and performant library of Shopify-specific commerce components, hooks, and utilities. Bring the best parts of Hydrogen to more React frameworks, like Next.js and Gatsby, and accelerate headless development using Shopify’s pre-built React components including Cart, Shop Pay, and Shopify Analytics.
 
 📚 [Overview](https://shopify.dev/custom-storefronts/hydrogen-react) | 🛠️ [Docs](https://shopify.dev/docs/api/hydrogen-react) | 🛍️ [Custom Storefronts at Shopify](https://shopify.dev/custom-storefronts) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 📝 [Changelog](https://github.com/Shopify/hydrogen/blob/main/packages/hydrogen-react/CHANGELOG.md)
 
