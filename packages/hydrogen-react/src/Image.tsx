@@ -1,12 +1,19 @@
+// eslint-disable-next-line eslint-comments/disable-enable-pair
+/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import * as React from 'react';
-import {
-  getShopifyImageDimensions,
-  shopifyImageLoader,
-  addImageSizeParametersToUrl,
-  IMG_SRC_SET_SIZES,
-} from './image-size.js';
-import type {Image as ImageType} from './storefront-api-types.js';
 import type {PartialDeep, Simplify} from 'type-fest';
+import type {Image as ImageType} from './storefront-api-types.js';
+
+/*
+ * An optional prop you can use to change the
+ * default srcSet generation behaviour
+ */
+interface SrcSetOptions {
+  intervals: number;
+  startingWidth: number;
+  incrementSize: number;
+  placeholderWidth: number;
+}
 
 type HtmlImageProps = React.ImgHTMLAttributes<HTMLImageElement>;
 
@@ -16,205 +23,491 @@ export type ShopifyLoaderOptions = {
   width?: HtmlImageProps['width'] | ImageType['width'];
   height?: HtmlImageProps['height'] | ImageType['height'];
 };
-export type ShopifyLoaderParams = Simplify<ShopifyLoaderOptions & ImageSrc>;
 
-type ImageSrc = {
-  src: ImageType['url'];
+export type ShopifyLoaderParams = Simplify<
+  ShopifyLoaderOptions & {
+    src?: ImageType['url'];
+    width?: number;
+    height?: number;
+    crop?: Crop;
+  }
+>;
+
+/*
+ * TODO: Expand to include focal point support;
+ * or switch this to be an SF API type
+ */
+
+type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right' | undefined;
+
+export type ShopifyImageProps = {
+  as?: 'img' | 'source';
+  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;
+  src?: string;
+  loader?: (params: ShopifyLoaderParams) => string;
+  width?: string | number;
+  height?: string | number;
+  crop?: Crop;
+  sizes?: string;
+  aspectRatio?: string;
+  srcSetOptions?: SrcSetOptions;
+  alt?: string;
+  loading?: 'lazy' | 'eager';
+  loaderOptions?: ShopifyLoaderOptions;
+  widths?: (HtmlImageProps['width'] | ImageType['width'])[];
 };
 
-export type ShopifyImageProps = Omit<HtmlImageProps, 'src'> &
-  ShopifyImageBaseProps;
-
-type ShopifyImageBaseProps = {
+export function Image({
   /** An object with fields that correspond to the Storefront API's
    * [Image object](https://shopify.dev/api/storefront/reference/common-objects/image).
    * The `data` prop is required.
    */
-  data: PartialDeep<ImageType, {recurseIntoArrays: true}>;
-  /** A custom function that generates the image URL. Parameters passed in
-   * are `ShopifyLoaderParams`
-   */
-  loader?: (params: ShopifyLoaderParams) => string;
-  /** An object of `loader` function options. For example, if the `loader` function
-   * requires a `scale` option, then the value can be a property of the
-   * `loaderOptions` object (for example, `{scale: 2}`). The object shape is `ShopifyLoaderOptions`.
-   */
-  loaderOptions?: ShopifyLoaderOptions;
-  /**
-   * `src` isn't used, and should instead be passed as part of the `data` object
-   */
-  src?: never;
-  /**
-   * An array of pixel widths to overwrite the default generated srcset. For example, `[300, 600, 800]`.
-   */
-  widths?: (HtmlImageProps['width'] | ImageType['width'])[];
-};
-
-/**
- * The `Image` component renders an image for the Storefront API's
- * [Image object](https://shopify.dev/api/storefront/reference/common-objects/image) by using the `data` prop. You can [customize this component](https://shopify.dev/api/hydrogen/components#customizing-hydrogen-components) using passthrough props.
- *
- * An image's width and height are determined using the following priority list:
- * 1. The width and height values for the `loaderOptions` prop
- * 2. The width and height values for bare props
- * 3. The width and height values for the `data` prop
- *
- * If only one of `width` or `height` are defined, then the other will attempt to be calculated based on the image's aspect ratio,
- * provided that both `data.width` and `data.height` are available. If `data.width` and `data.height` aren't available, then the aspect ratio cannot be determined and the missing
- * value will remain as `null`
- */
-export function Image({
   data,
+  as: Component = 'img',
+  src,
+  /*
+   * Supports third party loaders, which are expected to provide
+   * a function that can generate a URL string
+   */
+  loader = shopifyLoader,
+  /*
+   * The default behaviour is a responsive image, set to 100%, that fills
+   * the width of its container. It’s not declared in the props.
+   */
   width,
   height,
-  loading,
-  loader = shopifyImageLoader,
+  /*
+   * The default crop is center, in the event that AspectRatio is set,
+   * without specifying a crop, Imagery won't return the expected image.
+   */
+  crop = 'center',
+  sizes,
+  /*
+   * aspectRatio is a string in the format of 'width/height'
+   * it's used to generate the srcSet URLs, and to set the
+   * aspect ratio of the image element to prevent CLS.
+   */
+  aspectRatio,
+  /*
+   * An optional prop you can use to change
+   * the default srcSet generation behaviour
+   */
+  srcSetOptions = {
+    intervals: 10,
+    startingWidth: 300,
+    incrementSize: 300,
+    placeholderWidth: 100,
+  },
+  alt,
+  loading = 'lazy',
+  /*
+   * Deprecated property from original Image component,
+   * you can now use the flat `crop`, `width`, and `height` props
+   * as well as `src` and `data` to achieve the same result.
+   */
   loaderOptions,
+  /*
+   * Deprecated property from original Image component,
+   * widths are now calculated automatically based on the
+   * config and width props.
+   */
   widths,
-  decoding = 'async',
-  ...rest
+  ...passthroughProps
 }: ShopifyImageProps): JSX.Element | null {
-  if (!data.url) {
-    const missingUrlError = `<Image/>: the 'data' prop requires the 'url' property. Image: ${
-      data.id ?? 'no ID provided'
-    }`;
-
-    if (__HYDROGEN_DEV__) {
-      throw new Error(missingUrlError);
-    } else {
-      console.error(missingUrlError);
-    }
-
-    return null;
-  }
-
-  if (__HYDROGEN_DEV__ && !data.altText && !rest.alt) {
+  /*
+   * Deprecated Props from original Image component
+   */
+  if (loaderOptions) {
     console.warn(
-      `<Image/>: the 'data' prop should have the 'altText' property, or the 'alt' prop, and one of them should not be empty. Image: ${
-        data.id ?? data.url
-      }`,
-    );
-  }
-
-  const {width: imgElementWidth, height: imgElementHeight} =
-    getShopifyImageDimensions({
-      data,
-      loaderOptions,
-      elementProps: {
-        width,
-        height,
-      },
-    });
-
-  if (__HYDROGEN_DEV__ && (!imgElementWidth || !imgElementHeight)) {
-    console.warn(
-      `<Image/>: the 'data' prop requires either 'width' or 'data.width', and 'height' or 'data.height' properties. Image: ${
-        data.id ?? data.url
-      }`,
-    );
-  }
-
-  let finalSrc = data.url;
-
-  if (loader) {
-    finalSrc = loader({
-      ...loaderOptions,
-      src: data.url,
-      width: imgElementWidth,
-      height: imgElementHeight,
-    });
-    if (typeof finalSrc !== 'string' || !finalSrc) {
-      throw new Error(
-        `<Image/>: 'loader' did not return a valid string. Image: ${
-          data.id ?? data.url
+      `Deprecated property from original Image component in use: ` +
+        `Use the \`crop\`, \`width\`, \`height\`, and src props, or` +
+        `the \`data\` prop to achieve the same result. Image used is ${
+          src || data?.url
         }`,
-      );
-    }
+    );
   }
 
-  // determining what the intended width of the image is. For example, if the width is specified and lower than the image width, then that is the maximum image width
-  // to prevent generating a srcset with widths bigger than needed or to generate images that would distort because of being larger than original
-  const maxWidth =
-    width && imgElementWidth && width < imgElementWidth
-      ? width
-      : imgElementWidth;
-  const finalSrcset =
-    rest.srcSet ??
-    internalImageSrcSet({
-      ...loaderOptions,
-      widths,
-      src: data.url,
-      width: maxWidth,
-      height: imgElementHeight,
-      loader,
-    });
+  if (widths) {
+    console.warn(
+      `Deprecated property from original Image component in use: ` +
+        `\`widths\` are now calculated automatically based on the ` +
+        `config and width props. Image used is ${src || data?.url}`,
+    );
+  }
 
-  /* eslint-disable hydrogen/prefer-image-component */
-  return (
-    <img
-      id={data.id ?? ''}
-      alt={data.altText ?? rest.alt ?? ''}
-      loading={loading ?? 'lazy'}
-      {...rest}
-      src={finalSrc}
-      width={imgElementWidth ?? undefined}
-      height={imgElementHeight ?? undefined}
-      srcSet={finalSrcset}
-      decoding={decoding}
-    />
+  if (!sizes) {
+    console.warn(
+      'No sizes prop provided to Image component, ' +
+        'you may be loading unnecessarily large images. ' +
+        `Image used is ${src || data?.url}`,
+    );
+  }
+
+  /* Only use data width if height is also set */
+
+  const dataWidth: number | undefined =
+    data?.width && data?.height ? data?.width : undefined;
+
+  const dataHeight: number | undefined =
+    data?.width && data?.height ? data?.height : undefined;
+
+  const dataUnitsMatch: boolean = unitsMatch(dataWidth, dataHeight);
+
+  /*
+   * Gets normalized values for width, height, src, alt, and aspectRatio props
+   * supporting the presence of `data` in addition to flat props.
+   */
+
+  const normalizedWidthProp: string | number = width || '100%';
+
+  const normalizedWidth = `${
+    getUnitValueParts(normalizedWidthProp.toString()).number
+  } ${getUnitValueParts(normalizedWidthProp.toString()).unit}`;
+
+  const normalizedHeight: string =
+    height === undefined
+      ? 'auto'
+      : `${getUnitValueParts(height.toString()).number} ${
+          getUnitValueParts(height.toString()).unit
+        }`;
+
+  const normalizedSrc: string | undefined = src || data?.url;
+
+  if (!normalizedSrc) {
+    console.error(`No src or data.url provided to Image component.`);
+  }
+
+  const normalizedAlt: string =
+    data?.altText && !alt ? data?.altText : alt || '';
+
+  const normalizedAspectRatio: string | undefined = aspectRatio
+    ? aspectRatio
+    : dataUnitsMatch
+    ? `${getNormalizedFixedUnit(dataWidth)}/${getNormalizedFixedUnit(
+        dataHeight,
+      )}`
+    : undefined;
+
+  const {intervals, startingWidth, incrementSize, placeholderWidth} =
+    srcSetOptions;
+
+  /*
+   * This function creates an array of widths to be used in srcSet
+   */
+  const imageWidths = generateImageWidths(
+    width,
+    intervals,
+    startingWidth,
+    incrementSize,
   );
-  /* eslint-enable hydrogen/prefer-image-component */
+
+  /*
+   * We check to see whether the image is fixed width or not,
+   * if fixed, we still provide a srcSet, but only to account for
+   * different pixel densities.
+   */
+  if (isFixedWidth(normalizedWidth)) {
+    const intWidth: number | undefined = getNormalizedFixedUnit(width);
+    const intHeight: number | undefined = getNormalizedFixedUnit(height);
+
+    /*
+     * The aspect ratio for fixed with images is taken from the explicitly
+     * set prop, but if that's not present, and both width and height are
+     * set, we calculate the aspect ratio from the width and height—as
+     * long as they share the same unit type (e.g. both are 'px').
+     */
+    const fixedAspectRatio = aspectRatio
+      ? aspectRatio
+      : unitsMatch(normalizedWidth, normalizedHeight)
+      ? `${intWidth}/${intHeight}`
+      : normalizedAspectRatio
+      ? normalizedAspectRatio
+      : undefined;
+
+    /*
+     * The Sizes Array generates an array of all of the parts
+     * that make up the srcSet, including the width, height, and crop
+     */
+    const sizesArray =
+      imageWidths === undefined
+        ? undefined
+        : generateSizes(imageWidths, fixedAspectRatio, crop);
+
+    return React.createElement(Component, {
+      srcSet: generateShopifySrcSet(normalizedSrc, sizesArray),
+      src: loader({
+        src: normalizedSrc,
+        width: intWidth,
+        height: intHeight
+          ? intHeight
+          : fixedAspectRatio && intWidth
+          ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
+          : undefined,
+        crop: normalizedHeight === 'auto' ? undefined : crop,
+      }),
+      alt: normalizedAlt,
+      sizes: sizes || normalizedWidth,
+      style: {
+        width: normalizedWidth,
+        height: normalizedHeight,
+        aspectRatio: fixedAspectRatio,
+      },
+      loading,
+      ...passthroughProps,
+    });
+  } else {
+    const sizesArray =
+      imageWidths === undefined
+        ? undefined
+        : generateSizes(imageWidths, normalizedAspectRatio, crop);
+
+    return React.createElement(Component, {
+      srcSet: generateShopifySrcSet(normalizedSrc, sizesArray),
+      src: loader({
+        src: normalizedSrc,
+        width: placeholderWidth,
+        height:
+          normalizedAspectRatio && placeholderWidth
+            ? placeholderWidth * (parseAspectRatio(normalizedAspectRatio) ?? 1)
+            : undefined,
+      }),
+      alt: normalizedAlt,
+      sizes,
+      style: {
+        width: normalizedWidth,
+        height: normalizedHeight,
+        aspectRatio: normalizedAspectRatio,
+      },
+      loading,
+      ...passthroughProps,
+    });
+  }
 }
 
-type InternalShopifySrcSetGeneratorsParams = Simplify<
-  ShopifyLoaderOptions & {
-    src: ImageType['url'];
-    widths?: (HtmlImageProps['width'] | ImageType['width'])[];
-    loader?: (params: ShopifyLoaderParams) => string;
-  }
->;
-function internalImageSrcSet({
-  src,
-  width,
-  crop,
-  scale,
-  widths,
-  loader,
-  height,
-}: InternalShopifySrcSetGeneratorsParams): string {
-  const hasCustomWidths = widths && Array.isArray(widths);
-  if (hasCustomWidths && widths.some((size) => isNaN(size as number))) {
-    throw new Error(
-      `<Image/>: the 'widths' must be an array of numbers. Image: ${src}`,
-    );
+function unitsMatch(
+  width: string | number = '100%',
+  height: string | number = 'auto',
+): boolean {
+  return (
+    getUnitValueParts(width.toString()).unit ===
+    getUnitValueParts(height.toString()).unit
+  );
+  /*
+      Given:
+        width = '100px'
+        height = 'auto'
+      Returns:
+        false
+
+      Given:
+        width = '100px'
+        height = '50px'
+      Returns:
+        true
+   */
+}
+
+function getUnitValueParts(value: string): {unit: string; number: number} {
+  const unit = value.replace(/[0-9.]/g, '');
+  const number = parseFloat(value.replace(unit, ''));
+
+  return {
+    unit: unit === '' ? (number === undefined ? 'auto' : 'px') : unit,
+    number,
+  };
+  /*
+      Given:
+        value = '100px'
+      Returns:
+        {
+          unit: 'px',
+          number: 100
+        }
+   */
+}
+
+function getNormalizedFixedUnit(value?: string | number): number | undefined {
+  if (value === undefined) {
+    return;
   }
 
-  let aspectRatio = 1;
-  if (width && height) {
-    aspectRatio = Number(height) / Number(width);
+  const {unit, number} = getUnitValueParts(value.toString());
+
+  switch (unit) {
+    case 'em':
+      return number * 16;
+    case 'rem':
+      return number * 16;
+    case 'px':
+      return number;
+    case '':
+      return number;
+    default:
+      return;
+  }
+  /*
+      Given:
+        value = 16px | 1rem | 1em | 16
+      Returns:
+        16
+
+      Given:
+        value = 100%
+      Returns:
+        undefined
+   */
+}
+
+function isFixedWidth(width: string | number): boolean {
+  const fixedEndings = /\d(px|em|rem)$/;
+  return (
+    typeof width === 'number' ||
+    (typeof width === 'string' && fixedEndings.test(width))
+  );
+  /*
+    Given:
+      width = 100 | '100px' | '100em' | '100rem'
+    Returns:
+      true
+  */
+}
+
+export function generateShopifySrcSet(
+  src?: string,
+  sizesArray?: Array<{width?: number; height?: number; crop?: Crop}>,
+): string {
+  if (!src) {
+    return '';
   }
 
-  let setSizes = hasCustomWidths ? widths : IMG_SRC_SET_SIZES;
-  if (
-    !hasCustomWidths &&
-    width &&
-    width < IMG_SRC_SET_SIZES[IMG_SRC_SET_SIZES.length - 1]
-  ) {
-    setSizes = IMG_SRC_SET_SIZES.filter((size) => size <= width);
+  if (sizesArray?.length === 0 || !sizesArray) {
+    return src;
   }
-  const srcGenerator = loader ? loader : addImageSizeParametersToUrl;
-  return setSizes
+
+  return sizesArray
     .map(
       (size) =>
-        `${srcGenerator({
+        `${shopifyLoader({
           src,
-          width: size,
-          // height is not applied if there is no crop
-          // if there is crop, then height is applied as a ratio of the original width + height aspect ratio * size
-          height: crop ? Number(size) * aspectRatio : undefined,
-          crop,
-          scale,
-        })} ${size ?? ''}w`,
+          width: size.width,
+          height: size.height,
+          crop: size.crop,
+        })} ${size.width}w`,
     )
-    .join(', ');
+    .join(`, `);
+  /*
+      Given:
+        src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg'
+        sizesArray = [
+          {width: 200, height: 200, crop: 'center'},
+          {width: 400, height: 400, crop: 'center'},
+        ]
+      Returns:
+        'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=200&height=200&crop=center 200w, https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=400&height=400&crop=center 400w'
+   */
+}
+
+export function generateImageWidths(
+  width: string | number = '100%',
+  intervals = 20,
+  startingWidth = 200,
+  incrementSize = 100,
+): number[] {
+  const responsive = Array.from(
+    {length: intervals},
+    (_, i) => i * incrementSize + startingWidth,
+  );
+
+  const fixed = Array.from(
+    {length: 3},
+    (_, i) => (i + 1) * (getNormalizedFixedUnit(width) ?? 0),
+  );
+
+  return isFixedWidth(width) ? fixed : responsive;
+}
+
+// Simple utility function to convert 1/1 to [1, 1]
+export function parseAspectRatio(aspectRatio?: string): number | undefined {
+  if (!aspectRatio) return;
+  const [width, height] = aspectRatio.split('/');
+  return 1 / (Number(width) / Number(height));
+  /* 
+    Given: 
+      '1/1'
+    Returns: 
+      0.5,
+    Given:
+      '4/3'
+    Returns:
+      0.75
+  */
+}
+
+// Generate data needed for Imagery loader
+export function generateSizes(
+  imageWidths?: number[],
+  aspectRatio?: string,
+  crop: Crop = 'center',
+):
+  | {
+      width: number;
+      height: number | undefined;
+      crop: Crop;
+    }[]
+  | undefined {
+  if (!imageWidths) return;
+  const sizes = imageWidths.map((width: number) => {
+    return {
+      width,
+      height: aspectRatio
+        ? width * (parseAspectRatio(aspectRatio) ?? 1)
+        : undefined,
+      crop,
+    };
+  });
+  return sizes;
+  /* 
+    Given: 
+      ([100, 200], 1/1, 'center')
+    Returns: 
+      [{width: 100, height: 100, crop: 'center'}, 
+      {width: 200, height: 200, crop: 'center'}]
+  */
+}
+
+/*
+ * The shopifyLoader function is a simple utility function that takes a src, width,
+ * height, and crop and returns a string that can be used as the src for an image.
+ * It can be used with the Hydrogen Image component or with the next/image component.
+ * (or any others that accept equivalent configuration)
+ */
+export function shopifyLoader({
+  src,
+  width,
+  height,
+  crop,
+}: {
+  src?: string;
+  width?: number;
+  height?: number;
+  crop?: Crop;
+}): string {
+  if (!src) {
+    return '';
+  }
+
+  const url = new URL(src);
+  width && url.searchParams.append('width', Math.round(width).toString());
+  height && url.searchParams.append('height', Math.round(height).toString());
+  crop && url.searchParams.append('crop', crop);
+  return url.href;
+  /*
+    Given:
+      src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg'
+      width = 100
+      height = 100
+      crop = 'center'
+    Returns:
+      'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=100&height=100&crop=center'
+  */
 }

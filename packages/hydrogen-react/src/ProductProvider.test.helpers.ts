@@ -10,7 +10,7 @@ import type {PartialDeep} from 'type-fest';
 import {faker} from '@faker-js/faker';
 import {getRawMetafield} from './parse-metafield.test.helpers.js';
 import {getUnitPriceMeasurement, getPrice} from './Money.test.helpers.js';
-import {getPreviewImage} from './Image.test.helpers.js';
+import {getPreviewImage} from './ImageLegacy.test.helpers.js';
 import {getMedia} from './MediaFile.test.helpers.js';
 
 export function getProduct(

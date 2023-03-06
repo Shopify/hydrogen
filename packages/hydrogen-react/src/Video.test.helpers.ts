@@ -1,7 +1,7 @@
 import type {Video as VideoType, VideoSource} from './storefront-api-types.js';
 import {faker} from '@faker-js/faker';
 import type {PartialDeep} from 'type-fest';
-import {getPreviewImage} from './Image.test.helpers.js';
+import {getPreviewImage} from './ImageLegacy.test.helpers.js';
 
 export function getVideoData(
   video: PartialDeep<VideoType, {recurseIntoArrays: true}> = {},

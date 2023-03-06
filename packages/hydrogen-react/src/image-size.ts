@@ -1,6 +1,6 @@
 import type {Image as ImageType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
-import type {ShopifyLoaderOptions, ShopifyLoaderParams} from './Image.js';
+import type {ShopifyLoaderOptions, ShopifyLoaderParams} from './ImageLegacy.js';
 
 // TODO: Are there other CDNs missing from here?
 const PRODUCTION_CDN_HOSTNAMES = [

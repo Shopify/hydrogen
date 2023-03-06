@@ -3,7 +3,7 @@ import {getExternalVideoData} from './ExternalVideo.test.helpers.js';
 import {faker} from '@faker-js/faker';
 import type {PartialDeep} from 'type-fest';
 import type {MediaImage, MediaEdge} from './storefront-api-types.js';
-import {getPreviewImage} from './Image.test.helpers.js';
+import {getPreviewImage} from './ImageLegacy.test.helpers.js';
 import {getModel3d} from './ModelViewer.test.helpers.js';
 
 export function getMedia(

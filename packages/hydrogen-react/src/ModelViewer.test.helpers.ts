@@ -1,7 +1,7 @@
 import type {Model3d} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import {faker} from '@faker-js/faker';
-import {getPreviewImage} from './Image.test.helpers.js';
+import {getPreviewImage} from './ImageLegacy.test.helpers.js';
 
 export function getModel3d(
   model: PartialDeep<Model3d, {recurseIntoArrays: true}> = {},
