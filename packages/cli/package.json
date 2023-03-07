@@ -22,6 +22,7 @@
     "@types/prettier": "^2.7.2",
     "@types/recursive-readdir": "^2.2.1",
     "@types/tar-fs": "^2.0.1",
+    "get-port": "^7.0.0",
     "tempy": "^3.0.0",
     "type-fest": "^3.6.0",
     "vitest": "^0.33.0"

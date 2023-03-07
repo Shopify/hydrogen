@@ -7,6 +7,7 @@ import {resolvePath} from '@shopify/cli-kit/node/path';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {DEFAULT_PORT} from './flags.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -21,7 +22,7 @@ export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygen>>;
 
 export async function startMiniOxygen({
   root,
-  port = 3000,
+  port = DEFAULT_PORT,
   watch = false,
   buildPathWorkerFile,
   buildPathClient,
