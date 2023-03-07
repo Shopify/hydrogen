@@ -5,7 +5,7 @@ import {
 } from '@shopify/cli-kit/node/node-package-manager';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import Flags from '@oclif/core/lib/flags.js';
-import {output, path} from '@shopify/cli-kit';
+import {output, path, environment} from '@shopify/cli-kit';
 import {
   commonFlags,
   parseProcessFlags,
@@ -210,6 +210,15 @@ export async function runInit(
       ).installDeps === 'true';
 
     if (installDeps) {
+      if (await environment.local.isShopify()) {
+        output.info("[Shopifolks-only] Configuring the project's NPM registry");
+
+        const npmrcPath = path.join(projectDir, '.npmrc');
+        const npmrcContent = `@shopify:registry=https://registry.npmjs.org\n`;
+
+        await file.appendFile(npmrcPath, npmrcContent);
+      }
+
       await installNodeModules({
         directory: projectDir,
         packageManager,
