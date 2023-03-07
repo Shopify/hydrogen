@@ -35,12 +35,12 @@ const data: ReferenceEntityTemplateSchema = {
           tabs: [
             {
               title: 'JavaScript',
-              code: './ShopPayButton.example.2.jsx',
+              code: './ShopPayButton2.example.jsx',
               language: 'jsx',
             },
             {
               title: 'TypeScript',
-              code: './ShopPayButton.example.2.tsx',
+              code: './ShopPayButton2.example.tsx',
               language: 'tsx',
             },
           ],
