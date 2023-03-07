@@ -207,7 +207,7 @@ function collectionJsonLd({
         collection?.seo?.description ?? collection?.description ?? '',
       ),
       image: collection?.image?.url,
-      url: `/collections/collection.handle`,
+      url: `/collections/${collection.handle}`,
       mainEntity: {
         '@type': 'ItemList',
         itemListElement,
