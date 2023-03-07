@@ -119,19 +119,23 @@ export function Image({
    */
   if (loaderOptions) {
     console.warn(
-      `Deprecated property from original Image component in use: ` +
-        `Use the \`crop\`, \`width\`, \`height\`, and src props, or ` +
+      [
+        `Deprecated property from original Image component in use:`,
+        `Use the \`crop\`, \`width\`, \`height\`, and src props, or`,
         `the \`data\` prop to achieve the same result. Image used is ${
           src || data?.url
         }`,
+      ].join(' '),
     );
   }
 
   if (widths) {
     console.warn(
-      `Deprecated property from original Image component in use: ` +
-        `\`widths\` are now calculated automatically based on the ` +
+      [
+        `Deprecated property from original Image component in use:`,
+        `\`widths\` are now calculated automatically based on the`,
         `config and width props. Image used is ${src || data?.url}`,
+      ].join(' '),
     );
   }
 
@@ -195,9 +199,11 @@ export function Image({
 
   if (!sizes && !isFixedWidth(normalizedWidth)) {
     console.warn(
-      'No sizes prop provided to Image component, ' +
-        'you may be loading unnecessarily large images. ' +
+      [
+        'No sizes prop provided to Image component,',
+        'you may be loading unnecessarily large images.',
         `Image used is ${src || data?.url}`,
+      ].join(' '),
     );
   }
 
