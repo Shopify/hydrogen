@@ -135,14 +135,6 @@ export function Image({
     );
   }
 
-  if (!sizes) {
-    console.warn(
-      'No sizes prop provided to Image component, ' +
-        'you may be loading unnecessarily large images. ' +
-        `Image used is ${src || data?.url}`,
-    );
-  }
-
   /* Only use data width if height is also set */
 
   const dataWidth: number | undefined =
@@ -200,6 +192,14 @@ export function Image({
     startingWidth,
     incrementSize,
   );
+
+  if (!sizes && !isFixedWidth(normalizedWidth)) {
+    console.warn(
+      'No sizes prop provided to Image component, ' +
+        'you may be loading unnecessarily large images. ' +
+        `Image used is ${src || data?.url}`,
+    );
+  }
 
   /*
    * We check to see whether the image is fixed width or not,
