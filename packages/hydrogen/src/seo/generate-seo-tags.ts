@@ -1,11 +1,12 @@
-import type {Maybe} from '@shopify/hydrogen-react/storefront-api-types';
-import type {WithContext, Thing} from 'schema-dts';
 import type {ComponentPropsWithoutRef} from 'react';
+import type {Maybe} from '@shopify/hydrogen-react/storefront-api-types';
+import type {Thing, WithContext} from 'schema-dts';
 
 const ERROR_PREFIX = 'Error in SEO input: ';
+
 // TODO: Refactor this into more reusible validators or use a library like zod to do this if we decide to use it in
 // other places. @cartogram
-const schema = {
+export const schema = {
   title: {
     validate: (value: unknown) => {
       if (typeof value === 'string' && value.length > 120) {
@@ -49,7 +50,7 @@ const schema = {
   },
 };
 
-export interface Seo<Schema extends Thing = Thing> {
+export interface SeoConfig<Schema extends Thing = Thing> {
   /**
    * The <title> HTML element defines the document's title that is shown in a browser's title bar or a page's tab. It
    * only contains text; tags within the element are ignored.
@@ -90,7 +91,6 @@ export interface Seo<Schema extends Thing = Thing> {
    *   ]
    * }
    * ```
-   *
    */
   media?:
     | Maybe<string>
@@ -175,9 +175,8 @@ export interface Seo<Schema extends Thing = Thing> {
    * @see https://schema.org/docs/schemas.html
    * @see https://developers.google.com/search/docs/guides/intro-structured-data
    * @see https://developer.mozilla.org/en-US/docs/Web/HTML/Element/script
-   *
    */
-  jsonLd?: WithContext<Schema>;
+  jsonLd?: WithContext<Schema> | WithContext<Schema>[];
   /**
    * The `alternates` property is used to specify the language and geographical targeting when you have multiple
    * versions of the same page in different languages. The `url` property tells search engines about these variations
@@ -215,7 +214,7 @@ export interface Seo<Schema extends Thing = Thing> {
 /**
  * @see https://developers.google.com/search/docs/crawling-indexing/robots-meta-tag
  */
-interface RobotsOptions {
+export interface RobotsOptions {
   /**
    * Set the maximum size of an image preview for this page in a search results Can be one of the following:
    *
@@ -317,7 +316,7 @@ export type SeoMedia = {
   altText: Maybe<string> | undefined;
 };
 
-export type TagKey = 'title' | 'base' | 'meta' | 'link' | 'script';
+type TagKey = 'title' | 'base' | 'meta' | 'link' | 'script';
 
 export interface CustomHeadTagObject {
   tag: TagKey;
@@ -333,18 +332,13 @@ export interface CustomHeadTagObject {
  */
 export function generateSeoTags<
   Schema extends Thing,
-  T extends Seo<Schema> = Seo<Schema>,
+  T extends SeoConfig<Schema> = SeoConfig<Schema>,
 >(seoInput: T): CustomHeadTagObject[] {
   const output: CustomHeadTagObject[] = [];
 
-  // TODO: Type this with `Schema` when we can use `Schema` as a generic type argument.
-  let jsonLd: any = {
-    '@context': 'https://schema.org',
-    '@type': 'Thing',
-  };
-
   for (const seoKey of Object.keys(seoInput)) {
-    const values = ensureArray(seoInput[seoKey as keyof T]);
+    const keyValue = seoInput[seoKey as keyof T];
+    const values = ensureArray(keyValue);
     let content;
 
     if (!values) {
@@ -370,8 +364,6 @@ export function generateSeoTags<
             generateTag('meta', {name: 'twitter:title', content: title}),
           );
 
-          jsonLd.name = content;
-
           break;
         }
 
@@ -393,8 +385,6 @@ export function generateSeoTags<
             }),
           );
 
-          jsonLd.description = content;
-
           break;
 
         case 'url':
@@ -404,9 +394,6 @@ export function generateSeoTags<
             generateTag('meta', {property: 'og:url', content}),
             generateTag('link', {rel: 'canonical', href: content}),
           );
-
-          jsonLd.url = content;
-          jsonLd['@type'] = inferSchemaType(content);
 
           break;
 
@@ -420,21 +407,14 @@ export function generateSeoTags<
 
           break;
 
-        case 'jsonLd':
-          jsonLd = {...jsonLd, ...value};
-
-          break;
-
         case 'media': {
-          const values = ensureArray(value as unknown as Seo['media']);
+          const values = ensureArray(value as unknown as SeoConfig['media']);
 
           for (const media of values) {
             if (typeof media === 'string') {
               tagResults.push(
                 generateTag('meta', {name: 'og:image', content: media}),
               );
-
-              jsonLd.image = media;
             }
 
             if (media && typeof media === 'object') {
@@ -475,8 +455,26 @@ export function generateSeoTags<
           break;
         }
 
+        case 'jsonLd': {
+          const tag = generateTag(
+            'script',
+            {
+              type: 'application/ld+json',
+              children: JSON.stringify(value),
+            },
+            // @ts-expect-error
+            `json-ld-${value?.['@type'] || value?.name || ''}`,
+          );
+
+          tagResults.push(tag);
+
+          break;
+        }
+
         case 'alternates': {
-          const alternates = ensureArray(value as unknown as Seo['alternates']);
+          const alternates = ensureArray(
+            value as unknown as SeoConfig['alternates'],
+          );
 
           for (const alternate of alternates) {
             if (!alternate) {
@@ -548,135 +546,14 @@ export function generateSeoTags<
       return tagResults;
     });
 
-    const entries = tags.flat();
+    const entries: CustomHeadTagObject[] = tags
+      .flat()
+      .filter((value) => !!value);
 
-    output.push(
-      // @ts-expect-error untyped
-      entries.filter((value) => !!value),
-    );
+    output.push(...entries);
   }
 
-  const additionalTags = [
-    generateTag('meta', {property: 'og:type', content: 'website'}),
-    generateTag('meta', {
-      name: 'twitter:card',
-      content: 'summary_large_image',
-    }),
-  ];
-
-  return [...output, ...additionalTags]
-    .flat()
-    .sort((a, b) => a.key.localeCompare(b.key))
-    .concat(
-      // move ld+json to the end
-      generateTag('script', {
-        type: 'application/ld+json',
-        children: jsonLd as unknown as string,
-      }),
-    )
-    .flat();
-}
-
-type MetaTagProps =
-  | ComponentPropsWithoutRef<'title'>
-  | ComponentPropsWithoutRef<'base'>
-  | ComponentPropsWithoutRef<'meta'>
-  | ComponentPropsWithoutRef<'link'>
-  | ComponentPropsWithoutRef<'script'>;
-
-function generateTag(
-  tagName: 'script',
-  input: ComponentPropsWithoutRef<'script'>,
-  group?: string,
-): CustomHeadTagObject;
-function generateTag(
-  tagName: 'title',
-  input: ComponentPropsWithoutRef<'title'>,
-  group?: string,
-): CustomHeadTagObject;
-function generateTag(
-  tagName: 'base',
-  input: ComponentPropsWithoutRef<'base'>,
-  group?: string,
-): CustomHeadTagObject;
-function generateTag(
-  tagName: 'meta',
-  input: ComponentPropsWithoutRef<'meta'>,
-  group?: string,
-): CustomHeadTagObject;
-function generateTag(
-  tagName: 'link',
-  input: ComponentPropsWithoutRef<'link'>,
-  group?: string,
-): CustomHeadTagObject;
-function generateTag(
-  tagName: TagKey,
-  input: MetaTagProps,
-  group?: string,
-): CustomHeadTagObject {
-  const tag: CustomHeadTagObject = {tag: tagName, props: {}, key: ''};
-
-  // title tags don't have props so move to children
-  if (tagName === 'title') {
-    tag.children = input.title as string;
-    tag.key = generateKey(tag);
-
-    return tag;
-  }
-
-  // also move the input children to children and delete it
-  if (tagName === 'script') {
-    tag.children = JSON.stringify(input.children);
-
-    delete input.children;
-  }
-
-  // the rest goes on props
-  tag.props = input;
-
-  // remove empty props
-  Object.keys(tag.props).forEach(
-    (key) => !tag.props[key] && delete tag.props[key],
-  );
-
-  tag.key = generateKey(tag, group);
-
-  return tag;
-}
-
-function generateKey(tag: CustomHeadTagObject, group?: string) {
-  const {tag: tagName, props} = tag;
-
-  if (tagName === 'title') {
-    // leading 0 moves title to the top when sorting
-    return '0-title';
-  }
-
-  if (tagName === 'meta') {
-    // leading 0 moves meta to the top when sorting exclude secure_url from the logic because the content is the same as
-    // url
-    const priority =
-      props.content === group &&
-      typeof props.property === 'string' &&
-      !props.property.endsWith('secure_url') &&
-      '0';
-    const groupName = [group, priority];
-
-    return [tagName, ...groupName, props.property || props.name]
-      .filter((x) => x)
-      .join('-');
-  }
-
-  if (tagName === 'link') {
-    const key = [tagName, props.rel, props.hrefLang || props.media]
-      .filter((x) => x)
-      .join('-');
-
-    // replace spaces with dashes, needed for media prop
-    return key.replace(/\s+/g, '-');
-  }
-
-  return `${tagName}-${props.type}`;
+  return output.sort((a, b) => a.key.localeCompare(b.key));
 }
 
 function renderTitle<T extends CustomHeadTagObject['children']>(
@@ -728,77 +605,125 @@ function inferMimeType(url: Maybe<string> | undefined) {
   return 'image/jpeg';
 }
 
-export type SchemaType =
-  | 'Product'
-  | 'ItemList'
-  | 'Organization'
-  | 'WebSite'
-  | 'WebPage'
-  | 'BlogPosting'
-  | 'Thing';
+type MetaTagProps =
+  | ComponentPropsWithoutRef<'title'>
+  | ComponentPropsWithoutRef<'base'>
+  | ComponentPropsWithoutRef<'meta'>
+  | ComponentPropsWithoutRef<'link'>
+  | ComponentPropsWithoutRef<'script'>;
 
-function inferSchemaType(url: Maybe<string> | undefined): SchemaType {
-  const defaultType = 'Thing';
+export function generateTag(
+  tagName: 'script',
+  input: ComponentPropsWithoutRef<'script'>,
+  group?: string,
+): CustomHeadTagObject;
+export function generateTag(
+  tagName: 'title',
+  input: ComponentPropsWithoutRef<'title'>,
+  group?: string,
+): CustomHeadTagObject;
+export function generateTag(
+  tagName: 'base',
+  input: ComponentPropsWithoutRef<'base'>,
+  group?: string,
+): CustomHeadTagObject;
+export function generateTag(
+  tagName: 'meta',
+  input: ComponentPropsWithoutRef<'meta'>,
+  group?: string,
+): CustomHeadTagObject;
+export function generateTag(
+  tagName: 'link',
+  input: ComponentPropsWithoutRef<'link'>,
+  group?: string,
+): CustomHeadTagObject;
+export function generateTag(
+  tagName: TagKey,
+  input: MetaTagProps,
+  group?: string,
+): CustomHeadTagObject {
+  const tag: CustomHeadTagObject = {tag: tagName, props: {}, key: ''};
 
-  if (!url) {
-    return defaultType;
+  // title tags don't have props so move to children
+  if (tagName === 'title') {
+    tag.children = input.title as string;
+    tag.key = generateKey(tag);
+
+    return tag;
   }
 
-  const routes: {type: SchemaType; pattern: RegExp | string}[] = [
-    {
-      type: 'WebSite',
-      pattern: '^/$',
-    },
-    {
-      type: 'Product',
-      pattern: '/products/.*',
-    },
-    {
-      type: 'ItemList',
-      pattern: /\/collections$/,
-    },
-    {
-      type: 'ItemList',
-      pattern: /\/collections\/([^/]+)/,
-    },
-    {
-      type: 'WebPage',
-      pattern: /\/pages\/([^/]+)/,
-    },
-    {
-      type: 'WebSite',
-      pattern: /\/blogs\/([^/]+)/,
-    },
-    {
-      type: 'BlogPosting',
-      pattern: /\/blogs\/([^/]+)\/([^/]+)/,
-    },
-    {
-      type: 'Organization',
-      pattern: '/policies',
-    },
-    {
-      type: 'Organization',
-      pattern: /\/policies\/([^/]+)/,
-    },
-  ];
+  // also move the input children to children and delete it
+  if (tagName === 'script') {
+    tag.children = input.children as string;
+    tag.key = generateKey(tag, group);
+    delete input.children;
+    tag.props = input;
+    return tag;
+  }
 
-  const typeMatches = routes.filter((route) => {
-    const {pattern} = route;
-    const regex = new RegExp(pattern);
-    return regex.test(url);
-  });
+  // the rest goes on props
+  tag.props = input;
 
-  return typeMatches.length > 0
-    ? typeMatches[typeMatches.length - 1].type
-    : defaultType;
+  // remove empty props
+  Object.keys(tag.props).forEach(
+    (key) => !tag.props[key] && delete tag.props[key],
+  );
+
+  tag.key = generateKey(tag, group);
+
+  return tag;
 }
 
-function ensureArray<T>(value: T | T[]): T[] {
+//**
+// * Generate a unique key for a tag
+// * @param tag - a generated tag object
+// * @param group? - the group the tag belongs to
+// * @returns - a unique key to be used for react
+// */
+export function generateKey(tag: CustomHeadTagObject, group?: string) {
+  const {tag: tagName, props} = tag;
+
+  if (tagName === 'title') {
+    // leading 0 moves title to the top when sorting
+    return '0-title';
+  }
+
+  if (tagName === 'meta') {
+    // leading 0 moves meta to the top when sorting exclude secure_url from the logic because the content is the same as
+    // url
+    const priority =
+      props.content === group &&
+      typeof props.property === 'string' &&
+      !props.property.endsWith('secure_url') &&
+      '0';
+    const groupName = [group, priority];
+
+    return [tagName, ...groupName, props.property || props.name]
+      .filter((x) => x)
+      .join('-');
+  }
+
+  if (tagName === 'link') {
+    const key = [tagName, props.rel, props.hrefLang || props.media]
+      .filter((x) => x)
+      .join('-');
+
+    // replace spaces with dashes, needed for media prop
+    return key.replace(/\s+/g, '-');
+  }
+
+  if (tagName === 'script') {
+    return `${tagName}-${group}`;
+  }
+
+  return `${tagName}-${props.type}`;
+}
+
+export function ensureArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
 }
 
-function validate(
+export function validate(
   schema: {validate: (data: unknown) => unknown},
   data: unknown,
 ) {
