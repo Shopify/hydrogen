@@ -4686,7 +4686,7 @@
     "description": "The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout. It renders a [`<shop-pay-button>`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically.",
     "type": "component",
     "defaultExample": {
-      "description": "Example without `<ShopifyProvider>`",
+      "description": "<ShopPayButton> without <ShopifyProvider>",
       "codeblock": {
         "tabs": [
           {
@@ -4700,7 +4700,7 @@
             "language": "tsx"
           }
         ],
-        "title": "Example without `<ShopifyProvider>`"
+        "title": "<ShopPayButton> without <ShopifyProvider>"
       }
     },
     "examples": {
@@ -4721,7 +4721,7 @@
                 "language": "tsx"
               }
             ],
-            "title": "Example with `<ShopifyProvider>`"
+            "title": "<ShopPayButton> with <ShopifyProvider>"
           }
         }
       ]
