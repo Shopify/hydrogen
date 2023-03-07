@@ -1,7 +1,7 @@
 import {createElement} from 'react';
-import {vi, expect, it, describe, afterEach} from 'vitest';
-import {useMatches, Location, RouteMatch} from '@remix-run/react';
-import {render, cleanup} from '@testing-library/react';
+import {afterEach, describe, expect, it, vi} from 'vitest';
+import {Location, RouteMatch, useMatches} from '@remix-run/react';
+import {cleanup, render} from '@testing-library/react';
 
 import {Seo} from './seo';
 
@@ -14,6 +14,63 @@ describe('seo', () => {
   afterEach(() => {
     cleanup();
     vi.resetAllMocks();
+  });
+
+  it('it does not render any tags if seo is not provided', async () => {
+    vi.mocked(useMatches).mockReturnValueOnce([
+      fillMatch({
+        data: {},
+      }),
+    ]);
+
+    const {asFragment} = render(createElement(Seo));
+
+    expect(asFragment()).toMatchInlineSnapshot('<DocumentFragment />');
+  });
+
+  it('takes the latest route match', async () => {
+    vi.mocked(useMatches).mockReturnValueOnce([
+      fillMatch({
+        data: {
+          seo: {title: 'Snow devil', description: 'A hydrogen storefront'},
+        },
+      }),
+      fillMatch({
+        data: {
+          seo: {title: 'Sand devil'},
+        },
+      }),
+    ]);
+
+    const {asFragment} = render(createElement(Seo));
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <title>
+          Sand devil
+        </title>
+        <meta
+          content="A hydrogen storefront"
+          name="description"
+        />
+        <meta
+          content="A hydrogen storefront"
+          property="og:description"
+        />
+        <meta
+          content="Sand devil"
+          property="og:title"
+        />
+        <meta
+          content="A hydrogen storefront"
+          name="twitter:description"
+        />
+        <meta
+          content="Sand devil"
+          name="twitter:title"
+        />
+      </DocumentFragment>
+    `);
   });
 
   it('uses seo loader data to generate the meta tags', async () => {
@@ -45,14 +102,6 @@ describe('seo', () => {
           property="og:title"
         />
         <meta
-          content="website"
-          property="og:type"
-        />
-        <meta
-          content="summary_large_image"
-          name="twitter:card"
-        />
-        <meta
           content="A hydrogen storefront"
           name="twitter:description"
         />
@@ -60,11 +109,6 @@ describe('seo', () => {
           content="Snow devil"
           name="twitter:title"
         />
-        <script
-          type="application/ld+json"
-        >
-          {"@context":"https://schema.org","@type":"Thing","name":"Snow devil","description":"A hydrogen storefront"}
-        </script>
       </DocumentFragment>
     `);
   });
@@ -103,14 +147,6 @@ describe('seo', () => {
           property="og:title"
         />
         <meta
-          content="website"
-          property="og:type"
-        />
-        <meta
-          content="summary_large_image"
-          name="twitter:card"
-        />
-        <meta
           content="A hydrogen storefront"
           name="twitter:description"
         />
@@ -118,10 +154,112 @@ describe('seo', () => {
           content="Sand devil"
           name="twitter:title"
         />
+      </DocumentFragment>
+    `);
+  });
+
+  it('it renders a root jsonLd tag', async () => {
+    vi.mocked(useMatches).mockReturnValueOnce([
+      fillMatch({
+        data: {
+          seo: {
+            jsonLd: {
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Hydrogen Root',
+            },
+          },
+        },
+      }),
+    ]);
+
+    const {asFragment} = render(createElement(Seo));
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
         <script
           type="application/ld+json"
         >
-          {"@context":"https://schema.org","@type":"Thing","name":"Sand devil","description":"A hydrogen storefront"}
+          {"@context":"https://schema.org","@type":"Organization","name":"Hydrogen Root"}
+        </script>
+      </DocumentFragment>
+    `);
+  });
+
+  it('it renders multiple jsonLd tags at the root', async () => {
+    vi.mocked(useMatches).mockReturnValueOnce([
+      fillMatch({
+        data: {
+          seo: {
+            jsonLd: [
+              {
+                '@context': 'https://schema.org',
+                '@type': 'Organization',
+                name: 'Hydrogen Root',
+              },
+              {
+                '@context': 'https://schema.org',
+                '@type': 'Breadcrumbs',
+                name: 'Main Menu',
+              },
+            ],
+          },
+        },
+      }),
+    ]);
+
+    const {asFragment} = render(createElement(Seo));
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <script
+          type="application/ld+json"
+        >
+          [{"@context":"https://schema.org","@type":"Organization","name":"Hydrogen Root"},{"@context":"https://schema.org","@type":"Breadcrumbs","name":"Main Menu"}]
+        </script>
+      </DocumentFragment>
+    `);
+  });
+
+  it('it renders multiple jsonLd tags (layout and route)', async () => {
+    vi.mocked(useMatches).mockReturnValueOnce([
+      fillMatch({
+        data: {
+          seo: {
+            jsonLd: {
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'Hydrogen Store',
+            },
+          },
+        },
+      }),
+      fillMatch({
+        data: {
+          seo: {
+            jsonLd: {
+              '@context': 'https://schema.org',
+              '@type': 'Product',
+              name: 'Hydrogen Product',
+            },
+          },
+        },
+      }),
+    ]);
+
+    const {asFragment} = render(createElement(Seo));
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <script
+          type="application/ld+json"
+        >
+          {"@context":"https://schema.org","@type":"Organization","name":"Hydrogen Store"}
+        </script>
+        <script
+          type="application/ld+json"
+        >
+          {"@context":"https://schema.org","@type":"Product","name":"Hydrogen Product"}
         </script>
       </DocumentFragment>
     `);

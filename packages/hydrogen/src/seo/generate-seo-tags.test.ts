@@ -1,6 +1,6 @@
-import {expect, describe, afterAll, it, vi} from 'vitest';
-import {generateSeoTags, type Seo} from './generate-seo-tags';
-import type {Product} from 'schema-dts';
+import type {Organization, Product, Thing} from 'schema-dts';
+import {afterAll, describe, expect, it, vi} from 'vitest';
+import {generateSeoTags, type SeoConfig} from './generate-seo-tags';
 
 describe('generateSeoTags', () => {
   const consoleMock = {
@@ -30,34 +30,7 @@ describe('generateSeoTags', () => {
     const output = generateSeoTags(input);
 
     // Then
-    expect(output).toMatchInlineSnapshot(`
-      [
-        {
-          "key": "meta-og:type",
-          "props": {
-            "content": "website",
-            "property": "og:type",
-          },
-          "tag": "meta",
-        },
-        {
-          "key": "meta-twitter:card",
-          "props": {
-            "content": "summary_large_image",
-            "name": "twitter:card",
-          },
-          "tag": "meta",
-        },
-        {
-          "children": "{\\"@context\\":\\"https://schema.org\\",\\"@type\\":\\"Thing\\"}",
-          "key": "script-application/ld+json",
-          "props": {
-            "type": "application/ld+json",
-          },
-          "tag": "script",
-        },
-      ]
-    `);
+    expect(output).toMatchInlineSnapshot('[]');
   });
 
   describe('title', () => {
@@ -150,7 +123,6 @@ describe('generateSeoTags', () => {
       generateSeoTags(input);
 
       // Then
-
       expect(console.warn).toHaveBeenCalledWith(
         'Error in SEO input: `title` should not be longer than 120 characters',
       );
@@ -635,54 +607,6 @@ describe('generateSeoTags', () => {
     });
   });
 
-  describe('jsonLd', () => {
-    it('should add additional jsonLd values', () => {
-      // Given
-      const input = {
-        jsonLd: {
-          '@context': 'https://schema.org',
-          '@type': 'Product',
-          aggregateRating: {
-            '@type': 'AggregateRating',
-            bestRating: '100',
-            ratingCount: '24',
-            ratingValue: '87',
-          },
-          offers: {
-            '@type': 'AggregateOffer',
-            highPrice: '$1495',
-            lowPrice: '$1250',
-            offerCount: '8',
-            offers: [
-              {
-                '@type': 'Offer',
-                url: 'hydrogen.shop/discount/1234',
-              },
-            ],
-          },
-        },
-      } satisfies Seo<Product>;
-
-      // When
-      const output = generateSeoTags<Product>(input);
-
-      console.warn(output);
-      // Then
-      expect(output).toEqual(
-        expect.arrayContaining([
-          {
-            children: JSON.stringify(input.jsonLd),
-            key: 'script-application/ld+json',
-            props: {
-              type: 'application/ld+json',
-            },
-            tag: 'script',
-          },
-        ]),
-      );
-    });
-  });
-
   describe('alternates', () => {
     it('should add alternate links for each alternate', () => {
       // Given
@@ -816,6 +740,172 @@ describe('generateSeoTags', () => {
             name: 'robots',
           },
           tag: 'meta',
+        },
+      ]),
+    );
+  });
+
+  describe('jsonLd', () => {
+    it('should not generate jsonLd if not configured', () => {
+      // Given
+      const input = {
+        jsonLd: {},
+      } as SeoConfig<Thing>;
+
+      // When
+      const output = generateSeoTags(input);
+
+      // Then
+      expect(output).toEqual(expect.arrayContaining([]));
+    });
+
+    it('should generate Organization jsonLd tag', () => {
+      // Given
+      const input = {
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'Hydrogen',
+          logo: 'https://cdn.shopify.com/s/files/1/0551/4566/0472/files/Logotype_086d64de-1273-4dbc-91c5-8d6d161d85d4.png?v=1655847948',
+          sameAs: [
+            'https://twitter.com/shopify',
+            'https://facebook.com/shopify',
+            'https://instagram.com/shopify',
+            'https://youtube.com/shopify',
+            'https://tiktok.com/@shopify',
+          ],
+          url: 'http://localhost:3000/products/the-full-stack',
+        },
+      } satisfies SeoConfig<Organization>;
+
+      // When
+      const output = generateSeoTags(input);
+
+      // Then
+      expect(output).toEqual(
+        expect.arrayContaining([
+          {
+            children: JSON.stringify(input.jsonLd),
+            key: 'script-json-ld-Organization',
+            props: {
+              type: 'application/ld+json',
+            },
+            tag: 'script',
+          },
+        ]),
+      );
+    });
+
+    it('should generate Product jsonLd tag', () => {
+      // Given
+      const input = {
+        jsonLd: {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            bestRating: '100',
+            ratingCount: '24',
+            ratingValue: '87',
+          },
+          offers: {
+            '@type': 'AggregateOffer',
+            highPrice: '$1495',
+            lowPrice: '$1250',
+            offerCount: '8',
+            offers: [
+              {
+                '@type': 'Offer',
+                url: 'hydrogen.shop/discounts/1234',
+              },
+            ],
+          },
+        },
+      } satisfies SeoConfig<Product>;
+
+      // When
+      const output = generateSeoTags(input);
+
+      // Then
+      expect(output).toEqual(
+        expect.arrayContaining([
+          {
+            children: JSON.stringify(input.jsonLd),
+            key: 'script-json-ld-Product',
+            props: {
+              type: 'application/ld+json',
+            },
+            tag: 'script',
+          },
+        ]),
+      );
+    });
+  });
+
+  it('should generate both Organization and Product jsonLd tags', () => {
+    // Given
+    const input = {
+      jsonLd: [
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Organization',
+          name: 'Hydrogen',
+          logo: 'https://cdn.shopify.com/s/files/1/0551/4566/0472/files/Logotype_086d64de-1273-4dbc-91c5-8d6d161d85d4.png?v=1655847948',
+          sameAs: [
+            'https://twitter.com/shopify',
+            'https://facebook.com/shopify',
+            'https://instagram.com/shopify',
+            'https://youtube.com/shopify',
+            'https://tiktok.com/@shopify',
+          ],
+          url: 'http://localhost:3000/products/the-full-stack',
+        },
+        {
+          '@context': 'https://schema.org',
+          '@type': 'Product',
+          aggregateRating: {
+            '@type': 'AggregateRating',
+            bestRating: '100',
+            ratingCount: '24',
+            ratingValue: '87',
+          },
+          offers: {
+            '@type': 'AggregateOffer',
+            highPrice: '$1495',
+            lowPrice: '$1250',
+            offerCount: '8',
+            offers: [
+              {
+                '@type': 'Offer',
+                url: 'hydrogen.shop/discounts/1234',
+              },
+            ],
+          },
+        },
+      ],
+    } satisfies SeoConfig<Organization | Product>;
+
+    // When
+    const output = generateSeoTags(input);
+
+    // Then
+    expect(output).toEqual(
+      expect.arrayContaining([
+        {
+          children: JSON.stringify(input.jsonLd[0]),
+          key: 'script-json-ld-Organization',
+          props: {
+            type: 'application/ld+json',
+          },
+          tag: 'script',
+        },
+        {
+          children: JSON.stringify(input.jsonLd[1]),
+          key: 'script-json-ld-Product',
+          props: {
+            type: 'application/ld+json',
+          },
+          tag: 'script',
         },
       ]),
     );

@@ -1,9 +1,9 @@
 export * from './storefront';
 export {
+  CacheCustom,
+  CacheLong,
   CacheNone,
   CacheShort,
-  CacheLong,
-  CacheCustom,
   generateCacheControlHeader,
 } from './cache/strategies';
 export {InMemoryCache} from './cache/in-memory';
@@ -11,7 +11,7 @@ export {InMemoryCache} from './cache/in-memory';
 export {storefrontRedirect} from './routing/redirect';
 export {graphiqlLoader} from './routing/graphiql';
 export {Seo} from './seo/seo';
-export {type Seo as SeoConfig} from './seo/generate-seo-tags';
+export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 
 export {
