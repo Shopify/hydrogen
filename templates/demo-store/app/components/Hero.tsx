@@ -62,6 +62,7 @@ export function Hero({
                 widths={[450, 700]}
                 width={375}
                 data={spreadSecondary.reference as Media}
+                loading={loading}
               />
             </div>
           )}
