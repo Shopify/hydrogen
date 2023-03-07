@@ -5,33 +5,13 @@ import type {
   CollectionConnection,
   Filter,
 } from '@shopify/hydrogen/storefront-api-types';
-import {
-  flattenConnection,
-  AnalyticsPageType,
-  type SeoHandleFunction,
-} from '@shopify/hydrogen';
+import {flattenConnection, AnalyticsPageType} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
-
-const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
-  title: data?.collection?.seo?.title,
-  description: data?.collection?.seo?.description,
-  titleTemplate: '%s | Collection',
-  media: {
-    type: 'image',
-    url: data?.collection?.image?.url,
-    height: data?.collection?.image?.height,
-    width: data?.collection?.image?.width,
-    altText: data?.collection?.image?.altText,
-  },
-});
-
-export const handle = {
-  seo,
-};
+import {seoPayload} from '~/lib/seo.server';
 
 export const headers = routeHeaders;
 
@@ -144,6 +124,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   }
 
   const collectionNodes = flattenConnection(collections);
+  const seo = seoPayload.collection({collection, url: request.url});
 
   return json(
     {
@@ -155,6 +136,7 @@ export async function loader({params, request, context}: LoaderArgs) {
         collectionHandle,
         resourceId: collection.id,
       },
+      seo,
     },
     {
       headers: {

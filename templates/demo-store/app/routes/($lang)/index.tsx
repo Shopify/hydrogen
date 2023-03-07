@@ -4,6 +4,7 @@ import {Await, useLoaderData} from '@remix-run/react';
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getHeroPlaceholder} from '~/lib/placeholders';
+import {seoPayload} from '~/lib/seo.server';
 import type {
   CollectionConnection,
   Metafield,
@@ -51,6 +52,8 @@ export async function loader({params, context}: LoaderArgs) {
   }>(HOMEPAGE_SEO_QUERY, {
     variables: {handle: 'freestyle'},
   });
+
+  const seo = seoPayload.home();
 
   return defer(
     {
@@ -102,6 +105,7 @@ export async function loader({params, context}: LoaderArgs) {
       analytics: {
         pageType: AnalyticsPageType.home,
       },
+      seo,
     },
     {
       headers: {
@@ -122,13 +126,6 @@ export default function Homepage() {
 
   // TODO: skeletons vs placeholders
   const skeletons = getHeroPlaceholder([{}, {}, {}]);
-
-  // TODO: analytics
-  // useServerAnalytics({
-  //   shopify: {
-  //     pageType: ShopifyAnalyticsConstants.pageType.home,
-  //   },
-  // });
 
   return (
     <>

@@ -13,9 +13,6 @@ import {
   Money,
   ShopifyAnalyticsProduct,
   ShopPayButton,
-  flattenConnection,
-  type SeoHandleFunction,
-  type SeoConfig,
 } from '@shopify/hydrogen';
 import {
   Heading,
@@ -32,6 +29,7 @@ import {
   Button,
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
+import {seoPayload} from '~/lib/seo.server';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import type {
@@ -40,8 +38,6 @@ import type {
   Product as ProductType,
   Shop,
   ProductConnection,
-  MediaConnection,
-  MediaImage,
 } from '@shopify/hydrogen/storefront-api-types';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
@@ -90,34 +86,24 @@ export async function loader({params, request, context}: LoaderArgs) {
     price: selectedVariant.price.amount,
   };
 
-  const media = flattenConnection<MediaConnection>(product.media).find(
-    (media) => media.mediaContentType === 'IMAGE',
-  ) as MediaImage | undefined;
-
-  const seo = {
-    title: product?.seo?.title ?? product?.title,
-    media: media?.image,
-    description: product?.seo?.description ?? product?.description,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      brand: product?.vendor,
-      name: product?.title,
-    },
-  } satisfies SeoConfig<Product>;
+  const seo = seoPayload.product({
+    product,
+    selectedVariant,
+    url: request.url,
+  });
 
   return defer(
     {
       product,
       shop,
       recommended,
-      seo,
       analytics: {
         pageType: AnalyticsPageType.product,
         resourceId: product.id,
         products: [productAnalytics],
         totalValue: parseFloat(selectedVariant.price.amount),
       },
+      seo,
     },
     {
       headers: {
