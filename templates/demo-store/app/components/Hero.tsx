@@ -87,6 +87,7 @@ export function Hero({
 interface SpreadMediaProps {
   data: Media | MediaImage | MediaVideo;
   loading?: HTMLImageElement['loading'];
+  decoding?: HTMLImageElement['decoding'];
   scale?: 2 | 3;
   sizes: string;
   width: number;
@@ -96,6 +97,7 @@ interface SpreadMediaProps {
 function SpreadMedia({
   data,
   loading,
+  decoding,
   scale,
   sizes,
   width,
@@ -117,6 +119,7 @@ function SpreadMedia({
         },
         image: {
           loading,
+          decoding,
           loaderOptions: {scale, crop: 'center'},
           widths,
           sizes,
