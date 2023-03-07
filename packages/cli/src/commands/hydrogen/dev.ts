@@ -17,7 +17,12 @@ import {
   muteDevLogs,
   muteRemixLogs,
 } from '../../lib/log.js';
-import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
+import {
+  deprecated,
+  commonFlags,
+  flagsToCamelObject,
+  DEFAULT_PORT,
+} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen.js';
@@ -27,6 +32,7 @@ import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
+import {findPort} from '../../lib/find-port.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -73,7 +79,7 @@ export default class Dev extends Command {
 }
 
 async function runDev({
-  port,
+  port: portFlag = DEFAULT_PORT,
   path: appPath,
   useCodegen = false,
   codegenConfigPath,
@@ -154,7 +160,7 @@ async function runDev({
 
     miniOxygen = await startMiniOxygen({
       root,
-      port,
+      port: await findPort(portFlag),
       watch: true,
       buildPathWorkerFile,
       buildPathClient,

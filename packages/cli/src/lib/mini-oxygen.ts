@@ -17,6 +17,7 @@ import {
   NoOpLog,
 } from 'miniflare';
 import {connectToInspector, findInspectorUrl} from './mini-oxygen-inspector.js';
+import {DEFAULT_PORT} from './flags.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -31,7 +32,7 @@ export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygen>>;
 
 export async function startMiniOxygen({
   root,
-  port = 3000,
+  port = DEFAULT_PORT,
   watch = false,
   buildPathWorkerFile,
   buildPathClient,

@@ -24,6 +24,7 @@
     "@types/stack-trace": "^0.0.30",
     "@types/tar-fs": "^2.0.1",
     "devtools-protocol": "^0.0.1177611",
+    "get-port": "^7.0.0",
     "tempy": "^3.0.0",
     "type-fest": "^3.6.0",
     "vitest": "^0.33.0"
