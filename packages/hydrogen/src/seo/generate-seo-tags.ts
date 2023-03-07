@@ -553,17 +553,7 @@ export function generateSeoTags<
     output.push(...entries);
   }
 
-  const additionalTags = [
-    generateTag('meta', {property: 'og:type', content: 'website'}),
-    generateTag('meta', {
-      name: 'twitter:card',
-      content: 'summary_large_image',
-    }),
-  ];
-
-  return [...output, ...additionalTags].sort((a, b) =>
-    a.key.localeCompare(b.key),
-  );
+  return output.sort((a, b) => a.key.localeCompare(b.key));
 }
 
 function renderTitle<T extends CustomHeadTagObject['children']>(

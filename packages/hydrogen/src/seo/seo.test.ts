@@ -25,10 +25,7 @@ describe('seo', () => {
 
     const {asFragment} = render(createElement(Seo));
 
-    expect(asFragment()).toMatchInlineSnapshot(`
-      <DocumentFragment>
-      </DocumentFragment>
-    `);
+    expect(asFragment()).toMatchInlineSnapshot('<DocumentFragment />');
   });
 
   it('takes the latest route match', async () => {
@@ -63,14 +60,6 @@ describe('seo', () => {
         <meta
           content="Sand devil"
           property="og:title"
-        />
-        <meta
-          content="website"
-          property="og:type"
-        />
-        <meta
-          content="summary_large_image"
-          name="twitter:card"
         />
         <meta
           content="A hydrogen storefront"
@@ -113,14 +102,6 @@ describe('seo', () => {
           property="og:title"
         />
         <meta
-          content="website"
-          property="og:type"
-        />
-        <meta
-          content="summary_large_image"
-          name="twitter:card"
-        />
-        <meta
           content="A hydrogen storefront"
           name="twitter:description"
         />
@@ -166,14 +147,6 @@ describe('seo', () => {
           property="og:title"
         />
         <meta
-          content="website"
-          property="og:type"
-        />
-        <meta
-          content="summary_large_image"
-          name="twitter:card"
-        />
-        <meta
           content="A hydrogen storefront"
           name="twitter:description"
         />
@@ -204,14 +177,6 @@ describe('seo', () => {
 
     expect(asFragment()).toMatchInlineSnapshot(`
       <DocumentFragment>
-        <meta
-          content="website"
-          property="og:type"
-        />
-        <meta
-          content="summary_large_image"
-          name="twitter:card"
-        />
         <script
           type="application/ld+json"
         >
@@ -247,14 +212,6 @@ describe('seo', () => {
 
     expect(asFragment()).toMatchInlineSnapshot(`
       <DocumentFragment>
-        <meta
-          content="website"
-          property="og:type"
-        />
-        <meta
-          content="summary_large_image"
-          name="twitter:card"
-        />
         <script
           type="application/ld+json"
         >
@@ -294,14 +251,6 @@ describe('seo', () => {
 
     expect(asFragment()).toMatchInlineSnapshot(`
       <DocumentFragment>
-        <meta
-          content="website"
-          property="og:type"
-        />
-        <meta
-          content="summary_large_image"
-          name="twitter:card"
-        />
         <script
           type="application/ld+json"
         >

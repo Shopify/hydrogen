@@ -30,26 +30,7 @@ describe('generateSeoTags', () => {
     const output = generateSeoTags(input);
 
     // Then
-    expect(output).toMatchInlineSnapshot(`
-      [
-        {
-          "key": "meta-og:type",
-          "props": {
-            "content": "website",
-            "property": "og:type",
-          },
-          "tag": "meta",
-        },
-        {
-          "key": "meta-twitter:card",
-          "props": {
-            "content": "summary_large_image",
-            "name": "twitter:card",
-          },
-          "tag": "meta",
-        },
-      ]
-    `);
+    expect(output).toMatchInlineSnapshot('[]');
   });
 
   describe('title', () => {
