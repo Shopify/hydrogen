@@ -113,7 +113,7 @@ export function Image({
    */
   widths,
   ...passthroughProps
-}: ShopifyImageProps): JSX.Element | null {
+}: HtmlImageProps & ShopifyImageProps): JSX.Element | null {
   /*
    * Deprecated Props from original Image component
    */
@@ -431,10 +431,10 @@ export function parseAspectRatio(aspectRatio?: string): number | undefined {
   if (!aspectRatio) return;
   const [width, height] = aspectRatio.split('/');
   return 1 / (Number(width) / Number(height));
-  /* 
-    Given: 
+  /*
+    Given:
       '1/1'
-    Returns: 
+    Returns:
       0.5,
     Given:
       '4/3'
@@ -466,11 +466,11 @@ export function generateSizes(
     };
   });
   return sizes;
-  /* 
-    Given: 
+  /*
+    Given:
       ([100, 200], 1/1, 'center')
-    Returns: 
-      [{width: 100, height: 100, crop: 'center'}, 
+    Returns:
+      [{width: 100, height: 100, crop: 'center'},
       {width: 200, height: 200, crop: 'center'}]
   */
 }
