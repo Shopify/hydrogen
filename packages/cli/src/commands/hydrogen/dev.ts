@@ -15,6 +15,7 @@ import Flags from '@oclif/core/lib/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 import {checkHydrogenVersion} from '../../utils/check-version.js';
 import {addVirtualRoutes} from '../../utils/virtual-routes.js';
+import {setupLiveReload} from '../../utils/live-reload.js';
 import {findPort} from '../../utils/find-port.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
@@ -79,6 +80,8 @@ async function runDev({
   const serverBundleExists = () => file.exists(buildPathWorkerFile);
 
   const port = await findPort(portReference);
+  const remixConfig = await reloadConfig();
+  const liveReload = await setupLiveReload(remixConfig, port);
 
   let miniOxygenStarted = false;
   async function safeStartMiniOxygen() {
@@ -88,6 +91,7 @@ async function runDev({
       root,
       port,
       watch: true,
+      autoReload: !liveReload,
       buildPathWorkerFile,
       buildPathClient,
     });
@@ -99,10 +103,11 @@ async function runDev({
   }
 
   const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
-  await watch(await reloadConfig(), {
+
+  await watch(remixConfig, {
     reloadConfig,
     mode: process.env.NODE_ENV as any,
-    async onInitialBuild() {
+    async onInitialBuild(_, build) {
       await copyingFiles;
 
       if (!(await serverBundleExists())) {
@@ -119,6 +124,7 @@ async function runDev({
 
       console.timeEnd(LOG_INITIAL_BUILD);
       await safeStartMiniOxygen();
+      liveReload?.onInitialBuild(build);
     },
     async onFileCreated(file: string) {
       const [relative, absolute] = getFilePaths(file);
@@ -154,12 +160,15 @@ async function runDev({
       output.info(LOG_REBUILDING);
       console.time(LOG_REBUILT);
     },
-    async onRebuildFinish() {
+    async onRebuildFinish(_, build) {
       console.timeEnd(LOG_REBUILT);
 
       if (!miniOxygenStarted && (await serverBundleExists())) {
         console.log(''); // New line
         await safeStartMiniOxygen();
+        liveReload?.onInitialBuild(build);
+      } else if (liveReload) {
+        await liveReload.hotUpdate(build);
       }
     },
   });

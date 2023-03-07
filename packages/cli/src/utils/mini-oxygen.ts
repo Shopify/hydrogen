@@ -5,6 +5,7 @@ type MiniOxygenOptions = {
   root: string;
   port?: number;
   watch?: boolean;
+  autoReload?: boolean;
   buildPathClient: string;
   buildPathWorkerFile: string;
 };
@@ -13,6 +14,7 @@ export async function startMiniOxygen({
   root,
   port = 3000,
   watch = false,
+  autoReload = watch,
   buildPathWorkerFile,
   buildPathClient,
 }: MiniOxygenOptions) {
@@ -28,14 +30,11 @@ export async function startMiniOxygen({
     publicPath: '',
     port,
     watch,
-    autoReload: watch,
+    autoReload,
     modules: true,
     env: process.env,
     envPath: (await file.exists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
-    buildWatchPaths: watch
-      ? [path.resolve(root, buildPathWorkerFile)]
-      : undefined,
     onResponse: (request, response) =>
       // 'Request' and 'Response' types in MiniOxygen comes from
       // Miniflare and are slightly different from standard types.
@@ -58,7 +57,9 @@ export async function startMiniOxygen({
 export function logResponse(request: Request, response: Response) {
   try {
     const url = new URL(request.url);
-    if (['/graphiql'].includes(url.pathname)) return;
+    if (['/graphiql', '/__REMIX_ASSETS_MANIFEST'].includes(url.pathname)) {
+      return;
+    }
 
     const isProxy = !!response.url && response.url !== request.url;
     const isDataRequest = !isProxy && url.searchParams.has('_data');
