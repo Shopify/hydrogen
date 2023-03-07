@@ -56,7 +56,7 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
     description: 'Search results',
     seo: {
       title: 'Search',
-      description: `Showing ${products.edges.nodes.length} search results for "${searchTerm}"`,
+      description: `Showing ${products.nodes.length} search results for "${searchTerm}"`,
     },
     metafields: [],
     products,
