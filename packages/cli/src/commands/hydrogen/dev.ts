@@ -7,6 +7,7 @@ import {muteDevLogs} from '../../utils/log.js';
 import {
   deprecated,
   commonFlags,
+  DEFAULT_PORT,
   flagsToCamelObject,
 } from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
@@ -14,6 +15,7 @@ import Flags from '@oclif/core/lib/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 import {checkHydrogenVersion} from '../../utils/check-version.js';
 import {addVirtualRoutes} from '../../utils/virtual-routes.js';
+import {findPort} from '../../utils/find-port.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -44,7 +46,7 @@ export default class Dev extends Command {
 }
 
 async function runDev({
-  port,
+  port: portReference = DEFAULT_PORT,
   path: appPath,
   disableVirtualRoutes,
 }: {
@@ -75,6 +77,8 @@ async function runDev({
   };
 
   const serverBundleExists = () => file.exists(buildPathWorkerFile);
+
+  const port = await findPort(portReference);
 
   let miniOxygenStarted = false;
   async function safeStartMiniOxygen() {

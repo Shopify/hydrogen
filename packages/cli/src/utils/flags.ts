@@ -3,6 +3,8 @@ import {string as stringUtils} from '@shopify/cli-kit';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 
+export const DEFAULT_PORT = 3000;
+
 export const commonFlags = {
   path: Flags.string({
     description:
@@ -12,7 +14,7 @@ export const commonFlags = {
   port: Flags.integer({
     description: 'Port to run the server on.',
     env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
-    default: 3000,
+    default: DEFAULT_PORT,
   }),
   force: Flags.boolean({
     description:

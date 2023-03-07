@@ -1,8 +1,9 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {muteDevLogs} from '../../utils/log.js';
 import {getProjectPaths} from '../../utils/config.js';
-import {commonFlags} from '../../utils/flags.js';
+import {commonFlags, DEFAULT_PORT} from '../../utils/flags.js';
 import {startMiniOxygen} from '../../utils/mini-oxygen.js';
+import {findPort} from '../../utils/find-port.js';
 
 export default class Preview extends Command {
   static description =
@@ -21,7 +22,7 @@ export default class Preview extends Command {
 }
 
 export async function runPreview({
-  port,
+  port = DEFAULT_PORT,
   path: appPath,
 }: {
   port?: number;
@@ -35,7 +36,7 @@ export async function runPreview({
 
   await startMiniOxygen({
     root,
-    port,
+    port: await findPort(port),
     buildPathClient,
     buildPathWorkerFile,
   });
