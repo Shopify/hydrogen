@@ -5,7 +5,7 @@ export function AddVariantQuantity1({
   storeDomain,
 }: {
   variantId: string;
-  storeDomain: String;
+  storeDomain: string;
 }) {
   return <ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} />;
 }

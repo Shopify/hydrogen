@@ -4,8 +4,8 @@ import {parseGid} from './analytics-utils.js';
 
 // By using 'never' in the "or" cases below, it makes these props "exclusive" and means that you cannot pass both of them; you must pass either one OR the other.
 type ShopPayButtonProps = ShopPayButtonStyleProps &
-  (ShopPayVariantIds | ShopPayVariantAndQuantities) &
-  ShopPayDomainProps;
+  ShopPayDomainProps &
+  (ShopPayVariantIds | ShopPayVariantAndQuantities);
 
 type ShopPayButtonStyleProps = {
   /** A string of classes to apply to the `div` that wraps the Shop Pay button. */
