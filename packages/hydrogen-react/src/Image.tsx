@@ -120,7 +120,7 @@ export function Image({
   if (loaderOptions) {
     console.warn(
       `Deprecated property from original Image component in use: ` +
-        `Use the \`crop\`, \`width\`, \`height\`, and src props, or` +
+        `Use the \`crop\`, \`width\`, \`height\`, and src props, or ` +
         `the \`data\` prop to achieve the same result. Image used is ${
           src || data?.url
         }`,
@@ -154,7 +154,7 @@ export function Image({
 
   const normalizedWidth = `${
     getUnitValueParts(normalizedWidthProp.toString()).number
-  } ${getUnitValueParts(normalizedWidthProp.toString()).unit}`;
+  }${getUnitValueParts(normalizedWidthProp.toString()).unit}`;
 
   const normalizedHeight: string =
     height === undefined
