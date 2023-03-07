@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
@@ -32,6 +32,7 @@ import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {findPort} from '../../lib/find-port.js';
+import {setupLiveReload} from '../../lib/live-reload.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -153,6 +154,9 @@ async function runDev({
   let initialBuildDurationMs = 0;
   let initialBuildStartTimeMs = Date.now();
 
+  const port = await findPort(portFlag);
+  const liveReload = await setupLiveReload(remixConfig, port);
+
   let miniOxygen: MiniOxygen;
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
@@ -161,6 +165,7 @@ async function runDev({
       root,
       port: await findPort(portFlag),
       watch: true,
+      autoReload: !liveReload,
       buildPathWorkerFile,
       buildPathClient,
       env: await envPromise,
@@ -207,7 +212,7 @@ async function runDev({
           console.time(LOG_REBUILT);
         }
       },
-      async onBuildFinish() {
+      async onBuildFinish(context) {
         if (isInitialBuild) {
           await copyingFiles;
           initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
@@ -231,6 +236,9 @@ async function runDev({
           }
 
           await safeStartMiniOxygen();
+          liveReload?.onInitialBuild(context);
+        } else {
+          liveReload?.hotUpdate(context);
         }
       },
       async onFileCreated(file: string) {
