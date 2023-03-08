@@ -50,6 +50,10 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
   );
 }
 
+function xmlEncode(string: string) {
+  return string.replace(/[&<>'"]/g, (char) => `&#${char.charCodeAt(0)};`);
+}
+
 function shopSitemap({
   data,
   baseUrl,
@@ -60,7 +64,7 @@ function shopSitemap({
   const productsData = flattenConnection(data.products)
     .filter((product) => product.onlineStoreUrl)
     .map((product) => {
-      const url = `${baseUrl}/products/${product.handle}`;
+      const url = `${baseUrl}/products/${xmlEncode(product.handle)}`;
 
       const finalObject: ProductEntry = {
         url,
@@ -70,15 +74,15 @@ function shopSitemap({
 
       if (product.featuredImage?.url) {
         finalObject.image = {
-          url: product.featuredImage!.url,
+          url: xmlEncode(product.featuredImage!.url),
         };
 
         if (product.title) {
-          finalObject.image.title = product.title;
+          finalObject.image.title = xmlEncode(product.title);
         }
 
         if (product.featuredImage!.altText) {
-          finalObject.image.caption = product.featuredImage!.altText;
+          finalObject.image.caption = xmlEncode(product.featuredImage!.altText);
         }
       }
 
