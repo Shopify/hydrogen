@@ -74,6 +74,8 @@ export async function loader({context}: LoaderArgs) {
     getLayoutData(context),
   ]);
 
+  console.log('API:', context.env.PUBLIC_STORE_DOMAIN);
+
   return defer({
     layout,
     selectedLocale: context.storefront.i18n,
