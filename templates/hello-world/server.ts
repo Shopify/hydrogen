@@ -3,7 +3,7 @@ import * as remixBuild from '@remix-run/dev/server-build';
 import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
 import {
   createRequestHandler,
-  getBuyerIp,
+  getStorefrontHeaders,
   createCookieSessionStorage,
   type SessionStorage,
   type Session,
@@ -36,17 +36,15 @@ export default {
        * Create Hydrogen's Storefront client.
        */
       const {storefront} = createStorefrontClient({
-        request,
         cache,
         waitUntil,
-        buyerIp: getBuyerIp(request),
         i18n: {language: 'EN', country: 'US'},
         publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
         storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,
         storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2023-01',
         storefrontId: env.PUBLIC_STOREFRONT_ID,
-        requestGroupId: request.headers.get('request-id'),
+        storefrontHeaders: getStorefrontHeaders(request),
       });
 
       /**

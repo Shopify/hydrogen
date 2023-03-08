@@ -30,9 +30,13 @@ export function getBuyerIp(request: Request) {
   return request.headers.get('oxygen-buyer-ip') ?? undefined;
 }
 
-export function getStorefrontHeaders(
-  request: Request,
-): Record<string, string | null> {
+type StorefrontHeaders = {
+  requestGroupId: string | null;
+  buyerIp: string | null;
+  cookie: string | null;
+};
+
+export function getStorefrontHeaders(request: Request): StorefrontHeaders {
   const headers = request.headers;
   return {
     requestGroupId: headers.get('request-id'),
