@@ -24,5 +24,19 @@ export function createRequestHandler<Context = unknown>({
 }
 
 export function getBuyerIp(request: Request) {
+  console.warn(
+    '"getBuyerIp" will be deprecated. Please use "getStorefrontHeaders"',
+  );
   return request.headers.get('oxygen-buyer-ip') ?? undefined;
+}
+
+export function getStorefrontHeaders(
+  request: Request,
+): Record<string, string | null> {
+  const headers = request.headers;
+  return {
+    requestGroupId: headers.get('request-id'),
+    buyerIp: headers.get('oxygen-buyer-ip'),
+    cookie: headers.get('cookie'),
+  };
 }

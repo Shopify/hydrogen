@@ -74,13 +74,19 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
   typeof createStorefrontUtilities
 >[0] & {
-  request?: Request;
+  storefrontHeaders?: StorefrontHeaders;
   cache?: Cache;
   buyerIp?: string;
   requestGroupId?: string | null;
   storefrontId?: string;
   waitUntil?: ExecutionContext['waitUntil'];
   i18n?: TI18n;
+};
+
+type StorefrontHeaders = {
+  requestGroupId: string | null;
+  buyerIp: string | null;
+  cookie: string | null;
 };
 
 type StorefrontCommonOptions = {
@@ -123,7 +129,7 @@ const SHOPIFY_S = '_shopify_s';
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
 export function createStorefrontClient<TI18n extends I18nBase>({
-  request,
+  storefrontHeaders,
   cache,
   waitUntil,
   buyerIp,
@@ -153,18 +159,29 @@ export function createStorefrontClient<TI18n extends I18nBase>({
   const defaultHeaders = getHeaders({contentType: 'json'});
 
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
-    requestGroupId || generateUUID();
+    storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();
+
+  if (storefrontHeaders?.buyerIp)
+    defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = storefrontHeaders?.buyerIp;
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
+
   if (storefrontId) defaultHeaders[STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
-  if (request && request.headers.has('cookie')) {
-    const cookies = getShopifyCookies(request.headers.get('cookie') || '');
+  if (storefrontHeaders && storefrontHeaders.cookie) {
+    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');
 
     if (cookies[SHOPIFY_Y])
       defaultHeaders['Shopify-Storefront-Y'] = cookies[SHOPIFY_Y];
     if (cookies[SHOPIFY_S])
       defaultHeaders['Shopify-Storefront-S'] = cookies[SHOPIFY_S];
+  }
+
+  // Deprecation warning
+  if (!storefrontHeaders) {
+    console.warn(
+      '"requestGroupId" and "buyerIp" will be deprecated in the next calendar release. Please use "getStorefrontHeaders"',
+    );
   }
 
   async function fetchStorefrontApi<T>({
