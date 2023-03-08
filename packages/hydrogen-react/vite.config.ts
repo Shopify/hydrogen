@@ -109,6 +109,10 @@ export default defineConfig(({mode, ssrBuild}) => {
       environment: 'happy-dom',
       setupFiles: './vitest.setup.ts',
       restoreMocks: true,
+      coverage: {
+        provider: 'c8',
+        reporter: ['text', 'json', 'html'],
+      },
     },
   };
 });

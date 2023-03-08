@@ -170,7 +170,7 @@ export function Image({
   const normalizedSrc: string | undefined = src || data?.url;
 
   if (!normalizedSrc) {
-    console.error(`No src or data.url provided to Image component.`);
+    console.warn(`No src or data.url provided to Image component.`);
   }
 
   const normalizedAlt: string =

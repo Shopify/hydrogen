@@ -69,6 +69,19 @@ describe('<Image />', () => {
       vi.unstubAllGlobals();
     });
 
+    it('warns user if no src is provided', () => {
+      render(<Image {...defaultProps} src={undefined} />);
+
+      expect(console.warn).toHaveBeenCalledTimes(1);
+      expect(getWarnings()).toMatchInlineSnapshot(
+        `
+        [
+          "No src or data.url provided to Image component.",
+        ]
+      `,
+      );
+    });
+
     it('warns user if no sizes are provided', () => {
       render(<Image {...defaultProps} sizes={undefined} />);
 
