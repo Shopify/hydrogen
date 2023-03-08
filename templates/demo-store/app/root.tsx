@@ -74,7 +74,7 @@ export async function loader({context}: LoaderArgs) {
     getLayoutData(context),
   ]);
 
-  console.log('API:', context.env.PUBLIC_STORE_DOMAIN);
+  console.log('API:', context.storefront.getShopifyDomain());
 
   return defer({
     layout,
