@@ -1,4 +1,4 @@
-import {CustomHeadTagObject} from './generate-seo-tags';
+import type {CustomHeadTagObject} from './generate-seo-tags';
 
 export default function Logger({headTags}: {headTags: CustomHeadTagObject[]}) {
   logSeoTags(headTags);

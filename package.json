@@ -4,10 +4,11 @@
   "scripts": {
     "build": "turbo build --parallel",
     "build:pkg": "npm run build -- --filter=./packages/*",
+    "ci:checks": "turbo run lint test format:check typecheck",
     "dev": "npm run dev:pkg -- --filter=./templates/demo-store",
     "dev:pkg": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=./packages/*",
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
-    "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages && npm run lint -w demo-store",
+    "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages & npm run lint -w demo-store",
     "format": "prettier --write --ignore-unknown ./packages && npm run format -w demo-store",
     "format:check": "prettier --check --ignore-unknown ./packages && npm run format:check -w demo-store",
     "typecheck": "turbo typecheck --parallel",
@@ -27,7 +28,8 @@
     "packages/remix-oxygen",
     "packages/hydrogen",
     "packages/create-hydrogen",
-    "packages/cli"
+    "packages/cli",
+    "packages/hydrogen-react"
   ],
   "prettier": "@shopify/prettier-config",
   "devDependencies": {
@@ -40,7 +42,7 @@
     "prettier": "^2.8.4",
     "rimraf": "^3.0.2",
     "tsup": "^6.5.0",
-    "turbo": "^1.6.3",
+    "turbo": "^1.8.3",
     "typescript": "^4.9.5",
     "yorkie": "^2.0.0"
   },

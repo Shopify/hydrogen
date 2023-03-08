@@ -1,9 +1,12 @@
 import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-
 import {PageHeader, Section, Button} from '~/components';
 import invariant from 'tiny-invariant';
 import {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
+import {routeHeaders, CACHE_LONG} from '~/data/cache';
+import {seoPayload} from '~/lib/seo.server';
+
+export const headers = routeHeaders;
 
 export async function loader({request, params, context}: LoaderArgs) {
   invariant(params.policyHandle, 'Missing policy handle');
@@ -33,21 +36,17 @@ export async function loader({request, params, context}: LoaderArgs) {
     throw new Response(null, {status: 404});
   }
 
+  const seo = seoPayload.policy({policy, url: request.url});
+
   return json(
-    {policy},
+    {policy, seo},
     {
       headers: {
-        // TODO cacheLong()
+        'Cache-Control': CACHE_LONG,
       },
     },
   );
 }
-
-export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return {
-    title: data?.policy?.title ?? 'Policies',
-  };
-};
 
 export default function Policies() {
   const {policy} = useLoaderData<typeof loader>();

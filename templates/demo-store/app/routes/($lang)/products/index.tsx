@@ -1,6 +1,9 @@
-import {type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import type {ProductConnection} from '@shopify/hydrogen/storefront-api-types';
+import type {
+  ProductConnection,
+  Collection,
+} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {
   PageHeader,
@@ -13,8 +16,12 @@ import {
 } from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
+import {seoPayload} from '~/lib/seo.server';
+import {routeHeaders, CACHE_SHORT} from '~/data/cache';
 
 const PAGE_BY = 8;
+
+export const headers = routeHeaders;
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
   const variables = getPaginationVariables(request, PAGE_BY);
@@ -31,16 +38,41 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
 
   invariant(data, 'No data returned from Shopify API');
 
-  return data.products;
+  const seoCollection = {
+    id: 'all-products',
+    title: 'All Products',
+    handle: 'products',
+    descriptionHtml: 'All the store products',
+    description: 'All the store products',
+    seo: {
+      title: 'All Products',
+      description: 'All the store products',
+    },
+    metafields: [],
+    products: data.products,
+    updatedAt: '',
+  } satisfies Collection;
+
+  const seo = seoPayload.collection({
+    collection: seoCollection,
+    url: request.url,
+  });
+
+  return json(
+    {
+      products: data.products,
+      seo,
+    },
+    {
+      headers: {
+        'Cache-Control': CACHE_SHORT,
+      },
+    },
+  );
 }
 
-export const handle = {
-  seo: {
-    title: 'Products',
-  },
-};
 export default function AllProducts() {
-  const products = useLoaderData<typeof loader>();
+  const {products} = useLoaderData<typeof loader>();
 
   return (
     <>

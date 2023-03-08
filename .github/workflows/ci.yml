@@ -48,7 +48,7 @@ jobs:
       - name: 📥 Install dependencies
         run: npm ci
 
-      - name: 🔬 Lint
+      - name: 🔬 Check Formatting
         run: npm run format:check
 
   typecheck:
@@ -72,16 +72,18 @@ jobs:
       - name: 📥 Install dependencies
         run: npm ci
 
-      - name: 💾 Turbo cache
-        id: turbo-cache
-        uses: actions/cache@v3
-        with:
-          path: |
-            node_modules/.cache/turbo
-            **/.turbo
-          key: turbo-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
-          restore-keys: |
-            turbo-${{ github.job }}-${{ github.ref_name }}-
+      # Enabling the turbo cache causes deployments to fail intermittently.
+      # The build step fails with dependency issues. More investigation needed.
+      # - name: 💾 Turbo cache
+      #   id: turbo-cache
+      #   uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       node_modules/.cache/turbo
+      #       **/.turbo
+      #     key: turbo-${{ github.job }}-${{ github.ref_name }}-${{ github.sha }}
+      #     restore-keys: |
+      #       turbo-${{ github.job }}-${{ github.ref_name }}-
 
       - name: 📦 Build packages
         run: npm run build

@@ -1,6 +1,6 @@
-import {expect, describe, it, vi, beforeEach, type Mock} from 'vitest';
+import {beforeEach, describe, expect, it, type Mock, vi} from 'vitest';
 import {logSeoTags} from './log-seo-tags';
-import {CustomHeadTagObject} from './generate-seo-tags';
+import type {CustomHeadTagObject} from './generate-seo-tags';
 
 describe('logSeoTags', () => {
   const consoleMock = {

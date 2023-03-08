@@ -35,10 +35,13 @@ import {flattenConnection} from '@shopify/hydrogen';
 import {getFeaturedData} from './featured-products';
 import {doLogout} from './account/__private/logout';
 import {usePrefixPathWithLocale} from '~/lib/utils';
+import {CACHE_NONE, routeHeaders} from '~/data/cache';
 
 // Combining json + Response + defer in a loader breaks the
 // types returned by useLoaderData. This is a temporary fix.
 type TmpRemixFix = ReturnType<typeof defer<{isAuthenticated: false}>>;
+
+export const headers = routeHeaders;
 
 export async function loader({request, context, params}: LoaderArgs) {
   const {pathname} = new URL(request.url);
@@ -65,14 +68,21 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const orders = flattenConnection(customer.orders) as Order[];
 
-  return defer({
-    isAuthenticated,
-    customer,
-    heading,
-    orders,
-    addresses: flattenConnection(customer.addresses) as MailingAddress[],
-    featuredData: getFeaturedData(context.storefront),
-  });
+  return defer(
+    {
+      isAuthenticated,
+      customer,
+      heading,
+      orders,
+      addresses: flattenConnection(customer.addresses) as MailingAddress[],
+      featuredData: getFeaturedData(context.storefront),
+    },
+    {
+      headers: {
+        'Cache-Control': CACHE_NONE,
+      },
+    },
+  );
 }
 
 export default function Authenticated() {

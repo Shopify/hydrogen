@@ -1,4 +1,4 @@
-import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection,
@@ -15,14 +15,12 @@ import {
   Button,
 } from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
+import {seoPayload} from '~/lib/seo.server';
+import {CACHE_SHORT, routeHeaders} from '~/data/cache';
 
 const PAGINATION_SIZE = 8;
 
-export const handle = {
-  seo: {
-    title: 'All Collections',
-  },
-};
+export const headers = routeHeaders;
 
 export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   const variables = getPaginationVariables(request, PAGINATION_SIZE);
@@ -36,13 +34,19 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
     },
   });
 
-  return json({collections});
-};
+  const seo = seoPayload.listCollections({
+    collections,
+    url: request.url,
+  });
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'All Collections',
-  };
+  return json(
+    {collections, seo},
+    {
+      headers: {
+        'Cache-Control': CACHE_SHORT,
+      },
+    },
+  );
 };
 
 export default function Collections() {
