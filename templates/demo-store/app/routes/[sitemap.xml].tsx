@@ -66,21 +66,21 @@ function shopSitemap({
 
       const finalObject: ProductEntry = {
         url,
-        lastMod: product.updatedAt!,
+        lastMod: product.updatedAt,
         changeFreq: 'daily',
       };
 
       if (product.featuredImage?.url) {
         finalObject.image = {
-          url: xmlEncode(product.featuredImage!.url),
+          url: xmlEncode(product.featuredImage.url),
         };
 
         if (product.title) {
           finalObject.image.title = xmlEncode(product.title);
         }
 
-        if (product.featuredImage!.altText) {
-          finalObject.image.caption = xmlEncode(product.featuredImage!.altText);
+        if (product.featuredImage.altText) {
+          finalObject.image.caption = xmlEncode(product.featuredImage.altText);
         }
       }
 
@@ -118,7 +118,7 @@ function shopSitemap({
       xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
       xmlns:image="http://www.google.com/schemas/sitemap-image/1.1"
     >
-      ${urlsDatas.map((url) => renderUrlTag(url!)).join('')}
+      ${urlsDatas.map((url) => renderUrlTag(url)).join('')}
     </urlset>`;
 }
 
