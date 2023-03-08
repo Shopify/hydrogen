@@ -74,8 +74,6 @@ export async function loader({context}: LoaderArgs) {
     getLayoutData(context),
   ]);
 
-  console.log('API:', context.storefront.getShopifyDomain());
-
   return defer({
     layout,
     selectedLocale: context.storefront.i18n,
