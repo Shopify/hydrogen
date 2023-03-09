@@ -24,9 +24,6 @@ export function createRequestHandler<Context = unknown>({
 }
 
 export function getBuyerIp(request: Request) {
-  console.warn(
-    '"getBuyerIp" will be deprecated. Please use "getStorefrontHeaders"',
-  );
   return request.headers.get('oxygen-buyer-ip') ?? undefined;
 }
 
