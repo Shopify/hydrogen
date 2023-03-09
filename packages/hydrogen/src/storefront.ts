@@ -181,7 +181,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
 
   // Deprecation warning
   if (!storefrontHeaders) {
-    console.warn(
+    warnOnce(
       '"requestGroupId" and "buyerIp" will be deprecated in the next calendar release. Please use "getStorefrontHeaders"',
     );
   }
