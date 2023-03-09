@@ -8,14 +8,21 @@ const Template: Story<ButtonProps> = (props) => <ShopPayButton {...props} />;
 
 export const NoQuantity = Template.bind({});
 NoQuantity.args = {
-  variantIds: ['123', '456'],
+  variantIds: [
+    'gid://shopify/ProductVariant/123',
+    'gid://shopify/ProductVariant/456',
+  ],
+  storeDomain: 'https://notashop.myshopify.io',
   className: '',
   width: '',
 };
 
 export const Quantities = Template.bind({});
 Quantities.args = {
-  variantIdsAndQuantities: [{id: '123', quantity: 2}],
+  variantIdsAndQuantities: [
+    {id: 'gid://shopify/ProductVariant/123', quantity: 2},
+  ],
+  storeDomain: 'https://notashop.myshopify.io',
   className: '',
   width: '',
 };

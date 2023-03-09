@@ -3,7 +3,7 @@ import type {LanguageCode, CountryCode} from './storefront-api-types.js';
 import {SFAPI_VERSION} from './storefront-api-constants.js';
 import {getPublicTokenHeadersRaw} from './storefront-client.js';
 
-const ShopifyContext = createContext<ShopifyContextValue>({
+export const defaultShopifyContext: ShopifyContextValue = {
   storeDomain: 'test',
   storefrontToken: 'abc123',
   storefrontApiVersion: SFAPI_VERSION,
@@ -18,7 +18,11 @@ const ShopifyContext = createContext<ShopifyContextValue>({
   getShopifyDomain() {
     return '';
   },
-});
+};
+
+const ShopifyContext = createContext<ShopifyContextValue>(
+  defaultShopifyContext,
+);
 
 /**
  * The `<ShopifyProvider/>` component enables use of the `useShop()` hook. The component should wrap your app.
