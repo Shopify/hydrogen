@@ -2,12 +2,16 @@ import {
   createStorefrontClient as createStorefrontUtilities,
   getShopifyCookies,
   type StorefrontApiResponseOk,
+  SHOPIFY_S,
+  SHOPIFY_Y,
+  SHOPIFY_STOREFRONT_ID_HEADER,
+  SHOPIFY_STOREFRONT_Y_HEADER,
+  SHOPIFY_STOREFRONT_S_HEADER,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
   STOREFRONT_API_BUYER_IP_HEADER,
-  STOREFRONT_ID_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
 } from './constants';
 import {
@@ -124,8 +128,6 @@ function minifyQuery(string: string) {
     .trim();
 }
 
-const SHOPIFY_Y = '_shopify_y';
-const SHOPIFY_S = '_shopify_s';
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
 export function createStorefrontClient<TI18n extends I18nBase>({
@@ -165,16 +167,16 @@ export function createStorefrontClient<TI18n extends I18nBase>({
     defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = storefrontHeaders?.buyerIp;
   if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
 
-  if (storefrontId) defaultHeaders[STOREFRONT_ID_HEADER] = storefrontId;
+  if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
 
   if (storefrontHeaders && storefrontHeaders.cookie) {
     const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');
 
     if (cookies[SHOPIFY_Y])
-      defaultHeaders['Shopify-Storefront-Y'] = cookies[SHOPIFY_Y];
+      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];
     if (cookies[SHOPIFY_S])
-      defaultHeaders['Shopify-Storefront-S'] = cookies[SHOPIFY_S];
+      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];
   }
 
   // Deprecation warning
@@ -183,6 +185,8 @@ export function createStorefrontClient<TI18n extends I18nBase>({
       '"requestGroupId" and "buyerIp" will be deprecated in the next calendar release. Please use "getStorefrontHeaders"',
     );
   }
+
+  console.log(defaultHeaders);
 
   async function fetchStorefrontApi<T>({
     query,

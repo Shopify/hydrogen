@@ -1,4 +1,6 @@
 ---
+'@shopify/hydrogen-react': patch
+'@shopify/remix-oxygen': patch
 '@shopify/hydrogen': patch
 ---
 
@@ -7,8 +9,9 @@ Fix active cart session event in Live View
 Introducing `getStorefrontHeaders` that collects the required Shopify headers for making a
 Storefront API call.
 
-- Deprecating `buyerIp` and `requestGroupId` from `createStorefrontClient`
-- Deprecating `getBuyerIp` from `@shopify/remix-oxygen`
+- Make cart constants available as exports from `@shopify/hydrogen-react`
+- Deprecating `buyerIp` and `requestGroupId` props from `createStorefrontClient` from `@shopify/hydrogen`
+- Deprecating `getBuyerIp` function from `@shopify/remix-oxygen`
 
 ```diff
 + import {getStorefrontHeaders} from '@shopify/remix-oxygen';
