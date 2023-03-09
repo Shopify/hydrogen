@@ -163,9 +163,8 @@ export function createStorefrontClient<TI18n extends I18nBase>({
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
     storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();
 
-  if (storefrontHeaders?.buyerIp)
-    defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = storefrontHeaders?.buyerIp;
-  if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
+if (storefrontHeaders?.buyerIp || buyerIp)
+    defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = storefrontHeaders?.buyerIp || buyerIp;
 
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
