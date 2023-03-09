@@ -25,6 +25,7 @@ import {
 } from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {PAGINATION_SIZE} from '~/lib/const';
+import {analyticsPayload} from '~/lib/analytics.server';
 import {seoPayload} from '~/lib/seo.server';
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
@@ -68,7 +69,12 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
     url: request.url,
   });
 
+  const analytics = analyticsPayload.collection({
+    collection: seoCollection,
+  });
+
   return defer({
+    analytics,
     seo,
     searchTerm,
     products,

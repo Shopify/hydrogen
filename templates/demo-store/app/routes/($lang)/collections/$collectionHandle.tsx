@@ -5,13 +5,14 @@ import type {
   CollectionConnection,
   Filter,
 } from '@shopify/hydrogen/storefront-api-types';
-import {flattenConnection, AnalyticsPageType} from '@shopify/hydrogen';
+import {flattenConnection} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section, Text, SortFilter} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
+import {analyticsPayload} from '~/lib/analytics.server';
 
 export const headers = routeHeaders;
 
@@ -125,17 +126,14 @@ export async function loader({params, request, context}: LoaderArgs) {
 
   const collectionNodes = flattenConnection(collections);
   const seo = seoPayload.collection({collection, url: request.url});
+  const analytics = analyticsPayload.collection({collection});
 
   return json(
     {
       collection,
       appliedFilters,
       collections: collectionNodes,
-      analytics: {
-        pageType: AnalyticsPageType.collection,
-        collectionHandle,
-        resourceId: collection.id,
-      },
+      analytics,
       seo,
     },
     {

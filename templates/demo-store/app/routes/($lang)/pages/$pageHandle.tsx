@@ -5,6 +5,7 @@ import invariant from 'tiny-invariant';
 import {PageHeader} from '~/components';
 import {CACHE_LONG, routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
+import {analyticsPayload} from '~/lib/analytics.server';
 
 export const headers = routeHeaders;
 
@@ -23,9 +24,10 @@ export async function loader({request, params, context}: LoaderArgs) {
   }
 
   const seo = seoPayload.page({page, url: request.url});
+  const analytics = analyticsPayload.page({page});
 
   return json(
-    {page, seo},
+    {page, seo, analytics},
     {
       headers: {
         'Cache-Control': CACHE_LONG,

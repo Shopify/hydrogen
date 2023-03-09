@@ -5,12 +5,12 @@ import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import {seoPayload} from '~/lib/seo.server';
+import {analyticsPayload} from '~/lib/analytics.server';
 import type {
   CollectionConnection,
   Metafield,
   ProductConnection,
 } from '@shopify/hydrogen/storefront-api-types';
-import {AnalyticsPageType} from '@shopify/hydrogen';
 import {routeHeaders, CACHE_SHORT} from '~/data/cache';
 
 interface HomeSeoData {
@@ -54,6 +54,7 @@ export async function loader({params, context}: LoaderArgs) {
   });
 
   const seo = seoPayload.home();
+  const analytics = analyticsPayload.home();
 
   return defer(
     {
@@ -102,9 +103,7 @@ export async function loader({params, context}: LoaderArgs) {
           },
         },
       ),
-      analytics: {
-        pageType: AnalyticsPageType.home,
-      },
+      analytics,
       seo,
     },
     {

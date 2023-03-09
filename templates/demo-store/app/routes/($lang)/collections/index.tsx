@@ -16,6 +16,7 @@ import {
 } from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
+import {analyticsPayload} from '~/lib/analytics.server';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
 
 const PAGINATION_SIZE = 8;
@@ -39,8 +40,13 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
     url: request.url,
   });
 
+  const analytics = analyticsPayload.listCollections({
+    collections,
+    handle: 'collections',
+  });
+
   return json(
-    {collections, seo},
+    {collections, seo, analytics},
     {
       headers: {
         'Cache-Control': CACHE_SHORT,

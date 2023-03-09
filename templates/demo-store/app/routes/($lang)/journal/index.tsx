@@ -5,6 +5,7 @@ import type {Article, Blog} from '@shopify/hydrogen/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
+import {analyticsPayload} from '~/lib/analytics.server';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
 
 const BLOG_HANDLE = 'Journal';
@@ -40,9 +41,10 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   });
 
   const seo = seoPayload.blog({blog, url: request.url});
+  const analytics = analyticsPayload.blog({blog});
 
   return json(
-    {articles, seo},
+    {articles, seo, analytics},
     {
       headers: {
         'Cache-Control': CACHE_SHORT,

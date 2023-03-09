@@ -18,6 +18,7 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {isLocalPath} from '~/lib/utils';
 import {CartAction, type CartActions} from '~/lib/type';
+import {analyticsPayload} from '~/lib/analytics.server';
 
 export async function action({request, context}: ActionArgs) {
   const {session, storefront} = context;
@@ -160,22 +161,14 @@ export async function action({request, context}: ActionArgs) {
     headers.set('Location', redirectTo);
   }
 
+  const analytics = analyticsPayload.cart({cartId, cartAction});
+
   const {cart, errors} = result;
-  return json(
-    {
-      cart,
-      errors,
-      analytics: {
-        cartId,
-      },
-    },
-    {status, headers},
-  );
+  return json({cart, errors, analytics}, {status, headers});
 }
 
 export default function CartRoute() {
   const [root] = useMatches();
-  // @todo: finish on a separate PR
   return (
     <div className="grid w-full gap-8 p-6 py-8 md:p-8 lg:p-12 justify-items-start">
       <Suspense fallback={<CartLoading />}>

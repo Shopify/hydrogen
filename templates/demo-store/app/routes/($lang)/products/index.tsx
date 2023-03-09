@@ -17,6 +17,7 @@ import {
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
+import {analyticsPayload} from '~/lib/analytics.server';
 import {routeHeaders, CACHE_SHORT} from '~/data/cache';
 
 const PAGE_BY = 8;
@@ -58,11 +59,12 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
     url: request.url,
   });
 
+  const analytics = analyticsPayload.collection({
+    collection: seoCollection,
+  });
+
   return json(
-    {
-      products: data.products,
-      seo,
-    },
+    {products: data.products, seo, analytics},
     {
       headers: {
         'Cache-Control': CACHE_SHORT,

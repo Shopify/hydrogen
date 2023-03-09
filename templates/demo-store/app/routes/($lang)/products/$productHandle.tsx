@@ -8,12 +8,7 @@ import {
   useLocation,
   useTransition,
 } from '@remix-run/react';
-import {
-  AnalyticsPageType,
-  Money,
-  ShopifyAnalyticsProduct,
-  ShopPayButton,
-} from '@shopify/hydrogen';
+import {Money, ShopifyAnalyticsProduct, ShopPayButton} from '@shopify/hydrogen';
 import {
   Heading,
   IconCaret,
@@ -30,6 +25,7 @@ import {
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
 import {seoPayload} from '~/lib/seo.server';
+import {analyticsPayload} from '~/lib/analytics.server';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import type {
@@ -77,19 +73,15 @@ export async function loader({params, request, context}: LoaderArgs) {
   const firstVariant = product.variants.nodes[0];
   const selectedVariant = product.selectedVariant ?? firstVariant;
 
-  const productAnalytics: ShopifyAnalyticsProduct = {
-    productGid: product.id,
-    variantGid: selectedVariant.id,
-    name: product.title,
-    variantName: selectedVariant.title,
-    brand: product.vendor,
-    price: selectedVariant.price.amount,
-  };
-
   const seo = seoPayload.product({
     product,
     selectedVariant,
     url: request.url,
+  });
+
+  const analytics = analyticsPayload.product({
+    product,
+    selectedVariant,
   });
 
   return defer(
@@ -98,12 +90,7 @@ export async function loader({params, request, context}: LoaderArgs) {
       shop,
       storeDomain: context.storefront.getShopifyDomain(),
       recommended,
-      analytics: {
-        pageType: AnalyticsPageType.product,
-        resourceId: product.id,
-        products: [productAnalytics],
-        totalValue: parseFloat(selectedVariant.price.amount),
-      },
+      analytics,
       seo,
     },
     {

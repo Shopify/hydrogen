@@ -6,6 +6,7 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
+import {analyticsPayload} from '~/lib/analytics.server';
 import styles from '../../../styles/custom-font.css';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
 
@@ -45,9 +46,12 @@ export async function loader({request, params, context}: LoaderArgs) {
   }).format(new Date(article?.publishedAt!));
 
   const seo = seoPayload.article({article, url: request.url});
+  const analytics = analyticsPayload.article({
+    handle: params.journalHandle,
+  });
 
   return json(
-    {article, formattedDate, seo},
+    {article, formattedDate, seo, analytics},
     {
       headers: {
         'Cache-Control': CACHE_LONG,
