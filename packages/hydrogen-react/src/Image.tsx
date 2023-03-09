@@ -1,5 +1,3 @@
-// eslint-disable-next-line eslint-comments/disable-enable-pair
-/* eslint-disable @typescript-eslint/restrict-template-expressions */
 import * as React from 'react';
 import type {PartialDeep, Simplify} from 'type-fest';
 import type {Image as ImageType} from './storefront-api-types.js';
@@ -123,7 +121,7 @@ export function Image({
         `Deprecated property from original Image component in use:`,
         `Use the \`crop\`, \`width\`, \`height\`, and src props, or`,
         `the \`data\` prop to achieve the same result. Image used is ${
-          src || data?.url
+          src || data?.url || 'unknown'
         }`,
       ].join(' '),
     );
@@ -134,7 +132,9 @@ export function Image({
       [
         `Deprecated property from original Image component in use:`,
         `\`widths\` are now calculated automatically based on the`,
-        `config and width props. Image used is ${src || data?.url}`,
+        `config and width props. Image used is ${
+          src || data?.url || 'unknown'
+        }`,
       ].join(' '),
     );
   }
@@ -179,9 +179,10 @@ export function Image({
   const normalizedAspectRatio: string | undefined = aspectRatio
     ? aspectRatio
     : dataUnitsMatch
-    ? `${getNormalizedFixedUnit(dataWidth)}/${getNormalizedFixedUnit(
-        dataHeight,
-      )}`
+    ? [
+        getNormalizedFixedUnit(dataWidth),
+        getNormalizedFixedUnit(dataHeight),
+      ].join('/')
     : undefined;
 
   const {intervals, startingWidth, incrementSize, placeholderWidth} =
@@ -202,7 +203,7 @@ export function Image({
       [
         'No sizes prop provided to Image component,',
         'you may be loading unnecessarily large images.',
-        `Image used is ${src || data?.url}`,
+        `Image used is ${src || data?.url || 'unknown'}`,
       ].join(' '),
     );
   }
@@ -225,7 +226,7 @@ export function Image({
     const fixedAspectRatio = aspectRatio
       ? aspectRatio
       : unitsMatch(normalizedWidth, normalizedHeight)
-      ? `${intWidth}/${intHeight}`
+      ? [intWidth, intHeight].join('/')
       : normalizedAspectRatio
       ? normalizedAspectRatio
       : undefined;
@@ -398,7 +399,7 @@ export function generateShopifySrcSet(
           width: size.width,
           height: size.height,
           crop: size.crop,
-        })} ${size.width}w`,
+        })} ${size.width || 0}w`,
     )
     .join(`, `);
   /*
