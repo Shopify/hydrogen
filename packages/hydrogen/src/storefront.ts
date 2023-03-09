@@ -186,8 +186,6 @@ export function createStorefrontClient<TI18n extends I18nBase>({
     );
   }
 
-  console.log(defaultHeaders);
-
   async function fetchStorefrontApi<T>({
     query,
     mutation,
