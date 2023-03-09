@@ -81,6 +81,20 @@ describe('<Image />', () => {
     });
   });
 
+  describe('srcSet', () => {
+    it('renders a `srcSet` attribute when the `widths` prop is provided', () => {
+      const widths = [100, 200, 300];
+
+      render(<Image {...defaultProps} widths={widths} />);
+      const img = screen.getByRole('img');
+
+      expect(img).toHaveAttribute('srcSet');
+      expect(img.getAttribute('srcSet')).toMatchInlineSnapshot(
+        '"https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=300&crop=center 300w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=600&crop=center 600w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=900&crop=center 900w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=1200&crop=center 1200w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=1500&crop=center 1500w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=1800&crop=center 1800w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=2100&crop=center 2100w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=2400&crop=center 2400w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=2700&crop=center 2700w, https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=3000&crop=center 3000w"',
+      );
+    });
+  });
+
   describe('aspect-ratio', () => {
     // Assertion support is limited for aspectRatio
     // https://github.com/testing-library/jest-dom/issues/452
