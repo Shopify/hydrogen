@@ -56,9 +56,9 @@ export type ShopifyImageProps = {
 };
 
 export function Image({
-  /** An object with fields that correspond to the Storefront API's
+  /**
+   * An object with fields that correspond to the Storefront API's
    * [Image object](https://shopify.dev/api/storefront/reference/common-objects/image).
-   * The `data` prop is required.
    */
   data,
   as: Component = 'img',
@@ -163,7 +163,7 @@ export function Image({
   const normalizedHeight: string =
     height === undefined
       ? 'auto'
-      : `${getUnitValueParts(height.toString()).number} ${
+      : `${getUnitValueParts(height.toString()).number}${
           getUnitValueParts(height.toString()).unit
         }`;
 
@@ -218,7 +218,7 @@ export function Image({
     const intHeight: number | undefined = getNormalizedFixedUnit(height);
 
     /*
-     * The aspect ratio for fixed with images is taken from the explicitly
+     * The aspect ratio for fixed width images is taken from the explicitly
      * set prop, but if that's not present, and both width and height are
      * set, we calculate the aspect ratio from the width and height—as
      * long as they share the same unit type (e.g. both are 'px').
