@@ -49,8 +49,7 @@ export function CartDetails({
   cart: CartType | null;
 }) {
   // @todo: get optimistic cart cost
-  const isZeroCost = !cart || cart?.cost?.subtotalAmount?.amount === '0.0';
-
+  const cartHasItems = !!cart && cart.totalQuantity > 0;
   const container = {
     drawer: 'grid grid-cols-1 h-screen-no-nav grid-rows-[1fr_auto]',
     page: 'w-full pb-12 grid md:grid-cols-2 md:items-start gap-8 md:gap-8 lg:gap-12',
@@ -59,7 +58,7 @@ export function CartDetails({
   return (
     <div className={container[layout]}>
       <CartLines lines={cart?.lines} layout={layout} />
-      {!isZeroCost && (
+      {cartHasItems && (
         <CartSummary cost={cart.cost} layout={layout}>
           <CartDiscounts discountCodes={cart.discountCodes} />
           <CartCheckoutActions checkoutUrl={cart.checkoutUrl} />
