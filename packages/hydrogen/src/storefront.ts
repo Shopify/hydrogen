@@ -80,7 +80,9 @@ export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
 >[0] & {
   storefrontHeaders?: StorefrontHeaders;
   cache?: Cache;
+  /** @deprecated use storefrontHeaders instead */
   buyerIp?: string;
+  /** @deprecated use storefrontHeaders instead */
   requestGroupId?: string | null;
   storefrontId?: string;
   waitUntil?: ExecutionContext['waitUntil'];
@@ -165,7 +167,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
 
   if (storefrontHeaders?.buyerIp || buyerIp)
     defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] =
-      storefrontHeaders?.buyerIp || buyerIp;
+      storefrontHeaders?.buyerIp || buyerIp || '';
 
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
