@@ -96,6 +96,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     {
       product,
       shop,
+      storeDomain: context.storefront.getShopifyDomain(),
       recommended,
       analytics: {
         pageType: AnalyticsPageType.product,
@@ -178,7 +179,7 @@ export default function Product() {
 }
 
 export function ProductForm() {
-  const {product, analytics} = useLoaderData<typeof loader>();
+  const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
 
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
@@ -282,7 +283,10 @@ export function ProductForm() {
               </AddToCartButton>
             )}
             {!isOutOfStock && (
-              <ShopPayButton variantIds={[selectedVariant?.id!]} />
+              <ShopPayButton
+                variantIds={[selectedVariant?.id!]}
+                storeDomain={storeDomain}
+              />
             )}
           </div>
         )}
