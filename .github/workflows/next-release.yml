@@ -1,0 +1,64 @@
+name: ⏭️ Next Release
+
+on:
+  push:
+    branches:
+      - '[0-9]+-[0-9]+'
+
+jobs:
+  next-release:
+    name: ⏭️ Next Release
+    runs-on: ubuntu-latest
+    if: github.repository_owner == 'shopify'
+    outputs:
+      NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
+    steps:
+      - name: ⬇️ Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: ⎔ Setup node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
+
+      - name: Install the packages
+        run: npm install --frozen-lockfile --ignore-engines --legacy-peer-deps
+
+      - name: 🕵️ Check for changes
+        id: version
+        run: |
+          # get latest commit sha
+          SHA=$(git rev-parse HEAD)
+          # get first 7 characters of sha
+          SHORT_SHA=${SHA::7}
+          # yyyyMMdd format (e.g. 20221207)
+          NEXT_VERSION=next-${SHORT_SHA}
+          # set output so it can be used in other jobs
+          echo "NEXT_VERSION=${NEXT_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: ⤴️ Update version
+        if: steps.version.outputs.NEXT_VERSION
+        run: |
+          git config --local user.email "daniel.riospavia@shopify.com"
+          git config --local user.name "Lordofthecactus Run Bot"
+          git checkout -B next/${{ steps.version.outputs.NEXT_VERSION }}
+          npm run changeset -- version --snapshot ${{steps.version.outputs.NEXT_VERSION}}
+
+      - name: 🏗 Build
+        if: steps.version.outputs.NEXT_VERSION
+        run: npm run build
+
+      - name: 🔐 Setup npm auth
+        if: steps.version.outputs.NEXT_VERSION
+        run: |
+          echo "registry=https://registry.npmjs.org" >> ~/.npmrc
+          echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+
+      - name: 🚀 Publish
+        if: steps.version.outputs.NEXT_VERSION
+        run: npm run changeset -- publish --tag next
+
