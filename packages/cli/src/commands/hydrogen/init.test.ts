@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
 import {runInit} from './init.js';
-import {ui} from '@shopify/cli-kit';
+import {ui, path} from '@shopify/cli-kit';
 import {installNodeModules} from '@shopify/cli-kit/node/node-package-manager';
 
 describe('init', () => {
@@ -25,15 +25,41 @@ describe('init', () => {
     ...stubs,
   });
 
-  describe('installDeps', () => {
-    it('prompts the user to install dependencies when installDeps is not passed', async () => {
+  describe.each([
+    {flag: 'template', value: 'hello-world'},
+    {flag: 'installDeps', value: true},
+    {flag: 'language', value: 'ts'},
+    {flag: 'path', value: './my-app'},
+  ])('flag $flag', ({flag, value}) => {
+    it(`does not prompt the user for ${flag} when a value is passed in options`, async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         // Given
-        const options = defaultOptions({path: tmpDir});
+        const options = defaultOptions({
+          path: tmpDir,
+          [flag as string]: value,
+        });
 
-        vi.mocked(ui.prompt).mockImplementation(() =>
-          Promise.resolve({installDeps: 'false'}),
+        // When
+        await runInit(options);
+
+        // Then
+        expect(ui.prompt).not.toHaveBeenCalledWith(
+          expect.arrayContaining([
+            expect.objectContaining({
+              name: flag,
+            }),
+          ]),
         );
+      });
+    });
+
+    it(`prompts the user for ${flag} when no value is passed in options`, async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        // Given
+        const options = defaultOptions({
+          path: tmpDir,
+          [flag as string]: undefined,
+        });
 
         // When
         await runInit(options);
@@ -42,51 +68,10 @@ describe('init', () => {
         expect(ui.prompt).toHaveBeenCalledWith(
           expect.arrayContaining([
             expect.objectContaining({
-              name: 'installDeps',
+              name: flag,
             }),
           ]),
         );
-        expect(installNodeModules).not.toHaveBeenCalled();
-      });
-    });
-
-    it('does not prompt the user to install dependencies when installDeps is true', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
-        // Given
-        const options = defaultOptions({installDeps: true, path: tmpDir});
-
-        // When
-        await runInit(options);
-
-        // Then
-        expect(ui.prompt).not.toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({
-              name: 'installDeps',
-            }),
-          ]),
-        );
-        expect(installNodeModules).toHaveBeenCalled();
-      });
-    });
-
-    it('does not show a prompt to install dependencies when installDeps is false', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
-        // Given
-        const options = defaultOptions({installDeps: false, path: tmpDir});
-
-        // When
-        await runInit(options);
-
-        // Then
-        expect(ui.prompt).not.toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({
-              name: 'installDeps',
-            }),
-          ]),
-        );
-        expect(installNodeModules).not.toHaveBeenCalled();
       });
     });
   });
