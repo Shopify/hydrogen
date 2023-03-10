@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
 import {runInit} from './init.js';
-import {ui, path} from '@shopify/cli-kit';
+import {ui} from '@shopify/cli-kit';
 import {installNodeModules} from '@shopify/cli-kit/node/node-package-manager';
 
 describe('init', () => {
@@ -73,6 +73,32 @@ describe('init', () => {
           ]),
         );
       });
+    });
+  });
+
+  it('installs dependencies when installDeps is true', async () => {
+    await temporaryDirectoryTask(async (tmpDir) => {
+      // Given
+      const options = defaultOptions({installDeps: true, path: tmpDir});
+
+      // When
+      await runInit(options);
+
+      // Then
+      expect(installNodeModules).toHaveBeenCalled();
+    });
+  });
+
+  it('does not install dependencies when installDeps is false', async () => {
+    await temporaryDirectoryTask(async (tmpDir) => {
+      // Given
+      const options = defaultOptions({installDeps: false, path: tmpDir});
+
+      // When
+      await runInit(options);
+
+      // Then
+      expect(installNodeModules).not.toHaveBeenCalled();
     });
   });
 });
