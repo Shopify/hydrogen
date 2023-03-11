@@ -26,3 +26,18 @@ export function createRequestHandler<Context = unknown>({
 export function getBuyerIp(request: Request) {
   return request.headers.get('oxygen-buyer-ip') ?? undefined;
 }
+
+type StorefrontHeaders = {
+  requestGroupId: string | null;
+  buyerIp: string | null;
+  cookie: string | null;
+};
+
+export function getStorefrontHeaders(request: Request): StorefrontHeaders {
+  const headers = request.headers;
+  return {
+    requestGroupId: headers.get('request-id'),
+    buyerIp: headers.get('oxygen-buyer-ip'),
+    cookie: headers.get('cookie'),
+  };
+}

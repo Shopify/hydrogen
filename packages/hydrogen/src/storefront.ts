@@ -1,12 +1,17 @@
 import {
   createStorefrontClient as createStorefrontUtilities,
+  getShopifyCookies,
   type StorefrontApiResponseOk,
+  SHOPIFY_S,
+  SHOPIFY_Y,
+  SHOPIFY_STOREFRONT_ID_HEADER,
+  SHOPIFY_STOREFRONT_Y_HEADER,
+  SHOPIFY_STOREFRONT_S_HEADER,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
   STOREFRONT_API_BUYER_IP_HEADER,
-  STOREFRONT_ID_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
 } from './constants';
 import {
@@ -73,12 +78,21 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
   typeof createStorefrontUtilities
 >[0] & {
+  storefrontHeaders?: StorefrontHeaders;
   cache?: Cache;
+  /** @deprecated use storefrontHeaders instead */
   buyerIp?: string;
+  /** @deprecated use storefrontHeaders instead */
   requestGroupId?: string | null;
   storefrontId?: string;
   waitUntil?: ExecutionContext['waitUntil'];
   i18n?: TI18n;
+};
+
+type StorefrontHeaders = {
+  requestGroupId: string | null;
+  buyerIp: string | null;
+  cookie: string | null;
 };
 
 type StorefrontCommonOptions = {
@@ -119,6 +133,7 @@ function minifyQuery(string: string) {
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
 export function createStorefrontClient<TI18n extends I18nBase>({
+  storefrontHeaders,
   cache,
   waitUntil,
   buyerIp,
@@ -148,10 +163,30 @@ export function createStorefrontClient<TI18n extends I18nBase>({
   const defaultHeaders = getHeaders({contentType: 'json'});
 
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
-    requestGroupId || generateUUID();
-  if (buyerIp) defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] = buyerIp;
-  if (storefrontId) defaultHeaders[STOREFRONT_ID_HEADER] = storefrontId;
+    storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();
+
+  if (storefrontHeaders?.buyerIp || buyerIp)
+    defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] =
+      storefrontHeaders?.buyerIp || buyerIp || '';
+
+  if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
+
+  if (storefrontHeaders && storefrontHeaders.cookie) {
+    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');
+
+    if (cookies[SHOPIFY_Y])
+      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];
+    if (cookies[SHOPIFY_S])
+      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];
+  }
+
+  // Deprecation warning
+  if (!storefrontHeaders) {
+    warnOnce(
+      '"requestGroupId" and "buyerIp" will be deprecated in the next calendar release. Please use "getStorefrontHeaders"',
+    );
+  }
 
   async function fetchStorefrontApi<T>({
     query,
@@ -183,7 +218,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
     }
 
     const url = getStorefrontApiUrl({storefrontApiVersion});
-    const requestInit = {
+    const requestInit: RequestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
       body: JSON.stringify({
