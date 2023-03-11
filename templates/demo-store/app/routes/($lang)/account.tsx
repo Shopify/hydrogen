@@ -49,13 +49,14 @@ export async function loader({request, context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
   const isAuthenticated = Boolean(customerAccessToken);
   const loginPath = lang ? `/${lang}/account/login` : '/account/login';
+  const isAccountPage = /^\/account\/?$/.test(pathname);
 
   if (!isAuthenticated) {
-    if (/\/account\/login$/.test(pathname)) {
-      return json({isAuthenticated}) as unknown as TmpRemixFix;
+    if (isAccountPage) {
+      return redirect(loginPath) as unknown as TmpRemixFix;
     }
-
-    return redirect(loginPath) as unknown as TmpRemixFix;
+    // pass through to public routes
+    return json({isAuthenticated: false}) as unknown as TmpRemixFix;
   }
 
   const customer = await getCustomer(context, customerAccessToken);
