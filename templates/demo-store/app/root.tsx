@@ -48,7 +48,8 @@ export const meta: MetaFunction = () => ({
 });
 
 export async function loader({request, context}: LoaderArgs) {
-  const [cartId, layout] = await Promise.all([
+  const [customerAccessToken, cartId, layout] = await Promise.all([
+    context.session.get('customerAccessToken'),
     context.session.get('cartId'),
     getLayoutData(context),
   ]);
@@ -56,6 +57,7 @@ export async function loader({request, context}: LoaderArgs) {
   const seo = seoPayload.root({shop: layout.shop, url: request.url});
 
   return defer({
+    isLoggedIn: Boolean(customerAccessToken),
     layout,
     selectedLocale: context.storefront.i18n,
     cart: cartId ? getCart(context, cartId) : undefined,
