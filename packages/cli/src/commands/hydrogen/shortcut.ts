@@ -88,6 +88,10 @@ end
 `;
 
 function shellWriteFile(filepath: string, content: string, append = false) {
+  if (!IS_WINDOWS) {
+    content = `"${content}"`;
+  }
+
   return execSync(
     `echo ${content} ${append ? '>>' : '>'} ${resolveFromHome(filepath)}`,
   );
