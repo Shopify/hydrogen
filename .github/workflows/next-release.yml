@@ -59,7 +59,8 @@ jobs:
           echo "registry=https://registry.npmjs.org" >> ~/.npmrc
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
 
-      - name: 🚀 Publish
-        if: steps.version.outputs.NEXT_VERSION
-        run: npm run changeset -- publish --tag next
+      # commenting until feedback
+      # - name: 🚀 Publish
+      #   if: steps.version.outputs.NEXT_VERSION
+      #   run: npm run changeset -- publish --tag next
 
