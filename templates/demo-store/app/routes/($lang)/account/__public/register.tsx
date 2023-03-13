@@ -8,9 +8,9 @@ import {
 import {Form, useActionData} from '@remix-run/react';
 import {useState} from 'react';
 import {getInputStyleClasses} from '~/lib/utils';
-import {Link} from '~/components';
 import {doLogin} from './login';
 import type {CustomerCreatePayload} from '@shopify/hydrogen/storefront-api-types';
+import {Link} from '~/components';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
@@ -180,6 +180,7 @@ export default function Register() {
             <button
               className="bg-primary text-contrast rounded py-2 px-4 focus:shadow-outline block w-full"
               type="submit"
+              disabled={!!(nativePasswordError || nativeEmailError)}
             >
               Create Account
             </button>
