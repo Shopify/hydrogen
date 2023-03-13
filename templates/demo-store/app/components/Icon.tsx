@@ -145,6 +145,25 @@ export function IconBag(props: IconProps) {
   );
 }
 
+export function IconLogin(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <title>Login</title>
+      <g stroke="none" strokeWidth="1" fill="none" fillRule="evenodd">
+        <path
+          d="M8,10.6928545 C10.362615,10.6928545 12.4860225,11.7170237 13.9504747,13.3456144 C12.4860225,14.9758308 10.362615,16 8,16 C5.63738499,16 3.51397752,14.9758308 2.04952533,13.3472401 C3.51397752,11.7170237 5.63738499,10.6928545 8,10.6928545 Z"
+          fill="currentColor"
+        ></path>
+        <path
+          d="M8,3.5 C6.433,3.5 5.25,4.894 5.25,6.5 C5.25,8.106 6.433,9.5 8,9.5 C9.567,9.5 10.75,8.106 10.75,6.5 C10.75,4.894 9.567,3.5 8,3.5 Z"
+          fill="currentColor"
+          fillRule="nonzero"
+        ></path>
+      </g>
+    </Icon>
+  );
+}
+
 export function IconAccount(props: IconProps) {
   return (
     <Icon {...props}>
