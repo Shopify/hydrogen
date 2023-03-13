@@ -41,7 +41,7 @@ export default class Init extends Command {
     }),
     'install-deps': Flags.boolean({
       description: 'Auto install dependencies using the active package manager',
-      env: 'SHOPIFY_HYDROGEN_INSTALL_DEPS',
+      env: 'SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS',
       allowNo: true,
     }),
   };
