@@ -242,16 +242,18 @@ export function Image({
         ? undefined
         : generateSizes(imageWidths, fixedAspectRatio, crop);
 
+    const fixedHeight = intHeight
+      ? intHeight
+      : fixedAspectRatio && intWidth
+      ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
+      : undefined;
+
     return React.createElement(Component, {
       srcSet: generateShopifySrcSet(normalizedSrc, sizesArray, loader),
       src: loader({
         src: normalizedSrc,
         width: intWidth,
-        height: intHeight
-          ? intHeight
-          : fixedAspectRatio && intWidth
-          ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
-          : undefined,
+        height: fixedHeight,
         crop: normalizedHeight === 'auto' ? undefined : crop,
       }),
       alt: normalizedAlt,
@@ -261,8 +263,8 @@ export function Image({
         height: normalizedHeight,
         aspectRatio: fixedAspectRatio,
       },
-      width: normalizedWidth,
-      height: normalizedHeight,
+      width: intWidth,
+      height: fixedHeight,
       loading,
       ...passthroughProps,
     });
@@ -272,15 +274,17 @@ export function Image({
         ? undefined
         : generateSizes(imageWidths, normalizedAspectRatio, crop);
 
+    const placeholderHeight =
+      normalizedAspectRatio && placeholderWidth
+        ? placeholderWidth * (parseAspectRatio(normalizedAspectRatio) ?? 1)
+        : undefined;
+
     return React.createElement(Component, {
       srcSet: generateShopifySrcSet(normalizedSrc, sizesArray),
       src: loader({
         src: normalizedSrc,
         width: placeholderWidth,
-        height:
-          normalizedAspectRatio && placeholderWidth
-            ? placeholderWidth * (parseAspectRatio(normalizedAspectRatio) ?? 1)
-            : undefined,
+        height: placeholderHeight,
       }),
       alt: normalizedAlt,
       sizes,
@@ -289,8 +293,8 @@ export function Image({
         height: normalizedHeight,
         aspectRatio: normalizedAspectRatio,
       },
-      width: normalizedWidth,
-      height: normalizedHeight,
+      width: placeholderWidth,
+      height: placeholderHeight,
       loading,
       ...passthroughProps,
     });
