@@ -47,7 +47,7 @@ export function CountrySelector() {
   return (
     <section
       ref={observerRef}
-      className="grid w-full gap-4 md:max-w-xs md:ml-auto"
+      className="grid w-full gap-4"
       onMouseLeave={closeDropdown}
     >
       <Heading size="lead" className="cursor-default" as="h3">
