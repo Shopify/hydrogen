@@ -8,6 +8,7 @@ import {
   useLocation,
   useTransition,
 } from '@remix-run/react';
+
 import {
   AnalyticsPageType,
   Money,
@@ -96,7 +97,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     {
       product,
       shop,
-      storeDomain: context.storefront.getShopifyDomain(),
+      storeDomain: shop.primaryDomain.url,
       recommended,
       analytics: {
         pageType: AnalyticsPageType.product,
@@ -284,6 +285,7 @@ export function ProductForm() {
             )}
             {!isOutOfStock && (
               <ShopPayButton
+                width="100%"
                 variantIds={[selectedVariant?.id!]}
                 storeDomain={storeDomain}
               />
@@ -575,6 +577,9 @@ const PRODUCT_QUERY = `#graphql
     }
     shop {
       name
+      primaryDomain {
+        url
+      }
       shippingPolicy {
         body
         handle
