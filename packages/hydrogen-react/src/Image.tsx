@@ -6,12 +6,12 @@ import type {Image as ImageType} from './storefront-api-types.js';
  * An optional prop you can use to change the
  * default srcSet generation behaviour
  */
-interface SrcSetOptions {
+type SrcSetOptions = {
   intervals: number;
   startingWidth: number;
   incrementSize: number;
   placeholderWidth: number;
-}
+};
 
 type HtmlImageProps = React.ImgHTMLAttributes<HTMLImageElement>;
 
@@ -19,7 +19,6 @@ export type ImageLoader = (params: ShopifyLoaderParams) => string;
 
 export type ShopifyLoaderOptions = {
   crop?: 'top' | 'bottom' | 'left' | 'right' | 'center';
-  scale?: 2 | 3;
   width?: HtmlImageProps['width'] | ImageType['width'];
   height?: HtmlImageProps['height'] | ImageType['height'];
 };
@@ -34,64 +33,171 @@ export type ShopifyLoaderParams = Simplify<
 >;
 
 /*
- * TODO: Expand to include focal point support;
- * or switch this to be an SF API type
+ * @TODO: Expand to include focal point support; and/or switch this to be an SF API type
  */
-
 type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right' | undefined;
 
-export type ShopifyImageProps = {
+export interface ShopifyImageProps {
+  /** The HTML element to use for the image, `source` should only be used inside `picture` */
   as?: 'img' | 'source';
-  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;
-  src?: string;
-  loader?: ImageLoader;
-  width?: string | number;
-  height?: string | number;
-  crop?: Crop;
-  sizes?: string;
-  aspectRatio?: string;
-  srcSetOptions?: SrcSetOptions;
-  alt?: string;
-  loading?: 'lazy' | 'eager';
-  loaderOptions?: ShopifyLoaderOptions;
-  widths?: (HtmlImageProps['width'] | ImageType['width'])[];
-};
-
-export function Image({
-  /**
-   * An object with fields that correspond to the Storefront API's
-   * [Image object](https://shopify.dev/api/storefront/reference/common-objects/image).
+  /** Data mapping to the Storefront API `Image` object. Must be an Image object.
+   * Optionally, import the `IMAGE_FRAGMENT` to use in your GraphQL queries.
+   *
+   * @example
+   * ```
+   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';
+   *
+   * export const IMAGE_QUERY = `#graphql
+   * ${IMAGE_FRAGMENT}
+   * query {
+   *   product {
+   *     featuredImage {
+   *       ...Image
+   *     }
+   *   }
+   * }`
+   *
+   * <Image
+   *   data={productImage}
+   *   sizes="(min-width: 45em) 50vw, 100vw"
+   *   aspectRatio="4/5"
+   * />
+   * ```
+   *
+   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}
    */
+  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;
+  /** The image URL. This is used if no `data` prop is provided. */
+  src?: string;
+  /** A function that returns a URL string for an image.
+   *
+   * @remarks
+   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide
+   * your own function to use a another provider, as long as they support URL based image transformations.
+   */
+  loader?: ImageLoader;
+  /** Image width, as meant to be rendered on the page.
+   * You will mostly use this prop if you're rendering a fixed size image.
+   *
+   * @defaultValue `100%`
+   */
+  width?: string | number;
+  /** The image height. You probably only want to set this if you're using a fixed image.
+   * For responsive images, we automatically render the height of the image based on the aspect ratio of the image,
+   * and the width. The number provided here will be set as the height prop on the rendered HTML,
+   * which helps prevent layout shift.
+   *
+   * @defaultValue `auto`
+   *
+   * @example
+   * ```
+   * <Image
+   *   data={productImage}
+   *   sizes="(min-width: 45em) 50vw, 100vw" />
+   *   width={100}
+   *   height={100}
+   *  />
+   * ```
+   */
+  height?: string | number;
+  /** The crop position of the image.
+   *
+   * @remarks
+   * In the event that AspectRatio is set, without specifying a crop,
+   * the Shopify CDN won't return the expected image.
+   *
+   * @defaultValue `center`
+   */
+  crop?: Crop;
+  /** Standard CSS sizes
+   *
+   * @example
+   * ```
+   * <Image
+   *   data={productImage}
+   *   sizes="(min-width: 45em) 50vw, 100vw"
+   *   aspectRatio="4/5"
+   * />
+   * ```
+   *
+   * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#attr-srcset} */
+  sizes?: string;
+  /** The aspect ratio of the image, in the format of `width/height`.
+   *
+   * @example
+   * ```
+   * <Image data={productImage} aspectRatio="4/5" />
+   * ```
+   */
+  aspectRatio?: string;
+  /** An optional prop you can use to change the default srcSet generation behaviour */
+  srcSetOptions?: SrcSetOptions;
+  /** The alt text for the image.
+   *
+   * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#attr-alt} */
+  alt?: string;
+  /** Our Image component defaults to `lazy` loading, if you’re rendering an image at the top of
+   * the page, set this prop to `eager`.
+   *
+   * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#attr-loading}
+   */
+  loading?: 'lazy' | 'eager';
+  /** @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop */
+  loaderOptions?: ShopifyLoaderOptions;
+  /** @deprecated Autocalculated, use only `width` prop, or srcSetOptions */
+  widths?: (HtmlImageProps['width'] | ImageType['width'])[];
+}
+
+/**
+ * A Storefront API GraphQL fragment that can be used to query for an image.
+ */
+export const IMAGE_FRAGMENT = `#graphql
+  fragment Image on Image {
+    altText
+    url
+    width
+    height
+  }
+`;
+
+/**
+ * Hydrgen’s Image component is a wrapper around the HTML image element.
+ * It supports the same props as the HTML image element, but automatically
+ * generates the srcSet and sizes attributes for you. For most use cases,
+ * you’ll want to set the `aspectRatio` prop to ensure the image is sized
+ * correctly.
+ *
+ * @example
+ * A responsive image with a 4:5 aspect ratio:
+ * ```
+ * <Image
+ *   data={product.featuredImage}
+ *   aspectRatio="4/5"
+ *   sizes="(min-width: 45em) 40vw, 100vw"
+ * />
+ * ```
+ * @example
+ * A fixed size image:
+ * ```
+ * <Image
+ *   data={product.featuredImage}
+ *   width={100}
+ *   height={100}
+ * />
+ * ```
+ *
+ * {@link https://shopify.dev/docs/api/hydrogen-react/components/image}
+ */
+export function Image({
   data,
   as: Component = 'img',
   src,
-  /*
-   * Supports third party loaders, which are expected to provide
-   * a function that can generate a URL string
-   */
   loader = shopifyLoader,
-  /*
-   * The default behaviour is a responsive image, set to 100%, that fills
-   * the width of its container. It’s not declared in the props.
-   */
   width,
   height,
-  /*
-   * The default crop is center, in the event that AspectRatio is set,
-   * without specifying a crop, Imagery won't return the expected image.
-   */
   crop = 'center',
   sizes,
-  /*
-   * aspectRatio is a string in the format of 'width/height'
-   * it's used to generate the srcSet URLs, and to set the
-   * aspect ratio of the image element to prevent CLS.
-   */
   aspectRatio,
-  /*
-   * An optional prop you can use to change
-   * the default srcSet generation behaviour
-   */
   srcSetOptions = {
     intervals: 10,
     startingWidth: 300,
@@ -100,17 +206,7 @@ export function Image({
   },
   alt,
   loading = 'lazy',
-  /*
-   * Deprecated property from original Image component,
-   * you can now use the flat `crop`, `width`, and `height` props
-   * as well as `src` and `data` to achieve the same result.
-   */
   loaderOptions,
-  /*
-   * Deprecated property from original Image component,
-   * widths are now calculated automatically based on the
-   * config and width props.
-   */
   widths,
   ...passthroughProps
 }: HtmlImageProps & ShopifyImageProps): JSX.Element | null {
@@ -307,6 +403,12 @@ export function Image({
   }
 }
 
+/**
+ * Checks whether the width and height share the same unit type
+ * @param width - The width of the image, e.g. 100% | 10px
+ * @param height - The height of the image, e.g. auto | 100px
+ * @returns Whether the width and height share the same unit type (boolean)
+ */
 function unitsMatch(
   width: string | number = '100%',
   height: string | number = 'auto',
@@ -315,21 +417,13 @@ function unitsMatch(
     getUnitValueParts(width.toString()).unit ===
     getUnitValueParts(height.toString()).unit
   );
-  /*
-      Given:
-        width = '100px'
-        height = 'auto'
-      Returns:
-        false
-
-      Given:
-        width = '100px'
-        height = '50px'
-      Returns:
-        true
-   */
 }
 
+/**
+ * Given a CSS size, returns the unit and number parts of the value
+ * @param value - The CSS size, e.g. 100px
+ * @returns The unit and number parts of the value, e.g. \{unit: 'px', number: 100\}
+ */
 function getUnitValueParts(value: string): {unit: string; number: number} {
   const unit = value.replace(/[0-9.]/g, '');
   const number = parseFloat(value.replace(unit, ''));
@@ -338,17 +432,13 @@ function getUnitValueParts(value: string): {unit: string; number: number} {
     unit: unit === '' ? (number === undefined ? 'auto' : 'px') : unit,
     number,
   };
-  /*
-      Given:
-        value = '100px'
-      Returns:
-        {
-          unit: 'px',
-          number: 100
-        }
-   */
 }
 
+/**
+ * Given a value, returns the width of the image as an integer in pixels
+ * @param value - The width of the image, e.g. 16px | 1rem | 1em | 16
+ * @returns The width of the image in pixels, e.g. 16, or undefined if the value is not a fixed unit
+ */
 function getNormalizedFixedUnit(value?: string | number): number | undefined {
   if (value === undefined) {
     return;
@@ -368,33 +458,28 @@ function getNormalizedFixedUnit(value?: string | number): number | undefined {
     default:
       return;
   }
-  /*
-      Given:
-        value = 16px | 1rem | 1em | 16
-      Returns:
-        16
-
-      Given:
-        value = 100%
-      Returns:
-        undefined
-   */
 }
 
+/**
+ * This function checks whether a width is fixed or not.
+ * @param width - The width of the image, e.g. 100 | '100px' | '100em' | '100rem'
+ * @returns Whether the width is fixed or not
+ */
 function isFixedWidth(width: string | number): boolean {
   const fixedEndings = /\d(px|em|rem)$/;
   return (
     typeof width === 'number' ||
     (typeof width === 'string' && fixedEndings.test(width))
   );
-  /*
-    Given:
-      width = 100 | '100px' | '100em' | '100rem'
-    Returns:
-      true
-  */
 }
 
+/**
+ * This function generates a srcSet for Shopify images.
+ * @param src - The source URL of the image, e.g. https://cdn.shopify.com/static/sample-images/garnished.jpeg
+ * @param sizesArray - An array of objects containing the width, height, and crop of the image, e.g. [\{width: 200, height: 200, crop: 'center'\}, \{width: 400, height: 400, crop: 'center'\}]
+ * @param loader - A function that takes a Shopify image URL and returns a Shopify image URL with the correct query parameters
+ * @returns A srcSet for Shopify images, e.g. 'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=200&height=200&crop=center 200w, https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=400&height=400&crop=center 400w'
+ */
 export function generateShopifySrcSet(
   src?: string,
   sizesArray?: Array<{width?: number; height?: number; crop?: Crop}>,
@@ -419,18 +504,16 @@ export function generateShopifySrcSet(
         })} ${size.width || 0}w`,
     )
     .join(`, `);
-  /*
-      Given:
-        src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg'
-        sizesArray = [
-          {width: 200, height: 200, crop: 'center'},
-          {width: 400, height: 400, crop: 'center'},
-        ]
-      Returns:
-        'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=200&height=200&crop=center 200w, https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=400&height=400&crop=center 400w'
-   */
 }
 
+/**
+ * This function generates an array of sizes for Shopify images, for both fixed and responsive images.
+ * @param width - The CSS width of the image
+ * @param intervals - The number of intervals to generate
+ * @param startingWidth - The starting width of the image
+ * @param incrementSize - The size of each interval
+ * @returns An array of widths
+ */
 export function generateImageWidths(
   width: string | number = '100%',
   intervals = 20,
@@ -450,21 +533,17 @@ export function generateImageWidths(
   return isFixedWidth(width) ? fixed : responsive;
 }
 
-// Simple utility function to convert 1/1 to [1, 1]
+/**
+ * Simple utility function to convert an aspect ratio CSS string to a decimal, currently only supports values like `1/1`, not `0.5`, or `auto`
+ * @param aspectRatio - The aspect ratio of the image, e.g. `1/1`
+ * @returns The aspect ratio as a number, e.g. `0.5`
+ *
+ * {@link https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio}
+ */
 export function parseAspectRatio(aspectRatio?: string): number | undefined {
   if (!aspectRatio) return;
   const [width, height] = aspectRatio.split('/');
   return 1 / (Number(width) / Number(height));
-  /*
-    Given:
-      '1/1'
-    Returns:
-      0.5,
-    Given:
-      '4/3'
-    Returns:
-      0.75
-  */
 }
 
 // Generate data needed for Imagery loader
@@ -499,11 +578,16 @@ export function generateSizes(
   */
 }
 
-/*
+/**
  * The shopifyLoader function is a simple utility function that takes a src, width,
  * height, and crop and returns a string that can be used as the src for an image.
  * It can be used with the Hydrogen Image component or with the next/image component.
  * (or any others that accept equivalent configuration)
+ * @param src - The source URL of the image, e.g. `https://cdn.shopify.com/static/sample-images/garnished.jpeg`
+ * @param width - The width of the image, e.g. `100`
+ * @param height - The height of the image, e.g. `100`
+ * @param crop - The crop of the image, e.g. `center`
+ * @returns A Shopify image URL with the correct query parameters, e.g. `https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=100&height=100&crop=center`
  */
 export const shopifyLoader: ImageLoader = ({src, width, height, crop}) => {
   if (!src) {
@@ -515,13 +599,4 @@ export const shopifyLoader: ImageLoader = ({src, width, height, crop}) => {
   height && url.searchParams.append('height', Math.round(height).toString());
   crop && url.searchParams.append('crop', crop);
   return url.href;
-  /*
-    Given:
-      src = 'https://cdn.shopify.com/static/sample-images/garnished.jpeg'
-      width = 100
-      height = 100
-      crop = 'center'
-    Returns:
-      'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=100&height=100&crop=center'
-  */
 };
