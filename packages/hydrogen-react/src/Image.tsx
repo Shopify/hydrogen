@@ -261,6 +261,8 @@ export function Image({
         height: normalizedHeight,
         aspectRatio: fixedAspectRatio,
       },
+      width: normalizedWidth,
+      height: normalizedHeight,
       loading,
       ...passthroughProps,
     });
@@ -287,6 +289,8 @@ export function Image({
         height: normalizedHeight,
         aspectRatio: normalizedAspectRatio,
       },
+      width: normalizedWidth,
+      height: normalizedHeight,
       loading,
       ...passthroughProps,
     });
