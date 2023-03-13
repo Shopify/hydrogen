@@ -117,28 +117,30 @@ export function Image({
   /*
    * Deprecated Props from original Image component
    */
-  if (loaderOptions) {
-    console.warn(
-      [
-        `Deprecated property from original Image component in use:`,
-        `Use the \`crop\`, \`width\`, \`height\`, and src props, or`,
-        `the \`data\` prop to achieve the same result. Image used is ${
-          src || data?.url || 'unknown'
-        }`,
-      ].join(' '),
-    );
-  }
+  if (process.env.NODE_ENV === 'development') {
+    if (loaderOptions) {
+      console.warn(
+        [
+          `Deprecated property from original Image component in use:`,
+          `Use the \`crop\`, \`width\`, \`height\`, and src props, or`,
+          `the \`data\` prop to achieve the same result. Image used is ${
+            src || data?.url || 'unknown'
+          }`,
+        ].join(' '),
+      );
+    }
 
-  if (widths) {
-    console.warn(
-      [
-        `Deprecated property from original Image component in use:`,
-        `\`widths\` are now calculated automatically based on the`,
-        `config and width props. Image used is ${
-          src || data?.url || 'unknown'
-        }`,
-      ].join(' '),
-    );
+    if (widths) {
+      console.warn(
+        [
+          `Deprecated property from original Image component in use:`,
+          `\`widths\` are now calculated automatically based on the`,
+          `config and width props. Image used is ${
+            src || data?.url || 'unknown'
+          }`,
+        ].join(' '),
+      );
+    }
   }
 
   /* Only use data width if height is also set */
@@ -171,7 +173,7 @@ export function Image({
 
   const normalizedSrc: string | undefined = src || data?.url;
 
-  if (!normalizedSrc) {
+  if (!normalizedSrc && process.env.NODE_ENV === 'development') {
     console.warn(`No src or data.url provided to Image component.`);
   }
 
@@ -200,7 +202,11 @@ export function Image({
     incrementSize,
   );
 
-  if (!sizes && !isFixedWidth(normalizedWidth)) {
+  if (
+    !sizes &&
+    !isFixedWidth(normalizedWidth) &&
+    process.env.NODE_ENV === 'development'
+  ) {
     console.warn(
       [
         'No sizes prop provided to Image component,',
