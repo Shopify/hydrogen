@@ -21,8 +21,10 @@ const GRAPHQL_QUERY = `
 export async function getServerSideProps() {
   // Get the Storefront API url
   const response = await fetch(client.getStorefrontApiUrl(), {
-    body: GRAPHQL_QUERY,
-    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address to help prevent bad actors from overloading your store.
+    body: JSON.stringify({
+      query: GRAPHQL_QUERY,
+    }),
+    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address from the request object to help prevent bad actors from overloading your store.
     headers: client.getPrivateTokenHeaders({buyerIp: '...'}),
     method: 'POST',
   });
