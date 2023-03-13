@@ -20,9 +20,10 @@ export default class GenerateRoute extends Command {
 const IS_WINDOWS = process.platform === 'win32';
 
 export async function runCreateShortcut() {
-  const shortcuts: Array<UnixShell> = IS_WINDOWS
-    ? await createShortcutsForWindows()
-    : await createShortcutsForUnix();
+  const shortcuts: Array<UnixShell> =
+    IS_WINDOWS && !process.env.MINGW_PREFIX
+      ? await createShortcutsForWindows()
+      : await createShortcutsForUnix();
 
   if (shortcuts.length > 0) {
     renderSuccess({
