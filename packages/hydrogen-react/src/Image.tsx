@@ -15,6 +15,8 @@ interface SrcSetOptions {
 
 type HtmlImageProps = React.ImgHTMLAttributes<HTMLImageElement>;
 
+export type ImageLoader = (params: ShopifyLoaderParams) => string;
+
 export type ShopifyLoaderOptions = {
   crop?: 'top' | 'bottom' | 'left' | 'right' | 'center';
   scale?: 2 | 3;
@@ -42,7 +44,7 @@ export type ShopifyImageProps = {
   as?: 'img' | 'source';
   data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;
   src?: string;
-  loader?: (params: ShopifyLoaderParams) => string;
+  loader?: ImageLoader;
   width?: string | number;
   height?: string | number;
   crop?: Crop;
@@ -241,7 +243,7 @@ export function Image({
         : generateSizes(imageWidths, fixedAspectRatio, crop);
 
     return React.createElement(Component, {
-      srcSet: generateShopifySrcSet(normalizedSrc, sizesArray),
+      srcSet: generateShopifySrcSet(normalizedSrc, sizesArray, loader),
       src: loader({
         src: normalizedSrc,
         width: intWidth,
@@ -382,6 +384,7 @@ function isFixedWidth(width: string | number): boolean {
 export function generateShopifySrcSet(
   src?: string,
   sizesArray?: Array<{width?: number; height?: number; crop?: Crop}>,
+  loader: ImageLoader = shopifyLoader,
 ): string {
   if (!src) {
     return '';
@@ -394,7 +397,7 @@ export function generateShopifySrcSet(
   return sizesArray
     .map(
       (size) =>
-        `${shopifyLoader({
+        `${loader({
           src,
           width: size.width,
           height: size.height,
@@ -488,17 +491,7 @@ export function generateSizes(
  * It can be used with the Hydrogen Image component or with the next/image component.
  * (or any others that accept equivalent configuration)
  */
-export function shopifyLoader({
-  src,
-  width,
-  height,
-  crop,
-}: {
-  src?: string;
-  width?: number;
-  height?: number;
-  crop?: Crop;
-}): string {
+export const shopifyLoader: ImageLoader = ({src, width, height, crop}) => {
   if (!src) {
     return '';
   }
@@ -517,4 +510,4 @@ export function shopifyLoader({
     Returns:
       'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=100&height=100&crop=center'
   */
-}
+};

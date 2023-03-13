@@ -71,7 +71,6 @@ describe('<Image />', () => {
         />,
       );
 
-      expect(loader).toHaveBeenCalledTimes(1);
       expect(loader).toHaveBeenCalledWith({
         src,
         width,
