@@ -2,19 +2,13 @@ import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
-
 import {PageHeader, Section, Heading, Link} from '~/components';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
-
-export const handle = {
-  seo: {
-    title: 'Policies',
-  },
-};
+import {seoPayload} from '~/lib/seo.server';
 
 export const headers = routeHeaders;
 
-export async function loader({context: {storefront}}: LoaderArgs) {
+export async function loader({request, context: {storefront}}: LoaderArgs) {
   const data = await storefront.query<{
     shop: Record<string, ShopPolicy>;
   }>(POLICIES_QUERY);
@@ -26,9 +20,12 @@ export async function loader({context: {storefront}}: LoaderArgs) {
     throw new Response('Not found', {status: 404});
   }
 
+  const seo = seoPayload.policies({policies, url: request.url});
+
   return json(
     {
       policies,
+      seo,
     },
     {
       headers: {
