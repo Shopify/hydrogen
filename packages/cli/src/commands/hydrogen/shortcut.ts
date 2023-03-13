@@ -6,6 +6,7 @@ import path from 'path';
 import os from 'os';
 
 type UnixShell = 'zsh' | 'bash' | 'fish';
+type WindowsShell = 'PowerShell' | 'PowerShell 7+' | 'CMD';
 
 const ALIAS_NAME = 'h2';
 
@@ -20,16 +21,16 @@ export default class GenerateRoute extends Command {
 const IS_WINDOWS = process.platform === 'win32';
 
 export async function runCreateShortcut() {
-  const shortcuts: Array<UnixShell> =
-    IS_WINDOWS && !process.env.MINGW_PREFIX
-      ? await createShortcutsForWindows()
-      : await createShortcutsForUnix();
+  const shortcuts: Array<UnixShell | WindowsShell> =
+    IS_WINDOWS && !process.env.MINGW_PREFIX // Check Mintty/Mingw/Cygwin
+      ? await createShortcutsForWindows() // Windows without Git Bash
+      : await createShortcutsForUnix(); // Unix and Windows with Git Bash
 
   if (shortcuts.length > 0) {
     renderSuccess({
       headline: `Shortcut ready for the following shells: ${shortcuts.join(
         ', ',
-      )}.\nRestart your terminal session and you can run \`${ALIAS_NAME}\` from your local project.`,
+      )}.\nRestart your terminal session and run \`${ALIAS_NAME}\` from your local project.`,
     });
   } else {
     renderFatalError({
@@ -147,7 +148,49 @@ async function createShortcutsForUnix() {
   return shells;
 }
 
+// Create a PS function and and alias to call it.
+const PS_FUNCTION = `function Invoke-Local-H2 {$npmBin = npm prefix -s; Invoke-Expression "$npmBin\\node_modules\\.bin\\shopify.ps1 hydrogen $Args"}; Set-Alias -Name ${ALIAS_NAME} -Value Invoke-Local-H2`;
+
+// Add the previous function and alias to the user's profile if they don't already exist.
+const PS_APPEND_PROFILE_COMMAND = `
+if (!(Test-Path -Path $PROFILE)) {
+  New-Item -ItemType File -Path $PROFILE -Force
+}
+
+$profileContent = Get-Content -Path $PROFILE
+if (!$profileContent -or $profileContent -NotLike '*Invoke-Local-H2*') {
+  Add-Content -Path $PROFILE -Value '${PS_FUNCTION}'
+}
+`;
+
 async function createShortcutsForWindows() {
-  // TODO: Support PowerShell and CMD?
-  return [];
+  const shells: WindowsShell[] = [];
+
+  try {
+    // Legacy PowerShell
+    execSync(PS_APPEND_PROFILE_COMMAND, {
+      shell: 'powershell.exe',
+      stdio: 'ignore',
+    });
+    shells.push('PowerShell');
+  } catch (error) {
+    output.debug(
+      'Could not create alias for PowerShell:\n' + (error as Error).stack,
+    );
+  }
+
+  try {
+    // PowerShell 7+ has a different executable name and installation path:
+    // https://learn.microsoft.com/en-us/powershell/scripting/whats-new/migrating-from-windows-powershell-51-to-powershell-7?view=powershell-7.3#separate-installation-path-and-executable-name
+    execSync(PS_APPEND_PROFILE_COMMAND, {shell: 'pwsh.exe', stdio: 'ignore'});
+    shells.push('PowerShell 7+');
+  } catch (error) {
+    output.debug(
+      'Could not create alias for PowerShell 7+:\n' + (error as Error).stack,
+    );
+  }
+
+  // TODO: support CMD?
+
+  return shells;
 }
