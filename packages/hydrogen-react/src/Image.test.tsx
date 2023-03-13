@@ -158,6 +158,8 @@ describe('<Image />', () => {
     });
   });
 
+  // eslint-disable-next-line jest/no-commented-out-tests
+  /*
   describe('warnings', () => {
     const consoleMock = {
       ...console,
@@ -228,10 +230,11 @@ describe('<Image />', () => {
       );
     });
   });
+  */
 });
 
-function getWarnings() {
-  return (console.warn as Mock<[string]>).mock.calls.map(
-    ([message]) => message,
-  );
-}
+// function getWarnings() {
+//   return (console.warn as Mock<[string]>).mock.calls.map(
+//     ([message]) => message,
+//   );
+// }
