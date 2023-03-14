@@ -9,13 +9,10 @@ import type {
   CartBuyerIdentityInput,
 } from '@shopify/hydrogen/storefront-api-types';
 import {
-  createCookieSessionStorage,
   type AppLoadContext,
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
-
-import {CartAction} from './types';
 
 type Storefront = AppLoadContext['storefront'];
 
@@ -23,13 +20,6 @@ interface CartOptions {
   countryCode?: string;
   cartFrament?: string;
   numCartLines?: number;
-  cookie?: Partial<{
-    name: string;
-    secrets: string[];
-    httpOnly: boolean;
-    path: string;
-    sameSite: 'lax' | 'strict';
-  }>;
 }
 
 interface Result {
@@ -86,13 +76,10 @@ export class AlphaCart {
   }
 
   set id(value: string) {
-    console.log('set cart id', value);
     this.session.set('cartId', value);
   }
 
   async get() {
-    console.log('get cart');
-    console.log('cart id', this.id);
     if (!this.id) {
       return null;
     }
@@ -155,6 +142,7 @@ export class AlphaCart {
       });
 
       const response = await this.respond(cartLinesAdd, options);
+
       return response;
     }
   }
@@ -192,18 +180,9 @@ export class AlphaCart {
   static async init(
     request: Request,
     storefront: Storefront,
+    storage: SessionStorage,
     options: CartOptions = {},
   ) {
-    const storage = createCookieSessionStorage({
-      cookie: {
-        name: 'session',
-        httpOnly: true,
-        path: '/',
-        sameSite: 'lax',
-        ...options.cookie,
-      },
-    });
-
     const session = await storage.getSession(request.headers.get('Cookie'));
     return new this(storage, session, storefront, options);
   }

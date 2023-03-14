@@ -51,7 +51,18 @@ export default {
       /**
        * Create a custom cart instance.
        */
-      const cart = await AlphaCart.init(request, storefront);
+      const cart = await AlphaCart.init(
+        request,
+        storefront,
+        createCookieSessionStorage({
+          cookie: {
+            name: 'session',
+            httpOnly: true,
+            path: '/',
+            sameSite: 'lax',
+          },
+        }),
+      );
 
       /**
        * Create a Remix request handler and pass

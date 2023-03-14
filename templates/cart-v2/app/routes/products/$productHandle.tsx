@@ -31,6 +31,8 @@ export default function Product() {
   const {product} = useLoaderData<typeof loader>();
   const {title, vendor, descriptionHtml} = product;
 
+  console.log(product);
+
   return (
     <>
       <h1>{title}</h1>
@@ -38,7 +40,7 @@ export default function Product() {
       <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
       <Form action="/cart" method="post">
         <input type="hidden" name="cartAction" value="ADD_TO_CART" />
-        <input type="hidden" name="productId" value={product.id} />
+        <input type="hidden" name="lines" value={product.id} />
         <input
           type="hidden"
           name="variantId"
@@ -63,6 +65,19 @@ const PRODUCT_QUERY = `#graphql
       title
       descriptionHtml
       vendor
+      variants(first: 10) {
+        edges {
+          node {
+            id
+            title
+            price {
+              amount
+              currencyCode
+            }
+            availableForSale
+          }
+        }
+      }
     }
   }
 `;
