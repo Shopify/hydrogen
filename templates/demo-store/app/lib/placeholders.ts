@@ -44,6 +44,7 @@ const PLACEHOLDERS = {
       },
       height: 'full',
       top: true,
+      decoding: 'sync',
       loading: 'eager',
     },
     // secondaryHero

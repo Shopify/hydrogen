@@ -32,13 +32,16 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export const meta: MetaFunction = (data) => ({
+export const meta: MetaFunction = () => ({
   charset: 'utf-8',
   viewport: 'width=device-width,initial-scale=1',
 });
 
-export async function loader({context, request}: LoaderArgs) {
-  const cartId = await context.session.get('cartId');
+export async function loader({context}: LoaderArgs) {
+  const [customerAccessToken, cartId] = await Promise.all([
+    context.session.get('customerAccessToken'),
+    context.session.get('cartId'),
+  ]);
 
   const [cart, layout] = await Promise.all([
     cartId
@@ -62,6 +65,7 @@ export async function loader({context, request}: LoaderArgs) {
   ]);
 
   return defer({
+    isLoggedIn: Boolean(customerAccessToken),
     cart,
     layout,
   });

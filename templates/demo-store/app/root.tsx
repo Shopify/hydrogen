@@ -15,38 +15,17 @@ import {
   useLoaderData,
   useMatches,
 } from '@remix-run/react';
-import {
-  ShopifySalesChannel,
-  Seo,
-  type SeoHandleFunction,
-} from '@shopify/hydrogen';
+import {ShopifySalesChannel, Seo} from '@shopify/hydrogen';
 import {Layout} from '~/components';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
-
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
-
+import {seoPayload} from '~/lib/seo.server';
 import {DEFAULT_LOCALE, parseMenu, type EnhancedMenu} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
 import {useAnalytics} from './hooks/useAnalytics';
-
-const seo: SeoHandleFunction<typeof loader> = ({data, pathname}) => ({
-  title: data?.layout?.shop?.name,
-  titleTemplate: '%s | Hydrogen Demo Store',
-  description: data?.layout?.shop?.description,
-  handle: '@shopify',
-  url: `https://hydrogen.shop${pathname}`,
-  robots: {
-    noIndex: false,
-    noFollow: false,
-  },
-});
-
-export const handle = {
-  seo,
-};
 
 export const links: LinksFunction = () => {
   return [
@@ -68,13 +47,17 @@ export const meta: MetaFunction = () => ({
   viewport: 'width=device-width,initial-scale=1',
 });
 
-export async function loader({context}: LoaderArgs) {
-  const [cartId, layout] = await Promise.all([
+export async function loader({request, context}: LoaderArgs) {
+  const [customerAccessToken, cartId, layout] = await Promise.all([
+    context.session.get('customerAccessToken'),
     context.session.get('cartId'),
     getLayoutData(context),
   ]);
 
+  const seo = seoPayload.root({shop: layout.shop, url: request.url});
+
   return defer({
+    isLoggedIn: Boolean(customerAccessToken),
     layout,
     selectedLocale: context.storefront.i18n,
     cart: cartId ? getCart(context, cartId) : undefined,
@@ -82,6 +65,7 @@ export async function loader({context}: LoaderArgs) {
       shopifySalesChannel: ShopifySalesChannel.hydrogen,
       shopId: layout.shop.id,
     },
+    seo,
   });
 }
 
@@ -176,6 +160,16 @@ const LAYOUT_QUERY = `#graphql
       id
       name
       description
+      primaryDomain {
+        url
+      }
+      brand {
+       logo {
+         image {
+          url
+         }
+       }
+     }
     }
     headerMenu: menu(handle: $headerMenuHandle) {
       id

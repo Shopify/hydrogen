@@ -17,6 +17,13 @@ export type {
   ShopifyPageViewPayload,
 } from './analytics-types.js';
 export {BuyNowButton} from './BuyNowButton.js';
+export {
+  SHOPIFY_S,
+  SHOPIFY_STOREFRONT_ID_HEADER,
+  SHOPIFY_STOREFRONT_S_HEADER,
+  SHOPIFY_STOREFRONT_Y_HEADER,
+  SHOPIFY_Y,
+} from './cart-constants.js';
 export type {
   Cart,
   CartAction,

@@ -1,22 +1,17 @@
-import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {flattenConnection, Image} from '@shopify/hydrogen';
 import type {Article, Blog} from '@shopify/hydrogen/storefront-api-types';
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
+import {seoPayload} from '~/lib/seo.server';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
 
 const BLOG_HANDLE = 'Journal';
 
-export const handle = {
-  seo: {
-    title: 'Journal',
-  },
-};
-
 export const headers = routeHeaders;
 
-export const loader = async ({context: {storefront}}: LoaderArgs) => {
+export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   const {language, country} = storefront.i18n;
   const {blog} = await storefront.query<{
     blog: Blog;
@@ -44,20 +39,16 @@ export const loader = async ({context: {storefront}}: LoaderArgs) => {
     };
   });
 
+  const seo = seoPayload.blog({blog, url: request.url});
+
   return json(
-    {articles},
+    {articles, seo},
     {
       headers: {
         'Cache-Control': CACHE_SHORT,
       },
     },
   );
-};
-
-export const meta: MetaFunction = () => {
-  return {
-    title: 'All Journals',
-  };
 };
 
 export default function Journals() {
@@ -121,6 +112,11 @@ query Blog(
   $cursor: String
 ) @inContext(language: $language) {
   blog(handle: $blogHandle) {
+    title
+    seo {
+      title
+      description
+    }
     articles(first: $pageBy, after: $cursor) {
       edges {
         node {

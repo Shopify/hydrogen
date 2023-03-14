@@ -4866,25 +4866,48 @@
     "category": "components",
     "isVisualComponent": false,
     "related": [],
-    "description": "The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout. It renders a [`<shop-pay-button>`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically. It relies on the `<ShopProvider>` context provider.",
+    "description": "The `ShopPayButton` component renders a button that redirects to the Shop Pay checkout. It renders a [`<shop-pay-button>`](https://shopify.dev/custom-storefronts/tools/web-components) custom element, for which it will lazy-load the source code automatically.",
     "type": "component",
     "defaultExample": {
-      "description": "I am the default example",
+      "description": "<ShopPayButton> without <ShopifyProvider>",
       "codeblock": {
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({variantId}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n\nexport function AddVariantQuantityMultiple({variantId, quantity}) {\n  return (\n    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />\n  );\n}\n",
+            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({variantId, storeDomain}) {\n  return <ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} />;\n}\n\nexport function AddVariantQuantityMultiple({variantId, quantity, storeDomain}) {\n  return (\n    <ShopPayButton\n      variantIdsAndQuantities={[{id: variantId, quantity}]}\n      storeDomain={storeDomain}\n    />\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n\nexport function AddVariantQuantityMultiple({\n  variantId,\n  quantity,\n}: {\n  variantId: string;\n  quantity: number;\n}) {\n  return (\n    <ShopPayButton variantIdsAndQuantities={[{id: variantId, quantity}]} />\n  );\n}\n",
+            "code": "import {ShopPayButton} from '@shopify/hydrogen-react';\n\nexport function AddVariantQuantity1({\n  variantId,\n  storeDomain,\n}: {\n  variantId: string;\n  storeDomain: string;\n}) {\n  return <ShopPayButton variantIds={[variantId]} storeDomain={storeDomain} />;\n}\n\nexport function AddVariantQuantityMultiple({\n  variantId,\n  quantity,\n  storeDomain,\n}: {\n  variantId: string;\n  quantity: number;\n  storeDomain: string;\n}) {\n  return (\n    <ShopPayButton\n      variantIdsAndQuantities={[{id: variantId, quantity}]}\n      storeDomain={storeDomain}\n    />\n  );\n}\n",
             "language": "tsx"
           }
         ],
-        "title": "Example code"
+        "title": "<ShopPayButton> without <ShopifyProvider>"
       }
+    },
+    "examples": {
+      "description": "",
+      "examples": [
+        {
+          "description": "If `<ShopifyProvider>` context provider is used in your app, you can use the `<ShopPayButton>` without supplying a `storeDomain` prop",
+          "codeblock": {
+            "tabs": [
+              {
+                "title": "JavaScript",
+                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2023-01\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" />\n    </ShopifyProvider>\n  );\n}\n\nexport function AddVariantQuantity1({variantId}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n",
+                "language": "jsx"
+              },
+              {
+                "title": "TypeScript",
+                "code": "import {ShopifyProvider, ShopPayButton} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2023-01\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <AddVariantQuantity1 variantId=\"gid://shopify/ProductVariant/1\" />\n    </ShopifyProvider>\n  );\n}\n\nexport function AddVariantQuantity1({variantId}: {variantId: string}) {\n  return <ShopPayButton variantIds={[variantId]} />;\n}\n",
+                "language": "tsx"
+              }
+            ],
+            "title": "<ShopPayButton> with <ShopifyProvider>"
+          }
+        }
+      ]
     },
     "definitions": [
       {
@@ -4896,7 +4919,7 @@
             "filePath": "/ShopPayButton.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopPayButtonProps",
-            "value": "ShopPayButtonStyleProps & (ShopPayVariantIds | ShopPayVariantAndQuantities)",
+            "value": "ShopPayButtonStyleProps & ShopPayDomainProps & (ShopPayVariantIds | ShopPayVariantAndQuantities)",
             "description": ""
           },
           "ShopPayButtonStyleProps": {
@@ -4920,6 +4943,23 @@
                 "name": "width",
                 "value": "string",
                 "description": "A string that's applied to the [CSS custom property (variable)](https://developer.mozilla.org/en-US/docs/Web/CSS/--*) `--shop-pay-button-width` for the [Buy with Shop Pay component](https://shopify.dev/custom-storefronts/tools/web-components#buy-with-shop-pay-component).",
+                "isOptional": true
+              }
+            ]
+          },
+          "ShopPayDomainProps": {
+            "filePath": "/ShopPayButton.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopPayDomainProps",
+            "value": "{\n  /** The domain of your Shopify storefront URL (eg: `your-store.myshopify.com`). */\n  storeDomain?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ShopPayButton.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "storeDomain",
+                "value": "string",
+                "description": "The domain of your Shopify storefront URL (eg: `your-store.myshopify.com`).",
                 "isOptional": true
               }
             ]
@@ -6436,7 +6476,7 @@
         "tabs": [
           {
             "title": "Client Example in NextJS",
-            "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  storeDomain: 'https://{store-name}.myshopify.com',\n  storefrontApiVersion: '2023-01',\n  privateStorefrontToken: '{private token for server-side requests}',\n});\n\n// in another file where you need to make queries, for example in NextJS server-side:\n\n// a Storefront API query\nconst GRAPHQL_QUERY = `\n  query {\n    shop {\n      name\n    }\n  }\n`;\n\n// make the request\nexport async function getServerSideProps() {\n  // Get the Storefront API url\n  const response = await fetch(client.getStorefrontApiUrl(), {\n    body: GRAPHQL_QUERY,\n    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address to help prevent bad actors from overloading your store.\n    headers: client.getPrivateTokenHeaders({buyerIp: '...'}),\n    method: 'POST',\n  });\n\n  if (!response.ok) {\n    throw new Error(response.statusText);\n  }\n\n  const json = await response.json();\n\n  return {props: json};\n}\n",
+            "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  storeDomain: 'https://{store-name}.myshopify.com',\n  storefrontApiVersion: '2023-01',\n  privateStorefrontToken: '{private token for server-side requests}',\n});\n\n// in another file where you need to make queries, for example in NextJS server-side:\n\n// a Storefront API query\nconst GRAPHQL_QUERY = `\n  query {\n    shop {\n      name\n    }\n  }\n`;\n\n// make the request\nexport async function getServerSideProps() {\n  // Get the Storefront API url\n  const response = await fetch(client.getStorefrontApiUrl(), {\n    body: JSON.stringify({\n      query: GRAPHQL_QUERY,\n    }),\n    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address from the request object to help prevent bad actors from overloading your store.\n    headers: client.getPrivateTokenHeaders({buyerIp: '...'}),\n    method: 'POST',\n  });\n\n  if (!response.ok) {\n    throw new Error(response.statusText);\n  }\n\n  const json = await response.json();\n\n  return {props: json};\n}\n",
             "language": "js"
           }
         ],

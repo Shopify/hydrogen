@@ -8,14 +8,12 @@ import {
   useLocation,
   useTransition,
 } from '@remix-run/react';
+
 import {
   AnalyticsPageType,
   Money,
   ShopifyAnalyticsProduct,
   ShopPayButton,
-  flattenConnection,
-  type SeoHandleFunction,
-  type SeoConfig,
 } from '@shopify/hydrogen';
 import {
   Heading,
@@ -32,6 +30,7 @@ import {
   Button,
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
+import {seoPayload} from '~/lib/seo.server';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import type {
@@ -40,8 +39,6 @@ import type {
   Product as ProductType,
   Shop,
   ProductConnection,
-  MediaConnection,
-  MediaImage,
 } from '@shopify/hydrogen/storefront-api-types';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
@@ -90,34 +87,25 @@ export async function loader({params, request, context}: LoaderArgs) {
     price: selectedVariant.price.amount,
   };
 
-  const media = flattenConnection<MediaConnection>(product.media).find(
-    (media) => media.mediaContentType === 'IMAGE',
-  ) as MediaImage | undefined;
-
-  const seo = {
-    title: product?.seo?.title ?? product?.title,
-    media: media?.image,
-    description: product?.seo?.description ?? product?.description,
-    jsonLd: {
-      '@context': 'https://schema.org',
-      '@type': 'Product',
-      brand: product?.vendor,
-      name: product?.title,
-    },
-  } satisfies SeoConfig<Product>;
+  const seo = seoPayload.product({
+    product,
+    selectedVariant,
+    url: request.url,
+  });
 
   return defer(
     {
       product,
       shop,
+      storeDomain: shop.primaryDomain.url,
       recommended,
-      seo,
       analytics: {
         pageType: AnalyticsPageType.product,
         resourceId: product.id,
         products: [productAnalytics],
         totalValue: parseFloat(selectedVariant.price.amount),
       },
+      seo,
     },
     {
       headers: {
@@ -192,7 +180,7 @@ export default function Product() {
 }
 
 export function ProductForm() {
-  const {product, analytics} = useLoaderData<typeof loader>();
+  const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
 
   const [currentSearchParams] = useSearchParams();
   const transition = useTransition();
@@ -296,7 +284,11 @@ export function ProductForm() {
               </AddToCartButton>
             )}
             {!isOutOfStock && (
-              <ShopPayButton variantIds={[selectedVariant?.id!]} />
+              <ShopPayButton
+                width="100%"
+                variantIds={[selectedVariant?.id!]}
+                storeDomain={storeDomain}
+              />
             )}
           </div>
         )}
@@ -585,6 +577,9 @@ const PRODUCT_QUERY = `#graphql
     }
     shop {
       name
+      primaryDomain {
+        url
+      }
       shippingPolicy {
         body
         handle
