@@ -37,7 +37,9 @@ export type ShopifyLoaderParams = Simplify<
  */
 type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right' | undefined;
 
-export interface ShopifyImageProps {
+export type ShopifyImageProps = HtmlImageProps & ShopifyImageBaseProps;
+
+type ShopifyImageBaseProps = {
   /** The HTML element to use for the image, `source` should only be used inside `picture` */
   as?: 'img' | 'source';
   /** Data mapping to the Storefront API `Image` object. Must be an Image object.
@@ -67,39 +69,14 @@ export interface ShopifyImageProps {
    * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}
    */
   data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;
-  /** The image URL. This is used if no `data` prop is provided. */
-  src?: string;
-  /** A function that returns a URL string for an image.
-   *
-   * @remarks
-   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide
-   * your own function to use a another provider, as long as they support URL based image transformations.
-   */
-  loader?: ImageLoader;
-  /** Image width, as meant to be rendered on the page.
-   * You will mostly use this prop if you're rendering a fixed size image.
-   *
-   * @defaultValue `100%`
-   */
-  width?: string | number;
-  /** The image height. You probably only want to set this if you're using a fixed image.
-   * For responsive images, we automatically render the height of the image based on the aspect ratio of the image,
-   * and the width. The number provided here will be set as the height prop on the rendered HTML,
-   * which helps prevent layout shift.
-   *
-   * @defaultValue `auto`
+  /** The aspect ratio of the image, in the format of `width/height`.
    *
    * @example
    * ```
-   * <Image
-   *   data={productImage}
-   *   sizes="(min-width: 45em) 50vw, 100vw" />
-   *   width={100}
-   *   height={100}
-   *  />
+   * <Image data={productImage} aspectRatio="4/5" />
    * ```
    */
-  height?: string | number;
+  aspectRatio?: string;
   /** The crop position of the image.
    *
    * @remarks
@@ -109,44 +86,20 @@ export interface ShopifyImageProps {
    * @defaultValue `center`
    */
   crop?: Crop;
-  /** Standard CSS sizes
+  /** A function that returns a URL string for an image.
    *
-   * @example
-   * ```
-   * <Image
-   *   data={productImage}
-   *   sizes="(min-width: 45em) 50vw, 100vw"
-   *   aspectRatio="4/5"
-   * />
-   * ```
-   *
-   * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#attr-srcset} */
-  sizes?: string;
-  /** The aspect ratio of the image, in the format of `width/height`.
-   *
-   * @example
-   * ```
-   * <Image data={productImage} aspectRatio="4/5" />
-   * ```
+   * @remarks
+   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide
+   * your own function to use a another provider, as long as they support URL based image transformations.
    */
-  aspectRatio?: string;
+  loader?: ImageLoader;
   /** An optional prop you can use to change the default srcSet generation behaviour */
   srcSetOptions?: SrcSetOptions;
-  /** The alt text for the image.
-   *
-   * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#attr-alt} */
-  alt?: string;
-  /** Our Image component defaults to `lazy` loading, if you’re rendering an image at the top of
-   * the page, set this prop to `eager`.
-   *
-   * {@link https://developer.mozilla.org/en-US/docs/Web/HTML/Element/img#attr-loading}
-   */
-  loading?: 'lazy' | 'eager';
   /** @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop */
   loaderOptions?: ShopifyLoaderOptions;
   /** @deprecated Autocalculated, use only `width` prop, or srcSetOptions */
   widths?: (HtmlImageProps['width'] | ImageType['width'])[];
-}
+};
 
 /**
  * A Storefront API GraphQL fragment that can be used to query for an image.
@@ -189,15 +142,11 @@ export const IMAGE_FRAGMENT = `#graphql
  * {@link https://shopify.dev/docs/api/hydrogen-react/components/image}
  */
 export function Image({
-  data,
   as: Component = 'img',
-  src,
-  loader = shopifyLoader,
-  width,
-  height,
-  crop = 'center',
-  sizes,
+  data,
   aspectRatio,
+  crop = 'center',
+  loader = shopifyLoader,
   srcSetOptions = {
     intervals: 10,
     startingWidth: 300,
@@ -205,11 +154,16 @@ export function Image({
     placeholderWidth: 100,
   },
   alt,
+  decoding = 'async',
+  height,
   loading = 'lazy',
+  sizes,
+  src,
+  width,
   loaderOptions,
   widths,
   ...passthroughProps
-}: HtmlImageProps & ShopifyImageProps): JSX.Element | null {
+}: ShopifyImageProps): JSX.Element | null {
   /*
    * Deprecated Props from original Image component
    */
@@ -359,6 +313,7 @@ export function Image({
         crop: normalizedHeight === 'auto' ? undefined : crop,
       }),
       alt: normalizedAlt,
+      decoding,
       sizes: sizes || normalizedWidth,
       style: {
         width: normalizedWidth,
@@ -389,6 +344,7 @@ export function Image({
         height: placeholderHeight,
       }),
       alt: normalizedAlt,
+      decoding,
       sizes,
       style: {
         width: normalizedWidth,

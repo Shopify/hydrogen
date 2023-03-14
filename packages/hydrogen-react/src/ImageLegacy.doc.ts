@@ -20,12 +20,12 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './Image.example.jsx',
+          code: './ImageLegacy.example.jsx',
           language: 'jsx',
         },
         {
           title: 'TypeScript',
-          code: './Image.example.tsx',
+          code: './ImageLegacy.example.tsx',
           language: 'tsx',
         },
       ],
