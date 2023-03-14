@@ -62,6 +62,11 @@ const Template: Story<{
         }}
         widths={[200, 300]}
       />
+      <Image
+        sizes="100vw"
+        src="https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg"
+        widths={[100, 200, 300]}
+      />
     </>
   );
 };

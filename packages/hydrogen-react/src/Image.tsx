@@ -149,7 +149,7 @@ export function Image({
   loader = shopifyLoader,
   srcSetOptions = {
     intervals: 15,
-    startingWidth: 100,
+    startingWidth: 200,
     incrementSize: 200,
     placeholderWidth: 100,
   },
@@ -438,7 +438,7 @@ function isFixedWidth(width: string | number): boolean {
  */
 export function generateShopifySrcSet(
   src?: string,
-  sizesArray?: Array<{width: number; height: number; crop?: Crop}>,
+  sizesArray?: Array<{width?: number; height?: number; crop?: Crop}>,
   loader: ImageLoader = shopifyLoader,
 ): string {
   if (!src) {
@@ -457,7 +457,7 @@ export function generateShopifySrcSet(
           width: size.width,
           height: size.height,
           crop: size.crop,
-        })} ${sizesArray.length === 3 ? `${i + 1}x` : `${size.width}w`}`,
+        })} ${sizesArray.length === 3 ? `${i + 1}x` : `${size.width ?? 0}w`}`,
     )
     .join(`, `);
 }
@@ -472,9 +472,9 @@ export function generateShopifySrcSet(
  */
 export function generateImageWidths(
   width: string | number = '100%',
-  intervals = 20,
-  startingWidth = 200,
-  incrementSize = 100,
+  intervals: number,
+  startingWidth: number,
+  incrementSize: number,
 ): number[] {
   const responsive = Array.from(
     {length: intervals},
