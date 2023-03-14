@@ -342,6 +342,7 @@ export function Image({
         src: normalizedSrc,
         width: placeholderWidth,
         height: placeholderHeight,
+        crop,
       }),
       alt: normalizedAlt,
       decoding,
