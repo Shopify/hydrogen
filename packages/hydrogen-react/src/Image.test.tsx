@@ -1,6 +1,8 @@
 import {render, screen} from '@testing-library/react';
 import {faker} from '@faker-js/faker';
 import {Image} from './Image.js';
+import {withEnv} from './test-utils.js';
+import {Mock} from 'vitest';
 
 const defaultProps = {
   sizes: '100vw',
@@ -157,8 +159,6 @@ describe('<Image />', () => {
     });
   });
 
-  // eslint-disable-next-line jest/no-commented-out-tests
-  /*
   describe('warnings', () => {
     const consoleMock = {
       ...console,
@@ -171,69 +171,78 @@ describe('<Image />', () => {
       vi.unstubAllGlobals();
     });
 
-    it('warns user if no src is provided', () => {
-      render(<Image {...defaultProps} src={undefined} />);
+    it('warns user if no src is provided', async () => {
+      await withEnv('development', () => {
+        render(<Image {...defaultProps} src={undefined} />);
 
-      expect(console.warn).toHaveBeenCalledTimes(1);
-      expect(getWarnings()).toMatchInlineSnapshot(
-        `
-        [
-          "No src or data.url provided to Image component.",
-        ]
-      `,
-      );
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(getWarnings()).toMatchInlineSnapshot(
+          `
+          [
+            "No src or data.url provided to Image component.",
+          ]
+        `,
+        );
+      });
     });
 
-    it('warns user if no sizes are provided', () => {
-      render(<Image {...defaultProps} sizes={undefined} />);
+    it('warns user if no sizes are provided', async () => {
+      await withEnv('development', () => {
+        render(<Image {...defaultProps} sizes={undefined} />);
 
-      expect(console.warn).toHaveBeenCalledTimes(1);
-      expect(getWarnings()).toMatchInlineSnapshot(
-        `
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(getWarnings()).toMatchInlineSnapshot(
+          `
         [
           "No sizes prop provided to Image component, you may be loading unnecessarily large images. Image used is https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg",
         ]
       `,
-      );
+        );
+      });
     });
 
-    it('does not warn user if no sizes are provided but width is fixed', () => {
-      render(<Image {...defaultProps} sizes={undefined} width={100} />);
+    it('does not warn user if no sizes are provided but width is fixed', async () => {
+      await withEnv('development', () => {
+        render(<Image {...defaultProps} sizes={undefined} width={100} />);
 
-      expect(console.warn).toHaveBeenCalledTimes(0);
+        expect(console.warn).toHaveBeenCalledTimes(0);
+      });
     });
 
-    it('warns user if widths is provided', () => {
-      render(<Image {...defaultProps} widths={[]} />);
+    it('warns user if widths is provided', async () => {
+      await withEnv('development', () => {
+        render(<Image {...defaultProps} widths={[]} />);
 
-      expect(console.warn).toHaveBeenCalledTimes(1);
-      expect(getWarnings()).toMatchInlineSnapshot(
-        `
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(getWarnings()).toMatchInlineSnapshot(
+          `
         [
           "Deprecated property from original Image component in use: \`widths\` are now calculated automatically based on the config and width props. Image used is https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg",
         ]
       `,
-      );
+        );
+      });
     });
 
-    it('warns user if loaderOptions are provided', () => {
-      render(<Image {...defaultProps} loaderOptions={{}} />);
+    it('warns user if loaderOptions are provided', async () => {
+      await withEnv('development', () => {
+        render(<Image {...defaultProps} loaderOptions={{}} />);
 
-      expect(console.warn).toHaveBeenCalledTimes(1);
-      expect(getWarnings()).toMatchInlineSnapshot(
-        `
+        expect(console.warn).toHaveBeenCalledTimes(1);
+        expect(getWarnings()).toMatchInlineSnapshot(
+          `
         [
           "Deprecated property from original Image component in use: Use the \`crop\`, \`width\`, \`height\`, and src props, or the \`data\` prop to achieve the same result. Image used is https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg",
         ]
       `,
-      );
+        );
+      });
     });
   });
-  */
 });
 
-// function getWarnings() {
-//   return (console.warn as Mock<[string]>).mock.calls.map(
-//     ([message]) => message,
-//   );
-// }
+function getWarnings(): string[] {
+  return (console.warn as Mock<[string]>).mock.calls.map(
+    ([message]) => message,
+  );
+}
