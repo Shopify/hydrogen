@@ -148,9 +148,9 @@ export function Image({
   crop = 'center',
   loader = shopifyLoader,
   srcSetOptions = {
-    intervals: 10,
-    startingWidth: 300,
-    incrementSize: 300,
+    intervals: 15,
+    startingWidth: 100,
+    incrementSize: 200,
     placeholderWidth: 100,
   },
   alt,
@@ -432,13 +432,13 @@ function isFixedWidth(width: string | number): boolean {
 /**
  * This function generates a srcSet for Shopify images.
  * @param src - The source URL of the image, e.g. https://cdn.shopify.com/static/sample-images/garnished.jpeg
- * @param sizesArray - An array of objects containing the width, height, and crop of the image, e.g. [\{width: 200, height: 200, crop: 'center'\}, \{width: 400, height: 400, crop: 'center'\}]
+ * @param sizesArray - An array of objects containing the `width`, `height`, and `crop` of the image, e.g. [\{width: 200, height: 200, crop: 'center'\}, \{width: 400, height: 400, crop: 'center'\}]
  * @param loader - A function that takes a Shopify image URL and returns a Shopify image URL with the correct query parameters
  * @returns A srcSet for Shopify images, e.g. 'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=200&height=200&crop=center 200w, https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=400&height=400&crop=center 400w'
  */
 export function generateShopifySrcSet(
   src?: string,
-  sizesArray?: Array<{width?: number; height?: number; crop?: Crop}>,
+  sizesArray?: Array<{width: number; height: number; crop?: Crop}>,
   loader: ImageLoader = shopifyLoader,
 ): string {
   if (!src) {
@@ -451,13 +451,13 @@ export function generateShopifySrcSet(
 
   return sizesArray
     .map(
-      (size) =>
+      (size, i) =>
         `${loader({
           src,
           width: size.width,
           height: size.height,
           crop: size.crop,
-        })} ${size.width || 0}w`,
+        })} ${sizesArray.length === 3 ? `${i + 1}x` : `${size.width}w`}`,
     )
     .join(`, `);
 }
