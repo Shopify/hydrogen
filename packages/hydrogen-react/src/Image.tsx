@@ -314,7 +314,6 @@ export function Image({
       }),
       alt: normalizedAlt,
       decoding,
-      sizes: sizes || normalizedWidth,
       style: {
         width: normalizedWidth,
         height: normalizedHeight,
