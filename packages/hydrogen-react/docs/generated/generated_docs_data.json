@@ -1333,6 +1333,214 @@
         "url": "/api/hydrogen-react/components/mediafile"
       }
     ],
+    "description": "The `Image` component renders an image for the Storefront API's\n[Image object](https://shopify.dev/api/storefront/reference/common-objects/image) by using the `data` prop. You can [customize this component](https://shopify.dev/api/hydrogen/components#customizing-hydrogen-components) using passthrough props.\n\nImages default to being responsive automativally (`width: 100%, height: auto`), and expect an `aspectRatio` prop, which ensures your image doesn't create any layout shift. For fixed-size images, you can set `width` to an exact value, and a `srcSet` with 1x, 2x, and 3x DPI variants will automatically be generated for you.",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {Image, IMAGE_FRAGMENT} from '@shopify/hydrogen-react';\n\n// An example query that includes the image fragment\nconst IMAGE_QUERY = `#graphql\n  ${IMAGE_FRAGMENT}\n  query {\n    product {\n      featuredImage {\n        ...Image\n      }\n    }\n  }\n`;\n\nexport default function ProductImage({product}) {\n  const image = product.featuredImage;\n\n  if (!image) {\n    return null;\n  }\n\n  return (\n    <Image\n      data={image}\n      sizes=\"(min-width: 45em) 50vw, 100vw\"\n      aspectRatio=\"4/5\"\n    />\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import React from 'react';\nimport {Image, IMAGE_FRAGMENT} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\n// An example query that includes the image fragment\nconst IMAGE_QUERY = `#graphql\n  ${IMAGE_FRAGMENT}\n  query {\n    product {\n      featuredImage {\n        ...Image\n      }\n    }\n  }\n`;\n\nexport default function ProductImage({product}: {product: Product}) {\n  const image = product.featuredImage;\n\n  if (!image) {\n    return null;\n  }\n\n  return (\n    <Image\n      data={image}\n      sizes=\"(min-width: 45em) 50vw, 100vw\"\n      aspectRatio=\"4/5\"\n    />\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "ShopifyImageBaseProps",
+        "typeDefinitions": {
+          "ShopifyImageBaseProps": {
+            "filePath": "/Image.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyImageBaseProps",
+            "value": "{\n  /** The HTML element to use for the image, `source` should only be used inside `picture` */\n  as?: 'img' | 'source';\n  /** Data mapping to the Storefront API `Image` object. Must be an Image object.\n   * Optionally, import the `IMAGE_FRAGMENT` to use in your GraphQL queries.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: ImageLoader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n  /** @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop */\n  loaderOptions?: ShopifyLoaderOptions;\n  /** @deprecated Autocalculated, use only `width` prop, or srcSetOptions */\n  widths?: (HtmlImageProps['width'] | ImageType['width'])[];\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "as",
+                "value": "\"img\" | \"source\"",
+                "description": "The HTML element to use for the image, `source` should only be used inside `picture`",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "data",
+                "value": "PartialObjectDeep<Image, { recurseIntoArrays: true; }>",
+                "description": "Data mapping to the Storefront API `Image` object. Must be an Image object.\nOptionally, import the `IMAGE_FRAGMENT` to use in your GraphQL queries.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "aspectRatio",
+                "value": "string",
+                "description": "The aspect ratio of the image, in the format of `width/height`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "crop",
+                "value": "Crop",
+                "description": "The crop position of the image.",
+                "isOptional": true,
+                "defaultValue": "`center`"
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "loader",
+                "value": "ImageLoader",
+                "description": "A function that returns a URL string for an image.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "srcSetOptions",
+                "value": "SrcSetOptions",
+                "description": "An optional prop you can use to change the default srcSet generation behaviour",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "loaderOptions",
+                "value": "ShopifyLoaderOptions",
+                "description": "",
+                "isOptional": true,
+                "deprecationMessage": "Use `crop`, `width`, `height`, and `src` props, and/or `data` prop"
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "widths",
+                "value": "(string | number)[]",
+                "description": "",
+                "isOptional": true,
+                "deprecationMessage": "Autocalculated, use only `width` prop, or srcSetOptions"
+              }
+            ]
+          },
+          "Crop": {
+            "filePath": "/Image.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "Crop",
+            "value": "'center' | 'top' | 'bottom' | 'left' | 'right' | undefined",
+            "description": ""
+          },
+          "ImageLoader": {
+            "filePath": "/Image.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ImageLoader",
+            "value": "(params: ShopifyLoaderParams) => string",
+            "description": ""
+          },
+          "ShopifyLoaderParams": {
+            "filePath": "/Image.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyLoaderParams",
+            "value": "Simplify<\n  ShopifyLoaderOptions & {\n    src?: ImageType['url'];\n    width?: number;\n    height?: number;\n    crop?: Crop;\n  }\n>",
+            "description": ""
+          },
+          "ShopifyLoaderOptions": {
+            "filePath": "/Image.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyLoaderOptions",
+            "value": "{\n  crop?: 'top' | 'bottom' | 'left' | 'right' | 'center';\n  width?: HtmlImageProps['width'] | ImageType['width'];\n  height?: HtmlImageProps['height'] | ImageType['height'];\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "crop",
+                "value": "\"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "width",
+                "value": "string | number",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "height",
+                "value": "string | number",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "SrcSetOptions": {
+            "filePath": "/Image.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "SrcSetOptions",
+            "value": "{\n  intervals: number;\n  startingWidth: number;\n  incrementSize: number;\n  placeholderWidth: number;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "intervals",
+                "value": "number",
+                "description": ""
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "startingWidth",
+                "value": "number",
+                "description": ""
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "incrementSize",
+                "value": "number",
+                "description": ""
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "placeholderWidth",
+                "value": "number",
+                "description": ""
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "Image",
+    "category": "components",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "MediaFile",
+        "type": "component",
+        "url": "/api/hydrogen-react/components/mediafile"
+      }
+    ],
     "description": "The `Image` component renders an image for the Storefront API's\n[Image object](https://shopify.dev/api/storefront/reference/common-objects/image) by using the `data` prop. You can [customize this component](https://shopify.dev/api/hydrogen/components#customizing-hydrogen-components) using passthrough props.\n\nAn image's width and height are determined using the following priority list:\n1. The width and height values for the `loaderOptions` prop\n2. The width and height values for bare props\n3. The width and height values for the `data` prop\n\nIf only one of `width` or `height` are defined, then the other will attempt to be calculated based on the image's aspect ratio,\nprovided that both `data.width` and `data.height` are available. If `data.width` and `data.height` aren't available, then the aspect ratio cannot be determined and the missing value will remain as `null`",
     "type": "component",
     "defaultExample": {
@@ -1363,22 +1571,56 @@
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyImageBaseProps",
-            "value": "{\n  /** An object with fields that correspond to the Storefront API's\n   * [Image object](https://shopify.dev/api/storefront/reference/common-objects/image).\n   * The `data` prop is required.\n   */\n  data: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A custom function that generates the image URL. Parameters passed in\n   * are `ShopifyLoaderParams`\n   */\n  loader?: (params: ShopifyLoaderParams) => string;\n  /** An object of `loader` function options. For example, if the `loader` function\n   * requires a `scale` option, then the value can be a property of the\n   * `loaderOptions` object (for example, `{scale: 2}`). The object shape is `ShopifyLoaderOptions`.\n   */\n  loaderOptions?: ShopifyLoaderOptions;\n  /**\n   * `src` isn't used, and should instead be passed as part of the `data` object\n   */\n  src?: never;\n  /**\n   * An array of pixel widths to overwrite the default generated srcset. For example, `[300, 600, 800]`.\n   */\n  widths?: (HtmlImageProps['width'] | ImageType['width'])[];\n}",
+            "value": "{\n  /** The HTML element to use for the image, `source` should only be used inside `picture` */\n  as?: 'img' | 'source';\n  /** Data mapping to the Storefront API `Image` object. Must be an Image object.\n   * Optionally, import the `IMAGE_FRAGMENT` to use in your GraphQL queries.\n   *\n   * @example\n   * ```\n   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';\n   *\n   * export const IMAGE_QUERY = `#graphql\n   * ${IMAGE_FRAGMENT}\n   * query {\n   *   product {\n   *     featuredImage {\n   *       ...Image\n   *     }\n   *   }\n   * }`\n   *\n   * <Image\n   *   data={productImage}\n   *   sizes=\"(min-width: 45em) 50vw, 100vw\"\n   *   aspectRatio=\"4/5\"\n   * />\n   * ```\n   *\n   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}\n   */\n  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** The aspect ratio of the image, in the format of `width/height`.\n   *\n   * @example\n   * ```\n   * <Image data={productImage} aspectRatio=\"4/5\" />\n   * ```\n   */\n  aspectRatio?: string;\n  /** The crop position of the image.\n   *\n   * @remarks\n   * In the event that AspectRatio is set, without specifying a crop,\n   * the Shopify CDN won't return the expected image.\n   *\n   * @defaultValue `center`\n   */\n  crop?: Crop;\n  /** A function that returns a URL string for an image.\n   *\n   * @remarks\n   * By default, this uses Shopify’s CDN {@link https://cdn.shopify.com/} but you can provide\n   * your own function to use a another provider, as long as they support URL based image transformations.\n   */\n  loader?: ImageLoader;\n  /** An optional prop you can use to change the default srcSet generation behaviour */\n  srcSetOptions?: SrcSetOptions;\n  /** @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop */\n  loaderOptions?: ShopifyLoaderOptions;\n  /** @deprecated Autocalculated, use only `width` prop, or srcSetOptions */\n  widths?: (HtmlImageProps['width'] | ImageType['width'])[];\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
+                "name": "as",
+                "value": "\"img\" | \"source\"",
+                "description": "The HTML element to use for the image, `source` should only be used inside `picture`",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialObjectDeep<Image, { recurseIntoArrays: true; }>",
-                "description": "An object with fields that correspond to the Storefront API's\n[Image object](https://shopify.dev/api/storefront/reference/common-objects/image).\nThe `data` prop is required."
+                "description": "Data mapping to the Storefront API `Image` object. Must be an Image object.\nOptionally, import the `IMAGE_FRAGMENT` to use in your GraphQL queries.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "aspectRatio",
+                "value": "string",
+                "description": "The aspect ratio of the image, in the format of `width/height`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "crop",
+                "value": "Crop",
+                "description": "The crop position of the image.",
+                "isOptional": true,
+                "defaultValue": "`center`"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "loader",
-                "value": "(params: { crop?: \"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"; scale?: 2 | 3; width?: string | number; height?: string | number; src: string; }) => string",
-                "description": "A custom function that generates the image URL. Parameters passed in\nare `ShopifyLoaderParams`",
+                "value": "ImageLoader",
+                "description": "A function that returns a URL string for an image.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "srcSetOptions",
+                "value": "SrcSetOptions",
+                "description": "An optional prop you can use to change the default srcSet generation behaviour",
                 "isOptional": true
               },
               {
@@ -1386,32 +1628,47 @@
                 "syntaxKind": "PropertySignature",
                 "name": "loaderOptions",
                 "value": "ShopifyLoaderOptions",
-                "description": "An object of `loader` function options. For example, if the `loader` function\nrequires a `scale` option, then the value can be a property of the\n`loaderOptions` object (for example, `{scale: 2}`). The object shape is `ShopifyLoaderOptions`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "src",
-                "value": "never",
-                "description": "`src` isn't used, and should instead be passed as part of the `data` object",
-                "isOptional": true
+                "description": "",
+                "isOptional": true,
+                "deprecationMessage": "Use `crop`, `width`, `height`, and `src` props, and/or `data` prop"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "widths",
                 "value": "(string | number)[]",
-                "description": "An array of pixel widths to overwrite the default generated srcset. For example, `[300, 600, 800]`.",
-                "isOptional": true
+                "description": "",
+                "isOptional": true,
+                "deprecationMessage": "Autocalculated, use only `width` prop, or srcSetOptions"
               }
             ]
+          },
+          "Crop": {
+            "filePath": "/Image.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "Crop",
+            "value": "'center' | 'top' | 'bottom' | 'left' | 'right' | undefined",
+            "description": ""
+          },
+          "ImageLoader": {
+            "filePath": "/Image.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ImageLoader",
+            "value": "(params: ShopifyLoaderParams) => string",
+            "description": ""
+          },
+          "ShopifyLoaderParams": {
+            "filePath": "/Image.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyLoaderParams",
+            "value": "Simplify<\n  ShopifyLoaderOptions & {\n    src?: ImageType['url'];\n    width?: number;\n    height?: number;\n    crop?: Crop;\n  }\n>",
+            "description": ""
           },
           "ShopifyLoaderOptions": {
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyLoaderOptions",
-            "value": "{\n  crop?: 'top' | 'bottom' | 'left' | 'right' | 'center';\n  scale?: 2 | 3;\n  width?: HtmlImageProps['width'] | ImageType['width'];\n  height?: HtmlImageProps['height'] | ImageType['height'];\n}",
+            "value": "{\n  crop?: 'top' | 'bottom' | 'left' | 'right' | 'center';\n  width?: HtmlImageProps['width'] | ImageType['width'];\n  height?: HtmlImageProps['height'] | ImageType['height'];\n}",
             "description": "",
             "members": [
               {
@@ -1419,14 +1676,6 @@
                 "syntaxKind": "PropertySignature",
                 "name": "crop",
                 "value": "\"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "scale",
-                "value": "2 | 3",
                 "description": "",
                 "isOptional": true
               },
@@ -1445,6 +1694,43 @@
                 "value": "string | number",
                 "description": "",
                 "isOptional": true
+              }
+            ]
+          },
+          "SrcSetOptions": {
+            "filePath": "/Image.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "SrcSetOptions",
+            "value": "{\n  intervals: number;\n  startingWidth: number;\n  incrementSize: number;\n  placeholderWidth: number;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "intervals",
+                "value": "number",
+                "description": ""
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "startingWidth",
+                "value": "number",
+                "description": ""
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "incrementSize",
+                "value": "number",
+                "description": ""
+              },
+              {
+                "filePath": "/Image.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "placeholderWidth",
+                "value": "number",
+                "description": ""
               }
             ]
           }
@@ -3624,109 +3910,6 @@
                 "name": "modelViewer",
                 "value": "Omit<(props: ModelViewerProps) => Element, \"data\">",
                 "description": "Props that will only apply when a `<ModelViewer />` is rendered",
-                "isOptional": true
-              }
-            ]
-          },
-          "ShopifyImageProps": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyImageProps",
-            "value": "Omit<HtmlImageProps, 'src'> & ShopifyImageBaseProps",
-            "description": ""
-          },
-          "HtmlImageProps": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "HtmlImageProps",
-            "value": "React.ImgHTMLAttributes<HTMLImageElement>",
-            "description": ""
-          },
-          "ShopifyImageBaseProps": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyImageBaseProps",
-            "value": "{\n  /** An object with fields that correspond to the Storefront API's\n   * [Image object](https://shopify.dev/api/storefront/reference/common-objects/image).\n   * The `data` prop is required.\n   */\n  data: PartialDeep<ImageType, {recurseIntoArrays: true}>;\n  /** A custom function that generates the image URL. Parameters passed in\n   * are `ShopifyLoaderParams`\n   */\n  loader?: (params: ShopifyLoaderParams) => string;\n  /** An object of `loader` function options. For example, if the `loader` function\n   * requires a `scale` option, then the value can be a property of the\n   * `loaderOptions` object (for example, `{scale: 2}`). The object shape is `ShopifyLoaderOptions`.\n   */\n  loaderOptions?: ShopifyLoaderOptions;\n  /**\n   * `src` isn't used, and should instead be passed as part of the `data` object\n   */\n  src?: never;\n  /**\n   * An array of pixel widths to overwrite the default generated srcset. For example, `[300, 600, 800]`.\n   */\n  widths?: (HtmlImageProps['width'] | ImageType['width'])[];\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "data",
-                "value": "PartialObjectDeep<Image, { recurseIntoArrays: true; }>",
-                "description": "An object with fields that correspond to the Storefront API's\n[Image object](https://shopify.dev/api/storefront/reference/common-objects/image).\nThe `data` prop is required."
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "loader",
-                "value": "(params: { crop?: \"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"; scale?: 2 | 3; width?: string | number; height?: string | number; src: string; }) => string",
-                "description": "A custom function that generates the image URL. Parameters passed in\nare `ShopifyLoaderParams`",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "loaderOptions",
-                "value": "ShopifyLoaderOptions",
-                "description": "An object of `loader` function options. For example, if the `loader` function\nrequires a `scale` option, then the value can be a property of the\n`loaderOptions` object (for example, `{scale: 2}`). The object shape is `ShopifyLoaderOptions`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "src",
-                "value": "never",
-                "description": "`src` isn't used, and should instead be passed as part of the `data` object",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "widths",
-                "value": "(string | number)[]",
-                "description": "An array of pixel widths to overwrite the default generated srcset. For example, `[300, 600, 800]`.",
-                "isOptional": true
-              }
-            ]
-          },
-          "ShopifyLoaderOptions": {
-            "filePath": "/Image.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "ShopifyLoaderOptions",
-            "value": "{\n  crop?: 'top' | 'bottom' | 'left' | 'right' | 'center';\n  scale?: 2 | 3;\n  width?: HtmlImageProps['width'] | ImageType['width'];\n  height?: HtmlImageProps['height'] | ImageType['height'];\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "crop",
-                "value": "\"center\" | \"top\" | \"bottom\" | \"left\" | \"right\"",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "scale",
-                "value": "2 | 3",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "width",
-                "value": "string | number",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/Image.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "height",
-                "value": "string | number",
-                "description": "",
                 "isOptional": true
               }
             ]
