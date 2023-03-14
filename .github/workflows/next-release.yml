@@ -3,7 +3,8 @@ name: ⏭️ Next Release
 on:
   push:
     branches:
-      - '[0-9]+-[0-9]+'
+      # update to latest cal release to keep this action working
+      - 2023-01
 
 jobs:
   next-release:
@@ -26,7 +27,7 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: Install the packages
-        run: npm install --frozen-lockfile --ignore-engines --legacy-peer-deps
+        run: npm ci
 
       - name: 🕵️ Check for changes
         id: version
