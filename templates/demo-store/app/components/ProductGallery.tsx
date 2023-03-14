@@ -1,5 +1,5 @@
+import {Image} from '@shopify/hydrogen';
 import type {MediaEdge} from '@shopify/hydrogen/storefront-api-types';
-import {ATTR_LOADING_EAGER} from '~/lib/const';
 import type {MediaImage} from '@shopify/hydrogen/storefront-api-types';
 
 /**
@@ -21,7 +21,6 @@ export function ProductGallery({
       className={`swimlane md:grid-flow-row hiddenScroll md:p-0 md:overflow-x-auto md:grid-cols-2 ${className}`}
     >
       {media.map((med, i) => {
-        let mediaProps: Record<string, any> = {};
         const isFirst = i === 0;
         const isFourth = i === 3;
         const isFullWidth = i % 3 === 0;
@@ -35,41 +34,6 @@ export function ProductGallery({
           },
         } as MediaImage;
 
-        switch (med.mediaContentType) {
-          case 'IMAGE':
-            mediaProps = {
-              width: 800,
-              widths: [400, 800, 1200, 1600, 2000, 2400],
-            };
-            break;
-          case 'VIDEO':
-            mediaProps = {
-              width: '100%',
-              autoPlay: true,
-              controls: false,
-              muted: true,
-              loop: true,
-              preload: 'auto',
-            };
-            break;
-          case 'EXTERNAL_VIDEO':
-            mediaProps = {width: '100%'};
-            break;
-          case 'MODEL_3D':
-            mediaProps = {
-              width: '100%',
-              interactionPromptThreshold: '0',
-              ar: true,
-              loading: ATTR_LOADING_EAGER,
-              disableZoom: true,
-            };
-            break;
-        }
-
-        if (i === 0 && med.mediaContentType === 'IMAGE') {
-          mediaProps.loading = ATTR_LOADING_EAGER;
-        }
-
         const style = [
           isFullWidth ? 'md:col-span-2' : 'md:col-span-1',
           isFirst || isFourth ? '' : 'md:aspect-[4/5]',
@@ -82,30 +46,20 @@ export function ProductGallery({
             // @ts-ignore
             key={med.id || med.image.id}
           >
-            {/* TODO: Replace with MediaFile when it's available */}
+            {/* TODO: Replace with MediaFile */}
             {(med as MediaImage).image && (
-              <img
-                src={data.image!.url}
-                alt={data.image!.altText!}
-                className="w-full h-full aspect-square fadeIn object-cover"
+              <Image
+                loading={i === 0 ? 'eager' : 'lazy'}
+                data={data.image!}
+                aspectRatio={!isFirst && !isFourth ? '4/5' : undefined}
+                sizes={
+                  isFirst || isFourth
+                    ? '(min-width: 48em) 60vw, 90vw'
+                    : '(min-width: 48em) 30vw, 90vw'
+                }
+                className="object-cover w-full h-full aspect-square fadeIn"
               />
             )}
-            {/* <MediaFile
-              tabIndex="0"
-              className={`w-full h-full aspect-square fadeIn object-cover`}
-              data={data}
-              sizes={
-                isFullWidth
-                  ? '(min-width: 64em) 60vw, (min-width: 48em) 50vw, 90vw'
-                  : '(min-width: 64em) 30vw, (min-width: 48em) 25vw, 90vw'
-              }
-              // @ts-ignore
-              options={{
-                crop: 'center',
-                scale: 2,
-              }}
-              {...mediaProps}
-            /> */}
           </div>
         );
       })}
