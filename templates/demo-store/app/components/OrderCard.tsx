@@ -1,4 +1,4 @@
-import {flattenConnection} from '@shopify/hydrogen';
+import {flattenConnection, Image} from '@shopify/hydrogen';
 import type {Order} from '@shopify/hydrogen/storefront-api-types';
 import {Heading, Text, Link} from '~/components';
 import {statusMessage} from '~/lib/utils';
@@ -17,7 +17,7 @@ export function OrderCard({order}: {order: Order}) {
       >
         {lineItems[0].variant?.image && (
           <div className="card-image aspect-square bg-primary/5">
-            <img
+            <Image
               width={168}
               height={168}
               className="w-full fadeIn cover"
