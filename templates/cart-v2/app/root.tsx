@@ -11,7 +11,7 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from '@remix-run/react';
-import type {Shop} from '@shopify/hydrogen/storefront-api-types';
+import type {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 
@@ -36,14 +36,16 @@ export const meta: MetaFunction = () => ({
 });
 
 export async function loader({context}: LoaderArgs) {
-  const layout = await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY);
-  return {layout};
+  const [layout, cart] = await Promise.all([
+    context.storefront.query<{shop: Shop}>(LAYOUT_QUERY),
+    context.cart.get(),
+  ]);
+
+  return {layout, cart};
 }
 
 export default function App() {
-  const data = useLoaderData<typeof loader>();
-
-  const {name} = data.layout.shop;
+  const {cart} = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -52,8 +54,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <h1>Hello, {name}</h1>
-        <p>This is a custom storefront powered by Hydrogen</p>
+        <Cart cart={cart} />
         <Outlet />
         <ScrollRestoration />
         <Scripts />
@@ -70,3 +71,12 @@ const LAYOUT_QUERY = `#graphql
     }
   }
 `;
+
+function Cart({cart}: {cart: Cart | null}) {
+  return (
+    <div>
+      <h1>Cart</h1>
+      <pre>{JSON.stringify(cart, null, 2)}</pre>
+    </div>
+  );
+}

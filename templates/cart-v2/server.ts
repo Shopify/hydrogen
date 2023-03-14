@@ -8,6 +8,7 @@ import {
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
+import {AlphaCart} from './app/lib/cart/cart.server';
 
 /**
  * Export a fetch handler in module format.
@@ -48,13 +49,18 @@ export default {
       });
 
       /**
+       * Create a custom cart instance.
+       */
+      const cart = await AlphaCart.init(request, storefront);
+
+      /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
        */
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({session, storefront, env}),
+        getLoadContext: () => ({session, storefront, cart, env}),
       });
 
       const response = await handleRequest(request);

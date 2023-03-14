@@ -1,0 +1,6 @@
+export type CartAction =
+  | 'ADD_TO_CART'
+  | 'REMOVE_FROM_CART'
+  | 'UPDATE_CART'
+  | 'UPDATE_DISCOUNT'
+  | 'UPDATE_BUYER_IDENTITY';
