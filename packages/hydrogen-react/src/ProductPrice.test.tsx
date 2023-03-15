@@ -1,3 +1,5 @@
+import {describe, expect, it} from 'vitest';
+
 import {render, screen} from '@testing-library/react';
 import {getProduct} from './ProductProvider.test.helpers.js';
 import {ProductPrice} from './ProductPrice.js';
@@ -108,7 +110,6 @@ describe('<ProductPrice />', () => {
     ).toHaveClass('emphasized');
   });
 
-  // eslint-disable-next-line jest/expect-expect
   it.skip(`has the correct TS types for itself and for <Money/>`, () => {
     // no errors
     render(<ProductPrice data={getProduct()} />);

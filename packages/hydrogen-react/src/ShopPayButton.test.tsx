@@ -1,4 +1,5 @@
-import {vi} from 'vitest';
+import {vi, describe, expect, it} from 'vitest';
+
 import {render} from '@testing-library/react';
 import {ShopifyProvider} from './ShopifyProvider.js';
 import {
