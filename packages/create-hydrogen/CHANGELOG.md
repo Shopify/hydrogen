@@ -1,5 +1,20 @@
 # @shopify/create-hydrogen
 
+## 4.0.5
+
+### Patch Changes
+
+- Fix register and login issues in the demostore ([#659](https://github.com/Shopify/hydrogen/pull/659)) by [@blittle](https://github.com/blittle)
+
+- Adding decoding prop to the SpreadMedia component ([#642](https://github.com/Shopify/hydrogen/pull/642)) by [@rafaelstz](https://github.com/rafaelstz)
+
+- - Added a route to the Demo store that demonstrates redirecting an order status url back to the online store primary domain. ([#540](https://github.com/Shopify/hydrogen/pull/540)) by [@johncraigcole](https://github.com/johncraigcole)
+
+- Stop hydrating with `requestIdleCallback` ([#667](https://github.com/Shopify/hydrogen/pull/667)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`bceddb4`](https://github.com/Shopify/hydrogen/commit/bceddb44c8f108706428b87201b16ce46b3228c0), [`09259cf`](https://github.com/Shopify/hydrogen/commit/09259cf13af59afecaa86d24ae5ae7696232dd60), [`4443a2b`](https://github.com/Shopify/hydrogen/commit/4443a2b9c85bec3e2a1773d5bc69350dec008df2), [`3344b79`](https://github.com/Shopify/hydrogen/commit/3344b79de67a631293a5a3c3c518d5a7e1924757), [`d8821f8`](https://github.com/Shopify/hydrogen/commit/d8821f85f5313b9326f9c2cbfe33e3e854e48bd2), [`a841303`](https://github.com/Shopify/hydrogen/commit/a84130378424bdebfd33eeef268b61ab7a80f65a)]:
+  - @shopify/cli-hydrogen@4.0.9
+
 ## 4.0.4
 
 ### Patch Changes
