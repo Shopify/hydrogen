@@ -45,8 +45,9 @@ export async function runCreateShortcut() {
   }
 }
 
-const BASH_ZSH_COMMAND_UNIX = `alias ${ALIAS_NAME}='$(npm bin -s)/shopify hydrogen'`;
-const BASH_ZSH_COMMAND_WINDOWS = `alias ${ALIAS_NAME}='$(npm prefix -s)/node_modules/.bin/shopify hydrogen'`;
+const COMMENT = `\n# Shopify Hydrogen alias to local projects`;
+const BASH_ZSH_COMMAND_UNIX = `${COMMENT}\nalias ${ALIAS_NAME}='\\$(npm bin -s)/shopify hydrogen'`;
+const BASH_ZSH_COMMAND_WINDOWS = `${COMMENT}\nalias ${ALIAS_NAME}='\\$(npm prefix -s)/node_modules/.bin/shopify hydrogen'`;
 
 const FISH_FUNCTION = `
 function ${ALIAS_NAME} --wraps='shopify hydrogen' --description 'Shortcut for the Hydrogen CLI'
@@ -64,16 +65,16 @@ async function createShortcutsForUnix() {
 
   if (
     supportsShell('zsh') &&
-    !hasAlias(ALIAS_NAME, '~/.zshrc') &&
-    shellWriteFile('~/.zshrc', ALIAS_COMMAND, true)
+    (hasAlias(ALIAS_NAME, '~/.zshrc') ||
+      shellWriteFile('~/.zshrc', ALIAS_COMMAND, true))
   ) {
     shells.push('zsh');
   }
 
   if (
     supportsShell('bash') &&
-    !hasAlias(ALIAS_NAME, '~/.bashrc') &&
-    shellWriteFile('~/.bashrc', ALIAS_COMMAND, true)
+    (hasAlias(ALIAS_NAME, '~/.bashrc') ||
+      shellWriteFile('~/.bashrc', ALIAS_COMMAND, true))
   ) {
     shells.push('bash');
   }
