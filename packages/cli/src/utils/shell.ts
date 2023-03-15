@@ -1,7 +1,7 @@
-import path from 'path';
 import os from 'os';
-import {file, output} from '@shopify/cli-kit';
+import path from 'path';
 import {execSync} from 'child_process';
+import {file, output} from '@shopify/cli-kit';
 
 export type UnixShell = 'zsh' | 'bash' | 'fish';
 export type WindowsShell = 'PowerShell' | 'PowerShell 7+' | 'CMD';
@@ -56,7 +56,27 @@ export function shellWriteFile(
     content = `"${content}"`;
   }
 
-  return execSync(
-    `echo ${content} ${append ? '>>' : '>'} ${resolveFromHome(filepath)}`,
-  );
+  try {
+    execSync(
+      `echo ${content} ${append ? '>>' : '>'} ${resolveFromHome(filepath)}`,
+    );
+    return true;
+  } catch (error) {
+    output.debug(
+      `Could not create or modify ${filepath}:\n` + (error as Error).stack,
+    );
+    return false;
+  }
+}
+
+export function shellRunScript(script: string, shellBin: string) {
+  try {
+    execSync(script, {shell: shellBin, stdio: 'ignore'});
+    return true;
+  } catch (error) {
+    output.debug(
+      `Could not run shell script for ${shellBin}:\n` + (error as Error).stack,
+    );
+    return false;
+  }
 }

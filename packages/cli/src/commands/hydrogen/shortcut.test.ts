@@ -1,40 +1,8 @@
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  afterEach,
-  afterAll,
-} from 'vitest';
+import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {runCreateShortcut} from './shortcut.js';
-import {execSync} from 'child_process';
 import {outputMocker} from '@shopify/cli-kit';
-
-const originalPlatform = process.platform;
-
-const mockExecSyncImplementation = (
-  command: string,
-  {shell}: {shell?: string} = {},
-) => {
-  if (command.startsWith('which')) {
-    const item = command.split(' ')[1];
-    if (process.platform === 'win32' && item !== 'bash') {
-      throw new Error(`${item} not found`);
-    }
-
-    return Buffer.from('/usr/path/to/shell');
-  }
-  if (command.startsWith('grep')) {
-    return Buffer.from('alias h2="hydrogen"');
-  }
-
-  if (command.startsWith('echo') || shell?.endsWith('.exe')) {
-    return Buffer.from('');
-  }
-
-  throw new Error('Unknown command: ' + command);
-};
+import {isWindows, isGitBash, supportsShell} from '../../utils/shell.js';
+import {execSync, exec} from 'child_process';
 
 describe('shortcut', () => {
   const outputMock = outputMocker.mockAndCaptureOutput();
@@ -42,21 +10,33 @@ describe('shortcut', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mock('child_process');
-    vi.mocked(execSync).mockImplementation(mockExecSyncImplementation);
+    vi.mock('../../utils/shell.js', async () => {
+      return {
+        isWindows: vi.fn(),
+        isGitBash: vi.fn(),
+        supportsShell: vi.fn(),
+        shellWriteFile: () => true,
+        shellRunScript: () => true,
+        hasAlias: () => false,
+        homeFileExists: () => Promise.resolve(true),
+      };
+    });
+
+    vi.mocked(supportsShell).mockImplementation(
+      (shell: string) => !isWindows() || shell === 'bash',
+    );
   });
 
   afterEach(() => {
     outputMock.clear();
+    // Check we are mocking all the things:
+    expect(execSync).toHaveBeenCalledTimes(0);
+    expect(exec).toHaveBeenCalledTimes(0);
   });
 
-  afterAll(() => {
-    Object.defineProperty(process, 'platform', {value: originalPlatform});
-    delete process.env.MINGW_PREFIX;
-  });
-
-  it(`creates aliases for Unix`, async () => {
+  it('creates aliases for Unix', async () => {
     // Given
-    Object.defineProperty(process, 'platform', {value: 'linux'});
+    vi.mocked(isWindows).mockReturnValue(false);
 
     // When
     await runCreateShortcut();
@@ -66,9 +46,9 @@ describe('shortcut', () => {
     expect(outputMock.error()).toBeFalsy();
   });
 
-  it(`creates aliases for Windows`, async () => {
+  it('creates aliases for Windows', async () => {
     // Given
-    Object.defineProperty(process, 'platform', {value: 'win32'});
+    vi.mocked(isWindows).mockReturnValue(true);
 
     // When
     await runCreateShortcut();
@@ -78,10 +58,10 @@ describe('shortcut', () => {
     expect(outputMock.error()).toBeFalsy();
   });
 
-  it(`creates aliases for Windows in Git Bash`, async () => {
+  it('creates aliases for Windows in Git Bash', async () => {
     // Given
-    Object.defineProperty(process, 'platform', {value: 'win32'});
-    process.env.MINGW_PREFIX = 'C:\\Program Files\\Git';
+    vi.mocked(isWindows).mockReturnValue(true);
+    vi.mocked(isGitBash).mockReturnValueOnce(true);
 
     // When
     await runCreateShortcut();
@@ -91,17 +71,10 @@ describe('shortcut', () => {
     expect(outputMock.error()).toBeFalsy();
   });
 
-  it(`warns about not finding shells to alias`, async () => {
+  it('warns when not finding shells', async () => {
     // Given
-    Object.defineProperty(process, 'platform', {value: 'darwin'});
-    vi.mocked(execSync).mockImplementation((command: string) => {
-      if (command.startsWith('which')) {
-        const item = command.split(' ')[1];
-        throw new Error(`${item} not found`);
-      }
-
-      return mockExecSyncImplementation(command);
-    });
+    vi.mocked(isWindows).mockReturnValue(false);
+    vi.mocked(supportsShell).mockReturnValue(false);
 
     // When
     await runCreateShortcut();

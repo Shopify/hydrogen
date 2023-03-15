@@ -1,12 +1,11 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderFatalError, renderSuccess} from '@shopify/cli-kit/node/ui';
-import {output} from '@shopify/cli-kit';
-import {execSync} from 'child_process';
 import {
   hasAlias,
   homeFileExists,
   isGitBash,
   isWindows,
+  shellRunScript,
   shellWriteFile,
   supportsShell,
   type Shell,
@@ -16,7 +15,7 @@ import {
 
 const ALIAS_NAME = 'h2';
 
-export default class GenerateRoute extends Command {
+export default class Shortcut extends Command {
   static description = `Creates a global \`${ALIAS_NAME}\` shortcut for the Hydrogen CLI`;
 
   async run(): Promise<void> {
@@ -26,7 +25,7 @@ export default class GenerateRoute extends Command {
 
 export async function runCreateShortcut() {
   const shortcuts: Array<Shell> =
-    isWindows() && !isGitBash() // Check Mintty/Mingw/Cygwin
+    isWindows() && !isGitBash()
       ? await createShortcutsForWindows() // Windows without Git Bash
       : await createShortcutsForUnix(); // Unix and Windows with Git Bash
 
@@ -46,7 +45,7 @@ export async function runCreateShortcut() {
   }
 }
 
-const BASH_ZSH_COMMAND = `alias ${ALIAS_NAME}='$(npm bin -s)/shopify hydrogen'`;
+const BASH_ZSH_COMMAND_UNIX = `alias ${ALIAS_NAME}='$(npm bin -s)/shopify hydrogen'`;
 const BASH_ZSH_COMMAND_WINDOWS = `alias ${ALIAS_NAME}='$(npm prefix -s)/node_modules/.bin/shopify hydrogen'`;
 
 const FISH_FUNCTION = `
@@ -61,55 +60,36 @@ async function createShortcutsForUnix() {
 
   const ALIAS_COMMAND = isWindows()
     ? BASH_ZSH_COMMAND_WINDOWS
-    : BASH_ZSH_COMMAND;
+    : BASH_ZSH_COMMAND_UNIX;
 
-  if (supportsShell('zsh')) {
-    try {
-      if (!hasAlias(ALIAS_NAME, '~/.zshrc')) {
-        shellWriteFile('~/.zshrc', ALIAS_COMMAND, true);
-      }
-      shells.push('zsh');
-    } catch (error) {
-      output.debug(
-        'Could not create alias for ZSH:\n' + (error as Error).stack,
-      );
-    }
+  if (
+    supportsShell('zsh') &&
+    !hasAlias(ALIAS_NAME, '~/.zshrc') &&
+    shellWriteFile('~/.zshrc', ALIAS_COMMAND, true)
+  ) {
+    shells.push('zsh');
   }
 
-  if (supportsShell('bash')) {
-    try {
-      if (!hasAlias(ALIAS_NAME, '~/.bashrc')) {
-        shellWriteFile('~/.bashrc', ALIAS_COMMAND, true);
-      }
-      shells.push('bash');
-    } catch (error) {
-      output.debug(
-        'Could not create alias for Bash:\n' + (error as Error).stack,
-      );
-    }
+  if (
+    supportsShell('bash') &&
+    !hasAlias(ALIAS_NAME, '~/.bashrc') &&
+    shellWriteFile('~/.bashrc', ALIAS_COMMAND, true)
+  ) {
+    shells.push('bash');
   }
 
   if (
     supportsShell('fish') &&
-    (await homeFileExists('~/.config/fish/functions'))
+    (await homeFileExists('~/.config/fish/functions')) &&
+    shellWriteFile(`~/.config/fish/functions/${ALIAS_NAME}.fish`, FISH_FUNCTION)
   ) {
-    try {
-      shellWriteFile(
-        `~/.config/fish/functions/${ALIAS_NAME}.fish`,
-        FISH_FUNCTION,
-      );
-      shells.push('fish');
-    } catch (error) {
-      output.debug(
-        'Could not create alias for Fish:\n' + (error as Error).stack,
-      );
-    }
+    shells.push('fish');
   }
 
   return shells;
 }
 
-// Create a PS function and and alias to call it.
+// Create a PowerShell function and an alias to call it.
 const PS_FUNCTION = `function Invoke-Local-H2 {$npmBin = npm prefix -s; Invoke-Expression "$npmBin\\node_modules\\.bin\\shopify.ps1 hydrogen $Args"}; Set-Alias -Name ${ALIAS_NAME} -Value Invoke-Local-H2`;
 
 // Add the previous function and alias to the user's profile if they don't already exist.
@@ -127,28 +107,15 @@ if (!$profileContent -or $profileContent -NotLike '*Invoke-Local-H2*') {
 async function createShortcutsForWindows() {
   const shells: WindowsShell[] = [];
 
-  try {
-    // Legacy PowerShell
-    execSync(PS_APPEND_PROFILE_COMMAND, {
-      shell: 'powershell.exe',
-      stdio: 'ignore',
-    });
+  // Legacy PowerShell
+  if (shellRunScript(PS_APPEND_PROFILE_COMMAND, 'powershell.exe')) {
     shells.push('PowerShell');
-  } catch (error) {
-    output.debug(
-      'Could not create alias for PowerShell:\n' + (error as Error).stack,
-    );
   }
 
-  try {
-    // PowerShell 7+ has a different executable name and installation path:
-    // https://learn.microsoft.com/en-us/powershell/scripting/whats-new/migrating-from-windows-powershell-51-to-powershell-7?view=powershell-7.3#separate-installation-path-and-executable-name
-    execSync(PS_APPEND_PROFILE_COMMAND, {shell: 'pwsh.exe', stdio: 'ignore'});
+  // PowerShell 7+ has a different executable name and installation path:
+  // https://learn.microsoft.com/en-us/powershell/scripting/whats-new/migrating-from-windows-powershell-51-to-powershell-7?view=powershell-7.3#separate-installation-path-and-executable-name
+  if (shellRunScript(PS_APPEND_PROFILE_COMMAND, 'pwsh.exe')) {
     shells.push('PowerShell 7+');
-  } catch (error) {
-    output.debug(
-      'Could not create alias for PowerShell 7+:\n' + (error as Error).stack,
-    );
   }
 
   // TODO: support CMD?
