@@ -71,11 +71,3 @@ jobs:
       - name: 🚀 Publish
         if: steps.version.outputs.NEXT_VERSION
         run: npm run changeset -- publish --tag next
-
-      - name: Archive npm failure logs
-        uses: actions/upload-artifact@v2
-        if: failure()
-        with:
-          name: npm-logs
-          path: ~/.npm/_logs
-
