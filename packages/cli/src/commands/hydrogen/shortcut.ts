@@ -18,11 +18,11 @@ export default class GenerateRoute extends Command {
   }
 }
 
-const IS_WINDOWS = process.platform === 'win32';
+const isWindows = () => process.platform === 'win32';
 
 export async function runCreateShortcut() {
   const shortcuts: Array<UnixShell | WindowsShell> =
-    IS_WINDOWS && !process.env.MINGW_PREFIX // Check Mintty/Mingw/Cygwin
+    isWindows() && !process.env.MINGW_PREFIX // Check Mintty/Mingw/Cygwin
       ? await createShortcutsForWindows() // Windows without Git Bash
       : await createShortcutsForUnix(); // Unix and Windows with Git Bash
 
@@ -89,7 +89,7 @@ end
 `;
 
 function shellWriteFile(filepath: string, content: string, append = false) {
-  if (!IS_WINDOWS) {
+  if (!isWindows()) {
     content = `"${content}"`;
   }
 
@@ -101,7 +101,7 @@ function shellWriteFile(filepath: string, content: string, append = false) {
 async function createShortcutsForUnix() {
   const shells: UnixShell[] = [];
 
-  const ALIAS_COMMAND = IS_WINDOWS
+  const ALIAS_COMMAND = isWindows()
     ? BASH_ZSH_COMMAND_WINDOWS
     : BASH_ZSH_COMMAND;
 
