@@ -1,5 +1,5 @@
 import * as React from 'react';
-import type {PartialDeep, Simplify} from 'type-fest';
+import type {PartialDeep} from 'type-fest';
 import type {Image as ImageType} from './storefront-api-types.js';
 
 /*
@@ -15,22 +15,31 @@ type SrcSetOptions = {
 
 type HtmlImageProps = React.ImgHTMLAttributes<HTMLImageElement>;
 
-export type ImageLoader = (params: ShopifyLoaderParams) => string;
+export type ImageLoader = (params: LoaderParams) => string;
 
-export type ShopifyLoaderOptions = {
-  crop?: 'top' | 'bottom' | 'left' | 'right' | 'center';
+/** Legacy type for backwards compatibility *
+ * @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop. Or pass a custom `loader` with `LoaderParams` */
+type ShopifyLoaderOptions = {
+  /** The base URL of the image */
+  src?: ImageType['url'];
+  /** The URL param that controls width */
   width?: HtmlImageProps['width'] | ImageType['width'];
+  /** The URL param that controls height */
   height?: HtmlImageProps['height'] | ImageType['height'];
+  /** The URL param that controls the cropping region */
+  crop?: Crop;
 };
 
-export type ShopifyLoaderParams = Simplify<
-  ShopifyLoaderOptions & {
-    src?: ImageType['url'];
-    width?: number;
-    height?: number;
-    crop?: Crop;
-  }
->;
+export type LoaderParams = {
+  /** The base URL of the image */
+  src?: ImageType['url'];
+  /** The URL param that controls width */
+  width?: number;
+  /** The URL param that controls height */
+  height?: number;
+  /** The URL param that controls the cropping region */
+  crop?: Crop;
+};
 
 /**
  * The shopifyLoader function is a simple utility function that takes a src, width,
@@ -42,6 +51,16 @@ export type ShopifyLoaderParams = Simplify<
  * @param height - The height of the image, e.g. `100`
  * @param crop - The crop of the image, e.g. `center`
  * @returns A Shopify image URL with the correct query parameters, e.g. `https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=100&height=100&crop=center`
+ *
+ * @example
+ * ```
+ * loader({
+ *   src: 'https://cdn.shopify.com/static/sample-images/garnished.jpeg',
+ *   width: 100,
+ *   height: 100,
+ *   crop: 'center',
+ * })
+ * ```
  */
 export const shopifyLoader: ImageLoader = ({src, width, height, crop}) => {
   if (!src) {
@@ -58,13 +77,24 @@ export const shopifyLoader: ImageLoader = ({src, width, height, crop}) => {
 /*
  * @TODO: Expand to include focal point support; and/or switch this to be an SF API type
  */
-type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right' | undefined;
+type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right';
 
-export type ShopifyImageProps = HtmlImageProps & ShopifyImageBaseProps;
+type ValidImageAsType = React.ElementType<'img'> | React.ElementType<'source'>;
 
-type ShopifyImageBaseProps = {
+export type ShopifyImageProps<ComponentGeneric extends ValidImageAsType> =
+  ShopifyImageBaseProps<ComponentGeneric> &
+    Omit<
+      React.ComponentPropsWithoutRef<ComponentGeneric>,
+      keyof ShopifyImageBaseProps<ComponentGeneric>
+    >;
+
+// HtmlImageProps & ShopifyImageBaseProps<ComponentGeneric>;
+
+export interface ShopifyImageBaseProps<
+  ComponentGeneric extends ValidImageAsType,
+> {
   /** The HTML element to use for the image, `source` should only be used inside `picture` */
-  as?: 'img' | 'source';
+  as?: ComponentGeneric;
   /** Data mapping to the Storefront API `Image` object. Must be an Image object.
    * Optionally, import the `IMAGE_FRAGMENT` to use in your GraphQL queries.
    *
@@ -122,7 +152,7 @@ type ShopifyImageBaseProps = {
   loaderOptions?: ShopifyLoaderOptions;
   /** @deprecated Autocalculated, use only `width` prop, or srcSetOptions */
   widths?: (HtmlImageProps['width'] | ImageType['width'])[];
-};
+}
 
 /**
  * A Storefront API GraphQL fragment that can be used to query for an image.
@@ -164,8 +194,8 @@ export const IMAGE_FRAGMENT = `#graphql
  *
  * {@link https://shopify.dev/docs/api/hydrogen-react/components/image}
  */
-export function Image({
-  as: Component = 'img',
+export function Image<ComponentGeneric extends ValidImageAsType = 'img'>({
+  as: Component,
   data,
   aspectRatio,
   crop = 'center',
@@ -186,7 +216,7 @@ export function Image({
   loaderOptions,
   widths,
   ...passthroughProps
-}: ShopifyImageProps): JSX.Element | null {
+}: ShopifyImageProps<ComponentGeneric>): JSX.Element | null {
   /*
    * Deprecated Props from original Image component
    */
