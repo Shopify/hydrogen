@@ -38,7 +38,7 @@ jobs:
           cache-dependency-path: '**/package-lock.json'
 
       - name: Install the packages
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
       - name: Format release with Prettier
         run: npm run format
