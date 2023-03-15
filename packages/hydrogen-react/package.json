@@ -9,7 +9,7 @@
   },
   "publishConfig": {
     "access": "public",
-    "registry": "https://registry.npmjs.org/"
+    "@shopify:registry": "https://registry.npmjs.org"
   },
   "files": [
     "dist",
