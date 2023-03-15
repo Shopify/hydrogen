@@ -49,6 +49,8 @@ jobs:
           # using changeset snapshot releases, this sets the version to 0.0.0-{tag}-DATETIMESTAMP where tag=next-SHORT_SHA
           # as an example this results in a next release as following 0.0.0-next-1686a75-20230313113149 with a next tag
           npm run changeset -- version --snapshot ${{steps.version.outputs.NEXT_VERSION}}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: 🏗 Build
         if: steps.version.outputs.NEXT_VERSION
@@ -59,6 +61,8 @@ jobs:
         run: |
           echo "registry=https://registry.npmjs.org" >> ~/.npmrc
           echo "//registry.npmjs.org/:_authToken=${{ secrets.NPM_TOKEN }}" >> ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       - name: 🚀 Publish
         if: steps.version.outputs.NEXT_VERSION
