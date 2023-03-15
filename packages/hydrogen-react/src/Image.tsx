@@ -167,7 +167,7 @@ export function Image({
   /*
    * Deprecated Props from original Image component
    */
-  if (process.env.NODE_ENV === 'development') {
+  if (__HYDROGEN_DEV__) {
     if (loaderOptions) {
       console.warn(
         [
@@ -223,7 +223,7 @@ export function Image({
 
   const normalizedSrc: string | undefined = src || data?.url;
 
-  if (!normalizedSrc && process.env.NODE_ENV === 'development') {
+  if (__HYDROGEN_DEV__ && !normalizedSrc) {
     console.warn(`No src or data.url provided to Image component.`);
   }
 
@@ -252,11 +252,7 @@ export function Image({
     incrementSize,
   );
 
-  if (
-    !sizes &&
-    !isFixedWidth(normalizedWidth) &&
-    process.env.NODE_ENV === 'development'
-  ) {
+  if (__HYDROGEN_DEV__ && !sizes && !isFixedWidth(normalizedWidth)) {
     console.warn(
       [
         'No sizes prop provided to Image component,',
