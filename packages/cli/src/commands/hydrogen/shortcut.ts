@@ -45,28 +45,24 @@ export async function runCreateShortcut() {
   }
 }
 
-const COMMENT = `\n# Shopify Hydrogen alias to local projects`;
-const BASH_ZSH_COMMAND_UNIX = `${COMMENT}\nalias ${ALIAS_NAME}='\\$(npm bin -s)/shopify hydrogen'`;
-const BASH_ZSH_COMMAND_WINDOWS = `${COMMENT}\nalias ${ALIAS_NAME}='\\$(npm prefix -s)/node_modules/.bin/shopify hydrogen'`;
+const BASH_ZSH_COMMAND = `
+# Shopify Hydrogen alias to local projects
+alias ${ALIAS_NAME}='$(npm prefix -s)/node_modules/.bin/shopify hydrogen'`;
 
 const FISH_FUNCTION = `
 function ${ALIAS_NAME} --wraps='shopify hydrogen' --description 'Shortcut for the Hydrogen CLI'
-   set npmBin (npm bin -s)
-   \\$npmBin/shopify hydrogen \\$argv
+   set npmPrefix (npm prefix -s)
+   $npmPrefix/node_modules/.bin/shopify hydrogen $argv
 end
 `;
 
 async function createShortcutsForUnix() {
   const shells: UnixShell[] = [];
 
-  const ALIAS_COMMAND = isWindows()
-    ? BASH_ZSH_COMMAND_WINDOWS
-    : BASH_ZSH_COMMAND_UNIX;
-
   if (
     supportsShell('zsh') &&
     (hasAlias(ALIAS_NAME, '~/.zshrc') ||
-      shellWriteFile('~/.zshrc', ALIAS_COMMAND, true))
+      shellWriteFile('~/.zshrc', BASH_ZSH_COMMAND, true))
   ) {
     shells.push('zsh');
   }
@@ -74,7 +70,7 @@ async function createShortcutsForUnix() {
   if (
     supportsShell('bash') &&
     (hasAlias(ALIAS_NAME, '~/.bashrc') ||
-      shellWriteFile('~/.bashrc', ALIAS_COMMAND, true))
+      shellWriteFile('~/.bashrc', BASH_ZSH_COMMAND, true))
   ) {
     shells.push('bash');
   }
@@ -91,7 +87,7 @@ async function createShortcutsForUnix() {
 }
 
 // Create a PowerShell function and an alias to call it.
-const PS_FUNCTION = `function Invoke-Local-H2 {$npmBin = npm prefix -s; Invoke-Expression "$npmBin\\node_modules\\.bin\\shopify.ps1 hydrogen $Args"}; Set-Alias -Name ${ALIAS_NAME} -Value Invoke-Local-H2`;
+const PS_FUNCTION = `function Invoke-Local-H2 {$npmPrefix = npm prefix -s; Invoke-Expression "$npmPrefix\\node_modules\\.bin\\shopify.ps1 hydrogen $Args"}; Set-Alias -Name ${ALIAS_NAME} -Value Invoke-Local-H2`;
 
 // Add the previous function and alias to the user's profile if they don't already exist.
 const PS_APPEND_PROFILE_COMMAND = `

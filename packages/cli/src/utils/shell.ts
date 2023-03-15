@@ -52,13 +52,15 @@ export function shellWriteFile(
   content: string,
   append = false,
 ) {
+  content = `"${content}"`;
+  content = content.replaceAll('\n', '\\n');
   if (!isWindows()) {
-    content = `"${content}"`;
+    content = content.replaceAll('$', '\\$');
   }
 
   try {
     execSync(
-      `echo ${content} ${append ? '>>' : '>'} ${resolveFromHome(filepath)}`,
+      `printf ${content} ${append ? '>>' : '>'} ${resolveFromHome(filepath)}`,
     );
     return true;
   } catch (error) {
