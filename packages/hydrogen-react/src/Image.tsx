@@ -32,6 +32,29 @@ export type ShopifyLoaderParams = Simplify<
   }
 >;
 
+/**
+ * The shopifyLoader function is a simple utility function that takes a src, width,
+ * height, and crop and returns a string that can be used as the src for an image.
+ * It can be used with the Hydrogen Image component or with the next/image component.
+ * (or any others that accept equivalent configuration)
+ * @param src - The source URL of the image, e.g. `https://cdn.shopify.com/static/sample-images/garnished.jpeg`
+ * @param width - The width of the image, e.g. `100`
+ * @param height - The height of the image, e.g. `100`
+ * @param crop - The crop of the image, e.g. `center`
+ * @returns A Shopify image URL with the correct query parameters, e.g. `https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=100&height=100&crop=center`
+ */
+export const shopifyLoader: ImageLoader = ({src, width, height, crop}) => {
+  if (!src) {
+    return '';
+  }
+
+  const url = new URL(src);
+  width && url.searchParams.append('width', Math.round(width).toString());
+  height && url.searchParams.append('height', Math.round(height).toString());
+  crop && url.searchParams.append('crop', crop);
+  return url.href;
+};
+
 /*
  * @TODO: Expand to include focal point support; and/or switch this to be an SF API type
  */
@@ -300,26 +323,49 @@ export function Image({
       ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
       : undefined;
 
-    return React.createElement(Component, {
-      srcSet: generateShopifySrcSet(normalizedSrc, sizesArray, loader),
-      src: loader({
-        src: normalizedSrc,
-        width: intWidth,
-        height: fixedHeight,
-        crop: normalizedHeight === 'auto' ? undefined : crop,
-      }),
-      alt: normalizedAlt,
-      decoding,
-      style: {
-        width: normalizedWidth,
-        height: normalizedHeight,
-        aspectRatio: fixedAspectRatio,
-      },
-      width: intWidth,
-      height: fixedHeight,
-      loading,
-      ...passthroughProps,
-    });
+    // return React.createElement(Component, {
+    //   srcSet: generateShopifySrcSet(normalizedSrc, sizesArray, loader),
+    //   src: loader({
+    //     src: normalizedSrc,
+    //     width: intWidth,
+    //     height: fixedHeight,
+    //     crop: normalizedHeight === 'auto' ? undefined : crop,
+    //   }),
+    //   alt: normalizedAlt,
+    //   decoding,
+    //   style: {
+    //     width: normalizedWidth,
+    //     height: normalizedHeight,
+    //     aspectRatio: fixedAspectRatio,
+    //   },
+    //   width: intWidth,
+    //   height: fixedHeight,
+    //   loading,
+    //   ...passthroughProps,
+    // });
+    return (
+      <Component
+        srcSet={generateShopifySrcSet(normalizedSrc, sizesArray, loader)}
+        src={loader({
+          src: normalizedSrc,
+          width: intWidth,
+          height: fixedHeight,
+          crop: normalizedHeight === 'auto' ? undefined : crop,
+        })}
+        alt={normalizedAlt}
+        decoding={decoding}
+        style={{
+          width: normalizedWidth,
+          height: normalizedHeight,
+          aspectRatio: fixedAspectRatio,
+          ...passthroughProps.style,
+        }}
+        width={intWidth}
+        height={fixedHeight}
+        loading={loading}
+        {...passthroughProps}
+      />
+    );
   } else {
     const sizesArray =
       imageWidths === undefined
@@ -331,27 +377,30 @@ export function Image({
         ? placeholderWidth * (parseAspectRatio(normalizedAspectRatio) ?? 1)
         : undefined;
 
-    return React.createElement(Component, {
-      srcSet: generateShopifySrcSet(normalizedSrc, sizesArray),
-      src: loader({
-        src: normalizedSrc,
-        width: placeholderWidth,
-        height: placeholderHeight,
-        crop,
-      }),
-      alt: normalizedAlt,
-      decoding,
-      sizes,
-      style: {
-        width: normalizedWidth,
-        height: normalizedHeight,
-        aspectRatio: normalizedAspectRatio,
-      },
-      width: placeholderWidth,
-      height: placeholderHeight,
-      loading,
-      ...passthroughProps,
-    });
+    return (
+      <Component
+        srcSet={generateShopifySrcSet(normalizedSrc, sizesArray, loader)}
+        src={loader({
+          src: normalizedSrc,
+          width: placeholderWidth,
+          height: placeholderHeight,
+          crop,
+        })}
+        alt={normalizedAlt}
+        decoding={decoding}
+        sizes={sizes}
+        style={{
+          width: normalizedWidth,
+          height: normalizedHeight,
+          aspectRatio: normalizedAspectRatio,
+          ...passthroughProps.style,
+        }}
+        width={placeholderWidth}
+        height={placeholderHeight}
+        loading={loading}
+        {...passthroughProps}
+      />
+    );
   }
 }
 
@@ -529,26 +578,3 @@ export function generateSizes(
       {width: 200, height: 200, crop: 'center'}]
   */
 }
-
-/**
- * The shopifyLoader function is a simple utility function that takes a src, width,
- * height, and crop and returns a string that can be used as the src for an image.
- * It can be used with the Hydrogen Image component or with the next/image component.
- * (or any others that accept equivalent configuration)
- * @param src - The source URL of the image, e.g. `https://cdn.shopify.com/static/sample-images/garnished.jpeg`
- * @param width - The width of the image, e.g. `100`
- * @param height - The height of the image, e.g. `100`
- * @param crop - The crop of the image, e.g. `center`
- * @returns A Shopify image URL with the correct query parameters, e.g. `https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=100&height=100&crop=center`
- */
-export const shopifyLoader: ImageLoader = ({src, width, height, crop}) => {
-  if (!src) {
-    return '';
-  }
-
-  const url = new URL(src);
-  width && url.searchParams.append('width', Math.round(width).toString());
-  height && url.searchParams.append('height', Math.round(height).toString());
-  crop && url.searchParams.append('crop', crop);
-  return url.href;
-};
