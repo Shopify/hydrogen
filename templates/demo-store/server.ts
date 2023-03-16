@@ -34,7 +34,7 @@ export default {
       /**
        * Create Hydrogen's Storefront client.
        */
-      const {storefront, withCache} = createStorefrontClient({
+      const {storefront} = createStorefrontClient({
         cache,
         waitUntil,
         i18n: getLocaleFromRequest(request),
@@ -57,7 +57,6 @@ export default {
           session,
           waitUntil,
           storefront,
-          withCache,
           env,
         }),
       });
