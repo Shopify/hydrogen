@@ -91,7 +91,7 @@
     "graphql-types": "graphql-codegen --config codegen.ts && npm run format",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx src",
     "test": "vitest run --coverage",
-    "test:local": "vitest",
+    "test:watch": "vitest",
     "typecheck": "run-p typecheck:*",
     "typecheck:code": "tsc --noEmit",
     "typecheck:examples": "tsc --noEmit --project tsconfig.examples.json"
