@@ -1,9 +1,12 @@
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Form} from '@remix-run/react';
+import {useLoaderData} from '@remix-run/react';
 import type {
   ProductVariant,
   Product as ProductType,
 } from '@shopify/hydrogen/storefront-api-types';
+import {Money} from '@shopify/hydrogen';
+import {CartAction} from '~/lib/cart/components';
+import {CartCount} from '~/components';
 
 export async function loader({params, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -24,37 +27,59 @@ export async function loader({params, context}: LoaderArgs) {
 
   return defer({
     product,
+    analytics: {
+      pageType: 'product',
+    },
   });
 }
 
 export default function Product() {
   const {product} = useLoaderData<typeof loader>();
-  const {title, vendor, descriptionHtml} = product;
+  const {title, descriptionHtml} = product;
+  const firstVariant = product.variants.nodes[0];
+  const selectedVariant = product.selectedVariant ?? firstVariant;
 
-  console.log(product);
+  const lines = [
+    {
+      merchandiseId: selectedVariant.id,
+      quantity: 1,
+    },
+  ];
 
   return (
-    <>
-      <h1>{title}</h1>
-      <h2>{vendor}</h2>
-      <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
-      <Form action="/cart" method="post">
-        <input type="hidden" name="cartAction" value="ADD_TO_CART" />
-        <input type="hidden" name="lines" value={product.id} />
-        <input
-          type="hidden"
-          name="variantId"
-          value={product.selectedVariant?.id}
-        />
-        <input type="hidden" name="quantity" value="1" />
-        <button type="submit">Add to cart</button>
-      </Form>
-    </>
+    <section className="Product Global__Section">
+      <CartCount />
+      <div className="Product__Mast">
+        <div className="Product__Info" aria-label="Product details">
+          <h1 className="Product__Title">{title}</h1>
+
+          <div className="Product__Description">
+            <div className="p">
+              <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
+            </div>
+          </div>
+
+          <div className="Product__Cart">
+            <div className="Price Heading--2">
+              <Money
+                data={{
+                  amount: selectedVariant.price.amount,
+                  currencyCode: selectedVariant.price.currencyCode,
+                }}
+              />
+            </div>
+
+            <CartAction action="LINES_ADD" inputs={lines}>
+              {() => <button>Add to cart</button>}
+            </CartAction>
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }
 
 const PRODUCT_QUERY = `#graphql
-
   query Product(
     $country: CountryCode
     $language: LanguageCode
@@ -65,17 +90,15 @@ const PRODUCT_QUERY = `#graphql
       title
       descriptionHtml
       vendor
-      variants(first: 10) {
-        edges {
-          node {
-            id
-            title
-            price {
-              amount
-              currencyCode
-            }
-            availableForSale
+      variants(first: 1) {
+        nodes {
+          id
+          title
+          price {
+            amount
+            currencyCode
           }
+          availableForSale
         }
       }
     }

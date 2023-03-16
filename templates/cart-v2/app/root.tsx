@@ -5,6 +5,7 @@ import {
 } from '@shopify/remix-oxygen';
 import {
   Links,
+  Link,
   Meta,
   Outlet,
   Scripts,
@@ -45,8 +46,6 @@ export async function loader({context}: LoaderArgs) {
 }
 
 export default function App() {
-  const {cart} = useLoaderData<typeof loader>();
-
   return (
     <html lang="en">
       <head>
@@ -54,7 +53,6 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Cart cart={cart} />
         <Outlet />
         <ScrollRestoration />
         <Scripts />
@@ -71,12 +69,3 @@ const LAYOUT_QUERY = `#graphql
     }
   }
 `;
-
-function Cart({cart}: {cart: Cart | null}) {
-  return (
-    <div>
-      <h1>Cart</h1>
-      <pre>{JSON.stringify(cart, null, 2)}</pre>
-    </div>
-  );
-}
