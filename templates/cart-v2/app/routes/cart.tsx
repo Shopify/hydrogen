@@ -4,8 +4,9 @@ import {Cart as CartUi} from '~/components';
 
 export async function action({request, context}: ActionArgs) {
   const {cart} = context;
-
   const [result, headers, status] = await cart.perform(request);
+
+  // What if we want to do something after line item is updated
 
   return json({cart: result}, {headers, status});
 }
