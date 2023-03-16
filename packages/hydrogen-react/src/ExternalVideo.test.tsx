@@ -1,7 +1,7 @@
-import * as React from 'react';
+import {vi, describe, expect, it} from 'vitest';
+
 import {render, screen} from '@testing-library/react';
 import {ExternalVideo} from './ExternalVideo.js';
-import {vi} from 'vitest';
 import {getExternalVideoData} from './ExternalVideo.test.helpers.js';
 
 const testId = 'video-iframe';

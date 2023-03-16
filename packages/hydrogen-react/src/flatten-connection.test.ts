@@ -1,7 +1,8 @@
+import {vi, describe, it, expect} from 'vitest';
+
 import {PartialDeep} from 'type-fest';
 import {ProductConnection, Product} from './storefront-api-types.js';
 import {flattenConnection} from './flatten-connection.js';
-import {vi} from 'vitest';
 import {expectType, TypeEqual} from 'ts-expect';
 
 describe('flattenConnection', () => {
@@ -74,7 +75,6 @@ describe('flattenConnection', () => {
     expect(console.warn).toHaveBeenCalled();
   });
 
-  // eslint-disable-next-line jest/expect-expect
   it.skip(`has correct typescript types`, () => {
     // works without PartialDeep
     const type1 = flattenConnection({} as ProductConnection);

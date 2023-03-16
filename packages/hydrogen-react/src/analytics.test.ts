@@ -1,4 +1,4 @@
-import {vi, afterEach} from 'vitest';
+import {vi, afterEach, describe, it, expect} from 'vitest';
 import {AnalyticsEventName} from './analytics-constants.js';
 import {BASE_PAYLOAD} from './analytics-schema.test.helpers.js';
 import {getClientBrowserParameters, sendShopifyAnalytics} from './analytics.js';

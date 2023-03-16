@@ -1,3 +1,4 @@
+import {expect, it, describe} from 'vitest';
 import {expectType} from 'ts-expect';
 import {ShopifySalesChannel} from './analytics-constants.js';
 import {

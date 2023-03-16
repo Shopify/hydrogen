@@ -1,3 +1,5 @@
+import {describe, expect, it} from 'vitest';
+
 import {ProductProvider, useProduct} from './ProductProvider.js';
 import {
   getProduct,

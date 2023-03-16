@@ -1,3 +1,4 @@
+import {vi} from 'vitest';
 import {flattenConnection} from './flatten-connection.js';
 import {getPrice} from './Money.test.helpers.js';
 import type {

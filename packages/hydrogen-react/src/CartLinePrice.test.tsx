@@ -1,3 +1,5 @@
+import {describe, it, expect} from 'vitest';
+
 import {render, screen} from '@testing-library/react';
 import {CartLinePrice} from './CartLinePrice.js';
 import {getCartLineMock} from './CartProvider.test.helpers.js';

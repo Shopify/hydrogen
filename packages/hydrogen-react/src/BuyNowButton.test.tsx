@@ -1,6 +1,6 @@
+import {vi, afterEach, beforeEach, describe, it, expect} from 'vitest';
 import {CartProvider, useCart} from './CartProvider.js';
 import {render, screen} from '@testing-library/react';
-import {vi} from 'vitest';
 import userEvent from '@testing-library/user-event';
 import {BuyNowButton} from './BuyNowButton.js';
 import {getCartWithActionsMock} from './CartProvider.test.helpers.js';

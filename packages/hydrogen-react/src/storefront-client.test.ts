@@ -1,6 +1,7 @@
+import {vi, beforeEach, describe, expect, it} from 'vitest';
+
 import {createStorefrontClient} from './storefront-client.js';
 import {SFAPI_VERSION} from './storefront-api-constants.js';
-import {vi} from 'vitest';
 
 describe(`createStorefrontClient`, () => {
   beforeEach(() => {

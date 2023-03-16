@@ -1,3 +1,5 @@
+import {describe, it, expect} from 'vitest';
+
 import {render, screen} from '@testing-library/react';
 import {CartProvider} from './CartProvider.js';
 import {CART_WITH_LINES} from './CartProvider.test.helpers.js';

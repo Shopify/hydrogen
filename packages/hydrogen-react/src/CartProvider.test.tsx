@@ -1,7 +1,8 @@
 /* eslint-disable eslint-comments/disable-enable-pair */
 /* eslint-disable @typescript-eslint/no-empty-function */
+import {vi, beforeEach, describe, expect, it} from 'vitest';
+
 import {ComponentProps, PropsWithChildren} from 'react';
-import {vi} from 'vitest';
 import {renderHook, act} from '@testing-library/react';
 import {getCartMock, getCartLineMock} from './CartProvider.test.helpers.js';
 import {ShopifyProvider} from './ShopifyProvider.js';

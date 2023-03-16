@@ -1,3 +1,4 @@
+import {describe, it, expect} from 'vitest';
 import {
   parseMetafield,
   type ParsedMetafields,
@@ -536,7 +537,6 @@ describe(`parseMetafield`, () => {
   });
 
   describe(`types`, () => {
-    // eslint-disable-next-line jest/expect-expect
     it.skip(`TS tests`, () => {
       // This test is to ensure that ParsedMetafields has a key for every item in 'allMetafieldsTypesArray'
       expectType<TypeEqual<keyof ParsedMetafields, MetafieldTypeTypes>>(true);
