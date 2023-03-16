@@ -62,6 +62,8 @@ type ShopifyImageBaseProps = {
  * If only one of `width` or `height` are defined, then the other will attempt to be calculated based on the image's aspect ratio,
  * provided that both `data.width` and `data.height` are available. If `data.width` and `data.height` aren't available, then the aspect ratio cannot be determined and the missing
  * value will remain as `null`
+ *
+ * @deprecated Use the new `Image` component instead
  */
 export function Image({
   data,

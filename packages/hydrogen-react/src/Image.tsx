@@ -79,22 +79,14 @@ export const shopifyLoader: ImageLoader = ({src, width, height, crop}) => {
  */
 type Crop = 'center' | 'top' | 'bottom' | 'left' | 'right';
 
-type ValidImageAsType = React.ElementType<'img'> | React.ElementType<'source'>;
+type AllowedElements = 'img' | 'source';
 
-export type ShopifyImageProps<ComponentGeneric extends ValidImageAsType> =
-  ShopifyImageBaseProps<ComponentGeneric> &
-    Omit<
-      React.ComponentPropsWithoutRef<ComponentGeneric>,
-      keyof ShopifyImageBaseProps<ComponentGeneric>
-    >;
+type HydrogenImageProps<T extends AllowedElements> = {
+  as: T;
+} & HydrogenImageBaseProps &
+  React.HTMLAttributes<JSX.IntrinsicElements[T]>;
 
-// HtmlImageProps & ShopifyImageBaseProps<ComponentGeneric>;
-
-export interface ShopifyImageBaseProps<
-  ComponentGeneric extends ValidImageAsType,
-> {
-  /** The HTML element to use for the image, `source` should only be used inside `picture` */
-  as?: ComponentGeneric;
+export type HydrogenImageBaseProps = {
   /** Data mapping to the Storefront API `Image` object. Must be an Image object.
    * Optionally, import the `IMAGE_FRAGMENT` to use in your GraphQL queries.
    *
@@ -148,11 +140,18 @@ export interface ShopifyImageBaseProps<
   loader?: ImageLoader;
   /** An optional prop you can use to change the default srcSet generation behaviour */
   srcSetOptions?: SrcSetOptions;
+  alt?: HtmlImageProps['alt'];
+  width?: HtmlImageProps['width'];
+  height?: HtmlImageProps['height'];
+  decoding?: HtmlImageProps['decoding'];
+  src?: HtmlImageProps['src'];
+  loading?: HtmlImageProps['loading'];
+  sizes?: HtmlImageProps['sizes'];
   /** @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop */
   loaderOptions?: ShopifyLoaderOptions;
   /** @deprecated Autocalculated, use only `width` prop, or srcSetOptions */
   widths?: (HtmlImageProps['width'] | ImageType['width'])[];
-}
+};
 
 /**
  * A Storefront API GraphQL fragment that can be used to query for an image.
@@ -168,10 +167,17 @@ export const IMAGE_FRAGMENT = `#graphql
 
 /**
  * Hydrgen’s Image component is a wrapper around the HTML image element.
- * It supports the same props as the HTML image element, but automatically
+ * It supports the same props as the HTML `img` element, but automatically
  * generates the srcSet and sizes attributes for you. For most use cases,
  * you’ll want to set the `aspectRatio` prop to ensure the image is sized
  * correctly.
+ *
+ * @remarks
+ * - `decoding` is set to `async` by default.
+ * - `loading` is set to `lazy` by default.
+ * - `alt` will automatically be set to the `altText` from the Storefront API if passed in the `data` prop
+ * - `src` will automatically be set to the `url` from the Storefront API if passed in the `data` prop
+ * - `width` defaults to `100%`should be set to how you want the image to be displayed, not the original image width
  *
  * @example
  * A responsive image with a 4:5 aspect ratio:
@@ -194,7 +200,7 @@ export const IMAGE_FRAGMENT = `#graphql
  *
  * {@link https://shopify.dev/docs/api/hydrogen-react/components/image}
  */
-export function Image<ComponentGeneric extends ValidImageAsType = 'img'>({
+export function Image<T extends AllowedElements = 'img'>({
   as: Component,
   data,
   aspectRatio,
@@ -208,15 +214,15 @@ export function Image<ComponentGeneric extends ValidImageAsType = 'img'>({
   },
   alt,
   decoding = 'async',
-  height,
   loading = 'lazy',
-  sizes,
   src,
   width,
+  height,
+  sizes,
   loaderOptions,
   widths,
   ...passthroughProps
-}: ShopifyImageProps<ComponentGeneric>): JSX.Element | null {
+}: HydrogenImageProps<T>): JSX.Element | null {
   /*
    * Deprecated Props from original Image component
    */
@@ -268,7 +274,7 @@ export function Image<ComponentGeneric extends ValidImageAsType = 'img'>({
   }${getUnitValueParts(normalizedWidthProp.toString()).unit}`;
 
   const normalizedHeight: string =
-    height === undefined
+    height === undefined || height === null
       ? 'auto'
       : `${getUnitValueParts(height.toString()).number}${
           getUnitValueParts(height.toString()).unit
@@ -353,29 +359,9 @@ export function Image<ComponentGeneric extends ValidImageAsType = 'img'>({
       ? intWidth * (parseAspectRatio(fixedAspectRatio) ?? 1)
       : undefined;
 
-    // return React.createElement(Component, {
-    //   srcSet: generateShopifySrcSet(normalizedSrc, sizesArray, loader),
-    //   src: loader({
-    //     src: normalizedSrc,
-    //     width: intWidth,
-    //     height: fixedHeight,
-    //     crop: normalizedHeight === 'auto' ? undefined : crop,
-    //   }),
-    //   alt: normalizedAlt,
-    //   decoding,
-    //   style: {
-    //     width: normalizedWidth,
-    //     height: normalizedHeight,
-    //     aspectRatio: fixedAspectRatio,
-    //   },
-    //   width: intWidth,
-    //   height: fixedHeight,
-    //   loading,
-    //   ...passthroughProps,
-    // });
     return (
       <Component
-        srcSet={generateShopifySrcSet(normalizedSrc, sizesArray, loader)}
+        srcSet={generateSrcSet(normalizedSrc, sizesArray, loader)}
         src={loader({
           src: normalizedSrc,
           width: intWidth,
@@ -383,16 +369,16 @@ export function Image<ComponentGeneric extends ValidImageAsType = 'img'>({
           crop: normalizedHeight === 'auto' ? undefined : crop,
         })}
         alt={normalizedAlt}
-        decoding={decoding}
         style={{
           width: normalizedWidth,
           height: normalizedHeight,
           aspectRatio: fixedAspectRatio,
           ...passthroughProps.style,
         }}
+        loading={Component === 'img' ? loading : undefined}
+        decoding={Component === 'img' ? decoding : undefined}
         width={intWidth}
         height={fixedHeight}
-        loading={loading}
         {...passthroughProps}
       />
     );
@@ -409,7 +395,7 @@ export function Image<ComponentGeneric extends ValidImageAsType = 'img'>({
 
     return (
       <Component
-        srcSet={generateShopifySrcSet(normalizedSrc, sizesArray, loader)}
+        srcSet={generateSrcSet(normalizedSrc, sizesArray, loader)}
         src={loader({
           src: normalizedSrc,
           width: placeholderWidth,
@@ -511,7 +497,7 @@ function isFixedWidth(width: string | number): boolean {
  * @param loader - A function that takes a Shopify image URL and returns a Shopify image URL with the correct query parameters
  * @returns A srcSet for Shopify images, e.g. 'https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=200&height=200&crop=center 200w, https://cdn.shopify.com/static/sample-images/garnished.jpeg?width=400&height=400&crop=center 400w'
  */
-export function generateShopifySrcSet(
+export function generateSrcSet(
   src?: string,
   sizesArray?: Array<{width?: number; height?: number; crop?: Crop}>,
   loader: ImageLoader = shopifyLoader,
