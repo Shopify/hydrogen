@@ -46,7 +46,7 @@ export type I18nBase = {
 
 export type StorefrontClient<TI18n extends I18nBase> = {
   storefront: Storefront<TI18n>;
-  withCache: WithCache;
+  withCache_unstable: WithCache;
 };
 
 export type Storefront<TI18n extends I18nBase = I18nBase> = {
@@ -356,14 +356,14 @@ export function createStorefrontClient<TI18n extends I18nBase>({
      *
      * ```js
      * async function loader ({context: {storefront}}) {
-     *   const data = await storefront.withCache('my-unique-key', () => {
+     *   const data = await storefront.withCache_unstable('my-unique-key', () => {
      *     return fetch('https://example.com/api').then(res => res.json());
      *   }, {
      *     strategy: storefront.CacheLong(),
      *   });
      * ```
      */
-    withCache: (cacheKey, actionFn, options) =>
+    withCache_unstable: (cacheKey, actionFn, options) =>
       runWithCache(cacheKey, actionFn, {
         ...options,
         cacheInstance: cache,
