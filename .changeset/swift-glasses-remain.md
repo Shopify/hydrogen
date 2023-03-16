@@ -26,8 +26,10 @@ Add an experimental `withCache_unstable` utility similar to `useQuery` from Hydr
 Then use the utility within your loaders:
 
 ```ts
-export async function loader({context: {storefront, withCache}}: LoaderArgs) {
-  const data = await withCache(
+export async function loader({
+  context: {storefront, withCache_unstable},
+}: LoaderArgs) {
+  const data = await withCache_unstable(
     'test-with-cache',
     async () => {
       const result = await fetch('https://www.some.com/api');

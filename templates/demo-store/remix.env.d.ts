@@ -33,7 +33,6 @@ declare module '@shopify/remix-oxygen' {
     waitUntil: ExecutionContext['waitUntil'];
     session: HydrogenSession;
     storefront: Storefront;
-    withCache: WithCache;
     env: Env;
   }
 }
