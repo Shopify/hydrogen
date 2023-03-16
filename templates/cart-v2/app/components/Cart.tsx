@@ -60,8 +60,6 @@ function CartItem({item, theme}: CartItemProps) {
 
   const {handle, title} = product;
 
-  const byLineMarkup = <span className="Item__ByLine">{id}</span>;
-
   const imageMarkup = image ? (
     <Image width={200} height={200} data={image} alt={merchandise.title} />
   ) : null;
@@ -93,8 +91,6 @@ function CartItem({item, theme}: CartItemProps) {
         </h3>
         <div style={{display: 'flex', justifyContent: 'space-between'}}>
           <QuantityControls
-            outline
-            inverted={theme === 'dark'}
             line={{merchandiseId: merchandise.id, id: item.id}}
             quantity={quantity}
           />
@@ -163,7 +159,7 @@ interface Props {
   quantity: number;
 }
 
-export function QuantityControls({outline, quantity, inverted, line}: Props) {
+export function QuantityControls({quantity, line}: Props) {
   return (
     <div style={{display: 'flex'}}>
       <CartAction

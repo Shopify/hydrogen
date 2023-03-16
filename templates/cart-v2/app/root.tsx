@@ -1,4 +1,5 @@
 import {
+  json,
   type LinksFunction,
   type MetaFunction,
   type LoaderArgs,
@@ -42,7 +43,7 @@ export async function loader({context}: LoaderArgs) {
     context.cart.get(),
   ]);
 
-  return {layout, cart};
+  return json({layout, cart});
 }
 
 export default function App() {
