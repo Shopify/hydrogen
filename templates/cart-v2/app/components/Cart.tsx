@@ -26,6 +26,7 @@ export function Cart({theme}: CartProps) {
 
   return (
     <div className="Cart">
+      <h1>Cart</h1>
       {flattenedLines.map((line) => (
         <CartItem theme={theme || 'light'} key={line.id} item={line} />
       ))}
@@ -66,37 +67,53 @@ function CartItem({item, theme}: CartItemProps) {
   ) : null;
 
   return (
-    <div className="Item" key={item.id}>
-      <div className="Item__Image">{imageMarkup}</div>
-      <div className="Item__Details">
-        <div className="Item__Line">
-          <div className="Item__Info">
-            <Link to={`/products/${handle}`}>{title}</Link>
-            <h4>{byLineMarkup}</h4>
-            <div className="Item__Remove">
-              <Money data={price} className="Item__Price" />
-              <CartAction inputs={{lineIds: [id]}} action="LINES_REMOVE">
-                {() => <button aria-label="Remove from cart">remove</button>}
-              </CartAction>
-            </div>
-          </div>
-        </div>
-        <div className="Item__Line">
+    <div
+      style={{
+        display: 'flex',
+        padding: 20,
+        width: '100%',
+        maxWidth: 800,
+        margin: '0 auto',
+      }}
+      key={item.id}
+    >
+      {imageMarkup}
+      <div
+        style={{
+          width: '100%',
+          display: 'flex',
+          flexDirection: 'column',
+        }}
+      >
+        <h3>
+          <Link to={`/products/${handle}`}>{title}</Link>
+          <small>
+            <Money data={price} className="Item__Price" />
+          </small>
+        </h3>
+        <div style={{display: 'flex', justifyContent: 'space-between'}}>
           <QuantityControls
             outline
             inverted={theme === 'dark'}
             line={{merchandiseId: merchandise.id, id: item.id}}
             quantity={quantity}
           />
-          <div className="Item__Price">
-            <Money
-              data={{
-                amount: item.cost.totalAmount.amount,
-                currencyCode: item.cost.totalAmount.currencyCode,
-              }}
-              className="medium"
-            />
-          </div>
+          <CartAction inputs={{lineIds: [id]}} action="LINES_REMOVE">
+            {() => <button aria-label="Remove from cart">remove</button>}
+          </CartAction>
+        </div>
+        <div
+          style={{
+            padding: '10px 0',
+            display: 'flex',
+          }}
+        >
+          <Money
+            data={{
+              amount: item.cost.totalAmount.amount,
+              currencyCode: item.cost.totalAmount.currencyCode,
+            }}
+          />
         </div>
       </div>
     </div>
@@ -112,9 +129,17 @@ function CartFooter() {
   const {totalAmount} = cost;
 
   return (
-    <footer className="Cart__Footer">
-      <div className="Cart__Subtotal">
-        <span className="Cart__SubtotalLabel Heading--4">Subtotal</span>
+    <footer
+      style={{
+        justifyContent: 'flex-end',
+        display: 'flex',
+        margin: 'auto',
+        width: '100%',
+        maxWidth: 800,
+      }}
+    >
+      <div style={{padding: '0 20px'}}>
+        Subtotal
         <Money
           className="Cart__SubtotalValue Heading--2"
           data={{
@@ -123,6 +148,7 @@ function CartFooter() {
           }}
         />
       </div>
+
       <Link to={checkoutUrl}>
         <span className="Button__Target">Checkout</span>
       </Link>
@@ -139,14 +165,14 @@ interface Props {
 
 export function QuantityControls({outline, quantity, inverted, line}: Props) {
   return (
-    <div className="QuantityControls">
+    <div style={{display: 'flex'}}>
       <CartAction
         inputs={[{...line, quantity: quantity - 1}]}
         action="LINES_UPDATE"
       >
         {() => <button>-</button>}
       </CartAction>
-      <span className="strong Item__Quantity">{quantity}</span>
+      <span style={{padding: '0 1em'}}>{quantity}</span>
       <CartAction
         inputs={[{...line, quantity: quantity + 1}]}
         action="LINES_UPDATE"

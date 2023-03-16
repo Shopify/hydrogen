@@ -1,3 +1,7 @@
+* {
+  box-sizing: border-box;
+}
+
 body {
   margin: 0;
   background: #ffffff;
@@ -28,4 +32,11 @@ h2 {
 p {
   font-size: 1rem;
   line-height: 1.4;
+}
+
+button {
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+  border: 1px solid;
 }
