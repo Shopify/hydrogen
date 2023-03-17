@@ -37,9 +37,9 @@ export async function loader({context}: LoaderArgs) {
 }
 ```
 
-Developers could choose to return only a partial cart here (if they know there are parts of the payload that are not required for their use-case).
+Developers can return a partial cart if they know there are parts of the payload that are not required for their use-case.
 
-The cart class on the context also allows for developers to override the cart fragment when it is instantiated in `server.ts` using the fourth `CartOptions` param, as well as in every operation `context.cart.linesAdd(inputs, {cartFragment})`.
+The cart class on the context also allows for developers to override the cart fragment when it is instantiated in `server.ts` using the fourth `CartOptions` param, or in any cart operation `context.cart.linesAdd(inputs, {cartFragment})`.
 
 **Add a `/cart` route to intercept the cart operation `POST` requests.**
 
@@ -54,12 +54,14 @@ export async function action({request, context}: ActionArgs) {
 
 This is the most basic action possible, but advanced users will have all the flexibility to handle errors, perform individual operations on the cart and chain logic before and after the request hits the SFAPI.
 
+More examples to come.
+
 **Add your UI using the `<CartAction />` component and `useCart()` hook.**
 
 - The `useCart` hook returns the current cart state.
-- The `<CartAction />` component provides a typed interface for the expected data given the SFAPI cart operation. It also takes care of adding this data to the payload. Users are given a child function with access to the fetcher. This allows the to build out an interface for submitting the action, showing pending or optimistic UI and failure states.
+- The `<CartAction />` component provides a typed interface for the expected data given the SFAPI cart operation. It also takes care of adding this data to the payload and users are provided a child function with access to a [fetcher](https://remix.run/docs/en/1.14.3/hooks/use-fetcher) object. This allows them to build out a UI for submitting the action and showing pending, optimistic and/or failure states.
 
-Here are some initial examples (more to come).
+Here are some initial examples, more to come.
 
 ```tsx
 // routes/cart.tsx
@@ -164,3 +166,8 @@ export default function Product() {
 ## Internals
 
 All the code to provide the above API is located in `lib/cart`.
+
+- `cart.server.ts` contains the cart context
+- `hooks.ts` contains the `useCart()` hook
+- `components.ts` contains the `<CartAction /> component
+- `types.ts` shared types
