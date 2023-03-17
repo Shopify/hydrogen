@@ -17,6 +17,8 @@ import type {
   ProductVariant,
 } from './storefront-api-types.js';
 import {faker} from '@faker-js/faker';
+import {RICH_TEXT_CONTENT} from './RichText.test.helpers.js';
+import {type RichTextASTNode} from './RichText.js';
 
 /**
  * The tests in this file are written in the format `parsed.parsedValue? === ''` instead of `(parsed.parsedValue).toEqual()`
@@ -140,6 +142,16 @@ describe(`parseMetafield`, () => {
       expect(parsed?.parsedValue?.amount === '12').toBe(true);
       expect(parsed?.parsedValue?.currencyCode === 'USD').toBe(true);
       expectType<null | MoneyV2>(parsed?.parsedValue);
+    });
+
+    it(`rich_text_field`, () => {
+      const parsed = parseMetafield<ParsedMetafields['rich_text_field']>({
+        type: 'rich_text_field',
+        value: JSON.stringify(RICH_TEXT_CONTENT),
+      });
+      expect(parsed.parsedValue?.type === 'root').toBe(true);
+      expect(parsed.parsedValue?.children?.length === 6).toBe(true);
+      expectType<null | RichTextASTNode>(parsed?.parsedValue);
     });
 
     it(`multi_line_text_field`, () => {
