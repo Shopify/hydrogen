@@ -1,8 +1,35 @@
 # Cart POC
 
-## Public API
+The most basic implementation of this cart requires the following steps.
 
-1. Request the cart in the root.tsx file
+**Add the cart to the Remix context in `server.ts`.**.
+
+```tsx diff
+// server.ts
+const cart = await AlphaCart.init(
+  request,
+  storefront,
+  createCookieSessionStorage({
+    cookie: {
+      name: 'session',
+      httpOnly: true,
+      path: '/',
+      sameSite: 'lax',
+    },
+  }),
+);
+
+
+const handleRequest = createRequestHandler({
+  build: remixBuild,
+  mode: process.env.NODE_ENV,
+- getLoadContext: () => ({session, storefront, env}),
++ getLoadContext: () => ({session, storefront, cart, env}),
+});
+
+```
+
+**Request the cart in the root.tsx file.** This data will be shared across other routes and components and can be accessed with a provided `useCart(): Cart | null` hook.
 
 ```tsx
 export async function loader({context}: LoaderArgs) {
@@ -10,7 +37,11 @@ export async function loader({context}: LoaderArgs) {
 }
 ```
 
-2. Add a cart route with the following action
+Developers could choose to return only a partial cart here (if they know there are parts of the payload that are not required for their use-case).
+
+The cart class on the context also allows for developers to override the cart fragment when it is instantiated in `server.ts` using the fourth `CartOptions` param, as well as in every operation `context.cart.linesAdd(inputs, {cartFragment})`.
+
+**Add a `/cart` route to intercept the cart operation `POST` requests.**
 
 ```tsx
 // routes/cart.tsx
@@ -21,7 +52,14 @@ export async function action({request, context}: ActionArgs) {
 }
 ```
 
-3. Add your UI using the `<CartAction />` component and `useCart()` hook
+This is the most basic action possible, but advanced users will have all the flexibility to handle errors, perform individual operations on the cart and chain logic before and after the request hits the SFAPI.
+
+**Add your UI using the `<CartAction />` component and `useCart()` hook.**
+
+- The `useCart` hook returns the current cart state.
+- The `<CartAction />` component provides a typed interface for the expected data given the SFAPI cart operation. It also takes care of adding this data to the payload. Users are given a child function with access to the fetcher. This allows the to build out an interface for submitting the action, showing pending or optimistic UI and failure states.
+
+Here are some initial examples (more to come).
 
 ```tsx
 // routes/cart.tsx
@@ -56,14 +94,14 @@ export function Cart({theme}: CartProps) {
               inputs={[{...item, quantity: quantity - 1}]}
               action="LINES_UPDATE"
             >
-              {() => <button>-</button>}
+              {() => <button type="submit">-</button>}
             </CartAction>
             <span>{quantity}</span>
             <CartAction
               inputs={[{...item, quantity: quantity + 1}]}
               action="LINES_UPDATE"
             >
-              {() => <button>+</button>}
+              {() => <button type="submit">+</button>}
             </CartAction>
 
             <CartAction inputs={{lineIds: [id]}} action="LINES_REMOVE">
@@ -102,7 +140,21 @@ export default function Product() {
         }}
       />
       <CartAction action="LINES_ADD" inputs={lines}>
-        {() => <button>Add to cart</button>}
+        {({state, type}) => {
+          if (type === 'done') {
+            return (
+              <p>
+                {title} added to your cart! <Link to="/cart">Checkout now</Link>
+              </p>
+            );
+          }
+
+          return (
+            <button disabled={state === 'submitting'} type="submit">
+              Add to cart
+            </button>
+          );
+        }}
       </CartAction>
     </>
   );

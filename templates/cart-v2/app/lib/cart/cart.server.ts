@@ -134,7 +134,6 @@ export class AlphaCart {
         variables: {cartId: this.id, lines, countryCode: this.countryCode},
       });
 
-      console.log(cartLinesAdd.cart.lines.edges[0].node);
       const response = await this.respond(cartLinesAdd, options);
       return response;
     }
