@@ -1,6 +1,6 @@
 import * as React from 'react';
 import type {Story} from '@ladle/react';
-import {Image, ShopifyLoaderOptions, ShopifyLoaderParams} from './Image.js';
+import {Image, ShopifyLoaderOptions, LoaderParams} from './Image.js';
 import type {PartialDeep} from 'type-fest';
 import type {Image as ImageType} from './storefront-api-types.js';
 
@@ -18,7 +18,7 @@ type HtmlImageProps = React.ImgHTMLAttributes<HTMLImageElement>;
 const Template: Story<{
   as?: 'img' | 'source';
   data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;
-  loader?: (params: ShopifyLoaderParams) => string;
+  loader?: (params: LoaderParams) => string;
   src: string;
   width?: string | number;
   height?: string | number;

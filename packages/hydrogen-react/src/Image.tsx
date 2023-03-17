@@ -44,7 +44,7 @@ export type Loader = (params: LoaderParams) => string;
 
 /** Legacy type for backwards compatibility *
  * @deprecated Use `crop`, `width`, `height`, and `src` props, and/or `data` prop. Or pass a custom `loader` with `LoaderParams` */
-type ShopifyLoaderOptions = {
+export type ShopifyLoaderOptions = {
   /** The base URL of the image */
   src?: ImageType['url'];
   /** The URL param that controls width */
