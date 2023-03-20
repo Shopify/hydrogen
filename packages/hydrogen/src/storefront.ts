@@ -42,17 +42,45 @@ export type StorefrontClient<TI18n extends I18nBase> = {
   storefront: Storefront<TI18n>;
 };
 
+// Default type for `variables` in storefront client
+type GqlVariables = ExecutionArgs['variableValues'];
+
+// This interface will be augmented in user land with generated query types
+export interface QueryTypes<U = any> {
+  [key: string]: {
+    return: U;
+    variables: {[key: string]: any};
+  };
+}
+
+// This interface will be augmented in user land with generated mutation types
+export interface MutationTypes<U = any> {
+  [key: string]: {
+    return: U;
+    variables: {[key: string]: any};
+  };
+}
+
+type StorefrontQueryParam<T extends keyof QueryTypes> = StorefrontCommonOptions<
+  QueryTypes[T]['variables']
+> & {
+  cache?: CachingStrategy;
+};
+
+type StorefrontMutateParam<T extends keyof MutationTypes> =
+  StorefrontCommonOptions<MutationTypes[T]['variables']>;
+
 export type Storefront<TI18n extends I18nBase = I18nBase> = {
-  query: <T>(
-    query: string,
-    payload?: StorefrontCommonOptions & {
-      cache?: CachingStrategy;
-    },
-  ) => Promise<T>;
-  mutate: <T>(
-    mutation: string,
-    payload?: StorefrontCommonOptions,
-  ) => Promise<T>;
+  query: <U, T extends keyof QueryTypes = string>(
+    query: T,
+    payload?: StorefrontQueryParam<T>,
+  ) => Promise<QueryTypes<U>[T]['return']>;
+
+  mutate: <U, T extends keyof MutationTypes = string>(
+    mutation: T,
+    payload?: StorefrontMutateParam<T>,
+  ) => Promise<MutationTypes<U>[T]['return']>;
+
   cache?: Cache;
   CacheNone: typeof CacheNone;
   CacheLong: typeof CacheLong;
@@ -95,26 +123,24 @@ type StorefrontHeaders = {
   cookie: string | null;
 };
 
-type StorefrontCommonOptions = {
-  variables?: ExecutionArgs['variableValues'] & {
-    country?: CountryCode;
-    language?: LanguageCode;
-  };
+type StorefrontCommonOptions<T extends GqlVariables> = {
   headers?: HeadersInit;
   storefrontApiVersion?: string;
-};
+} & {variables?: T};
 
-export type StorefrontQueryOptions = StorefrontCommonOptions & {
-  query: string;
-  mutation?: never;
-  cache?: CachingStrategy;
-};
+export type StorefrontQueryOptions<T extends GqlVariables = GqlVariables> =
+  StorefrontCommonOptions<T> & {
+    query: string;
+    mutation?: never;
+    cache?: CachingStrategy;
+  };
 
-export type StorefrontMutationOptions = StorefrontCommonOptions & {
-  query?: never;
-  mutation: string;
-  cache?: never;
-};
+export type StorefrontMutationOptions<T extends GqlVariables = GqlVariables> =
+  StorefrontCommonOptions<T> & {
+    query?: never;
+    mutation: string;
+    cache?: never;
+  };
 
 const StorefrontApiError = class extends Error {} as ErrorConstructor;
 export const isStorefrontApiError = (error: any) =>
@@ -272,16 +298,13 @@ export function createStorefrontClient<TI18n extends I18nBase>({
        * }
        * ```
        */
-      query: <T>(
-        query: string,
-        payload?: StorefrontCommonOptions & {cache?: CachingStrategy},
-      ) => {
+      query: <Storefront['query']>((query: string, payload) => {
         query = minifyQuery(query);
         if (isMutationRE.test(query))
           throw new Error('storefront.query cannot execute mutations');
 
-        return fetchStorefrontApi<T>({...payload, query});
-      },
+        return fetchStorefrontApi({...payload, query});
+      }),
       /**
        * Sends a GraphQL mutation to the Storefront API.
        *
@@ -295,13 +318,13 @@ export function createStorefrontClient<TI18n extends I18nBase>({
        * }
        * ```
        */
-      mutate: <T>(mutation: string, payload?: StorefrontCommonOptions) => {
+      mutate: <Storefront['mutate']>((mutation: string, payload) => {
         mutation = minifyQuery(mutation);
         if (isQueryRE.test(mutation))
           throw new Error('storefront.mutate cannot execute queries');
 
-        return fetchStorefrontApi<T>({...payload, mutation});
-      },
+        return fetchStorefrontApi({...payload, mutation});
+      }),
       cache,
       CacheNone,
       CacheLong,
