@@ -45,6 +45,10 @@ export type StorefrontClient<TI18n extends I18nBase> = {
 // Default type for `variables` in storefront client
 type GqlVariables = ExecutionArgs['variableValues'];
 
+// Use this type to make parameters optional in storefront client
+// when no variables need to be passed.
+type EmptyVariables = {[key: string]: never};
+
 // This interface will be augmented in user land with generated query types
 export interface QueryTypes<U = any> {
   [key: string]: {
@@ -73,12 +77,16 @@ type StorefrontMutateParam<T extends keyof MutationTypes> =
 export type Storefront<TI18n extends I18nBase = I18nBase> = {
   query: <U, T extends keyof QueryTypes = string>(
     query: T,
-    payload?: StorefrontQueryParam<T>,
+    ...options: QueryTypes[T]['variables'] extends EmptyVariables
+      ? [StorefrontQueryParam<T>?]
+      : [StorefrontQueryParam<T>]
   ) => Promise<QueryTypes<U>[T]['return']>;
 
   mutate: <U, T extends keyof MutationTypes = string>(
     mutation: T,
-    payload?: StorefrontMutateParam<T>,
+    ...options: MutationTypes[T]['variables'] extends EmptyVariables
+      ? [StorefrontMutateParam<T>?]
+      : [StorefrontMutateParam<T>]
   ) => Promise<MutationTypes<U>[T]['return']>;
 
   cache?: Cache;
@@ -126,7 +134,7 @@ type StorefrontHeaders = {
 type StorefrontCommonOptions<T extends GqlVariables> = {
   headers?: HeadersInit;
   storefrontApiVersion?: string;
-} & {variables?: T};
+} & (T extends EmptyVariables ? {variables?: T} : {variables: T});
 
 export type StorefrontQueryOptions<T extends GqlVariables = GqlVariables> =
   StorefrontCommonOptions<T> & {
