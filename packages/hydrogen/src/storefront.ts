@@ -54,6 +54,9 @@ export interface QueryTypes<U = any> {
   [key: string]: {
     return: U;
     variables: {[key: string]: any};
+    // This property *is not* added by the codegen plugin so it can be used
+    // to discriminate between this default type and generated types.
+    forceOptionalVariables: true;
   };
 }
 
@@ -62,29 +65,38 @@ export interface MutationTypes<U = any> {
   [key: string]: {
     return: U;
     variables: {[key: string]: any};
+    forceOptionalVariables: true;
   };
 }
 
 type StorefrontQueryParam<T extends keyof QueryTypes> = StorefrontCommonOptions<
-  QueryTypes[T]['variables']
+  QueryTypes[T]['variables'],
+  QueryTypes[T]['forceOptionalVariables']
 > & {
   cache?: CachingStrategy;
 };
 
 type StorefrontMutateParam<T extends keyof MutationTypes> =
-  StorefrontCommonOptions<MutationTypes[T]['variables']>;
+  StorefrontCommonOptions<
+    MutationTypes[T]['variables'],
+    MutationTypes[T]['forceOptionalVariables']
+  >;
 
 export type Storefront<TI18n extends I18nBase = I18nBase> = {
   query: <U, T extends keyof QueryTypes = string>(
     query: T,
-    ...options: QueryTypes[T]['variables'] extends EmptyVariables
+    ...options: QueryTypes[T]['forceOptionalVariables'] extends true
+      ? [StorefrontQueryParam<T>?]
+      : QueryTypes[T]['variables'] extends EmptyVariables
       ? [StorefrontQueryParam<T>?]
       : [StorefrontQueryParam<T>]
   ) => Promise<QueryTypes<U>[T]['return']>;
 
   mutate: <U, T extends keyof MutationTypes = string>(
     mutation: T,
-    ...options: MutationTypes[T]['variables'] extends EmptyVariables
+    ...options: MutationTypes[T]['forceOptionalVariables'] extends true
+      ? [StorefrontMutateParam<T>?]
+      : MutationTypes[T]['variables'] extends EmptyVariables
       ? [StorefrontMutateParam<T>?]
       : [StorefrontMutateParam<T>]
   ) => Promise<MutationTypes<U>[T]['return']>;
@@ -131,10 +143,17 @@ type StorefrontHeaders = {
   cookie: string | null;
 };
 
-type StorefrontCommonOptions<T extends GqlVariables> = {
+type StorefrontCommonOptions<
+  T extends GqlVariables,
+  ForceOptionalVariables extends boolean | undefined = undefined,
+> = {
   headers?: HeadersInit;
   storefrontApiVersion?: string;
-} & (T extends EmptyVariables ? {variables?: T} : {variables: T});
+} & (ForceOptionalVariables extends true
+  ? {variables?: T}
+  : T extends EmptyVariables
+  ? {variables?: T}
+  : {variables: T});
 
 export type StorefrontQueryOptions<T extends GqlVariables = GqlVariables> =
   StorefrontCommonOptions<T> & {
