@@ -49,6 +49,11 @@ type GqlVariables = ExecutionArgs['variableValues'];
 // when no variables need to be passed.
 type EmptyVariables = {[key: string]: never};
 
+// These are the variables that are automatically added to the storefront API.
+// We use this type to make parameters optional in storefront client
+// when these are the only variables that can be passed.
+type AutoAddedVariableNames = 'country' | 'language';
+
 // This interface will be augmented in user land with generated query types
 export interface QueryTypes<U = any> {
   [key: string]: {
@@ -87,7 +92,10 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     query: T,
     ...options: QueryTypes[T]['forceOptionalVariables'] extends true
       ? [StorefrontQueryParam<T>?]
-      : QueryTypes[T]['variables'] extends EmptyVariables
+      : Omit<
+          QueryTypes[T]['variables'],
+          AutoAddedVariableNames
+        > extends EmptyVariables
       ? [StorefrontQueryParam<T>?]
       : [StorefrontQueryParam<T>]
   ) => Promise<QueryTypes<U>[T]['return']>;
@@ -96,7 +104,10 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
     mutation: T,
     ...options: MutationTypes[T]['forceOptionalVariables'] extends true
       ? [StorefrontMutateParam<T>?]
-      : MutationTypes[T]['variables'] extends EmptyVariables
+      : Omit<
+          MutationTypes[T]['variables'],
+          AutoAddedVariableNames
+        > extends EmptyVariables
       ? [StorefrontMutateParam<T>?]
       : [StorefrontMutateParam<T>]
   ) => Promise<MutationTypes<U>[T]['return']>;
@@ -151,7 +162,7 @@ type StorefrontCommonOptions<
   storefrontApiVersion?: string;
 } & (ForceOptionalVariables extends true
   ? {variables?: T}
-  : T extends EmptyVariables
+  : Omit<T, AutoAddedVariableNames> extends EmptyVariables
   ? {variables?: T}
   : {variables: T});
 
