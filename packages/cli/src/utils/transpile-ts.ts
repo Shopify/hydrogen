@@ -132,7 +132,7 @@ export async function transpileProject(projectDir: string) {
   const formatConfig = await resolveFormatConfig();
 
   for (const entry of entries) {
-    if (entry.endsWith('.d.ts')) {
+    if (entry.endsWith('.d.ts') || entry.endsWith('codegen.ts')) {
       await fs.rm(entry);
       continue;
     }
