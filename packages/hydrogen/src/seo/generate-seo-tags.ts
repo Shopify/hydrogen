@@ -4,7 +4,7 @@ import type {Thing, WithContext} from 'schema-dts';
 
 const ERROR_PREFIX = 'Error in SEO input: ';
 
-// TODO: Refactor this into more reusible validators or use a library like zod to do this if we decide to use it in
+// TODO: Refactor this into more reusable validators or use a library like zod to do this if we decide to use it in
 // other places. @cartogram
 export const schema = {
   title: {
@@ -584,47 +584,22 @@ export function generateSeoTags<
 
         break;
       }
+
+      default: {
+        // TODO: We should be able to catch unaccounted for keys at compile time
+        // let exhaustiveCheck: never = seoKey;
+
+        break;
+      }
     }
   }
 
   return tagResults.flat().sort((a, b) => a.key.localeCompare(b.key));
 }
 
-type MetaTagProps =
-  | ComponentPropsWithoutRef<'title'>
-  | ComponentPropsWithoutRef<'base'>
-  | ComponentPropsWithoutRef<'meta'>
-  | ComponentPropsWithoutRef<'link'>
-  | ComponentPropsWithoutRef<'script'>;
-
-export function generateTag(
-  tagName: 'script',
-  input: ComponentPropsWithoutRef<'script'>,
-  group?: string,
-): CustomHeadTagObject;
-export function generateTag(
-  tagName: 'title',
-  input: ComponentPropsWithoutRef<'title'>,
-  group?: string,
-): CustomHeadTagObject;
-export function generateTag(
-  tagName: 'base',
-  input: ComponentPropsWithoutRef<'base'>,
-  group?: string,
-): CustomHeadTagObject;
-export function generateTag(
-  tagName: 'meta',
-  input: ComponentPropsWithoutRef<'meta'>,
-  group?: string,
-): CustomHeadTagObject;
-export function generateTag(
-  tagName: 'link',
-  input: ComponentPropsWithoutRef<'link'>,
-  group?: string,
-): CustomHeadTagObject;
-export function generateTag(
-  tagName: TagKey,
-  input: MetaTagProps,
+export function generateTag<T extends TagKey>(
+  tagName: T,
+  input: ComponentPropsWithoutRef<T>,
   group?: string,
 ): CustomHeadTagObject {
   const tag: CustomHeadTagObject = {tag: tagName, props: {}, key: ''};
@@ -730,31 +705,22 @@ function renderTitle<T extends CustomHeadTagObject['children']>(
 function inferMimeType(url: Maybe<string> | undefined) {
   const ext = url && url.split('.').pop();
 
-  if (ext === 'svg') {
-    return 'image/svg+xml';
+  switch (ext) {
+    case 'svg':
+      return 'image/svg+xml';
+    case 'png':
+      return 'image/png';
+    case 'gif':
+      return 'image/gif';
+    case 'swf':
+      return 'application/x-shockwave-flash';
+    case 'mp3':
+      return 'audio/mpeg';
+    case 'jpg':
+    case 'jpeg':
+    default:
+      return 'image/jpeg';
   }
-
-  if (ext === 'png') {
-    return 'image/png';
-  }
-
-  if (ext === 'jpg' || ext === 'jpeg') {
-    return 'image/jpeg';
-  }
-
-  if (ext === 'gif') {
-    return 'image/gif';
-  }
-
-  if (ext === 'swf') {
-    return 'application/x-shockwave-flash';
-  }
-
-  if (ext === 'mp3') {
-    return 'audio/mpeg';
-  }
-
-  return 'image/jpeg';
 }
 
 export type SchemaType =
@@ -765,63 +731,6 @@ export type SchemaType =
   | 'WebPage'
   | 'BlogPosting'
   | 'Thing';
-
-function inferSchemaType(url: Maybe<string> | undefined): SchemaType {
-  const defaultType = 'Thing';
-
-  if (!url) {
-    return defaultType;
-  }
-
-  const routes: {type: SchemaType; pattern: RegExp | string}[] = [
-    {
-      type: 'WebSite',
-      pattern: '^/$',
-    },
-    {
-      type: 'Product',
-      pattern: '/products/.*',
-    },
-    {
-      type: 'ItemList',
-      pattern: /\/collections$/,
-    },
-    {
-      type: 'ItemList',
-      pattern: /\/collections\/([^/]+)/,
-    },
-    {
-      type: 'WebPage',
-      pattern: /\/pages\/([^/]+)/,
-    },
-    {
-      type: 'WebSite',
-      pattern: /\/blogs\/([^/]+)/,
-    },
-    {
-      type: 'BlogPosting',
-      pattern: /\/blogs\/([^/]+)\/([^/]+)/,
-    },
-    {
-      type: 'Organization',
-      pattern: '/policies',
-    },
-    {
-      type: 'Organization',
-      pattern: /\/policies\/([^/]+)/,
-    },
-  ];
-
-  const typeMatches = routes.filter((route) => {
-    const {pattern} = route;
-    const regex = new RegExp(pattern);
-    return regex.test(url);
-  });
-
-  return typeMatches.length > 0
-    ? typeMatches[typeMatches.length - 1].type
-    : defaultType;
-}
 
 function ensureArray<T>(value: T | T[]): T[] {
   return Array.isArray(value) ? value : [value];
