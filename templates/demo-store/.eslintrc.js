@@ -2,7 +2,16 @@
  * @type {import("@types/eslint").Linter.BaseConfig}
  */
 module.exports = {
-  extends: ['plugin:hydrogen/recommended', 'plugin:hydrogen/typescript'],
+  extends: [
+    'plugin:hydrogen/recommended',
+    'plugin:hydrogen/typescript',
+    'plugin:@typescript-eslint/recommended-requiring-type-checking',
+  ],
+  parser: '@typescript-eslint/parser',
+  parserOptions: {
+    project: ['./tsconfig.json'],
+    tsconfigRootDir: __dirname,
+  },
   rules: {
     '@typescript-eslint/ban-ts-comment': 'off',
     '@typescript-eslint/naming-convention': 'off',
