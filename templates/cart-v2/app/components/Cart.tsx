@@ -1,6 +1,6 @@
 // import React from 'react';
 import {Image, Money, flattenConnection} from '@shopify/hydrogen';
-import {Form, Link} from '@remix-run/react';
+import {Form, Link, useFetchers} from '@remix-run/react';
 import type {
   CartLine,
   CartLineUpdateInput,
@@ -160,21 +160,82 @@ interface Props {
 }
 
 export function QuantityControls({quantity, line}: Props) {
+  const optimisticData = useOptimisticDataFromActions(line?.merchandiseId);
+  const optimisticQuantity = optimisticData
+    ? (optimisticData.quantity as number)
+    : quantity;
+
   return (
     <div style={{display: 'flex'}}>
       <CartAction
-        cartInput={{lines: [{...line, quantity: quantity - 1}]}}
+        cartInput={{lines: [{...line, quantity: optimisticQuantity - 1}]}}
         action="LINES_UPDATE"
       >
-        {() => <button>-</button>}
+        {() => (
+          <>
+            <input
+              type="hidden"
+              name="optimistic-identifier"
+              value={line?.merchandiseId || ''}
+            />
+            <input
+              type="hidden"
+              name="optimistic-data"
+              value={JSON.stringify({
+                quantity: optimisticQuantity - 1,
+              })}
+            />
+            <button>-</button>
+          </>
+        )}
       </CartAction>
-      <span style={{padding: '0 1em'}}>{quantity}</span>
+      <span style={{padding: '0 1em'}}>{optimisticQuantity}</span>
       <CartAction
-        cartInput={{lines: [{...line, quantity: quantity + 1}]}}
+        cartInput={{lines: [{...line, quantity: optimisticQuantity + 1}]}}
         action="LINES_UPDATE"
       >
-        {() => <button>+</button>}
+        {() => (
+          <>
+            <input
+              type="hidden"
+              name="optimistic-identifier"
+              value={line?.merchandiseId || ''}
+            />
+            <input
+              type="hidden"
+              name="optimistic-data"
+              value={JSON.stringify({
+                quantity: optimisticQuantity + 1,
+              })}
+            />
+            <button>+</button>
+          </>
+        )}
       </CartAction>
     </div>
   );
+}
+
+function useOptimisticDataFromActions(identifier: string | undefined | null) {
+  const fetchers = useFetchers();
+
+  if (!identifier) return;
+  const data: Record<string, unknown> = {};
+
+  for (const fetcher of fetchers) {
+    const formData = fetcher.submission?.formData;
+    if (formData && formData.get('optimistic-identifier') === identifier) {
+      try {
+        if (formData.has('optimistic-data')) {
+          const dataInForm: unknown = JSON.parse(
+            String(formData.get('optimistic-data')),
+          );
+          Object.assign(data, dataInForm);
+        }
+      } catch {
+        // do nothing
+      }
+    }
+  }
+  return Object.keys(data).length ? data : undefined;
 }

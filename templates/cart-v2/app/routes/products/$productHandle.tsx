@@ -123,25 +123,3 @@ const PRODUCT_QUERY = `#graphql
     }
   }
 `;
-
-function useOptimisticDataFromActions(identifier: string) {
-  const fetchers = useFetchers();
-  const data: Record<string, unknown> = {};
-
-  for (const fetcher of fetchers) {
-    const formData = fetcher.submission?.formData;
-    if (formData && formData.get('optimistic-identifier') === identifier) {
-      try {
-        if (formData.has('optimistic-data')) {
-          const dataInForm: unknown = JSON.parse(
-            String(formData.get('optimistic-data')),
-          );
-          Object.assign(data, dataInForm);
-        }
-      } catch {
-        // do nothing
-      }
-    }
-  }
-  return Object.keys(data).length ? data : undefined;
-}
