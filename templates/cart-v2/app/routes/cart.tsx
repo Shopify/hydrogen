@@ -43,8 +43,6 @@ export async function action({request, context}: ActionArgs) {
     status = 400;
   }
 
-  console.log(cartResult);
-
   session.set('cartId', cartResult.cart.id);
   headers.set('Set-Cookie', await session.commit());
 

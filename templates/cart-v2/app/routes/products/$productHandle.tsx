@@ -8,6 +8,7 @@ import {Money} from '@shopify/hydrogen';
 import {CartAction} from '~/lib/cart/components';
 import {CartCount} from '~/components';
 import {useMatchesData} from '~/lib/cart/hooks';
+import {QuantityControls} from '~/components/Cart';
 
 export async function loader({params, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -41,7 +42,7 @@ export default function Product() {
   const selectedVariant = product.selectedVariant ?? firstVariant;
 
   const data = useMatchesData('root');
-  console.log(data?.cartLines);
+  const variantInCart = data?.cartLines[selectedVariant.id];
 
   const cartInput = {
     lines: [
@@ -75,13 +76,21 @@ export default function Product() {
               />
             </div>
 
-            <CartAction action="LINES_ADD" cartInput={cartInput}>
-              {() => (
-                <>
-                  <button>Add to cart</button>
-                </>
-              )}
-            </CartAction>
+            {!!variantInCart && (
+              <>
+                You have {variantInCart.quantity} quantities of this item in
+                cart
+                <QuantityControls
+                  quantity={variantInCart.quantity}
+                  line={variantInCart}
+                />
+              </>
+            )}
+            {!variantInCart && (
+              <CartAction action="LINES_ADD" cartInput={cartInput}>
+                {() => <button>Add to cart</button>}
+              </CartAction>
+            )}
           </div>
         </div>
       </div>

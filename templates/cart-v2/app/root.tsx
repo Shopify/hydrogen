@@ -50,18 +50,22 @@ export async function loader({context}: LoaderArgs) {
     context.cart.get({cartId}),
   ]);
 
-  const cartLines = flattenConnection(cart.lines).reduce(
-    (previousValue: object, currentValue: unknown) => {
-      const line = currentValue as CartLine;
-      return {
-        ...previousValue,
-        [line.merchandise.id]: {
-          quantity: line.quantity,
+  const cartLines = cart
+    ? flattenConnection(cart.lines).reduce(
+        (previousValue: object, currentValue: unknown) => {
+          const line = currentValue as CartLine;
+          return {
+            ...previousValue,
+            [line.merchandise.id]: {
+              id: line.id,
+              merchandiseId: line.merchandise.id,
+              quantity: line.quantity,
+            },
+          };
         },
-      };
-    },
-    {},
-  );
+        {},
+      )
+    : {};
 
   return json({layout, cart, cartLines});
 }
