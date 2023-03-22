@@ -31,10 +31,6 @@
     },
     "./package.json": "./package.json"
   },
-  "typings": "dist/esm/index.d.ts",
-  "typescript": {
-    "definition": "dist/esm/index.d.ts"
-  },
   "repository": {
     "type": "git",
     "url": "https://github.com/shopify/hydrogen.git",
