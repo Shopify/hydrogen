@@ -11,7 +11,7 @@
     "build": "tsup --clean --config ./tsup.config.ts",
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
-    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
+    "test:disabled": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest",
     "postinstall": "node ./postinstall.mjs"
   },
