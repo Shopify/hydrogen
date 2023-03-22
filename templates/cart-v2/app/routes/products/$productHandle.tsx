@@ -1,5 +1,5 @@
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {useFetchers, useLoaderData} from '@remix-run/react';
 import type {
   ProductVariant,
   Product as ProductType,
@@ -7,6 +7,7 @@ import type {
 import {Money} from '@shopify/hydrogen';
 import {CartAction} from '~/lib/cart/components';
 import {CartCount} from '~/components';
+import {useMatchesData} from '~/lib/cart/hooks';
 
 export async function loader({params, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -38,6 +39,9 @@ export default function Product() {
   const {title, descriptionHtml} = product;
   const firstVariant = product.variants.nodes[0];
   const selectedVariant = product.selectedVariant ?? firstVariant;
+
+  const data = useMatchesData('root');
+  console.log(data?.cartLines);
 
   const cartInput = {
     lines: [
@@ -72,7 +76,11 @@ export default function Product() {
             </div>
 
             <CartAction action="LINES_ADD" cartInput={cartInput}>
-              {() => <button>Add to cart</button>}
+              {() => (
+                <>
+                  <button>Add to cart</button>
+                </>
+              )}
             </CartAction>
           </div>
         </div>
@@ -106,3 +114,25 @@ const PRODUCT_QUERY = `#graphql
     }
   }
 `;
+
+function useOptimisticDataFromActions(identifier: string) {
+  const fetchers = useFetchers();
+  const data: Record<string, unknown> = {};
+
+  for (const fetcher of fetchers) {
+    const formData = fetcher.submission?.formData;
+    if (formData && formData.get('optimistic-identifier') === identifier) {
+      try {
+        if (formData.has('optimistic-data')) {
+          const dataInForm: unknown = JSON.parse(
+            String(formData.get('optimistic-data')),
+          );
+          Object.assign(data, dataInForm);
+        }
+      } catch {
+        // do nothing
+      }
+    }
+  }
+  return Object.keys(data).length ? data : undefined;
+}

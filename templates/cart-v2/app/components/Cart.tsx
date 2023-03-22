@@ -94,7 +94,7 @@ function CartItem({item, theme}: CartItemProps) {
             line={{merchandiseId: merchandise.id, id: item.id}}
             quantity={quantity}
           />
-          <CartAction inputs={{lineIds: [id]}} action="LINES_REMOVE">
+          <CartAction cartInput={{lineIds: [id]}} action="LINES_REMOVE">
             {() => <button aria-label="Remove from cart">remove</button>}
           </CartAction>
         </div>
@@ -163,14 +163,14 @@ export function QuantityControls({quantity, line}: Props) {
   return (
     <div style={{display: 'flex'}}>
       <CartAction
-        inputs={[{...line, quantity: quantity - 1}]}
+        cartInput={{lines: [{...line, quantity: quantity - 1}]}}
         action="LINES_UPDATE"
       >
         {() => <button>-</button>}
       </CartAction>
       <span style={{padding: '0 1em'}}>{quantity}</span>
       <CartAction
-        inputs={[{...line, quantity: quantity + 1}]}
+        cartInput={{lines: [{...line, quantity: quantity + 1}]}}
         action="LINES_UPDATE"
       >
         {() => <button>+</button>}

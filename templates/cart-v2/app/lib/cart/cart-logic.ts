@@ -22,6 +22,7 @@ export type CartLogicProps = {
   get: CartQuery;
   createCart: CartQuery;
   addLine: CartQuery;
+  updateLine: CartQuery;
   applyDiscountCode: CartQuery;
   removeLine: CartQuery;
 };
@@ -36,6 +37,7 @@ export function CartLogic(queries: CartLogicProps): CartLogicProps {
         ? queries.addLine<T>(cartInput)
         : queries.createCart<T>(inputs);
     },
+    updateLine: queries.updateLine,
     applyDiscountCode: <T>(cartInput: CartActionInput) => {
       const {cartId, ...inputs} = cartInput;
       return cartInput.cartId

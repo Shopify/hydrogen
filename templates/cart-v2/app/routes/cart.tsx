@@ -19,7 +19,8 @@ export async function action({request, context}: ActionArgs) {
     : ({} as CartActionInput);
 
   console.log('+++++++++++++++++++++++++++++');
-  console.log(`Performing cart ${action} with ${JSON.stringify(cartInput)}.`);
+  console.log(`Performing cart ${action}`);
+  console.log(cartInput);
   console.log('+++++++++++++++++++++++++++++');
 
   let cartResult;
@@ -30,8 +31,9 @@ export async function action({request, context}: ActionArgs) {
     case 'LINES_REMOVE':
       cartResult = await cart.removeLine(cartInput);
       break;
-    // case 'LINES_UPDATE':
-    //   cartResult = cart.addLine(cartInput);
+    case 'LINES_UPDATE':
+      cartResult = await cart.updateLine(cartInput);
+      break;
   }
 
   const headers = new Headers();

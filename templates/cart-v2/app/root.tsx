@@ -13,9 +13,14 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from '@remix-run/react';
-import type {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
+import type {
+  Shop,
+  Cart,
+  CartLine,
+} from '@shopify/hydrogen/storefront-api-types';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
+import {flattenConnection} from '@shopify/hydrogen';
 
 export const links: LinksFunction = () => {
   return [
@@ -45,7 +50,20 @@ export async function loader({context}: LoaderArgs) {
     context.cart.get({cartId}),
   ]);
 
-  return json({layout, cart});
+  const cartLines = flattenConnection(cart.lines).reduce(
+    (previousValue: object, currentValue: unknown) => {
+      const line = currentValue as CartLine;
+      return {
+        ...previousValue,
+        [line.merchandise.id]: {
+          quantity: line.quantity,
+        },
+      };
+    },
+    {},
+  );
+
+  return json({layout, cart, cartLines});
 }
 
 export default function App() {

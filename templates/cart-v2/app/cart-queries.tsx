@@ -13,7 +13,6 @@ import type {
 export function myCartQueries(storefront: Storefront) {
   const myCartLogics = CartLogic({
     get: async (cartInput: CartActionInput) => {
-      console.log('get', cartInput);
       if (!cartInput?.cartId) {
         return null;
       }
@@ -27,7 +26,6 @@ export function myCartQueries(storefront: Storefront) {
       return cart;
     },
     createCart: async (cartInput: CartActionInput) => {
-      console.log('createCart', cartInput);
       const {cartCreate, errors} = await storefront.mutate<{
         cartCreate: {
           cart: Cart;
@@ -45,7 +43,6 @@ export function myCartQueries(storefront: Storefront) {
       });
     },
     addLine: async (cartInput: CartActionInput) => {
-      console.log('addLine', cartInput);
       const {cartLinesAdd, errors} = await storefront.mutate<{
         cartLinesAdd: {
           cart: Cart;
@@ -63,8 +60,25 @@ export function myCartQueries(storefront: Storefront) {
         errors,
       });
     },
+    updateLine: async (cartInput: CartActionInput) => {
+      const {cartLinesUpdate, errors} = await storefront.mutate<{
+        cartLinesUpdate: {
+          cart: Cart;
+          errors: CartUserError[];
+        };
+        errors: UserError[];
+      }>(CART_UPDATE_QUERY, {
+        variables: {
+          cartId: cartInput.cartId,
+          lines: cartInput.lines,
+        },
+      });
+      return Promise.resolve({
+        cart: cartLinesUpdate.cart,
+        errors,
+      });
+    },
     removeLine: async (cartInput: CartActionInput) => {
-      console.log('removeLine', cartInput);
       const {cartLinesRemove, errors} = await storefront.mutate<{
         cartLinesRemove: {
           cart: Cart;
@@ -82,8 +96,8 @@ export function myCartQueries(storefront: Storefront) {
         errors,
       });
     },
-    applyDiscountCode: (cartInput: CartActionInput) => {
-      return storefront.mutate<{
+    applyDiscountCode: async (cartInput: CartActionInput) => {
+      const {cartDiscountCodesUpdate, errors} = await storefront.mutate<{
         cartDiscountCodesUpdate: {
           cart: Cart;
         };
@@ -93,6 +107,10 @@ export function myCartQueries(storefront: Storefront) {
           cartId: cartInput.cartId,
           discountCodes: cartInput.discountCodes,
         },
+      });
+      return Promise.resolve({
+        cart: cartDiscountCodesUpdate.cart,
+        errors,
       });
     },
   });
@@ -264,6 +282,26 @@ const CART_ADD_QUERY = /* GraphQL */ `
     $language: LanguageCode
   ) @inContext(country: $country, language: $language) {
     cartLinesAdd(cartId: $cartId, lines: $lines) {
+      cart {
+        ...CartFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+  ${mutateCartFragment}
+  ${errorFragment}
+`;
+
+const CART_UPDATE_QUERY = /* GraphQL */ `
+  mutation CartLinesUpdate(
+    $cartId: ID!
+    $lines: [CartLineUpdateInput!]!
+    $country: CountryCode = ZZ
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFragment
       }
