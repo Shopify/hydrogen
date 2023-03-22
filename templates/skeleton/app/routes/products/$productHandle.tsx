@@ -1,5 +1,5 @@
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, useCatch} from '@remix-run/react';
 import type {
   ProductVariant,
   Product as ProductType,
@@ -27,6 +27,35 @@ export async function loader({params, context}: LoaderArgs) {
   });
 }
 
+export function ErrorBoundary({error}: {error: unknown}) {
+  return (
+    <div>
+      There was an error!
+      <div>
+        <pre>{error instanceof Error ? error.message : String(error)}</pre>
+      </div>
+    </div>
+  );
+}
+
+export function CatchBoundary() {
+  const {status, statusText, data} = useCatch();
+  return (
+    <div>
+      There was a problem with your request. The server responded with:
+      <div>
+        <pre>{status}</pre>
+      </div>
+      <div>
+        <pre>{statusText}</pre>
+      </div>
+      <div>
+        <pre>{String(data)}</pre>
+      </div>
+    </div>
+  );
+}
+
 export default function Product() {
   const {product} = useLoaderData<typeof loader>();
   const {title, vendor, descriptionHtml} = product;
@@ -41,7 +70,6 @@ export default function Product() {
 }
 
 const PRODUCT_QUERY = `#graphql
-
   query Product(
     $country: CountryCode
     $language: LanguageCode

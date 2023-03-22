@@ -4,7 +4,7 @@ import {
   type LoaderArgs,
   SerializeFrom,
 } from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {useLoaderData, useCatch} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import type {Page as PageType} from '@shopify/hydrogen/storefront-api-types';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
@@ -32,18 +32,53 @@ const seo: SeoHandleFunction<typeof loader> = ({data}) => ({
   description: data?.page?.seo?.description,
 });
 
+// wait what's going on here??
 export const handle = {
   seo,
 };
 
 export const meta: MetaFunction = ({data}) => {
-  const {title, description} = data?.page.seo ?? {};
+  try {
+    const {title, description} = data?.page.seo ?? {};
 
-  return {
-    title,
-    description,
-  };
+    return {
+      title,
+      description,
+    };
+  } catch (error) {
+    console.error(error);
+    return {};
+  }
 };
+
+export function ErrorBoundary({error}: {error: unknown}) {
+  return (
+    <div>
+      There was an error!
+      <div>
+        <pre>{error instanceof Error ? error.message : String(error)}</pre>
+      </div>
+    </div>
+  );
+}
+
+export function CatchBoundary() {
+  const {status, statusText, data} = useCatch();
+  return (
+    <div>
+      There was a problem with your request. The server responded with:
+      <div>
+        <pre>{status}</pre>
+      </div>
+      <div>
+        <pre>{statusText}</pre>
+      </div>
+      <div>
+        <pre>{String(data)}</pre>
+      </div>
+    </div>
+  );
+}
 
 export default function Page() {
   const {page} = useLoaderData<typeof loader>();
