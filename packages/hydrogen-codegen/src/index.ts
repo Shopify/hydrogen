@@ -6,7 +6,8 @@ import * as dtsPlugin from './dts-plugin';
 
 export type GqlTagConfig = {};
 
-// TODO: how does this work in ESM land?
+// This comment is used during ESM build:
+//! import {createRequire} from 'module'; const require = createRequire(import.meta.url);
 export const schema = require.resolve(
   '@shopify/hydrogen-react/storefront.schema.json',
 );
