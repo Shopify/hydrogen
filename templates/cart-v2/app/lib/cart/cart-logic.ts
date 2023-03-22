@@ -10,6 +10,7 @@ export type CartLogicProps = {
   createCart: CartQuery;
   addLine: CartQuery;
   applyDiscountCode: CartQuery;
+  removeLine: CartQuery;
 };
 
 export function CartLogic(queries: CartLogicProps): CartLogicProps {
@@ -25,5 +26,6 @@ export function CartLogic(queries: CartLogicProps): CartLogicProps {
         ? queries.applyDiscountCode<T>(cartInput)
         : queries.createCart<T>(cartInput);
     },
+    removeLine: queries.removeLine,
   };
 }
