@@ -7,7 +7,9 @@ export type LayoutQueryVariables = HydrogenStorefront.Exact<{
   [key: string]: never;
 }>;
 
-export type LayoutQuery = {shop: {name: string; description?: string | null}};
+export type LayoutQuery = {
+  shop: Pick<HydrogenStorefront.Shop, 'name' | 'description'>;
+};
 
 export interface GeneratedQueryTypes {
   '#graphql\n  query layout {\n    shop {\n      name\n      description\n    }\n  }\n': {

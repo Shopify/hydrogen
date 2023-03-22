@@ -52,7 +52,13 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
         },
       },
       // 3. Generate the operations (i.e. queries, mutations, and fragments types)
-      {[`typescript-operations`]: {skipTypename: true, useTypeImports: true}},
+      {
+        [`typescript-operations`]: {
+          skipTypename: true, // Skip __typename fields
+          useTypeImports: true, // Use `import type` instead of `import`
+          preResolveTypes: false, // Use Pick<...> instead of primitives
+        },
+      },
       // 4. Augment Hydrogen query/mutation types with the generated operations
       {[`gen-dts`]: {sourcesWithOperations}},
       // 5. Custom plugins from the user
