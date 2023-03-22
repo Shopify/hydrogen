@@ -55,9 +55,13 @@ type EmptyVariables = {[key: string]: never};
 type AutoAddedVariableNames = 'country' | 'language';
 
 // This interface will be augmented in user land with generated query types
-export interface QueryTypes<U = any> {
+export interface QueryTypes<OverrideReturnType = any> {
+  // Example of how a generated query type looks like:
+  // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables}
+
+  // Fallback type for queries that don't have a generated type:
   [key: string]: {
-    return: U;
+    return: OverrideReturnType;
     variables: {[key: string]: any};
     // This property *is not* added by the codegen plugin so it can be used
     // to discriminate between this default type and generated types.
@@ -66,51 +70,59 @@ export interface QueryTypes<U = any> {
 }
 
 // This interface will be augmented in user land with generated mutation types
-export interface MutationTypes<U = any> {
+export interface MutationTypes<OverrideReturnType = any> {
+  // Example of how a generated mutation type looks like:
+  // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables}
+
+  // Fallback type for mutations that don't have a generated type:
   [key: string]: {
-    return: U;
+    return: OverrideReturnType;
     variables: {[key: string]: any};
     forceOptionalVariables: true;
   };
 }
 
-type StorefrontQueryParam<T extends keyof QueryTypes> = StorefrontCommonOptions<
-  QueryTypes[T]['variables'],
-  QueryTypes[T]['forceOptionalVariables']
-> & {
-  cache?: CachingStrategy;
-};
-
-type StorefrontMutateParam<T extends keyof MutationTypes> =
+type StorefrontQueryParam<RawGqlString extends keyof QueryTypes> =
   StorefrontCommonOptions<
-    MutationTypes[T]['variables'],
-    MutationTypes[T]['forceOptionalVariables']
+    QueryTypes[RawGqlString]['variables'],
+    QueryTypes[RawGqlString]['forceOptionalVariables']
+  > & {
+    cache?: CachingStrategy;
+  };
+
+type StorefrontMutateParam<RawGqlString extends keyof MutationTypes> =
+  StorefrontCommonOptions<
+    MutationTypes[RawGqlString]['variables'],
+    MutationTypes[RawGqlString]['forceOptionalVariables']
   >;
 
 export type Storefront<TI18n extends I18nBase = I18nBase> = {
-  query: <U, T extends keyof QueryTypes = string>(
-    query: T,
-    ...options: QueryTypes[T]['forceOptionalVariables'] extends true
-      ? [StorefrontQueryParam<T>?]
+  query: <OverrideReturnType, RawGqlString extends keyof QueryTypes = string>(
+    query: RawGqlString,
+    ...options: QueryTypes[RawGqlString]['forceOptionalVariables'] extends true
+      ? [StorefrontQueryParam<RawGqlString>?]
       : Omit<
-          QueryTypes[T]['variables'],
+          QueryTypes[RawGqlString]['variables'],
           AutoAddedVariableNames
         > extends EmptyVariables
-      ? [StorefrontQueryParam<T>?]
-      : [StorefrontQueryParam<T>]
-  ) => Promise<QueryTypes<U>[T]['return']>;
+      ? [StorefrontQueryParam<RawGqlString>?]
+      : [StorefrontQueryParam<RawGqlString>]
+  ) => Promise<QueryTypes<OverrideReturnType>[RawGqlString]['return']>;
 
-  mutate: <U, T extends keyof MutationTypes = string>(
-    mutation: T,
-    ...options: MutationTypes[T]['forceOptionalVariables'] extends true
-      ? [StorefrontMutateParam<T>?]
+  mutate: <
+    OverrideReturnType,
+    RawGqlString extends keyof MutationTypes = string,
+  >(
+    mutation: RawGqlString,
+    ...options: MutationTypes[RawGqlString]['forceOptionalVariables'] extends true
+      ? [StorefrontMutateParam<RawGqlString>?]
       : Omit<
-          MutationTypes[T]['variables'],
+          MutationTypes[RawGqlString]['variables'],
           AutoAddedVariableNames
         > extends EmptyVariables
-      ? [StorefrontMutateParam<T>?]
-      : [StorefrontMutateParam<T>]
-  ) => Promise<MutationTypes<U>[T]['return']>;
+      ? [StorefrontMutateParam<RawGqlString>?]
+      : [StorefrontMutateParam<RawGqlString>]
+  ) => Promise<MutationTypes<OverrideReturnType>[RawGqlString]['return']>;
 
   cache?: Cache;
   CacheNone: typeof CacheNone;
@@ -155,30 +167,32 @@ type StorefrontHeaders = {
 };
 
 type StorefrontCommonOptions<
-  T extends GqlVariables,
+  Variables extends GqlVariables,
   ForceOptionalVariables extends boolean | undefined = undefined,
 > = {
   headers?: HeadersInit;
   storefrontApiVersion?: string;
 } & (ForceOptionalVariables extends true
-  ? {variables?: T}
-  : Omit<T, AutoAddedVariableNames> extends EmptyVariables
-  ? {variables?: T}
-  : {variables: T});
+  ? {variables?: Variables}
+  : Omit<Variables, AutoAddedVariableNames> extends EmptyVariables
+  ? {variables?: Variables}
+  : {variables: Variables});
 
-export type StorefrontQueryOptions<T extends GqlVariables = GqlVariables> =
-  StorefrontCommonOptions<T> & {
-    query: string;
-    mutation?: never;
-    cache?: CachingStrategy;
-  };
+export type StorefrontQueryOptions<
+  Variables extends GqlVariables = GqlVariables,
+> = StorefrontCommonOptions<Variables> & {
+  query: string;
+  mutation?: never;
+  cache?: CachingStrategy;
+};
 
-export type StorefrontMutationOptions<T extends GqlVariables = GqlVariables> =
-  StorefrontCommonOptions<T> & {
-    query?: never;
-    mutation: string;
-    cache?: never;
-  };
+export type StorefrontMutationOptions<
+  Variables extends GqlVariables = GqlVariables,
+> = StorefrontCommonOptions<Variables> & {
+  query?: never;
+  mutation: string;
+  cache?: never;
+};
 
 const StorefrontApiError = class extends Error {} as ErrorConstructor;
 export const isStorefrontApiError = (error: any) =>
