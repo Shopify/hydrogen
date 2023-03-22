@@ -6,6 +6,7 @@
   "type": "module",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
   "scripts": {
     "build": "tsup --clean --config ./tsup.config.ts",
     "dev": "tsup --watch --config ./tsup.config.ts",
