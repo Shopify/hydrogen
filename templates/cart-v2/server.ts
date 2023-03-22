@@ -8,7 +8,8 @@ import {
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
-import {AlphaCart} from './app/lib/cart/cart.server';
+import {myCartQueries} from '~/cart-queries';
+// import {AlphaCart} from './app/lib/cart/cart.server';
 
 /**
  * Export a fetch handler in module format.
@@ -51,18 +52,19 @@ export default {
       /**
        * Create a custom cart instance.
        */
-      const cart = await AlphaCart.init(
-        request,
-        storefront,
-        createCookieSessionStorage({
-          cookie: {
-            name: 'session',
-            httpOnly: true,
-            path: '/',
-            sameSite: 'lax',
-          },
-        }),
-      );
+      // const cart = await AlphaCart.init(
+      //   request,
+      //   storefront,
+      //   createCookieSessionStorage({
+      //     cookie: {
+      //       name: 'session',
+      //       httpOnly: true,
+      //       path: '/',
+      //       sameSite: 'lax',
+      //     },
+      //   }),
+      // );
+      const cart = myCartQueries(storefront);
 
       /**
        * Create a Remix request handler and pass
@@ -118,7 +120,7 @@ class HydrogenSession {
 
     const session = await storage.getSession(request.headers.get('Cookie'));
 
-    return new this(storage, session);
+    return new HydrogenSession(storage, session);
   }
 
   get(key: string) {

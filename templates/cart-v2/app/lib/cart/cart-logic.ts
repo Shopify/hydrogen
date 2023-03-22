@@ -1,12 +1,25 @@
-import {CartInput} from '@shopify/hydrogen/storefront-api-types';
+import type {
+  Cart,
+  CartInput,
+  CartUserError,
+} from '@shopify/hydrogen/storefront-api-types';
 
 export type CartActionInput = {
   cartId?: string;
+  lineIds?: Array<string>;
 } & CartInput;
 
-export type CartQuery = <T>(cartInput: CartActionInput) => Promise<T>;
+export type CartActionReturn = {
+  cart: Cart;
+  errors?: CartUserError;
+};
+
+export type CartQuery = <T>(
+  cartInput: CartActionInput,
+) => Promise<CartActionReturn>;
 
 export type CartLogicProps = {
+  get: CartQuery;
   createCart: CartQuery;
   addLine: CartQuery;
   applyDiscountCode: CartQuery;
@@ -15,16 +28,19 @@ export type CartLogicProps = {
 
 export function CartLogic(queries: CartLogicProps): CartLogicProps {
   return {
+    get: queries.get,
     createCart: queries.createCart,
     addLine: <T>(cartInput: CartActionInput) => {
+      const {cartId, ...inputs} = cartInput;
       return cartInput.cartId
         ? queries.addLine<T>(cartInput)
-        : queries.createCart<T>(cartInput);
+        : queries.createCart<T>(inputs);
     },
     applyDiscountCode: <T>(cartInput: CartActionInput) => {
+      const {cartId, ...inputs} = cartInput;
       return cartInput.cartId
         ? queries.applyDiscountCode<T>(cartInput)
-        : queries.createCart<T>(cartInput);
+        : queries.createCart<T>(inputs);
     },
     removeLine: queries.removeLine,
   };

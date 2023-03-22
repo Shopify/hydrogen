@@ -39,12 +39,14 @@ export default function Product() {
   const firstVariant = product.variants.nodes[0];
   const selectedVariant = product.selectedVariant ?? firstVariant;
 
-  const lines = [
-    {
-      merchandiseId: selectedVariant.id,
-      quantity: 1,
-    },
-  ];
+  const cartInput = {
+    lines: [
+      {
+        merchandiseId: selectedVariant.id,
+        quantity: 1,
+      },
+    ],
+  };
 
   return (
     <section className="Product Global__Section">
@@ -69,7 +71,7 @@ export default function Product() {
               />
             </div>
 
-            <CartAction action="LINES_ADD" inputs={lines}>
+            <CartAction action="LINES_ADD" cartInput={cartInput}>
               {() => <button>Add to cart</button>}
             </CartAction>
           </div>

@@ -10,10 +10,25 @@ import type {
   CartBuyerIdentityInput,
 } from '@shopify/hydrogen/storefront-api-types';
 
-export function MyCartQueries(storefront: Storefront) {
+export function myCartQueries(storefront: Storefront) {
   const myCartLogics = CartLogic({
-    createCart: (cartInput: CartActionInput) => {
-      return storefront.mutate<{
+    get: async (cartInput: CartActionInput) => {
+      console.log('get', cartInput);
+      if (!cartInput?.cartId) {
+        return null;
+      }
+
+      const {cart} = await storefront.query<{cart: Cart}>(CART_QUERY, {
+        variables: {
+          id: cartInput.cartId,
+        },
+        cache: storefront.CacheNone(),
+      });
+      return cart;
+    },
+    createCart: async (cartInput: CartActionInput) => {
+      console.log('createCart', cartInput);
+      const {cartCreate, errors} = await storefront.mutate<{
         cartCreate: {
           cart: Cart;
           errors: CartUserError[];
@@ -24,9 +39,14 @@ export function MyCartQueries(storefront: Storefront) {
           input: cartInput,
         },
       });
+      return Promise.resolve({
+        cart: cartCreate.cart,
+        errors,
+      });
     },
-    addLine: (cartInput: CartActionInput) => {
-      return storefront.mutate<{
+    addLine: async (cartInput: CartActionInput) => {
+      console.log('addLine', cartInput);
+      const {cartLinesAdd, errors} = await storefront.mutate<{
         cartLinesAdd: {
           cart: Cart;
           errors: CartUserError[];
@@ -38,9 +58,14 @@ export function MyCartQueries(storefront: Storefront) {
           lines: cartInput.lines,
         },
       });
+      return Promise.resolve({
+        cart: cartLinesAdd.cart,
+        errors,
+      });
     },
-    removeLine: (cartInput: CartActionInput) => {
-      return storefront.mutate<{
+    removeLine: async (cartInput: CartActionInput) => {
+      console.log('removeLine', cartInput);
+      const {cartLinesRemove, errors} = await storefront.mutate<{
         cartLinesRemove: {
           cart: Cart;
           errors: CartUserError[];
@@ -51,6 +76,10 @@ export function MyCartQueries(storefront: Storefront) {
           cartId: cartInput.cartId,
           lineIds: cartInput.lineIds,
         },
+      });
+      return Promise.resolve({
+        cart: cartLinesRemove.cart,
+        errors,
       });
     },
     applyDiscountCode: (cartInput: CartActionInput) => {
@@ -78,9 +107,112 @@ export function MyCartQueries(storefront: Storefront) {
   };
 }
 
+const mutateCartFragment = /* GraphQL */ `
+  fragment CartFragment on Cart {
+    id
+  }
+`;
+
 const cartFragment = /* GraphQL */ `
   fragment CartFragment on Cart {
     id
+    checkoutUrl
+    totalQuantity
+    buyerIdentity {
+      countryCode
+      customer {
+        id
+        email
+        firstName
+        lastName
+        displayName
+      }
+      email
+      phone
+    }
+    lines(first: $numCartLines) {
+      edges {
+        node {
+          id
+          quantity
+          attributes {
+            key
+            value
+          }
+          cost {
+            totalAmount {
+              amount
+              currencyCode
+            }
+            compareAtAmountPerQuantity {
+              amount
+              currencyCode
+            }
+          }
+          merchandise {
+            ... on ProductVariant {
+              id
+              availableForSale
+              compareAtPrice {
+                ...MoneyFragment
+              }
+              price {
+                ...MoneyFragment
+              }
+              requiresShipping
+              title
+              image {
+                ...ImageFragment
+              }
+              product {
+                handle
+                title
+                id
+              }
+              selectedOptions {
+                name
+                value
+              }
+            }
+          }
+        }
+      }
+    }
+    cost {
+      subtotalAmount {
+        ...MoneyFragment
+      }
+      totalAmount {
+        ...MoneyFragment
+      }
+      totalDutyAmount {
+        ...MoneyFragment
+      }
+      totalTaxAmount {
+        ...MoneyFragment
+      }
+    }
+    note
+    attributes {
+      key
+      value
+    }
+    discountCodes {
+      code
+    }
+  }
+
+  fragment MoneyFragment on MoneyV2 {
+    currencyCode
+    amount
+  }
+
+  fragment ImageFragment on Image {
+    id
+    url
+    altText
+    width
+    height
   }
 `;
 
@@ -90,6 +222,19 @@ const errorFragment = /* GraphQL */ `
     field
     code
   }
+`;
+
+const CART_QUERY = /* GraphQL */ `
+  query CartQuery(
+    $id: ID!
+    $numCartLines: Int = 250
+    $country: CountryCode = ZZ
+  ) @inContext(country: $country) {
+    cart(id: $id) {
+      ...CartFragment
+    }
+  }
+  ${cartFragment}
 `;
 
 const CART_CREATE_QUERY = /* GraphQL */ `
@@ -107,7 +252,7 @@ const CART_CREATE_QUERY = /* GraphQL */ `
       }
     }
   }
-  ${cartFragment}
+  ${mutateCartFragment}
   ${errorFragment}
 `;
 
@@ -127,7 +272,7 @@ const CART_ADD_QUERY = /* GraphQL */ `
       }
     }
   }
-  ${cartFragment}
+  ${mutateCartFragment}
   ${errorFragment}
 `;
 
@@ -143,7 +288,7 @@ const CART_REMOVE_QUERY = /* GraphQL */ `
       }
     }
   }
-  ${cartFragment}
+  ${mutateCartFragment}
 `;
 
 const CART_APPLY_DISCOUNT = /* GraphQL */ `
@@ -158,5 +303,5 @@ const CART_APPLY_DISCOUNT = /* GraphQL */ `
       }
     }
   }
-  ${cartFragment}
+  ${mutateCartFragment}
 `;
