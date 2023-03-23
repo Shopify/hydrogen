@@ -19,6 +19,7 @@ export type CartQuery = <T>(
 ) => Promise<CartActionReturn>;
 
 export type CartLogicProps = {
+  id: () => string;
   get: CartQuery;
   createCart: CartQuery;
   addLine: CartQuery;
@@ -29,6 +30,7 @@ export type CartLogicProps = {
 
 export function CartLogic(queries: CartLogicProps): CartLogicProps {
   return {
+    id: queries.id,
     get: queries.get,
     createCart: queries.createCart,
     addLine: <T>(cartInput: CartActionInput) => {

@@ -7,7 +7,7 @@ export async function action({request, context}: ActionArgs) {
   const {cart, session} = context;
   const [formData, storedCartId] = await Promise.all([
     request.formData(),
-    session.get('cartId'),
+    cart.id(),
   ]);
 
   const action = formData.get('action');

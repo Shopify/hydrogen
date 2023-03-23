@@ -64,7 +64,9 @@ export default {
       //     },
       //   }),
       // );
-      const cart = myCartQueries(storefront);
+      const cart = myCartQueries(storefront, {
+        getStoredCartId: () => session.get('cartId'),
+      });
 
       /**
        * Create a Remix request handler and pass
@@ -123,7 +125,7 @@ class HydrogenSession {
     return new HydrogenSession(storage, session);
   }
 
-  get(key: string) {
+  get<T>(key: string): T {
     return this.session.get(key);
   }
 

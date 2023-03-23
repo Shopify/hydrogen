@@ -10,16 +10,20 @@ import type {
   CartBuyerIdentityInput,
 } from '@shopify/hydrogen/storefront-api-types';
 
-export function myCartQueries(storefront: Storefront) {
+export function myCartQueries(
+  storefront: Storefront,
+  {getStoredCartId}: {getStoredCartId: () => string},
+) {
   const myCartLogics = CartLogic({
+    id: getStoredCartId,
     get: async (cartInput: CartActionInput) => {
-      if (!cartInput?.cartId) {
+      if (!cartInput?.cartId && !getStoredCartId()) {
         return null;
       }
 
       const {cart} = await storefront.query<{cart: Cart}>(CART_QUERY, {
         variables: {
-          id: cartInput.cartId,
+          id: cartInput.cartId || getStoredCartId(),
         },
         cache: storefront.CacheNone(),
       });
@@ -51,7 +55,7 @@ export function myCartQueries(storefront: Storefront) {
         errors: UserError[];
       }>(CART_ADD_QUERY, {
         variables: {
-          cartId: cartInput.cartId,
+          cartId: cartInput.cartId || getStoredCartId(),
           lines: cartInput.lines,
         },
       });
@@ -69,7 +73,7 @@ export function myCartQueries(storefront: Storefront) {
         errors: UserError[];
       }>(CART_UPDATE_QUERY, {
         variables: {
-          cartId: cartInput.cartId,
+          cartId: cartInput.cartId || getStoredCartId(),
           lines: cartInput.lines,
         },
       });
@@ -87,7 +91,7 @@ export function myCartQueries(storefront: Storefront) {
         errors: UserError[];
       }>(CART_REMOVE_QUERY, {
         variables: {
-          cartId: cartInput.cartId,
+          cartId: cartInput.cartId || getStoredCartId(),
           lineIds: cartInput.lineIds,
         },
       });
@@ -104,7 +108,7 @@ export function myCartQueries(storefront: Storefront) {
         errors: UserError[];
       }>(CART_APPLY_DISCOUNT, {
         variables: {
-          cartId: cartInput.cartId,
+          cartId: cartInput.cartId || getStoredCartId(),
           discountCodes: cartInput.discountCodes,
         },
       });
