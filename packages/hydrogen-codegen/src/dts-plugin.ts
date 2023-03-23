@@ -26,7 +26,7 @@ declare module '@shopify/hydrogen' {
   interface MutationTypes extends GeneratedMutationTypes {}
 }`);
 
-  return code.join('');
+  return code.join('') + '\n';
 };
 
 const isMutationRE = /(^|}\s|\n\s*)mutation[\s({]/im;
@@ -58,11 +58,11 @@ const normalizeOperation = (
 };
 
 const buildTypeLines = (name: string, operations: Map<string, string[]>) => {
-  const lines = [`export interface Generated${name} {\n`];
+  const lines = [`interface Generated${name} {\n`];
 
   for (const [originalString, typeNames] of operations) {
     lines.push(
-      `    ${JSON.stringify(originalString)}: {return: ${
+      `  ${JSON.stringify(originalString)}: {return: ${
         // SFAPI does not support multiple operations in a single document.
         // Use 'never' here if that's the case so that the user gets a type error.
         // e.g. `'query q1 {...} query q2 {...}'` is invalid.
@@ -108,6 +108,7 @@ function getDocumentRegistryChunk(
 
   return [
     ...buildTypeLines('QueryTypes', queries),
+    '\n',
     ...buildTypeLines('MutationTypes', mutations),
   ];
 }
