@@ -1,5 +1,5 @@
 import {useMemo} from 'react';
-import {useMatches, useFetcher} from '@remix-run/react';
+import {useMatches, useFetcher, useFetchers} from '@remix-run/react';
 
 import type {
   Cart as CartType,
@@ -21,4 +21,17 @@ export function useCart(): CartType | undefined {
   const data = useMatchesData('root');
 
   return data?.cart;
+}
+
+export function useFormFetcher(id: string) {
+  const fetchers = useFetchers();
+  const data: Record<string, unknown> = {};
+
+  for (const fetcher of fetchers) {
+    const formData = fetcher.submission?.formData;
+    if (formData && formData.get('form-id') === id) {
+      return fetcher;
+    }
+  }
+  return null;
 }

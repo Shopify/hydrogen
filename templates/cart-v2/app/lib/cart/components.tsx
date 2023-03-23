@@ -2,7 +2,11 @@ import {
   CartLineInput,
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
-import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
+import {
+  type FetcherWithComponents,
+  useFetcher,
+  useFetchers,
+} from '@remix-run/react';
 import {CartAction} from './types';
 
 type CartActionProps<T> = T extends 'LINES_ADD'

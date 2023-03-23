@@ -3,10 +3,12 @@ import {useLoaderData} from '@remix-run/react';
 import type {
   ProductVariant,
   Product as ProductType,
+  CartLineInput,
 } from '@shopify/hydrogen/storefront-api-types';
-import {Money} from '@shopify/hydrogen';
+import {flattenConnection, Money} from '@shopify/hydrogen';
 import {CartAction} from '~/lib/cart/components';
 import {CartCount} from '~/components';
+import {useCart, useFormFetcher} from '~/lib/cart/hooks';
 
 export async function loader({params, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -39,6 +41,33 @@ export default function Product() {
   const firstVariant = product.variants.nodes[0];
   const selectedVariant = product.selectedVariant ?? firstVariant;
 
+  const cart = useCart();
+  const flattenedLines = cart ? flattenConnection(cart.lines) : undefined;
+
+  // find the line in the cart that matches the selected variant
+  const selectedLine = flattenedLines?.find(
+    (line) => line.merchandise.id === selectedVariant.id,
+  );
+
+  const currentQuantity = selectedLine?.quantity ?? 0;
+
+  const fetcher = useFormFetcher('123');
+
+  const input = fetcher?.submission?.formData.get('lines')?.toString();
+  const parsedInput = input
+    ? (JSON.parse(input) as CartLineInput[])
+    : undefined;
+
+  const selectedVariantFound = parsedInput?.find(
+    (line) => line.merchandiseId === selectedVariant.id,
+  );
+
+  const futureAddQuantity = selectedVariantFound?.quantity;
+
+  const quantity = futureAddQuantity
+    ? currentQuantity + futureAddQuantity
+    : currentQuantity;
+
   const lines = [
     {
       merchandiseId: selectedVariant.id,
@@ -60,6 +89,7 @@ export default function Product() {
           </div>
 
           <div className="Product__Cart">
+            <div>You have {quantity} of this product in your cart</div>
             <div className="Price Heading--2">
               <Money
                 data={{
@@ -70,7 +100,14 @@ export default function Product() {
             </div>
 
             <CartAction action="LINES_ADD" inputs={lines}>
-              {() => <button>Add to cart</button>}
+              {() => {
+                return (
+                  <>
+                    <input type="hidden" name="form-id" value={'123'} />
+                    <button>Add to cart</button>
+                  </>
+                );
+              }}
             </CartAction>
           </div>
         </div>
