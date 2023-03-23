@@ -2,7 +2,9 @@ import type {Types} from '@graphql-codegen/plugin-helpers';
 import * as addPlugin from '@graphql-codegen/add';
 import * as typescriptOperationPlugin from '@graphql-codegen/typescript-operations';
 import {processSources} from './process-sources';
-import * as dtsPlugin from './dts-plugin';
+import {plugin as hydrogenPlugin} from './dts-plugin';
+
+export {plugin} from './dts-plugin';
 
 export type GqlTagConfig = {};
 
@@ -12,10 +14,22 @@ export const schema = require.resolve(
   '@shopify/hydrogen-react/storefront.schema.json',
 );
 
+const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
 export const preset: Types.OutputPreset<GqlTagConfig> = {
   buildGeneratesSection: (options) => {
-    const capitalize = (str: string) =>
-      str.charAt(0).toUpperCase() + str.slice(1);
+    if (!options.baseOutputDir.endsWith('.d.ts')) {
+      throw new Error('[hydrogen-preset] target output should be a .d.ts file');
+    }
+
+    if (
+      options.plugins?.length > 0 &&
+      Object.keys(options.plugins).some((p) => p.startsWith('typescript'))
+    ) {
+      throw new Error(
+        '[hydrogen-preset] providing additional typescript-based `plugins` leads to duplicated generated types',
+      );
+    }
 
     const sourcesWithOperations = processSources(options.documents, (node) => {
       if (node.kind === 'FragmentDefinition') {
@@ -34,7 +48,7 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
       ...options.pluginMap,
       [`add`]: addPlugin,
       [`typescript-operations`]: typescriptOperationPlugin,
-      [`gen-dts`]: dtsPlugin,
+      [`gen-dts`]: {plugin: hydrogenPlugin},
     };
 
     const namespacedImportName = 'HydrogenStorefront';
