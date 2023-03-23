@@ -99,7 +99,7 @@ type StorefrontMutateSecondParam<
   : StorefrontCommonOptions<GenericVariables>;
 
 export type Storefront<TI18n extends I18nBase = I18nBase> = {
-  query: <OverrideReturnType, RawGqlString extends string = string>(
+  query: <OverrideReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
     ...options: RawGqlString extends keyof QueryTypes // Do we have any generated query types?
       ? IsOptionalVariables<QueryTypes[RawGqlString]> extends true
@@ -112,7 +112,7 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
       : OverrideReturnType // No codegen, let user specify return type
   >;
 
-  mutate: <OverrideReturnType, RawGqlString extends string = string>(
+  mutate: <OverrideReturnType = any, RawGqlString extends string = string>(
     mutation: RawGqlString,
     ...options: RawGqlString extends keyof MutationTypes // Do we have any generated mutation types?
       ? IsOptionalVariables<MutationTypes[RawGqlString]> extends true
