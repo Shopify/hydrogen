@@ -9,6 +9,7 @@ import {CartAction} from '~/lib/cart/components';
 import {CartCount} from '~/components';
 import {useMatchesData} from '~/lib/cart/hooks';
 import {QuantityControls} from '~/components/Cart';
+import {AddToCartForm} from '~/components/AddToCartForm';
 
 export async function loader({params, context}: LoaderArgs) {
   const {productHandle} = params;
@@ -41,17 +42,7 @@ export default function Product() {
   const firstVariant = product.variants.nodes[0];
   const selectedVariant = product.selectedVariant ?? firstVariant;
 
-  const data = useMatchesData('root');
-  const variantInCart = data?.cartLines[selectedVariant.id];
-
-  const cartInput = {
-    lines: [
-      {
-        merchandiseId: selectedVariant.id,
-        quantity: 1,
-      },
-    ],
-  };
+  console.log(product);
 
   return (
     <section className="Product Global__Section">
@@ -76,21 +67,7 @@ export default function Product() {
               />
             </div>
 
-            {!!variantInCart && (
-              <>
-                You have {variantInCart.quantity} quantities of this item in
-                cart
-                <QuantityControls
-                  quantity={variantInCart.quantity}
-                  line={variantInCart}
-                />
-              </>
-            )}
-            {!variantInCart && (
-              <CartAction action="LINES_ADD" cartInput={cartInput}>
-                {() => <button>Add to cart</button>}
-              </CartAction>
-            )}
+            <AddToCartForm selectedVariant={selectedVariant} />
           </div>
         </div>
       </div>

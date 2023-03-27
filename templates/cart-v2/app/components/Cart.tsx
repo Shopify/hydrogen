@@ -17,8 +17,9 @@ interface CartProps {
 
 export function Cart({theme}: CartProps) {
   const cart = useCart();
+  const optimisticData = useOptimisticDataFromActions('optimistic-add-to-cart');
 
-  if (!cart) return <CartEmpty />;
+  if (!cart || !optimisticData) return <CartEmpty />;
 
   const flattenedLines = flattenConnection(cart.lines);
 
@@ -27,6 +28,9 @@ export function Cart({theme}: CartProps) {
   return (
     <div className="Cart">
       <h1>Cart</h1>
+      {optimisticData.map((line) => (
+        <CartItem theme={theme || 'light'} key={line.id} item={line} />
+      ))}
       {flattenedLines.map((line) => (
         <CartItem theme={theme || 'light'} key={line.id} item={line} />
       ))}
@@ -50,7 +54,8 @@ interface CartItemProps {
   item: CartLine;
 }
 
-function CartItem({item, theme}: CartItemProps) {
+function CartItem({item}: CartItemProps) {
+  const optimisticData = useOptimisticDataFromActions(item.merchandise.id);
   if (!item?.id) return null;
 
   const {id, quantity, merchandise} = item;
@@ -67,7 +72,7 @@ function CartItem({item, theme}: CartItemProps) {
   return (
     <div
       style={{
-        display: 'flex',
+        display: optimisticData?.type === 'remove' ? 'none' : 'flex',
         padding: 20,
         width: '100%',
         maxWidth: 800,
@@ -95,7 +100,23 @@ function CartItem({item, theme}: CartItemProps) {
             quantity={quantity}
           />
           <CartAction cartInput={{lineIds: [id]}} action="LINES_REMOVE">
-            {() => <button aria-label="Remove from cart">remove</button>}
+            {() => (
+              <>
+                <input
+                  type="hidden"
+                  name="optimistic-identifier"
+                  value={merchandise.id || ''}
+                />
+                <input
+                  type="hidden"
+                  name="optimistic-data"
+                  value={JSON.stringify({
+                    type: 'remove',
+                  })}
+                />
+                <button aria-label="Remove from cart">remove</button>
+              </>
+            )}
           </CartAction>
         </div>
         <div
