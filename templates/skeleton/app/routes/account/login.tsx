@@ -14,6 +14,8 @@ export async function loader({context, params}: LoaderArgs) {
   if (customerAccessToken) {
     return redirect(params.lang ? `${params.lang}/account` : '/account');
   }
+
+  return new Response(null);
 }
 
 type ActionData = {
