@@ -2,4 +2,4 @@
 '@shopify/hydrogen-react': patch
 ---
 
-Fix Gid parsing
+Fix `parseGid()` to return a query string if it was a part of the original GID.
