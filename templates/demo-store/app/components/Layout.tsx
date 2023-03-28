@@ -162,6 +162,19 @@ function MenuMobileNav({
           </Link>
         </span>
       ))}
+      <span className="block">
+        <Link
+          to="/login"
+          onClick={onClose}
+          className={({isActive}) =>
+            isActive ? 'pb-1 border-b -mb-px' : 'pb-1'
+          }
+        >
+          <Text as="span" size="copy">
+            Identity
+          </Text>
+        </Link>
+      </span>
     </nav>
   );
 }
@@ -282,6 +295,14 @@ function DesktopHeader({
               {item.title}
             </Link>
           ))}
+          <Link
+            to="/login"
+            className={({isActive}) =>
+              isActive ? 'pb-1 border-b -mb-px' : 'pb-1'
+            }
+          >
+            Identity
+          </Link>
         </nav>
       </div>
       <div className="flex items-center gap-1">
