@@ -37,7 +37,8 @@
       "dependsOn": [
         "@shopify/hydrogen#build",
         "@shopify/cli-hydrogen#build",
-        "@shopify/remix-oxygen#build"
+        "@shopify/remix-oxygen#build",
+        "eslint-plugin-hydrogen"
       ],
       "outputs": ["dist/**"]
     },
@@ -45,7 +46,8 @@
       "dependsOn": [
         "@shopify/hydrogen#build",
         "@shopify/cli-hydrogen#build",
-        "@shopify/remix-oxygen#build"
+        "@shopify/remix-oxygen#build",
+        "eslint-plugin-hydrogen"
       ],
       "outputs": ["dist/**"]
     },
@@ -53,7 +55,8 @@
       "dependsOn": [
         "@shopify/hydrogen#build",
         "@shopify/cli-hydrogen#build",
-        "@shopify/remix-oxygen#build"
+        "@shopify/remix-oxygen#build",
+        "eslint-plugin-hydrogen"
       ],
       "outputs": ["dist/**"]
     }

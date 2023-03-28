@@ -30,28 +30,24 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Shopify/hydrogen-v1.git",
+    "url": "git+https://github.com/Shopify/hydrogen.git",
     "directory": "packages/eslint-plugin"
   },
   "dependencies": {
-    "@typescript-eslint/eslint-plugin": "^5.26.0",
-    "@typescript-eslint/experimental-utils": "^5.26.0",
-    "@typescript-eslint/parser": "^5.26.0",
-    "@typescript-eslint/types": "^5.20.0",
+    "@typescript-eslint/eslint-plugin": "^5.57.0",
+    "@typescript-eslint/experimental-utils": "^5.57.0",
+    "@typescript-eslint/parser": "^5.57.0",
+    "@typescript-eslint/types": "^5.57.0",
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-eslint-comments": "^3.2.0",
-    "eslint-plugin-jest": "^26.2.2",
-    "eslint-plugin-jsx-a11y": "^6.5.1",
     "eslint-plugin-prettier": "^4.0.0",
     "eslint-plugin-react": "^7.30.0",
     "eslint-plugin-react-hooks": "^4.5.0",
-    "prettier": "^2.6.2"
+    "prettier": "^2.8.7"
   },
   "devDependencies": {
     "@types/dedent": "^0.7.0",
-    "@types/jest": "^27.5.1",
-    "dedent": "^0.7.0",
-    "jest": "^27.0.0"
+    "dedent": "^0.7.0"
   },
   "peerDependencies": {
     "eslint": ">=8.0.0"

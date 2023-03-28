@@ -23,6 +23,7 @@
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache"
   },
   "workspaces": [
+    "packages/eslint-plugin",
     "templates/hello-world",
     "templates/demo-store",
     "templates/skeleton",
