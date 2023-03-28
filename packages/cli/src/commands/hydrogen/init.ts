@@ -228,14 +228,20 @@ export async function runInit(
   renderSuccess({
     headline: `${projectName} is ready to build.`,
     nextSteps: [
-      `Run \`cd ${location}\`${
-        depsInstalled ? '' : `, \`${packageManager} install\`,`
-      } and \`${
-        packageManager + (packageManager === 'npm' ? ' run' : '')
-      } dev\` to start your local development server and start building.`,
-    ],
+      output.content`Run ${output.token.genericShellCommand(`cd ${location}`)}`
+        .value,
+      depsInstalled
+        ? undefined
+        : output.content`Run ${output.token.genericShellCommand(
+            `${packageManager} install`,
+          )} to install the dependencies`.value,
+      output.content`Run ${output.token.packagejsonScript(
+        packageManager,
+        'dev',
+      )} to start your local development server and start building`.value,
+    ].filter((step): step is string => Boolean(step)),
     reference: [
-      'Building with Hydrogen: https://shopify.dev/custom-storefronts/hydrogen',
+      'Building with Hydrogen: https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development',
     ],
   });
 
