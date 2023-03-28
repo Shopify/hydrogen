@@ -24,7 +24,7 @@ describe('analytic-utils', () => {
 
     it('returns the id and resource type from a gid with a query string', () => {
       const {id, resource} = parseGid('gid://shopify/Order/123?namespace=123');
-      expect(id).toBe('123');
+      expect(id).toBe('123?namespace=123');
       expect(resource).toBe('Order');
     });
 
@@ -32,7 +32,7 @@ describe('analytic-utils', () => {
       const {id, resource} = parseGid(
         'gid://shopify/Order/123?namespace=123#fragment',
       );
-      expect(id).toBe('123');
+      expect(id).toBe('123?namespace=123#fragment');
       expect(resource).toBe('Order');
     });
 
@@ -40,6 +40,14 @@ describe('analytic-utils', () => {
       const {id, resource} = parseGid('gid://shopify//123');
       expect(id).toBe('');
       expect(resource).toBe(null);
+    });
+
+    it('returns the c1 cart token', () => {
+      const {id, resource} = parseGid(
+        'gid://shopify/Cart/c1-3d2419bf79df5e91d37b449cc6cd0ba1?test=123',
+      );
+      expect(id).toBe('c1-3d2419bf79df5e91d37b449cc6cd0ba1?test=123');
+      expect(resource).toBe('Cart');
     });
   });
 

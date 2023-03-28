@@ -46,7 +46,7 @@ export function parseGid(gid: string | undefined): ShopifyGId {
 
   // TODO: add support for parsing query parameters on complex gids
   // Reference: https://shopify.dev/api/usage/gids
-  const matches = gid.match(/^gid:\/\/shopify\/(\w+)\/([a-z0-9]+)/);
+  const matches = gid.match(/^gid:\/\/shopify\/(\w+)\/([^/]+)/);
 
   if (!matches || matches.length === 1) {
     return defaultReturn;
