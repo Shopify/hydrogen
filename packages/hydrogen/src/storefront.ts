@@ -9,13 +9,7 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
-import {
-  fetchWithServerCache,
-  runWithCache,
-  checkGraphQLErrors,
-  type CacheKey,
-  type WithCacheOptions,
-} from './cache/fetch';
+import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
 import {
   STOREFRONT_API_BUYER_IP_HEADER,
   STOREFRONT_REQUEST_GROUP_ID_HEADER,
@@ -46,7 +40,6 @@ export type I18nBase = {
 
 export type StorefrontClient<TI18n extends I18nBase> = {
   storefront: Storefront<TI18n>;
-  withCache_unstable: WithCache;
 };
 
 export type Storefront<TI18n extends I18nBase = I18nBase> = {
@@ -81,12 +74,6 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   isApiError: (error: any) => boolean;
   i18n: TI18n;
 };
-
-export type WithCache = <T = unknown>(
-  cacheKey: CacheKey,
-  actionFn: () => T | Promise<T>,
-  options?: Pick<WithCacheOptions<T>, 'strategy' | 'shouldCacheResult'>,
-) => Promise<T>;
 
 export type CreateStorefrontClientOptions<TI18n extends I18nBase> = Parameters<
   typeof createStorefrontUtilities
@@ -347,28 +334,6 @@ export function createStorefrontClient<TI18n extends I18nBase>({
       isApiError: isStorefrontApiError,
       i18n: (i18n ?? defaultI18n) as TI18n,
     },
-    /**
-     * Executes an asynchronous operation like `fetch` and caches the result
-     * according to the strategy provided. Use this to call any third-party APIs
-     * from loaders or actions. By default, it uses the `CacheShort` strategy.
-     *
-     * Example:
-     *
-     * ```js
-     * async function loader ({context: {storefront}}) {
-     *   const data = await storefront.withCache_unstable('my-unique-key', () => {
-     *     return fetch('https://example.com/api').then(res => res.json());
-     *   }, {
-     *     strategy: storefront.CacheLong(),
-     *   });
-     * ```
-     */
-    withCache_unstable: (cacheKey, actionFn, options) =>
-      runWithCache(cacheKey, actionFn, {
-        ...options,
-        cacheInstance: cache,
-        waitUntil,
-      }),
   };
 }
 
