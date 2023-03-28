@@ -245,10 +245,12 @@ export async function runInit(
     ],
   });
 
-  renderInfo({
-    headline: `Your project will display inventory from the Hydrogen Demo Store.`,
-    body: `To connect this project to your Shopify store’s inventory, update \`${projectName}/.env\` with your store ID and Storefront API key.`,
-  });
+  if (appTemplate === 'demo-store') {
+    renderInfo({
+      headline: `Your project will display inventory from the Hydrogen Demo Store.`,
+      body: `To connect this project to your Shopify store’s inventory, update \`${projectName}/.env\` with your store ID and Storefront API key.`,
+    });
+  }
 }
 
 async function projectExists(projectDir: string) {
