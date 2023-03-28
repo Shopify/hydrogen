@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
 import {runInit} from './init.js';
-import {ui} from '@shopify/cli-kit';
+import {ui, output} from '@shopify/cli-kit';
 import {installNodeModules} from '@shopify/cli-kit/node/node-package-manager';
 
 describe('init', () => {
@@ -16,6 +16,9 @@ describe('init', () => {
     vi.mocked(ui.prompt).mockImplementation(() =>
       Promise.resolve({installDeps: 'false'}),
     );
+    vi.mocked(output.content).mockImplementation(() => ({
+      value: '',
+    }));
   });
 
   const defaultOptions = (stubs: Record<any, unknown>) => ({
