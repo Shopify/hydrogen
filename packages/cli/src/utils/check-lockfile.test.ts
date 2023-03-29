@@ -5,21 +5,11 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {checkIfIgnoredInGitRepository} from '@shopify/cli-kit/node/git';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 
-vi.mock('@shopify/cli-kit', async () => {
-  const cliKit: any = await vi.importActual('@shopify/cli-kit');
-
-  return {
-    ...cliKit,
-    git: {
-      factory: vi.fn(),
-    },
-  };
-});
-
 describe('checkLockfileStatus()', () => {
   const checkIgnoreMock = vi.fn();
 
   beforeEach(() => {
+    vi.mock('@shopify/cli-kit/node/git');
     vi.mocked(checkIfIgnoredInGitRepository).mockImplementation(
       checkIgnoreMock,
     );

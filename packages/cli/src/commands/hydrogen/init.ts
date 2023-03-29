@@ -4,10 +4,12 @@ import {
   packageManagerUsedForCreating,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {
-  ui,
   renderFatalError,
   renderSuccess,
   renderInfo,
+  renderSelectPrompt,
+  renderTextPrompt,
+  renderConfirmationPrompt,
 } from '@shopify/cli-kit/node/ui';
 import {Flags} from '@oclif/core';
 import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
@@ -108,67 +110,47 @@ export async function runInit(
     process.exit(1);
   });
 
-  const prompts: Writable<Parameters<typeof ui.prompt>[0]> = [];
-
-  if (!options.template) {
-    prompts.push({
-      type: 'select',
-      name: 'template',
+  const appTemplate =
+    options.template ??
+    (await renderSelectPrompt({
       message: 'Choose a template',
+      defaultValue: 'hello-world',
       choices: STARTER_TEMPLATES.map((value) => ({
-        name: value.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+        label: value
+          .replace(/-/g, ' ')
+          .replace(/\b\w/g, (l) => l.toUpperCase()),
         value,
       })),
-    });
-  }
+    }));
 
-  if (!options.language) {
-    prompts.push({
-      type: 'select',
-      name: 'language',
+  const language =
+    options.language ??
+    (await renderSelectPrompt({
       message: 'Choose a language',
       choices: [
-        {name: 'JavaScript', value: 'js'},
-        {name: 'TypeScript', value: 'ts'},
+        {label: 'JavaScript', value: 'js'},
+        {label: 'TypeScript', value: 'ts'},
       ],
-      default: 'js',
-    });
-  }
+      defaultValue: 'js',
+    }));
 
-  if (!options.path) {
-    prompts.push({
-      type: 'input',
-      name: 'path',
+  const location =
+    options.path ??
+    (await renderTextPrompt({
       message: 'Where would you like to create your app?',
-      default: 'hydrogen-storefront',
-    });
-  }
-
-  const {
-    path: location = options.path!,
-    template: appTemplate = options.template!,
-    language = options.language ?? 'js',
-  } = prompts.length > 0 ? await ui.prompt(prompts) : options;
+      defaultValue: 'hydrogen-storefront',
+    }));
 
   const projectName = basename(location);
   const projectDir = resolvePath(process.cwd(), location);
 
   if (await projectExists(projectDir)) {
     if (!options.force) {
-      const {deleteFiles} = await ui.prompt([
-        {
-          type: 'select',
-          name: 'deleteFiles',
-          message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
-          choices: [
-            {name: 'Yes, delete the files', value: 'true'},
-            {name: 'No, do not delete the files', value: 'false'},
-          ],
-          default: 'false',
-        },
-      ]);
+      const deleteFiles = await renderConfirmationPrompt({
+        message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
+      });
 
-      if (deleteFiles === 'false') {
+      if (!deleteFiles) {
         renderInfo({
           headline: `Destination path ${location} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to override it.`,
         });
@@ -207,20 +189,9 @@ export async function runInit(
   if (packageManager !== 'unknown') {
     const installDeps =
       options.installDeps ??
-      (
-        await ui.prompt([
-          {
-            type: 'select',
-            name: 'installDeps',
-            message: `Install dependencies with ${packageManager}?`,
-            choices: [
-              {name: 'Yes', value: 'true'},
-              {name: 'No', value: 'false'},
-            ],
-            default: 'true',
-          },
-        ])
-      ).installDeps === 'true';
+      (await renderConfirmationPrompt({
+        message: `Install dependencies with ${packageManager}?`,
+      }));
 
     if (installDeps) {
       await installNodeModules({

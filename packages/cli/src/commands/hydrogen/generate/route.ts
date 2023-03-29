@@ -1,6 +1,5 @@
 import {fileURLToPath} from 'url';
 import Command from '@shopify/cli-kit/node/base-command';
-import {ui} from '@shopify/cli-kit';
 import {fileExists, readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
 import {
   joinPath,
@@ -10,7 +9,10 @@ import {
   relativizePath,
 } from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {
+  renderSuccess,
+  renderConfirmationPrompt,
+} from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../../utils/flags.js';
 import {Flags, Args} from '@oclif/core';
 import {
@@ -165,23 +167,18 @@ export async function runGenerate(
   const relativeDestinationPath = relativePath(directory, destinationPath);
 
   if (!force && (await fileExists(destinationPath))) {
-    const options = [
-      {name: 'No', value: 'skip'},
-      {name: `Yes`, value: 'overwrite'},
-    ];
+    // const options = [
+    //   {name: 'No', value: 'skip'},
+    //   {name: `Yes`, value: 'overwrite'},
+    // ];
 
-    const choice = await ui.prompt([
-      {
-        type: 'select',
-        name: 'value',
-        message: `The file ${relativizePath(
-          relativeDestinationPath,
-        )} already exists. Do you want to overwrite it?`,
-        choices: options,
-      },
-    ]);
+    const shouldOverwrite = await renderConfirmationPrompt({
+      message: `The file ${relativizePath(
+        relativeDestinationPath,
+      )} already exists. Do you want to overwrite it?`,
+    });
 
-    operation = choice.value === 'skip' ? 'skipped' : 'overwritten';
+    operation = shouldOverwrite ? 'overwritten' : 'skipped';
 
     if (operation === 'skipped') {
       return {operation};

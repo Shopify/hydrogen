@@ -1,7 +1,11 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
 import {runInit} from './init.js';
-import {ui} from '@shopify/cli-kit/node/ui';
+import {
+  renderConfirmationPrompt,
+  renderSelectPrompt,
+  renderTextPrompt,
+} from '@shopify/cli-kit/node/ui';
 import {outputContent} from '@shopify/cli-kit/node/output';
 import {installNodeModules} from '@shopify/cli-kit/node/node-package-manager';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
@@ -15,13 +19,11 @@ describe('init', () => {
       getLatestTemplates: () => Promise.resolve({}),
     }));
     vi.mock('@shopify/cli-kit/node/node-package-manager');
-    vi.mocked(ui.prompt).mockImplementation(() =>
-      Promise.resolve({installDeps: 'false'}),
-    );
     vi.mocked(outputContent).mockImplementation(() => ({
       value: '',
     }));
     vi.mock('@shopify/cli-kit/node/ui');
+    vi.mock('@shopify/cli-kit/node/fs');
   });
 
   const defaultOptions = (stubs: Record<any, unknown>) => ({
@@ -32,11 +34,27 @@ describe('init', () => {
   });
 
   describe.each([
-    {flag: 'template', value: 'hello-world'},
-    {flag: 'installDeps', value: true},
-    {flag: 'language', value: 'ts'},
-    {flag: 'path', value: './my-app'},
-  ])('flag $flag', ({flag, value}) => {
+    {
+      flag: 'template',
+      value: 'hello-world',
+      condition: {fn: renderSelectPrompt, match: /template/i},
+    },
+    {
+      flag: 'installDeps',
+      value: true,
+      condition: {fn: renderConfirmationPrompt, match: /install dependencies/i},
+    },
+    {
+      flag: 'language',
+      value: 'ts',
+      condition: {fn: renderSelectPrompt, match: /language/i},
+    },
+    {
+      flag: 'path',
+      value: './my-app',
+      condition: {fn: renderTextPrompt, match: /where/i},
+    },
+  ])('flag $flag', ({flag, value, condition}) => {
     it(`does not prompt the user for ${flag} when a value is passed in options`, async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         // Given
@@ -49,12 +67,10 @@ describe('init', () => {
         await runInit(options);
 
         // Then
-        expect(ui.prompt).not.toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({
-              name: flag,
-            }),
-          ]),
+        expect(condition.fn).not.toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.stringMatching(condition.match),
+          }),
         );
       });
     });
@@ -71,12 +87,10 @@ describe('init', () => {
         await runInit(options);
 
         // Then
-        expect(ui.prompt).toHaveBeenCalledWith(
-          expect.arrayContaining([
-            expect.objectContaining({
-              name: flag,
-            }),
-          ]),
+        expect(condition.fn).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.stringMatching(condition.match),
+          }),
         );
       });
     });
