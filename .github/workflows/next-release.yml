@@ -10,7 +10,8 @@ jobs:
   next-release:
     name: ⏭️ Next Release
     runs-on: ubuntu-latest
-    if: github.repository_owner == 'shopify'
+    # don't run if a commit message with [ci] release is present. The release workflow will do the release
+    if: github.repository_owner == 'shopify' && !contains(github.event.commits.*.message, '[ci] release')
     outputs:
       NEXT_VERSION: ${{ steps.version.outputs.NEXT_VERSION }}
     steps:

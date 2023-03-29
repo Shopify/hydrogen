@@ -53,6 +53,7 @@ jobs:
         with:
           version: npm run version
           publish: npm run changeset publish
+          # we use the commit message in next release workflow file. This avoid a next release when an actual release is happening
           commit: '[ci] release ${{ github.ref_name }}'
           title: '[ci] release ${{ github.ref_name }}'
         env:
