@@ -125,7 +125,15 @@ export function ErrorBoundary({error}: {error: Error}) {
           key={`${locale.language}-${locale.country}`}
         >
           {isRouteError ? (
-            <NotFound type={pageType} />
+            <>
+              {routeError.status === 404 ? (
+                <NotFound type={pageType} />
+              ) : (
+                <GenericError
+                  error={{message: `${routeError.status} ${routeError.data}`}}
+                />
+              )}
+            </>
           ) : (
             <GenericError error={error instanceof Error ? error : undefined} />
           )}
