@@ -6,6 +6,7 @@ import {
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {
+  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
@@ -97,25 +98,24 @@ export default function App() {
   );
 }
 
-// Can't find this type exported anywhere
-type ErrorResponse = {
-  status: number;
-  statusText: string;
-  internal: boolean;
-  data: string;
-};
-
 export function ErrorBoundary({error}: {error: Error}) {
   const [root] = useMatches();
   const locale = root?.data?.selectedLocale ?? DEFAULT_LOCALE;
+  const routeError = useRouteError();
+  const isRouteError = isRouteErrorResponse(routeError);
 
-  const routeError = useRouteError() as ErrorResponse;
-  const isNotFound = routeError ? routeError.status === 404 : false;
+  let title = 'Error';
+  let pageType = 'page';
+
+  if (isRouteError) {
+    title = 'Not found';
+    if (routeError.status === 404) pageType = routeError.data || pageType;
+  }
 
   return (
     <html lang={locale.language}>
       <head>
-        <title>{isNotFound ? 'Not found' : 'Error'}</title>
+        <title>{title}</title>
         <Meta />
         <Links />
       </head>
@@ -124,10 +124,10 @@ export function ErrorBoundary({error}: {error: Error}) {
           layout={root?.data?.layout}
           key={`${locale.language}-${locale.country}`}
         >
-          {isNotFound ? (
-            <NotFound type={routeError?.data || 'page'} />
+          {isRouteError ? (
+            <NotFound type={pageType} />
           ) : (
-            <GenericError error={error} />
+            <GenericError error={error instanceof Error ? error : undefined} />
           )}
         </Layout>
         <Scripts />
