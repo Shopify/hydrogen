@@ -1,6 +1,6 @@
-// TODO: implement this or import it from cli-kit
-const fakeColor = (s: string) => s;
+import ansiColors from 'ansi-colors';
+
 export const colors = {
-  dim: fakeColor,
-  bold: fakeColor,
+  dim: ansiColors.dim,
+  bold: ansiColors.bold,
 };
