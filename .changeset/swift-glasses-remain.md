@@ -2,13 +2,39 @@
 '@shopify/hydrogen': patch
 ---
 
-Add an experimental `withCache_unstable` utility similar to `useQuery` from Hydrogen v1. To setup the utility, update your `server.ts`:
+Add an experimental `createWithCache_unstable` utility, which creates a function similar to `useQuery` from Hydrogen v1. Use this utility to query third-party APIs and apply custom cache options.
 
-```diff
-- const {storefront} = createStorefrontClient({
-+ const {storefront, withCache_unstable} = createStorefrontClient({
-    ...
-  });
+To setup the utility, update your `server.ts`:
+
+```js
+import {
+  createStorefrontClient,
+  createWithCache_unstable,
+  CacheLong,
+} from '@shopify/hydrogen';
+
+// ...
+
+  const cache = await caches.open('hydrogen');
+  const withCache = createWithCache_unstable({cache, waitUntil});
+
+  // Create custom utilities to query third-party APIs:
+  const fetchMyCMS = (query) => {
+    // Prefix the cache key and make it unique based on arguments.
+    return withCache(['my-cms', query], CacheLong(), () => {
+      const cmsData = await (await fetch('my-cms.com/api', {
+        method: 'POST',
+        body: query
+      })).json();
+
+      const nextPage = (await fetch('my-cms.com/api', {
+        method: 'POST',
+        body: cmsData1.nextPageQuery,
+      })).json();
+
+      return {...cmsData, nextPage}
+    });
+  };
 
   const handleRequest = createRequestHandler({
     build: remixBuild,
@@ -18,34 +44,9 @@ Add an experimental `withCache_unstable` utility similar to `useQuery` from Hydr
       waitUntil,
       storefront,
       env,
-+     withCache_unstable,
+      fetchMyCMS,
     }),
   });
 ```
 
-Then use the utility within your loaders:
-
-```ts
-export async function loader({
-  context: {storefront, withCache_unstable},
-}: LoaderArgs) {
-  const data = await withCache_unstable(
-    'test-with-cache',
-    async () => {
-      const result = await fetch('https://www.some.com/api');
-      if (result.ok) {
-        return result.json();
-      } else {
-        throw new Error('Error: ' + result.status);
-      }
-    },
-    {
-      strategy: storefront.CacheLong(),
-    },
-  );
-
-  return json({data});
-}
-```
-
-The utility is unstable and subject to change before stabalizing in the 2023.04 release.
+**Note:** The utility is unstable and subject to change before stabalizing in the 2023.04 release.
