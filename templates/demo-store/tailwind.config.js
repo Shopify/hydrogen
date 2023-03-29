@@ -1,4 +1,6 @@
-/** @type {import('tailwindcss').Config} */
+import formsPlugin from '@tailwindcss/forms';
+import typographyPlugin from '@tailwindcss/typography';
+
 function withOpacityValue(variable) {
   return ({opacityValue}) => {
     if (opacityValue === undefined) {
@@ -8,7 +10,8 @@ function withOpacityValue(variable) {
   };
 }
 
-module.exports = {
+/** @type {import('tailwindcss').Config} */
+export default {
   content: ['./app/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
@@ -66,5 +69,5 @@ module.exports = {
       },
     },
   },
-  plugins: [require('@tailwindcss/forms'), require('@tailwindcss/typography')],
+  plugins: [formsPlugin, typographyPlugin],
 };
