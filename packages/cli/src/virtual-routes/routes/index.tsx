@@ -55,10 +55,6 @@ export async function loader({context}: {context: AppLoadContext}) {
 
 export const HYDROGEN_SHOP_ID = 'gid://shopify/Shop/55145660472';
 
-export function CatchBoundary() {
-  return <ErrorPage />;
-}
-
 export function ErrorBoundary() {
   return <ErrorPage />;
 }

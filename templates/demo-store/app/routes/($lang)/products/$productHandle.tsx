@@ -71,7 +71,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   if (!product?.id) {
-    throw new Response(null, {status: 404});
+    throw new Response('product', {status: 404});
   }
 
   const recommended = getRecommendedProducts(context.storefront, product.id);

@@ -6,6 +6,7 @@ import {
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {
+  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
@@ -14,6 +15,7 @@ import {
   useCatch,
   useLoaderData,
   useMatches,
+  useRouteError,
 } from '@remix-run/react';
 import {ShopifySalesChannel, Seo} from '@shopify/hydrogen';
 import {Layout} from '~/components';
@@ -97,11 +99,20 @@ export default function App() {
   );
 }
 
-export function CatchBoundary() {
+// Can't find this type exported anywhere
+type ErrorResponse = {
+  status: number;
+  statusText: string;
+  internal: boolean;
+  data: string;
+};
+
+export function ErrorBoundary({error}: {error: Error}) {
   const [root] = useMatches();
-  const caught = useCatch();
-  const isNotFound = caught.status === 404;
-  const locale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
+  const locale = root?.data?.selectedLocale ?? DEFAULT_LOCALE;
+
+  const routeError = useRouteError() as ErrorResponse;
+  const isNotFound = routeError ? routeError.status === 404 : false;
 
   return (
     <html lang={locale.language}>
@@ -116,33 +127,10 @@ export function CatchBoundary() {
           key={`${locale.language}-${locale.country}`}
         >
           {isNotFound ? (
-            <NotFound type={caught.data?.pageType} />
+            <NotFound type={routeError?.data || 'page'} />
           ) : (
-            <GenericError
-              error={{message: `${caught.status} ${caught.data}`}}
-            />
+            <GenericError error={error} />
           )}
-        </Layout>
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
-export function ErrorBoundary({error}: {error: Error}) {
-  const [root] = useMatches();
-  const locale = root?.data?.selectedLocale ?? DEFAULT_LOCALE;
-
-  return (
-    <html lang={locale.language}>
-      <head>
-        <title>Error</title>
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <Layout layout={root?.data?.layout}>
-          <GenericError error={error} />
         </Layout>
         <Scripts />
       </body>
