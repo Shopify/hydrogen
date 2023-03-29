@@ -1,22 +1,17 @@
 import type {LoaderArgs} from '@remix-run/server-runtime';
-import type {I18nBase, StorefrontClient} from '../storefront';
+import type {Storefront} from '../storefront';
 
-export function graphiqlLoader(
-  {context} = {} as LoaderArgs & {
-    context: LoaderArgs['context'] & StorefrontClient<I18nBase>;
-  },
-) {
-  if (!context?.storefront) {
+export function graphiqlLoader({context}: LoaderArgs) {
+  const storefront = context?.storefront as Storefront | undefined;
+  if (!storefront) {
     throw new Error(
       `GraphiQL: Hydrogen's storefront client must be injected in the loader context.`,
     );
   }
 
-  const url = context.storefront.getApiUrl();
+  const url = storefront.getApiUrl();
   const accessToken =
-    context.storefront.getPublicTokenHeaders()[
-      'X-Shopify-Storefront-Access-Token'
-    ];
+    storefront.getPublicTokenHeaders()['X-Shopify-Storefront-Access-Token'];
 
   return new Response(
     `
