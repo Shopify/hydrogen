@@ -1,3 +1,4 @@
+import {parseJSON} from '../utils/parse-json';
 import {CacheAPI} from './api';
 import {
   CacheShort,
@@ -48,7 +49,12 @@ export async function getItemFromCache(
     return;
   }
 
-  return [await response.json(), response];
+  const text = await response.text();
+  try {
+    return [parseJSON(text), response];
+  } catch {
+    return [text, response];
+  }
 }
 
 /**
