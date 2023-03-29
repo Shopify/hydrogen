@@ -1,6 +1,6 @@
+import {vi, describe, it, expect} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import {BaseButton} from './BaseButton.js';
-import {vi} from 'vitest';
 import userEvent from '@testing-library/user-event';
 
 describe('<BaseButton/>', () => {

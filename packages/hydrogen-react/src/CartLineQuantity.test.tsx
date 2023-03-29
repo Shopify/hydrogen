@@ -1,3 +1,4 @@
+import {describe, it, expect} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import {CartLineProvider} from './CartLineProvider.js';
 import {CartLineQuantity} from './CartLineQuantity.js';
