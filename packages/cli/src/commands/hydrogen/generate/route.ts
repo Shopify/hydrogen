@@ -167,11 +167,6 @@ export async function runGenerate(
   const relativeDestinationPath = relativePath(directory, destinationPath);
 
   if (!force && (await fileExists(destinationPath))) {
-    // const options = [
-    //   {name: 'No', value: 'skip'},
-    //   {name: `Yes`, value: 'overwrite'},
-    // ];
-
     const shouldOverwrite = await renderConfirmationPrompt({
       message: `The file ${relativizePath(
         relativeDestinationPath,
