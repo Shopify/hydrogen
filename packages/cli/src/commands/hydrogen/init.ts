@@ -71,8 +71,6 @@ export default class Init extends Command {
   }
 }
 
-type Writable<T> = {-readonly [P in keyof T]: T[P]};
-
 export async function runInit(
   options: {
     path?: string;
