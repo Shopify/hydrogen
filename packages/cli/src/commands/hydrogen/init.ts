@@ -41,7 +41,7 @@ export default class Init extends Command {
     }),
     'install-deps': Flags.boolean({
       description: 'Auto install dependencies using the active package manager',
-      env: 'SHOPIFY_HYDROGEN_INSTALL_DEPS',
+      env: 'SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS',
       allowNo: true,
     }),
   };
@@ -228,21 +228,29 @@ export async function runInit(
   renderSuccess({
     headline: `${projectName} is ready to build.`,
     nextSteps: [
-      `Run \`cd ${location}\`${
-        depsInstalled ? '' : `, \`${packageManager} install\`,`
-      } and \`${
-        packageManager + (packageManager === 'npm' ? ' run' : '')
-      } dev\` to start your local development server and start building.`,
-    ],
+      output.content`Run ${output.token.genericShellCommand(`cd ${location}`)}`
+        .value,
+      depsInstalled
+        ? undefined
+        : output.content`Run ${output.token.genericShellCommand(
+            `${packageManager} install`,
+          )} to install the dependencies`.value,
+      output.content`Run ${output.token.packagejsonScript(
+        packageManager,
+        'dev',
+      )} to start your local development server and start building`.value,
+    ].filter((step): step is string => Boolean(step)),
     reference: [
-      'Building with Hydrogen: https://shopify.dev/custom-storefronts/hydrogen',
+      'Building with Hydrogen: https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development',
     ],
   });
 
-  renderInfo({
-    headline: `Your project will display inventory from the Hydrogen Demo Store.`,
-    body: `To connect this project to your Shopify store’s inventory, update \`${projectName}/.env\` with your store ID and Storefront API key.`,
-  });
+  if (appTemplate === 'demo-store') {
+    renderInfo({
+      headline: `Your project will display inventory from the Hydrogen Demo Store.`,
+      body: `To connect this project to your Shopify store’s inventory, update \`${projectName}/.env\` with your store ID and Storefront API key.`,
+    });
+  }
 }
 
 async function projectExists(projectDir: string) {

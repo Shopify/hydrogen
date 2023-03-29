@@ -1,3 +1,4 @@
+import {describe, it, expect} from 'vitest';
 import {expectType} from 'ts-expect';
 import {ShopifySalesChannel} from './analytics-constants.js';
 import {pageView} from './analytics-schema-trekkie-storefront-page-view.js';

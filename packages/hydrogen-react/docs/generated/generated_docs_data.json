@@ -12,12 +12,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {AddToCartButton} from '@shopify/hydrogen-react';\n\nexport default function ProductAddToCartButton({product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <AddToCartButton data={variantId} />;\n}\n",
+            "code": "import {AddToCartButton} from '@shopify/hydrogen-react';\n\nexport default function ProductAddToCartButton({product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <AddToCartButton variantId={variantId} />;\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {AddToCartButton} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function ProductAddToCartButton({product}: {product: Product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <AddToCartButton data={variantId} />;\n}\n",
+            "code": "import {AddToCartButton} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function ProductAddToCartButton({product}: {product: Product}) {\n  const variantId = product.variants[0].id;\n\n  if (!variantId) {\n    return null;\n  }\n\n  return <AddToCartButton variantId={variantId} />;\n}\n",
             "language": "tsx"
           }
         ],
@@ -6293,7 +6293,7 @@
         "tabs": [
           {
             "title": "Client Example in NextJS",
-            "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  storeDomain: 'https://{store-name}.myshopify.com',\n  storefrontApiVersion: '2023-01',\n  privateStorefrontToken: '{private token for server-side requests}',\n});\n\n// in another file where you need to make queries, for example in NextJS server-side:\n\n// a Storefront API query\nconst GRAPHQL_QUERY = `\n  query {\n    shop {\n      name\n    }\n  }\n`;\n\n// make the request\nexport async function getServerSideProps() {\n  // Get the Storefront API url\n  const response = await fetch(client.getStorefrontApiUrl(), {\n    body: GRAPHQL_QUERY,\n    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address to help prevent bad actors from overloading your store.\n    headers: client.getPrivateTokenHeaders({buyerIp: '...'}),\n    method: 'POST',\n  });\n\n  if (!response.ok) {\n    throw new Error(response.statusText);\n  }\n\n  const json = await response.json();\n\n  return {props: json};\n}\n",
+            "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  storeDomain: 'https://{store-name}.myshopify.com',\n  storefrontApiVersion: '2023-01',\n  privateStorefrontToken: '{private token for server-side requests}',\n});\n\n// in another file where you need to make queries, for example in NextJS server-side:\n\n// a Storefront API query\nconst GRAPHQL_QUERY = `\n  query {\n    shop {\n      name\n    }\n  }\n`;\n\n// make the request\nexport async function getServerSideProps() {\n  // Get the Storefront API url\n  const response = await fetch(client.getStorefrontApiUrl(), {\n    body: JSON.stringify({\n      query: GRAPHQL_QUERY,\n    }),\n    // Generate the headers using the private token. Additionally, you can pass in the buyer's IP address from the request object to help prevent bad actors from overloading your store.\n    headers: client.getPrivateTokenHeaders({buyerIp: '...'}),\n    method: 'POST',\n  });\n\n  if (!response.ok) {\n    throw new Error(response.statusText);\n  }\n\n  const json = await response.json();\n\n  return {props: json};\n}\n",
             "language": "js"
           }
         ],
