@@ -13,7 +13,7 @@ import type {CachingStrategy} from './cache/strategies';
  * // In your app's `server.ts` file:
  * createRequestHandler({
  *   /* ... *\/,
- *   getLoadContext: () => ({ withCache: createWithCacheUtility_unstable({cache, waitUntil}) })
+ *   getLoadContext: () => ({ withCache: createWithCache_unstable({cache, waitUntil}) })
  * });
  *
  * // In your route loaders:
@@ -24,7 +24,7 @@ import type {CachingStrategy} from './cache/strategies';
  *   });
  * ```
  */
-export function createWithCacheUtil_unstable({
+export function createWithCache_unstable({
   cache,
   waitUntil,
 }: {
@@ -43,4 +43,4 @@ export function createWithCacheUtil_unstable({
     });
 }
 
-export type WithCache = ReturnType<typeof createWithCacheUtil_unstable>;
+export type WithCache = ReturnType<typeof createWithCache_unstable>;
