@@ -6,13 +6,11 @@ import {
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {
-  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-  useCatch,
   useLoaderData,
   useMatches,
   useRouteError,
