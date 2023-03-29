@@ -64,7 +64,7 @@ export default class GenerateRoute extends Command {
   static hidden: true;
 
   static args = {
-    firstArg: Args.string({
+    route: Args.string({
       name: 'route',
       description: `The route to generate. One of ${ROUTES.join()}.`,
       required: true,
@@ -78,7 +78,7 @@ export default class GenerateRoute extends Command {
     const {flags, args} = await this.parse(GenerateRoute);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    const route = args.firstArg;
+    const {route} = args;
 
     const routePath =
       route === 'all'

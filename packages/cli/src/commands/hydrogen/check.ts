@@ -18,7 +18,7 @@ export default class GenerateRoute extends Command {
   };
 
   static args = {
-    firstArg: Args.string({
+    resource: Args.string({
       name: 'resource',
       description: `The resource to check. Currently only 'routes' is supported.`,
       required: true,
@@ -30,7 +30,7 @@ export default class GenerateRoute extends Command {
     const {flags, args} = await this.parse(GenerateRoute);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    if (args.firstArg === 'routes') {
+    if (args.resource === 'routes') {
       await runCheckRoutes({directory});
     } else {
       throw new Error('Invalid command argument.');
