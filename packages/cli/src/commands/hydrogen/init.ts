@@ -3,9 +3,25 @@ import {
   installNodeModules,
   packageManagerUsedForCreating,
 } from '@shopify/cli-kit/node/node-package-manager';
-import {renderFatalError} from '@shopify/cli-kit/node/ui';
-import Flags from '@oclif/core/lib/flags.js';
-import {output, path} from '@shopify/cli-kit';
+import {
+  ui,
+  renderFatalError,
+  renderSuccess,
+  renderInfo,
+} from '@shopify/cli-kit/node/ui';
+import {Flags} from '@oclif/core';
+import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
+import {
+  rmdir,
+  copyFile,
+  fileExists,
+  isDirectory,
+} from '@shopify/cli-kit/node/fs';
+import {
+  outputInfo,
+  outputContent,
+  outputToken,
+} from '@shopify/cli-kit/node/output';
 import {
   commonFlags,
   parseProcessFlags,
@@ -47,7 +63,6 @@ export default class Init extends Command {
   };
 
   async run(): Promise<void> {
-    // @ts-ignore
     const {flags} = await this.parse(Init);
 
     await runInit(flagsToCamelObject(flags));
@@ -87,14 +102,12 @@ export async function runInit(
 
   // Start downloading templates early.
   const templatesPromise = getLatestTemplates().catch((error) => {
-    output.info('\n\n\n');
+    outputInfo('\n\n\n');
     renderFatalError(error);
 
     process.exit(1);
   });
 
-  const {ui, file} = await import('@shopify/cli-kit');
-  const {renderSuccess, renderInfo} = await import('@shopify/cli-kit/node/ui');
   const prompts: Writable<Parameters<typeof ui.prompt>[0]> = [];
 
   if (!options.template) {
@@ -137,8 +150,8 @@ export async function runInit(
     language = options.language ?? 'js',
   } = prompts.length > 0 ? await ui.prompt(prompts) : options;
 
-  const projectName = path.basename(location);
-  const projectDir = path.resolve(process.cwd(), location);
+  const projectName = basename(location);
+  const projectDir = resolvePath(process.cwd(), location);
 
   if (await projectExists(projectDir)) {
     if (!options.force) {
@@ -164,26 +177,26 @@ export async function runInit(
       }
     }
 
-    await file.rmdir(projectDir, {force: true});
+    await rmdir(projectDir, {force: true});
   }
 
   // Templates might be cached or the download might be finished already.
   // Only output progress if the download is still in progress.
   let downloaded = false;
   setTimeout(
-    () => !downloaded && output.info('\n📥 Downloading templates...'),
+    () => !downloaded && outputInfo('\n📥 Downloading templates...'),
     150,
   );
   const {templatesDir} = await templatesPromise;
   downloaded = true;
 
-  await file.copy(path.join(templatesDir, appTemplate), projectDir);
+  await copyFile(joinPath(templatesDir, appTemplate), projectDir);
 
   if (language === 'js') {
     try {
       await transpileProject(projectDir);
     } catch (error) {
-      await file.rmdir(projectDir, {force: true});
+      await rmdir(projectDir, {force: true});
       throw error;
     }
   }
@@ -228,14 +241,14 @@ export async function runInit(
   renderSuccess({
     headline: `${projectName} is ready to build.`,
     nextSteps: [
-      output.content`Run ${output.token.genericShellCommand(`cd ${location}`)}`
+      outputContent`Run ${outputToken.genericShellCommand(`cd ${location}`)}`
         .value,
       depsInstalled
         ? undefined
-        : output.content`Run ${output.token.genericShellCommand(
+        : outputContent`Run ${outputToken.genericShellCommand(
             `${packageManager} install`,
           )} to install the dependencies`.value,
-      output.content`Run ${output.token.packagejsonScript(
+      outputContent`Run ${outputToken.packagejsonScript(
         packageManager,
         'dev',
       )} to start your local development server and start building`.value,
@@ -254,10 +267,9 @@ export async function runInit(
 }
 
 async function projectExists(projectDir: string) {
-  const {file} = await import('@shopify/cli-kit');
   return (
-    (await file.exists(projectDir)) &&
-    (await file.isDirectory(projectDir)) &&
+    (await fileExists(projectDir)) &&
+    (await isDirectory(projectDir)) &&
     (await readdir(projectDir)).length > 0
   );
 }

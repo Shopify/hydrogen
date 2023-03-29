@@ -1,7 +1,8 @@
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
-import {output, file} from '@shopify/cli-kit';
+import {outputWarn} from '@shopify/cli-kit/node/output';
+import {fileExists} from '@shopify/cli-kit/node/fs';
 import {createRequire} from 'module';
 import {fileURLToPath} from 'url';
 import path from 'path';
@@ -84,7 +85,7 @@ export async function getRemixConfig(
     process.env.NODE_ENV === 'development' &&
     !config.serverConditions?.includes('development')
   ) {
-    output.warn(
+    outputWarn(
       'Add `process.env.NODE_ENV` value to serverConditions in remix.config.js to enable debugging features in development.',
     );
   }
@@ -170,7 +171,7 @@ export async function assertEntryFileExists(
   fileRelative: string,
 ) {
   const fileAbsolute = path.resolve(root, fileRelative);
-  const exists = await file.exists(fileAbsolute);
+  const exists = await fileExists(fileAbsolute);
 
   if (!exists) {
     if (!path.extname(fileAbsolute)) {

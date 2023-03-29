@@ -7,13 +7,13 @@ import {startMiniOxygen} from '../../utils/mini-oxygen.js';
 export default class Preview extends Command {
   static description =
     'Runs a Hydrogen storefront in an Oxygen worker for production.';
+
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
   };
 
   async run(): Promise<void> {
-    // @ts-ignore
     const {flags} = await this.parse(Preview);
 
     await runPreview({...flags});

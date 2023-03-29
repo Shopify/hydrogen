@@ -1,11 +1,13 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {path} from '@shopify/cli-kit';
+import {resolvePath} from '@shopify/cli-kit/node/path';
 import {commonFlags} from '../../utils/flags.js';
 import {getRemixConfig} from '../../utils/config.js';
 import {
   findMissingRoutes,
   logMissingRoutes,
 } from '../../utils/missing-routes.js';
+
+import {Args} from '@oclif/core';
 
 export default class GenerateRoute extends Command {
   static description =
@@ -15,21 +17,20 @@ export default class GenerateRoute extends Command {
     path: commonFlags.path,
   };
 
-  static args = [
-    {
+  static args = {
+    firstArg: Args.string({
       name: 'resource',
       description: `The resource to check. Currently only 'routes' is supported.`,
       required: true,
       options: ['routes'],
-    },
-  ];
+    }),
+  };
 
   async run(): Promise<void> {
-    // @ts-ignore
     const {flags, args} = await this.parse(GenerateRoute);
-    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    if (args.resource === 'routes') {
+    if (args.firstArg === 'routes') {
       await runCheckRoutes({directory});
     } else {
       throw new Error('Invalid command argument.');

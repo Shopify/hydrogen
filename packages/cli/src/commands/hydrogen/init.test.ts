@@ -1,14 +1,15 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
 import {runInit} from './init.js';
-import {ui, output} from '@shopify/cli-kit';
+import {ui} from '@shopify/cli-kit/node/ui';
+import {outputContent} from '@shopify/cli-kit/node/output';
 import {installNodeModules} from '@shopify/cli-kit/node/node-package-manager';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
 
 describe('init', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.mock('@shopify/cli-kit');
+    vi.mock('@shopify/cli-kit/node/output');
     vi.mock('../../utils/transpile-ts.js');
     vi.mock('../../utils/template-downloader.js', async () => ({
       getLatestTemplates: () => Promise.resolve({}),
@@ -17,7 +18,7 @@ describe('init', () => {
     vi.mocked(ui.prompt).mockImplementation(() =>
       Promise.resolve({installDeps: 'false'}),
     );
-    vi.mocked(output.content).mockImplementation(() => ({
+    vi.mocked(outputContent).mockImplementation(() => ({
       value: '',
     }));
     vi.mock('@shopify/cli-kit/node/ui');

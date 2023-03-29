@@ -3,7 +3,7 @@ import fs from 'fs/promises';
 import prettier, {type Options as FormatOptions} from 'prettier';
 import ts, {type CompilerOptions} from 'typescript';
 import glob from 'fast-glob';
-import {output} from '@shopify/cli-kit';
+import {outputDebug} from '@shopify/cli-kit/node/output';
 
 const escapeNewLines = (code: string) =>
   code.replace(/\n\n/g, '\n/* :newline: */');
@@ -153,7 +153,7 @@ export async function transpileProject(projectDir: string) {
 
     await fs.writeFile(remixConfigPath, remixConfig);
   } catch (error) {
-    output.debug(
+    outputDebug(
       'Could not change TS extensions in remix.config.js:\n' +
         (error as Error).stack,
     );
@@ -174,7 +174,7 @@ export async function transpileProject(projectDir: string) {
       'utf8',
     );
   } catch (error) {
-    output.debug(
+    outputDebug(
       'Could not transpile tsconfig.json:\n' + (error as Error).stack,
     );
   }
@@ -200,7 +200,7 @@ export async function transpileProject(projectDir: string) {
       JSON.stringify(pkgJson, null, 2),
     );
   } catch (error) {
-    output.debug(
+    outputDebug(
       'Could not remove TS dependencies from package.json:\n' +
         (error as Error).stack,
     );
@@ -218,7 +218,7 @@ export async function transpileProject(projectDir: string) {
 
     await fs.writeFile(eslintrcPath, eslintrc);
   } catch (error) {
-    output.debug(
+    outputDebug(
       'Could not remove TS rules from .eslintrc:\n' + (error as Error).stack,
     );
   }

@@ -1,6 +1,11 @@
 import path from 'path';
-import {output, file} from '@shopify/cli-kit';
-import colors from '@shopify/cli-kit/node/colors';
+import {
+  outputInfo,
+  outputWarn,
+  outputContent,
+  outputToken,
+} from '@shopify/cli-kit/node/output';
+import {fileSize, copyFile, rmdir} from '@shopify/cli-kit/node/fs';
 import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
 import {
   deprecated,
@@ -8,10 +13,11 @@ import {
   flagsToCamelObject,
 } from '../../utils/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import Flags from '@oclif/core/lib/flags.js';
+import {Flags} from '@oclif/core';
 import {checkLockfileStatus} from '../../utils/check-lockfile.js';
 import {findMissingRoutes} from '../../utils/missing-routes.js';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
+import {colors} from '../../utils/colors.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -34,7 +40,6 @@ export default class Build extends Command {
   };
 
   async run(): Promise<void> {
-    // @ts-ignore
     const {flags} = await this.parse(Build);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
@@ -64,10 +69,10 @@ export async function runBuild({
 
   const [remixConfig] = await Promise.all([
     getRemixConfig(root),
-    file.rmdir(buildPath, {force: true}),
+    rmdir(buildPath, {force: true}),
   ]);
 
-  output.info(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
+  outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
   const {build} = await import('@remix-run/dev/dist/compiler/build.js');
   const {logCompileFailure} = await import(
@@ -89,18 +94,17 @@ export async function runBuild({
 
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
-    const sizeMB = (await file.size(buildPathWorkerFile)) / (1024 * 1024);
+    const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
 
-    output.info(
-      output.content`   ${colors.dim(
+    outputInfo(
+      outputContent`   ${colors.dim(
         path.relative(root, buildPathWorkerFile),
-      )}  ${output.token.yellow(sizeMB.toFixed(2))} MB\n`,
+      )}  ${outputToken.yellow(sizeMB.toFixed(2))} MB\n`,
     );
 
     if (sizeMB >= 1) {
-      output.warn(
+      outputWarn(
         `🚨 Worker bundle exceeds 1 MB! This can delay your worker response.${
-          // @ts-ignore
           remixConfig.serverMinify
             ? ''
             : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
@@ -115,7 +119,7 @@ export async function runBuild({
       const packageManager = await getPackageManager(root);
       const exec = packageManager === 'npm' ? 'npx' : packageManager;
 
-      output.warn(
+      outputWarn(
         `Heads up: Shopify stores have a number of standard routes that aren’t set up yet.\n` +
           `Some functionality and backlinks might not work as expected until these are created or redirects are set up.\n` +
           `This build is missing ${missingRoutes.length} route${
@@ -135,5 +139,5 @@ export async function copyPublicFiles(
   publicPath: string,
   buildPathClient: string,
 ) {
-  return file.copy(publicPath, buildPathClient);
+  return copyFile(publicPath, buildPathClient);
 }
