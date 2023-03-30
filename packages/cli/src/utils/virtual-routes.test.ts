@@ -21,6 +21,9 @@ describe('virtual routes', () => {
     const config = {
       appDirectory: fileURLToPath(new URL('../virtual-test', import.meta.url)),
       routes: {},
+      future: {
+        v2_meta: false,
+      },
     } as RemixConfig;
 
     const {routesDir, root} = buildPaths(V1_DIR);
@@ -30,7 +33,7 @@ describe('virtual routes', () => {
     expect(config.routes[root]).toMatchObject({
       path: '',
       id: root,
-      file: '../virtual-routes/virtual-root.jsx',
+      file: '../' + root + '.jsx',
     });
 
     expect(config.routes[routesDir + '/index']).toMatchObject({
@@ -59,6 +62,9 @@ describe('virtual routes', () => {
       appDirectory: fileURLToPath(new URL('../virtual-test', import.meta.url)),
       routes: {
         [existingIndexRoute.id]: existingIndexRoute,
+      },
+      future: {
+        v2_meta: false,
       },
     } as unknown as RemixConfig;
 
@@ -91,7 +97,7 @@ describe('virtual routes', () => {
     expect(config.routes[root]).toMatchObject({
       path: '',
       id: root,
-      file: '../virtual-routes/virtual-root.jsx',
+      file: '../' + root + '.jsx',
     });
 
     expect(config.routes[routesDir + '/index']).toMatchObject({
