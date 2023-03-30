@@ -1,7 +1,7 @@
 import {
   json,
   redirect,
-  type MetaFunction,
+  type V2_MetaFunction,
   type ActionFunction,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
@@ -53,10 +53,8 @@ export const action: ActionFunction = async ({request, context}) => {
   }
 };
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'Recover Password',
-  };
+export const meta: V2_MetaFunction = () => {
+  return [{title: 'Recover Password'}];
 };
 
 export default function Recover() {
