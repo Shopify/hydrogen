@@ -120,7 +120,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   if (!collection) {
-    throw new Response(null, {status: 404});
+    throw new Response('collection', {status: 404});
   }
 
   const collectionNodes = flattenConnection(collections);
