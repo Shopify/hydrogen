@@ -3,16 +3,24 @@ import {fileURLToPath} from 'url';
 import recursiveReaddir from 'recursive-readdir';
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 
-export const VIRTUAL_ROUTES_DIR = 'virtual-routes/routes';
-export const VIRTUAL_ROOT = 'virtual-routes/virtual-root';
+export const VIRTUAL_ROUTES_DIR = 'virtual-routes';
+export const V1_DIR = 'v1';
+export const V2_META_DIR = 'v2-meta';
 
 export async function addVirtualRoutes(config: RemixConfig) {
   const userRouteList = Object.values(config.routes);
   const distPath = fileURLToPath(new URL('..', import.meta.url));
-  const virtualRoutesPath = path.join(distPath, VIRTUAL_ROUTES_DIR);
 
-  for (const absoluteFilePath of await recursiveReaddir(virtualRoutesPath)) {
-    const relativeFilePath = path.relative(virtualRoutesPath, absoluteFilePath);
+  // Base on future flags config, pick the correct virtual routes folder
+  const virtualDir = `${VIRTUAL_ROUTES_DIR}/${
+    config.future.v2_meta ? V2_META_DIR : V1_DIR
+  }`;
+  const routesDir = `${virtualDir}/routes`;
+  const root = `${virtualDir}/virtual-root`;
+  const routesPath = path.join(distPath, routesDir);
+
+  for (const absoluteFilePath of await recursiveReaddir(routesPath)) {
+    const relativeFilePath = path.relative(routesPath, absoluteFilePath);
     const routePath = relativeFilePath
       .replace(/\.[jt]sx?$/, '')
       .replaceAll('\\', '/');
@@ -30,24 +38,24 @@ export async function addVirtualRoutes(config: RemixConfig) {
     );
 
     if (!hasUserRoute) {
-      const id = VIRTUAL_ROUTES_DIR + '/' + routePath;
+      const id = routesDir + '/' + routePath;
 
       config.routes[id] = {
         id,
-        parentId: VIRTUAL_ROOT,
+        parentId: root,
         path: normalizedVirtualRoutePath,
         index: isIndex || undefined,
         caseSensitive: undefined,
         file: path.relative(config.appDirectory, absoluteFilePath),
       };
 
-      if (!config.routes[VIRTUAL_ROOT]) {
-        config.routes[VIRTUAL_ROOT] = {
-          id: VIRTUAL_ROOT,
+      if (!config.routes[root]) {
+        config.routes[root] = {
+          id: root,
           path: '',
           file: path.relative(
             config.appDirectory,
-            path.join(distPath, VIRTUAL_ROOT + '.jsx'),
+            path.join(distPath, root + '.jsx'),
           ),
         };
       }

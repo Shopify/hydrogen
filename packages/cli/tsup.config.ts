@@ -41,7 +41,14 @@ export default defineConfig([
 
       // For some reason, it seems that publicDir => outDir might be skipped on CI,
       // so ensure here that asset files are copied:
-      await fs.copy('src/virtual-routes/assets', 'dist/virtual-routes/assets');
+      await fs.copy(
+        'src/virtual-routes/v1/assets',
+        'dist/virtual-routes/v1/assets',
+      );
+      await fs.copy(
+        'src/virtual-routes/v2-meta/assets',
+        'dist/virtual-routes/v2-meta/assets',
+      );
 
       console.log('\n', 'Copied virtual route assets to build directory', '\n');
     },

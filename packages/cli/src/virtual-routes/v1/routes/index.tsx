@@ -1,5 +1,5 @@
 import {useLoaderData} from '@remix-run/react';
-import {type V2_MetaFunction, LinksFunction} from '@shopify/remix-oxygen';
+import {type MetaFunction, LinksFunction} from '@shopify/remix-oxygen';
 import {type Shop} from '@shopify/hydrogen-react/storefront-api-types';
 import {HydrogenLogoBaseBW} from '../components/HydrogenLogoBaseBW.jsx';
 import {HydrogenLogoBaseColor} from '../components/HydrogenLogoBaseColor.jsx';
@@ -17,13 +17,13 @@ interface AppLoadContext {
   storefront: StorefrontClient<I18nBase>['storefront'];
 }
 
-export const meta: V2_MetaFunction = () => {
-  return [
-    {
-      title: 'Hydrogen',
-      description: 'A custom storefront powered by Hydrogen',
-    },
-  ];
+export const meta: MetaFunction = () => {
+  return {
+    title: 'Hydrogen',
+    description: 'A custom storefront powered by Hydrogen',
+    charset: 'utf-8',
+    viewport: 'width=device-width,initial-scale=1',
+  };
 };
 
 export const links: LinksFunction = () => [
