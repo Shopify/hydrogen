@@ -1,7 +1,7 @@
 // This file is the root of every virtual route tree.
 // It does not affect the routes from the user app.
 
-import type {LinksFunction, MetaFunction} from '@shopify/remix-oxygen';
+import type {LinksFunction} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,

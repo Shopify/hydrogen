@@ -21,8 +21,6 @@ export const meta: V2_MetaFunction = () => {
   return [
     {
       title: 'Hydrogen',
-    },
-    {
       description: 'A custom storefront powered by Hydrogen',
     },
   ];
