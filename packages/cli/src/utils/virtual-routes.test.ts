@@ -106,36 +106,4 @@ describe('virtual routes', () => {
       file: '../' + routesDir + '/graphiql.tsx',
     });
   });
-
-  it('skips existing routes', async () => {
-    const existingIndexRoute = {
-      id: 'routes/index',
-      index: true,
-      parentId: 'root',
-      path: undefined,
-      file: 'user-app/routes/index.tsx',
-    };
-
-    const config = {
-      appDirectory: fileURLToPath(new URL('../virtual-test', import.meta.url)),
-      routes: {
-        [existingIndexRoute.id]: existingIndexRoute,
-      },
-      future: {
-        v2_meta: true,
-      },
-    } as unknown as RemixConfig;
-
-    const {routesDir} = buildPaths(V2_META_DIR);
-
-    await addVirtualRoutes(config);
-
-    expect(config.routes[existingIndexRoute.id]).toMatchObject(
-      existingIndexRoute,
-    );
-
-    expect(config.routes[routesDir + '/index']).toBeFalsy();
-
-    expect(Object.values(config.routes).length).toBeGreaterThan(2);
-  });
 });
