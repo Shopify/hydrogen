@@ -1,7 +1,7 @@
 import {
   json,
   redirect,
-  type MetaFunction,
+  type V2_MetaFunction,
   type ActionFunction,
   type AppLoadContext,
   type LoaderArgs,
@@ -79,10 +79,8 @@ export const action: ActionFunction = async ({request, context, params}) => {
   }
 };
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'Login',
-  };
+export const meta: V2_MetaFunction = () => {
+  return [{title: 'Login'}];
 };
 
 export default function Login() {

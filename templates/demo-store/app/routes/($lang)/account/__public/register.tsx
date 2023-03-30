@@ -1,5 +1,5 @@
 import {
-  type MetaFunction,
+  type V2_MetaFunction,
   redirect,
   json,
   type ActionFunction,
@@ -88,10 +88,8 @@ export const action: ActionFunction = async ({request, context, params}) => {
   }
 };
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'Register',
-  };
+export const meta: V2_MetaFunction = () => {
+  return [{title: 'Register'}];
 };
 
 export default function Register() {
