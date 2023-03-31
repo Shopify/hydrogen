@@ -23,6 +23,7 @@ declare global {
     PUBLIC_STOREFRONT_ID: string;
     IDENTITY_CLIENT_ID: string;
     IDENTITY_DESTINATION_UUID: string;
+    IDENTITY_HOST: string;
   }
 }
 

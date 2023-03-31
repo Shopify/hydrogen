@@ -11,13 +11,19 @@ export async function loader({request, params, context}: LoaderArgs) {
   return {
     identityClientId: context.env.IDENTITY_CLIENT_ID,
     destinationUuid: context.env.IDENTITY_DESTINATION_UUID,
+    identityHost: context.env.IDENTITY_HOST,
   };
 }
 
 export default function Login() {
-  const {destinationUuid, identityClientId} = useLoaderData<typeof loader>();
+  const {destinationUuid, identityClientId, identityHost} =
+    useLoaderData<typeof loader>();
 
-  const url = useAuthorizationRequestUrl(destinationUuid, identityClientId);
+  const url = useAuthorizationRequestUrl(
+    destinationUuid,
+    identityClientId,
+    identityHost,
+  );
 
   return (
     <div>
@@ -30,17 +36,18 @@ export default function Login() {
 function useAuthorizationRequestUrl(
   destinationUuid: string,
   identityClientId: string,
+  identityHost: string,
 ) {
   const [url, setUrl] = useState<string>();
 
   useEffect(() => {
     async function doStuff() {
       const authorizationRequestUrl = new URL(
-        'https://customer-identity.identity.custom-storefronts-zzwg.mathieu-lagace.us.spin.dev/oauth/authorize',
+        `https://${identityHost}/oauth/authorize`,
       );
       authorizationRequestUrl.searchParams.append(
         'scope',
-        'openid https://api.customers.com/auth/customer.graphql',
+        'openid email https://api.customers.com/auth/customer.graphql',
       );
       authorizationRequestUrl.searchParams.append(
         'client_id',
@@ -49,7 +56,7 @@ function useAuthorizationRequestUrl(
       authorizationRequestUrl.searchParams.append('response_type', 'code');
       authorizationRequestUrl.searchParams.append(
         'redirect_uri',
-        'https://custom-storefronts.custom-storefronts-zzwg.mathieu-lagace.us.spin.dev/authorize',
+        `https://${window.location.hostname}/authorize`,
       );
       authorizationRequestUrl.searchParams.append(
         'destination_uuid',
@@ -71,7 +78,7 @@ function useAuthorizationRequestUrl(
     }
 
     doStuff();
-  }, [destinationUuid, identityClientId]);
+  }, [destinationUuid, identityClientId, identityHost]);
 
   return url;
 }

@@ -28,6 +28,7 @@ import {Suspense, useEffect, useMemo} from 'react';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
 import type {LayoutData} from '../root';
+import {LogoutButton} from './LogoutButton';
 
 export function Layout({
   children,
@@ -171,7 +172,7 @@ function MenuMobileNav({
           }
         >
           <Text as="span" size="copy">
-            Identity
+            Login with Identity
           </Text>
         </Link>
       </span>
@@ -301,8 +302,17 @@ function DesktopHeader({
               isActive ? 'pb-1 border-b -mb-px' : 'pb-1'
             }
           >
-            Identity
+            Login with Identity
           </Link>
+          <Link
+            to="/customer-api"
+            className={({isActive}) =>
+              isActive ? 'pb-1 border-b -mb-px' : 'pb-1'
+            }
+          >
+            Customer API
+          </Link>
+          <LogoutButton />
         </nav>
       </div>
       <div className="flex items-center gap-1">
