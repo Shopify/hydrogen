@@ -4,6 +4,7 @@
 
 import type {Storefront} from '@shopify/hydrogen';
 import type {HydrogenSession} from '../server';
+import {CustomerContext} from '@shopify/hydrogen';
 
 declare global {
   /**
@@ -31,6 +32,7 @@ declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
     session: HydrogenSession;
     storefront: Storefront;
+    customer: CustomerContext;
     env: Env;
   }
 }

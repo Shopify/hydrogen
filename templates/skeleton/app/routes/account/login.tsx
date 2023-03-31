@@ -1,7 +1,6 @@
 import {
   type ActionFunction,
   type LoaderArgs,
-  type ErrorBoundaryComponent,
   redirect,
 } from '@shopify/remix-oxygen';
 import {
@@ -9,19 +8,19 @@ import {
   useCatch,
   useRouteError,
   isRouteErrorResponse,
+  Link,
 } from '@remix-run/react';
 
 export async function loader({context, params}: LoaderArgs) {
-  const customerAccessToken = await context.session.get('customerAccessToken');
+  const {customer} = context;
 
-  if (customerAccessToken) {
+  if (customer.isAuthenticated)
     return redirect(params.lang ? `${params.lang}/account` : '/account');
-  }
 
   return new Response(null);
 }
 
-export const action: ActionFunction = async ({request}) => {
+export const action: ActionFunction = async ({request, context, params}) => {
   const formData = await request.formData();
 
   const email = formData.get('email');
@@ -38,12 +37,22 @@ export const action: ActionFunction = async ({request}) => {
     });
   }
 
-  // TODO Add login logic
+  const {customer} = context;
+
+  const {headers} = await customer.authenticate({
+    email,
+    password,
+  });
+
+  return redirect(params.lang ? `${params.lang}/account` : '/account', {
+    headers,
+  });
 };
 
-export default function Login() {
+function LoginForm() {
   return (
     <Form method="post">
+      <h2>Login</h2>
       <input
         id="email"
         name="email"
@@ -52,8 +61,6 @@ export default function Login() {
         required
         placeholder="Email address"
         aria-label="Email address"
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
       />
       <input
         id="password"
@@ -64,18 +71,26 @@ export default function Login() {
         aria-label="Password"
         minLength={8}
         required
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
       />
       <button type="submit">Sign in</button>
+      <Link to="/account/recover">Forgot?</Link>
     </Form>
   );
+}
+
+export default function Login() {
+  return <LoginForm />;
 }
 
 export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
   console.error(error);
 
-  return <div>There was an error.</div>;
+  return (
+    <>
+      <div>There was an error.</div>;
+      <LoginForm />
+    </>
+  );
 };
 
 export function CatchBoundary() {
@@ -93,11 +108,23 @@ export function CatchBoundary() {
 export function ErrorBoundary() {
   const error = useRouteError();
 
-  if (isRouteErrorResponse(error)) {
-    console.error(error.status, error.statusText, error.data);
-    return <div>Route Error</div>;
-  } else {
+  if (error instanceof Error) {
     console.error((error as Error).message);
-    return <div>Thrown Error</div>;
+    return (
+      <>
+        <pre>{error.message}</pre>
+        <LoginForm />
+      </>
+    );
+  } else {
+    if (isRouteErrorResponse(error)) {
+      console.error(error.status, error.statusText, error.data);
+    }
+    return (
+      <>
+        <div>Route Error</div>
+        <LoginForm />
+      </>
+    );
   }
 }

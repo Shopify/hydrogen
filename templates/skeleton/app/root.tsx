@@ -32,9 +32,10 @@ export const links: LinksFunction = () => {
 };
 
 export async function loader({context}: LoaderArgs) {
-  const [customerAccessToken, cartId] = await Promise.all([
+  const [customerAccessToken, cartId, customer] = await Promise.all([
     context.session.get('customerAccessToken'),
     context.session.get('cartId'),
+    context.customer.get(),
   ]);
 
   const [cart, layout] = await Promise.all([
@@ -62,6 +63,7 @@ export async function loader({context}: LoaderArgs) {
     isLoggedIn: Boolean(customerAccessToken),
     cart,
     layout,
+    customer,
   });
 }
 
@@ -81,6 +83,7 @@ export default function App() {
       <body>
         <Layout description={description} title={name}>
           <Outlet />
+          <pre>customer: {JSON.stringify(data.customer, null, 2)}</pre>
         </Layout>
         <ScrollRestoration />
         <Scripts />

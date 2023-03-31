@@ -18,9 +18,6 @@ import {
 import {ShopifySalesChannel, Seo} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
-import {seoPayload} from '~/lib/seo.server';
-import {Layout} from '~/components';
-
 import favicon from '../public/favicon.svg';
 
 import {GenericError} from './components/GenericError';
@@ -28,6 +25,9 @@ import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
 import {DEFAULT_LOCALE, parseMenu, getCartId} from './lib/utils';
 import {useAnalytics} from './hooks/useAnalytics';
+
+import {seoPayload} from '~/lib/seo.server';
+import {Layout} from '~/components';
 
 export const links: LinksFunction = () => {
   return [
@@ -45,10 +45,11 @@ export const links: LinksFunction = () => {
 };
 
 export async function loader({request, context}: LoaderArgs) {
-  const cartId = getCartId(request);
-  const [customerAccessToken, layout] = await Promise.all([
+  const [customerAccessToken, cartId, layout, customer] = await Promise.all([
     context.session.get('customerAccessToken'),
+    getCartId(request),
     getLayoutData(context),
+    context.customer.get(),
   ]);
 
   const seo = seoPayload.root({shop: layout.shop, url: request.url});
@@ -63,6 +64,7 @@ export async function loader({request, context}: LoaderArgs) {
       shopId: layout.shop.id,
     },
     seo,
+    customer,
   });
 }
 
@@ -88,6 +90,7 @@ export default function App() {
           layout={data.layout}
         >
           <Outlet />
+          <pre>{JSON.stringify(data.customer, null, 2)}</pre>
         </Layout>
         <ScrollRestoration />
         <Scripts />

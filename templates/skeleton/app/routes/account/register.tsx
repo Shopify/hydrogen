@@ -12,16 +12,15 @@ import {
 } from '@remix-run/react';
 
 export async function loader({context, params}: LoaderArgs) {
-  const customerAccessToken = await context.session.get('customerAccessToken');
+  const {customer} = context;
 
-  if (customerAccessToken) {
+  if (customer.isAuthenticated)
     return redirect(params.lang ? `${params.lang}/account` : '/account');
-  }
 
   return new Response(null);
 }
 
-export const action: ActionFunction = async ({request}) => {
+export const action: ActionFunction = async ({request, context, params}) => {
   const formData = await request.formData();
 
   const email = formData.get('email');
@@ -38,12 +37,22 @@ export const action: ActionFunction = async ({request}) => {
     });
   }
 
-  // TODO Add register logic
+  const {customer} = context;
+
+  const {headers} = await customer.create({
+    email,
+    password,
+  });
+
+  return redirect(params.lang ? `${params.lang}/account` : '/account', {
+    headers,
+  });
 };
 
-export default function Register() {
+function RegisterForm() {
   return (
     <Form method="post">
+      <h2>Register</h2>
       <input
         id="email"
         name="email"
@@ -52,8 +61,6 @@ export default function Register() {
         required
         placeholder="Email address"
         aria-label="Email address"
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
       />
       <input
         id="password"
@@ -64,8 +71,6 @@ export default function Register() {
         aria-label="Password"
         minLength={8}
         required
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
       />
       <button type="submit">Sign up</button>
     </Form>
@@ -100,4 +105,8 @@ export function ErrorBoundary() {
     console.error((error as Error).message);
     return <div>Thrown Error</div>;
   }
+}
+
+export default function Register() {
+  return <RegisterForm />;
 }
