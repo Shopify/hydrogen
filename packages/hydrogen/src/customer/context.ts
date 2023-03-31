@@ -11,7 +11,7 @@ import type {
   MutationCustomerRecoverArgs,
   CustomerUpdateInput,
   CustomerAccessTokenCreateInput,
-} from '@shopify/hydrogen/storefront-api-types';
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {createStorefrontClient} from '@shopify/hydrogen';
 
 const debug =
