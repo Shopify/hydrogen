@@ -6795,6 +6795,96 @@
     ]
   },
   {
+    "name": "useProduct",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "ShopifyProvider",
+        "type": "component",
+        "url": "/api/hydrogen-react/components/shopifyprovider"
+      }
+    ],
+    "description": "Provides access to the product value passed to `<ProductProvider />`. It also includes properties for selecting produt variants, options, and selling plans.",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {ShopifyProvider, useShop} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {ShopifyProvider, useShop} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "`useProduct` must be a descendent of the `<ProductProvider />` component.",
+        "type": "UseProductGeneratedType",
+        "typeDefinitions": {
+          "UseProductGeneratedType": {
+            "filePath": "/ProductProvider.tsx",
+            "name": "UseProductGeneratedType",
+            "params": [],
+            "returns": {
+              "filePath": "/ProductProvider.tsx",
+              "description": "",
+              "name": "ProductHookValue",
+              "value": "ProductHookValue"
+            },
+            "value": "export function useProduct(): ProductHookValue {\n  const context = useContext(ProductOptionsContext);\n\n  if (!context) {\n    throw new Error(`'useProduct' must be a child of <ProductProvider />`);\n  }\n\n  return context;\n}"
+          },
+          "ProductHookValue": {
+            "filePath": "/ProductProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ProductHookValue",
+            "value": "PartialDeep<\n  {\n    /** The raw product from the Storefront API */\n    product: Product;\n    /** An array of the variant `nodes` from the `VariantConnection`. */\n    variants: ProductVariantType[];\n    variantsConnection?: ProductVariantConnection;\n    /** An array of the product's options and values. */\n    options: OptionWithValues[];\n    /** The selected variant. */\n    selectedVariant?: ProductVariantType | null;\n    selectedOptions: SelectedOptions;\n    /** The selected selling plan. */\n    selectedSellingPlan?: SellingPlanType;\n    /** The selected selling plan allocation. */\n    selectedSellingPlanAllocation?: SellingPlanAllocationType;\n    /** The selling plan groups. */\n    sellingPlanGroups?: (Omit<SellingPlanGroupType, 'sellingPlans'> & {\n      sellingPlans: SellingPlanType[];\n    })[];\n    sellingPlanGroupsConnection?: SellingPlanGroupConnection;\n  },\n  {recurseIntoArrays: true}\n> & {\n  /** A callback to set the selected variant to the variant passed as an argument. */\n  setSelectedVariant: (\n    variant: PartialDeep<ProductVariantType, {recurseIntoArrays: true}> | null,\n  ) => void;\n  /** A callback to set the selected option. */\n  setSelectedOption: (\n    name: SelectedOptionType['name'],\n    value: SelectedOptionType['value'],\n  ) => void;\n  /** A callback to set multiple selected options at once. */\n  setSelectedOptions: (options: SelectedOptions) => void;\n  /** A callback to set the selected selling plan to the one passed as an argument. */\n  setSelectedSellingPlan: (\n    sellingPlan: PartialDeep<SellingPlanType, {recurseIntoArrays: true}>,\n  ) => void;\n  /** A callback that returns a boolean indicating if the option is in stock. */\n  isOptionInStock: (\n    name: SelectedOptionType['name'],\n    value: SelectedOptionType['value'],\n  ) => boolean;\n}",
+            "description": ""
+          },
+          "OptionWithValues": {
+            "filePath": "/ProductProvider.tsx",
+            "name": "OptionWithValues",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "name",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "values",
+                "value": "string[]",
+                "description": ""
+              }
+            ],
+            "value": "export interface OptionWithValues {\n  name: SelectedOptionType['name'];\n  values: SelectedOptionType['value'][];\n}"
+          },
+          "SelectedOptions": {
+            "filePath": "/ProductProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "SelectedOptions",
+            "value": "{\n  [key: string]: string;\n}",
+            "description": "",
+            "members": []
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "useShop",
     "category": "hooks",
     "isVisualComponent": false,
