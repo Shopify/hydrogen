@@ -99,6 +99,8 @@ type CartProviderProps = {
  *
  * There are props that trigger when a call to the Storefront API is made, such as `onLineAdd={}` when a line is added to the cart.
  * There are also props that trigger when a call to the Storefront API is completed, such as `onLineAddComplete={}` when the fetch request for adding a line to the cart completes.
+ *
+ * The `CartProvider` component must be a descendant of the `ShopifyProvider` component.
  */
 export function CartProvider({
   children,
