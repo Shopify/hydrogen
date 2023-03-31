@@ -6,9 +6,9 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [
     {
-      name: 'ShopifyProvider',
+      name: 'ProductProvider',
       type: 'component',
-      url: '/api/hydrogen-react/components/shopifyprovider',
+      url: '/api/hydrogen-react/components/productprovider',
     },
   ],
   description:
@@ -20,12 +20,12 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './ShopifyProvider.example.jsx',
+          code: './ProductProvider.example.jsx',
           language: 'jsx',
         },
         {
           title: 'TypeScript',
-          code: './ShopifyProvider.example.tsx',
+          code: './ProductProvider.example.tsx',
           language: 'tsx',
         },
       ],
