@@ -4626,12 +4626,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ProductProvider} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ProductProvider} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -6800,9 +6800,9 @@
     "isVisualComponent": false,
     "related": [
       {
-        "name": "ShopifyProvider",
+        "name": "ProductProvider",
         "type": "component",
-        "url": "/api/hydrogen-react/components/shopifyprovider"
+        "url": "/api/hydrogen-react/components/productprovider"
       }
     ],
     "description": "Provides access to the product value passed to `<ProductProvider />`. It also includes properties for selecting product variants, options, and selling plans.",
@@ -6813,12 +6813,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ShopifyProvider, useShop} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ShopifyProvider, useShop} from '@shopify/hydrogen-react';\n\nexport default function App() {\n  return (\n    <ShopifyProvider\n      storeDomain=\"my-store\"\n      storefrontToken=\"abc123\"\n      storefrontApiVersion=\"2022-10\"\n      countryIsoCode=\"CA\"\n      languageIsoCode=\"EN\"\n    >\n      <UsingUseShop />\n    </ShopifyProvider>\n  );\n}\n\nexport function UsingUseShop() {\n  const shop = useShop();\n\n  return (\n    <>\n      <div>{shop.storeDomain}</div>\n      <div>{shop.storefrontToken}</div>\n      <div>{shop.storefrontApiVersion}</div>\n    </>\n  );\n}\n",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
             "language": "tsx"
           }
         ],
