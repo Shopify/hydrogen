@@ -1,19 +1,19 @@
 import {
   defer,
   type LinksFunction,
-  type MetaFunction,
   type LoaderArgs,
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {
+  isRouteErrorResponse,
   Links,
   Meta,
   Outlet,
   Scripts,
   ScrollRestoration,
-  useCatch,
   useLoaderData,
   useMatches,
+  useRouteError,
 } from '@remix-run/react';
 import {ShopifySalesChannel, Seo} from '@shopify/hydrogen';
 import {Layout} from '~/components';
@@ -41,11 +41,6 @@ export const links: LinksFunction = () => {
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 };
-
-export const meta: MetaFunction = () => ({
-  charset: 'utf-8',
-  viewport: 'width=device-width,initial-scale=1',
-});
 
 export async function loader({request, context}: LoaderArgs) {
   const [customerAccessToken, cartId, layout] = await Promise.all([
@@ -79,6 +74,8 @@ export default function App() {
   return (
     <html lang={locale.language}>
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Seo />
         <Meta />
         <Links />
@@ -97,16 +94,26 @@ export default function App() {
   );
 }
 
-export function CatchBoundary() {
+export function ErrorBoundary({error}: {error: Error}) {
   const [root] = useMatches();
-  const caught = useCatch();
-  const isNotFound = caught.status === 404;
-  const locale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
+  const locale = root?.data?.selectedLocale ?? DEFAULT_LOCALE;
+  const routeError = useRouteError();
+  const isRouteError = isRouteErrorResponse(routeError);
+
+  let title = 'Error';
+  let pageType = 'page';
+
+  if (isRouteError) {
+    title = 'Not found';
+    if (routeError.status === 404) pageType = routeError.data || pageType;
+  }
 
   return (
     <html lang={locale.language}>
       <head>
-        <title>{isNotFound ? 'Not found' : 'Error'}</title>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <title>{title}</title>
         <Meta />
         <Links />
       </head>
@@ -115,34 +122,19 @@ export function CatchBoundary() {
           layout={root?.data?.layout}
           key={`${locale.language}-${locale.country}`}
         >
-          {isNotFound ? (
-            <NotFound type={caught.data?.pageType} />
+          {isRouteError ? (
+            <>
+              {routeError.status === 404 ? (
+                <NotFound type={pageType} />
+              ) : (
+                <GenericError
+                  error={{message: `${routeError.status} ${routeError.data}`}}
+                />
+              )}
+            </>
           ) : (
-            <GenericError
-              error={{message: `${caught.status} ${caught.data}`}}
-            />
+            <GenericError error={error instanceof Error ? error : undefined} />
           )}
-        </Layout>
-        <Scripts />
-      </body>
-    </html>
-  );
-}
-
-export function ErrorBoundary({error}: {error: Error}) {
-  const [root] = useMatches();
-  const locale = root?.data?.selectedLocale ?? DEFAULT_LOCALE;
-
-  return (
-    <html lang={locale.language}>
-      <head>
-        <title>Error</title>
-        <Meta />
-        <Links />
-      </head>
-      <body>
-        <Layout layout={root?.data?.layout}>
-          <GenericError error={error} />
         </Layout>
         <Scripts />
       </body>
