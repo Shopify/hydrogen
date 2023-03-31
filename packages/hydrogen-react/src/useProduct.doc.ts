@@ -12,8 +12,8 @@ const data: ReferenceEntityTemplateSchema = {
     },
   ],
   description:
-    'Provides access to the product value passed to `<ProductProvider />`. It also includes properties for selecting produt variants, options, and selling plans.',
-  type: 'component',
+    'Provides access to the product value passed to `<ProductProvider />`. It also includes properties for selecting product variants, options, and selling plans.',
+  type: 'hook',
   defaultExample: {
     description: 'I am the default example',
     codeblock: {
