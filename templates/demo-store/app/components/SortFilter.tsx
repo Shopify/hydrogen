@@ -17,10 +17,21 @@ import type {
   Filter,
   Collection,
 } from '@shopify/hydrogen/storefront-api-types';
-import {
-  AppliedFilter,
-  SortParam,
-} from '~/routes/($lang)/collections/$collectionHandle';
+
+export type AppliedFilter = {
+  label: string;
+  urlParam: {
+    key: string;
+    value: string;
+  };
+};
+
+export type SortParam =
+  | 'price-low-high'
+  | 'price-high-low'
+  | 'best-selling'
+  | 'newest'
+  | 'featured';
 
 type Props = {
   filters: Filter[];

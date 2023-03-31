@@ -12,6 +12,7 @@ import {ProductGrid} from '~/components/ProductGrid';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
+import type {AppliedFilter, SortParam} from '~/components/SortFilter';
 
 export const headers = routeHeaders;
 
@@ -23,25 +24,9 @@ type VariantOptionFiltersQueryParam = Record<
   'variantOption',
   {name: string; value: string}
 >;
-
-export type AppliedFilter = {
-  label: string;
-  urlParam: {
-    key: string;
-    value: string;
-  };
-};
-
 type FiltersQueryParams = Array<
   VariantFilterParam | PriceFiltersQueryParam | VariantOptionFiltersQueryParam
 >;
-
-export type SortParam =
-  | 'price-low-high'
-  | 'price-high-low'
-  | 'best-selling'
-  | 'newest'
-  | 'featured';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {collectionHandle} = params;

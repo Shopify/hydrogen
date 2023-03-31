@@ -7,29 +7,17 @@ import {getHeroPlaceholder} from '~/lib/placeholders';
 import {seoPayload} from '~/lib/seo.server';
 import type {
   CollectionConnection,
-  Metafield,
   ProductConnection,
 } from '@shopify/hydrogen/storefront-api-types';
 import {AnalyticsPageType} from '@shopify/hydrogen';
 import {routeHeaders, CACHE_SHORT} from '~/data/cache';
+import {type CollectionHero} from '~/components/Hero';
 
 interface HomeSeoData {
   shop: {
     name: string;
     description: string;
   };
-}
-
-export interface CollectionHero {
-  byline: Metafield;
-  cta: Metafield;
-  handle: string;
-  heading: Metafield;
-  height?: 'full';
-  loading?: 'eager' | 'lazy';
-  spread: Metafield;
-  spreadSecondary: Metafield;
-  top?: boolean;
 }
 
 export const headers = routeHeaders;
