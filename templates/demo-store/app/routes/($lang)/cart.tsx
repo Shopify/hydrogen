@@ -69,6 +69,7 @@ export async function action({request, context}: ActionArgs) {
 
       break;
     case CartAction.REMOVE_FROM_CART:
+      invariant(cartId, 'Missing cartId');
       const lineIds = formData.get('linesIds')
         ? (JSON.parse(String(formData.get('linesIds'))) as CartType['id'][])
         : ([] as CartType['id'][]);
@@ -84,6 +85,7 @@ export async function action({request, context}: ActionArgs) {
 
       break;
     case CartAction.UPDATE_CART:
+      invariant(cartId, 'Missing cartId');
       const updateLines = formData.get('lines')
         ? (JSON.parse(String(formData.get('lines'))) as CartLineUpdateInput[])
         : ([] as CartLineUpdateInput[]);
