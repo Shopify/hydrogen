@@ -1,6 +1,7 @@
 {
   "name": "demo-store",
   "private": true,
+  "sideEffects": false,
   "version": "0.0.0",
   "scripts": {
     "dev": "shopify hydrogen dev",
