@@ -19,7 +19,6 @@ export {
   getPaginationVariables as getPaginationVariables__unstable,
 } from './pagination/Pagination';
 export {CustomerContext} from './customer/context';
-export {useCustomer} from './customer/hooks';
 
 export {
   AnalyticsEventName,
