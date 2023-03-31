@@ -76,6 +76,11 @@ async function runDev({
 
   const serverBundleExists = () => file.exists(buildPathWorkerFile);
 
+  const remixConfig = await reloadConfig();
+  const requestDebugFlags = remixConfig?.future
+    ? {...remixConfig.future}
+    : undefined;
+
   let miniOxygenStarted = false;
   async function safeStartMiniOxygen() {
     if (miniOxygenStarted) return;
@@ -86,6 +91,7 @@ async function runDev({
       watch: true,
       buildPathWorkerFile,
       buildPathClient,
+      requestDebugFlags,
     });
 
     miniOxygenStarted = true;
@@ -95,7 +101,7 @@ async function runDev({
   }
 
   const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
-  await watch(await reloadConfig(), {
+  await watch(remixConfig, {
     reloadConfig,
     mode: process.env.NODE_ENV as any,
     async onInitialBuild() {

@@ -1,5 +1,5 @@
 import {useLoaderData} from '@remix-run/react';
-import {type MetaFunction, LinksFunction} from '@shopify/remix-oxygen';
+import type {LinksFunction, LoaderArgs} from '@shopify/remix-oxygen';
 import {type Shop} from '@shopify/hydrogen-react/storefront-api-types';
 import {HydrogenLogoBaseBW} from '../components/HydrogenLogoBaseBW.jsx';
 import {HydrogenLogoBaseColor} from '../components/HydrogenLogoBaseColor.jsx';
@@ -17,13 +17,18 @@ interface AppLoadContext {
   storefront: StorefrontClient<I18nBase>['storefront'];
 }
 
-export const meta: MetaFunction = () => {
-  return {
+export const meta = ({data}: {data: Awaited<ReturnType<typeof loader>>}) => {
+  const metaObj = {
     title: 'Hydrogen',
     description: 'A custom storefront powered by Hydrogen',
-    charset: 'utf-8',
-    viewport: 'width=device-width,initial-scale=1',
   };
+
+  return data.debugFlags.v2_meta
+    ? [
+        {title: metaObj.title},
+        {name: 'description', content: metaObj.description},
+      ]
+    : metaObj;
 };
 
 export const links: LinksFunction = () => [
@@ -48,9 +53,15 @@ export const links: LinksFunction = () => [
   },
 ];
 
-export async function loader({context}: {context: AppLoadContext}) {
+export async function loader({
+  context,
+  request,
+}: LoaderArgs & {context: AppLoadContext}) {
   const layout = await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY);
-  return {layout};
+  return {
+    layout,
+    debugFlags: {v2_meta: request.headers.get('x-v2-meta') === 'true'},
+  };
 }
 
 export const HYDROGEN_SHOP_ID = 'gid://shopify/Shop/55145660472';

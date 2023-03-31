@@ -7,6 +7,7 @@ type MiniOxygenOptions = {
   watch?: boolean;
   buildPathClient: string;
   buildPathWorkerFile: string;
+  requestDebugFlags?: Record<string, any>;
 };
 
 export async function startMiniOxygen({
@@ -15,6 +16,7 @@ export async function startMiniOxygen({
   watch = false,
   buildPathWorkerFile,
   buildPathClient,
+  requestDebugFlags,
 }: MiniOxygenOptions) {
   const {default: miniOxygen} = await import('@shopify/mini-oxygen');
   const miniOxygenPreview =
@@ -43,6 +45,13 @@ export async function startMiniOxygen({
         request as unknown as Request,
         response as unknown as Response,
       ),
+    onRequest: requestDebugFlags
+      ? (request) => {
+          if (requestDebugFlags.v2_meta) {
+            request.headers.set('x-v2-meta', 'true');
+          }
+        }
+      : undefined,
   });
 
   const listeningAt = `http://localhost:${actualPort}`;
