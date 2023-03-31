@@ -167,6 +167,7 @@ export function ProductProvider({
 
   const value = useMemo<ProductHookValue>(
     () => ({
+      product,
       variants,
       variantsConnection: product.variants,
       options,
@@ -183,10 +184,9 @@ export function ProductProvider({
       sellingPlanGroupsConnection: product.sellingPlanGroups,
     }),
     [
+      product,
       isOptionInStock,
       options,
-      product.sellingPlanGroups,
-      product.variants,
       selectedOptions,
       selectedSellingPlan,
       selectedSellingPlanAllocation,
@@ -335,6 +335,8 @@ export interface OptionWithValues {
 
 type ProductHookValue = PartialDeep<
   {
+    /** The raw product from the Storefront API */
+    product: Product;
     /** An array of the variant `nodes` from the `VariantConnection`. */
     variants: ProductVariantType[];
     variantsConnection?: ProductVariantConnection;

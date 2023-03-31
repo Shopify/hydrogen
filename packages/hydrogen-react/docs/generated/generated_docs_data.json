@@ -4626,12 +4626,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ProductProvider} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ProductProvider} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -6789,6 +6789,96 @@
                 "description": "A string without currency and without trailing zeros removed from the fractional part, if any exist. If there are no trailing zeros, then the fractional part remains.\nFor example, `$640.00` turns into `640`.\n`$640.42` turns into `640.42`."
               }
             ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "useProduct",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "ProductProvider",
+        "type": "component",
+        "url": "/api/hydrogen-react/components/productprovider"
+      }
+    ],
+    "description": "Provides access to the product value passed to `<ProductProvider />`. It also includes properties for selecting product variants, options, and selling plans.",
+    "type": "hook",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "`useProduct` must be a descendent of the `<ProductProvider />` component.",
+        "type": "UseProductGeneratedType",
+        "typeDefinitions": {
+          "UseProductGeneratedType": {
+            "filePath": "/ProductProvider.tsx",
+            "name": "UseProductGeneratedType",
+            "params": [],
+            "returns": {
+              "filePath": "/ProductProvider.tsx",
+              "description": "",
+              "name": "ProductHookValue",
+              "value": "ProductHookValue"
+            },
+            "value": "export function useProduct(): ProductHookValue {\n  const context = useContext(ProductOptionsContext);\n\n  if (!context) {\n    throw new Error(`'useProduct' must be a child of <ProductProvider />`);\n  }\n\n  return context;\n}"
+          },
+          "ProductHookValue": {
+            "filePath": "/ProductProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ProductHookValue",
+            "value": "PartialDeep<\n  {\n    /** The raw product from the Storefront API */\n    product: Product;\n    /** An array of the variant `nodes` from the `VariantConnection`. */\n    variants: ProductVariantType[];\n    variantsConnection?: ProductVariantConnection;\n    /** An array of the product's options and values. */\n    options: OptionWithValues[];\n    /** The selected variant. */\n    selectedVariant?: ProductVariantType | null;\n    selectedOptions: SelectedOptions;\n    /** The selected selling plan. */\n    selectedSellingPlan?: SellingPlanType;\n    /** The selected selling plan allocation. */\n    selectedSellingPlanAllocation?: SellingPlanAllocationType;\n    /** The selling plan groups. */\n    sellingPlanGroups?: (Omit<SellingPlanGroupType, 'sellingPlans'> & {\n      sellingPlans: SellingPlanType[];\n    })[];\n    sellingPlanGroupsConnection?: SellingPlanGroupConnection;\n  },\n  {recurseIntoArrays: true}\n> & {\n  /** A callback to set the selected variant to the variant passed as an argument. */\n  setSelectedVariant: (\n    variant: PartialDeep<ProductVariantType, {recurseIntoArrays: true}> | null,\n  ) => void;\n  /** A callback to set the selected option. */\n  setSelectedOption: (\n    name: SelectedOptionType['name'],\n    value: SelectedOptionType['value'],\n  ) => void;\n  /** A callback to set multiple selected options at once. */\n  setSelectedOptions: (options: SelectedOptions) => void;\n  /** A callback to set the selected selling plan to the one passed as an argument. */\n  setSelectedSellingPlan: (\n    sellingPlan: PartialDeep<SellingPlanType, {recurseIntoArrays: true}>,\n  ) => void;\n  /** A callback that returns a boolean indicating if the option is in stock. */\n  isOptionInStock: (\n    name: SelectedOptionType['name'],\n    value: SelectedOptionType['value'],\n  ) => boolean;\n}",
+            "description": ""
+          },
+          "OptionWithValues": {
+            "filePath": "/ProductProvider.tsx",
+            "name": "OptionWithValues",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "name",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "values",
+                "value": "string[]",
+                "description": ""
+              }
+            ],
+            "value": "export interface OptionWithValues {\n  name: SelectedOptionType['name'];\n  values: SelectedOptionType['value'][];\n}"
+          },
+          "SelectedOptions": {
+            "filePath": "/ProductProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "SelectedOptions",
+            "value": "{\n  [key: string]: string;\n}",
+            "description": "",
+            "members": []
           }
         }
       }
