@@ -1,4 +1,4 @@
-import {redirect} from '@shopify/remix-oxygen';
+import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import {cartCreate} from './cart';
 
 /**
@@ -18,17 +18,16 @@ import {cartCreate} from './cart';
  * ```
  * @preserve
  */
-export async function loader({request, context, params}) {
+export async function loader({request, context, params}: LoaderArgs) {
   const {storefront} = context;
 
   const session = context.session;
 
   const {lines} = params;
-  const linesArray = lines.split(',');
-  const linesMap = linesArray.map((line) => {
-    line = line.split(':');
-    const variantId = line[0];
-    const quantity = parseInt(line[1], 10);
+  const linesMap = lines?.split(',').map((line) => {
+    const lineDetails = line.split(':');
+    const variantId = lineDetails[0];
+    const quantity = parseInt(lineDetails[1], 10);
 
     return {
       merchandiseId: `gid://shopify/ProductVariant/${variantId}`,
@@ -38,7 +37,9 @@ export async function loader({request, context, params}) {
 
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
+
   const discount = searchParams.get('discount');
+  const discountArray = discount ? [discount] : [];
 
   const headers = new Headers();
 
@@ -46,7 +47,7 @@ export async function loader({request, context, params}) {
   const {cart, errors: graphqlCartErrors} = await cartCreate({
     input: {
       lines: linesMap,
-      discountCodes: discount,
+      discountCodes: discountArray,
     },
     storefront,
   });
