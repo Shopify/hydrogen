@@ -36,7 +36,7 @@ Code:
 
 ```tsx
 export async function loader() {
-  /* failed SFAPI requests will throw to the ErrorBoundary */
+  /* failed Storefront API requests will throw to the ErrorBoundary */
   const data = storefront.query()
 
 
