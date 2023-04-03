@@ -149,14 +149,13 @@ exports.default = (code, out, options = {}) => {
     modules = [],
     globalGqlIdentifierName,
     gqlMagicComment,
+    skipIndent,
+    isGqlTemplateLiteral = defaultIsGqlTemplateLiteral,
+    pluckStringFromFile = defaultPluckStringFromFile,
   } = {
     ...defaults,
     ...options,
   };
-  const isGqlTemplateLiteral =
-    options.isGqlTemplateLiteral || defaultIsGqlTemplateLiteral;
-  const pluckStringFromFile =
-    options.pluckStringFromFile || defaultPluckStringFromFile;
   // Prevent case related potential errors
   gqlMagicComment = gqlMagicComment.toLowerCase();
   // normalize `name` and `identifier` values
@@ -169,6 +168,12 @@ exports.default = (code, out, options = {}) => {
   globalGqlIdentifierName = (0, utils_1.asArray)(globalGqlIdentifierName).map(
     (s) => s.toLowerCase(),
   );
+  const hooksOptions = {
+    skipIndent,
+    gqlMagicComment,
+    modules,
+    globalGqlIdentifierName,
+  };
   // Keep imported identifiers
   // import gql from 'graphql-tag' -> gql
   // import { graphql } from 'gatsby' -> graphql
@@ -202,14 +207,15 @@ exports.default = (code, out, options = {}) => {
   // Push all template literals leaded by graphql magic comment
   // e.g. /* GraphQL */ `query myQuery {}` -> query myQuery {}
   const pluckMagicTemplateLiteral = (node, takeExpression = false) => {
-    if (!isGqlTemplateLiteral(node, {...defaults, ...options})) {
+    if (!isGqlTemplateLiteral(node, hooksOptions)) {
       return;
     }
     const nodeToUse = takeExpression ? node.expression : node;
-    const gqlTemplateLiteral = pluckStringFromFile(code, nodeToUse, {
-      ...defaults,
-      ...options,
-    });
+    const gqlTemplateLiteral = pluckStringFromFile(
+      code,
+      nodeToUse,
+      hooksOptions,
+    );
     if (gqlTemplateLiteral) {
       addTemplateLiteralToResult({
         content: gqlTemplateLiteral,
@@ -266,8 +272,8 @@ exports.default = (code, out, options = {}) => {
           if (start != null && end != null && start != null && loc != null) {
             const gqlTemplateLiteral = pluckStringFromFile(
               code,
-              {start, end},
-              options,
+              unwrappedExpression,
+              hooksOptions,
             );
             // If the entire template was made out of interpolations it should be an empty
             // string by now and thus should be ignored
@@ -351,7 +357,7 @@ exports.default = (code, out, options = {}) => {
         const gqlTemplateLiteral = pluckStringFromFile(
           code,
           path.node.quasi,
-          options,
+          hooksOptions,
         );
         if (gqlTemplateLiteral) {
           addTemplateLiteralToResult({
