@@ -2,8 +2,6 @@
 
 This initial document provides guidelines and opinionated best practices for developing in Remix and Hydrogen with the goal of building consistent and well structured code. This may evolve into more official recommendations, such as ESLint presets and other tooling to guide users to the outcomes defined below.
 
-At the moment this document is meant to provide guidelines for the templates that the Hydrogen team creates; however, if this is found valuable, it could branch into an official recommendation for Hydrogen codebases, potentially with ESLint presets to help enforce the rules.
-
 Topics covered:
 
 - [Error Handling](#error-handling)
@@ -78,7 +76,7 @@ export default function TheUIComponents() {
 
 ## Template Dependencies
 
-Minimalize dependencies and shared code between templates; template files are meant to stand alone in a given Hydrogen storefront. 
+Minimalize dependencies and shared code between templates; template files are meant to stand alone in a given Hydrogen storefront.
 
 ### Do:
 
