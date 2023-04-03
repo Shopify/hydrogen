@@ -1,6 +1,6 @@
 # Hydrogen Template Guidelines
 
-The following code guidelines are our opinionated best practices for developing templates in Remix and Hydrogen, with the goal of building consistent and well structured code.
+This initial document provides guidelines and opinionated best practices for developing in Remix and Hydrogen with the goal of building consistent and well structured code. This may evolve into more official recommendations, such as ESLint presets and other tooling to guide users to the outcomes defined below.
 
 At the moment this document is meant to provide guidelines for the templates that the Hydrogen team creates; however, if this is found valuable, it could branch into an official recommendation for Hydrogen codebases, potentially with ESLint presets to help enforce the rules.
 
@@ -78,7 +78,7 @@ export default function TheUIComponents() {
 
 ## Template Dependencies
 
-Minimalize dependencies and shared code between templates.
+Minimalize dependencies and shared code between templates; template files are meant to stand alone in a given Hydrogen storefront. 
 
 ### Do:
 
@@ -186,7 +186,7 @@ Use the correct return type in `loader()`, `action()`, etc.
 ### Do:
 
 - Use `json()` by default
-- Use `redirect()` from the `remix` package to redirect
+- Use `redirect()` from the `@shopify/remix-oxygen` package to redirect
 - Use `defer()` when there is a need to have content streamed in later
 - Use `new Response()` for errors (like 404s) and for unique document responses like `.xml` and `.txt`
 - Use capitalized and kebab-cased headers in responses, like `Cache-Control`
@@ -221,7 +221,7 @@ export async function loader() {
 
 ## Graphql Query Definitions
 
-Be consistent in the query's variable name, in addition to the query's name in the query string. This helps the variables to be easily found, and ensure that tooling (like GraphQL Codegen) doesn't get have conflicts in query types and results.
+Be consistent in the query's variable name, in addition to the query's name in the query string. This helps the variables to be easily found, and ensure that tooling (like GraphQL Codegen) doesn't have conflicts in query types and results.
 
 ### Do:
 
