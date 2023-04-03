@@ -61,6 +61,7 @@ export function ErrorBoundary({error}) {
   return (<div>{error.message}</div>)
 }
 
+// Note that `CatchBoundary`s will be deprecated in Remix V2
 export function CatchBoundary() {
   const {statusText} = useCatch()
   return (<div>{statusText}</div>)
