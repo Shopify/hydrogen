@@ -200,7 +200,7 @@ export async function loader() {
 ```
 
 ```tsx
-import {redirect} from 'remix';
+import {redirect} from ''@shopify/remix-oxygen';';
 export async function loader() {
   return redirect('/');
 }
