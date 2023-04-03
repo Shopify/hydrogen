@@ -123,7 +123,7 @@ Remix-specific route API functions should be ordered and consistent in style, to
 - Order these APIs following a top-down order of concerns:
   1. Http header tweaks (`shouldRevalidate`, `headers`, `meta`, `links`)
   1. Data manipulation (`loader`, `action`)
-  1. UI (`Route`)
+  1. UI (`Component`)
   1. Error handling (`ErrorBoundary`, `CatchBoundary`)
   1. Storefront API GraphQL query strings
 - Use function declarations when possible
@@ -151,7 +151,7 @@ export async function loader({}: LoaderArgs) {}
 
 export async function action({}: ActionArgs) {}
 
-export default function Route() {}
+export default function Component() {}
 
 export function ErrorBoundary() {}
 
