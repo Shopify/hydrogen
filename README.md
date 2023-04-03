@@ -6,18 +6,16 @@
 
 [![MIT License](https://img.shields.io/github/license/shopify/hydrogen)](LICENSE.md)
 [![npm downloads](https://img.shields.io/npm/dm/@shopify/hydrogen.svg?sanitize=true)](https://npmcharts.com/compare/@shopify/hydrogen?minimal=true)
-  
 
 📚 [Docs](https://shopify.dev/custom-storefronts/hydrogen) | 🗣 [Discord](https://discord.gg/Hefq6w5c5d) | 💬 [Discussions](https://github.com/Shopify/hydrogen/discussions) | 📝 [Changelog](./packages/hydrogen/CHANGELOG.md)
 
-
-  Hydrogen is Shopify’s stack for headless commerce. It provides a set of tools, utilities, and best-in-class examples for building dynamic and performant commerce applications. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework, but it also provides a React library portable to other supporting frameworks.
+Hydrogen is Shopify’s stack for headless commerce. It provides a set of tools, utilities, and best-in-class examples for building dynamic and performant commerce applications. Hydrogen is designed to dovetail with [Remix](https://remix.run/), Shopify’s full stack web framework, but it also provides a React library portable to other supporting frameworks.
 
  </div>
 
 ## Hydrogen Legacy v1
 
-Hydrogen legacy v1 has been moved [to a separate repo](https://github.com/Shopify/hydrogen-v1) and the [docs can be found here](https://shopify.github.io/hydrogen-v1/tutorials/getting-started). 
+Hydrogen legacy v1 has been moved [to a separate repo](https://github.com/Shopify/hydrogen-v1) and the [docs can be found here](https://shopify.github.io/hydrogen-v1/tutorials/getting-started).
 
 ## Getting started with Hydrogen
 
