@@ -84,7 +84,7 @@ Minimalize dependencies and shared code between templates; template files are me
 
 ### Don't:
 
-- Share code between templates in a separate file. There is no guarantee that any given project will need both those templates, and we also want to avoid issues associated with generating multiple files (such as file placement)
+- Share code between templates in a separate file. There is no guarantee that any given project will need both those templates, and we also want to avoid issues associated with generating multiple files (such as file organization).
 - Use `npm` packages or dependencies in templates that aren't directly associated with Hydrogen or Remix. A package like `tiny-invariant` could be 1) confusing to developers unfamiliar with it, 2) abstract away things that we want to teach, such as correct error handling, and 3) require us to figure out how to correctly give direction on installation and updating the `package.json` upon template creation.
 
 <!-- ## Code Organization
