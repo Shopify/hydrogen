@@ -158,7 +158,7 @@ export function ErrorBoundary() {}
 
 export function CatchBoundary() {}
 
-/* storefront Queries/Mutations */
+/* storefront Queries/Mutations, see more specific recommendations below  */
 ```
 
 ## TypeScript
