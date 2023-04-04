@@ -11,7 +11,7 @@ export function ProductSwimlane({
   ...props
 }: {
   title?: string;
-  products?: SerializeFrom<Product[]>;
+  products?: Product[];
   count?: number;
 }) {
   return (

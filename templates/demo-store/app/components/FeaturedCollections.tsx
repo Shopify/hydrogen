@@ -8,7 +8,7 @@ export function FeaturedCollections({
   title = 'Collections',
   ...props
 }: {
-  collections: SerializeFrom<Collection[]>;
+  collections: Collection[];
   title?: string;
   [key: string]: any;
 }) {

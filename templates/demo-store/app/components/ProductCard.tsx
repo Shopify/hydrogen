@@ -20,7 +20,7 @@ export function ProductCard({
   onClick,
   quickAdd,
 }: {
-  product: SerializeFrom<Product>;
+  product: Product;
   label?: string;
   className?: string;
   loading?: HTMLImageElement['loading'];

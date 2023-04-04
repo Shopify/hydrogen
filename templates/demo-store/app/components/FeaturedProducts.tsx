@@ -110,7 +110,7 @@ function FeatureProductsContent({
     <>
       {products.map((product) => (
         <ProductCard
-          product={product as Product}
+          product={product}
           key={product.id}
           onClick={onClick}
           quickAdd
