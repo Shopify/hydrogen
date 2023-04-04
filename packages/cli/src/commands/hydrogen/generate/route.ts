@@ -11,6 +11,7 @@ import {
   transpileFile,
   resolveFormatConfig,
 } from '../../../utils/transpile-ts.js';
+import {getRemixConfig} from '../../../utils/config.js';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 
@@ -72,6 +73,9 @@ export default class GenerateRoute extends Command {
 
     const {route} = args;
 
+    const remixConfig = await getRemixConfig(directory);
+    const isV2 = !!remixConfig.future?.v2_routeConvention;
+
     const routePath =
       route === 'all'
         ? Object.values(ROUTE_MAP).flat()
@@ -90,9 +94,12 @@ export default class GenerateRoute extends Command {
 
     try {
       for (const item of routesArray) {
+        const routeFrom = item;
+        const routeTo = isV2 ? convertRouteToV2(item) : item;
+
         result.set(
-          item,
-          await runGenerate(item, {
+          routeTo,
+          await runGenerate(routeFrom, routeTo, {
             directory,
             typescript: isTypescript,
             force: flags.force,
@@ -126,8 +133,13 @@ export default class GenerateRoute extends Command {
   }
 }
 
+export function convertRouteToV2(route: string): string {
+  return route.replace(/\/index$/, '/_index').replace(/(?<!^)\//g, '.');
+}
+
 export async function runGenerate(
-  route: string,
+  routeFrom: string,
+  routeTo: string,
   {
     directory,
     typescript,
@@ -148,13 +160,13 @@ export async function runGenerate(
     templatesRoot,
     GENERATOR_TEMPLATES_DIR,
     'routes',
-    `${route}.tsx`,
+    `${routeFrom}.tsx`,
   );
   const destinationPath = path.join(
     directory,
     'app',
     'routes',
-    `${route}${extension}`,
+    `${routeTo}${extension}`,
   );
   const relativeDestinationPath = path.relative(directory, destinationPath);
 
