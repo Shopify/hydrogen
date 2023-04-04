@@ -1,4 +1,9 @@
-import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  type MetaFunction,
+  type V2_MetaFunction,
+  type LoaderArgs,
+} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import type {Page as PageType} from '@shopify/hydrogen/storefront-api-types';
@@ -33,11 +38,12 @@ export const handle = {
 
 export const meta: MetaFunction = ({data}) => {
   const {title, description} = data?.page.seo ?? {};
+  return {title, description};
+};
 
-  return {
-    title,
-    description,
-  };
+export const metaV2: V2_MetaFunction = ({data}) => {
+  const {title, description} = data?.page.seo ?? {};
+  return [{title}, {name: 'description', content: description}];
 };
 
 export default function Page() {

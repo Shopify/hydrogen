@@ -1,4 +1,9 @@
-import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  type MetaFunction,
+  type V2_MetaFunction,
+  type LoaderArgs,
+} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 
 import {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
@@ -37,9 +42,13 @@ export async function loader({params, context}: LoaderArgs) {
 }
 
 export const meta: MetaFunction<typeof loader> = ({data}) => {
-  return {
-    title: data?.policy?.title ?? 'Policies',
-  };
+  const title = data?.policy?.title ?? 'Policies';
+  return {title};
+};
+
+export const metaV2: V2_MetaFunction<typeof loader> = ({data}) => {
+  const title = data?.policy?.title ?? 'Policies';
+  return [{title}];
 };
 
 export default function Policies() {

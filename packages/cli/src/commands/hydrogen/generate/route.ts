@@ -74,7 +74,8 @@ export default class GenerateRoute extends Command {
     const {route} = args;
 
     const remixConfig = await getRemixConfig(directory);
-    const isV2 = !!remixConfig.future?.v2_routeConvention;
+    const isV2RouteConvention = !!remixConfig.future?.v2_routeConvention;
+    const isV2Meta = !!remixConfig.future?.v2_meta;
 
     const routePath =
       route === 'all'
@@ -95,7 +96,7 @@ export default class GenerateRoute extends Command {
     try {
       for (const item of routesArray) {
         const routeFrom = item;
-        const routeTo = isV2 ? convertRouteToV2(item) : item;
+        const routeTo = isV2RouteConvention ? convertRouteToV2(item) : item;
 
         result.set(
           routeTo,
@@ -104,6 +105,7 @@ export default class GenerateRoute extends Command {
             typescript: isTypescript,
             force: flags.force,
             adapter: flags.adapter,
+            isV2Meta,
           }),
         );
       }
@@ -133,10 +135,6 @@ export default class GenerateRoute extends Command {
   }
 }
 
-export function convertRouteToV2(route: string): string {
-  return route.replace(/\/index$/, '/_index').replace(/(?<!^)\//g, '.');
-}
-
 export async function runGenerate(
   routeFrom: string,
   routeTo: string,
@@ -146,12 +144,14 @@ export async function runGenerate(
     force,
     adapter,
     templatesRoot = fileURLToPath(new URL('../../../', import.meta.url)),
+    isV2Meta,
   }: {
     directory: string;
     typescript?: boolean;
     force?: boolean;
     adapter?: string;
     templatesRoot?: string;
+    isV2Meta?: boolean;
   },
 ): Promise<Result> {
   let operation;
@@ -197,6 +197,10 @@ export async function runGenerate(
   }
 
   let templateContent = await file.read(templatePath);
+
+  templateContent = isV2Meta
+    ? convertToMetaV2(templateContent)
+    : convertToMetaV1(templateContent);
 
   // If the project is not using TypeScript, we need to compile the template
   // to JavaScript. We try to read the project's jsconfig.json, but if it
@@ -244,4 +248,21 @@ export async function runGenerate(
   return {
     operation: operation as 'generated' | 'overwritten',
   };
+}
+
+export function convertRouteToV2(route: string) {
+  return route.replace(/\/index$/, '/_index').replace(/(?<!^)\//g, '.');
+}
+
+function convertToMetaV2(template: string) {
+  return template
+    .replace(/type MetaFunction\s*,?/, '')
+    .replace(/export const meta:.+?\n};/s, '')
+    .replace(/const metaV2:/, 'export const meta:');
+}
+
+function convertToMetaV1(template: string) {
+  return template
+    .replace(/type V2_MetaFunction\s*,?/, '')
+    .replace(/export const metaV2:.+?\n};/s, '');
 }

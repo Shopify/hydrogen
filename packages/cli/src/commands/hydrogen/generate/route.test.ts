@@ -148,6 +148,78 @@ describe('generate/route', () => {
       expect(ui.prompt).not.toHaveBeenCalled();
     });
   });
+
+  describe('v2_meta', () => {
+    const META_TEMPLATE = `
+    import {type MetaFunction, type V2_MetaFunction} from '@shopify/remix-oxygen';
+    export const meta: MetaFunction = ({data}) => {
+      const title = 'title';
+      return {title};
+    };
+    export const metaV2: V2_MetaFunction = ({data}) => {
+      const title = 'title';
+      return [{title}];
+    };
+    `.replace(/^\s{4}/gm, '');
+
+    it('uses v2 meta exports when enabled', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        // Given
+        const route = 'meta-test';
+        const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
+          files: [],
+          templates: [[route, META_TEMPLATE]],
+        });
+
+        // When
+        await runGenerate(route, convertRouteToV2(route), {
+          directory: appRoot,
+          templatesRoot,
+          isV2Meta: true,
+          typescript: true,
+        });
+
+        // Then
+        const result = await file.read(
+          path.join(appRoot, 'app/routes', 'meta-test.tsx'),
+        );
+        expect(result).toContain(
+          `import {type V2_MetaFunction} from '@shopify/remix-oxygen';`,
+        );
+        expect(result).toMatch(/return \[\{title\}\];/);
+        expect(result).not.toMatch(/return \{title\};/);
+      });
+    });
+
+    it('uses v1 meta exports when disabled', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        // Given
+        const route = 'meta-test';
+        const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
+          files: [],
+          templates: [[route, META_TEMPLATE]],
+        });
+
+        // When
+        await runGenerate(route, convertRouteToV2(route), {
+          directory: appRoot,
+          templatesRoot,
+          isV2Meta: false,
+          typescript: true,
+        });
+
+        // Then
+        const result = await file.read(
+          path.join(appRoot, 'app/routes', 'meta-test.tsx'),
+        );
+        expect(result).toContain(
+          `import {type MetaFunction} from '@shopify/remix-oxygen';`,
+        );
+        expect(result).toMatch(/return \{title\};/);
+        expect(result).not.toMatch(/return \[\{title\}\];/);
+      });
+    });
+  });
 });
 
 async function createHydrogen(
