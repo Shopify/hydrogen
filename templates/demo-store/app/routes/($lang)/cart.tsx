@@ -212,6 +212,7 @@ const CREATE_CART_MUTATION = `#graphql
     cartCreate(input: $input) {
       cart {
         ...CartLinesFragment
+        checkoutUrl
       }
       errors: userErrors {
         ...ErrorFragment
