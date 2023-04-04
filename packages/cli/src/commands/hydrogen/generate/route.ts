@@ -258,7 +258,7 @@ function convertToMetaV2(template: string) {
   return template
     .replace(/type MetaFunction\s*,?/, '')
     .replace(/export const meta:.+?\n};/s, '')
-    .replace(/const metaV2:/, 'export const meta:');
+    .replace(/const metaV2:/, 'const meta:');
 }
 
 function convertToMetaV1(template: string) {
