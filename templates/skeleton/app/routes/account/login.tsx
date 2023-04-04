@@ -1,12 +1,10 @@
 import {
-  type MetaFunction,
   type ActionFunction,
   type LoaderArgs,
   redirect,
   json,
 } from '@shopify/remix-oxygen';
-import {Form, Link, useActionData, useLoaderData} from '@remix-run/react';
-import {useState} from 'react';
+import {Form} from '@remix-run/react';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');

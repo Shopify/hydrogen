@@ -3,7 +3,7 @@ import {useLoaderData} from '@remix-run/react';
 
 import {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 
-export async function loader({request, params, context}: LoaderArgs) {
+export async function loader({params, context}: LoaderArgs) {
   const handle = params.policyHandle;
 
   if (!handle) {
