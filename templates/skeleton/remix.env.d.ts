@@ -30,7 +30,7 @@ declare global {
 declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
     session: HydrogenSession;
-    storefront: Storefront;
+    storefront: Storefront & {mock: Storefront};
     env: Env;
   }
 }

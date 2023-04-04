@@ -8,6 +8,8 @@ import {
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
+// eslint-disable-next-line hydrogen/prefer-gql
+import {gql} from 'graphql-request';
 
 /**
  * Export a fetch handler in module format.
@@ -48,6 +50,33 @@ export default {
       });
 
       /**
+       * Create a mock Storefront client that uses mock.shop
+       */
+      const extendedStorefront = Object.assign(storefront, {
+        mock: {
+          query: async (queryString, options) => {
+            const mockShopApiUrl = new URL('https://mock.shop/api');
+            mockShopApiUrl.search = new URLSearchParams({
+              query: queryString.replace(/#graphql/g, ' ').trim(),
+              variables: options?.variables
+                ? JSON.stringify(options?.variables)
+                : '',
+            }).toString();
+
+            const response = await fetch(mockShopApiUrl);
+            const {data} = await response.json<{
+              data: Record<string, unknown>;
+            }>();
+
+            return data;
+          },
+        } as Pick<
+          ReturnType<typeof createStorefrontClient>['storefront'],
+          'query'
+        >,
+      });
+
+      /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
        */
@@ -65,7 +94,11 @@ export default {
          * If the redirect doesn't exist, then `storefrontRedirect`
          * will pass through the 404 response.
          */
-        return storefrontRedirect({request, response, storefront});
+        return storefrontRedirect({
+          request,
+          response,
+          storefront: extendedStorefront,
+        });
       }
 
       return response;
