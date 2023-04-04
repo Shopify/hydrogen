@@ -16,20 +16,18 @@ import type {
   UserError,
   CartBuyerIdentityInput,
 } from '@shopify/hydrogen/storefront-api-types';
-import {isLocalPath} from '~/lib/utils';
+import {isLocalPath, getCartId} from '~/lib/utils';
 import {CartAction, type CartActions} from '~/lib/type';
 
 export async function action({request, context}: ActionArgs) {
   const {session, storefront} = context;
   const headers = new Headers();
+  let cartId = getCartId(request);
 
-  const [formData, storedCartId, customerAccessToken] = await Promise.all([
+  const [formData, customerAccessToken] = await Promise.all([
     request.formData(),
-    session.get('cartId'),
     session.get('customerAccessToken'),
   ]);
-
-  let cartId = storedCartId;
 
   const cartAction = formData.get('cartAction') as CartActions;
   invariant(cartAction, 'No cartAction defined');
@@ -71,6 +69,7 @@ export async function action({request, context}: ActionArgs) {
 
       break;
     case CartAction.REMOVE_FROM_CART:
+      invariant(cartId, 'Missing cartId');
       const lineIds = formData.get('linesIds')
         ? (JSON.parse(String(formData.get('linesIds'))) as CartType['id'][])
         : ([] as CartType['id'][]);
@@ -86,6 +85,7 @@ export async function action({request, context}: ActionArgs) {
 
       break;
     case CartAction.UPDATE_CART:
+      invariant(cartId, 'Missing cartId');
       const updateLines = formData.get('lines')
         ? (JSON.parse(String(formData.get('lines'))) as CartLineUpdateInput[])
         : ([] as CartLineUpdateInput[]);
@@ -151,8 +151,7 @@ export async function action({request, context}: ActionArgs) {
   /**
    * The Cart ID may change after each mutation. We need to update it each time in the session.
    */
-  session.set('cartId', cartId);
-  headers.set('Set-Cookie', await session.commit());
+  headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
