@@ -6,7 +6,7 @@ import {Link} from '@remix-run/react';
 export async function loader({params, request, context}: LoaderArgs) {
   const {collectionHandle} = params;
 
-  const {collection} = await context.storefront.query<{
+  const {collection} = await context.storefront.mock.query<{
     collection: CollectionType;
   }>(COLLECTION_QUERY, {
     variables: {

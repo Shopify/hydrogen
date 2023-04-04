@@ -8,7 +8,7 @@ import type {
 export async function loader({params, context}: LoaderArgs) {
   const {productHandle} = params;
 
-  const {product} = await context.storefront.query<{
+  const {product} = await context.storefront.mock.query<{
     product: ProductType & {selectedVariant?: ProductVariant};
   }>(PRODUCT_QUERY, {
     variables: {
