@@ -11,7 +11,7 @@ import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
  * @param reverse
  * @param sortKey
  * @returns Product[]
- * @see https://shopify.dev/api/storefront/2023-01/queries/products
+ * @see https://shopify.dev/api/storefront/latest/queries/products
  */
 export async function loader({request, context: {storefront}}: LoaderArgs) {
   const url = new URL(request.url);
