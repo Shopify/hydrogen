@@ -6,7 +6,6 @@ import {
   ShopifyAnalyticsProduct,
   useMoney,
 } from '@shopify/hydrogen';
-import type {SerializeFrom} from '@shopify/remix-oxygen';
 import {Text, Link, AddToCartButton} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
