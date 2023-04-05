@@ -11,7 +11,7 @@ import {
   transpileFile,
   resolveFormatConfig,
 } from '../../../utils/transpile-ts.js';
-import {getRemixConfig} from '../../../utils/config.js';
+import {getRawRemixConfig} from '../../../utils/config.js';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 
@@ -73,7 +73,7 @@ export default class GenerateRoute extends Command {
 
     const {route} = args;
 
-    const remixConfig = await getRemixConfig(directory);
+    const remixConfig = await getRawRemixConfig(directory);
     const isV2RouteConvention = !!remixConfig.future?.v2_routeConvention;
     const isV2Meta = !!remixConfig.future?.v2_meta;
 

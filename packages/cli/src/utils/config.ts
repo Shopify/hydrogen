@@ -1,8 +1,7 @@
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
-import type {RemixConfig} from '@remix-run/dev/dist/config.js';
+import type {AppConfig, RemixConfig} from '@remix-run/dev/dist/config.js';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {output, file} from '@shopify/cli-kit';
-import {createRequire} from 'module';
 import {fileURLToPath} from 'url';
 import path from 'path';
 import fs from 'fs/promises';
@@ -10,6 +9,8 @@ import fs from 'fs/promises';
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
 const WORKER_SUBDIR = 'worker'; // Hardcoded in Oxygen
+
+const oxygenServerMainFields = ['browser', 'module', 'main'];
 
 export function getProjectPaths(appPath?: string, entry?: string) {
   const root = appPath ?? process.cwd();
@@ -40,11 +41,11 @@ export async function getRemixConfig(
 
   // TODO: Remove when updating Remix
   if (!config.serverConditions) {
-    const require = createRequire(import.meta.url);
-    const actualConfigFile = require(path.join(root, 'remix.config'));
+    const actualConfigFile = await getRawRemixConfig(root);
     config.serverBuildTarget = 'cloudflare-workers';
     config.serverConditions = actualConfigFile.serverConditions;
-    config.serverMainFields = actualConfigFile.serverMainFields;
+    config.serverMainFields =
+      actualConfigFile.serverMainFields ?? oxygenServerMainFields;
   }
 
   if (!config.serverEntryPoint) {
@@ -89,17 +90,13 @@ export async function getRemixConfig(
     );
   }
 
-  const expectedServerMainFields = ['browser', 'module', 'main'];
-
   if (
     !config.serverMainFields ||
-    !expectedServerMainFields.every(
-      (v, i) => config.serverMainFields?.[i] === v,
-    )
+    !oxygenServerMainFields.every((v, i) => config.serverMainFields?.[i] === v)
   ) {
     throwConfigError(
       `The serverMainFields in remix.config.js must be ${JSON.stringify(
-        expectedServerMainFields,
+        oxygenServerMainFields,
       )}.`,
     );
   }
@@ -188,5 +185,14 @@ export async function assertEntryFileExists(
       `Entry file "${fileRelative}" not found.`,
       'Please ensure the file exists and that the path is correctly added to the `server` property in remix.config.js.',
     );
+  }
+}
+
+export async function getRawRemixConfig(root: string) {
+  try {
+    const config = await import(path.join(root, 'remix.config'));
+    return (config?.default || config || {}) as AppConfig;
+  } catch {
+    return {};
   }
 }
