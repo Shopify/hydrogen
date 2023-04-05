@@ -13,13 +13,13 @@ import {
   renderSuccess,
   renderConfirmationPrompt,
 } from '@shopify/cli-kit/node/ui';
-import {commonFlags} from '../../../utils/flags.js';
+import {commonFlags} from '../../../lib/flags.js';
 import {Flags, Args} from '@oclif/core';
 import {
   format,
   transpileFile,
   resolveFormatConfig,
-} from '../../../utils/transpile-ts.js';
+} from '../../../lib/transpile-ts.js';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 

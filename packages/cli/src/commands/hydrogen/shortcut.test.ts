@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {runCreateShortcut} from './shortcut.js';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
-import {isWindows, isGitBash, supportsShell} from '../../utils/shell.js';
+import {isWindows, isGitBash, supportsShell} from '../../lib/shell.js';
 import {execSync, exec} from 'child_process';
 
 describe('shortcut', () => {
@@ -10,7 +10,7 @@ describe('shortcut', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mock('child_process');
-    vi.mock('../../utils/shell.js', async () => {
+    vi.mock('../../lib/shell.js', async () => {
       return {
         isWindows: vi.fn(),
         isGitBash: vi.fn(),

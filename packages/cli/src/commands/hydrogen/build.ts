@@ -6,18 +6,14 @@ import {
   outputToken,
 } from '@shopify/cli-kit/node/output';
 import {fileSize, copyFile, rmdir} from '@shopify/cli-kit/node/fs';
-import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
-import {
-  deprecated,
-  commonFlags,
-  flagsToCamelObject,
-} from '../../utils/flags.js';
+import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
+import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {checkLockfileStatus} from '../../utils/check-lockfile.js';
-import {findMissingRoutes} from '../../utils/missing-routes.js';
+import {checkLockfileStatus} from '../../lib/check-lockfile.js';
+import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
-import {colors} from '../../utils/colors.js';
+import {colors} from '../../lib/colors.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 

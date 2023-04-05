@@ -1,11 +1,8 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {commonFlags} from '../../utils/flags.js';
-import {getRemixConfig} from '../../utils/config.js';
-import {
-  findMissingRoutes,
-  logMissingRoutes,
-} from '../../utils/missing-routes.js';
+import {commonFlags} from '../../lib/flags.js';
+import {getRemixConfig} from '../../lib/config.js';
+import {findMissingRoutes, logMissingRoutes} from '../../lib/missing-routes.js';
 
 import {Args} from '@oclif/core';
 

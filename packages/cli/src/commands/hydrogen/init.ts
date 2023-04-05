@@ -29,10 +29,10 @@ import {
   commonFlags,
   parseProcessFlags,
   flagsToCamelObject,
-} from '../../utils/flags.js';
-import {transpileProject} from '../../utils/transpile-ts.js';
-import {getLatestTemplates} from '../../utils/template-downloader.js';
-import {checkHydrogenVersion} from '../../utils/check-version.js';
+} from '../../lib/flags.js';
+import {transpileProject} from '../../lib/transpile-ts.js';
+import {getLatestTemplates} from '../../lib/template-downloader.js';
+import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {readdir} from 'fs/promises';
 import {fileURLToPath} from 'url';
 

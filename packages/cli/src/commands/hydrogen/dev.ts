@@ -3,18 +3,14 @@ import fs from 'fs/promises';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {copyPublicFiles} from './build.js';
-import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
-import {muteDevLogs} from '../../utils/log.js';
-import {
-  deprecated,
-  commonFlags,
-  flagsToCamelObject,
-} from '../../utils/flags.js';
+import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
+import {muteDevLogs} from '../../lib/log.js';
+import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {startMiniOxygen} from '../../utils/mini-oxygen.js';
-import {checkHydrogenVersion} from '../../utils/check-version.js';
-import {addVirtualRoutes} from '../../utils/virtual-routes.js';
+import {startMiniOxygen} from '../../lib/mini-oxygen.js';
+import {checkHydrogenVersion} from '../../lib/check-version.js';
+import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
