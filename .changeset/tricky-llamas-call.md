@@ -1,5 +1,5 @@
 ---
-'@shopify/cli-hydrogen': patch
+'@shopify/cli-hydrogen': minor
 ---
 
 Added a new `shortcut` command that creates a global `h2` alias for the Hydrogen CLI:

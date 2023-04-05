@@ -1,5 +1,5 @@
 ---
-'@shopify/cli-hydrogen': patch
+'@shopify/cli-hydrogen': minor
 ---
 
 Updated CLI prompts. It's recommended to update your version of `@shopify/cli` to `3.45.0` when updating `@shopify/cli-hydrogen`.
