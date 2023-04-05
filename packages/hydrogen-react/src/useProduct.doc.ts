@@ -35,9 +35,8 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'UseProductGeneratedType',
-      description:
-        '`useProduct` must be a descendent of the `<ProductProvider />` component.',
+      type: 'ProductHookValue',
+      description: '',
     },
   ],
 };
