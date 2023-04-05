@@ -1,7 +1,8 @@
 import os from 'os';
 import path from 'path';
 import {execSync} from 'child_process';
-import {file, output} from '@shopify/cli-kit';
+import {fileExists} from '@shopify/cli-kit/node/fs';
+import {outputDebug} from '@shopify/cli-kit/node/output';
 
 export type UnixShell = 'zsh' | 'bash' | 'fish';
 export type WindowsShell = 'PowerShell' | 'PowerShell 7+' | 'CMD';
@@ -20,7 +21,7 @@ function resolveFromHome(filepath: string) {
 
 export function homeFileExists(filepath: string) {
   try {
-    return file.exists(resolveFromHome(filepath));
+    return fileExists(resolveFromHome(filepath));
   } catch (error) {
     return false;
   }
@@ -64,7 +65,7 @@ export function shellWriteFile(
     );
     return true;
   } catch (error) {
-    output.debug(
+    outputDebug(
       `Could not create or modify ${filepath}:\n` + (error as Error).stack,
     );
     return false;
@@ -76,7 +77,7 @@ export function shellRunScript(script: string, shellBin: string) {
     execSync(script, {shell: shellBin, stdio: 'ignore'});
     return true;
   } catch (error) {
-    output.debug(
+    outputDebug(
       `Could not run shell script for ${shellBin}:\n` + (error as Error).stack,
     );
     return false;
