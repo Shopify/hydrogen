@@ -4,21 +4,25 @@ import gunzipMaybe from 'gunzip-maybe';
 import {extract} from 'tar-fs';
 import {fetch} from '@shopify/cli-kit/node/http';
 import {mkdir, fileExists} from '@shopify/cli-kit/node/fs';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {fileURLToPath} from 'url';
 
 // Note: this skips pre-releases
 const REPO_RELEASES_URL = `https://api.github.com/repos/shopify/hydrogen/releases/latest`;
 
-export async function getLatestReleaseDownloadUrl() {
+const getTryMessage = (status: number) =>
+  status === 403
+    ? `If you are using a VPN, WARP, or similar service, consider disabling it momentarily.`
+    : undefined;
+
+async function getLatestReleaseDownloadUrl() {
   const response = await fetch(REPO_RELEASES_URL);
   if (!response.ok || response.status >= 400) {
-    throw new Error(
+    throw new AbortError(
       `Failed to fetch the latest release information. Status ${
         response.status
-      } ${response.statusText.replace(/\.$/, '')}.` +
-        (response.status === 403
-          ? `\n\nIf you are using a VPN, WARP, or similar service, consider disabling it momentarily.`
-          : ''),
+      } ${response.statusText.replace(/\.$/, '')}.`,
+      getTryMessage(response.status),
     );
   }
 
@@ -34,11 +38,12 @@ export async function getLatestReleaseDownloadUrl() {
   };
 }
 
-export async function downloadTarball(url: string, storageDir: string) {
+async function downloadTarball(url: string, storageDir: string) {
   const response = await fetch(url);
   if (!response.ok || response.status >= 400) {
-    throw new Error(
+    throw new AbortError(
       `Failed to download the latest release files. Status ${response.status} ${response.statusText}}`,
+      getTryMessage(response.status),
     );
   }
 
@@ -82,11 +87,11 @@ export async function getLatestTemplates() {
       templatesDir: path.join(templateStorageVersionPath, 'templates'),
     };
   } catch (e) {
-    const error = e as Error;
-    error.message =
+    const error = e as AbortError;
+    throw new AbortError(
       `Could not download Hydrogen templates from GitHub.\nPlease check your internet connection and the following error:\n\n` +
-      error.message;
-
-    throw error;
+        error.message,
+      error.tryMessage,
+    );
   }
 }
