@@ -189,9 +189,15 @@ export async function assertEntryFileExists(
   }
 }
 
+const configExts = ['.js', '.cjs', '.mjs'];
+
 export async function getRawRemixConfig(root: string) {
   try {
-    const config = await import(path.join(root, 'remix.config'));
+    const {findConfig} = await import('@remix-run/dev/dist/config.js');
+    const configPath = findConfig(root, 'remix.config', configExts);
+    if (!configPath) return {};
+
+    const config = await import(configPath);
     return (config?.default || config || {}) as AppConfig;
   } catch {
     return {};
