@@ -732,6 +732,18 @@ export type CartBuyerIdentityUpdatePayload = {
   userErrors: Array<CartUserError>;
 };
 
+/**
+ * Represents how credit card details are provided for a direct payment.
+ *
+ */
+export type CartCardSource =
+  /**
+   * The credit card was provided by a third party and vaulted on their system.
+   * Using this value requires a separate permission from Shopify.
+   *
+   */
+  'SAVED_CREDIT_CARD';
+
 /** The discount that has been applied to the cart line using a discount code. */
 export type CartCodeDiscountAllocation = CartDiscountAllocation & {
   __typename?: 'CartCodeDiscountAllocation';
@@ -911,6 +923,8 @@ export type CartDeliveryOption = {
 export type CartDirectPaymentMethodInput = {
   /** The customer's billing address. */
   billingAddress: MailingAddressInput;
+  /** The source of the credit card payment. */
+  cardSource?: InputMaybe<CartCardSource>;
   /** The session ID for the direct payment method used to create the payment. */
   sessionId: Scalars['String'];
 };
