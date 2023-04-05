@@ -146,6 +146,7 @@ export async function runInit(
     if (!options.force) {
       const deleteFiles = await renderConfirmationPrompt({
         message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
+        defaultValue: false,
       });
 
       if (!deleteFiles) {

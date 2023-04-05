@@ -171,6 +171,7 @@ export async function runGenerate(
       message: `The file ${relativizePath(
         relativeDestinationPath,
       )} already exists. Do you want to overwrite it?`,
+      defaultValue: false,
     });
 
     operation = shouldOverwrite ? 'overwritten' : 'skipped';
