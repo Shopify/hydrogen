@@ -1,12 +1,10 @@
 import {
-  type MetaFunction,
   type ActionFunction,
   type LoaderArgs,
+  type ErrorBoundaryComponent,
   redirect,
-  json,
 } from '@shopify/remix-oxygen';
-import {Form, Link, useActionData, useLoaderData} from '@remix-run/react';
-import {useState} from 'react';
+import {Form, useCatch} from '@remix-run/react';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
@@ -18,13 +16,7 @@ export async function loader({context, params}: LoaderArgs) {
   return new Response(null);
 }
 
-type ActionData = {
-  formError?: string;
-};
-
-const badRequest = (data: ActionData) => json(data, {status: 400});
-
-export const action: ActionFunction = async ({request, context, params}) => {
+export const action: ActionFunction = async ({request}) => {
   const formData = await request.formData();
 
   const email = formData.get('email');
@@ -36,8 +28,8 @@ export const action: ActionFunction = async ({request, context, params}) => {
     typeof email !== 'string' ||
     typeof password !== 'string'
   ) {
-    return badRequest({
-      formError: 'Please provide both an email and a password.',
+    throw new Response('Please provide both an email and a password.', {
+      status: 404,
     });
   }
 
@@ -72,5 +64,27 @@ export default function Register() {
       />
       <button type="submit">Sign up</button>
     </Form>
+  );
+}
+
+// Remix v1 implementation of ErrorBoundary; for Remix v2, this will need to be updated according to the following documentation:
+// https://remix.run/docs/en/1.15.0/pages/v2#catchboundary-and-errorboundary
+export const ErrorBoundary: ErrorBoundaryComponent = ({error}) => {
+  console.error(error);
+
+  return <div>There was an error.</div>;
+};
+
+// Remix v1 implementation of CatchBoundary; for v2, you can remove `CatchBoundary` and implement the error handling in `ErrorBoundary`:
+// https://remix.run/docs/en/1.15.0/pages/v2#catchboundary-and-errorboundary
+export function CatchBoundary() {
+  const caught = useCatch();
+  console.error(caught);
+
+  return (
+    <div>
+      There was an error. Status: {caught.status}. Message:{' '}
+      {caught.data?.message}
+    </div>
   );
 }
