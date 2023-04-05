@@ -11,7 +11,7 @@ import {
   transpileFile,
   resolveFormatConfig,
 } from '../../../utils/transpile-ts.js';
-import {getRawRemixConfig} from '../../../utils/config.js';
+import {getRawRemixConfig, isRemixV2} from '../../../utils/config.js';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 
@@ -67,15 +67,10 @@ export default class GenerateRoute extends Command {
 
   async run(): Promise<void> {
     const result = new Map<string, Result>();
-    // @ts-ignore
-    const {flags, args} = await this.parse(GenerateRoute);
-    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
-
-    const {route} = args;
-
-    const remixConfig = await getRawRemixConfig(directory);
-    const isV2RouteConvention = !!remixConfig.future?.v2_routeConvention;
-    const isV2Meta = !!remixConfig.future?.v2_meta;
+    const {
+      flags,
+      args: {route},
+    } = await this.parse(GenerateRoute);
 
     const routePath =
       route === 'all'
@@ -87,6 +82,9 @@ export default class GenerateRoute extends Command {
         `No route found for ${route}. Try one of ${ROUTES.join()}.`,
       );
     }
+
+    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+
     const isTypescript =
       flags.typescript ||
       (await file.exists(path.join(directory, 'tsconfig.json')));
@@ -94,6 +92,8 @@ export default class GenerateRoute extends Command {
     const routesArray = Array.isArray(routePath) ? routePath : [routePath];
 
     try {
+      const {isV2Meta, isV2RouteConvention} = await getV2Flags(directory);
+
       for (const item of routesArray) {
         const routeFrom = item;
         const routeTo = isV2RouteConvention ? convertRouteToV2(item) : item;
@@ -247,6 +247,16 @@ export async function runGenerate(
 
   return {
     operation: operation as 'generated' | 'overwritten',
+  };
+}
+
+async function getV2Flags(root: string) {
+  const isV2 = isRemixV2();
+  const futureFlags = isV2 ? {} : (await getRawRemixConfig(root)).future ?? {};
+
+  return {
+    isV2Meta: isV2 || !!futureFlags.v2_meta,
+    isV2RouteConvention: isV2 || !!futureFlags.v2_routeConvention,
   };
 }
 

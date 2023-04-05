@@ -2,6 +2,7 @@ import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
 import type {AppConfig, RemixConfig} from '@remix-run/dev/dist/config.js';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {output, file} from '@shopify/cli-kit';
+import {createRequire} from 'module';
 import {fileURLToPath} from 'url';
 import path from 'path';
 import fs from 'fs/promises';
@@ -194,5 +195,17 @@ export async function getRawRemixConfig(root: string) {
     return (config?.default || config || {}) as AppConfig;
   } catch {
     return {};
+  }
+}
+
+export function isRemixV2() {
+  try {
+    const require = createRequire(import.meta.url);
+    const version: string =
+      require('@remix-run/server-runtime/package.json')?.version ?? '';
+
+    return version.startsWith('2.');
+  } catch (e) {
+    return false;
   }
 }
