@@ -16,4 +16,10 @@ module.exports = {
   serverModuleFormat: 'esm',
   serverPlatform: 'neutral',
   serverMinify: process.env.NODE_ENV === 'production',
+  future: {
+    unstable_postcss: true,
+    unstable_tailwind: true,
+    v2_errorBoundary: true,
+    v2_meta: true,
+  },
 };

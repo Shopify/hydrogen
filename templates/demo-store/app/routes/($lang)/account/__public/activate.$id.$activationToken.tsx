@@ -1,7 +1,7 @@
 import {
   json,
   redirect,
-  type MetaFunction,
+  type V2_MetaFunction,
   type ActionFunction,
 } from '@shopify/remix-oxygen';
 import {Form, useActionData} from '@remix-run/react';
@@ -100,10 +100,8 @@ export const action: ActionFunction = async ({
   }
 };
 
-export const meta: MetaFunction = () => {
-  return {
-    title: 'Activate Account',
-  };
+export const meta: V2_MetaFunction = () => {
+  return [{title: 'Activate Account'}];
 };
 
 export default function Activate() {

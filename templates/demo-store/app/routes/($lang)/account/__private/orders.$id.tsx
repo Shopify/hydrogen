@@ -3,7 +3,7 @@ import clsx from 'clsx';
 import {
   json,
   redirect,
-  type MetaFunction,
+  type V2_MetaFunction,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
@@ -16,9 +16,9 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {Link, Heading, PageHeader, Text} from '~/components';
 
-export const meta: MetaFunction = ({data}) => ({
-  title: `Order ${data?.order?.name}`,
-});
+export const meta: V2_MetaFunction<typeof loader> = ({data}) => {
+  return [{title: `Order ${data?.order?.name}`}];
+};
 
 export async function loader({request, context, params}: LoaderArgs) {
   if (!params.id) {

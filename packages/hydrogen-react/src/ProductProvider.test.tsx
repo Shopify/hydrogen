@@ -43,6 +43,17 @@ describe('<ProductProvider />', () => {
     ]);
   });
 
+  it('returns full product', () => {
+    const product = getProduct({variants: VARIANTS});
+    const {result} = renderHook(() => useProduct(), {
+      wrapper: ({children}) => (
+        <ProductProvider data={product}>{children}</ProductProvider>
+      ),
+    });
+
+    expect(result.current.product).toEqual(product);
+  });
+
   it('provides setSelectedOption callback', async () => {
     const user = userEvent.setup();
 
