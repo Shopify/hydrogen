@@ -381,7 +381,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "measurement",
                 "value": "PartialObjectDeep<UnitPriceMeasurement, { recurseIntoArrays: true; }>",
-                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/latest/objects/unitpricemeasurement).",
+                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2023-04/objects/unitpricemeasurement).",
                 "isOptional": true
               },
               {
@@ -394,110 +394,6 @@
               }
             ],
             "value": "export interface CartCostPropsForDocs<AsType extends React.ElementType = 'div'>\n  extends Omit<MoneyPropsBase<AsType>, 'data'>,\n    CartCostPropsBase {}"
-          }
-        }
-      }
-    ]
-  },
-  {
-    "name": "CartLinePrice",
-    "category": "components",
-    "isVisualComponent": false,
-    "related": [
-      {
-        "name": "Money",
-        "type": "component",
-        "url": "/api/hydrogen-react/components/money"
-      }
-    ],
-    "description": "\n    `@deprecated` Use `Money` instead.\n\nTo migrate, use the `priceType` prop that matches the corresponding property on the `CartLine` object:\n\n- `regular`: `cartLine.cost.totalAmount`\n\n- `compareAt`: `cartLine.cost.compareAtAmountPerQuantity`\n\nFor example\n\nBefore:\n\n`<CartLinePrice data={cartLine} priceType=\"regular\" />`\n\nAfter:\n\n`<Money data={cartLine.cost.totalAmount} />`\n\nThe `CartLinePrice` component renders a `Money` component for the cart line merchandise's price or compare at price.\n  ",
-    "type": "component",
-    "defaultExample": {
-      "description": "I am the default example",
-      "codeblock": {
-        "tabs": [
-          {
-            "title": "JavaScript",
-            "code": "import {CartLinePrice} from '@shopify/hydrogen-react';\n\nexport default function ProductCartLinePrice({cartLine}) {\n  return <CartLinePrice data={cartLine} priceType=\"compareAt\" />;\n}\n",
-            "language": "jsx"
-          },
-          {
-            "title": "TypeScript",
-            "code": "import {CartLinePrice} from '@shopify/hydrogen-react';\nimport type {CartLine} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport default function ProductCartLinePrice({cartLine}: {cartLine: CartLine}) {\n  return <CartLinePrice data={cartLine} priceType=\"compareAt\" />;\n}\n",
-            "language": "tsx"
-          }
-        ],
-        "title": "Example code"
-      }
-    },
-    "definitions": [
-      {
-        "title": "Props",
-        "description": "",
-        "type": "CartLinePricePropsForDocs",
-        "typeDefinitions": {
-          "CartLinePricePropsForDocs": {
-            "filePath": "/CartLinePrice.tsx",
-            "name": "CartLinePricePropsForDocs",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/CartLinePrice.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "data",
-                "value": "PartialObjectDeep<CartLine, { recurseIntoArrays: true; }>",
-                "description": "A [CartLine object](https://shopify.dev/api/storefront/reference/objects/CartLine)."
-              },
-              {
-                "filePath": "/CartLinePrice.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "priceType",
-                "value": "\"regular\" | \"compareAt\"",
-                "description": "The type of price. Valid values:`regular` (default) or `compareAt`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/CartLinePrice.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "as",
-                "value": "AsType",
-                "description": "An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/CartLinePrice.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "withoutCurrency",
-                "value": "boolean",
-                "description": "Whether to remove the currency symbol from the output.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/CartLinePrice.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "withoutTrailingZeros",
-                "value": "boolean",
-                "description": "Whether to remove trailing zeros (fractional money) from the output.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/CartLinePrice.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "measurement",
-                "value": "PartialObjectDeep<UnitPriceMeasurement, { recurseIntoArrays: true; }>",
-                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/latest/objects/unitpricemeasurement).",
-                "isOptional": true
-              },
-              {
-                "filePath": "/CartLinePrice.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "measurementSeparator",
-                "value": "ReactNode",
-                "description": "Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`.",
-                "isOptional": true
-              }
-            ],
-            "value": "export interface CartLinePricePropsForDocs<\n  AsType extends React.ElementType = 'div',\n> extends Omit<MoneyPropsBase<AsType>, 'data'>,\n    CartLinePricePropsBase {}"
           }
         }
       }
@@ -737,7 +633,7 @@
             "filePath": "/CartProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartProviderProps",
-            "value": "{\n  /** Any `ReactNode` elements. */\n  children: React.ReactNode;\n  /**  Maximum number of cart lines to fetch. Defaults to 250 cart lines. */\n  numCartLines?: number;\n  /** A callback that is invoked when the process to create a cart begins, but before the cart is created in the Storefront API. */\n  onCreate?: () => void;\n  /** A callback that is invoked when the process to add a line item to the cart begins, but before the line item is added to the Storefront API. */\n  onLineAdd?: () => void;\n  /** A callback that is invoked when the process to remove a line item to the cart begins, but before the line item is removed from the Storefront API. */\n  onLineRemove?: () => void;\n  /** A callback that is invoked when the process to update a line item in the cart begins, but before the line item is updated in the Storefront API. */\n  onLineUpdate?: () => void;\n  /** A callback that is invoked when the process to add or update a note in the cart begins, but before the note is added or updated in the Storefront API. */\n  onNoteUpdate?: () => void;\n  /** A callback that is invoked when the process to update the buyer identity begins, but before the buyer identity is updated in the Storefront API. */\n  onBuyerIdentityUpdate?: () => void;\n  /** A callback that is invoked when the process to update the cart attributes begins, but before the attributes are updated in the Storefront API. */\n  onAttributesUpdate?: () => void;\n  /** A callback that is invoked when the process to update the cart discount codes begins, but before the discount codes are updated in the Storefront API. */\n  onDiscountCodesUpdate?: () => void;\n  /** A callback that is invoked when the process to create a cart completes */\n  onCreateComplete?: () => void;\n  /** A callback that is invoked when the process to add a line item to the cart completes */\n  onLineAddComplete?: () => void;\n  /** A callback that is invoked when the process to remove a line item to the cart completes */\n  onLineRemoveComplete?: () => void;\n  /** A callback that is invoked when the process to update a line item in the cart completes */\n  onLineUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to add or update a note in the cart completes */\n  onNoteUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the buyer identity completes */\n  onBuyerIdentityUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the cart attributes completes */\n  onAttributesUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the cart discount codes completes */\n  onDiscountCodesUpdateComplete?: () => void;\n  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/latest/objects/cart). */\n  data?: PartialDeep<CartType, {recurseIntoArrays: true}>;\n  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/latest/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */\n  cartFragment?: string;\n  /** A customer access token that's accessible on the server if there's a customer login. */\n  customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];\n  /** The ISO country code for i18n. */\n  countryCode?: CountryCode;\n}",
+            "value": "{\n  /** Any `ReactNode` elements. */\n  children: React.ReactNode;\n  /**  Maximum number of cart lines to fetch. Defaults to 250 cart lines. */\n  numCartLines?: number;\n  /** A callback that is invoked when the process to create a cart begins, but before the cart is created in the Storefront API. */\n  onCreate?: () => void;\n  /** A callback that is invoked when the process to add a line item to the cart begins, but before the line item is added to the Storefront API. */\n  onLineAdd?: () => void;\n  /** A callback that is invoked when the process to remove a line item to the cart begins, but before the line item is removed from the Storefront API. */\n  onLineRemove?: () => void;\n  /** A callback that is invoked when the process to update a line item in the cart begins, but before the line item is updated in the Storefront API. */\n  onLineUpdate?: () => void;\n  /** A callback that is invoked when the process to add or update a note in the cart begins, but before the note is added or updated in the Storefront API. */\n  onNoteUpdate?: () => void;\n  /** A callback that is invoked when the process to update the buyer identity begins, but before the buyer identity is updated in the Storefront API. */\n  onBuyerIdentityUpdate?: () => void;\n  /** A callback that is invoked when the process to update the cart attributes begins, but before the attributes are updated in the Storefront API. */\n  onAttributesUpdate?: () => void;\n  /** A callback that is invoked when the process to update the cart discount codes begins, but before the discount codes are updated in the Storefront API. */\n  onDiscountCodesUpdate?: () => void;\n  /** A callback that is invoked when the process to create a cart completes */\n  onCreateComplete?: () => void;\n  /** A callback that is invoked when the process to add a line item to the cart completes */\n  onLineAddComplete?: () => void;\n  /** A callback that is invoked when the process to remove a line item to the cart completes */\n  onLineRemoveComplete?: () => void;\n  /** A callback that is invoked when the process to update a line item in the cart completes */\n  onLineUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to add or update a note in the cart completes */\n  onNoteUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the buyer identity completes */\n  onBuyerIdentityUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the cart attributes completes */\n  onAttributesUpdateComplete?: () => void;\n  /** A callback that is invoked when the process to update the cart discount codes completes */\n  onDiscountCodesUpdateComplete?: () => void;\n  /** An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-04/objects/cart). */\n  data?: PartialDeep<CartType, {recurseIntoArrays: true}>;\n  /** A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-04/objects/cart) for all queries and mutations. A default value is used if no argument is provided. */\n  cartFragment?: string;\n  /** A customer access token that's accessible on the server if there's a customer login. */\n  customerAccessToken?: CartBuyerIdentityInput['customerAccessToken'];\n  /** The ISO country code for i18n. */\n  countryCode?: CountryCode;\n}",
             "description": "",
             "members": [
               {
@@ -888,7 +784,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialObjectDeep<Cart, { recurseIntoArrays: true; }>",
-                "description": "An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/latest/objects/cart).",
+                "description": "An object with fields that correspond to the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-04/objects/cart).",
                 "isOptional": true
               },
               {
@@ -896,7 +792,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "cartFragment",
                 "value": "string",
-                "description": "A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/latest/objects/cart) for all queries and mutations. A default value is used if no argument is provided.",
+                "description": "A fragment used to query the Storefront API's [Cart object](https://shopify.dev/api/storefront/2023-04/objects/cart) for all queries and mutations. A default value is used if no argument is provided.",
                 "isOptional": true
               },
               {
@@ -3848,7 +3744,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialObjectDeep<Video, { recurseIntoArrays: true; }>",
-                "description": "An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/latest/objects/video)."
+                "description": "An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2023-04/objects/video)."
               },
               {
                 "filePath": "/Video.tsx",
@@ -4215,7 +4111,7 @@
             "filePath": "/ModelViewer.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ModelViewerBaseProps",
-            "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/latest/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
+            "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2023-04/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
             "description": "",
             "members": [
               {
@@ -4223,7 +4119,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialObjectDeep<Model3d, { recurseIntoArrays: true; }>",
-                "description": "An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/latest/objects/model3d)."
+                "description": "An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2023-04/objects/model3d)."
               },
               {
                 "filePath": "/ModelViewer.tsx",
@@ -4376,7 +4272,7 @@
             "filePath": "/ModelViewer.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ModelViewerBaseProps",
-            "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/latest/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
+            "value": "{\n  /** An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2023-04/objects/model3d). */\n  data: PartialDeep<Model3d, {recurseIntoArrays: true}>;\n  /** The callback to invoke when the 'error' event is triggered. Refer to [error in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-error). */\n  onError?: (event: Event) => void;\n  /** The callback to invoke when the `load` event is triggered. Refer to [load in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-load). */\n  onLoad?: (event: Event) => void;\n  /** The callback to invoke when the 'preload' event is triggered. Refer to [preload in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-preload). */\n  onPreload?: (event: Event) => void;\n  /** The callback to invoke when the 'model-visibility' event is triggered. Refer to [model-visibility in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-modelVisibility). */\n  onModelVisibility?: (event: Event) => void;\n  /** The callback to invoke when the 'progress' event is triggered. Refer to [progress in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-loading-events-progress). */\n  onProgress?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-status' event is triggered. Refer to [ar-status in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arStatus). */\n  onArStatus?: (event: Event) => void;\n  /** The callback to invoke when the 'ar-tracking' event is triggered. Refer to [ar-tracking in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-arTracking). */\n  onArTracking?: (event: Event) => void;\n  /** The callback to invoke when the 'quick-look-button-tapped' event is triggered. Refer to [quick-look-button-tapped in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-augmentedreality-events-quickLookButtonTapped). */\n  onQuickLookButtonTapped?: (event: Event) => void;\n  /** The callback to invoke when the 'camera-change' event is triggered. Refer to [camera-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-stagingandcameras-events-cameraChange). */\n  onCameraChange?: (event: Event) => void;\n  /** The callback to invoke when the 'environment-change' event is triggered. Refer to [environment-change in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-lightingandenv-events-environmentChange).  */\n  onEnvironmentChange?: (event: Event) => void;\n  /**  The callback to invoke when the 'play' event is triggered. Refer to [play in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-play). */\n  onPlay?: (event: Event) => void;\n  /**  The callback to invoke when the 'pause' event is triggered. Refer to [pause in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-animation-events-pause). */\n  onPause?: (event: Event) => void;\n  /** The callback to invoke when the 'scene-graph-ready' event is triggered. Refer to [scene-graph-ready in the <model-viewer> documentation](https://modelviewer.dev/docs/index.html#entrydocs-scenegraph-events-sceneGraphReady). */\n  onSceneGraphReady?: (event: Event) => void;\n}",
             "description": "",
             "members": [
               {
@@ -4384,7 +4280,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialObjectDeep<Model3d, { recurseIntoArrays: true; }>",
-                "description": "An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/latest/objects/model3d)."
+                "description": "An object with fields that correspond to the Storefront API's [Model3D object](https://shopify.dev/api/storefront/2023-04/objects/model3d)."
               },
               {
                 "filePath": "/ModelViewer.tsx",
@@ -4574,7 +4470,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "measurement",
                 "value": "PartialObjectDeep<UnitPriceMeasurement, { recurseIntoArrays: true; }>",
-                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/latest/objects/unitpricemeasurement).",
+                "description": "A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2023-04/objects/unitpricemeasurement).",
                 "isOptional": true
               },
               {
@@ -4586,7 +4482,7 @@
                 "isOptional": true
               }
             ],
-            "value": "export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {\n  /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */\n  as?: ComponentGeneric;\n  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */\n  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;\n  /** Whether to remove the currency symbol from the output. */\n  withoutCurrency?: boolean;\n  /** Whether to remove trailing zeros (fractional money) from the output. */\n  withoutTrailingZeros?: boolean;\n  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/latest/objects/unitpricemeasurement). */\n  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;\n  /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */\n  measurementSeparator?: ReactNode;\n}"
+            "value": "export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {\n  /** An HTML tag or React Component to be rendered as the base element wrapper. The default is `div`. */\n  as?: ComponentGeneric;\n  /** An object with fields that correspond to the Storefront API's [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2). */\n  data: PartialDeep<MoneyV2, {recurseIntoArrays: true}>;\n  /** Whether to remove the currency symbol from the output. */\n  withoutCurrency?: boolean;\n  /** Whether to remove trailing zeros (fractional money) from the output. */\n  withoutTrailingZeros?: boolean;\n  /** A [UnitPriceMeasurement object](https://shopify.dev/api/storefront/2023-04/objects/unitpricemeasurement). */\n  measurement?: PartialDeep<UnitPriceMeasurement, {recurseIntoArrays: true}>;\n  /** Customizes the separator between the money output and the measurement output. Used with the `measurement` prop. Defaults to `'/'`. */\n  measurementSeparator?: ReactNode;\n}"
           }
         }
       }
@@ -5092,7 +4988,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "data",
                 "value": "PartialObjectDeep<Video, { recurseIntoArrays: true; }>",
-                "description": "An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/latest/objects/video)."
+                "description": "An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2023-04/objects/video)."
               },
               {
                 "filePath": "/Video.tsx",
