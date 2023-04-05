@@ -10,6 +10,7 @@ import {
   renderSelectPrompt,
   renderTextPrompt,
   renderConfirmationPrompt,
+  renderTasks,
 } from '@shopify/cli-kit/node/ui';
 import {Flags} from '@oclif/core';
 import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
@@ -101,12 +102,16 @@ export async function runInit(
   }
 
   // Start downloading templates early.
-  const templatesPromise = getLatestTemplates().catch((error) => {
-    outputInfo('\n\n\n');
-    renderFatalError(error);
-
-    process.exit(1);
-  });
+  let templatesDownloaded = false;
+  const templatesPromise = getLatestTemplates()
+    .then((result) => {
+      templatesDownloaded = true;
+      return result;
+    })
+    .catch((error) => {
+      renderFatalError(error);
+      process.exit(1);
+    });
 
   const appTemplate =
     options.template ??
@@ -163,13 +168,18 @@ export async function runInit(
 
   // Templates might be cached or the download might be finished already.
   // Only output progress if the download is still in progress.
-  let downloaded = false;
-  setTimeout(
-    () => !downloaded && outputInfo('\n📥 Downloading templates...'),
-    150,
-  );
+  if (!templatesDownloaded) {
+    await renderTasks([
+      {
+        title: 'Downloading templates',
+        task: async () => {
+          await templatesPromise;
+        },
+      },
+    ]);
+  }
+
   const {templatesDir} = await templatesPromise;
-  downloaded = true;
 
   await copyFile(joinPath(templatesDir, appTemplate), projectDir);
 
