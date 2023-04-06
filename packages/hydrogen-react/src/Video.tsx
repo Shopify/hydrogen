@@ -1,5 +1,5 @@
 import {type HTMLAttributes} from 'react';
-import {shopifyImageLoader} from './image-size.js';
+import {shopifyLoader} from './Image.js';
 import type {Video as VideoType} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
@@ -7,7 +7,7 @@ export interface VideoProps {
   /** An object with fields that correspond to the Storefront API's [Video object](https://shopify.dev/api/storefront/2023-04/objects/video). */
   data: PartialDeep<VideoType, {recurseIntoArrays: true}>;
   /** An object of image size options for the video's `previewImage`. Uses `shopifyImageLoader` to generate the `poster` URL. */
-  previewImageOptions?: Parameters<typeof shopifyImageLoader>[0];
+  previewImageOptions?: Parameters<typeof shopifyLoader>[0];
   /** Props that will be passed to the `video` element's `source` children elements. */
   sourceProps?: HTMLAttributes<HTMLSourceElement> & {
     'data-testid'?: string;
@@ -30,7 +30,7 @@ export function Video(
     ...passthroughProps
   } = props;
 
-  const posterUrl = shopifyImageLoader({
+  const posterUrl = shopifyLoader({
     src: data.previewImage?.url ?? '',
     ...previewImageOptions,
   });

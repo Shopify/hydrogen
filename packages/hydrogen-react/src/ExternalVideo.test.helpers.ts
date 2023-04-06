@@ -1,7 +1,7 @@
 import {PartialDeep} from 'type-fest';
 import type {ExternalVideo as ExternalVideoType} from './storefront-api-types.js';
 import {faker} from '@faker-js/faker';
-import {getPreviewImage} from './ImageLegacy.test.helpers.js';
+import {getPreviewImage} from './Image.test.helpers.js';
 
 export function getExternalVideoData(
   externalVideo: Partial<ExternalVideoType> = {},
