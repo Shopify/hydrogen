@@ -64,7 +64,6 @@ function convertToErrorBoundaryV2(template: string) {
     .replace(/useCatch\s*,?/s, '')
     .replace(/export function CatchBoundary.+?\n}/s, '')
     .replace(/export const ErrorBoundaryV1.+?\n};/s, '')
-    .replace(/const metaV2:/, 'const meta:')
     .replace(/import \{\s*\} from '@shopify\/remix-oxygen';/, '');
 }
 
