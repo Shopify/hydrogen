@@ -6,11 +6,13 @@ Adopt Remix [`v2_meta`](https://remix.run/docs/en/main/route/meta#metav2) future
 
 ### `v2_meta` migration steps
 
-1. For any routes that you used `meta` route export, convert it to the `V2_MetaFunction` equivalent.
+1. For any routes that you used `meta` route export, convert it to the `V2_MetaFunction` equivalent. Notice that the package name in the import statement has also changed to `'@remix-run/react'`:
 
    **Before** - returns an object;
 
    ```jsx
+   import {type MetaFunction} from '@shopify/remix-oxygen';
+
    export const meta: MetaFunction = () => {
      return {
        title: 'Login',
@@ -21,6 +23,8 @@ Adopt Remix [`v2_meta`](https://remix.run/docs/en/main/route/meta#metav2) future
    **After** - returns an array of object:
 
    ```jsx
+   import {type V2_MetaFunction} from '@remix-run/react';
+
    export const meta: V2_MetaFunction = () => {
      return [
        {
@@ -35,6 +39,8 @@ Adopt Remix [`v2_meta`](https://remix.run/docs/en/main/route/meta#metav2) future
    **Before** - returns an object;
 
    ```jsx
+   import {type MetaFunction} from '@shopify/remix-oxygen';
+
    export const meta: MetaFunction = ({data}) => ({
      title: `Order ${data?.order?.name}`,
    });
@@ -43,6 +49,8 @@ Adopt Remix [`v2_meta`](https://remix.run/docs/en/main/route/meta#metav2) future
    **After** - returns an array of object:
 
    ```jsx
+   import {type V2_MetaFunction} from '@remix-run/react';
+
    export const meta: V2_MetaFunction<typeof loader> = ({data}) => {
      return [
        {
@@ -67,8 +75,8 @@ Adopt Remix [`v2_meta`](https://remix.run/docs/en/main/route/meta#metav2) future
      return (
        <html lang={locale.language}>
          <head>
-   +        <meta charSet="utf-8" />
-   +        <meta name="viewport" content="width=device-width,initial-scale=1" />
+   +       <meta charSet="utf-8" />
+   +       <meta name="viewport" content="width=device-width,initial-scale=1" />
            <Seo />
            <Meta />
    ```
