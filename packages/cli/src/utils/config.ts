@@ -188,15 +188,3 @@ export async function assertEntryFileExists(
     );
   }
 }
-
-export function isRemixV2() {
-  try {
-    const require = createRequire(import.meta.url);
-    const version: string =
-      require('@remix-run/server-runtime/package.json')?.version ?? '';
-
-    return version.startsWith('2.');
-  } catch (e) {
-    return false;
-  }
-}

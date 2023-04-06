@@ -11,7 +11,12 @@ import {
   transpileFile,
   resolveFormatConfig,
 } from '../../../utils/transpile-ts.js';
-import {getRemixConfig, isRemixV2} from '../../../utils/config.js';
+import {
+  convertRouteToV2,
+  convertTemplateToRemixVersion,
+  getV2Flags,
+  type RemixV2Flags,
+} from '../../../utils/remix-version-interop.js';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 
@@ -92,7 +97,7 @@ export default class GenerateRoute extends Command {
     const routesArray = Array.isArray(routePath) ? routePath : [routePath];
 
     try {
-      const {isV2Meta, isV2RouteConvention} = await getV2Flags(directory);
+      const {isV2RouteConvention, ...v2Flags} = await getV2Flags(directory);
 
       for (const item of routesArray) {
         const routeFrom = item;
@@ -105,7 +110,7 @@ export default class GenerateRoute extends Command {
             typescript: isTypescript,
             force: flags.force,
             adapter: flags.adapter,
-            isV2Meta,
+            v2Flags,
           }),
         );
       }
@@ -144,14 +149,14 @@ export async function runGenerate(
     force,
     adapter,
     templatesRoot = fileURLToPath(new URL('../../../', import.meta.url)),
-    isV2Meta,
+    v2Flags = {},
   }: {
     directory: string;
     typescript?: boolean;
     force?: boolean;
     adapter?: string;
     templatesRoot?: string;
-    isV2Meta?: boolean;
+    v2Flags?: RemixV2Flags;
   },
 ): Promise<Result> {
   let operation;
@@ -198,9 +203,7 @@ export async function runGenerate(
 
   let templateContent = await file.read(templatePath);
 
-  templateContent = isV2Meta
-    ? convertToMetaV2(templateContent)
-    : convertToMetaV1(templateContent);
+  templateContent = convertTemplateToRemixVersion(templateContent, v2Flags);
 
   // If the project is not using TypeScript, we need to compile the template
   // to JavaScript. We try to read the project's jsconfig.json, but if it
@@ -248,33 +251,4 @@ export async function runGenerate(
   return {
     operation: operation as 'generated' | 'overwritten',
   };
-}
-
-async function getV2Flags(root: string) {
-  const isV2 = isRemixV2();
-  const futureFlags = {
-    ...(!isV2 && (await getRemixConfig(root)).future),
-  };
-
-  return {
-    isV2Meta: isV2 || !!futureFlags.v2_meta,
-    isV2RouteConvention: isV2 || !!futureFlags.v2_routeConvention,
-  };
-}
-
-export function convertRouteToV2(route: string) {
-  return route.replace(/\/index$/, '/_index').replace(/(?<!^)\//g, '.');
-}
-
-function convertToMetaV2(template: string) {
-  return template
-    .replace(/type MetaFunction\s*,?/, '')
-    .replace(/export const meta:.+?\n};/s, '')
-    .replace(/const metaV2:/, 'const meta:');
-}
-
-function convertToMetaV1(template: string) {
-  return template
-    .replace(/type V2_MetaFunction\s*,?/, '')
-    .replace(/export const metaV2:.+?\n};/s, '');
 }

@@ -1,10 +1,8 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
-import {
-  runGenerate,
-  GENERATOR_TEMPLATES_DIR,
-  convertRouteToV2,
-} from './route.js';
+import {runGenerate, GENERATOR_TEMPLATES_DIR} from './route.js';
+import {convertRouteToV2} from '../../../utils/remix-version-interop.js';
+
 import {file, path, ui} from '@shopify/cli-kit';
 
 describe('generate/route', () => {
@@ -175,8 +173,8 @@ describe('generate/route', () => {
         await runGenerate(route, convertRouteToV2(route), {
           directory: appRoot,
           templatesRoot,
-          isV2Meta: true,
           typescript: true,
+          v2Flags: {isV2Meta: true},
         });
 
         // Then
@@ -204,8 +202,8 @@ describe('generate/route', () => {
         await runGenerate(route, convertRouteToV2(route), {
           directory: appRoot,
           templatesRoot,
-          isV2Meta: false,
           typescript: true,
+          v2Flags: {isV2Meta: false},
         });
 
         // Then
