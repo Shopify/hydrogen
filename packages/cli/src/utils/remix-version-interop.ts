@@ -21,8 +21,10 @@ export async function getV2Flags(root: string) {
 
   return {
     isV2Meta: isV2 || !!futureFlags.v2_meta,
-    isV2RouteConvention: isV2 || !!futureFlags.v2_routeConvention,
     isV2ErrorBoundary: isV2 || !!futureFlags.v2_errorBoundary,
+    isV2RouteConvention: isV2
+      ? !isV1RouteConventionInstalled()
+      : !!futureFlags.v2_routeConvention,
   };
 }
 
@@ -73,4 +75,14 @@ function convertToErrorBoundaryV1(template: string) {
     .replace(/isRouteErrorResponse\s*,?/s, '')
     .replace(/export function ErrorBoundary.+?\n}/s, '')
     .replace(/const ErrorBoundaryV1:/, 'const ErrorBoundary:');
+}
+
+function isV1RouteConventionInstalled() {
+  try {
+    const require = createRequire(import.meta.url);
+    require.resolve('@remix-run/v1-route-convention/package.json');
+    return true;
+  } catch {
+    return false;
+  }
 }
