@@ -42,11 +42,11 @@ export async function getRemixConfig(
 
   // TODO: Remove when updating Remix
   if (!config.serverConditions) {
-    const actualConfigFile = await getRawRemixConfig(root);
+    const require = createRequire(import.meta.url);
+    const actualConfigFile = require(path.join(root, 'remix.config'));
     config.serverBuildTarget = 'cloudflare-workers';
     config.serverConditions = actualConfigFile.serverConditions;
-    config.serverMainFields =
-      actualConfigFile.serverMainFields ?? oxygenServerMainFields;
+    config.serverMainFields = actualConfigFile.serverMainFields;
   }
 
   if (!config.serverEntryPoint) {
