@@ -1,11 +1,10 @@
 import {
-  type V2_MetaFunction,
   redirect,
   json,
   type ActionFunction,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {Form, useActionData} from '@remix-run/react';
+import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 import {useState} from 'react';
 import {getInputStyleClasses} from '~/lib/utils';
 import {doLogin} from './login';
