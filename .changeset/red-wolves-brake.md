@@ -1,5 +1,6 @@
 ---
 '@shopify/hydrogen': patch
+'@shopify/remix-oxygen': patch
 '@shopify/cli-hydrogen': patch
 ---
 
