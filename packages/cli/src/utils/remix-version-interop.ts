@@ -43,12 +43,12 @@ export function convertTemplateToRemixVersion(
 function convertToMetaV2(template: string) {
   return template
     .replace(/type MetaFunction\s*,?/, '')
-    .replace(/export const meta:.+?\n};/s, '')
-    .replace(/const metaV2:/, 'const meta:');
+    .replace(/export const metaV1:.+?\n};/s, '');
 }
 
 function convertToMetaV1(template: string) {
   return template
     .replace(/type V2_MetaFunction\s*,?/, '')
-    .replace(/export const metaV2:.+?\n};/s, '');
+    .replace(/export const meta:.+?\n};/s, '')
+    .replace(/const metaV1:/, 'const meta:');
 }

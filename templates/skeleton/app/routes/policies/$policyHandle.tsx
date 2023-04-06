@@ -41,12 +41,12 @@ export async function loader({params, context}: LoaderArgs) {
   return json({policy});
 }
 
-export const meta: MetaFunction<typeof loader> = ({data}) => {
+export const metaV1: MetaFunction<typeof loader> = ({data}) => {
   const title = data?.policy?.title ?? 'Policies';
   return {title};
 };
 
-export const metaV2: V2_MetaFunction<typeof loader> = ({data}) => {
+export const meta: V2_MetaFunction<typeof loader> = ({data}) => {
   const title = data?.policy?.title ?? 'Policies';
   return [{title}];
 };

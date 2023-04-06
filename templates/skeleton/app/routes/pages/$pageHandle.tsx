@@ -36,12 +36,12 @@ export const handle = {
   seo,
 };
 
-export const meta: MetaFunction = ({data}) => {
+export const metaV1: MetaFunction = ({data}) => {
   const {title, description} = data?.page.seo ?? {};
   return {title, description};
 };
 
-export const metaV2: V2_MetaFunction = ({data}) => {
+export const meta: V2_MetaFunction = ({data}) => {
   const {title, description} = data?.page.seo ?? {};
   return [{title}, {name: 'description', content: description}];
 };

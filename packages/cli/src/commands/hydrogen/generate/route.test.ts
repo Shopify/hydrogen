@@ -150,11 +150,11 @@ describe('generate/route', () => {
   describe('v2_meta', () => {
     const META_TEMPLATE = `
     import {type MetaFunction, type V2_MetaFunction} from '@shopify/remix-oxygen';
-    export const meta: MetaFunction = ({data}) => {
+    export const metaV1: MetaFunction = ({data}) => {
       const title = 'title';
       return {title};
     };
-    export const metaV2: V2_MetaFunction = ({data}) => {
+    export const meta: V2_MetaFunction = ({data}) => {
       const title = 'title';
       return [{title}];
     };
