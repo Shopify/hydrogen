@@ -22,6 +22,7 @@ export async function getV2Flags(root: string) {
   return {
     isV2Meta: isV2 || !!futureFlags.v2_meta,
     isV2RouteConvention: isV2 || !!futureFlags.v2_routeConvention,
+    isV2ErrorBoundary: isV2 || !!futureFlags.v2_errorBoundary,
   };
 }
 
@@ -33,9 +34,13 @@ export function convertRouteToV2(route: string) {
 
 export function convertTemplateToRemixVersion(
   template: string,
-  {isV2Meta}: RemixV2Flags,
+  {isV2Meta, isV2ErrorBoundary}: RemixV2Flags,
 ) {
   template = isV2Meta ? convertToMetaV2(template) : convertToMetaV1(template);
+
+  template = isV2ErrorBoundary
+    ? convertToErrorBoundaryV2(template)
+    : convertToErrorBoundaryV1(template);
 
   return template;
 }
@@ -51,4 +56,22 @@ function convertToMetaV1(template: string) {
     .replace(/type V2_MetaFunction\s*,?/, '')
     .replace(/export const meta:.+?\n};/s, '')
     .replace(/const metaV1:/, 'const meta:');
+}
+
+function convertToErrorBoundaryV2(template: string) {
+  return template
+    .replace(/type ErrorBoundaryComponent\s*,?/s, '')
+    .replace(/useCatch\s*,?/s, '')
+    .replace(/export function CatchBoundary.+?\n}/s, '')
+    .replace(/export const ErrorBoundaryV1.+?\n};/s, '')
+    .replace(/const metaV2:/, 'const meta:')
+    .replace(/import \{\s*\} from '@shopify\/remix-oxygen';/, '');
+}
+
+function convertToErrorBoundaryV1(template: string) {
+  return template
+    .replace(/useRouteError\s*,?/s, '')
+    .replace(/isRouteErrorResponse\s*,?/s, '')
+    .replace(/export function ErrorBoundary.+?\n}/s, '')
+    .replace(/const ErrorBoundaryV1:/, 'const ErrorBoundary:');
 }

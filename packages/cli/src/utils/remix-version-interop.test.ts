@@ -37,4 +37,64 @@ describe('remix-version-interop', () => {
       expect(result).not.toMatch(/return \[\{title\}\];/);
     });
   });
+
+  describe('v2_errorBoundary', () => {
+    const ERROR_BOUNDARY_TEMPLATE = `
+    import {useCatch, isRouteErrorResponse, useRouteError} from "@remix-run/react";
+    import {type ErrorBoundaryComponent} from '@shopify/remix-oxygen';
+
+    export function CatchBoundary() {
+      const caught = useCatch();
+      console.error(caught);
+  
+      return <div>stuff</div>;
+    }
+
+    export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+      console.error(error);
+    
+      return <div>There was an error.</div>;
+    };
+
+    export function ErrorBoundary() {
+      const error = useRouteError();
+
+      if (isRouteErrorResponse(error)) {
+        return <div>RouteError</div>;
+      } else {
+        return <h1>Unknown Error</h1>;
+      }
+    }
+    `.replace(/^\s{4}/gm, '');
+
+    it('transforms ErrorBoundary exports to v2', async () => {
+      const result = convertTemplateToRemixVersion(ERROR_BOUNDARY_TEMPLATE, {
+        isV2ErrorBoundary: true,
+      });
+
+      console.log(result);
+      expect(result).toContain('export function ErrorBoundary');
+      expect(result).not.toContain('export const ErrorBoundary');
+      expect(result).not.toMatch('export function CatchBoundary');
+      expect(result).not.toContain('type ErrorBoundaryComponent');
+      expect(result).not.toContain('@shopify/remix-oxygen'); // Cleans empty up imports
+      expect(result).toContain('useRouteError');
+      expect(result).toContain('isRouteErrorResponse');
+      expect(result).not.toContain('useCatch');
+    });
+
+    it('transforms ErrorBoundary exports to v1', async () => {
+      const result = convertTemplateToRemixVersion(ERROR_BOUNDARY_TEMPLATE, {
+        isV2ErrorBoundary: false,
+      });
+
+      expect(result).toContain('export const ErrorBoundary');
+      expect(result).not.toContain('export function ErrorBoundary');
+      expect(result).toMatch('export function CatchBoundary');
+      expect(result).toContain('type ErrorBoundaryComponent');
+      expect(result).toContain('useCatch');
+      expect(result).not.toContain('useRouteError');
+      expect(result).not.toContain('isRouteErrorResponse');
+    });
+  });
 });
