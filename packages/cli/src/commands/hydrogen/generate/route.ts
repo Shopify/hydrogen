@@ -11,7 +11,7 @@ import {
   transpileFile,
   resolveFormatConfig,
 } from '../../../utils/transpile-ts.js';
-import {getRawRemixConfig, isRemixV2} from '../../../utils/config.js';
+import {getRemixConfig, isRemixV2} from '../../../utils/config.js';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 
@@ -252,7 +252,9 @@ export async function runGenerate(
 
 async function getV2Flags(root: string) {
   const isV2 = isRemixV2();
-  const futureFlags = isV2 ? {} : (await getRawRemixConfig(root)).future ?? {};
+  const futureFlags = {
+    ...(!isV2 && (await getRemixConfig(root)).future),
+  };
 
   return {
     isV2Meta: isV2 || !!futureFlags.v2_meta,

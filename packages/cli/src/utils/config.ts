@@ -1,5 +1,5 @@
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
-import type {AppConfig, RemixConfig} from '@remix-run/dev/dist/config.js';
+import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {output, file} from '@shopify/cli-kit';
 import {createRequire} from 'module';
@@ -186,21 +186,6 @@ export async function assertEntryFileExists(
       `Entry file "${fileRelative}" not found.`,
       'Please ensure the file exists and that the path is correctly added to the `server` property in remix.config.js.',
     );
-  }
-}
-
-const configExts = ['.js', '.cjs', '.mjs'];
-
-export async function getRawRemixConfig(root: string) {
-  try {
-    const {findConfig} = await import('@remix-run/dev/dist/config.js');
-    const configPath = findConfig(root, 'remix.config', configExts);
-    if (!configPath) return {};
-
-    const config = await import(configPath);
-    return (config?.default || config || {}) as AppConfig;
-  } catch {
-    return {};
   }
 }
 
