@@ -1,6 +1,6 @@
 /**
  * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
- * Based on Storefront API 2023-01
+ * Based on Storefront API 2023-04
  * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run `npm run graphql-types`.
  * Except custom Scalars, which are defined in the `codegen.ts` file
  */
@@ -43,6 +43,40 @@ export type ApiVersion = {
   handle: Scalars['String'];
   /** Whether the version is actively supported by Shopify. Supported API versions are guaranteed to be stable. Unsupported API versions include unstable, release candidate, and end-of-life versions that are marked as unsupported. For more information, refer to [Versioning](https://shopify.dev/api/usage/versioning). */
   supported: Scalars['Boolean'];
+};
+
+/**
+ * The input fields for submitting Apple Pay payment method information for checkout.
+ *
+ */
+export type ApplePayWalletContentInput = {
+  /** The customer's billing address. */
+  billingAddress: MailingAddressInput;
+  /** The data for the Apple Pay wallet. */
+  data: Scalars['String'];
+  /** The header data for the Apple Pay wallet. */
+  header: ApplePayWalletHeaderInput;
+  /** The last digits of the card used to create the payment. */
+  lastDigits?: InputMaybe<Scalars['String']>;
+  /** The signature for the Apple Pay wallet. */
+  signature: Scalars['String'];
+  /** The version for the Apple Pay wallet. */
+  version: Scalars['String'];
+};
+
+/**
+ * The input fields for submitting wallet payment method information for checkout.
+ *
+ */
+export type ApplePayWalletHeaderInput = {
+  /** The application data for the Apple Pay wallet. */
+  applicationData?: InputMaybe<Scalars['String']>;
+  /** The ephemeral public key for the Apple Pay wallet. */
+  ephemeralPublicKey: Scalars['String'];
+  /** The public key hash for the Apple Pay wallet. */
+  publicKeyHash: Scalars['String'];
+  /** The transaction ID for the Apple Pay wallet. */
+  transactionId: Scalars['String'];
 };
 
 /** Details about the gift card used on the checkout. */
@@ -263,6 +297,66 @@ export type AvailableShippingRates = {
   shippingRates?: Maybe<Array<ShippingRate>>;
 };
 
+/** Represents a cart line common fields. */
+export type BaseCartLine = {
+  /** An attribute associated with the cart line. */
+  attribute?: Maybe<Attribute>;
+  /** The attributes associated with the cart line. Attributes are represented as key-value pairs. */
+  attributes: Array<Attribute>;
+  /** The cost of the merchandise that the buyer will pay for at checkout. The costs are subject to change and changes will be reflected at checkout. */
+  cost: CartLineCost;
+  /** The discounts that have been applied to the cart line. */
+  discountAllocations: Array<
+    | CartAutomaticDiscountAllocation
+    | CartCodeDiscountAllocation
+    | CartCustomDiscountAllocation
+  >;
+  /**
+   * The estimated cost of the merchandise that the buyer will pay for at checkout. The estimated costs are subject to change and changes will be reflected at checkout.
+   * @deprecated Use `cost` instead.
+   */
+  estimatedCost: CartLineEstimatedCost;
+  /** A globally-unique identifier. */
+  id: Scalars['ID'];
+  /** The merchandise that the buyer intends to purchase. */
+  merchandise: Merchandise;
+  /** The quantity of the merchandise that the customer intends to purchase. */
+  quantity: Scalars['Int'];
+  /** The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased. */
+  sellingPlanAllocation?: Maybe<SellingPlanAllocation>;
+};
+
+/** Represents a cart line common fields. */
+export type BaseCartLineAttributeArgs = {
+  key: Scalars['String'];
+};
+
+/**
+ * An auto-generated type for paginating through multiple BaseCartLines.
+ *
+ */
+export type BaseCartLineConnection = {
+  __typename?: 'BaseCartLineConnection';
+  /** A list of edges. */
+  edges: Array<BaseCartLineEdge>;
+  /** A list of the nodes contained in BaseCartLineEdge. */
+  nodes: Array<CartLine>;
+  /** Information to aid in pagination. */
+  pageInfo: PageInfo;
+};
+
+/**
+ * An auto-generated type which holds one BaseCartLine and a cursor during pagination.
+ *
+ */
+export type BaseCartLineEdge = {
+  __typename?: 'BaseCartLineEdge';
+  /** A cursor for use in pagination. */
+  cursor: Scalars['String'];
+  /** The item at the end of BaseCartLineEdge. */
+  node: CartLine;
+};
+
 /** An online store blog. */
 export type Blog = HasMetafields &
   Node &
@@ -430,57 +524,65 @@ export type CardBrand =
  * during a customer's session.
  *
  */
-export type Cart = Node & {
-  __typename?: 'Cart';
-  /** An attribute associated with the cart. */
-  attribute?: Maybe<Attribute>;
-  /** The attributes associated with the cart. Attributes are represented as key-value pairs. */
-  attributes: Array<Attribute>;
-  /** Information about the buyer that is interacting with the cart. */
-  buyerIdentity: CartBuyerIdentity;
-  /** The URL of the checkout for the cart. */
-  checkoutUrl: Scalars['URL'];
-  /** The estimated costs that the buyer will pay at checkout. The costs are subject to change and changes will be reflected at checkout. The `cost` field uses the `buyerIdentity` field to determine [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). */
-  cost: CartCost;
-  /** The date and time when the cart was created. */
-  createdAt: Scalars['DateTime'];
-  /**
-   * The delivery groups available for the cart, based on the buyer identity default
-   * delivery address preference or the default address of the logged-in customer.
-   *
-   */
-  deliveryGroups: CartDeliveryGroupConnection;
-  /** The discounts that have been applied to the entire cart. */
-  discountAllocations: Array<
-    | CartAutomaticDiscountAllocation
-    | CartCodeDiscountAllocation
-    | CartCustomDiscountAllocation
-  >;
-  /**
-   * The case-insensitive discount codes that the customer added at checkout.
-   *
-   */
-  discountCodes: Array<CartDiscountCode>;
-  /**
-   * The estimated costs that the buyer will pay at checkout.
-   * The estimated costs are subject to change and changes will be reflected at checkout.
-   * The `estimatedCost` field uses the `buyerIdentity` field to determine
-   * [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing).
-   *
-   * @deprecated Use `cost` instead.
-   */
-  estimatedCost: CartEstimatedCost;
-  /** A globally-unique identifier. */
-  id: Scalars['ID'];
-  /** A list of lines containing information about the items the customer intends to purchase. */
-  lines: CartLineConnection;
-  /** A note that is associated with the cart. For example, the note can be a personalized message to the buyer. */
-  note?: Maybe<Scalars['String']>;
-  /** The total number of items in the cart. */
-  totalQuantity: Scalars['Int'];
-  /** The date and time when the cart was updated. */
-  updatedAt: Scalars['DateTime'];
-};
+export type Cart = HasMetafields &
+  Node & {
+    __typename?: 'Cart';
+    /** An attribute associated with the cart. */
+    attribute?: Maybe<Attribute>;
+    /** The attributes associated with the cart. Attributes are represented as key-value pairs. */
+    attributes: Array<Attribute>;
+    /** Information about the buyer that is interacting with the cart. */
+    buyerIdentity: CartBuyerIdentity;
+    /** The URL of the checkout for the cart. */
+    checkoutUrl: Scalars['URL'];
+    /** The estimated costs that the buyer will pay at checkout. The costs are subject to change and changes will be reflected at checkout. The `cost` field uses the `buyerIdentity` field to determine [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing). */
+    cost: CartCost;
+    /** The date and time when the cart was created. */
+    createdAt: Scalars['DateTime'];
+    /**
+     * The delivery groups available for the cart, based on the buyer identity default
+     * delivery address preference or the default address of the logged-in customer.
+     *
+     */
+    deliveryGroups: CartDeliveryGroupConnection;
+    /** The discounts that have been applied to the entire cart. */
+    discountAllocations: Array<
+      | CartAutomaticDiscountAllocation
+      | CartCodeDiscountAllocation
+      | CartCustomDiscountAllocation
+    >;
+    /**
+     * The case-insensitive discount codes that the customer added at checkout.
+     *
+     */
+    discountCodes: Array<CartDiscountCode>;
+    /**
+     * The estimated costs that the buyer will pay at checkout.
+     * The estimated costs are subject to change and changes will be reflected at checkout.
+     * The `estimatedCost` field uses the `buyerIdentity` field to determine
+     * [international pricing](https://shopify.dev/custom-storefronts/internationalization/international-pricing).
+     *
+     * @deprecated Use `cost` instead.
+     */
+    estimatedCost: CartEstimatedCost;
+    /** A globally-unique identifier. */
+    id: Scalars['ID'];
+    /** A list of lines containing information about the items the customer intends to purchase. */
+    lines: BaseCartLineConnection;
+    /** Returns a metafield found by namespace and key. */
+    metafield?: Maybe<Metafield>;
+    /**
+     * The metafields associated with the resource matching the supplied list of namespaces and keys.
+     *
+     */
+    metafields: Array<Maybe<Metafield>>;
+    /** A note that is associated with the cart. For example, the note can be a personalized message to the buyer. */
+    note?: Maybe<Scalars['String']>;
+    /** The total number of items in the cart. */
+    totalQuantity: Scalars['Int'];
+    /** The date and time when the cart was updated. */
+    updatedAt: Scalars['DateTime'];
+  };
 
 /**
  * A cart represents the merchandise that a buyer intends to purchase,
@@ -523,6 +625,29 @@ export type CartLinesArgs = {
   reverse?: InputMaybe<Scalars['Boolean']>;
 };
 
+/**
+ * A cart represents the merchandise that a buyer intends to purchase,
+ * and the estimated cost associated with the cart. Learn how to
+ * [interact with a cart](https://shopify.dev/custom-storefronts/internationalization/international-pricing)
+ * during a customer's session.
+ *
+ */
+export type CartMetafieldArgs = {
+  key: Scalars['String'];
+  namespace: Scalars['String'];
+};
+
+/**
+ * A cart represents the merchandise that a buyer intends to purchase,
+ * and the estimated cost associated with the cart. Learn how to
+ * [interact with a cart](https://shopify.dev/custom-storefronts/internationalization/international-pricing)
+ * during a customer's session.
+ *
+ */
+export type CartMetafieldsArgs = {
+  identifiers: Array<HasMetafieldsIdentifier>;
+};
+
 /** Return type for `cartAttributesUpdate` mutation. */
 export type CartAttributesUpdatePayload = {
   __typename?: 'CartAttributesUpdatePayload';
@@ -559,6 +684,12 @@ export type CartBuyerIdentity = {
   email?: Maybe<Scalars['String']>;
   /** The phone number of the buyer that is interacting with the cart. */
   phone?: Maybe<Scalars['String']>;
+  /**
+   * A set of wallet preferences tied to the buyer that is interacting with the cart.
+   * Preferences can be used to populate relevant payment fields in the checkout flow.
+   *
+   */
+  walletPreferences: Array<Scalars['String']>;
 };
 
 /**
@@ -584,6 +715,12 @@ export type CartBuyerIdentityInput = {
   email?: InputMaybe<Scalars['String']>;
   /** The phone number of the buyer that is interacting with the cart. */
   phone?: InputMaybe<Scalars['String']>;
+  /**
+   * A set of wallet preferences tied to the buyer that is interacting with the cart.
+   * Preferences can be used to populate relevant payment fields in the checkout flow.
+   *
+   */
+  walletPreferences?: InputMaybe<Array<Scalars['String']>>;
 };
 
 /** Return type for `cartBuyerIdentityUpdate` mutation. */
@@ -595,6 +732,18 @@ export type CartBuyerIdentityUpdatePayload = {
   userErrors: Array<CartUserError>;
 };
 
+/**
+ * Represents how credit card details are provided for a direct payment.
+ *
+ */
+export type CartCardSource =
+  /**
+   * The credit card was provided by a third party and vaulted on their system.
+   * Using this value requires a separate permission from Shopify.
+   *
+   */
+  'SAVED_CREDIT_CARD';
+
 /** The discount that has been applied to the cart line using a discount code. */
 export type CartCodeDiscountAllocation = CartDiscountAllocation & {
   __typename?: 'CartCodeDiscountAllocation';
@@ -602,6 +751,56 @@ export type CartCodeDiscountAllocation = CartDiscountAllocation & {
   code: Scalars['String'];
   /** The discounted amount that has been applied to the cart line. */
   discountedAmount: MoneyV2;
+};
+
+/** The completion action to checkout a cart. */
+export type CartCompletionAction = CompletePaymentChallenge;
+
+/** The required completion action to checkout a cart. */
+export type CartCompletionActionRequired = {
+  __typename?: 'CartCompletionActionRequired';
+  /** The action required to complete the cart completion attempt. */
+  action?: Maybe<CartCompletionAction>;
+  /** The ID of the cart completion attempt. */
+  id: Scalars['String'];
+};
+
+/** The result of a cart completion attempt. */
+export type CartCompletionAttemptResult =
+  | CartCompletionActionRequired
+  | CartCompletionFailed
+  | CartCompletionProcessing
+  | CartCompletionSuccess;
+
+/** A failed completion to checkout a cart. */
+export type CartCompletionFailed = {
+  __typename?: 'CartCompletionFailed';
+  /** The errors that caused the checkout to fail. */
+  errors: Array<CompletionError>;
+  /** The ID of the cart completion attempt. */
+  id: Scalars['String'];
+};
+
+/** A cart checkout completion that's still processing. */
+export type CartCompletionProcessing = {
+  __typename?: 'CartCompletionProcessing';
+  /** The ID of the cart completion attempt. */
+  id: Scalars['String'];
+  /** The number of milliseconds to wait before polling again. */
+  pollDelay: Scalars['Int'];
+};
+
+/** A successful completion to checkout a cart and a created order. */
+export type CartCompletionSuccess = {
+  __typename?: 'CartCompletionSuccess';
+  /** The date and time when the job completed. */
+  completedAt?: Maybe<Scalars['DateTime']>;
+  /** The ID of the cart completion attempt. */
+  id: Scalars['String'];
+  /** The ID of the order that's created in Shopify. */
+  orderId: Scalars['ID'];
+  /** The URL of the order confirmation in Shopify. */
+  orderUrl: Scalars['URL'];
 };
 
 /**
@@ -654,7 +853,7 @@ export type CartCustomDiscountAllocation = CartDiscountAllocation & {
 export type CartDeliveryGroup = {
   __typename?: 'CartDeliveryGroup';
   /** A list of cart lines for the delivery group. */
-  cartLines: CartLineConnection;
+  cartLines: BaseCartLineConnection;
   /** The destination address for the delivery group. */
   deliveryAddress: MailingAddress;
   /** The delivery options available for the delivery group. */
@@ -717,6 +916,19 @@ export type CartDeliveryOption = {
   title?: Maybe<Scalars['String']>;
 };
 
+/**
+ * The input fields for submitting direct payment method information for checkout.
+ *
+ */
+export type CartDirectPaymentMethodInput = {
+  /** The customer's billing address. */
+  billingAddress: MailingAddressInput;
+  /** The source of the credit card payment. */
+  cardSource?: InputMaybe<CartCardSource>;
+  /** The session ID for the direct payment method used to create the payment. */
+  sessionId: Scalars['String'];
+};
+
 /** The discounts that have been applied to the cart line. */
 export type CartDiscountAllocation = {
   /** The discounted amount that has been applied to the cart line. */
@@ -745,14 +957,26 @@ export type CartDiscountCodesUpdatePayload = {
 export type CartErrorCode =
   /** The input value is invalid. */
   | 'INVALID'
+  /** Delivery group was not found in cart. */
+  | 'INVALID_DELIVERY_GROUP'
+  /** Delivery option was not valid. */
+  | 'INVALID_DELIVERY_OPTION'
   /** Merchandise line was not found in cart. */
   | 'INVALID_MERCHANDISE_LINE'
+  /** The metafields were not valid. */
+  | 'INVALID_METAFIELDS'
+  /** The payment wasn't valid. */
+  | 'INVALID_PAYMENT'
+  /** Cannot update payment on an empty cart */
+  | 'INVALID_PAYMENT_EMPTY_CART'
   /** The input value should be less than the maximum value allowed. */
   | 'LESS_THAN'
   /** Missing discount code. */
   | 'MISSING_DISCOUNT_CODE'
   /** Missing note. */
-  | 'MISSING_NOTE';
+  | 'MISSING_NOTE'
+  /** The payment method is not supported. */
+  | 'PAYMENT_METHOD_NOT_SUPPORTED';
 
 /**
  * The estimated costs that the buyer will pay at checkout.
@@ -776,6 +1000,15 @@ export type CartEstimatedCost = {
   totalTaxAmount?: Maybe<MoneyV2>;
 };
 
+/**
+ * The input fields for submitting a billing address without a selected payment method.
+ *
+ */
+export type CartFreePaymentMethodInput = {
+  /** The customer's billing address. */
+  billingAddress: MailingAddressInput;
+};
+
 /** Specifies the input fields to create a cart. */
 export type CartInput = {
   /** An array of key-value pairs that contains additional information about the cart. */
@@ -794,57 +1027,63 @@ export type CartInput = {
   discountCodes?: InputMaybe<Array<Scalars['String']>>;
   /** A list of merchandise lines to add to the cart. */
   lines?: InputMaybe<Array<CartLineInput>>;
+  /** The metafields to associate with this cart. */
+  metafields?: InputMaybe<Array<CartInputMetafieldInput>>;
   /** A note that is associated with the cart. For example, the note can be a personalized message to the buyer. */
   note?: InputMaybe<Scalars['String']>;
 };
 
-/** Represents information about the merchandise in the cart. */
-export type CartLine = Node & {
-  __typename?: 'CartLine';
-  /** An attribute associated with the cart line. */
-  attribute?: Maybe<Attribute>;
-  /** The attributes associated with the cart line. Attributes are represented as key-value pairs. */
-  attributes: Array<Attribute>;
-  /** The cost of the merchandise that the buyer will pay for at checkout. The costs are subject to change and changes will be reflected at checkout. */
-  cost: CartLineCost;
-  /** The discounts that have been applied to the cart line. */
-  discountAllocations: Array<
-    | CartAutomaticDiscountAllocation
-    | CartCodeDiscountAllocation
-    | CartCustomDiscountAllocation
-  >;
+/** Specifies the input fields for a cart metafield value to set. */
+export type CartInputMetafieldInput = {
+  /** The key name of the metafield. */
+  key: Scalars['String'];
   /**
-   * The estimated cost of the merchandise that the buyer will pay for at checkout. The estimated costs are subject to change and changes will be reflected at checkout.
-   * @deprecated Use `cost` instead.
+   * The type of data that the cart metafield stores.
+   * The type of data must be a [supported type](https://shopify.dev/apps/metafields/types).
+   *
    */
-  estimatedCost: CartLineEstimatedCost;
-  /** A globally-unique identifier. */
-  id: Scalars['ID'];
-  /** The merchandise that the buyer intends to purchase. */
-  merchandise: Merchandise;
-  /** The quantity of the merchandise that the customer intends to purchase. */
-  quantity: Scalars['Int'];
-  /** The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased. */
-  sellingPlanAllocation?: Maybe<SellingPlanAllocation>;
+  type: Scalars['String'];
+  /**
+   * The data to store in the cart metafield. The data is always stored as a string, regardless of the metafield's type.
+   *
+   */
+  value: Scalars['String'];
 };
+
+/** Represents information about the merchandise in the cart. */
+export type CartLine = BaseCartLine &
+  Node & {
+    __typename?: 'CartLine';
+    /** An attribute associated with the cart line. */
+    attribute?: Maybe<Attribute>;
+    /** The attributes associated with the cart line. Attributes are represented as key-value pairs. */
+    attributes: Array<Attribute>;
+    /** The cost of the merchandise that the buyer will pay for at checkout. The costs are subject to change and changes will be reflected at checkout. */
+    cost: CartLineCost;
+    /** The discounts that have been applied to the cart line. */
+    discountAllocations: Array<
+      | CartAutomaticDiscountAllocation
+      | CartCodeDiscountAllocation
+      | CartCustomDiscountAllocation
+    >;
+    /**
+     * The estimated cost of the merchandise that the buyer will pay for at checkout. The estimated costs are subject to change and changes will be reflected at checkout.
+     * @deprecated Use `cost` instead.
+     */
+    estimatedCost: CartLineEstimatedCost;
+    /** A globally-unique identifier. */
+    id: Scalars['ID'];
+    /** The merchandise that the buyer intends to purchase. */
+    merchandise: Merchandise;
+    /** The quantity of the merchandise that the customer intends to purchase. */
+    quantity: Scalars['Int'];
+    /** The selling plan associated with the cart line and the effect that each selling plan has on variants when they're purchased. */
+    sellingPlanAllocation?: Maybe<SellingPlanAllocation>;
+  };
 
 /** Represents information about the merchandise in the cart. */
 export type CartLineAttributeArgs = {
   key: Scalars['String'];
-};
-
-/**
- * An auto-generated type for paginating through multiple CartLines.
- *
- */
-export type CartLineConnection = {
-  __typename?: 'CartLineConnection';
-  /** A list of edges. */
-  edges: Array<CartLineEdge>;
-  /** A list of the nodes contained in CartLineEdge. */
-  nodes: Array<CartLine>;
-  /** Information to aid in pagination. */
-  pageInfo: PageInfo;
 };
 
 /** The cost of the merchandise line that the buyer will pay at checkout. */
@@ -858,18 +1097,6 @@ export type CartLineCost = {
   subtotalAmount: MoneyV2;
   /** The total cost of the merchandise line. */
   totalAmount: MoneyV2;
-};
-
-/**
- * An auto-generated type which holds one CartLine and a cursor during pagination.
- *
- */
-export type CartLineEdge = {
-  __typename?: 'CartLineEdge';
-  /** A cursor for use in pagination. */
-  cursor: Scalars['String'];
-  /** The item at the end of CartLineEdge. */
-  node: CartLine;
 };
 
 /** The estimated cost of the merchandise line that the buyer will pay at checkout. */
@@ -938,9 +1165,94 @@ export type CartLinesUpdatePayload = {
   userErrors: Array<CartUserError>;
 };
 
+/** Specifies the input fields to delete a cart metafield. */
+export type CartMetafieldDeleteInput = {
+  /** The key name of the cart metafield. */
+  key: Scalars['String'];
+  /** The ID of the cart resource. */
+  ownerId: Scalars['ID'];
+};
+
+/** Return type for `cartMetafieldDelete` mutation. */
+export type CartMetafieldDeletePayload = {
+  __typename?: 'CartMetafieldDeletePayload';
+  /** The ID of the deleted cart metafield. */
+  deletedId?: Maybe<Scalars['ID']>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<MetafieldDeleteUserError>;
+};
+
+/** Specifies the input fields for a cart metafield value to set. */
+export type CartMetafieldsSetInput = {
+  /** The key name of the cart metafield. */
+  key: Scalars['String'];
+  /** The ID of the cart resource. */
+  ownerId: Scalars['ID'];
+  /**
+   * The type of data that the cart metafield stores.
+   * The type of data must be a [supported type](https://shopify.dev/apps/metafields/types).
+   *
+   */
+  type: Scalars['String'];
+  /**
+   * The data to store in the cart metafield. The data is always stored as a string, regardless of the metafield's type.
+   *
+   */
+  value: Scalars['String'];
+};
+
+/** Return type for `cartMetafieldsSet` mutation. */
+export type CartMetafieldsSetPayload = {
+  __typename?: 'CartMetafieldsSetPayload';
+  /** The list of cart metafields that were set. */
+  metafields?: Maybe<Array<Metafield>>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<MetafieldsSetUserError>;
+};
+
 /** Return type for `cartNoteUpdate` mutation. */
 export type CartNoteUpdatePayload = {
   __typename?: 'CartNoteUpdatePayload';
+  /** The updated cart. */
+  cart?: Maybe<Cart>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<CartUserError>;
+};
+
+/**
+ * The input fields for updating the payment method that will be used to checkout.
+ *
+ */
+export type CartPaymentInput = {
+  /** The amount that the customer will be charged at checkout. */
+  amount: MoneyInput;
+  /**
+   * The input fields to use when checking out a cart with a direct payment method (like a credit card).
+   *
+   */
+  directPaymentMethod?: InputMaybe<CartDirectPaymentMethodInput>;
+  /**
+   * The input fields to use to checkout a cart without providing a payment method.
+   * Use this payment method input if the total cost of the cart is 0.
+   *
+   */
+  freePaymentMethod?: InputMaybe<CartFreePaymentMethodInput>;
+  /**
+   * An ID of the order placed on the originating platform.
+   * Note that this value doesn't correspond to the Shopify Order ID.
+   *
+   */
+  sourceIdentifier?: InputMaybe<Scalars['String']>;
+  /**
+   * The input fields to use when checking out a cart with a wallet payment method (like Shop Pay or Apple Pay).
+   *
+   */
+  walletPaymentMethod?: InputMaybe<CartWalletPaymentMethodInput>;
+};
+
+/** Return type for `cartPaymentUpdate` mutation. */
+export type CartPaymentUpdatePayload = {
+  __typename?: 'CartPaymentUpdatePayload';
   /** The updated cart. */
   cart?: Maybe<Cart>;
   /** The list of errors that occurred from executing the mutation. */
@@ -967,6 +1279,22 @@ export type CartSelectedDeliveryOptionsUpdatePayload = {
   userErrors: Array<CartUserError>;
 };
 
+/** Return type for `cartSubmitForCompletion` mutation. */
+export type CartSubmitForCompletionPayload = {
+  __typename?: 'CartSubmitForCompletionPayload';
+  /** The result of cart submission for completion. */
+  result?: Maybe<CartSubmitForCompletionResult>;
+  /** The list of errors that occurred from executing the mutation. */
+  userErrors: Array<CartUserError>;
+};
+
+/** The result of cart submit completion. */
+export type CartSubmitForCompletionResult =
+  | SubmitAlreadyAccepted
+  | SubmitFailed
+  | SubmitSuccess
+  | SubmitThrottled;
+
 /** Represents an error that happens during execution of a cart mutation. */
 export type CartUserError = DisplayableError & {
   __typename?: 'CartUserError';
@@ -976,6 +1304,17 @@ export type CartUserError = DisplayableError & {
   field?: Maybe<Array<Scalars['String']>>;
   /** The error message. */
   message: Scalars['String'];
+};
+
+/**
+ * The input fields for submitting wallet payment method information for checkout.
+ *
+ */
+export type CartWalletPaymentMethodInput = {
+  /** The payment method information for the Apple Pay wallet. */
+  applePayWalletContent?: InputMaybe<ApplePayWalletContentInput>;
+  /** The payment method information for the Shop Pay wallet. */
+  shopPayWalletContent?: InputMaybe<ShopPayWalletContentInput>;
 };
 
 /** A container for all the information required to checkout items and pay. */
@@ -1380,6 +1719,8 @@ export type CheckoutErrorCode =
   | 'NOT_SUPPORTED'
   /** The input value needs to be blank. */
   | 'PRESENT'
+  /** Product is not published for this customer. */
+  | 'PRODUCT_NOT_AVAILABLE'
   /** Shipping rate expired. */
   | 'SHIPPING_RATE_EXPIRED'
   /** Throttled during checkout. */
@@ -1735,6 +2076,38 @@ export type CommentEdge = {
   node: Comment;
 };
 
+/** The action for the 3DS payment redirect. */
+export type CompletePaymentChallenge = {
+  __typename?: 'CompletePaymentChallenge';
+  /** The URL for the 3DS payment redirect. */
+  redirectUrl?: Maybe<Scalars['URL']>;
+};
+
+/** An error that occurred during a cart completion attempt. */
+export type CompletionError = {
+  __typename?: 'CompletionError';
+  /** The error code. */
+  code: CompletionErrorCode;
+  /** The error message. */
+  message?: Maybe<Scalars['String']>;
+};
+
+/** The code of the error that occurred during a cart completion attempt. */
+export type CompletionErrorCode =
+  | 'ERROR'
+  | 'INVENTORY_RESERVATION_ERROR'
+  | 'PAYMENT_AMOUNT_TOO_SMALL'
+  | 'PAYMENT_CALL_ISSUER'
+  | 'PAYMENT_CARD_DECLINED'
+  | 'PAYMENT_ERROR'
+  | 'PAYMENT_GATEWAY_NOT_ENABLED_ERROR'
+  | 'PAYMENT_INSUFFICIENT_FUNDS'
+  | 'PAYMENT_INVALID_BILLING_ADDRESS'
+  | 'PAYMENT_INVALID_CREDIT_CARD'
+  | 'PAYMENT_INVALID_CURRENCY'
+  | 'PAYMENT_INVALID_PAYMENT_METHOD'
+  | 'PAYMENT_TRANSIENT_ERROR';
+
 /** A country. */
 export type Country = {
   __typename?: 'Country';
@@ -1744,6 +2117,8 @@ export type Country = {
   currency: Currency;
   /** The ISO code of the country. */
   isoCode: CountryCode;
+  /** The market that includes this country. */
+  market?: Maybe<Market>;
   /** The name of the country. */
   name: Scalars['String'];
   /** The unit system used in the country. */
@@ -3049,6 +3424,11 @@ export type DeliveryAddress = MailingAddress;
  *
  */
 export type DeliveryAddressInput = {
+  /**
+   * The ID of a customer address that is associated with the buyer that is interacting with the cart.
+   *
+   */
+  customerAddressId?: InputMaybe<Scalars['ID']>;
   /** A delivery address preference of a buyer that is interacting with the cart. */
   deliveryAddress?: InputMaybe<MailingAddressInput>;
 };
@@ -3241,6 +3621,8 @@ export type ExternalVideo = Media &
     mediaContentType: MediaContentType;
     /** The origin URL of the video on the respective host. */
     originUrl: Scalars['URL'];
+    /** The presentation for a media. */
+    presentation?: Maybe<MediaPresentation>;
     /** The preview image for the media. */
     previewImage?: Maybe<Image>;
   };
@@ -3852,17 +4234,38 @@ export type Localization = {
   country: Country;
   /** The language of the active localized experience. Use the `@inContext` directive to change this value. */
   language: Language;
+  /** The market including the country of the active localized experience. Use the `@inContext` directive to change this value. */
+  market: Market;
 };
 
 /** Represents a location where product inventory is held. */
-export type Location = Node & {
-  __typename?: 'Location';
-  /** The address of the location. */
-  address: LocationAddress;
-  /** A globally-unique identifier. */
-  id: Scalars['ID'];
-  /** The name of the location. */
-  name: Scalars['String'];
+export type Location = HasMetafields &
+  Node & {
+    __typename?: 'Location';
+    /** The address of the location. */
+    address: LocationAddress;
+    /** A globally-unique identifier. */
+    id: Scalars['ID'];
+    /** Returns a metafield found by namespace and key. */
+    metafield?: Maybe<Metafield>;
+    /**
+     * The metafields associated with the resource matching the supplied list of namespaces and keys.
+     *
+     */
+    metafields: Array<Maybe<Metafield>>;
+    /** The name of the location. */
+    name: Scalars['String'];
+  };
+
+/** Represents a location where product inventory is held. */
+export type LocationMetafieldArgs = {
+  key: Scalars['String'];
+  namespace: Scalars['String'];
+};
+
+/** Represents a location where product inventory is held. */
+export type LocationMetafieldsArgs = {
+  identifiers: Array<HasMetafieldsIdentifier>;
 };
 
 /**
@@ -4109,12 +4512,45 @@ export type ManualDiscountApplication = DiscountApplication & {
   value: PricingValue;
 };
 
+/** A group of one or more regions of the world that a merchant is targeting for sales. To learn more about markets, refer to [the Shopify Markets conceptual overview](/docs/apps/markets). */
+export type Market = HasMetafields &
+  Node & {
+    __typename?: 'Market';
+    /**
+     * A human-readable unique string for the market automatically generated from its title.
+     *
+     */
+    handle: Scalars['String'];
+    /** A globally-unique identifier. */
+    id: Scalars['ID'];
+    /** Returns a metafield found by namespace and key. */
+    metafield?: Maybe<Metafield>;
+    /**
+     * The metafields associated with the resource matching the supplied list of namespaces and keys.
+     *
+     */
+    metafields: Array<Maybe<Metafield>>;
+  };
+
+/** A group of one or more regions of the world that a merchant is targeting for sales. To learn more about markets, refer to [the Shopify Markets conceptual overview](/docs/apps/markets). */
+export type MarketMetafieldArgs = {
+  key: Scalars['String'];
+  namespace: Scalars['String'];
+};
+
+/** A group of one or more regions of the world that a merchant is targeting for sales. To learn more about markets, refer to [the Shopify Markets conceptual overview](/docs/apps/markets). */
+export type MarketMetafieldsArgs = {
+  identifiers: Array<HasMetafieldsIdentifier>;
+};
+
 /** Represents a media interface. */
 export type Media = {
   /** A word or phrase to share the nature or contents of a media. */
   alt?: Maybe<Scalars['String']>;
   /** The media content type. */
   mediaContentType: MediaContentType;
+  /** The presentation for a media. */
+  presentation?: Maybe<MediaPresentation>;
   /** The preview image for the media. */
   previewImage?: Maybe<Image>;
 };
@@ -4175,9 +4611,32 @@ export type MediaImage = Media &
     image?: Maybe<Image>;
     /** The media content type. */
     mediaContentType: MediaContentType;
+    /** The presentation for a media. */
+    presentation?: Maybe<MediaPresentation>;
     /** The preview image for the media. */
     previewImage?: Maybe<Image>;
   };
+
+/** A media presentation. */
+export type MediaPresentation = Node & {
+  __typename?: 'MediaPresentation';
+  /** A JSON object representing a presentation view. */
+  asJson?: Maybe<Scalars['JSON']>;
+  /** A globally-unique identifier. */
+  id: Scalars['ID'];
+};
+
+/** A media presentation. */
+export type MediaPresentationAsJsonArgs = {
+  format: MediaPresentationFormat;
+};
+
+/** The possible formats for a media presentation. */
+export type MediaPresentationFormat =
+  /** A media image presentation. */
+  | 'IMAGE'
+  /** A model viewer presentation. */
+  | 'MODEL_VIEWER';
 
 /**
  * A menu used for navigation within a storefront.
@@ -4294,6 +4753,24 @@ export type MetafieldReferencesArgs = {
   last?: InputMaybe<Scalars['Int']>;
 };
 
+/** Possible error codes that can be returned by `MetafieldDeleteUserError`. */
+export type MetafieldDeleteErrorCode =
+  /** The owner ID is invalid. */
+  | 'INVALID_OWNER'
+  /** Metafield not found. */
+  | 'METAFIELD_DOES_NOT_EXIST';
+
+/** An error that occurs during the execution of cart metafield deletion. */
+export type MetafieldDeleteUserError = DisplayableError & {
+  __typename?: 'MetafieldDeleteUserError';
+  /** The error code. */
+  code?: Maybe<MetafieldDeleteErrorCode>;
+  /** The path to the input field that caused the error. */
+  field?: Maybe<Array<Scalars['String']>>;
+  /** The error message. */
+  message: Scalars['String'];
+};
+
 /**
  * A filter used to view a subset of products in a collection matching a specific metafield value.
  *
@@ -4317,8 +4794,11 @@ export type MetafieldFilter = {
 export type MetafieldParentResource =
   | Article
   | Blog
+  | Cart
   | Collection
   | Customer
+  | Location
+  | Market
   | Order
   | Page
   | Product
@@ -4364,6 +4844,40 @@ export type MetafieldReferenceEdge = {
   /** The item at the end of MetafieldReferenceEdge. */
   node: MetafieldReference;
 };
+
+/** An error that occurs during the execution of `MetafieldsSet`. */
+export type MetafieldsSetUserError = DisplayableError & {
+  __typename?: 'MetafieldsSetUserError';
+  /** The error code. */
+  code?: Maybe<MetafieldsSetUserErrorCode>;
+  /** The index of the array element that's causing the error. */
+  elementIndex?: Maybe<Scalars['Int']>;
+  /** The path to the input field that caused the error. */
+  field?: Maybe<Array<Scalars['String']>>;
+  /** The error message. */
+  message: Scalars['String'];
+};
+
+/** Possible error codes that can be returned by `MetafieldsSetUserError`. */
+export type MetafieldsSetUserErrorCode =
+  /** The input value is blank. */
+  | 'BLANK'
+  /** The input value isn't included in the list. */
+  | 'INCLUSION'
+  /** The owner ID is invalid. */
+  | 'INVALID_OWNER'
+  /** The type is invalid. */
+  | 'INVALID_TYPE'
+  /** The value is invalid for metafield type or for definition options. */
+  | 'INVALID_VALUE'
+  /** The input value should be less than or equal to the maximum value allowed. */
+  | 'LESS_THAN_OR_EQUAL_TO'
+  /** The input value needs to be blank. */
+  | 'PRESENT'
+  /** The input value is too long. */
+  | 'TOO_LONG'
+  /** The input value is too short. */
+  | 'TOO_SHORT';
 
 /** An instance of a user-defined model based on a MetaobjectDefinition. */
 export type Metaobject = Node & {
@@ -4462,6 +4976,8 @@ export type Model3d = Media &
     id: Scalars['ID'];
     /** The media content type. */
     mediaContentType: MediaContentType;
+    /** The presentation for a media. */
+    presentation?: Maybe<MediaPresentation>;
     /** The preview image for the media. */
     previewImage?: Maybe<Image>;
     /** The sources for a 3d model. */
@@ -4524,10 +5040,23 @@ export type Mutation = {
   cartLinesRemove?: Maybe<CartLinesRemovePayload>;
   /** Updates one or more merchandise lines on a cart. */
   cartLinesUpdate?: Maybe<CartLinesUpdatePayload>;
+  /** Deletes a cart metafield. */
+  cartMetafieldDelete?: Maybe<CartMetafieldDeletePayload>;
+  /**
+   * Sets cart metafield values. Cart metafield values will be set regardless if they were previously created or not.
+   *
+   * Allows a maximum of 25 cart metafields to be set at a time.
+   *
+   */
+  cartMetafieldsSet?: Maybe<CartMetafieldsSetPayload>;
   /** Updates the note on the cart. */
   cartNoteUpdate?: Maybe<CartNoteUpdatePayload>;
+  /** Update the customer's payment method that will be used to checkout. */
+  cartPaymentUpdate?: Maybe<CartPaymentUpdatePayload>;
   /** Update the selected delivery options for a delivery group. */
   cartSelectedDeliveryOptionsUpdate?: Maybe<CartSelectedDeliveryOptionsUpdatePayload>;
+  /** Submit the cart for checkout completion. */
+  cartSubmitForCompletion?: Maybe<CartSubmitForCompletionPayload>;
   /** Updates the attributes of a checkout if `allowPartialAddresses` is `true`. */
   checkoutAttributesUpdateV2?: Maybe<CheckoutAttributesUpdateV2Payload>;
   /** Completes a checkout without providing payment information. You can use this mutation for free items or items whose purchase price is covered by a gift card. */
@@ -4673,15 +5202,37 @@ export type MutationCartLinesUpdateArgs = {
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
+export type MutationCartMetafieldDeleteArgs = {
+  input: CartMetafieldDeleteInput;
+};
+
+/** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
+export type MutationCartMetafieldsSetArgs = {
+  metafields: Array<CartMetafieldsSetInput>;
+};
+
+/** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartNoteUpdateArgs = {
   cartId: Scalars['ID'];
   note?: InputMaybe<Scalars['String']>;
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
+export type MutationCartPaymentUpdateArgs = {
+  cartId: Scalars['ID'];
+  payment: CartPaymentInput;
+};
+
+/** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
 export type MutationCartSelectedDeliveryOptionsUpdateArgs = {
   cartId: Scalars['ID'];
   selectedDeliveryOptions: Array<CartSelectedDeliveryOptionInput>;
+};
+
+/** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
+export type MutationCartSubmitForCompletionArgs = {
+  attemptToken: Scalars['String'];
+  cartId: Scalars['ID'];
 };
 
 /** The schema’s entry-point for mutations. This acts as the public, top-level API from which all mutation queries must start. */
@@ -4896,6 +5447,8 @@ export type OnlineStorePublishable = {
 export type Order = HasMetafields &
   Node & {
     __typename?: 'Order';
+    /** The address associated with the payment method. */
+    billingAddress?: Maybe<MailingAddress>;
     /** The reason for the order's cancellation. Returns `null` if the order wasn't canceled. */
     cancelReason?: Maybe<OrderCancelReason>;
     /** The date and time when the order was canceled. Returns null if the order wasn't canceled. */
@@ -5693,6 +6246,17 @@ export type ProductPriceRange = {
   minVariantPrice: MoneyV2;
 };
 
+/**
+ * The recommendation intent that is used to generate product recommendations.
+ * You can use intent to generate product recommendations according to different strategies.
+ *
+ */
+export type ProductRecommendationIntent =
+  /** Offer customers products that are complementary to a product for which recommendations are to be fetched. An example is add-on products that display in a Pair it with section. */
+  | 'COMPLEMENTARY'
+  /** Offer customers a mix of products that are similar or complementary to a product for which recommendations are to be fetched. An example is substitutable products that display in a You may also like section. */
+  | 'RELATED';
+
 /** The set of valid sort keys for the Product query. */
 export type ProductSortKeys =
   /** Sort by the `best_selling` value. */
@@ -5858,6 +6422,8 @@ export type ProductVariantSortKeys =
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRoot = {
   __typename?: 'QueryRoot';
+  /** Fetch a specific Article by its ID. */
+  article?: Maybe<Article>;
   /** List of the shop's articles. */
   articles: ArticleConnection;
   /** Fetch a specific `Blog` by one of its unique attributes. */
@@ -5875,6 +6441,8 @@ export type QueryRoot = {
    *
    */
   cart?: Maybe<Cart>;
+  /** A poll for the status of the cart checkout completion and order creation. */
+  cartCompletionAttempt?: Maybe<CartCompletionAttemptResult>;
   /** Fetch a specific `Collection` by one of its unique attributes. */
   collection?: Maybe<Collection>;
   /**
@@ -5916,7 +6484,9 @@ export type QueryRoot = {
     | GenericFile
     | Location
     | MailingAddress
+    | Market
     | MediaImage
+    | MediaPresentation
     | Menu
     | MenuItem
     | Metafield
@@ -5949,7 +6519,9 @@ export type QueryRoot = {
       | GenericFile
       | Location
       | MailingAddress
+      | Market
       | MediaImage
+      | MediaPresentation
       | Menu
       | MenuItem
       | Metafield
@@ -6009,6 +6581,11 @@ export type QueryRoot = {
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
+export type QueryRootArticleArgs = {
+  id: Scalars['ID'];
+};
+
+/** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootArticlesArgs = {
   after?: InputMaybe<Scalars['String']>;
   before?: InputMaybe<Scalars['String']>;
@@ -6044,6 +6621,11 @@ export type QueryRootBlogsArgs = {
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootCartArgs = {
   id: Scalars['ID'];
+};
+
+/** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
+export type QueryRootCartCompletionAttemptArgs = {
+  attemptId: Scalars['String'];
 };
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
@@ -6151,6 +6733,7 @@ export type QueryRootProductByHandleArgs = {
 
 /** The schema’s entry-point for queries. This acts as the public, top-level API from which all queries must start. */
 export type QueryRootProductRecommendationsArgs = {
+  intent?: InputMaybe<ProductRecommendationIntent>;
   productId: Scalars['ID'];
 };
 
@@ -6531,6 +7114,17 @@ export type ShopMetafieldsArgs = {
   identifiers: Array<HasMetafieldsIdentifier>;
 };
 
+/**
+ * The input fields for submitting Shop Pay payment method information for checkout.
+ *
+ */
+export type ShopPayWalletContentInput = {
+  /** The customer's billing address. */
+  billingAddress: MailingAddressInput;
+  /** Session token for transaction. */
+  sessionToken: Scalars['String'];
+};
+
 /** Policy that a merchant has configured for their store, such as their refund or privacy policy. */
 export type ShopPolicy = Node & {
   __typename?: 'ShopPolicy';
@@ -6629,6 +7223,146 @@ export type StringEdge = {
   cursor: Scalars['String'];
   /** The item at the end of StringEdge. */
   node: Scalars['String'];
+};
+
+/** An error that occurred during cart submit for completion. */
+export type SubmissionError = {
+  __typename?: 'SubmissionError';
+  /** The error code. */
+  code: SubmissionErrorCode;
+  /** The error message. */
+  message?: Maybe<Scalars['String']>;
+};
+
+/** The code of the error that occurred during cart submit for completion. */
+export type SubmissionErrorCode =
+  | 'BUYER_IDENTITY_EMAIL_IS_INVALID'
+  | 'BUYER_IDENTITY_EMAIL_REQUIRED'
+  | 'BUYER_IDENTITY_PHONE_IS_INVALID'
+  | 'DELIVERY_ADDRESS1_INVALID'
+  | 'DELIVERY_ADDRESS1_REQUIRED'
+  | 'DELIVERY_ADDRESS1_TOO_LONG'
+  | 'DELIVERY_ADDRESS2_INVALID'
+  | 'DELIVERY_ADDRESS2_REQUIRED'
+  | 'DELIVERY_ADDRESS2_TOO_LONG'
+  | 'DELIVERY_ADDRESS_REQUIRED'
+  | 'DELIVERY_CITY_INVALID'
+  | 'DELIVERY_CITY_REQUIRED'
+  | 'DELIVERY_CITY_TOO_LONG'
+  | 'DELIVERY_COMPANY_INVALID'
+  | 'DELIVERY_COMPANY_REQUIRED'
+  | 'DELIVERY_COMPANY_TOO_LONG'
+  | 'DELIVERY_COUNTRY_REQUIRED'
+  | 'DELIVERY_FIRST_NAME_INVALID'
+  | 'DELIVERY_FIRST_NAME_REQUIRED'
+  | 'DELIVERY_FIRST_NAME_TOO_LONG'
+  | 'DELIVERY_INVALID_POSTAL_CODE_FOR_COUNTRY'
+  | 'DELIVERY_INVALID_POSTAL_CODE_FOR_ZONE'
+  | 'DELIVERY_LAST_NAME_INVALID'
+  | 'DELIVERY_LAST_NAME_REQUIRED'
+  | 'DELIVERY_LAST_NAME_TOO_LONG'
+  | 'DELIVERY_NO_DELIVERY_AVAILABLE'
+  | 'DELIVERY_NO_DELIVERY_AVAILABLE_FOR_MERCHANDISE_LINE'
+  | 'DELIVERY_OPTIONS_PHONE_NUMBER_INVALID'
+  | 'DELIVERY_OPTIONS_PHONE_NUMBER_REQUIRED'
+  | 'DELIVERY_PHONE_NUMBER_INVALID'
+  | 'DELIVERY_PHONE_NUMBER_REQUIRED'
+  | 'DELIVERY_POSTAL_CODE_INVALID'
+  | 'DELIVERY_POSTAL_CODE_REQUIRED'
+  | 'DELIVERY_ZONE_NOT_FOUND'
+  | 'DELIVERY_ZONE_REQUIRED_FOR_COUNTRY'
+  | 'ERROR'
+  | 'MERCHANDISE_LINE_LIMIT_REACHED'
+  | 'MERCHANDISE_NOT_APPLICABLE'
+  | 'MERCHANDISE_NOT_ENOUGH_STOCK_AVAILABLE'
+  | 'MERCHANDISE_OUT_OF_STOCK'
+  | 'MERCHANDISE_PRODUCT_NOT_PUBLISHED'
+  | 'NO_DELIVERY_GROUP_SELECTED'
+  | 'PAYMENTS_ADDRESS1_INVALID'
+  | 'PAYMENTS_ADDRESS1_REQUIRED'
+  | 'PAYMENTS_ADDRESS1_TOO_LONG'
+  | 'PAYMENTS_ADDRESS2_INVALID'
+  | 'PAYMENTS_ADDRESS2_REQUIRED'
+  | 'PAYMENTS_ADDRESS2_TOO_LONG'
+  | 'PAYMENTS_BILLING_ADDRESS_ZONE_NOT_FOUND'
+  | 'PAYMENTS_BILLING_ADDRESS_ZONE_REQUIRED_FOR_COUNTRY'
+  | 'PAYMENTS_CITY_INVALID'
+  | 'PAYMENTS_CITY_REQUIRED'
+  | 'PAYMENTS_CITY_TOO_LONG'
+  | 'PAYMENTS_COMPANY_INVALID'
+  | 'PAYMENTS_COMPANY_REQUIRED'
+  | 'PAYMENTS_COMPANY_TOO_LONG'
+  | 'PAYMENTS_COUNTRY_REQUIRED'
+  | 'PAYMENTS_CREDIT_CARD_BASE_EXPIRED'
+  | 'PAYMENTS_CREDIT_CARD_BASE_GATEWAY_NOT_SUPPORTED'
+  | 'PAYMENTS_CREDIT_CARD_BASE_INVALID_START_DATE_OR_ISSUE_NUMBER_FOR_DEBIT'
+  | 'PAYMENTS_CREDIT_CARD_BRAND_NOT_SUPPORTED'
+  | 'PAYMENTS_CREDIT_CARD_FIRST_NAME_BLANK'
+  | 'PAYMENTS_CREDIT_CARD_GENERIC'
+  | 'PAYMENTS_CREDIT_CARD_LAST_NAME_BLANK'
+  | 'PAYMENTS_CREDIT_CARD_MONTH_INCLUSION'
+  | 'PAYMENTS_CREDIT_CARD_NAME_INVALID'
+  | 'PAYMENTS_CREDIT_CARD_NUMBER_INVALID'
+  | 'PAYMENTS_CREDIT_CARD_NUMBER_INVALID_FORMAT'
+  | 'PAYMENTS_CREDIT_CARD_SESSION_ID'
+  | 'PAYMENTS_CREDIT_CARD_VERIFICATION_VALUE_BLANK'
+  | 'PAYMENTS_CREDIT_CARD_VERIFICATION_VALUE_INVALID_FOR_CARD_TYPE'
+  | 'PAYMENTS_CREDIT_CARD_YEAR_EXPIRED'
+  | 'PAYMENTS_CREDIT_CARD_YEAR_INVALID_EXPIRY_YEAR'
+  | 'PAYMENTS_FIRST_NAME_INVALID'
+  | 'PAYMENTS_FIRST_NAME_REQUIRED'
+  | 'PAYMENTS_FIRST_NAME_TOO_LONG'
+  | 'PAYMENTS_INVALID_POSTAL_CODE_FOR_COUNTRY'
+  | 'PAYMENTS_INVALID_POSTAL_CODE_FOR_ZONE'
+  | 'PAYMENTS_LAST_NAME_INVALID'
+  | 'PAYMENTS_LAST_NAME_REQUIRED'
+  | 'PAYMENTS_LAST_NAME_TOO_LONG'
+  | 'PAYMENTS_METHOD_REQUIRED'
+  | 'PAYMENTS_METHOD_UNAVAILABLE'
+  | 'PAYMENTS_PHONE_NUMBER_INVALID'
+  | 'PAYMENTS_PHONE_NUMBER_REQUIRED'
+  | 'PAYMENTS_POSTAL_CODE_INVALID'
+  | 'PAYMENTS_POSTAL_CODE_REQUIRED'
+  | 'PAYMENTS_SHOPIFY_PAYMENTS_REQUIRED'
+  | 'PAYMENTS_UNACCEPTABLE_PAYMENT_AMOUNT'
+  | 'PAYMENTS_WALLET_CONTENT_MISSING'
+  | 'TAXES_DELIVERY_GROUP_ID_NOT_FOUND'
+  | 'TAXES_LINE_ID_NOT_FOUND'
+  | 'TAXES_MUST_BE_DEFINED';
+
+/** Cart submit for checkout completion is successful. */
+export type SubmitAlreadyAccepted = {
+  __typename?: 'SubmitAlreadyAccepted';
+  /** The id of the cart completion attempt that will be used for polling for the result. */
+  attemptId: Scalars['String'];
+};
+
+/** Cart submit for checkout completion failed. */
+export type SubmitFailed = {
+  __typename?: 'SubmitFailed';
+  /** The URL of the checkout for the cart. */
+  checkoutUrl?: Maybe<Scalars['URL']>;
+  /** The list of errors that occurred from executing the mutation. */
+  errors: Array<SubmissionError>;
+};
+
+/** Cart submit for checkout completion is already accepted. */
+export type SubmitSuccess = {
+  __typename?: 'SubmitSuccess';
+  /** The id of the cart completion attempt that will be used for polling for the result. */
+  attemptId: Scalars['String'];
+};
+
+/** Cart submit for checkout completion is throttled. */
+export type SubmitThrottled = {
+  __typename?: 'SubmitThrottled';
+  /**
+   * UTC date time string that indicates the time after which clients should make their next
+   * poll request. Any poll requests sent before this time will be ignored. Use this value to schedule the
+   * next poll request.
+   *
+   */
+  pollAfter: Scalars['DateTime'];
 };
 
 /**
@@ -6829,6 +7563,8 @@ export type Video = Media &
     id: Scalars['ID'];
     /** The media content type. */
     mediaContentType: MediaContentType;
+    /** The presentation for a media. */
+    presentation?: Maybe<MediaPresentation>;
     /** The preview image for the media. */
     previewImage?: Maybe<Image>;
     /** The sources for a video. */

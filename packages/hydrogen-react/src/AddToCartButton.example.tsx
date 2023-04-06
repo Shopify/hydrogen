@@ -8,5 +8,5 @@ export default function ProductAddToCartButton({product}: {product: Product}) {
     return null;
   }
 
-  return <AddToCartButton data={variantId} />;
+  return <AddToCartButton variantId={variantId} />;
 }

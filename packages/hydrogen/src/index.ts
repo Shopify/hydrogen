@@ -1,4 +1,5 @@
 export * from './storefront';
+export * from './with-cache';
 export {
   CacheCustom,
   CacheLong,

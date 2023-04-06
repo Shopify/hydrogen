@@ -2,16 +2,25 @@ import {hashKey} from '../utils/hash.js';
 import {CacheShort, CachingStrategy} from './strategies';
 import {getItemFromCache, setItemInCache, isStale} from './sub-request';
 
+export type CacheKey = string | readonly unknown[];
+
+export type WithCacheOptions<T = unknown> = {
+  strategy?: CachingStrategy | null;
+  cacheInstance?: Cache;
+  shouldCacheResult?: (value: T) => boolean;
+  waitUntil?: ExecutionContext['waitUntil'];
+};
+
 export type FetchCacheOptions = {
   cache?: CachingStrategy;
   cacheInstance?: Cache;
-  cacheKey?: string | readonly unknown[];
+  cacheKey?: CacheKey;
   shouldCacheResponse?: (body: any, response: Response) => boolean;
   waitUntil?: ExecutionContext['waitUntil'];
   returnType?: 'json' | 'text' | 'arrayBuffer' | 'blob';
 };
 
-function serializeResponse(body: any, response: Response) {
+function toSerializableResponse(body: any, response: Response) {
   return [
     body,
     {
@@ -19,7 +28,11 @@ function serializeResponse(body: any, response: Response) {
       statusText: response.statusText,
       headers: Array.from(response.headers.entries()),
     },
-  ];
+  ] satisfies [any, ResponseInit];
+}
+
+function fromSerializableResponse([body, init]: [any, ResponseInit]) {
+  return [body, new Response(body, init)] as const;
 }
 
 // Check if the response body has GraphQL errors
@@ -32,6 +45,77 @@ export const checkGraphQLErrors = (body: any) => !body?.errors;
 // since this is only an in-memory lock.
 // https://github.com/Shopify/oxygen-platform/issues/625
 const swrLock = new Set<string>();
+
+export async function runWithCache<T = unknown>(
+  cacheKey: CacheKey,
+  actionFn: () => T | Promise<T>,
+  {
+    strategy = CacheShort(),
+    cacheInstance,
+    shouldCacheResult = () => true,
+    waitUntil,
+  }: WithCacheOptions<T>,
+): Promise<T> {
+  if (!cacheInstance || !strategy) return actionFn();
+
+  const key = hashKey([
+    // '__HYDROGEN_CACHE_ID__', // TODO purgeQueryCacheOnBuild
+    ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
+  ]);
+
+  const cachedItem = await getItemFromCache(cacheInstance, key);
+  // console.log('--- Cache', cachedItem ? 'HIT' : 'MISS');
+
+  if (cachedItem) {
+    const [cachedResult, cacheInfo] = cachedItem;
+
+    if (!swrLock.has(key) && isStale(key, cacheInfo)) {
+      swrLock.add(key);
+
+      // Important: Run revalidation asynchronously.
+      const revalidatingPromise = Promise.resolve().then(async () => {
+        try {
+          const result = await actionFn();
+
+          if (shouldCacheResult(result)) {
+            await setItemInCache(cacheInstance, key, result, strategy);
+          }
+        } catch (error: any) {
+          if (error.message) {
+            error.message = 'SWR in sub-request failed: ' + error.message;
+          }
+
+          console.error(error);
+        } finally {
+          swrLock.delete(key);
+        }
+      });
+
+      // Asynchronously wait for it in workers
+      waitUntil?.(revalidatingPromise);
+    }
+
+    return cachedResult;
+  }
+
+  const result = await actionFn();
+
+  /**
+   * Important: Do this async
+   */
+  if (shouldCacheResult(result)) {
+    const setItemInCachePromise = setItemInCache(
+      cacheInstance,
+      key,
+      result,
+      strategy,
+    );
+
+    waitUntil?.(setItemInCachePromise);
+  }
+
+  return result;
+}
 
 /**
  * `fetch` equivalent that stores responses in cache.
@@ -54,82 +138,26 @@ export async function fetchWithServerCache(
     cacheOptions = CacheShort();
   }
 
-  const doFetch = async () => {
-    const response = await fetch(url, requestInit);
-    let data;
+  return runWithCache(
+    cacheKey,
+    async () => {
+      const response = await fetch(url, requestInit);
+      let data;
 
-    try {
-      data = await response[returnType]();
-    } catch {
-      data = await response.text();
-    }
+      try {
+        data = await response[returnType]();
+      } catch {
+        data = await response.text();
+      }
 
-    return [data, response] as const;
-  };
-
-  if (!cacheInstance || !cacheKey || !cacheOptions) return doFetch();
-
-  const key = hashKey([
-    // '__HYDROGEN_CACHE_ID__', // TODO purgeQueryCacheOnBuild
-    ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
-  ]);
-
-  const cachedItem = await getItemFromCache(cacheInstance, key);
-  // console.log('--- Cache', cachedItem ? 'HIT' : 'MISS');
-
-  if (cachedItem) {
-    const [cachedValue, cacheInfo] = cachedItem;
-
-    if (!swrLock.has(key) && isStale(key, cacheInfo)) {
-      swrLock.add(key);
-
-      // Important: Run revalidation asynchronously.
-      const revalidatingPromise = Promise.resolve().then(async () => {
-        try {
-          const [body, response] = await doFetch();
-
-          if (shouldCacheResponse(body, response)) {
-            await setItemInCache(
-              cacheInstance,
-              key,
-              serializeResponse(body, response),
-              cacheOptions,
-            );
-          }
-        } catch (error: any) {
-          if (error.message) {
-            error.message = 'SWR in sub-request failed: ' + error.message;
-          }
-
-          console.error(error);
-        } finally {
-          swrLock.delete(key);
-        }
-      });
-
-      // Asynchronously wait for it in workers
-      waitUntil?.(revalidatingPromise);
-    }
-
-    const [body, init] = cachedValue;
-    return [body, new Response(body, init)];
-  }
-
-  const [body, response] = await doFetch();
-
-  /**
-   * Important: Do this async
-   */
-  if (shouldCacheResponse(body, response)) {
-    const setItemInCachePromise = setItemInCache(
+      return toSerializableResponse(data, response);
+    },
+    {
       cacheInstance,
-      key,
-      serializeResponse(body, response),
-      cacheOptions,
-    );
-
-    waitUntil?.(setItemInCachePromise);
-  }
-
-  return [body, response];
+      waitUntil,
+      strategy: cacheOptions ?? null,
+      shouldCacheResult: (result) =>
+        shouldCacheResponse(...fromSerializableResponse(result)),
+    },
+  ).then(fromSerializableResponse);
 }

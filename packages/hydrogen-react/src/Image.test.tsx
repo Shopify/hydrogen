@@ -1,3 +1,4 @@
+import {vi, describe, expect, it} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import {faker} from '@faker-js/faker';
 import {Image} from './Image.js';
@@ -204,7 +205,6 @@ describe('<Image />', () => {
     it('does not warn user if no sizes are provided but width is fixed', async () => {
       await withEnv('development', () => {
         render(<Image {...defaultProps} sizes={undefined} width={100} />);
-
         expect(console.warn).toHaveBeenCalledTimes(0);
       });
     });

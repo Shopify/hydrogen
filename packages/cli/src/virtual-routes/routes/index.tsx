@@ -1,5 +1,5 @@
 import {useLoaderData} from '@remix-run/react';
-import {type MetaFunction, LinksFunction} from '@shopify/remix-oxygen';
+import {LinksFunction} from '@shopify/remix-oxygen';
 import {type Shop} from '@shopify/hydrogen-react/storefront-api-types';
 import {HydrogenLogoBaseBW} from '../components/HydrogenLogoBaseBW.jsx';
 import {HydrogenLogoBaseColor} from '../components/HydrogenLogoBaseColor.jsx';
@@ -16,15 +16,6 @@ import type {I18nBase, StorefrontClient} from '@shopify/hydrogen';
 interface AppLoadContext {
   storefront: StorefrontClient<I18nBase>['storefront'];
 }
-
-export const meta: MetaFunction = () => {
-  return {
-    title: 'Hydrogen',
-    description: 'A custom storefront powered by Hydrogen',
-    charset: 'utf-8',
-    viewport: 'width=device-width,initial-scale=1',
-  };
-};
 
 export const links: LinksFunction = () => [
   {
@@ -54,10 +45,6 @@ export async function loader({context}: {context: AppLoadContext}) {
 }
 
 export const HYDROGEN_SHOP_ID = 'gid://shopify/Shop/55145660472';
-
-export function CatchBoundary() {
-  return <ErrorPage />;
-}
 
 export function ErrorBoundary() {
   return <ErrorPage />;

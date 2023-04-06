@@ -33,7 +33,6 @@ export type {
 } from './cart-types.js';
 export {CartCheckoutButton} from './CartCheckoutButton.js';
 export {CartCost} from './CartCost.js';
-export {CartLinePrice} from './CartLinePrice.js';
 export {CartLineProvider, useCartLine} from './CartLineProvider.js';
 export {CartLineQuantity} from './CartLineQuantity.js';
 export {CartLineQuantityAdjustButton} from './CartLineQuantityAdjustButton.js';

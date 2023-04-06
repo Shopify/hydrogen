@@ -1,3 +1,5 @@
+import {describe, expect, it} from 'vitest';
+
 import {buildUUID, hexTime, getShopifyCookies} from './cookies-utils.js';
 import {ShopifyCookies} from './analytics-types.js';
 

@@ -1,4 +1,4 @@
-import {vi} from 'vitest';
+import {vi, describe, it, expect} from 'vitest';
 import {CartProvider} from './CartProvider.js';
 import {render, screen, waitFor} from '@testing-library/react';
 import {ProductProvider} from './ProductProvider.js';

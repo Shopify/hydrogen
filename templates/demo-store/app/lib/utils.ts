@@ -306,3 +306,22 @@ export function isLocalPath(url: string) {
 
   return false;
 }
+
+/**
+ * Shopify's 'Online Store' stores cart IDs in a 'cart' cookie.
+ * By doing the same, merchants can switch from the Online Store to Hydrogen
+ * without customers losing carts.
+ */
+export function getCartId(request: Request) {
+  const cookies = request.headers.get('Cookie');
+
+  let cart = cookies
+    ?.split(';')
+    .find((cookie) => cookie.trim().startsWith('cart='))
+    ?.substring(6);
+
+  if (cart) {
+    cart = `gid://shopify/Cart/${cart}`;
+  }
+  return cart;
+}
