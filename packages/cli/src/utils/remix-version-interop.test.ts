@@ -4,7 +4,8 @@ import {convertTemplateToRemixVersion} from './remix-version-interop.js';
 describe('remix-version-interop', () => {
   describe('v2_meta', () => {
     const META_TEMPLATE = `
-    import {type MetaFunction, type V2_MetaFunction} from '@shopify/remix-oxygen';
+    import {type MetaFunction} from '@shopify/remix-oxygen';
+    import {type V2_MetaFunction} from '@remix-run/react';
     export const metaV1: MetaFunction = ({data}) => {
       const title = 'title';
       return {title};
@@ -22,6 +23,7 @@ describe('remix-version-interop', () => {
 
       expect(result).toContain('type V2_MetaFunction');
       expect(result).not.toContain('type MetaFunction');
+      expect(result).not.toContain('@shopify/remix-oxygen');
       expect(result).toMatch(/return \[\{title\}\];/);
       expect(result).not.toMatch(/return \{title\};/);
     });
@@ -33,6 +35,7 @@ describe('remix-version-interop', () => {
 
       expect(result).toContain('type MetaFunction');
       expect(result).not.toContain('type V2_MetaFunction');
+      expect(result).not.toContain('@remix-run/react');
       expect(result).toMatch(/return \{title\};/);
       expect(result).not.toMatch(/return \[\{title\}\];/);
     });
