@@ -72,7 +72,6 @@ describe('remix-version-interop', () => {
         isV2ErrorBoundary: true,
       });
 
-      console.log(result);
       expect(result).toContain('export function ErrorBoundary');
       expect(result).not.toContain('export const ErrorBoundary');
       expect(result).not.toMatch('export function CatchBoundary');

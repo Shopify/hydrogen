@@ -50,14 +50,16 @@ export function convertTemplateToRemixVersion(
 function convertToMetaV2(template: string) {
   return template
     .replace(/type MetaFunction\s*,?/, '')
-    .replace(/export const metaV1:.+?\n};/s, '');
+    .replace(/export (const|function) metaV1.+?\n};?\n/s, '')
+    .replace(/import \{\s*\} from '@shopify\/remix-oxygen';/, '');
 }
 
 function convertToMetaV1(template: string) {
   return template
     .replace(/type V2_MetaFunction\s*,?/, '')
-    .replace(/export const meta:.+?\n};/s, '')
-    .replace(/const metaV1:/, 'const meta:');
+    .replace(/export (const|function) meta[^V].+?\n};?\n/s, '')
+    .replace(/(const|function) metaV1/, '$1 meta')
+    .replace(/import \{\s*\} from '@remix-run\/react';/, '');
 }
 
 function convertToErrorBoundaryV2(template: string) {
@@ -65,16 +67,18 @@ function convertToErrorBoundaryV2(template: string) {
     .replace(/type ErrorBoundaryComponent\s*,?/s, '')
     .replace(/useCatch\s*,?/s, '')
     .replace(/export function CatchBoundary.+?\n}/s, '')
-    .replace(/export const ErrorBoundaryV1.+?\n};/s, '')
-    .replace(/import \{\s*\} from '@shopify\/remix-oxygen';/, '');
+    .replace(/export (const|function) ErrorBoundaryV1.+?\n};?/s, '')
+    .replace(/import \{\s*\} from '@shopify\/remix-oxygen';/, '')
+    .replace(/import \{\s*\} from '@remix-run\/react';/, '');
 }
 
 function convertToErrorBoundaryV1(template: string) {
   return template
     .replace(/useRouteError\s*,?/s, '')
     .replace(/isRouteErrorResponse\s*,?/s, '')
-    .replace(/export function ErrorBoundary.+?\n}/s, '')
-    .replace(/const ErrorBoundaryV1:/, 'const ErrorBoundary:');
+    .replace(/export function ErrorBoundary[^V].+?\n}/s, '')
+    .replace(/(const|function) ErrorBoundaryV1/, '$1 ErrorBoundary')
+    .replace(/import \{\s*\} from '@remix-run\/react';/, '');
 }
 
 function isV1RouteConventionInstalled() {
