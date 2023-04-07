@@ -3,7 +3,6 @@ import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {createRequire} from 'module';
 import {fileURLToPath} from 'url';
 import path from 'path';
 import fs from 'fs/promises';
@@ -38,15 +37,6 @@ export async function getRemixConfig(
     serverMainFields?: string[];
     serverDependenciesToBundle?: string;
   };
-
-  // TODO: Remove when updating Remix
-  if (!config.serverConditions) {
-    const require = createRequire(import.meta.url);
-    const actualConfigFile = require(path.join(root, 'remix.config'));
-    config.serverBuildTarget = 'cloudflare-workers';
-    config.serverConditions = actualConfigFile.serverConditions;
-    config.serverMainFields = actualConfigFile.serverMainFields;
-  }
 
   if (!config.serverEntryPoint) {
     throwConfigError(
