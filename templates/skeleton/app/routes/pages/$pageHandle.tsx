@@ -1,10 +1,5 @@
-import {
-  json,
-  type MetaFunction,
-  type LoaderArgs,
-  SerializeFrom,
-} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, type V2_MetaFunction} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import type {Page as PageType} from '@shopify/hydrogen/storefront-api-types';
 import type {SeoHandleFunction} from '@shopify/hydrogen';
@@ -36,13 +31,14 @@ export const handle = {
   seo,
 };
 
-export const meta: MetaFunction = ({data}) => {
+export const metaV1: MetaFunction = ({data}) => {
   const {title, description} = data?.page.seo ?? {};
+  return {title, description};
+};
 
-  return {
-    title,
-    description,
-  };
+export const meta: V2_MetaFunction = ({data}) => {
+  const {title, description} = data?.page.seo ?? {};
+  return [{title}, {name: 'description', content: description}];
 };
 
 export default function Page() {

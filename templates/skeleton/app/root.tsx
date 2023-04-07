@@ -1,7 +1,6 @@
 import {
   defer,
   type LinksFunction,
-  type MetaFunction,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
 import {
@@ -31,11 +30,6 @@ export const links: LinksFunction = () => {
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
 };
-
-export const meta: MetaFunction = () => ({
-  charset: 'utf-8',
-  viewport: 'width=device-width,initial-scale=1',
-});
 
 export async function loader({context}: LoaderArgs) {
   const [customerAccessToken, cartId] = await Promise.all([
@@ -79,6 +73,8 @@ export default function App() {
   return (
     <html lang="en">
       <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
         <Meta />
         <Links />
       </head>

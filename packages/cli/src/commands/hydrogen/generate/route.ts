@@ -11,6 +11,12 @@ import {
   transpileFile,
   resolveFormatConfig,
 } from '../../../utils/transpile-ts.js';
+import {
+  convertRouteToV2,
+  convertTemplateToRemixVersion,
+  getV2Flags,
+  type RemixV2Flags,
+} from '../../../utils/remix-version-interop.js';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 
@@ -66,11 +72,10 @@ export default class GenerateRoute extends Command {
 
   async run(): Promise<void> {
     const result = new Map<string, Result>();
-    // @ts-ignore
-    const {flags, args} = await this.parse(GenerateRoute);
-    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
-
-    const {route} = args;
+    const {
+      flags,
+      args: {route},
+    } = await this.parse(GenerateRoute);
 
     const routePath =
       route === 'all'
@@ -82,6 +87,9 @@ export default class GenerateRoute extends Command {
         `No route found for ${route}. Try one of ${ROUTES.join()}.`,
       );
     }
+
+    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+
     const isTypescript =
       flags.typescript ||
       (await file.exists(path.join(directory, 'tsconfig.json')));
@@ -89,14 +97,20 @@ export default class GenerateRoute extends Command {
     const routesArray = Array.isArray(routePath) ? routePath : [routePath];
 
     try {
+      const {isV2RouteConvention, ...v2Flags} = await getV2Flags(directory);
+
       for (const item of routesArray) {
+        const routeFrom = item;
+        const routeTo = isV2RouteConvention ? convertRouteToV2(item) : item;
+
         result.set(
-          item,
-          await runGenerate(item, {
+          routeTo,
+          await runGenerate(routeFrom, routeTo, {
             directory,
             typescript: isTypescript,
             force: flags.force,
             adapter: flags.adapter,
+            v2Flags,
           }),
         );
       }
@@ -127,19 +141,22 @@ export default class GenerateRoute extends Command {
 }
 
 export async function runGenerate(
-  route: string,
+  routeFrom: string,
+  routeTo: string,
   {
     directory,
     typescript,
     force,
     adapter,
     templatesRoot = fileURLToPath(new URL('../../../', import.meta.url)),
+    v2Flags = {},
   }: {
     directory: string;
     typescript?: boolean;
     force?: boolean;
     adapter?: string;
     templatesRoot?: string;
+    v2Flags?: RemixV2Flags;
   },
 ): Promise<Result> {
   let operation;
@@ -148,13 +165,13 @@ export async function runGenerate(
     templatesRoot,
     GENERATOR_TEMPLATES_DIR,
     'routes',
-    `${route}.tsx`,
+    `${routeFrom}.tsx`,
   );
   const destinationPath = path.join(
     directory,
     'app',
     'routes',
-    `${route}${extension}`,
+    `${routeTo}${extension}`,
   );
   const relativeDestinationPath = path.relative(directory, destinationPath);
 
@@ -185,6 +202,8 @@ export async function runGenerate(
   }
 
   let templateContent = await file.read(templatePath);
+
+  templateContent = convertTemplateToRemixVersion(templateContent, v2Flags);
 
   // If the project is not using TypeScript, we need to compile the template
   // to JavaScript. We try to read the project's jsconfig.json, but if it
