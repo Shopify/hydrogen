@@ -1,10 +1,5 @@
-import {
-  json,
-  type MetaFunction,
-  type V2_MetaFunction,
-  type LoaderArgs,
-} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, type V2_MetaFunction} from '@remix-run/react';
 
 import {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 
