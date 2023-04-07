@@ -1,22 +1,31 @@
 import {fileURLToPath} from 'url';
 import Command from '@shopify/cli-kit/node/base-command';
-import {ui} from '@shopify/cli-kit';
-import {file, path} from '@shopify/cli-kit';
+import {fileExists, readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
+import {
+  joinPath,
+  dirname,
+  resolvePath,
+  relativePath,
+  relativizePath,
+} from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
-import {commonFlags} from '../../../utils/flags.js';
-import Flags from '@oclif/core/lib/flags.js';
+import {
+  renderSuccess,
+  renderConfirmationPrompt,
+} from '@shopify/cli-kit/node/ui';
+import {commonFlags} from '../../../lib/flags.js';
+import {Flags, Args} from '@oclif/core';
 import {
   format,
   transpileFile,
   resolveFormatConfig,
-} from '../../../utils/transpile-ts.js';
+} from '../../../lib/transpile-ts.js';
 import {
   convertRouteToV2,
   convertTemplateToRemixVersion,
   getV2Flags,
   type RemixV2Flags,
-} from '../../../utils/remix-version-interop.js';
+} from '../../../lib/remix-version-interop.js';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 
@@ -60,15 +69,15 @@ export default class GenerateRoute extends Command {
 
   static hidden: true;
 
-  static args = [
-    {
+  static args = {
+    route: Args.string({
       name: 'route',
       description: `The route to generate. One of ${ROUTES.join()}.`,
       required: true,
       options: ROUTES,
       env: 'SHOPIFY_HYDROGEN_ARG_ROUTE',
-    },
-  ];
+    }),
+  };
 
   async run(): Promise<void> {
     const result = new Map<string, Result>();
@@ -88,11 +97,11 @@ export default class GenerateRoute extends Command {
       );
     }
 
-    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     const isTypescript =
       flags.typescript ||
-      (await file.exists(path.join(directory, 'tsconfig.json')));
+      (await fileExists(joinPath(directory, 'tsconfig.json')));
 
     const routesArray = Array.isArray(routePath) ? routePath : [routePath];
 
@@ -161,38 +170,29 @@ export async function runGenerate(
 ): Promise<Result> {
   let operation;
   const extension = typescript ? '.tsx' : '.jsx';
-  const templatePath = path.join(
+  const templatePath = joinPath(
     templatesRoot,
     GENERATOR_TEMPLATES_DIR,
     'routes',
     `${routeFrom}.tsx`,
   );
-  const destinationPath = path.join(
+  const destinationPath = joinPath(
     directory,
     'app',
     'routes',
     `${routeTo}${extension}`,
   );
-  const relativeDestinationPath = path.relative(directory, destinationPath);
+  const relativeDestinationPath = relativePath(directory, destinationPath);
 
-  if (!force && (await file.exists(destinationPath))) {
-    const options = [
-      {name: 'No', value: 'skip'},
-      {name: `Yes`, value: 'overwrite'},
-    ];
+  if (!force && (await fileExists(destinationPath))) {
+    const shouldOverwrite = await renderConfirmationPrompt({
+      message: `The file ${relativizePath(
+        relativeDestinationPath,
+      )} already exists. Do you want to overwrite it?`,
+      defaultValue: false,
+    });
 
-    const choice = await ui.prompt([
-      {
-        type: 'select',
-        name: 'value',
-        message: `The file ${path.relativize(
-          relativeDestinationPath,
-        )} already exists. Do you want to overwrite it?`,
-        choices: options,
-      },
-    ]);
-
-    operation = choice.value === 'skip' ? 'skipped' : 'overwritten';
+    operation = shouldOverwrite ? 'overwritten' : 'skipped';
 
     if (operation === 'skipped') {
       return {operation};
@@ -201,7 +201,7 @@ export async function runGenerate(
     operation = 'generated';
   }
 
-  let templateContent = await file.read(templatePath);
+  let templateContent = await readFile(templatePath);
 
   templateContent = convertTemplateToRemixVersion(templateContent, v2Flags);
 
@@ -209,10 +209,10 @@ export async function runGenerate(
   // to JavaScript. We try to read the project's jsconfig.json, but if it
   // doesn't exist, we use a default configuration.
   if (!typescript) {
-    const jsConfigPath = path.join(directory, 'jsconfig.json');
-    const config = (await file.exists(jsConfigPath))
+    const jsConfigPath = joinPath(directory, 'jsconfig.json');
+    const config = (await fileExists(jsConfigPath))
       ? JSON.parse(
-          (await file.read(jsConfigPath, {encoding: 'utf8'})).replace(
+          (await readFile(jsConfigPath, {encoding: 'utf8'})).replace(
             /^\s*\/\/.*$/gm,
             '',
           ),
@@ -242,11 +242,11 @@ export async function runGenerate(
   );
 
   // Create the directory if it doesn't exist.
-  if (!(await file.exists(path.dirname(destinationPath)))) {
-    await file.mkdir(path.dirname(destinationPath));
+  if (!(await fileExists(dirname(destinationPath)))) {
+    await mkdir(dirname(destinationPath));
   }
   // Write the final file to the user's project.
-  await file.write(destinationPath, templateContent);
+  await writeFile(destinationPath, templateContent);
 
   return {
     operation: operation as 'generated' | 'overwritten',

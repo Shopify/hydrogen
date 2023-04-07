@@ -9,7 +9,6 @@ export default class GenerateRoutes extends Command {
   static flags = GenerateRoute.flags;
 
   async run(): Promise<void> {
-    // @ts-ignore
     const {flags} = await this.parse(GenerateRoutes);
 
     await GenerateRoute.run([

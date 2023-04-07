@@ -1,5 +1,11 @@
-import {output, path, file} from '@shopify/cli-kit';
-import colors from '@shopify/cli-kit/node/colors';
+import {
+  outputInfo,
+  outputToken,
+  outputContent,
+} from '@shopify/cli-kit/node/output';
+import {resolvePath} from '@shopify/cli-kit/node/path';
+import {fileExists} from '@shopify/cli-kit/node/fs';
+import {colors} from './colors.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -20,7 +26,7 @@ export async function startMiniOxygen({
   const miniOxygenPreview =
     miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
 
-  const dotenvPath = path.resolve(root, '.env');
+  const dotenvPath = resolvePath(root, '.env');
 
   const {port: actualPort} = await miniOxygenPreview({
     workerFile: buildPathWorkerFile,
@@ -31,10 +37,10 @@ export async function startMiniOxygen({
     autoReload: watch,
     modules: true,
     env: process.env,
-    envPath: (await file.exists(dotenvPath)) ? dotenvPath : undefined,
+    envPath: (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
     buildWatchPaths: watch
-      ? [path.resolve(root, buildPathWorkerFile)]
+      ? [resolvePath(root, buildPathWorkerFile)]
       : undefined,
     onResponse: (request, response) =>
       // 'Request' and 'Response' types in MiniOxygen comes from
@@ -47,8 +53,8 @@ export async function startMiniOxygen({
 
   const listeningAt = `http://localhost:${actualPort}`;
 
-  output.info(
-    output.content`🚥 MiniOxygen server started at ${output.token.link(
+  outputInfo(
+    outputContent`🚥 MiniOxygen server started at ${outputToken.link(
       listeningAt,
       listeningAt,
     )}\n`,
@@ -80,25 +86,25 @@ export function logResponse(request: Request, response: Response) {
 
     const colorizeStatus =
       response.status < 300
-        ? output.token.green
+        ? outputToken.green
         : response.status < 400
-        ? output.token.cyan
-        : output.token.errorText;
+        ? outputToken.cyan
+        : outputToken.errorText;
 
-    output.info(
-      output.content`${request.method.padStart(6)}  ${colorizeStatus(
+    outputInfo(
+      outputContent`${request.method.padStart(6)}  ${colorizeStatus(
         String(response.status),
-      )}  ${output.token.italic(type.padEnd(7, ' '))} ${route}${
+      )}  ${outputToken.italic(type.padEnd(7, ' '))} ${route}${
         info ? ' ' + colors.dim(info) : ''
       } ${
         request.headers.get('purpose') === 'prefetch'
-          ? output.token.italic('(prefetch)')
+          ? outputToken.italic('(prefetch)')
           : ''
       }`,
     );
   } catch {
     if (request && response) {
-      output.info(`${request.method} ${response.status} ${request.url}`);
+      outputInfo(`${request.method} ${response.status} ${request.url}`);
     }
   }
 }

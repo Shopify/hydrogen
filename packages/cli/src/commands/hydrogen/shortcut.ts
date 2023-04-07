@@ -11,7 +11,7 @@ import {
   type Shell,
   type UnixShell,
   type WindowsShell,
-} from '../../utils/shell.js';
+} from '../../lib/shell.js';
 
 const ALIAS_NAME = 'h2';
 

@@ -1,19 +1,16 @@
 import path from 'path';
 import fs from 'fs/promises';
-import {output, file} from '@shopify/cli-kit';
+import {outputInfo} from '@shopify/cli-kit/node/output';
+import {fileExists} from '@shopify/cli-kit/node/fs';
 import {copyPublicFiles} from './build.js';
-import {getProjectPaths, getRemixConfig} from '../../utils/config.js';
-import {muteDevLogs} from '../../utils/log.js';
-import {
-  deprecated,
-  commonFlags,
-  flagsToCamelObject,
-} from '../../utils/flags.js';
+import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
+import {muteDevLogs} from '../../lib/log.js';
+import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import Flags from '@oclif/core/lib/flags.js';
-import {startMiniOxygen} from '../../utils/mini-oxygen.js';
-import {checkHydrogenVersion} from '../../utils/check-version.js';
-import {addVirtualRoutes} from '../../utils/virtual-routes.js';
+import {Flags} from '@oclif/core';
+import {startMiniOxygen} from '../../lib/mini-oxygen.js';
+import {checkHydrogenVersion} from '../../lib/check-version.js';
+import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -35,7 +32,6 @@ export default class Dev extends Command {
   };
 
   async run(): Promise<void> {
-    // @ts-ignore
     const {flags} = await this.parse(Dev);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
@@ -74,7 +70,7 @@ async function runDev({
     return [fileRelative, path.resolve(root, fileRelative)] as const;
   };
 
-  const serverBundleExists = () => file.exists(buildPathWorkerFile);
+  const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
   let miniOxygenStarted = false;
   async function safeStartMiniOxygen() {
@@ -118,7 +114,7 @@ async function runDev({
     },
     async onFileCreated(file: string) {
       const [relative, absolute] = getFilePaths(file);
-      output.info(`\n📄 File created: ${relative}`);
+      outputInfo(`\n📄 File created: ${relative}`);
 
       if (absolute.startsWith(publicPath)) {
         await copyPublicFiles(
@@ -129,7 +125,7 @@ async function runDev({
     },
     async onFileChanged(file: string) {
       const [relative, absolute] = getFilePaths(file);
-      output.info(`\n📄 File changed: ${relative}`);
+      outputInfo(`\n📄 File changed: ${relative}`);
 
       if (absolute.startsWith(publicPath)) {
         await copyPublicFiles(
@@ -140,14 +136,14 @@ async function runDev({
     },
     async onFileDeleted(file: string) {
       const [relative, absolute] = getFilePaths(file);
-      output.info(`\n📄 File deleted: ${relative}`);
+      outputInfo(`\n📄 File deleted: ${relative}`);
 
       if (absolute.startsWith(publicPath)) {
         await fs.unlink(absolute.replace(publicPath, buildPathClient));
       }
     },
     onRebuildStart() {
-      output.info(LOG_REBUILDING);
+      outputInfo(LOG_REBUILDING);
       console.time(LOG_REBUILT);
     },
     async onRebuildFinish() {

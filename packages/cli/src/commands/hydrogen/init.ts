@@ -3,17 +3,36 @@ import {
   installNodeModules,
   packageManagerUsedForCreating,
 } from '@shopify/cli-kit/node/node-package-manager';
-import {renderFatalError} from '@shopify/cli-kit/node/ui';
-import Flags from '@oclif/core/lib/flags.js';
-import {output, path} from '@shopify/cli-kit';
+import {
+  renderFatalError,
+  renderSuccess,
+  renderInfo,
+  renderSelectPrompt,
+  renderTextPrompt,
+  renderConfirmationPrompt,
+  renderTasks,
+} from '@shopify/cli-kit/node/ui';
+import {Flags} from '@oclif/core';
+import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
+import {
+  rmdir,
+  copyFile,
+  fileExists,
+  isDirectory,
+} from '@shopify/cli-kit/node/fs';
+import {
+  outputInfo,
+  outputContent,
+  outputToken,
+} from '@shopify/cli-kit/node/output';
 import {
   commonFlags,
   parseProcessFlags,
   flagsToCamelObject,
-} from '../../utils/flags.js';
-import {transpileProject} from '../../utils/transpile-ts.js';
-import {getLatestTemplates} from '../../utils/template-downloader.js';
-import {checkHydrogenVersion} from '../../utils/check-version.js';
+} from '../../lib/flags.js';
+import {transpileProject} from '../../lib/transpile-ts.js';
+import {getLatestTemplates} from '../../lib/template-downloader.js';
+import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {readdir} from 'fs/promises';
 import {fileURLToPath} from 'url';
 
@@ -47,14 +66,11 @@ export default class Init extends Command {
   };
 
   async run(): Promise<void> {
-    // @ts-ignore
     const {flags} = await this.parse(Init);
 
     await runInit(flagsToCamelObject(flags));
   }
 }
-
-type Writable<T> = {-readonly [P in keyof T]: T[P]};
 
 export async function runInit(
   options: {
@@ -86,76 +102,59 @@ export async function runInit(
   }
 
   // Start downloading templates early.
-  const templatesPromise = getLatestTemplates().catch((error) => {
-    output.info('\n\n\n');
-    renderFatalError(error);
+  let templatesDownloaded = false;
+  const templatesPromise = getLatestTemplates()
+    .then((result) => {
+      templatesDownloaded = true;
+      return result;
+    })
+    .catch((error) => {
+      renderFatalError(error);
+      process.exit(1);
+    });
 
-    process.exit(1);
-  });
-
-  const {ui, file} = await import('@shopify/cli-kit');
-  const {renderSuccess, renderInfo} = await import('@shopify/cli-kit/node/ui');
-  const prompts: Writable<Parameters<typeof ui.prompt>[0]> = [];
-
-  if (!options.template) {
-    prompts.push({
-      type: 'select',
-      name: 'template',
+  const appTemplate =
+    options.template ??
+    (await renderSelectPrompt({
       message: 'Choose a template',
+      defaultValue: 'hello-world',
       choices: STARTER_TEMPLATES.map((value) => ({
-        name: value.replace(/-/g, ' ').replace(/\b\w/g, (l) => l.toUpperCase()),
+        label: value
+          .replace(/-/g, ' ')
+          .replace(/\b\w/g, (l) => l.toUpperCase()),
         value,
       })),
-    });
-  }
+    }));
 
-  if (!options.language) {
-    prompts.push({
-      type: 'select',
-      name: 'language',
+  const language =
+    options.language ??
+    (await renderSelectPrompt({
       message: 'Choose a language',
       choices: [
-        {name: 'JavaScript', value: 'js'},
-        {name: 'TypeScript', value: 'ts'},
+        {label: 'JavaScript', value: 'js'},
+        {label: 'TypeScript', value: 'ts'},
       ],
-      default: 'js',
-    });
-  }
+      defaultValue: 'js',
+    }));
 
-  if (!options.path) {
-    prompts.push({
-      type: 'input',
-      name: 'path',
+  const location =
+    options.path ??
+    (await renderTextPrompt({
       message: 'Where would you like to create your app?',
-      default: 'hydrogen-storefront',
-    });
-  }
+      defaultValue: 'hydrogen-storefront',
+    }));
 
-  const {
-    path: location = options.path!,
-    template: appTemplate = options.template!,
-    language = options.language ?? 'js',
-  } = prompts.length > 0 ? await ui.prompt(prompts) : options;
-
-  const projectName = path.basename(location);
-  const projectDir = path.resolve(process.cwd(), location);
+  const projectName = basename(location);
+  const projectDir = resolvePath(process.cwd(), location);
 
   if (await projectExists(projectDir)) {
     if (!options.force) {
-      const {deleteFiles} = await ui.prompt([
-        {
-          type: 'select',
-          name: 'deleteFiles',
-          message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
-          choices: [
-            {name: 'Yes, delete the files', value: 'true'},
-            {name: 'No, do not delete the files', value: 'false'},
-          ],
-          default: 'false',
-        },
-      ]);
+      const deleteFiles = await renderConfirmationPrompt({
+        message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
+        defaultValue: false,
+      });
 
-      if (deleteFiles === 'false') {
+      if (!deleteFiles) {
         renderInfo({
           headline: `Destination path ${location} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to override it.`,
         });
@@ -164,26 +163,31 @@ export async function runInit(
       }
     }
 
-    await file.rmdir(projectDir, {force: true});
+    await rmdir(projectDir, {force: true});
   }
 
   // Templates might be cached or the download might be finished already.
   // Only output progress if the download is still in progress.
-  let downloaded = false;
-  setTimeout(
-    () => !downloaded && output.info('\n📥 Downloading templates...'),
-    150,
-  );
-  const {templatesDir} = await templatesPromise;
-  downloaded = true;
+  if (!templatesDownloaded) {
+    await renderTasks([
+      {
+        title: 'Downloading templates',
+        task: async () => {
+          await templatesPromise;
+        },
+      },
+    ]);
+  }
 
-  await file.copy(path.join(templatesDir, appTemplate), projectDir);
+  const {templatesDir} = await templatesPromise;
+
+  await copyFile(joinPath(templatesDir, appTemplate), projectDir);
 
   if (language === 'js') {
     try {
       await transpileProject(projectDir);
     } catch (error) {
-      await file.rmdir(projectDir, {force: true});
+      await rmdir(projectDir, {force: true});
       throw error;
     }
   }
@@ -194,20 +198,9 @@ export async function runInit(
   if (packageManager !== 'unknown') {
     const installDeps =
       options.installDeps ??
-      (
-        await ui.prompt([
-          {
-            type: 'select',
-            name: 'installDeps',
-            message: `Install dependencies with ${packageManager}?`,
-            choices: [
-              {name: 'Yes', value: 'true'},
-              {name: 'No', value: 'false'},
-            ],
-            default: 'true',
-          },
-        ])
-      ).installDeps === 'true';
+      (await renderConfirmationPrompt({
+        message: `Install dependencies with ${packageManager}?`,
+      }));
 
     if (installDeps) {
       await installNodeModules({
@@ -228,14 +221,14 @@ export async function runInit(
   renderSuccess({
     headline: `${projectName} is ready to build.`,
     nextSteps: [
-      output.content`Run ${output.token.genericShellCommand(`cd ${location}`)}`
+      outputContent`Run ${outputToken.genericShellCommand(`cd ${location}`)}`
         .value,
       depsInstalled
         ? undefined
-        : output.content`Run ${output.token.genericShellCommand(
+        : outputContent`Run ${outputToken.genericShellCommand(
             `${packageManager} install`,
           )} to install the dependencies`.value,
-      output.content`Run ${output.token.packagejsonScript(
+      outputContent`Run ${outputToken.packagejsonScript(
         packageManager,
         'dev',
       )} to start your local development server and start building`.value,
@@ -254,10 +247,9 @@ export async function runInit(
 }
 
 async function projectExists(projectDir: string) {
-  const {file} = await import('@shopify/cli-kit');
   return (
-    (await file.exists(projectDir)) &&
-    (await file.isDirectory(projectDir)) &&
+    (await fileExists(projectDir)) &&
+    (await isDirectory(projectDir)) &&
     (await readdir(projectDir)).length > 0
   );
 }

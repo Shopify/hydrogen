@@ -1,19 +1,19 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {muteDevLogs} from '../../utils/log.js';
-import {getProjectPaths} from '../../utils/config.js';
-import {commonFlags} from '../../utils/flags.js';
-import {startMiniOxygen} from '../../utils/mini-oxygen.js';
+import {muteDevLogs} from '../../lib/log.js';
+import {getProjectPaths} from '../../lib/config.js';
+import {commonFlags} from '../../lib/flags.js';
+import {startMiniOxygen} from '../../lib/mini-oxygen.js';
 
 export default class Preview extends Command {
   static description =
     'Runs a Hydrogen storefront in an Oxygen worker for production.';
+
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
   };
 
   async run(): Promise<void> {
-    // @ts-ignore
     const {flags} = await this.parse(Preview);
 
     await runPreview({...flags});
