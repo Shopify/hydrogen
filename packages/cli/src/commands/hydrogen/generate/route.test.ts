@@ -1,6 +1,8 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
 import {runGenerate, GENERATOR_TEMPLATES_DIR} from './route.js';
+import {convertRouteToV2} from '../../../utils/remix-version-interop.js';
+
 import {file, path, ui} from '@shopify/cli-kit';
 
 describe('generate/route', () => {
@@ -31,7 +33,7 @@ describe('generate/route', () => {
       });
 
       // When
-      await runGenerate(route, {
+      await runGenerate(route, route, {
         directory: appRoot,
         templatesRoot,
       });
@@ -39,6 +41,30 @@ describe('generate/route', () => {
       // Then
       expect(
         await file.read(path.join(appRoot, 'app/routes', `${route}.jsx`)),
+      ).toContain(`const str = 'hello world'`);
+    });
+  });
+
+  it('generates a route file for Remix v2', async () => {
+    await temporaryDirectoryTask(async (tmpDir) => {
+      // Given
+      const route = 'custom/path/$handle/index';
+      const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
+        files: [],
+        templates: [[route, `const str = "hello world"`]],
+      });
+
+      // When
+      await runGenerate(route, convertRouteToV2(route), {
+        directory: appRoot,
+        templatesRoot,
+      });
+
+      // Then
+      expect(
+        await file.read(
+          path.join(appRoot, 'app/routes', `custom.path.$handle._index.jsx`),
+        ),
       ).toContain(`const str = 'hello world'`);
     });
   });
@@ -53,7 +79,7 @@ describe('generate/route', () => {
       });
 
       // When
-      await runGenerate(route, {
+      await runGenerate(route, route, {
         directory: appRoot,
         templatesRoot,
         typescript: true,
@@ -80,7 +106,7 @@ describe('generate/route', () => {
       });
 
       // When
-      await runGenerate(route, {
+      await runGenerate(route, route, {
         directory: appRoot,
         templatesRoot,
       });
@@ -110,7 +136,7 @@ describe('generate/route', () => {
       });
 
       // When
-      await runGenerate(route, {
+      await runGenerate(route, route, {
         directory: appRoot,
         templatesRoot,
         force: true,
