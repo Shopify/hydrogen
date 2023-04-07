@@ -8,7 +8,7 @@ export function isRemixV2() {
       require('@remix-run/server-runtime/package.json')?.version ?? '';
 
     return version.startsWith('2.');
-  } catch (e) {
+  } catch {
     return false;
   }
 }
