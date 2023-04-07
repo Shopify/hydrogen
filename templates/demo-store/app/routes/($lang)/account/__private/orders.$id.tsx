@@ -1,12 +1,7 @@
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
-import {
-  json,
-  redirect,
-  type V2_MetaFunction,
-  type LoaderArgs,
-} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, type V2_MetaFunction} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
 import {statusMessage} from '~/lib/utils';
 import type {

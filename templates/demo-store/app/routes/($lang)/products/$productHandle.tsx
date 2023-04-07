@@ -6,7 +6,7 @@ import {
   Await,
   useSearchParams,
   useLocation,
-  useTransition,
+  useNavigation,
 } from '@remix-run/react';
 
 import {
@@ -183,18 +183,18 @@ export function ProductForm() {
   const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
 
   const [currentSearchParams] = useSearchParams();
-  const transition = useTransition();
+  const {location} = useNavigation();
 
   /**
-   * We update `searchParams` with in-flight request data from `transition` (if available)
+   * We update `searchParams` with in-flight request data from `location` (if available)
    * to create an optimistic UI, e.g. check the product option before the
    * request has completed.
    */
   const searchParams = useMemo(() => {
-    return transition.location
-      ? new URLSearchParams(transition.location.search)
+    return location
+      ? new URLSearchParams(location.search)
       : currentSearchParams;
-  }, [currentSearchParams, transition]);
+  }, [currentSearchParams, location]);
 
   const firstVariant = product.variants.nodes[0];
 

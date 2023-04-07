@@ -4,7 +4,7 @@ import {
   useActionData,
   useOutletContext,
   useParams,
-  useTransition,
+  useNavigation,
 } from '@remix-run/react';
 import {flattenConnection} from '@shopify/hydrogen';
 import type {
@@ -144,7 +144,7 @@ export default function EditAddress() {
   const {id: addressId} = useParams();
   const isNewAddress = addressId === 'add';
   const actionData = useActionData<ActionData>();
-  const transition = useTransition();
+  const {state} = useNavigation();
   const {customer} = useOutletContext<AccountOutletContext>();
   const addresses = flattenConnection(customer.addresses);
   const defaultAddress = customer.defaultAddress;
@@ -324,9 +324,9 @@ export default function EditAddress() {
               className="w-full rounded focus:shadow-outline"
               type="submit"
               variant="primary"
-              disabled={transition.state !== 'idle'}
+              disabled={state !== 'idle'}
             >
-              {transition.state !== 'idle' ? 'Saving' : 'Save'}
+              {state !== 'idle' ? 'Saving' : 'Save'}
             </Button>
           </div>
           <div>
