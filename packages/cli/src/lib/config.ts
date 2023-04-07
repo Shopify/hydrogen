@@ -11,6 +11,8 @@ const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
 const WORKER_SUBDIR = 'worker'; // Hardcoded in Oxygen
 
+const oxygenServerMainFields = ['browser', 'module', 'main'];
+
 export function getProjectPaths(appPath?: string, entry?: string) {
   const root = appPath ?? process.cwd();
   const publicPath = path.join(root, 'public');
@@ -80,17 +82,13 @@ export async function getRemixConfig(
     );
   }
 
-  const expectedServerMainFields = ['browser', 'module', 'main'];
-
   if (
     !config.serverMainFields ||
-    !expectedServerMainFields.every(
-      (v, i) => config.serverMainFields?.[i] === v,
-    )
+    !oxygenServerMainFields.every((v, i) => config.serverMainFields?.[i] === v)
   ) {
     throwConfigError(
       `The serverMainFields in remix.config.js must be ${JSON.stringify(
-        expectedServerMainFields,
+        oxygenServerMainFields,
       )}.`,
     );
   }
