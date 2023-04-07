@@ -22,7 +22,12 @@ import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 import {seoPayload} from '~/lib/seo.server';
-import {DEFAULT_LOCALE, parseMenu, type EnhancedMenu} from './lib/utils';
+import {
+  DEFAULT_LOCALE,
+  parseMenu,
+  getCartId,
+  type EnhancedMenu,
+} from './lib/utils';
 import invariant from 'tiny-invariant';
 import {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
 import {useAnalytics} from './hooks/useAnalytics';
@@ -43,9 +48,9 @@ export const links: LinksFunction = () => {
 };
 
 export async function loader({request, context}: LoaderArgs) {
-  const [customerAccessToken, cartId, layout] = await Promise.all([
+  const cartId = getCartId(request);
+  const [customerAccessToken, layout] = await Promise.all([
     context.session.get('customerAccessToken'),
-    context.session.get('cartId'),
     getLayoutData(context),
   ]);
 
