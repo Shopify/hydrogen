@@ -69,5 +69,6 @@ export default {
       },
     },
   },
+  safelist: ['prose-lg', 'prose-pre:p-0', 'prose-pre:m-0'],
   plugins: [formsPlugin, typographyPlugin],
 };

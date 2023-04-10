@@ -1,0 +1,42 @@
+---
+meta:
+  - title: Changelog | Hydrogen Demo Store
+  - name: description
+    content: Updates and migration guides for the Hydrogen demo-store template
+
+headers:
+  Link: <https://cdnjs.cloudflare.com>; rel=preconnect
+---
+
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/night-owl.min.css"
+/>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+<script dangerouslySetInnerHTML={{__html: 'hljs.highlightAll()'}}></script>
+
+import {Section} from '~/components';
+
+<Section className="prose dark:prose-invert prose-lg prose-pre:p-0 prose-pre:m-0 mx-auto" style={{gap: '0rem', maxWidth: '85ch'}}>
+
+# Demo-Store Changelog
+
+## 2023-01-01
+
+Hello moto
+
+```tsx
+const variable = 'value' as string;
+<div></div>;
+```
+
+Text
+
+```diff
+-line1;
++line2;
+```
+
+</Section>
