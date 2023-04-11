@@ -1,39 +1,31 @@
 import {checkLockfileStatus} from './check-lockfile.js';
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import {file, path, git, outputMocker} from '@shopify/cli-kit';
-
-vi.mock('@shopify/cli-kit', async () => {
-  const cliKit: any = await vi.importActual('@shopify/cli-kit');
-
-  return {
-    ...cliKit,
-    git: {
-      factory: vi.fn(),
-    },
-  };
-});
+import {writeFile, inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
+import {joinPath} from '@shopify/cli-kit/node/path';
+import {checkIfIgnoredInGitRepository} from '@shopify/cli-kit/node/git';
+import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 
 describe('checkLockfileStatus()', () => {
   const checkIgnoreMock = vi.fn();
-  const gitFactoryMock = {
-    checkIgnore: checkIgnoreMock,
-  };
+  const outputMock = mockAndCaptureOutput();
 
   beforeEach(() => {
-    vi.mocked(git.factory).mockReturnValue(gitFactoryMock as any);
+    vi.mock('@shopify/cli-kit/node/git');
+    vi.mocked(checkIfIgnoredInGitRepository).mockImplementation(
+      checkIgnoreMock,
+    );
     vi.mocked(checkIgnoreMock).mockResolvedValue([]);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
-    outputMocker.mockAndCaptureOutput().clear();
+    outputMock.clear();
   });
 
   describe('when a lockfile is present', () => {
     it('does not call displayLockfileWarning', async () => {
-      await file.inTemporaryDirectory(async (tmpDir) => {
-        await file.write(path.join(tmpDir, 'package-lock.json'), '');
-        const outputMock = outputMocker.mockAndCaptureOutput();
+      await inTemporaryDirectory(async (tmpDir) => {
+        await writeFile(joinPath(tmpDir, 'package-lock.json'), '');
 
         await checkLockfileStatus(tmpDir);
 
@@ -47,9 +39,8 @@ describe('checkLockfileStatus()', () => {
       });
 
       it('renders a warning', async () => {
-        await file.inTemporaryDirectory(async (tmpDir) => {
-          await file.write(path.join(tmpDir, 'package-lock.json'), '');
-          const outputMock = outputMocker.mockAndCaptureOutput();
+        await inTemporaryDirectory(async (tmpDir) => {
+          await writeFile(joinPath(tmpDir, 'package-lock.json'), '');
 
           await checkLockfileStatus(tmpDir);
 
@@ -63,11 +54,9 @@ describe('checkLockfileStatus()', () => {
 
   describe('when there are multiple lockfiles', () => {
     it('renders a warning', async () => {
-      await file.inTemporaryDirectory(async (tmpDir) => {
-        await file.write(path.join(tmpDir, 'package-lock.json'), '');
-        await file.write(path.join(tmpDir, 'pnpm-lock.yaml'), '');
-
-        const outputMock = outputMocker.mockAndCaptureOutput();
+      await inTemporaryDirectory(async (tmpDir) => {
+        await writeFile(joinPath(tmpDir, 'package-lock.json'), '');
+        await writeFile(joinPath(tmpDir, 'pnpm-lock.yaml'), '');
 
         await checkLockfileStatus(tmpDir);
 
@@ -80,9 +69,7 @@ describe('checkLockfileStatus()', () => {
 
   describe('when a lockfile is missing', () => {
     it('renders a warning', async () => {
-      await file.inTemporaryDirectory(async (tmpDir) => {
-        const outputMock = outputMocker.mockAndCaptureOutput();
-
+      await inTemporaryDirectory(async (tmpDir) => {
         await checkLockfileStatus(tmpDir);
 
         expect(outputMock.warn()).toMatch(/ warning .+ No lockfile found .+/is);

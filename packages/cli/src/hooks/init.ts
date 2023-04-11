@@ -1,5 +1,5 @@
 import {spawnSync} from 'child_process';
-import {output} from '@shopify/cli-kit';
+import {outputDebug} from '@shopify/cli-kit/node/output';
 import type {Hook} from '@oclif/core';
 
 const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
@@ -11,7 +11,7 @@ const hook: Hook<'init'> = async function (options) {
     !process.execArgv.includes(EXPERIMENTAL_VM_MODULES_FLAG) &&
     !(process.env.NODE_OPTIONS ?? '').includes(EXPERIMENTAL_VM_MODULES_FLAG)
   ) {
-    output.debug(
+    outputDebug(
       `Restarting CLI process with ${EXPERIMENTAL_VM_MODULES_FLAG} flag.`,
     );
 

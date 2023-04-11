@@ -1,24 +1,16 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
 import {runGenerate, GENERATOR_TEMPLATES_DIR} from './route.js';
-import {file, path, ui} from '@shopify/cli-kit';
+import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
+import {readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
+import {joinPath, dirname} from '@shopify/cli-kit/node/path';
+import {convertRouteToV2} from '../../../lib/remix-version-interop.js';
 
 describe('generate/route', () => {
   beforeEach(() => {
     vi.resetAllMocks();
-    vi.mock('@shopify/cli-kit', async () => {
-      const cliKit: any = await vi.importActual('@shopify/cli-kit');
-      return {
-        ...cliKit,
-        output: {
-          ...cliKit.output,
-          success: vi.fn(),
-        },
-        ui: {
-          prompt: vi.fn(),
-        },
-      };
-    });
+    vi.mock('@shopify/cli-kit/node/output');
+    vi.mock('@shopify/cli-kit/node/ui');
   });
 
   it('generates a route file', async () => {
@@ -31,14 +23,38 @@ describe('generate/route', () => {
       });
 
       // When
-      await runGenerate(route, {
+      await runGenerate(route, route, {
         directory: appRoot,
         templatesRoot,
       });
 
       // Then
       expect(
-        await file.read(path.join(appRoot, 'app/routes', `${route}.jsx`)),
+        await readFile(joinPath(appRoot, 'app/routes', `${route}.jsx`)),
+      ).toContain(`const str = 'hello world'`);
+    });
+  });
+
+  it('generates a route file for Remix v2', async () => {
+    await temporaryDirectoryTask(async (tmpDir) => {
+      // Given
+      const route = 'custom/path/$handle/index';
+      const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
+        files: [],
+        templates: [[route, `const str = "hello world"`]],
+      });
+
+      // When
+      await runGenerate(route, convertRouteToV2(route), {
+        directory: appRoot,
+        templatesRoot,
+      });
+
+      // Then
+      expect(
+        await readFile(
+          joinPath(appRoot, 'app/routes', `custom.path.$handle._index.jsx`),
+        ),
       ).toContain(`const str = 'hello world'`);
     });
   });
@@ -53,7 +69,7 @@ describe('generate/route', () => {
       });
 
       // When
-      await runGenerate(route, {
+      await runGenerate(route, route, {
         directory: appRoot,
         templatesRoot,
         typescript: true,
@@ -61,7 +77,7 @@ describe('generate/route', () => {
 
       // Then
       expect(
-        await file.read(path.join(appRoot, 'app/routes', `${route}.tsx`)),
+        await readFile(joinPath(appRoot, 'app/routes', `${route}.tsx`)),
       ).toContain(`const str = 'hello typescript'`);
     });
   });
@@ -69,9 +85,9 @@ describe('generate/route', () => {
   it('prompts the user if there the file already exists', async () => {
     await temporaryDirectoryTask(async (tmpDir) => {
       // Given
-      vi.mocked(ui.prompt).mockImplementationOnce(async () => {
-        return {value: 'overwrite'};
-      });
+      vi.mocked(renderConfirmationPrompt).mockImplementationOnce(
+        async () => true,
+      );
 
       const route = 'page/$pageHandle';
       const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
@@ -80,18 +96,16 @@ describe('generate/route', () => {
       });
 
       // When
-      await runGenerate(route, {
+      await runGenerate(route, route, {
         directory: appRoot,
         templatesRoot,
       });
 
       // Then
-      expect(ui.prompt).toHaveBeenCalledWith(
-        expect.arrayContaining([
-          expect.objectContaining({
-            message: expect.stringContaining('already exists'),
-          }),
-        ]),
+      expect(renderConfirmationPrompt).toHaveBeenCalledWith(
+        expect.objectContaining({
+          message: expect.stringContaining('already exists'),
+        }),
       );
     });
   });
@@ -99,9 +113,9 @@ describe('generate/route', () => {
   it('does not prompt the user if the force property is true', async () => {
     await temporaryDirectoryTask(async (tmpDir) => {
       // Given
-      vi.mocked(ui.prompt).mockImplementationOnce(async () => {
-        return {value: 'overwrite'};
-      });
+      vi.mocked(renderConfirmationPrompt).mockImplementationOnce(
+        async () => true,
+      );
 
       const route = 'page/$pageHandle';
       const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
@@ -110,14 +124,14 @@ describe('generate/route', () => {
       });
 
       // When
-      await runGenerate(route, {
+      await runGenerate(route, route, {
         directory: appRoot,
         templatesRoot,
         force: true,
       });
 
       // Then
-      expect(ui.prompt).not.toHaveBeenCalled();
+      expect(renderConfirmationPrompt).not.toHaveBeenCalled();
     });
   });
 });
@@ -134,25 +148,25 @@ async function createHydrogen(
 ) {
   for (const item of files) {
     const [filePath, fileContent] = item;
-    const fullFilePath = path.join(directory, 'app', filePath);
-    await file.mkdir(path.dirname(fullFilePath));
-    await file.write(fullFilePath, fileContent);
+    const fullFilePath = joinPath(directory, 'app', filePath);
+    await mkdir(dirname(fullFilePath));
+    await writeFile(fullFilePath, fileContent);
   }
 
   for (const item of templates) {
     const [filePath, fileContent] = item;
-    const fullFilePath = path.join(
+    const fullFilePath = joinPath(
       directory,
       GENERATOR_TEMPLATES_DIR,
       'routes',
       `${filePath}.tsx`,
     );
-    await file.mkdir(path.dirname(fullFilePath));
-    await file.write(fullFilePath, fileContent);
+    await mkdir(dirname(fullFilePath));
+    await writeFile(fullFilePath, fileContent);
   }
 
   return {
-    appRoot: path.join(directory, 'app'),
+    appRoot: joinPath(directory, 'app'),
     templatesRoot: directory,
   };
 }

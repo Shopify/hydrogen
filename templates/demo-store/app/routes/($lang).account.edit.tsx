@@ -3,7 +3,7 @@ import {
   useActionData,
   Form,
   useOutletContext,
-  useTransition,
+  useNavigation,
 } from '@remix-run/react';
 import type {
   Customer,
@@ -128,7 +128,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 export default function AccountDetailsEdit() {
   const actionData = useActionData<ActionData>();
   const {customer} = useOutletContext<AccountOutletContext>();
-  const transition = useTransition();
+  const {state} = useNavigation();
 
   return (
     <>
@@ -240,9 +240,9 @@ export default function AccountDetailsEdit() {
             variant="primary"
             width="full"
             type="submit"
-            disabled={transition.state !== 'idle'}
+            disabled={state !== 'idle'}
           >
-            {transition.state !== 'idle' ? 'Saving' : 'Save'}
+            {state !== 'idle' ? 'Saving' : 'Save'}
           </Button>
         </div>
         <div className="mb-4">
