@@ -70,12 +70,14 @@ export function findMissingRoutes(
           currentRoute.parentId = parentRoute.parentId;
         }
 
+        const optionalSegment = ':?[^\\/\\?]+\\?';
         const reString =
-          // Starts with optional params
-          '^(:[^\\/\\?]+\\?\\/)?' +
-          // Escape dots and replace params with regex
-          requiredRoute.replaceAll('.', '\\.').replace(/:[^/]+/g, ':[^\\/]+') +
-          '$';
+          `^(${optionalSegment}\\/)?` + // Starts with an optional segment
+          requiredRoute
+            .replaceAll('.', '\\.') // Escape dots
+            .replace(/\//g, `\\/(${optionalSegment}\\/)?`) // Has optional segments in the middle
+            .replace(/:[^/)?]+/g, ':[^\\/]+') + // Replace params with regex
+          `(\\/${optionalSegment})?$`; // Ends with an optional segment
 
         if (new RegExp(reString).test(currentRoute.path)) {
           missingRoutes.delete(requiredRoute);
