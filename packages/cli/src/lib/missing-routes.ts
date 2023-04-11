@@ -41,14 +41,17 @@ const REQUIRED_ROUTES = [
   //   'opening_soon',
 ];
 
-export function findMissingRoutes(config: RemixConfig) {
+export function findMissingRoutes(
+  config: {routes: RemixConfig['routes']},
+  requiredRoutes = REQUIRED_ROUTES,
+) {
   const userRoutes = Object.values(config.routes);
-  const requiredRoutes = new Set(REQUIRED_ROUTES);
+  const missingRoutes = new Set(requiredRoutes);
 
   for (const requiredRoute of requiredRoutes) {
     for (const userRoute of userRoutes) {
       if (!requiredRoute && !userRoute.path) {
-        requiredRoutes.delete(requiredRoute);
+        missingRoutes.delete(requiredRoute);
       } else if (requiredRoute && userRoute.path) {
         const currentRoute = {
           path: userRoute.path,
@@ -75,13 +78,13 @@ export function findMissingRoutes(config: RemixConfig) {
           '$';
 
         if (new RegExp(reString).test(currentRoute.path)) {
-          requiredRoutes.delete(requiredRoute);
+          missingRoutes.delete(requiredRoute);
         }
       }
     }
   }
 
-  return [...requiredRoutes];
+  return [...missingRoutes];
 }
 
 const LINE_LIMIT = 100;
