@@ -8,6 +8,8 @@ Adopt `v2_routeConvention` future flag
 
 Remix v2 route conventions are just file renames. We just need to ensure when changing file name and file location, the import paths of other files are also updated.
 
+Go to Remix docs for more details on the [V2 route convention](https://remix.run/docs/en/main/file-conventions/route-files-v2).
+
 Rename and move the following files in the `routes` folder to adopt to V2 route convention.
 
 <table>
