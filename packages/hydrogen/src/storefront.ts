@@ -1,5 +1,5 @@
 import {
-  createStorefrontClient as createStorefrontUtilities,
+  type createStorefrontClient as createStorefrontUtilities,
   getShopifyCookies,
   type StorefrontApiResponseOk,
   SHOPIFY_S,
@@ -8,12 +8,10 @@ import {
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_STOREFRONT_S_HEADER,
 } from '@shopify/hydrogen-react';
+
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
-import {
-  STOREFRONT_API_BUYER_IP_HEADER,
-  STOREFRONT_REQUEST_GROUP_ID_HEADER,
-} from './constants';
+import {STOREFRONT_REQUEST_GROUP_ID_HEADER} from './constants';
 import {
   CacheNone,
   CacheLong,
@@ -30,6 +28,7 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
+import {createAuthorizer} from '../vendor/storefront-client-js';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -149,25 +148,24 @@ export function createStorefrontClient<TI18n extends I18nBase>({
     );
   }
 
-  const {
-    getPublicTokenHeaders,
-    getPrivateTokenHeaders,
-    getStorefrontApiUrl,
-    getShopifyDomain,
-  } = createStorefrontUtilities(clientOptions);
+  const authorizer = createAuthorizer({
+    storeDomain: clientOptions.storeDomain,
+    storefrontAPIVersion: clientOptions.storefrontApiVersion,
+    publicAccessToken: clientOptions.publicStorefrontToken,
+    privateAccessToken: clientOptions.privateStorefrontToken,
+    contentType: clientOptions.contentType,
+    sdkVariant: 'Hydrogen',
+    sdkVariantSource: 'react',
+    sdkVersion: clientOptions.storefrontApiVersion,
+  });
 
-  const getHeaders = clientOptions.privateStorefrontToken
-    ? getPrivateTokenHeaders
-    : getPublicTokenHeaders;
-
-  const defaultHeaders = getHeaders({contentType: 'json'});
+  const defaultHeaders = authorizer.getApiHeaders({
+    tokenType: clientOptions.privateStorefrontToken ? 'private' : 'public',
+    buyerIp,
+  }) as Record<string, string>;
 
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
     storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();
-
-  if (storefrontHeaders?.buyerIp || buyerIp)
-    defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] =
-      storefrontHeaders?.buyerIp || buyerIp || '';
 
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
@@ -217,7 +215,7 @@ export function createStorefrontClient<TI18n extends I18nBase>({
       }
     }
 
-    const url = getStorefrontApiUrl({storefrontApiVersion});
+    const url = authorizer.getApiUrl({apiVersion: storefrontApiVersion});
     const requestInit: RequestInit = {
       method: 'POST',
       headers: {...defaultHeaders, ...userHeaders},
@@ -308,10 +306,18 @@ export function createStorefrontClient<TI18n extends I18nBase>({
       CacheShort,
       CacheCustom,
       generateCacheControlHeader,
-      getPublicTokenHeaders,
-      getPrivateTokenHeaders,
-      getShopifyDomain,
-      getApiUrl: getStorefrontApiUrl,
+      getPublicTokenHeaders: () =>
+        authorizer.getApiHeaders({tokenType: 'public'}) as Record<
+          string,
+          string
+        >,
+      getPrivateTokenHeaders: () =>
+        authorizer.getApiHeaders({tokenType: 'private'}) as Record<
+          string,
+          string
+        >,
+      getShopifyDomain: () => authorizer.config.storeDomain,
+      getApiUrl: () => authorizer.getApiUrl(),
       /**
        * Wether it's a GraphQL error returned in the Storefront API response.
        *
