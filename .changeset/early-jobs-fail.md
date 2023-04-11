@@ -4,47 +4,113 @@
 
 Adopt `v2_routeConvention` future flag
 
-### `v2_routeConventions` migration steps
+## `v2_routeConventions` migration steps
 
 Remix v2 route conventions are just file renames. We just need to ensure when changing file name and file location, the import paths of other files are also updated.
 
-Here is an example list of file renames for the demo store:
+Rename and move the following files in the `routes` folder to adopt to V2 route convention.
+
+<table>
+<tr>
+<th>Before</th>
+<th>After (V2 route convention)</th>
+</tr>
+<tr>
+<td>
 
 ```txt
-Original                                  New
-============================================================================================================
-routes/                                   routes/
-  [robots.txt].tsx                          [robots.txt].tsx
-  [sitemap.xml].tsx                         [sitemap.xml].tsx
-
-  ($lang)/
-    index.tsx                               _index.tsx
-    featured-products.tsx                   ($lang).featured-products.tsx
-    api/products.tsx                        ($lang).api.products.tsx
-    api/countries.tsx                       api.countries.tsx
-    $.tsx                                   $.tsx
-    $shopid/orders/$token/authenticate.tsx  ($lang).$shopid.orders.$token.authenticate.tsx
-    discount.$code.tsx                      ($lang).discount.$code.tsx
-    search.tsx                              ($lang).search.tsx
-    policies/index.tsx                      ($lang).policies._index.tsx
-    policies/$policyHandle.tsx              ($lang).policies.$policyHandle.tsx
-    products/index.tsx                      ($lang).products._index.tsx
-    products/$productHandle.tsx             ($lang).products.$productHandle.tsx
-    collections/index.tsx                   ($lang).collections._index.tsx
-    collections/all.tsx                     ($lang).collections.all.tsx
-    collections/$collectionHandle.tsx       ($lang).collections.$collectionHandle.tsx
-    pages/$pageHandle.tsx                   ($lang).pages.$pageHandle.tsx
-    journal/index.tsx                       ($lang).journal._index.tsx
-    journal/$journalHandle.tsx              ($lang).journal.$journalHandle.tsx
-
-    account                                               ($lang).account.tsx
-    account/__public/login.tsx                            ($lang).account.login.tsx
-    account/__public/register.tsx                         ($lang).account.register.tsx
-    account/__public/recover.tsx                          ($lang).account.recover.tsx
-    account/__public/reset.$id.$resetToken.tsx            ($lang).account.reset.$id.$resetToken.tsx
-    account/__public/activate.$id.$activationToken.tsx    ($lang).account.activate.$id.$activationToken.tsx
-    account/__private/edit.tsx                            ($lang).account.edit.tsx
-    account/__private/logout.tsx                          ($lang).account.logout.ts
-    account/__private/orders.$id.tsx                      ($lang).account.orders.$id.tsx
-    account/__private/address/$id.tsx                     ($lang).account.address.$id.tsx
+app/routes/
+  ├─ [sitemap.xml].tsx
+  ├─ [robots.txt].tsx
+  └─ ($lang)/
+      ├─ $shopid/orders/$token/
+      │   └─ authenticate.tsx
+      ├─ account/
+      │   ├─ __private/
+      │   │   ├─ address/
+      │   │   │   └─ $id.tsx
+      │   │   ├─ orders.$id.tsx
+      │   │   ├─ edit.tsx
+      │   │   └─ logout.ts
+      │   └─ __public/
+      │       ├─ recover.tsx
+      │       ├─ login.tsx
+      │       ├─ register.tsx
+      │       ├─ activate.$id.$activationToken.tsx
+      │       └─ reset.$id.$resetToken.tsx
+      ├─ api/
+      │   ├─ countries.tsx
+      │   └─ products.tsx
+      ├─ collections/
+      │   ├─ index.tsx
+      │   ├─ $collectionHandle.tsx
+      │   └─ all.tsx
+      ├─ journal/
+      │   ├─ index.tsx
+      │   └─ $journalHandle.tsx
+      ├─ pages
+      │   └─ $pageHandle.tsx
+      ├─ policies/
+      │   ├─ index.tsx
+      │   └─ $policyHandle.tsx
+      ├─ products/
+      │   ├─ index.tsx
+      │   └─ $productHandle.tsx
+      ├─ $.tsx
+      ├─ account.tsx
+      ├─ cart.tsx
+      ├─ cart.$lines.tsx
+      ├─ discount.$code.tsx
+      ├─ featured-products.tsx
+      ├─ index.tsx
+      └─ search.tsx
 ```
+
+</td>
+<td valign="top">
+
+```txt
+app/routes/
+  ├─ [sitemap.xml].tsx
+  ├─ [robots.txt].tsx
+  ├─ ($lang).$shopid.orders.$token.authenticate.tsx
+  ├─ ($lang).account.address.$id.tsx
+  ├─ ($lang).account.orders.$id.tsx
+  ├─ ($lang).account.edit.tsx
+  ├─ ($lang).account.logout.ts
+  ├─ ($lang).account.recover.tsx
+  ├─ ($lang).account.login.tsx
+  ├─ ($lang).account.register.tsx
+  ├─ ($lang).account.activate.$id.$activationToken.tsx
+  ├─ ($lang).account.reset.$id.$resetToken.tsx
+  ├─ ($lang).api.countries.tsx
+  ├─ ($lang).api.products.tsx
+  ├─ ($lang).collections._index.tsx
+  ├─ ($lang).collections.$collectionHandle.tsx
+  ├─ ($lang).collections.all.tsx
+  ├─ ($lang).journal._index.tsx
+  ├─ ($lang).journal.$journalHandle.tsx
+  ├─ ($lang).pages.$pageHandle.tsx
+  ├─ ($lang).policies._index.tsx
+  ├─ ($lang).policies.$policyHandle.tsx
+  ├─ ($lang).products._index.tsx
+  ├─ ($lang).products.$productHandle.tsx
+  ├─ $.tsx
+  ├─ ($lang)._index.tsx
+  ├─ ($lang).account.tsx
+  ├─ ($lang).cart.tsx
+  ├─ ($lang).cart.$lines.tsx
+  ├─ ($lang).discount.$code.tsx
+  ├─ ($lang).featured-products.tsx
+  └─ ($lang).search.tsx
+```
+
+</td>
+</tr>
+</table>
+
+### Optional
+
+If you want to continue using nested folder routes but have the `v2_routeConvention` flag turned on, you may consider to use the npm package [`@remix-run/v1-route-convention`](https://www.npmjs.com/package/@remix-run/v1-route-convention).
+
+If you like the flat route convention but still wants a hybrid style of nested route folder, you may consider to use the npm package [`remix-flat-routes`](https://www.npmjs.com/package/remix-flat-routes)
