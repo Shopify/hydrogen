@@ -72,20 +72,12 @@ export default function Login() {
   );
 }
 
-/**
- * Remix v1 implementation of ErrorBoundary
- * https://remix.run/docs/en/1.15.0/pages/v2#catchboundary-and-errorboundary
- */
 export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
   console.error(error);
 
   return <div>There was an error.</div>;
 };
 
-/**
- * Remix v1 implementation of CatchBoundary
- * https://remix.run/docs/en/1.15.0/pages/v2#catchboundary-and-errorboundary
- */
 export function CatchBoundary() {
   const caught = useCatch();
   console.error(caught);
@@ -98,10 +90,6 @@ export function CatchBoundary() {
   );
 }
 
-/**
- * Remix v2 ErrorBoundary
- * https://remix.run/docs/en/1.15.0/route/error-boundary-v2
- */
 export function ErrorBoundary() {
   const error = useRouteError();
 
