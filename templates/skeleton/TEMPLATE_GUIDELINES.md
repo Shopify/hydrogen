@@ -10,6 +10,7 @@ Topics covered:
 - [TypeScript](#typescript)
 - [Remix Loader Return Values](#remix-loader-return-values)
 - [GraphQL Query Definitions](#graphql-query-definitions)
+- [Comment Styles](#comment-styles)
 
 ## Error Handling
 
@@ -247,4 +248,29 @@ const MUTATION_ADD_TO_CART = `#graphql
     ...
   }
 `;
+```
+
+## Comment Styles
+
+Use `//` for single-line comments, and `/** */` for multi-line comments. Consider adding a header section for additional context or extremely long comment blocks.
+
+### Example
+
+```tsx
+// this is fine for single lines
+function test() {}
+
+/**
+ * If you're providing substantial context, links, example code and other stuff,
+ * then you should switch to something that really visually differentiates.
+ */
+function thing() {}
+
+/**
+ * myStuff
+ * -----------------
+ * Renders a login page for customer accounts.
+ * And does other really cool stuff
+ */
+function myStuff() {}
 ```

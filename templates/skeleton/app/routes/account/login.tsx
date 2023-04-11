@@ -1,10 +1,15 @@
 import {
   type ActionFunction,
   type LoaderArgs,
+  type ErrorBoundaryComponent,
   redirect,
-  json,
 } from '@shopify/remix-oxygen';
-import {Form} from '@remix-run/react';
+import {
+  Form,
+  useCatch,
+  useRouteError,
+  isRouteErrorResponse,
+} from '@remix-run/react';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
@@ -16,13 +21,7 @@ export async function loader({context, params}: LoaderArgs) {
   return new Response(null);
 }
 
-type ActionData = {
-  formError?: string;
-};
-
-const badRequest = (data: ActionData) => json(data, {status: 400});
-
-export const action: ActionFunction = async ({request, context, params}) => {
+export const action: ActionFunction = async ({request}) => {
   const formData = await request.formData();
 
   const email = formData.get('email');
@@ -34,8 +33,8 @@ export const action: ActionFunction = async ({request, context, params}) => {
     typeof email !== 'string' ||
     typeof password !== 'string'
   ) {
-    return badRequest({
-      formError: 'Please provide both an email and a password.',
+    throw new Response('Please provide both an email and a password.', {
+      status: 400,
     });
   }
 
@@ -71,4 +70,34 @@ export default function Login() {
       <button type="submit">Sign in</button>
     </Form>
   );
+}
+
+export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+  console.error(error);
+
+  return <div>There was an error.</div>;
+};
+
+export function CatchBoundary() {
+  const caught = useCatch();
+  console.error(caught);
+
+  return (
+    <div>
+      There was an error. Status: {caught.status}. Message:{' '}
+      {caught.data?.message}
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    console.error(error.status, error.statusText, error.data);
+    return <div>Route Error</div>;
+  } else {
+    console.error((error as Error).message);
+    return <div>Thrown Error</div>;
+  }
 }
