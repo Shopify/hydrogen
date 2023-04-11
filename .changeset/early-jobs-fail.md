@@ -111,6 +111,6 @@ app/routes/
 
 ### Optional
 
-If you want to continue using nested folder routes but have the `v2_routeConvention` flag turned on, you may consider to use the npm package [`@remix-run/v1-route-convention`](https://www.npmjs.com/package/@remix-run/v1-route-convention).
+If you want to continue using nested folder routes but have the `v2_routeConvention` flag turned on, you may consider using the npm package [`@remix-run/v1-route-convention`](https://www.npmjs.com/package/@remix-run/v1-route-convention).
 
-If you like the flat route convention but still wants a hybrid style of nested route folder, you may consider to use the npm package [`remix-flat-routes`](https://www.npmjs.com/package/remix-flat-routes)
+If you like the flat route convention but still wants a hybrid style of nested route folder, you may consider using the npm package [`remix-flat-routes`](https://www.npmjs.com/package/remix-flat-routes)
