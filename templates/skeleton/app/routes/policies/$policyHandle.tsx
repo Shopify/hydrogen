@@ -1,21 +1,31 @@
-import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, type V2_MetaFunction} from '@remix-run/react';
-
-import {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
+import {
+  json,
+  type MetaFunction,
+  type LoaderArgs,
+  type ErrorBoundaryComponent,
+} from '@shopify/remix-oxygen';
+import {
+  useLoaderData,
+  type V2_MetaFunction,
+  useCatch,
+  useRouteError,
+  isRouteErrorResponse,
+} from '@remix-run/react';
+import {Shop} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({params, context}: LoaderArgs) {
   const handle = params.policyHandle;
 
   if (!handle) {
-    throw new Response(null, {status: 404});
+    throw new Response('No handle was passed in', {status: 404});
   }
 
   const policyName = handle.replace(/-([a-z])/g, (_: unknown, m1: string) =>
     m1.toUpperCase(),
-  );
+  ) as SelectedPolicies;
 
   const data = await context.storefront.query<{
-    shop: Record<string, ShopPolicy>;
+    shop: Pick<Shop, SelectedPolicies>;
   }>(POLICY_CONTENT_QUERY, {
     variables: {
       privacyPolicy: false,
@@ -30,7 +40,7 @@ export async function loader({params, context}: LoaderArgs) {
   const policy = data.shop?.[policyName];
 
   if (!policy) {
-    throw new Response(null, {status: 404});
+    throw new Response('Could not find the policy', {status: 404});
   }
 
   return json({policy});
@@ -57,6 +67,36 @@ export default function Policies() {
   );
 }
 
+export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+  console.error(error);
+
+  return <div>There was an error.</div>;
+};
+
+export function CatchBoundary() {
+  const caught = useCatch();
+  console.error(caught);
+
+  return (
+    <div>
+      There was an error. Status: {caught.status}. Message:{' '}
+      {caught.data?.message}
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    console.error(error.status, error.statusText, error.data);
+    return <div>Route Error</div>;
+  } else {
+    console.error((error as Error).message);
+    return <div>Thrown Error</div>;
+  }
+}
+
 const POLICY_CONTENT_QUERY = `#graphql
   fragment Policy on ShopPolicy {
     body
@@ -66,7 +106,7 @@ const POLICY_CONTENT_QUERY = `#graphql
     url
   }
 
-  query PoliciesQuery(
+  query policy_query(
     $language: LanguageCode
     $privacyPolicy: Boolean!
     $shippingPolicy: Boolean!
@@ -89,3 +129,12 @@ const POLICY_CONTENT_QUERY = `#graphql
     }
   }
 `;
+
+const policies = [
+  'privacyPolicy',
+  'shippingPolicy',
+  'refundPolicy',
+  'termsOfService',
+] as const;
+
+type SelectedPolicies = (typeof policies)[number];

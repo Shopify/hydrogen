@@ -1,5 +1,6 @@
 import {flattenConnection} from '@shopify/hydrogen';
-import type {LoaderArgs} from '@shopify/remix-oxygen';
+import type {LoaderArgs, ErrorBoundaryComponent} from '@shopify/remix-oxygen';
+import {useCatch, useRouteError, isRouteErrorResponse} from '@remix-run/react';
 import {
   CollectionConnection,
   PageConnection,
@@ -34,7 +35,7 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
   });
 
   if (!data) {
-    throw new Response(null, {status: 404});
+    throw new Response('No data found', {status: 404});
   }
 
   return new Response(
@@ -48,6 +49,36 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
       },
     },
   );
+}
+
+export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+  console.error(error);
+
+  return <div>There was an error.</div>;
+};
+
+export function CatchBoundary() {
+  const caught = useCatch();
+  console.error(caught);
+
+  return (
+    <div>
+      There was an error. Status: {caught.status}. Message:{' '}
+      {caught.data?.message}
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    console.error(error.status, error.statusText, error.data);
+    return <div>Route Error</div>;
+  } else {
+    console.error((error as Error).message);
+    return <div>Thrown Error</div>;
+  }
 }
 
 function xmlEncode(string: string) {
