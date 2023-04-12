@@ -48,7 +48,6 @@
   "exports": {
     "./package.json": "./package.json",
     "./commands/hydrogen/init": {
-      "types": "./dist/commands/hydrogen/init.d.ts",
       "default": "./dist/commands/hydrogen/init.js"
     }
   },

@@ -8,7 +8,7 @@ const commonConfig = {
   splitting: true,
   treeshake: true,
   sourcemap: false,
-  dts: true,
+  dts: false,
   publicDir: 'templates',
 };
 
