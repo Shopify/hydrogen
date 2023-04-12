@@ -1,9 +1,8 @@
-import {vi, describe, expect, it} from 'vitest';
+import {Mock, vi, describe, expect, it} from 'vitest';
 import {render, screen} from '@testing-library/react';
 import {faker} from '@faker-js/faker';
 import {Image} from './Image.js';
 import {withEnv} from './test-utils.js';
-import {Mock} from 'vitest';
 
 const defaultProps = {
   sizes: '100vw',
