@@ -6,6 +6,7 @@ import type {
   Product,
   ProductSortKeys,
 } from '@shopify/hydrogen/storefront-api-types';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 interface FeaturedProductsProps {
   count: number;
@@ -45,10 +46,13 @@ export function FeaturedProducts({
         .join('&'),
     [count, sortKey, query, reverse],
   );
+  const productsApiPath = usePrefixPathWithLocale(
+    `/api/products?${queryString}`,
+  );
 
   useEffect(() => {
-    load(`/api/products?${queryString}`);
-  }, [load, queryString]);
+    load(productsApiPath);
+  }, [load, productsApiPath]);
 
   return (
     <>

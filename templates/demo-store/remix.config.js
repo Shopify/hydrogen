@@ -20,6 +20,7 @@ module.exports = {
     unstable_postcss: true,
     unstable_tailwind: true,
     v2_meta: true,
+    v2_routeConvention: true,
     v2_errorBoundary: true,
     v2_normalizeFormMethod: true,
   },

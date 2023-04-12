@@ -4,10 +4,22 @@ import {MediaFile} from '@shopify/hydrogen';
 import type {
   MediaImage,
   Media,
+  Metafield,
   Video as MediaVideo,
 } from '@shopify/hydrogen/storefront-api-types';
 import {Heading, Text, Link} from '~/components';
-import type {CollectionHero} from '~/routes/($lang)/index';
+
+export interface CollectionHero {
+  byline: Metafield;
+  cta: Metafield;
+  handle: string;
+  heading: Metafield;
+  height?: 'full';
+  loading?: 'eager' | 'lazy';
+  spread: Metafield;
+  spreadSecondary: Metafield;
+  top?: boolean;
+}
 
 /**
  * Hero component that renders metafields attached to collection resources
