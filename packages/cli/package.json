@@ -42,7 +42,7 @@
     "prettier": "^2.8.4",
     "recursive-readdir": "^2.2.3",
     "tar-fs": "^2.1.1",
-    "typescript": "^4.9.5"
+    "typescript": "^5.0.4"
   },
   "bin": "dist/create-app.js",
   "exports": {
