@@ -17,7 +17,7 @@ import type {
 import invariant from 'tiny-invariant';
 import {Button, Text} from '~/components';
 import {assertApiErrors, getInputStyleClasses} from '~/lib/utils';
-import type {AccountOutletContext} from '../edit';
+import type {AccountOutletContext} from './($lang).account.edit';
 
 interface ActionData {
   formError?: string;

@@ -6,7 +6,7 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
-import styles from '../../../styles/custom-font.css';
+import styles from '../styles/custom-font.css';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
 
 const BLOG_HANDLE = 'journal';
