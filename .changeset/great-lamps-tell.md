@@ -1,6 +1,5 @@
 ---
-'@shopify/cli-hydrogen': minor
-'@shopify/create-hydrogen': minor
+'demo-store': patch
 ---
 
 Forwards search params of `/discount/<code>` route to a redirect route.
