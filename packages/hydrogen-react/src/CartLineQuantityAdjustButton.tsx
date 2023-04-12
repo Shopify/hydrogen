@@ -23,7 +23,13 @@ export function CartLineQuantityAdjustButton<
 >(props: CartLineQuantityAdjustButtonProps<AsType>): JSX.Element {
   const {status, linesRemove, linesUpdate} = useCart();
   const cartLine = useCartLine();
-  const {children, adjust, onClick, ...passthroughProps} = props;
+  const {
+    children,
+    adjust,
+    onClick,
+    as: asComponent,
+    ...passthroughProps
+  } = props;
 
   const handleAdjust = useCallback(() => {
     if (adjust === 'remove') {
@@ -61,6 +67,7 @@ export function CartLineQuantityAdjustButton<
   return (
     <BaseButton
       {...passthroughProps}
+      as={asComponent as React.ElementType}
       onClick={onClick}
       defaultOnClick={handleAdjust}
       disabled={

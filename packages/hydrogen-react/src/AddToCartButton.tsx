@@ -43,6 +43,7 @@ export function AddToCartButton<AsType extends React.ElementType = 'button'>(
     onClick,
     children,
     accessibleAddingToCartLabel,
+    as: asComponent,
     ...passthroughProps
   } = props;
   const {status, linesAdd} = useCart();
@@ -77,6 +78,7 @@ export function AddToCartButton<AsType extends React.ElementType = 'button'>(
     <>
       <BaseButton
         {...passthroughProps}
+        as={asComponent as React.ElementType}
         disabled={disabled}
         onClick={onClick}
         defaultOnClick={handleAddItem}

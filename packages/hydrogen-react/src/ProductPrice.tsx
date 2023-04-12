@@ -31,6 +31,7 @@ export function ProductPrice<ComponentGeneric extends React.ElementType>(
     variantId,
     valueType = 'min',
     data: product,
+    as: asComponent,
     ...passthroughProps
   } = props;
 
@@ -78,11 +79,22 @@ export function ProductPrice<ComponentGeneric extends React.ElementType>(
 
   if (measurement) {
     return (
-      <Money {...passthroughProps} data={price} measurement={measurement} />
+      <Money
+        {...passthroughProps}
+        as={asComponent as React.ElementType}
+        data={price}
+        measurement={measurement}
+      />
     );
   }
 
-  return <Money {...passthroughProps} data={price} />;
+  return (
+    <Money
+      {...passthroughProps}
+      as={asComponent as React.ElementType}
+      data={price}
+    />
+  );
 }
 
 // This is only for documenation purposes, and it is not used in the code.
