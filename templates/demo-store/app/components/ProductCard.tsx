@@ -73,12 +73,6 @@ export function ProductCard({
                 data={image}
                 alt={image.altText || `Picture of ${product.title}`}
                 loading={loading}
-                srcSetOptions={{
-                  intervals: 10,
-                  startingWidth: 150,
-                  incrementSize: 150,
-                  placeholderWidth: 100,
-                }}
               />
             )}
             <Text
