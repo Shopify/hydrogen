@@ -198,9 +198,9 @@ function internalImageSrcSet({
   if (
     !hasCustomWidths &&
     width &&
-    width < IMG_SRC_SET_SIZES[IMG_SRC_SET_SIZES.length - 1]
+    Number(width) < IMG_SRC_SET_SIZES[IMG_SRC_SET_SIZES.length - 1]
   ) {
-    setSizes = IMG_SRC_SET_SIZES.filter((size) => size <= width);
+    setSizes = IMG_SRC_SET_SIZES.filter((size) => size <= Number(width));
   }
   const srcGenerator = loader ? loader : addImageSizeParametersToUrl;
   return setSizes
