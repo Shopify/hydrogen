@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen': patch
+'demo-store': patch
 ---
 
 Adopt Remix [`v2_meta`](https://remix.run/docs/en/main/route/meta#metav2) future flag

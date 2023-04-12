@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen': patch
+'demo-store': patch
 ---
 
 Adopt Remix [`unstable_tailwind`](https://remix.run/docs/en/1.15.0/guides/styling#built-in-tailwind-support) and [`unstable_postcss`](https://remix.run/docs/en/1.15.0/guides/styling#built-in-postcss-support) future flags for the Demo Store template.

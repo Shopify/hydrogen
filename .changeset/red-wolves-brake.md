@@ -2,6 +2,7 @@
 '@shopify/hydrogen': patch
 '@shopify/remix-oxygen': patch
 '@shopify/cli-hydrogen': patch
+'demo-store': patch
 ---
 
 Bump internal Remix dependencies to 1.15.0.

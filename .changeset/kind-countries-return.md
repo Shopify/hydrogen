@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen': patch
+'demo-store': patch
 ---
 
 Carts created in liquid will soon be compatible with the Storefront API and vice versa, making it possible to share carts between channels.
