@@ -7,5 +7,6 @@
   "access": "public",
   "baseBranch": "2023-01",
   "updateInternalDependencies": "patch",
-  "ignore": ["demo-store", "hello-world", "skeleton"]
+  "ignore": ["hello-world", "skeleton"],
+  "privatePackages": {"version": true, "tag": true}
 }
