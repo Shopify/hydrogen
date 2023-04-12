@@ -85,7 +85,7 @@ function productJsonLd({
   product: Product;
   selectedVariant: ProductVariant;
   url: Request['url'];
-}): SeoConfig<SeoProduct | BreadcrumbList>['jsonLd'][] {
+}): SeoConfig<SeoProduct | BreadcrumbList>['jsonLd'] {
   const origin = new URL(url).origin;
   const variants = product.variants.nodes;
   const description = truncate(
@@ -152,7 +152,7 @@ function product({
   product: Product;
   selectedVariant: ProductVariant;
   url: Request['url'];
-}) {
+}): SeoConfig<SeoProduct | BreadcrumbList> {
   const description = truncate(
     product?.seo?.description ?? product?.description ?? '',
   );
@@ -170,7 +170,7 @@ function collectionJsonLd({
 }: {
   url: Request['url'];
   collection: Collection;
-}): SeoConfig<CollectionPage | BreadcrumbList>['jsonLd'][] {
+}): SeoConfig<CollectionPage | BreadcrumbList>['jsonLd'] {
   const siteUrl = new URL(url);
   const itemListElement: CollectionPage['mainEntity'] =
     collection.products.nodes.map((product, index) => {
@@ -222,7 +222,7 @@ function collection({
 }: {
   collection: Collection;
   url: Request['url'];
-}) {
+}): SeoConfig<CollectionPage | BreadcrumbList> {
   return {
     title: collection?.seo?.title,
     description: truncate(

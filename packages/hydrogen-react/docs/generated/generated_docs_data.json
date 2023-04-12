@@ -700,9 +700,14 @@
         "name": "useCart",
         "type": "hooks",
         "url": "/api/hydrogen-react/hooks/useCart"
+      },
+      {
+        "name": "ShopifyProvider",
+        "type": "components",
+        "url": "/api/hydrogen-react/components/shopifyprovider"
       }
     ],
-    "description": "\n    The `CartProvider` component synchronizes the state of the Storefront API Cart and a customer's cart, and allows you to more easily manipulate the cart by adding, removing, and updating it. It could be placed at the root of your app so that your whole app is able to use the `useCart()` hook anywhere.\n\nThere are props that trigger when a call to the Storefront API is made, such as `onLineAdd={}` when a line is added to the cart. There are also props that trigger when a call to the Storefront API is completed, such as `onLineAddComplete={}` when the fetch request for adding a line to the cart completes.\n  ",
+    "description": "\n    The `CartProvider` component synchronizes the state of the Storefront API Cart and a customer's cart, and allows you to more easily manipulate the cart by adding, removing, and updating it. It could be placed at the root of your app so that your whole app is able to use the `useCart()` hook anywhere.\n\nThere are props that trigger when a call to the Storefront API is made, such as `onLineAdd={}` when a line is added to the cart. There are also props that trigger when a call to the Storefront API is completed, such as `onLineAddComplete={}` when the fetch request for adding a line to the cart completes.\n\nThe `CartProvider` component must be a descendant of the `ShopifyProvider` component\n.\n  ",
     "type": "component",
     "defaultExample": {
       "description": "I am the default example",
@@ -4626,12 +4631,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {ProductProvider} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {ProductProvider} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      {/* Your JSX */}\n    </ProductProvider>\n  );\n}\n",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -6787,6 +6792,213 @@
                 "name": "withoutTrailingZerosAndCurrency",
                 "value": "string",
                 "description": "A string without currency and without trailing zeros removed from the fractional part, if any exist. If there are no trailing zeros, then the fractional part remains.\nFor example, `$640.00` turns into `640`.\n`$640.42` turns into `640.42`."
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "useProduct",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "ProductProvider",
+        "type": "component",
+        "url": "/api/hydrogen-react/components/productprovider"
+      }
+    ],
+    "description": "Provides access to the product value passed to `<ProductProvider />`. It also includes properties for selecting product variants, options, and selling plans.",
+    "type": "hook",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\n\nexport function Product({product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {ProductProvider, useProduct} from '@shopify/hydrogen-react';\nimport type {Product} from '@shopify/hydrogen-react/storefront-api-types';\n\nexport function Product({product}: {product: Product}) {\n  return (\n    <ProductProvider data={product} initialVariantId=\"some-id\">\n      <UsingProduct />\n    </ProductProvider>\n  );\n}\n\nfunction UsingProduct() {\n  const {product, variants, setSelectedVariant} = useProduct();\n  return (\n    <>\n      <h1>{product?.title}</h1>\n      {variants?.map((variant) => {\n        <button onClick={() => setSelectedVariant(variant)} key={variant?.id}>\n          {variant?.title}\n        </button>;\n      })}\n      ;\n    </>\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "ProductHookValue",
+        "typeDefinitions": {
+          "ProductHookValue": {
+            "filePath": "/ProductProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ProductHookValue",
+            "value": "PartialDeep<\n  UseProductObjects,\n  {recurseIntoArrays: true}\n> & UseProductFunctions",
+            "description": ""
+          },
+          "UseProductObjects": {
+            "filePath": "/ProductProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "UseProductObjects",
+            "value": "{\n  /** The raw product from the Storefront API */\n  product: Product;\n  /** An array of the variant `nodes` from the `VariantConnection`. */\n  variants: ProductVariantType[];\n  variantsConnection?: ProductVariantConnection;\n  /** An array of the product's options and values. */\n  options: OptionWithValues[];\n  /** The selected variant. */\n  selectedVariant?: ProductVariantType | null;\n  selectedOptions: SelectedOptions;\n  /** The selected selling plan. */\n  selectedSellingPlan?: SellingPlanType;\n  /** The selected selling plan allocation. */\n  selectedSellingPlanAllocation?: SellingPlanAllocationType;\n  /** The selling plan groups. */\n  sellingPlanGroups?: (Omit<SellingPlanGroupType, 'sellingPlans'> & {\n    sellingPlans: SellingPlanType[];\n  })[];\n  sellingPlanGroupsConnection?: SellingPlanGroupConnection;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "product",
+                "value": "Product",
+                "description": "The raw product from the Storefront API"
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "variants",
+                "value": "ProductVariant[]",
+                "description": "An array of the variant `nodes` from the `VariantConnection`."
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "variantsConnection",
+                "value": "ProductVariantConnection",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "options",
+                "value": "OptionWithValues[]",
+                "description": "An array of the product's options and values."
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "selectedVariant",
+                "value": "ProductVariant",
+                "description": "The selected variant.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "selectedOptions",
+                "value": "SelectedOptions",
+                "description": ""
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "selectedSellingPlan",
+                "value": "SellingPlan",
+                "description": "The selected selling plan.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "selectedSellingPlanAllocation",
+                "value": "SellingPlanAllocation",
+                "description": "The selected selling plan allocation.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "sellingPlanGroups",
+                "value": "(Omit<SellingPlanGroup, \"sellingPlans\"> & { sellingPlans: SellingPlan[]; })[]",
+                "description": "The selling plan groups.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "sellingPlanGroupsConnection",
+                "value": "SellingPlanGroupConnection",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "OptionWithValues": {
+            "filePath": "/ProductProvider.tsx",
+            "name": "OptionWithValues",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "name",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "values",
+                "value": "string[]",
+                "description": ""
+              }
+            ],
+            "value": "export interface OptionWithValues {\n  name: SelectedOptionType['name'];\n  values: SelectedOptionType['value'][];\n}"
+          },
+          "SelectedOptions": {
+            "filePath": "/ProductProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "SelectedOptions",
+            "value": "{\n  [key: string]: string;\n}",
+            "description": "",
+            "members": []
+          },
+          "UseProductFunctions": {
+            "filePath": "/ProductProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "UseProductFunctions",
+            "value": "{\n  /** A callback to set the selected variant to the variant passed as an argument. */\n  setSelectedVariant: (\n    variant: PartialDeep<ProductVariantType, {recurseIntoArrays: true}> | null,\n  ) => void;\n  /** A callback to set the selected option. */\n  setSelectedOption: (\n    name: SelectedOptionType['name'],\n    value: SelectedOptionType['value'],\n  ) => void;\n  /** A callback to set multiple selected options at once. */\n  setSelectedOptions: (options: SelectedOptions) => void;\n  /** A callback to set the selected selling plan to the one passed as an argument. */\n  setSelectedSellingPlan: (\n    sellingPlan: PartialDeep<SellingPlanType, {recurseIntoArrays: true}>,\n  ) => void;\n  /** A callback that returns a boolean indicating if the option is in stock. */\n  isOptionInStock: (\n    name: SelectedOptionType['name'],\n    value: SelectedOptionType['value'],\n  ) => boolean;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "setSelectedVariant",
+                "value": "(variant: PartialObjectDeep<ProductVariant, { recurseIntoArrays: true; }>) => void",
+                "description": "A callback to set the selected variant to the variant passed as an argument."
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "setSelectedOption",
+                "value": "(name: string, value: string) => void",
+                "description": "A callback to set the selected option."
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "setSelectedOptions",
+                "value": "(options: SelectedOptions) => void",
+                "description": "A callback to set multiple selected options at once."
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "setSelectedSellingPlan",
+                "value": "(sellingPlan: PartialObjectDeep<SellingPlan, { recurseIntoArrays: true; }>) => void",
+                "description": "A callback to set the selected selling plan to the one passed as an argument."
+              },
+              {
+                "filePath": "/ProductProvider.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "isOptionInStock",
+                "value": "(name: string, value: string) => boolean",
+                "description": "A callback that returns a boolean indicating if the option is in stock."
               }
             ]
           }

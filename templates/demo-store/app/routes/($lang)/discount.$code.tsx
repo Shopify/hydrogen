@@ -1,4 +1,5 @@
 import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {getCartId} from '~/lib/utils';
 import {cartCreate, cartDiscountCodesUpdate} from './cart';
 
 /**
@@ -21,16 +22,20 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
-  const redirectUrl =
+  const redirectParam =
     searchParams.get('redirect') || searchParams.get('return_to') || '/';
 
+  searchParams.delete('redirect');
+  searchParams.delete('return_to');
+
+  const redirectUrl = `${redirectParam}?${searchParams}`;
   const headers = new Headers();
 
   if (!code) {
     return redirect(redirectUrl);
   }
 
-  let cartId = await session.get('cartId');
+  let cartId = getCartId(request);
 
   //! if no existing cart, create one
   if (!cartId) {
@@ -45,8 +50,7 @@ export async function loader({request, context, params}: LoaderArgs) {
 
     //! cart created - we only need a Set-Cookie header if we're creating
     cartId = cart.id;
-    session.set('cartId', cartId);
-    headers.set('Set-Cookie', await session.commit());
+    headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
   }
 
   //! apply discount to the cart

@@ -167,6 +167,7 @@ export function ProductProvider({
 
   const value = useMemo<ProductHookValue>(
     () => ({
+      product,
       variants,
       variantsConnection: product.variants,
       options,
@@ -183,10 +184,9 @@ export function ProductProvider({
       sellingPlanGroupsConnection: product.sellingPlanGroups,
     }),
     [
+      product,
       isOptionInStock,
       options,
-      product.sellingPlanGroups,
-      product.variants,
       selectedOptions,
       selectedSellingPlan,
       selectedSellingPlanAllocation,
@@ -333,28 +333,29 @@ export interface OptionWithValues {
   values: SelectedOptionType['value'][];
 }
 
-type ProductHookValue = PartialDeep<
-  {
-    /** An array of the variant `nodes` from the `VariantConnection`. */
-    variants: ProductVariantType[];
-    variantsConnection?: ProductVariantConnection;
-    /** An array of the product's options and values. */
-    options: OptionWithValues[];
-    /** The selected variant. */
-    selectedVariant?: ProductVariantType | null;
-    selectedOptions: SelectedOptions;
-    /** The selected selling plan. */
-    selectedSellingPlan?: SellingPlanType;
-    /** The selected selling plan allocation. */
-    selectedSellingPlanAllocation?: SellingPlanAllocationType;
-    /** The selling plan groups. */
-    sellingPlanGroups?: (Omit<SellingPlanGroupType, 'sellingPlans'> & {
-      sellingPlans: SellingPlanType[];
-    })[];
-    sellingPlanGroupsConnection?: SellingPlanGroupConnection;
-  },
-  {recurseIntoArrays: true}
-> & {
+type UseProductObjects = {
+  /** The raw product from the Storefront API */
+  product: Product;
+  /** An array of the variant `nodes` from the `VariantConnection`. */
+  variants: ProductVariantType[];
+  variantsConnection?: ProductVariantConnection;
+  /** An array of the product's options and values. */
+  options: OptionWithValues[];
+  /** The selected variant. */
+  selectedVariant?: ProductVariantType | null;
+  selectedOptions: SelectedOptions;
+  /** The selected selling plan. */
+  selectedSellingPlan?: SellingPlanType;
+  /** The selected selling plan allocation. */
+  selectedSellingPlanAllocation?: SellingPlanAllocationType;
+  /** The selling plan groups. */
+  sellingPlanGroups?: (Omit<SellingPlanGroupType, 'sellingPlans'> & {
+    sellingPlans: SellingPlanType[];
+  })[];
+  sellingPlanGroupsConnection?: SellingPlanGroupConnection;
+};
+
+type UseProductFunctions = {
   /** A callback to set the selected variant to the variant passed as an argument. */
   setSelectedVariant: (
     variant: PartialDeep<ProductVariantType, {recurseIntoArrays: true}> | null,
@@ -376,6 +377,12 @@ type ProductHookValue = PartialDeep<
     value: SelectedOptionType['value'],
   ) => boolean;
 };
+
+type ProductHookValue = PartialDeep<
+  UseProductObjects,
+  {recurseIntoArrays: true}
+> &
+  UseProductFunctions;
 
 export type SelectedOptions = {
   [key: string]: string;

@@ -1,8 +1,8 @@
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
-import {output, file} from '@shopify/cli-kit';
-import {createRequire} from 'module';
+import {outputWarn} from '@shopify/cli-kit/node/output';
+import {fileExists} from '@shopify/cli-kit/node/fs';
 import {fileURLToPath} from 'url';
 import path from 'path';
 import fs from 'fs/promises';
@@ -10,6 +10,8 @@ import fs from 'fs/promises';
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
 const WORKER_SUBDIR = 'worker'; // Hardcoded in Oxygen
+
+const oxygenServerMainFields = ['browser', 'module', 'main'];
 
 export function getProjectPaths(appPath?: string, entry?: string) {
   const root = appPath ?? process.cwd();
@@ -37,15 +39,6 @@ export async function getRemixConfig(
     serverMainFields?: string[];
     serverDependenciesToBundle?: string;
   };
-
-  // TODO: Remove when updating Remix
-  if (!config.serverConditions) {
-    const require = createRequire(import.meta.url);
-    const actualConfigFile = require(path.join(root, 'remix.config'));
-    config.serverBuildTarget = 'cloudflare-workers';
-    config.serverConditions = actualConfigFile.serverConditions;
-    config.serverMainFields = actualConfigFile.serverMainFields;
-  }
 
   if (!config.serverEntryPoint) {
     throwConfigError(
@@ -84,22 +77,18 @@ export async function getRemixConfig(
     process.env.NODE_ENV === 'development' &&
     !config.serverConditions?.includes('development')
   ) {
-    output.warn(
+    outputWarn(
       'Add `process.env.NODE_ENV` value to serverConditions in remix.config.js to enable debugging features in development.',
     );
   }
 
-  const expectedServerMainFields = ['browser', 'module', 'main'];
-
   if (
     !config.serverMainFields ||
-    !expectedServerMainFields.every(
-      (v, i) => config.serverMainFields?.[i] === v,
-    )
+    !oxygenServerMainFields.every((v, i) => config.serverMainFields?.[i] === v)
   ) {
     throwConfigError(
       `The serverMainFields in remix.config.js must be ${JSON.stringify(
-        expectedServerMainFields,
+        oxygenServerMainFields,
       )}.`,
     );
   }
@@ -170,7 +159,7 @@ export async function assertEntryFileExists(
   fileRelative: string,
 ) {
   const fileAbsolute = path.resolve(root, fileRelative);
-  const exists = await file.exists(fileAbsolute);
+  const exists = await fileExists(fileAbsolute);
 
   if (!exists) {
     if (!path.extname(fileAbsolute)) {

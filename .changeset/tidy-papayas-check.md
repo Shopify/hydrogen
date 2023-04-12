@@ -1,5 +1,5 @@
 ---
-'@shopify/cli-hydrogen': patch
+'@shopify/hydrogen': patch
 ---
 
 Adopt Remix [`v2_errorBoundary`](https://remix.run/docs/en/release-next/route/error-boundary-v2) future flag
