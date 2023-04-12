@@ -459,12 +459,6 @@ function FixedWidthImage({
       srcSet={fixed.srcSet}
       width={fixed.width}
       {...passthroughProps}
-      style={{
-        width: normalizedProps.width,
-        height: normalizedProps.height,
-        aspectRatio: fixed.aspectRatio,
-        ...passthroughProps.style,
-      }}
     />
   );
 }
@@ -539,8 +533,6 @@ function FluidImage({
       width={placeholderWidth}
       {...passthroughProps}
       style={{
-        width: normalizedProps.width,
-        height: normalizedProps.height,
         aspectRatio: normalizedProps.aspectRatio,
         ...passthroughProps.style,
       }}
