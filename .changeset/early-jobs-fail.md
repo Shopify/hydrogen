@@ -1,3 +1,7 @@
+---
+'demo-store': patch
+---
+
 Adopt `v2_routeConvention` future flag
 
 ## `v2_routeConventions` migration steps
