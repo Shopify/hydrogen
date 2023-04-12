@@ -22,9 +22,13 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
-  const redirectUrl =
+  const redirectParam =
     searchParams.get('redirect') || searchParams.get('return_to') || '/';
 
+  searchParams.delete('redirect');
+  searchParams.delete('return_to');
+
+  const redirectUrl = `${redirectParam}?${searchParams}`;
   const headers = new Headers();
 
   if (!code) {
