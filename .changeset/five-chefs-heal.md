@@ -98,7 +98,7 @@ All three above examples would result in the following HTML:
   decoding="async"
   width="100px"
   height="100px"
-  style="width: 100%; height: auto; aspect-ratio: 4000 / 4000;"
+  style="aspect-ratio: 4000 / 4000;"
 />
 ```
 
@@ -122,7 +122,9 @@ Instead of generating 15 images for a broad range of screen sizes, `Image` will 
   src="https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg?width=80&height=80"
   alt="alt text"
   loading="lazy"
-  style="width: 5rem; height: auto; aspect-ratio: 80 / 80;"
+  width="80px"
+  height="80px"
+  style="aspect-ratio: 80 / 80;"
 />
 ```
 
