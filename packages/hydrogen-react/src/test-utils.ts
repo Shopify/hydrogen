@@ -2,6 +2,10 @@ interface EnvBackup {
   [key: string]: {isSet: boolean; value: string | undefined};
 }
 
+interface ProcessEnv {
+  [key: string]: string | undefined;
+}
+
 function getEnvValues(envVars: string[]): EnvBackup {
   return envVars.reduce((acc, key) => {
     acc[key] = {
@@ -27,7 +31,7 @@ function resetEnv(oldEnv: EnvBackup): void {
 }
 
 export async function withEnv(
-  env: string | NodeJS.ProcessEnv,
+  env: string | ProcessEnv,
   callback: () => Promise<void> | void,
 ): Promise<void> {
   const envToSet = typeof env === 'string' ? {NODE_ENV: env} : env;

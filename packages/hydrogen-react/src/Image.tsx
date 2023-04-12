@@ -180,7 +180,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
       loader = shopifyLoader,
       loaderOptions,
       loading = 'lazy',
-      sizes,
+      sizes = '100vw',
       src,
       srcSetOptions = {
         intervals: 15,
