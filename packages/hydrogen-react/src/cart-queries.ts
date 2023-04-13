@@ -153,6 +153,12 @@ export const CartQuery = (cartFragment: string): string => /* GraphQL */ `
   ${cartFragment}
 `;
 
+export const basicCartFragment = /* GraphQL */ `
+  fragment CartFragment on Cart {
+    id
+  }
+`;
+
 export const defaultCartFragment = /* GraphQL */ `
   fragment CartFragment on Cart {
     id

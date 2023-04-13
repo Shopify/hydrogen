@@ -31,6 +31,8 @@ export function Cart({
   onClose?: () => void;
   cart: CartType | null;
 }) {
+  console.log('Cart', cart);
+
   const linesCount = Boolean(cart?.lines?.edges?.length || 0);
 
   return (

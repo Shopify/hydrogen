@@ -105,12 +105,17 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   const [root] = useMatches();
 
+  // console.log('Root', root);
+
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
         <Suspense fallback={<CartLoading />}>
           <Await resolve={root.data?.cart}>
-            {(cart) => <Cart layout="drawer" onClose={onClose} cart={cart} />}
+            {(cart) => {
+              console.log('await cart', cart);
+              return <Cart layout="drawer" onClose={onClose} cart={cart} />;
+            }}
           </Await>
         </Suspense>
       </div>

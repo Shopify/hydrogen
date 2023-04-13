@@ -2,6 +2,8 @@ import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
 import {useFetcher, useMatches, useNavigation} from '@remix-run/react';
 import {Button} from '~/components';
 import {CartAction} from '~/lib/type';
+import {CartFormInputAction, CartLinesAdd} from '@shopify/hydrogen';
+import {CartForm} from './CartForm';
 
 export function AddToCartButton({
   children,
@@ -22,28 +24,53 @@ export function AddToCartButton({
   analytics?: unknown;
   [key: string]: any;
 }) {
-  const [root] = useMatches();
-  const selectedLocale = root?.data?.selectedLocale;
-  const fetcher = useFetcher();
-  const fetcherIsNotIdle = fetcher.state !== 'idle';
+  const formInput: CartLinesAdd = {
+    action: CartFormInputAction.CartLinesAdd,
+    lines,
+  };
 
   return (
-    <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value={CartAction.ADD_TO_CART} />
-      <input type="hidden" name="countryCode" value={selectedLocale.country} />
-      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
-      <input type="hidden" name="analytics" value={JSON.stringify(analytics)} />
-      <Button
-        as="button"
-        type="submit"
-        width={width}
-        variant={variant}
-        className={className}
-        disabled={disabled ?? fetcherIsNotIdle}
-        {...props}
-      >
-        {children}
-      </Button>
-    </fetcher.Form>
+    <CartForm route="/cart" formInput={formInput}>
+      {(fetcher) => (
+        <>
+          <input
+            type="hidden"
+            name="analytics"
+            value={JSON.stringify(analytics)}
+          />
+          <Button
+            as="button"
+            type="submit"
+            width={width}
+            variant={variant}
+            className={className}
+            disabled={disabled ?? fetcher.state !== 'idle'}
+            {...props}
+          >
+            {children}
+          </Button>
+        </>
+      )}
+    </CartForm>
   );
 }
+
+// return (
+//   <fetcher.Form action="/cart" method="post">
+//     <input type="hidden" name="cartAction" value={CartAction.ADD_TO_CART} />
+//     <input type="hidden" name="countryCode" value={selectedLocale.country} />
+//     <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+// <input type="hidden" name="analytics" value={JSON.stringify(analytics)} />
+// <Button
+//   as="button"
+//   type="submit"
+//   width={width}
+//   variant={variant}
+//   className={className}
+//   disabled={disabled ?? fetcherIsNotIdle}
+//   {...props}
+// >
+//   {children}
+// </Button>
+//   </fetcher.Form>
+// );

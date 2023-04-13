@@ -48,9 +48,9 @@ export const links: LinksFunction = () => {
 };
 
 export async function loader({request, context}: LoaderArgs) {
-  const cartId = getCartId(request);
+  const {session, storefront, cart} = context;
   const [customerAccessToken, layout] = await Promise.all([
-    context.session.get('customerAccessToken'),
+    session.get('customerAccessToken'),
     getLayoutData(context),
   ]);
 
@@ -59,8 +59,8 @@ export async function loader({request, context}: LoaderArgs) {
   return defer({
     isLoggedIn: Boolean(customerAccessToken),
     layout,
-    selectedLocale: context.storefront.i18n,
-    cart: cartId ? getCart(context, cartId) : undefined,
+    selectedLocale: storefront.i18n,
+    cart: cart.get(),
     analytics: {
       shopifySalesChannel: ShopifySalesChannel.hydrogen,
       shopId: layout.shop.id,
@@ -237,133 +237,4 @@ async function getLayoutData({storefront}: AppLoadContext) {
     : undefined;
 
   return {shop: data.shop, headerMenu, footerMenu};
-}
-
-const CART_QUERY = `#graphql
-  query CartQuery($cartId: ID!, $country: CountryCode, $language: LanguageCode)
-    @inContext(country: $country, language: $language) {
-    cart(id: $cartId) {
-      ...CartFragment
-    }
-  }
-
-  fragment CartFragment on Cart {
-    id
-    checkoutUrl
-    totalQuantity
-    buyerIdentity {
-      countryCode
-      customer {
-        id
-        email
-        firstName
-        lastName
-        displayName
-      }
-      email
-      phone
-    }
-    lines(first: 100) {
-      edges {
-        node {
-          id
-          quantity
-          attributes {
-            key
-            value
-          }
-          cost {
-            totalAmount {
-              amount
-              currencyCode
-            }
-            amountPerQuantity {
-              amount
-              currencyCode
-            }
-            compareAtAmountPerQuantity {
-              amount
-              currencyCode
-            }
-          }
-          merchandise {
-            ... on ProductVariant {
-              id
-              availableForSale
-              compareAtPrice {
-                ...MoneyFragment
-              }
-              price {
-                ...MoneyFragment
-              }
-              requiresShipping
-              title
-              image {
-                ...ImageFragment
-              }
-              product {
-                handle
-                title
-                id
-              }
-              selectedOptions {
-                name
-                value
-              }
-            }
-          }
-        }
-      }
-    }
-    cost {
-      subtotalAmount {
-        ...MoneyFragment
-      }
-      totalAmount {
-        ...MoneyFragment
-      }
-      totalDutyAmount {
-        ...MoneyFragment
-      }
-      totalTaxAmount {
-        ...MoneyFragment
-      }
-    }
-    note
-    attributes {
-      key
-      value
-    }
-    discountCodes {
-      code
-    }
-  }
-
-  fragment MoneyFragment on MoneyV2 {
-    currencyCode
-    amount
-  }
-
-  fragment ImageFragment on Image {
-    id
-    url
-    altText
-    width
-    height
-  }
-`;
-
-export async function getCart({storefront}: AppLoadContext, cartId: string) {
-  invariant(storefront, 'missing storefront client in cart query');
-
-  const {cart} = await storefront.query<{cart?: Cart}>(CART_QUERY, {
-    variables: {
-      cartId,
-      country: storefront.i18n.country,
-      language: storefront.i18n.language,
-    },
-    cache: storefront.CacheNone(),
-  });
-
-  return cart;
 }

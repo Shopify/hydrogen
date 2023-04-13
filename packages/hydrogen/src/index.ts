@@ -16,6 +16,22 @@ export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 
 export {
+  type CartQueryOptions,
+  type CartQueryFunction,
+  type CartQueryReturn,
+  type CartQueryData,
+  cartCreateDefault,
+  cartGetDefault,
+  cartLineAddDefault,
+} from './cart/cart-query-wrapper';
+export {
+  CartFormInputAction,
+  type CartFormInput,
+  type CartCreate,
+  type CartLinesAdd,
+} from './cart/cart-types';
+
+export {
   AnalyticsEventName,
   AnalyticsPageType,
   ExternalVideo,
