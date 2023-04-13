@@ -184,7 +184,7 @@ describe('<Image />', () => {
     });
 
     it('warns user if no sizes are provided', () => {
-      render(<Image {...defaultProps} sizes={undefined} />);
+      render(<Image {...defaultProps} width="100%" sizes={undefined} />);
 
       expect(console.warn).toHaveBeenCalledTimes(1);
       expect(getWarnings()).toMatchInlineSnapshot(

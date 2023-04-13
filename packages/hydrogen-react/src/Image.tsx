@@ -180,7 +180,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
       loader = shopifyLoader,
       loaderOptions,
       loading = 'lazy',
-      sizes = '100vw',
+      sizes,
       src,
       srcSetOptions = {
         intervals: 15,
@@ -458,6 +458,10 @@ function FixedWidthImage({
       src={fixed.src}
       srcSet={fixed.srcSet}
       width={fixed.width}
+      style={{
+        aspectRatio: fixed.aspectRatio,
+        ...passthroughProps.style,
+      }}
       {...passthroughProps}
     />
   );
