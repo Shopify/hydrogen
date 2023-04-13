@@ -68,15 +68,9 @@ export function ProductCard({
           <div className="card-image aspect-[4/5] bg-primary/5">
             {image && (
               <Image
-                className="aspect-[4/5] w-full object-cover fadeIn"
-                widths={[320]}
-                sizes="320px"
-                loaderOptions={{
-                  crop: 'center',
-                  scale: 2,
-                  width: 320,
-                  height: 400,
-                }}
+                className="object-cover w-full fadeIn"
+                sizes="(min-width: 64em) 25vw, (min-width: 48em) 30vw, 45vw"
+                aspectRatio="4/5"
                 data={image}
                 alt={image.altText || `Picture of ${product.title}`}
                 loading={loading}

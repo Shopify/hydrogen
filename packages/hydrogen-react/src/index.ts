@@ -42,7 +42,7 @@ export {storefrontApiCustomScalars} from './codegen.helpers.js';
 export {getShopifyCookies} from './cookies-utils.js';
 export {ExternalVideo} from './ExternalVideo.js';
 export {flattenConnection} from './flatten-connection.js';
-export {Image} from './Image.js';
+export {Image, IMAGE_FRAGMENT} from './Image.js';
 export {MediaFile} from './MediaFile.js';
 export {ModelViewer} from './ModelViewer.js';
 export {Money} from './Money.js';

@@ -23,6 +23,7 @@ export {
   getClientBrowserParameters,
   getShopifyCookies,
   Image,
+  IMAGE_FRAGMENT,
   MediaFile,
   ModelViewer,
   Money,

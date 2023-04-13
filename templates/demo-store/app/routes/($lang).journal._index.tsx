@@ -91,14 +91,9 @@ function ArticleCard({
               alt={article.image.altText || article.title}
               className="object-cover w-full"
               data={article.image}
-              height={400}
+              aspectRatio="3/2"
               loading={loading}
               sizes="(min-width: 768px) 50vw, 100vw"
-              width={600}
-              loaderOptions={{
-                scale: 2,
-                crop: 'center',
-              }}
             />
           </div>
         )}
