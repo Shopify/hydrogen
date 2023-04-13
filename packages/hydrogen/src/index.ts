@@ -22,7 +22,7 @@ export {
   type CartQueryData,
   cartCreateDefault,
   cartGetDefault,
-  cartLineAddDefault,
+  cartLinesAddDefault,
 } from './cart/cart-query-wrapper';
 export {
   CartFormInputAction,

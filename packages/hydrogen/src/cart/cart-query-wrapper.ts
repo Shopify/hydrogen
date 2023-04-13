@@ -1,10 +1,10 @@
 import {
-  CART_FRAGMENT_BASIC,
-  CART_FRAGMENT_DEFAULT,
+  DEFAULT_CART_FRAGMENT,
+  MINIMAL_CART_FRAGMENT,
   CartQuery,
+  CartLinesAdd,
   CartCreate,
-  CartLineAdd,
-} from '@shopify/hydrogen-react';
+} from './cart-queries';
 import type {Storefront} from '../storefront';
 import type {CartFormInput} from './cart-types';
 import type {
@@ -17,6 +17,7 @@ export type CartQueryOptions = {
   getStoredCartId: () => string | undefined;
   query?: string;
   variables?: Record<string, unknown>;
+  cartFragment?: string;
 };
 
 export type CartQueryData = {
@@ -31,18 +32,18 @@ export type CartQueryFunction = (options: CartQueryOptions) => CartQueryReturn;
 
 export function cartGetDefault(
   options: CartQueryOptions,
-): () => Promise<Cart | null | undefined> {
-  return async () => {
+): (cartInput: CartFormInput) => Promise<Cart | null | undefined> {
+  return async (cartInput: CartFormInput) => {
     const cartId = options.getStoredCartId();
 
     if (!cartId) return null;
 
     const {cart} = await options.storefront.query<{cart?: Cart}>(
-      options.query || CartQuery(CART_FRAGMENT_DEFAULT),
+      CartQuery(options.cartFragment || DEFAULT_CART_FRAGMENT),
       {
-        variables: options.variables || {
-          id: cartId,
-          country: options.storefront.i18n.country,
+        variables: {
+          cartId,
+          numCartLines: cartInput.numCartLines || 100,
         },
         cache: options.storefront.CacheNone(),
       },
@@ -53,23 +54,28 @@ export function cartGetDefault(
 }
 
 export function cartCreateDefault(options: CartQueryOptions): CartQueryReturn {
-  return (cartInput: CartFormInput) => {
-    return options.storefront.mutate<CartQueryData>(
-      options.query || CartCreate(CART_FRAGMENT_BASIC),
-      {
-        variables: cartInput,
-      },
-    );
+  return async (cartInput: CartFormInput) => {
+    const {cartCreate} = await options.storefront.mutate<{
+      cartCreate: CartQueryData;
+    }>(CartCreate(options.cartFragment || MINIMAL_CART_FRAGMENT), {
+      variables: cartInput,
+    });
+    return cartCreate;
   };
 }
 
-export function cartLineAddDefault(options: CartQueryOptions): CartQueryReturn {
-  return (cartInput: CartFormInput) => {
-    return options.storefront.mutate<CartQueryData>(
-      options.query || CartLineAdd(CART_FRAGMENT_BASIC),
-      {
-        variables: cartInput,
+export function cartLinesAddDefault(
+  options: CartQueryOptions,
+): CartQueryReturn {
+  return async (cartInput: CartFormInput) => {
+    const {cartLinesAdd} = await options.storefront.mutate<{
+      cartLinesAdd: CartQueryData;
+    }>(CartLinesAdd(options.cartFragment || MINIMAL_CART_FRAGMENT), {
+      variables: {
+        cartId: options.getStoredCartId(),
+        ...cartInput,
       },
-    );
+    });
+    return cartLinesAdd;
   };
 }
