@@ -5,6 +5,7 @@ import {
   cartCreateDefault,
   cartGetDefault,
   cartLinesAddDefault,
+  cartLinesUpdateDefault,
 } from '@shopify/hydrogen';
 import {Cart} from '@shopify/hydrogen/storefront-api-types';
 
@@ -15,6 +16,7 @@ export type MyCartQueryReturn = {
   getId: () => string | undefined;
   create: (cartInput: CartFormInput) => CartQueryData;
   addLine: (cartInput: CartFormInput) => CartQueryData;
+  updateLines: (cartInput: CartFormInput) => CartQueryData;
 };
 
 export function myCartQueries(options: MyCartQueryOptions): MyCartQueryReturn {
@@ -31,5 +33,6 @@ export function myCartQueries(options: MyCartQueryOptions): MyCartQueryReturn {
         ? await cartLinesAddDefault(options)({lines: cartInput.lines})
         : await cartCreate({input: {lines: cartInput.lines}});
     },
+    updateLines: cartLinesUpdateDefault(options),
   };
 }

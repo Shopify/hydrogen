@@ -6,64 +6,6 @@ const USER_ERROR_FRAGMENT = `#graphql
   }
 `;
 
-export const CartQuery = (cartFragment: string): string => `#graphql
-  query CartQuery(
-    $cartId: ID!
-    $numCartLines: Int = 100
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
-    cart(id: $cartId) {
-      ...CartFragment
-    }
-  }
-
-  ${cartFragment}
-`;
-
-//! @see: https://shopify.dev/api/storefront/2022-01/mutations/cartCreate
-export const CartCreate = (cartFragment: string): string => `#graphql
-  mutation CartCreate(
-    $input: CartInput!
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
-    cartCreate(input: $input) {
-      cart {
-        ...CartFragment
-        checkoutUrl
-      }
-      errors: userErrors {
-        ...ErrorFragment
-      }
-    }
-  }
-  ${cartFragment}
-  ${USER_ERROR_FRAGMENT}
-`;
-
-//! @see: https://shopify.dev/api/storefront/2022-01/mutations/cartLinesAdd
-export const CartLinesAdd = (cartFragment: string): string => `#graphql
-  mutation CartLinesAdd(
-    $cartId: ID!
-    $lines: [CartLineInput!]!
-    $country: CountryCode = ZZ
-    $language: LanguageCode
-  ) @inContext(country: $country, language: $language) {
-    cartLinesAdd(cartId: $cartId, lines: $lines) {
-      cart {
-        ...CartFragment
-      }
-      errors: userErrors {
-        ...ErrorFragment
-      }
-    }
-  }
-
-  ${cartFragment}
-  ${USER_ERROR_FRAGMENT}
-`;
-
 export const MINIMAL_CART_FRAGMENT = `#graphql
   fragment CartFragment on Cart {
     id
@@ -176,4 +118,84 @@ export const DEFAULT_CART_FRAGMENT = `#graphql
     width
     height
   }
+`;
+
+export const CART_QUERY = `#graphql
+  query CartQuery(
+    $cartId: ID!
+    $numCartLines: Int = 100
+    $country: CountryCode = ZZ
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    cart(id: $cartId) {
+      ...CartFragment
+    }
+  }
+
+  ${DEFAULT_CART_FRAGMENT}
+`;
+
+//! @see: https://shopify.dev/docs/api/storefront/2023-01/mutations/cartCreate
+export const CART_CREATE_MUTATION = `#graphql
+  mutation CartCreate(
+    $input: CartInput!
+    $country: CountryCode = ZZ
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    cartCreate(input: $input) {
+      cart {
+        ...CartFragment
+        checkoutUrl
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+  ${MINIMAL_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
+`;
+
+//! @see: https://shopify.dev/docs/api/storefront/2023-01/mutations/cartLinesAdd
+export const CART_LINES_ADD_MUTATION = `#graphql
+  mutation CartLinesAdd(
+    $cartId: ID!
+    $lines: [CartLineInput!]!
+    $country: CountryCode = ZZ
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
+    cartLinesAdd(cartId: $cartId, lines: $lines) {
+      cart {
+        ...CartFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+
+  ${MINIMAL_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
+`;
+
+//! @see: https://shopify.dev/docs/api/storefront/2023-01/mutations/cartLinesUpdate
+export const CART_LINES_UPDATE_MUTATION = `#graphql
+  mutation CartLinesUpdate(
+    $cartId: ID!
+    $lines: [CartLineUpdateInput!]!
+    $language: LanguageCode
+    $country: CountryCode)
+  @inContext(country: $country, language: $language) {
+    cartLinesUpdate(cartId: $cartId, lines: $lines) {
+      cart {
+        ...CartFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+
+  ${MINIMAL_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
 `;

@@ -50,6 +50,9 @@ export async function action({request, context}: ActionArgs) {
     case CartFormInputAction.CartLinesAdd:
       result = await cart.addLine(restOfInput);
       break;
+    case CartFormInputAction.CartLinesUpdate:
+      result = await cart.updateLines(restOfInput);
+      break;
     // case CartAction.REMOVE_FROM_CART:
     //   invariant(cartId, 'Missing cartId');
     //   const lineIds = formData.get('linesIds')
@@ -60,22 +63,6 @@ export async function action({request, context}: ActionArgs) {
     //   result = await cartRemove({
     //     cartId,
     //     lineIds,
-    //     storefront,
-    //   });
-
-    //   cartId = result.cart.id;
-
-    //   break;
-    // case CartAction.UPDATE_CART:
-    //   invariant(cartId, 'Missing cartId');
-    //   const updateLines = formData.get('lines')
-    //     ? (JSON.parse(String(formData.get('lines'))) as CartLineUpdateInput[])
-    //     : ([] as CartLineUpdateInput[]);
-    //   invariant(updateLines.length, 'No lines to update');
-
-    //   result = await cartUpdate({
-    //     cartId,
-    //     lines: updateLines,
     //     storefront,
     //   });
 

@@ -1,9 +1,8 @@
 import {
-  DEFAULT_CART_FRAGMENT,
-  MINIMAL_CART_FRAGMENT,
-  CartQuery,
-  CartLinesAdd,
-  CartCreate,
+  CART_QUERY,
+  CART_LINES_ADD_MUTATION,
+  CART_CREATE_MUTATION,
+  CART_LINES_UPDATE_MUTATION,
 } from './cart-queries';
 import type {Storefront} from '../storefront';
 import type {CartFormInput} from './cart-types';
@@ -32,22 +31,19 @@ export type CartQueryFunction = (options: CartQueryOptions) => CartQueryReturn;
 
 export function cartGetDefault(
   options: CartQueryOptions,
-): (cartInput: CartFormInput) => Promise<Cart | null | undefined> {
-  return async (cartInput: CartFormInput) => {
+): (cartInput?: CartFormInput) => Promise<Cart | null | undefined> {
+  return async (cartInput?: CartFormInput) => {
     const cartId = options.getStoredCartId();
 
     if (!cartId) return null;
 
-    const {cart} = await options.storefront.query<{cart?: Cart}>(
-      CartQuery(options.cartFragment || DEFAULT_CART_FRAGMENT),
-      {
-        variables: {
-          cartId,
-          numCartLines: cartInput.numCartLines || 100,
-        },
-        cache: options.storefront.CacheNone(),
+    const {cart} = await options.storefront.query<{cart?: Cart}>(CART_QUERY, {
+      variables: {
+        cartId,
+        numCartLines: cartInput?.numCartLines || 100,
       },
-    );
+      cache: options.storefront.CacheNone(),
+    });
 
     return cart;
   };
@@ -57,7 +53,7 @@ export function cartCreateDefault(options: CartQueryOptions): CartQueryReturn {
   return async (cartInput: CartFormInput) => {
     const {cartCreate} = await options.storefront.mutate<{
       cartCreate: CartQueryData;
-    }>(CartCreate(options.cartFragment || MINIMAL_CART_FRAGMENT), {
+    }>(CART_CREATE_MUTATION, {
       variables: cartInput,
     });
     return cartCreate;
@@ -70,12 +66,28 @@ export function cartLinesAddDefault(
   return async (cartInput: CartFormInput) => {
     const {cartLinesAdd} = await options.storefront.mutate<{
       cartLinesAdd: CartQueryData;
-    }>(CartLinesAdd(options.cartFragment || MINIMAL_CART_FRAGMENT), {
+    }>(CART_LINES_ADD_MUTATION, {
       variables: {
         cartId: options.getStoredCartId(),
         ...cartInput,
       },
     });
     return cartLinesAdd;
+  };
+}
+
+export function cartLinesUpdateDefault(
+  options: CartQueryOptions,
+): CartQueryReturn {
+  return async (cartInput: CartFormInput) => {
+    const {cartLinesUpdate} = await options.storefront.mutate<{
+      cartLinesUpdate: CartQueryData;
+    }>(CART_LINES_UPDATE_MUTATION, {
+      variables: {
+        cartId: options.getStoredCartId(),
+        ...cartInput,
+      },
+    });
+    return cartLinesUpdate;
   };
 }

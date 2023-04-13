@@ -1,7 +1,12 @@
 import clsx from 'clsx';
 import {useRef} from 'react';
 import {useScroll} from 'react-use';
-import {flattenConnection, Image, Money} from '@shopify/hydrogen';
+import {
+  flattenConnection,
+  Image,
+  Money,
+  CartFormInputAction,
+} from '@shopify/hydrogen';
 import {
   Button,
   Heading,
@@ -19,6 +24,7 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {useFetcher} from '@remix-run/react';
 import {CartAction} from '~/lib/type';
+import {CartForm} from './CartForm';
 
 type Layouts = 'page' | 'drawer';
 
@@ -31,8 +37,6 @@ export function Cart({
   onClose?: () => void;
   cart: CartType | null;
 }) {
-  console.log('Cart', cart);
-
   const linesCount = Boolean(cart?.lines?.edges?.length || 0);
 
   return (
@@ -351,14 +355,16 @@ function UpdateCartButton({
   children: React.ReactNode;
   lines: CartLineUpdateInput[];
 }) {
-  const fetcher = useFetcher();
-
   return (
-    <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value={CartAction.UPDATE_CART} />
-      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
-      {children}
-    </fetcher.Form>
+    <CartForm
+      route="/cart"
+      formInput={{
+        action: CartFormInputAction.CartLinesUpdate,
+        lines,
+      }}
+    >
+      {() => children}
+    </CartForm>
   );
 }
 

@@ -23,6 +23,7 @@ export {
   cartCreateDefault,
   cartGetDefault,
   cartLinesAddDefault,
+  cartLinesUpdateDefault,
 } from './cart/cart-query-wrapper';
 export {
   CartFormInputAction,
