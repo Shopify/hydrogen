@@ -145,7 +145,6 @@ export const IMAGE_FRAGMENT = `#graphql
  * - `loading` is set to `lazy` by default.
  * - `alt` will automatically be set to the `altText` from the Storefront API if passed in the `data` prop
  * - `src` will automatically be set to the `url` from the Storefront API if passed in the `data` prop
- * - `width` defaults to `100%`should be set to how you want the image to be displayed, not the original image width
  *
  * @example
  * A responsive image with a 4:5 aspect ratio:

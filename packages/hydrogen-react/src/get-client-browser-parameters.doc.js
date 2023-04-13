@@ -1,0 +1,50 @@
+'use strict';
+Object.defineProperty(exports, '__esModule', {value: true});
+const data = {
+  name: 'getClientBrowserParameters',
+  category: 'utilities',
+  isVisualComponent: false,
+  related: [
+    {
+      subtitle: 'Utility',
+      name: 'sendShopifyAnalytics',
+      url: '/api/hydrogen-react/utilities/sendShopifyAnalytics',
+      type: 'gear',
+    },
+    {
+      subtitle: 'Hook',
+      name: 'useShopifyCookies',
+      url: '/api/hydrogen-react/hooks/useShopifyCookies',
+      type: 'tool',
+    },
+  ],
+  description: 'Gathers client browser values commonly used for analytics',
+  type: 'utility',
+  defaultExample: {
+    description: 'I am the default example',
+    codeblock: {
+      tabs: [
+        {
+          title: 'JavaScript',
+          code: './get-client-browser-parameters.example.jsx',
+          language: 'jsx',
+        },
+        {
+          title: 'TypeScript',
+          code: './get-client-browser-parameters.example.tsx',
+          language: 'tsx',
+        },
+      ],
+      title: 'Example code',
+    },
+  },
+  definitions: [
+    {
+      title: 'getClientBrowserParameters',
+      type: 'GetClientBrowserParametersGeneratedType',
+      description:
+        'If executed on server, this method will return empty string for each field.',
+    },
+  ],
+};
+exports.default = data;
