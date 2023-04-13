@@ -1,10 +1,20 @@
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link} from '@remix-run/react';
-import type {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
+import {
+  json,
+  type LoaderArgs,
+  type ErrorBoundaryComponent,
+} from '@shopify/remix-oxygen';
+import {
+  useLoaderData,
+  Link,
+  useCatch,
+  useRouteError,
+  isRouteErrorResponse,
+} from '@remix-run/react';
+import type {Shop} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({context: {storefront}}: LoaderArgs) {
   const data = await storefront.query<{
-    shop: Record<string, ShopPolicy>;
+    shop: Pick<Shop, SelectedPolicies>;
   }>(POLICIES_QUERY);
 
   const policies = Object.values(data.shop || {});
@@ -36,6 +46,36 @@ export default function Policies() {
   );
 }
 
+export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+  console.error(error);
+
+  return <div>There was an error.</div>;
+};
+
+export function CatchBoundary() {
+  const caught = useCatch();
+  console.error(caught);
+
+  return (
+    <div>
+      There was an error. Status: {caught.status}. Message:{' '}
+      {caught.data?.message}
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    console.error(error.status, error.statusText, error.data);
+    return <div>Route Error</div>;
+  } else {
+    console.error((error as Error).message);
+    return <div>Thrown Error</div>;
+  }
+}
+
 const POLICIES_QUERY = `#graphql
   fragment Policy on ShopPolicy {
     id
@@ -65,3 +105,13 @@ const POLICIES_QUERY = `#graphql
     }
   }
 `;
+
+const policies = [
+  'privacyPolicy',
+  'shippingPolicy',
+  'refundPolicy',
+  'termsOfService',
+  'subscriptionPolicy',
+] as const;
+
+type SelectedPolicies = (typeof policies)[number];

@@ -1,15 +1,21 @@
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
-import type {
-  ProductVariant,
-  Product as ProductType,
-} from '@shopify/hydrogen/storefront-api-types';
+import {
+  defer,
+  type LoaderArgs,
+  type ErrorBoundaryComponent,
+} from '@shopify/remix-oxygen';
+import {
+  useLoaderData,
+  useCatch,
+  useRouteError,
+  isRouteErrorResponse,
+} from '@remix-run/react';
+import type {Product as ProductType} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({params, context}: LoaderArgs) {
   const {productHandle} = params;
 
   const {product} = await context.storefront.query<{
-    product: ProductType & {selectedVariant?: ProductVariant};
+    product: Pick<ProductType, 'id' | 'title' | 'descriptionHtml' | 'vendor'>;
   }>(PRODUCT_QUERY, {
     variables: {
       handle: productHandle,
@@ -40,9 +46,38 @@ export default function Product() {
   );
 }
 
-const PRODUCT_QUERY = `#graphql
+export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+  console.error(error);
 
-  query Product(
+  return <div>There was an error.</div>;
+};
+
+export function CatchBoundary() {
+  const caught = useCatch();
+  console.error(caught);
+
+  return (
+    <div>
+      There was an error. Status: {caught.status}. Message:{' '}
+      {caught.data?.message}
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    console.error(error.status, error.statusText, error.data);
+    return <div>Route Error</div>;
+  } else {
+    console.error((error as Error).message);
+    return <div>Thrown Error</div>;
+  }
+}
+
+const PRODUCT_QUERY = `#graphql
+  query product_query(
     $country: CountryCode
     $language: LanguageCode
     $handle: String!
