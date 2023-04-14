@@ -5,7 +5,7 @@ import React from 'react';
 type CartFormProps = {
   children?: (fetcher: FetcherWithComponents<any>) => React.ReactNode;
   formInput: CartFormInput;
-  route: string;
+  route?: string;
 };
 
 const CART_FORM_INPUT_NAME = 'cartFormInput';
@@ -14,7 +14,7 @@ export function CartForm({children, formInput, route}: CartFormProps) {
   const fetcher = useFetcher();
 
   return (
-    <fetcher.Form action={route} method="post">
+    <fetcher.Form action={route || ''} method="post">
       <input
         type="hidden"
         name={CART_FORM_INPUT_NAME}
