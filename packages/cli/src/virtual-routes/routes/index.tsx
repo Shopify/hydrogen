@@ -75,7 +75,7 @@ export default function Index() {
               <br /> To get started, edit {` `}
               <code>.env</code>. Then, create your first route with the file
               {` `}
-              <code>/app/routes/index.jsx</code>. Learn more about
+              <code>/app/routes/_index.jsx</code>. Learn more about
               {` `}
               <a
                 target="_blank"
