@@ -24,13 +24,6 @@ export {
   SHOPIFY_STOREFRONT_Y_HEADER,
   SHOPIFY_Y,
 } from './cart-constants.js';
-export {
-  basicCartFragment as CART_FRAGMENT_BASIC,
-  defaultCartFragment as CART_FRAGMENT_DEFAULT,
-  CartCreate,
-  CartLineAdd,
-  CartQuery,
-} from './cart-queries.js';
 export type {
   Cart,
   CartAction,
