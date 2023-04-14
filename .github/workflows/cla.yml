@@ -14,7 +14,7 @@ jobs:
         && !github.event.issue.pull_request.merged_at
         && contains(github.event.comment.body, 'signed')
       )
-      || (github.event.pull_request && !github.event.pull_request.merged)
+      || (github.event.pull_request && !github.event.pull_request.merged && !contains(github.event.commits.*.message, '[ci] release'))
     steps:
       - uses: Shopify/shopify-cla-action@v1
         with:
