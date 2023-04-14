@@ -16,7 +16,7 @@ import type {
 
 export type CartQueryOptions = {
   storefront: Storefront;
-  getStoredCartId: () => string | undefined;
+  getCartId: () => string | undefined;
   query?: string;
   variables?: Record<string, unknown>;
   cartFragment?: string;
@@ -36,7 +36,7 @@ export function cartGetDefault(
   options: CartQueryOptions,
 ): (cartInput?: CartFormInput) => Promise<Cart | null | undefined> {
   return async (cartInput?: CartFormInput) => {
-    const cartId = options.getStoredCartId();
+    const cartId = options.getCartId();
 
     if (!cartId) return null;
 
@@ -54,7 +54,6 @@ export function cartGetDefault(
 
 export function cartCreateDefault(options: CartQueryOptions): CartQueryReturn {
   return async (cartInput: CartFormInput) => {
-    console.log('cartCreateDefault', cartInput);
     const {cartCreate} = await options.storefront.mutate<{
       cartCreate: CartQueryData;
     }>(CART_CREATE_MUTATION, {
@@ -80,7 +79,7 @@ export function cartLinesAddDefault(
       cartLinesAdd: CartQueryData;
     }>(CART_LINES_ADD_MUTATION, {
       variables: {
-        cartId: options.getStoredCartId(),
+        cartId: options.getCartId(),
         ...cartInput,
       },
     });
@@ -103,7 +102,7 @@ export function cartLinesUpdateDefault(
       cartLinesUpdate: CartQueryData;
     }>(CART_LINES_UPDATE_MUTATION, {
       variables: {
-        cartId: options.getStoredCartId(),
+        cartId: options.getCartId(),
         ...cartInput,
       },
     });
@@ -126,7 +125,7 @@ export function cartLinesRemoveDefault(
       cartLinesRemove: CartQueryData;
     }>(CART_LINES_REMOVE_MUTATION, {
       variables: {
-        cartId: options.getStoredCartId(),
+        cartId: options.getCartId(),
         ...cartInput,
       },
     });
@@ -150,7 +149,7 @@ export function cartDiscountCodesUpdateDefault(
       cartDiscountCodesUpdate: CartQueryData;
     }>(CART_DISCOUNT_CODE_UPDATE_MUTATION, {
       variables: {
-        cartId: options.getStoredCartId(),
+        cartId: options.getCartId(),
         ...cartInput,
       },
     });
@@ -173,7 +172,7 @@ export function cartBuyerIdentityUpdateDefault(
       cartBuyerIdentityUpdate: CartQueryData;
     }>(CART_BUYER_IDENTITY_UPDATE_MUTATION, {
       variables: {
-        cartId: options.getStoredCartId(),
+        cartId: options.getCartId(),
         ...cartInput,
       },
     });

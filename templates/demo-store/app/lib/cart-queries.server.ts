@@ -11,12 +11,17 @@ import {
   cartBuyerIdentityUpdateDefault,
 } from '@shopify/hydrogen';
 import {Cart} from '@shopify/hydrogen/storefront-api-types';
+import {getFormInput} from '~/components/CartForm';
 
-type MyCartQueryOptions = Omit<CartQueryOptions, 'query'>;
+type MyCartQueryOptions = CartQueryOptions & {
+  setCartId: (cartId: string, headers: Headers) => void;
+};
 
 export type MyCartQueryReturn = {
-  get: () => Cart;
-  getId: () => string | undefined;
+  getFormInput: (formData: any) => Omit<CartFormInput, 'action'>;
+  get: (cartInput?: CartFormInput) => Cart;
+  getCartId: () => string | undefined;
+  setCartId: (cartId: string, headers: Headers) => void;
   create: (cartInput: CartFormInput) => CartQueryData;
   addLine: (cartInput: CartFormInput) => CartQueryData;
   updateLines: (cartInput: CartFormInput) => CartQueryData;
@@ -26,13 +31,15 @@ export type MyCartQueryReturn = {
 };
 
 export function myCartQueries(options: MyCartQueryOptions): MyCartQueryReturn {
-  const {getStoredCartId} = options;
-  const cartId = getStoredCartId();
+  const {getCartId, setCartId} = options;
+  const cartId = getCartId();
   const cartCreate = cartCreateDefault(options);
 
   return {
+    getFormInput,
     get: cartGetDefault(options),
-    getId: getStoredCartId,
+    getCartId,
+    setCartId,
     create: cartCreate,
     addLine: async (cartInput: CartFormInput) => {
       return cartId

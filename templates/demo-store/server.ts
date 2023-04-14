@@ -8,6 +8,7 @@ import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
 import {HydrogenSession} from '~/lib/session.server';
 import {getCartId, getLocaleFromRequest} from '~/lib/utils';
 import {myCartQueries} from '~/lib/cart-queries.server';
+import {parse as parseCookie} from 'worktop/cookie';
 
 /**
  * Export a fetch handler in module format.
@@ -49,9 +50,20 @@ export default {
 
       const cart = myCartQueries({
         storefront,
-        getStoredCartId: () => {
-          const cartId = getCartId(request);
-          return cartId;
+        getCartId: () => {
+          const cookies = parseCookie(request.headers.get('Cookie') || '');
+
+          /**
+           * Shopify's 'Online Store' stores cart IDs in a 'cart' cookie.
+           * By doing the same, merchants can switch from the Online Store to Hydrogen
+           * without customers losing carts.
+           */
+          return cookies.cart
+            ? `gid://shopify/Cart/${cookies.cart}`
+            : undefined;
+        },
+        setCartId: (cartId: string, headers: Headers) => {
+          headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
         },
       });
 

@@ -34,8 +34,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   }
 
   const result = await cart.updateDiscountCodes({discountCodes: [code]});
-
-  headers.append('Set-Cookie', `cart=${result.cart.id.split('/').pop()}`);
+  cart.setCartId(result.cart.id, headers);
 
   // Using set-cookie on a 303 redirect will not work if the domain origin have port number (:3000)
   // If there is no cart id and a new cart id is created in the progress, it will not be set in the cookie

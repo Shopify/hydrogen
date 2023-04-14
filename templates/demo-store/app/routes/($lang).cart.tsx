@@ -2,42 +2,26 @@ import {CartLoading, Cart} from '~/components';
 import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
-import {
-  json,
-  type ActionArgs,
-  type AppLoadContext,
-} from '@shopify/remix-oxygen';
+import {json, type ActionArgs} from '@shopify/remix-oxygen';
 import type {
   Cart as CartType,
-  CartInput,
-  CartLineInput,
-  CartLineUpdateInput,
   CartUserError,
   UserError,
-  CartBuyerIdentityInput,
 } from '@shopify/hydrogen/storefront-api-types';
-import {isLocalPath, getCartId} from '~/lib/utils';
-import {CartFormInput, CartFormInputAction} from '@shopify/hydrogen';
+import {isLocalPath} from '~/lib/utils';
+import {CartFormInputAction} from '@shopify/hydrogen';
 
 export async function action({request, context}: ActionArgs) {
-  const {session, storefront, cart} = context;
+  const {session, cart} = context;
   const headers = new Headers();
-  let cartId = getCartId(request);
 
   const [formData, customerAccessToken] = await Promise.all([
     request.formData(),
     session.get('customerAccessToken'),
   ]);
 
-  const cartFormInput = formData.has('cartFormInput')
-    ? (JSON.parse(String(formData.get('cartFormInput'))) as CartFormInput)
-    : ({} as CartFormInput);
-  const {action: cartAction, ...restOfInput} = cartFormInput;
-  invariant(cartAction, 'No cartAction defined');
-
-  const countryCode = formData.get('countryCode')
-    ? (formData.get('countryCode') as CartBuyerIdentityInput['countryCode'])
-    : null;
+  const {action, cartInput} = cart.getFormInput(formData);
+  invariant(action, 'No cartAction defined');
 
   let status = 200;
   let result: {
@@ -45,15 +29,15 @@ export async function action({request, context}: ActionArgs) {
     errors?: CartUserError[] | UserError[];
   };
 
-  switch (cartAction) {
+  switch (action) {
     case CartFormInputAction.CartLinesAdd:
-      result = await cart.addLine(restOfInput);
+      result = await cart.addLine(cartInput);
       break;
     case CartFormInputAction.CartLinesUpdate:
-      result = await cart.updateLines(restOfInput);
+      result = await cart.updateLines(cartInput);
       break;
     case CartFormInputAction.CartLinesRemove:
-      result = await cart.removeLines(restOfInput);
+      result = await cart.removeLines(cartInput);
       break;
     case CartFormInputAction.CartDiscountCodesUpdate:
       const formDiscountCode = formData.get('discountCode');
@@ -63,19 +47,25 @@ export async function action({request, context}: ActionArgs) {
       result = await cart.updateDiscountCodes({discountCodes});
       break;
     case CartFormInputAction.CartBuyerIdentityUpdate:
-      result = await cart.updateBuyerIdentity(restOfInput);
+      result = await cart.updateBuyerIdentity({
+        ...cartInput,
+        buyerIdentity: {
+          ...cartInput.buyerIdentity,
+          customerAccessToken,
+        },
+      });
       break;
     default:
-      invariant(false, `${cartAction} cart action is not defined`);
+      invariant(false, `${action} cart action is not defined`);
   }
 
-  console.log(`${cartAction} result`, result);
+  console.log(`${action} result`, result);
 
   /**
    * The Cart ID may change after each mutation. We need to update it each time in the session.
    */
-  cartId = result.cart.id;
-  headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
+  const cartId = result.cart.id;
+  cart.setCartId(cartId, headers);
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {
