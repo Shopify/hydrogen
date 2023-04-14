@@ -6,7 +6,7 @@ import {
 } from '@shopify/remix-oxygen';
 import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
 import {HydrogenSession} from '~/lib/session.server';
-import {getCartId, getLocaleFromRequest} from '~/lib/utils';
+import {getLocaleFromRequest} from '~/lib/utils';
 import {myCartQueries} from '~/lib/cart-queries.server';
 import {parse as parseCookie} from 'worktop/cookie';
 

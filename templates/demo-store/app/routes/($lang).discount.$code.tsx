@@ -13,7 +13,7 @@ import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
  * @preserve
  */
 export async function loader({request, context, params}: LoaderArgs) {
-  const {storefront, cart} = context;
+  const {cart} = context;
   // N.B. This route will probably be removed in the future.
   const session = context.session as any;
   const {code} = params;

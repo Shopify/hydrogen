@@ -22,8 +22,6 @@ import type {
   CartLine,
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
-import {useFetcher} from '@remix-run/react';
-import {CartAction} from '~/lib/type';
 import {CartForm} from './CartForm';
 
 type Layouts = 'page' | 'drawer';

@@ -20,10 +20,7 @@ import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
  * @preserve
  */
 export async function loader({request, context, params}: LoaderArgs) {
-  const {storefront, cart} = context;
-
-  const session = context.session;
-
+  const {cart} = context;
   const {lines} = params;
   const linesMap = lines?.split(',').map((line) => {
     const lineDetails = line.split(':');
@@ -59,9 +56,7 @@ export async function loader({request, context, params}: LoaderArgs) {
   }
 
   //! cart created - set and replace the session cart if there is one
-  session.unset('cartId');
-  session.set('cartId', cartResult.id);
-  headers.set('Set-Cookie', await session.commit());
+  cart.setCartId(cartResult.id, headers);
 
   //! redirect to checkout
   if (cartResult.checkoutUrl) {
