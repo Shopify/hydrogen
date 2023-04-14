@@ -51,7 +51,6 @@ export default {
         storefront,
         getStoredCartId: () => {
           const cartId = getCartId(request);
-          console.log('cartId', cartId);
           return cartId;
         },
       });

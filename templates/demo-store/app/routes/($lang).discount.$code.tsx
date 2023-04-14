@@ -1,6 +1,4 @@
 import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-import {getCartId} from '~/lib/utils';
-import {cartCreate, cartDiscountCodesUpdate} from './($lang).cart';
 
 /**
  * Automatically applies a discount found on the url
@@ -15,7 +13,7 @@ import {cartCreate, cartDiscountCodesUpdate} from './($lang).cart';
  * @preserve
  */
 export async function loader({request, context, params}: LoaderArgs) {
-  const {storefront} = context;
+  const {storefront, cart} = context;
   // N.B. This route will probably be removed in the future.
   const session = context.session as any;
   const {code} = params;
@@ -35,30 +33,15 @@ export async function loader({request, context, params}: LoaderArgs) {
     return redirect(redirectUrl);
   }
 
-  let cartId = getCartId(request);
+  const result = await cart.updateDiscountCodes({discountCodes: [code]});
 
-  //! if no existing cart, create one
-  if (!cartId) {
-    const {cart, errors: graphqlCartErrors} = await cartCreate({
-      input: {},
-      storefront,
-    });
+  headers.append('Set-Cookie', `cart=${result.cart.id.split('/').pop()}`);
 
-    if (graphqlCartErrors?.length) {
-      return redirect(redirectUrl);
-    }
-
-    //! cart created - we only need a Set-Cookie header if we're creating
-    cartId = cart.id;
-    headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
-  }
-
-  //! apply discount to the cart
-  await cartDiscountCodesUpdate({
-    cartId,
-    discountCodes: [code],
-    storefront,
+  // Using set-cookie on a 303 redirect will not work if the domain origin have port number (:3000)
+  // If there is no cart id and a new cart id is created in the progress, it will not be set in the cookie
+  // on localhost:3000
+  return redirect(redirectUrl, {
+    status: 303,
+    headers,
   });
-
-  return redirect(redirectUrl, {headers});
 }

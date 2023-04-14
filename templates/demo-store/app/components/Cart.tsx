@@ -130,16 +130,15 @@ function CartDiscounts({
 }
 
 function UpdateDiscountForm({children}: {children: React.ReactNode}) {
-  const fetcher = useFetcher();
   return (
-    <fetcher.Form action="/cart" method="post">
-      <input
-        type="hidden"
-        name="cartAction"
-        value={CartAction.UPDATE_DISCOUNT}
-      />
-      {children}
-    </fetcher.Form>
+    <CartForm
+      route="/cart"
+      formInput={{
+        action: CartFormInputAction.CartDiscountCodesUpdate,
+      }}
+    >
+      {() => children}
+    </CartForm>
   );
 }
 
@@ -284,24 +283,24 @@ function CartLineItem({line}: {line: CartLine}) {
 }
 
 function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
-  const fetcher = useFetcher();
-
   return (
-    <fetcher.Form action="/cart" method="post">
-      <input
-        type="hidden"
-        name="cartAction"
-        value={CartAction.REMOVE_FROM_CART}
-      />
-      <input type="hidden" name="linesIds" value={JSON.stringify(lineIds)} />
-      <button
-        className="flex items-center justify-center w-10 h-10 border rounded"
-        type="submit"
-      >
-        <span className="sr-only">Remove</span>
-        <IconRemove aria-hidden="true" />
-      </button>
-    </fetcher.Form>
+    <CartForm
+      route="/cart"
+      formInput={{
+        action: CartFormInputAction.CartLinesRemove,
+        lineIds,
+      }}
+    >
+      {() => (
+        <button
+          className="flex items-center justify-center w-10 h-10 border rounded"
+          type="submit"
+        >
+          <span className="sr-only">Remove</span>
+          <IconRemove aria-hidden="true" />
+        </button>
+      )}
+    </CartForm>
   );
 }
 

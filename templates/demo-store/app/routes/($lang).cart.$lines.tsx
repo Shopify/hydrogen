@@ -1,5 +1,4 @@
 import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-import {cartCreate} from './($lang).cart';
 
 /**
  * Automatically creates a new cart based on the URL and redirects straight to checkout.
@@ -21,7 +20,7 @@ import {cartCreate} from './($lang).cart';
  * @preserve
  */
 export async function loader({request, context, params}: LoaderArgs) {
-  const {storefront} = context;
+  const {storefront, cart} = context;
 
   const session = context.session;
 
@@ -46,15 +45,14 @@ export async function loader({request, context, params}: LoaderArgs) {
   const headers = new Headers();
 
   //! create a cart
-  const {cart, errors: graphqlCartErrors} = await cartCreate({
+  const {cart: cartResult, errors: graphqlCartErrors} = await cart.create({
     input: {
       lines: linesMap,
       discountCodes: discountArray,
     },
-    storefront,
   });
 
-  if (graphqlCartErrors?.length || !cart) {
+  if (graphqlCartErrors?.length || !cartResult) {
     throw new Response('Link may be expired. Try checking the URL.', {
       status: 410,
     });
@@ -62,12 +60,12 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   //! cart created - set and replace the session cart if there is one
   session.unset('cartId');
-  session.set('cartId', cart.id);
+  session.set('cartId', cartResult.id);
   headers.set('Set-Cookie', await session.commit());
 
   //! redirect to checkout
-  if (cart.checkoutUrl) {
-    return redirect(cart.checkoutUrl, {headers});
+  if (cartResult.checkoutUrl) {
+    return redirect(cartResult.checkoutUrl, {headers});
   } else {
     throw new Error('No checkout URL found');
   }

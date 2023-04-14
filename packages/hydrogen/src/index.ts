@@ -24,6 +24,9 @@ export {
   cartGetDefault,
   cartLinesAddDefault,
   cartLinesUpdateDefault,
+  cartLinesRemoveDefault,
+  cartDiscountCodesUpdateDefault,
+  cartBuyerIdentityUpdateDefault,
 } from './cart/cart-query-wrapper';
 export {
   CartFormInputAction,

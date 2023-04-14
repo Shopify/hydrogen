@@ -6,6 +6,8 @@ import {Localizations, Locale, CartAction} from '~/lib/type';
 import {DEFAULT_LOCALE} from '~/lib/utils';
 import clsx from 'clsx';
 import {CartBuyerIdentityInput} from '@shopify/hydrogen/storefront-api-types';
+import {CartForm} from './CartForm';
+import {CartFormInputAction} from '@shopify/hydrogen';
 
 export function CountrySelector() {
   const [root] = useMatches();
@@ -141,23 +143,21 @@ function ChangeLocaleForm({
   buyerIdentity: CartBuyerIdentityInput;
   redirectTo: string;
 }) {
-  const fetcher = useFetcher();
-
   return (
-    <fetcher.Form action="/cart" method="post">
-      <input
-        type="hidden"
-        name="cartAction"
-        value={CartAction.UPDATE_BUYER_IDENTITY}
-      />
-      <input
-        type="hidden"
-        name="buyerIdentity"
-        value={JSON.stringify(buyerIdentity)}
-      />
-      <input type="hidden" name="redirectTo" value={redirectTo} />
-      {children}
-    </fetcher.Form>
+    <CartForm
+      route="/cart"
+      formInput={{
+        action: CartFormInputAction.CartBuyerIdentityUpdate,
+        buyerIdentity,
+      }}
+    >
+      {() => (
+        <>
+          <input type="hidden" name="redirectTo" value={redirectTo} />
+          {children}
+        </>
+      )}
+    </CartForm>
   );
 }
 

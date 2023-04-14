@@ -6,6 +6,9 @@ import {
   cartGetDefault,
   cartLinesAddDefault,
   cartLinesUpdateDefault,
+  cartLinesRemoveDefault,
+  cartDiscountCodesUpdateDefault,
+  cartBuyerIdentityUpdateDefault,
 } from '@shopify/hydrogen';
 import {Cart} from '@shopify/hydrogen/storefront-api-types';
 
@@ -17,6 +20,9 @@ export type MyCartQueryReturn = {
   create: (cartInput: CartFormInput) => CartQueryData;
   addLine: (cartInput: CartFormInput) => CartQueryData;
   updateLines: (cartInput: CartFormInput) => CartQueryData;
+  removeLines: (cartInput: CartFormInput) => CartQueryData;
+  updateDiscountCodes: (cartInput: CartFormInput) => CartQueryData;
+  updateBuyerIdentity: (cartInput: CartFormInput) => CartQueryData;
 };
 
 export function myCartQueries(options: MyCartQueryOptions): MyCartQueryReturn {
@@ -34,5 +40,20 @@ export function myCartQueries(options: MyCartQueryOptions): MyCartQueryReturn {
         : await cartCreate({input: {lines: cartInput.lines}});
     },
     updateLines: cartLinesUpdateDefault(options),
+    removeLines: cartLinesRemoveDefault(options),
+    updateDiscountCodes: async (cartInput: CartFormInput) => {
+      return cartId
+        ? await cartDiscountCodesUpdateDefault(options)({
+            discountCodes: cartInput.discountCodes,
+          })
+        : await cartCreate({input: {discountCodes: cartInput.discountCodes}});
+    },
+    updateBuyerIdentity: async (cartInput: CartFormInput) => {
+      return cartId
+        ? await cartBuyerIdentityUpdateDefault(options)({
+            buyerIdentity: cartInput.buyerIdentity,
+          })
+        : await cartCreate({input: {buyerIdentity: cartInput.buyerIdentity}});
+    },
   };
 }

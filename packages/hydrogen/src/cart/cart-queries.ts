@@ -184,8 +184,8 @@ export const CART_LINES_UPDATE_MUTATION = `#graphql
     $cartId: ID!
     $lines: [CartLineUpdateInput!]!
     $language: LanguageCode
-    $country: CountryCode)
-  @inContext(country: $country, language: $language) {
+    $country: CountryCode
+  ) @inContext(country: $country, language: $language) {
     cartLinesUpdate(cartId: $cartId, lines: $lines) {
       cart {
         ...CartFragment
@@ -196,6 +196,68 @@ export const CART_LINES_UPDATE_MUTATION = `#graphql
     }
   }
 
+  ${MINIMAL_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
+`;
+
+//! @see: https://shopify.dev/docs/api/storefront/2023-01/mutations/cartLinesRemove
+export const CART_LINES_REMOVE_MUTATION = `#graphql
+  mutation CartLinesRemove(
+    $cartId: ID!
+    $lineIds: [ID!]!
+    $language: LanguageCode
+    $country: CountryCode
+  ) @inContext(country: $country, language: $language) {
+    cartLinesRemove(cartId: $cartId, lineIds: $lineIds) {
+      cart {
+        ...CartFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+
+  ${MINIMAL_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
+`;
+
+export const CART_DISCOUNT_CODE_UPDATE_MUTATION = `#graphql
+  mutation cartDiscountCodesUpdate(
+    $cartId: ID!
+    $discountCodes: [String!]
+    $language: LanguageCode
+    $country: CountryCode
+  ) @inContext(country: $country, language: $language) {
+    cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
+      cart {
+        ...CartFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+  ${MINIMAL_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
+`;
+
+export const CART_BUYER_IDENTITY_UPDATE_MUTATION = `#graphql
+  mutation cartBuyerIdentityUpdate(
+    $cartId: ID!
+    $buyerIdentity: CartBuyerIdentityInput!
+    $language: LanguageCode
+    $country: CountryCode
+  ) @inContext(country: $country, language: $language) {
+    cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
+      cart {
+        ...CartFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
   ${MINIMAL_CART_FRAGMENT}
   ${USER_ERROR_FRAGMENT}
 `;
