@@ -99,6 +99,45 @@ Tests that fail **only** in CI can be difficult and time-consuming to debug. If 
 - The testing Github Action will run automatically and you will see it paused with both a Web Shell address and SSH address.
 - Copy and paste the SSH address into your terminal.
 
+## Release Hydrogen
+
+To update `@shopify/hydrogen` to new calversion, for example from `2023-01` to `2023-04` follow these steps:
+
+- Create a new branch for the version from the latest, e.g. `2023-04`.
+- Create a new changeset file updating to `major` any packages that you want released. Add any notes and guides to important updates for devs.
+- Update `next-release.yml` to the new branch name. This will make sure `next` tagged releases happen:
+
+```
+on:
+  push:
+    branches:
+      # update to latest cal release to keep this action working
+      - 2023-04
+```
+
+- Update `changesets.yml` the following line to the the new branch name.
+
+```
+          echo "latest=${{ github.ref_name == '2023-04' }}" >> $GITHUB_ENV
+```
+
+- Push your branch to the remote repository. After this, a PR should be created `[ci] release ...`.
+- Working on the `[ci] release ...` PR do a find & replace in the code to replace nearly all instances of the old version with the new version. For example `2023-01` to `2023-04`.
+  - However, don't replace documentation unless it makes sense.
+  - Also be careful that some versions of the Storefront API don't exactly match code here: for example, SFAPI `2023-01` could be `2023-01`, `2023-1`, and `2023.1.x` in this codebase.
+  - Note that the package.json `version` field cannot have leading `0`s. So you cannot have `2023.04.0`, and must instead use `2023.4.0`
+- Working on the same PR. Run the `graphql-types` within `package/hydrogen-react` NPM script to generate the new types.
+  - Look through the new schema and see if there are any breaking changes
+  - If there are new scalars, or scalars are removed, update the `codegen.yml` file's custom scalar settings and run the command again.
+- Search for all instances of `@deprecated` and see if it is time to make that breaking change
+- Run the `ci:checks` NPM script and fix any issues that may come up.
+- Manually update the `package.json` `version` to the latest. Note that you can't have a leading `0` in the version number, so for example Storefront API `2023-04` would have to be `2023.4.0`.
+- Once you feel that everything is ready:
+  - Do one last `ci:checks`
+  - Push your updates to the `[ci] release ...` PR.
+- Change the default branch in Github to the newly version `2023-04`.
+- Merge the `[ci] release ...` PR to the new version branch `2023-04` which should trigger a new release.
+
 ## Principles to develop by
 
 ### Understand the concept and primitives
