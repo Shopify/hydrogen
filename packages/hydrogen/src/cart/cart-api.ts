@@ -41,21 +41,19 @@ export function CartApi(options: CartApiOptions): CartApiReturn {
   const {request} = options;
 
   // Default get cartId in cookie
-  let getCartId = options.getCartId;
-  if (!getCartId) {
-    getCartId = () => {
+  const getCartId =
+    options.getCartId ||
+    (() => {
       const cookies = parseCookie(request.headers.get('Cookie') || '');
       return cookies.cart ? `gid://shopify/Cart/${cookies.cart}` : undefined;
-    };
-  }
+    });
 
   // Default set cartId in cookie
-  let setCartId = options.setCartId;
-  if (!setCartId) {
-    setCartId = (cartId: string, headers: Headers) => {
+  const setCartId =
+    options.setCartId ||
+    ((cartId: string, headers: Headers) => {
       headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
-    };
-  }
+    });
 
   const queryOptions = {
     storefront: options.storefront,
