@@ -8,7 +8,7 @@ import {
   CART_BUYER_IDENTITY_UPDATE_MUTATION,
 } from './cart-queries';
 import type {Storefront} from '../storefront';
-import type {CartFormInput} from './cart-types';
+import type {CartCreate, CartFormInput} from './cart-types';
 import type {
   Cart,
   CartUserError,
@@ -17,9 +17,6 @@ import type {
 export type CartQueryOptions = {
   storefront: Storefront;
   getCartId: () => string | undefined;
-  query?: string;
-  variables?: Record<string, unknown>;
-  cartFragment?: string;
 };
 
 export type CartQueryData = {

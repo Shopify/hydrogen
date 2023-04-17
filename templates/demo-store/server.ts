@@ -4,7 +4,11 @@ import {
   createRequestHandler,
   getStorefrontHeaders,
 } from '@shopify/remix-oxygen';
-import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
+import {
+  CartApi,
+  createStorefrontClient,
+  storefrontRedirect,
+} from '@shopify/hydrogen';
 import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
 import {myCartQueries} from '~/lib/cart-queries.server';
@@ -48,23 +52,9 @@ export default {
         storefrontHeaders: getStorefrontHeaders(request),
       });
 
-      const cart = myCartQueries({
+      const cart = CartApi({
         storefront,
-        getCartId: () => {
-          const cookies = parseCookie(request.headers.get('Cookie') || '');
-
-          /**
-           * Shopify's 'Online Store' stores cart IDs in a 'cart' cookie.
-           * By doing the same, merchants can switch from the Online Store to Hydrogen
-           * without customers losing carts.
-           */
-          return cookies.cart
-            ? `gid://shopify/Cart/${cookies.cart}`
-            : undefined;
-        },
-        setCartId: (cartId: string, headers: Headers) => {
-          headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
-        },
+        request,
       });
 
       /**

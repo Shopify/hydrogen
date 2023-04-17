@@ -28,6 +28,7 @@ export {
   cartDiscountCodesUpdateDefault,
   cartBuyerIdentityUpdateDefault,
 } from './cart/cart-query-wrapper';
+export {type CartApiReturn, CartApi} from './cart/cart-api';
 export {
   CartFormInputAction,
   type CartFormInput,
