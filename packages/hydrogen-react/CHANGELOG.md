@@ -1,5 +1,26 @@
 # @shopify/hydrogen-react
 
+## 2023.1.8
+
+### Patch Changes
+
+- Fix `parseGid()` to return a query string if it was a part of the original GID. ([#723](https://github.com/Shopify/hydrogen/pull/723)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add the raw product returned from the Storefront API to also return from `useProduct()`: ([#735](https://github.com/Shopify/hydrogen/pull/735)) by [@blittle](https://github.com/blittle)
+
+  ```ts
+  function SomeComponent() {
+    const {product} = useProduct();
+
+    return (
+      <div>
+        <h2>{product.title}</h2>
+        <h3>{product.description}</h3>
+      </div>
+    );
+  }
+  ```
+
 ## 2023.1.7
 
 ### Patch Changes
