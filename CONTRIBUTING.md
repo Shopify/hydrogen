@@ -104,6 +104,7 @@ Tests that fail **only** in CI can be difficult and time-consuming to debug. If 
 To update `@shopify/hydrogen` to new calversion, for example from `2023-01` to `2023-04` follow these steps:
 
 - Create a new branch for the version from the latest, e.g. `2023-04`.
+- Change the `.changeset/config.json` config `baseBranch` to the new version. E.g. `"baseBranch": "2023-04"`.
 - Create a new changeset file updating to `major` any packages that you want released. Add any notes and guides to important updates for devs.
 - Update `next-release.yml` to the new branch name. This will make sure `next` tagged releases happen:
 
