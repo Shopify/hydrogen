@@ -1,6 +1,6 @@
 ---
-'@shopify/hydrogen-react': patch
-'@shopify/hydrogen': patch
+'@shopify/hydrogen-react': major
+'@shopify/hydrogen': major
 ---
 
 Adds a new `Image` component, replacing the existing one. The new component is backwards compatible, but deprecates some props and benefits from some breaking changes.
