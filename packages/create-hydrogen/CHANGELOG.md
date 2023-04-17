@@ -1,5 +1,23 @@
 # @shopify/create-hydrogen
 
+## 4.1.0
+
+### Minor Changes
+
+- Updated CLI prompts. It's recommended to update your version of `@shopify/cli` to `3.45.0` when updating `@shopify/cli-hydrogen`. ([#733](https://github.com/Shopify/hydrogen/pull/733)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  "dependencies": {
+  -  "@shopify/cli": "3.x.x",
+  +  "@shopify/cli": "3.45.0",
+  }
+  ```
+
+### Patch Changes
+
+- Updated dependencies [[`e6e6c2d`](https://github.com/Shopify/hydrogen/commit/e6e6c2da274d0582c6b3b9f298dfd2e86dd4bfbe), [`475a39c`](https://github.com/Shopify/hydrogen/commit/475a39c867b0851bba0358b6db9208b664aec68c), [`1f8526c`](https://github.com/Shopify/hydrogen/commit/1f8526c750dc1d5aa7ea02e196fffdd14d17a536), [`0f4d562`](https://github.com/Shopify/hydrogen/commit/0f4d562a2129e8e03ed123dc572a14a72e487a1b), [`2d4c5d9`](https://github.com/Shopify/hydrogen/commit/2d4c5d9340c5a2458c682aa3f9b12352dacdd759), [`68a6028`](https://github.com/Shopify/hydrogen/commit/68a60285a3d563d6e98fb79c3ba6d98eb4ee6be0)]:
+  - @shopify/cli-hydrogen@4.1.0
+
 ## 4.0.5
 
 ### Patch Changes

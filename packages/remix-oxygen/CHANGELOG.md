@@ -1,5 +1,16 @@
 # @shopify/remix-oxygen
 
+## 1.0.5
+
+### Patch Changes
+
+- Bump internal Remix dependencies to 1.15.0. ([#728](https://github.com/Shopify/hydrogen/pull/728)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  Recommendations to follow:
+
+  - Upgrade all the Remix packages in your app to 1.15.0.
+  - Enable Remix v2 future flags at your earliest convenience following [the official guide](https://remix.run/docs/en/1.15.0/pages/v2).
+
 ## 1.0.4
 
 ### Patch Changes

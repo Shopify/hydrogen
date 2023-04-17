@@ -1,5 +1,68 @@
 # @shopify/hydrogen
 
+## 2023.1.7
+
+### Patch Changes
+
+- Bump internal Remix dependencies to 1.15.0. ([#728](https://github.com/Shopify/hydrogen/pull/728)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  Recommendations to follow:
+
+  - Upgrade all the Remix packages in your app to 1.15.0.
+  - Enable Remix v2 future flags at your earliest convenience following [the official guide](https://remix.run/docs/en/1.15.0/pages/v2).
+
+- Add an experimental `createWithCache_unstable` utility, which creates a function similar to `useQuery` from Hydrogen v1. Use this utility to query third-party APIs and apply custom cache options. ([#600](https://github.com/Shopify/hydrogen/pull/600)) by [@frandiox](https://github.com/frandiox)
+
+  To setup the utility, update your `server.ts`:
+
+  ```js
+  import {
+    createStorefrontClient,
+    createWithCache_unstable,
+    CacheLong,
+  } from '@shopify/hydrogen';
+
+  // ...
+
+    const cache = await caches.open('hydrogen');
+    const withCache = createWithCache_unstable({cache, waitUntil});
+
+    // Create custom utilities to query third-party APIs:
+    const fetchMyCMS = (query) => {
+      // Prefix the cache key and make it unique based on arguments.
+      return withCache(['my-cms', query], CacheLong(), () => {
+        const cmsData = await (await fetch('my-cms.com/api', {
+          method: 'POST',
+          body: query
+        })).json();
+
+        const nextPage = (await fetch('my-cms.com/api', {
+          method: 'POST',
+          body: cmsData1.nextPageQuery,
+        })).json();
+
+        return {...cmsData, nextPage}
+      });
+    };
+
+    const handleRequest = createRequestHandler({
+      build: remixBuild,
+      mode: process.env.NODE_ENV,
+      getLoadContext: () => ({
+        session,
+        waitUntil,
+        storefront,
+        env,
+        fetchMyCMS,
+      }),
+    });
+  ```
+
+  **Note:** The utility is unstable and subject to change before stabalizing in the 2023.04 release.
+
+- Updated dependencies [[`85ae63a`](https://github.com/Shopify/hydrogen/commit/85ae63ac37e5c4200919d8ae6c861c60effb4ded), [`5e26503`](https://github.com/Shopify/hydrogen/commit/5e2650374441fb5ae4840215fefdd5d547a378c0)]:
+  - @shopify/hydrogen-react@2023.1.8
+
 ## 2023.1.6
 
 ### Patch Changes
