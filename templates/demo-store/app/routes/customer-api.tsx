@@ -27,6 +27,7 @@ export default function CustomerApiPage() {
   const callCustomerApi = async () => {
     const apiAccessToken = await getApiAccessToken();
     //  rake dev:customer_accounts:setup SHOP_ID=1
+
     const response = await fetch(
       'https://shop1.account.shopify.custom-storefronts-s6z7.mathieu-lagace.us.spin.dev/customer/api/unstable/graphql',
       {
@@ -38,7 +39,12 @@ export default function CustomerApiPage() {
         },
         body: JSON.stringify({
           operationName: 'SomeQuery',
-          query: 'query { personalAccount { email }}',
+          query: `
+            query SomeQuery {
+              personalAccount {
+                email
+              }
+            }`,
           variables: {},
         }),
       },
