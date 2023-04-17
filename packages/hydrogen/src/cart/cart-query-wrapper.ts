@@ -6,6 +6,7 @@ import {
   CART_LINES_REMOVE_MUTATION,
   CART_DISCOUNT_CODE_UPDATE_MUTATION,
   CART_BUYER_IDENTITY_UPDATE_MUTATION,
+  CART_NOTE_UPDATE_MUTATION,
 } from './cart-queries';
 import type {Storefront} from '../storefront';
 import type {CartCreate, CartFormInput} from './cart-types';
@@ -61,13 +62,6 @@ export function cartCreateDefault(options: CartQueryOptions): CartQueryReturn {
   };
 }
 
-/**
- * Storefront API cartLinesAdd mutation
- * @param lines [CartLineInput!]! https://shopify.dev/docs/api/storefront/2023-04/input-objects/CartLineInput
- * @see https://shopify.dev/docs/api/storefront/2023-04/mutations/cartLinesAdd
- * @returns result {cart, errors}
- * @preserve
- */
 export function cartLinesAddDefault(
   options: CartQueryOptions,
 ): CartQueryReturn {
@@ -84,13 +78,6 @@ export function cartLinesAddDefault(
   };
 }
 
-/**
- * Storefront API cartLinesUpdate mutation
- * @param lines [CartLineUpdateInput!]! https://shopify.dev/docs/api/storefront/2023-04/input-objects/CartLineUpdateInput
- * @see https://shopify.dev/docs/api/storefront/2023-04/mutations/cartLinesUpdate
- * @returns result {cart, errors}
- * @preserve
- */
 export function cartLinesUpdateDefault(
   options: CartQueryOptions,
 ): CartQueryReturn {
@@ -107,13 +94,6 @@ export function cartLinesUpdateDefault(
   };
 }
 
-/**
- * Storefront API cartLinesRemove mutation
- * @param lineIds [ID!]! an array of cart line ids to remove
- * @see https://shopify.dev/docs/api/storefront/2023-04/mutations/cartLinesRemove
- * @returns result {cart, errors}
- * @preserve
- */
 export function cartLinesRemoveDefault(
   options: CartQueryOptions,
 ): CartQueryReturn {
@@ -130,13 +110,6 @@ export function cartLinesRemoveDefault(
   };
 }
 
-/**
- * Storefront API cartDiscountCodesUpdate mutation
- * @param discountCodes [String!] an array of codes to remove
- * @see https://shopify.dev/docs/api/storefront/2023-04/mutations/cartDiscountCodesUpdate
- * @returns result {cart, errors}
- * @preserve
- */
 export function cartDiscountCodesUpdateDefault(
   options: CartQueryOptions,
 ): CartQueryReturn {
@@ -150,16 +123,10 @@ export function cartDiscountCodesUpdateDefault(
         ...cartInput,
       },
     });
-    console.log(cartDiscountCodesUpdate);
     return cartDiscountCodesUpdate;
   };
 }
 
-/**
- *
- * @param options
- * @returns
- */
 export function cartBuyerIdentityUpdateDefault(
   options: CartQueryOptions,
 ): CartQueryReturn {
@@ -174,5 +141,21 @@ export function cartBuyerIdentityUpdateDefault(
       },
     });
     return cartBuyerIdentityUpdate;
+  };
+}
+
+export function cartNoteUpdateDefault(
+  options: CartQueryOptions,
+): CartQueryReturn {
+  return async (cartInput: CartFormInput) => {
+    const {cartNoteUpdate} = await options.storefront.mutate<{
+      cartNoteUpdate: CartQueryData;
+    }>(CART_NOTE_UPDATE_MUTATION, {
+      variables: {
+        cartId: options.getCartId(),
+        ...cartInput,
+      },
+    });
+    return cartNoteUpdate;
   };
 }

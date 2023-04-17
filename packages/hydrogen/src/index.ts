@@ -27,6 +27,7 @@ export {
   cartLinesRemoveDefault,
   cartDiscountCodesUpdateDefault,
   cartBuyerIdentityUpdateDefault,
+  cartNoteUpdateDefault,
 } from './cart/cart-query-wrapper';
 export {type CartApiReturn, CartApi} from './cart/cart-api';
 export {

@@ -261,3 +261,23 @@ export const CART_BUYER_IDENTITY_UPDATE_MUTATION = `#graphql
   ${MINIMAL_CART_FRAGMENT}
   ${USER_ERROR_FRAGMENT}
 `;
+
+export const CART_NOTE_UPDATE_MUTATION = `#graphql
+  mutation cartNoteUpdate(
+    $cartId: ID!
+    $note: String
+    $language: LanguageCode
+    $country: CountryCode
+  ) @inContext(country: $country, language: $language) {
+    cartNoteUpdate(cartId: $cartId, note: $note) {
+      cart {
+        ...CartFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+  ${MINIMAL_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
+`;

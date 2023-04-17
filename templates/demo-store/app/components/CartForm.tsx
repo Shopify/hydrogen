@@ -3,7 +3,10 @@ import {type CartFormInput, CartFormInputAction} from '@shopify/hydrogen';
 import React from 'react';
 
 type CartFormProps = {
-  children?: (fetcher: FetcherWithComponents<any>) => React.ReactNode;
+  children?: (
+    fetcher: FetcherWithComponents<any>,
+    submit: (data?: object) => void,
+  ) => React.ReactNode;
   formInput: CartFormInput;
   route?: string;
 };
@@ -13,6 +16,23 @@ const CART_FORM_INPUT_NAME = 'cartFormInput';
 export function CartForm({children, formInput, route}: CartFormProps) {
   const fetcher = useFetcher();
 
+  const submit = (data?: object) => {
+    fetcher.submit(
+      {
+        [CART_FORM_INPUT_NAME]: JSON.stringify(
+          {
+            ...formInput,
+            ...data,
+          } || {},
+        ),
+      },
+      {
+        method: 'post',
+        action: route || '?index',
+      },
+    );
+  };
+
   return (
     <fetcher.Form action={route || ''} method="post">
       <input
@@ -20,7 +40,7 @@ export function CartForm({children, formInput, route}: CartFormProps) {
         name={CART_FORM_INPUT_NAME}
         value={JSON.stringify(formInput || {})}
       />
-      {typeof children === 'function' && children(fetcher)}
+      {typeof children === 'function' && children(fetcher, submit)}
     </fetcher.Form>
   );
 }
