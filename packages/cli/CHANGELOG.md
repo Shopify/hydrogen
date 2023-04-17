@@ -1,5 +1,51 @@
 # @shopify/cli-hydrogen
 
+## 4.1.0
+
+### Minor Changes
+
+- Updated CLI prompts. It's recommended to update your version of `@shopify/cli` to `3.45.0` when updating `@shopify/cli-hydrogen`. ([#733](https://github.com/Shopify/hydrogen/pull/733)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  "dependencies": {
+  -  "@shopify/cli": "3.x.x",
+  +  "@shopify/cli": "3.45.0",
+  }
+  ```
+
+- Added a new `shortcut` command that creates a global `h2` alias for the Hydrogen CLI: ([#679](https://github.com/Shopify/hydrogen/pull/679)) by [@frandiox](https://github.com/frandiox)
+
+  ```sh
+  $> npx shopify hydrogen shortcut
+  ```
+
+  After that, you can run commands using the new alias:
+
+  ```sh
+  $> h2 generate route home
+  $> h2 g r home # Same as the above
+  $> h2 check routes
+  ```
+
+### Patch Changes
+
+- Add support for the Remix future flags `v2_meta`, `v2_errorBoundary` and `v2_routeConvention` to the `generate` command. If these flags are enabled in your project, the new generated files will follow the v2 conventions. ([#756](https://github.com/Shopify/hydrogen/pull/756)) by [@frandiox](https://github.com/frandiox)
+
+- Update virtual route to use Remix V2 route name conventions ([#792](https://github.com/Shopify/hydrogen/pull/792)) by [@DavidWittness](https://github.com/DavidWittness)
+
+- Bump internal Remix dependencies to 1.15.0. ([#728](https://github.com/Shopify/hydrogen/pull/728)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  Recommendations to follow:
+
+  - Upgrade all the Remix packages in your app to 1.15.0.
+  - Enable Remix v2 future flags at your earliest convenience following [the official guide](https://remix.run/docs/en/1.15.0/pages/v2).
+
+- Improve type safety in SEO data generators. ([#763](https://github.com/Shopify/hydrogen/pull/763)) by [@davidhousedev](https://github.com/davidhousedev)
+
+- Updated dependencies [[`85ae63a`](https://github.com/Shopify/hydrogen/commit/85ae63ac37e5c4200919d8ae6c861c60effb4ded), [`5e26503`](https://github.com/Shopify/hydrogen/commit/5e2650374441fb5ae4840215fefdd5d547a378c0), [`1f8526c`](https://github.com/Shopify/hydrogen/commit/1f8526c750dc1d5aa7ea02e196fffdd14d17a536)]:
+  - @shopify/hydrogen-react@2023.1.8
+  - @shopify/remix-oxygen@1.0.5
+
 ## 4.0.9
 
 ### Patch Changes
