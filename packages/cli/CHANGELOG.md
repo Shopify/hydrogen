@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 4.1.1
+
+### Patch Changes
+
+- Fix the `check routes` command to match optional segments. ([#774](https://github.com/Shopify/hydrogen/pull/774)) by [@frandiox](https://github.com/frandiox)
+
 ## 4.1.0
 
 ### Minor Changes
