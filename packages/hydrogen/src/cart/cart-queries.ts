@@ -281,3 +281,23 @@ export const CART_NOTE_UPDATE_MUTATION = `#graphql
   ${MINIMAL_CART_FRAGMENT}
   ${USER_ERROR_FRAGMENT}
 `;
+
+export const CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION = `#graphql
+  mutation cartSelectedDeliveryOptionsUpdate(
+    $cartId: ID!
+    $selectedDeliveryOptions: [CartSelectedDeliveryOptionInput!]!
+    $language: LanguageCode
+    $country: CountryCode
+  ) @inContext(country: $country, language: $language) {
+    cartSelectedDeliveryOptionsUpdate(cartId: $cartId, selectedDeliveryOptions: $selectedDeliveryOptions) {
+      cart {
+        ...CartFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+  ${MINIMAL_CART_FRAGMENT}
+  ${USER_ERROR_FRAGMENT}
+`;

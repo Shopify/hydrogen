@@ -7,6 +7,7 @@ import {
   CART_DISCOUNT_CODE_UPDATE_MUTATION,
   CART_BUYER_IDENTITY_UPDATE_MUTATION,
   CART_NOTE_UPDATE_MUTATION,
+  CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION,
 } from './cart-queries';
 import type {Storefront} from '../storefront';
 import type {CartCreate, CartFormInput} from './cart-types';
@@ -114,7 +115,6 @@ export function cartDiscountCodesUpdateDefault(
   options: CartQueryOptions,
 ): CartQueryReturn {
   return async (cartInput: CartFormInput) => {
-    console.log('cartDiscountCodesUpdateDefault', cartInput);
     const {cartDiscountCodesUpdate} = await options.storefront.mutate<{
       cartDiscountCodesUpdate: CartQueryData;
     }>(CART_DISCOUNT_CODE_UPDATE_MUTATION, {
@@ -131,7 +131,6 @@ export function cartBuyerIdentityUpdateDefault(
   options: CartQueryOptions,
 ): CartQueryReturn {
   return async (cartInput: CartFormInput) => {
-    console.log('cartBuyerIdentityUpdateDefault', cartInput);
     const {cartBuyerIdentityUpdate} = await options.storefront.mutate<{
       cartBuyerIdentityUpdate: CartQueryData;
     }>(CART_BUYER_IDENTITY_UPDATE_MUTATION, {
@@ -157,5 +156,22 @@ export function cartNoteUpdateDefault(
       },
     });
     return cartNoteUpdate;
+  };
+}
+
+export function cartSelectedDeliveryOptionsUpdateDefault(
+  options: CartQueryOptions,
+): CartQueryReturn {
+  return async (cartInput: CartFormInput) => {
+    const {cartSelectedDeliveryOptionsUpdate} =
+      await options.storefront.mutate<{
+        cartSelectedDeliveryOptionsUpdate: CartQueryData;
+      }>(CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION, {
+        variables: {
+          cartId: options.getCartId(),
+          ...cartInput,
+        },
+      });
+    return cartSelectedDeliveryOptionsUpdate;
   };
 }

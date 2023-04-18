@@ -11,6 +11,8 @@ import {
   cartLinesRemoveDefault,
   cartDiscountCodesUpdateDefault,
   cartBuyerIdentityUpdateDefault,
+  cartNoteUpdateDefault,
+  cartSelectedDeliveryOptionsUpdateDefault,
 } from './cart-query-wrapper';
 import type {CartFormInput} from './cart-types';
 import {Cart} from '@shopify/hydrogen/storefront-api-types';
@@ -35,6 +37,8 @@ export type CartApiReturn = {
   removeLines: (cartInput: CartFormInput) => CartDataPromise;
   updateDiscountCodes: (cartInput: CartFormInput) => CartDataPromise;
   updateBuyerIdentity: (cartInput: CartFormInput) => CartDataPromise;
+  updateNote: (cartInput: CartFormInput) => CartDataPromise;
+  updateSelectedDeliveryOption: (cartInput: CartFormInput) => CartDataPromise;
 };
 
 export function CartApi(options: CartApiOptions): CartApiReturn {
@@ -90,5 +94,8 @@ export function CartApi(options: CartApiOptions): CartApiReturn {
           })
         : await cartCreate({input: {buyerIdentity: cartInput.buyerIdentity}});
     },
+    updateNote: cartNoteUpdateDefault(queryOptions),
+    updateSelectedDeliveryOption:
+      cartSelectedDeliveryOptionsUpdateDefault(queryOptions),
   };
 }

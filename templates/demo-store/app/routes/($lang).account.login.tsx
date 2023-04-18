@@ -54,11 +54,18 @@ export const action: ActionFunction = async ({request, context, params}) => {
     });
   }
 
-  const {session, storefront} = context;
+  const {session, storefront, cart} = context;
 
   try {
     const customerAccessToken = await doLogin(context, {email, password});
     session.set('customerAccessToken', customerAccessToken);
+
+    // Sync customerAccessToken with existing cart
+    await cart.updateBuyerIdentity({
+      buyerIdentity: {
+        customerAccessToken,
+      },
+    });
 
     return redirect(params.lang ? `/${params.lang}/account` : '/account', {
       headers: {
