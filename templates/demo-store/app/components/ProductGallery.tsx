@@ -46,7 +46,6 @@ export function ProductGallery({
             // @ts-ignore
             key={med.id || med.image.id}
           >
-            {/* TODO: Replace with MediaFile */}
             {(med as MediaImage).image && (
               <Image
                 loading={i === 0 ? 'eager' : 'lazy'}
