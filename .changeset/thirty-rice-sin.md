@@ -3,7 +3,7 @@
 '@shopify/hydrogen': major
 ---
 
-Adds a new `Image` component, replacing the existing one. The new component is backwards compatible, but deprecates some props and benefits from some breaking changes.
+Adds a new `Image` component, replacing the existing one. While your existing implementation won't break, props `widths` and `loaderOptions` are now deprecated disregarded, with a new `aspectRatio` prop added.
 
 ### Migrating to the new `Image`
 
