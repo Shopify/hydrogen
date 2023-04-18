@@ -145,8 +145,7 @@ function CollectionCard({
       <div className="card-image bg-primary/5 aspect-[3/2]">
         {collection?.image && (
           <Image
-            alt={collection.title}
-            src={collection.image.url}
+            data={collection.image}
             aspectRatio="6/4"
             sizes="(max-width: 32em) 100vw, 45vw"
             loading={loading}
