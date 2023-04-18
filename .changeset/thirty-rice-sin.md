@@ -82,7 +82,7 @@ Assuming `data` had the following shape:
 {
   url: "https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg",
   altText: "alt text",
-  width: "4000"
+  width: "4000",
   height: "4000"
 }
 ```
@@ -111,7 +111,7 @@ When using images that are meant to be a fixed size, like showing a preview imag
 <Image data={data} width={80} height={80} />
 ```
 
-Instead of generating 15 images for a broad range of screen sizes, `Image` will instead only generate 3, for various screen pixel densities. The above example would result in the following HTML:
+Instead of generating 15 images for a broad range of screen sizes, `Image` will instead only generate 3, for various screen pixel densities (1x, 2x, and 3x). The above example would result in the following HTML:
 
 ```html
 <img
@@ -135,7 +135,7 @@ If you don't want to have a fixed aspect ratio, and instead respect whatever is 
 <Image data={data} width="5rem" />
 ```
 
-Which would result in the same HTML as above, however the generated URLs would not have `height` or `crop` parameters appended to them, and the generated `aspect-ratio` in `style` would be `4000 / 4000` (if using the same `data` values as our original example).
+Which would result in the same HTML as above, however the generated URLs inside the `src` and `srcset` attributes would not have `height` or `crop` parameters appended to them, and the generated `aspect-ratio` in `style` would be `4000 / 4000` (if using the same `data` values as our original example).
 
 #### Custom Loaders
 
