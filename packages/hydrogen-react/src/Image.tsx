@@ -536,6 +536,7 @@ function FluidImage({
       width={placeholderWidth}
       {...passthroughProps}
       style={{
+        width: normalizedProps.width,
         aspectRatio: normalizedProps.aspectRatio,
         ...passthroughProps.style,
       }}
