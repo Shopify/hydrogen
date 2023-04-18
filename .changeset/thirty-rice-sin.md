@@ -33,7 +33,7 @@ The new `Image` component is responsive by default, and requires less configurat
 Note that `widths` and `loaderOptions` have now been deprecated, declaring `width` is no longer necessary, and we’ve added an `aspectRatio` prop:
 
 - `widths` is now calculated automatically based on a new `srcSetOptions` prop (see below for details).
-- `loaderOptions` has been removed in favour of declaring `crop` and `src` as props. `width` and `height` should only be set as props if rendered a fixed image size, and otherwise default to `100%` and `auto` respectively, with the loader calculating each dynamically.
+- `loaderOptions` has been removed in favour of declaring `crop` and `src` as props. `width` and `height` should only be set as props if rendering a fixed image size, and otherwise default to `100%` and `auto` respectively, with the loader calculating each dynamically.
 - `aspectRatio` is calculated automatically using `data.width` and `data.height` (if available) — but if you want to present an image with an aspect ratio other than what was uploaded, you can set using the format `Int/Int` (e.g. `3/2`, [see MDN docs for more info](https://developer.mozilla.org/en-US/docs/Web/CSS/aspect-ratio)); if you've set an `aspectRatio`, we will default the crop to be `crop: center` (in the example above we've specified this to use `left` instead).
 
 ### Examples
