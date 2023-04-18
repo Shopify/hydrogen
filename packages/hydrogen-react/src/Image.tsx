@@ -175,7 +175,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
       crop = 'center',
       data,
       decoding = 'async',
-      height,
+      height = 'auto',
       loader = shopifyLoader,
       loaderOptions,
       loading = 'lazy',
@@ -187,7 +187,7 @@ export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
         incrementSize: 200,
         placeholderWidth: 100,
       },
-      width,
+      width = '100%',
       widths,
       ...passthroughProps
     },

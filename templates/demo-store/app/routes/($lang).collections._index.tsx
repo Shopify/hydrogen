@@ -142,14 +142,6 @@ function CollectionCard({
 }) {
   return (
     <Link to={`/collections/${collection.handle}`} className="grid gap-4">
-      <Image
-        data={collection.image}
-        aspectRatio="6/4"
-        width="100%"
-        height="auto"
-        sizes="(max-width: 32em) 100vw, 45vw"
-        loading={loading}
-      />
       <div className="card-image bg-primary/5 aspect-[3/2]">
         {collection?.image && (
           <Image
