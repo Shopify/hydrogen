@@ -1,6 +1,7 @@
 import {Flags} from '@oclif/core';
 import {camelize} from '@shopify/cli-kit/common/string';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
+import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 import {colors} from './colors.js';
 
 export const commonFlags = {
@@ -19,6 +20,14 @@ export const commonFlags = {
       'Overwrite the destination directory and files if they already exist.',
     env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
     char: 'f',
+  }),
+  shop: Flags.string({
+    char: 's',
+    description:
+      'Shop URL. It can be the shop prefix (janes-apparel)' +
+      ' or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).',
+    env: 'SHOPIFY_SHOP',
+    parse: async (input) => normalizeStoreFqdn(input),
   }),
 };
 
