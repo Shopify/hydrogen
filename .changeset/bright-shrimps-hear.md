@@ -3,4 +3,4 @@
 '@shopify/hydrogen-react': major
 ---
 
-Release 2023-04
+Releases 2023-04

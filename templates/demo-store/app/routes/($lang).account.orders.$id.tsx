@@ -129,16 +129,9 @@ export default function OrderRoute() {
                           {lineItem?.variant?.image && (
                             <div className="w-24 card-image aspect-square">
                               <Image
-                                data={{
-                                  url: lineItem.variant.image.src!,
-                                }}
-                                width={lineItem.variant.image.width!}
-                                height={lineItem.variant.image.height!}
-                                alt={lineItem.variant.image.altText!}
-                                loaderOptions={{
-                                  scale: 2,
-                                  crop: 'center',
-                                }}
+                                data={lineItem.variant.image}
+                                width={96}
+                                height={96}
                               />
                             </div>
                           )}
@@ -409,13 +402,13 @@ const CUSTOMER_ORDER_QUERY = `#graphql
         orderNumber
         processedAt
         fulfillmentStatus
-        totalTaxV2 {
+        totalTax {
           ...Money
         }
-        totalPriceV2 {
+        totalPrice {
           ...Money
         }
-        subtotalPriceV2 {
+        subtotalPrice {
           ...Money
         }
         shippingAddress {

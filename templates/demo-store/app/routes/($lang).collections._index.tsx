@@ -17,6 +17,7 @@ import {
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
+import {Image} from '@shopify/hydrogen';
 
 const PAGINATION_SIZE = 8;
 
@@ -143,12 +144,10 @@ function CollectionCard({
     <Link to={`/collections/${collection.handle}`} className="grid gap-4">
       <div className="card-image bg-primary/5 aspect-[3/2]">
         {collection?.image && (
-          <img
-            alt={collection.title}
-            src={collection.image.url}
-            height={400}
-            sizes="(max-width: 32em) 100vw, 33vw"
-            width={600}
+          <Image
+            data={collection.image}
+            aspectRatio="6/4"
+            sizes="(max-width: 32em) 100vw, 45vw"
             loading={loading}
           />
         )}

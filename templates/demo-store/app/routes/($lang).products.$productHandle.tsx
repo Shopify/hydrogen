@@ -122,7 +122,7 @@ export default function Product() {
 
   return (
     <>
-      <Section padding="x" className="px-0">
+      <Section className="px-0 md:px-8 lg:px-12">
         <div className="grid items-start md:gap-6 lg:gap-20 md:grid-cols-2 lg:grid-cols-3">
           <ProductGallery
             media={media.nodes}
