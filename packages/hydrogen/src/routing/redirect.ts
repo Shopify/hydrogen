@@ -29,7 +29,6 @@ export async function storefrontRedirect({
       urlRedirects: UrlRedirectConnection;
     }>(REDIRECT_QUERY, {
       variables: {query: 'path:' + redirectFrom},
-      storefrontApiVersion: '2023-04',
     });
 
     const location = urlRedirects?.edges?.[0]?.node?.target;
