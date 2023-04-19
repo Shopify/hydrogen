@@ -232,7 +232,7 @@ const COLLECTION_HERO_QUERY = `#graphql
   }
 `;
 
-// @see: https://shopify.dev/api/storefront/latest/queries/products
+// @see: https://shopify.dev/api/storefront/2023-04/queries/products
 export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
   ${PRODUCT_CARD_FRAGMENT}
   query homepageFeaturedProducts($country: CountryCode, $language: LanguageCode)
@@ -245,7 +245,7 @@ export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
   }
 `;
 
-// @see: https://shopify.dev/api/storefront/latest/queries/collections
+// @see: https://shopify.dev/api/storefront/2023-04/queries/collections
 export const FEATURED_COLLECTIONS_QUERY = `#graphql
   query homepageFeaturedCollections($country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
