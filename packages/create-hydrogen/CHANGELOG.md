@@ -5,7 +5,7 @@
 ### Patch Changes
 
 - Updated dependencies [[`2039a4a`](https://github.com/Shopify/hydrogen/commit/2039a4a534cf75ebcf39bab6d2f95a535bb5d390)]:
-  - @shopify/cli-hydrogen@5.0.0
+  - @shopify/cli-hydrogen@4.1.1
 
 ## 4.1.0
 
