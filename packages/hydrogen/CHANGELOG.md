@@ -1,10 +1,28 @@
 # @shopify/hydrogen
 
-## 2024.0.0
+## 2023.4.0
 
 ### Major Changes
 
-- Releases 2023-04 ([#797](https://github.com/Shopify/hydrogen/pull/797)) by [@github-actions](https://github.com/apps/github-actions)
+- Releases `2023-04` ([#797](https://github.com/Shopify/hydrogen/pull/797)) by [@github-actions](https://github.com/apps/github-actions)
+
+- Updates Hydrogen to [Storefront 2023-04 API release](https://shopify.dev/docs/api/release-notes/2023-04).
+
+- Updates types from `CartLineConnection` to `BaseCartLineConnection`.
+
+- Deprecates `CartLinePrice` from `@shopify/hydrogen-react` use `Money` instead:
+
+  ```diff
+  - import {CartLinePrice} from '@shopify/hydrogen-react';
+  + import {Money} from '@shopify/hydrogen-react';
+  ```
+
+  ```diff
+  - <CartLinePrice line={line} />
+  + <Money data={line.priceV2} />
+  ```
+
+  [Check the docs for using `Money` 💵.](https://shopify.dev/docs/api/hydrogen-react/2023-04/components/money)
 
 - Adds a new `Image` component, replacing the existing one. While your existing implementation won't break, props `widths` and `loaderOptions` are now deprecated disregarded, with a new `aspectRatio` prop added. ([#787](https://github.com/Shopify/hydrogen/pull/787)) by [@benjaminsehl](https://github.com/benjaminsehl)
 
