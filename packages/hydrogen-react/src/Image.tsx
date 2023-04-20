@@ -82,7 +82,6 @@ type HydrogenImageBaseProps = {
    */
   crop?: Crop;
   /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-04/objects/Image) object. Must be an Image object.
-   * Optionally, import the `IMAGE_FRAGMENT` to use in your GraphQL queries.
    *
    * @example
    * ```
