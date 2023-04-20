@@ -13,16 +13,16 @@ import {
   cartSelectedDeliveryOptionsUpdateDefault,
 } from './cart-query-wrapper';
 import {
-  CartBuyerIdentityUpdate,
-  CartCreate,
-  CartDiscountCodesUpdate,
-  CartFormInput,
+  type CartBuyerIdentityUpdate,
+  type CartCreate,
+  type CartDiscountCodesUpdate,
+  type CartFormInput,
   CartFormInputAction,
-  CartLinesAdd,
-  CartLinesRemove,
-  CartLinesUpdate,
-  CartNoteUpdate,
-  CartSelectedDeliveryOptionsUpdate,
+  type CartLinesAdd,
+  type CartLinesRemove,
+  type CartLinesUpdate,
+  type CartNoteUpdate,
+  type CartSelectedDeliveryOptionsUpdate,
 } from './cart-types';
 import {Cart} from '@shopify/hydrogen/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
