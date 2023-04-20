@@ -4,7 +4,7 @@
 
 ### Major Changes
 
-- Releases `2023-04` ([#797](https://github.com/Shopify/hydrogen/pull/797)) by [@github-actions](https://github.com/apps/github-actions)
+- Releases `2023-04` ([#754](https://github.com/Shopify/hydrogen/pull/754)) by [@lordofthecactus](https://github.com/lordofthecactus)
 
 - Updates Hydrogen to [Storefront 2023-04 API release](https://shopify.dev/docs/api/release-notes/2023-04).
 
