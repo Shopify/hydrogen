@@ -50,18 +50,11 @@ export function Hero({
           {spread?.reference && (
             <div>
               <SpreadMedia
-                scale={2}
                 sizes={
                   spreadSecondary?.reference
-                    ? '(min-width: 80em) 700px, (min-width: 48em) 450px, 500px'
-                    : '(min-width: 80em) 1400px, (min-width: 48em) 900px, 500px'
+                    ? '(min-width: 48em) 50vw, 100vw'
+                    : '100vw'
                 }
-                widths={
-                  spreadSecondary?.reference
-                    ? [500, 450, 700]
-                    : [500, 900, 1400]
-                }
-                width={spreadSecondary?.reference ? 375 : 750}
                 data={spread.reference as Media}
                 loading={loading}
               />
@@ -70,9 +63,7 @@ export function Hero({
           {spreadSecondary?.reference && (
             <div className="hidden md:block">
               <SpreadMedia
-                sizes="(min-width: 80em) 700, (min-width: 48em) 450, 500"
-                widths={[450, 700]}
-                width={375}
+                sizes="50vw"
                 data={spreadSecondary.reference as Media}
                 loading={loading}
               />
@@ -100,22 +91,10 @@ export function Hero({
 interface SpreadMediaProps {
   data: Media | MediaImage | MediaVideo;
   loading?: HTMLImageElement['loading'];
-  decoding?: HTMLImageElement['decoding'];
-  scale?: 2 | 3;
   sizes: string;
-  width: number;
-  widths: number[];
 }
 
-function SpreadMedia({
-  data,
-  loading,
-  decoding,
-  scale,
-  sizes,
-  width,
-  widths,
-}: SpreadMediaProps) {
+function SpreadMedia({data, loading, sizes}: SpreadMediaProps) {
   return (
     <MediaFile
       data={data}
@@ -127,16 +106,12 @@ function SpreadMedia({
           loop: true,
           playsInline: true,
           autoPlay: true,
-          width: (scale ?? 1) * width,
-          previewImageOptions: {scale, src: data.previewImage?.url ?? ''},
+          previewImageOptions: {src: data.previewImage?.url ?? ''},
         },
         image: {
           loading,
-          decoding,
-          loaderOptions: {scale, crop: 'center'},
-          widths,
+          crop: 'center',
           sizes,
-          width,
           alt: data.alt || '',
         },
       }}

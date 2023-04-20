@@ -1,4 +1,8 @@
-import {type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  type LoaderArgs,
+  type ErrorBoundaryComponent,
+} from '@shopify/remix-oxygen';
+import {useCatch, useRouteError, isRouteErrorResponse} from '@remix-run/react';
 
 export const loader = ({request}: LoaderArgs) => {
   const url = new URL(request.url);
@@ -13,6 +17,36 @@ export const loader = ({request}: LoaderArgs) => {
     },
   });
 };
+
+export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+  console.error(error);
+
+  return <div>There was an error.</div>;
+};
+
+export function CatchBoundary() {
+  const caught = useCatch();
+  console.error(caught);
+
+  return (
+    <div>
+      There was an error. Status: {caught.status}. Message:{' '}
+      {caught.data?.message}
+    </div>
+  );
+}
+
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    console.error(error.status, error.statusText, error.data);
+    return <div>Route Error</div>;
+  } else {
+    console.error((error as Error).message);
+    return <div>Thrown Error</div>;
+  }
+}
 
 function robotsTxtData({url}: {url: string}) {
   const sitemapUrl = url ? `${url}/sitemap.xml` : undefined;

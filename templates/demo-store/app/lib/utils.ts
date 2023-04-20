@@ -1,4 +1,5 @@
 import {useLocation, useMatches} from '@remix-run/react';
+import {parse as parseCookie} from 'worktop/cookie';
 import type {
   MenuItem,
   Menu,
@@ -305,4 +306,14 @@ export function isLocalPath(url: string) {
   }
 
   return false;
+}
+
+/**
+ * Shopify's 'Online Store' stores cart IDs in a 'cart' cookie.
+ * By doing the same, merchants can switch from the Online Store to Hydrogen
+ * without customers losing carts.
+ */
+export function getCartId(request: Request) {
+  const cookies = parseCookie(request.headers.get('Cookie') || '');
+  return cookies.cart ? `gid://shopify/Cart/${cookies.cart}` : undefined;
 }

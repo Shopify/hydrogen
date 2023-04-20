@@ -4,7 +4,6 @@ import {Image} from '@shopify/hydrogen';
 import {Blog} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {PageHeader, Section} from '~/components';
-import {ATTR_LOADING_EAGER} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
 import styles from '../styles/custom-font.css';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
@@ -74,13 +73,7 @@ export default function Article() {
             data={image}
             className="w-full mx-auto mt-8 md:mt-16 max-w-7xl"
             sizes="90vw"
-            widths={[400, 800, 1200]}
-            width="100px"
-            loading={ATTR_LOADING_EAGER}
-            loaderOptions={{
-              scale: 2,
-              crop: 'center',
-            }}
+            loading="eager"
           />
         )}
         <div

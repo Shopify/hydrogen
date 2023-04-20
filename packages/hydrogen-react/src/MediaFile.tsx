@@ -1,4 +1,4 @@
-import {Image, type ShopifyImageProps} from './Image.js';
+import {Image, type HydrogenImageProps} from './Image.js';
 import {Video} from './Video.js';
 import {ExternalVideo} from './ExternalVideo.js';
 import {ModelViewer} from './ModelViewer.js';
@@ -18,7 +18,7 @@ export interface MediaFileProps extends BaseProps {
 
 type MediaOptions = {
   /** Props that will only apply when an `<Image />` is rendered */
-  image?: Omit<ShopifyImageProps, 'data'>;
+  image?: Omit<HydrogenImageProps, 'data'>;
   /** Props that will only apply when a `<Video />` is rendered */
   video?: Omit<React.ComponentProps<typeof Video>, 'data'>;
   /** Props that will only apply when an `<ExternalVideo />` is rendered */
