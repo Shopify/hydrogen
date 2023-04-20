@@ -20,7 +20,7 @@ export async function action({request, context}: ActionArgs) {
     session.get('customerAccessToken'),
   ]);
 
-  const {action, cartInput} = cart.getFormInput(formData);
+  const cartInput = cart.getFormInput(formData);
   invariant(action, 'No cartAction defined');
 
   let status = 200;
@@ -29,7 +29,7 @@ export async function action({request, context}: ActionArgs) {
     errors?: CartUserError[] | UserError[];
   };
 
-  switch (action) {
+  switch (cartInput.action) {
     case CartFormInputAction.CartLinesAdd:
       result = await cart.addLine(cartInput);
       break;
@@ -44,7 +44,10 @@ export async function action({request, context}: ActionArgs) {
       const discountCodes = (
         formDiscountCode ? [formDiscountCode] : ['']
       ) as string[];
-      result = await cart.updateDiscountCodes({discountCodes});
+      result = await cart.updateDiscountCodes({
+        ...cartInput,
+        discountCodes,
+      });
       break;
     case CartFormInputAction.CartBuyerIdentityUpdate:
       result = await cart.updateBuyerIdentity({

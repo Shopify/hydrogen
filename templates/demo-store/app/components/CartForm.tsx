@@ -45,13 +45,9 @@ export function CartForm({children, formInput, route}: CartFormProps) {
   );
 }
 
-export function getFormInput(formData: any): {
-  action: typeof CartFormInputAction;
-  cartInput: Omit<CartFormInput, 'action'>;
-} {
+export function getFormInput(formData: any): CartFormInput {
   const cartFormInput = formData.has(CART_FORM_INPUT_NAME)
     ? (JSON.parse(String(formData.get(CART_FORM_INPUT_NAME))) as CartFormInput)
     : ({} as CartFormInput);
-  const {action, ...cartInput} = cartFormInput;
-  return {action, cartInput};
+  return cartFormInput;
 }

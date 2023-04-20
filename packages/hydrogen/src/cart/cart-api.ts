@@ -14,7 +14,17 @@ import {
   cartNoteUpdateDefault,
   cartSelectedDeliveryOptionsUpdateDefault,
 } from './cart-query-wrapper';
-import type {CartFormInput} from './cart-types';
+import type {
+  CartBuyerIdentityUpdate,
+  CartCreate,
+  CartDiscountCodesUpdate,
+  CartFormInput,
+  CartLinesAdd,
+  CartLinesRemove,
+  CartLinesUpdate,
+  CartNoteUpdate,
+  CartSelectedDeliveryOptionsUpdate,
+} from './cart-types';
 import {Cart} from '@shopify/hydrogen/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
 
@@ -27,18 +37,20 @@ type CartApiOptions = Omit<CartQueryOptions, 'getCartId'> & {
 type CartDataPromise = Promise<CartQueryData>;
 
 export type CartApiReturn = {
-  getFormInput: (formData: any) => Omit<CartFormInput, 'action'>;
+  getFormInput: (formData: any) => CartFormInput;
   get: (cartInput?: CartFormInput) => Promise<Cart | null | undefined>;
   getCartId: () => string | undefined;
   setCartId: (cartId: string, headers: Headers) => void;
-  create: (cartInput: CartFormInput) => CartDataPromise;
-  addLine: (cartInput: CartFormInput) => CartDataPromise;
-  updateLines: (cartInput: CartFormInput) => CartDataPromise;
-  removeLines: (cartInput: CartFormInput) => CartDataPromise;
-  updateDiscountCodes: (cartInput: CartFormInput) => CartDataPromise;
-  updateBuyerIdentity: (cartInput: CartFormInput) => CartDataPromise;
-  updateNote: (cartInput: CartFormInput) => CartDataPromise;
-  updateSelectedDeliveryOption: (cartInput: CartFormInput) => CartDataPromise;
+  create: (cartInput: CartCreate) => CartDataPromise;
+  addLine: (cartInput: CartLinesAdd) => CartDataPromise;
+  updateLines: (cartInput: CartLinesUpdate) => CartDataPromise;
+  removeLines: (cartInput: CartLinesRemove) => CartDataPromise;
+  updateDiscountCodes: (cartInput: CartDiscountCodesUpdate) => CartDataPromise;
+  updateBuyerIdentity: (cartInput: CartBuyerIdentityUpdate) => CartDataPromise;
+  updateNote: (cartInput: CartNoteUpdate) => CartDataPromise;
+  updateSelectedDeliveryOption: (
+    cartInput: CartSelectedDeliveryOptionsUpdate,
+  ) => CartDataPromise;
 };
 
 export function CartApi(options: CartApiOptions): CartApiReturn {
@@ -73,21 +85,19 @@ export function CartApi(options: CartApiOptions): CartApiReturn {
     getCartId,
     setCartId,
     create: cartCreate,
-    addLine: async (cartInput: CartFormInput) => {
+    addLine: async (cartInput: CartLinesAdd) => {
       return cartId
         ? await cartLinesAddDefault(queryOptions)({lines: cartInput.lines})
         : await cartCreate({input: {lines: cartInput.lines}});
     },
     updateLines: cartLinesUpdateDefault(queryOptions),
     removeLines: cartLinesRemoveDefault(queryOptions),
-    updateDiscountCodes: async (cartInput: CartFormInput) => {
+    updateDiscountCodes: async (cartInput: CartDiscountCodesUpdate) => {
       return cartId
-        ? await cartDiscountCodesUpdateDefault(queryOptions)({
-            discountCodes: cartInput.discountCodes,
-          })
+        ? await cartDiscountCodesUpdateDefault(queryOptions)(cartInput)
         : await cartCreate({input: {discountCodes: cartInput.discountCodes}});
     },
-    updateBuyerIdentity: async (cartInput: CartFormInput) => {
+    updateBuyerIdentity: async (cartInput: CartBuyerIdentityUpdate) => {
       return cartId
         ? await cartBuyerIdentityUpdateDefault(queryOptions)({
             buyerIdentity: cartInput.buyerIdentity,

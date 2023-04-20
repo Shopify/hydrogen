@@ -21,62 +21,57 @@ export const CartFormInputAction = {
 export type CartAttributesUpdateInput = {
   action: 'CartAttributesUpdateInput';
   attribute: AttributeInput;
-  [key: string]: unknown;
 };
 
 export type CartBuyerIdentityUpdate = {
   action: 'CartBuyerIdentityUpdate';
   buyerIdentity: CartBuyerIdentityInput;
-  [key: string]: unknown;
 };
 
 export type CartCreate = {
   action: 'CartCreate';
   input: CartInput;
-  [key: string]: unknown;
 };
 
 export type CartDiscountCodesUpdate = {
   action: 'CartDiscountCodesUpdate';
   discountCodes: string[];
-  [key: string]: unknown;
 };
 
 export type CartLinesAdd = {
   action: 'CartLinesAdd';
   lines: CartLineInput[];
-  [key: string]: unknown;
 };
 
 export type CartLinesRemove = {
   action: 'CartLinesRemove';
   lineIds: string[];
-  [key: string]: unknown;
 };
 
 export type CartLinesUpdate = {
   action: 'CartLinesUpdate';
   lines: CartLineUpdateInput;
-  [key: string]: unknown;
 };
 export type CartNoteUpdate = {
   action: 'CartNoteUpdate';
   note: string;
-  [key: string]: unknown;
 };
 export type CartSelectedDeliveryOptionsUpdate = {
   action: 'CartSelectedDeliveryOptionsUpdate';
   selectedDeliveryOptions: CartSelectedDeliveryOptionsUpdate;
+};
+
+type OtherFormData = {
   [key: string]: unknown;
 };
 
 export type CartFormInput =
-  | CartAttributesUpdateInput
-  | CartBuyerIdentityUpdate
-  | CartCreate
-  | CartDiscountCodesUpdate
-  | CartLinesAdd
-  | CartLinesRemove
-  | CartLinesUpdate
-  | CartNoteUpdate
-  | CartSelectedDeliveryOptionsUpdate;
+  | (CartAttributesUpdateInput & OtherFormData)
+  | (CartBuyerIdentityUpdate & OtherFormData)
+  | (CartCreate & OtherFormData)
+  | (CartDiscountCodesUpdate & OtherFormData)
+  | (CartLinesAdd & OtherFormData)
+  | (CartLinesRemove & OtherFormData)
+  | (CartLinesUpdate & OtherFormData)
+  | (CartNoteUpdate & OtherFormData)
+  | (CartSelectedDeliveryOptionsUpdate & OtherFormData);
