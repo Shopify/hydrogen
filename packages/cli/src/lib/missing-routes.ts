@@ -41,17 +41,14 @@ const REQUIRED_ROUTES = [
   //   'opening_soon',
 ];
 
-export function findMissingRoutes(
-  config: {routes: RemixConfig['routes']},
-  requiredRoutes = REQUIRED_ROUTES,
-) {
+export function findMissingRoutes(config: RemixConfig) {
   const userRoutes = Object.values(config.routes);
-  const missingRoutes = new Set(requiredRoutes);
+  const requiredRoutes = new Set(REQUIRED_ROUTES);
 
   for (const requiredRoute of requiredRoutes) {
     for (const userRoute of userRoutes) {
       if (!requiredRoute && !userRoute.path) {
-        missingRoutes.delete(requiredRoute);
+        requiredRoutes.delete(requiredRoute);
       } else if (requiredRoute && userRoute.path) {
         const currentRoute = {
           path: userRoute.path,
@@ -70,23 +67,21 @@ export function findMissingRoutes(
           currentRoute.parentId = parentRoute.parentId;
         }
 
-        const optionalSegment = ':?[^\\/\\?]+\\?';
         const reString =
-          `^(${optionalSegment}\\/)?` + // Starts with an optional segment
-          requiredRoute
-            .replaceAll('.', '\\.') // Escape dots
-            .replace(/\//g, `\\/(${optionalSegment}\\/)?`) // Has optional segments in the middle
-            .replace(/:[^/)?]+/g, ':[^\\/]+') + // Replace params with regex
-          `(\\/${optionalSegment})?$`; // Ends with an optional segment
+          // Starts with optional params
+          '^(:[^\\/\\?]+\\?\\/)?' +
+          // Escape dots and replace params with regex
+          requiredRoute.replaceAll('.', '\\.').replace(/:[^/]+/g, ':[^\\/]+') +
+          '$';
 
         if (new RegExp(reString).test(currentRoute.path)) {
-          missingRoutes.delete(requiredRoute);
+          requiredRoutes.delete(requiredRoute);
         }
       }
     }
   }
 
-  return [...missingRoutes];
+  return [...requiredRoutes];
 }
 
 const LINE_LIMIT = 100;
