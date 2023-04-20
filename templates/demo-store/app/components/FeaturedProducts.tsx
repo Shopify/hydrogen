@@ -25,8 +25,8 @@ interface FeaturedProductsProps {
  * @param query a filtering query
  * @param reverse wether to reverse the product results
  * @param sortKey Sort the underlying list by the given key.
- * @see query https://shopify.dev/api/storefront/2023-01/queries/products
- * @see filters https://shopify.dev/api/storefront/2023-01/queries/products#argument-products-query
+ * @see query https://shopify.dev/api/storefront/2023-04/queries/products
+ * @see filters https://shopify.dev/api/storefront/2023-04/queries/products#argument-products-query
  */
 export function FeaturedProducts({
   count = 4,
@@ -110,7 +110,7 @@ function FeatureProductsContent({
     <>
       {products.map((product) => (
         <ProductCard
-          product={product as Product}
+          product={product}
           key={product.id}
           onClick={onClick}
           quickAdd
