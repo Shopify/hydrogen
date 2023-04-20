@@ -1,5 +1,4 @@
 import {Image} from '@shopify/hydrogen';
-import type {SerializeFrom} from '@shopify/remix-oxygen';
 import type {Collection} from '@shopify/hydrogen/storefront-api-types';
 import {Heading, Section, Grid, Link} from '~/components';
 
@@ -8,7 +7,7 @@ export function FeaturedCollections({
   title = 'Collections',
   ...props
 }: {
-  collections: SerializeFrom<Collection[]>;
+  collections: Collection[];
   title?: string;
   [key: string]: any;
 }) {

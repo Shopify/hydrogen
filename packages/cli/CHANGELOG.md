@@ -1,5 +1,14 @@
 # @shopify/cli-hydrogen
 
+## 4.1.1
+
+### Patch Changes
+
+- Fix the `check routes` command to match optional segments. ([#774](https://github.com/Shopify/hydrogen/pull/774)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`82b6af7`](https://github.com/Shopify/hydrogen/commit/82b6af71cafe1f88c24630178e61cd09e5a59f5e), [`361879e`](https://github.com/Shopify/hydrogen/commit/361879ee11dfe8f1ee916b022165b1e7f0e45964)]:
+  - @shopify/hydrogen-react@2023.4.0
+
 ## 4.1.0
 
 ### Minor Changes

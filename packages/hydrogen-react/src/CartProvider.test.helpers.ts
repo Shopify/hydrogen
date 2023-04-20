@@ -4,7 +4,7 @@ import {getPrice} from './Money.test.helpers.js';
 import type {
   Cart,
   CartLine,
-  CartLineConnection,
+  BaseCartLineConnection,
 } from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import type {CartWithActions} from './cart-types.js';
@@ -104,7 +104,7 @@ export function getCartLinesMock(
     | ((index: number) => PartialDeep<CartLine>)
     | PartialDeep<CartLine>,
   count?: number,
-): CartLineConnection {
+): BaseCartLineConnection {
   const nodes = Array.from({length: count ?? 1}, (_, index) => {
     const options =
       typeof getOptions === 'function' ? getOptions(index) : getOptions;
@@ -116,7 +116,7 @@ export function getCartLinesMock(
 
   return {
     edges: nodes,
-  } as CartLineConnection;
+  } as BaseCartLineConnection;
 }
 
 export function getCartWithActionsMock(
