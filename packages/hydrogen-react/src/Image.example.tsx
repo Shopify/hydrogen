@@ -4,18 +4,19 @@ import type {Product} from '@shopify/hydrogen-react/storefront-api-types';
 
 // An example query that includes the image fragment
 const IMAGE_QUERY = `#graphql
-  ${IMAGE_FRAGMENT}
   query {
     product {
       featuredImage {
+        # The IMAGE_FRAGMENT defines a fragment called "Image" which we can spread here
         ...Image
       }
     }
   }
+  ${IMAGE_FRAGMENT}
 `;
 
 export default function ProductImage({product}: {product: Product}) {
-  if (!image) {
+  if (!product.featuredImage) {
     return null;
   }
 
