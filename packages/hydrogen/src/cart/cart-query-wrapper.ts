@@ -72,7 +72,6 @@ export function cartCreateDefault(
     }>(CART_CREATE_MUTATION, {
       variables: getInputs(cartInput),
     });
-    console.log(cartCreate);
     return cartCreate;
   };
 }
