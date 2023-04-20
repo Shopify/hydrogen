@@ -17,9 +17,7 @@ export type {SeoHandleFunction} from './seo/seo';
 
 export {
   type CartQueryOptions,
-  type CartQueryFunction,
   type CartQueryReturn,
-  type CartQueryData,
   cartCreateDefault,
   cartGetDefault,
   cartLinesAddDefault,
@@ -33,9 +31,15 @@ export {
 export {type CartApiReturn, CartApi} from './cart/cart-api';
 export {
   CartFormInputAction,
-  type CartFormInput,
+  type CartBuyerIdentityUpdate,
   type CartCreate,
+  type CartDiscountCodesUpdate,
+  type CartFormInput,
   type CartLinesAdd,
+  type CartLinesRemove,
+  type CartLinesUpdate,
+  type CartNoteUpdate,
+  type CartSelectedDeliveryOptionsUpdate,
 } from './cart/cart-types';
 
 export {

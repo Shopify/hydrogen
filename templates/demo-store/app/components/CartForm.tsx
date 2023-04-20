@@ -1,12 +1,9 @@
 import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
-import {type CartFormInput, CartFormInputAction} from '@shopify/hydrogen';
+import {type CartFormInput} from '@shopify/hydrogen';
 import React from 'react';
 
 type CartFormProps = {
-  children?: (
-    fetcher: FetcherWithComponents<any>,
-    submit: (data?: object) => void,
-  ) => React.ReactNode;
+  children?: (fetcher: FetcherWithComponents<any>) => React.ReactNode;
   formInput: CartFormInput;
   route?: string;
 };
@@ -16,23 +13,6 @@ const CART_FORM_INPUT_NAME = 'cartFormInput';
 export function CartForm({children, formInput, route}: CartFormProps) {
   const fetcher = useFetcher();
 
-  const submit = (data?: object) => {
-    fetcher.submit(
-      {
-        [CART_FORM_INPUT_NAME]: JSON.stringify(
-          {
-            ...formInput,
-            ...data,
-          } || {},
-        ),
-      },
-      {
-        method: 'post',
-        action: route || '?index',
-      },
-    );
-  };
-
   return (
     <fetcher.Form action={route || ''} method="post">
       <input
@@ -40,14 +20,14 @@ export function CartForm({children, formInput, route}: CartFormProps) {
         name={CART_FORM_INPUT_NAME}
         value={JSON.stringify(formInput || {})}
       />
-      {typeof children === 'function' && children(fetcher, submit)}
+      {typeof children === 'function' && children(fetcher)}
     </fetcher.Form>
   );
 }
 
 export function getFormInput(formData: any): CartFormInput {
-  const cartFormInput = formData.has(CART_FORM_INPUT_NAME)
-    ? (JSON.parse(String(formData.get(CART_FORM_INPUT_NAME))) as CartFormInput)
-    : ({} as CartFormInput);
+  const cartFormInput: CartFormInput = formData.has(CART_FORM_INPUT_NAME)
+    ? JSON.parse(String(formData.get(CART_FORM_INPUT_NAME)))
+    : {};
   return cartFormInput;
 }

@@ -31,15 +31,12 @@ export type CartQueryOptions = {
   getCartId: () => string | undefined;
 };
 
-export type CartQueryData = {
+type CartQueryData = {
   cart: Cart;
   errors?: CartUserError[];
 };
 
 export type CartQueryReturn<T> = (cartInput: T) => Promise<CartQueryData>;
-export type CartQueryFunction = (
-  options: CartQueryOptions,
-) => CartQueryReturn<CartFormInput>;
 
 export function cartGetDefault(
   options: CartQueryOptions,

@@ -1,9 +1,7 @@
-// @ts-nocheck
-
 import {getFormInput} from './CartForm';
 import {
   type CartQueryOptions,
-  type CartQueryData,
+  type CartQueryReturn,
   cartCreateDefault,
   cartGetDefault,
   cartLinesAddDefault,
@@ -14,11 +12,12 @@ import {
   cartNoteUpdateDefault,
   cartSelectedDeliveryOptionsUpdateDefault,
 } from './cart-query-wrapper';
-import type {
+import {
   CartBuyerIdentityUpdate,
   CartCreate,
   CartDiscountCodesUpdate,
   CartFormInput,
+  CartFormInputAction,
   CartLinesAdd,
   CartLinesRemove,
   CartLinesUpdate,
@@ -34,23 +33,19 @@ type CartApiOptions = Omit<CartQueryOptions, 'getCartId'> & {
   setCartId?: (cartId: string, headers: Headers) => void;
 };
 
-type CartDataPromise = Promise<CartQueryData>;
-
 export type CartApiReturn = {
   getFormInput: (formData: any) => CartFormInput;
   get: (cartInput?: CartFormInput) => Promise<Cart | null | undefined>;
   getCartId: () => string | undefined;
   setCartId: (cartId: string, headers: Headers) => void;
-  create: (cartInput: CartCreate) => CartDataPromise;
-  addLine: (cartInput: CartLinesAdd) => CartDataPromise;
-  updateLines: (cartInput: CartLinesUpdate) => CartDataPromise;
-  removeLines: (cartInput: CartLinesRemove) => CartDataPromise;
-  updateDiscountCodes: (cartInput: CartDiscountCodesUpdate) => CartDataPromise;
-  updateBuyerIdentity: (cartInput: CartBuyerIdentityUpdate) => CartDataPromise;
-  updateNote: (cartInput: CartNoteUpdate) => CartDataPromise;
-  updateSelectedDeliveryOption: (
-    cartInput: CartSelectedDeliveryOptionsUpdate,
-  ) => CartDataPromise;
+  create: CartQueryReturn<CartCreate>;
+  addLine: CartQueryReturn<CartLinesAdd>;
+  updateLines: CartQueryReturn<CartLinesUpdate>;
+  removeLines: CartQueryReturn<CartLinesRemove>;
+  updateDiscountCodes: CartQueryReturn<CartDiscountCodesUpdate>;
+  updateBuyerIdentity: CartQueryReturn<CartBuyerIdentityUpdate>;
+  updateNote: CartQueryReturn<CartNoteUpdate>;
+  updateSelectedDeliveryOption: CartQueryReturn<CartSelectedDeliveryOptionsUpdate>;
 };
 
 export function CartApi(options: CartApiOptions): CartApiReturn {
@@ -87,22 +82,32 @@ export function CartApi(options: CartApiOptions): CartApiReturn {
     create: cartCreate,
     addLine: async (cartInput: CartLinesAdd) => {
       return cartId
-        ? await cartLinesAddDefault(queryOptions)({lines: cartInput.lines})
-        : await cartCreate({input: {lines: cartInput.lines}});
+        ? await cartLinesAddDefault(queryOptions)(cartInput)
+        : await cartCreate({
+            action: CartFormInputAction.CartCreate,
+            input: {lines: cartInput.lines},
+          });
     },
     updateLines: cartLinesUpdateDefault(queryOptions),
     removeLines: cartLinesRemoveDefault(queryOptions),
     updateDiscountCodes: async (cartInput: CartDiscountCodesUpdate) => {
       return cartId
         ? await cartDiscountCodesUpdateDefault(queryOptions)(cartInput)
-        : await cartCreate({input: {discountCodes: cartInput.discountCodes}});
+        : await cartCreate({
+            action: CartFormInputAction.CartCreate,
+            input: {discountCodes: cartInput.discountCodes},
+          });
     },
     updateBuyerIdentity: async (cartInput: CartBuyerIdentityUpdate) => {
       return cartId
         ? await cartBuyerIdentityUpdateDefault(queryOptions)({
+            action: CartFormInputAction.CartBuyerIdentityUpdate,
             buyerIdentity: cartInput.buyerIdentity,
           })
-        : await cartCreate({input: {buyerIdentity: cartInput.buyerIdentity}});
+        : await cartCreate({
+            action: CartFormInputAction.CartCreate,
+            input: {buyerIdentity: cartInput.buyerIdentity},
+          });
     },
     updateNote: cartNoteUpdateDefault(queryOptions),
     updateSelectedDeliveryOption:
