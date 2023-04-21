@@ -60,6 +60,7 @@ This proposal recommends the configurations and custom rules will move into the 
   - `storefront`: This configuration will be exposed for Hydrogen storefronts and used across our `demo-store` and `hello-world` templates and any future scaffolding commands that relate to eslint (for example, `h2 setup eslint`). It will contain a combined config of the internal configs for `react`, `remix` and `hydrogen`.
   - `workspace`: This configuration will be used in the mono-repo root and used across our packages.
   - `cli`: This configuration will be used in the hydrogen packages `cli-hydrogen` and `create-hydrogen` specifically. It will contain a the configurations and custom rules from the `@shopify/eslint-plugin-cli`.
+  - `library`: This configuration will be used in the `hydrogen-react` package. It is more strict when it comes to typescript.
 
 ## New rules
 
