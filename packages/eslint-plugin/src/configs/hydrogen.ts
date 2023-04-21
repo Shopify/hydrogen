@@ -1,10 +1,8 @@
-export default {
-  plugins: ['hydrogen'],
+module.exports = {
+  plugins: ['h2'],
   rules: {
-    'hydrogen/client-component-banned-hooks': 'error',
-    'hydrogen/prefer-image-component': 'error',
-    'hydrogen/server-component-banned-hooks': 'error',
-    'hydrogen/server-no-json-parse': 'error',
-    'hydrogen/prefer-gql': 'error',
+    'h2/prefer-image-component': 'error',
   },
 };
+
+export {};

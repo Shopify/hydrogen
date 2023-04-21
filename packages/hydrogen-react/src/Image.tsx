@@ -149,7 +149,6 @@ export function Image({
       loader,
     });
 
-  /* eslint-disable hydrogen/prefer-image-component */
   return (
     <img
       id={data.id ?? ''}
@@ -163,7 +162,6 @@ export function Image({
       decoding={decoding}
     />
   );
-  /* eslint-enable hydrogen/prefer-image-component */
 }
 
 type InternalShopifySrcSetGeneratorsParams = Simplify<

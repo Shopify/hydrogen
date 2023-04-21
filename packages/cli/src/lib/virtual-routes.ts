@@ -23,7 +23,7 @@ export async function addVirtualRoutes(config: RemixConfig) {
     const normalizedVirtualRoutePath = isIndex
       ? routePath.slice(0, -'index'.length).replace(/\/$/, '') || undefined
       : // TODO: support v2 flat routes?
-        routePath.replace(/\$/g, ':').replace(/[\[\]]/g, '');
+        routePath.replace(/\$/g, ':').replace(/[[\]]/g, '');
 
     const hasUserRoute = userRouteList.some(
       (r) => r.parentId === 'root' && r.path === normalizedVirtualRoutePath,

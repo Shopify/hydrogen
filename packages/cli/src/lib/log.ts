@@ -21,3 +21,4 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
     return log(first, ...rest);
   };
 }
+/* eslint-enable no-console */

@@ -1,31 +1,13 @@
-import {basename, extname} from 'path';
 import {AST_NODE_TYPES, TSESTree} from '@typescript-eslint/types';
 
 import {findParent} from './ast';
-
-enum ReactComponentType {
-  Server = 'server',
-  Client = 'client',
-}
 
 export function insideReactComponent(node: TSESTree.Node) {
   return Boolean(findParent(node, isReactComponent));
 }
 
-export function insideAPIRoute(node: TSESTree.Node) {
-  return Boolean(findParent(node, isAPIRoute));
-}
-
-export function isServerComponentFile(filename: string) {
-  const type = getReactComponentTypeFromFilename(filename);
-
-  return type === ReactComponentType.Server;
-}
-
-export function isClientComponentFile(filename: string) {
-  const type = getReactComponentTypeFromFilename(filename);
-
-  return type === ReactComponentType.Client;
+export function insideLoader(node: TSESTree.Node) {
+  return Boolean(findParent(node, isLoader));
 }
 
 export function isHook(node: TSESTree.CallExpression) {
@@ -74,22 +56,16 @@ function isReactComponent(node: TSESTree.Node) {
   return false;
 }
 
-function isAPIRoute(node: TSESTree.Node) {
+function isLoader(node: TSESTree.Node) {
   if (
     node.type === AST_NODE_TYPES.ExportNamedDeclaration &&
     node.declaration?.type === AST_NODE_TYPES.FunctionDeclaration &&
-    node.declaration?.id?.name === 'api'
+    node.declaration?.id?.name === 'loader'
   ) {
     return true;
   }
 
   return false;
-}
-
-function getReactComponentTypeFromFilename(filename: string) {
-  const ext = extname(basename(filename, extname(filename)));
-
-  return ext.slice(1);
 }
 
 function isHookName(str: string) {

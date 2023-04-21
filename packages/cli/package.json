@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "generate:manifest": "oclif manifest",
     "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest",
+    "lint": "eslint . --ext .ts,.tsx"
   },
   "devDependencies": {
     "@types/fs-extra": "^9.0.13",
@@ -23,7 +24,9 @@
     "@types/tar-fs": "^2.0.1",
     "oclif": "2.1.4",
     "tempy": "^3.0.0",
-    "vitest": "^0.28.1"
+    "vitest": "^0.28.1",
+    "eslint": "^8.20.0",
+    "eslint-plugin-h2": "*"
   },
   "peerDependencies": {
     "@remix-run/react": "^1.15.0",

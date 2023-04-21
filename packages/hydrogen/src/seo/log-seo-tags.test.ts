@@ -129,7 +129,7 @@ describe('logSeoTags', () => {
 function expectLogFixture(
   expectedOutput: ([string, number] | [string])[],
   styles = expect.any(String),
-  debug: boolean = false,
+  debug = false,
 ) {
   expectedOutput.forEach(([line, numStyles], index) => {
     const styleLines = numStyles

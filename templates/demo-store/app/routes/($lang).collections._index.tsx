@@ -1,3 +1,4 @@
+/* eslint-disable h2/prefer-image-component */
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {
@@ -196,3 +197,4 @@ const COLLECTIONS_QUERY = `#graphql
     }
   }
 `;
+/* eslint-enable h2/prefer-image-component */

@@ -1,11 +1,13 @@
-import recommended from './configs/recommended';
-import hydrogen from './configs/hydrogen';
-import typescript from './configs/typescript';
+import storefront from './configs/storefront';
+import cli from './configs/cli';
+import workspace from './configs/workspace';
+import library from './configs/library';
 
 export {rules} from './rules';
 
 export const configs = {
-  recommended,
-  hydrogen,
-  typescript,
+  storefront,
+  cli,
+  workspace,
+  library,
 };

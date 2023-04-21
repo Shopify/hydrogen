@@ -38,7 +38,7 @@
         "@shopify/hydrogen#build",
         "@shopify/cli-hydrogen#build",
         "@shopify/remix-oxygen#build",
-        "eslint-plugin-hydrogen"
+        "eslint-plugin-h2"
       ],
       "outputs": ["dist/**"]
     },
@@ -47,7 +47,7 @@
         "@shopify/hydrogen#build",
         "@shopify/cli-hydrogen#build",
         "@shopify/remix-oxygen#build",
-        "eslint-plugin-hydrogen"
+        "eslint-plugin-h2"
       ],
       "outputs": ["dist/**"]
     },
@@ -56,7 +56,7 @@
         "@shopify/hydrogen#build",
         "@shopify/cli-hydrogen#build",
         "@shopify/remix-oxygen#build",
-        "eslint-plugin-hydrogen"
+        "eslint-plugin-h2"
       ],
       "outputs": ["dist/**"]
     }

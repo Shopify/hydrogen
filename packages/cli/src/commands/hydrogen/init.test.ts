@@ -5,10 +5,10 @@ import {
   renderConfirmationPrompt,
   renderSelectPrompt,
   renderTextPrompt,
+  renderInfo,
 } from '@shopify/cli-kit/node/ui';
 import {outputContent} from '@shopify/cli-kit/node/output';
 import {installNodeModules} from '@shopify/cli-kit/node/node-package-manager';
-import {renderInfo} from '@shopify/cli-kit/node/ui';
 
 describe('init', () => {
   beforeEach(() => {

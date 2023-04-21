@@ -38,6 +38,7 @@ export async function startMiniOxygen({
     modules: true,
     env: process.env,
     envPath: (await fileExists(dotenvPath)) ? dotenvPath : undefined,
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     log: () => {},
     buildWatchPaths: watch
       ? [resolvePath(root, buildPathWorkerFile)]

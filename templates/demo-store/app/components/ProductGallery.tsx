@@ -1,3 +1,4 @@
+/* eslint-disable h2/prefer-image-component */
 import type {MediaEdge} from '@shopify/hydrogen/storefront-api-types';
 import {ATTR_LOADING_EAGER} from '~/lib/const';
 import type {MediaImage} from '@shopify/hydrogen/storefront-api-types';
@@ -112,3 +113,4 @@ export function ProductGallery({
     </div>
   );
 }
+/* eslint-enable h2/prefer-image-component */

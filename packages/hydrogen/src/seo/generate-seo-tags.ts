@@ -572,7 +572,7 @@ export function generateSeoTags<
           ',' +
           (noFollow ? 'nofollow' : 'follow');
 
-        for (let param of robotsParams) {
+        for (const param of robotsParams) {
           if (param) {
             robotsParam += `,${param}`;
           }
@@ -634,12 +634,12 @@ export function generateTag<T extends TagKey>(
   return tag;
 }
 
-//**
-// * Generate a unique key for a tag
-// * @param tag - a generated tag object
-// * @param group? - the group the tag belongs to
-// * @returns - a unique key to be used for react
-// */
+/**
+ * Generate a unique key for a tag
+ * @param tag - a generated tag object
+ * @param group? - the group the tag belongs to
+ * @returns - a unique key to be used for react
+ */
 export function generateKey(tag: CustomHeadTagObject, group?: string) {
   const {tag: tagName, props} = tag;
 

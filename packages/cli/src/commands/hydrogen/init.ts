@@ -20,11 +20,7 @@ import {
   fileExists,
   isDirectory,
 } from '@shopify/cli-kit/node/fs';
-import {
-  outputInfo,
-  outputContent,
-  outputToken,
-} from '@shopify/cli-kit/node/output';
+import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import {
   commonFlags,
   parseProcessFlags,

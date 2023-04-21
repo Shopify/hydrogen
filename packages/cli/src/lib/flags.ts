@@ -26,7 +26,7 @@ export function flagsToCamelObject(obj: Record<string, any>) {
   return Object.entries(obj).reduce((acc, [key, value]) => {
     acc[camelize(key)] = value;
     return acc;
-  }, {} as any);
+  }, {} as Record<string, unknown>);
 }
 
 /**
@@ -34,7 +34,7 @@ export function flagsToCamelObject(obj: Record<string, any>) {
  * This is used when starting the init command from create-hydrogen without Oclif.
  * @example
  * input: `node ./bin --force --no-install-deps --language js`
- * output: { force: true, installDeps: false,  language: 'js' }
+ * output: `{ force: true, installDeps: false,  language: 'js' }`
  */
 export function parseProcessFlags(
   processArgv: string[],
@@ -49,7 +49,7 @@ export function parseProcessFlags(
     const nextArg = args[i + 1];
 
     if (arg?.startsWith('-')) {
-      let key = arg.replace(/^\-{1,2}/, '');
+      let key = arg.replace(/^-{1,2}/, '');
       let value = !nextArg || nextArg.startsWith('-') ? true : nextArg;
 
       if (value === true && key.startsWith('no-')) {
@@ -67,7 +67,7 @@ export function parseProcessFlags(
 /**
  * Create a deprecated flag to prevent the CLI from crashing when a deprecated flag is used.
  * Displays an info message when the flag is used.
- * @param name The name of the flag.
+ * @param name - The name of the flag.
  */
 export function deprecated(name: string) {
   return Flags.custom<unknown>({

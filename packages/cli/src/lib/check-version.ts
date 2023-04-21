@@ -10,8 +10,8 @@ const PACKAGE_NAMES = {
 
 /**
  *
- * @param resolveFrom Path to a directory to resolve from, or directly the path to a package.json file.
- * @param pkgKey Package to check for updates.
+ * @param resolveFrom - Path to a directory to resolve from, or directly the path to a package.json file.
+ * @param pkgKey - Package to check for updates.
  * @returns A function to show the update information if any update is available.
  */
 export async function checkHydrogenVersion(

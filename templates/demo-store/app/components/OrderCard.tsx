@@ -1,3 +1,4 @@
+/* eslint-disable h2/prefer-image-component */
 import {flattenConnection} from '@shopify/hydrogen';
 import type {Order} from '@shopify/hydrogen/storefront-api-types';
 import {Heading, Text, Link} from '~/components';
@@ -80,3 +81,4 @@ export function OrderCard({order}: {order: Order}) {
     </li>
   );
 }
+/* eslint-enable h2/prefer-image-component */
