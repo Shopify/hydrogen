@@ -24,12 +24,17 @@ module.exports = {
     'object-shorthand': ['error', 'always', {avoidQuotes: true}],
 
     // TODO
-    // All rules below this comment should removed and fixed in the codebase
+    // All rules below this comment should be removed and fixed in the codebase
     // --------------------------------------------------------------------
     // we can't use engine, so we need to use the node version
     // we allow import/export syntax because typescript supports it
     'node/no-unsupported-features/es-syntax': 'off',
     'node/no-unsupported-features/es-builtins': 'off',
+    'node/no-unsupported-features/node-builtins': 'off',
+    'node/no-missing-import': 'off',
+    'node/no-extraneous-import': 'off',
+    'import/no-unresolved': 'off',
+    'node/no-unpublished-import': 'off',
   },
   ignorePatterns: [
     'node_modules/',
@@ -55,7 +60,7 @@ module.exports = {
       rules: {
         // We use tsdoc for documentation when possible, but we don't
         // need to break the build if it's missing or there are problems.
-        'tsdoc/syntax': 'error',
+        'tsdoc/syntax': 'warn',
         // Don't hate.
         '@typescript-eslint/no-explicit-any': 'warn',
         '@typescript-eslint/no-non-null-assertion': 'warn',

@@ -93,8 +93,8 @@ export interface SeoConfig<Schema extends Thing = Thing> {
   titleTemplate?: Maybe<string> | null;
   /**
    * The media associated with the given page (images, videos, etc). If you pass a string, it will be used as the
-   * `og:image` meta tag. If you pass an object or an array of objects, that will be used to generate `og:<type of
-   * media>` meta tags. The `url` property should be the URL of the media. The `height` and `width` properties are
+   * `og:image` meta tag. If you pass an object or an array of objects, that will be used to generate `og:type-of-media`
+   * meta tags. The `url` property should be the URL of the media. The `height` and `width` properties are
    * optional and should be the height and width of the media. The `altText` property is optional and should be a
    * description of the media.
    *
@@ -318,23 +318,23 @@ export interface LanguageAlternate {
 
 export type SeoMedia = {
   /**
-   * Used to generate og:<type of media> meta tag
+   * Used to generate og:type-of-media meta tag
    */
   type: 'image' | 'video' | 'audio';
   /**
-   * The url value populates both url and secure_url and is used to infer the og:<type of media>:type meta tag.
+   * The url value populates both url and secure_url and is used to infer the og:type-of-media:type meta tag.
    */
   url: Maybe<string> | undefined;
   /**
-   * The height in pixels of the media. This is used to generate the og:<type of media>:height meta tag.
+   * The height in pixels of the media. This is used to generate the og:type-of-media:height meta tag.
    */
   height: Maybe<number> | undefined;
   /**
-   * The width in pixels of the media. This is used to generate the og:<type of media>:width meta tag.
+   * The width in pixels of the media. This is used to generate the og:type-of-media:width meta tag.
    */
   width: Maybe<number> | undefined;
   /**
-   * The alt text for the media. This is used to generate the og:<type of media>:alt meta tag.
+   * The alt text for the media. This is used to generate the og:type-of-media:alt meta tag.
    */
   altText: Maybe<string> | undefined;
 };
@@ -502,7 +502,7 @@ export function generateSeoTags<
               type: 'application/ld+json',
               children: JSON.stringify(block),
             },
-            // @ts-expect-error
+            // @ts-expect-error - we know that the block is an object
             `json-ld-${block?.['@type'] || block?.name || index++}`,
           );
 
@@ -637,7 +637,7 @@ export function generateTag<T extends TagKey>(
 /**
  * Generate a unique key for a tag
  * @param tag - a generated tag object
- * @param group? - the group the tag belongs to
+ * @param group - the group the tag belongs to
  * @returns - a unique key to be used for react
  */
 export function generateKey(tag: CustomHeadTagObject, group?: string) {

@@ -128,11 +128,11 @@ export function Seo({debug}: SeoProps) {
 
 /**
  * Recursively invoke a function or return the value
- * @param value
- * @param rest
+ * @param value - function or value
+ * @param rest - rest parameters to pass to the function
  * @returns
  */
-export function recursivelyInvokeOrReturn<T, R extends any[]>(
+export function recursivelyInvokeOrReturn<T, R extends unknown[]>(
   value: T | ((...rest: R) => T),
   ...rest: R
 ): T | Record<string, T> {
@@ -154,7 +154,7 @@ export function recursivelyInvokeOrReturn<T, R extends any[]>(
     const entries = Object.entries(value);
 
     entries.forEach(([key, val]) => {
-      // @ts-expect-error
+      // @ts-expect-error - we know result is an object and we're adding a key
       result[key] = recursivelyInvokeOrReturn<T, R>(val, ...rest);
     });
 
