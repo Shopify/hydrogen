@@ -35,7 +35,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'HydrogenImageProps',
+      type: 'HydrogenImageBaseProps',
       description: '',
     },
   ],
