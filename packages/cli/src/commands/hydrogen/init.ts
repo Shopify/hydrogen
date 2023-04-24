@@ -234,7 +234,9 @@ export async function runInit(
       )} to start your local development server and start building`.value,
     ].filter((step): step is string => Boolean(step)),
     reference: [
-      'Building with Hydrogen: https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development',
+      'Getting started with Hydrogen: https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development',
+      'Hydrogen project structure: https://shopify.dev/docs/custom-storefronts/hydrogen/project-structure',
+      'Setting up Hydrogen environment variables: https://shopify.dev/docs/custom-storefronts/hydrogen/environment-variables',
     ],
   });
 
