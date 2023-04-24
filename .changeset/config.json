@@ -8,5 +8,13 @@
   "baseBranch": "2023-04",
   "updateInternalDependencies": "patch",
   "ignore": ["hello-world", "skeleton"],
-  "privatePackages": {"version": true, "tag": true}
+  "privatePackages": {"version": true, "tag": true},
+  "incrementVersions": {
+    "@shopify/hydrogen": {
+      "path": "./hydrogen-increase-version.js"
+    },
+    "@shopify/hydrogen-react": {
+      "path": "./hydrogen-increase-version.js"
+    }
+  }
 }
