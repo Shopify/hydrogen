@@ -1,0 +1,1022 @@
+diff --git a/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.cjs.dev.js b/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.cjs.dev.js
+index c2e8d2f..a501930 100644
+--- a/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.cjs.dev.js
++++ b/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.cjs.dev.js
+@@ -24,71 +24,54 @@ var getVersionRangeType__default = /*#__PURE__*/_interopDefault(getVersionRangeT
+ var semver__default = /*#__PURE__*/_interopDefault(semver);
+ var startCase__default = /*#__PURE__*/_interopDefault(startCase);
+ 
+-function _defineProperty(obj, key, value) {
+-  if (key in obj) {
+-    Object.defineProperty(obj, key, {
+-      value: value,
+-      enumerable: true,
+-      configurable: true,
+-      writable: true
+-    });
+-  } else {
+-    obj[key] = value;
+-  }
+-
+-  return obj;
+-}
+-
+ function ownKeys(object, enumerableOnly) {
+   var keys = Object.keys(object);
+-
+   if (Object.getOwnPropertySymbols) {
+     var symbols = Object.getOwnPropertySymbols(object);
+-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
++    enumerableOnly && (symbols = symbols.filter(function (sym) {
+       return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+-    });
+-    keys.push.apply(keys, symbols);
++    })), keys.push.apply(keys, symbols);
+   }
+-
+   return keys;
+ }
+-
+ function _objectSpread2(target) {
+   for (var i = 1; i < arguments.length; i++) {
+-    var source = arguments[i] != null ? arguments[i] : {};
+-
+-    if (i % 2) {
+-      ownKeys(Object(source), true).forEach(function (key) {
+-        _defineProperty(target, key, source[key]);
+-      });
+-    } else if (Object.getOwnPropertyDescriptors) {
+-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+-    } else {
+-      ownKeys(Object(source)).forEach(function (key) {
+-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+-      });
+-    }
++    var source = null != arguments[i] ? arguments[i] : {};
++    i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
++      _defineProperty(target, key, source[key]);
++    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
++      Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
++    });
+   }
+-
+   return target;
+ }
++function _defineProperty(obj, key, value) {
++  if (key in obj) {
++    Object.defineProperty(obj, key, {
++      value: value,
++      enumerable: true,
++      configurable: true,
++      writable: true
++    });
++  } else {
++    obj[key] = value;
++  }
++  return obj;
++}
+ 
+ /**
+  * Shared utility functions and business logic
+  */
+ const bumpTypes = ["none", "patch", "minor", "major"];
+-/* Converts a bump type into a numeric level to indicate order */
+ 
++/* Converts a bump type into a numeric level to indicate order */
+ function getBumpLevel(type) {
+   const level = bumpTypes.indexOf(type);
+-
+   if (level < 0) {
+     throw new Error(`Unrecognised bump type ${type}`);
+   }
+-
+   return level;
+ }
+-
+ function shouldUpdateDependencyBasedOnConfig(release, {
+   depVersionRange,
+   depType
+@@ -100,14 +83,11 @@ function shouldUpdateDependencyBasedOnConfig(release, {
+     // Dependencies leaving semver range should always be updated
+     return true;
+   }
+-
+   const minLevel = getBumpLevel(minReleaseType);
+   let shouldUpdate = getBumpLevel(release.type) >= minLevel;
+-
+   if (depType === "peerDependencies") {
+     shouldUpdate = !onlyUpdatePeerDependentsWhenOutOfRange;
+   }
+-
+   return shouldUpdate;
+ }
+ 
+@@ -123,10 +103,8 @@ function versionPackage(release, versionsToUpdate, {
+     packageJson
+   } = release;
+   packageJson.version = newVersion;
+-
+   for (let depType of DEPENDENCY_TYPES) {
+     let deps = packageJson[depType];
+-
+     if (deps) {
+       for (let {
+         name,
+@@ -134,7 +112,6 @@ function versionPackage(release, versionsToUpdate, {
+         type
+       } of versionsToUpdate) {
+         let depCurrentVersion = deps[name];
+-
+         if (!depCurrentVersion || depCurrentVersion.startsWith("file:") || depCurrentVersion.startsWith("link:") || !shouldUpdateDependencyBasedOnConfig({
+           version,
+           type
+@@ -147,28 +124,24 @@ function versionPackage(release, versionsToUpdate, {
+         })) {
+           continue;
+         }
+-
+         const usesWorkspaceRange = depCurrentVersion.startsWith("workspace:");
+-
+         if (!usesWorkspaceRange && bumpVersionsWithWorkspaceProtocolOnly === true) {
+           continue;
+         }
+-
+         if (usesWorkspaceRange) {
+           const workspaceDepVersion = depCurrentVersion.replace(/^workspace:/, "");
+-
+           if (workspaceDepVersion === "*" || workspaceDepVersion === "^" || workspaceDepVersion === "~") {
+             continue;
+           }
+-
+           depCurrentVersion = workspaceDepVersion;
+         }
+-
+-        if ( // an empty string is the normalised version of x/X/*
++        if (
++        // an empty string is the normalised version of x/X/*
+         // we don't want to change these versions because they will match
+         // any version and if someone makes the range that
+         // they probably want it to stay like that...
+-        new semver__default['default'].Range(depCurrentVersion).range !== "" || // ...unless the current version of a dependency is a prerelease (which doesn't satisfy x/X/*)
++        new semver__default['default'].Range(depCurrentVersion).range !== "" ||
++        // ...unless the current version of a dependency is a prerelease (which doesn't satisfy x/X/*)
+         // leaving those as is would leave the package in a non-installable state (wrong dep versions would get installed)
+         semver__default['default'].prerelease(version) !== null) {
+           let newNewRange = snapshot ? version : `${getVersionRangeType__default['default'](depCurrentVersion)}${version}`;
+@@ -178,7 +151,6 @@ function versionPackage(release, versionsToUpdate, {
+       }
+     }
+   }
+-
+   return _objectSpread2(_objectSpread2({}, release), {}, {
+     packageJson
+   });
+@@ -187,13 +159,12 @@ function versionPackage(release, versionsToUpdate, {
+ async function generateChangesForVersionTypeMarkdown(obj, type) {
+   let releaseLines = await Promise.all(obj[type]);
+   releaseLines = releaseLines.filter(x => x);
+-
+   if (releaseLines.length) {
+     return `### ${startCase__default['default'](type)} Changes\n\n${releaseLines.join("\n")}\n`;
+   }
+-} // release is the package and version we are releasing
+-
++}
+ 
++// release is the package and version we are releasing
+ async function getChangelogEntry(release, releases, changesets, changelogFuncs, changelogOpts, {
+   updateInternalDependencies,
+   onlyUpdatePeerDependentsWhenOutOfRange
+@@ -203,21 +174,20 @@ async function getChangelogEntry(release, releases, changesets, changelogFuncs,
+     major: [],
+     minor: [],
+     patch: []
+-  }; // I sort of feel we can do better, as ComprehensiveReleases have an array
++  };
++
++  // I sort of feel we can do better, as ComprehensiveReleases have an array
+   // of the relevant changesets but since we need the version type for the
+   // release in the changeset, I don't know if we can
+   // We can filter here, but that just adds another iteration over this list
+-
+   changesets.forEach(cs => {
+     const rls = cs.releases.find(r => r.name === release.name);
+-
+     if (rls && rls.type !== "none") {
+       changelogLines[rls.type].push(changelogFuncs.getReleaseLine(cs, rls.type, changelogOpts));
+     }
+   });
+   let dependentReleases = releases.filter(rel => {
+     var _release$packageJson$, _release$packageJson$2;
+-
+     const dependencyVersionRange = (_release$packageJson$ = release.packageJson.dependencies) === null || _release$packageJson$ === void 0 ? void 0 : _release$packageJson$[rel.name];
+     const peerDependencyVersionRange = (_release$packageJson$2 = release.packageJson.peerDependencies) === null || _release$packageJson$2 === void 0 ? void 0 : _release$packageJson$2[rel.name];
+     const versionRange = dependencyVersionRange || peerDependencyVersionRange;
+@@ -252,35 +222,32 @@ function getPrettierInstance(cwd) {
+     if (!err || err.code !== "MODULE_NOT_FOUND") {
+       throw err;
+     }
+-
+     return prettier__default['default'];
+   }
+ }
+-
+ function stringDefined(s) {
+   return !!s;
+ }
+-
+ async function getCommitsThatAddChangesets(changesetIds, cwd) {
+   const paths = changesetIds.map(id => `.changeset/${id}.md`);
+   const commits = await git.getCommitsThatAddFiles(paths, {
+     cwd,
+     short: true
+   });
+-
+   if (commits.every(stringDefined)) {
+     // We have commits for all files
+     return commits;
+-  } // Some files didn't exist. Try legacy filenames instead
+-
++  }
+ 
++  // Some files didn't exist. Try legacy filenames instead
+   const missingIds = changesetIds.map((id, i) => commits[i] ? undefined : id).filter(stringDefined);
+   const legacyPaths = missingIds.map(id => `.changeset/${id}/changes.json`);
+   const commitsForLegacyPaths = await git.getCommitsThatAddFiles(legacyPaths, {
+     cwd,
+     short: true
+-  }); // Fill in the blanks in the array of commits
++  });
+ 
++  // Fill in the blanks in the array of commits
+   changesetIds.forEach((id, i) => {
+     if (!commits[i]) {
+       const missingIndex = missingIds.indexOf(id);
+@@ -289,7 +256,6 @@ async function getCommitsThatAddChangesets(changesetIds, cwd) {
+   });
+   return commits;
+ }
+-
+ async function applyReleasePlan(releasePlan, packages, config$1 = config.defaultConfig, snapshot) {
+   let cwd = packages.root.dir;
+   let touchedFiles = [];
+@@ -302,10 +268,10 @@ async function applyReleasePlan(releasePlan, packages, config$1 = config.default
+     let pkg = packagesByName.get(release.name);
+     if (!pkg) throw new Error(`Could not find matching package for release of: ${release.name}`);
+     return _objectSpread2(_objectSpread2({}, release), pkg);
+-  }); // I think this might be the wrong place to do this, but gotta do it somewhere -  add changelog entries to releases
++  });
+ 
++  // I think this might be the wrong place to do this, but gotta do it somewhere -  add changelog entries to releases
+   let releaseWithChangelogs = await getNewChangelogEntry(releasesWithPackage, changesets, config$1, cwd);
+-
+   if (releasePlan.preState !== undefined && snapshot === undefined) {
+     if (releasePlan.preState.mode === "exit") {
+       await fs__default['default'].remove(path__default['default'].join(cwd, ".changeset", "pre.json"));
+@@ -313,7 +279,6 @@ async function applyReleasePlan(releasePlan, packages, config$1 = config.default
+       await fs__default['default'].writeFile(path__default['default'].join(cwd, ".changeset", "pre.json"), JSON.stringify(releasePlan.preState, null, 2) + "\n");
+     }
+   }
+-
+   let versionsToUpdate = releases.map(({
+     name,
+     newVersion,
+@@ -322,8 +287,9 @@ async function applyReleasePlan(releasePlan, packages, config$1 = config.default
+     name,
+     version: newVersion,
+     type
+-  })); // iterate over releases updating packages
++  }));
+ 
++  // iterate over releases updating packages
+   let finalisedRelease = releaseWithChangelogs.map(release => {
+     return versionPackage(release, versionsToUpdate, {
+       updateInternalDependencies: config$1.updateInternalDependencies,
+@@ -334,7 +300,6 @@ async function applyReleasePlan(releasePlan, packages, config$1 = config.default
+   });
+   let prettierInstance = getPrettierInstance(cwd);
+   let prettierConfig = await prettierInstance.resolveConfig(cwd);
+-
+   for (let release of finalisedRelease) {
+     let {
+       changelog,
+@@ -345,20 +310,17 @@ async function applyReleasePlan(releasePlan, packages, config$1 = config.default
+     const pkgJSONPath = path__default['default'].resolve(dir, "package.json");
+     await updatePackageJson(pkgJSONPath, packageJson);
+     touchedFiles.push(pkgJSONPath);
+-
+     if (changelog && changelog.length > 0) {
+       const changelogPath = path__default['default'].resolve(dir, "CHANGELOG.md");
+       await updateChangelog(changelogPath, changelog, name, prettierInstance, prettierConfig);
+       touchedFiles.push(changelogPath);
+     }
+   }
+-
+   if (releasePlan.preState === undefined || releasePlan.preState.mode === "exit") {
+     let changesetFolder = path__default['default'].resolve(cwd, ".changeset");
+     await Promise.all(changesets.map(async changeset => {
+       let changesetPath = path__default['default'].resolve(changesetFolder, `${changeset.id}.md`);
+       let changesetFolderPath = path__default['default'].resolve(changesetFolder, changeset.id);
+-
+       if (await fs__default['default'].pathExists(changesetPath)) {
+         // DO NOT remove changeset for ignored packages
+         // Mixed changeset that contains both ignored packages and not ignored packages are disallowed
+@@ -368,26 +330,24 @@ async function applyReleasePlan(releasePlan, packages, config$1 = config.default
+         if (!changeset.releases.find(release => config$1.ignore.includes(release.name))) {
+           touchedFiles.push(changesetPath);
+           await fs__default['default'].remove(changesetPath);
+-        } // TO REMOVE LOGIC - this works to remove v1 changesets. We should be removed in the future
+-
++        }
++        // TO REMOVE LOGIC - this works to remove v1 changesets. We should be removed in the future
+       } else if (await fs__default['default'].pathExists(changesetFolderPath)) {
+         touchedFiles.push(changesetFolderPath);
+         await fs__default['default'].remove(changesetFolderPath);
+       }
+     }));
+-  } // We return the touched files to be committed in the cli
+-
++  }
+ 
++  // We return the touched files to be committed in the cli
+   return touchedFiles;
+ }
+-
+ async function getNewChangelogEntry(releasesWithPackage, changesets, config, cwd) {
+   if (!config.changelog) {
+     return Promise.resolve(releasesWithPackage.map(release => _objectSpread2(_objectSpread2({}, release), {}, {
+       changelog: null
+     })));
+   }
+-
+   let getChangelogFuncs = {
+     getReleaseLine: () => Promise.resolve(""),
+     getDependencyReleaseLine: () => Promise.resolve("")
+@@ -395,19 +355,15 @@ async function getNewChangelogEntry(releasesWithPackage, changesets, config, cwd
+   const changelogOpts = config.changelog[1];
+   let changesetPath = path__default['default'].join(cwd, ".changeset");
+   let changelogPath = resolveFrom__default['default'](changesetPath, config.changelog[0]);
+-
+   let possibleChangelogFunc = require(changelogPath);
+-
+   if (possibleChangelogFunc.default) {
+     possibleChangelogFunc = possibleChangelogFunc.default;
+   }
+-
+   if (typeof possibleChangelogFunc.getReleaseLine === "function" && typeof possibleChangelogFunc.getDependencyReleaseLine === "function") {
+     getChangelogFuncs = possibleChangelogFunc;
+   } else {
+     throw new Error("Could not resolve changelog generation functions");
+   }
+-
+   let commits = await getCommitsThatAddChangesets(changesets.map(cs => cs.id), cwd);
+   let moddedChangesets = changesets.map((cs, i) => _objectSpread2(_objectSpread2({}, cs), {}, {
+     commit: commits[i]
+@@ -426,10 +382,8 @@ async function getNewChangelogEntry(releasesWithPackage, changesets, config, cwd
+     throw e;
+   });
+ }
+-
+ async function updateChangelog(changelogPath, changelog, name, prettierInstance, prettierConfig) {
+   let templateString = `\n\n${changelog.trim()}\n`;
+-
+   try {
+     if (fs__default['default'].existsSync(changelogPath)) {
+       await prependFile(changelogPath, templateString, name, prettierInstance, prettierConfig);
+@@ -440,29 +394,26 @@ async function updateChangelog(changelogPath, changelog, name, prettierInstance,
+     console.warn(e);
+   }
+ }
+-
+ async function updatePackageJson(pkgJsonPath, pkgJson) {
+   const pkgRaw = await fs__default['default'].readFile(pkgJsonPath, "utf-8");
+   const indent = detectIndent__default['default'](pkgRaw).indent || "  ";
+   const stringified = JSON.stringify(pkgJson, null, indent) + (pkgRaw.endsWith("\n") ? "\n" : "");
+   return fs__default['default'].writeFile(pkgJsonPath, stringified);
+ }
+-
+ async function prependFile(filePath, data, name, prettierInstance, prettierConfig) {
+-  const fileData = fs__default['default'].readFileSync(filePath).toString(); // if the file exists but doesn't have the header, we'll add it in
+-
++  const fileData = fs__default['default'].readFileSync(filePath).toString();
++  // if the file exists but doesn't have the header, we'll add it in
+   if (!fileData) {
+     const completelyNewChangelog = `# ${name}${data}`;
+     await writeFormattedMarkdownFile(filePath, completelyNewChangelog, prettierInstance, prettierConfig);
+     return;
+   }
+-
+   const newChangelog = fileData.replace("\n", data);
+   await writeFormattedMarkdownFile(filePath, newChangelog, prettierInstance, prettierConfig);
+ }
+-
+ async function writeFormattedMarkdownFile(filePath, content, prettierInstance, prettierConfig) {
+-  await fs__default['default'].writeFile(filePath, // Prettier v3 returns a promise
++  await fs__default['default'].writeFile(filePath,
++  // Prettier v3 returns a promise
+   await prettierInstance.format(content, _objectSpread2(_objectSpread2({}, prettierConfig), {}, {
+     filepath: filePath,
+     parser: "markdown"
+diff --git a/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.cjs.prod.js b/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.cjs.prod.js
+index 846b320..5ce5d1b 100644
+--- a/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.cjs.prod.js
++++ b/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.cjs.prod.js
+@@ -14,15 +14,6 @@ function _interopDefault(e) {
+ 
+ var resolveFrom__default = _interopDefault(resolveFrom), detectIndent__default = _interopDefault(detectIndent), fs__default = _interopDefault(fs), path__default = _interopDefault(path), prettier__default = _interopDefault(prettier), getVersionRangeType__default = _interopDefault(getVersionRangeType), semver__default = _interopDefault(semver), startCase__default = _interopDefault(startCase);
+ 
+-function _defineProperty(obj, key, value) {
+-  return key in obj ? Object.defineProperty(obj, key, {
+-    value: value,
+-    enumerable: !0,
+-    configurable: !0,
+-    writable: !0
+-  }) : obj[key] = value, obj;
+-}
+-
+ function ownKeys(object, enumerableOnly) {
+   var keys = Object.keys(object);
+   if (Object.getOwnPropertySymbols) {
+@@ -46,6 +37,15 @@ function _objectSpread2(target) {
+   return target;
+ }
+ 
++function _defineProperty(obj, key, value) {
++  return key in obj ? Object.defineProperty(obj, key, {
++    value: value,
++    enumerable: !0,
++    configurable: !0,
++    writable: !0
++  }) : obj[key] = value, obj;
++}
++
+ const bumpTypes = [ "none", "patch", "minor", "major" ];
+ 
+ function getBumpLevel(type) {
+diff --git a/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.esm.js b/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.esm.js
+index 47a42c3..d5b6ab7 100644
+--- a/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.esm.js
++++ b/node_modules/@changesets/apply-release-plan/dist/apply-release-plan.esm.js
+@@ -9,71 +9,54 @@ import getVersionRangeType from '@changesets/get-version-range-type';
+ import semver from 'semver';
+ import startCase from 'lodash.startcase';
+ 
+-function _defineProperty(obj, key, value) {
+-  if (key in obj) {
+-    Object.defineProperty(obj, key, {
+-      value: value,
+-      enumerable: true,
+-      configurable: true,
+-      writable: true
+-    });
+-  } else {
+-    obj[key] = value;
+-  }
+-
+-  return obj;
+-}
+-
+ function ownKeys(object, enumerableOnly) {
+   var keys = Object.keys(object);
+-
+   if (Object.getOwnPropertySymbols) {
+     var symbols = Object.getOwnPropertySymbols(object);
+-    if (enumerableOnly) symbols = symbols.filter(function (sym) {
++    enumerableOnly && (symbols = symbols.filter(function (sym) {
+       return Object.getOwnPropertyDescriptor(object, sym).enumerable;
+-    });
+-    keys.push.apply(keys, symbols);
++    })), keys.push.apply(keys, symbols);
+   }
+-
+   return keys;
+ }
+-
+ function _objectSpread2(target) {
+   for (var i = 1; i < arguments.length; i++) {
+-    var source = arguments[i] != null ? arguments[i] : {};
+-
+-    if (i % 2) {
+-      ownKeys(Object(source), true).forEach(function (key) {
+-        _defineProperty(target, key, source[key]);
+-      });
+-    } else if (Object.getOwnPropertyDescriptors) {
+-      Object.defineProperties(target, Object.getOwnPropertyDescriptors(source));
+-    } else {
+-      ownKeys(Object(source)).forEach(function (key) {
+-        Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
+-      });
+-    }
++    var source = null != arguments[i] ? arguments[i] : {};
++    i % 2 ? ownKeys(Object(source), !0).forEach(function (key) {
++      _defineProperty(target, key, source[key]);
++    }) : Object.getOwnPropertyDescriptors ? Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)) : ownKeys(Object(source)).forEach(function (key) {
++      Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key));
++    });
+   }
+-
+   return target;
+ }
++function _defineProperty(obj, key, value) {
++  if (key in obj) {
++    Object.defineProperty(obj, key, {
++      value: value,
++      enumerable: true,
++      configurable: true,
++      writable: true
++    });
++  } else {
++    obj[key] = value;
++  }
++  return obj;
++}
+ 
+ /**
+  * Shared utility functions and business logic
+  */
+ const bumpTypes = ["none", "patch", "minor", "major"];
+-/* Converts a bump type into a numeric level to indicate order */
+ 
++/* Converts a bump type into a numeric level to indicate order */
+ function getBumpLevel(type) {
+   const level = bumpTypes.indexOf(type);
+-
+   if (level < 0) {
+     throw new Error(`Unrecognised bump type ${type}`);
+   }
+-
+   return level;
+ }
+-
+ function shouldUpdateDependencyBasedOnConfig(release, {
+   depVersionRange,
+   depType
+@@ -85,14 +68,11 @@ function shouldUpdateDependencyBasedOnConfig(release, {
+     // Dependencies leaving semver range should always be updated
+     return true;
+   }
+-
+   const minLevel = getBumpLevel(minReleaseType);
+   let shouldUpdate = getBumpLevel(release.type) >= minLevel;
+-
+   if (depType === "peerDependencies") {
+     shouldUpdate = !onlyUpdatePeerDependentsWhenOutOfRange;
+   }
+-
+   return shouldUpdate;
+ }
+ 
+@@ -108,10 +88,8 @@ function versionPackage(release, versionsToUpdate, {
+     packageJson
+   } = release;
+   packageJson.version = newVersion;
+-
+   for (let depType of DEPENDENCY_TYPES) {
+     let deps = packageJson[depType];
+-
+     if (deps) {
+       for (let {
+         name,
+@@ -119,7 +97,6 @@ function versionPackage(release, versionsToUpdate, {
+         type
+       } of versionsToUpdate) {
+         let depCurrentVersion = deps[name];
+-
+         if (!depCurrentVersion || depCurrentVersion.startsWith("file:") || depCurrentVersion.startsWith("link:") || !shouldUpdateDependencyBasedOnConfig({
+           version,
+           type
+@@ -132,28 +109,24 @@ function versionPackage(release, versionsToUpdate, {
+         })) {
+           continue;
+         }
+-
+         const usesWorkspaceRange = depCurrentVersion.startsWith("workspace:");
+-
+         if (!usesWorkspaceRange && bumpVersionsWithWorkspaceProtocolOnly === true) {
+           continue;
+         }
+-
+         if (usesWorkspaceRange) {
+           const workspaceDepVersion = depCurrentVersion.replace(/^workspace:/, "");
+-
+           if (workspaceDepVersion === "*" || workspaceDepVersion === "^" || workspaceDepVersion === "~") {
+             continue;
+           }
+-
+           depCurrentVersion = workspaceDepVersion;
+         }
+-
+-        if ( // an empty string is the normalised version of x/X/*
++        if (
++        // an empty string is the normalised version of x/X/*
+         // we don't want to change these versions because they will match
+         // any version and if someone makes the range that
+         // they probably want it to stay like that...
+-        new semver.Range(depCurrentVersion).range !== "" || // ...unless the current version of a dependency is a prerelease (which doesn't satisfy x/X/*)
++        new semver.Range(depCurrentVersion).range !== "" ||
++        // ...unless the current version of a dependency is a prerelease (which doesn't satisfy x/X/*)
+         // leaving those as is would leave the package in a non-installable state (wrong dep versions would get installed)
+         semver.prerelease(version) !== null) {
+           let newNewRange = snapshot ? version : `${getVersionRangeType(depCurrentVersion)}${version}`;
+@@ -163,7 +136,6 @@ function versionPackage(release, versionsToUpdate, {
+       }
+     }
+   }
+-
+   return _objectSpread2(_objectSpread2({}, release), {}, {
+     packageJson
+   });
+@@ -172,13 +144,12 @@ function versionPackage(release, versionsToUpdate, {
+ async function generateChangesForVersionTypeMarkdown(obj, type) {
+   let releaseLines = await Promise.all(obj[type]);
+   releaseLines = releaseLines.filter(x => x);
+-
+   if (releaseLines.length) {
+     return `### ${startCase(type)} Changes\n\n${releaseLines.join("\n")}\n`;
+   }
+-} // release is the package and version we are releasing
+-
++}
+ 
++// release is the package and version we are releasing
+ async function getChangelogEntry(release, releases, changesets, changelogFuncs, changelogOpts, {
+   updateInternalDependencies,
+   onlyUpdatePeerDependentsWhenOutOfRange
+@@ -188,21 +159,20 @@ async function getChangelogEntry(release, releases, changesets, changelogFuncs,
+     major: [],
+     minor: [],
+     patch: []
+-  }; // I sort of feel we can do better, as ComprehensiveReleases have an array
++  };
++
++  // I sort of feel we can do better, as ComprehensiveReleases have an array
+   // of the relevant changesets but since we need the version type for the
+   // release in the changeset, I don't know if we can
+   // We can filter here, but that just adds another iteration over this list
+-
+   changesets.forEach(cs => {
+     const rls = cs.releases.find(r => r.name === release.name);
+-
+     if (rls && rls.type !== "none") {
+       changelogLines[rls.type].push(changelogFuncs.getReleaseLine(cs, rls.type, changelogOpts));
+     }
+   });
+   let dependentReleases = releases.filter(rel => {
+     var _release$packageJson$, _release$packageJson$2;
+-
+     const dependencyVersionRange = (_release$packageJson$ = release.packageJson.dependencies) === null || _release$packageJson$ === void 0 ? void 0 : _release$packageJson$[rel.name];
+     const peerDependencyVersionRange = (_release$packageJson$2 = release.packageJson.peerDependencies) === null || _release$packageJson$2 === void 0 ? void 0 : _release$packageJson$2[rel.name];
+     const versionRange = dependencyVersionRange || peerDependencyVersionRange;
+@@ -237,35 +207,32 @@ function getPrettierInstance(cwd) {
+     if (!err || err.code !== "MODULE_NOT_FOUND") {
+       throw err;
+     }
+-
+     return prettier;
+   }
+ }
+-
+ function stringDefined(s) {
+   return !!s;
+ }
+-
+ async function getCommitsThatAddChangesets(changesetIds, cwd) {
+   const paths = changesetIds.map(id => `.changeset/${id}.md`);
+   const commits = await getCommitsThatAddFiles(paths, {
+     cwd,
+     short: true
+   });
+-
+   if (commits.every(stringDefined)) {
+     // We have commits for all files
+     return commits;
+-  } // Some files didn't exist. Try legacy filenames instead
+-
++  }
+ 
++  // Some files didn't exist. Try legacy filenames instead
+   const missingIds = changesetIds.map((id, i) => commits[i] ? undefined : id).filter(stringDefined);
+   const legacyPaths = missingIds.map(id => `.changeset/${id}/changes.json`);
+   const commitsForLegacyPaths = await getCommitsThatAddFiles(legacyPaths, {
+     cwd,
+     short: true
+-  }); // Fill in the blanks in the array of commits
++  });
+ 
++  // Fill in the blanks in the array of commits
+   changesetIds.forEach((id, i) => {
+     if (!commits[i]) {
+       const missingIndex = missingIds.indexOf(id);
+@@ -274,7 +241,6 @@ async function getCommitsThatAddChangesets(changesetIds, cwd) {
+   });
+   return commits;
+ }
+-
+ async function applyReleasePlan(releasePlan, packages, config = defaultConfig, snapshot) {
+   let cwd = packages.root.dir;
+   let touchedFiles = [];
+@@ -287,10 +253,10 @@ async function applyReleasePlan(releasePlan, packages, config = defaultConfig, s
+     let pkg = packagesByName.get(release.name);
+     if (!pkg) throw new Error(`Could not find matching package for release of: ${release.name}`);
+     return _objectSpread2(_objectSpread2({}, release), pkg);
+-  }); // I think this might be the wrong place to do this, but gotta do it somewhere -  add changelog entries to releases
++  });
+ 
++  // I think this might be the wrong place to do this, but gotta do it somewhere -  add changelog entries to releases
+   let releaseWithChangelogs = await getNewChangelogEntry(releasesWithPackage, changesets, config, cwd);
+-
+   if (releasePlan.preState !== undefined && snapshot === undefined) {
+     if (releasePlan.preState.mode === "exit") {
+       await fs.remove(path.join(cwd, ".changeset", "pre.json"));
+@@ -298,7 +264,6 @@ async function applyReleasePlan(releasePlan, packages, config = defaultConfig, s
+       await fs.writeFile(path.join(cwd, ".changeset", "pre.json"), JSON.stringify(releasePlan.preState, null, 2) + "\n");
+     }
+   }
+-
+   let versionsToUpdate = releases.map(({
+     name,
+     newVersion,
+@@ -307,8 +272,9 @@ async function applyReleasePlan(releasePlan, packages, config = defaultConfig, s
+     name,
+     version: newVersion,
+     type
+-  })); // iterate over releases updating packages
++  }));
+ 
++  // iterate over releases updating packages
+   let finalisedRelease = releaseWithChangelogs.map(release => {
+     return versionPackage(release, versionsToUpdate, {
+       updateInternalDependencies: config.updateInternalDependencies,
+@@ -319,7 +285,6 @@ async function applyReleasePlan(releasePlan, packages, config = defaultConfig, s
+   });
+   let prettierInstance = getPrettierInstance(cwd);
+   let prettierConfig = await prettierInstance.resolveConfig(cwd);
+-
+   for (let release of finalisedRelease) {
+     let {
+       changelog,
+@@ -330,20 +295,17 @@ async function applyReleasePlan(releasePlan, packages, config = defaultConfig, s
+     const pkgJSONPath = path.resolve(dir, "package.json");
+     await updatePackageJson(pkgJSONPath, packageJson);
+     touchedFiles.push(pkgJSONPath);
+-
+     if (changelog && changelog.length > 0) {
+       const changelogPath = path.resolve(dir, "CHANGELOG.md");
+       await updateChangelog(changelogPath, changelog, name, prettierInstance, prettierConfig);
+       touchedFiles.push(changelogPath);
+     }
+   }
+-
+   if (releasePlan.preState === undefined || releasePlan.preState.mode === "exit") {
+     let changesetFolder = path.resolve(cwd, ".changeset");
+     await Promise.all(changesets.map(async changeset => {
+       let changesetPath = path.resolve(changesetFolder, `${changeset.id}.md`);
+       let changesetFolderPath = path.resolve(changesetFolder, changeset.id);
+-
+       if (await fs.pathExists(changesetPath)) {
+         // DO NOT remove changeset for ignored packages
+         // Mixed changeset that contains both ignored packages and not ignored packages are disallowed
+@@ -353,26 +315,24 @@ async function applyReleasePlan(releasePlan, packages, config = defaultConfig, s
+         if (!changeset.releases.find(release => config.ignore.includes(release.name))) {
+           touchedFiles.push(changesetPath);
+           await fs.remove(changesetPath);
+-        } // TO REMOVE LOGIC - this works to remove v1 changesets. We should be removed in the future
+-
++        }
++        // TO REMOVE LOGIC - this works to remove v1 changesets. We should be removed in the future
+       } else if (await fs.pathExists(changesetFolderPath)) {
+         touchedFiles.push(changesetFolderPath);
+         await fs.remove(changesetFolderPath);
+       }
+     }));
+-  } // We return the touched files to be committed in the cli
+-
++  }
+ 
++  // We return the touched files to be committed in the cli
+   return touchedFiles;
+ }
+-
+ async function getNewChangelogEntry(releasesWithPackage, changesets, config, cwd) {
+   if (!config.changelog) {
+     return Promise.resolve(releasesWithPackage.map(release => _objectSpread2(_objectSpread2({}, release), {}, {
+       changelog: null
+     })));
+   }
+-
+   let getChangelogFuncs = {
+     getReleaseLine: () => Promise.resolve(""),
+     getDependencyReleaseLine: () => Promise.resolve("")
+@@ -380,19 +340,15 @@ async function getNewChangelogEntry(releasesWithPackage, changesets, config, cwd
+   const changelogOpts = config.changelog[1];
+   let changesetPath = path.join(cwd, ".changeset");
+   let changelogPath = resolveFrom(changesetPath, config.changelog[0]);
+-
+   let possibleChangelogFunc = require(changelogPath);
+-
+   if (possibleChangelogFunc.default) {
+     possibleChangelogFunc = possibleChangelogFunc.default;
+   }
+-
+   if (typeof possibleChangelogFunc.getReleaseLine === "function" && typeof possibleChangelogFunc.getDependencyReleaseLine === "function") {
+     getChangelogFuncs = possibleChangelogFunc;
+   } else {
+     throw new Error("Could not resolve changelog generation functions");
+   }
+-
+   let commits = await getCommitsThatAddChangesets(changesets.map(cs => cs.id), cwd);
+   let moddedChangesets = changesets.map((cs, i) => _objectSpread2(_objectSpread2({}, cs), {}, {
+     commit: commits[i]
+@@ -411,10 +367,8 @@ async function getNewChangelogEntry(releasesWithPackage, changesets, config, cwd
+     throw e;
+   });
+ }
+-
+ async function updateChangelog(changelogPath, changelog, name, prettierInstance, prettierConfig) {
+   let templateString = `\n\n${changelog.trim()}\n`;
+-
+   try {
+     if (fs.existsSync(changelogPath)) {
+       await prependFile(changelogPath, templateString, name, prettierInstance, prettierConfig);
+@@ -425,29 +379,26 @@ async function updateChangelog(changelogPath, changelog, name, prettierInstance,
+     console.warn(e);
+   }
+ }
+-
+ async function updatePackageJson(pkgJsonPath, pkgJson) {
+   const pkgRaw = await fs.readFile(pkgJsonPath, "utf-8");
+   const indent = detectIndent(pkgRaw).indent || "  ";
+   const stringified = JSON.stringify(pkgJson, null, indent) + (pkgRaw.endsWith("\n") ? "\n" : "");
+   return fs.writeFile(pkgJsonPath, stringified);
+ }
+-
+ async function prependFile(filePath, data, name, prettierInstance, prettierConfig) {
+-  const fileData = fs.readFileSync(filePath).toString(); // if the file exists but doesn't have the header, we'll add it in
+-
++  const fileData = fs.readFileSync(filePath).toString();
++  // if the file exists but doesn't have the header, we'll add it in
+   if (!fileData) {
+     const completelyNewChangelog = `# ${name}${data}`;
+     await writeFormattedMarkdownFile(filePath, completelyNewChangelog, prettierInstance, prettierConfig);
+     return;
+   }
+-
+   const newChangelog = fileData.replace("\n", data);
+   await writeFormattedMarkdownFile(filePath, newChangelog, prettierInstance, prettierConfig);
+ }
+-
+ async function writeFormattedMarkdownFile(filePath, content, prettierInstance, prettierConfig) {
+-  await fs.writeFile(filePath, // Prettier v3 returns a promise
++  await fs.writeFile(filePath,
++  // Prettier v3 returns a promise
+   await prettierInstance.format(content, _objectSpread2(_objectSpread2({}, prettierConfig), {}, {
+     filepath: filePath,
+     parser: "markdown"
+diff --git a/node_modules/@changesets/apply-release-plan/src/index.test.ts b/node_modules/@changesets/apply-release-plan/src/index.test.ts
+index 8d07a81..3909bbe 100644
+--- a/node_modules/@changesets/apply-release-plan/src/index.test.ts
++++ b/node_modules/@changesets/apply-release-plan/src/index.test.ts
+@@ -60,6 +60,7 @@ class FakeReleasePlan {
+         useCalculatedVersion: false,
+         prereleaseTemplate: null,
+       },
++      incrementVersions: false,
+       ...config,
+     };
+ 
+@@ -103,6 +104,7 @@ async function testSetup(
+         onlyUpdatePeerDependentsWhenOutOfRange: false,
+         updateInternalDependents: "out-of-range",
+       },
++      incrementVersions: false,
+     };
+   }
+   let tempDir = await testdir(fixture);
+@@ -675,6 +677,7 @@ describe("apply release plan", () => {
+             useCalculatedVersion: false,
+             prereleaseTemplate: null,
+           },
++          incrementVersions: false,
+         }
+       );
+       let pkgPathA = changedFiles.find((a) =>
+@@ -751,6 +754,7 @@ describe("apply release plan", () => {
+             useCalculatedVersion: false,
+             prereleaseTemplate: null,
+           },
++          incrementVersions: false,
+         }
+       );
+ 
+@@ -1009,6 +1013,7 @@ describe("apply release plan", () => {
+                 useCalculatedVersion: false,
+                 prereleaseTemplate: null,
+               },
++              incrementVersions: false,
+             }
+           );
+           let pkgPathA = changedFiles.find((a) =>
+@@ -1125,6 +1130,7 @@ describe("apply release plan", () => {
+                 useCalculatedVersion: false,
+                 prereleaseTemplate: null,
+               },
++              incrementVersions: false,
+             }
+           );
+           let pkgPathA = changedFiles.find((a) =>
+@@ -1226,6 +1232,7 @@ describe("apply release plan", () => {
+                 useCalculatedVersion: false,
+                 prereleaseTemplate: null,
+               },
++              incrementVersions: false,
+             }
+           );
+           let pkgPathA = changedFiles.find((a) =>
+@@ -1326,6 +1333,7 @@ describe("apply release plan", () => {
+                 useCalculatedVersion: false,
+                 prereleaseTemplate: null,
+               },
++              incrementVersions: false,
+             }
+           );
+           let pkgPathA = changedFiles.find((a) =>
+@@ -1429,6 +1437,7 @@ describe("apply release plan", () => {
+                 useCalculatedVersion: false,
+                 prereleaseTemplate: null,
+               },
++              incrementVersions: false,
+             }
+           );
+           let pkgPathA = changedFiles.find((a) =>
+@@ -1545,6 +1554,7 @@ describe("apply release plan", () => {
+                 useCalculatedVersion: false,
+                 prereleaseTemplate: null,
+               },
++              incrementVersions: false,
+             }
+           );
+           let pkgPathA = changedFiles.find((a) =>
+@@ -1654,6 +1664,7 @@ describe("apply release plan", () => {
+                 useCalculatedVersion: false,
+                 prereleaseTemplate: null,
+               },
++              incrementVersions: false,
+             }
+           );
+           let pkgPathA = changedFiles.find((a) =>
+@@ -1754,6 +1765,7 @@ describe("apply release plan", () => {
+                 useCalculatedVersion: false,
+                 prereleaseTemplate: null,
+               },
++              incrementVersions: false,
+             }
+           );
+           let pkgPathA = changedFiles.find((a) =>
+@@ -1855,6 +1867,7 @@ describe("apply release plan", () => {
+               useCalculatedVersion: false,
+               prereleaseTemplate: null,
+             },
++            incrementVersions: false,
+           }
+         );
+         let pkgPathDependent = changedFiles.find((a) =>
+@@ -2087,6 +2100,7 @@ describe("apply release plan", () => {
+             useCalculatedVersion: false,
+             prereleaseTemplate: null,
+           },
++          incrementVersions: false,
+         }
+       );
+       let pkgAChangelogPath = changedFiles.find((a) =>
+@@ -2225,6 +2239,7 @@ describe("apply release plan", () => {
+             useCalculatedVersion: false,
+             prereleaseTemplate: null,
+           },
++          incrementVersions: false,
+         }
+       );
+ 
+@@ -2334,6 +2349,7 @@ describe("apply release plan", () => {
+             useCalculatedVersion: false,
+             prereleaseTemplate: null,
+           },
++          incrementVersions: false,
+         }
+       );
+ 
+@@ -2455,6 +2471,7 @@ describe("apply release plan", () => {
+             useCalculatedVersion: false,
+             prereleaseTemplate: null,
+           },
++          incrementVersions: false,
+         }
+       );
+ 
+@@ -2590,6 +2607,7 @@ describe("apply release plan", () => {
+             useCalculatedVersion: false,
+             prereleaseTemplate: null,
+           },
++          incrementVersions: false,
+         }
+       );
+ 

@@ -1,0 +1,82 @@
+diff --git a/node_modules/@changesets/types/dist/declarations/src/index.d.ts b/node_modules/@changesets/types/dist/declarations/src/index.d.ts
+index 1903f29..e9cc006 100644
+--- a/node_modules/@changesets/types/dist/declarations/src/index.d.ts
++++ b/node_modules/@changesets/types/dist/declarations/src/index.d.ts
+@@ -1,3 +1,4 @@
++import { ReleaseType } from "semver";
+ declare const DEPENDENCY_TYPES: readonly ["dependencies", "devDependencies", "peerDependencies", "optionalDependencies"];
+ export declare type VersionType = "major" | "minor" | "patch" | "none";
+ export declare type DependencyType = typeof DEPENDENCY_TYPES[number];
+@@ -77,6 +78,9 @@ export declare type Config = {
+         useCalculatedVersion: boolean;
+         prereleaseTemplate: string | null;
+     };
++    incrementVersions: false | Record<string, {
++        path: string;
++    }>;
+ };
+ export declare type WrittenConfig = {
+     changelog?: false | readonly [string, any] | string;
+@@ -100,6 +104,9 @@ export declare type WrittenConfig = {
+         prereleaseTemplate?: string;
+     };
+     ___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH?: ExperimentalOptions;
++    incrementVersions?: false | Record<string, {
++        path: string;
++    }>;
+ };
+ export declare type ExperimentalOptions = {
+     onlyUpdatePeerDependentsWhenOutOfRange?: boolean;
+@@ -120,6 +127,9 @@ export declare type ChangelogFunctions = {
+     getReleaseLine: GetReleaseLine;
+     getDependencyReleaseLine: GetDependencyReleaseLine;
+ };
++export declare type IncrementVersionsFunctions = {
++    incrementVersion: (oldVersion: string, type: ReleaseType, defaultIncreaseVersion: () => string) => string;
++};
+ export declare type GetAddMessage = (changeset: Changeset, commitOptions: any) => Promise<string>;
+ export declare type GetVersionMessage = (releasePlan: ReleasePlan, commitOptions: any) => Promise<string>;
+ export declare type CommitFunctions = {
+diff --git a/node_modules/@changesets/types/src/index.ts b/node_modules/@changesets/types/src/index.ts
+index 17bb849..ad51f22 100644
+--- a/node_modules/@changesets/types/src/index.ts
++++ b/node_modules/@changesets/types/src/index.ts
+@@ -1,4 +1,7 @@
+ // NB: Bolt check uses a different dependnecy set to every other package.
++
++import { ReleaseType } from "semver";
++
+ // You need think before you use this.
+ const DEPENDENCY_TYPES = [
+   "dependencies",
+@@ -89,6 +92,7 @@ export type Config = {
+     useCalculatedVersion: boolean;
+     prereleaseTemplate: string | null;
+   };
++  incrementVersions: false | Record<string, { path: string }>;
+ };
+ 
+ export type WrittenConfig = {
+@@ -115,6 +119,7 @@ export type WrittenConfig = {
+     prereleaseTemplate?: string;
+   };
+   ___experimentalUnsafeOptions_WILL_CHANGE_IN_PATCH?: ExperimentalOptions;
++  incrementVersions?: false | Record<string, { path: string }>;
+ };
+ 
+ export type ExperimentalOptions = {
+@@ -148,6 +153,14 @@ export type ChangelogFunctions = {
+   getDependencyReleaseLine: GetDependencyReleaseLine;
+ };
+ 
++export type IncrementVersionsFunctions = {
++  incrementVersion: (
++    oldVersion: string,
++    type: ReleaseType,
++    defaultIncreaseVersion: () => string
++  ) => string;
++};
++
+ export type GetAddMessage = (
+   changeset: Changeset,
+   commitOptions: any
