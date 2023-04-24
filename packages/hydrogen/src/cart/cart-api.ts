@@ -24,7 +24,7 @@ import {
   type CartNoteUpdate,
   type CartSelectedDeliveryOptionsUpdate,
 } from './cart-types';
-import {Cart} from '@shopify/hydrogen/storefront-api-types';
+import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
 
 type CartApiOptions = Omit<CartQueryOptions, 'getCartId'> & {
