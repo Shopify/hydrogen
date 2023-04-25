@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "type": "module",
+  "type": "commonjs",
   "version": "2023.4.0",
   "license": "SEE LICENSE IN LICENSE.md",
   "main": "dist/index.cjs",
@@ -18,7 +18,8 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepack": "npm run build",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build-docs": "sh ./docs/build-docs.sh"
   },
   "exports": {
     ".": {
@@ -63,6 +64,7 @@
     "@testing-library/react": "^14.0.0",
     "happy-dom": "^8.9.0",
     "schema-dts": "^1.1.0",
-    "vitest": "^0.27.2"
+    "vitest": "^0.27.2",
+    "@shopify/generate-docs": "0.10.7"
   }
 }
