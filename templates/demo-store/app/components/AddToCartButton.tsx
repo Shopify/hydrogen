@@ -1,8 +1,7 @@
 import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
 import {Button} from '~/components';
 import {CartFormInputAction, CartLinesAdd} from '@shopify/hydrogen';
-import {CartForm} from './CartForm';
-import {CartFormInput} from '@shopify/hydrogen';
+import {CartForm, CartFormInput} from '@shopify/hydrogen';
 
 export function AddToCartButton({
   children,

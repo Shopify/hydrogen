@@ -6,6 +6,7 @@ import {
   Image,
   Money,
   CartFormInputAction,
+  CartForm,
 } from '@shopify/hydrogen';
 import {
   Button,
@@ -22,7 +23,6 @@ import type {
   CartLine,
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
-import {CartForm} from './CartForm';
 
 type Layouts = 'page' | 'drawer';
 

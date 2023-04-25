@@ -6,8 +6,7 @@ import {Localizations, Locale} from '~/lib/type';
 import {DEFAULT_LOCALE} from '~/lib/utils';
 import clsx from 'clsx';
 import {CartBuyerIdentityInput} from '@shopify/hydrogen/storefront-api-types';
-import {CartForm} from './CartForm';
-import {CartFormInputAction} from '@shopify/hydrogen';
+import {CartForm, CartFormInputAction} from '@shopify/hydrogen';
 
 export function CountrySelector() {
   const [root] = useMatches();

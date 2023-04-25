@@ -15,6 +15,7 @@ export {Seo} from './seo/seo';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 
+export {CartForm} from './cart/CartForm';
 export {
   type CartQueryOptions,
   type CartQueryReturn,

@@ -1,5 +1,5 @@
 import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
-import {type CartFormInput} from '@shopify/hydrogen';
+import {type CartFormInput} from './cart-types';
 import React from 'react';
 
 type CartFormProps = {
