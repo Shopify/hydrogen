@@ -81,32 +81,7 @@ type HydrogenImageBaseProps = {
    * @defaultValue `center`
    */
   crop?: Crop;
-  /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-04/objects/Image) object. Must be an Image object.
-   *
-   * @example
-   * ```
-   * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';
-   *
-   * export const IMAGE_QUERY = `#graphql
-   * ${IMAGE_FRAGMENT}
-   * query {
-   *   product {
-   *     featuredImage {
-   *       ...Image
-   *     }
-   *   }
-   * }`
-   *
-   * <Image
-   *   data={productImage}
-   *   sizes="(min-width: 45em) 50vw, 100vw"
-   *   aspectRatio="4/5"
-   * />
-   * ```
-   *
-   * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}
-   */
-  data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;
+
   /** A function that returns a URL string for an image.
    *
    * @remarks
@@ -122,6 +97,39 @@ type HydrogenImageBaseProps = {
   widths?: (HtmlImageProps['width'] | ImageType['width'])[];
 };
 
+type DataProps =
+  | {
+      /** Data mapping to the [Storefront API `Image`](https://shopify.dev/docs/api/storefront/2023-04/objects/Image) object. Must be an Image object.
+       *
+       * @example
+       * ```
+       * import {IMAGE_FRAGMENT, Image} from '@shopify/hydrogen';
+       *
+       * export const IMAGE_QUERY = `#graphql
+       * ${IMAGE_FRAGMENT}
+       * query {
+       *   product {
+       *     featuredImage {
+       *       ...Image
+       *     }
+       *   }
+       * }`
+       *
+       * <Image
+       *   data={productImage}
+       *   sizes="(min-width: 45em) 50vw, 100vw"
+       *   aspectRatio="4/5"
+       * />
+       * ```
+       *
+       * Image: {@link https://shopify.dev/api/storefront/reference/common-objects/image}
+       */
+      data: PartialDeep<ImageType, {recurseIntoArrays: true}>;
+    }
+  | {
+      data?: PartialDeep<ImageType, {recurseIntoArrays: true}>;
+      src: string;
+    };
 /**
  * A Storefront API GraphQL fragment that can be used to query for an image.
  */
@@ -135,7 +143,7 @@ export const IMAGE_FRAGMENT = `#graphql
 `;
 
 /**
- * Hydrgen’s Image component is a wrapper around the HTML image element.
+ * Hydrogen’s Image component is a wrapper around the HTML image element.
  * It supports the same props as the HTML `img` element, but automatically
  * generates the srcSet and sizes attributes for you. For most use cases,
  * you’ll want to set the `aspectRatio` prop to ensure the image is sized
@@ -168,7 +176,10 @@ export const IMAGE_FRAGMENT = `#graphql
  *
  * {@link https://shopify.dev/docs/api/hydrogen-react/components/image}
  */
-export const Image = React.forwardRef<HTMLImageElement, HydrogenImageProps>(
+export const Image = React.forwardRef<
+  HTMLImageElement,
+  HydrogenImageProps & DataProps
+>(
   (
     {
       alt,
@@ -571,6 +582,24 @@ export function shopifyLoader({src, width, height, crop}: LoaderParams) {
     return '';
   }
 
+  if (!isValidShopifyCDNImageURL(src)) {
+    const invalidUrlError = [
+      `The image URL provided is not a valid Shopify CDN image URL: ${src}.`,
+      `The Image component is meant to be used with Shopify hosted images,`,
+      `If you are trying to load images from another hosting provider you will need`,
+      `to override the \`loader\` prop. If you are trying to load images from a local`,
+      `directory use either an HTML img tag or framework provided Image component.`,
+    ].join(' ');
+
+    if (__HYDROGEN_DEV__) {
+      throw new Error(invalidUrlError);
+    } else {
+      console.error(invalidUrlError);
+
+      return src;
+    }
+  }
+
   const url = new URL(src);
 
   if (width) {
@@ -760,4 +789,18 @@ export function generateSizes(
       [{width: 100, height: 100, crop: 'center'},
       {width: 200, height: 200, crop: 'center'}]
   */
+}
+
+/**
+ * Function to check if URL looks like a Shopify CDN image source.
+ * @param url - the url to check
+ * @returns true if url starts with cdn.shopify.com
+ */
+function isValidShopifyCDNImageURL(url?: string): boolean {
+  if (!url) {
+    return false;
+  }
+
+  const regex = /^https:\/\/cdn\.shopify\.com/;
+  return regex.test(url);
 }

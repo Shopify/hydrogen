@@ -6,6 +6,7 @@ import {Image} from './Image.js';
 const defaultProps = {
   sizes: '100vw',
   src: 'https://cdn.shopify.com/s/files/1/0551/4566/0472/products/Main.jpg',
+  alt: 'Alt text',
 };
 
 describe('<Image />', () => {
@@ -171,6 +172,7 @@ describe('<Image />', () => {
     });
 
     it('warns user if no src is provided', () => {
+      // @ts-expect-error: intentionally omitting src
       render(<Image {...defaultProps} src={undefined} />);
 
       expect(console.warn).toHaveBeenCalledTimes(1);
@@ -225,6 +227,29 @@ describe('<Image />', () => {
         ]
       `,
       );
+    });
+
+    it(`throws an error if you don't have data.url`, () => {
+      expect(() => render(<Image data={{url: ''}} />)).toThrow();
+    });
+
+    it(`throws an error if you pass a local image src`, () => {
+      expect(() => render(<Image data={{url: '/local/image'}} />)).toThrow();
+    });
+
+    it.skip(`typescript types`, () => {
+      // this test is actually just using //@ts-expect-error as the assertion, and don't need to execute in order to have TS validation on them
+      // I don't love this idea, but at the moment I also don't have other great ideas for how to easily test our component TS types
+
+      // no errors in these situations
+      <Image src="foo" alt="foo" />;
+      <Image data={{}} />;
+
+      // @ts-expect-error no src or data
+      <Image />;
+
+      // @ts-expect-error foo is invalid
+      <Image data={{url: ''}} foo="bar" />;
     });
   });
 });

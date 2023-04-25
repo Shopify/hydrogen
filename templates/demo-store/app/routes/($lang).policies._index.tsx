@@ -5,6 +5,7 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section, Heading, Link} from '~/components';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
+import {Image} from '@shopify/hydrogen';
 
 export const headers = routeHeaders;
 
@@ -41,6 +42,7 @@ export default function Policies() {
   return (
     <>
       <PageHeader heading="Policies" />
+      <Image />
       <Section padding="x" className="mb-24">
         {policies.map((policy) => {
           return (
