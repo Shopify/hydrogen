@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "type": "commonjs",
+  "type": "module",
   "version": "2023.4.0",
   "license": "SEE LICENSE IN LICENSE.md",
   "main": "dist/index.cjs",
