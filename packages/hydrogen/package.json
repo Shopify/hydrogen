@@ -19,7 +19,8 @@
     "test": "vitest run",
     "prepack": "npm run build",
     "test:watch": "vitest",
-    "build-docs": "sh ./docs/build-docs.sh"
+    "build-docs": "sh ./docs/build-docs.sh && npm run format",
+    "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown"
   },
   "exports": {
     ".": {
