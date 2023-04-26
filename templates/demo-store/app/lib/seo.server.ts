@@ -28,6 +28,7 @@ function root({
   shop: Shop;
   url: Request['url'];
 }): SeoConfig<Organization> {
+  const requestUrl = new URL(url);
   return {
     title: shop?.name,
     titleTemplate: '%s | Hydrogen Demo Store',
@@ -53,7 +54,7 @@ function root({
       url,
       potentialAction: {
         '@type': 'SearchAction',
-        target: `${url}search?q={search_term}`,
+        target: `${requestUrl.origin}/search?q={search_term}`,
         query: "required name='search_term'",
       },
     },
