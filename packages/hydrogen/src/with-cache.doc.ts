@@ -16,11 +16,6 @@ const data: ReferenceEntityTemplateSchema = {
           code: './with-cache.example.js',
           language: 'js',
         },
-        {
-          title: 'TypeScript',
-          code: './with-cache.example.ts',
-          language: 'ts',
-        },
       ],
       title: 'Example code',
     },
