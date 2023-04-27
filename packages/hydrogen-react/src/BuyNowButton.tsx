@@ -44,7 +44,7 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
     if (loading && checkoutUrl) {
       window.location.href = checkoutUrl;
     }
-  }, [checkoutUrl]);
+  }, [loading, checkoutUrl]);
 
   const handleBuyNow = useCallback(() => {
     setLoading(true);
