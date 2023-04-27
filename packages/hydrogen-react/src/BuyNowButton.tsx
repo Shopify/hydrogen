@@ -41,7 +41,7 @@ export function BuyNowButton<AsType extends React.ElementType = 'button'>(
   } = props;
 
   useEffect(() => {
-    if (checkoutUrl) {
+    if (loading && checkoutUrl) {
       window.location.href = checkoutUrl;
     }
   }, [checkoutUrl]);
