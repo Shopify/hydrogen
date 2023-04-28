@@ -139,7 +139,6 @@ export const CART_QUERY = `#graphql
 export const CART_CREATE_MUTATION = `#graphql
   mutation CartCreate(
     $input: CartInput!
-    $numCartLines: Int = 100
     $country: CountryCode = ZZ
     $language: LanguageCode
   ) @inContext(country: $country, language: $language) {
@@ -162,7 +161,6 @@ export const CART_LINES_ADD_MUTATION = `#graphql
   mutation CartLinesAdd(
     $cartId: ID!
     $lines: [CartLineInput!]!
-    $numCartLines: Int = 100
     $country: CountryCode = ZZ
     $language: LanguageCode
   ) @inContext(country: $country, language: $language) {
@@ -185,7 +183,6 @@ export const CART_LINES_UPDATE_MUTATION = `#graphql
   mutation CartLinesUpdate(
     $cartId: ID!
     $lines: [CartLineUpdateInput!]!
-    $numCartLines: Int = 100
     $language: LanguageCode
     $country: CountryCode
   ) @inContext(country: $country, language: $language) {
@@ -208,7 +205,6 @@ export const CART_LINES_REMOVE_MUTATION = `#graphql
   mutation CartLinesRemove(
     $cartId: ID!
     $lineIds: [ID!]!
-    $numCartLines: Int = 100
     $language: LanguageCode
     $country: CountryCode
   ) @inContext(country: $country, language: $language) {
@@ -230,7 +226,6 @@ export const CART_DISCOUNT_CODE_UPDATE_MUTATION = `#graphql
   mutation cartDiscountCodesUpdate(
     $cartId: ID!
     $discountCodes: [String!]
-    $numCartLines: Int = 100
     $language: LanguageCode
     $country: CountryCode
   ) @inContext(country: $country, language: $language) {
@@ -251,7 +246,6 @@ export const CART_BUYER_IDENTITY_UPDATE_MUTATION = `#graphql
   mutation cartBuyerIdentityUpdate(
     $cartId: ID!
     $buyerIdentity: CartBuyerIdentityInput!
-    $numCartLines: Int = 100
     $language: LanguageCode
     $country: CountryCode
   ) @inContext(country: $country, language: $language) {
@@ -272,7 +266,6 @@ export const CART_NOTE_UPDATE_MUTATION = `#graphql
   mutation cartNoteUpdate(
     $cartId: ID!
     $note: String
-    $numCartLines: Int = 100
     $language: LanguageCode
     $country: CountryCode
   ) @inContext(country: $country, language: $language) {
@@ -293,7 +286,6 @@ export const CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION = `#graphql
   mutation cartSelectedDeliveryOptionsUpdate(
     $cartId: ID!
     $selectedDeliveryOptions: [CartSelectedDeliveryOptionInput!]!
-    $numCartLines: Int = 100
     $language: LanguageCode
     $country: CountryCode
   ) @inContext(country: $country, language: $language) {
