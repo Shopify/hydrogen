@@ -167,7 +167,6 @@ export default function Collection() {
 }
 
 const COLLECTION_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
   query CollectionDetails(
     $handle: String!
     $country: CountryCode
@@ -230,6 +229,7 @@ const COLLECTION_QUERY = `#graphql
       }
     }
   }
+  ${PRODUCT_CARD_FRAGMENT}
 `;
 
 function getSortValuesFromParam(sortParam: SortParam | null) {

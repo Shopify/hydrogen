@@ -154,7 +154,6 @@ export default function AllProducts() {
 }
 
 const ALL_PRODUCTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
   query AllProducts(
     $country: CountryCode
     $language: LanguageCode
@@ -175,4 +174,5 @@ const ALL_PRODUCTS_QUERY = `#graphql
       }
     }
   }
+  ${PRODUCT_CARD_FRAGMENT}
 `;
