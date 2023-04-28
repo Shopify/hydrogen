@@ -62,7 +62,6 @@ export default {
       });
 
       const response = await handleRequest(request);
-      //       ^?
 
       if (response.status === 404) {
         /**
