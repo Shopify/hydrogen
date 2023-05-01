@@ -62,7 +62,6 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
 }
 
 const PRODUCTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
   query (
     $query: String
     $count: Int
@@ -77,6 +76,7 @@ const PRODUCTS_QUERY = `#graphql
       }
     }
   }
+  ${PRODUCT_CARD_FRAGMENT}
 `;
 
 // no-op

@@ -180,7 +180,6 @@ export default function Homepage() {
 }
 
 const COLLECTION_CONTENT_FRAGMENT = `#graphql
-  ${MEDIA_FRAGMENT}
   fragment CollectionContent on Collection {
     id
     handle
@@ -206,10 +205,10 @@ const COLLECTION_CONTENT_FRAGMENT = `#graphql
       }
     }
   }
+  ${MEDIA_FRAGMENT}
 `;
 
 const HOMEPAGE_SEO_QUERY = `#graphql
-  ${COLLECTION_CONTENT_FRAGMENT}
   query collectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     hero: collection(handle: $handle) {
@@ -220,21 +219,21 @@ const HOMEPAGE_SEO_QUERY = `#graphql
       description
     }
   }
+  ${COLLECTION_CONTENT_FRAGMENT}
 `;
 
 const COLLECTION_HERO_QUERY = `#graphql
-  ${COLLECTION_CONTENT_FRAGMENT}
   query collectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     hero: collection(handle: $handle) {
       ...CollectionContent
     }
   }
+  ${COLLECTION_CONTENT_FRAGMENT}
 `;
 
 // @see: https://shopify.dev/api/storefront/2023-04/queries/products
 export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
   query homepageFeaturedProducts($country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     products(first: 8) {
@@ -243,6 +242,7 @@ export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
       }
     }
   }
+  ${PRODUCT_CARD_FRAGMENT}
 `;
 
 // @see: https://shopify.dev/api/storefront/2023-04/queries/collections

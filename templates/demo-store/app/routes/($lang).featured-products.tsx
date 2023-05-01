@@ -33,7 +33,6 @@ export async function getFeaturedData(
 }
 
 const FEATURED_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
   query homepage($country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
@@ -55,4 +54,5 @@ const FEATURED_QUERY = `#graphql
       }
     }
   }
+  ${PRODUCT_CARD_FRAGMENT}
 `;
