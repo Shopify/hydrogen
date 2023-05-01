@@ -5,7 +5,7 @@ import type {Socket} from 'net';
 import getPort from 'get-port';
 
 import {MiniOxygen} from './mini-oxygen/core';
-import type {MiniOxygenServerHooks} from './mini-oxygen/server';
+import type {MiniOxygenServerOptions} from './mini-oxygen/server';
 
 class WorkerNotFoundError extends Error {
   name = 'WorkerNotFoundError';
@@ -13,23 +13,19 @@ class WorkerNotFoundError extends Error {
     'A worker file is required for this command. Try building your project or check your mini-oxygen config file to ensure a workerFile is specified and the path is correct.';
 }
 
-export type MiniOxygenPreviewOptions = Partial<{
-  log(message: string): unknown;
-  port: number;
-  workerFile: string;
-  assetsDir: string;
-  publicPath: string;
-  watch: boolean;
-  modules: boolean;
-  buildCommand: string;
-  buildWatchPaths: string[];
-  autoReload: boolean;
-  sourceMap: boolean;
-  proxyServer: string;
-  envPath: string;
-  env: {[key: string]: unknown};
-}> &
-  MiniOxygenServerHooks;
+export type MiniOxygenPreviewOptions = MiniOxygenServerOptions &
+  Partial<{
+    log(message: string): unknown;
+    port: number;
+    workerFile: string;
+    watch: boolean;
+    modules: boolean;
+    buildCommand: string;
+    buildWatchPaths: string[];
+    sourceMap: boolean;
+    envPath: string;
+    env: {[key: string]: unknown};
+  }>;
 
 export const configFileName = 'mini-oxygen.config.json';
 
@@ -50,6 +46,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     proxyServer,
     envPath,
     env = {},
+    buyerIp = '127.0.0.1',
     onRequest,
     onResponseError,
     onResponse = (req, res) => {
@@ -97,6 +94,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     publicPath,
     autoReload,
     proxyServer,
+    buyerIp,
     onRequest,
     onResponse,
     onResponseError,

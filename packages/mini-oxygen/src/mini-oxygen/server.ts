@@ -23,6 +23,7 @@ export interface MiniOxygenServerOptions extends MiniOxygenServerHooks {
   autoReload?: boolean;
   publicPath?: string;
   proxyServer?: string;
+  buyerIp?: string;
 }
 
 const SSEUrl = '/events';
@@ -121,11 +122,11 @@ function createRequestMiddleware(
   {
     autoReload,
     proxyServer,
+    buyerIp,
     onRequest,
     onResponse,
     onResponseError,
-  }: MiniOxygenServerHooks &
-    Pick<MiniOxygenServerOptions, 'autoReload' | 'proxyServer'>,
+  }: Omit<MiniOxygenServerOptions, 'publicPath' | 'assetsDir'>,
 ): NextHandleFunction {
   return async (req, res) => {
     if (shouldProxy(req, proxyServer)) {
@@ -146,6 +147,11 @@ function createRequestMiddleware(
         reqHeaders[key] = val;
       }
     }
+
+    if (buyerIp) {
+      reqHeaders['oxygen-buyer-ip'] = buyerIp;
+    }
+
     const request = new Request(urlFromRequest(req), {
       method: req.method,
       headers: reqHeaders,
@@ -247,7 +253,7 @@ export function createServer(
     publicPath,
     autoReload = false,
     proxyServer,
-    ...hooks
+    ...rest
   }: MiniOxygenServerOptions,
 ) {
   const app = connect();
@@ -261,7 +267,7 @@ export function createServer(
   }
 
   app.use(bodyParser.raw({type: '*/*'}));
-  app.use(createRequestMiddleware(mf, {autoReload, proxyServer, ...hooks}));
+  app.use(createRequestMiddleware(mf, {autoReload, proxyServer, ...rest}));
 
   const server = http.createServer(app);
 

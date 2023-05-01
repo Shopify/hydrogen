@@ -11,7 +11,12 @@ import {MiniOxygenPreviewOptions, configFileName} from './preview';
 const DEFAULTS: Required<
   Omit<
     MiniOxygenPreviewOptions,
-    'log' | 'envPath' | 'onRequest' | 'onResponse' | 'onResponseError'
+    | 'log'
+    | 'envPath'
+    | 'buyerIp'
+    | 'onRequest'
+    | 'onResponse'
+    | 'onResponseError'
   >
 > = {
   port: 3000,
