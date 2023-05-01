@@ -76,7 +76,7 @@ export function ErrorBoundary() {
 }
 
 const COLLECTIONS_QUERY = `#graphql
-  query Collections {
+  query collection_index {
     collectionConnection: collections(first: 250) {
       nodes {
         id
