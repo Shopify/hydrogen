@@ -162,7 +162,9 @@ function createRequestMiddleware(
     });
 
     try {
+      if (onRequest) await onRequest(request);
       response = await mf.dispatchFetch(request);
+      if (onResponse) await onResponse(request, response as Response);
       status = response.status;
 
       for (const key of response.headers.keys()) {
@@ -198,6 +200,7 @@ function createRequestMiddleware(
 
       res.end();
     } catch (err: any) {
+      onResponseError?.(request, err as Error);
       // eslint-disable-next-line @typescript-eslint/naming-convention
       res.writeHead(status, {'Content-Type': 'text/plain; charset=UTF-8'});
       res.end(err.stack, 'utf8');
