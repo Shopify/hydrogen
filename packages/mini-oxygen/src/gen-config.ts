@@ -13,7 +13,7 @@ const DEFAULTS: Required<
     MiniOxygenPreviewOptions,
     | 'log'
     | 'envPath'
-    | 'buyerIp'
+    | 'oxygenHeaders'
     | 'onRequest'
     | 'onResponse'
     | 'onResponseError'

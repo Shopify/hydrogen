@@ -18,12 +18,29 @@ export interface MiniOxygenServerHooks {
   onResponseError?: (request: Request, error: unknown) => void;
 }
 
+// https://shopify.dev/docs/custom-storefronts/oxygen/worker-runtime-apis#custom-headers
+const OXYGEN_HEADERS_MAP = {
+  ip: {name: 'oxygen-buyer-ip', defaultValue: '127.0.0.1'},
+  longitude: {name: 'oxygen-buyer-longitude', defaultValue: ''},
+  latitude: {name: 'oxygen-buyer-latitude', defaultValue: ''},
+  continent: {name: 'oxygen-buyer-continent', defaultValue: ''},
+  country: {name: 'oxygen-buyer-country', defaultValue: ''},
+  region: {name: 'oxygen-buyer-region', defaultValue: ''},
+  regionCode: {name: 'oxygen-buyer-region-code', defaultValue: ''},
+  city: {name: 'oxygen-buyer-city', defaultValue: ''},
+  timezone: {name: 'oxygen-buyer-timezone', defaultValue: ''},
+  isEuCountry: {name: 'oxygen-buyer-is-eu-country', defaultValue: ''},
+} as const;
+
+type OxygenHeaderParams = keyof typeof OXYGEN_HEADERS_MAP;
+
 export interface MiniOxygenServerOptions extends MiniOxygenServerHooks {
   assetsDir?: string;
   autoReload?: boolean;
   publicPath?: string;
   proxyServer?: string;
-  buyerIp?: string;
+  // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
+  oxygenHeaders?: Partial<Record<OxygenHeaderParams, string>>;
 }
 
 const SSEUrl = '/events';
@@ -122,7 +139,7 @@ function createRequestMiddleware(
   {
     autoReload,
     proxyServer,
-    buyerIp,
+    oxygenHeaders,
     onRequest,
     onResponse,
     onResponseError,
@@ -138,6 +155,7 @@ function createRequestMiddleware(
     const headers: http.OutgoingHttpHeaders = {};
 
     const reqHeaders: {[key: string]: string} = {};
+
     // eslint-disable-next-line guard-for-in
     for (const key in req.headers) {
       const val = req.headers[key];
@@ -148,8 +166,11 @@ function createRequestMiddleware(
       }
     }
 
-    if (buyerIp) {
-      reqHeaders['oxygen-buyer-ip'] = buyerIp;
+    for (const [key, {name, defaultValue}] of Object.entries(
+      OXYGEN_HEADERS_MAP,
+    )) {
+      reqHeaders[name] =
+        oxygenHeaders?.[key as OxygenHeaderParams] ?? defaultValue;
     }
 
     const request = new Request(urlFromRequest(req), {

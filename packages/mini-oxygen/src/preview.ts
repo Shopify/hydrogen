@@ -46,7 +46,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     proxyServer,
     envPath,
     env = {},
-    buyerIp = '127.0.0.1',
+    oxygenHeaders,
     onRequest,
     onResponseError,
     onResponse = (req, res) => {
@@ -94,7 +94,7 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
     publicPath,
     autoReload,
     proxyServer,
-    buyerIp,
+    oxygenHeaders,
     onRequest,
     onResponse,
     onResponseError,
