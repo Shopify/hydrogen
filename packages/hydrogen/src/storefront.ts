@@ -10,10 +10,7 @@ import {
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
 import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
-import {
-  STOREFRONT_API_BUYER_IP_HEADER,
-  STOREFRONT_REQUEST_GROUP_ID_HEADER,
-} from './constants';
+import {STOREFRONT_REQUEST_GROUP_ID_HEADER} from './constants';
 import {
   CacheNone,
   CacheLong,
@@ -160,14 +157,13 @@ export function createStorefrontClient<TI18n extends I18nBase>({
     ? getPrivateTokenHeaders
     : getPublicTokenHeaders;
 
-  const defaultHeaders = getHeaders({contentType: 'json'});
+  const defaultHeaders = getHeaders({
+    contentType: 'json',
+    buyerIp: storefrontHeaders?.buyerIp || buyerIp,
+  });
 
   defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =
     storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();
-
-  if (storefrontHeaders?.buyerIp || buyerIp)
-    defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] =
-      storefrontHeaders?.buyerIp || buyerIp || '';
 
   if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;
   if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;
