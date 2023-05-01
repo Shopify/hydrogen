@@ -39,8 +39,7 @@ export interface MiniOxygenServerOptions extends MiniOxygenServerHooks {
   autoReload?: boolean;
   publicPath?: string;
   proxyServer?: string;
-  // eslint-disable-next-line @typescript-eslint/consistent-indexed-object-style
-  oxygenHeaders?: Partial<Record<OxygenHeaderParams, string>>;
+  oxygenHeaders?: Partial<{[key in OxygenHeaderParams]: string}>;
 }
 
 const SSEUrl = '/events';
