@@ -16,7 +16,12 @@ import {Image} from '@shopify/hydrogen';
 export async function loader({context}: LoaderArgs) {
   const {collectionConnection} = await context.storefront.query<{
     collectionConnection: CollectionConnection;
-  }>(COLLECTIONS_QUERY);
+  }>(COLLECTIONS_QUERY, {
+    variables: {
+      country: context.storefront.i18n?.country,
+      language: context.storefront.i18n?.language,
+    },
+  });
 
   return json({collectionConnection});
 }
@@ -76,7 +81,11 @@ export function ErrorBoundary() {
 }
 
 const COLLECTIONS_QUERY = `#graphql
-  query collection_index {
+  query collection_index(
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language)
+  {
     collectionConnection: collections(first: 250) {
       nodes {
         id
