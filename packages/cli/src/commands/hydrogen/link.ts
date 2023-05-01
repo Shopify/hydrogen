@@ -22,7 +22,7 @@ import {
   LinkStorefrontSchema,
 } from '../../lib/graphql/admin/link-storefront.js';
 import {getConfig, setStorefront} from '../../lib/shopify-config.js';
-import {missingStorefronts} from '../../lib/missing-storefronts.js';
+import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
 
 export default class Link extends Command {
   static description =
@@ -81,7 +81,7 @@ export async function linkStorefront({
   );
 
   if (!result.hydrogenStorefronts.length) {
-    missingStorefronts(adminSession);
+    logMissingStorefronts(adminSession);
     return;
   }
 

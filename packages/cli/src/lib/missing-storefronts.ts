@@ -3,7 +3,7 @@ import type {AdminSession} from '@shopify/cli-kit/node/session';
 
 import {newHydrogenStorefrontUrl} from './admin-urls.js';
 
-export function missingStorefronts(adminSession: AdminSession) {
+export function logMissingStorefronts(adminSession: AdminSession) {
   renderInfo({
     headline: 'Hydrogen storefronts',
     body: 'There are no Hydrogen storefronts on your Shop.',

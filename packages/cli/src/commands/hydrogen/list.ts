@@ -11,7 +11,7 @@ import {
   ListStorefrontsSchema,
   Deployment,
 } from '../../lib/graphql/admin/list-storefronts.js';
-import {missingStorefronts} from '../../lib/missing-storefronts.js';
+import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
 
 export default class List extends Command {
   static description =
@@ -80,7 +80,7 @@ export async function listStorefronts({path, shop: flagShop}: Flags) {
       },
     });
   } else {
-    missingStorefronts(adminSession);
+    logMissingStorefronts(adminSession);
   }
 }
 
