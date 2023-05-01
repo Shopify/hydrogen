@@ -199,7 +199,6 @@ export async function getNoResultRecommendations(
 }
 
 const SEARCH_NO_RESULTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
   query searchNoResult(
     $country: CountryCode
     $language: LanguageCode
@@ -224,4 +223,5 @@ const SEARCH_NO_RESULTS_QUERY = `#graphql
       }
     }
   }
+  ${PRODUCT_CARD_FRAGMENT}
 `;

@@ -538,8 +538,6 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
 `;
 
 const PRODUCT_QUERY = `#graphql
-  ${MEDIA_FRAGMENT}
-  ${PRODUCT_VARIANT_FRAGMENT}
   query Product(
     $country: CountryCode
     $language: LanguageCode
@@ -590,10 +588,11 @@ const PRODUCT_QUERY = `#graphql
       }
     }
   }
+  ${MEDIA_FRAGMENT}
+  ${PRODUCT_VARIANT_FRAGMENT}
 `;
 
 const RECOMMENDED_PRODUCTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
   query productRecommendations(
     $productId: ID!
     $count: Int
@@ -609,6 +608,7 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
       }
     }
   }
+  ${PRODUCT_CARD_FRAGMENT}
 `;
 
 async function getRecommendedProducts(
