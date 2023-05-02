@@ -33,6 +33,11 @@ const OXYGEN_HEADERS_MAP = {
     defaultValue: 'America/Los_Angeles',
   },
   isEuCountry: {name: 'oxygen-buyer-is-eu-country', defaultValue: ''},
+
+  // Not documented but available in Oxygen:
+  shopId: {name: 'oxygen-buyer-shop-id', defaultValue: ''},
+  storefrontId: {name: 'oxygen-buyer-storefront-id', defaultValue: ''},
+  deploymentId: {name: 'oxygen-buyer-deployment-id', defaultValue: ''},
 } as const;
 
 type OxygenHeaderParams = keyof typeof OXYGEN_HEADERS_MAP;
