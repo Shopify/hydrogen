@@ -21,14 +21,14 @@ export interface MiniOxygenServerHooks {
 // https://shopify.dev/docs/custom-storefronts/oxygen/worker-runtime-apis#custom-headers
 const OXYGEN_HEADERS_MAP = {
   ip: {name: 'oxygen-buyer-ip', defaultValue: '127.0.0.1'},
-  longitude: {name: 'oxygen-buyer-longitude', defaultValue: ''},
-  latitude: {name: 'oxygen-buyer-latitude', defaultValue: ''},
-  continent: {name: 'oxygen-buyer-continent', defaultValue: ''},
-  country: {name: 'oxygen-buyer-country', defaultValue: ''},
-  region: {name: 'oxygen-buyer-region', defaultValue: ''},
-  regionCode: {name: 'oxygen-buyer-region-code', defaultValue: ''},
-  city: {name: 'oxygen-buyer-city', defaultValue: ''},
-  timezone: {name: 'oxygen-buyer-timezone', defaultValue: ''},
+  longitude: {name: 'oxygen-buyer-longitude', defaultValue: '-74.00000'},
+  latitude: {name: 'oxygen-buyer-latitude', defaultValue: '40.70000'},
+  continent: {name: 'oxygen-buyer-continent', defaultValue: 'NA'},
+  country: {name: 'oxygen-buyer-country', defaultValue: 'US'},
+  region: {name: 'oxygen-buyer-region', defaultValue: 'New York'},
+  regionCode: {name: 'oxygen-buyer-region-code', defaultValue: 'NY'},
+  city: {name: 'oxygen-buyer-city', defaultValue: 'New York'},
+  timezone: {name: 'oxygen-buyer-timezone', defaultValue: 'America/New_York'},
   isEuCountry: {name: 'oxygen-buyer-is-eu-country', defaultValue: ''},
 } as const;
 
