@@ -14,7 +14,7 @@
   "scripts": {
     "build": "tsup --clean --config ../../tsup.config.ts && npm run copy-hydrogen-react",
     "copy-hydrogen-react": "node ../../scripts/copy-hydrogen-react.mjs",
-    "dev": "tsup --watch --config ../../tsup.config.ts --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
+    "dev": "tsup --config ../../tsup.config.ts --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepack": "npm run build",
