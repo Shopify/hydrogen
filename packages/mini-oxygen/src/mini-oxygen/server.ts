@@ -168,8 +168,10 @@ function createRequestMiddleware(
     for (const [key, {name, defaultValue}] of Object.entries(
       OXYGEN_HEADERS_MAP,
     )) {
-      reqHeaders[name] =
-        oxygenHeaders?.[key as OxygenHeaderParams] ?? defaultValue;
+      if (!reqHeaders[name]) {
+        reqHeaders[name] =
+          oxygenHeaders?.[key as OxygenHeaderParams] ?? defaultValue;
+      }
     }
 
     const request = new Request(urlFromRequest(req), {
