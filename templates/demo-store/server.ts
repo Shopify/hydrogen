@@ -18,6 +18,17 @@ export default {
     executionContext: ExecutionContext,
   ): Promise<Response> {
     try {
+      if (new URL(request.url).pathname === '/oxygen-headers') {
+        const headers: Record<string, string> = {};
+        request.headers.forEach((value, key) => {
+          if (key.startsWith('oxygen-buyer-')) {
+            headers[key] = value;
+          }
+        });
+
+        return new Response(JSON.stringify(headers, null, 2));
+      }
+
       /**
        * Open a cache instance in the worker and a custom session instance.
        */
