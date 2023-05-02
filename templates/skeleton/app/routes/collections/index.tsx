@@ -10,7 +10,7 @@ import {
   type LoaderArgs,
   type ErrorBoundaryComponent,
 } from '@shopify/remix-oxygen';
-import {type CollectionConnection} from '@shopify/hydrogen/storefront-api-types';
+import type {CollectionConnection} from '@shopify/hydrogen/storefront-api-types';
 import {Image} from '@shopify/hydrogen';
 
 export async function loader({context}: LoaderArgs) {
@@ -33,17 +33,15 @@ export default function Collections() {
     <>
       {collectionConnection.nodes.map((collection, collectionIndex) => {
         return (
-          <div key={collection.id}>
-            <Link to={`/collections/${collection.handle}`}>
-              <h3>{collection.title}</h3>
-            </Link>
+          <Link key={collection.id} to={`/collections/${collection.handle}`}>
+            <h3>{collection.title}</h3>
             {collection.image && (
               <Image
                 data={collection.image}
                 loading={collectionIndex === 0 ? 'eager' : undefined}
               />
             )}
-          </div>
+          </Link>
         );
       })}
     </>
