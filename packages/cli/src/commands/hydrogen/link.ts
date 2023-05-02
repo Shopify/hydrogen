@@ -12,7 +12,8 @@ import {
   outputToken,
 } from '@shopify/cli-kit/node/output';
 
-import {adminRequest, parseGid} from '../../lib/graphql.js';
+import {parseGid} from '@shopify/hydrogen-react';
+import {adminRequest} from '../../lib/graphql.js';
 import {commonFlags} from '../../lib/flags.js';
 import {getHydrogenShop} from '../../lib/shop.js';
 import {getAdminSession} from '../../lib/admin-session.js';
@@ -131,7 +132,7 @@ export async function linkStorefront({
   outputInfo(
     `Admin URL: ${hydrogenStorefrontUrl(
       adminSession,
-      parseGid(selectedStorefront.id),
+      parseGid(selectedStorefront.id).id,
     )}`,
   );
   outputInfo(`Site URL: ${selectedStorefront.productionUrl}`);
