@@ -881,6 +881,48 @@
     ]
   },
   {
+    "name": "graphiqlLoader",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "This function creates an instance of [GraphiQL](https://graphql.org/swapi-graphql) in your Hydrogen app when running on a development server. This enables you to explore, write, and test GraphQL queries using your store's live data from the Storefront API. You can visit the GraphiQL app at your storefront route /graphiql. This function accepts [Remix LoaderArgs](https://remix.run/docs/en/v1/route/loader#type-safety) if you need to customize GraphiQL's behavior. Learn more about [using GraphiQL in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/graphiql).",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {graphiqlLoader} from '@shopify/hydrogen';\nimport {redirect} from '@shopify/remix-oxygen';\n\nexport async function loader(args) {\n  if (process.env.NODE_ENV === 'development') {\n    return graphiqlLoader(args);\n  }\n\n  return redirect('/');\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {graphiqlLoader} from '@shopify/hydrogen';\nimport {redirect, type LoaderArgs} from '@shopify/remix-oxygen';\n\nexport async function loader(args: LoaderArgs) {\n  if (process.env.NODE_ENV === 'development') {\n    return graphiqlLoader(args);\n  }\n\n  return redirect('/');\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Arguments",
+        "description": "",
+        "type": "GraphiQLLoader",
+        "typeDefinitions": {
+          "GraphiQLLoader": {
+            "filePath": "/routing/graphiql.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GraphiQLLoader",
+            "value": "(args: LoaderArgs) => Promise<Response>",
+            "description": ""
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "storefrontRedirect",
     "category": "utilities",
     "isVisualComponent": false,
