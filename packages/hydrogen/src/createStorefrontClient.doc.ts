@@ -1,11 +1,13 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'createWithCache',
+  name: 'createStorefrontClient',
   category: 'utilities',
   isVisualComponent: false,
   related: [],
-  description: `Creates a utility function that executes an asynchronous operation \n like \`fetch\` and caches the result according to the strategy provided.\nUse this to call any third-party APIs from loaders or actions.\nBy default, it uses the \`CacheShort\` strategy.`,
+  description: `This function extends \`createStorefrontClient\` from [Hydrogen React](https://shopify.dev/docs/api/hydrogen-react/latest/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
+
+Learn more about [data fetching in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
@@ -13,12 +15,12 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './with-cache.example.js',
+          code: './storefrontClient.example.js',
           language: 'js',
         },
         {
           title: 'TypeScript',
-          code: './with-cache.example.ts',
+          code: './storefrontClient.example.ts',
           language: 'ts',
         },
       ],
@@ -28,7 +30,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Arguments',
-      type: 'CreateWithCache_unstableGeneratedType',
+      type: 'CreateStorefrontClientGeneratedType',
       description: '',
     },
   ],

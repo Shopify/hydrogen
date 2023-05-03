@@ -1,19 +1,24 @@
 [
   {
-    "name": "createWithCache",
-    "category": "components",
+    "name": "createStorefrontClient",
+    "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a utility function that executes an asynchronous operation \n like `fetch` and caches the result according to the strategy provided.\nUse this to call any third-party APIs from loaders or actions.\nBy default, it uses the `CacheShort` strategy.",
-    "type": "component",
+    "description": "This function extends `createStorefrontClient` from [Hydrogen React](https://shopify.dev/docs/api/hydrogen-react/latest/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.\n\nLearn more about [data fetching in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
+    "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
       "codeblock": {
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache_unstable, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    /* ... */\n\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache_unstable({cache, waitUntil});\n\n    // Create custom utilities to query third-party APIs:\n    const fetchMyCMS = (query) => {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache(['my-cms', query], CacheLong(), async () => {\n        return await (\n          await fetch('my-cms.com/api', {\n            method: 'POST',\n            body: query,\n          })\n        ).json();\n      });\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        /* ... */\n        fetchMyCMS,\n      }),\n    });\n\n    /* ... */\n  },\n};\n",
+            "code": "import {createStorefrontClient} from '@shopify/hydrogen';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\nexport default {\n  async fetch(request, env, executionContext) {\n    /* Create a Storefront client with your credentials and options */\n    const {storefront} = createStorefrontClient({\n      /* Cache API instance */\n      cache: await caches.open('hydrogen'),\n      /* Runtime utility in serverless environments */\n      waitUntil: (p) => executionContext.waitUntil(p),\n      /* Private Storefront API token for your store */\n      privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,\n      /* Public Storefront API token for your store */\n      publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      /* Desired Storefront API version to use */\n      storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION,\n      /* Your store domain: \"https://{shop}.myshopify.com\" */\n      storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,\n      /**\n       * Storefront API headers containing:\n       * - buyerIp: The IP address of the customer.\n       * - requestGroupId: A unique ID to group all the logs for this request.\n       * - cookie: The 'cookie' header from the request.\n       */\n      storefrontHeaders: getStorefrontHeaders(request),\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the Storefront client in the Remix context */\n      getLoadContext: () => ({storefront}),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
             "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {createStorefrontClient} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record<string, string>,\n    executionContext: ExecutionContext,\n  ) {\n    /* Create a Storefront client with your credentials and options */\n    const {storefront} = createStorefrontClient({\n      /* Cache API instance */\n      cache: await caches.open('hydrogen'),\n      /* Runtime utility in serverless environments */\n      waitUntil: (p: Promise<unknown>) => executionContext.waitUntil(p),\n      /* Private Storefront API token for your store */\n      privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,\n      /* Public Storefront API token for your store */\n      publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      /* Desired Storefront API version to use */\n      storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION,\n      /* Your store domain: \"https://{shop}.myshopify.com\" */\n      storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,\n      /**\n       * Storefront API headers containing:\n       * - buyerIp: The IP address of the customer.\n       * - requestGroupId: A unique ID to group all the logs for this request.\n       * - cookie: The 'cookie' header from the request.\n       */\n      storefrontHeaders: getStorefrontHeaders(request),\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      /* Inject the Storefront client in the Remix context */\n      getLoadContext: () => ({storefront}),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
+            "language": "ts"
           }
         ],
         "title": "Example code"
@@ -21,23 +26,290 @@
     },
     "definitions": [
       {
-        "title": "Props",
+        "title": "Arguments",
         "description": "",
-        "type": "WithCache",
+        "type": "CreateStorefrontClientGeneratedType",
         "typeDefinitions": {
-          "WithCache": {
-            "filePath": "/with-cache.ts",
+          "CreateStorefrontClientGeneratedType": {
+            "filePath": "/storefront.ts",
+            "name": "CreateStorefrontClientGeneratedType",
+            "description": "This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/latest/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
+            "params": [
+              {
+                "name": "options",
+                "description": "",
+                "value": "CreateStorefrontClientOptions<TI18n>",
+                "filePath": "/storefront.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/storefront.ts",
+              "description": "",
+              "name": "StorefrontClient<TI18n extends I18nBase>",
+              "value": "StorefrontClient<TI18n extends I18nBase>"
+            },
+            "value": "export function createStorefrontClient<TI18n extends I18nBase>(\n  options: CreateStorefrontClientOptions<TI18n>,\n): StorefrontClient<TI18n> {\n  const {\n    storefrontHeaders,\n    cache,\n    waitUntil,\n    buyerIp,\n    i18n,\n    requestGroupId,\n    storefrontId,\n    ...clientOptions\n  } = options;\n  if (!cache) {\n    // TODO: should only warn in development\n    warnOnce(\n      'Storefront API client created without a cache instance. This may slow down your sub-requests.',\n    );\n  }\n\n  const {\n    getPublicTokenHeaders,\n    getPrivateTokenHeaders,\n    getStorefrontApiUrl,\n    getShopifyDomain,\n  } = createStorefrontUtilities(clientOptions);\n\n  const getHeaders = clientOptions.privateStorefrontToken\n    ? getPrivateTokenHeaders\n    : getPublicTokenHeaders;\n\n  const defaultHeaders = getHeaders({contentType: 'json'});\n\n  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =\n    storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();\n\n  if (storefrontHeaders?.buyerIp || buyerIp)\n    defaultHeaders[STOREFRONT_API_BUYER_IP_HEADER] =\n      storefrontHeaders?.buyerIp || buyerIp || '';\n\n  if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;\n  if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;\n\n  if (storefrontHeaders && storefrontHeaders.cookie) {\n    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');\n\n    if (cookies[SHOPIFY_Y])\n      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];\n    if (cookies[SHOPIFY_S])\n      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];\n  }\n\n  // Deprecation warning\n  if (!storefrontHeaders) {\n    warnOnce(\n      '\"requestGroupId\" and \"buyerIp\" will be deprecated in the next calendar release. Please use \"getStorefrontHeaders\"',\n    );\n  }\n\n  async function fetchStorefrontApi<T>({\n    query,\n    mutation,\n    variables,\n    cache: cacheOptions,\n    headers = [],\n    storefrontApiVersion,\n  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {\n    const userHeaders =\n      headers instanceof Headers\n        ? Object.fromEntries(headers.entries())\n        : Array.isArray(headers)\n        ? Object.fromEntries(headers)\n        : headers;\n\n    query = query ?? mutation;\n\n    const queryVariables = {...variables};\n\n    if (i18n) {\n      if (!variables?.country && /\\$country/.test(query)) {\n        queryVariables.country = i18n.country;\n      }\n\n      if (!variables?.language && /\\$language/.test(query)) {\n        queryVariables.language = i18n.language;\n      }\n    }\n\n    const url = getStorefrontApiUrl({storefrontApiVersion});\n    const requestInit: RequestInit = {\n      method: 'POST',\n      headers: {...defaultHeaders, ...userHeaders},\n      body: JSON.stringify({\n        query,\n        variables: queryVariables,\n      }),\n    };\n\n    const [body, response] = await fetchWithServerCache(url, requestInit, {\n      cacheInstance: mutation ? undefined : cache,\n      cache: cacheOptions || CacheShort(),\n      shouldCacheResponse: checkGraphQLErrors,\n      waitUntil,\n    });\n\n    if (!response.ok) {\n      /**\n       * The Storefront API might return a string error, or a JSON-formatted {error: string}.\n       * We try both and conform them to a single {errors} format.\n       */\n      let errors;\n      try {\n        errors = parseJSON(body);\n      } catch (_e) {\n        errors = [{message: body}];\n      }\n\n      throwError(response, errors);\n    }\n\n    const {data, errors} = body as StorefrontApiResponse<T>;\n\n    if (errors?.length) throwError(response, errors, StorefrontApiError);\n\n    return data as T;\n  }\n\n  return {\n    storefront: {\n      /**\n       * Sends a GraphQL query to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   const data = await storefront.query('query { ... }', {\n       *     variables: {},\n       *     cache: storefront.CacheLong()\n       *   });\n       * }\n       * ```\n       */\n      query: <T>(\n        query: string,\n        payload?: StorefrontCommonOptions & {cache?: CachingStrategy},\n      ) => {\n        query = minifyQuery(query);\n        if (isMutationRE.test(query))\n          throw new Error('storefront.query cannot execute mutations');\n\n        return fetchStorefrontApi<T>({...payload, query});\n      },\n      /**\n       * Sends a GraphQL mutation to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   await storefront.mutate('mutation { ... }', {\n       *     variables: {},\n       *   });\n       * }\n       * ```\n       */\n      mutate: <T>(mutation: string, payload?: StorefrontCommonOptions) => {\n        mutation = minifyQuery(mutation);\n        if (isQueryRE.test(mutation))\n          throw new Error('storefront.mutate cannot execute queries');\n\n        return fetchStorefrontApi<T>({...payload, mutation});\n      },\n      cache,\n      CacheNone,\n      CacheLong,\n      CacheShort,\n      CacheCustom,\n      generateCacheControlHeader,\n      getPublicTokenHeaders,\n      getPrivateTokenHeaders,\n      getShopifyDomain,\n      getApiUrl: getStorefrontApiUrl,\n      /**\n       * Wether it's a GraphQL error returned in the Storefront API response.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   try {\n       *     await storefront.query(...);\n       *   } catch(error) {\n       *     if (storefront.isApiError(error)) {\n       *       // ...\n       *     }\n       *\n       *     throw error;\n       *   }\n       * }\n       * ```\n       */\n      isApiError: isStorefrontApiError,\n      i18n: (i18n ?? defaultI18n) as TI18n,\n    },\n  };\n}"
+          },
+          "CreateStorefrontClientOptions": {
+            "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "WithCache",
-            "value": "<T = unknown>(cacheKey: CacheKey, strategy: AllCacheOptions, actionFn: () => T | Promise<T>) => Promise<T>",
+            "name": "CreateStorefrontClientOptions",
+            "value": "HydrogenClientProps<TI18n> & StorefrontClientProps",
             "description": ""
           },
-          "CacheKey": {
-            "filePath": "/cache/fetch.ts",
+          "HydrogenClientProps": {
+            "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "CacheKey",
-            "value": "string | readonly unknown[]",
-            "description": ""
+            "name": "HydrogenClientProps",
+            "value": "{\n  /** Storefront API headers. If on Oxygen, use `getStorefrontHeaders()` */\n  storefrontHeaders?: StorefrontHeaders;\n  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */\n  cache?: Cache;\n  /** @deprecated use storefrontHeaders instead */\n  buyerIp?: string;\n  /** @deprecated use storefrontHeaders instead */\n  requestGroupId?: string | null;\n  /** The globally unique identifier for the Shop */\n  storefrontId?: string;\n  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil?: ExecutionContext['waitUntil'];\n  /** An object containing a country code and language code */\n  i18n?: TI18n;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontHeaders",
+                "value": "StorefrontHeaders",
+                "description": "Storefront API headers. If on Oxygen, use `getStorefrontHeaders()`",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cache",
+                "value": "Cache",
+                "description": "An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache)",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "buyerIp",
+                "value": "string",
+                "description": "",
+                "isOptional": true,
+                "deprecationMessage": "use storefrontHeaders instead"
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "requestGroupId",
+                "value": "string",
+                "description": "",
+                "isOptional": true,
+                "deprecationMessage": "use storefrontHeaders instead"
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontId",
+                "value": "string",
+                "description": "The globally unique identifier for the Shop",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "waitUntil",
+                "value": "ExecutionContext",
+                "description": "The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "i18n",
+                "value": "TI18n",
+                "description": "An object containing a country code and language code",
+                "isOptional": true
+              }
+            ]
+          },
+          "StorefrontHeaders": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontHeaders",
+            "value": "{\n  /** A unique ID that correlates all sub-requests together. */\n  requestGroupId: string | null;\n  /** The IP address of the client. */\n  buyerIp: string | null;\n  /** The cookie header from the client  */\n  cookie: string | null;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "requestGroupId",
+                "value": "string",
+                "description": "A unique ID that correlates all sub-requests together."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "buyerIp",
+                "value": "string",
+                "description": "The IP address of the client."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cookie",
+                "value": "string",
+                "description": "The cookie header from the client"
+              }
+            ]
+          },
+          "StorefrontClient": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontClient",
+            "value": "{\n  storefront: Storefront<TI18n>;\n}",
+            "description": "other description",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefront",
+                "value": "Storefront<TI18n>",
+                "description": ""
+              }
+            ]
+          },
+          "Storefront": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "Storefront",
+            "value": "{\n  /** The function to run a query on storefront api. */\n  query: <T>(\n    query: string,\n    payload?: StorefrontCommonOptions & {\n      cache?: CachingStrategy;\n    },\n  ) => Promise<T>;\n  /** The function to run a mutation on storefront api. */\n  mutate: <T>(\n    mutation: string,\n    payload?: StorefrontCommonOptions,\n  ) => Promise<T>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of `CacheNone`. */\n  CacheNone: typeof CacheNone;\n  /** Re-export of `CacheLong`. */\n  CacheLong: typeof CacheLong;\n  /** Re-export of `CacheShort`. */\n  CacheShort: typeof CacheShort;\n  /** Re-export of `CacheCustom`. */\n  CacheCustom: typeof CacheCustom;\n  /** Re-export of `generateCacheControlHeader`. */\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /** Determines if the error is resulted from a Storefront API call. */\n  isApiError: (error: any) => boolean;\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n: TI18n;\n}",
+            "description": "some deswcription",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "query",
+                "value": "<T>(query: string, payload?: StorefrontCommonOptions & { cache?: AllCacheOptions; }) => Promise<T>",
+                "description": "The function to run a query on storefront api."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mutate",
+                "value": "<T>(mutation: string, payload?: StorefrontCommonOptions) => Promise<T>",
+                "description": "The function to run a mutation on storefront api."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cache",
+                "value": "Cache",
+                "description": "The cache instance passed in from the `createStorefrontClient` argument.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheNone",
+                "value": "() => NoStoreStrategy",
+                "description": "Re-export of `CacheNone`."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheLong",
+                "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
+                "description": "Re-export of `CacheLong`."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheShort",
+                "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
+                "description": "Re-export of `CacheShort`."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheCustom",
+                "value": "(overrideOptions: AllCacheOptions) => AllCacheOptions",
+                "description": "Re-export of `CacheCustom`."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "generateCacheControlHeader",
+                "value": "(cacheOptions: AllCacheOptions) => string",
+                "description": "Re-export of `generateCacheControlHeader`."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getPublicTokenHeaders",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getPrivateTokenHeaders",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getShopifyDomain",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getApiUrl",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\" | \"storefrontApiVersion\">>) => string",
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isApiError",
+                "value": "(error: any) => boolean",
+                "description": "Determines if the error is resulted from a Storefront API call."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "i18n",
+                "value": "TI18n",
+                "description": "The `i18n` object passed in from the `createStorefrontClient` argument."
+              }
+            ]
+          },
+          "StorefrontCommonOptions": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontCommonOptions",
+            "value": "{\n  variables?: ExecutionArgs['variableValues'] & {\n    country?: CountryCode;\n    language?: LanguageCode;\n  };\n  headers?: HeadersInit;\n  storefrontApiVersion?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "variables",
+                "value": "{ readonly [variable: string]: unknown; } & { country?: CountryCode; language?: LanguageCode; }",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "headers",
+                "value": "HeadersInit",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontApiVersion",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
           },
           "AllCacheOptions": {
             "filePath": "/cache/strategies.ts",
@@ -49,7 +321,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "mode",
                 "value": "string",
-                "description": "",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
                 "isOptional": true
               },
               {
@@ -57,7 +329,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "maxAge",
                 "value": "number",
-                "description": "",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
                 "isOptional": true
               },
               {
@@ -65,7 +337,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "staleWhileRevalidate",
                 "value": "number",
-                "description": "",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
                 "isOptional": true
               },
               {
@@ -73,7 +345,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "sMaxAge",
                 "value": "number",
-                "description": "",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
                 "isOptional": true
               },
               {
@@ -81,11 +353,242 @@
                 "syntaxKind": "PropertySignature",
                 "name": "staleIfError",
                 "value": "number",
-                "description": "",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
                 "isOptional": true
               }
             ],
-            "value": "export interface AllCacheOptions {\n  mode?: string;\n  maxAge?: number;\n  staleWhileRevalidate?: number;\n  sMaxAge?: number;\n  staleIfError?: number;\n}"
+            "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
+          },
+          "NoStoreStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "NoStoreStrategy",
+            "value": "{\n  mode: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          },
+          "I18nBase": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "I18nBase",
+            "value": "{\n  language: LanguageCode;\n  country: CountryCode;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "language",
+                "value": "LanguageCode",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "country",
+                "value": "CountryCode",
+                "description": ""
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "Seo",
+    "category": "components",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "The `<Seo />` component renders SEO meta tags in the document `head`. Add the `<Seo />` to your `root.jsx` before the `<Meta />` and `<Link />` components. SEO metadata is set on a per-route basis using Remix [loader functions](https://remix.run/docs/en/v1/guides/data-loading). Learn more about [how SEO works in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/seo).",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {Seo} from '@shopify/hydrogen';\nimport {\n  Links,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\n\nexport default function App() {\n  /** ... */\n  return (\n    <html>\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        {/* Add <Seo /> before <Meta /> and <Link /> */}\n        <Seo />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        <ScrollRestoration />\n        <Scripts />\n      </body>\n    </html>\n  );\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {Seo} from '@shopify/hydrogen';\nimport {\n  Links,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\n\nexport default function App() {\n  /** ... */\n  return (\n    <html>\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        {/* Add <Seo /> before <Meta /> and <Link /> */}\n        <Seo />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        <ScrollRestoration />\n        <Scripts />\n      </body>\n    </html>\n  );\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "SeoProps",
+        "typeDefinitions": {
+          "SeoProps": {
+            "filePath": "/seo/seo.ts",
+            "name": "SeoProps",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/seo/seo.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "debug",
+                "value": "boolean",
+                "description": "Enable debug mode that prints SEO properties for route in the console",
+                "isOptional": true
+              }
+            ],
+            "value": "interface SeoProps {\n  /** Enable debug mode that prints SEO properties for route in the console */\n  debug?: boolean;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "createWithCache",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Creates a utility function that executes an asynchronous operation \n like `fetch` and caches the result according to the strategy provided.\nUse this to call any third-party APIs from loaders or actions.\nBy default, it uses the `CacheShort` strategy.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache_unstable, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache_unstable({\n      cache,\n      waitUntil: executionContext.waitUntil,\n    });\n\n    // Create a custom utility to query a third-party API:\n    const fetchMyCMS = (query) => {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache(['my-cms', query], CacheLong(), async () => {\n        return await (\n          await fetch('my-cms.com/api', {\n            method: 'POST',\n            body: query,\n          })\n        ).json();\n      });\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        /* ... */\n        fetchMyCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "// In your app's `server.ts` file:\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {createWithCache_unstable, CacheLong} from '@shopify/hydrogen';\n// Use another `createRequestHandler` if deploying off oxygen\nimport {createRequestHandler} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record<string, string>,\n    executionContext: ExecutionContext,\n  ) {\n    const cache = await caches.open('my-cms');\n    const withCache = createWithCache_unstable({\n      cache,\n      waitUntil: executionContext.waitUntil,\n    });\n\n    // Create a custom utility to query a third-party API:\n    const fetchMyCMS = (query: string) => {\n      // Prefix the cache key and make it unique based on arguments.\n      return withCache(['my-cms', query], CacheLong(), async () => {\n        return await (\n          await fetch('my-cms.com/api', {\n            method: 'POST',\n            body: query,\n          })\n        ).json();\n      });\n    };\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        // Make sure to update remix.env.d.ts to include `fetchMyCMS`\n        fetchMyCMS,\n      }),\n    });\n\n    return handleRequest(request);\n  },\n};\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Arguments",
+        "description": "",
+        "type": "CreateWithCache_unstableGeneratedType",
+        "typeDefinitions": {
+          "CreateWithCache_unstableGeneratedType": {
+            "filePath": "/with-cache.ts",
+            "name": "CreateWithCache_unstableGeneratedType",
+            "description": "Creates a utility function that executes an asynchronous operation\nlike `fetch` and caches the result according to the strategy provided.\nUse this to call any third-party APIs from loaders or actions.\nBy default, it uses the `CacheShort` strategy.",
+            "params": [
+              {
+                "name": "options",
+                "description": "",
+                "value": "CreateWithCacheOptions",
+                "filePath": "/with-cache.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/with-cache.ts",
+              "description": "",
+              "name": "CreateWithCacheReturn<T = unknown>",
+              "value": "CreateWithCacheReturn<T = unknown>"
+            },
+            "value": "export function createWithCache_unstable<T = unknown>(\n  options: CreateWithCacheOptions,\n): CreateWithCacheReturn<T> {\n  const {cache, waitUntil} = options;\n  return function withCache<T = unknown>(\n    cacheKey: CacheKey,\n    strategy: CachingStrategy,\n    actionFn: () => T | Promise<T>,\n  ) {\n    return runWithCache<T>(cacheKey, actionFn, {\n      strategy,\n      cacheInstance: cache,\n      waitUntil,\n    });\n  };\n}"
+          },
+          "CreateWithCacheOptions": {
+            "filePath": "/with-cache.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CreateWithCacheOptions",
+            "value": "{\n  /** An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache) */\n  cache: Cache;\n  /** The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform. */\n  waitUntil: ExecutionContext['waitUntil'];\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/with-cache.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cache",
+                "value": "Cache",
+                "description": "An instance that implements the [Cache API](https://developer.mozilla.org/en-US/docs/Web/API/Cache)"
+              },
+              {
+                "filePath": "/with-cache.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "waitUntil",
+                "value": "ExecutionContext",
+                "description": "The `waitUntil` function is used to keep the current request/response lifecycle alive even after a response has been sent. It should be provided by your platform."
+              }
+            ]
+          },
+          "CreateWithCacheReturn": {
+            "filePath": "/with-cache.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CreateWithCacheReturn",
+            "value": "(\n  cacheKey: CacheKey,\n  strategy: CachingStrategy,\n  actionFn: () => T | Promise<T>,\n) => Promise<T>",
+            "description": "This is a caching async function. Whatever data is returned from the `actionFn` will be cached according to the strategy provided.\n\nUse the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the built-in caching strategies: `CacheNone`, `CacheShort`, `CacheLong`."
+          },
+          "CacheKey": {
+            "filePath": "/cache/fetch.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CacheKey",
+            "value": "string | readonly unknown[]",
+            "description": "The cache key is used to uniquely identify a value in the cache."
+          },
+          "CachingStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CachingStrategy",
+            "value": "AllCacheOptions",
+            "description": "Use the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the pre-defined caching strategies: CacheNone, CacheShort, CacheLong.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ]
           }
         }
       }
