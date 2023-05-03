@@ -1,6 +1,6 @@
 {
   "extends": "../../tsconfig.json",
-  "include": ["src"],
+  "include": ["src", "./hydrogen.config.d.ts"],
   "compilerOptions": {
     "jsx": "preserve",
     "paths": {

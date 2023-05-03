@@ -1,3 +1,6 @@
+/**
+ * Override options for a cache strategy.
+ */
 export interface AllCacheOptions {
   /**
    * The caching mode, generally `public`, `private`, or `no-store`.

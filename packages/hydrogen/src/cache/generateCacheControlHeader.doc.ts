@@ -1,11 +1,11 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'createStorefrontClient',
+  name: 'generateCacheControlHeader',
   category: 'utilities',
   isVisualComponent: false,
   related: [],
-  description: `This function extends \`createStorefrontClient\` from [Hydrogen React](/docs/api/hydrogen-react/latest/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
+  description: `This utility function accepts a \`CachingStrategy\` object and returns a string with the corresponding \`cache-control\` header.
 
 Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).`,
   type: 'utility',
@@ -15,12 +15,12 @@ Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/d
       tabs: [
         {
           title: 'JavaScript',
-          code: './storefrontClient.example.js',
+          code: './generateCacheControlHeader.example.js',
           language: 'js',
         },
         {
           title: 'TypeScript',
-          code: './storefrontClient.example.ts',
+          code: './generateCacheControlHeader.example.ts',
           language: 'ts',
         },
       ],
@@ -30,7 +30,7 @@ Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/d
   definitions: [
     {
       title: 'Arguments',
-      type: 'CreateStorefrontClientGeneratedType',
+      type: 'GenerateCacheControlHeaderGeneratedType',
       description: '',
     },
   ],

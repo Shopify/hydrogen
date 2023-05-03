@@ -1,13 +1,11 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'createStorefrontClient',
+  name: 'storefrontRedirect',
   category: 'utilities',
   isVisualComponent: false,
   related: [],
-  description: `This function extends \`createStorefrontClient\` from [Hydrogen React](/docs/api/hydrogen-react/latest/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
-
-Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).`,
+  description: `Queries the Storefront API to see if there is any redirect [created for the current route](https://help.shopify.com/en/manual/online-store/menus-and-links/url-redirect) and performs it. Otherwise, it returns the response passed in the parameters. Useful for conditionally redirecting after a 404 response.`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
@@ -15,12 +13,12 @@ Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/d
       tabs: [
         {
           title: 'JavaScript',
-          code: './storefrontClient.example.js',
+          code: './storefrontRedirect.example.js',
           language: 'js',
         },
         {
           title: 'TypeScript',
-          code: './storefrontClient.example.ts',
+          code: './storefrontRedirect.example.ts',
           language: 'ts',
         },
       ],
@@ -30,7 +28,7 @@ Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/d
   definitions: [
     {
       title: 'Arguments',
-      type: 'CreateStorefrontClientGeneratedType',
+      type: 'StorefrontRedirectGeneratedType',
       description: '',
     },
   ],

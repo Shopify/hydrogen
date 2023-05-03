@@ -1,10 +1,488 @@
 [
   {
+    "name": "CacheCustom",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "This allows you to create your own caching strategy, using any of the options available in a `CachingStrategy` object.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {json} from '@shopify/remix-oxygen';\nimport {CacheCustom} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheCustom({\n        maxAge: 1000 * 60 * 60 * 24 * 365,\n        staleWhileRevalidate: 1000 * 60 * 60 * 24 * 7,\n      }),\n    },\n  );\n\n  return json(data);\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {json, type LoaderArgs} from '@shopify/remix-oxygen';\nimport {CacheCustom} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheCustom({\n        maxAge: 1000 * 60 * 60 * 24 * 365,\n        staleWhileRevalidate: 1000 * 60 * 60 * 24 * 7,\n      }),\n    },\n  );\n\n  return json(data);\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Arguments",
+        "description": "",
+        "type": "CacheCustomGeneratedType",
+        "typeDefinitions": {
+          "CacheCustomGeneratedType": {
+            "filePath": "/cache/strategies.ts",
+            "name": "CacheCustomGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "overrideOptions",
+                "description": "",
+                "value": "AllCacheOptions",
+                "filePath": "/cache/strategies.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/cache/strategies.ts",
+              "description": "",
+              "name": "AllCacheOptions",
+              "value": "AllCacheOptions"
+            },
+            "value": "export function CacheCustom(overrideOptions: CachingStrategy): AllCacheOptions {\n  return overrideOptions as AllCacheOptions;\n}"
+          },
+          "AllCacheOptions": {
+            "filePath": "/cache/strategies.ts",
+            "name": "AllCacheOptions",
+            "description": "Override options for a cache strategy.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "CacheLong",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "The `CacheLong` strategy instructs caches to store data for 1 hour, and `staleWhileRevalidate` data for an additional 23 hours. Note: these time values are subject to change.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {json} from '@shopify/remix-oxygen';\nimport {CacheLong} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheLong(),\n    },\n  );\n\n  return json(data);\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {json, type LoaderArgs} from '@shopify/remix-oxygen';\nimport {CacheLong} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheLong(),\n    },\n  );\n\n  return json(data);\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Arguments",
+        "description": "",
+        "type": "CacheLongGeneratedType",
+        "typeDefinitions": {
+          "CacheLongGeneratedType": {
+            "filePath": "/cache/strategies.ts",
+            "name": "CacheLongGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "overrideOptions",
+                "description": "",
+                "value": "AllCacheOptions",
+                "isOptional": true,
+                "filePath": "/cache/strategies.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/cache/strategies.ts",
+              "description": "",
+              "name": "AllCacheOptions",
+              "value": "AllCacheOptions"
+            },
+            "value": "export function CacheLong(overrideOptions?: CachingStrategy): AllCacheOptions {\n  guardExpirableModeType(overrideOptions);\n  return {\n    mode: PUBLIC,\n    maxAge: 3600, // 1 hour\n    staleWhileRevalidate: 82800, // 23 Hours\n    ...overrideOptions,\n  };\n}"
+          },
+          "AllCacheOptions": {
+            "filePath": "/cache/strategies.ts",
+            "name": "AllCacheOptions",
+            "description": "Override options for a cache strategy.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "CacheNone",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "The CacheNone() strategy instructs caches not to store any data. The function accepts no arguments.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {json} from '@shopify/remix-oxygen';\nimport {CacheNone} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheNone(),\n    },\n  );\n\n  return json(data);\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {json, type LoaderArgs} from '@shopify/remix-oxygen';\nimport {CacheNone} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheNone(),\n    },\n  );\n\n  return json(data);\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Arguments",
+        "description": "",
+        "type": "CacheNoneGeneratedType",
+        "typeDefinitions": {
+          "CacheNoneGeneratedType": {
+            "filePath": "/cache/strategies.ts",
+            "name": "CacheNoneGeneratedType",
+            "description": "",
+            "params": [],
+            "returns": {
+              "filePath": "/cache/strategies.ts",
+              "description": "",
+              "name": "NoStoreStrategy",
+              "value": "NoStoreStrategy"
+            },
+            "value": "export function CacheNone(): NoStoreStrategy {\n  return {\n    mode: NO_STORE,\n  };\n}"
+          },
+          "NoStoreStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "NoStoreStrategy",
+            "value": "{\n  mode: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "CacheShort",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "The `CacheShort` strategy instructs caches to store data for 1 second, and `staleWhileRevalidate` data for an additional 9 seconds. Note: these time values are subject to change.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {json} from '@shopify/remix-oxygen';\nimport {CacheShort} from '@shopify/hydrogen';\n\nexport async function loader({context}) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheShort(),\n    },\n  );\n\n  return json(data);\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {json, type LoaderArgs} from '@shopify/remix-oxygen';\nimport {CacheShort} from '@shopify/hydrogen';\n\nexport async function loader({context}: LoaderArgs) {\n  const data = await context.storefront.query(\n    `#grahpql\n  {\n    shop {\n      name\n      description\n    }\n  }`,\n    {\n      cache: CacheShort(),\n    },\n  );\n\n  return json(data);\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Arguments",
+        "description": "",
+        "type": "CacheShortGeneratedType",
+        "typeDefinitions": {
+          "CacheShortGeneratedType": {
+            "filePath": "/cache/strategies.ts",
+            "name": "CacheShortGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "overrideOptions",
+                "description": "",
+                "value": "AllCacheOptions",
+                "isOptional": true,
+                "filePath": "/cache/strategies.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/cache/strategies.ts",
+              "description": "",
+              "name": "AllCacheOptions",
+              "value": "AllCacheOptions"
+            },
+            "value": "export function CacheShort(overrideOptions?: CachingStrategy): AllCacheOptions {\n  guardExpirableModeType(overrideOptions);\n  return {\n    mode: PUBLIC,\n    maxAge: 1,\n    staleWhileRevalidate: 9,\n    ...overrideOptions,\n  };\n}"
+          },
+          "AllCacheOptions": {
+            "filePath": "/cache/strategies.ts",
+            "name": "AllCacheOptions",
+            "description": "Override options for a cache strategy.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "generateCacheControlHeader",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "This utility function accepts a `CachingStrategy` object and returns a string with the corresponding `cache-control` header.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {json} from '@shopify/remix-oxygen';\nimport {generateCacheControlHeader, CacheShort} from '@shopify/hydrogen';\n\nexport async function loader() {\n  return json(\n    {some: 'data'},\n    {\n      headers: {\n        'cache-control': generateCacheControlHeader(CacheShort()),\n      },\n    },\n  );\n}\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {json} from '@shopify/remix-oxygen';\nimport {generateCacheControlHeader, CacheShort} from '@shopify/hydrogen';\n\nexport async function loader() {\n  return json(\n    {some: 'data'},\n    {\n      headers: {\n        'cache-control': generateCacheControlHeader(CacheShort()),\n      },\n    },\n  );\n}\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Arguments",
+        "description": "",
+        "type": "GenerateCacheControlHeaderGeneratedType",
+        "typeDefinitions": {
+          "GenerateCacheControlHeaderGeneratedType": {
+            "filePath": "/cache/strategies.ts",
+            "name": "GenerateCacheControlHeaderGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "cacheOptions",
+                "description": "",
+                "value": "AllCacheOptions",
+                "filePath": "/cache/strategies.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/cache/strategies.ts",
+              "description": "",
+              "name": "string",
+              "value": "string"
+            },
+            "value": "export function generateCacheControlHeader(\n  cacheOptions: CachingStrategy,\n): string {\n  const cacheControl: string[] = [];\n  Object.keys(cacheOptions).forEach((key: string) => {\n    if (key === 'mode') {\n      cacheControl.push(cacheOptions[key] as string);\n    } else if (optionMapping[key]) {\n      cacheControl.push(\n        `${optionMapping[key]}=${cacheOptions[key as keyof CachingStrategy]}`,\n      );\n    }\n  });\n  return cacheControl.join(', ');\n}"
+          },
+          "AllCacheOptions": {
+            "filePath": "/cache/strategies.ts",
+            "name": "AllCacheOptions",
+            "description": "Override options for a cache strategy.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "createStorefrontClient",
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "This function extends `createStorefrontClient` from [Hydrogen React](https://shopify.dev/docs/api/hydrogen-react/latest/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.\n\nLearn more about [data fetching in Hydrogen](https://shopify.dev/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
+    "description": "This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/latest/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
     "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
@@ -314,7 +792,321 @@
           "AllCacheOptions": {
             "filePath": "/cache/strategies.ts",
             "name": "AllCacheOptions",
+            "description": "Override options for a cache strategy.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
+          },
+          "NoStoreStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "NoStoreStrategy",
+            "value": "{\n  mode: string;\n}",
             "description": "",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          },
+          "I18nBase": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "I18nBase",
+            "value": "{\n  language: LanguageCode;\n  country: CountryCode;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "language",
+                "value": "LanguageCode",
+                "description": ""
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "country",
+                "value": "CountryCode",
+                "description": ""
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "storefrontRedirect",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Queries the Storefront API to see if there is any redirect [created for the current route](https://help.shopify.com/en/manual/online-store/menus-and-links/url-redirect) and performs it. Otherwise, it returns the response passed in the parameters. Useful for conditionally redirecting after a 404 response.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {storefrontRedirect, createStorefrontClient} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const {storefront} = createStorefrontClient({\n      cache: await caches.open('hydrogen'),\n      waitUntil: (p) => executionContext.waitUntil(p),\n      privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,\n      publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION,\n      storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,\n      storefrontHeaders: getStorefrontHeaders(request),\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n    });\n\n    const response = await handleRequest(request);\n\n    if (response.status === 404) {\n      /**\n       * Check for redirects only when there's a 404 from\n       * the app. If the redirect doesn't exist, then\n       * `storefrontRedirect` will pass through the 404\n       * response.\n       */\n      return storefrontRedirect({request, response, storefront});\n    }\n\n    return response;\n  },\n};\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {storefrontRedirect, createStorefrontClient} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request: Request, env: Env, executionContext: ExecutionContext) {\n    const {storefront} = createStorefrontClient({\n      cache: await caches.open('hydrogen'),\n      waitUntil: (p: Promise<unknown>) => executionContext.waitUntil(p),\n      privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,\n      publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n      storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION,\n      storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,\n      storefrontHeaders: getStorefrontHeaders(request),\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n    });\n\n    const response = await handleRequest(request);\n\n    if (response.status === 404) {\n      /**\n       * Check for redirects only when there's a 404 from\n       * the app. If the redirect doesn't exist, then\n       * `storefrontRedirect` will pass through the 404\n       * response.\n       */\n      return storefrontRedirect({request, response, storefront});\n    }\n\n    return response;\n  },\n};\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Arguments",
+        "description": "",
+        "type": "StorefrontRedirectGeneratedType",
+        "typeDefinitions": {
+          "StorefrontRedirectGeneratedType": {
+            "filePath": "/routing/redirect.ts",
+            "name": "StorefrontRedirectGeneratedType",
+            "description": "Queries the Storefront API to see if there is any redirect\ncreated for the current route and performs it. Otherwise,\nit returns the response passed in the parameters. Useful for\nconditionally redirecting after a 404 response.",
+            "params": [
+              {
+                "name": "options",
+                "description": "",
+                "value": "StorefrontRedirect",
+                "filePath": "/routing/redirect.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/routing/redirect.ts",
+              "description": "",
+              "name": "Promise<Response>",
+              "value": "Promise<Response>"
+            },
+            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const {pathname, search} = new URL(request.url);\n  const redirectFrom = pathname + search;\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return new Response(null, {status: 302, headers: {location}});\n    }\n\n    const searchParams = new URLSearchParams(search);\n    const redirectTo =\n      searchParams.get('return_to') || searchParams.get('redirect');\n\n    if (redirectTo) {\n      if (isLocalPath(redirectTo)) {\n        return redirect(redirectTo);\n      } else {\n        console.warn(\n          `Cross-domain redirects are not supported. Tried to redirect from ${redirectFrom} to ${redirectTo}`,\n        );\n      }\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
+          },
+          "StorefrontRedirect": {
+            "filePath": "/routing/redirect.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontRedirect",
+            "value": "{\n  storefront: Storefront<I18nBase>;\n  request: Request;\n  response?: Response;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/routing/redirect.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefront",
+                "value": "Storefront<I18nBase>",
+                "description": ""
+              },
+              {
+                "filePath": "/routing/redirect.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "request",
+                "value": "Request",
+                "description": ""
+              },
+              {
+                "filePath": "/routing/redirect.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "response",
+                "value": "Response",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "Storefront": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "Storefront",
+            "value": "{\n  /** The function to run a query on storefront api. */\n  query: <T>(\n    query: string,\n    payload?: StorefrontCommonOptions & {\n      cache?: CachingStrategy;\n    },\n  ) => Promise<T>;\n  /** The function to run a mutation on storefront api. */\n  mutate: <T>(\n    mutation: string,\n    payload?: StorefrontCommonOptions,\n  ) => Promise<T>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of `CacheNone`. */\n  CacheNone: typeof CacheNone;\n  /** Re-export of `CacheLong`. */\n  CacheLong: typeof CacheLong;\n  /** Re-export of `CacheShort`. */\n  CacheShort: typeof CacheShort;\n  /** Re-export of `CacheCustom`. */\n  CacheCustom: typeof CacheCustom;\n  /** Re-export of `generateCacheControlHeader`. */\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /** Determines if the error is resulted from a Storefront API call. */\n  isApiError: (error: any) => boolean;\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n: TI18n;\n}",
+            "description": "some deswcription",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "query",
+                "value": "<T>(query: string, payload?: StorefrontCommonOptions & { cache?: AllCacheOptions; }) => Promise<T>",
+                "description": "The function to run a query on storefront api."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mutate",
+                "value": "<T>(mutation: string, payload?: StorefrontCommonOptions) => Promise<T>",
+                "description": "The function to run a mutation on storefront api."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cache",
+                "value": "Cache",
+                "description": "The cache instance passed in from the `createStorefrontClient` argument.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheNone",
+                "value": "() => NoStoreStrategy",
+                "description": "Re-export of `CacheNone`."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheLong",
+                "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
+                "description": "Re-export of `CacheLong`."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheShort",
+                "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
+                "description": "Re-export of `CacheShort`."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheCustom",
+                "value": "(overrideOptions: AllCacheOptions) => AllCacheOptions",
+                "description": "Re-export of `CacheCustom`."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "generateCacheControlHeader",
+                "value": "(cacheOptions: AllCacheOptions) => string",
+                "description": "Re-export of `generateCacheControlHeader`."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getPublicTokenHeaders",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getPrivateTokenHeaders",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getShopifyDomain",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getApiUrl",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\" | \"storefrontApiVersion\">>) => string",
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isApiError",
+                "value": "(error: any) => boolean",
+                "description": "Determines if the error is resulted from a Storefront API call."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "i18n",
+                "value": "TI18n",
+                "description": "The `i18n` object passed in from the `createStorefrontClient` argument."
+              }
+            ]
+          },
+          "StorefrontCommonOptions": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontCommonOptions",
+            "value": "{\n  variables?: ExecutionArgs['variableValues'] & {\n    country?: CountryCode;\n    language?: LanguageCode;\n  };\n  headers?: HeadersInit;\n  storefrontApiVersion?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "variables",
+                "value": "{ readonly [variable: string]: unknown; } & { country?: CountryCode; language?: LanguageCode; }",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "headers",
+                "value": "HeadersInit",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontApiVersion",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "AllCacheOptions": {
+            "filePath": "/cache/strategies.ts",
+            "name": "AllCacheOptions",
+            "description": "Override options for a cache strategy.",
             "members": [
               {
                 "filePath": "/cache/strategies.ts",

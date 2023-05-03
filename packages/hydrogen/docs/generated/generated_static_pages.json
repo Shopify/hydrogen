@@ -1,7 +1,7 @@
 [
   {
     "title": "Hydrogen",
-    "description": "Hydrogen is Shopify’s opinionated stack for headless commerce. It provides a set of tools, utilities, and best-in-class examples for building dynamic and performant commerce applications.",
+    "description": "Hydrogen is Shopify’s opinionated stack for headless commerce, built on [Remix](https://remix.run). It provides a set of tools, utilities, and best-in-class examples for building dynamic and performant commerce applications.",
     "id": "hydrogen",
     "sections": [
       {
@@ -11,8 +11,8 @@
         "sectionContent": "\n1. Create a new Hydrogen project with your preferred package manager.\n1. Import components, hooks, or utilities that you want to use in your app. For more detailed instructions, see the Getting Started Guide.\n      ",
         "sectionCard": [
           {
-            "subtitle": "Navigate to",
-            "name": "Getting Started with Hydrogen",
+            "subtitle": "Tutorial",
+            "name": "Getting started with Hydrogen",
             "url": "/docs/custom-storefronts/hydrogen/getting-started/quickstart",
             "type": "tutorial"
           }
@@ -35,19 +35,19 @@
         "type": "Generic",
         "anchorLink": "authentication",
         "title": "Authentication",
-        "sectionContent": "To make full use of Hydrogen, you need to authenticate with and make requests to the [Storefront API](/docs/api/storefront). Hydrogen includes a full-featured [API client](/docs/api/hydrogen/current/utilities/createstorefrontclient) to securely handle API queries and mutations. You can create access tokens for your own Shopify store by [installing the Hydrogen sales channel](/docs/custom-storefronts/oxygen/getting-started), which includes built-in hosting on Oxygen, Shopify’s global edge hosting platform.",
+        "sectionContent": "To make full use of Hydrogen, you need to authenticate with and make requests to the [Storefront API](/docs/api/storefront). Hydrogen includes a full-featured [API client](/docs/api/hydrogen/current/utilities/createstorefrontclient) to securely handle API queries and mutations.\n\nYou can create access tokens for your own Shopify store by [installing the Hydrogen sales channel](/docs/custom-storefronts/oxygen/getting-started), which includes built-in support for Oxygen, Shopify’s global edge hosting platform. Or install the Headless sales channel to host your Hydrogen app anywhere.\n\nApps have access to [two kinds of tokens](/docs/api/usage/authentication#access-tokens-for-the-storefront-api): a public API token, which can be used in client-side code, and a private API token, which should only be used in server-side contexts and never exposed publicly.",
         "sectionCard": [
           {
             "subtitle": "Install",
             "name": "Hydrogen sales channel",
             "url": "https://apps.shopify.com/hydrogen",
-            "type": "tutorial"
+            "type": "hydrogen"
           },
           {
             "subtitle": "Install",
             "name": "Headless sales channel",
             "url": "https://apps.shopify.com/headless",
-            "type": "tutorial"
+            "type": "apps"
           }
         ],
         "codeblock": {
@@ -55,7 +55,7 @@
           "tabs": [
             {
               "title": "server.js",
-              "code": "/**\n * server.js\n * ---------\n * Create a storefront client.\n * Check the server.js file in the root of your new Hydrogen project to see\n * an example implementation of this function. If you start from an official\n * Hydrogen template (Hello World or Demo Store), then the client is already\n * set up for you. Update the Shopify store domain and API token to start\n * querying your own store inventory.\n */\nconst {storefront} = createStorefrontClient({\n  cache,\n  waitUntil,\n  i18n: {language: 'EN', country: 'US'},\n  publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n  privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,\n  storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,\n  storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2023-04',\n  storefrontId: env.PUBLIC_STOREFRONT_ID,\n  storefrontHeaders: getStorefrontHeaders(request),\n});\n",
+              "code": "/**\n * server.js\n * ---------\n * Create a storefront client.\n * Check the server.js file in the root of your new Hydrogen project to see\n * an example implementation of this function. If you start from an official\n * Hydrogen template (Hello World or Demo Store), then the client is already\n * set up for you. Update the Shopify store domain and API token to start\n * querying your own store inventory.\n */\nconst {storefront} = createStorefrontClient({\n  cache,\n  waitUntil,\n  i18n: {language: 'EN', country: 'US'},\n  // `env` provides access to runtime data, including environment variables\n  publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,\n  privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,\n  storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,\n  storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION || '2023-04',\n  storefrontId: env.PUBLIC_STOREFRONT_ID,\n  storefrontHeaders: getStorefrontHeaders(request),\n});\n",
               "language": "javascript"
             },
             {
@@ -69,7 +69,7 @@
         "type": "Generic",
         "anchorLink": "versioning",
         "title": "Versioning",
-        "sectionContent": "Hydrogen is tied to specific versions of the [Storefront API](/api/storefront). For example, if you're using Storefront API version `2023-04`, then Hydrogen versions `2023.1.x` are fully compatible.\n\n> Caution:\n>If a Storefront API version includes breaking changes, then the corresponding Hydrogen version will include the same breaking changes.",
+        "sectionContent": "Hydrogen is tied to specific versions of the [Storefront API](/api/storefront), which is versioned quarterly. For example, if you're using Storefront API version `2023-04`, then Hydrogen versions `2023.4.x` are fully compatible.\n\n> Caution:\n>If a Storefront API version includes breaking changes, then the corresponding Hydrogen version will include the same breaking changes.",
         "sectionCard": [
           {
             "subtitle": "Learn more",
@@ -81,7 +81,7 @@
             "subtitle": "Learn more",
             "name": "API release notes",
             "url": "/docs/api/release-notes",
-            "type": "tutorial"
+            "type": "changelog"
           }
         ]
       },
@@ -89,7 +89,7 @@
         "type": "Generic",
         "anchorLink": "hydrogen_react",
         "title": "How Hydrogen works with Hydrogen React",
-        "sectionContent": "Hydrogen is [built on Remix](/docs/custom-storefronts/hydrogen/project-structure). But many of the components, hooks and utilities built into Hydrogen come from [Hydrogen React](/docs/api/hydrogen-react), an underlying package that’s framework-agnostic. For convenience, the Hydrogen package re-exports those resources. This means that if you’re building a Hydrogen app, then you should import them from the `@shopify/hydrogen package.",
+        "sectionContent": "Hydrogen is [built on Remix](/docs/custom-storefronts/hydrogen/project-structure). But many of the components, hooks and utilities built into Hydrogen come from [Hydrogen React](/docs/api/hydrogen-react), an underlying package that’s framework-agnostic. For convenience, the Hydrogen package re-exports those resources. This means that if you’re building a Hydrogen app, then you should import modules from the `@shopify/hydrogen` package.",
         "codeblock": {
           "title": "Importing Hydrogen components",
           "tabs": [
@@ -107,20 +107,20 @@
         "title": "Resources",
         "resources": [
           {
-            "name": "Custom Storefronts on Shopify",
+            "name": "Custom storefronts on Shopify",
             "subtitle": "Learn more about how to design, build, and manage custom storefronts on Shopify.",
             "url": "/custom-storefronts",
             "type": "custom-storefronts"
           },
           {
             "name": "Hydrogen on Discord",
-            "subtitle": "Chat with our community of developers building on Hydrogen",
+            "subtitle": "Chat with the growing community of commerce developers building with Hydrogen",
             "url": "https://discord.gg/shopifydevs",
             "type": "discord"
           },
           {
-            "name": "Hydrogen on Github",
-            "subtitle": "Follow the Hydrogen project, contribute ",
+            "name": "Hydrogen on GitHub",
+            "subtitle": "Follow the Hydrogen project, file bugs and feature requests, preview upcoming features, and more",
             "url": "https://github.com/Shopify/hydrogen",
             "type": "github"
           }
