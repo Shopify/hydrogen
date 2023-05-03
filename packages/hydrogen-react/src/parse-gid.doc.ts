@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description: `
-    Parses global id (gid) and returns the resource type and id.
+    Parses Global ID (GID) and returns the resource type and ID.
   `,
   type: 'gear',
   defaultExample: {
