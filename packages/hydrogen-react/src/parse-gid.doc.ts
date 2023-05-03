@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description: `
-    Parses Global ID (GID) and returns the resource type and ID.
+    Parses [Shopify Global ID (GID)](https://shopify.dev/api/usage/gids) and returns the resource type and ID.
   `,
   type: 'gear',
   defaultExample: {
@@ -15,7 +15,7 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './parse-gid.example.jsx',
+          code: './parse-gid.example.js',
           language: 'js',
         },
       ],
