@@ -3,7 +3,7 @@
 '@shopify/hydrogen': patch
 ---
 
-Adds `parseGid()` which is a helper funciton that takes in a [Shopify GID](https://shopify.dev/docs/api/usage/gids) and returns the `resource` and `id` from it. For example:
+Adds `parseGid()` which is a helper function that takes in a [Shopify GID](https://shopify.dev/docs/api/usage/gids) and returns the `resource` and `id` from it. For example:
 
 ```js
 import {parseGid} from '@shopify/hydrogen-react';
