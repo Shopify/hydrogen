@@ -15,7 +15,7 @@ export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
 
   if (customerAccessToken) {
-    return redirect(params.lang ? `${params.lang}/account` : '/account');
+    return redirect(params.locale ? `${params.locale}/account` : '/account');
   }
 
   return new Response(null);
@@ -64,7 +64,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
     const customerAccessToken = await doLogin(context, {email, password});
     session.set('customerAccessToken', customerAccessToken);
 
-    return redirect(params.lang ? `${params.lang}/account` : '/account', {
+    return redirect(params.locale ? `${params.locale}/account` : '/account', {
       headers: {
         'Set-Cookie': await session.commit(),
       },
