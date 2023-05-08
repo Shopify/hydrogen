@@ -17,7 +17,7 @@ export const meta: V2_MetaFunction<typeof loader> = ({data}) => {
 
 export async function loader({request, context, params}: LoaderArgs) {
   if (!params.id) {
-    return redirect(params?.lang ? `${params.lang}/account` : '/account');
+    return redirect(params?.locale ? `${params.locale}/account` : '/account');
   }
 
   const queryParams = new URL(request.url).searchParams;
@@ -29,7 +29,7 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   if (!customerAccessToken) {
     return redirect(
-      params.lang ? `${params.lang}/account/login` : '/account/login',
+      params.locale ? `${params.locale}/account/login` : '/account/login',
     );
   }
 

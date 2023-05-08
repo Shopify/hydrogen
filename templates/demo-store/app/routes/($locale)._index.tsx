@@ -26,11 +26,11 @@ export async function loader({params, context}: LoaderArgs) {
   const {language, country} = context.storefront.i18n;
 
   if (
-    params.lang &&
-    params.lang.toLowerCase() !== `${language}-${country}`.toLowerCase()
+    params.locale &&
+    params.locale.toLowerCase() !== `${language}-${country}`.toLowerCase()
   ) {
-    // If the lang URL param is defined, yet we still are on `EN-US`
-    // the the lang param must be invalid, send to the 404 page
+    // If the locale URL param is defined, yet we still are on `EN-US`
+    // the the locale param must be invalid, send to the 404 page
     throw new Response(null, {status: 404});
   }
 
