@@ -12,6 +12,8 @@ import {startMiniOxygen} from '../../lib/mini-oxygen.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
+import {combinedEnvironmentVariables} from '../../lib/combined-environment-variables.js';
+import {getConfig} from '../../lib/shopify-config.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -41,6 +43,7 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
+    shop: commonFlags.shop,
     debug: Flags.boolean({
       description: 'Attaches a Node inspector',
       env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
@@ -67,6 +70,7 @@ async function runDev({
   codegen = false,
   codegenConfigPath,
   disableVirtualRoutes,
+  shop,
   debug = false,
 }: {
   port?: number;
@@ -74,6 +78,7 @@ async function runDev({
   codegen?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
+  shop?: string;
   debug?: false;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -102,6 +107,11 @@ async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
+  const hasLinkedStorefront = !!(await getConfig(root))?.storefront?.id;
+  const environmentVariables = hasLinkedStorefront
+    ? await combinedEnvironmentVariables({root, shop})
+    : undefined;
+
   let miniOxygenStarted = false;
   async function safeStartMiniOxygen() {
     if (miniOxygenStarted) return;
@@ -112,6 +122,7 @@ async function runDev({
       watch: true,
       buildPathWorkerFile,
       buildPathClient,
+      environmentVariables,
     });
 
     miniOxygenStarted = true;
