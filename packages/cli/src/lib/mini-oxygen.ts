@@ -42,7 +42,11 @@ export async function startMiniOxygen({
       ...environmentVariables,
       ...process.env,
     },
-    envPath: (await fileExists(dotenvPath)) ? dotenvPath : undefined,
+    envPath:
+      !Object.keys(environmentVariables).length &&
+      (await fileExists(dotenvPath))
+        ? dotenvPath
+        : undefined,
     log: () => {},
     buildWatchPaths: watch
       ? [resolvePath(root, buildPathWorkerFile)]
