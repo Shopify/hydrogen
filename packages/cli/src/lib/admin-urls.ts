@@ -5,6 +5,11 @@ export function newHydrogenStorefrontUrl(session: AdminSession) {
   return `https://${storeFqdn}/admin/custom_storefronts/new`;
 }
 
+export function hydrogenStorefrontsUrl(session: AdminSession) {
+  const {storeFqdn} = session;
+  return `https://${storeFqdn}/admin/custom_storefronts`;
+}
+
 export function hydrogenStorefrontUrl(
   session: AdminSession,
   storefrontId: string,
