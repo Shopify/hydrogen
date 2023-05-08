@@ -430,9 +430,9 @@ function ProductOptionLink({
   [key: string]: any;
 }) {
   const {pathname} = useLocation();
-  const isLangPathname = /\/[a-zA-Z]{2}-[a-zA-Z]{2}\//g.test(pathname);
+  const isLocalePathname = /\/[a-zA-Z]{2}-[a-zA-Z]{2}\//g.test(pathname);
   // fixes internalized pathname
-  const path = isLangPathname
+  const path = isLocalePathname
     ? `/${pathname.split('/').slice(2).join('/')}`
     : pathname;
 

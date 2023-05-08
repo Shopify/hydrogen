@@ -17,7 +17,7 @@ import type {
 import invariant from 'tiny-invariant';
 import {Button, Text} from '~/components';
 import {assertApiErrors, getInputStyleClasses} from '~/lib/utils';
-import type {AccountOutletContext} from './($lang).account.edit';
+import type {AccountOutletContext} from './($locale).account.edit';
 
 interface ActionData {
   formError?: string;
@@ -49,7 +49,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
       assertApiErrors(data.customerAddressDelete);
 
-      return redirect(params.lang ? `${params.lang}/account` : '/account');
+      return redirect(params.locale ? `${params.locale}/account` : '/account');
     } catch (error: any) {
       return badRequest({formError: error.message});
     }
@@ -102,7 +102,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
         assertApiErrors(data.customerDefaultAddressUpdate);
       }
 
-      return redirect(params.lang ? `${params.lang}/account` : '/account');
+      return redirect(params.locale ? `${params.locale}/account` : '/account');
     } catch (error: any) {
       return badRequest({formError: error.message});
     }
@@ -133,7 +133,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
         assertApiErrors(data.customerDefaultAddressUpdate);
       }
 
-      return redirect(params.lang ? `${params.lang}/account` : '/account');
+      return redirect(params.locale ? `${params.locale}/account` : '/account');
     } catch (error: any) {
       return badRequest({formError: error.message});
     }

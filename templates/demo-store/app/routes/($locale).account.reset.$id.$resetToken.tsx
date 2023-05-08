@@ -2,7 +2,7 @@ import {json, redirect, type ActionFunction} from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 import {useRef, useState} from 'react';
 import {getInputStyleClasses} from '~/lib/utils';
-import type {CustomerActivatePayload} from '@shopify/hydrogen/storefront-api-types';
+import type {CustomerResetPayload} from '@shopify/hydrogen/storefront-api-types';
 
 type ActionData = {
   formError?: string;
@@ -10,23 +10,19 @@ type ActionData = {
 
 const badRequest = (data: ActionData) => json(data, {status: 400});
 
-export const handle = {
-  isPublic: true,
-};
-
 export const action: ActionFunction = async ({
   request,
   context,
-  params: {lang, id, activationToken},
+  params: {locale, id, resetToken},
 }) => {
   if (
     !id ||
-    !activationToken ||
+    !resetToken ||
     typeof id !== 'string' ||
-    typeof activationToken !== 'string'
+    typeof resetToken !== 'string'
   ) {
     return badRequest({
-      formError: 'Wrong token. The link you followed might be wrong.',
+      formError: 'Wrong token. Please try to reset your password again.',
     });
   }
 
@@ -50,30 +46,31 @@ export const action: ActionFunction = async ({
   const {session, storefront} = context;
 
   try {
-    const data = await storefront.mutate<{
-      customerActivate: CustomerActivatePayload;
-    }>(CUSTOMER_ACTIVATE_MUTATION, {
-      variables: {
-        id: `gid://shopify/Customer/${id}`,
-        input: {
-          password,
-          activationToken,
+    const data = await storefront.mutate<{customerReset: CustomerResetPayload}>(
+      CUSTOMER_RESET_MUTATION,
+      {
+        variables: {
+          id: `gid://shopify/Customer/${id}`,
+          input: {
+            password,
+            resetToken,
+          },
         },
       },
-    });
+    );
 
-    const {accessToken} = data?.customerActivate?.customerAccessToken ?? {};
+    const {accessToken} = data?.customerReset?.customerAccessToken ?? {};
 
     if (!accessToken) {
       /**
        * Something is wrong with the user's input.
        */
-      throw new Error(data?.customerActivate?.customerUserErrors.join(', '));
+      throw new Error(data?.customerReset?.customerUserErrors.join(', '));
     }
 
     session.set('customerAccessToken', accessToken);
 
-    return redirect(lang ? `${lang}/account` : '/account', {
+    return redirect(locale ? `${locale}/account` : '/account', {
       headers: {
         'Set-Cookie': await session.commit(),
       },
@@ -90,16 +87,16 @@ export const action: ActionFunction = async ({
      * Let's make one up.
      */
     return badRequest({
-      formError: 'Sorry. We could not activate your account.',
+      formError: 'Sorry. We could not update your password.',
     });
   }
 };
 
 export const meta: V2_MetaFunction = () => {
-  return [{title: 'Activate Account'}];
+  return [{title: 'Reset Password'}];
 };
 
-export default function Activate() {
+export default function Reset() {
   const actionData = useActionData<ActionData>();
   const [nativePasswordError, setNativePasswordError] = useState<null | string>(
     null,
@@ -136,8 +133,8 @@ export default function Activate() {
   return (
     <div className="flex justify-center my-24 px-4">
       <div className="max-w-md w-full">
-        <h1 className="text-4xl">Activate Account.</h1>
-        <p className="mt-4">Create your password to activate your account.</p>
+        <h1 className="text-4xl">Reset Password.</h1>
+        <p className="mt-4">Enter a new password for your account.</p>
         {/* TODO: Add onSubmit to validate _before_ submission with native? */}
         <Form
           method="post"
@@ -225,9 +222,9 @@ export default function Activate() {
   );
 }
 
-const CUSTOMER_ACTIVATE_MUTATION = `#graphql
-  mutation customerActivate($id: ID!, $input: CustomerActivateInput!) {
-    customerActivate(id: $id, input: $input) {
+const CUSTOMER_RESET_MUTATION = `#graphql
+  mutation customerReset($id: ID!, $input: CustomerResetInput!) {
+    customerReset(id: $id, input: $input) {
       customerAccessToken {
         accessToken
         expiresAt
