@@ -13,6 +13,7 @@ type MiniOxygenOptions = {
   watch?: boolean;
   buildPathClient: string;
   buildPathWorkerFile: string;
+  environmentVariables?: {[key: string]: string};
 };
 
 export async function startMiniOxygen({
@@ -21,6 +22,7 @@ export async function startMiniOxygen({
   watch = false,
   buildPathWorkerFile,
   buildPathClient,
+  environmentVariables = {},
 }: MiniOxygenOptions) {
   const {default: miniOxygen} = await import('@shopify/mini-oxygen');
   const miniOxygenPreview =
@@ -36,7 +38,10 @@ export async function startMiniOxygen({
     watch,
     autoReload: watch,
     modules: true,
-    env: process.env,
+    env: {
+      ...environmentVariables,
+      ...process.env,
+    },
     envPath: (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
     buildWatchPaths: watch
