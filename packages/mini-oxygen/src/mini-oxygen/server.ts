@@ -28,16 +28,19 @@ const OXYGEN_HEADERS_MAP = {
   region: {name: 'oxygen-buyer-region', defaultValue: 'California'},
   regionCode: {name: 'oxygen-buyer-region-code', defaultValue: 'CA'},
   city: {name: 'oxygen-buyer-city', defaultValue: 'San Francisco'},
+  isEuCountry: {name: 'oxygen-buyer-is-eu-country', defaultValue: ''},
   timezone: {
     name: 'oxygen-buyer-timezone',
     defaultValue: 'America/Los_Angeles',
   },
-  isEuCountry: {name: 'oxygen-buyer-is-eu-country', defaultValue: ''},
 
   // Not documented but available in Oxygen:
-  shopId: {name: 'oxygen-buyer-shop-id', defaultValue: ''},
-  storefrontId: {name: 'oxygen-buyer-storefront-id', defaultValue: ''},
-  deploymentId: {name: 'oxygen-buyer-deployment-id', defaultValue: ''},
+  deploymentId: {name: 'oxygen-buyer-deployment-id', defaultValue: 'local'},
+  shopId: {name: 'oxygen-buyer-shop-id', defaultValue: 'development'},
+  storefrontId: {
+    name: 'oxygen-buyer-storefront-id',
+    defaultValue: 'development',
+  },
 } as const;
 
 type OxygenHeaderParams = keyof typeof OXYGEN_HEADERS_MAP;
