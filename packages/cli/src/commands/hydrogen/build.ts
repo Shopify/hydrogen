@@ -14,6 +14,7 @@ import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {colors} from '../../lib/colors.js';
+import {warnOnce} from '../../lib/log.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -64,28 +65,27 @@ export async function runBuild({
 
   console.time(LOG_WORKER_BUILT);
 
-  const [remixConfig] = await Promise.all([
+  outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
+
+  const [remixConfig, {build}, {logThrown}] = await Promise.all([
     getRemixConfig(root),
+    import('@remix-run/dev/dist/compiler/build.js'),
+    import('@remix-run/dev/dist/compiler/utils/log.js'),
     rmdir(buildPath, {force: true}),
   ]);
 
-  outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
-
-  const {build} = await import('@remix-run/dev/dist/compiler/build.js');
-  const {logCompileFailure} = await import(
-    '@remix-run/dev/dist/compiler/onCompileFailure.js'
-  );
-
   await Promise.all([
     copyPublicFiles(publicPath, buildPathClient),
-    build(remixConfig, {
-      mode: process.env.NODE_ENV as any,
-      sourcemap,
-      onCompileFailure: (failure: Error) => {
-        logCompileFailure(failure);
-        // Stop here and prevent waterfall errors
-        throw Error();
+    build({
+      config: remixConfig,
+      options: {
+        mode: process.env.NODE_ENV as 'development' | 'production',
+        onWarning: warnOnce,
+        sourcemap,
       },
+    }).catch((thrown) => {
+      logThrown(thrown);
+      process.exit(1);
     }),
   ]);
 
