@@ -109,7 +109,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
     assertApiErrors(data.customerUpdate);
 
-    return redirect(params?.lang ? `${params.locale}/account` : '/account');
+    return redirect(params?.locale ? `${params.locale}/account` : '/account');
   } catch (error: any) {
     return badRequest({formError: error.message});
   }

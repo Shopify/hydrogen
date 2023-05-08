@@ -17,7 +17,7 @@ export const handle = {
 export const action: ActionFunction = async ({
   request,
   context,
-  params: {lang, id, activationToken},
+  params: {locale, id, activationToken},
 }) => {
   if (
     !id ||
@@ -73,7 +73,7 @@ export const action: ActionFunction = async ({
 
     session.set('customerAccessToken', accessToken);
 
-    return redirect(lang ? `${lang}/account` : '/account', {
+    return redirect(locale ? `${locale}/account` : '/account', {
       headers: {
         'Set-Cookie': await session.commit(),
       },

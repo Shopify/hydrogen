@@ -45,10 +45,10 @@ export const headers = routeHeaders;
 
 export async function loader({request, context, params}: LoaderArgs) {
   const {pathname} = new URL(request.url);
-  const lang = params.locale;
+  const locale = params.locale;
   const customerAccessToken = await context.session.get('customerAccessToken');
   const isAuthenticated = Boolean(customerAccessToken);
-  const loginPath = lang ? `/${lang}/account/login` : '/account/login';
+  const loginPath = locale ? `/${locale}/account/login` : '/account/login';
   const isAccountPage = /^\/account\/?$/.test(pathname);
 
   if (!isAuthenticated) {

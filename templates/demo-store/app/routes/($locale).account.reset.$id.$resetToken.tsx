@@ -13,7 +13,7 @@ const badRequest = (data: ActionData) => json(data, {status: 400});
 export const action: ActionFunction = async ({
   request,
   context,
-  params: {lang, id, resetToken},
+  params: {locale, id, resetToken},
 }) => {
   if (
     !id ||
@@ -70,7 +70,7 @@ export const action: ActionFunction = async ({
 
     session.set('customerAccessToken', accessToken);
 
-    return redirect(lang ? `${lang}/account` : '/account', {
+    return redirect(locale ? `${locale}/account` : '/account', {
       headers: {
         'Set-Cookie': await session.commit(),
       },
