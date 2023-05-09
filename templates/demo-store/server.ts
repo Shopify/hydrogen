@@ -59,24 +59,24 @@ export default {
         storefrontHeaders: getStorefrontHeaders(request),
       });
 
-      const cart = createCartApi({
+      const cart = createCartApi<CartCustomMethods>({
         storefront,
         requestHeaders: request.headers,
         cartQueryFragment: MY_CART_QUERY_FRAGMENT,
-        // customMethods: {
-        //   magic: () => 'magic',
-        // addLine: async (cartInput: CartLinesAdd) => {
-        //   return cart.getCartId()
-        //     ? await cartLinesAddDefault({
-        //       storefront,
-        //       getCartId: cart.getCartId,
-        //     })(cartInput)
-        //     : await cart.create({
-        //         action: CartFormInputAction.CartCreate,
-        //         input: {lines: cartInput.lines},
-        //       });
-        // }
-        // }
+        customMethods: {
+          magic: () => 'magic',
+          // addLine: async (cartInput: CartLinesAdd) => {
+          //   return cart.getCartId()
+          //     ? await cartLinesAddDefault({
+          //       storefront,
+          //       getCartId: cart.getCartId,
+          //     })(cartInput)
+          //     : await cart.create({
+          //         action: CartFormInputAction.CartCreate,
+          //         input: {lines: cartInput.lines},
+          //       });
+          // }
+        },
       });
 
       /**

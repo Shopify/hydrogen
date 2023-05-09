@@ -59,7 +59,7 @@ type CartApiReturnBase = {
 
 export type CartApiReturnCustom<
   TCustomMethods extends Partial<CartApiReturnBase>,
-> = TCustomMethods;
+> = CartApiReturnBase & TCustomMethods;
 export type CartApiReturn<TCustomMethods extends CustomMethodsBase> =
   | CartApiReturnBase
   | CartApiReturnCustom<TCustomMethods>;
@@ -74,9 +74,9 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
   const {requestHeaders, storefront, cartQueryFragment, cartMutateFragment} =
     options;
 
-  let custom;
+  let customMethods;
   if ('customMethods' in options) {
-    custom = options.customMethods;
+    customMethods = options.customMethods;
   }
 
   // Default get cartId in cookie
@@ -145,6 +145,6 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
     updateNote: cartNoteUpdateDefault(mutateOptions),
     updateSelectedDeliveryOption:
       cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
-    ...(custom ?? {}),
+    ...(customMethods ?? {}),
   };
 }
