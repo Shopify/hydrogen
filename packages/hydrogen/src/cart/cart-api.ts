@@ -28,7 +28,7 @@ import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
 
 type CartApiOptions = Omit<CartQueryOptions, 'getCartId'> & {
-  request: Request;
+  requestHeaders: Headers;
   getCartId?: () => string | undefined;
   setCartId?: (cartId: string, headers: Headers) => void;
 };
@@ -48,14 +48,12 @@ export type CartApiReturn = {
   updateSelectedDeliveryOption: CartQueryReturn<CartSelectedDeliveryOptionsUpdate>;
 };
 
-export function CartApi(options: CartApiOptions): CartApiReturn {
-  const {request} = options;
-
+export function createCartApi(options: CartApiOptions): CartApiReturn {
   // Default get cartId in cookie
   const getCartId =
     options.getCartId ||
     (() => {
-      const cookies = parseCookie(request.headers.get('Cookie') || '');
+      const cookies = parseCookie(options.requestHeaders.get('Cookie') || '');
       return cookies.cart ? `gid://shopify/Cart/${cookies.cart}` : undefined;
     });
 

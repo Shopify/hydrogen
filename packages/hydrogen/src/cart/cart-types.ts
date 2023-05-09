@@ -7,6 +7,7 @@ import type {
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 export const CartFormInputAction = {
+  CartGet: 'CartGet',
   CartAttributesUpdateInput: 'CartAttributesUpdateInput',
   CartBuyerIdentityUpdate: 'CartBuyerIdentityUpdate',
   CartCreate: 'CartCreate',
@@ -17,6 +18,10 @@ export const CartFormInputAction = {
   CartNoteUpdate: 'CartNoteUpdate',
   CartSelectedDeliveryOptionsUpdate: 'CartSelectedDeliveryOptionsUpdate',
 } as const;
+
+export type CartGet = {
+  action: 'CartGet';
+};
 
 export type CartAttributesUpdateInput = {
   action: 'CartAttributesUpdateInput';
@@ -66,6 +71,7 @@ type OtherFormData = {
 };
 
 export type CartFormInput =
+  | (CartGet & OtherFormData)
   | (CartAttributesUpdateInput & OtherFormData)
   | (CartBuyerIdentityUpdate & OtherFormData)
   | (CartCreate & OtherFormData)

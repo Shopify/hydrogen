@@ -5,7 +5,7 @@ import {
   getStorefrontHeaders,
 } from '@shopify/remix-oxygen';
 import {
-  CartApi,
+  createCartApi,
   createStorefrontClient,
   storefrontRedirect,
 } from '@shopify/hydrogen';
@@ -52,10 +52,60 @@ export default {
         storefrontHeaders: getStorefrontHeaders(request),
       });
 
-      const cart = CartApi({
+      const cart = createCartApi({
         storefront,
-        request,
+        requestHeaders: request.headers,
       });
+
+      // const MY_CART_QUERY = `#graphql
+      //   query CartQuery(
+      //     $id: ID!
+      //     $numCartLines: Int = 100
+      //     $country: CountryCode = ZZ
+      //     $language: LanguageCode
+      //   ) @inContext(country: $country, language: $language) {
+      //     cart(id: $cartId) {
+      //       id
+      //       checkoutUrl
+      //       totalQuantity
+      //       lines(first: $numCartLines) {
+      //         edges {
+      //           node {
+      //             id
+      //           }
+      //         }
+      //       }
+      //     }
+      //   }
+      // `;
+
+      // only $cartId, ...
+      // no other variables exist
+      // const MY_CART_MUTATE_FRAGMENT = `#graphql
+      //   fragment CartFragment on Cart {
+      //     id
+      //     totalQuantity
+      //   }
+      // `;
+
+      // createCartApi({
+      //   storefront,
+      //   requestHeaders: request.headers,
+      //   cartQueryFragment: MY_CART_QUERY, // Only used by cartGetDefault
+      //   cartMutateFragment: MY_CART_MUTATE_FRAGMENT, // Used by all mutation queries
+      //   // Problems:
+      //   // - lost connection to the default getCartId
+      //   // - can type definition be overrided?
+      //   customMethods: {
+      //     addLine: () => {}, // override default method
+      //     magic: () => {},  // figure out how to type infer this as part of return type of createCartApi?
+      //   },
+      // });
+
+      // Decisions:
+      // - Bring in cart fragment
+      // Don't pass in request - instead pass in header
+      // - Another PR: output graphql query in its entirety when errors happens
 
       /**
        * Create a Remix request handler and pass

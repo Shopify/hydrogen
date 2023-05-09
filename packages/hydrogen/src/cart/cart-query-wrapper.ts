@@ -38,6 +38,11 @@ type CartQueryData = {
 
 export type CartQueryReturn<T> = (cartInput: T) => Promise<CartQueryData>;
 
+function getInputs(cartInput: CartFormInput): Omit<CartFormInput, 'action'> {
+  const {action, ...restOfInputs} = cartInput;
+  return restOfInputs;
+}
+
 export function cartGetDefault(
   options: CartQueryOptions,
 ): (cartInput?: CartFormInput) => Promise<Cart | null | undefined> {
@@ -49,18 +54,13 @@ export function cartGetDefault(
     const {cart} = await options.storefront.query<{cart?: Cart}>(CART_QUERY, {
       variables: {
         cartId,
-        numCartLines: cartInput?.numCartLines || 100,
+        ...getInputs(cartInput || {action: 'CartGet'}),
       },
       cache: options.storefront.CacheNone(),
     });
 
     return cart;
   };
-}
-
-function getInputs(cartInput: CartFormInput): Omit<CartFormInput, 'action'> {
-  const {action, ...restOfInputs} = cartInput;
-  return restOfInputs;
 }
 
 export function cartCreateDefault(
@@ -80,7 +80,6 @@ export function cartLinesAddDefault(
   options: CartQueryOptions,
 ): CartQueryReturn<CartLinesAdd> {
   return async (cartInput: CartLinesAdd) => {
-    const {action, ...restOfInput} = cartInput;
     const {cartLinesAdd} = await options.storefront.mutate<{
       cartLinesAdd: CartQueryData;
     }>(CART_LINES_ADD_MUTATION, {
