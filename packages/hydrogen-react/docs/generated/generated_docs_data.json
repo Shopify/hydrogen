@@ -6354,6 +6354,78 @@
     ]
   },
   {
+    "name": "parseGid",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "\n    Parses [Shopify Global ID (GID)](https://shopify.dev/api/usage/gids) and returns the resource type and ID.\n  ",
+    "type": "gear",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {parseGid} from '@shopify/hydrogen-react';\n\nconst {id, resource} = parseGid('gid://shopify/Order/123');\n\nconsole.log(id); // 123\nconsole.log(resource); // Cart\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "ParseGidGeneratedType",
+        "typeDefinitions": {
+          "ParseGidGeneratedType": {
+            "filePath": "/analytics-utils.ts",
+            "name": "ParseGidGeneratedType",
+            "params": [
+              {
+                "name": "gid",
+                "description": "A shopify GID (string)",
+                "value": "string",
+                "filePath": "/analytics-utils.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-utils.ts",
+              "description": "",
+              "name": "ShopifyGid",
+              "value": "ShopifyGid"
+            },
+            "value": "export function parseGid(gid: string | undefined): ShopifyGid {\n  const defaultReturn = {id: '', resource: null};\n\n  if (typeof gid !== 'string') {\n    return defaultReturn;\n  }\n\n  // TODO: add support for parsing query parameters on complex gids\n  // Reference: https://shopify.dev/api/usage/gids\n  const matches = gid.match(/^gid:\\/\\/shopify\\/(\\w+)\\/([^/]+)/);\n\n  if (!matches || matches.length === 1) {\n    return defaultReturn;\n  }\n  const id = matches[2] ?? null;\n  const resource = matches[1] ?? null;\n\n  return {id, resource};\n}"
+          },
+          "ShopifyGid": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyGid",
+            "value": "{\n  id: string;\n  resource: string | null;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "id",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "resource",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "parseMetafield",
     "category": "utilities",
     "isVisualComponent": false,

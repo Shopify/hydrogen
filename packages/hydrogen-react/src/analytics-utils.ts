@@ -1,7 +1,7 @@
 import type {
   ShopifyMonorailPayload,
   ShopifyMonorailEvent,
-  ShopifyGId,
+  ShopifyGid,
 } from './analytics-types.js';
 
 /**
@@ -37,7 +37,7 @@ export function schemaWrapper(
  * // => id = "abc123", resource = 'Cart'
  * ```
  **/
-export function parseGid(gid: string | undefined): ShopifyGId {
+export function parseGid(gid: string | undefined): ShopifyGid {
   const defaultReturn = {id: '', resource: null};
 
   if (typeof gid !== 'string') {

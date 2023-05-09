@@ -177,7 +177,7 @@ export type ShopifyCookies = {
   [SHOPIFY_S]: string;
 };
 
-export type ShopifyGId = {
+export type ShopifyGid = {
   id: string;
   resource: string | null;
 };
