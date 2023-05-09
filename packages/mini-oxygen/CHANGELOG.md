@@ -1,5 +1,15 @@
 # @shopify/mini-oxygen
 
+## 1.5.0
+
+- Dependency updates
+- Re add hooks that were accidently removed. ([PR](https://github.com/Shopify/mini-oxygen/pull/416))
+- Added ability to set oxygen headers along with default values for them ([PR](https://github.com/Shopify/mini-oxygen/pull/417))
+
+## 1.4.0
+
+- Allows mini-oxygen to proxy requests to a HTTP proxy server. ([PR](https://github.com/Shopify/mini-oxygen/pull/275))
+
 ## 1.3.1
 
 ### Patch Changes
