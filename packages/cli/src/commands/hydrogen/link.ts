@@ -12,8 +12,7 @@ import {
   outputToken,
 } from '@shopify/cli-kit/node/output';
 
-import {parseGid} from '@shopify/hydrogen-react';
-import {adminRequest} from '../../lib/graphql.js';
+import {adminRequest, parseGid} from '../../lib/graphql.js';
 import {commonFlags} from '../../lib/flags.js';
 import {getHydrogenShop} from '../../lib/shop.js';
 import {getAdminSession} from '../../lib/admin-session.js';

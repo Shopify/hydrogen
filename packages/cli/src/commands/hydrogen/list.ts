@@ -1,9 +1,8 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderTable} from '@shopify/cli-kit/node/ui';
 import {outputContent, outputInfo} from '@shopify/cli-kit/node/output';
-import {parseGid} from '@shopify/hydrogen-react';
 
-import {adminRequest} from '../../lib/graphql.js';
+import {adminRequest, parseGid} from '../../lib/graphql.js';
 import {commonFlags} from '../../lib/flags.js';
 import {getHydrogenShop} from '../../lib/shop.js';
 import {getAdminSession} from '../../lib/admin-session.js';
@@ -55,7 +54,7 @@ export async function listStorefronts({path, shop: flagShop}: Flags) {
 
     const rows = result.hydrogenStorefronts.map(
       ({id, title, productionUrl, currentProductionDeployment}) => ({
-        id: parseGid(id).id,
+        id: parseGid(id),
         title,
         productionUrl,
         currentDeployment: formatDeployment(currentProductionDeployment),
