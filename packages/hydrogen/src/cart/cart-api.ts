@@ -1,3 +1,4 @@
+import {Storefront} from '../storefront';
 import {getFormInput} from './CartForm';
 import {
   type CartQueryOptions,
@@ -27,13 +28,21 @@ import {
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
 
-type CartApiOptions = Omit<CartQueryOptions, 'getCartId'> & {
+type CartApiOptions = {
+  storefront: Storefront;
   requestHeaders: Headers;
   getCartId?: () => string | undefined;
   setCartId?: (cartId: string, headers: Headers) => void;
+  cartQueryFragment?: string;
+  cartMutateFragment?: string;
 };
 
-export type CartApiReturn = {
+type CustomMethodsBase = Record<string, Function>;
+type CartApiOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
+  CartApiOptions & {
+    customMethods?: TCustomMethods;
+  };
+type CartApiReturnBase = {
   getFormInput: (formData: any) => CartFormInput;
   get: (cartInput?: CartFormInput) => Promise<Cart | null | undefined>;
   getCartId: () => string | undefined;
@@ -48,12 +57,33 @@ export type CartApiReturn = {
   updateSelectedDeliveryOption: CartQueryReturn<CartSelectedDeliveryOptionsUpdate>;
 };
 
-export function createCartApi(options: CartApiOptions): CartApiReturn {
+export type CartApiReturnCustom<
+  TCustomMethods extends Partial<CartApiReturnBase>,
+> = TCustomMethods;
+export type CartApiReturn<TCustomMethods extends CustomMethodsBase> =
+  | CartApiReturnBase
+  | CartApiReturnCustom<TCustomMethods>;
+
+export function createCartApi(options: CartApiOptions): CartApiReturnBase;
+export function createCartApi<TCustomMethods extends CustomMethodsBase>(
+  options: CartApiOptionsWithCustom<TCustomMethods>,
+): CartApiReturnCustom<TCustomMethods>;
+export function createCartApi<TCustomMethods extends CustomMethodsBase>(
+  options: CartApiOptions | CartApiOptionsWithCustom<TCustomMethods>,
+): CartApiReturn<TCustomMethods> {
+  const {requestHeaders, storefront, cartQueryFragment, cartMutateFragment} =
+    options;
+
+  let custom;
+  if ('customMethods' in options) {
+    custom = options.customMethods;
+  }
+
   // Default get cartId in cookie
   const getCartId =
     options.getCartId ||
     (() => {
-      const cookies = parseCookie(options.requestHeaders.get('Cookie') || '');
+      const cookies = parseCookie(requestHeaders.get('Cookie') || '');
       return cookies.cart ? `gid://shopify/Cart/${cookies.cart}` : undefined;
     });
 
@@ -64,33 +94,38 @@ export function createCartApi(options: CartApiOptions): CartApiReturn {
       headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
     });
 
-  const queryOptions = {
-    storefront: options.storefront,
+  const mutateOptions = {
+    storefront,
     getCartId,
+    cartMutateFragment,
   };
 
   const cartId = getCartId();
-  const cartCreate = cartCreateDefault(queryOptions);
+  const cartCreate = cartCreateDefault(mutateOptions);
 
   return {
     getFormInput,
-    get: cartGetDefault(queryOptions),
+    get: cartGetDefault({
+      storefront,
+      getCartId,
+      cartQueryFragment,
+    }),
     getCartId,
     setCartId,
     create: cartCreate,
     addLine: async (cartInput: CartLinesAdd) => {
       return cartId
-        ? await cartLinesAddDefault(queryOptions)(cartInput)
+        ? await cartLinesAddDefault(mutateOptions)(cartInput)
         : await cartCreate({
             action: CartFormInputAction.CartCreate,
             input: {lines: cartInput.lines},
           });
     },
-    updateLines: cartLinesUpdateDefault(queryOptions),
-    removeLines: cartLinesRemoveDefault(queryOptions),
+    updateLines: cartLinesUpdateDefault(mutateOptions),
+    removeLines: cartLinesRemoveDefault(mutateOptions),
     updateDiscountCodes: async (cartInput: CartDiscountCodesUpdate) => {
       return cartId
-        ? await cartDiscountCodesUpdateDefault(queryOptions)(cartInput)
+        ? await cartDiscountCodesUpdateDefault(mutateOptions)(cartInput)
         : await cartCreate({
             action: CartFormInputAction.CartCreate,
             input: {discountCodes: cartInput.discountCodes},
@@ -98,7 +133,7 @@ export function createCartApi(options: CartApiOptions): CartApiReturn {
     },
     updateBuyerIdentity: async (cartInput: CartBuyerIdentityUpdate) => {
       return cartId
-        ? await cartBuyerIdentityUpdateDefault(queryOptions)({
+        ? await cartBuyerIdentityUpdateDefault(mutateOptions)({
             action: CartFormInputAction.CartBuyerIdentityUpdate,
             buyerIdentity: cartInput.buyerIdentity,
           })
@@ -107,8 +142,9 @@ export function createCartApi(options: CartApiOptions): CartApiReturn {
             input: {buyerIdentity: cartInput.buyerIdentity},
           });
     },
-    updateNote: cartNoteUpdateDefault(queryOptions),
+    updateNote: cartNoteUpdateDefault(mutateOptions),
     updateSelectedDeliveryOption:
-      cartSelectedDeliveryOptionsUpdateDefault(queryOptions),
+      cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
+    ...(custom ?? {}),
   };
 }

@@ -29,6 +29,8 @@ import type {
 export type CartQueryOptions = {
   storefront: Storefront;
   getCartId: () => string | undefined;
+  cartQueryFragment?: string;
+  cartMutateFragment?: string;
 };
 
 type CartQueryData = {
@@ -51,13 +53,16 @@ export function cartGetDefault(
 
     if (!cartId) return null;
 
-    const {cart} = await options.storefront.query<{cart?: Cart}>(CART_QUERY, {
-      variables: {
-        cartId,
-        ...getInputs(cartInput || {action: 'CartGet'}),
+    const {cart} = await options.storefront.query<{cart?: Cart}>(
+      CART_QUERY(options.cartQueryFragment),
+      {
+        variables: {
+          cartId,
+          ...getInputs(cartInput || {action: 'CartGet'}),
+        },
+        cache: options.storefront.CacheNone(),
       },
-      cache: options.storefront.CacheNone(),
-    });
+    );
 
     return cart;
   };
@@ -69,7 +74,7 @@ export function cartCreateDefault(
   return async (cartInput: CartCreate) => {
     const {cartCreate} = await options.storefront.mutate<{
       cartCreate: CartQueryData;
-    }>(CART_CREATE_MUTATION, {
+    }>(CART_CREATE_MUTATION(options.cartMutateFragment), {
       variables: getInputs(cartInput),
     });
     return cartCreate;
@@ -82,7 +87,7 @@ export function cartLinesAddDefault(
   return async (cartInput: CartLinesAdd) => {
     const {cartLinesAdd} = await options.storefront.mutate<{
       cartLinesAdd: CartQueryData;
-    }>(CART_LINES_ADD_MUTATION, {
+    }>(CART_LINES_ADD_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
         ...getInputs(cartInput),
@@ -98,7 +103,7 @@ export function cartLinesUpdateDefault(
   return async (cartInput: CartLinesUpdate) => {
     const {cartLinesUpdate} = await options.storefront.mutate<{
       cartLinesUpdate: CartQueryData;
-    }>(CART_LINES_UPDATE_MUTATION, {
+    }>(CART_LINES_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
         ...getInputs(cartInput),
@@ -114,7 +119,7 @@ export function cartLinesRemoveDefault(
   return async (cartInput: CartLinesRemove) => {
     const {cartLinesRemove} = await options.storefront.mutate<{
       cartLinesRemove: CartQueryData;
-    }>(CART_LINES_REMOVE_MUTATION, {
+    }>(CART_LINES_REMOVE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
         ...getInputs(cartInput),
@@ -130,7 +135,7 @@ export function cartDiscountCodesUpdateDefault(
   return async (cartInput: CartDiscountCodesUpdate) => {
     const {cartDiscountCodesUpdate} = await options.storefront.mutate<{
       cartDiscountCodesUpdate: CartQueryData;
-    }>(CART_DISCOUNT_CODE_UPDATE_MUTATION, {
+    }>(CART_DISCOUNT_CODE_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
         ...getInputs(cartInput),
@@ -146,7 +151,7 @@ export function cartBuyerIdentityUpdateDefault(
   return async (cartInput: CartBuyerIdentityUpdate) => {
     const {cartBuyerIdentityUpdate} = await options.storefront.mutate<{
       cartBuyerIdentityUpdate: CartQueryData;
-    }>(CART_BUYER_IDENTITY_UPDATE_MUTATION, {
+    }>(CART_BUYER_IDENTITY_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
         ...getInputs(cartInput),
@@ -162,7 +167,7 @@ export function cartNoteUpdateDefault(
   return async (cartInput: CartNoteUpdate) => {
     const {cartNoteUpdate} = await options.storefront.mutate<{
       cartNoteUpdate: CartQueryData;
-    }>(CART_NOTE_UPDATE_MUTATION, {
+    }>(CART_NOTE_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
         ...getInputs(cartInput),
@@ -179,12 +184,17 @@ export function cartSelectedDeliveryOptionsUpdateDefault(
     const {cartSelectedDeliveryOptionsUpdate} =
       await options.storefront.mutate<{
         cartSelectedDeliveryOptionsUpdate: CartQueryData;
-      }>(CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION, {
-        variables: {
-          cartId: options.getCartId(),
-          ...getInputs(cartInput),
+      }>(
+        CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION(
+          options.cartMutateFragment,
+        ),
+        {
+          variables: {
+            cartId: options.getCartId(),
+            ...getInputs(cartInput),
+          },
         },
-      });
+      );
     return cartSelectedDeliveryOptionsUpdate;
   };
 }

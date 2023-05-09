@@ -120,7 +120,7 @@ export const DEFAULT_CART_FRAGMENT = `#graphql
   }
 `;
 
-export const CART_QUERY = `#graphql
+export const CART_QUERY = (cartFragment = DEFAULT_CART_FRAGMENT) => `#graphql
   query CartQuery(
     $cartId: ID!
     $numCartLines: Int = 100
@@ -132,11 +132,13 @@ export const CART_QUERY = `#graphql
     }
   }
 
-  ${DEFAULT_CART_FRAGMENT}
+  ${cartFragment}
 `;
 
 //! @see: https://shopify.dev/docs/api/storefront/2023-01/mutations/cartCreate
-export const CART_CREATE_MUTATION = `#graphql
+export const CART_CREATE_MUTATION = (
+  cartFragment = MINIMAL_CART_FRAGMENT,
+) => `#graphql
   mutation CartCreate(
     $input: CartInput!
     $country: CountryCode = ZZ
@@ -152,12 +154,14 @@ export const CART_CREATE_MUTATION = `#graphql
       }
     }
   }
-  ${MINIMAL_CART_FRAGMENT}
+  ${cartFragment}
   ${USER_ERROR_FRAGMENT}
 `;
 
 //! @see: https://shopify.dev/docs/api/storefront/2023-01/mutations/cartLinesAdd
-export const CART_LINES_ADD_MUTATION = `#graphql
+export const CART_LINES_ADD_MUTATION = (
+  cartFragment = MINIMAL_CART_FRAGMENT,
+) => `#graphql
   mutation CartLinesAdd(
     $cartId: ID!
     $lines: [CartLineInput!]!
@@ -174,12 +178,14 @@ export const CART_LINES_ADD_MUTATION = `#graphql
     }
   }
 
-  ${MINIMAL_CART_FRAGMENT}
+  ${cartFragment}
   ${USER_ERROR_FRAGMENT}
 `;
 
 //! @see: https://shopify.dev/docs/api/storefront/2023-01/mutations/cartLinesUpdate
-export const CART_LINES_UPDATE_MUTATION = `#graphql
+export const CART_LINES_UPDATE_MUTATION = (
+  cartFragment = MINIMAL_CART_FRAGMENT,
+) => `#graphql
   mutation CartLinesUpdate(
     $cartId: ID!
     $lines: [CartLineUpdateInput!]!
@@ -196,12 +202,14 @@ export const CART_LINES_UPDATE_MUTATION = `#graphql
     }
   }
 
-  ${MINIMAL_CART_FRAGMENT}
+  ${cartFragment}
   ${USER_ERROR_FRAGMENT}
 `;
 
 //! @see: https://shopify.dev/docs/api/storefront/2023-01/mutations/cartLinesRemove
-export const CART_LINES_REMOVE_MUTATION = `#graphql
+export const CART_LINES_REMOVE_MUTATION = (
+  cartFragment = MINIMAL_CART_FRAGMENT,
+) => `#graphql
   mutation CartLinesRemove(
     $cartId: ID!
     $lineIds: [ID!]!
@@ -218,11 +226,13 @@ export const CART_LINES_REMOVE_MUTATION = `#graphql
     }
   }
 
-  ${MINIMAL_CART_FRAGMENT}
+  ${cartFragment}
   ${USER_ERROR_FRAGMENT}
 `;
 
-export const CART_DISCOUNT_CODE_UPDATE_MUTATION = `#graphql
+export const CART_DISCOUNT_CODE_UPDATE_MUTATION = (
+  cartFragment = MINIMAL_CART_FRAGMENT,
+) => `#graphql
   mutation cartDiscountCodesUpdate(
     $cartId: ID!
     $discountCodes: [String!]
@@ -238,11 +248,13 @@ export const CART_DISCOUNT_CODE_UPDATE_MUTATION = `#graphql
       }
     }
   }
-  ${MINIMAL_CART_FRAGMENT}
+  ${cartFragment}
   ${USER_ERROR_FRAGMENT}
 `;
 
-export const CART_BUYER_IDENTITY_UPDATE_MUTATION = `#graphql
+export const CART_BUYER_IDENTITY_UPDATE_MUTATION = (
+  cartFragment = MINIMAL_CART_FRAGMENT,
+) => `#graphql
   mutation cartBuyerIdentityUpdate(
     $cartId: ID!
     $buyerIdentity: CartBuyerIdentityInput!
@@ -258,11 +270,13 @@ export const CART_BUYER_IDENTITY_UPDATE_MUTATION = `#graphql
       }
     }
   }
-  ${MINIMAL_CART_FRAGMENT}
+  ${cartFragment}
   ${USER_ERROR_FRAGMENT}
 `;
 
-export const CART_NOTE_UPDATE_MUTATION = `#graphql
+export const CART_NOTE_UPDATE_MUTATION = (
+  cartFragment = MINIMAL_CART_FRAGMENT,
+) => `#graphql
   mutation cartNoteUpdate(
     $cartId: ID!
     $note: String
@@ -278,11 +292,13 @@ export const CART_NOTE_UPDATE_MUTATION = `#graphql
       }
     }
   }
-  ${MINIMAL_CART_FRAGMENT}
+  ${cartFragment}
   ${USER_ERROR_FRAGMENT}
 `;
 
-export const CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION = `#graphql
+export const CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION = (
+  cartFragment = MINIMAL_CART_FRAGMENT,
+) => `#graphql
   mutation cartSelectedDeliveryOptionsUpdate(
     $cartId: ID!
     $selectedDeliveryOptions: [CartSelectedDeliveryOptionInput!]!
@@ -298,6 +314,6 @@ export const CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION = `#graphql
       }
     }
   }
-  ${MINIMAL_CART_FRAGMENT}
+  ${cartFragment}
   ${USER_ERROR_FRAGMENT}
 `;

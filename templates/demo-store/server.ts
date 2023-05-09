@@ -5,14 +5,21 @@ import {
   getStorefrontHeaders,
 } from '@shopify/remix-oxygen';
 import {
+  CartFormInputAction,
+  CartLinesAdd,
+  CartQueryReturn,
   createCartApi,
   createStorefrontClient,
   storefrontRedirect,
 } from '@shopify/hydrogen';
 import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
-import {myCartQueries} from '~/lib/cart-queries.server';
-import {parse as parseCookie} from 'worktop/cookie';
+import {cartLinesAddDefault} from '@shopify/hydrogen';
+
+export type CartCustomMethods = {
+  magic: () => string;
+  // addLine: CartQueryReturn<CartLinesAdd>;
+};
 
 /**
  * Export a fetch handler in module format.
@@ -55,57 +62,22 @@ export default {
       const cart = createCartApi({
         storefront,
         requestHeaders: request.headers,
+        cartQueryFragment: MY_CART_QUERY_FRAGMENT,
+        // customMethods: {
+        //   magic: () => 'magic',
+        // addLine: async (cartInput: CartLinesAdd) => {
+        //   return cart.getCartId()
+        //     ? await cartLinesAddDefault({
+        //       storefront,
+        //       getCartId: cart.getCartId,
+        //     })(cartInput)
+        //     : await cart.create({
+        //         action: CartFormInputAction.CartCreate,
+        //         input: {lines: cartInput.lines},
+        //       });
+        // }
+        // }
       });
-
-      // const MY_CART_QUERY = `#graphql
-      //   query CartQuery(
-      //     $id: ID!
-      //     $numCartLines: Int = 100
-      //     $country: CountryCode = ZZ
-      //     $language: LanguageCode
-      //   ) @inContext(country: $country, language: $language) {
-      //     cart(id: $cartId) {
-      //       id
-      //       checkoutUrl
-      //       totalQuantity
-      //       lines(first: $numCartLines) {
-      //         edges {
-      //           node {
-      //             id
-      //           }
-      //         }
-      //       }
-      //     }
-      //   }
-      // `;
-
-      // only $cartId, ...
-      // no other variables exist
-      // const MY_CART_MUTATE_FRAGMENT = `#graphql
-      //   fragment CartFragment on Cart {
-      //     id
-      //     totalQuantity
-      //   }
-      // `;
-
-      // createCartApi({
-      //   storefront,
-      //   requestHeaders: request.headers,
-      //   cartQueryFragment: MY_CART_QUERY, // Only used by cartGetDefault
-      //   cartMutateFragment: MY_CART_MUTATE_FRAGMENT, // Used by all mutation queries
-      //   // Problems:
-      //   // - lost connection to the default getCartId
-      //   // - can type definition be overrided?
-      //   customMethods: {
-      //     addLine: () => {}, // override default method
-      //     magic: () => {},  // figure out how to type infer this as part of return type of createCartApi?
-      //   },
-      // });
-
-      // Decisions:
-      // - Bring in cart fragment
-      // Don't pass in request - instead pass in header
-      // - Another PR: output graphql query in its entirety when errors happens
 
       /**
        * Create a Remix request handler and pass
@@ -142,3 +114,111 @@ export default {
     }
   },
 };
+
+const MY_CART_QUERY_FRAGMENT = `#graphql
+fragment CartFragment on Cart {
+  id
+  note
+  checkoutUrl
+  totalQuantity
+  buyerIdentity {
+    countryCode
+    customer {
+      id
+      email
+      firstName
+      lastName
+      displayName
+    }
+    email
+    phone
+  }
+  lines(first: $numCartLines) {
+    edges {
+      node {
+        id
+        quantity
+        attributes {
+          key
+          value
+        }
+        cost {
+          totalAmount {
+            amount
+            currencyCode
+          }
+          amountPerQuantity {
+            amount
+            currencyCode
+          }
+          compareAtAmountPerQuantity {
+            amount
+            currencyCode
+          }
+        }
+        merchandise {
+          ... on ProductVariant {
+            id
+            availableForSale
+            compareAtPrice {
+              ...MoneyFragment
+            }
+            price {
+              ...MoneyFragment
+            }
+            requiresShipping
+            title
+            image {
+              ...ImageFragment
+            }
+            product {
+              handle
+              title
+              id
+            }
+            selectedOptions {
+              name
+              value
+            }
+          }
+        }
+      }
+    }
+  }
+  cost {
+    subtotalAmount {
+      ...MoneyFragment
+    }
+    totalAmount {
+      ...MoneyFragment
+    }
+    totalDutyAmount {
+      ...MoneyFragment
+    }
+    totalTaxAmount {
+      ...MoneyFragment
+    }
+  }
+  note
+  attributes {
+    key
+    value
+  }
+  discountCodes {
+    code
+  }
+}
+
+fragment MoneyFragment on MoneyV2 {
+  currencyCode
+  amount
+}
+
+fragment ImageFragment on Image {
+  id
+  url
+  altText
+  width
+  height
+}
+`;
