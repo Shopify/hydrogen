@@ -16,6 +16,7 @@ export type {
   ShopifyPageView,
   ShopifyPageViewPayload,
 } from './analytics-types.js';
+export {parseGid} from './analytics-utils.js';
 export {BuyNowButton} from './BuyNowButton.js';
 export {
   SHOPIFY_S,
