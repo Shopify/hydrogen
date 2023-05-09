@@ -32,8 +32,8 @@ import {
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
-import {getFeaturedData} from './($lang).featured-products';
-import {doLogout} from './($lang).account.logout';
+import {getFeaturedData} from './($locale).featured-products';
+import {doLogout} from './($locale).account.logout';
 import {usePrefixPathWithLocale} from '~/lib/utils';
 import {CACHE_NONE, routeHeaders} from '~/data/cache';
 
@@ -45,10 +45,10 @@ export const headers = routeHeaders;
 
 export async function loader({request, context, params}: LoaderArgs) {
   const {pathname} = new URL(request.url);
-  const lang = params.lang;
+  const locale = params.locale;
   const customerAccessToken = await context.session.get('customerAccessToken');
   const isAuthenticated = Boolean(customerAccessToken);
-  const loginPath = lang ? `/${lang}/account/login` : '/account/login';
+  const loginPath = locale ? `/${locale}/account/login` : '/account/login';
   const isAccountPage = /^\/account\/?$/.test(pathname);
 
   if (!isAuthenticated) {
