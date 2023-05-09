@@ -7,10 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        primary: 'rgba(var(--color-primary), <alpha-value>)',
-        contrast: 'rgba(var(--color-contrast), <alpha-value>)',
-        notice: 'rgba(var(--color-accent), <alpha-value>)',
-        shopPay: 'rgba(var(--color-shop-pay), <alpha-value>)',
+        primary: 'rgb(var(--color-primary) / <alpha-value>)',
+        contrast: 'rgb(var(--color-contrast) / <alpha-value>)',
+        notice: 'rgb(var(--color-accent) / <alpha-value>)',
+        shopPay: 'rgb(var(--color-shop-pay) / <alpha-value>)',
       },
       screens: {
         sm: '32em',
