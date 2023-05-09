@@ -199,7 +199,7 @@ function MobileHeader({
         </button>
         <Form
           method="get"
-          action={params.lang ? `/${params.lang}/search` : '/search'}
+          action={params.locale ? `/${params.locale}/search` : '/search'}
           className="items-center gap-2 sm:flex"
         >
           <button
@@ -290,7 +290,7 @@ function DesktopHeader({
       <div className="flex items-center gap-1">
         <Form
           method="get"
-          action={params.lang ? `/${params.lang}/search` : '/search'}
+          action={params.locale ? `/${params.locale}/search` : '/search'}
           className="flex items-center gap-2"
         >
           <Input

@@ -48,11 +48,12 @@ export default class Link extends Command {
   }
 }
 
-export interface LinkFlags {
+export interface LinkStorefrontArguments {
   force?: boolean;
   path?: string;
   shop?: string;
   storefront?: string;
+  silent?: boolean;
 }
 
 export async function linkStorefront({
@@ -60,7 +61,8 @@ export async function linkStorefront({
   path,
   shop: flagShop,
   storefront: flagStorefront,
-}: LinkFlags) {
+  silent = false,
+}: LinkStorefrontArguments) {
   const shop = await getHydrogenShop({path, shop: flagShop});
   const {storefront: configStorefront} = await getConfig(path ?? process.cwd());
 
@@ -129,11 +131,14 @@ export async function linkStorefront({
   await setStorefront(path ?? process.cwd(), selectedStorefront);
 
   outputSuccess(`Linked to ${selectedStorefront.title}`);
-  outputInfo(
-    `Admin URL: ${hydrogenStorefrontUrl(
-      adminSession,
-      parseGid(selectedStorefront.id).id,
-    )}`,
-  );
-  outputInfo(`Site URL: ${selectedStorefront.productionUrl}`);
+
+  if (!silent) {
+    outputInfo(
+      `Admin URL: ${hydrogenStorefrontUrl(
+        adminSession,
+        parseGid(selectedStorefront.id),
+      )}`,
+    );
+    outputInfo(`Site URL: ${selectedStorefront.productionUrl}`);
+  }
 }
