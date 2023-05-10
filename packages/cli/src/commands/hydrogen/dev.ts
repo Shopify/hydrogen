@@ -4,7 +4,11 @@ import {outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {copyPublicFiles} from './build.js';
-import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
+import {
+  getProjectPaths,
+  getRemixConfig,
+  type ServerMode,
+} from '../../lib/config.js';
 import {muteDevLogs, warnOnce} from '../../lib/log.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
@@ -149,7 +153,7 @@ async function runDev({
     {
       config: await reloadConfig(),
       options: {
-        mode: process.env.NODE_ENV as 'development' | 'production',
+        mode: process.env.NODE_ENV as ServerMode,
         onWarning: warnOnce,
         sourcemap,
       },

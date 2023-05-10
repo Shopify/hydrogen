@@ -6,7 +6,11 @@ import {
   outputToken,
 } from '@shopify/cli-kit/node/output';
 import {fileSize, copyFile, rmdir} from '@shopify/cli-kit/node/fs';
-import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
+import {
+  getProjectPaths,
+  getRemixConfig,
+  type ServerMode,
+} from '../../lib/config.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
@@ -74,7 +78,7 @@ export async function runBuild({
     build({
       config: remixConfig,
       options: {
-        mode: process.env.NODE_ENV as 'development' | 'production',
+        mode: process.env.NODE_ENV as ServerMode,
         onWarning: warnOnce,
         sourcemap,
       },
