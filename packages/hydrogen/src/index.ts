@@ -29,7 +29,11 @@ export {
   cartNoteUpdateDefault,
   cartSelectedDeliveryOptionsUpdateDefault,
 } from './cart/cart-query-wrapper';
-export {type CartApiReturn, createCartApi} from './cart/cart-api';
+export {
+  type CartApiReturnCustom,
+  type CartApiReturnBase,
+  createCartApi,
+} from './cart/cart-api';
 export {
   CartFormInputAction,
   type CartBuyerIdentityUpdate,

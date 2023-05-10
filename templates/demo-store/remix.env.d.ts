@@ -2,7 +2,7 @@
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
-import type {WithCache, CartApiReturn} from '@shopify/hydrogen';
+import type {WithCache, CartApiReturnBase} from '@shopify/hydrogen';
 import type {Storefront} from '~/lib/type';
 import type {HydrogenSession} from '~/lib/session.server';
 import {CartCustomMethods} from './server';
@@ -34,7 +34,7 @@ declare module '@shopify/remix-oxygen' {
     waitUntil: ExecutionContext['waitUntil'];
     session: HydrogenSession;
     storefront: Storefront;
-    cart: CartApiReturn<CartCustomMethods>;
+    cart: CartApiReturnBase;
     env: Env;
   }
 }

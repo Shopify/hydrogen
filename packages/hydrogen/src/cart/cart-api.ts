@@ -42,7 +42,7 @@ type CartApiOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
   CartApiOptions & {
     customMethods?: TCustomMethods;
   };
-type CartApiReturnBase = {
+export type CartApiReturnBase = {
   getFormInput: (formData: any) => CartFormInput;
   get: (cartInput?: CartFormInput) => Promise<Cart | null | undefined>;
   getCartId: () => string | undefined;
