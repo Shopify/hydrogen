@@ -36,6 +36,12 @@ export const commonFlags = {
     char: 'e',
     hidden: true,
   }),
+  sourcemap: Flags.boolean({
+    description: 'Generate sourcemaps for the build.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
+    default: true,
+    allowNo: true,
+  }),
 };
 
 export function flagsToCamelObject(obj: Record<string, any>) {
