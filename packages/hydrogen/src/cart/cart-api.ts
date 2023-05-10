@@ -59,10 +59,10 @@ type CartApiReturnBase = {
 
 export type CartApiReturnCustom<
   TCustomMethods extends Partial<CartApiReturnBase>,
-> = CartApiReturnBase & TCustomMethods;
+> = Omit<CartApiReturnBase, keyof TCustomMethods> & TCustomMethods;
 export type CartApiReturn<TCustomMethods extends CustomMethodsBase> =
-  | CartApiReturnBase
-  | CartApiReturnCustom<TCustomMethods>;
+  | CartApiReturnCustom<TCustomMethods>
+  | CartApiReturnBase;
 
 export function createCartApi(options: CartApiOptions): CartApiReturnBase;
 export function createCartApi<TCustomMethods extends CustomMethodsBase>(
@@ -73,11 +73,6 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
 ): CartApiReturn<TCustomMethods> {
   const {requestHeaders, storefront, cartQueryFragment, cartMutateFragment} =
     options;
-
-  let customMethods;
-  if ('customMethods' in options) {
-    customMethods = options.customMethods;
-  }
 
   // Default get cartId in cookie
   const getCartId =
@@ -103,7 +98,7 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
   const cartId = getCartId();
   const cartCreate = cartCreateDefault(mutateOptions);
 
-  return {
+  const methods: CartApiReturnBase = {
     getFormInput,
     get: cartGetDefault({
       storefront,
@@ -145,6 +140,14 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
     updateNote: cartNoteUpdateDefault(mutateOptions),
     updateSelectedDeliveryOption:
       cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
-    ...(customMethods ?? {}),
   };
+
+  if ('customMethods' in options) {
+    return {
+      ...methods,
+      ...(options.customMethods ?? {}),
+    };
+  } else {
+    return methods;
+  }
 }

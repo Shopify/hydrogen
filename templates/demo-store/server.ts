@@ -5,6 +5,7 @@ import {
   getStorefrontHeaders,
 } from '@shopify/remix-oxygen';
 import {
+  CartApiReturn,
   CartFormInputAction,
   CartLinesAdd,
   CartQueryReturn,
@@ -18,7 +19,7 @@ import {cartLinesAddDefault} from '@shopify/hydrogen';
 
 export type CartCustomMethods = {
   magic: () => string;
-  // addLine: CartQueryReturn<CartLinesAdd>;
+  addLine: CartQueryReturn<CartLinesAdd>;
 };
 
 /**
@@ -65,17 +66,18 @@ export default {
         cartQueryFragment: MY_CART_QUERY_FRAGMENT,
         customMethods: {
           magic: () => 'magic',
-          // addLine: async (cartInput: CartLinesAdd) => {
-          //   return cart.getCartId()
-          //     ? await cartLinesAddDefault({
-          //       storefront,
-          //       getCartId: cart.getCartId,
-          //     })(cartInput)
-          //     : await cart.create({
-          //         action: CartFormInputAction.CartCreate,
-          //         input: {lines: cartInput.lines},
-          //       });
-          // }
+          addLine: async (cartInput: CartLinesAdd) => {
+            console.log('addLine2');
+            return cart.getCartId()
+              ? await cartLinesAddDefault({
+                  storefront,
+                  getCartId: cart.getCartId,
+                })(cartInput)
+              : await cart.create({
+                  action: CartFormInputAction.CartCreate,
+                  input: {lines: cartInput.lines},
+                });
+          },
         },
       });
 
