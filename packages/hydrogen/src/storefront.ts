@@ -61,15 +61,15 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   ) => Promise<T>;
   /** The cache instance passed in from the `createStorefrontClient` argument. */
   cache?: Cache;
-  /** Re-export of `CacheNone`. */
+  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2023-04/utilities/cachenone). */
   CacheNone: typeof CacheNone;
-  /** Re-export of `CacheLong`. */
+  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2023-04/utilities/cachelong). */
   CacheLong: typeof CacheLong;
-  /** Re-export of `CacheShort`. */
+  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2023-04/utilities/cacheshort). */
   CacheShort: typeof CacheShort;
-  /** Re-export of `CacheCustom`. */
+  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-04/utilities/cachecustom). */
   CacheCustom: typeof CacheCustom;
-  /** Re-export of `generateCacheControlHeader`. */
+  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-04/utilities/generatecachecontrolheader). */
   generateCacheControlHeader: typeof generateCacheControlHeader;
   /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */
   getPublicTokenHeaders: ReturnType<
