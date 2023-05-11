@@ -4,6 +4,9 @@ import type {
   CartInput,
   CartLineInput,
   CartLineUpdateInput,
+  CartMetafieldDeleteInput,
+  CartMetafieldsSetInput,
+  Scalars,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 export const CartFormInputAction = {
@@ -17,6 +20,8 @@ export const CartFormInputAction = {
   CartLinesUpdate: 'CartLinesUpdate',
   CartNoteUpdate: 'CartNoteUpdate',
   CartSelectedDeliveryOptionsUpdate: 'CartSelectedDeliveryOptionsUpdate',
+  CartMetafieldsSet: 'CartMetafieldsSet',
+  CartMetafieldsDelete: 'CartMetafieldsDelete',
 } as const;
 
 export type CartGet = {
@@ -55,7 +60,7 @@ export type CartLinesRemove = {
 
 export type CartLinesUpdate = {
   action: 'CartLinesUpdate';
-  lines: CartLineUpdateInput;
+  lines: CartLineUpdateInput[];
 };
 export type CartNoteUpdate = {
   action: 'CartNoteUpdate';
@@ -64,6 +69,15 @@ export type CartNoteUpdate = {
 export type CartSelectedDeliveryOptionsUpdate = {
   action: 'CartSelectedDeliveryOptionsUpdate';
   selectedDeliveryOptions: CartSelectedDeliveryOptionsUpdate;
+};
+export type CartMetafieldsSet = {
+  action: 'CartMetafieldsSet';
+  metafields: Omit<CartMetafieldsSetInput, 'ownerId'>[];
+};
+
+export type CartMetafieldDelete = {
+  action: 'CartMetafieldsDelete';
+  key: Scalars['String'];
 };
 
 type OtherFormData = {
@@ -80,4 +94,6 @@ export type CartFormInput =
   | (CartLinesRemove & OtherFormData)
   | (CartLinesUpdate & OtherFormData)
   | (CartNoteUpdate & OtherFormData)
-  | (CartSelectedDeliveryOptionsUpdate & OtherFormData);
+  | (CartSelectedDeliveryOptionsUpdate & OtherFormData)
+  | (CartMetafieldsSet & OtherFormData)
+  | (CartMetafieldDelete & OtherFormData);

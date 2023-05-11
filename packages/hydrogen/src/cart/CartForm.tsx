@@ -3,8 +3,10 @@ import {type CartFormInput} from './cart-types';
 import React from 'react';
 
 type CartFormProps = {
-  children?: (fetcher: FetcherWithComponents<any>) => React.ReactNode;
-  formInput: CartFormInput;
+  children?:
+    | React.ReactNode
+    | ((fetcher: FetcherWithComponents<any>) => React.ReactNode);
+  formInput?: CartFormInput;
   route?: string;
 };
 
@@ -15,12 +17,14 @@ export function CartForm({children, formInput, route}: CartFormProps) {
 
   return (
     <fetcher.Form action={route || ''} method="post">
-      <input
-        type="hidden"
-        name={CART_FORM_INPUT_NAME}
-        value={JSON.stringify(formInput || {})}
-      />
-      {typeof children === 'function' && children(fetcher)}
+      {formInput && (
+        <input
+          type="hidden"
+          name={CART_FORM_INPUT_NAME}
+          value={JSON.stringify(formInput || {})}
+        />
+      )}
+      {typeof children === 'function' ? children(fetcher) : children}
     </fetcher.Form>
   );
 }

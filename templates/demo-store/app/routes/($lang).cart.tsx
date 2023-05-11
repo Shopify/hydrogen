@@ -6,6 +6,7 @@ import {json, type ActionArgs} from '@shopify/remix-oxygen';
 import type {
   Cart as CartType,
   CartUserError,
+  MetafieldsSetUserError,
   UserError,
 } from '@shopify/hydrogen/storefront-api-types';
 import {isLocalPath} from '~/lib/utils';
@@ -26,7 +27,7 @@ export async function action({request, context}: ActionArgs) {
   let status = 200;
   let result: {
     cart: CartType;
-    errors?: CartUserError[] | UserError[];
+    errors?: CartUserError[] | UserError[] | MetafieldsSetUserError[];
   };
 
   switch (cartInput.action) {

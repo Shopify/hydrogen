@@ -150,12 +150,10 @@ function ChangeLocaleForm({
         buyerIdentity,
       }}
     >
-      {() => (
-        <>
-          <input type="hidden" name="redirectTo" value={redirectTo} />
-          {children}
-        </>
-      )}
+      <>
+        <input type="hidden" name="redirectTo" value={redirectTo} />
+        {children}
+      </>
     </CartForm>
   );
 }

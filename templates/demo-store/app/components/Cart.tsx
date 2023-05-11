@@ -23,6 +23,8 @@ import type {
   CartLine,
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
+import {CartMetafieldsSet} from '@shopify/hydrogen';
+import {FetcherWithComponents} from '@remix-run/react';
 
 type Layouts = 'page' | 'drawer';
 
@@ -133,9 +135,10 @@ function UpdateDiscountForm({children}: {children: React.ReactNode}) {
       route="/cart"
       formInput={{
         action: CartFormInputAction.CartDiscountCodesUpdate,
+        discountCodes: [],
       }}
     >
-      {() => children}
+      {children}
     </CartForm>
   );
 }
@@ -289,15 +292,13 @@ function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
         lineIds,
       }}
     >
-      {() => (
-        <button
-          className="flex items-center justify-center w-10 h-10 border rounded"
-          type="submit"
-        >
-          <span className="sr-only">Remove</span>
-          <IconRemove aria-hidden="true" />
-        </button>
-      )}
+      <button
+        className="flex items-center justify-center w-10 h-10 border rounded"
+        type="submit"
+      >
+        <span className="sr-only">Remove</span>
+        <IconRemove aria-hidden="true" />
+      </button>
     </CartForm>
   );
 }
@@ -360,7 +361,7 @@ function UpdateCartButton({
         lines,
       }}
     >
-      {() => children}
+      {children}
     </CartForm>
   );
 }

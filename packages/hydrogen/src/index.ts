@@ -45,6 +45,8 @@ export {
   type CartLinesUpdate,
   type CartNoteUpdate,
   type CartSelectedDeliveryOptionsUpdate,
+  type CartMetafieldsSet,
+  type CartMetafieldDelete,
 } from './cart/cart-types';
 
 export {

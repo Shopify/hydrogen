@@ -6,6 +6,8 @@ import {
   CART_LINES_REMOVE_MUTATION,
   CART_DISCOUNT_CODE_UPDATE_MUTATION,
   CART_BUYER_IDENTITY_UPDATE_MUTATION,
+  CART_METAFIELD_DELETE_MUTATION,
+  CART_METAFIELD_SET_MUTATION,
   CART_NOTE_UPDATE_MUTATION,
   CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION,
 } from './cart-queries';
@@ -18,12 +20,18 @@ import type {
   CartLinesAdd,
   CartLinesRemove,
   CartLinesUpdate,
+  CartMetafieldDelete,
+  CartMetafieldsSet,
   CartNoteUpdate,
   CartSelectedDeliveryOptionsUpdate,
 } from './cart-types';
 import type {
   Cart,
   CartUserError,
+  CartMetafieldsSetInput,
+  Metafield,
+  MetafieldsSetUserError,
+  Scalars,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartQueryOptions = {
@@ -35,7 +43,7 @@ export type CartQueryOptions = {
 
 type CartQueryData = {
   cart: Cart;
-  errors?: CartUserError[];
+  errors?: CartUserError[] | MetafieldsSetUserError[];
 };
 
 export type CartQueryReturn<T> = (cartInput: T) => Promise<CartQueryData>;
@@ -196,5 +204,66 @@ export function cartSelectedDeliveryOptionsUpdateDefault(
         },
       );
     return cartSelectedDeliveryOptionsUpdate;
+  };
+}
+
+type MetafieldsQueryData = {
+  metafields: Metafield;
+  errors: MetafieldsSetUserError[];
+};
+
+export function cartMetafieldsSetDefault(
+  options: CartQueryOptions,
+): CartQueryReturn<CartMetafieldsSet> {
+  return async (cartInput: CartMetafieldsSet) => {
+    const cartId = options.getCartId();
+    const metafields = cartInput.metafields.map(
+      (metafield: Omit<CartMetafieldsSetInput, 'ownerId'>) => ({
+        ...metafield,
+        ownerId: cartId,
+      }),
+    );
+    const {cartMetafieldsSet} = await options.storefront.mutate<{
+      cartMetafieldsSet: MetafieldsQueryData;
+    }>(CART_METAFIELD_SET_MUTATION(), {
+      variables: {metafields},
+    });
+
+    return {
+      cart: {
+        id: cartId,
+        metafields: cartMetafieldsSet.metafields as unknown as Metafield[],
+      } as Cart,
+      errors: cartMetafieldsSet.errors as unknown as MetafieldsSetUserError[],
+    };
+  };
+}
+
+type MetafieldsDeleteData = {
+  deletedId: Scalars['String'];
+  errors: MetafieldsSetUserError[];
+};
+
+export function cartMetafieldDeleteDefault(
+  options: CartQueryOptions,
+): CartQueryReturn<CartMetafieldDelete> {
+  return async (cartInput: CartMetafieldDelete) => {
+    const cartId = options.getCartId();
+    const {cartMetafieldDelete} = await options.storefront.mutate<{
+      cartMetafieldDelete: MetafieldsDeleteData;
+    }>(CART_METAFIELD_DELETE_MUTATION(), {
+      variables: {
+        input: {
+          ownerId: cartId,
+          key: cartInput.key,
+        },
+      },
+    });
+    return {
+      cart: {
+        id: cartId,
+      } as Cart,
+      errors: cartMetafieldDelete.errors as unknown as MetafieldsSetUserError[],
+    };
   };
 }

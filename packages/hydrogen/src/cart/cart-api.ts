@@ -1,7 +1,6 @@
 import {Storefront} from '../storefront';
 import {getFormInput} from './CartForm';
 import {
-  type CartQueryOptions,
   type CartQueryReturn,
   cartCreateDefault,
   cartGetDefault,
@@ -10,6 +9,8 @@ import {
   cartLinesRemoveDefault,
   cartDiscountCodesUpdateDefault,
   cartBuyerIdentityUpdateDefault,
+  cartMetafieldDeleteDefault,
+  cartMetafieldsSetDefault,
   cartNoteUpdateDefault,
   cartSelectedDeliveryOptionsUpdateDefault,
 } from './cart-query-wrapper';
@@ -24,6 +25,8 @@ import {
   type CartLinesUpdate,
   type CartNoteUpdate,
   type CartSelectedDeliveryOptionsUpdate,
+  type CartMetafieldsSet,
+  type CartMetafieldDelete,
 } from './cart-types';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
@@ -55,6 +58,8 @@ export type CartApiReturnBase = {
   updateBuyerIdentity: CartQueryReturn<CartBuyerIdentityUpdate>;
   updateNote: CartQueryReturn<CartNoteUpdate>;
   updateSelectedDeliveryOption: CartQueryReturn<CartSelectedDeliveryOptionsUpdate>;
+  metafieldsSet: CartQueryReturn<CartMetafieldsSet>;
+  metafieldDelete: CartQueryReturn<CartMetafieldDelete>;
 };
 
 export type CartApiReturnCustom<
@@ -140,6 +145,15 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
     updateNote: cartNoteUpdateDefault(mutateOptions),
     updateSelectedDeliveryOption:
       cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
+    metafieldsSet: async (cartInput: CartMetafieldsSet) => {
+      return cartId
+        ? await cartMetafieldsSetDefault(mutateOptions)(cartInput)
+        : await cartCreate({
+            action: CartFormInputAction.CartCreate,
+            input: {metafields: cartInput.metafields},
+          });
+    },
+    metafieldDelete: cartMetafieldDeleteDefault(mutateOptions),
   };
 
   if ('customMethods' in options) {
