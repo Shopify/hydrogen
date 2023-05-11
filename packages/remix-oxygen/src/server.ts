@@ -7,19 +7,27 @@ import {
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
+  poweredByHeader = true,
   getLoadContext,
 }: {
   build: ServerBuild;
   mode?: string;
+  poweredByHeader?: boolean;
   getLoadContext?: (request: Request) => Promise<Context> | Context;
 }) {
   const handleRequest = createRemixRequestHandler(build, mode);
 
   return async (request: Request) => {
-    return handleRequest(
+    const response = await handleRequest(
       request,
       (await getLoadContext?.(request)) as AppLoadContext,
     );
+
+    if (poweredByHeader) {
+      response.headers.append('Powered-By', 'Shopify-Hydrogen');
+    }
+
+    return response;
   };
 }
 
