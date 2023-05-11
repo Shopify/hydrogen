@@ -18,7 +18,7 @@ const docsToCopy = [
   'sendShopifyAnalytics',
   'storefrontApiCustomScalars',
   'parseGid',
-  'storefrontSchema',
+  'Storefront Schema',
   'Storefront API Types',
 ];
 
@@ -45,9 +45,10 @@ async function copyFiles() {
     const docData = hydrogenReactDocsData.find(
       (docData) => docData.name === doc,
     );
-    if (!docData)
+    if (!docData) {
       console.warn(`Could not find doc "${doc}" in Hydrogen React docs`);
-    else {
+      process.exit(1);
+    } else {
       hydrogenDocsData.push(updatePaths(docData));
     }
   }
