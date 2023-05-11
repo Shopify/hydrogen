@@ -9,3 +9,5 @@ fi
 
 eval $COMPILE_DOCS 
 eval $COMPILE_STATIC_PAGES
+
+node ./docs/copy-hydrogen-react-docs.cjs
