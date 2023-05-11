@@ -61,6 +61,7 @@ export {
   MediaFile,
   ModelViewer,
   Money,
+  parseGid,
   parseMetafield,
   sendShopifyAnalytics,
   ShopifySalesChannel,
