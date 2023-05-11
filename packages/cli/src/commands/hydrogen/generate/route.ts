@@ -15,11 +15,8 @@ import {
 } from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../../lib/flags.js';
 import {Flags, Args} from '@oclif/core';
-import {
-  format,
-  transpileFile,
-  resolveFormatConfig,
-} from '../../../lib/transpile-ts.js';
+import {transpileFile} from '../../../lib/transpile-ts.js';
+import {formatCode, getCodeFormatOptions} from '../../../lib/format-code.js';
 import {
   convertRouteToV2,
   convertTemplateToRemixVersion,
@@ -235,9 +232,9 @@ export async function runGenerate(
   // We format the template content with Prettier.
   // TODO use @shopify/cli-kit's format function once it supports TypeScript
   // templateContent = await file.format(templateContent, destinationPath);
-  templateContent = format(
+  templateContent = formatCode(
     templateContent,
-    await resolveFormatConfig(destinationPath),
+    await getCodeFormatOptions(destinationPath),
     destinationPath,
   );
 
