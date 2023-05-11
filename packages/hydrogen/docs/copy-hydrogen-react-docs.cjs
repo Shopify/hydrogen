@@ -17,6 +17,9 @@ const docsToCopy = [
   'parseMetafield',
   'sendShopifyAnalytics',
   'storefrontApiCustomScalars',
+  'parseGid',
+  'storefrontSchema',
+  'Storefront API Types',
 ];
 
 async function copyFiles() {
@@ -96,4 +99,7 @@ function updatePaths(doc) {
 
 copyFiles()
   .then(() => console.log('Done!'))
-  .catch((error) => console.error(error));
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

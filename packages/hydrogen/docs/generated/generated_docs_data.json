@@ -7070,5 +7070,110 @@
       }
     },
     "definitions": []
+  },
+  {
+    "name": "parseGid",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "\n    Parses [Shopify Global ID (GID)](https://shopify.dev/api/usage/gids) and returns the resource type and ID.\n  ",
+    "type": "gear",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {parseGid} from '@shopify/hydrogen';\n\nconst {id, resource} = parseGid('gid://shopify/Order/123');\n\nconsole.log(id); // 123\nconsole.log(resource); // Order\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "ParseGidGeneratedType",
+        "typeDefinitions": {
+          "ParseGidGeneratedType": {
+            "filePath": "/analytics-utils.ts",
+            "name": "ParseGidGeneratedType",
+            "params": [
+              {
+                "name": "gid",
+                "description": "A shopify GID (string)",
+                "value": "string",
+                "filePath": "/analytics-utils.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/analytics-utils.ts",
+              "description": "",
+              "name": "ShopifyGid",
+              "value": "ShopifyGid"
+            },
+            "value": "export function parseGid(gid: string | undefined): ShopifyGid {\n  const defaultReturn = {id: '', resource: null};\n\n  if (typeof gid !== 'string') {\n    return defaultReturn;\n  }\n\n  // TODO: add support for parsing query parameters on complex gids\n  // Reference: https://shopify.dev/api/usage/gids\n  const matches = gid.match(/^gid:\\/\\/shopify\\/(\\w+)\\/([^/]+)/);\n\n  if (!matches || matches.length === 1) {\n    return defaultReturn;\n  }\n  const id = matches[2] ?? null;\n  const resource = matches[1] ?? null;\n\n  return {id, resource};\n}"
+          },
+          "ShopifyGid": {
+            "filePath": "/analytics-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ShopifyGid",
+            "value": "{\n  id: string;\n  resource: string | null;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "id",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/analytics-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "resource",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "Storefront API Types",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "storefrontApiCustomScalars",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/storefrontApiCustomScalars"
+      },
+      {
+        "name": "Storefront Schema",
+        "type": "gear",
+        "url": "/api/hydrogen/utilities/storefront-schema"
+      }
+    ],
+    "description": "\n    If you are using TypeScript, Hydrogen React ships with pre-generated TypeScript types that match the Storefront API's GraphQL schema. These types can be used when you need to manually create an object that matches a Storefront API object's shape.\n\nThese types also work really well with the new [`satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator) introduced in TypeScript 4.9, though you don't need to use `satisfies` to use these types.\n  ",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "Storefront API Types in TypeScript",
+            "code": "import type {\n  Product,\n  Collection,\n} from '@shopify/hydrogen/storefront-api-types';\n\nconst myProduct = {id: '123', title: 'My Product'} satisfies Partial<Product>;\nconsole.log(myProduct.title);\n\nconst myCollection = {\n  id: '456',\n  title: 'My Collection',\n} satisfies Partial<Collection>;\nconsole.log(myCollection.title);\n\nconst myNotSatisfyingProduct: Partial<Product> = {\n  id: '789',\n  title: 'Other Product',\n};\nconsole.log(myNotSatisfyingProduct.title);\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": []
   }
 ]
