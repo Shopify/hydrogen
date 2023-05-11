@@ -18,7 +18,9 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepack": "npm run build",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build-docs": "sh ./docs/build-docs.sh && npm run format",
+    "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown"
   },
   "exports": {
     ".": {
@@ -63,6 +65,7 @@
     "@testing-library/react": "^14.0.0",
     "happy-dom": "^8.9.0",
     "schema-dts": "^1.1.0",
-    "vitest": "^0.27.2"
+    "vitest": "^0.27.2",
+    "@shopify/generate-docs": "0.10.7"
   }
 }
