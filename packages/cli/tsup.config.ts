@@ -44,6 +44,10 @@ export default defineConfig([
       await fs.copy('src/virtual-routes/assets', 'dist/virtual-routes/assets');
 
       console.log('\n', 'Copied virtual route assets to build directory', '\n');
+
+      await fs.copy('src/setup-assets', 'dist/setup-assets');
+
+      console.log('\n', 'Copied setup assets build directory', '\n');
     },
   },
 ]);
