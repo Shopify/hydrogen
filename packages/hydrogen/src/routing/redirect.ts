@@ -16,11 +16,15 @@ type StorefrontRedirect = {
  *
  * @see {@link https://help.shopify.com/en/manual/online-store/menus-and-links/url-redirect Creating URL redirects in Shopify}
  */
-export async function storefrontRedirect({
-  storefront,
-  request,
-  response = new Response('Not Found', {status: 404}),
-}: StorefrontRedirect): Promise<Response> {
+export async function storefrontRedirect(
+  options: StorefrontRedirect,
+): Promise<Response> {
+  const {
+    storefront,
+    request,
+    response = new Response('Not Found', {status: 404}),
+  } = options;
+
   const {pathname, search} = new URL(request.url);
   const redirectFrom = pathname + search;
 

@@ -1,7 +1,11 @@
 import type {LoaderArgs} from '@remix-run/server-runtime';
 import type {Storefront} from '../storefront';
 
-export function graphiqlLoader({context}: LoaderArgs) {
+type GraphiQLLoader = (args: LoaderArgs) => Promise<Response>;
+
+export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
+  context,
+}: LoaderArgs) {
   const storefront = context?.storefront as Storefront | undefined;
   if (!storefront) {
     throw new Error(
@@ -71,4 +75,4 @@ export function graphiqlLoader({context}: LoaderArgs) {
   `,
     {status: 200, headers: {'content-type': 'text/html'}},
   );
-}
+};

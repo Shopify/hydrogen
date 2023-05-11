@@ -1,0 +1,3 @@
+{
+  "LoaderArgs": "The config argument Remix passed to your loader function. Read more about [Remix LoaderArgs](https://remix.run/docs/en/v1/route/loader#type-safety)."
+}

@@ -32,6 +32,7 @@ export interface SeoHandleFunction<
 }
 
 interface SeoProps {
+  /** Enable debug mode that prints SEO properties for route in the console */
   debug?: boolean;
 }
 
