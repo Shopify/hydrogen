@@ -1,4 +1,4 @@
-import type {OperationOrFragment, SourceWithOperations} from './dts-plugin';
+import type {OperationOrFragment, SourceWithOperations} from './plugin';
 import type {Source} from '@graphql-tools/utils';
 import type {FragmentDefinitionNode, OperationDefinitionNode} from 'graphql';
 
