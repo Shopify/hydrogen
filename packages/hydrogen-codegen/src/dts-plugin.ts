@@ -43,7 +43,11 @@ const normalizeOperation = (
         // This should not happen, but we'll handle it just in case
         // to prevent infinite loops. This should be logged as an error and fixed.
         variableNotFound = true; // break;
-        // TODO log error
+        console.error(
+          new Error(
+            `Variable "${variableName}" not found. This might be a bug in hydrogen-codegen, please report it.`,
+          ),
+        );
       }
     }
   }
