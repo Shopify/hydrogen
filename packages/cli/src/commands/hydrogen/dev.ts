@@ -50,6 +50,7 @@ export default class Dev extends Command {
       default: false,
     }),
     host: deprecated('--host')(),
+    ['env-branch']: commonFlags['env-branch'],
   };
 
   async run(): Promise<void> {
@@ -71,6 +72,7 @@ async function runDev({
   codegenConfigPath,
   disableVirtualRoutes,
   shop,
+  envBranch,
   debug = false,
 }: {
   port?: number;
@@ -79,6 +81,7 @@ async function runDev({
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   shop?: string;
+  envBranch?: string;
   debug?: false;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -109,7 +112,11 @@ async function runDev({
 
   const hasLinkedStorefront = !!(await getConfig(root))?.storefront?.id;
   const environmentVariables = hasLinkedStorefront
-    ? await combinedEnvironmentVariables({root, shop})
+    ? await combinedEnvironmentVariables({
+        root,
+        shop,
+        envBranch,
+      })
     : undefined;
 
   let miniOxygenStarted = false;
