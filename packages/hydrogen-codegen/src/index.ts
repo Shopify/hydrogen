@@ -16,7 +16,7 @@ export const schema = require.resolve(
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
 
-const defaultInterfaceAugmentation = `
+const interfaceExtensionCode = `
 declare module '@shopify/hydrogen' {
   interface QueryTypes extends GeneratedQueryTypes {}
   interface MutationTypes extends GeneratedMutationTypes {}
@@ -80,15 +80,9 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
           preResolveTypes: false, // Use Pick<...> instead of primitives
         },
       },
-      // 4. Generate the augmented interfaces
-      {[`gen-dts`]: {sourcesWithOperations}},
-      // 5. Augment Hydrogen query/mutation types with the generated operations
-      {
-        [`add`]: {
-          content: '\n' + defaultInterfaceAugmentation,
-        },
-      },
-      // 6. Custom plugins from the user
+      // 4.  Augment Hydrogen query/mutation interfaces with the generated operations
+      {[`gen-dts`]: {sourcesWithOperations, interfaceExtensionCode}},
+      // 5. Custom plugins from the user
       ...options.plugins,
     ];
 

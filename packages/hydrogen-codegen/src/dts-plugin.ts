@@ -17,8 +17,11 @@ export type SourceWithOperations = {
 
 export const plugin: PluginFunction<{
   sourcesWithOperations: Array<SourceWithOperations>;
-}> = (_, __, {sourcesWithOperations}, _info) => {
+  interfaceExtensionCode: string;
+}> = (_, __, {sourcesWithOperations, interfaceExtensionCode}, _info) => {
   const code = getDocumentRegistryChunk(sourcesWithOperations);
+
+  code.push(interfaceExtensionCode);
 
   return code.join('') + '\n';
 };
