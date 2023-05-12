@@ -2,7 +2,7 @@ import type {Types} from '@graphql-codegen/plugin-helpers';
 import * as addPlugin from '@graphql-codegen/add';
 import * as typescriptOperationPlugin from '@graphql-codegen/typescript-operations';
 import {processSources} from './process-sources';
-import {plugin as hydrogenPlugin} from './dts-plugin';
+import {plugin as dtsPlugin} from './dts-plugin';
 
 export {plugin} from './dts-plugin';
 
@@ -15,6 +15,12 @@ export const schema = require.resolve(
 );
 
 const capitalize = (str: string) => str.charAt(0).toUpperCase() + str.slice(1);
+
+const defaultInterfaceAugmentation = `
+declare module '@shopify/hydrogen' {
+  interface QueryTypes extends GeneratedQueryTypes {}
+  interface MutationTypes extends GeneratedMutationTypes {}
+}`;
 
 export const preset: Types.OutputPreset<GqlTagConfig> = {
   buildGeneratesSection: (options) => {
@@ -48,7 +54,7 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
       ...options.pluginMap,
       [`add`]: addPlugin,
       [`typescript-operations`]: typescriptOperationPlugin,
-      [`gen-dts`]: {plugin: hydrogenPlugin},
+      [`gen-dts`]: {plugin: dtsPlugin},
     };
 
     const namespacedImportName = 'SFAPI';
@@ -74,9 +80,15 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
           preResolveTypes: false, // Use Pick<...> instead of primitives
         },
       },
-      // 4. Augment Hydrogen query/mutation types with the generated operations
+      // 4. Generate the augmented interfaces
       {[`gen-dts`]: {sourcesWithOperations}},
-      // 5. Custom plugins from the user
+      // 5. Augment Hydrogen query/mutation types with the generated operations
+      {
+        [`add`]: {
+          content: '\n' + defaultInterfaceAugmentation,
+        },
+      },
+      // 6. Custom plugins from the user
       ...options.plugins,
     ];
 

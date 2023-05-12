@@ -20,12 +20,6 @@ export const plugin: PluginFunction<{
 }> = (_, __, {sourcesWithOperations}, _info) => {
   const code = getDocumentRegistryChunk(sourcesWithOperations);
 
-  code.push(`
-declare module '@shopify/hydrogen' {
-  interface QueryTypes extends GeneratedQueryTypes {}
-  interface MutationTypes extends GeneratedMutationTypes {}
-}`);
-
   return code.join('') + '\n';
 };
 
