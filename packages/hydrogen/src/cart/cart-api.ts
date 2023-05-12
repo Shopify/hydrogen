@@ -1,3 +1,4 @@
+import {CountryCode} from '@shopify/hydrogen-react/storefront-api-types';
 import {Storefront} from '../storefront';
 import {getFormInput} from './CartForm';
 import {
@@ -30,8 +31,9 @@ import {
 } from './cart-types';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
+import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
-type CartApiOptions = {
+export type CartApiOptions = {
   storefront: Storefront;
   requestHeaders: Headers;
   getCartId?: () => string | undefined;
@@ -40,8 +42,8 @@ type CartApiOptions = {
   cartMutateFragment?: string;
 };
 
-type CustomMethodsBase = Record<string, Function>;
-type CartApiOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
+export type CustomMethodsBase = Record<string, Function>;
+export type CartApiOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
   CartApiOptions & {
     customMethods?: TCustomMethods;
   };
@@ -165,3 +167,128 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
     return methods;
   }
 }
+
+export type CartApiOptionsForDocs<TCustomMethods extends CustomMethodsBase> = {
+  /**
+   * The storefront instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient)).
+   */
+  storefront: Storefront;
+  /**
+   * The request headers.
+   */
+  requestHeaders: Headers;
+  /**
+   * A function that returns the cart id.
+   * @default () => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']
+   */
+  getCartId?: () => string | undefined;
+  /**
+   * A function that sets the cart id.
+   * @default (cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)
+   */
+  setCartId?: (cartId: string, headers: Headers) => void;
+  /**
+   * Cart query fragment to be used by `cart.get()`.
+   */
+  cartQueryFragment?: string;
+  /**
+   * Cart mutate fragment to be used for all mutation query requests except for metafieldsSet and metafieldDelete.
+   */
+  cartMutateFragment?: string;
+  /**
+   * Define custom methods or overriding methods to be used in your cart api instance.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-custom-methods) usage.
+   */
+  customMethods?: TCustomMethods;
+};
+
+type CartGetForDocs = {
+  /**
+   * The cart id.
+   * @default cart.getCartId();
+   */
+  cartId?: string;
+  /**
+   * The number of cart lines to be returned.
+   * @default 100
+   */
+  numCartLines?: number;
+  /**
+   * The country code.
+   * @default storefront.i18n.country
+   */
+  country?: CountryCode;
+  /**
+   * The language code.
+   * @default storefront.i18n.language
+   */
+  language?: LanguageCode;
+};
+
+export type CartApiReturnBaseForDocs = {
+  /**
+   * Gets the form input created by CartForm action request.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-returns) usage.
+   */
+  getFormInput?: (formData: any) => CartFormInput;
+  /**
+   * Gets the cart with the storefront api.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-returns) usage.
+   */
+  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;
+  /**
+   * Gets the cart id. Default behavior is to get the cart id from the request cookie.
+   * Returns the cart id in the form of `gid://shopify/Cart/123`
+   */
+  getCartId?: () => string | undefined;
+  /**
+   * Sets the cart id. Default behavior is to set the cart id in the header cookie.
+   */
+  setCartId?: (cartId: string, headers: Headers) => void;
+  /**
+   * Creates a new cart with the storefront api.
+   */
+  create?: CartQueryReturn<CartCreate>;
+  /**
+   * Add lines to the cart with the storefront api.
+   * If the cart does not exist, a new cart will be created.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-returns) usage.
+   */
+  addLine?: CartQueryReturn<CartLinesAdd>;
+  /**
+   * Update lines in the cart with the storefront api.
+   */
+  updateLines?: CartQueryReturn<CartLinesUpdate>;
+  /**
+   * Remove lines from the cart with the storefront api.
+   */
+  removeLines?: CartQueryReturn<CartLinesRemove>;
+  /**
+   * Update discount codes in the cart with the storefront api.
+   */
+  updateDiscountCodes?: CartQueryReturn<CartDiscountCodesUpdate>;
+  /**
+   * Update buyer identity in the cart with the storefront api.
+   * If the cart does not exist, a new cart will be created.
+   */
+  updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityUpdate>;
+  /**
+   * Update note in the cart with the storefront api.
+   * If the cart does not exist, a new cart will be created.
+   */
+  updateNote?: CartQueryReturn<CartNoteUpdate>;
+  /**
+   * Update selected delivery options in the cart with the storefront api.
+   * Only available for cart associated with an `buyerIdentity.customerAccessToken`.
+   */
+  updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionsUpdate>;
+  /**
+   * Set metafields in the cart with the storefront api.
+   * If the cart does not exist, a new cart will be created.
+   */
+  metafieldsSet?: CartQueryReturn<CartMetafieldsSet>;
+  /**
+   * Delete metafield in the cart with the storefront api.
+   */
+  metafieldDelete?: CartQueryReturn<CartMetafieldDelete>;
+};
