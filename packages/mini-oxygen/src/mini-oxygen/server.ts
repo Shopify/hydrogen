@@ -53,7 +53,7 @@ export interface MiniOxygenServerOptions extends MiniOxygenServerHooks {
   oxygenHeaders?: Partial<{[key in OxygenHeaderParams]: string}>;
 }
 
-const SSEUrl = '/events';
+const SSEUrl = '/__minioxygen_events';
 const autoReloadScript = `<script defer type="application/javascript">
 (function () {
   // MiniOxygen Auto Reload

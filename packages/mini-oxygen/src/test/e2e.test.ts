@@ -106,7 +106,9 @@ describe('preview()', () => {
     });
     expect(receivedData).toContain('// MiniOxygen Auto Reload');
 
-    const eventStream = new EventSource(`http://localhost:${testPort}/events`);
+    const eventStream = new EventSource(
+      `http://localhost:${testPort}/__minioxygen_events`,
+    );
     const eventsCaught: MessageEvent[] = [];
     eventStream.addEventListener('message', (event) =>
       eventsCaught.push(event),
