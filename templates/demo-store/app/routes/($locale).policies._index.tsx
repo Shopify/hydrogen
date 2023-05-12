@@ -57,25 +57,25 @@ export default function Policies() {
 }
 
 const POLICIES_QUERY = `#graphql
-  fragment Policy on ShopPolicy {
+  fragment PolicyIndex on ShopPolicy {
     id
     title
     handle
   }
 
-  query PoliciesQuery {
+  query PoliciesIndexQuery {
     shop {
       privacyPolicy {
-        ...Policy
+        ...PolicyIndex
       }
       shippingPolicy {
-        ...Policy
+        ...PolicyIndex
       }
       termsOfService {
-        ...Policy
+        ...PolicyIndex
       }
       refundPolicy {
-        ...Policy
+        ...PolicyIndex
       }
       subscriptionPolicy {
         id
