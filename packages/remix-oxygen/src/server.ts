@@ -24,7 +24,7 @@ export function createRequestHandler<Context = unknown>({
     );
 
     if (poweredByHeader) {
-      response.headers.append('Powered-By', 'Shopify-Hydrogen');
+      response.headers.append('powered-by', 'Hydrogen');
     }
 
     return response;
