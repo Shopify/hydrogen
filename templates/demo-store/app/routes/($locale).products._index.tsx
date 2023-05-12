@@ -5,16 +5,9 @@ import type {
   Collection,
 } from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
+import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
 
-import {
-  PageHeader,
-  Section,
-  ProductCard,
-  Grid,
-  Pagination,
-  getPaginationVariables,
-  Button,
-} from '~/components';
+import {PageHeader, Section, ProductCard, Grid, Button} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
@@ -25,7 +18,7 @@ const PAGE_BY = 8;
 export const headers = routeHeaders;
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
-  const variables = getPaginationVariables(request, PAGE_BY);
+  const variables = getPaginationVariables(request, {pageBy: PAGE_BY});
 
   const data = await storefront.query<{
     products: ProductConnection;
@@ -109,6 +102,7 @@ export default function AllProducts() {
                       prefetch="intent"
                       width="full"
                       disabled={!isLoading}
+                      preventScrollReset={true}
                       state={{
                         pageInfo: {
                           endCursor,
@@ -132,6 +126,7 @@ export default function AllProducts() {
                       prefetch="intent"
                       width="full"
                       disabled={!isLoading}
+                      preventScrollReset={true}
                       state={{
                         pageInfo: {
                           endCursor,

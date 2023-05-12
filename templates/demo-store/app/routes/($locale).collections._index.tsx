@@ -4,28 +4,19 @@ import type {
   Collection,
   CollectionConnection,
 } from '@shopify/hydrogen/storefront-api-types';
-import {Image} from '@shopify/hydrogen';
+import {Image, Pagination, getPaginationVariables} from '@shopify/hydrogen';
 
-import {
-  Grid,
-  Heading,
-  PageHeader,
-  Section,
-  Link,
-  Pagination,
-  getPaginationVariables,
-  Button,
-} from '~/components';
+import {Grid, Heading, PageHeader, Section, Link, Button} from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
 
-const PAGINATION_SIZE = 8;
+const PAGINATION_SIZE = 4;
 
 export const headers = routeHeaders;
 
 export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
-  const variables = getPaginationVariables(request, PAGINATION_SIZE);
+  const variables = getPaginationVariables(request, {pageBy: PAGINATION_SIZE});
   const {collections} = await storefront.query<{
     collections: CollectionConnection;
   }>(COLLECTIONS_QUERY, {
@@ -78,6 +69,7 @@ export default function Collections() {
                     variant="secondary"
                     width="full"
                     prefetch="intent"
+                    preventScrollReset={true}
                     disabled={!isLoading}
                     state={{
                       pageInfo: {
@@ -88,7 +80,7 @@ export default function Collections() {
                       nodes,
                     }}
                   >
-                    {isLoading ? 'Loading...' : 'Previous products'}
+                    {isLoading ? 'Loading...' : 'Previous collections'}
                   </Button>
                 </div>
               )}
@@ -112,6 +104,7 @@ export default function Collections() {
                     variant="secondary"
                     width="full"
                     prefetch="intent"
+                    preventScrollReset={true}
                     disabled={!isLoading}
                     state={{
                       pageInfo: {
@@ -122,7 +115,7 @@ export default function Collections() {
                       nodes,
                     }}
                   >
-                    {isLoading ? 'Loading...' : 'Next products'}
+                    {isLoading ? 'Loading...' : 'Next collections'}
                   </Button>
                 </div>
               )}

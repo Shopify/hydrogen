@@ -37,7 +37,7 @@ interface PaginationInfo {
 export function Pagination<Resource extends Connection>({
   connection,
   children = () => null,
-  autoLoadOnScroll = true,
+  autoLoadOnScroll = false,
 }: Props<Resource> & {
   children: ({
     endCursor,
@@ -50,8 +50,8 @@ export function Pagination<Resource extends Connection>({
     startCursor,
   }: PaginationInfo) => JSX.Element | null;
 }) {
-  const {state} = useNavigation();
-  const isLoading = state === 'loading';
+  const transition = useNavigation();
+  const isLoading = transition.state === 'loading';
   const autoScrollEnabled = Boolean(autoLoadOnScroll);
   const autoScrollConfig = (
     autoScrollEnabled
@@ -96,6 +96,8 @@ export function Pagination<Resource extends Connection>({
   });
 }
 
+let hydrating = true;
+
 /**
  * Get cumulative pagination logic for a given connection
  */
@@ -107,40 +109,46 @@ export function usePagination(
     state: PaginationState;
     search: string;
   };
+  const [hydrated, setHydrated] = useState(() => !hydrating);
+
+  useEffect(function hydrate() {
+    hydrating = false;
+    setHydrated(true);
+  }, []);
+
   const params = new URLSearchParams(search);
   const direction = params.get('direction');
   const isPrevious = direction === 'previous';
 
-  const {hasNextPage, hasPreviousPage, startCursor, endCursor} =
-    connection.pageInfo;
-
+  // `connection` represents the data that came from the server
+  // `state` represents the data that came from the client
   const currentPageInfo = useMemo(() => {
     let pageStartCursor =
       state?.pageInfo?.startCursor === undefined
-        ? startCursor
+        ? connection.pageInfo.startCursor
         : state.pageInfo.startCursor;
 
     let pageEndCursor =
       state?.pageInfo?.endCursor === undefined
-        ? endCursor
+        ? connection.pageInfo.endCursor
         : state.pageInfo.endCursor;
 
     if (state?.nodes) {
       if (isPrevious) {
-        pageStartCursor = startCursor;
+        pageStartCursor = connection.pageInfo.startCursor;
       } else {
-        pageEndCursor = endCursor;
+        pageEndCursor = connection.pageInfo.endCursor;
       }
     }
 
     const previousPageExists =
       state?.pageInfo?.hasPreviousPage === undefined
-        ? hasPreviousPage
+        ? connection.pageInfo.hasPreviousPage
         : state.pageInfo.hasPreviousPage;
 
     const nextPageExists =
       state?.pageInfo?.hasNextPage === undefined
-        ? hasNextPage
+        ? connection.pageInfo.hasNextPage
         : state.pageInfo.hasNextPage;
 
     return {
@@ -149,7 +157,14 @@ export function usePagination(
       hasPreviousPage: previousPageExists,
       hasNextPage: nextPageExists,
     };
-  }, [isPrevious, state, hasNextPage, hasPreviousPage, startCursor, endCursor]);
+  }, [
+    isPrevious,
+    state,
+    connection.pageInfo.hasNextPage,
+    connection.pageInfo.hasPreviousPage,
+    connection.pageInfo.startCursor,
+    connection.pageInfo.endCursor,
+  ]);
 
   const prevPageUrl = useMemo(() => {
     const params = new URLSearchParams(search);
@@ -221,6 +236,7 @@ function useLoadMoreWhenInView<Resource extends Connection>({
       location.pathname + `?index&cursor=${endCursor}&direction=next`;
 
     navigate(nextPageUrl, {
+      preventScrollReset: true,
       state: {
         pageInfo: {
           endCursor,
@@ -246,13 +262,13 @@ function useLoadMoreWhenInView<Resource extends Connection>({
 
 /**
  * Get variables for route loader to support pagination
- * @param autoLoadOnScroll enable auto loading
- * @param inView trigger element is in viewport
- * @param isIdle page transition is idle
- * @param connection Storefront API connection
  * @returns cumulativePageInfo {startCursor, endCursor, hasPreviousPage, hasNextPage}
  */
-export function getPaginationVariables(request: Request, pageBy: number) {
+export function getPaginationVariables(
+  request: Request,
+  options: {pageBy: number} = {pageBy: 20},
+) {
+  const {pageBy} = options;
   const searchParams = new URLSearchParams(new URL(request.url).search);
 
   const cursor = searchParams.get('cursor') ?? undefined;

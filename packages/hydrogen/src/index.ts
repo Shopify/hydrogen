@@ -14,6 +14,11 @@ export {graphiqlLoader} from './routing/graphiql';
 export {Seo} from './seo/seo';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
+export {
+  Pagination,
+  getPaginationVariables,
+  // PAGINATION_PAGE_INFO_FRAGMENT,
+} from './pagination/Pagination';
 
 export {
   AnalyticsEventName,
