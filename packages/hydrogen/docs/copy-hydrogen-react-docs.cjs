@@ -46,8 +46,7 @@ async function copyFiles() {
       (docData) => docData.name === doc,
     );
     if (!docData) {
-      console.warn(`Could not find doc "${doc}" in Hydrogen React docs`);
-      process.exit(1);
+      throw new Error(`Could not find doc "${doc}" in Hydrogen React docs`);
     } else {
       hydrogenDocsData.push(updatePaths(docData));
     }
