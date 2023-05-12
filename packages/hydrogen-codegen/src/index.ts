@@ -51,7 +51,7 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
       [`gen-dts`]: {plugin: hydrogenPlugin},
     };
 
-    const namespacedImportName = 'HydrogenStorefront';
+    const namespacedImportName = 'SFAPI';
 
     const plugins: Array<Types.ConfiguredPlugin> = [
       // 1. Disable eslint for the generated file
@@ -63,7 +63,7 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
       // 2. Import all the generated API types from hydrogen-react
       {
         [`add`]: {
-          content: `import * as ${namespacedImportName} from '@shopify/hydrogen-react/storefront-api-types';\n`,
+          content: `import * as ${namespacedImportName} from '@shopify/hydrogen/storefront-api-types';\n`,
         },
       },
       // 3. Generate the operations (i.e. queries, mutations, and fragments types)
