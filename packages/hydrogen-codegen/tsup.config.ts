@@ -17,9 +17,10 @@ export default defineConfig([
     entry: ['src/**/*.ts'],
     outDir: 'dist/esm',
     async onSuccess() {
-      const content = await fs.readFile('dist/esm/index.js', 'utf8');
+      const schemaFile = 'dist/esm/schema.js';
+      const content = await fs.readFile(schemaFile, 'utf8');
       // Uncomment createRequire for ESM:
-      await fs.writeFile('dist/esm/index.js', content.replace(/\/\/!/g, ''));
+      await fs.writeFile(schemaFile, content.replace(/\/\/!/g, ''));
     },
   },
   {
