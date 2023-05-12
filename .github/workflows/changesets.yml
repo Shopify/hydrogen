@@ -22,7 +22,7 @@ jobs:
         id: flags
         run: |
           # IMPORTANT: Update this variable whenever we move to a new major version:
-          echo "latest=${{ github.ref_name == '2023-01' }}" >> $GITHUB_ENV
+          echo "latest=${{ github.ref_name == '2023-04' }}" >> $GITHUB_ENV
 
       - name: Checkout the code
         uses: actions/checkout@v3
@@ -57,7 +57,7 @@ jobs:
           commit: '[ci] release ${{ github.ref_name }}'
           title: '[ci] release ${{ github.ref_name }}'
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
       # - name: Create Release Pull Request or Publish (for legacy patch release)

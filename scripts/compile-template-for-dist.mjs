@@ -1,6 +1,6 @@
 import {resolve} from 'path';
 import fs from 'fs-extra';
-import {transpileProject} from '../packages/cli/dist/utils/transpile-ts.js';
+import {transpileProject} from '../packages/cli/dist/lib/transpile-ts.js';
 
 (async () => {
   const [template, ...flags] = process.argv.slice(2);

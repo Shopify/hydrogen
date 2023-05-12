@@ -6,6 +6,7 @@ import type {
   Product,
   ProductSortKeys,
 } from '@shopify/hydrogen/storefront-api-types';
+import {usePrefixPathWithLocale} from '~/lib/utils';
 
 interface FeaturedProductsProps {
   count: number;
@@ -24,8 +25,8 @@ interface FeaturedProductsProps {
  * @param query a filtering query
  * @param reverse wether to reverse the product results
  * @param sortKey Sort the underlying list by the given key.
- * @see query https://shopify.dev/api/storefront/2023-01/queries/products
- * @see filters https://shopify.dev/api/storefront/2023-01/queries/products#argument-products-query
+ * @see query https://shopify.dev/api/storefront/2023-04/queries/products
+ * @see filters https://shopify.dev/api/storefront/2023-04/queries/products#argument-products-query
  */
 export function FeaturedProducts({
   count = 4,
@@ -45,10 +46,13 @@ export function FeaturedProducts({
         .join('&'),
     [count, sortKey, query, reverse],
   );
+  const productsApiPath = usePrefixPathWithLocale(
+    `/api/products?${queryString}`,
+  );
 
   useEffect(() => {
-    load(`/api/products?${queryString}`);
-  }, [load, queryString]);
+    load(productsApiPath);
+  }, [load, productsApiPath]);
 
   return (
     <>
@@ -106,7 +110,7 @@ function FeatureProductsContent({
     <>
       {products.map((product) => (
         <ProductCard
-          product={product as Product}
+          product={product}
           key={product.id}
           onClick={onClick}
           quickAdd

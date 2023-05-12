@@ -16,6 +16,7 @@ export type {
   ShopifyPageView,
   ShopifyPageViewPayload,
 } from './analytics-types.js';
+export {parseGid} from './analytics-utils.js';
 export {BuyNowButton} from './BuyNowButton.js';
 export {
   SHOPIFY_S,
@@ -33,7 +34,6 @@ export type {
 } from './cart-types.js';
 export {CartCheckoutButton} from './CartCheckoutButton.js';
 export {CartCost} from './CartCost.js';
-export {CartLinePrice} from './CartLinePrice.js';
 export {CartLineProvider, useCartLine} from './CartLineProvider.js';
 export {CartLineQuantity} from './CartLineQuantity.js';
 export {CartLineQuantityAdjustButton} from './CartLineQuantityAdjustButton.js';
@@ -42,7 +42,7 @@ export {storefrontApiCustomScalars} from './codegen.helpers.js';
 export {getShopifyCookies} from './cookies-utils.js';
 export {ExternalVideo} from './ExternalVideo.js';
 export {flattenConnection} from './flatten-connection.js';
-export {Image} from './Image.js';
+export {Image, IMAGE_FRAGMENT} from './Image.js';
 export {MediaFile} from './MediaFile.js';
 export {ModelViewer} from './ModelViewer.js';
 export {Money} from './Money.js';
@@ -58,6 +58,7 @@ export type {
   StorefrontApiResponseOkPartial,
   StorefrontApiResponsePartial,
 } from './storefront-api-response.types.js';
+export type {StorefrontClientProps} from './storefront-client.js';
 export {createStorefrontClient} from './storefront-client.js';
 export {useMoney} from './useMoney.js';
 export {useShopifyCookies} from './useShopifyCookies.js';

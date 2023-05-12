@@ -199,7 +199,7 @@ function MobileHeader({
         </button>
         <Form
           method="get"
-          action={params.lang ? `/${params.lang}/search` : '/search'}
+          action={params.locale ? `/${params.locale}/search` : '/search'}
           className="items-center gap-2 sm:flex"
         >
           <button
@@ -226,7 +226,10 @@ function MobileHeader({
         className="flex items-center self-stretch leading-[3rem] md:leading-[4rem] justify-center flex-grow w-full h-full"
         to="/"
       >
-        <Heading className="font-bold text-center" as={isHome ? 'h1' : 'h2'}>
+        <Heading
+          className="font-bold text-center leading-none"
+          as={isHome ? 'h1' : 'h2'}
+        >
           {title}
         </Heading>
       </Link>
@@ -287,7 +290,7 @@ function DesktopHeader({
       <div className="flex items-center gap-1">
         <Form
           method="get"
-          action={params.lang ? `/${params.lang}/search` : '/search'}
+          action={params.locale ? `/${params.locale}/search` : '/search'}
           className="flex items-center gap-2"
         >
           <Input

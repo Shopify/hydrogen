@@ -6,7 +6,6 @@ import {
   ShopifyAnalyticsProduct,
   useMoney,
 } from '@shopify/hydrogen';
-import type {SerializeFrom} from '@shopify/remix-oxygen';
 import {Text, Link, AddToCartButton} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
@@ -20,7 +19,7 @@ export function ProductCard({
   onClick,
   quickAdd,
 }: {
-  product: SerializeFrom<Product>;
+  product: Product;
   label?: string;
   className?: string;
   loading?: HTMLImageElement['loading'];
@@ -68,15 +67,9 @@ export function ProductCard({
           <div className="card-image aspect-[4/5] bg-primary/5">
             {image && (
               <Image
-                className="aspect-[4/5] w-full object-cover fadeIn"
-                widths={[320]}
-                sizes="320px"
-                loaderOptions={{
-                  crop: 'center',
-                  scale: 2,
-                  width: 320,
-                  height: 400,
-                }}
+                className="object-cover w-full fadeIn"
+                sizes="(min-width: 64em) 25vw, (min-width: 48em) 30vw, 45vw"
+                aspectRatio="4/5"
                 data={image}
                 alt={image.altText || `Picture of ${product.title}`}
                 loading={loading}
@@ -127,7 +120,7 @@ export function ProductCard({
           }}
         >
           <Text as="span" className="flex items-center justify-center gap-2">
-            Add to Bag
+            Add to Cart
           </Text>
         </AddToCartButton>
       )}
