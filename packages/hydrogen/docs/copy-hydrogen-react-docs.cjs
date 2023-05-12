@@ -17,6 +17,9 @@ const docsToCopy = [
   'parseMetafield',
   'sendShopifyAnalytics',
   'storefrontApiCustomScalars',
+  'parseGid',
+  'Storefront Schema',
+  'Storefront API Types',
 ];
 
 async function copyFiles() {
@@ -42,9 +45,9 @@ async function copyFiles() {
     const docData = hydrogenReactDocsData.find(
       (docData) => docData.name === doc,
     );
-    if (!docData)
-      console.warn(`Could not find doc "${doc}" in Hydrogen React docs`);
-    else {
+    if (!docData) {
+      throw new Error(`Could not find doc "${doc}" in Hydrogen React docs`);
+    } else {
       hydrogenDocsData.push(updatePaths(docData));
     }
   }
@@ -96,4 +99,7 @@ function updatePaths(doc) {
 
 copyFiles()
   .then(() => console.log('Done!'))
-  .catch((error) => console.error(error));
+  .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });
