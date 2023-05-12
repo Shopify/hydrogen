@@ -1,6 +1,46 @@
 import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
-import {type CartFormInput} from './cart-types';
+import {
+  CartAttributesUpdateInput,
+  CartBuyerIdentityUpdate,
+  CartCreate,
+  CartDiscountCodesUpdate,
+  CartFormInputAction,
+  CartGet,
+  CartLinesAdd,
+  CartLinesRemove,
+  CartLinesUpdate,
+  CartMetafieldDelete,
+  CartMetafieldsSet,
+  CartNoteUpdate,
+  CartSelectedDeliveryOptionsUpdate,
+} from './cart-types';
 import React from 'react';
+import {
+  CartLineInput,
+  CartLineUpdateInput,
+} from '@shopify/hydrogen-react/storefront-api-types';
+
+type OtherFormData = {
+  [key: string]: unknown;
+};
+
+export type CartFormInput =
+  | (CartGet & OtherFormData & {action: 'CartGet'})
+  | (CartAttributesUpdateInput &
+      OtherFormData & {action: 'CartAttributesUpdateInput'})
+  | (CartBuyerIdentityUpdate &
+      OtherFormData & {action: 'CartBuyerIdentityUpdate'})
+  | (CartCreate & OtherFormData & {action: 'CartCreate'})
+  | (CartDiscountCodesUpdate &
+      OtherFormData & {action: 'CartDiscountCodesUpdate'})
+  | (CartLinesAdd & OtherFormData & {action: 'CartLinesAdd'})
+  | (CartLinesRemove & OtherFormData & {action: 'CartLinesRemove'})
+  | (CartLinesUpdate & OtherFormData & {action: 'CartLinesUpdate'})
+  | (CartNoteUpdate & OtherFormData & {action: 'CartNoteUpdate'})
+  | (CartSelectedDeliveryOptionsUpdate &
+      OtherFormData & {action: 'CartSelectedDeliveryOptionsUpdate'})
+  | (CartMetafieldsSet & OtherFormData & {action: 'CartMetafieldsSet'})
+  | (CartMetafieldDelete & OtherFormData & {action: 'CartMetafieldsDelete'});
 
 type CartFormProps = {
   children?:
@@ -29,9 +69,20 @@ export function CartForm({children, formInput, route}: CartFormProps) {
   );
 }
 
-export function getFormInput(formData: any): CartFormInput {
-  const cartFormInput: CartFormInput = formData.has(CART_FORM_INPUT_NAME)
+export type FormInput = {
+  action: keyof typeof CartFormInputAction;
+  cartInputs: Record<string, unknown>;
+};
+
+export function getFormInput(formData: any): FormInput {
+  const {action, ...cartInputs}: CartFormInput = formData.has(
+    CART_FORM_INPUT_NAME,
+  )
     ? JSON.parse(String(formData.get(CART_FORM_INPUT_NAME)))
     : {};
-  return cartFormInput;
+
+  return {
+    action,
+    cartInputs,
+  };
 }

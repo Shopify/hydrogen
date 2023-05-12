@@ -16,7 +16,7 @@ import type {
   CartBuyerIdentityUpdate,
   CartCreate,
   CartDiscountCodesUpdate,
-  CartFormInput,
+  CartGet,
   CartLinesAdd,
   CartLinesRemove,
   CartLinesUpdate,
@@ -48,15 +48,10 @@ type CartQueryData = {
 
 export type CartQueryReturn<T> = (cartInput: T) => Promise<CartQueryData>;
 
-function getInputs(cartInput: CartFormInput): Omit<CartFormInput, 'action'> {
-  const {action, ...restOfInputs} = cartInput;
-  return restOfInputs;
-}
-
 export function cartGetDefault(
   options: CartQueryOptions,
-): (cartInput?: CartFormInput) => Promise<Cart | null | undefined> {
-  return async (cartInput?: CartFormInput) => {
+): (cartInput?: CartGet) => Promise<Cart | null | undefined> {
+  return async (cartInput?: CartGet) => {
     const cartId = options.getCartId();
 
     if (!cartId) return null;
@@ -66,7 +61,7 @@ export function cartGetDefault(
       {
         variables: {
           cartId,
-          ...getInputs(cartInput || {action: 'CartGet'}),
+          ...cartInput,
         },
         cache: options.storefront.CacheNone(),
       },
@@ -83,7 +78,7 @@ export function cartCreateDefault(
     const {cartCreate} = await options.storefront.mutate<{
       cartCreate: CartQueryData;
     }>(CART_CREATE_MUTATION(options.cartMutateFragment), {
-      variables: getInputs(cartInput),
+      variables: cartInput,
     });
     return cartCreate;
   };
@@ -98,7 +93,7 @@ export function cartLinesAddDefault(
     }>(CART_LINES_ADD_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        ...cartInput,
       },
     });
     return cartLinesAdd;
@@ -114,7 +109,7 @@ export function cartLinesUpdateDefault(
     }>(CART_LINES_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        ...cartInput,
       },
     });
     return cartLinesUpdate;
@@ -130,7 +125,7 @@ export function cartLinesRemoveDefault(
     }>(CART_LINES_REMOVE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        ...cartInput,
       },
     });
     return cartLinesRemove;
@@ -146,7 +141,7 @@ export function cartDiscountCodesUpdateDefault(
     }>(CART_DISCOUNT_CODE_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        ...cartInput,
       },
     });
     return cartDiscountCodesUpdate;
@@ -162,7 +157,7 @@ export function cartBuyerIdentityUpdateDefault(
     }>(CART_BUYER_IDENTITY_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        ...cartInput,
       },
     });
     return cartBuyerIdentityUpdate;
@@ -178,7 +173,7 @@ export function cartNoteUpdateDefault(
     }>(CART_NOTE_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        ...cartInput,
       },
     });
     return cartNoteUpdate;
@@ -199,7 +194,7 @@ export function cartSelectedDeliveryOptionsUpdateDefault(
         {
           variables: {
             cartId: options.getCartId(),
-            ...getInputs(cartInput),
+            ...cartInput,
           },
         },
       );

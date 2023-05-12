@@ -1,5 +1,5 @@
 import {Storefront} from '../storefront';
-import {getFormInput} from './CartForm';
+import {type CartFormInput, getFormInput, FormInput} from './CartForm';
 import {
   type CartQueryReturn,
   cartCreateDefault,
@@ -14,19 +14,18 @@ import {
   cartNoteUpdateDefault,
   cartSelectedDeliveryOptionsUpdateDefault,
 } from './cart-query-wrapper';
-import {
-  type CartBuyerIdentityUpdate,
-  type CartCreate,
-  type CartDiscountCodesUpdate,
-  type CartFormInput,
-  CartFormInputAction,
-  type CartLinesAdd,
-  type CartLinesRemove,
-  type CartLinesUpdate,
-  type CartNoteUpdate,
-  type CartSelectedDeliveryOptionsUpdate,
-  type CartMetafieldsSet,
-  type CartMetafieldDelete,
+import type {
+  CartBuyerIdentityUpdate,
+  CartCreate,
+  CartDiscountCodesUpdate,
+  CartGet,
+  CartLinesAdd,
+  CartLinesRemove,
+  CartLinesUpdate,
+  CartNoteUpdate,
+  CartSelectedDeliveryOptionsUpdate,
+  CartMetafieldsSet,
+  CartMetafieldDelete,
 } from './cart-types';
 import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
@@ -46,8 +45,8 @@ type CartApiOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
     customMethods?: TCustomMethods;
   };
 export type CartApiReturnBase = {
-  getFormInput: (formData: any) => CartFormInput;
-  get: (cartInput?: CartFormInput) => Promise<Cart | null | undefined>;
+  getFormInput: (formData: any) => FormInput;
+  get: (cartInput?: CartGet) => Promise<Cart | null | undefined>;
   getCartId: () => string | undefined;
   setCartId: (cartId: string, headers: Headers) => void;
   create: CartQueryReturn<CartCreate>;
@@ -117,7 +116,6 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
       return cartId
         ? await cartLinesAddDefault(mutateOptions)(cartInput)
         : await cartCreate({
-            action: CartFormInputAction.CartCreate,
             input: {lines: cartInput.lines},
           });
     },
@@ -127,18 +125,15 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
       return cartId
         ? await cartDiscountCodesUpdateDefault(mutateOptions)(cartInput)
         : await cartCreate({
-            action: CartFormInputAction.CartCreate,
             input: {discountCodes: cartInput.discountCodes},
           });
     },
     updateBuyerIdentity: async (cartInput: CartBuyerIdentityUpdate) => {
       return cartId
         ? await cartBuyerIdentityUpdateDefault(mutateOptions)({
-            action: CartFormInputAction.CartBuyerIdentityUpdate,
             buyerIdentity: cartInput.buyerIdentity,
           })
         : await cartCreate({
-            action: CartFormInputAction.CartCreate,
             input: {buyerIdentity: cartInput.buyerIdentity},
           });
     },
@@ -149,7 +144,6 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
       return cartId
         ? await cartMetafieldsSetDefault(mutateOptions)(cartInput)
         : await cartCreate({
-            action: CartFormInputAction.CartCreate,
             input: {metafields: cartInput.metafields},
           });
     },

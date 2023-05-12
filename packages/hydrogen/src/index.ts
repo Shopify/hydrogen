@@ -15,7 +15,7 @@ export {Seo} from './seo/seo';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 
-export {CartForm} from './cart/CartForm';
+export {CartForm, type CartFormInput} from './cart/CartForm';
 export {
   type CartQueryOptions,
   type CartQueryReturn,
@@ -39,7 +39,7 @@ export {
   type CartBuyerIdentityUpdate,
   type CartCreate,
   type CartDiscountCodesUpdate,
-  type CartFormInput,
+  type CartGet,
   type CartLinesAdd,
   type CartLinesRemove,
   type CartLinesUpdate,
