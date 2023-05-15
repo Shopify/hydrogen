@@ -3,7 +3,7 @@ import * as addPlugin from '@graphql-codegen/add';
 import * as typescriptOperationPlugin from '@graphql-codegen/typescript-operations';
 import {processSources} from './sources.js';
 import {plugin as dtsPlugin} from './plugin.js';
-import {schema} from './schema.js';
+import {getSchema} from './schema.js';
 
 export type GqlTagConfig = {};
 
@@ -72,7 +72,7 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
         filename: options.baseOutputDir,
         plugins,
         pluginMap,
-        schema: options.schema || schema,
+        schema: options.schema || getSchema(),
         config: {
           ...options.config,
           // This is for the operations plugin
