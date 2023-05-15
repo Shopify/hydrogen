@@ -1,6 +1,5 @@
-import {describe, it, expect, beforeAll} from 'vitest';
+import {describe, it, expect} from 'vitest';
 import path from 'path';
-import {executeCodegen} from '@graphql-codegen/cli';
 import {preset, schema, pluckConfig, patchGqlPluck} from '../src/index.js';
 
 const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
@@ -14,10 +13,10 @@ const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
   },
 });
 
-describe('Hydrogen Codegen', () => {
-  beforeAll(async () => {
-    await patchGqlPluck();
-  });
+describe('Hydrogen Codegen', async () => {
+  // Patch dependency before importing the Codegen CLI
+  await patchGqlPluck();
+  const {executeCodegen} = await import('@graphql-codegen/cli');
 
   it('requires .d.ts extension', async () => {
     await expect(
