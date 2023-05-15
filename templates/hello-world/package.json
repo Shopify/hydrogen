@@ -8,9 +8,7 @@
     "dev": "shopify hydrogen dev",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
-    "typecheck": "tsc --noEmit",
-    "g": "shopify hydrogen generate",
-    "codegen": "graphql-codegen --config codegen.ts"
+    "typecheck": "tsc --noEmit"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
@@ -26,7 +24,6 @@
     "react-dom": "^18.2.0"
   },
   "devDependencies": {
-    "@graphql-codegen/cli": "3.2.2",
     "@remix-run/dev": "1.15.0",
     "@shopify/hydrogen-codegen": "^0.0.0",
     "@shopify/oxygen-workers-types": "^3.17.2",
