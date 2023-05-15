@@ -11,7 +11,7 @@
     "build": "tsup --clean --config ./tsup.config.ts",
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
-    "test:disabled": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
   },
   "exports": {
@@ -42,6 +42,7 @@
     "vendor"
   ],
   "devDependencies": {
+    "@graphql-codegen/cli": "3.3.1",
     "@graphql-codegen/plugin-helpers": "^4.1.0",
     "@graphql-tools/utils": "^9.0.0"
   },
