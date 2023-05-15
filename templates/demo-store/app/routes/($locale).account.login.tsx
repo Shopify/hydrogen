@@ -62,12 +62,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
     session.set('customerAccessToken', customerAccessToken);
 
     // Sync customerAccessToken with existing cart
-    await cart.updateBuyerIdentity({
-      action: CartFormInputAction.CartBuyerIdentityUpdate,
-      buyerIdentity: {
-        customerAccessToken,
-      },
-    });
+    await cart.updateBuyerIdentity({customerAccessToken});
 
     return redirect(params.locale ? `/${params.locale}/account` : '/account', {
       headers: {

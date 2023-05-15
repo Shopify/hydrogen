@@ -34,10 +34,7 @@ export async function loader({request, context, params}: LoaderArgs) {
     return redirect(redirectUrl);
   }
 
-  const result = await cart.updateDiscountCodes({
-    action: CartFormInputAction.CartDiscountCodesUpdate,
-    discountCodes: [code],
-  });
+  const result = await cart.updateDiscountCodes([code]);
   cart.setCartId(result.cart.id, headers);
 
   // Using set-cookie on a 303 redirect will not work if the domain origin have port number (:3000)

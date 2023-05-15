@@ -323,6 +323,26 @@ export const CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION = (
   ${USER_ERROR_FRAGMENT}
 `;
 
+export const CART_ATTRIBUTES_UPDATE_MUTATION = (
+  cartFragment = MINIMAL_CART_FRAGMENT,
+) => `#graphql
+  mutation cartAttributesUpdate(
+    $cartId: ID!
+    $attributes: [CartAttributeInput!]!
+  ) {
+    cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
+      cart {
+        ...CartFragment
+      }
+      errors: userErrors {
+        ...ErrorFragment
+      }
+    }
+  }
+  ${cartFragment}
+  ${USER_ERROR_FRAGMENT}
+`;
+
 //! @see https://shopify.dev/docs/api/storefront/latest/mutations/cartMetafieldsSet
 export const CART_METAFIELD_SET_MUTATION = () => `#graphql
   mutation cartMetafieldsSet(
@@ -331,12 +351,6 @@ export const CART_METAFIELD_SET_MUTATION = () => `#graphql
     $country: CountryCode
   ) @inContext(country: $country, language: $language) {
     cartMetafieldsSet(metafields: $metafields) {
-      metafields {
-        key
-        namespace
-        type
-        value
-      }
       errors: userErrors {
         code
         elementIndex
@@ -353,7 +367,6 @@ export const CART_METAFIELD_DELETE_MUTATION = () => `#graphql
     $input: CartMetafieldDeleteInput!
   ) {
     cartMetafieldDelete(input: $input) {
-      deletedId
       errors: userErrors {
         code
         field

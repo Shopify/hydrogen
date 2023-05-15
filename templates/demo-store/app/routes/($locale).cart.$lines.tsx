@@ -44,11 +44,8 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   //! create a cart
   const {cart: cartResult, errors: graphqlCartErrors} = await cart.create({
-    action: CartFormInputAction.CartCreate,
-    input: {
-      lines: linesMap,
-      discountCodes: discountArray,
-    },
+    lines: linesMap,
+    discountCodes: discountArray,
   });
 
   if (graphqlCartErrors?.length || !cartResult) {

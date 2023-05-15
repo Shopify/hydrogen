@@ -35,34 +35,28 @@ export async function action({request, context}: ActionArgs) {
 
   switch (action) {
     case CartFormInputAction.CartLinesAdd:
-      result = await cart.addLine({lines: cartInputs.lines as CartLineInput[]});
+      result = await cart.addLines(cartInputs.lines as CartLineInput[]);
       break;
     case CartFormInputAction.CartLinesUpdate:
-      result = await cart.updateLines({
-        lines: cartInputs.lines as CartLineUpdateInput[],
-      });
+      result = await cart.updateLines(
+        cartInputs.lines as CartLineUpdateInput[],
+      );
       break;
     case CartFormInputAction.CartLinesRemove:
-      result = await cart.removeLines({
-        lineIds: cartInputs.lineIds as string[],
-      });
+      result = await cart.removeLines(cartInputs.lineIds as string[]);
       break;
     case CartFormInputAction.CartDiscountCodesUpdate:
       const formDiscountCode = formData.get('discountCode');
       const discountCodes = (
         formDiscountCode ? [formDiscountCode] : ['']
       ) as string[];
-      result = await cart.updateDiscountCodes({
-        discountCodes,
-      });
+      result = await cart.updateDiscountCodes(discountCodes);
       break;
     case CartFormInputAction.CartBuyerIdentityUpdate:
       const buyerIdentity = cartInputs.buyerIdentity as CartBuyerIdentityInput;
       result = await cart.updateBuyerIdentity({
-        buyerIdentity: {
-          ...buyerIdentity,
-          customerAccessToken,
-        },
+        ...buyerIdentity,
+        customerAccessToken,
       });
       break;
     default:

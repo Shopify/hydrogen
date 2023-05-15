@@ -1,5 +1,5 @@
 import {Storefront} from '../storefront';
-import {type CartFormInput, getFormInput, FormInput} from './CartForm';
+import {getFormInput, FormInput} from './CartForm';
 import {
   type CartQueryReturn,
   cartCreateDefault,
@@ -13,21 +13,19 @@ import {
   cartMetafieldsSetDefault,
   cartNoteUpdateDefault,
   cartSelectedDeliveryOptionsUpdateDefault,
+  cartAttributesUpdateDefault,
 } from './cart-query-wrapper';
-import type {
-  CartBuyerIdentityUpdate,
-  CartCreate,
-  CartDiscountCodesUpdate,
-  CartGet,
-  CartLinesAdd,
-  CartLinesRemove,
-  CartLinesUpdate,
-  CartNoteUpdate,
-  CartSelectedDeliveryOptionsUpdate,
-  CartMetafieldsSet,
-  CartMetafieldDelete,
-} from './cart-types';
-import {Cart} from '@shopify/hydrogen-react/storefront-api-types';
+import type {CartGet, MetafieldWithoutOwnerId} from './cart-types';
+import {
+  AttributeInput,
+  Cart,
+  CartBuyerIdentityInput,
+  CartInput,
+  CartLineInput,
+  CartLineUpdateInput,
+  CartSelectedDeliveryOptionInput,
+  Scalars,
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
 
 type CartApiOptions = {
@@ -49,16 +47,17 @@ export type CartApiReturnBase = {
   get: (cartInput?: CartGet) => Promise<Cart | null | undefined>;
   getCartId: () => string | undefined;
   setCartId: (cartId: string, headers: Headers) => void;
-  create: CartQueryReturn<CartCreate>;
-  addLine: CartQueryReturn<CartLinesAdd>;
-  updateLines: CartQueryReturn<CartLinesUpdate>;
-  removeLines: CartQueryReturn<CartLinesRemove>;
-  updateDiscountCodes: CartQueryReturn<CartDiscountCodesUpdate>;
-  updateBuyerIdentity: CartQueryReturn<CartBuyerIdentityUpdate>;
-  updateNote: CartQueryReturn<CartNoteUpdate>;
-  updateSelectedDeliveryOption: CartQueryReturn<CartSelectedDeliveryOptionsUpdate>;
-  metafieldsSet: CartQueryReturn<CartMetafieldsSet>;
-  metafieldDelete: CartQueryReturn<CartMetafieldDelete>;
+  create: CartQueryReturn<CartInput>;
+  addLines: CartQueryReturn<CartLineInput[]>;
+  updateLines: CartQueryReturn<CartLineUpdateInput[]>;
+  removeLines: CartQueryReturn<string[]>;
+  updateDiscountCodes: CartQueryReturn<string[]>;
+  updateBuyerIdentity: CartQueryReturn<CartBuyerIdentityInput>;
+  updateNote: CartQueryReturn<string>;
+  updateSelectedDeliveryOption: CartQueryReturn<CartSelectedDeliveryOptionInput>;
+  attributesUpdate: CartQueryReturn<AttributeInput[]>;
+  metafieldsSet: CartQueryReturn<MetafieldWithoutOwnerId[]>;
+  metafieldDelete: CartQueryReturn<Scalars['String']>;
 };
 
 export type CartApiReturnCustom<
@@ -68,11 +67,17 @@ export type CartApiReturn<TCustomMethods extends CustomMethodsBase> =
   | CartApiReturnCustom<TCustomMethods>
   | CartApiReturnBase;
 
-export function createCartApi(options: CartApiOptions): CartApiReturnBase;
-export function createCartApi<TCustomMethods extends CustomMethodsBase>(
+export function createCartApi_unstable(
+  options: CartApiOptions,
+): CartApiReturnBase;
+export function createCartApi_unstable<
+  TCustomMethods extends CustomMethodsBase,
+>(
   options: CartApiOptionsWithCustom<TCustomMethods>,
 ): CartApiReturnCustom<TCustomMethods>;
-export function createCartApi<TCustomMethods extends CustomMethodsBase>(
+export function createCartApi_unstable<
+  TCustomMethods extends CustomMethodsBase,
+>(
   options: CartApiOptions | CartApiOptionsWithCustom<TCustomMethods>,
 ): CartApiReturn<TCustomMethods> {
   const {requestHeaders, storefront, cartQueryFragment, cartMutateFragment} =
@@ -112,40 +117,40 @@ export function createCartApi<TCustomMethods extends CustomMethodsBase>(
     getCartId,
     setCartId,
     create: cartCreate,
-    addLine: async (cartInput: CartLinesAdd) => {
+    addLines: async (lines, optionalParams) => {
       return cartId
-        ? await cartLinesAddDefault(mutateOptions)(cartInput)
-        : await cartCreate({
-            input: {lines: cartInput.lines},
-          });
+        ? await cartLinesAddDefault(mutateOptions)(lines, optionalParams)
+        : await cartCreate({lines}, optionalParams);
     },
     updateLines: cartLinesUpdateDefault(mutateOptions),
     removeLines: cartLinesRemoveDefault(mutateOptions),
-    updateDiscountCodes: async (cartInput: CartDiscountCodesUpdate) => {
+    updateDiscountCodes: async (discountCodes, optionalParams) => {
       return cartId
-        ? await cartDiscountCodesUpdateDefault(mutateOptions)(cartInput)
-        : await cartCreate({
-            input: {discountCodes: cartInput.discountCodes},
-          });
+        ? await cartDiscountCodesUpdateDefault(mutateOptions)(
+            discountCodes,
+            optionalParams,
+          )
+        : await cartCreate({discountCodes}, optionalParams);
     },
-    updateBuyerIdentity: async (cartInput: CartBuyerIdentityUpdate) => {
+    updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
       return cartId
-        ? await cartBuyerIdentityUpdateDefault(mutateOptions)({
-            buyerIdentity: cartInput.buyerIdentity,
-          })
-        : await cartCreate({
-            input: {buyerIdentity: cartInput.buyerIdentity},
-          });
+        ? await cartBuyerIdentityUpdateDefault(mutateOptions)(
+            buyerIdentity,
+            optionalParams,
+          )
+        : await cartCreate({buyerIdentity}, optionalParams);
     },
     updateNote: cartNoteUpdateDefault(mutateOptions),
     updateSelectedDeliveryOption:
       cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
-    metafieldsSet: async (cartInput: CartMetafieldsSet) => {
+    attributesUpdate: cartAttributesUpdateDefault(mutateOptions),
+    metafieldsSet: async (metafields, optionalParams) => {
       return cartId
-        ? await cartMetafieldsSetDefault(mutateOptions)(cartInput)
-        : await cartCreate({
-            input: {metafields: cartInput.metafields},
-          });
+        ? await cartMetafieldsSetDefault(mutateOptions)(
+            metafields,
+            optionalParams,
+          )
+        : await cartCreate({metafields}, optionalParams);
     },
     metafieldDelete: cartMetafieldDeleteDefault(mutateOptions),
   };

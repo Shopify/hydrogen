@@ -1,9 +1,4 @@
 import type {
-  AttributeInput,
-  CartBuyerIdentityInput,
-  CartInput,
-  CartLineInput,
-  CartLineUpdateInput,
   CartMetafieldsSetInput,
   Scalars,
   CountryCode,
@@ -25,53 +20,14 @@ export const CartFormInputAction = {
   CartMetafieldsDelete: 'CartMetafieldsDelete',
 } as const;
 
-type CartOptionalInput = {
+export type CartOptionalInput = {
   cartId?: Scalars['ID'];
   language?: LanguageCode;
   country?: CountryCode;
 };
 
+export type MetafieldWithoutOwnerId = Omit<CartMetafieldsSetInput, 'ownerId'>;
+
 export type CartGet = {
   numCartLines?: number;
-} & CartOptionalInput;
-
-export type CartAttributesUpdateInput = {
-  attribute: AttributeInput;
-} & CartOptionalInput;
-
-export type CartBuyerIdentityUpdate = {
-  buyerIdentity: CartBuyerIdentityInput;
-} & CartOptionalInput;
-
-export type CartCreate = {
-  input: CartInput;
-} & CartOptionalInput;
-
-export type CartDiscountCodesUpdate = {
-  discountCodes: string[];
-} & CartOptionalInput;
-
-export type CartLinesAdd = {
-  lines: CartLineInput[];
-} & CartOptionalInput;
-
-export type CartLinesRemove = {
-  lineIds: string[];
-} & CartOptionalInput;
-
-export type CartLinesUpdate = {
-  lines: CartLineUpdateInput[];
-} & CartOptionalInput;
-export type CartNoteUpdate = {
-  note: string;
-} & CartOptionalInput;
-export type CartSelectedDeliveryOptionsUpdate = {
-  selectedDeliveryOptions: CartSelectedDeliveryOptionsUpdate;
-} & CartOptionalInput;
-export type CartMetafieldsSet = {
-  metafields: Omit<CartMetafieldsSetInput, 'ownerId'>[];
-} & CartOptionalInput;
-
-export type CartMetafieldDelete = {
-  key: Scalars['String'];
 } & CartOptionalInput;
