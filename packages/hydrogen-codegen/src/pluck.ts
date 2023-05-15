@@ -1,3 +1,28 @@
+import fs from 'fs/promises';
+import path from 'path';
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+
+export async function patchGqlPluck() {
+  const require = createRequire(import.meta.url);
+  const realGqlTagPluck = require.resolve('@graphql-tools/graphql-tag-pluck');
+  const vendorGqlTagPluck = fileURLToPath(
+    new URL('../../vendor/graphql-tag-pluck', import.meta.url),
+  );
+
+  await Promise.all([
+    fs.copyFile(
+      path.join(vendorGqlTagPluck, 'visitor.cjs'),
+      realGqlTagPluck.replace('/index.js', '/visitor.js'),
+    ),
+
+    fs.copyFile(
+      path.join(vendorGqlTagPluck, 'visitor.mjs'),
+      realGqlTagPluck.replace('/cjs/index.js', '/esm/visitor.js'),
+    ),
+  ]);
+}
+
 /**
  * This is a modified version of graphql-tag-pluck's default config.
  * https://github.com/ardatan/graphql-tools/issues/5127

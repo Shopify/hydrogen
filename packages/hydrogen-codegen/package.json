@@ -1,8 +1,8 @@
 {
   "name": "@shopify/hydrogen-codegen",
-  "version": "0.0.0",
+  "version": "0.0.0-alpha.0",
   "private": true,
-  "description": "GraphQL Code Generator preset for gql magic.",
+  "description": "GraphQL Code Generator for Shopify Hydrogen",
   "type": "module",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.js",
@@ -12,8 +12,7 @@
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
     "test:disabled": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest",
-    "postinstall": "node ./postinstall.mjs"
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
   },
   "exports": {
     ".": {
@@ -38,6 +37,10 @@
     "directory": "packages/hydrogen-codegen"
   },
   "license": "MIT",
+  "files": [
+    "dist",
+    "vendor"
+  ],
   "devDependencies": {
     "@graphql-codegen/plugin-helpers": "^4.1.0",
     "@graphql-tools/utils": "^9.0.0"
