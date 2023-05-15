@@ -41,6 +41,11 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
+    debug: Flags.boolean({
+      description: 'Attaches a Node inspector',
+      env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
+      default: false,
+    }),
     host: deprecated('--host')(),
   };
 
@@ -61,16 +66,20 @@ async function runDev({
   experimentalCodegen: codegen = false,
   codegenConfigPath,
   disableVirtualRoutes,
+  debug = false,
 }: {
   port?: number;
   path?: string;
   experimentalCodegen?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
+  debug?: false;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
+
+  if (debug) (await import('node:inspector')).open();
 
   console.time(LOG_INITIAL_BUILD);
 
