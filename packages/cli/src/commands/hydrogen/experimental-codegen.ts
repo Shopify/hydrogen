@@ -10,7 +10,7 @@ export default class Codegen extends Command {
     'Generate types automatically for the Storefront API queries.';
   static flags = {
     path: commonFlags.path,
-    'codegen-config-path': Flags.string({
+    ['codegen-config-path']: Flags.string({
       description:
         ' Specify a path to a codegen configuration file. Defaults to `codegen.ts`.',
       required: false,
