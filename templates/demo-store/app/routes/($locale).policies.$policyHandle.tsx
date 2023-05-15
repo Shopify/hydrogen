@@ -90,7 +90,7 @@ const POLICY_CONTENT_QUERY = `#graphql
     url
   }
 
-  query PoliciesHandleQuery(
+  query PoliciesHandle(
     $language: LanguageCode
     $privacyPolicy: Boolean!
     $shippingPolicy: Boolean!

@@ -63,7 +63,7 @@ const POLICIES_QUERY = `#graphql
     handle
   }
 
-  query PoliciesIndexQuery {
+  query PoliciesIndex {
     shop {
       privacyPolicy {
         ...PolicyIndex

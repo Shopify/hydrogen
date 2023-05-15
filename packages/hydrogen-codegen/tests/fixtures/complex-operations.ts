@@ -66,7 +66,7 @@ const COLLECTION_CONTENT_FRAGMENT = `#graphql
 ` as const;
 
 export const HOMEPAGE_SEO_QUERY = `#graphql
-  query collectionContentQuery($handle: String, $country: CountryCode, $language: LanguageCode)
+  query collectionContentTest($handle: String, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     hero: collection(handle: $handle) {
       ...CollectionContent

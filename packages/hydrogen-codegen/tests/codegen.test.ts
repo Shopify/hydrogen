@@ -108,7 +108,6 @@ describe('Hydrogen Codegen', async () => {
 
     expect(result).toHaveLength(1);
 
-    // gql.ts
     const generatedCode = result.find(
       (file) => file.filename === 'out.d.ts',
     )!.content;
@@ -166,14 +165,14 @@ describe('Hydrogen Codegen', async () => {
           ) | {}> }> }
       );
 
-      export type CollectionContentQueryQueryVariables = SFAPI.Exact<{
+      export type CollectionContentTestQueryVariables = SFAPI.Exact<{
         handle?: SFAPI.InputMaybe<SFAPI.Scalars['String']>;
         country?: SFAPI.InputMaybe<SFAPI.CountryCode>;
         language?: SFAPI.InputMaybe<SFAPI.LanguageCode>;
       }>;
 
 
-      export type CollectionContentQueryQuery = { hero?: SFAPI.Maybe<(
+      export type CollectionContentTestQuery = { hero?: SFAPI.Maybe<(
           Pick<SFAPI.Collection, 'id' | 'handle' | 'title' | 'descriptionHtml'>
           & { heading?: SFAPI.Maybe<Pick<SFAPI.Metafield, 'value'>>, byline?: SFAPI.Maybe<Pick<SFAPI.Metafield, 'value'>>, cta?: SFAPI.Maybe<Pick<SFAPI.Metafield, 'value'>>, spread?: SFAPI.Maybe<{ reference?: SFAPI.Maybe<(
               { __typename: 'MediaImage' }
@@ -195,7 +194,7 @@ describe('Hydrogen Codegen', async () => {
         )>, shop: Pick<SFAPI.Shop, 'name' | 'description'> };
 
       interface GeneratedQueryTypes {
-        \\"#graphql\\\\n  query collectionContentQuery($handle: String, $country: CountryCode, $language: LanguageCode)\\\\n  @inContext(country: $country, language: $language) {\\\\n    hero: collection(handle: $handle) {\\\\n      ...CollectionContent\\\\n    }\\\\n    shop {\\\\n      name\\\\n      description\\\\n    }\\\\n  }\\\\n  #graphql\\\\n  fragment CollectionContent on Collection {\\\\n    id\\\\n    handle\\\\n    title\\\\n    descriptionHtml\\\\n    heading: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"title\\\\\\") {\\\\n      value\\\\n    }\\\\n    byline: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"byline\\\\\\") {\\\\n      value\\\\n    }\\\\n    cta: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"cta\\\\\\") {\\\\n      value\\\\n    }\\\\n    spread: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"spread\\\\\\") {\\\\n      reference {\\\\n        ...Media\\\\n      }\\\\n    }\\\\n    spreadSecondary: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"spread_secondary\\\\\\") {\\\\n      reference {\\\\n        ...Media\\\\n      }\\\\n    }\\\\n  }\\\\n  #graphql\\\\n  fragment Media on Media {\\\\n    __typename\\\\n    mediaContentType\\\\n    alt\\\\n    previewImage {\\\\n      url\\\\n    }\\\\n    ... on MediaImage {\\\\n      id\\\\n      image {\\\\n        url\\\\n        width\\\\n        height\\\\n      }\\\\n    }\\\\n    ... on Video {\\\\n      id\\\\n      sources {\\\\n        mimeType\\\\n        url\\\\n      }\\\\n    }\\\\n    ... on Model3d {\\\\n      id\\\\n      sources {\\\\n        mimeType\\\\n        url\\\\n      }\\\\n    }\\\\n    ... on ExternalVideo {\\\\n      id\\\\n      embedUrl\\\\n      host\\\\n    }\\\\n  }\\\\n\\\\n\\\\n\\": {return: CollectionContentQueryQuery, variables: CollectionContentQueryQueryVariables},
+        \\"#graphql\\\\n  query collectionContentTest($handle: String, $country: CountryCode, $language: LanguageCode)\\\\n  @inContext(country: $country, language: $language) {\\\\n    hero: collection(handle: $handle) {\\\\n      ...CollectionContent\\\\n    }\\\\n    shop {\\\\n      name\\\\n      description\\\\n    }\\\\n  }\\\\n  #graphql\\\\n  fragment CollectionContent on Collection {\\\\n    id\\\\n    handle\\\\n    title\\\\n    descriptionHtml\\\\n    heading: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"title\\\\\\") {\\\\n      value\\\\n    }\\\\n    byline: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"byline\\\\\\") {\\\\n      value\\\\n    }\\\\n    cta: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"cta\\\\\\") {\\\\n      value\\\\n    }\\\\n    spread: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"spread\\\\\\") {\\\\n      reference {\\\\n        ...Media\\\\n      }\\\\n    }\\\\n    spreadSecondary: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"spread_secondary\\\\\\") {\\\\n      reference {\\\\n        ...Media\\\\n      }\\\\n    }\\\\n  }\\\\n  #graphql\\\\n  fragment Media on Media {\\\\n    __typename\\\\n    mediaContentType\\\\n    alt\\\\n    previewImage {\\\\n      url\\\\n    }\\\\n    ... on MediaImage {\\\\n      id\\\\n      image {\\\\n        url\\\\n        width\\\\n        height\\\\n      }\\\\n    }\\\\n    ... on Video {\\\\n      id\\\\n      sources {\\\\n        mimeType\\\\n        url\\\\n      }\\\\n    }\\\\n    ... on Model3d {\\\\n      id\\\\n      sources {\\\\n        mimeType\\\\n        url\\\\n      }\\\\n    }\\\\n    ... on ExternalVideo {\\\\n      id\\\\n      embedUrl\\\\n      host\\\\n    }\\\\n  }\\\\n\\\\n\\\\n\\": {return: CollectionContentTestQuery, variables: CollectionContentTestQueryVariables},
       }
 
       interface GeneratedMutationTypes {
