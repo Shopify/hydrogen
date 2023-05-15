@@ -10,28 +10,25 @@ import {
   CART_METAFIELD_SET_MUTATION,
   CART_NOTE_UPDATE_MUTATION,
   CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION,
+  CART_ATTRIBUTES_UPDATE_MUTATION,
 } from './cart-queries';
 import type {Storefront} from '../storefront';
 import type {
-  CartBuyerIdentityUpdate,
-  CartCreate,
-  CartDiscountCodesUpdate,
-  CartFormInput,
-  CartLinesAdd,
-  CartLinesRemove,
-  CartLinesUpdate,
-  CartMetafieldDelete,
-  CartMetafieldsSet,
-  CartNoteUpdate,
-  CartSelectedDeliveryOptionsUpdate,
+  CartGet,
+  CartOptionalInput,
+  MetafieldWithoutOwnerId,
 } from './cart-types';
 import type {
   Cart,
   CartUserError,
-  CartMetafieldsSetInput,
-  Metafield,
   MetafieldsSetUserError,
   Scalars,
+  AttributeInput,
+  CartInput,
+  CartLineInput,
+  CartBuyerIdentityInput,
+  CartLineUpdateInput,
+  CartSelectedDeliveryOptionInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartQueryOptions = {
@@ -46,17 +43,15 @@ type CartQueryData = {
   errors?: CartUserError[] | MetafieldsSetUserError[];
 };
 
-export type CartQueryReturn<T> = (cartInput: T) => Promise<CartQueryData>;
-
-function getInputs(cartInput: CartFormInput): Omit<CartFormInput, 'action'> {
-  const {action, ...restOfInputs} = cartInput;
-  return restOfInputs;
-}
+export type CartQueryReturn<T> = (
+  requiredParams: T,
+  optionalParams?: CartOptionalInput,
+) => Promise<CartQueryData>;
 
 export function cartGetDefault(
   options: CartQueryOptions,
-): (cartInput?: CartFormInput) => Promise<Cart | null | undefined> {
-  return async (cartInput?: CartFormInput) => {
+): (cartInput?: CartGet) => Promise<Cart | null | undefined> {
+  return async (cartInput?: CartGet) => {
     const cartId = options.getCartId();
 
     if (!cartId) return null;
@@ -66,7 +61,7 @@ export function cartGetDefault(
       {
         variables: {
           cartId,
-          ...getInputs(cartInput || {action: 'CartGet'}),
+          ...cartInput,
         },
         cache: options.storefront.CacheNone(),
       },
@@ -78,12 +73,16 @@ export function cartGetDefault(
 
 export function cartCreateDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartCreate> {
-  return async (cartInput: CartCreate) => {
+): CartQueryReturn<CartInput> {
+  return async (input, optionalParams) => {
+    const {cartId, ...restOfOptionalParams} = optionalParams || {};
     const {cartCreate} = await options.storefront.mutate<{
       cartCreate: CartQueryData;
     }>(CART_CREATE_MUTATION(options.cartMutateFragment), {
-      variables: getInputs(cartInput),
+      variables: {
+        input,
+        ...restOfOptionalParams,
+      },
     });
     return cartCreate;
   };
@@ -91,14 +90,15 @@ export function cartCreateDefault(
 
 export function cartLinesAddDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartLinesAdd> {
-  return async (cartInput: CartLinesAdd) => {
+): CartQueryReturn<CartLineInput[]> {
+  return async (lines, optionalParams) => {
     const {cartLinesAdd} = await options.storefront.mutate<{
       cartLinesAdd: CartQueryData;
     }>(CART_LINES_ADD_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        lines,
+        ...optionalParams,
       },
     });
     return cartLinesAdd;
@@ -107,14 +107,15 @@ export function cartLinesAddDefault(
 
 export function cartLinesUpdateDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartLinesUpdate> {
-  return async (cartInput: CartLinesUpdate) => {
+): CartQueryReturn<CartLineUpdateInput[]> {
+  return async (lines, optionalParams) => {
     const {cartLinesUpdate} = await options.storefront.mutate<{
       cartLinesUpdate: CartQueryData;
     }>(CART_LINES_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        lines,
+        ...optionalParams,
       },
     });
     return cartLinesUpdate;
@@ -123,14 +124,15 @@ export function cartLinesUpdateDefault(
 
 export function cartLinesRemoveDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartLinesRemove> {
-  return async (cartInput: CartLinesRemove) => {
+): CartQueryReturn<string[]> {
+  return async (lineIds, optionalParams) => {
     const {cartLinesRemove} = await options.storefront.mutate<{
       cartLinesRemove: CartQueryData;
     }>(CART_LINES_REMOVE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        lineIds,
+        ...optionalParams,
       },
     });
     return cartLinesRemove;
@@ -139,14 +141,15 @@ export function cartLinesRemoveDefault(
 
 export function cartDiscountCodesUpdateDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartDiscountCodesUpdate> {
-  return async (cartInput: CartDiscountCodesUpdate) => {
+): CartQueryReturn<string[]> {
+  return async (discountCodes, optionalParams) => {
     const {cartDiscountCodesUpdate} = await options.storefront.mutate<{
       cartDiscountCodesUpdate: CartQueryData;
     }>(CART_DISCOUNT_CODE_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        discountCodes,
+        ...optionalParams,
       },
     });
     return cartDiscountCodesUpdate;
@@ -155,14 +158,15 @@ export function cartDiscountCodesUpdateDefault(
 
 export function cartBuyerIdentityUpdateDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartBuyerIdentityUpdate> {
-  return async (cartInput: CartBuyerIdentityUpdate) => {
+): CartQueryReturn<CartBuyerIdentityInput> {
+  return async (buyerIdentity, optionalParams) => {
     const {cartBuyerIdentityUpdate} = await options.storefront.mutate<{
       cartBuyerIdentityUpdate: CartQueryData;
     }>(CART_BUYER_IDENTITY_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        buyerIdentity,
+        ...optionalParams,
       },
     });
     return cartBuyerIdentityUpdate;
@@ -171,14 +175,15 @@ export function cartBuyerIdentityUpdateDefault(
 
 export function cartNoteUpdateDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartNoteUpdate> {
-  return async (cartInput: CartNoteUpdate) => {
+): CartQueryReturn<string> {
+  return async (note, optionalParams) => {
     const {cartNoteUpdate} = await options.storefront.mutate<{
       cartNoteUpdate: CartQueryData;
     }>(CART_NOTE_UPDATE_MUTATION(options.cartMutateFragment), {
       variables: {
         cartId: options.getCartId(),
-        ...getInputs(cartInput),
+        note,
+        ...optionalParams,
       },
     });
     return cartNoteUpdate;
@@ -187,8 +192,8 @@ export function cartNoteUpdateDefault(
 
 export function cartSelectedDeliveryOptionsUpdateDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartSelectedDeliveryOptionsUpdate> {
-  return async (cartInput: CartSelectedDeliveryOptionsUpdate) => {
+): CartQueryReturn<CartSelectedDeliveryOptionInput> {
+  return async (selectedDeliveryOptions, optionalParams) => {
     const {cartSelectedDeliveryOptionsUpdate} =
       await options.storefront.mutate<{
         cartSelectedDeliveryOptionsUpdate: CartQueryData;
@@ -199,7 +204,8 @@ export function cartSelectedDeliveryOptionsUpdateDefault(
         {
           variables: {
             cartId: options.getCartId(),
-            ...getInputs(cartInput),
+            selectedDeliveryOptions,
+            ...optionalParams,
           },
         },
       );
@@ -207,61 +213,70 @@ export function cartSelectedDeliveryOptionsUpdateDefault(
   };
 }
 
+export function cartAttributesUpdateDefault(
+  options: CartQueryOptions,
+): CartQueryReturn<AttributeInput[]> {
+  return async (attributes, optionalParams) => {
+    const {cartAttributesUpdate} = await options.storefront.mutate<{
+      cartAttributesUpdate: CartQueryData;
+    }>(CART_ATTRIBUTES_UPDATE_MUTATION(options.cartMutateFragment), {
+      variables: {
+        cartId: optionalParams?.cartId || options.getCartId(),
+        attributes,
+      },
+    });
+    return cartAttributesUpdate;
+  };
+}
+
 type MetafieldsQueryData = {
-  metafields: Metafield;
   errors: MetafieldsSetUserError[];
 };
 
 export function cartMetafieldsSetDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartMetafieldsSet> {
-  return async (cartInput: CartMetafieldsSet) => {
-    const cartId = options.getCartId();
-    const metafields = cartInput.metafields.map(
-      (metafield: Omit<CartMetafieldsSetInput, 'ownerId'>) => ({
+): CartQueryReturn<MetafieldWithoutOwnerId[]> {
+  return async (metafields, optionalParams) => {
+    const ownerId = optionalParams?.cartId || options.getCartId();
+    const metafieldsWithOwnerId = metafields.map(
+      (metafield: MetafieldWithoutOwnerId) => ({
         ...metafield,
-        ownerId: cartId,
+        ownerId,
       }),
     );
     const {cartMetafieldsSet} = await options.storefront.mutate<{
       cartMetafieldsSet: MetafieldsQueryData;
     }>(CART_METAFIELD_SET_MUTATION(), {
-      variables: {metafields},
+      variables: {metafields: metafieldsWithOwnerId},
     });
 
     return {
       cart: {
-        id: cartId,
-        metafields: cartMetafieldsSet.metafields as unknown as Metafield[],
+        id: ownerId,
       } as Cart,
       errors: cartMetafieldsSet.errors as unknown as MetafieldsSetUserError[],
     };
   };
 }
 
-type MetafieldsDeleteData = {
-  deletedId: Scalars['String'];
-  errors: MetafieldsSetUserError[];
-};
-
 export function cartMetafieldDeleteDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartMetafieldDelete> {
-  return async (cartInput: CartMetafieldDelete) => {
-    const cartId = options.getCartId();
+): CartQueryReturn<Scalars['String']> {
+  return async (key, optionalParams) => {
+    const ownerId = optionalParams?.cartId || options.getCartId();
     const {cartMetafieldDelete} = await options.storefront.mutate<{
-      cartMetafieldDelete: MetafieldsDeleteData;
+      cartMetafieldDelete: MetafieldsQueryData;
     }>(CART_METAFIELD_DELETE_MUTATION(), {
       variables: {
         input: {
-          ownerId: cartId,
-          key: cartInput.key,
+          ownerId,
+          key,
         },
       },
     });
     return {
       cart: {
-        id: cartId,
+        id: ownerId,
       } as Cart,
       errors: cartMetafieldDelete.errors as unknown as MetafieldsSetUserError[],
     };

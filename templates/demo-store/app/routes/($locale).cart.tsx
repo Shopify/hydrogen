@@ -4,6 +4,9 @@ import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
 import {json, type ActionArgs} from '@shopify/remix-oxygen';
 import type {
+  CartBuyerIdentityInput,
+  CartLineInput,
+  CartLineUpdateInput,
   Cart as CartType,
   CartUserError,
   MetafieldsSetUserError,
@@ -21,7 +24,7 @@ export async function action({request, context}: ActionArgs) {
     session.get('customerAccessToken'),
   ]);
 
-  const cartInput = cart.getFormInput(formData);
+  const {action, cartInputs} = cart.getFormInput(formData);
   invariant(action, 'No cartAction defined');
 
   let status = 200;
@@ -30,33 +33,30 @@ export async function action({request, context}: ActionArgs) {
     errors?: CartUserError[] | UserError[] | MetafieldsSetUserError[];
   };
 
-  switch (cartInput.action) {
+  switch (action) {
     case CartFormInputAction.CartLinesAdd:
-      result = await cart.addLine(cartInput);
+      result = await cart.addLines(cartInputs.lines as CartLineInput[]);
       break;
     case CartFormInputAction.CartLinesUpdate:
-      result = await cart.updateLines(cartInput);
+      result = await cart.updateLines(
+        cartInputs.lines as CartLineUpdateInput[],
+      );
       break;
     case CartFormInputAction.CartLinesRemove:
-      result = await cart.removeLines(cartInput);
+      result = await cart.removeLines(cartInputs.lineIds as string[]);
       break;
     case CartFormInputAction.CartDiscountCodesUpdate:
       const formDiscountCode = formData.get('discountCode');
       const discountCodes = (
         formDiscountCode ? [formDiscountCode] : ['']
       ) as string[];
-      result = await cart.updateDiscountCodes({
-        ...cartInput,
-        discountCodes,
-      });
+      result = await cart.updateDiscountCodes(discountCodes);
       break;
     case CartFormInputAction.CartBuyerIdentityUpdate:
+      const buyerIdentity = cartInputs.buyerIdentity as CartBuyerIdentityInput;
       result = await cart.updateBuyerIdentity({
-        ...cartInput,
-        buyerIdentity: {
-          ...cartInput.buyerIdentity,
-          customerAccessToken,
-        },
+        ...buyerIdentity,
+        customerAccessToken,
       });
       break;
     default:

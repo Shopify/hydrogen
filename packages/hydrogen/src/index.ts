@@ -15,7 +15,7 @@ export {Seo} from './seo/seo';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 
-export {CartForm} from './cart/CartForm';
+export {CartForm, type CartFormInput} from './cart/CartForm';
 export {
   type CartQueryOptions,
   type CartQueryReturn,
@@ -26,27 +26,20 @@ export {
   cartLinesRemoveDefault,
   cartDiscountCodesUpdateDefault,
   cartBuyerIdentityUpdateDefault,
+  cartMetafieldDeleteDefault,
+  cartMetafieldsSetDefault,
   cartNoteUpdateDefault,
   cartSelectedDeliveryOptionsUpdateDefault,
+  cartAttributesUpdateDefault,
 } from './cart/cart-query-wrapper';
 export {
   type CartApiReturnCustom,
   type CartApiReturnBase,
-  createCartApi,
+  createCartApi_unstable,
 } from './cart/cart-api';
 export {
   CartFormInputAction,
-  type CartBuyerIdentityUpdate,
-  type CartCreate,
-  type CartDiscountCodesUpdate,
-  type CartFormInput,
-  type CartLinesAdd,
-  type CartLinesRemove,
-  type CartLinesUpdate,
-  type CartNoteUpdate,
-  type CartSelectedDeliveryOptionsUpdate,
-  type CartMetafieldsSet,
-  type CartMetafieldDelete,
+  type MetafieldWithoutOwnerId,
 } from './cart/cart-types';
 
 export {
