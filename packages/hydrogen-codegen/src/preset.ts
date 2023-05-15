@@ -1,9 +1,9 @@
 import type {Types} from '@graphql-codegen/plugin-helpers';
 import * as addPlugin from '@graphql-codegen/add';
 import * as typescriptOperationPlugin from '@graphql-codegen/typescript-operations';
-import {processSources} from './sources';
-import {plugin as dtsPlugin} from './plugin';
-import {schema} from './schema';
+import {processSources} from './sources.js';
+import {plugin as dtsPlugin} from './plugin.js';
+import {schema} from './schema.js';
 
 export type GqlTagConfig = {};
 
@@ -79,7 +79,6 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
           namespacedImportName,
         },
         documents: sources,
-        // @ts-expect-error
         documentTransforms: options.documentTransforms,
       },
     ];
