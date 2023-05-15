@@ -25,6 +25,7 @@ if (isStandaloneProcess) {
     generateTypes({
       rootDirectory: process.argv[2]!,
       appDirectory: process.argv[3]!,
+      configFilePath: process.argv[4],
       watch: true,
     }),
   );
@@ -38,10 +39,16 @@ if (isStandaloneProcess) {
 export function spawnCodegenProcess({
   rootDirectory,
   appDirectory,
+  configFilePath,
 }: CodegenOptions) {
   const child = spawn(
     'node',
-    [fileURLToPath(import.meta.url), rootDirectory, appDirectory],
+    [
+      fileURLToPath(import.meta.url),
+      rootDirectory,
+      appDirectory,
+      configFilePath ?? '',
+    ],
     {stdio: ['inherit', 'ignore', 'pipe']},
   );
 
