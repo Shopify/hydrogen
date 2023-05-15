@@ -20,7 +20,7 @@
     "version:cli": "cd packages/cli && npm run generate:manifest",
     "version:create-hydrogen": "cd packages/create-hydrogen && npm run build",
     "changeset": "changeset",
-    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/remix-oxygen/dist && rimraf packages/hydrogen/dist && rimraf packages/cli/dist && rimraf templates/demo-store/.cache"
+    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache"
   },
   "workspaces": [
     "templates/hello-world",
