@@ -3,10 +3,80 @@ import {
   loadCodegenConfig,
   type LoadCodegenConfigResult,
 } from '@graphql-codegen/cli';
-import {schema, preset, pluckConfig} from '@shopify/hydrogen-codegen';
+import {
+  schema,
+  preset,
+  pluckConfig,
+  patchGqlPluck,
+} from '@shopify/hydrogen-codegen';
 import {format, resolveFormatConfig} from './transpile-ts.js';
+import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import {spawn} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 
 export {patchGqlPluck} from '@shopify/hydrogen-codegen';
+
+const nodePath = process.argv[1];
+const modulePath = fileURLToPath(import.meta.url);
+const isStandaloneProcess = nodePath === modulePath;
+
+if (isStandaloneProcess) {
+  patchGqlPluck().then(() =>
+    generateTypes({
+      rootDirectory: process.argv[2]!,
+      appDirectory: process.argv[3]!,
+      watch: true,
+    }),
+  );
+}
+
+/**
+ * Spawns a child process to run GraphlQL CLI Codegen.
+ * Running on a separate process splits work from this processor
+ * and also allows us to filter out logs.
+ */
+export function spawnCodegenProcess({
+  rootDirectory,
+  appDirectory,
+}: CodegenOptions) {
+  const child = spawn(
+    'node',
+    [fileURLToPath(import.meta.url), rootDirectory, appDirectory],
+    {stdio: ['inherit', 'ignore', 'pipe']},
+  );
+
+  child.stderr.on('data', (data) => {
+    const dataString: string =
+      typeof data === 'string' ? data : data?.toString?.('utf8') ?? '';
+
+    if (!dataString) return;
+
+    const [message = '', ...rest] = dataString
+      .replaceAll('[FAILED]', '')
+      .replace(/\s{2,}/g, '\n')
+      .trim()
+      .split('\n');
+
+    console.log('');
+    renderWarning({
+      headline: '[Codegen] ' + message,
+      body: rest.join('\n').replace(rootDirectory + '/', ''),
+    });
+  });
+
+  child.on('close', (code) => {
+    if (code !== 0) {
+      renderFatalError({
+        type: 0,
+        name: 'CodegenError',
+        message: `Codegen process exited with code ${code}`,
+        tryMessage: 'Try restarting the dev server.',
+      });
+    }
+  });
+
+  return child;
+}
 
 type ProjectDirs = {
   rootDirectory: string;

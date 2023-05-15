@@ -11,6 +11,7 @@ import {Flags} from '@oclif/core';
 import {startMiniOxygen} from '../../lib/mini-oxygen.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
+import {spawnCodegenProcess} from '../../lib/codegen.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -22,9 +23,21 @@ export default class Dev extends Command {
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
+    ['experimental-codegen']: Flags.boolean({
+      description:
+        'Generate types automatically for the Storefront API queries.',
+      required: false,
+      default: false,
+    }),
+    ['codegen-config-path']: Flags.string({
+      description:
+        ' Specify a path to a codegen configuration file. Defaults to `codegen.ts`.',
+      required: false,
+      dependsOn: ['experimental-codegen'],
+    }),
     ['disable-virtual-routes']: Flags.boolean({
       description:
-        "Disable rendering fallback routes when a route file doesn't exist",
+        "Disable rendering fallback routes when a route file doesn't exist.",
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
@@ -35,17 +48,24 @@ export default class Dev extends Command {
     const {flags} = await this.parse(Dev);
     const directory = flags.path ? path.resolve(flags.path) : process.cwd();
 
-    await runDev({...flagsToCamelObject(flags), path: directory});
+    await runDev({
+      ...flagsToCamelObject(flags),
+      path: directory,
+    });
   }
 }
 
 async function runDev({
   port,
   path: appPath,
+  experimentalCodegen: codegen = false,
+  codegenConfigPath,
   disableVirtualRoutes,
 }: {
   port?: number;
   path?: string;
+  experimentalCodegen?: boolean;
+  codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -91,7 +111,14 @@ async function runDev({
   }
 
   const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
-  await watch(await reloadConfig(), {
+
+  const remixConfig = await reloadConfig();
+
+  if (codegen) {
+    spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
+  }
+
+  await watch(remixConfig, {
     reloadConfig,
     mode: process.env.NODE_ENV as any,
     async onInitialBuild() {
