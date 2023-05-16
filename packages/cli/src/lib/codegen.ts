@@ -84,13 +84,15 @@ export function spawnCodegenProcess({
   });
 
   child.on('close', (code) => {
-    if (code !== 0) {
+    if (code && code > 0) {
       renderFatalError({
         type: 0,
         name: 'CodegenError',
         message: `Codegen process exited with code ${code}`,
         tryMessage: 'Try restarting the dev server.',
       });
+
+      process.exit(code);
     }
   });
 
@@ -128,8 +130,9 @@ export async function generateTypes({
       ...codegenConfig,
       cwd: dirs.rootDirectory,
       watch,
-      // Note: do not use `silent` here, it will swallow errors and
+      // Note: do not use `silent` without `watch`, it will swallow errors and
       // won't hide all logs. `errorsOnly` flag doesn't work either.
+      silent: !watch,
     },
     true,
   );

@@ -38,7 +38,7 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
       [`gen-dts`]: {plugin: dtsPlugin},
     };
 
-    const namespacedImportName = 'SFAPI';
+    const namespacedImportName = 'StorefrontAPI';
 
     const plugins: Array<Types.ConfiguredPlugin> = [
       // 1. Disable eslint for the generated file
@@ -47,7 +47,7 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
           content: `/* eslint-disable eslint-comments/disable-enable-pair */\n/* eslint-disable eslint-comments/no-unlimited-disable */\n/* eslint-disable */`,
         },
       },
-      // 2. Import all the generated API types from hydrogen-react
+      // 2. Import all the generated API types from Hydrogen
       {
         [`add`]: {
           content: `import * as ${namespacedImportName} from '@shopify/hydrogen/storefront-api-types';\n`,

@@ -23,7 +23,7 @@ export default class Dev extends Command {
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
-    ['experimental-codegen']: Flags.boolean({
+    ['codegen-unstable']: Flags.boolean({
       description:
         'Generate types automatically for the Storefront API queries.',
       required: false,
@@ -33,7 +33,7 @@ export default class Dev extends Command {
       description:
         ' Specify a path to a codegen configuration file. Defaults to `codegen.ts`.',
       required: false,
-      dependsOn: ['experimental-codegen'],
+      dependsOn: ['codegen-unstable'],
     }),
     ['disable-virtual-routes']: Flags.boolean({
       description:
@@ -55,6 +55,7 @@ export default class Dev extends Command {
 
     await runDev({
       ...flagsToCamelObject(flags),
+      codegen: flags['codegen-unstable'],
       path: directory,
     });
   }
@@ -63,14 +64,14 @@ export default class Dev extends Command {
 async function runDev({
   port,
   path: appPath,
-  experimentalCodegen: codegen = false,
+  codegen = false,
   codegenConfigPath,
   disableVirtualRoutes,
   debug = false,
 }: {
   port?: number;
   path?: string;
-  experimentalCodegen?: boolean;
+  codegen?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   debug?: false;

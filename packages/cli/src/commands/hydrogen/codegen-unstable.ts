@@ -1,9 +1,14 @@
 import path from 'path';
 import Command from '@shopify/cli-kit/node/base-command';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {Flags} from '@oclif/core';
 import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
-import {generateTypes, patchGqlPluck} from '../../lib/codegen.js';
+import {
+  generateTypes,
+  normalizeCodegenError,
+  patchGqlPluck,
+} from '../../lib/codegen.js';
 
 export default class Codegen extends Command {
   static description =
@@ -47,9 +52,19 @@ async function runCodegen({
 
   await patchGqlPluck();
 
-  await generateTypes({
-    ...remixConfig,
-    configFilePath: codegenConfigPath,
-    watch,
-  });
+  try {
+    await generateTypes({
+      ...remixConfig,
+      configFilePath: codegenConfigPath,
+      watch,
+    });
+  } catch (error) {
+    const {message, details} = normalizeCodegenError(
+      (error as Error).message,
+      remixConfig.rootDirectory,
+    );
+
+    console.log('');
+    throw new AbortError(message, details);
+  }
 }
