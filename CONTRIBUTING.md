@@ -19,10 +19,12 @@ Run the following commands to get started working on Hydrogen.
 
 Hydrogen is a monorepo built with [Turborepo](https://turbo.build/) and consists of the following workspaces:
 
-- `templates`: Full working implementations of a Hydrogen storefront, such as the [`demo-store`](https://hydrogen.shop) template
-- `packages/hydrogen`: The hooks, components, and utilities provided by Hydrogen
-- `packages/remix-oxygen`: A [Remix](https://remix.run) runtime adapter for [Oxygen](https://shopify.dev/custom-storefronts/oxygen)
+- `packages/hydrogen`: Opinionated [Remix](https://remix.run) components, hooks, and utilities provided by Hydrogen
+- `packages/hydrogen-react`: Platform-agnostic components, hooks, and utilities. This package is used by Hydrogen and published on its own for use by other React-based frameworks.
+- `packages/create-hydrogen`: Package scripts to create new Hydrogen apps from the command line.
+- `packages/remix-oxygen`: A [Remix](https://remix.run) runtime adapter for [Oxygen](https://shopify.dev/custom-storefronts/oxygen), Shopify’s serverless hosting platform.
 - `packages/cli`: A plugin for the [Shopify CLI](https://github.com/Shopify/cli) to provide specific commands for working on Hydrogen storefronts
+- `templates`: Full working implementations of Hydrogen storefronts. Used for scaffolding new starter Hydrogen apps, testing, and feature development.
 
 Running `npm run dev` at the root of the monorepo is the most common way to develop in Hydrogen. With this task running, each package will be rebuilt when files change and you can preview the results in the `templates/demo-store` template at (http://localhost:3000)[http://localhost:3000].
 
@@ -98,6 +100,35 @@ Tests that fail **only** in CI can be difficult and time-consuming to debug. If 
 - Commit and push your changes to Github.
 - The testing Github Action will run automatically and you will see it paused with both a Web Shell address and SSH address.
 - Copy and paste the SSH address into your terminal.
+
+## Generate API reference docs for Hydrogen and Hydrogen React
+
+The reference docs for Hydrogen and Hydrogen React are published on [Shopify.dev](https://shopify.dev):
+
+- [Hydrogen](https://shopify.dev/docs/api/hydrogen)
+- [Hydrogen React](https://shopify.dev/docs/api/hydrogen-react)
+
+In both cases, the reference documentation is stored in the Hydrogen repo in `*.doc.ts` files ([example](https://github.com/Shopify/hydrogen/blob/-/packages/hydrogen-react/src/Image.doc.ts)). These files get compiled into JSON, which is then copied over to Shopify.dev. For more background about how references work, see Shopify internal documentation on “[Writing UI reference docs](https://shopify.dev/internal/development/ui-reference-docs)”.
+
+### Generate the docs
+
+1. From the command line, `cd` to either `packages/hydrogen` or `packages/hydrogen-react`.
+1. Run `npm run build-docs` (view [build script](https://github.com/Shopify/hydrogen/blob/-/packages/hydrogen-react/docs/build-docs.sh))
+1. The script compiles and formats either one or both JSON files:
+   - `packages/{PACKAGE}/docs/generated/generated_docs_data.json`
+   - `packages/{PACKAGE}/docs/generated/generated_static_pages.json`
+1. You're now ready to copy these files to Shopify.dev.
+
+### Copy to Shopify.dev
+
+> Note:
+> Only Shopify staff will be able to complete these tasks, as it requires access to the private code repository for [Shopify.dev](https://shopify.dev).
+
+1. Open the Shopify.dev repo and check out a new branch.
+1. Copy the contents of the compiled JSON files to their corresponding location in the Shopify.dev repo.
+   - `db/data/docs/templated_apis/{PACKAGE}/{VERSION}/generated_docs_data.json`
+   - `db/data/docs/templated_apis/{PACKAGE}/{VERSION}/generated_static_pages.json`
+1. Commit the changes and create a PR.
 
 ## Principles to develop by
 
