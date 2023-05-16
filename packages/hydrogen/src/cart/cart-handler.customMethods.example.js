@@ -1,4 +1,4 @@
-const cart = createCartHandler({
+const cart = createCartHandler_unstable({
   storefront,
   requestHeaders: request.headers,
   customMethods: {
