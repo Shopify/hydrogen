@@ -51,15 +51,14 @@ export default function Collections() {
       <Section>
         <Pagination connection={collections}>
           {({
-            endCursor,
             hasNextPage,
             hasPreviousPage,
             nextPageUrl,
             nodes,
             prevPageUrl,
-            startCursor,
             nextLinkRef,
             isLoading,
+            state,
           }) => (
             <>
               {hasPreviousPage && (
@@ -71,14 +70,7 @@ export default function Collections() {
                     prefetch="intent"
                     preventScrollReset={true}
                     disabled={!isLoading}
-                    state={{
-                      pageInfo: {
-                        endCursor,
-                        hasNextPage,
-                        startCursor,
-                      },
-                      nodes,
-                    }}
+                    state={state}
                   >
                     {isLoading ? 'Loading...' : 'Previous collections'}
                   </Button>
@@ -106,14 +98,7 @@ export default function Collections() {
                     prefetch="intent"
                     preventScrollReset={true}
                     disabled={!isLoading}
-                    state={{
-                      pageInfo: {
-                        endCursor,
-                        hasPreviousPage,
-                        startCursor,
-                      },
-                      nodes,
-                    }}
+                    state={state}
                   >
                     {isLoading ? 'Loading...' : 'Next collections'}
                   </Button>

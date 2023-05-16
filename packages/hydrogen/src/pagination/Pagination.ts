@@ -17,13 +17,15 @@ type PaginationState = {
   pageInfo: PageInfo | null;
 };
 
-type Props<Resource extends Connection> = {
-  connection: Resource;
-  autoLoadOnScroll?: boolean | IntersectionOptions;
-};
-
 interface PaginationInfo {
-  endCursor: Maybe<string> | undefined;
+  state: {
+    nodes: ProductConnection['nodes'] | any[];
+    pageInfo: {
+      endCursor: Maybe<string> | undefined;
+      startCursor: Maybe<string> | undefined;
+      hasPreviousPage: boolean;
+    };
+  };
   hasNextPage: boolean;
   hasPreviousPage: boolean;
   isLoading: boolean;
@@ -31,25 +33,24 @@ interface PaginationInfo {
   nextPageUrl: string;
   nodes: ProductConnection['nodes'] | any[];
   prevPageUrl: string;
-  startCursor: Maybe<string> | undefined;
 }
 
-export function Pagination<Resource extends Connection>({
+type PaginationProps = {
+  /** The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined. */
+  connection: Connection;
+  /** Automatically load more items on scroll. Defaults to false. */
+  autoLoadOnScroll?: boolean | IntersectionOptions;
+  /** A render prop that includes pagination data and helpers. */
+  children: PaginationRenderProp;
+};
+
+type PaginationRenderProp = (props: PaginationInfo) => JSX.Element | null;
+
+export function Pagination({
   connection,
   children = () => null,
   autoLoadOnScroll = false,
-}: Props<Resource> & {
-  children: ({
-    endCursor,
-    hasNextPage,
-    hasPreviousPage,
-    isLoading,
-    nextPageUrl,
-    nodes,
-    prevPageUrl,
-    startCursor,
-  }: PaginationInfo) => JSX.Element | null;
-}) {
+}: PaginationProps) {
   const transition = useNavigation();
   const isLoading = transition.state === 'loading';
   const autoScrollEnabled = Boolean(autoLoadOnScroll);
@@ -84,7 +85,14 @@ export function Pagination<Resource extends Connection>({
   });
 
   return children({
-    endCursor,
+    state: {
+      pageInfo: {
+        endCursor,
+        hasPreviousPage,
+        startCursor,
+      },
+      nodes,
+    },
     hasNextPage,
     hasPreviousPage,
     isLoading,
@@ -92,7 +100,6 @@ export function Pagination<Resource extends Connection>({
     nextPageUrl,
     nodes,
     prevPageUrl,
-    startCursor,
   });
 }
 
@@ -101,9 +108,13 @@ let hydrating = true;
 /**
  * Get cumulative pagination logic for a given connection
  */
-export function usePagination(
-  connection: Connection,
-): Omit<PaginationInfo, 'isLoading' | 'nextLinkRef'> {
+export function usePagination(connection: Connection): Omit<
+  PaginationInfo,
+  'isLoading' | 'nextLinkRef' | 'state'
+> & {
+  startCursor: Maybe<string> | undefined;
+  endCursor: Maybe<string> | undefined;
+} {
   const [nodes, setNodes] = useState(connection.nodes);
   const {state, search} = useLocation() as {
     state: PaginationState;
@@ -211,7 +222,7 @@ function useLoadMoreWhenInView<Resource extends Connection>({
   inView,
   isLoading,
   connection,
-}: Pick<Props<Resource>, 'autoLoadOnScroll' | 'connection'> & {
+}: Pick<PaginationProps, 'autoLoadOnScroll' | 'connection'> & {
   disabled: boolean;
   inView: boolean;
   isLoading: boolean;

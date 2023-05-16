@@ -986,6 +986,166 @@
     ]
   },
   {
+    "name": "Pagnination",
+    "category": "components",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "The `<Pagination />` component makes it easy to pagination lists using cursors from the Storefront API. It is important for paginatino state to be maintained in the URL, so that the user can navigate to a product and return back to the same scrolled position in a list. It is also important that the list state is shareable via URL. The `<Pagination>` componenent provides a render prop with properties to load more elements into your list.",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {json} from '@shopify/remix-oxygen';\nimport {Pagination, getPaginationVariables} from '@shopify/hydrogen';\nimport {useLoaderData, Link} from '@remix-run/react';\n\nexport async function loader({request, context: {storefront}}) {\n  const variables = getPaginationVariables(request, {pageBy: 8});\n\n  const data = await storefront.query(ALL_PRODUCTS_QUERY, {\n    variables,\n  });\n\n  return json({products: data.products});\n}\n\nexport default function List() {\n  const {products} = useLoaderData();\n\n  return (\n    <Pagination connection={products}>\n      {({\n        endCursor,\n        hasNextPage,\n        hasPreviousPage,\n        nextPageUrl,\n        nodes,\n        prevPageUrl,\n        startCursor,\n        nextLinkRef,\n        isLoading,\n        state,\n      }) => (\n        <>\n          {hasPreviousPage && (\n            <Link to={prevPageUrl} preventScrollReset={true} state={state}>\n              {isLoading ? 'Loading' : 'Previous'}\n            </Link>\n          )}\n          <div>\n            {nodes.map((product) => (\n              <Link key={product.id} to={`/products/${product.handle}`}>\n                {product.title}\n              </Link>\n            ))}\n          </div>\n          {hasNextPage && (\n            <Link\n              ref={nextLinkRef}\n              to={nextPageUrl}\n              preventScrollReset={true}\n              state={state}\n            >\n              {isLoading ? 'Loading' : 'Next'}\n            </Link>\n          )}\n        </>\n      )}\n    </Pagination>\n  );\n}\n\nconst ALL_PRODUCTS_QUERY = `#graphql\n  query AllProducts(\n    $country: CountryCode\n    $language: LanguageCode\n    $first: Int\n    $last: Int\n    $startCursor: String\n    $endCursor: String\n  ) @inContext(country: $country, language: $language) {\n    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {\n      nodes { id\n        title\n        handle\n      }\n      pageInfo {\n        hasPreviousPage\n        hasNextPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n`;\n",
+            "language": "js"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {json, type LoaderArgs} from '@shopify/remix-oxygen';\nimport {Pagination, getPaginationVariables} from '@shopify/hydrogen';\nimport {useLoaderData, Link} from '@remix-run/react';\n\nexport async function loader({request, context: {storefront}}: LoaderArgs) {\n  const variables = getPaginationVariables(request, {pageBy: 8});\n\n  const data = await storefront.query(ALL_PRODUCTS_QUERY, {\n    variables,\n  });\n\n  return json({products: data.products});\n}\n\nexport default function List() {\n  const {products} = useLoaderData<typeof loader>();\n\n  return (\n    <Pagination connection={products}>\n      {({\n        hasNextPage,\n        hasPreviousPage,\n        nextPageUrl,\n        nodes,\n        prevPageUrl,\n        nextLinkRef,\n        isLoading,\n        state,\n      }) => (\n        <>\n          {hasPreviousPage && (\n            <Link to={prevPageUrl} preventScrollReset={true} state={state}>\n              {isLoading ? 'Loading' : 'Previous'}\n            </Link>\n          )}\n          <div>\n            {nodes.map((product) => (\n              <Link key={product.id} to={`/products/${product.handle}`}>\n                {product.title}\n              </Link>\n            ))}\n          </div>\n          {hasNextPage && (\n            <Link\n              ref={nextLinkRef}\n              to={nextPageUrl}\n              preventScrollReset={true}\n              state={state}\n            >\n              {isLoading ? 'Loading' : 'Next'}\n            </Link>\n          )}\n        </>\n      )}\n    </Pagination>\n  );\n}\n\nconst ALL_PRODUCTS_QUERY = `#graphql\n  query AllProducts(\n    $country: CountryCode\n    $language: LanguageCode\n    $first: Int\n    $last: Int\n    $startCursor: String\n    $endCursor: String\n  ) @inContext(country: $country, language: $language) {\n    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {\n      nodes { id\n        title\n        handle\n      }\n      pageInfo {\n        hasPreviousPage\n        hasNextPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n`;\n",
+            "language": "ts"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "PaginationProps",
+        "typeDefinitions": {
+          "PaginationProps": {
+            "filePath": "/pagination/Pagination.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "PaginationProps",
+            "value": "{\n  /** The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined. */\n  connection: Connection;\n  /** Automatically load more items on scroll. Defaults to false. */\n  autoLoadOnScroll?: boolean | IntersectionOptions;\n  /** A render prop that includes pagination data and helpers. */\n  children: PaginationRenderProp;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "connection",
+                "value": "Connection",
+                "description": "The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined."
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "autoLoadOnScroll",
+                "value": "boolean | IntersectionOptions",
+                "description": "Automatically load more items on scroll. Defaults to false.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "PaginationRenderProp",
+                "description": "A render prop that includes pagination data and helpers."
+              }
+            ]
+          },
+          "Connection": {
+            "filePath": "/pagination/Pagination.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "Connection",
+            "value": "{\n  nodes: ProductConnection['nodes'] | any[];\n  pageInfo: PageInfo;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "nodes",
+                "value": "any[] | Product[]",
+                "description": ""
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "pageInfo",
+                "value": "PageInfo",
+                "description": ""
+              }
+            ]
+          },
+          "PaginationRenderProp": {
+            "filePath": "/pagination/Pagination.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "PaginationRenderProp",
+            "value": "(props: PaginationInfo) => JSX.Element | null",
+            "description": ""
+          },
+          "PaginationInfo": {
+            "filePath": "/pagination/Pagination.ts",
+            "name": "PaginationInfo",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "state",
+                "value": "{ nodes: any[] | Product[]; pageInfo: { endCursor: string; startCursor: string; hasPreviousPage: boolean; }; }",
+                "description": ""
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "hasNextPage",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "hasPreviousPage",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isLoading",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "nextLinkRef",
+                "value": "any",
+                "description": ""
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "nextPageUrl",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "nodes",
+                "value": "any[] | Product[]",
+                "description": ""
+              },
+              {
+                "filePath": "/pagination/Pagination.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "prevPageUrl",
+                "value": "string",
+                "description": ""
+              }
+            ],
+            "value": "interface PaginationInfo {\n  state: {\n    nodes: ProductConnection['nodes'] | any[];\n    pageInfo: {\n      endCursor: Maybe<string> | undefined;\n      startCursor: Maybe<string> | undefined;\n      hasPreviousPage: boolean;\n    };\n  };\n  hasNextPage: boolean;\n  hasPreviousPage: boolean;\n  isLoading: boolean;\n  nextLinkRef: any;\n  nextPageUrl: string;\n  nodes: ProductConnection['nodes'] | any[];\n  prevPageUrl: string;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "graphiqlLoader",
     "category": "utilities",
     "isVisualComponent": false,

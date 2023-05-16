@@ -74,15 +74,14 @@ export default function AllProducts() {
       <Section>
         <Pagination connection={products}>
           {({
-            endCursor,
             hasNextPage,
             hasPreviousPage,
             nextPageUrl,
             nodes,
             prevPageUrl,
-            startCursor,
             nextLinkRef,
             isLoading,
+            state,
           }) => {
             const itemsMarkup = nodes.map((product, i) => (
               <ProductCard
@@ -103,14 +102,7 @@ export default function AllProducts() {
                       width="full"
                       disabled={!isLoading}
                       preventScrollReset={true}
-                      state={{
-                        pageInfo: {
-                          endCursor,
-                          hasNextPage,
-                          startCursor,
-                        },
-                        nodes,
-                      }}
+                      state={state}
                     >
                       {isLoading ? 'Loading...' : 'Previous'}
                     </Button>
@@ -127,14 +119,7 @@ export default function AllProducts() {
                       width="full"
                       disabled={!isLoading}
                       preventScrollReset={true}
-                      state={{
-                        pageInfo: {
-                          endCursor,
-                          hasPreviousPage,
-                          startCursor,
-                        },
-                        nodes,
-                      }}
+                      state={state}
                     >
                       {isLoading ? 'Loading...' : 'Next'}
                     </Button>
