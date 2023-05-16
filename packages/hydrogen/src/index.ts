@@ -33,10 +33,10 @@ export {
   cartAttributesUpdateDefault,
 } from './cart/cart-query-wrapper';
 export {
-  type CartApiReturnCustom,
-  type CartApiReturnBase,
-  createCartApi_unstable,
-} from './cart/cart-api';
+  type CartHandlerReturnCustom,
+  type CartHandlerReturnBase,
+  createCartHandler_unstable,
+} from './cart/cart-handler';
 export {
   CartFormInputAction,
   type MetafieldWithoutOwnerId,

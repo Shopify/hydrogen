@@ -28,7 +28,7 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
 
-type CartApiOptions = {
+type CartHandlerOptions = {
   storefront: Storefront;
   requestHeaders: Headers;
   getCartId?: () => string | undefined;
@@ -38,11 +38,11 @@ type CartApiOptions = {
 };
 
 type CustomMethodsBase = Record<string, Function>;
-type CartApiOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
-  CartApiOptions & {
+type CartHandlerOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
+  CartHandlerOptions & {
     customMethods?: TCustomMethods;
   };
-export type CartApiReturnBase = {
+export type CartHandlerReturnBase = {
   getFormInput: (formData: any) => FormInput;
   get: (cartInput?: CartGet) => Promise<Cart | null | undefined>;
   getCartId: () => string | undefined;
@@ -60,26 +60,26 @@ export type CartApiReturnBase = {
   metafieldDelete: CartQueryReturn<Scalars['String']>;
 };
 
-export type CartApiReturnCustom<
-  TCustomMethods extends Partial<CartApiReturnBase>,
-> = Omit<CartApiReturnBase, keyof TCustomMethods> & TCustomMethods;
-export type CartApiReturn<TCustomMethods extends CustomMethodsBase> =
-  | CartApiReturnCustom<TCustomMethods>
-  | CartApiReturnBase;
+export type CartHandlerReturnCustom<
+  TCustomMethods extends Partial<CartHandlerReturnBase>,
+> = Omit<CartHandlerReturnBase, keyof TCustomMethods> & TCustomMethods;
+export type CartHandlerReturn<TCustomMethods extends CustomMethodsBase> =
+  | CartHandlerReturnCustom<TCustomMethods>
+  | CartHandlerReturnBase;
 
-export function createCartApi_unstable(
-  options: CartApiOptions,
-): CartApiReturnBase;
-export function createCartApi_unstable<
+export function createCartHandler_unstable(
+  options: CartHandlerOptions,
+): CartHandlerReturnBase;
+export function createCartHandler_unstable<
   TCustomMethods extends CustomMethodsBase,
 >(
-  options: CartApiOptionsWithCustom<TCustomMethods>,
-): CartApiReturnCustom<TCustomMethods>;
-export function createCartApi_unstable<
+  options: CartHandlerOptionsWithCustom<TCustomMethods>,
+): CartHandlerReturnCustom<TCustomMethods>;
+export function createCartHandler_unstable<
   TCustomMethods extends CustomMethodsBase,
 >(
-  options: CartApiOptions | CartApiOptionsWithCustom<TCustomMethods>,
-): CartApiReturn<TCustomMethods> {
+  options: CartHandlerOptions | CartHandlerOptionsWithCustom<TCustomMethods>,
+): CartHandlerReturn<TCustomMethods> {
   const {requestHeaders, storefront, cartQueryFragment, cartMutateFragment} =
     options;
 
@@ -107,7 +107,7 @@ export function createCartApi_unstable<
   const cartId = getCartId();
   const cartCreate = cartCreateDefault(mutateOptions);
 
-  const methods: CartApiReturnBase = {
+  const methods: CartHandlerReturnBase = {
     getFormInput,
     get: cartGetDefault({
       storefront,
