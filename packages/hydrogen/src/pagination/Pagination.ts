@@ -1,7 +1,7 @@
-import {useEffect, useMemo, useState} from 'react';
+import {createElement, useEffect, useMemo, useState} from 'react';
 import type {Maybe, PageInfo} from '@shopify/hydrogen/storefront-api-types';
 
-import {useNavigation, useLocation} from '@remix-run/react';
+import {Link, LinkProps, useNavigation, useLocation} from '@remix-run/react';
 
 type Connection<NodesType> = {
   nodes: Array<NodesType>;
@@ -14,6 +14,23 @@ type PaginationState<NodesType> = {
 };
 
 interface PaginationInfo<NodesType> {
+  /** The paginated array of nodes. You should map over and render this array. */
+  nodes: Array<NodesType>;
+  /** The `<NextLink>` is a helper component that makes it easy to navigate to the next page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={nextPageUrl} state={state} preventScrollReset />` */
+  NextLink: (props: Omit<LinkProps, 'to'>) => JSX.Element | null;
+  /** The `<PreviousLink>` is a helper component that makes it easy to navigate to the previous page of paginated data. Alternatively you can build your own `<Link>` component: `<Link to={previousPageUrl} state={state} preventScrollReset />` */
+  PreviousLink: (props: Omit<LinkProps, 'to'>) => JSX.Element | null;
+  /** The URL to the previous page of paginated data. Use this prop to build your own `<Link>` component. */
+  previousPageUrl: string;
+  /** The URL to the next page of paginated data. Use this prop to build your own `<Link>` component. */
+  nextPageUrl: string;
+  /** True if the cursor has next paginated data */
+  hasNextPage: boolean;
+  /** True if the cursor has previous paginated data */
+  hasPreviousPage: boolean;
+  /** True if we are in the process of fetching another page of data */
+  isLoading: boolean;
+  /** The `state` property is important to use when building your own `<Link>` component if you want paginated data to continuously append to the page. This means that every time the user clicks "Next page", the next page of data will be apppended inline with the previous page. If you want the whole page to re-render with only the next page results, do not pass the `state` prop to the Remix `<Link>` component. */
   state: {
     nodes: Array<NodesType>;
     pageInfo: {
@@ -22,12 +39,6 @@ interface PaginationInfo<NodesType> {
       hasPreviousPage: boolean;
     };
   };
-  hasNextPage: boolean;
-  hasPreviousPage: boolean;
-  isLoading: boolean;
-  nextPageUrl: string;
-  nodes: Array<NodesType>;
-  prevPageUrl: string;
 }
 
 type PaginationProps<NodesType> = {
@@ -53,36 +64,74 @@ export function Pagination<NodesType>({
     hasPreviousPage,
     nextPageUrl,
     nodes,
-    prevPageUrl,
+    previousPageUrl,
     startCursor,
   } = usePagination<NodesType>(connection);
 
-  return children({
-    state: {
+  const state = useMemo(
+    () => ({
       pageInfo: {
         endCursor,
         hasPreviousPage,
         startCursor,
       },
       nodes,
-    },
+    }),
+    [endCursor, hasPreviousPage, startCursor, nodes],
+  );
+
+  const NextLink = useMemo(
+    () =>
+      function NextLink(props: Omit<LinkProps, 'to'>) {
+        return hasNextPage
+          ? createElement(Link, {
+              preventScrollReset: true,
+              ...props,
+              to: nextPageUrl,
+              state,
+            })
+          : null;
+      },
+    [hasNextPage, nextPageUrl],
+  );
+
+  const PreviousLink = useMemo(
+    () =>
+      function PrevLink(props: Omit<LinkProps, 'to'>) {
+        return hasPreviousPage
+          ? createElement(Link, {
+              preventScrollReset: true,
+              ...props,
+              to: previousPageUrl,
+              state,
+            })
+          : null;
+      },
+    [hasPreviousPage, previousPageUrl],
+  );
+
+  return children({
+    state,
     hasNextPage,
     hasPreviousPage,
     isLoading,
     nextPageUrl,
     nodes,
-    prevPageUrl,
+    previousPageUrl,
+    NextLink,
+    PreviousLink,
   });
 }
-
-let hydrating = true;
 
 /**
  * Get cumulative pagination logic for a given connection
  */
 export function usePagination<NodesType>(
   connection: Connection<NodesType>,
-): Omit<PaginationInfo<NodesType>, 'isLoading' | 'state'> & {
+): Omit<
+  PaginationInfo<NodesType>,
+  'isLoading' | 'state' | 'NextLink' | 'PreviousLink'
+> & {
   startCursor: Maybe<string> | undefined;
   endCursor: Maybe<string> | undefined;
 } {
@@ -141,7 +190,7 @@ export function usePagination<NodesType>(
     connection.pageInfo.endCursor,
   ]);
 
-  const prevPageUrl = useMemo(() => {
+  const previousPageUrl = useMemo(() => {
     const params = new URLSearchParams(search);
     params.set('direction', 'previous');
     currentPageInfo.startCursor &&
@@ -171,7 +220,7 @@ export function usePagination<NodesType>(
     }
   }, [state, isPrevious, connection.nodes]);
 
-  return {...currentPageInfo, prevPageUrl, nextPageUrl, nodes};
+  return {...currentPageInfo, previousPageUrl, nextPageUrl, nodes};
 }
 
 /**

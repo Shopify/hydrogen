@@ -17,21 +17,9 @@ export default function List() {
 
   return (
     <Pagination connection={products}>
-      {({
-        hasNextPage,
-        hasPreviousPage,
-        nextPageUrl,
-        nodes,
-        prevPageUrl,
-        isLoading,
-        state,
-      }) => (
+      {({nodes, NextLink, PreviousLink}) => (
         <>
-          {hasPreviousPage && (
-            <Link to={prevPageUrl} preventScrollReset={true} state={state}>
-              {isLoading ? 'Loading' : 'Previous'}
-            </Link>
-          )}
+          <PreviousLink />
           <div>
             {nodes.map((product) => (
               <Link key={product.id} to={`/products/${product.handle}`}>
@@ -39,11 +27,7 @@ export default function List() {
               </Link>
             ))}
           </div>
-          {hasNextPage && (
-            <Link to={nextPageUrl} preventScrollReset={true} state={state}>
-              {isLoading ? 'Loading' : 'Next'}
-            </Link>
-          )}
+          <NextLink />
         </>
       )}
     </Pagination>

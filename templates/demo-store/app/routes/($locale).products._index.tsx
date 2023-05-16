@@ -73,15 +73,7 @@ export default function AllProducts() {
       <PageHeader heading="All Products" variant="allCollections" />
       <Section>
         <Pagination connection={products}>
-          {({
-            hasNextPage,
-            hasPreviousPage,
-            nextPageUrl,
-            nodes,
-            prevPageUrl,
-            isLoading,
-            state,
-          }) => {
+          {({nodes, isLoading, NextLink, PreviousLink}) => {
             const itemsMarkup = nodes.map((product, i) => (
               <ProductCard
                 key={product.id}
@@ -92,37 +84,17 @@ export default function AllProducts() {
 
             return (
               <>
-                {hasPreviousPage && (
-                  <div className="flex items-center justify-center mt-6">
-                    <Button
-                      to={prevPageUrl}
-                      variant="secondary"
-                      prefetch="intent"
-                      width="full"
-                      disabled={!isLoading}
-                      preventScrollReset={true}
-                      state={state}
-                    >
-                      {isLoading ? 'Loading...' : 'Previous'}
-                    </Button>
-                  </div>
-                )}
+                <div className="flex items-center justify-center mt-6">
+                  <PreviousLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
+                    {isLoading ? 'Loading...' : 'Previous'}
+                  </PreviousLink>
+                </div>
                 <Grid data-test="product-grid">{itemsMarkup}</Grid>
-                {hasNextPage && (
-                  <div className="flex items-center justify-center mt-6">
-                    <Button
-                      to={nextPageUrl}
-                      variant="secondary"
-                      prefetch="intent"
-                      width="full"
-                      disabled={!isLoading}
-                      preventScrollReset={true}
-                      state={state}
-                    >
-                      {isLoading ? 'Loading...' : 'Next'}
-                    </Button>
-                  </div>
-                )}
+                <div className="flex items-center justify-center mt-6">
+                  <NextLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
+                    {isLoading ? 'Loading...' : 'Next'}
+                  </NextLink>
+                </div>
               </>
             );
           }}

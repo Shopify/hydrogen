@@ -50,31 +50,13 @@ export default function Collections() {
       <PageHeader heading="Collections" />
       <Section>
         <Pagination connection={collections}>
-          {({
-            hasNextPage,
-            hasPreviousPage,
-            nextPageUrl,
-            nodes,
-            prevPageUrl,
-            isLoading,
-            state,
-          }) => (
+          {({nodes, isLoading, PreviousLink, NextLink}) => (
             <>
-              {hasPreviousPage && (
-                <div className="flex items-center justify-center mt-6">
-                  <Button
-                    to={prevPageUrl}
-                    variant="secondary"
-                    width="full"
-                    prefetch="intent"
-                    preventScrollReset={true}
-                    disabled={!isLoading}
-                    state={state}
-                  >
-                    {isLoading ? 'Loading...' : 'Previous collections'}
-                  </Button>
-                </div>
-              )}
+              <div className="flex items-center justify-center mt-6">
+                <PreviousLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
+                  {isLoading ? 'Loading...' : 'Previous collections'}
+                </PreviousLink>
+              </div>
               <Grid
                 items={nodes.length === 3 ? 3 : 2}
                 data-test="collection-grid"
@@ -87,21 +69,11 @@ export default function Collections() {
                   />
                 ))}
               </Grid>
-              {hasNextPage && (
-                <div className="flex items-center justify-center mt-6">
-                  <Button
-                    to={nextPageUrl}
-                    variant="secondary"
-                    width="full"
-                    prefetch="intent"
-                    preventScrollReset={true}
-                    disabled={!isLoading}
-                    state={state}
-                  >
-                    {isLoading ? 'Loading...' : 'Next collections'}
-                  </Button>
-                </div>
-              )}
+              <div className="flex items-center justify-center mt-6">
+                <NextLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
+                  {isLoading ? 'Loading...' : 'Next collections'}
+                </NextLink>
+              </div>
             </>
           )}
         </Pagination>
