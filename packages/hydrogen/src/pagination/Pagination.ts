@@ -29,7 +29,6 @@ interface PaginationInfo {
   hasNextPage: boolean;
   hasPreviousPage: boolean;
   isLoading: boolean;
-  nextLinkRef: any;
   nextPageUrl: string;
   nodes: ProductConnection['nodes'] | any[];
   prevPageUrl: string;
@@ -49,20 +48,9 @@ type PaginationRenderProp = (props: PaginationInfo) => JSX.Element | null;
 export function Pagination({
   connection,
   children = () => null,
-  autoLoadOnScroll = false,
 }: PaginationProps) {
   const transition = useNavigation();
   const isLoading = transition.state === 'loading';
-  const autoScrollEnabled = Boolean(autoLoadOnScroll);
-  const autoScrollConfig = (
-    autoScrollEnabled
-      ? autoLoadOnScroll
-      : {
-          threshold: 0,
-          rootMargin: '1000px 0px 0px 0px',
-        }
-  ) as IntersectionOptions;
-  const {ref: nextLinkRef, inView} = useInView(autoScrollConfig);
   const {
     endCursor,
     hasNextPage,
@@ -72,17 +60,6 @@ export function Pagination({
     prevPageUrl,
     startCursor,
   } = usePagination(connection);
-
-  // auto load next page if in view
-  useLoadMoreWhenInView({
-    disabled: !autoScrollEnabled,
-    connection: {
-      pageInfo: {startCursor, endCursor, hasPreviousPage, hasNextPage},
-      nodes,
-    },
-    inView,
-    isLoading,
-  });
 
   return children({
     state: {
@@ -96,7 +73,6 @@ export function Pagination({
     hasNextPage,
     hasPreviousPage,
     isLoading,
-    nextLinkRef,
     nextPageUrl,
     nodes,
     prevPageUrl,
@@ -110,7 +86,7 @@ let hydrating = true;
  */
 export function usePagination(connection: Connection): Omit<
   PaginationInfo,
-  'isLoading' | 'nextLinkRef' | 'state'
+  'isLoading' | 'state'
 > & {
   startCursor: Maybe<string> | undefined;
   endCursor: Maybe<string> | undefined;
@@ -120,13 +96,6 @@ export function usePagination(connection: Connection): Omit<
     state: PaginationState;
     search: string;
   };
-  const [hydrated, setHydrated] = useState(() => !hydrating);
-
-  useEffect(function hydrate() {
-    hydrating = false;
-    setHydrated(true);
-  }, []);
-
   const params = new URLSearchParams(search);
   const direction = params.get('direction');
   const isPrevious = direction === 'previous';
@@ -211,67 +180,6 @@ export function usePagination(connection: Connection): Omit<
 }
 
 /**
- * Auto load the next pagination page when in view and autoLoadOnScroll is true
- * @param disabled disable auto loading
- * @param inView trigger element is in viewport
- * @param isIdle page transition is idle
- * @param connection Storefront API connection
- */
-function useLoadMoreWhenInView<Resource extends Connection>({
-  disabled,
-  inView,
-  isLoading,
-  connection,
-}: Pick<PaginationProps, 'autoLoadOnScroll' | 'connection'> & {
-  disabled: boolean;
-  inView: boolean;
-  isLoading: boolean;
-}) {
-  const location = useLocation();
-  const navigate = useNavigate();
-
-  const {
-    pageInfo: {startCursor, endCursor, hasPreviousPage, hasNextPage},
-    nodes,
-  } = connection;
-
-  // load next when in view and autoLoadOnScroll
-  useEffect(() => {
-    if (!inView) return;
-    if (!hasNextPage) return;
-    if (!endCursor) return;
-    if (disabled) return;
-    if (isLoading) return;
-
-    const nextPageUrl =
-      location.pathname + `?index&cursor=${endCursor}&direction=next`;
-
-    navigate(nextPageUrl, {
-      preventScrollReset: true,
-      state: {
-        pageInfo: {
-          endCursor,
-          hasPreviousPage,
-          startCursor,
-        },
-        nodes,
-      },
-    });
-  }, [
-    disabled,
-    endCursor,
-    hasNextPage,
-    hasPreviousPage,
-    inView,
-    isLoading,
-    nodes,
-    location.pathname,
-    navigate,
-    startCursor,
-  ]);
-}
-
-/**
  * Get variables for route loader to support pagination
  * @returns cumulativePageInfo {startCursor, endCursor, hasPreviousPage, hasNextPage}
  */
@@ -279,6 +187,12 @@ export function getPaginationVariables(
   request: Request,
   options: {pageBy: number} = {pageBy: 20},
 ) {
+  if (!(request instanceof Request)) {
+    throw new Error(
+      'getPaginationVariables must be called with the Request object passed to your loader function',
+    );
+  }
+
   const {pageBy} = options;
   const searchParams = new URLSearchParams(new URL(request.url).search);
 

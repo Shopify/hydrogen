@@ -23,7 +23,6 @@ export default function List() {
         nextPageUrl,
         nodes,
         prevPageUrl,
-        nextLinkRef,
         isLoading,
         state,
       }) => (
@@ -41,12 +40,7 @@ export default function List() {
             ))}
           </div>
           {hasNextPage && (
-            <Link
-              ref={nextLinkRef}
-              to={nextPageUrl}
-              preventScrollReset={true}
-              state={state}
-            >
+            <Link to={nextPageUrl} preventScrollReset={true} state={state}>
               {isLoading ? 'Loading' : 'Next'}
             </Link>
           )}

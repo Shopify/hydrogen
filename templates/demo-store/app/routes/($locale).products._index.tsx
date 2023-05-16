@@ -79,7 +79,6 @@ export default function AllProducts() {
             nextPageUrl,
             nodes,
             prevPageUrl,
-            nextLinkRef,
             isLoading,
             state,
           }) => {
@@ -112,7 +111,6 @@ export default function AllProducts() {
                 {hasNextPage && (
                   <div className="flex items-center justify-center mt-6">
                     <Button
-                      ref={nextLinkRef}
                       to={nextPageUrl}
                       variant="secondary"
                       prefetch="intent"

@@ -18,14 +18,11 @@ export default function List() {
   return (
     <Pagination connection={products}>
       {({
-        endCursor,
         hasNextPage,
         hasPreviousPage,
         nextPageUrl,
         nodes,
         prevPageUrl,
-        startCursor,
-        nextLinkRef,
         isLoading,
         state,
       }) => (
@@ -43,12 +40,7 @@ export default function List() {
             ))}
           </div>
           {hasNextPage && (
-            <Link
-              ref={nextLinkRef}
-              to={nextPageUrl}
-              preventScrollReset={true}
-              state={state}
-            >
+            <Link to={nextPageUrl} preventScrollReset={true} state={state}>
               {isLoading ? 'Loading' : 'Next'}
             </Link>
           )}

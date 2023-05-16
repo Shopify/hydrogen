@@ -56,7 +56,6 @@ export default function Collections() {
             nextPageUrl,
             nodes,
             prevPageUrl,
-            nextLinkRef,
             isLoading,
             state,
           }) => (
@@ -91,7 +90,6 @@ export default function Collections() {
               {hasNextPage && (
                 <div className="flex items-center justify-center mt-6">
                   <Button
-                    ref={nextLinkRef}
                     to={nextPageUrl}
                     variant="secondary"
                     width="full"
