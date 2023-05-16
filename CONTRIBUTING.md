@@ -110,6 +110,9 @@ The reference docs for Hydrogen and Hydrogen React are published on [Shopify.dev
 
 In both cases, the reference documentation is stored in the Hydrogen repo in `*.doc.ts` files ([example](https://github.com/Shopify/hydrogen/blob/-/packages/hydrogen-react/src/Image.doc.ts)). These files get compiled into JSON, which is then copied over to Shopify.dev. For more background about how references work, see Shopify internal documentation on “[Writing UI reference docs](https://shopify.dev/internal/development/ui-reference-docs)”.
 
+> Note:
+> A Pull Request is automatically created every night to sync the changes from the Hydrogen repo to the `shopify-dev` repo. Once changes are merged into Hydrogen, you can merge the _newest_ such PR in `shopify-dev`; if there are older PRs of this type present, they can safely be closed, since they're now stale.
+
 ### Generate the docs
 
 1. From the command line, `cd` to either `packages/hydrogen` or `packages/hydrogen-react`.
@@ -124,11 +127,17 @@ In both cases, the reference documentation is stored in the Hydrogen repo in `*.
 > Note:
 > Only Shopify staff will be able to complete these tasks, as it requires access to the private code repository for [Shopify.dev](https://shopify.dev).
 
-1. Open the Shopify.dev repo and check out a new branch.
-1. Copy the contents of the compiled JSON files to their corresponding location in the Shopify.dev repo.
+1. Terminal: `spin up shopify-dev:minimal`
+1. Terminal: `spin code` to open a VSCode Spin instance
+1. Copy the contents of the compiled JSON files to their corresponding location in the VSCode Spin instance:
    - `db/data/docs/templated_apis/{PACKAGE}/{VERSION}/generated_docs_data.json`
    - `db/data/docs/templated_apis/{PACKAGE}/{VERSION}/generated_static_pages.json`
-1. Commit the changes and create a PR.
+1. In the VSCode Spin instance:
+   1. Click on the Spin extension (with the Shopify bag icon).
+   1. Expand the list, then click on the "Restart unit" button for the `Server` line. (You can, alternatively, restart the whole spin instance by clicking on the restart button at the root, but it's not necessary and is likely slower.)
+1. Terminal: `spin open` (note: your original terminal and not the terminal for the VSCode Spin instance)
+1. In your browser, click on the `shopify.dev` link. You'll be redirected to your own personal spin instance of the docs
+1. Navigate to `{unique spin url}/docs/api/hydrogen` to see your updates
 
 ## Principles to develop by
 
