@@ -14,7 +14,7 @@ const data: ReferenceEntityTemplateSchema = {
         {
           title: 'JavaScript',
           code: './Pagination.example.jsx',
-          language: 'js',
+          language: 'jsx',
         },
         {
           title: 'TypeScript',
