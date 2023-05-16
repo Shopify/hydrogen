@@ -12,16 +12,17 @@ import {
 
 export default class Codegen extends Command {
   static description =
-    'Generate types automatically for the Storefront API queries.';
+    'Generate types for the Storefront API queries found in your project.';
   static flags = {
     path: commonFlags.path,
     ['codegen-config-path']: Flags.string({
       description:
-        ' Specify a path to a codegen configuration file. Defaults to `codegen.ts`.',
+        'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
       required: false,
     }),
     watch: Flags.boolean({
-      description: '',
+      description:
+        'Watch the project for changes to update types on file save.',
       required: false,
       default: false,
     }),

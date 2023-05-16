@@ -25,13 +25,13 @@ export default class Dev extends Command {
     port: commonFlags.port,
     ['codegen-unstable']: Flags.boolean({
       description:
-        'Generate types automatically for the Storefront API queries.',
+        'Generate types for the Storefront API queries found in your project. It updates the types on file save.',
       required: false,
       default: false,
     }),
     ['codegen-config-path']: Flags.string({
       description:
-        ' Specify a path to a codegen configuration file. Defaults to `codegen.ts`.',
+        'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
       required: false,
       dependsOn: ['codegen-unstable'],
     }),
