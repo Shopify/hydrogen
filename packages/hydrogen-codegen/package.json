@@ -1,12 +1,16 @@
 {
   "name": "@shopify/hydrogen-codegen",
+  "publishConfig": {
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org"
+  },
   "version": "0.0.0-alpha.0",
-  "private": true,
-  "description": "GraphQL Code Generator for Shopify Hydrogen",
+  "license": "SEE LICENSE IN LICENSE.md",
   "type": "module",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
+  "sideEffects": false,
   "scripts": {
     "build": "tsup --clean --config ./tsup.config.ts",
     "dev": "tsup --watch --config ./tsup.config.ts",
@@ -16,18 +20,10 @@
   },
   "exports": {
     ".": {
-      "require": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/cjs/index.cjs"
-      },
-      "import": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.js"
-      },
-      "default": {
-        "types": "./dist/esm/index.d.ts",
-        "default": "./dist/esm/index.js"
-      }
+      "types": "./dist/esm/index.d.ts",
+      "require": "./dist/cjs/index.cjs",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
     },
     "./package.json": "./package.json"
   },
@@ -36,7 +32,6 @@
     "url": "https://github.com/shopify/hydrogen.git",
     "directory": "packages/hydrogen-codegen"
   },
-  "license": "MIT",
   "files": [
     "dist",
     "vendor"
