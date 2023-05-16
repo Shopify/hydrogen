@@ -15,8 +15,13 @@ import {
   cartNoteUpdateDefault,
   cartSelectedDeliveryOptionsUpdateDefault,
   cartAttributesUpdateDefault,
+  type CartQueryData,
 } from './cart-query-wrapper';
-import type {CartGet, MetafieldWithoutOwnerId} from './cart-types';
+import type {
+  CartGet,
+  CartOptionalInput,
+  MetafieldWithoutOwnerId,
+} from './cart-types';
 import {
   AttributeInput,
   Cart,
@@ -250,7 +255,10 @@ export type CartHandlerReturnBaseForDocs = {
   /**
    * Creates a new cart with the storefront api.
    */
-  create?: CartQueryReturn<CartInput>;
+  create?: (
+    input: CartInput,
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
   /**
    * Add lines to the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.

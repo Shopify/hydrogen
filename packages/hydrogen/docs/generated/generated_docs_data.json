@@ -574,12 +574,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {createStorefrontClient, createCartHandler} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler({\n      storefront,\n      requestHeaders: request.headers,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
+            "code": "import {\n  createStorefrontClient,\n  createCartHandler_unstable,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler_unstable({\n      storefront,\n      requestHeaders: request.headers,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {createStorefrontClient, createCartHandler} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record<string, string>,\n    executionContext: ExecutionContext,\n  ): Promise<Response> {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler({\n      storefront,\n      requestHeaders: request.headers,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
+            "code": "import {\n  createStorefrontClient,\n  createCartHandler_unstable,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record<string, string>,\n    executionContext: ExecutionContext,\n  ): Promise<Response> {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler_unstable({\n      storefront,\n      requestHeaders: request.headers,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
             "language": "ts"
           }
         ],
@@ -873,7 +873,7 @@
             "filePath": "/cart/cart-handler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerReturnBaseForDocs",
-            "value": "{\n  /**\n   * Gets the form input created by CartForm action request.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  getFormInput?: (formData: any) => FormInput;\n  /**\n   * Gets the cart with the storefront api.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;\n  /**\n   * Gets the cart id. Default behavior is to get the cart id from the request cookie.\n   * Returns the cart id in the form of `gid://shopify/Cart/123`\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Sets the cart id. Default behavior is to set the cart id in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Creates a new cart with the storefront api.\n   */\n  create?: CartQueryReturn<CartInput>;\n  /**\n   * Add lines to the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  addLine?: CartQueryReturn<CartLineInput[]>;\n  /**\n   * Update lines in the cart with the storefront api.\n   */\n  updateLines?: CartQueryReturn<CartLineUpdateInput[]>;\n  /**\n   * Remove lines from the cart with the storefront api.\n   */\n  removeLines?: CartQueryReturn<string[]>;\n  /**\n   * Update discount codes in the cart with the storefront api.\n   */\n  updateDiscountCodes?: CartQueryReturn<string[]>;\n  /**\n   * Update buyer identity in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityInput>;\n  /**\n   * Update note in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateNote?: CartQueryReturn<string>;\n  /**\n   * Update selected delivery options in the cart with the storefront api.\n   * Only available for cart associated with an `buyerIdentity.customerAccessToken`.\n   */\n  updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionInput>;\n  /**\n   * Update attributes in the cart with the storefront api.\n   */\n  attributesUpdate?: CartQueryReturn<AttributeInput[]>;\n  /**\n   * Set metafields in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  metafieldsSet?: CartQueryReturn<MetafieldWithoutOwnerId[]>;\n  /**\n   * Delete metafield in the cart with the storefront api.\n   */\n  metafieldDelete?: CartQueryReturn<Scalars['String']>;\n}",
+            "value": "{\n  /**\n   * Gets the form input created by CartForm action request.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  getFormInput?: (formData: any) => FormInput;\n  /**\n   * Gets the cart with the storefront api.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;\n  /**\n   * Gets the cart id. Default behavior is to get the cart id from the request cookie.\n   * Returns the cart id in the form of `gid://shopify/Cart/123`\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Sets the cart id. Default behavior is to set the cart id in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Creates a new cart with the storefront api.\n   */\n  create?: (\n    input: CartInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Add lines to the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  addLine?: CartQueryReturn<CartLineInput[]>;\n  /**\n   * Update lines in the cart with the storefront api.\n   */\n  updateLines?: CartQueryReturn<CartLineUpdateInput[]>;\n  /**\n   * Remove lines from the cart with the storefront api.\n   */\n  removeLines?: CartQueryReturn<string[]>;\n  /**\n   * Update discount codes in the cart with the storefront api.\n   */\n  updateDiscountCodes?: CartQueryReturn<string[]>;\n  /**\n   * Update buyer identity in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityInput>;\n  /**\n   * Update note in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateNote?: CartQueryReturn<string>;\n  /**\n   * Update selected delivery options in the cart with the storefront api.\n   * Only available for cart associated with an `buyerIdentity.customerAccessToken`.\n   */\n  updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionInput>;\n  /**\n   * Update attributes in the cart with the storefront api.\n   */\n  attributesUpdate?: CartQueryReturn<AttributeInput[]>;\n  /**\n   * Set metafields in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  metafieldsSet?: CartQueryReturn<MetafieldWithoutOwnerId[]>;\n  /**\n   * Delete metafield in the cart with the storefront api.\n   */\n  metafieldDelete?: CartQueryReturn<Scalars['String']>;\n}",
             "description": "",
             "members": [
               {
@@ -912,7 +912,7 @@
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "create",
-                "value": "CartQueryReturn<CartInput>",
+                "value": "(input: CartInput, optionalParams: CartOptionalInput) => Promise<CartQueryData>",
                 "description": "Creates a new cart with the storefront api.",
                 "isOptional": true
               },
@@ -1066,12 +1066,12 @@
               }
             ]
           },
-          "CartQueryReturn": {
-            "filePath": "/cart/cart-query-wrapper.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartQueryReturn",
-            "value": "(\n  requiredParams: T,\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryData>",
-            "description": ""
+          "CartInput": {
+            "description": "",
+            "name": "CartInput",
+            "value": "CartInput",
+            "members": [],
+            "override": "Storefront type - [CartInput](/docs/api/storefront/2023-04/input-objects/CartInput)"
           },
           "CartOptionalInput": {
             "filePath": "/cart/cart-types.ts",
@@ -1130,6 +1130,13 @@
               }
             ]
           },
+          "CartQueryReturn": {
+            "filePath": "/cart/cart-query-wrapper.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartQueryReturn",
+            "value": "(\n  requiredParams: T,\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryData>",
+            "description": ""
+          },
           "MetafieldWithoutOwnerId": {
             "filePath": "/cart/cart-types.ts",
             "syntaxKind": "TypeAliasDeclaration",
@@ -1154,7 +1161,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "const cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  customMethods: {\n    example: () => 'example',\n    addLine: async (cartInput) => {\n      return await storefront.mutate(CART_LINES_ADD_MUTATION, {\n        variables: {\n          id: cartInput.id,\n          lines: cartInput.lines,\n        },\n      });\n    },\n  },\n});\n\n// Example usage\ncart.example(); // 'example'\nconst result = await cart.addLine({\n  id: '123',\n  lines: [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n});\n// Output of result:\n// {\n//   cartLinesAdd: {\n//     cart: {\n//       id: '123',\n//       totalQuantity: 1\n//     },\n//     errors: []\n//   }\n// }\n\nconst CART_LINES_ADD_MUTATION = `#graphql\n  mutation CartLinesAdd(\n    $cartId: ID!\n    $lines: [CartLineInput!]!\n    $country: CountryCode = ZZ\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    cartLinesAdd(cartId: $cartId, lines: $lines) {\n      cart {\n        id\n        totalQuantity\n      }\n      errors: userErrors {\n        message\n        field\n        code\n      }\n    }\n  }\n`;\n",
+                    "code": "const cart = createCartHandler_unstable({\n  storefront,\n  requestHeaders: request.headers,\n  customMethods: {\n    example: () => 'example',\n    addLine: async (cartInput) => {\n      return await storefront.mutate(CART_LINES_ADD_MUTATION, {\n        variables: {\n          id: cartInput.id,\n          lines: cartInput.lines,\n        },\n      });\n    },\n  },\n});\n\n// Example usage\ncart.example(); // 'example'\nconst result = await cart.addLine({\n  id: '123',\n  lines: [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n});\n// Output of result:\n// {\n//   cartLinesAdd: {\n//     cart: {\n//       id: '123',\n//       totalQuantity: 1\n//     },\n//     errors: []\n//   }\n// }\n\nconst CART_LINES_ADD_MUTATION = `#graphql\n  mutation CartLinesAdd(\n    $cartId: ID!\n    $lines: [CartLineInput!]!\n    $country: CountryCode = ZZ\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    cartLinesAdd(cartId: $cartId, lines: $lines) {\n      cart {\n        id\n        totalQuantity\n      }\n      errors: userErrors {\n        message\n        field\n        code\n      }\n    }\n  }\n`;\n",
                     "language": "js"
                   }
                 ]
