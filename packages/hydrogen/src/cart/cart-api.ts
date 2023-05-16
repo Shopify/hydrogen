@@ -229,7 +229,7 @@ export type CartApiReturnBaseForDocs = {
    * Gets the form input created by CartForm action request.
    * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-returns) usage.
    */
-  getFormInput?: (formData: any) => CartFormInput;
+  getFormInput?: (formData: any) => FormInput;
   /**
    * Gets the cart with the storefront api.
    * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-returns) usage.
@@ -247,47 +247,51 @@ export type CartApiReturnBaseForDocs = {
   /**
    * Creates a new cart with the storefront api.
    */
-  create?: CartQueryReturn<CartCreate>;
+  create?: CartQueryReturn<CartInput>;
   /**
    * Add lines to the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
    * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-returns) usage.
    */
-  addLine?: CartQueryReturn<CartLinesAdd>;
+  addLine?: CartQueryReturn<CartLineInput[]>;
   /**
    * Update lines in the cart with the storefront api.
    */
-  updateLines?: CartQueryReturn<CartLinesUpdate>;
+  updateLines?: CartQueryReturn<CartLineUpdateInput[]>;
   /**
    * Remove lines from the cart with the storefront api.
    */
-  removeLines?: CartQueryReturn<CartLinesRemove>;
+  removeLines?: CartQueryReturn<string[]>;
   /**
    * Update discount codes in the cart with the storefront api.
    */
-  updateDiscountCodes?: CartQueryReturn<CartDiscountCodesUpdate>;
+  updateDiscountCodes?: CartQueryReturn<string[]>;
   /**
    * Update buyer identity in the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
    */
-  updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityUpdate>;
+  updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityInput>;
   /**
    * Update note in the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
    */
-  updateNote?: CartQueryReturn<CartNoteUpdate>;
+  updateNote?: CartQueryReturn<string>;
   /**
    * Update selected delivery options in the cart with the storefront api.
    * Only available for cart associated with an `buyerIdentity.customerAccessToken`.
    */
-  updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionsUpdate>;
+  updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionInput>;
+  /**
+   * Update attributes in the cart with the storefront api.
+   */
+  attributesUpdate?: CartQueryReturn<AttributeInput[]>;
   /**
    * Set metafields in the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
    */
-  metafieldsSet?: CartQueryReturn<CartMetafieldsSet>;
+  metafieldsSet?: CartQueryReturn<MetafieldWithoutOwnerId[]>;
   /**
    * Delete metafield in the cart with the storefront api.
    */
-  metafieldDelete?: CartQueryReturn<CartMetafieldDelete>;
+  metafieldDelete?: CartQueryReturn<Scalars['String']>;
 };
