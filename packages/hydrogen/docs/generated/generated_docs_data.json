@@ -1020,29 +1020,21 @@
             "filePath": "/pagination/Pagination.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "PaginationProps",
-            "value": "{\n  /** The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined. */\n  connection: Connection;\n  /** Automatically load more items on scroll. Defaults to false. */\n  autoLoadOnScroll?: boolean | IntersectionOptions;\n  /** A render prop that includes pagination data and helpers. */\n  children: PaginationRenderProp;\n}",
+            "value": "{\n  /** The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined. */\n  connection: Connection<NodesType>;\n  /** A render prop that includes pagination data and helpers. */\n  children: PaginationRenderProp<NodesType>;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/pagination/Pagination.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "connection",
-                "value": "Connection",
+                "value": "Connection<NodesType>",
                 "description": "The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined."
               },
               {
                 "filePath": "/pagination/Pagination.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "autoLoadOnScroll",
-                "value": "boolean | IntersectionOptions",
-                "description": "Automatically load more items on scroll. Defaults to false.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/pagination/Pagination.ts",
-                "syntaxKind": "PropertySignature",
                 "name": "children",
-                "value": "PaginationRenderProp",
+                "value": "PaginationRenderProp<NodesType>",
                 "description": "A render prop that includes pagination data and helpers."
               }
             ]
@@ -1051,14 +1043,14 @@
             "filePath": "/pagination/Pagination.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Connection",
-            "value": "{\n  nodes: ProductConnection['nodes'] | any[];\n  pageInfo: PageInfo;\n}",
+            "value": "{\n  nodes: Array<NodesType>;\n  pageInfo: PageInfo;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/pagination/Pagination.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "nodes",
-                "value": "any[] | Product[]",
+                "value": "Array<NodesType>",
                 "description": ""
               },
               {
@@ -1074,7 +1066,7 @@
             "filePath": "/pagination/Pagination.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "PaginationRenderProp",
-            "value": "(props: PaginationInfo) => JSX.Element | null",
+            "value": "(\n  props: PaginationInfo<NodesType>,\n) => JSX.Element | null",
             "description": ""
           },
           "PaginationInfo": {
@@ -1086,7 +1078,7 @@
                 "filePath": "/pagination/Pagination.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "state",
-                "value": "{ nodes: any[] | Product[]; pageInfo: { endCursor: string; startCursor: string; hasPreviousPage: boolean; }; }",
+                "value": "{ nodes: NodesType[]; pageInfo: { endCursor: string; startCursor: string; hasPreviousPage: boolean; }; }",
                 "description": ""
               },
               {
@@ -1121,7 +1113,7 @@
                 "filePath": "/pagination/Pagination.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "nodes",
-                "value": "any[] | Product[]",
+                "value": "Array<NodesType>",
                 "description": ""
               },
               {
@@ -1132,7 +1124,7 @@
                 "description": ""
               }
             ],
-            "value": "interface PaginationInfo {\n  state: {\n    nodes: ProductConnection['nodes'] | any[];\n    pageInfo: {\n      endCursor: Maybe<string> | undefined;\n      startCursor: Maybe<string> | undefined;\n      hasPreviousPage: boolean;\n    };\n  };\n  hasNextPage: boolean;\n  hasPreviousPage: boolean;\n  isLoading: boolean;\n  nextPageUrl: string;\n  nodes: ProductConnection['nodes'] | any[];\n  prevPageUrl: string;\n}"
+            "value": "interface PaginationInfo<NodesType> {\n  state: {\n    nodes: Array<NodesType>;\n    pageInfo: {\n      endCursor: Maybe<string> | undefined;\n      startCursor: Maybe<string> | undefined;\n      hasPreviousPage: boolean;\n    };\n  };\n  hasNextPage: boolean;\n  hasPreviousPage: boolean;\n  isLoading: boolean;\n  nextPageUrl: string;\n  nodes: Array<NodesType>;\n  prevPageUrl: string;\n}"
           }
         }
       }

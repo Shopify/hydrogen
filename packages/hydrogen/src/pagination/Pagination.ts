@@ -1,25 +1,21 @@
 import {useEffect, useMemo, useState} from 'react';
-import type {
-  Maybe,
-  PageInfo,
-  ProductConnection,
-} from '@shopify/hydrogen/storefront-api-types';
+import type {Maybe, PageInfo} from '@shopify/hydrogen/storefront-api-types';
 
 import {useNavigation, useLocation} from '@remix-run/react';
 
-type Connection = {
-  nodes: ProductConnection['nodes'] | any[];
+type Connection<NodesType> = {
+  nodes: Array<NodesType>;
   pageInfo: PageInfo;
 };
 
-type PaginationState = {
-  nodes: ProductConnection['nodes'] | any[];
+type PaginationState<NodesType> = {
+  nodes: Array<NodesType>;
   pageInfo: PageInfo | null;
 };
 
-interface PaginationInfo {
+interface PaginationInfo<NodesType> {
   state: {
-    nodes: ProductConnection['nodes'] | any[];
+    nodes: Array<NodesType>;
     pageInfo: {
       endCursor: Maybe<string> | undefined;
       startCursor: Maybe<string> | undefined;
@@ -30,23 +26,25 @@ interface PaginationInfo {
   hasPreviousPage: boolean;
   isLoading: boolean;
   nextPageUrl: string;
-  nodes: ProductConnection['nodes'] | any[];
+  nodes: Array<NodesType>;
   prevPageUrl: string;
 }
 
-type PaginationProps = {
+type PaginationProps<NodesType> = {
   /** The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined. */
-  connection: Connection;
+  connection: Connection<NodesType>;
   /** A render prop that includes pagination data and helpers. */
-  children: PaginationRenderProp;
+  children: PaginationRenderProp<NodesType>;
 };
 
-type PaginationRenderProp = (props: PaginationInfo) => JSX.Element | null;
+type PaginationRenderProp<NodesType> = (
+  props: PaginationInfo<NodesType>,
+) => JSX.Element | null;
 
-export function Pagination({
+export function Pagination<NodesType>({
   connection,
   children = () => null,
-}: PaginationProps) {
+}: PaginationProps<NodesType>) {
   const transition = useNavigation();
   const isLoading = transition.state === 'loading';
   const {
@@ -57,7 +55,7 @@ export function Pagination({
     nodes,
     prevPageUrl,
     startCursor,
-  } = usePagination(connection);
+  } = usePagination<NodesType>(connection);
 
   return children({
     state: {
@@ -82,16 +80,15 @@ let hydrating = true;
 /**
  * Get cumulative pagination logic for a given connection
  */
-export function usePagination(connection: Connection): Omit<
-  PaginationInfo,
-  'isLoading' | 'state'
-> & {
+export function usePagination<NodesType>(
+  connection: Connection<NodesType>,
+): Omit<PaginationInfo<NodesType>, 'isLoading' | 'state'> & {
   startCursor: Maybe<string> | undefined;
   endCursor: Maybe<string> | undefined;
 } {
   const [nodes, setNodes] = useState(connection.nodes);
   const {state, search} = useLocation() as {
-    state: PaginationState;
+    state: PaginationState<NodesType>;
     search: string;
   };
   const params = new URLSearchParams(search);
