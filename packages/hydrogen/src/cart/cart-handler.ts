@@ -30,7 +30,7 @@ import {
 import {parse as parseCookie} from 'worktop/cookie';
 import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
-export type CartApiOptions = {
+export type CartHandlerOptions = {
   storefront: Storefront;
   requestHeaders: Headers;
   getCartId?: () => string | undefined;
@@ -40,11 +40,12 @@ export type CartApiOptions = {
 };
 
 export type CustomMethodsBase = Record<string, Function>;
-export type CartApiOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
-  CartApiOptions & {
-    customMethods?: TCustomMethods;
-  };
-export type CartApiReturnBase = {
+export type CartHandlerOptionsWithCustom<
+  TCustomMethods extends CustomMethodsBase,
+> = CartHandlerOptions & {
+  customMethods?: TCustomMethods;
+};
+export type CartHandlerReturnBase = {
   getFormInput: (formData: any) => FormInput;
   get: (cartInput?: CartGet) => Promise<Cart | null | undefined>;
   getCartId: () => string | undefined;
@@ -62,26 +63,26 @@ export type CartApiReturnBase = {
   metafieldDelete: CartQueryReturn<Scalars['String']>;
 };
 
-export type CartApiReturnCustom<
-  TCustomMethods extends Partial<CartApiReturnBase>,
-> = Omit<CartApiReturnBase, keyof TCustomMethods> & TCustomMethods;
-export type CartApiReturn<TCustomMethods extends CustomMethodsBase> =
-  | CartApiReturnCustom<TCustomMethods>
-  | CartApiReturnBase;
+export type CartHandlerReturnCustom<
+  TCustomMethods extends Partial<CartHandlerReturnBase>,
+> = Omit<CartHandlerReturnBase, keyof TCustomMethods> & TCustomMethods;
+export type CartHandlerReturn<TCustomMethods extends CustomMethodsBase> =
+  | CartHandlerReturnCustom<TCustomMethods>
+  | CartHandlerReturnBase;
 
-export function createCartApi_unstable(
-  options: CartApiOptions,
-): CartApiReturnBase;
-export function createCartApi_unstable<
+export function createCartHandler_unstable(
+  options: CartHandlerOptions,
+): CartHandlerReturnBase;
+export function createCartHandler_unstable<
   TCustomMethods extends CustomMethodsBase,
 >(
-  options: CartApiOptionsWithCustom<TCustomMethods>,
-): CartApiReturnCustom<TCustomMethods>;
-export function createCartApi_unstable<
+  options: CartHandlerOptionsWithCustom<TCustomMethods>,
+): CartHandlerReturnCustom<TCustomMethods>;
+export function createCartHandler_unstable<
   TCustomMethods extends CustomMethodsBase,
 >(
-  options: CartApiOptions | CartApiOptionsWithCustom<TCustomMethods>,
-): CartApiReturn<TCustomMethods> {
+  options: CartHandlerOptions | CartHandlerOptionsWithCustom<TCustomMethods>,
+): CartHandlerReturn<TCustomMethods> {
   const {requestHeaders, storefront, cartQueryFragment, cartMutateFragment} =
     options;
 
@@ -109,7 +110,7 @@ export function createCartApi_unstable<
   const cartId = getCartId();
   const cartCreate = cartCreateDefault(mutateOptions);
 
-  const methods: CartApiReturnBase = {
+  const methods: CartHandlerReturnBase = {
     getFormInput,
     get: cartGetDefault({
       storefront,
@@ -167,7 +168,9 @@ export function createCartApi_unstable<
   }
 }
 
-export type CartApiOptionsForDocs<TCustomMethods extends CustomMethodsBase> = {
+export type CartHandlerOptionsForDocs<
+  TCustomMethods extends CustomMethodsBase,
+> = {
   /**
    * The storefront instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient)).
    */
@@ -196,7 +199,7 @@ export type CartApiOptionsForDocs<TCustomMethods extends CustomMethodsBase> = {
   cartMutateFragment?: string;
   /**
    * Define custom methods or overriding methods to be used in your cart api instance.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-custom-methods) usage.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) usage.
    */
   customMethods?: TCustomMethods;
 };
@@ -224,15 +227,15 @@ type CartGetForDocs = {
   language?: LanguageCode;
 };
 
-export type CartApiReturnBaseForDocs = {
+export type CartHandlerReturnBaseForDocs = {
   /**
    * Gets the form input created by CartForm action request.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-returns) usage.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-returns) usage.
    */
   getFormInput?: (formData: any) => FormInput;
   /**
    * Gets the cart with the storefront api.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-returns) usage.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-returns) usage.
    */
   get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;
   /**
@@ -251,7 +254,7 @@ export type CartApiReturnBaseForDocs = {
   /**
    * Add lines to the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcartapi#example-returns) usage.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-returns) usage.
    */
   addLine?: CartQueryReturn<CartLineInput[]>;
   /**

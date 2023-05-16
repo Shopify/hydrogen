@@ -1,7 +1,7 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'createCartApi_unstable',
+  name: 'createCartHandler_unstable',
   category: 'utilities',
   isVisualComponent: false,
   related: [],
@@ -13,12 +13,12 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './cart-api.example.js',
+          code: './cart-handler.example.js',
           language: 'js',
         },
         {
           title: 'TypeScript',
-          code: './cart-api.example.ts',
+          code: './cart-handler.example.ts',
           language: 'ts',
         },
       ],
@@ -27,13 +27,13 @@ const data: ReferenceEntityTemplateSchema = {
   },
   definitions: [
     {
-      title: 'createCartApi(options)',
-      type: 'CartApiOptionsForDocs',
+      title: 'createCartHandler_unstable(options)',
+      type: 'CartHandlerOptionsForDocs',
       description: '',
     },
     {
       title: 'Returns',
-      type: 'CartApiReturnBaseForDocs',
+      type: 'CartHandlerReturnBaseForDocs',
       description:
         'If you defined custom methods, they will be included in the return type. See examples below for each function usage.',
     },
@@ -53,7 +53,7 @@ const data: ReferenceEntityTemplateSchema = {
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-api.customMethods.example.js',
+                  code: './cart-handler.customMethods.example.js',
                   language: 'js',
                 },
               ],
@@ -72,7 +72,7 @@ const data: ReferenceEntityTemplateSchema = {
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-api.getFormInput.example.js',
+                  code: './cart-handler.getFormInput.example.js',
                   language: 'js',
                 },
               ],
@@ -85,7 +85,7 @@ const data: ReferenceEntityTemplateSchema = {
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-api.get.example.js',
+                  code: './cart-handler.get.example.js',
                   language: 'js',
                 },
               ],
@@ -99,7 +99,7 @@ const data: ReferenceEntityTemplateSchema = {
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-api.addLine.example.js',
+                  code: './cart-handler.addLine.example.js',
                   language: 'js',
                 },
               ],

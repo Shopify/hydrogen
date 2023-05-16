@@ -1,4 +1,4 @@
-const cart = createCartApi({
+const cart = createCartHandler({
   storefront,
   requestHeaders: request.headers,
   customMethods: {
