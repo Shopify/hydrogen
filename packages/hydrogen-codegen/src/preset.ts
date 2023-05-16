@@ -7,7 +7,9 @@ import {getSchema} from './schema.js';
 
 export type GqlTagConfig = {};
 
-const interfaceExtensionCode = `
+export const namespacedImportName = 'StorefrontAPI';
+
+export const interfaceExtensionCode = `
 declare module '@shopify/hydrogen' {
   interface QueryTypes extends GeneratedQueryTypes {}
   interface MutationTypes extends GeneratedMutationTypes {}
@@ -37,8 +39,6 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
       [`typescript-operations`]: typescriptOperationPlugin,
       [`gen-dts`]: {plugin: dtsPlugin},
     };
-
-    const namespacedImportName = 'StorefrontAPI';
 
     const plugins: Array<Types.ConfiguredPlugin> = [
       // 1. Disable eslint for the generated file

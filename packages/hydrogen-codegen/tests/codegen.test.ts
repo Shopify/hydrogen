@@ -1,6 +1,7 @@
 import {describe, it, expect} from 'vitest';
 import path from 'path';
 import {preset, schema, pluckConfig, patchGqlPluck} from '../src/index.js';
+import {interfaceExtensionCode, namespacedImportName} from '../src/preset.js';
 
 const getCodegenOptions = (fixture: string, output = 'out.d.ts') => ({
   pluckConfig: pluckConfig as any,
@@ -48,11 +49,11 @@ describe('Hydrogen Codegen', async () => {
 
     // Imports SFAPI
     expect(generatedCode).toMatch(
-      "import * as SFAPI from '@shopify/hydrogen/storefront-api-types';",
+      `import * as ${namespacedImportName} from '@shopify/hydrogen/storefront-api-types';`,
     );
 
     // Uses Pick<...>
-    expect(generatedCode).toMatch('Pick<SFAPI.');
+    expect(generatedCode).toMatch(`Pick<${namespacedImportName}.`);
 
     // Generates query and mutation types
     expect(generatedCode).toMatch(
@@ -63,27 +64,25 @@ describe('Hydrogen Codegen', async () => {
     );
 
     // Augments query/mutation types
-    expect(generatedCode).toMatch(
-      /declare module '@shopify\/hydrogen' {\s+interface QueryTypes extends GeneratedQueryTypes \{}\s+interface MutationTypes extends GeneratedMutationTypes \{}/,
-    );
+    expect(generatedCode).toMatch(interfaceExtensionCode);
 
     expect(generatedCode).toMatchInlineSnapshot(`
       "/* eslint-disable eslint-comments/disable-enable-pair */
       /* eslint-disable eslint-comments/no-unlimited-disable */
       /* eslint-disable */
-      import * as SFAPI from '@shopify/hydrogen/storefront-api-types';
+      import * as StorefrontAPI from '@shopify/hydrogen/storefront-api-types';
 
-      export type LayoutQueryVariables = SFAPI.Exact<{ [key: string]: never; }>;
+      export type LayoutQueryVariables = StorefrontAPI.Exact<{ [key: string]: never; }>;
 
 
-      export type LayoutQuery = { shop: Pick<SFAPI.Shop, 'name' | 'description'> };
+      export type LayoutQuery = { shop: Pick<StorefrontAPI.Shop, 'name' | 'description'> };
 
-      export type CartCreateMutationVariables = SFAPI.Exact<{
-        input: SFAPI.CartInput;
+      export type CartCreateMutationVariables = StorefrontAPI.Exact<{
+        input: StorefrontAPI.CartInput;
       }>;
 
 
-      export type CartCreateMutation = { cartCreate?: SFAPI.Maybe<{ cart?: SFAPI.Maybe<Pick<SFAPI.Cart, 'id'>> }> };
+      export type CartCreateMutation = { cartCreate?: StorefrontAPI.Maybe<{ cart?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Cart, 'id'>> }> };
 
       interface GeneratedQueryTypes {
         \\"#graphql\\\\n  query layout {\\\\n    shop {\\\\n      name\\\\n      description\\\\n    }\\\\n  }\\\\n\\": {return: LayoutQuery, variables: LayoutQueryVariables},
@@ -116,82 +115,82 @@ describe('Hydrogen Codegen', async () => {
       "/* eslint-disable eslint-comments/disable-enable-pair */
       /* eslint-disable eslint-comments/no-unlimited-disable */
       /* eslint-disable */
-      import * as SFAPI from '@shopify/hydrogen/storefront-api-types';
+      import * as StorefrontAPI from '@shopify/hydrogen/storefront-api-types';
 
       type Media_ExternalVideo_Fragment = (
         { __typename: 'ExternalVideo' }
-        & Pick<SFAPI.ExternalVideo, 'id' | 'embedUrl' | 'host' | 'mediaContentType' | 'alt'>
-        & { previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
+        & Pick<StorefrontAPI.ExternalVideo, 'id' | 'embedUrl' | 'host' | 'mediaContentType' | 'alt'>
+        & { previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
       );
 
       type Media_MediaImage_Fragment = (
         { __typename: 'MediaImage' }
-        & Pick<SFAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
-        & { image?: SFAPI.Maybe<Pick<SFAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
+        & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
+        & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
       );
 
       type Media_Model3d_Fragment = (
         { __typename: 'Model3d' }
-        & Pick<SFAPI.Model3d, 'id' | 'mediaContentType' | 'alt'>
-        & { sources: Array<Pick<SFAPI.Model3dSource, 'mimeType' | 'url'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
+        & Pick<StorefrontAPI.Model3d, 'id' | 'mediaContentType' | 'alt'>
+        & { sources: Array<Pick<StorefrontAPI.Model3dSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
       );
 
       type Media_Video_Fragment = (
         { __typename: 'Video' }
-        & Pick<SFAPI.Video, 'id' | 'mediaContentType' | 'alt'>
-        & { sources: Array<Pick<SFAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
+        & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
+        & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
       );
 
       export type MediaFragment = Media_ExternalVideo_Fragment | Media_MediaImage_Fragment | Media_Model3d_Fragment | Media_Video_Fragment;
 
       export type CollectionContentFragment = (
-        Pick<SFAPI.Collection, 'id' | 'handle' | 'title' | 'descriptionHtml'>
-        & { heading?: SFAPI.Maybe<Pick<SFAPI.Metafield, 'value'>>, byline?: SFAPI.Maybe<Pick<SFAPI.Metafield, 'value'>>, cta?: SFAPI.Maybe<Pick<SFAPI.Metafield, 'value'>>, spread?: SFAPI.Maybe<{ reference?: SFAPI.Maybe<(
+        Pick<StorefrontAPI.Collection, 'id' | 'handle' | 'title' | 'descriptionHtml'>
+        & { heading?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Metafield, 'value'>>, byline?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Metafield, 'value'>>, cta?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Metafield, 'value'>>, spread?: StorefrontAPI.Maybe<{ reference?: StorefrontAPI.Maybe<(
             { __typename: 'MediaImage' }
-            & Pick<SFAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
-            & { image?: SFAPI.Maybe<Pick<SFAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
+            & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
+            & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
           ) | (
             { __typename: 'Video' }
-            & Pick<SFAPI.Video, 'id' | 'mediaContentType' | 'alt'>
-            & { sources: Array<Pick<SFAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
-          ) | {}> }>, spreadSecondary?: SFAPI.Maybe<{ reference?: SFAPI.Maybe<(
+            & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
+            & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
+          ) | {}> }>, spreadSecondary?: StorefrontAPI.Maybe<{ reference?: StorefrontAPI.Maybe<(
             { __typename: 'MediaImage' }
-            & Pick<SFAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
-            & { image?: SFAPI.Maybe<Pick<SFAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
+            & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
+            & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
           ) | (
             { __typename: 'Video' }
-            & Pick<SFAPI.Video, 'id' | 'mediaContentType' | 'alt'>
-            & { sources: Array<Pick<SFAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
+            & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
+            & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
           ) | {}> }> }
       );
 
-      export type CollectionContentTestQueryVariables = SFAPI.Exact<{
-        handle?: SFAPI.InputMaybe<SFAPI.Scalars['String']>;
-        country?: SFAPI.InputMaybe<SFAPI.CountryCode>;
-        language?: SFAPI.InputMaybe<SFAPI.LanguageCode>;
+      export type CollectionContentTestQueryVariables = StorefrontAPI.Exact<{
+        handle?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+        country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+        language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
       }>;
 
 
-      export type CollectionContentTestQuery = { hero?: SFAPI.Maybe<(
-          Pick<SFAPI.Collection, 'id' | 'handle' | 'title' | 'descriptionHtml'>
-          & { heading?: SFAPI.Maybe<Pick<SFAPI.Metafield, 'value'>>, byline?: SFAPI.Maybe<Pick<SFAPI.Metafield, 'value'>>, cta?: SFAPI.Maybe<Pick<SFAPI.Metafield, 'value'>>, spread?: SFAPI.Maybe<{ reference?: SFAPI.Maybe<(
+      export type CollectionContentTestQuery = { hero?: StorefrontAPI.Maybe<(
+          Pick<StorefrontAPI.Collection, 'id' | 'handle' | 'title' | 'descriptionHtml'>
+          & { heading?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Metafield, 'value'>>, byline?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Metafield, 'value'>>, cta?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Metafield, 'value'>>, spread?: StorefrontAPI.Maybe<{ reference?: StorefrontAPI.Maybe<(
               { __typename: 'MediaImage' }
-              & Pick<SFAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
-              & { image?: SFAPI.Maybe<Pick<SFAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
+              & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
+              & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
             ) | (
               { __typename: 'Video' }
-              & Pick<SFAPI.Video, 'id' | 'mediaContentType' | 'alt'>
-              & { sources: Array<Pick<SFAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
-            ) | {}> }>, spreadSecondary?: SFAPI.Maybe<{ reference?: SFAPI.Maybe<(
+              & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
+              & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
+            ) | {}> }>, spreadSecondary?: StorefrontAPI.Maybe<{ reference?: StorefrontAPI.Maybe<(
               { __typename: 'MediaImage' }
-              & Pick<SFAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
-              & { image?: SFAPI.Maybe<Pick<SFAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
+              & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
+              & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
             ) | (
               { __typename: 'Video' }
-              & Pick<SFAPI.Video, 'id' | 'mediaContentType' | 'alt'>
-              & { sources: Array<Pick<SFAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: SFAPI.Maybe<Pick<SFAPI.Image, 'url'>> }
+              & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
+              & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
             ) | {}> }> }
-        )>, shop: Pick<SFAPI.Shop, 'name' | 'description'> };
+        )>, shop: Pick<StorefrontAPI.Shop, 'name' | 'description'> };
 
       interface GeneratedQueryTypes {
         \\"#graphql\\\\n  query collectionContentTest($handle: String, $country: CountryCode, $language: LanguageCode)\\\\n  @inContext(country: $country, language: $language) {\\\\n    hero: collection(handle: $handle) {\\\\n      ...CollectionContent\\\\n    }\\\\n    shop {\\\\n      name\\\\n      description\\\\n    }\\\\n  }\\\\n  #graphql\\\\n  fragment CollectionContent on Collection {\\\\n    id\\\\n    handle\\\\n    title\\\\n    descriptionHtml\\\\n    heading: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"title\\\\\\") {\\\\n      value\\\\n    }\\\\n    byline: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"byline\\\\\\") {\\\\n      value\\\\n    }\\\\n    cta: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"cta\\\\\\") {\\\\n      value\\\\n    }\\\\n    spread: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"spread\\\\\\") {\\\\n      reference {\\\\n        ...Media\\\\n      }\\\\n    }\\\\n    spreadSecondary: metafield(namespace: \\\\\\"hero\\\\\\", key: \\\\\\"spread_secondary\\\\\\") {\\\\n      reference {\\\\n        ...Media\\\\n      }\\\\n    }\\\\n  }\\\\n  #graphql\\\\n  fragment Media on Media {\\\\n    __typename\\\\n    mediaContentType\\\\n    alt\\\\n    previewImage {\\\\n      url\\\\n    }\\\\n    ... on MediaImage {\\\\n      id\\\\n      image {\\\\n        url\\\\n        width\\\\n        height\\\\n      }\\\\n    }\\\\n    ... on Video {\\\\n      id\\\\n      sources {\\\\n        mimeType\\\\n        url\\\\n      }\\\\n    }\\\\n    ... on Model3d {\\\\n      id\\\\n      sources {\\\\n        mimeType\\\\n        url\\\\n      }\\\\n    }\\\\n    ... on ExternalVideo {\\\\n      id\\\\n      embedUrl\\\\n      host\\\\n    }\\\\n  }\\\\n\\\\n\\\\n\\": {return: CollectionContentTestQuery, variables: CollectionContentTestQueryVariables},
