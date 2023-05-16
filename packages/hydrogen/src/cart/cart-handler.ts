@@ -199,7 +199,7 @@ export type CartHandlerOptionsForDocs<
   cartMutateFragment?: string;
   /**
    * Define custom methods or overriding methods to be used in your cart api instance.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) usage.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.
    */
   customMethods?: TCustomMethods;
 };
@@ -230,12 +230,12 @@ type CartGetForDocs = {
 export type CartHandlerReturnBaseForDocs = {
   /**
    * Gets the form input created by CartForm action request.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-returns) usage.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.
    */
   getFormInput?: (formData: any) => FormInput;
   /**
    * Gets the cart with the storefront api.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-returns) usage.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.
    */
   get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;
   /**
@@ -254,7 +254,7 @@ export type CartHandlerReturnBaseForDocs = {
   /**
    * Add lines to the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-returns) usage.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.
    */
   addLine?: CartQueryReturn<CartLineInput[]>;
   /**
