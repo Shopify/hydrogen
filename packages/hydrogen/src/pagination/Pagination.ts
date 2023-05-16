@@ -4,8 +4,8 @@ import type {
   PageInfo,
   ProductConnection,
 } from '@shopify/hydrogen/storefront-api-types';
-import {useInView, type IntersectionOptions} from 'react-intersection-observer';
-import {useNavigation, useLocation, useNavigate} from '@remix-run/react';
+
+import {useNavigation, useLocation} from '@remix-run/react';
 
 type Connection = {
   nodes: ProductConnection['nodes'] | any[];
@@ -37,8 +37,6 @@ interface PaginationInfo {
 type PaginationProps = {
   /** The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined. */
   connection: Connection;
-  /** Automatically load more items on scroll. Defaults to false. */
-  autoLoadOnScroll?: boolean | IntersectionOptions;
   /** A render prop that includes pagination data and helpers. */
   children: PaginationRenderProp;
 };
