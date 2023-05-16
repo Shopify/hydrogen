@@ -31,6 +31,25 @@ if (isStandaloneProcess) {
   );
 }
 
+export function normalizeCodegenError(
+  errorMessage: string,
+  rootDirectory?: string,
+) {
+  const [first = '', ...rest] = errorMessage
+    .replaceAll('[FAILED]', '')
+    .replace(/\s{2,}/g, '\n')
+    .replace(/\n,\n/, '\n')
+    .trim()
+    .split('\n');
+
+  const message = '[Codegen] ' + first;
+
+  let details = rest.join('\n');
+  if (rootDirectory) details = details.replaceAll(rootDirectory + '/', '');
+
+  return {message, details};
+}
+
 /**
  * Spawns a child process to run GraphlQL CLI Codegen.
  * Running on a separate process splits work from this processor
@@ -58,17 +77,10 @@ export function spawnCodegenProcess({
 
     if (!dataString) return;
 
-    const [message = '', ...rest] = dataString
-      .replaceAll('[FAILED]', '')
-      .replace(/\s{2,}/g, '\n')
-      .trim()
-      .split('\n');
+    const {message, details} = normalizeCodegenError(dataString, rootDirectory);
 
     console.log('');
-    renderWarning({
-      headline: '[Codegen] ' + message,
-      body: rest.join('\n').replace(rootDirectory + '/', ''),
-    });
+    renderWarning({headline: message, body: details});
   });
 
   child.on('close', (code) => {
