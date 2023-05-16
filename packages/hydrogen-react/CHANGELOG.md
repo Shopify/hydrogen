@@ -1,5 +1,20 @@
 # @shopify/hydrogen-react
 
+## 2023.4.1
+
+### Patch Changes
+
+- Adds `parseGid()` which is a helper function that takes in a [Shopify GID](https://shopify.dev/docs/api/usage/gids) and returns the `resource` and `id` from it. For example: ([#845](https://github.com/Shopify/hydrogen/pull/845)) by [@frehner](https://github.com/frehner)
+
+  ```js
+  import {parseGid} from '@shopify/hydrogen-react';
+
+  const {id, resource} = parseGid('gid://shopify/Order/123');
+
+  console.log(id); // 123
+  console.log(resource); // Order
+  ```
+
 ## 2023.4.0
 
 ### Major Changes

@@ -1,5 +1,25 @@
 # @shopify/hydrogen
 
+## 2023.4.1
+
+### Patch Changes
+
+- Adds `parseGid()` which is a helper function that takes in a [Shopify GID](https://shopify.dev/docs/api/usage/gids) and returns the `resource` and `id` from it. For example: ([#845](https://github.com/Shopify/hydrogen/pull/845)) by [@frehner](https://github.com/frehner)
+
+  ```js
+  import {parseGid} from '@shopify/hydrogen-react';
+
+  const {id, resource} = parseGid('gid://shopify/Order/123');
+
+  console.log(id); // 123
+  console.log(resource); // Order
+  ```
+
+- Avoid warning about missing `buyerIp` when using private access tokens in development. ([#836](https://github.com/Shopify/hydrogen/pull/836)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`0a009a3b`](https://github.com/Shopify/hydrogen/commit/0a009a3ba06dadd8f9d799575d7f88590f82a966)]:
+  - @shopify/hydrogen-react@2023.4.1
+
 ## 2023.4.0
 
 ### Major Changes
