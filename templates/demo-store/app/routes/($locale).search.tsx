@@ -13,6 +13,7 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
+
 import {
   Heading,
   Input,

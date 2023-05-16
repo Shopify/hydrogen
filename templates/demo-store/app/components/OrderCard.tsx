@@ -1,5 +1,6 @@
 import {flattenConnection, Image} from '@shopify/hydrogen';
 import type {Order} from '@shopify/hydrogen/storefront-api-types';
+
 import {Heading, Text, Link} from '~/components';
 import {statusMessage} from '~/lib/utils';
 

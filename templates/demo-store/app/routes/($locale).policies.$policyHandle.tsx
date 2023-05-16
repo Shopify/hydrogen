@@ -1,8 +1,9 @@
 import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import {PageHeader, Section, Button} from '~/components';
 import invariant from 'tiny-invariant';
-import {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
+import type {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
+
+import {PageHeader, Section, Button} from '~/components';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
 

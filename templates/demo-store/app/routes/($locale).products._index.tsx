@@ -5,6 +5,7 @@ import type {
   Collection,
 } from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
+
 import {
   PageHeader,
   Section,

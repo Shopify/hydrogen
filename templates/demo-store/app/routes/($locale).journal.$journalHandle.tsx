@@ -1,12 +1,14 @@
 import {json, type LinksFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen';
-import {Blog} from '@shopify/hydrogen/storefront-api-types';
+import type {Blog} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
+
 import {PageHeader, Section} from '~/components';
 import {seoPayload} from '~/lib/seo.server';
-import styles from '../styles/custom-font.css';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
+
+import styles from '../styles/custom-font.css';
 
 const BLOG_HANDLE = 'journal';
 
