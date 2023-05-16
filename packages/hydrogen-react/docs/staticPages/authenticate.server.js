@@ -1,4 +1,4 @@
-import { client } from './client.js'
+import {client} from './client.js';
 
 export async function getServerSideProps() {
   const response = await fetch(client.getStorefrontApiUrl(), {
