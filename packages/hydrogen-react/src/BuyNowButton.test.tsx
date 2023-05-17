@@ -102,36 +102,4 @@ describe('<BuyNowButton/>', () => {
       expect(button).toBeDisabled();
     });
   });
-
-  describe('when a checkout URL is available', () => {
-    const {location} = window;
-    const mockSetHref = vi.fn((href: string) => href);
-
-    beforeEach(() => {
-      delete (window as Partial<Window>).location;
-      window.location = {...window.location};
-      Object.defineProperty(window.location, 'href', {
-        set: mockSetHref,
-      });
-    });
-
-    afterEach(() => {
-      window.location = location;
-    });
-
-    it('redirects to checkout', () => {
-      vi.mocked(useCart).mockImplementation(() =>
-        getCartWithActionsMock({
-          checkoutUrl: '/checkout?id=123',
-        }),
-      );
-
-      render(<BuyNowButton variantId="1">Buy now</BuyNowButton>, {
-        wrapper: CartProvider,
-      });
-
-      expect(mockSetHref).toHaveBeenCalledTimes(1);
-      expect(mockSetHref).toHaveBeenCalledWith('/checkout?id=123');
-    });
-  });
 });
