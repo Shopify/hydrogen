@@ -1,15 +1,11 @@
 import clsx from 'clsx';
-import {
-  flattenConnection,
-  Image,
-  Money,
-  ShopifyAnalyticsProduct,
-  useMoney,
-} from '@shopify/hydrogen';
+import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
+import {flattenConnection, Image, Money, useMoney} from '@shopify/hydrogen';
+import type {MoneyV2, Product} from '@shopify/hydrogen/storefront-api-types';
+
 import {Text, Link, AddToCartButton} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
 import {getProductPlaceholder} from '~/lib/placeholders';
-import type {MoneyV2, Product} from '@shopify/hydrogen/storefront-api-types';
 
 export function ProductCard({
   product,

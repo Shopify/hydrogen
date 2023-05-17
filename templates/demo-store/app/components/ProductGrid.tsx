@@ -1,8 +1,9 @@
-import {Button, Grid, ProductCard, Link} from '~/components';
-import {getImageLoadingPriority} from '~/lib/const';
 import type {Collection, Product} from '@shopify/hydrogen/storefront-api-types';
 import {useFetcher} from '@remix-run/react';
 import {useEffect, useState} from 'react';
+
+import {getImageLoadingPriority} from '~/lib/const';
+import {Button, Grid, ProductCard, Link} from '~/components';
 
 export function ProductGrid({
   url,

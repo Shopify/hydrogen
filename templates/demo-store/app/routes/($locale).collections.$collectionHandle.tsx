@@ -7,6 +7,7 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {flattenConnection, AnalyticsPageType} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
+
 import {PageHeader, Section, Text, SortFilter} from '~/components';
 import {ProductGrid} from '~/components/ProductGrid';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';

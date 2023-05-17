@@ -4,6 +4,8 @@ import type {
   Collection,
   CollectionConnection,
 } from '@shopify/hydrogen/storefront-api-types';
+import {Image} from '@shopify/hydrogen';
+
 import {
   Grid,
   Heading,
@@ -17,7 +19,6 @@ import {
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
-import {Image} from '@shopify/hydrogen';
 
 const PAGINATION_SIZE = 8;
 

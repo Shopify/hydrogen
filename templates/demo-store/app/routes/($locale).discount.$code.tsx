@@ -1,5 +1,7 @@
 import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+
 import {getCartId} from '~/lib/utils';
+
 import {cartCreate, cartDiscountCodesUpdate} from './($locale).cart';
 
 /**
