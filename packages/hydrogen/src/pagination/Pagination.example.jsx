@@ -1,5 +1,8 @@
 import {json} from '@shopify/remix-oxygen';
-import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
+import {
+  Pagination__unstable as Pagination,
+  getPaginationVariables__unstable as getPaginationVariables,
+} from '@shopify/hydrogen';
 import {useLoaderData, Link} from '@remix-run/react';
 
 export async function loader({request, context: {storefront}}) {

@@ -4,7 +4,11 @@ import type {
   Collection,
   CollectionConnection,
 } from '@shopify/hydrogen/storefront-api-types';
-import {Image, Pagination, getPaginationVariables} from '@shopify/hydrogen';
+import {
+  Image,
+  Pagination__unstable as Pagination,
+  getPaginationVariables__unstable as getPaginationVariables,
+} from '@shopify/hydrogen';
 
 import {Grid, Heading, PageHeader, Section, Link, Button} from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';

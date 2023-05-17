@@ -1,14 +1,14 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'Pagination',
+  name: 'Pagination__unstable',
   category: 'components',
   isVisualComponent: false,
   related: [
     {
-      name: 'getPaginationVariables',
+      name: 'getPaginationVariables__unstable',
       type: 'utilities',
-      url: '/docs/api/hydrogen/utilities/getpaginationvariables',
+      url: '/docs/api/hydrogen/utilities/getpaginationvariables__unstable',
     },
   ],
   description: `The \`<Pagination />\` component makes it easy to pagination lists using cursors from the Storefront API. It is important for pagination state to be maintained in the URL, so that the user can navigate to a product and return back to the same scrolled position in a list. It is also important that the list state is shareable via URL. The \`<Pagination>\` component provides a render prop with properties to load more elements into your list.`,

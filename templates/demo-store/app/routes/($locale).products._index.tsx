@@ -5,7 +5,10 @@ import type {
   Collection,
 } from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
-import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
+import {
+  Pagination__unstable as Pagination,
+  getPaginationVariables__unstable as getPaginationVariables,
+} from '@shopify/hydrogen';
 
 import {PageHeader, Section, ProductCard, Grid, Button} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
