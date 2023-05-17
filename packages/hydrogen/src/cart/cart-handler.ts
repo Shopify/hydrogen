@@ -295,14 +295,14 @@ export type CartHandlerReturnBaseForDocs = {
   /**
    * Update attributes in the cart with the storefront api.
    */
-  attributesUpdate?: CartQueryReturn<AttributeInput[]>;
+  updateAttributes?: CartQueryReturn<AttributeInput[]>;
   /**
    * Set metafields in the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
    */
-  metafieldsSet?: CartQueryReturn<MetafieldWithoutOwnerId[]>;
+  setMetafields?: CartQueryReturn<MetafieldWithoutOwnerId[]>;
   /**
    * Delete metafield in the cart with the storefront api.
    */
-  metafieldDelete?: CartQueryReturn<Scalars['String']>;
+  deleteMetafield?: CartQueryReturn<Scalars['String']>;
 };
