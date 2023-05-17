@@ -19,7 +19,7 @@ export default function List() {
     <Pagination connection={products}>
       {({nodes, PreviousLink, NextLink}) => (
         <>
-          <PreviousLink />
+          <PreviousLink>Previous</PreviousLink>
           <div>
             {nodes.map((product) => (
               <Link key={product.id} to={`/products/${product.handle}`}>
@@ -27,7 +27,7 @@ export default function List() {
               </Link>
             ))}
           </div>
-          <NextLink />
+          <NextLink>Next</NextLink>
         </>
       )}
     </Pagination>
