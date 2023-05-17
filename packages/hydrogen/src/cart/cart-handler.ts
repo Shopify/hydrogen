@@ -63,9 +63,9 @@ export type CartHandlerReturnBase = {
   updateBuyerIdentity: CartQueryReturn<CartBuyerIdentityInput>;
   updateNote: CartQueryReturn<string>;
   updateSelectedDeliveryOption: CartQueryReturn<CartSelectedDeliveryOptionInput>;
-  attributesUpdate: CartQueryReturn<AttributeInput[]>;
-  metafieldsSet: CartQueryReturn<MetafieldWithoutOwnerId[]>;
-  metafieldDelete: CartQueryReturn<Scalars['String']>;
+  updateAttributes: CartQueryReturn<AttributeInput[]>;
+  setMetafields: CartQueryReturn<MetafieldWithoutOwnerId[]>;
+  deleteMetafield: CartQueryReturn<Scalars['String']>;
 };
 
 export type CartHandlerReturnCustom<
@@ -151,8 +151,8 @@ export function createCartHandler_unstable<
     updateNote: cartNoteUpdateDefault(mutateOptions),
     updateSelectedDeliveryOption:
       cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
-    attributesUpdate: cartAttributesUpdateDefault(mutateOptions),
-    metafieldsSet: async (metafields, optionalParams) => {
+    updateAttributes: cartAttributesUpdateDefault(mutateOptions),
+    setMetafields: async (metafields, optionalParams) => {
       return cartId
         ? await cartMetafieldsSetDefault(mutateOptions)(
             metafields,
@@ -160,7 +160,7 @@ export function createCartHandler_unstable<
           )
         : await cartCreate({metafields}, optionalParams);
     },
-    metafieldDelete: cartMetafieldDeleteDefault(mutateOptions),
+    deleteMetafield: cartMetafieldDeleteDefault(mutateOptions),
   };
 
   if ('customMethods' in options) {
