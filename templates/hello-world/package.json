@@ -8,8 +8,7 @@
     "dev": "shopify hydrogen dev",
     "preview": "npm run build && shopify hydrogen preview",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx .",
-    "typecheck": "tsc --noEmit",
-    "g": "shopify hydrogen generate"
+    "typecheck": "tsc --noEmit"
   },
   "prettier": "@shopify/prettier-config",
   "dependencies": {
