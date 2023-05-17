@@ -13,17 +13,16 @@ export async function patchGqlPluck() {
     new URL(depth + '/vendor/graphql-tag-pluck', import.meta.url),
   );
 
-  await Promise.all([
-    fs.copyFile(
-      path.join(vendorGqlTagPluck, 'visitor.cjs'),
-      realGqlTagPluck.replace('/index.js', '/visitor.js'),
-    ),
+  // Copy files sequencially to avoid `EBUSY` errors in Windows
+  await fs.copyFile(
+    path.join(vendorGqlTagPluck, 'visitor.cjs'),
+    realGqlTagPluck.replace(/index\.js$/, 'visitor.js'),
+  );
 
-    fs.copyFile(
-      path.join(vendorGqlTagPluck, 'visitor.mjs'),
-      realGqlTagPluck.replace('/cjs/index.js', '/esm/visitor.js'),
-    ),
-  ]);
+  await fs.copyFile(
+    path.join(vendorGqlTagPluck, 'visitor.mjs'),
+    realGqlTagPluck.replace('cjs', 'esm').replace(/index\.js$/, 'visitor.js'),
+  );
 }
 
 /**

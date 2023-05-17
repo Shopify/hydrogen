@@ -11,6 +11,7 @@ import {
 } from '@shopify/hydrogen-codegen';
 import {format, resolveFormatConfig} from './transpile-ts.js';
 import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
 
@@ -45,7 +46,11 @@ export function normalizeCodegenError(
   const message = '[Codegen] ' + first;
 
   let details = rest.join('\n');
-  if (rootDirectory) details = details.replaceAll(rootDirectory + '/', '');
+  if (rootDirectory) {
+    // Codegen CLI shows errors using forward slashes even on Windows.
+    const forwardSlashRootDir = rootDirectory.replaceAll('\\', '/') + '/';
+    details = details.replaceAll(forwardSlashRootDir, '');
+  }
 
   return {message, details};
 }
@@ -140,9 +145,7 @@ export async function generateTypes({
 
 function generateDefaultConfig({rootDirectory, appDirectory}: ProjectDirs) {
   const tsDefaultGlob = '*!(*.d).{ts,tsx}'; // No d.ts files
-  const appDirRelative = appDirectory
-    .replace(rootDirectory, '')
-    .replaceAll('/', '');
+  const appDirRelative = relativePath(rootDirectory, appDirectory);
 
   return {
     filepath: 'virtual:codegen',
@@ -154,8 +157,8 @@ function generateDefaultConfig({rootDirectory, appDirectory}: ProjectDirs) {
           preset,
           schema,
           documents: [
-            `${tsDefaultGlob}`, // E.g. ./server.ts
-            `${appDirRelative}/**/${tsDefaultGlob}`, // E.g. app/routes/_index.tsx
+            tsDefaultGlob, // E.g. ./server.ts
+            joinPath(appDirRelative, '**', tsDefaultGlob), // E.g. app/routes/_index.tsx
           ],
         },
       },
@@ -179,7 +182,7 @@ async function addHooksToHydrogenOptions(
     const formatConfig = await resolveFormatConfig(rootDirectory);
 
     hydrogenOptions.hooks = {
-      beforeOneFileWrite: (file, content) =>
+      beforeOneFileWrite: (file: string, content: string) =>
         format(content, formatConfig, file), // Run Prettier before writing files
       ...hydrogenOptions.hooks,
     };
