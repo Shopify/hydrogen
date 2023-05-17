@@ -209,7 +209,7 @@ const COLLECTION_CONTENT_FRAGMENT = `#graphql
 `;
 
 const HOMEPAGE_SEO_QUERY = `#graphql
-  query collectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
+  query seoCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     hero: collection(handle: $handle) {
       ...CollectionContent
@@ -223,7 +223,7 @@ const HOMEPAGE_SEO_QUERY = `#graphql
 `;
 
 const COLLECTION_HERO_QUERY = `#graphql
-  query collectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
+  query heroCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     hero: collection(handle: $handle) {
       ...CollectionContent

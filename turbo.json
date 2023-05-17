@@ -27,6 +27,9 @@
     "test:watch": {
       "cache": false
     },
+    "@shopify/cli-hydrogen#build": {
+      "dependsOn": ["@shopify/hydrogen-codegen#build"]
+    },
     "@shopify/create-hydrogen#build": {
       "dependsOn": ["@shopify/cli-hydrogen#build"]
     },
