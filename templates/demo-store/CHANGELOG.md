@@ -1,5 +1,24 @@
 # demo-store
 
+## 1.0.0
+
+### Major Changes
+
+- All routes were changed from having a `$lang` path parameter to having a `$locale` path parameter. See #860 for more details. ([#864](https://github.com/Shopify/hydrogen/pull/864)) by [@frehner](https://github.com/frehner)
+
+### Patch Changes
+
+- Add `.shopify` to the .gitignore file to support upcoming CLI changes ([#784](https://github.com/Shopify/hydrogen/pull/784)) by [@graygilmore](https://github.com/graygilmore)
+
+- Move GraphQL fragments from the beginning of the template literal to the end of it, so that we don't get the EOF error in VSCode. ([#833](https://github.com/Shopify/hydrogen/pull/833)) by [@frehner](https://github.com/frehner)
+
+- Updated Tailwind configuration file with a new dynamic opacity placeholder for colors ([#851](https://github.com/Shopify/hydrogen/pull/851)) by [@blanklob](https://github.com/blanklob)
+
+- Updated dependencies [[`685bb696`](https://github.com/Shopify/hydrogen/commit/685bb696a9bd03b8a7fe8bcefa3630d6ba0c99c8), [`025385b6`](https://github.com/Shopify/hydrogen/commit/025385b6f9f58a76ffb15d9f505dfbf2b5e21427), [`35a87107`](https://github.com/Shopify/hydrogen/commit/35a871073941e008e104e9c491719d4cade8b49a), [`33f33edd`](https://github.com/Shopify/hydrogen/commit/33f33edd205bbc113047533c71c71ad53bc91b3e), [`0a009a3b`](https://github.com/Shopify/hydrogen/commit/0a009a3ba06dadd8f9d799575d7f88590f82a966), [`9c2e67c5`](https://github.com/Shopify/hydrogen/commit/9c2e67c52ec1c77062cb667505560afb757372a9), [`9c2e67c5`](https://github.com/Shopify/hydrogen/commit/9c2e67c52ec1c77062cb667505560afb757372a9), [`3d458e2b`](https://github.com/Shopify/hydrogen/commit/3d458e2b3c66a4daac798598cadba38b9ecd8a1e)]:
+  - @shopify/cli-hydrogen@4.1.2
+  - @shopify/remix-oxygen@1.0.6
+  - @shopify/hydrogen@2023.4.1
+
 ## 0.2.1
 
 ### Patch Changes
