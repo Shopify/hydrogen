@@ -596,9 +596,16 @@
             "filePath": "/cart/cart-handler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerOptionsForDocs",
-            "value": "{\n  /**\n   * The storefront instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient)).\n   */\n  storefront: Storefront;\n  /**\n   * The request headers.\n   */\n  requestHeaders: Headers;\n  /**\n   * A function that returns the cart id.\n   * @default () => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * A function that sets the cart id.\n   * @default (cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Cart query fragment to be used by `cart.get()`.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Cart mutate fragment to be used for all mutation query requests except for metafieldsSet and metafieldDelete.\n   */\n  cartMutateFragment?: string;\n  /**\n   * Define custom methods or overriding methods to be used in your cart api instance.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.\n   */\n  customMethods?: TCustomMethods;\n}",
+            "value": "{\n  /**\n   * The request headers.\n   */\n  requestHeaders: Headers;\n  /**\n   * The storefront instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient)).\n   */\n  storefront: Storefront;\n  /**\n   * Cart mutate fragment to be used for all mutation query requests except for metafieldsSet and metafieldDelete.\n   */\n  cartMutateFragment?: string;\n  /**\n   * Cart query fragment to be used by `cart.get()`.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or overriding methods to be used in your cart api instance.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.\n   */\n  customMethods?: TCustomMethods;\n  /**\n   * A function that returns the cart id.\n   * @default () => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * A function that sets the cart id.\n   * @default (cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n}",
             "description": "",
             "members": [
+              {
+                "filePath": "/cart/cart-handler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "requestHeaders",
+                "value": "Headers",
+                "description": "The request headers."
+              },
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
@@ -609,9 +616,26 @@
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "requestHeaders",
-                "value": "Headers",
-                "description": "The request headers."
+                "name": "cartMutateFragment",
+                "value": "string",
+                "description": "Cart mutate fragment to be used for all mutation query requests except for metafieldsSet and metafieldDelete.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cart-handler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cartQueryFragment",
+                "value": "string",
+                "description": "Cart query fragment to be used by `cart.get()`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cart-handler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "customMethods",
+                "value": "TCustomMethods",
+                "description": "Define custom methods or overriding methods to be used in your cart api instance.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.",
+                "isOptional": true
               },
               {
                 "filePath": "/cart/cart-handler.ts",
@@ -630,30 +654,6 @@
                 "description": "A function that sets the cart id.",
                 "isOptional": true,
                 "defaultValue": "(cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)"
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "cartQueryFragment",
-                "value": "string",
-                "description": "Cart query fragment to be used by `cart.get()`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "cartMutateFragment",
-                "value": "string",
-                "description": "Cart mutate fragment to be used for all mutation query requests except for metafieldsSet and metafieldDelete.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "customMethods",
-                "value": "TCustomMethods",
-                "description": "Define custom methods or overriding methods to be used in your cart api instance.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.",
-                "isOptional": true
               }
             ]
           },
@@ -873,15 +873,31 @@
             "filePath": "/cart/cart-handler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerReturnBaseForDocs",
-            "value": "{\n  /**\n   * Gets the form input created by CartForm action request.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  getFormInput?: (formData: any) => CartActionInput;\n  /**\n   * Gets the cart with the storefront api.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;\n  /**\n   * Gets the cart id. Default behavior is to get the cart id from the request cookie.\n   * Returns the cart id in the form of `gid://shopify/Cart/123`\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Sets the cart id. Default behavior is to set the cart id in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Creates a new cart with the storefront api.\n   */\n  create?: (\n    input: CartInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Add lines to the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  addLine?: CartQueryReturn<CartLineInput[]>;\n  /**\n   * Update lines in the cart with the storefront api.\n   */\n  updateLines?: CartQueryReturn<CartLineUpdateInput[]>;\n  /**\n   * Remove lines from the cart with the storefront api.\n   */\n  removeLines?: CartQueryReturn<string[]>;\n  /**\n   * Update discount codes in the cart with the storefront api.\n   */\n  updateDiscountCodes?: CartQueryReturn<string[]>;\n  /**\n   * Update buyer identity in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityInput>;\n  /**\n   * Update note in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateNote?: CartQueryReturn<string>;\n  /**\n   * Update selected delivery options in the cart with the storefront api.\n   * Only available for cart associated with an `buyerIdentity.customerAccessToken`.\n   */\n  updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionInput>;\n  /**\n   * Update attributes in the cart with the storefront api.\n   */\n  updateAttributes?: CartQueryReturn<AttributeInput[]>;\n  /**\n   * Set metafields in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  setMetafields?: CartQueryReturn<MetafieldWithoutOwnerId[]>;\n  /**\n   * Delete metafield in the cart with the storefront api.\n   */\n  deleteMetafield?: CartQueryReturn<Scalars['String']>;\n}",
+            "value": "{\n  /**\n   * Add lines to the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  addLine?: CartQueryReturn<CartLineInput[]>;\n  /**\n   * Creates a new cart with the storefront api.\n   */\n  create?: (\n    input: CartInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Delete metafield in the cart with the storefront api.\n   */\n  deleteMetafield?: CartQueryReturn<Scalars['String']>;\n  /**\n   * Gets the cart with the storefront api.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;\n  /**\n   * Gets the cart id. Default behavior is to get the cart id from the request cookie.\n   * Returns the cart id in the form of `gid://shopify/Cart/123`\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Gets the form input created by CartForm action request.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  getFormInput?: (formData: any) => CartActionInput;\n  /**\n   * Remove lines from the cart with the storefront api.\n   */\n  removeLines?: CartQueryReturn<string[]>;\n  /**\n   * Sets the cart id. Default behavior is to set the cart id in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Set metafields in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  setMetafields?: CartQueryReturn<MetafieldWithoutOwnerId[]>;\n  /**\n   * Update attributes in the cart with the storefront api.\n   */\n  updateAttributes?: CartQueryReturn<AttributeInput[]>;\n  /**\n   * Update buyer identity in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityInput>;\n  /**\n   * Update discount codes in the cart with the storefront api.\n   */\n  updateDiscountCodes?: CartQueryReturn<string[]>;\n  /**\n   * Update lines in the cart with the storefront api.\n   */\n  updateLines?: CartQueryReturn<CartLineUpdateInput[]>;\n  /**\n   * Update note in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateNote?: CartQueryReturn<string>;\n  /**\n   * Update selected delivery options in the cart with the storefront api.\n   * Only available for cart associated with an `buyerIdentity.customerAccessToken`.\n   */\n  updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionInput>;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "getFormInput",
-                "value": "(formData: any) => CartActionInput",
-                "description": "Gets the form input created by CartForm action request.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.",
+                "name": "addLine",
+                "value": "CartQueryReturn<CartLineInput[]>",
+                "description": "Add lines to the cart with the storefront api.\nIf the cart does not exist, a new cart will be created.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cart-handler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "create",
+                "value": "(input: CartInput, optionalParams: CartOptionalInput) => Promise<CartQueryData>",
+                "description": "Creates a new cart with the storefront api.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cart-handler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "deleteMetafield",
+                "value": "CartQueryReturn<Scalars['String']>",
+                "description": "Delete metafield in the cart with the storefront api.",
                 "isOptional": true
               },
               {
@@ -903,33 +919,9 @@
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "setCartId",
-                "value": "(cartId: string, headers: Headers) => void",
-                "description": "Sets the cart id. Default behavior is to set the cart id in the header cookie.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "create",
-                "value": "(input: CartInput, optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Creates a new cart with the storefront api.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "addLine",
-                "value": "CartQueryReturn<CartLineInput[]>",
-                "description": "Add lines to the cart with the storefront api.\nIf the cart does not exist, a new cart will be created.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "updateLines",
-                "value": "CartQueryReturn<CartLineUpdateInput[]>",
-                "description": "Update lines in the cart with the storefront api.",
+                "name": "getFormInput",
+                "value": "(formData: any) => CartActionInput",
+                "description": "Gets the form input created by CartForm action request.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.",
                 "isOptional": true
               },
               {
@@ -943,9 +935,25 @@
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "updateDiscountCodes",
-                "value": "CartQueryReturn<string[]>",
-                "description": "Update discount codes in the cart with the storefront api.",
+                "name": "setCartId",
+                "value": "(cartId: string, headers: Headers) => void",
+                "description": "Sets the cart id. Default behavior is to set the cart id in the header cookie.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cart-handler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "setMetafields",
+                "value": "CartQueryReturn<MetafieldWithoutOwnerId[]>",
+                "description": "Set metafields in the cart with the storefront api.\nIf the cart does not exist, a new cart will be created.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cart-handler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "updateAttributes",
+                "value": "CartQueryReturn<AttributeInput[]>",
+                "description": "Update attributes in the cart with the storefront api.",
                 "isOptional": true
               },
               {
@@ -954,6 +962,22 @@
                 "name": "updateBuyerIdentity",
                 "value": "CartQueryReturn<CartBuyerIdentityInput>",
                 "description": "Update buyer identity in the cart with the storefront api.\nIf the cart does not exist, a new cart will be created.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cart-handler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "updateDiscountCodes",
+                "value": "CartQueryReturn<string[]>",
+                "description": "Update discount codes in the cart with the storefront api.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cart-handler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "updateLines",
+                "value": "CartQueryReturn<CartLineUpdateInput[]>",
+                "description": "Update lines in the cart with the storefront api.",
                 "isOptional": true
               },
               {
@@ -971,30 +995,122 @@
                 "value": "CartQueryReturn<CartSelectedDeliveryOptionInput>",
                 "description": "Update selected delivery options in the cart with the storefront api.\nOnly available for cart associated with an `buyerIdentity.customerAccessToken`.",
                 "isOptional": true
+              }
+            ]
+          },
+          "CartQueryReturn": {
+            "filePath": "/cart/cart-query-wrapper.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartQueryReturn",
+            "value": "(\n  requiredParams: T,\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryData>",
+            "description": ""
+          },
+          "CartOptionalInput": {
+            "filePath": "/cart/cart-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartOptionalInput",
+            "value": "{\n  cartId?: Scalars['ID'];\n  language?: LanguageCode;\n  country?: CountryCode;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cartId",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "language",
+                "value": "LanguageCode",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "country",
+                "value": "CountryCode",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "CartQueryData": {
+            "filePath": "/cart/cart-query-wrapper.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartQueryData",
+            "value": "{\n  cart: Cart;\n  errors?: CartUserError[] | MetafieldsSetUserError[];\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/cart-query-wrapper.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cart",
+                "value": "Cart",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/cart-query-wrapper.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "errors",
+                "value": "CartUserError[] | MetafieldsSetUserError[]",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "CartInput": {
+            "description": "",
+            "name": "CartInput",
+            "value": "CartInput",
+            "members": [],
+            "override": "[CartInput](/docs/api/storefront/2023-04/input-objects/CartInput) - Storefront API type"
+          },
+          "CartGetForDocs": {
+            "filePath": "/cart/cart-handler.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartGetForDocs",
+            "value": "{\n  /**\n   * The cart id.\n   * @default cart.getCartId();\n   */\n  cartId?: string;\n  /**\n   * The country code.\n   * @default storefront.i18n.country\n   */\n  country?: CountryCode;\n  /**\n   * The language code.\n   * @default storefront.i18n.language\n   */\n  language?: LanguageCode;\n  /**\n   * The number of cart lines to be returned.\n   * @default 100\n   */\n  numCartLines?: number;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/cart-handler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cartId",
+                "value": "string",
+                "description": "The cart id.",
+                "isOptional": true,
+                "defaultValue": "cart.getCartId();"
               },
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "updateAttributes",
-                "value": "CartQueryReturn<AttributeInput[]>",
-                "description": "Update attributes in the cart with the storefront api.",
-                "isOptional": true
+                "name": "country",
+                "value": "CountryCode",
+                "description": "The country code.",
+                "isOptional": true,
+                "defaultValue": "storefront.i18n.country"
               },
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "setMetafields",
-                "value": "CartQueryReturn<MetafieldWithoutOwnerId[]>",
-                "description": "Set metafields in the cart with the storefront api.\nIf the cart does not exist, a new cart will be created.",
-                "isOptional": true
+                "name": "language",
+                "value": "LanguageCode",
+                "description": "The language code.",
+                "isOptional": true,
+                "defaultValue": "storefront.i18n.language"
               },
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "deleteMetafield",
-                "value": "CartQueryReturn<Scalars['String']>",
-                "description": "Delete metafield in the cart with the storefront api.",
-                "isOptional": true
+                "name": "numCartLines",
+                "value": "number",
+                "description": "The number of cart lines to be returned.",
+                "isOptional": true,
+                "defaultValue": "100"
               }
             ]
           },
@@ -1081,13 +1197,6 @@
                 "description": ""
               }
             ]
-          },
-          "CartInput": {
-            "description": "",
-            "name": "CartInput",
-            "value": "CartInput",
-            "members": [],
-            "override": "[CartInput](/docs/api/storefront/2023-04/input-objects/CartInput) - Storefront API type"
           },
           "CartDiscountCodesUpdateFormInput": {
             "filePath": "/cart/CartForm.tsx",
@@ -1303,115 +1412,6 @@
                 "description": ""
               }
             ]
-          },
-          "CartGetForDocs": {
-            "filePath": "/cart/cart-handler.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartGetForDocs",
-            "value": "{\n  /**\n   * The cart id.\n   * @default cart.getCartId();\n   */\n  cartId?: string;\n  /**\n   * The number of cart lines to be returned.\n   * @default 100\n   */\n  numCartLines?: number;\n  /**\n   * The country code.\n   * @default storefront.i18n.country\n   */\n  country?: CountryCode;\n  /**\n   * The language code.\n   * @default storefront.i18n.language\n   */\n  language?: LanguageCode;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "cartId",
-                "value": "string",
-                "description": "The cart id.",
-                "isOptional": true,
-                "defaultValue": "cart.getCartId();"
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "numCartLines",
-                "value": "number",
-                "description": "The number of cart lines to be returned.",
-                "isOptional": true,
-                "defaultValue": "100"
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "country",
-                "value": "CountryCode",
-                "description": "The country code.",
-                "isOptional": true,
-                "defaultValue": "storefront.i18n.country"
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "language",
-                "value": "LanguageCode",
-                "description": "The language code.",
-                "isOptional": true,
-                "defaultValue": "storefront.i18n.language"
-              }
-            ]
-          },
-          "CartOptionalInput": {
-            "filePath": "/cart/cart-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartOptionalInput",
-            "value": "{\n  cartId?: Scalars['ID'];\n  language?: LanguageCode;\n  country?: CountryCode;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/cart-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "cartId",
-                "value": "string",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/cart/cart-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "language",
-                "value": "LanguageCode",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/cart/cart-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "country",
-                "value": "CountryCode",
-                "description": "",
-                "isOptional": true
-              }
-            ]
-          },
-          "CartQueryData": {
-            "filePath": "/cart/cart-query-wrapper.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartQueryData",
-            "value": "{\n  cart: Cart;\n  errors?: CartUserError[] | MetafieldsSetUserError[];\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/cart-query-wrapper.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "cart",
-                "value": "Cart",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/cart-query-wrapper.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "errors",
-                "value": "CartUserError[] | MetafieldsSetUserError[]",
-                "description": "",
-                "isOptional": true
-              }
-            ]
-          },
-          "CartQueryReturn": {
-            "filePath": "/cart/cart-query-wrapper.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartQueryReturn",
-            "value": "(\n  requiredParams: T,\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryData>",
-            "description": ""
           }
         }
       }

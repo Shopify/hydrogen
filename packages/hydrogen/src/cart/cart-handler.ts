@@ -177,13 +177,26 @@ export type CartHandlerOptionsForDocs<
   TCustomMethods extends CustomMethodsBase,
 > = {
   /**
+   * The request headers.
+   */
+  requestHeaders: Headers;
+  /**
    * The storefront instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient)).
    */
   storefront: Storefront;
   /**
-   * The request headers.
+   * Cart mutate fragment to be used for all mutation query requests except for metafieldsSet and metafieldDelete.
    */
-  requestHeaders: Headers;
+  cartMutateFragment?: string;
+  /**
+   * Cart query fragment to be used by `cart.get()`.
+   */
+  cartQueryFragment?: string;
+  /**
+   * Define custom methods or overriding methods to be used in your cart api instance.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.
+   */
+  customMethods?: TCustomMethods;
   /**
    * A function that returns the cart id.
    * @default () => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']
@@ -194,19 +207,6 @@ export type CartHandlerOptionsForDocs<
    * @default (cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)
    */
   setCartId?: (cartId: string, headers: Headers) => void;
-  /**
-   * Cart query fragment to be used by `cart.get()`.
-   */
-  cartQueryFragment?: string;
-  /**
-   * Cart mutate fragment to be used for all mutation query requests except for metafieldsSet and metafieldDelete.
-   */
-  cartMutateFragment?: string;
-  /**
-   * Define custom methods or overriding methods to be used in your cart api instance.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.
-   */
-  customMethods?: TCustomMethods;
 };
 
 type CartGetForDocs = {
@@ -215,11 +215,6 @@ type CartGetForDocs = {
    * @default cart.getCartId();
    */
   cartId?: string;
-  /**
-   * The number of cart lines to be returned.
-   * @default 100
-   */
-  numCartLines?: number;
   /**
    * The country code.
    * @default storefront.i18n.country
@@ -230,14 +225,31 @@ type CartGetForDocs = {
    * @default storefront.i18n.language
    */
   language?: LanguageCode;
+  /**
+   * The number of cart lines to be returned.
+   * @default 100
+   */
+  numCartLines?: number;
 };
 
 export type CartHandlerReturnBaseForDocs = {
   /**
-   * Gets the form input created by CartForm action request.
+   * Add lines to the cart with the storefront api.
+   * If the cart does not exist, a new cart will be created.
    * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.
    */
-  getFormInput?: (formData: any) => CartActionInput;
+  addLine?: CartQueryReturn<CartLineInput[]>;
+  /**
+   * Creates a new cart with the storefront api.
+   */
+  create?: (
+    input: CartInput,
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
+  /**
+   * Delete metafield in the cart with the storefront api.
+   */
+  deleteMetafield?: CartQueryReturn<Scalars['String']>;
   /**
    * Gets the cart with the storefront api.
    * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.
@@ -249,39 +261,40 @@ export type CartHandlerReturnBaseForDocs = {
    */
   getCartId?: () => string | undefined;
   /**
-   * Sets the cart id. Default behavior is to set the cart id in the header cookie.
-   */
-  setCartId?: (cartId: string, headers: Headers) => void;
-  /**
-   * Creates a new cart with the storefront api.
-   */
-  create?: (
-    input: CartInput,
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
-  /**
-   * Add lines to the cart with the storefront api.
-   * If the cart does not exist, a new cart will be created.
+   * Gets the form input created by CartForm action request.
    * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.
    */
-  addLine?: CartQueryReturn<CartLineInput[]>;
-  /**
-   * Update lines in the cart with the storefront api.
-   */
-  updateLines?: CartQueryReturn<CartLineUpdateInput[]>;
+  getFormInput?: (formData: any) => CartActionInput;
   /**
    * Remove lines from the cart with the storefront api.
    */
   removeLines?: CartQueryReturn<string[]>;
   /**
-   * Update discount codes in the cart with the storefront api.
+   * Sets the cart id. Default behavior is to set the cart id in the header cookie.
    */
-  updateDiscountCodes?: CartQueryReturn<string[]>;
+  setCartId?: (cartId: string, headers: Headers) => void;
+  /**
+   * Set metafields in the cart with the storefront api.
+   * If the cart does not exist, a new cart will be created.
+   */
+  setMetafields?: CartQueryReturn<MetafieldWithoutOwnerId[]>;
+  /**
+   * Update attributes in the cart with the storefront api.
+   */
+  updateAttributes?: CartQueryReturn<AttributeInput[]>;
   /**
    * Update buyer identity in the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
    */
   updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityInput>;
+  /**
+   * Update discount codes in the cart with the storefront api.
+   */
+  updateDiscountCodes?: CartQueryReturn<string[]>;
+  /**
+   * Update lines in the cart with the storefront api.
+   */
+  updateLines?: CartQueryReturn<CartLineUpdateInput[]>;
   /**
    * Update note in the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
@@ -292,17 +305,4 @@ export type CartHandlerReturnBaseForDocs = {
    * Only available for cart associated with an `buyerIdentity.customerAccessToken`.
    */
   updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionInput>;
-  /**
-   * Update attributes in the cart with the storefront api.
-   */
-  updateAttributes?: CartQueryReturn<AttributeInput[]>;
-  /**
-   * Set metafields in the cart with the storefront api.
-   * If the cart does not exist, a new cart will be created.
-   */
-  setMetafields?: CartQueryReturn<MetafieldWithoutOwnerId[]>;
-  /**
-   * Delete metafield in the cart with the storefront api.
-   */
-  deleteMetafield?: CartQueryReturn<Scalars['String']>;
 };
