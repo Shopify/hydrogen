@@ -15,7 +15,6 @@ import {useState} from 'react';
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
 import type {CustomerAccessTokenCreatePayload} from '@shopify/hydrogen/storefront-api-types';
-import {CartFormInputAction} from '@shopify/hydrogen';
 
 export const handle = {
   isPublic: true,

@@ -1,4 +1,3 @@
-import {CartFormInputAction} from '@shopify/hydrogen';
 import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 
 /**

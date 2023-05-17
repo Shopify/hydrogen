@@ -15,8 +15,9 @@ export {Seo} from './seo/seo';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 
-export {CartForm, type CartFormInput} from './cart/CartForm';
+export {CartForm, type CartActionInput} from './cart/CartForm';
 export {
+  type CartQueryData,
   type CartQueryOptions,
   type CartQueryReturn,
   cartCreateDefault,
@@ -37,10 +38,7 @@ export {
   type CartHandlerReturnBase,
   createCartHandler_unstable,
 } from './cart/cart-handler';
-export {
-  CartFormInputAction,
-  type MetafieldWithoutOwnerId,
-} from './cart/cart-types';
+export {type MetafieldWithoutOwnerId} from './cart/cart-types';
 
 export {
   AnalyticsEventName,

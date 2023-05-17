@@ -5,21 +5,6 @@ import type {
   LanguageCode,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
-export const CartFormInputAction = {
-  CartGet: 'CartGet',
-  CartAttributesUpdateInput: 'CartAttributesUpdateInput',
-  CartBuyerIdentityUpdate: 'CartBuyerIdentityUpdate',
-  CartCreate: 'CartCreate',
-  CartDiscountCodesUpdate: 'CartDiscountCodesUpdate',
-  CartLinesAdd: 'CartLinesAdd',
-  CartLinesRemove: 'CartLinesRemove',
-  CartLinesUpdate: 'CartLinesUpdate',
-  CartNoteUpdate: 'CartNoteUpdate',
-  CartSelectedDeliveryOptionsUpdate: 'CartSelectedDeliveryOptionsUpdate',
-  CartMetafieldsSet: 'CartMetafieldsSet',
-  CartMetafieldsDelete: 'CartMetafieldsDelete',
-} as const;
-
 export type CartOptionalInput = {
   cartId?: Scalars['ID'];
   language?: LanguageCode;

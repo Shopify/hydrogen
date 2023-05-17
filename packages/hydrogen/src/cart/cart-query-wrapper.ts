@@ -38,7 +38,7 @@ export type CartQueryOptions = {
   cartMutateFragment?: string;
 };
 
-type CartQueryData = {
+export type CartQueryData = {
   cart: Cart;
   errors?: CartUserError[] | MetafieldsSetUserError[];
 };

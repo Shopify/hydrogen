@@ -1,7 +1,6 @@
 import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
 import {Button} from '~/components';
-import {CartFormInputAction, CartLinesAdd} from '@shopify/hydrogen';
-import {CartForm, CartFormInput} from '@shopify/hydrogen';
+import {CartForm} from '@shopify/hydrogen';
 import {FetcherWithComponents} from '@remix-run/react';
 
 export function AddToCartButton({
@@ -23,13 +22,14 @@ export function AddToCartButton({
   analytics?: unknown;
   [key: string]: any;
 }) {
-  const formInput: CartFormInput = {
-    action: CartFormInputAction.CartLinesAdd,
-    lines,
-  };
-
   return (
-    <CartForm route="/cart" formInput={formInput}>
+    <CartForm
+      route="/cart"
+      inputs={{
+        lines,
+      }}
+      action={CartForm.ACTIONS.LinesAdd}
+    >
       {(fetcher: FetcherWithComponents<any>) => (
         <>
           <input

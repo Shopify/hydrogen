@@ -1,5 +1,5 @@
 import {Storefront} from '../storefront';
-import {getFormInput, FormInput} from './CartForm';
+import {getFormInput, CartActionInput} from './CartForm';
 import {
   type CartQueryReturn,
   cartCreateDefault,
@@ -43,7 +43,7 @@ type CartHandlerOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
     customMethods?: TCustomMethods;
   };
 export type CartHandlerReturnBase = {
-  getFormInput: (formData: any) => FormInput;
+  getFormInput: (formData: any) => CartActionInput;
   get: (cartInput?: CartGet) => Promise<Cart | null | undefined>;
   getCartId: () => string | undefined;
   setCartId: (cartId: string, headers: Headers) => void;
