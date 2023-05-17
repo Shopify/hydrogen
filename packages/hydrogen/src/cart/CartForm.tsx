@@ -15,28 +15,28 @@ type OtherFormData = {
   [key: string]: unknown;
 };
 
-type CartAttributesUpdateFormInput = {
+type CartAttributesUpdateProps = {
   action: 'AttributesUpdateInput';
   inputs: {
     attributes: AttributeInput[];
   } & OtherFormData;
 };
 
-type CartBuyerIdentityUpdateFormInput = {
+type CartBuyerIdentityUpdateProps = {
   action: 'BuyerIdentityUpdate';
   inputs: {
     buyerIdentity: CartBuyerIdentityInput;
   } & OtherFormData;
 };
 
-type CartCreateFormInput = {
+type CartCreateProps = {
   action: 'Create';
   inputs: {
     input: CartInput;
   } & OtherFormData;
 };
 
-type CartDiscountCodesUpdateFormInput = {
+type CartDiscountCodesUpdateProps = {
   action: 'DiscountCodesUpdate';
   inputs: {
     discountCodes: string[];
@@ -57,42 +57,42 @@ type CartLinesUpdateProps = {
   } & OtherFormData;
 };
 
-type CartLinesRemoveFormInput = {
+type CartLinesRemoveProps = {
   action: 'LinesRemove';
   inputs: {
     lineIds: string[];
   } & OtherFormData;
 };
 
-type CartNoteUpdateFormInput = {
+type CartNoteUpdateProps = {
   action: 'NoteUpdate';
   inputs: {
     note: string;
   } & OtherFormData;
 };
 
-type CartSelectedDeliveryOptionsUpdateFormInput = {
+type CartSelectedDeliveryOptionsUpdateProps = {
   action: 'SelectedDeliveryOptionsUpdate';
   inputs: {
     selectedDeliveryOptions: CartSelectedDeliveryOptionInput[];
   } & OtherFormData;
 };
 
-type CartMetafieldsSetFormInput = {
+type CartMetafieldsSetProps = {
   action: 'MetafieldsSet';
   inputs: {
     metafields: MetafieldWithoutOwnerId[];
   } & OtherFormData;
 };
 
-type CartMetafieldDeleteFormInput = {
+type CartMetafieldDeleteProps = {
   action: 'MetafieldsDelete';
   inputs: {
     key: Scalars['String'];
   } & OtherFormData;
 };
 
-type CartCustomFormInput = {
+type CartCustomProps = {
   action: 'Custom';
   inputs: Record<string, unknown>;
 };
@@ -105,18 +105,18 @@ type CartFormCommonProps = {
 };
 
 export type CartActionInput =
-  | CartAttributesUpdateFormInput
-  | CartBuyerIdentityUpdateFormInput
-  | CartCreateFormInput
-  | CartDiscountCodesUpdateFormInput
+  | CartAttributesUpdateProps
+  | CartBuyerIdentityUpdateProps
+  | CartCreateProps
+  | CartDiscountCodesUpdateProps
   | CartLinesAddProps
   | CartLinesUpdateProps
-  | CartLinesRemoveFormInput
-  | CartNoteUpdateFormInput
-  | CartSelectedDeliveryOptionsUpdateFormInput
-  | CartMetafieldsSetFormInput
-  | CartMetafieldDeleteFormInput
-  | CartCustomFormInput;
+  | CartLinesRemoveProps
+  | CartNoteUpdateProps
+  | CartSelectedDeliveryOptionsUpdateProps
+  | CartMetafieldsSetProps
+  | CartMetafieldDeleteProps
+  | CartCustomProps;
 
 type CartFormProps = CartActionInput & CartFormCommonProps;
 
