@@ -94,7 +94,7 @@ type CartMetafieldDeleteFormInput = {
 
 type CartCustomFormInput = {
   action: 'Custom';
-  inputs: OtherFormData;
+  inputs: Record<string, unknown>;
 };
 
 type CartFormCommonProps = {
