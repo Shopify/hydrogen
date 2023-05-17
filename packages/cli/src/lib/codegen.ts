@@ -150,7 +150,7 @@ function generateDefaultConfig({rootDirectory, appDirectory}: ProjectDirs) {
       overwrite: true,
       pluckConfig: pluckConfig as any,
       generates: {
-        ['sfapi.generated.d.ts']: {
+        ['storefrontapi.generated.d.ts']: {
           preset,
           schema,
           documents: [

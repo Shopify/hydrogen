@@ -46,7 +46,7 @@ How to use it while unstable:
    npx shopify hydrogen codegen-unstable --watch # Standalone codegen watcher
    ```
 
-As a result, a new `sfapi.generated.d.ts` file should be generated at your project root. You don't need to reference this file from anywhere for it to work, but you should commit it every time the types change.
+As a result, a new `storefrontapi.generated.d.ts` file should be generated at your project root. You don't need to reference this file from anywhere for it to work, but you should commit it every time the types change.
 
 **Optional**: you can tune the codegen configuration by providing a `<root>/codegen.ts` file (or specify a different path with the `--codegen-config-path` flag) with the following content:
 
@@ -58,7 +58,7 @@ export default <CodegenConfig>{
   overwrite: true,
   pluckConfig,
   generates: {
-    ['sfapi.generated.d.ts']: {
+    ['storefrontapi.generated.d.ts']: {
       preset,
       schema,
       documents: ['*.{ts,tsx}', 'app/**/*.{ts,tsx}'],
