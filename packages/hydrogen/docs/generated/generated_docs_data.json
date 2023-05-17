@@ -873,14 +873,14 @@
             "filePath": "/cart/cart-handler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerReturnBaseForDocs",
-            "value": "{\n  /**\n   * Gets the form input created by CartForm action request.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  getFormInput?: (formData: any) => FormInput;\n  /**\n   * Gets the cart with the storefront api.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;\n  /**\n   * Gets the cart id. Default behavior is to get the cart id from the request cookie.\n   * Returns the cart id in the form of `gid://shopify/Cart/123`\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Sets the cart id. Default behavior is to set the cart id in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Creates a new cart with the storefront api.\n   */\n  create?: (\n    input: CartInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Add lines to the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  addLine?: CartQueryReturn<CartLineInput[]>;\n  /**\n   * Update lines in the cart with the storefront api.\n   */\n  updateLines?: CartQueryReturn<CartLineUpdateInput[]>;\n  /**\n   * Remove lines from the cart with the storefront api.\n   */\n  removeLines?: CartQueryReturn<string[]>;\n  /**\n   * Update discount codes in the cart with the storefront api.\n   */\n  updateDiscountCodes?: CartQueryReturn<string[]>;\n  /**\n   * Update buyer identity in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityInput>;\n  /**\n   * Update note in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateNote?: CartQueryReturn<string>;\n  /**\n   * Update selected delivery options in the cart with the storefront api.\n   * Only available for cart associated with an `buyerIdentity.customerAccessToken`.\n   */\n  updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionInput>;\n  /**\n   * Update attributes in the cart with the storefront api.\n   */\n  attributesUpdate?: CartQueryReturn<AttributeInput[]>;\n  /**\n   * Set metafields in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  metafieldsSet?: CartQueryReturn<MetafieldWithoutOwnerId[]>;\n  /**\n   * Delete metafield in the cart with the storefront api.\n   */\n  metafieldDelete?: CartQueryReturn<Scalars['String']>;\n}",
+            "value": "{\n  /**\n   * Gets the form input created by CartForm action request.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  getFormInput?: (formData: any) => CartActionInput;\n  /**\n   * Gets the cart with the storefront api.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;\n  /**\n   * Gets the cart id. Default behavior is to get the cart id from the request cookie.\n   * Returns the cart id in the form of `gid://shopify/Cart/123`\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Sets the cart id. Default behavior is to set the cart id in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Creates a new cart with the storefront api.\n   */\n  create?: (\n    input: CartInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Add lines to the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.\n   */\n  addLine?: CartQueryReturn<CartLineInput[]>;\n  /**\n   * Update lines in the cart with the storefront api.\n   */\n  updateLines?: CartQueryReturn<CartLineUpdateInput[]>;\n  /**\n   * Remove lines from the cart with the storefront api.\n   */\n  removeLines?: CartQueryReturn<string[]>;\n  /**\n   * Update discount codes in the cart with the storefront api.\n   */\n  updateDiscountCodes?: CartQueryReturn<string[]>;\n  /**\n   * Update buyer identity in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityInput>;\n  /**\n   * Update note in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateNote?: CartQueryReturn<string>;\n  /**\n   * Update selected delivery options in the cart with the storefront api.\n   * Only available for cart associated with an `buyerIdentity.customerAccessToken`.\n   */\n  updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionInput>;\n  /**\n   * Update attributes in the cart with the storefront api.\n   */\n  attributesUpdate?: CartQueryReturn<AttributeInput[]>;\n  /**\n   * Set metafields in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  metafieldsSet?: CartQueryReturn<MetafieldWithoutOwnerId[]>;\n  /**\n   * Delete metafield in the cart with the storefront api.\n   */\n  metafieldDelete?: CartQueryReturn<Scalars['String']>;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getFormInput",
-                "value": "(formData: any) => FormInput",
+                "value": "(formData: any) => CartActionInput",
                 "description": "Gets the form input created by CartForm action request.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.",
                 "isOptional": true
               },
@@ -998,25 +998,308 @@
               }
             ]
           },
-          "FormInput": {
+          "CartActionInput": {
             "filePath": "/cart/CartForm.tsx",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "FormInput",
-            "value": "{\n  action: CartFormInput['action'];\n  cartInputs: Record<string, unknown>;\n}",
+            "name": "CartActionInput",
+            "value": "CartAttributesUpdateFormInput | CartBuyerIdentityUpdateFormInput | CartCreateFormInput | CartDiscountCodesUpdateFormInput | CartLinesAddProps | CartLinesUpdateProps | CartLinesRemoveFormInput | CartNoteUpdateFormInput | CartSelectedDeliveryOptionsUpdateFormInput | CartMetafieldsSetFormInput | CartMetafieldDeleteFormInput | CartCustomFormInput",
+            "description": ""
+          },
+          "CartAttributesUpdateFormInput": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartAttributesUpdateFormInput",
+            "value": "{\n  action: 'AttributesUpdateInput';\n  inputs: {\n    attributes: AttributeInput[];\n  } & OtherFormData;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/cart/CartForm.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "action",
-                "value": "string",
+                "value": "\"AttributesUpdateInput\"",
                 "description": ""
               },
               {
                 "filePath": "/cart/CartForm.tsx",
                 "syntaxKind": "PropertySignature",
-                "name": "cartInputs",
-                "value": "Record<string, unknown>",
+                "name": "inputs",
+                "value": "{ attributes: AttributeInput[]; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "OtherFormData": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "OtherFormData",
+            "value": "{\n  [key: string]: unknown;\n}",
+            "description": "",
+            "members": []
+          },
+          "CartBuyerIdentityUpdateFormInput": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartBuyerIdentityUpdateFormInput",
+            "value": "{\n  action: 'BuyerIdentityUpdate';\n  inputs: {\n    buyerIdentity: CartBuyerIdentityInput;\n  } & OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"BuyerIdentityUpdate\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "{ buyerIdentity: CartBuyerIdentityInput; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "CartCreateFormInput": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartCreateFormInput",
+            "value": "{\n  action: 'Create';\n  inputs: {\n    input: CartInput;\n  } & OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"Create\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "{ input: CartInput; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "CartInput": {
+            "description": "",
+            "name": "CartInput",
+            "value": "CartInput",
+            "members": [],
+            "override": "[CartInput](/docs/api/storefront/2023-04/input-objects/CartInput) - Storefront API type"
+          },
+          "CartDiscountCodesUpdateFormInput": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartDiscountCodesUpdateFormInput",
+            "value": "{\n  action: 'DiscountCodesUpdate';\n  inputs: {\n    discountCodes: string[];\n  } & OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"DiscountCodesUpdate\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "{ discountCodes: string[]; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "CartLinesAddProps": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartLinesAddProps",
+            "value": "{\n  action: 'LinesAdd';\n  inputs: {\n    lines: CartLineInput[];\n  } & OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"LinesAdd\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "{ lines: CartLineInput[]; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "CartLinesUpdateProps": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartLinesUpdateProps",
+            "value": "{\n  action: 'LinesUpdate';\n  inputs: {\n    lines: CartLineUpdateInput[];\n  } & OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"LinesUpdate\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "{ lines: CartLineUpdateInput[]; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "CartLinesRemoveFormInput": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartLinesRemoveFormInput",
+            "value": "{\n  action: 'LinesRemove';\n  inputs: {\n    lineIds: string[];\n  } & OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"LinesRemove\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "{ lineIds: string[]; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "CartNoteUpdateFormInput": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartNoteUpdateFormInput",
+            "value": "{\n  action: 'NoteUpdate';\n  inputs: {\n    note: string;\n  } & OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"NoteUpdate\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "{ note: string; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "CartSelectedDeliveryOptionsUpdateFormInput": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartSelectedDeliveryOptionsUpdateFormInput",
+            "value": "{\n  action: 'SelectedDeliveryOptionsUpdate';\n  inputs: {\n    selectedDeliveryOptions: CartSelectedDeliveryOptionInput[];\n  } & OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"SelectedDeliveryOptionsUpdate\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "{ selectedDeliveryOptions: CartSelectedDeliveryOptionInput[]; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "CartMetafieldsSetFormInput": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartMetafieldsSetFormInput",
+            "value": "{\n  action: 'MetafieldsSet';\n  inputs: {\n    metafields: MetafieldWithoutOwnerId[];\n  } & OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"MetafieldsSet\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "{ metafields: MetafieldWithoutOwnerId[]; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "MetafieldWithoutOwnerId": {
+            "filePath": "/cart/cart-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "MetafieldWithoutOwnerId",
+            "value": "Omit<CartMetafieldsSetInput, 'ownerId'>",
+            "description": "",
+            "members": []
+          },
+          "CartMetafieldDeleteFormInput": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartMetafieldDeleteFormInput",
+            "value": "{\n  action: 'MetafieldsDelete';\n  inputs: {\n    key: Scalars['String'];\n  } & OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"MetafieldsDelete\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "{ key: string; } & OtherFormData",
+                "description": ""
+              }
+            ]
+          },
+          "CartCustomFormInput": {
+            "filePath": "/cart/CartForm.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartCustomFormInput",
+            "value": "{\n  action: 'Custom';\n  inputs: OtherFormData;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "action",
+                "value": "\"Custom\"",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/CartForm.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "inputs",
+                "value": "OtherFormData",
                 "description": ""
               }
             ]
@@ -1065,13 +1348,6 @@
                 "defaultValue": "storefront.i18n.language"
               }
             ]
-          },
-          "CartInput": {
-            "description": "",
-            "name": "CartInput",
-            "value": "CartInput",
-            "members": [],
-            "override": "Storefront type - [CartInput](/docs/api/storefront/2023-04/input-objects/CartInput)"
           },
           "CartOptionalInput": {
             "filePath": "/cart/cart-types.ts",
@@ -1136,14 +1412,6 @@
             "name": "CartQueryReturn",
             "value": "(\n  requiredParams: T,\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryData>",
             "description": ""
-          },
-          "MetafieldWithoutOwnerId": {
-            "filePath": "/cart/cart-types.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "MetafieldWithoutOwnerId",
-            "value": "Omit<CartMetafieldsSetInput, 'ownerId'>",
-            "description": "",
-            "members": []
           }
         }
       }
@@ -1179,7 +1447,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export async function action({request, context}) {\n  const formData = await request.formData();\n  const cartInput = context.cart.getFormInput(formData);\n}\n",
+                    "code": "export async function action({request, context}) {\n  const formData = await request.formData();\n  const {action, inputs} = context.cart.getFormInput(formData);\n\n  // Do something with the action and inputs\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1205,7 +1473,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Basic usage\nconst result = await cart.addLine({\n  action: 'CartLinesAdd',\n  lines: [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n});\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1\n//   },\n//   errors: []\n// }\n\n// Optional parameters\ncart.addLine({\n  action: 'CartLinesAdd',\n  lines: [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n  cartId: '123', // override the cart id\n  country: 'US', // override the country code to 'US'\n  language: 'EN', // override the language code to 'EN'\n});\n",
+                    "code": "// Basic usage\nconst result = await cart.addLine({\n  lines: [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n});\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1\n//   },\n//   errors: []\n// }\n\n// Optional parameters\ncart.addLine({\n  lines: [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n  cartId: '123', // override the cart id\n  country: 'US', // override the country code to 'US'\n  language: 'EN', // override the language code to 'EN'\n});\n",
                     "language": "js"
                   }
                 ]

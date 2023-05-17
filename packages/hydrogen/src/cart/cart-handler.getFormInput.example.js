@@ -1,4 +1,6 @@
 export async function action({request, context}) {
   const formData = await request.formData();
-  const cartInput = context.cart.getFormInput(formData);
+  const {action, inputs} = context.cart.getFormInput(formData);
+
+  // Do something with the action and inputs
 }

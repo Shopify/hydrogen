@@ -237,7 +237,7 @@ export type CartHandlerReturnBaseForDocs = {
    * Gets the form input created by CartForm action request.
    * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.
    */
-  getFormInput?: (formData: any) => FormInput;
+  getFormInput?: (formData: any) => CartActionInput;
   /**
    * Gets the cart with the storefront api.
    * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.

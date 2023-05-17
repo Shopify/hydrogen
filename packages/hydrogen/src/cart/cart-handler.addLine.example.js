@@ -1,6 +1,5 @@
 // Basic usage
 const result = await cart.addLine({
-  action: 'CartLinesAdd',
   lines: [
     {
       merchandiseId: '123',
@@ -20,7 +19,6 @@ const result = await cart.addLine({
 
 // Optional parameters
 cart.addLine({
-  action: 'CartLinesAdd',
   lines: [
     {
       merchandiseId: '123',
