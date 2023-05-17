@@ -1285,7 +1285,7 @@
             "filePath": "/cart/CartForm.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartCustomFormInput",
-            "value": "{\n  action: 'Custom';\n  inputs: OtherFormData;\n}",
+            "value": "{\n  action: 'Custom';\n  inputs: Record<string, unknown>;\n}",
             "description": "",
             "members": [
               {
@@ -1299,7 +1299,7 @@
                 "filePath": "/cart/CartForm.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "inputs",
-                "value": "OtherFormData",
+                "value": "Record<string, unknown>",
                 "description": ""
               }
             ]
