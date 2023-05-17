@@ -185,11 +185,13 @@ export type CartHandlerOptionsForDocs<
    */
   storefront: Storefront;
   /**
-   * Cart mutate fragment to be used for all mutation query requests except for metafieldsSet and metafieldDelete.
+   * Cart mutate fragment to be used for all mutation query requests except for `setMetafields` and `deleteMetafield`.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.
    */
   cartMutateFragment?: string;
   /**
    * Cart query fragment to be used by `cart.get()`.
+   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.
    */
   cartQueryFragment?: string;
   /**
@@ -236,9 +238,11 @@ export type CartHandlerReturnBaseForDocs = {
   /**
    * Add lines to the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.
    */
-  addLine?: CartQueryReturn<CartLineInput[]>;
+  addLines?: (
+    lines: CartLineInput[],
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
   /**
    * Creates a new cart with the storefront api.
    */
@@ -249,10 +253,12 @@ export type CartHandlerReturnBaseForDocs = {
   /**
    * Delete metafield in the cart with the storefront api.
    */
-  deleteMetafield?: CartQueryReturn<Scalars['String']>;
+  deleteMetafield?: (
+    key: Scalars['String'],
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
   /**
    * Gets the cart with the storefront api.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.
    */
   get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;
   /**
@@ -262,13 +268,15 @@ export type CartHandlerReturnBaseForDocs = {
   getCartId?: () => string | undefined;
   /**
    * Gets the form input created by CartForm action request.
-   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-returns) usage.
    */
   getFormInput?: (formData: any) => CartActionInput;
   /**
    * Remove lines from the cart with the storefront api.
    */
-  removeLines?: CartQueryReturn<string[]>;
+  removeLines?: (
+    lineIds: string[],
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
   /**
    * Sets the cart id. Default behavior is to set the cart id in the header cookie.
    */
@@ -277,7 +285,10 @@ export type CartHandlerReturnBaseForDocs = {
    * Set metafields in the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
    */
-  setMetafields?: CartQueryReturn<MetafieldWithoutOwnerId[]>;
+  setMetafields?: (
+    metafields: MetafieldWithoutOwnerId[],
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
   /**
    * Update attributes in the cart with the storefront api.
    */

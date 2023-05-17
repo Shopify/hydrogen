@@ -1,4 +1,4 @@
-// Basic usage
+// Usage
 cart.get();
 
 // Optional parameters

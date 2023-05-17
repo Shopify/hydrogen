@@ -3,7 +3,7 @@ const cart = createCartHandler_unstable({
   requestHeaders: request.headers,
   customMethods: {
     example: () => 'example',
-    addLine: async (cartInput) => {
+    addLines: async (cartInput) => {
       return await storefront.mutate(CART_LINES_ADD_MUTATION, {
         variables: {
           id: cartInput.id,
@@ -16,7 +16,7 @@ const cart = createCartHandler_unstable({
 
 // Example usage
 cart.example(); // 'example'
-const result = await cart.addLine({
+const result = await cart.addLines({
   id: '123',
   lines: [
     {
