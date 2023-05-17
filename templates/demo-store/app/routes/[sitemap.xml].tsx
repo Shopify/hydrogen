@@ -1,6 +1,6 @@
 import {flattenConnection} from '@shopify/hydrogen';
 import type {LoaderArgs} from '@shopify/remix-oxygen';
-import {
+import type {
   CollectionConnection,
   PageConnection,
   ProductConnection,

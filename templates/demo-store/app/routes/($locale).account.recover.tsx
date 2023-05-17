@@ -6,9 +6,10 @@ import {
 } from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 import {useState} from 'react';
+import type {CustomerRecoverPayload} from '@shopify/hydrogen/storefront-api-types';
+
 import {Link} from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
-import type {CustomerRecoverPayload} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');

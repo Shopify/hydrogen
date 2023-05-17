@@ -16,20 +16,23 @@ import {
   useRouteError,
 } from '@remix-run/react';
 import {ShopifySalesChannel, Seo} from '@shopify/hydrogen';
+import invariant from 'tiny-invariant';
+import type {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
+
 import {Layout} from '~/components';
+import {seoPayload} from '~/lib/seo.server';
+
+import favicon from '../public/favicon.svg';
+
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
-import favicon from '../public/favicon.svg';
-import {seoPayload} from '~/lib/seo.server';
 import {
   DEFAULT_LOCALE,
   parseMenu,
   getCartId,
   type EnhancedMenu,
 } from './lib/utils';
-import invariant from 'tiny-invariant';
-import {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
 import {useAnalytics} from './hooks/useAnalytics';
 
 export const links: LinksFunction = () => {

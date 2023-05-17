@@ -8,13 +8,18 @@ import {
   useLocation,
   useNavigation,
 } from '@remix-run/react';
+import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
+import {AnalyticsPageType, Money, ShopPayButton} from '@shopify/hydrogen';
+import invariant from 'tiny-invariant';
+import clsx from 'clsx';
+import type {
+  ProductVariant,
+  SelectedOptionInput,
+  Product as ProductType,
+  Shop,
+  ProductConnection,
+} from '@shopify/hydrogen/storefront-api-types';
 
-import {
-  AnalyticsPageType,
-  Money,
-  ShopifyAnalyticsProduct,
-  ShopPayButton,
-} from '@shopify/hydrogen';
 import {
   Heading,
   IconCaret,
@@ -31,18 +36,8 @@ import {
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
 import {seoPayload} from '~/lib/seo.server';
-import invariant from 'tiny-invariant';
-import clsx from 'clsx';
-import type {
-  ProductVariant,
-  SelectedOptionInput,
-  Product as ProductType,
-  Shop,
-  ProductConnection,
-} from '@shopify/hydrogen/storefront-api-types';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
-import type {Product} from 'schema-dts';
 import {routeHeaders, CACHE_SHORT} from '~/data/cache';
 
 export const headers = routeHeaders;

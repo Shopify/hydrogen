@@ -3,12 +3,13 @@ import clsx from 'clsx';
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type V2_MetaFunction} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
-import {statusMessage} from '~/lib/utils';
 import type {
   Order,
   OrderLineItem,
   DiscountApplicationConnection,
 } from '@shopify/hydrogen/storefront-api-types';
+
+import {statusMessage} from '~/lib/utils';
 import {Link, Heading, PageHeader, Text} from '~/components';
 
 export const meta: V2_MetaFunction<typeof loader> = ({data}) => {

@@ -12,9 +12,10 @@ import {
   type V2_MetaFunction,
 } from '@remix-run/react';
 import {useState} from 'react';
+import type {CustomerAccessTokenCreatePayload} from '@shopify/hydrogen/storefront-api-types';
+
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
-import type {CustomerAccessTokenCreatePayload} from '@shopify/hydrogen/storefront-api-types';
 
 export const handle = {
   isPublic: true,

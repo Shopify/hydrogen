@@ -1,4 +1,3 @@
-import {CartLoading, Cart} from '~/components';
 import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
@@ -16,6 +15,8 @@ import type {
   UserError,
   CartBuyerIdentityInput,
 } from '@shopify/hydrogen/storefront-api-types';
+
+import {CartLoading, Cart} from '~/components';
 import {isLocalPath, getCartId} from '~/lib/utils';
 import {CartAction, type CartActions} from '~/lib/type';
 
