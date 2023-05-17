@@ -1,13 +1,7 @@
 import clsx from 'clsx';
 import {useRef} from 'react';
 import {useScroll} from 'react-use';
-import {
-  flattenConnection,
-  Image,
-  Money,
-  CartFormInputAction,
-  CartForm,
-} from '@shopify/hydrogen';
+import {flattenConnection, Image, Money, CartForm} from '@shopify/hydrogen';
 import {
   Button,
   Heading,
@@ -23,8 +17,6 @@ import type {
   CartLine,
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
-import {CartMetafieldsSet} from '@shopify/hydrogen';
-import {FetcherWithComponents} from '@remix-run/react';
 
 type Layouts = 'page' | 'drawer';
 
@@ -133,8 +125,8 @@ function UpdateDiscountForm({children}: {children: React.ReactNode}) {
   return (
     <CartForm
       route="/cart"
-      formInput={{
-        action: CartFormInputAction.CartDiscountCodesUpdate,
+      action={CartForm.ACTIONS.DiscountCodesUpdate}
+      inputs={{
         discountCodes: [],
       }}
     >
@@ -287,8 +279,8 @@ function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
   return (
     <CartForm
       route="/cart"
-      formInput={{
-        action: CartFormInputAction.CartLinesRemove,
+      action={CartForm.ACTIONS.LinesRemove}
+      inputs={{
         lineIds,
       }}
     >
@@ -356,8 +348,8 @@ function UpdateCartButton({
   return (
     <CartForm
       route="/cart"
-      formInput={{
-        action: CartFormInputAction.CartLinesUpdate,
+      action={CartForm.ACTIONS.LinesUpdate}
+      inputs={{
         lines,
       }}
     >

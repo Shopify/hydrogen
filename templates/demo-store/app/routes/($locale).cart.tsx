@@ -3,17 +3,8 @@ import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
 import {json, type ActionArgs} from '@shopify/remix-oxygen';
-import type {
-  CartBuyerIdentityInput,
-  CartLineInput,
-  CartLineUpdateInput,
-  Cart as CartType,
-  CartUserError,
-  MetafieldsSetUserError,
-  UserError,
-} from '@shopify/hydrogen/storefront-api-types';
 import {isLocalPath} from '~/lib/utils';
-import {CartFormInputAction} from '@shopify/hydrogen';
+import {CartForm, type CartQueryData} from '@shopify/hydrogen';
 
 export async function action({request, context}: ActionArgs) {
   const {session, cart} = context;
@@ -24,38 +15,32 @@ export async function action({request, context}: ActionArgs) {
     session.get('customerAccessToken'),
   ]);
 
-  const {action, cartInputs} = cart.getFormInput(formData);
+  const {action, inputs} = cart.getFormInput(formData);
   invariant(action, 'No cartAction defined');
 
   let status = 200;
-  let result: {
-    cart: CartType;
-    errors?: CartUserError[] | UserError[] | MetafieldsSetUserError[];
-  };
+  let result: CartQueryData;
 
   switch (action) {
-    case CartFormInputAction.CartLinesAdd:
-      result = await cart.addLines(cartInputs.lines as CartLineInput[]);
+    case CartForm.ACTIONS.LinesAdd:
+      result = await cart.addLines(inputs.lines);
       break;
-    case CartFormInputAction.CartLinesUpdate:
-      result = await cart.updateLines(
-        cartInputs.lines as CartLineUpdateInput[],
-      );
+    case CartForm.ACTIONS.LinesUpdate:
+      result = await cart.updateLines(inputs.lines);
       break;
-    case CartFormInputAction.CartLinesRemove:
-      result = await cart.removeLines(cartInputs.lineIds as string[]);
+    case CartForm.ACTIONS.LinesRemove:
+      result = await cart.removeLines(inputs.lineIds);
       break;
-    case CartFormInputAction.CartDiscountCodesUpdate:
+    case CartForm.ACTIONS.DiscountCodesUpdate:
       const formDiscountCode = formData.get('discountCode');
       const discountCodes = (
         formDiscountCode ? [formDiscountCode] : ['']
       ) as string[];
       result = await cart.updateDiscountCodes(discountCodes);
       break;
-    case CartFormInputAction.CartBuyerIdentityUpdate:
-      const buyerIdentity = cartInputs.buyerIdentity as CartBuyerIdentityInput;
+    case CartForm.ACTIONS.BuyerIdentityUpdate:
       result = await cart.updateBuyerIdentity({
-        ...buyerIdentity,
+        ...inputs.buyerIdentity,
         customerAccessToken,
       });
       break;

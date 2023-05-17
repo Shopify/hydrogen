@@ -1,6 +1,6 @@
 import {CountryCode} from '@shopify/hydrogen-react/storefront-api-types';
 import {Storefront} from '../storefront';
-import {getFormInput, FormInput} from './CartForm';
+import {getFormInput, CartActionInput} from './CartForm';
 import {
   type CartQueryReturn,
   cartCreateDefault,
@@ -51,7 +51,7 @@ export type CartHandlerOptionsWithCustom<
   customMethods?: TCustomMethods;
 };
 export type CartHandlerReturnBase = {
-  getFormInput: (formData: any) => FormInput;
+  getFormInput: (formData: any) => CartActionInput;
   get: (cartInput?: CartGet) => Promise<Cart | null | undefined>;
   getCartId: () => string | undefined;
   setCartId: (cartId: string, headers: Headers) => void;

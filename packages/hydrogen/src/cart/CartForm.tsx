@@ -16,122 +16,153 @@ type OtherFormData = {
 };
 
 type CartAttributesUpdateFormInput = {
-  action: 'CartAttributesUpdateInput';
-  attributes: AttributeInput[];
+  action: 'AttributesUpdateInput';
+  inputs: {
+    attributes: AttributeInput[];
+  } & OtherFormData;
 };
 
 type CartBuyerIdentityUpdateFormInput = {
-  action: 'CartBuyerIdentityUpdate';
-  buyerIdentity: CartBuyerIdentityInput;
+  action: 'BuyerIdentityUpdate';
+  inputs: {
+    buyerIdentity: CartBuyerIdentityInput;
+  } & OtherFormData;
 };
 
 type CartCreateFormInput = {
-  action: 'CartCreate';
-  input: CartInput;
+  action: 'Create';
+  inputs: {
+    input: CartInput;
+  } & OtherFormData;
 };
 
 type CartDiscountCodesUpdateFormInput = {
-  action: 'CartDiscountCodesUpdate';
-  discountCodes: string[];
+  action: 'DiscountCodesUpdate';
+  inputs: {
+    discountCodes: string[];
+  } & OtherFormData;
 };
 
-type CartLinesAddFormInput = {
-  action: 'CartLinesAdd';
-  lines: CartLineInput[];
+type CartLinesAddProps = {
+  action: 'LinesAdd';
+  inputs: {
+    lines: CartLineInput[];
+  } & OtherFormData;
 };
 
-type CartLinesUpdateFormInput = {
-  action: 'CartLinesUpdate';
-  lines: CartLineUpdateInput[];
+type CartLinesUpdateProps = {
+  action: 'LinesUpdate';
+  inputs: {
+    lines: CartLineUpdateInput[];
+  } & OtherFormData;
 };
 
 type CartLinesRemoveFormInput = {
-  action: 'CartLinesRemove';
-  lineIds: string[];
+  action: 'LinesRemove';
+  inputs: {
+    lineIds: string[];
+  } & OtherFormData;
 };
 
 type CartNoteUpdateFormInput = {
-  action: 'CartNoteUpdate';
-  note: string;
+  action: 'NoteUpdate';
+  inputs: {
+    note: string;
+  } & OtherFormData;
 };
 
 type CartSelectedDeliveryOptionsUpdateFormInput = {
-  action: 'CartSelectedDeliveryOptionsUpdate';
-  selectedDeliveryOptions: CartSelectedDeliveryOptionInput[];
+  action: 'SelectedDeliveryOptionsUpdate';
+  inputs: {
+    selectedDeliveryOptions: CartSelectedDeliveryOptionInput[];
+  } & OtherFormData;
 };
 
 type CartMetafieldsSetFormInput = {
-  action: 'CartMetafieldsSet';
-  metafields: MetafieldWithoutOwnerId[];
+  action: 'MetafieldsSet';
+  inputs: {
+    metafields: MetafieldWithoutOwnerId[];
+  } & OtherFormData;
 };
 
 type CartMetafieldDeleteFormInput = {
-  action: 'CartMetafieldsDelete';
-  key: Scalars['String'];
+  action: 'MetafieldsDelete';
+  inputs: {
+    key: Scalars['String'];
+  } & OtherFormData;
 };
 
-type CartActionFormInput = {
-  action: string;
+type CartCustomFormInput = {
+  action: 'Custom';
+  inputs: OtherFormData;
 };
 
-export type CartFormInput =
-  | (CartAttributesUpdateFormInput & OtherFormData)
-  | (CartBuyerIdentityUpdateFormInput & OtherFormData)
-  | (CartCreateFormInput & OtherFormData)
-  | (CartDiscountCodesUpdateFormInput & OtherFormData)
-  | (CartLinesAddFormInput & OtherFormData)
-  | (CartLinesRemoveFormInput & OtherFormData)
-  | (CartLinesUpdateFormInput & OtherFormData)
-  | (CartNoteUpdateFormInput & OtherFormData)
-  | (CartSelectedDeliveryOptionsUpdateFormInput & OtherFormData)
-  | (CartMetafieldsSetFormInput & OtherFormData)
-  | (CartMetafieldDeleteFormInput & OtherFormData)
-  | (CartActionFormInput & OtherFormData);
-
-type CartFormProps = {
+type CartFormCommonProps = {
   children?:
     | React.ReactNode
     | ((fetcher: FetcherWithComponents<any>) => React.ReactNode);
-  formInput?: CartFormInput;
   route?: string;
 };
 
-const CART_FORM_INPUT_NAME = 'cartFormInput';
+export type CartActionInput =
+  | CartAttributesUpdateFormInput
+  | CartBuyerIdentityUpdateFormInput
+  | CartCreateFormInput
+  | CartDiscountCodesUpdateFormInput
+  | CartLinesAddProps
+  | CartLinesUpdateProps
+  | CartLinesRemoveFormInput
+  | CartNoteUpdateFormInput
+  | CartSelectedDeliveryOptionsUpdateFormInput
+  | CartMetafieldsSetFormInput
+  | CartMetafieldDeleteFormInput
+  | CartCustomFormInput;
 
-export function CartForm({children, formInput, route}: CartFormProps) {
+type CartFormProps = CartActionInput & CartFormCommonProps;
+
+const INPUT_NAME = 'cartFormInput';
+
+export function CartForm({
+  children,
+  action,
+  inputs,
+  route,
+}: CartFormProps): JSX.Element {
   const fetcher = useFetcher();
 
   return (
     <fetcher.Form action={route || ''} method="post">
-      {formInput && (
+      {(action || inputs) && (
         <input
           type="hidden"
-          name={CART_FORM_INPUT_NAME}
-          value={JSON.stringify(formInput || {})}
+          name={INPUT_NAME}
+          value={JSON.stringify({action, ...inputs})}
         />
       )}
       {typeof children === 'function' ? children(fetcher) : children}
     </fetcher.Form>
   );
 }
+CartForm.INPUT_NAME = INPUT_NAME;
+CartForm.ACTIONS = {
+  AttributesUpdateInput: 'AttributesUpdateInput',
+  BuyerIdentityUpdate: 'BuyerIdentityUpdate',
+  Create: 'Create',
+  DiscountCodesUpdate: 'DiscountCodesUpdate',
+  LinesAdd: 'LinesAdd',
+  LinesRemove: 'LinesRemove',
+  LinesUpdate: 'LinesUpdate',
+  NoteUpdate: 'NoteUpdate',
+  SelectedDeliveryOptionsUpdate: 'SelectedDeliveryOptionsUpdate',
+  MetafieldsSet: 'MetafieldsSet',
+  MetafieldsDelete: 'MetafieldsDelete',
+  Custom: 'Custom',
+} as const;
 
-export type FormInput = {
-  action: CartFormInput['action'];
-  cartInputs: Record<string, unknown>;
-};
-
-// Not sure if it is possible to return cartInput as an inferred type
-// based on the action value. Even if we can, what do we do with the other
-// form data that doesn't meet the type requirements?
-export function getFormInput(formData: any): FormInput {
-  const {action, ...cartInputs}: CartFormInput = formData.has(
-    CART_FORM_INPUT_NAME,
-  )
-    ? JSON.parse(String(formData.get(CART_FORM_INPUT_NAME)))
+export function getFormInput(formData: any): CartActionInput {
+  const formInputs: CartActionInput = formData.has(INPUT_NAME)
+    ? JSON.parse(String(formData.get(INPUT_NAME)))
     : {};
 
-  return {
-    action,
-    cartInputs,
-  };
+  return formInputs;
 }

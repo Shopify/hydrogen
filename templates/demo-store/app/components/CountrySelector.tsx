@@ -6,7 +6,7 @@ import {Localizations, Locale} from '~/lib/type';
 import {DEFAULT_LOCALE} from '~/lib/utils';
 import clsx from 'clsx';
 import {CartBuyerIdentityInput} from '@shopify/hydrogen/storefront-api-types';
-import {CartForm, CartFormInputAction} from '@shopify/hydrogen';
+import {CartForm} from '@shopify/hydrogen';
 
 export function CountrySelector() {
   const [root] = useMatches();
@@ -145,8 +145,8 @@ function ChangeLocaleForm({
   return (
     <CartForm
       route="/cart"
-      formInput={{
-        action: CartFormInputAction.CartBuyerIdentityUpdate,
+      action={CartForm.ACTIONS.BuyerIdentityUpdate}
+      inputs={{
         buyerIdentity,
       }}
     >
