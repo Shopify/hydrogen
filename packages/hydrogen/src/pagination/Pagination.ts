@@ -224,8 +224,10 @@ export function usePagination<NodesType>(
 }
 
 /**
- * Get variables for route loader to support pagination
- * @returns cumulativePageInfo {startCursor, endCursor, hasPreviousPage, hasNextPage}
+ * @param request The request object passed to your Remix loader function.
+ * @param options Options for how to configure the pagination variables. Includes the ability to change how many nodes are within each page.
+ *
+ * @returns variables to be used with the `storefront.query` function
  */
 export function getPaginationVariables(
   request: Request,

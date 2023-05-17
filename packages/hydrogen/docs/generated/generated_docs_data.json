@@ -7,22 +7,22 @@
       {
         "name": "createStorefrontClient",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/utilities/createstorefrontclient"
       },
       {
         "name": "CacheNone",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachenone"
+        "url": "/docs/api/hydrogen/utilities/cachenone"
       },
       {
         "name": "CacheShort",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cacheshort"
+        "url": "/docs/api/hydrogen/utilities/cacheshort"
       },
       {
         "name": "CacheLong",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachelong"
+        "url": "/docs/api/hydrogen/utilities/cachelong"
       }
     ],
     "description": "This allows you to create your own caching strategy, using any of the options available in a `CachingStrategy` object.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -131,22 +131,22 @@
       {
         "name": "createStorefrontClient",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/utilities/createstorefrontclient"
       },
       {
         "name": "CacheNone",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachenone"
+        "url": "/docs/api/hydrogen/utilities/cachenone"
       },
       {
         "name": "CacheShort",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cacheshort"
+        "url": "/docs/api/hydrogen/utilities/cacheshort"
       },
       {
         "name": "CacheCustom",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachecustom"
+        "url": "/docs/api/hydrogen/utilities/cachecustom"
       }
     ],
     "description": "The `CacheLong` strategy instructs caches to store data for 1 hour, and `staleWhileRevalidate` data for an additional 23 hours. Note: these time values are subject to change.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -256,22 +256,22 @@
       {
         "name": "createStorefrontClient",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/utilities/createstorefrontclient"
       },
       {
         "name": "CacheShort",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cacheshort"
+        "url": "/docs/api/hydrogen/utilities/cacheshort"
       },
       {
         "name": "CacheLong",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachelong"
+        "url": "/docs/api/hydrogen/utilities/cachelong"
       },
       {
         "name": "CacheCustom",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachecustom"
+        "url": "/docs/api/hydrogen/utilities/cachecustom"
       }
     ],
     "description": "The CacheNone() strategy instructs caches not to store any data. The function accepts no arguments.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -341,22 +341,22 @@
       {
         "name": "createStorefrontClient",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/createstorefrontclient"
+        "url": "/docs/api/hydrogen/utilities/createstorefrontclient"
       },
       {
         "name": "CacheNone",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachenone"
+        "url": "/docs/api/hydrogen/utilities/cachenone"
       },
       {
         "name": "CacheLong",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachelong"
+        "url": "/docs/api/hydrogen/utilities/cachelong"
       },
       {
         "name": "CacheCustom",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachecustom"
+        "url": "/docs/api/hydrogen/utilities/cachecustom"
       }
     ],
     "description": "The `CacheShort` strategy instructs caches to store data for 1 second, and `staleWhileRevalidate` data for an additional 9 seconds. Note: these time values are subject to change.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -569,22 +569,22 @@
       {
         "name": "CacheNone",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachenone"
+        "url": "/docs/api/hydrogen/utilities/cachenone"
       },
       {
         "name": "CacheShort",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cacheshort"
+        "url": "/docs/api/hydrogen/utilities/cacheshort"
       },
       {
         "name": "CacheLong",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachelong"
+        "url": "/docs/api/hydrogen/utilities/cachelong"
       },
       {
         "name": "CacheCustom",
         "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/cachecustom"
+        "url": "/docs/api/hydrogen/utilities/cachecustom"
       }
     ],
     "description": "This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/latest/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
@@ -631,7 +631,7 @@
               "name": "StorefrontClient<TI18n extends I18nBase>",
               "value": "StorefrontClient<TI18n extends I18nBase>"
             },
-            "value": "export function createStorefrontClient<TI18n extends I18nBase>(\n  options: CreateStorefrontClientOptions<TI18n>,\n): StorefrontClient<TI18n> {\n  const {\n    storefrontHeaders,\n    cache,\n    waitUntil,\n    buyerIp,\n    i18n,\n    requestGroupId,\n    storefrontId,\n    ...clientOptions\n  } = options;\n  if (!cache) {\n    // TODO: should only warn in development\n    warnOnce(\n      'Storefront API client created without a cache instance. This may slow down your sub-requests.',\n    );\n  }\n\n  const {\n    getPublicTokenHeaders,\n    getPrivateTokenHeaders,\n    getStorefrontApiUrl,\n    getShopifyDomain,\n  } = createStorefrontUtilities(clientOptions);\n\n  const getHeaders = clientOptions.privateStorefrontToken\n    ? getPrivateTokenHeaders\n    : getPublicTokenHeaders;\n\n  const defaultHeaders = getHeaders({\n    contentType: 'json',\n    buyerIp: storefrontHeaders?.buyerIp || buyerIp,\n  });\n\n  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =\n    storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();\n\n  if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;\n  if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;\n\n  if (storefrontHeaders && storefrontHeaders.cookie) {\n    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');\n\n    if (cookies[SHOPIFY_Y])\n      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];\n    if (cookies[SHOPIFY_S])\n      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];\n  }\n\n  // Deprecation warning\n  if (!storefrontHeaders) {\n    warnOnce(\n      '\"requestGroupId\" and \"buyerIp\" will be deprecated in the next calendar release. Please use \"getStorefrontHeaders\"',\n    );\n  }\n\n  async function fetchStorefrontApi<T>({\n    query,\n    mutation,\n    variables,\n    cache: cacheOptions,\n    headers = [],\n    storefrontApiVersion,\n  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {\n    const userHeaders =\n      headers instanceof Headers\n        ? Object.fromEntries(headers.entries())\n        : Array.isArray(headers)\n        ? Object.fromEntries(headers)\n        : headers;\n\n    query = query ?? mutation;\n\n    const queryVariables = {...variables};\n\n    if (i18n) {\n      if (!variables?.country && /\\$country/.test(query)) {\n        queryVariables.country = i18n.country;\n      }\n\n      if (!variables?.language && /\\$language/.test(query)) {\n        queryVariables.language = i18n.language;\n      }\n    }\n\n    const url = getStorefrontApiUrl({storefrontApiVersion});\n    const requestInit: RequestInit = {\n      method: 'POST',\n      headers: {...defaultHeaders, ...userHeaders},\n      body: JSON.stringify({\n        query,\n        variables: queryVariables,\n      }),\n    };\n\n    const [body, response] = await fetchWithServerCache(url, requestInit, {\n      cacheInstance: mutation ? undefined : cache,\n      cache: cacheOptions || CacheShort(),\n      shouldCacheResponse: checkGraphQLErrors,\n      waitUntil,\n    });\n\n    if (!response.ok) {\n      /**\n       * The Storefront API might return a string error, or a JSON-formatted {error: string}.\n       * We try both and conform them to a single {errors} format.\n       */\n      let errors;\n      try {\n        errors = parseJSON(body);\n      } catch (_e) {\n        errors = [{message: body}];\n      }\n\n      throwError(response, errors);\n    }\n\n    const {data, errors} = body as StorefrontApiResponse<T>;\n\n    if (errors?.length) throwError(response, errors, StorefrontApiError);\n\n    return data as T;\n  }\n\n  return {\n    storefront: {\n      /**\n       * Sends a GraphQL query to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   const data = await storefront.query('query { ... }', {\n       *     variables: {},\n       *     cache: storefront.CacheLong()\n       *   });\n       * }\n       * ```\n       */\n      query: <T>(\n        query: string,\n        payload?: StorefrontCommonOptions & {cache?: CachingStrategy},\n      ) => {\n        query = minifyQuery(query);\n        if (isMutationRE.test(query))\n          throw new Error('storefront.query cannot execute mutations');\n\n        return fetchStorefrontApi<T>({...payload, query});\n      },\n      /**\n       * Sends a GraphQL mutation to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   await storefront.mutate('mutation { ... }', {\n       *     variables: {},\n       *   });\n       * }\n       * ```\n       */\n      mutate: <T>(mutation: string, payload?: StorefrontCommonOptions) => {\n        mutation = minifyQuery(mutation);\n        if (isQueryRE.test(mutation))\n          throw new Error('storefront.mutate cannot execute queries');\n\n        return fetchStorefrontApi<T>({...payload, mutation});\n      },\n      cache,\n      CacheNone,\n      CacheLong,\n      CacheShort,\n      CacheCustom,\n      generateCacheControlHeader,\n      getPublicTokenHeaders,\n      getPrivateTokenHeaders,\n      getShopifyDomain,\n      getApiUrl: getStorefrontApiUrl,\n      /**\n       * Wether it's a GraphQL error returned in the Storefront API response.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   try {\n       *     await storefront.query(...);\n       *   } catch(error) {\n       *     if (storefront.isApiError(error)) {\n       *       // ...\n       *     }\n       *\n       *     throw error;\n       *   }\n       * }\n       * ```\n       */\n      isApiError: isStorefrontApiError,\n      i18n: (i18n ?? defaultI18n) as TI18n,\n    },\n  };\n}"
+            "value": "export function createStorefrontClient<TI18n extends I18nBase>(\n  options: CreateStorefrontClientOptions<TI18n>,\n): StorefrontClient<TI18n> {\n  const {\n    storefrontHeaders,\n    cache,\n    waitUntil,\n    buyerIp,\n    i18n,\n    requestGroupId,\n    storefrontId,\n    ...clientOptions\n  } = options;\n  if (!cache) {\n    // TODO: should only warn in development\n    warnOnce(\n      'Storefront API client created without a cache instance. This may slow down your sub-requests.',\n    );\n  }\n\n  const {\n    getPublicTokenHeaders,\n    getPrivateTokenHeaders,\n    getStorefrontApiUrl,\n    getShopifyDomain,\n  } = createStorefrontUtilities(clientOptions);\n\n  const getHeaders = clientOptions.privateStorefrontToken\n    ? getPrivateTokenHeaders\n    : getPublicTokenHeaders;\n\n  const defaultHeaders = getHeaders({\n    contentType: 'json',\n    buyerIp: storefrontHeaders?.buyerIp || buyerIp,\n  });\n\n  defaultHeaders[STOREFRONT_REQUEST_GROUP_ID_HEADER] =\n    storefrontHeaders?.requestGroupId || requestGroupId || generateUUID();\n\n  if (storefrontId) defaultHeaders[SHOPIFY_STOREFRONT_ID_HEADER] = storefrontId;\n  if (LIB_VERSION) defaultHeaders['user-agent'] = `Hydrogen ${LIB_VERSION}`;\n\n  if (storefrontHeaders && storefrontHeaders.cookie) {\n    const cookies = getShopifyCookies(storefrontHeaders.cookie ?? '');\n\n    if (cookies[SHOPIFY_Y])\n      defaultHeaders[SHOPIFY_STOREFRONT_Y_HEADER] = cookies[SHOPIFY_Y];\n    if (cookies[SHOPIFY_S])\n      defaultHeaders[SHOPIFY_STOREFRONT_S_HEADER] = cookies[SHOPIFY_S];\n  }\n\n  // Deprecation warning\n  if (!storefrontHeaders) {\n    warnOnce(\n      '\"requestGroupId\" and \"buyerIp\" will be deprecated in the next calendar release. Please use \"getStorefrontHeaders\"',\n    );\n  }\n\n  async function fetchStorefrontApi<T>({\n    query,\n    mutation,\n    variables,\n    cache: cacheOptions,\n    headers = [],\n    storefrontApiVersion,\n  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {\n    const userHeaders =\n      headers instanceof Headers\n        ? Object.fromEntries(headers.entries())\n        : Array.isArray(headers)\n        ? Object.fromEntries(headers)\n        : headers;\n\n    query = query ?? mutation;\n\n    const queryVariables = {...variables};\n\n    if (i18n) {\n      if (!variables?.country && /\\$country/.test(query)) {\n        queryVariables.country = i18n.country;\n      }\n\n      if (!variables?.language && /\\$language/.test(query)) {\n        queryVariables.language = i18n.language;\n      }\n    }\n\n    const url = getStorefrontApiUrl({storefrontApiVersion});\n    const requestInit: RequestInit = {\n      method: 'POST',\n      headers: {...defaultHeaders, ...userHeaders},\n      body: JSON.stringify({\n        query,\n        variables: queryVariables,\n      }),\n    };\n\n    const [body, response] = await fetchWithServerCache(url, requestInit, {\n      cacheInstance: mutation ? undefined : cache,\n      cache: cacheOptions || CacheShort(),\n      shouldCacheResponse: checkGraphQLErrors,\n      waitUntil,\n    });\n\n    if (!response.ok) {\n      /**\n       * The Storefront API might return a string error, or a JSON-formatted {error: string}.\n       * We try both and conform them to a single {errors} format.\n       */\n      let errors;\n      try {\n        errors = parseJSON(body);\n      } catch (_e) {\n        errors = [{message: body}];\n      }\n\n      throwError(response, errors);\n    }\n\n    const {data, errors} = body as StorefrontApiResponse<T>;\n\n    if (errors?.length) throwError(response, errors, StorefrontApiError);\n\n    return data as T;\n  }\n\n  return {\n    storefront: {\n      /**\n       * Sends a GraphQL query to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   const data = await storefront.query('query { ... }', {\n       *     variables: {},\n       *     cache: storefront.CacheLong()\n       *   });\n       * }\n       * ```\n       */\n      query: <Storefront['query']>((query: string, payload) => {\n        query = minifyQuery(query);\n        if (isMutationRE.test(query))\n          throw new Error('storefront.query cannot execute mutations');\n\n        return fetchStorefrontApi({...payload, query});\n      }),\n      /**\n       * Sends a GraphQL mutation to the Storefront API.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   await storefront.mutate('mutation { ... }', {\n       *     variables: {},\n       *   });\n       * }\n       * ```\n       */\n      mutate: <Storefront['mutate']>((mutation: string, payload) => {\n        mutation = minifyQuery(mutation);\n        if (isQueryRE.test(mutation))\n          throw new Error('storefront.mutate cannot execute queries');\n\n        return fetchStorefrontApi({...payload, mutation});\n      }),\n      cache,\n      CacheNone,\n      CacheLong,\n      CacheShort,\n      CacheCustom,\n      generateCacheControlHeader,\n      getPublicTokenHeaders,\n      getPrivateTokenHeaders,\n      getShopifyDomain,\n      getApiUrl: getStorefrontApiUrl,\n      /**\n       * Wether it's a GraphQL error returned in the Storefront API response.\n       *\n       * Example:\n       *\n       * ```js\n       * async function loader ({context: {storefront}}) {\n       *   try {\n       *     await storefront.query(...);\n       *   } catch(error) {\n       *     if (storefront.isApiError(error)) {\n       *       // ...\n       *     }\n       *\n       *     throw error;\n       *   }\n       * }\n       * ```\n       */\n      isApiError: isStorefrontApiError,\n      i18n: (i18n ?? defaultI18n) as TI18n,\n    },\n  };\n}"
           },
           "CreateStorefrontClientOptions": {
             "filePath": "/storefront.ts",
@@ -742,7 +742,7 @@
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontClient",
             "value": "{\n  storefront: Storefront<TI18n>;\n}",
-            "description": "other description",
+            "description": "Wraps all the returned utilities from `createStorefrontClient`.",
             "members": [
               {
                 "filePath": "/storefront.ts",
@@ -757,22 +757,22 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  /** The function to run a query on storefront api. */\n  query: <T>(\n    query: string,\n    payload?: StorefrontCommonOptions & {\n      cache?: CachingStrategy;\n    },\n  ) => Promise<T>;\n  /** The function to run a mutation on storefront api. */\n  mutate: <T>(\n    mutation: string,\n    payload?: StorefrontCommonOptions,\n  ) => Promise<T>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2023-04/utilities/cachenone). */\n  CacheNone: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2023-04/utilities/cachelong). */\n  CacheLong: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2023-04/utilities/cacheshort). */\n  CacheShort: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-04/utilities/cachecustom). */\n  CacheCustom: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-04/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /** Determines if the error is resulted from a Storefront API call. */\n  isApiError: (error: any) => boolean;\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n: TI18n;\n}",
-            "description": "some deswcription",
+            "value": "{\n  /** The function to run a query on Storefront API. */\n  query: <OverrideReturnType = any, RawGqlString extends string = string>(\n    query: RawGqlString,\n    ...options: RawGqlString extends keyof QueryTypes // Do we have any generated query types?\n      ? IsOptionalVariables<QueryTypes[RawGqlString]> extends true\n        ? [StorefrontQuerySecondParam<RawGqlString>?] // Using codegen, query has no variables\n        : [StorefrontQuerySecondParam<RawGqlString>] // Using codegen, query needs variables\n      : [StorefrontQuerySecondParam?] // No codegen, variables always optional\n  ) => Promise<\n    RawGqlString extends keyof QueryTypes // Do we have any generated query types?\n      ? QueryTypes[RawGqlString]['return'] // Using codegen, return type is known\n      : OverrideReturnType // No codegen, let user specify return type\n  >;\n  /** The function to run a mutation on Storefront API. */\n  mutate: <OverrideReturnType = any, RawGqlString extends string = string>(\n    mutation: RawGqlString,\n    ...options: RawGqlString extends keyof MutationTypes // Do we have any generated mutation types?\n      ? IsOptionalVariables<MutationTypes[RawGqlString]> extends true\n        ? [StorefrontMutateSecondParam<RawGqlString>?] // Using codegen, mutation has no variables\n        : [StorefrontMutateSecondParam<RawGqlString>] // Using codegen, mutation needs variables\n      : [StorefrontMutateSecondParam?] // No codegen, variables always optional\n  ) => Promise<\n    RawGqlString extends keyof MutationTypes // Do we have any generated mutation types?\n      ? MutationTypes[RawGqlString]['return'] // Using codegen, return type is known\n      : OverrideReturnType // No codegen, let user specify return type\n  >;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/utilities/cachenone). */\n  CacheNone: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/utilities/cachelong). */\n  CacheLong: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort). */\n  CacheShort: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/utilities/cachecustom). */\n  CacheCustom: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /** Determines if the error is resulted from a Storefront API call. */\n  isApiError: (error: any) => boolean;\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n: TI18n;\n}",
+            "description": "Interface to interact with the Storefront API.",
             "members": [
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "query",
-                "value": "<T>(query: string, payload?: StorefrontCommonOptions & { cache?: AllCacheOptions; }) => Promise<T>",
-                "description": "The function to run a query on storefront api."
+                "value": "<OverrideReturnType = any, RawGqlString extends string = string>(query: RawGqlString, ...options: RawGqlString extends never ? IsOptionalVariables<QueryTypes[RawGqlString]> extends true ? [StorefrontQuerySecondParam<RawGqlString>?] : [StorefrontQuerySecondParam<RawGqlString>] : [StorefrontQuerySecondParam<string>?]) => Promise<RawGqlString extends never ? QueryTypes[RawGqlString][\"return\"] : OverrideReturnType>",
+                "description": "The function to run a query on Storefront API."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "mutate",
-                "value": "<T>(mutation: string, payload?: StorefrontCommonOptions) => Promise<T>",
-                "description": "The function to run a mutation on storefront api."
+                "value": "<OverrideReturnType = any, RawGqlString extends string = string>(mutation: RawGqlString, ...options: RawGqlString extends never ? IsOptionalVariables<MutationTypes[RawGqlString]> extends true ? [StorefrontMutateSecondParam<RawGqlString>?] : [StorefrontMutateSecondParam<RawGqlString>] : [StorefrontCommonOptions<{ readonly [variable: string]: unknown; }>?]) => Promise<RawGqlString extends never ? MutationTypes[RawGqlString][\"return\"] : OverrideReturnType>",
+                "description": "The function to run a mutation on Storefront API."
               },
               {
                 "filePath": "/storefront.ts",
@@ -787,63 +787,63 @@
                 "syntaxKind": "PropertySignature",
                 "name": "CacheNone",
                 "value": "() => NoStoreStrategy",
-                "description": "Re-export of [`CacheNone`](/docs/api/hydrogen/2023-04/utilities/cachenone)."
+                "description": "Re-export of [`CacheNone`](/docs/api/hydrogen/utilities/cachenone)."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "CacheLong",
                 "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
-                "description": "Re-export of [`CacheLong`](/docs/api/hydrogen/2023-04/utilities/cachelong)."
+                "description": "Re-export of [`CacheLong`](/docs/api/hydrogen/utilities/cachelong)."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "CacheShort",
                 "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
-                "description": "Re-export of [`CacheShort`](/docs/api/hydrogen/2023-04/utilities/cacheshort)."
+                "description": "Re-export of [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort)."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "CacheCustom",
                 "value": "(overrideOptions: AllCacheOptions) => AllCacheOptions",
-                "description": "Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-04/utilities/cachecustom)."
+                "description": "Re-export of [`CacheCustom`](/docs/api/hydrogen/utilities/cachecustom)."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "generateCacheControlHeader",
                 "value": "(cacheOptions: AllCacheOptions) => string",
-                "description": "Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-04/utilities/generatecachecontrolheader)."
+                "description": "Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/utilities/generatecachecontrolheader)."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
-                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details."
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
-                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details."
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
-                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details."
+                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\" | \"storefrontApiVersion\">>) => string",
-                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details."
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details."
               },
               {
                 "filePath": "/storefront.ts",
@@ -861,36 +861,132 @@
               }
             ]
           },
+          "IsOptionalVariables": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "IsOptionalVariables",
+            "value": "Omit<\n  OperationTypeValue['variables'],\n  AutoAddedVariableNames\n> extends EmptyVariables\n  ? true // No need to pass variables\n  : GenericVariables extends OperationTypeValue['variables']\n  ? true // We don't know what variables are needed\n  : false",
+            "description": ""
+          },
+          "AutoAddedVariableNames": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "AutoAddedVariableNames",
+            "value": "'country' | 'language'",
+            "description": ""
+          },
+          "EmptyVariables": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "EmptyVariables",
+            "value": "{[key: string]: never}",
+            "description": "",
+            "members": []
+          },
+          "GenericVariables": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GenericVariables",
+            "value": "ExecutionArgs['variableValues']",
+            "description": ""
+          },
+          "QueryTypes": {
+            "filePath": "/storefront.ts",
+            "name": "QueryTypes",
+            "description": "Maps all the queries found in the project to variables and return types.",
+            "members": [],
+            "value": "export interface QueryTypes {\n  // Example of how a generated query type looks like:\n  // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};\n}"
+          },
+          "StorefrontQuerySecondParam": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontQuerySecondParam",
+            "value": "(RawGqlString extends keyof QueryTypes\n  ? StorefrontCommonOptions<QueryTypes[RawGqlString]['variables']>\n  : StorefrontCommonOptions<GenericVariables>) & {cache?: CachingStrategy}",
+            "description": ""
+          },
           "StorefrontCommonOptions": {
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontCommonOptions",
-            "value": "{\n  variables?: ExecutionArgs['variableValues'] & {\n    country?: CountryCode;\n    language?: LanguageCode;\n  };\n  headers?: HeadersInit;\n  storefrontApiVersion?: string;\n}",
+            "value": "{\n  headers?: HeadersInit;\n  storefrontApiVersion?: string;\n} & (IsOptionalVariables<{variables: Variables}> extends true\n  ? {variables?: Variables}\n  : {variables: Variables})",
+            "description": ""
+          },
+          "CachingStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CachingStrategy",
+            "value": "AllCacheOptions",
+            "description": "Use the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the pre-defined caching strategies: CacheNone, CacheShort, CacheLong.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ]
+          },
+          "MutationTypes": {
+            "filePath": "/storefront.ts",
+            "name": "MutationTypes",
+            "description": "Maps all the mutations found in the project to variables and return types.",
+            "members": [],
+            "value": "export interface MutationTypes {\n  // Example of how a generated mutation type looks like:\n  // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};\n}"
+          },
+          "StorefrontMutateSecondParam": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontMutateSecondParam",
+            "value": "RawGqlString extends keyof MutationTypes\n  ? StorefrontCommonOptions<MutationTypes[RawGqlString]['variables']>\n  : StorefrontCommonOptions<GenericVariables>",
+            "description": ""
+          },
+          "NoStoreStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "NoStoreStrategy",
+            "value": "{\n  mode: string;\n}",
             "description": "",
             "members": [
               {
-                "filePath": "/storefront.ts",
+                "filePath": "/cache/strategies.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "variables",
-                "value": "{ readonly [variable: string]: unknown; } & { country?: CountryCode; language?: LanguageCode; }",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "headers",
-                "value": "HeadersInit",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "storefrontApiVersion",
+                "name": "mode",
                 "value": "string",
-                "description": "",
-                "isOptional": true
+                "description": ""
               }
             ]
           },
@@ -942,22 +1038,6 @@
             ],
             "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
           },
-          "NoStoreStrategy": {
-            "filePath": "/cache/strategies.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "NoStoreStrategy",
-            "value": "{\n  mode: string;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cache/strategies.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "mode",
-                "value": "string",
-                "description": ""
-              }
-            ]
-          },
           "I18nBase": {
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
@@ -986,10 +1066,16 @@
     ]
   },
   {
-    "name": "Pagnination",
+    "name": "Pagination",
     "category": "components",
     "isVisualComponent": false,
-    "related": [],
+    "related": [
+      {
+        "name": "getPaginationVariables",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/utilities/getpaginationvariables"
+      }
+    ],
     "description": "The `<Pagination />` component makes it easy to pagination lists using cursors from the Storefront API. It is important for pagination state to be maintained in the URL, so that the user can navigate to a product and return back to the same scrolled position in a list. It is also important that the list state is shareable via URL. The `<Pagination>` component provides a render prop with properties to load more elements into your list.",
     "type": "component",
     "defaultExample": {
@@ -1003,7 +1089,7 @@
           },
           {
             "title": "TypeScript",
-            "code": "import {json, type LoaderArgs} from '@shopify/remix-oxygen';\nimport {Pagination, getPaginationVariables} from '@shopify/hydrogen';\nimport {useLoaderData, Link} from '@remix-run/react';\n\nexport async function loader({request, context: {storefront}}: LoaderArgs) {\n  const variables = getPaginationVariables(request, {pageBy: 8});\n\n  const data = await storefront.query(ALL_PRODUCTS_QUERY, {\n    variables,\n  });\n\n  return json({products: data.products});\n}\n\nexport default function List() {\n  const {products} = useLoaderData<typeof loader>();\n\n  return (\n    <Pagination connection={products}>\n      {({nodes, NextLink, PreviousLink}) => (\n        <>\n          <PreviousLink>Previous</PreviousLink>\n          <div>\n            {nodes.map((product) => (\n              <Link key={product.id} to={`/products/${product.handle}`}>\n                {product.title}\n              </Link>\n            ))}\n          </div>\n          <NextLink>Next</NextLink>\n        </>\n      )}\n    </Pagination>\n  );\n}\n\nconst ALL_PRODUCTS_QUERY = `#graphql\n  query AllProducts(\n    $country: CountryCode\n    $language: LanguageCode\n    $first: Int\n    $last: Int\n    $startCursor: String\n    $endCursor: String\n  ) @inContext(country: $country, language: $language) {\n    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {\n      nodes { id\n        title\n        handle\n      }\n      pageInfo {\n        hasPreviousPage\n        hasNextPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n`;\n",
+            "code": "import {json, type LoaderArgs} from '@shopify/remix-oxygen';\nimport {Pagination, getPaginationVariables} from '@shopify/hydrogen';\nimport {useLoaderData, Link} from '@remix-run/react';\nimport {ProductConnection} from '@shopify/hydrogen/storefront-api-types';\n\nexport async function loader({request, context: {storefront}}: LoaderArgs) {\n  const variables = getPaginationVariables(request, {pageBy: 8});\n\n  const data = await storefront.query<{products: ProductConnection}>(\n    ALL_PRODUCTS_QUERY,\n    {\n      variables,\n    },\n  );\n\n  return json({products: data.products});\n}\n\nexport default function List() {\n  const {products} = useLoaderData<typeof loader>();\n\n  return (\n    <Pagination connection={products}>\n      {({nodes, NextLink, PreviousLink}) => (\n        <>\n          <PreviousLink>Previous</PreviousLink>\n          <div>\n            {nodes.map((product) => (\n              <Link key={product.id} to={`/products/${product.handle}`}>\n                {product.title}\n              </Link>\n            ))}\n          </div>\n          <NextLink>Next</NextLink>\n        </>\n      )}\n    </Pagination>\n  );\n}\n\nconst ALL_PRODUCTS_QUERY = `#graphql\n  query AllProducts(\n    $country: CountryCode\n    $language: LanguageCode\n    $first: Int\n    $last: Int\n    $startCursor: String\n    $endCursor: String\n  ) @inContext(country: $country, language: $language) {\n    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {\n      nodes { id\n        title\n        handle\n      }\n      pageInfo {\n        hasPreviousPage\n        hasNextPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n`;\n",
             "language": "tsx"
           }
         ],
@@ -1145,6 +1231,75 @@
     ]
   },
   {
+    "name": "getPaginationVariables",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "Pagination",
+        "type": "components",
+        "url": "/docs/api/hydrogen/components/pagination"
+      }
+    ],
+    "description": "The `getPaginationVariables` function is used with the [`<Pagination>`](/docs/api/hydrogen/components/pagnination) component to generate the variables needed to fetch paginated data from the Storefront API. The returned variables should be used within your storefront GraphQL query.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {json} from '@shopify/remix-oxygen';\nimport {Pagination, getPaginationVariables} from '@shopify/hydrogen';\nimport {useLoaderData, Link} from '@remix-run/react';\n\nexport async function loader({request, context: {storefront}}) {\n  const variables = getPaginationVariables(request, {pageBy: 8});\n\n  const data = await storefront.query(ALL_PRODUCTS_QUERY, {\n    variables,\n  });\n\n  return json({products: data.products});\n}\n\nexport default function List() {\n  const {products} = useLoaderData();\n\n  return (\n    <Pagination connection={products}>\n      {({nodes, PreviousLink, NextLink}) => (\n        <>\n          <PreviousLink>Previous</PreviousLink>\n          <div>\n            {nodes.map((product) => (\n              <Link key={product.id} to={`/products/${product.handle}`}>\n                {product.title}\n              </Link>\n            ))}\n          </div>\n          <NextLink>Next</NextLink>\n        </>\n      )}\n    </Pagination>\n  );\n}\n\nconst ALL_PRODUCTS_QUERY = `#graphql\n  query AllProducts(\n    $country: CountryCode\n    $language: LanguageCode\n    $first: Int\n    $last: Int\n    $startCursor: String\n    $endCursor: String\n  ) @inContext(country: $country, language: $language) {\n    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {\n      nodes { id\n        title\n        handle\n      }\n      pageInfo {\n        hasPreviousPage\n        hasNextPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n`;\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {json, type LoaderArgs} from '@shopify/remix-oxygen';\nimport {Pagination, getPaginationVariables} from '@shopify/hydrogen';\nimport {useLoaderData, Link} from '@remix-run/react';\nimport {ProductConnection} from '@shopify/hydrogen/storefront-api-types';\n\nexport async function loader({request, context: {storefront}}: LoaderArgs) {\n  const variables = getPaginationVariables(request, {pageBy: 8});\n\n  const data = await storefront.query<{products: ProductConnection}>(\n    ALL_PRODUCTS_QUERY,\n    {\n      variables,\n    },\n  );\n\n  return json({products: data.products});\n}\n\nexport default function List() {\n  const {products} = useLoaderData<typeof loader>();\n\n  return (\n    <Pagination connection={products}>\n      {({nodes, NextLink, PreviousLink}) => (\n        <>\n          <PreviousLink>Previous</PreviousLink>\n          <div>\n            {nodes.map((product) => (\n              <Link key={product.id} to={`/products/${product.handle}`}>\n                {product.title}\n              </Link>\n            ))}\n          </div>\n          <NextLink>Next</NextLink>\n        </>\n      )}\n    </Pagination>\n  );\n}\n\nconst ALL_PRODUCTS_QUERY = `#graphql\n  query AllProducts(\n    $country: CountryCode\n    $language: LanguageCode\n    $first: Int\n    $last: Int\n    $startCursor: String\n    $endCursor: String\n  ) @inContext(country: $country, language: $language) {\n    products(first: $first, last: $last, before: $startCursor, after: $endCursor) {\n      nodes { id\n        title\n        handle\n      }\n      pageInfo {\n        hasPreviousPage\n        hasNextPage\n        startCursor\n        endCursor\n      }\n    }\n  }\n`;\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "GetPaginationVariablesGeneratedType",
+        "typeDefinitions": {
+          "GetPaginationVariablesGeneratedType": {
+            "filePath": "/pagination/Pagination.ts",
+            "name": "GetPaginationVariablesGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "request",
+                "description": "The request object passed to your Remix loader function.",
+                "value": "Request",
+                "filePath": "/pagination/Pagination.ts"
+              },
+              {
+                "name": "options",
+                "description": "Options for how to configure the pagination variables. Includes the ability to change how many nodes are within each page.",
+                "value": "{ pageBy: number; }",
+                "isOptional": true,
+                "defaultValue": "{pageBy: 20}",
+                "filePath": "/pagination/Pagination.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/pagination/Pagination.ts",
+              "description": "variables to be used with the `storefront.query` function",
+              "name": "",
+              "value": ""
+            },
+            "value": "export function getPaginationVariables(\n  request: Request,\n  options: {pageBy: number} = {pageBy: 20},\n) {\n  if (!(request instanceof Request)) {\n    throw new Error(\n      'getPaginationVariables must be called with the Request object passed to your loader function',\n    );\n  }\n\n  const {pageBy} = options;\n  const searchParams = new URLSearchParams(new URL(request.url).search);\n\n  const cursor = searchParams.get('cursor') ?? undefined;\n  const direction =\n    searchParams.get('direction') === 'previous' ? 'previous' : 'next';\n  const isPrevious = direction === 'previous';\n\n  const prevPage = {\n    last: pageBy,\n    startCursor: cursor ?? null,\n  };\n\n  const nextPage = {\n    first: pageBy,\n    endCursor: cursor ?? null,\n  };\n\n  const variables = isPrevious ? prevPage : nextPage;\n\n  return variables;\n}"
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "graphiqlLoader",
     "category": "utilities",
     "isVisualComponent": false,
@@ -1279,22 +1434,22 @@
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Storefront",
-            "value": "{\n  /** The function to run a query on storefront api. */\n  query: <T>(\n    query: string,\n    payload?: StorefrontCommonOptions & {\n      cache?: CachingStrategy;\n    },\n  ) => Promise<T>;\n  /** The function to run a mutation on storefront api. */\n  mutate: <T>(\n    mutation: string,\n    payload?: StorefrontCommonOptions,\n  ) => Promise<T>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2023-04/utilities/cachenone). */\n  CacheNone: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2023-04/utilities/cachelong). */\n  CacheLong: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2023-04/utilities/cacheshort). */\n  CacheShort: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-04/utilities/cachecustom). */\n  CacheCustom: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-04/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /** Determines if the error is resulted from a Storefront API call. */\n  isApiError: (error: any) => boolean;\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n: TI18n;\n}",
-            "description": "some deswcription",
+            "value": "{\n  /** The function to run a query on Storefront API. */\n  query: <OverrideReturnType = any, RawGqlString extends string = string>(\n    query: RawGqlString,\n    ...options: RawGqlString extends keyof QueryTypes // Do we have any generated query types?\n      ? IsOptionalVariables<QueryTypes[RawGqlString]> extends true\n        ? [StorefrontQuerySecondParam<RawGqlString>?] // Using codegen, query has no variables\n        : [StorefrontQuerySecondParam<RawGqlString>] // Using codegen, query needs variables\n      : [StorefrontQuerySecondParam?] // No codegen, variables always optional\n  ) => Promise<\n    RawGqlString extends keyof QueryTypes // Do we have any generated query types?\n      ? QueryTypes[RawGqlString]['return'] // Using codegen, return type is known\n      : OverrideReturnType // No codegen, let user specify return type\n  >;\n  /** The function to run a mutation on Storefront API. */\n  mutate: <OverrideReturnType = any, RawGqlString extends string = string>(\n    mutation: RawGqlString,\n    ...options: RawGqlString extends keyof MutationTypes // Do we have any generated mutation types?\n      ? IsOptionalVariables<MutationTypes[RawGqlString]> extends true\n        ? [StorefrontMutateSecondParam<RawGqlString>?] // Using codegen, mutation has no variables\n        : [StorefrontMutateSecondParam<RawGqlString>] // Using codegen, mutation needs variables\n      : [StorefrontMutateSecondParam?] // No codegen, variables always optional\n  ) => Promise<\n    RawGqlString extends keyof MutationTypes // Do we have any generated mutation types?\n      ? MutationTypes[RawGqlString]['return'] // Using codegen, return type is known\n      : OverrideReturnType // No codegen, let user specify return type\n  >;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/utilities/cachenone). */\n  CacheNone: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/utilities/cachelong). */\n  CacheLong: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort). */\n  CacheShort: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/utilities/cachecustom). */\n  CacheCustom: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /** Determines if the error is resulted from a Storefront API call. */\n  isApiError: (error: any) => boolean;\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n: TI18n;\n}",
+            "description": "Interface to interact with the Storefront API.",
             "members": [
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "query",
-                "value": "<T>(query: string, payload?: StorefrontCommonOptions & { cache?: AllCacheOptions; }) => Promise<T>",
-                "description": "The function to run a query on storefront api."
+                "value": "<OverrideReturnType = any, RawGqlString extends string = string>(query: RawGqlString, ...options: RawGqlString extends never ? IsOptionalVariables<QueryTypes[RawGqlString]> extends true ? [StorefrontQuerySecondParam<RawGqlString>?] : [StorefrontQuerySecondParam<RawGqlString>] : [StorefrontQuerySecondParam<string>?]) => Promise<RawGqlString extends never ? QueryTypes[RawGqlString][\"return\"] : OverrideReturnType>",
+                "description": "The function to run a query on Storefront API."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "mutate",
-                "value": "<T>(mutation: string, payload?: StorefrontCommonOptions) => Promise<T>",
-                "description": "The function to run a mutation on storefront api."
+                "value": "<OverrideReturnType = any, RawGqlString extends string = string>(mutation: RawGqlString, ...options: RawGqlString extends never ? IsOptionalVariables<MutationTypes[RawGqlString]> extends true ? [StorefrontMutateSecondParam<RawGqlString>?] : [StorefrontMutateSecondParam<RawGqlString>] : [StorefrontCommonOptions<{ readonly [variable: string]: unknown; }>?]) => Promise<RawGqlString extends never ? MutationTypes[RawGqlString][\"return\"] : OverrideReturnType>",
+                "description": "The function to run a mutation on Storefront API."
               },
               {
                 "filePath": "/storefront.ts",
@@ -1309,63 +1464,63 @@
                 "syntaxKind": "PropertySignature",
                 "name": "CacheNone",
                 "value": "() => NoStoreStrategy",
-                "description": "Re-export of [`CacheNone`](/docs/api/hydrogen/2023-04/utilities/cachenone)."
+                "description": "Re-export of [`CacheNone`](/docs/api/hydrogen/utilities/cachenone)."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "CacheLong",
                 "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
-                "description": "Re-export of [`CacheLong`](/docs/api/hydrogen/2023-04/utilities/cachelong)."
+                "description": "Re-export of [`CacheLong`](/docs/api/hydrogen/utilities/cachelong)."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "CacheShort",
                 "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
-                "description": "Re-export of [`CacheShort`](/docs/api/hydrogen/2023-04/utilities/cacheshort)."
+                "description": "Re-export of [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort)."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "CacheCustom",
                 "value": "(overrideOptions: AllCacheOptions) => AllCacheOptions",
-                "description": "Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-04/utilities/cachecustom)."
+                "description": "Re-export of [`CacheCustom`](/docs/api/hydrogen/utilities/cachecustom)."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "generateCacheControlHeader",
                 "value": "(cacheOptions: AllCacheOptions) => string",
-                "description": "Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-04/utilities/generatecachecontrolheader)."
+                "description": "Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/utilities/generatecachecontrolheader)."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPublicTokenHeaders",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
-                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details."
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getPrivateTokenHeaders",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
-                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details."
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getShopifyDomain",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
-                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details."
+                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details."
               },
               {
                 "filePath": "/storefront.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getApiUrl",
                 "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\" | \"storefrontApiVersion\">>) => string",
-                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details."
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details."
               },
               {
                 "filePath": "/storefront.ts",
@@ -1383,36 +1538,132 @@
               }
             ]
           },
+          "IsOptionalVariables": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "IsOptionalVariables",
+            "value": "Omit<\n  OperationTypeValue['variables'],\n  AutoAddedVariableNames\n> extends EmptyVariables\n  ? true // No need to pass variables\n  : GenericVariables extends OperationTypeValue['variables']\n  ? true // We don't know what variables are needed\n  : false",
+            "description": ""
+          },
+          "AutoAddedVariableNames": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "AutoAddedVariableNames",
+            "value": "'country' | 'language'",
+            "description": ""
+          },
+          "EmptyVariables": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "EmptyVariables",
+            "value": "{[key: string]: never}",
+            "description": "",
+            "members": []
+          },
+          "GenericVariables": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GenericVariables",
+            "value": "ExecutionArgs['variableValues']",
+            "description": ""
+          },
+          "QueryTypes": {
+            "filePath": "/storefront.ts",
+            "name": "QueryTypes",
+            "description": "Maps all the queries found in the project to variables and return types.",
+            "members": [],
+            "value": "export interface QueryTypes {\n  // Example of how a generated query type looks like:\n  // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};\n}"
+          },
+          "StorefrontQuerySecondParam": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontQuerySecondParam",
+            "value": "(RawGqlString extends keyof QueryTypes\n  ? StorefrontCommonOptions<QueryTypes[RawGqlString]['variables']>\n  : StorefrontCommonOptions<GenericVariables>) & {cache?: CachingStrategy}",
+            "description": ""
+          },
           "StorefrontCommonOptions": {
             "filePath": "/storefront.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontCommonOptions",
-            "value": "{\n  variables?: ExecutionArgs['variableValues'] & {\n    country?: CountryCode;\n    language?: LanguageCode;\n  };\n  headers?: HeadersInit;\n  storefrontApiVersion?: string;\n}",
+            "value": "{\n  headers?: HeadersInit;\n  storefrontApiVersion?: string;\n} & (IsOptionalVariables<{variables: Variables}> extends true\n  ? {variables?: Variables}\n  : {variables: Variables})",
+            "description": ""
+          },
+          "CachingStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CachingStrategy",
+            "value": "AllCacheOptions",
+            "description": "Use the `CachingStrategy` to define a custom caching mechanism for your data. Or use one of the pre-defined caching strategies: CacheNone, CacheShort, CacheLong.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ]
+          },
+          "MutationTypes": {
+            "filePath": "/storefront.ts",
+            "name": "MutationTypes",
+            "description": "Maps all the mutations found in the project to variables and return types.",
+            "members": [],
+            "value": "export interface MutationTypes {\n  // Example of how a generated mutation type looks like:\n  // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};\n}"
+          },
+          "StorefrontMutateSecondParam": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontMutateSecondParam",
+            "value": "RawGqlString extends keyof MutationTypes\n  ? StorefrontCommonOptions<MutationTypes[RawGqlString]['variables']>\n  : StorefrontCommonOptions<GenericVariables>",
+            "description": ""
+          },
+          "NoStoreStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "NoStoreStrategy",
+            "value": "{\n  mode: string;\n}",
             "description": "",
             "members": [
               {
-                "filePath": "/storefront.ts",
+                "filePath": "/cache/strategies.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "variables",
-                "value": "{ readonly [variable: string]: unknown; } & { country?: CountryCode; language?: LanguageCode; }",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "headers",
-                "value": "HeadersInit",
-                "description": "",
-                "isOptional": true
-              },
-              {
-                "filePath": "/storefront.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "storefrontApiVersion",
+                "name": "mode",
                 "value": "string",
-                "description": "",
-                "isOptional": true
+                "description": ""
               }
             ]
           },
@@ -1463,22 +1714,6 @@
               }
             ],
             "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
-          },
-          "NoStoreStrategy": {
-            "filePath": "/cache/strategies.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "NoStoreStrategy",
-            "value": "{\n  mode: string;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cache/strategies.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "mode",
-                "value": "string",
-                "description": ""
-              }
-            ]
           },
           "I18nBase": {
             "filePath": "/storefront.ts",
