@@ -9,8 +9,8 @@ type Connection<NodesType> = {
 };
 
 type PaginationState<NodesType> = {
-  nodes: Array<NodesType>;
-  pageInfo: PageInfo | null;
+  nodes?: Array<NodesType>;
+  pageInfo?: PageInfo | null;
 };
 
 interface PaginationInfo<NodesType> {
@@ -52,9 +52,20 @@ type PaginationRenderProp<NodesType> = (
   props: PaginationInfo<NodesType>,
 ) => JSX.Element | null;
 
+/**
+ *
+ * The [Storefront API uses cursors](https://shopify.dev/docs/api/usage/pagination-graphql) to paginate through lists of data
+ * and the \`<Pagination />\` component makes it easy to paginate data from the Storefront API.
+ *
+ * @prop connection The response from `storefront.query` for a paginated request. Make sure the query is passed pagination variables and that the query has `pageInfo` with `hasPreviousPage`, `hasNextpage`, `startCursor`, and `endCursor` defined.
+ * @prop children A render prop that includes pagination data and helpers.
+ */
 export function Pagination<NodesType>({
   connection,
-  children = () => null,
+  children = () => {
+    console.warn('<Pagination> requires children to work properly');
+    return null;
+  },
 }: PaginationProps<NodesType>) {
   const transition = useNavigation();
   const isLoading = transition.state === 'loading';
@@ -136,9 +147,10 @@ export function usePagination<NodesType>(
   endCursor: Maybe<string> | undefined;
 } {
   const [nodes, setNodes] = useState(connection.nodes);
+  const wow = useLocation();
   const {state, search} = useLocation() as {
-    state: PaginationState<NodesType>;
-    search: string;
+    state?: PaginationState<NodesType>;
+    search?: string;
   };
   const params = new URLSearchParams(search);
   const direction = params.get('direction');
