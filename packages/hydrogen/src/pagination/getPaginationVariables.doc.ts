@@ -1,17 +1,20 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'getPaginationVariables__unstable',
+  name: 'getPaginationVariables',
   category: 'utilities',
   isVisualComponent: false,
   related: [
     {
-      name: 'Pagination__unstable',
+      name: 'Pagination',
       type: 'components',
-      url: '/docs/api/hydrogen/components/pagination__unstable',
+      url: '/docs/api/hydrogen/components/pagination',
     },
   ],
-  description: `The \`getPaginationVariables\` function is used with the [\`<Pagination>\`](/docs/api/hydrogen/components/pagnination) component to generate the variables needed to fetch paginated data from the Storefront API. The returned variables should be used within your storefront GraphQL query.`,
+  description: `> Caution:
+> This component is in an unstable pre-release state and may have breaking changes in a future release.
+  
+The \`getPaginationVariables\` function is used with the [\`<Pagination>\`](/docs/api/hydrogen/components/pagnination) component to generate the variables needed to fetch paginated data from the Storefront API. The returned variables should be used within your storefront GraphQL query.`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',

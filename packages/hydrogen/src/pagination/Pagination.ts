@@ -227,7 +227,7 @@ export function usePagination<NodesType>(
  * @param request The request object passed to your Remix loader function.
  * @param options Options for how to configure the pagination variables. Includes the ability to change how many nodes are within each page.
  *
- * @returns variables to be used with the `storefront.query` function
+ * @returns Variables to be used with the `storefront.query` function
  */
 export function getPaginationVariables(
   request: Request,
