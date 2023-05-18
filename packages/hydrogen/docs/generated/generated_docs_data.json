@@ -1289,7 +1289,7 @@
             ],
             "returns": {
               "filePath": "/pagination/Pagination.ts",
-              "description": "variables to be used with the `storefront.query` function",
+              "description": "Variables to be used with the `storefront.query` function",
               "name": "",
               "value": ""
             },
