@@ -1129,24 +1129,8 @@
             "filePath": "/pagination/Pagination.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Connection",
-            "value": "{\n  nodes: Array<NodesType>;\n  pageInfo: PageInfo;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/pagination/Pagination.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "nodes",
-                "value": "Array<NodesType>",
-                "description": ""
-              },
-              {
-                "filePath": "/pagination/Pagination.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "pageInfo",
-                "value": "PageInfo",
-                "description": ""
-              }
-            ]
+            "value": "{\n      nodes: Array<NodesType>;\n      pageInfo: PageInfo;\n    } | {\n      edges: {\n        nodes: Array<NodesType>;\n      };\n      pageInfo: PageInfo;\n    }",
+            "description": ""
           },
           "PaginationRenderProp": {
             "filePath": "/pagination/Pagination.ts",
