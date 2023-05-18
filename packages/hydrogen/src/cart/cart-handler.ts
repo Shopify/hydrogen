@@ -1,7 +1,6 @@
 import {Storefront} from '../storefront';
 import {getFormInput, CartActionInput} from './CartForm';
 import {
-  type CartQueryReturn,
   cartCreateDefault,
   cartGetDefault,
   cartLinesAddDefault,
@@ -15,17 +14,6 @@ import {
   cartSelectedDeliveryOptionsUpdateDefault,
   cartAttributesUpdateDefault,
 } from './cart-query-wrapper';
-import type {CartGet, MetafieldWithoutOwnerId} from './cart-types';
-import {
-  AttributeInput,
-  Cart,
-  CartBuyerIdentityInput,
-  CartInput,
-  CartLineInput,
-  CartLineUpdateInput,
-  CartSelectedDeliveryOptionInput,
-  Scalars,
-} from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
 
 type CartHandlerOptions = {
@@ -44,20 +32,22 @@ type CartHandlerOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
   };
 export type CartHandlerReturnBase = {
   getFormInput: (formData: any) => CartActionInput;
-  get: (cartInput?: CartGet) => Promise<Cart | null | undefined>;
+  get: ReturnType<typeof cartGetDefault>;
   getCartId: () => string | undefined;
   setCartId: (cartId: string, headers: Headers) => void;
-  create: CartQueryReturn<CartInput>;
-  addLines: CartQueryReturn<CartLineInput[]>;
-  updateLines: CartQueryReturn<CartLineUpdateInput[]>;
-  removeLines: CartQueryReturn<string[]>;
-  updateDiscountCodes: CartQueryReturn<string[]>;
-  updateBuyerIdentity: CartQueryReturn<CartBuyerIdentityInput>;
-  updateNote: CartQueryReturn<string>;
-  updateSelectedDeliveryOption: CartQueryReturn<CartSelectedDeliveryOptionInput>;
-  updateAttributes: CartQueryReturn<AttributeInput[]>;
-  setMetafields: CartQueryReturn<MetafieldWithoutOwnerId[]>;
-  deleteMetafield: CartQueryReturn<Scalars['String']>;
+  create: ReturnType<typeof cartCreateDefault>;
+  addLines: ReturnType<typeof cartLinesAddDefault>;
+  updateLines: ReturnType<typeof cartLinesUpdateDefault>;
+  removeLines: ReturnType<typeof cartLinesRemoveDefault>;
+  updateDiscountCodes: ReturnType<typeof cartDiscountCodesUpdateDefault>;
+  updateBuyerIdentity: ReturnType<typeof cartBuyerIdentityUpdateDefault>;
+  updateNote: ReturnType<typeof cartNoteUpdateDefault>;
+  updateSelectedDeliveryOption: ReturnType<
+    typeof cartSelectedDeliveryOptionsUpdateDefault
+  >;
+  updateAttributes: ReturnType<typeof cartAttributesUpdateDefault>;
+  setMetafields: ReturnType<typeof cartMetafieldsSetDefault>;
+  deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;
 };
 
 export type CartHandlerReturnCustom<
