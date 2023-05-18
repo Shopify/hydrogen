@@ -29,6 +29,7 @@ import type {
   CartBuyerIdentityInput,
   CartLineUpdateInput,
   CartSelectedDeliveryOptionInput,
+  MetafieldDeleteUserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartQueryOptions = {
@@ -40,7 +41,10 @@ export type CartQueryOptions = {
 
 export type CartQueryData = {
   cart: Cart;
-  errors?: CartUserError[] | MetafieldsSetUserError[];
+  errors?:
+    | CartUserError[]
+    | MetafieldsSetUserError[]
+    | MetafieldDeleteUserError[];
 };
 
 export type CartQueryReturn<T> = (
@@ -245,7 +249,10 @@ export function cartMetafieldsSetDefault(
       }),
     );
     const {cartMetafieldsSet} = await options.storefront.mutate<{
-      cartMetafieldsSet: MetafieldsQueryData;
+      cartMetafieldsSet: {
+        cart: Cart;
+        errors: MetafieldsSetUserError[];
+      };
     }>(CART_METAFIELD_SET_MUTATION(), {
       variables: {metafields: metafieldsWithOwnerId},
     });
@@ -265,7 +272,10 @@ export function cartMetafieldDeleteDefault(
   return async (key, optionalParams) => {
     const ownerId = optionalParams?.cartId || options.getCartId();
     const {cartMetafieldDelete} = await options.storefront.mutate<{
-      cartMetafieldDelete: MetafieldsQueryData;
+      cartMetafieldDelete: {
+        cart: Cart;
+        errors: MetafieldDeleteUserError[];
+      };
     }>(CART_METAFIELD_DELETE_MUTATION(), {
       variables: {
         input: {
