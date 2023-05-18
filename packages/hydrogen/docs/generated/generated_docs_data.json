@@ -880,7 +880,7 @@
             "filePath": "/cart/cart-handler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerReturnBaseForDocs",
-            "value": "{\n  /**\n   * Add lines to the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  addLines?: (\n    lines: CartLineInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Creates a new cart with the storefront api.\n   */\n  create?: (\n    input: CartInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Delete metafield in the cart with the storefront api.\n   */\n  deleteMetafield?: (\n    key: Scalars['String'],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Gets the cart with the storefront api.\n   */\n  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;\n  /**\n   * Gets the cart id. Default behavior is to get the cart id from the request cookie.\n   * Returns the cart id in the form of `gid://shopify/Cart/123`\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Gets the form input created by CartForm action request.\n   */\n  getFormInput?: (formData: any) => CartActionInput;\n  /**\n   * Remove lines from the cart with the storefront api.\n   */\n  removeLines?: (\n    lineIds: string[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Sets the cart id. Default behavior is to set the cart id in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Set metafields in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  setMetafields?: (\n    metafields: MetafieldWithoutOwnerId[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update attributes in the cart with the storefront api.\n   */\n  updateAttributes?: (\n    attributes: AttributeInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update buyer identity in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateBuyerIdentity?: (\n    buyerIdentity: CartBuyerIdentityInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update discount codes in the cart with the storefront api.\n   */\n  updateDiscountCodes?: (\n    attributes: AttributeInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update lines in the cart with the storefront api.\n   */\n  updateLines?: (\n    discountCodes: string[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update note in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateNote?: (\n    note: string,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update selected delivery options in the cart with the storefront api.\n   * Only available for cart associated with an `buyerIdentity.customerAccessToken`.\n   */\n  updateSelectedDeliveryOption?: (\n    selectedDeliveryOptions: CartSelectedDeliveryOptionInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n}",
+            "value": "{\n  /**\n   * Add lines to the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  addLines?: (\n    lines: CartLineInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Creates a new cart with the storefront api.\n   */\n  create?: (\n    input: CartInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Delete metafield in the cart with the storefront api.\n   */\n  deleteMetafield?: (\n    key: Scalars['String'],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Gets the cart with the storefront api.\n   */\n  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;\n  /**\n   * Gets the cart id. Default behavior is to get the cart id from the request cookie.\n   * Returns the cart id in the form of `gid://shopify/Cart/123`\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Gets the form input created by CartForm action request.\n   */\n  getFormInput?: (formData: any) => CartActionInput;\n  /**\n   * Remove lines from the cart with the storefront api.\n   */\n  removeLines?: (\n    lineIds: string[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Sets the cart id. Default behavior is to set the cart id in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Set metafields in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  setMetafields?: (\n    metafields: MetafieldWithoutOwnerId[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update attributes in the cart with the storefront api.\n   */\n  updateAttributes?: (\n    attributes: AttributeInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update buyer identity in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateBuyerIdentity?: (\n    buyerIdentity: CartBuyerIdentityInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update discount codes in the cart with the storefront api.\n   */\n  updateDiscountCodes?: (\n    discountCodes: string[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update lines in the cart with the storefront api.\n   */\n  updateLines?: (\n    lines: CartLineUpdateInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update note in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateNote?: (\n    note: string,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update selected delivery options in the cart with the storefront api.\n   * Only available for cart associated with an `buyerIdentity.customerAccessToken`.\n   */\n  updateSelectedDeliveryOption?: (\n    selectedDeliveryOptions: CartSelectedDeliveryOptionInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n}",
             "description": "",
             "members": [
               {
@@ -975,7 +975,7 @@
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "updateDiscountCodes",
-                "value": "(attributes: AttributeInput[], optionalParams: CartOptionalInput) => Promise<CartQueryData>",
+                "value": "(discountCodes: string[], optionalParams: CartOptionalInput) => Promise<CartQueryData>",
                 "description": "Update discount codes in the cart with the storefront api.",
                 "isOptional": true
               },
@@ -983,7 +983,7 @@
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "updateLines",
-                "value": "(discountCodes: string[], optionalParams: CartOptionalInput) => Promise<CartQueryData>",
+                "value": "(lines: CartLineUpdateInput[], optionalParams: CartOptionalInput) => Promise<CartQueryData>",
                 "description": "Update lines in the cart with the storefront api.",
                 "isOptional": true
               },
@@ -1175,6 +1175,13 @@
               }
             ]
           },
+          "AttributeInput": {
+            "description": "",
+            "name": "AttributeInput",
+            "value": "AttributeInput",
+            "members": [],
+            "override": "[AttributeInput](/docs/api/storefront/2023-04/input-objects/AttributeInput) - Storefront API type"
+          },
           "OtherFormData": {
             "filePath": "/cart/CartForm.tsx",
             "syntaxKind": "TypeAliasDeclaration",
@@ -1205,6 +1212,13 @@
                 "description": ""
               }
             ]
+          },
+          "CartBuyerIdentityInput": {
+            "description": "",
+            "name": "CartBuyerIdentityInput",
+            "value": "CartBuyerIdentityInput",
+            "members": [],
+            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2023-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
           },
           "CartCreateProps": {
             "filePath": "/cart/CartForm.tsx",
@@ -1298,6 +1312,13 @@
               }
             ]
           },
+          "CartLineUpdateInput": {
+            "description": "",
+            "name": "CartLineUpdateInput",
+            "value": "CartLineUpdateInput",
+            "members": [],
+            "override": "[CartLineUpdateInput](/docs/api/storefront/2023-04/input-objects/CartLineUpdateInput) - Storefront API type"
+          },
           "CartLinesRemoveProps": {
             "filePath": "/cart/CartForm.tsx",
             "syntaxKind": "TypeAliasDeclaration",
@@ -1366,6 +1387,13 @@
                 "description": ""
               }
             ]
+          },
+          "CartSelectedDeliveryOptionInput": {
+            "description": "",
+            "name": "CartSelectedDeliveryOptionInput",
+            "value": "CartSelectedDeliveryOptionInput",
+            "members": [],
+            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2023-04/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
           },
           "CartMetafieldsSetProps": {
             "filePath": "/cart/CartForm.tsx",
@@ -1484,7 +1512,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "const cart = createCartHandler_unstable({\n  storefront,\n  requestHeaders: request.headers,\n  customMethods: {\n    example: () => 'example',\n    addLines: async (cartInput) => {\n      return await storefront.mutate(CART_LINES_ADD_MUTATION, {\n        variables: {\n          id: cartInput.id,\n          lines: cartInput.lines,\n        },\n      });\n    },\n  },\n});\n\n// Example usage\ncart.example(); // 'example'\nconst result = await cart.addLines({\n  id: '123',\n  lines: [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n});\n// Output of result:\n// {\n//   cartLinesAdd: {\n//     cart: {\n//       id: '123',\n//       totalQuantity: 1\n//     },\n//     errors: []\n//   }\n// }\n\nconst CART_LINES_ADD_MUTATION = `#graphql\n  mutation CartLinesAdd(\n    $cartId: ID!\n    $lines: [CartLineInput!]!\n    $country: CountryCode = ZZ\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    cartLinesAdd(cartId: $cartId, lines: $lines) {\n      cart {\n        id\n        totalQuantity\n      }\n      errors: userErrors {\n        message\n        field\n        code\n      }\n    }\n  }\n`;\n",
+                    "code": "const cart = createCartHandler_unstable({\n  storefront,\n  requestHeaders: request.headers,\n  customMethods: {\n    example: () => 'example',\n    addLines: async (lines, optionalParams) => {\n      return await storefront.mutate(CART_LINES_ADD_MUTATION, {\n        variables: {\n          id: optionalParams.cartId,\n          lines,\n        },\n      });\n    },\n  },\n});\n\n// Example usage\ncart.example(); // 'example'\nconst result = await cart.addLines([\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n  {\n    cartId: 'c-123',\n  },\n);\n// Output of result:\n// {\n//   cartLinesAdd: {\n//     cart: {\n//       id: 'c-123',\n//       totalQuantity: 1\n//     },\n//     errors: []\n//   }\n// }\n\nconst CART_LINES_ADD_MUTATION = `#graphql\n  mutation CartLinesAdd(\n    $cartId: ID!\n    $lines: [CartLineInput!]!\n    $country: CountryCode = ZZ\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    cartLinesAdd(cartId: $cartId, lines: $lines) {\n      cart {\n        id\n        totalQuantity\n      }\n      errors: userErrors {\n        message\n        field\n        code\n      }\n    }\n  }\n`;\n",
                     "language": "js"
                   }
                 ]
@@ -1620,6 +1648,71 @@
                   {
                     "title": "JavaScript",
                     "code": "// Usage\nconst result = await cart.updateAttributes(\n  [\n    {\n      key: 'Somekey',\n      value: '1',\n    },\n  ],\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1\n//   },\n//   errors: []\n// }\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            },
+            {
+              "description": "Update buyer identity in the cart with the storefront api. If the cart does not exist, a new cart will be created.",
+              "codeblock": {
+                "title": "cart.updateBuyerIdentity",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "// Usage\nconst result = await cart.updateBuyerIdentity(\n  {\n    customerAccessToken: '123',\n  },\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1\n//   },\n//   errors: []\n// }\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            },
+            {
+              "description": "Update discount codes in the cart with the storefront api.",
+              "codeblock": {
+                "title": "cart.updateDiscountCodes",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "// Usage\nconst result = await cart.updateDiscountCodes(\n  ['FREE_SHIPPING'],\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1\n//   },\n//   errors: []\n// }\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            },
+            {
+              "description": "Update lines in the cart with the storefront api.",
+              "codeblock": {
+                "title": "cart.updateLines",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "// Usage\nconst result = await cart.updateLines(\n  [\n    {\n      merchandiseId: '123',\n      quantity: 2,\n    },\n  ],\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 2\n//   },\n//   errors: []\n// }\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            },
+            {
+              "description": "Update note in the cart with the storefront api. If the cart does not exist, a new cart will be created.",
+              "codeblock": {
+                "title": "cart.updateNote",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "// Usage\nconst result = await cart.updateNote(\n  'Some notes',\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 0\n//   },\n//   errors: []\n// }\n",
+                    "language": "js"
+                  }
+                ]
+              }
+            },
+            {
+              "description": "Update selected delivery options in the cart with the storefront api. Only available for cart associated with an `buyerIdentity.customerAccessToken`.",
+              "codeblock": {
+                "title": "cart.updateSelectedDeliveryOptions",
+                "tabs": [
+                  {
+                    "title": "JavaScript",
+                    "code": "// Usage\nconst result = await cart.updateSelectedDeliveryOptions(\n  {\n    deliveryGroupId: '123',\n    deliveryOptionHandle: 'Canada Post',\n  },\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 2\n//   },\n//   errors: []\n// }\n",
                     "language": "js"
                   }
                 ]

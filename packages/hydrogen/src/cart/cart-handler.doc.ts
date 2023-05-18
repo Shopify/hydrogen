@@ -217,6 +217,75 @@ const data: ReferenceEntityTemplateSchema = {
               ],
             },
           },
+          {
+            description:
+              'Update buyer identity in the cart with the storefront api. If the cart does not exist, a new cart will be created.',
+            codeblock: {
+              title: 'cart.updateBuyerIdentity',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './cart-handler.updateBuyerIdentity.example.js',
+                  language: 'js',
+                },
+              ],
+            },
+          },
+          {
+            description:
+              'Update discount codes in the cart with the storefront api.',
+            codeblock: {
+              title: 'cart.updateDiscountCodes',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './cart-handler.updateDiscountCodes.example.js',
+                  language: 'js',
+                },
+              ],
+            },
+          },
+          {
+            description: 'Update lines in the cart with the storefront api.',
+            codeblock: {
+              title: 'cart.updateLines',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './cart-handler.updateLines.example.js',
+                  language: 'js',
+                },
+              ],
+            },
+          },
+          {
+            description:
+              'Update note in the cart with the storefront api. If the cart does not exist, a new cart will be created.',
+            codeblock: {
+              title: 'cart.updateNote',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './cart-handler.updateNote.example.js',
+                  language: 'js',
+                },
+              ],
+            },
+          },
+          {
+            description:
+              'Update selected delivery options in the cart with the storefront api. Only available for cart associated with an `buyerIdentity.customerAccessToken`.',
+            codeblock: {
+              title: 'cart.updateSelectedDeliveryOptions',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './cart-handler.updateSelectedDeliveryOptions.example.js',
+                  language: 'js',
+                },
+              ],
+            },
+          },
         ],
       },
     ],

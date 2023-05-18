@@ -308,14 +308,14 @@ export type CartHandlerReturnBaseForDocs = {
    * Update discount codes in the cart with the storefront api.
    */
   updateDiscountCodes?: (
-    attributes: AttributeInput[],
+    discountCodes: string[],
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Update lines in the cart with the storefront api.
    */
   updateLines?: (
-    discountCodes: string[],
+    lines: CartLineUpdateInput[],
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
