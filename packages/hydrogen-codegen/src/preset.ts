@@ -11,8 +11,8 @@ export const namespacedImportName = 'StorefrontAPI';
 
 export const interfaceExtensionCode = `
 declare module '@shopify/hydrogen' {
-  interface QueryTypes extends GeneratedQueryTypes {}
-  interface MutationTypes extends GeneratedMutationTypes {}
+  interface StorefrontQueries extends GeneratedQueryTypes {}
+  interface StorefrontMutations extends GeneratedMutationTypes {}
 }`;
 
 export const preset: Types.OutputPreset<GqlTagConfig> = {

@@ -46,7 +46,7 @@ export type StorefrontClient<TI18n extends I18nBase> = {
 /**
  * Maps all the queries found in the project to variables and return types.
  */
-export interface QueryTypes {
+export interface StorefrontQueries {
   // Example of how a generated query type looks like:
   // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};
 }
@@ -54,7 +54,7 @@ export interface QueryTypes {
 /**
  * Maps all the mutations found in the project to variables and return types.
  */
-export interface MutationTypes {
+export interface StorefrontMutations {
   // Example of how a generated mutation type looks like:
   // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
 }
@@ -88,15 +88,15 @@ type StorefrontCommonOptions<Variables extends GenericVariables> = {
   : {variables: Variables});
 
 type StorefrontQuerySecondParam<
-  RawGqlString extends keyof QueryTypes | string = string,
-> = (RawGqlString extends keyof QueryTypes
-  ? StorefrontCommonOptions<QueryTypes[RawGqlString]['variables']>
+  RawGqlString extends keyof StorefrontQueries | string = string,
+> = (RawGqlString extends keyof StorefrontQueries
+  ? StorefrontCommonOptions<StorefrontQueries[RawGqlString]['variables']>
   : StorefrontCommonOptions<GenericVariables>) & {cache?: CachingStrategy};
 
 type StorefrontMutateSecondParam<
-  RawGqlString extends keyof MutationTypes | string = string,
-> = RawGqlString extends keyof MutationTypes
-  ? StorefrontCommonOptions<MutationTypes[RawGqlString]['variables']>
+  RawGqlString extends keyof StorefrontMutations | string = string,
+> = RawGqlString extends keyof StorefrontMutations
+  ? StorefrontCommonOptions<StorefrontMutations[RawGqlString]['variables']>
   : StorefrontCommonOptions<GenericVariables>;
 
 /**
@@ -106,27 +106,27 @@ export type Storefront<TI18n extends I18nBase = I18nBase> = {
   /** The function to run a query on Storefront API. */
   query: <OverrideReturnType = any, RawGqlString extends string = string>(
     query: RawGqlString,
-    ...options: RawGqlString extends keyof QueryTypes // Do we have any generated query types?
-      ? IsOptionalVariables<QueryTypes[RawGqlString]> extends true
+    ...options: RawGqlString extends keyof StorefrontQueries // Do we have any generated query types?
+      ? IsOptionalVariables<StorefrontQueries[RawGqlString]> extends true
         ? [StorefrontQuerySecondParam<RawGqlString>?] // Using codegen, query has no variables
         : [StorefrontQuerySecondParam<RawGqlString>] // Using codegen, query needs variables
       : [StorefrontQuerySecondParam?] // No codegen, variables always optional
   ) => Promise<
-    RawGqlString extends keyof QueryTypes // Do we have any generated query types?
-      ? QueryTypes[RawGqlString]['return'] // Using codegen, return type is known
+    RawGqlString extends keyof StorefrontQueries // Do we have any generated query types?
+      ? StorefrontQueries[RawGqlString]['return'] // Using codegen, return type is known
       : OverrideReturnType // No codegen, let user specify return type
   >;
   /** The function to run a mutation on Storefront API. */
   mutate: <OverrideReturnType = any, RawGqlString extends string = string>(
     mutation: RawGqlString,
-    ...options: RawGqlString extends keyof MutationTypes // Do we have any generated mutation types?
-      ? IsOptionalVariables<MutationTypes[RawGqlString]> extends true
+    ...options: RawGqlString extends keyof StorefrontMutations // Do we have any generated mutation types?
+      ? IsOptionalVariables<StorefrontMutations[RawGqlString]> extends true
         ? [StorefrontMutateSecondParam<RawGqlString>?] // Using codegen, mutation has no variables
         : [StorefrontMutateSecondParam<RawGqlString>] // Using codegen, mutation needs variables
       : [StorefrontMutateSecondParam?] // No codegen, variables always optional
   ) => Promise<
-    RawGqlString extends keyof MutationTypes // Do we have any generated mutation types?
-      ? MutationTypes[RawGqlString]['return'] // Using codegen, return type is known
+    RawGqlString extends keyof StorefrontMutations // Do we have any generated mutation types?
+      ? StorefrontMutations[RawGqlString]['return'] // Using codegen, return type is known
       : OverrideReturnType // No codegen, let user specify return type
   >;
   /** The cache instance passed in from the `createStorefrontClient` argument. */
