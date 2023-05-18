@@ -1,5 +1,9 @@
 # @shopify/mini-oxygen
 
+## 1.5.1
+
+- Change minioxygen's events route to avoid conflicts with actual routes. ([PR](https://github.com/Shopify/mini-oxygen/pull/436))
+
 ## 1.5.0
 
 - Dependency updates
