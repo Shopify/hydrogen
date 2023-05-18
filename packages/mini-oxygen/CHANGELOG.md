@@ -1,6 +1,6 @@
 # @shopify/mini-oxygen
 
-## 1.5.1
+## 1.6.0
 
 - Change minioxygen's events route to avoid conflicts with actual routes. ([PR](https://github.com/Shopify/mini-oxygen/pull/436))
 
