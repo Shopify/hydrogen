@@ -160,9 +160,12 @@ CartForm.ACTIONS = {
 } as const;
 
 export function getFormInput(formData: any): CartActionInput {
-  const formInputs: CartActionInput = formData.has(INPUT_NAME)
+  const {action, ...inputs}: CartActionInput = formData.has(INPUT_NAME)
     ? JSON.parse(String(formData.get(INPUT_NAME)))
     : {};
 
-  return formInputs;
+  return {
+    action,
+    inputs,
+  } as unknown as CartActionInput;
 }
