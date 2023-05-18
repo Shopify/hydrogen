@@ -203,6 +203,20 @@ const data: ReferenceEntityTemplateSchema = {
               ],
             },
           },
+          {
+            description:
+              'Update attributes in the cart with the storefront api.',
+            codeblock: {
+              title: 'cart.updateAttributes',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './cart-handler.updateAttributes.example.js',
+                  language: 'js',
+                },
+              ],
+            },
+          },
         ],
       },
     ],

@@ -292,28 +292,46 @@ export type CartHandlerReturnBaseForDocs = {
   /**
    * Update attributes in the cart with the storefront api.
    */
-  updateAttributes?: CartQueryReturn<AttributeInput[]>;
+  updateAttributes?: (
+    attributes: AttributeInput[],
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
   /**
    * Update buyer identity in the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
    */
-  updateBuyerIdentity?: CartQueryReturn<CartBuyerIdentityInput>;
+  updateBuyerIdentity?: (
+    buyerIdentity: CartBuyerIdentityInput,
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
   /**
    * Update discount codes in the cart with the storefront api.
    */
-  updateDiscountCodes?: CartQueryReturn<string[]>;
+  updateDiscountCodes?: (
+    attributes: AttributeInput[],
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
   /**
    * Update lines in the cart with the storefront api.
    */
-  updateLines?: CartQueryReturn<CartLineUpdateInput[]>;
+  updateLines?: (
+    discountCodes: string[],
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
   /**
    * Update note in the cart with the storefront api.
    * If the cart does not exist, a new cart will be created.
    */
-  updateNote?: CartQueryReturn<string>;
+  updateNote?: (
+    note: string,
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
   /**
    * Update selected delivery options in the cart with the storefront api.
    * Only available for cart associated with an `buyerIdentity.customerAccessToken`.
    */
-  updateSelectedDeliveryOption?: CartQueryReturn<CartSelectedDeliveryOptionInput>;
+  updateSelectedDeliveryOption?: (
+    selectedDeliveryOptions: CartSelectedDeliveryOptionInput,
+    optionalParams: CartOptionalInput,
+  ) => Promise<CartQueryData>;
 };
