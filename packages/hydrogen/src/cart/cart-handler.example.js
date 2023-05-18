@@ -1,6 +1,6 @@
 import {
   createStorefrontClient,
-  createCartHandler_unstable,
+  createCartHandler_unstable as createCartHandler,
 } from '@shopify/hydrogen';
 import * as remixBuild from '@remix-run/dev/server-build';
 import {
@@ -15,7 +15,7 @@ export default {
     });
 
     // Create a cart api instance.
-    const cart = createCartHandler_unstable({
+    const cart = createCartHandler({
       storefront,
       requestHeaders: request.headers,
     });

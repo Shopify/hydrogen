@@ -1,5 +1,7 @@
+import {createCartHandler_unstable as createCartHandler} from '@shopify/hydrogen';
+
 // Override cart fragments
-const cart = createCartHandler_unstable({
+const cart = createCartHandler({
   storefront,
   requestHeaders: request.headers,
   cartQueryFragment: CART_QUERY_FRAGMENT,

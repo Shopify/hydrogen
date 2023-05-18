@@ -5,7 +5,10 @@ const data: ReferenceEntityTemplateSchema = {
   category: 'utilities',
   isVisualComponent: false,
   related: [],
-  description: `Creates a cart API instance that can be used to interact with the cart.`,
+  description: `> Caution:
+> This component is in an unstable pre-release state and may have breaking changes in a future release.
+
+Creates a cart API instance that can be used to interact with the cart.`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
@@ -35,7 +38,7 @@ const data: ReferenceEntityTemplateSchema = {
       title: 'Returns',
       type: 'CartHandlerReturnBaseForDocs',
       description:
-        'If you defined custom methods, they will be included in the return type. See [examples](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-instance-usage) below for each function usage.',
+        'The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-instance-usage) or overwritten methods will also be available in the returned cart instance.',
     },
   ],
   examples: {
@@ -143,7 +146,7 @@ const data: ReferenceEntityTemplateSchema = {
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.cartId.example.js',
+                  code: './cart-handler.getCartId.example.js',
                   language: 'js',
                 },
               ],
@@ -183,7 +186,7 @@ const data: ReferenceEntityTemplateSchema = {
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.cartId.example.js',
+                  code: './cart-handler.setCartId.example.js',
                   language: 'js',
                 },
               ],

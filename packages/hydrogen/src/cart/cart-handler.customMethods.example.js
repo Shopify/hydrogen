@@ -1,4 +1,6 @@
-const cart = createCartHandler_unstable({
+import {createCartHandler_unstable as createCartHandler} from '@shopify/hydrogen';
+
+const cart = createCartHandler({
   storefront,
   requestHeaders: request.headers,
   customMethods: {

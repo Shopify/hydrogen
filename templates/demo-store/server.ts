@@ -5,7 +5,7 @@ import {
   getStorefrontHeaders,
 } from '@shopify/remix-oxygen';
 import {
-  createCartHandler_unstable,
+  createCartHandler_unstable as createCartHandler,
   createStorefrontClient,
   storefrontRedirect,
 } from '@shopify/hydrogen';
@@ -50,7 +50,7 @@ export default {
         storefrontHeaders: getStorefrontHeaders(request),
       });
 
-      const cart = createCartHandler_unstable({
+      const cart = createCartHandler({
         storefront,
         requestHeaders: request.headers,
       });

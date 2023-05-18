@@ -181,11 +181,11 @@ export type CartHandlerOptionsForDocs<
    */
   requestHeaders: Headers;
   /**
-   * The storefront instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient)).
+   * The storefront client instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient)).
    */
   storefront: Storefront;
   /**
-   * Cart mutate fragment to be used for all mutation query requests except for `setMetafields` and `deleteMetafield`.
+   * Cart mutate fragment is used in all mutation requests except for `setMetafields` and `deleteMetafield`.
    * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.
    */
   cartMutateFragment?: string;

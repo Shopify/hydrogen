@@ -1,28 +1,35 @@
-// Usage
-cart.setMetafields(
-  [
+export async function action({context}) {
+  const {cart} = context;
+
+  // Usage
+  const result = await cart.setMetafields(
+    [
+      {
+        key: 'public.gift',
+        type: 'boolean',
+        value: 'true',
+      },
+    ],
+    // Optional parameters
     {
-      key: 'public.gift',
-      type: 'boolean',
-      value: 'true',
+      cartId: '123', // override the cart id
     },
-  ],
-  // Optional parameters
-  {
-    cartId: '123', // override the cart id
-  },
-);
+  );
 
-cart.deleteMetafield(
-  'public.gift',
-  // Optional parameters
-  {
-    cartId: '123', // override the cart id
-  },
-);
+  const result2 = await cart.deleteMetafield(
+    'public.gift',
+    // Optional parameters
+    {
+      cartId: '123', // override the cart id
+    },
+  );
+}
 
+// server.js
 // To query for metafields, use the `cartQueryFragment` option when creating the cart handler.
-const cart = createCartHandler_unstable({
+import {createCartHandler_unstable as createCartHandler} from '@shopify/hydrogen';
+
+const cart = createCartHandler({
   storefront,
   requestHeaders: request.headers,
   cartQueryFragment: CART_QUERY_FRAGMENT,

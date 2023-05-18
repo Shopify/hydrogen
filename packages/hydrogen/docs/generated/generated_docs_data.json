@@ -566,7 +566,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a cart API instance that can be used to interact with the cart.",
+    "description": "> Caution:\n> This component is in an unstable pre-release state and may have breaking changes in a future release.\n\nCreates a cart API instance that can be used to interact with the cart.",
     "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
@@ -574,12 +574,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {\n  createStorefrontClient,\n  createCartHandler_unstable,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler_unstable({\n      storefront,\n      requestHeaders: request.headers,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
+            "code": "import {\n  createStorefrontClient,\n  createCartHandler_unstable as createCartHandler,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler({\n      storefront,\n      requestHeaders: request.headers,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  createStorefrontClient,\n  createCartHandler_unstable,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record<string, string>,\n    executionContext: ExecutionContext,\n  ): Promise<Response> {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler_unstable({\n      storefront,\n      requestHeaders: request.headers,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
+            "code": "import {\n  createStorefrontClient,\n  createCartHandler_unstable as createCartHandler,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record<string, string>,\n    executionContext: ExecutionContext,\n  ): Promise<Response> {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler({\n      storefront,\n      requestHeaders: request.headers,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
             "language": "ts"
           }
         ],
@@ -596,7 +596,7 @@
             "filePath": "/cart/cart-handler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerOptionsForDocs",
-            "value": "{\n  /**\n   * The request headers.\n   */\n  requestHeaders: Headers;\n  /**\n   * The storefront instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient)).\n   */\n  storefront: Storefront;\n  /**\n   * Cart mutate fragment to be used for all mutation query requests except for `setMetafields` and `deleteMetafield`.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.\n   */\n  cartMutateFragment?: string;\n  /**\n   * Cart query fragment to be used by `cart.get()`.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or overriding methods to be used in your cart api instance.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.\n   */\n  customMethods?: TCustomMethods;\n  /**\n   * A function that returns the cart id.\n   * @default () => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * A function that sets the cart id.\n   * @default (cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n}",
+            "value": "{\n  /**\n   * The request headers.\n   */\n  requestHeaders: Headers;\n  /**\n   * The storefront client instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient)).\n   */\n  storefront: Storefront;\n  /**\n   * Cart mutate fragment is used in all mutation requests except for `setMetafields` and `deleteMetafield`.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.\n   */\n  cartMutateFragment?: string;\n  /**\n   * Cart query fragment to be used by `cart.get()`.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or overriding methods to be used in your cart api instance.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.\n   */\n  customMethods?: TCustomMethods;\n  /**\n   * A function that returns the cart id.\n   * @default () => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * A function that sets the cart id.\n   * @default (cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n}",
             "description": "",
             "members": [
               {
@@ -611,14 +611,14 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storefront",
                 "value": "Storefront",
-                "description": "The storefront instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient))."
+                "description": "The storefront client instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient))."
               },
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartMutateFragment",
                 "value": "string",
-                "description": "Cart mutate fragment to be used for all mutation query requests except for `setMetafields` and `deleteMetafield`.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.",
+                "description": "Cart mutate fragment is used in all mutation requests except for `setMetafields` and `deleteMetafield`.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.",
                 "isOptional": true
               },
               {
@@ -873,7 +873,7 @@
       },
       {
         "title": "Returns",
-        "description": "If you defined custom methods, they will be included in the return type. See [examples](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-instance-usage) below for each function usage.",
+        "description": "The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-instance-usage) or overwritten methods will also be available in the returned cart instance.",
         "type": "CartHandlerReturnBaseForDocs",
         "typeDefinitions": {
           "CartHandlerReturnBaseForDocs": {
@@ -1494,7 +1494,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Override cart fragments\nconst cart = createCartHandler_unstable({\n  storefront,\n  requestHeaders: request.headers,\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n  cartMutateFragment: CART_MUTATE_FRAGMENT,\n});\n\n// cartQueryFragment requirements:\n// - Must be named `CartFragment`\n// - Only have access to the following query variables:\n//   - $cartId: ID!\n//   - $country: CountryCode\n//   - $language: LanguageCode\n//   - $numCartLines: Int\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    totalQuantity\n    checkoutUrl\n    note\n  }\n`;\n\n// cartMutateFragment requirements:\n// - Must be named `CartFragment`\n// - Only have access to the following query variables:\n//   - $cartId: ID!\n//   - $country: CountryCode\n//   - $language: LanguageCode\nconst CART_MUTATE_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    totalQuantity\n    checkoutUrl\n    lines(first: 100) {\n      edges {\n        node {\n          id\n          quantity\n        }\n      }\n    }\n  }\n`;\n",
+                    "code": "import {createCartHandler_unstable as createCartHandler} from '@shopify/hydrogen';\n\n// Override cart fragments\nconst cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n  cartMutateFragment: CART_MUTATE_FRAGMENT,\n});\n\n// cartQueryFragment requirements:\n// - Must be named `CartFragment`\n// - Only have access to the following query variables:\n//   - $cartId: ID!\n//   - $country: CountryCode\n//   - $language: LanguageCode\n//   - $numCartLines: Int\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    totalQuantity\n    checkoutUrl\n    note\n  }\n`;\n\n// cartMutateFragment requirements:\n// - Must be named `CartFragment`\n// - Only have access to the following query variables:\n//   - $cartId: ID!\n//   - $country: CountryCode\n//   - $language: LanguageCode\nconst CART_MUTATE_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    totalQuantity\n    checkoutUrl\n    lines(first: 100) {\n      edges {\n        node {\n          id\n          quantity\n        }\n      }\n    }\n  }\n`;\n",
                     "language": "js"
                   }
                 ]
@@ -1512,7 +1512,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "const cart = createCartHandler_unstable({\n  storefront,\n  requestHeaders: request.headers,\n  customMethods: {\n    example: () => 'example',\n    addLines: async (lines, optionalParams) => {\n      return await storefront.mutate(CART_LINES_ADD_MUTATION, {\n        variables: {\n          id: optionalParams.cartId,\n          lines,\n        },\n      });\n    },\n  },\n});\n\n// Example usage\ncart.example(); // 'example'\nconst result = await cart.addLines([\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n  {\n    cartId: 'c-123',\n  },\n);\n// Output of result:\n// {\n//   cartLinesAdd: {\n//     cart: {\n//       id: 'c-123',\n//       totalQuantity: 1\n//     },\n//     errors: []\n//   }\n// }\n\nconst CART_LINES_ADD_MUTATION = `#graphql\n  mutation CartLinesAdd(\n    $cartId: ID!\n    $lines: [CartLineInput!]!\n    $country: CountryCode = ZZ\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    cartLinesAdd(cartId: $cartId, lines: $lines) {\n      cart {\n        id\n        totalQuantity\n      }\n      errors: userErrors {\n        message\n        field\n        code\n      }\n    }\n  }\n`;\n",
+                    "code": "import {createCartHandler_unstable as createCartHandler} from '@shopify/hydrogen';\n\nconst cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  customMethods: {\n    example: () => 'example',\n    addLines: async (lines, optionalParams) => {\n      return await storefront.mutate(CART_LINES_ADD_MUTATION, {\n        variables: {\n          id: optionalParams.cartId,\n          lines,\n        },\n      });\n    },\n  },\n});\n\n// Example usage\ncart.example(); // 'example'\nconst result = await cart.addLines(\n  [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n  {\n    cartId: 'c-123',\n  },\n);\n// Output of result:\n// {\n//   cartLinesAdd: {\n//     cart: {\n//       id: 'c-123',\n//       totalQuantity: 1\n//     },\n//     errors: []\n//   }\n// }\n\nconst CART_LINES_ADD_MUTATION = `#graphql\n  mutation CartLinesAdd(\n    $cartId: ID!\n    $lines: [CartLineInput!]!\n    $country: CountryCode = ZZ\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    cartLinesAdd(cartId: $cartId, lines: $lines) {\n      cart {\n        id\n        totalQuantity\n      }\n      errors: userErrors {\n        message\n        field\n        code\n      }\n    }\n  }\n`;\n",
                     "language": "js"
                   }
                 ]
@@ -1530,7 +1530,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\nconst result = await cart.addLines(\n  [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1\n//   },\n//   errors: []\n// }\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.addLines(\n    [\n      {\n        merchandiseId: '123',\n        quantity: 1,\n      },\n    ],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n      country: 'US', // override the country code to 'US'\n      language: 'EN', // override the language code to 'EN'\n    },\n  );\n}\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1\n//   },\n//   errors: []\n// }\n",
                     "language": "js"
                   }
                 ]
@@ -1543,7 +1543,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\nconst result = cart.create(\n  {\n    lines: [\n      {\n        merchandiseId: '123',\n        quantity: 1,\n      },\n    ],\n    discountCodes: ['FREE_SHIPPING'],\n  },\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1,\n//     discountCodes: [{ code: 'FREE_SHIPPING'}]\n//   },\n//   errors: []\n// }\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.create(\n    {\n      lines: [\n        {\n          merchandiseId: '123',\n          quantity: 1,\n        },\n      ],\n      discountCodes: ['FREE_SHIPPING'],\n    },\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n      country: 'US', // override the country code to 'US'\n      language: 'EN', // override the language code to 'EN'\n    },\n  );\n\n  // Output of result:\n  // {\n  //   cart: {\n  //     id: 'c1-123',\n  //     totalQuantity: 1,\n  //     discountCodes: [{ code: 'FREE_SHIPPING'}]\n  //   },\n  //   errors: []\n  // }\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1556,7 +1556,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\ncart.setMetafields(\n  [\n    {\n      key: 'public.gift',\n      type: 'boolean',\n      value: 'true',\n    },\n  ],\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n  },\n);\n\ncart.deleteMetafield(\n  'public.gift',\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n  },\n);\n\n// To query for metafields, use the `cartQueryFragment` option when creating the cart handler.\nconst cart = createCartHandler_unstable({\n  storefront,\n  requestHeaders: request.headers,\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n});\n\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    metafields(\n      identifiers: [{\n        namespace: \"public\",\n        key: \"gift\"\n      ])\n    {\n      namespace\n      key\n      type\n      value\n    }\n\n  }\n`;\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.setMetafields(\n    [\n      {\n        key: 'public.gift',\n        type: 'boolean',\n        value: 'true',\n      },\n    ],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n\n  const result2 = await cart.deleteMetafield(\n    'public.gift',\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n}\n\n// server.js\n// To query for metafields, use the `cartQueryFragment` option when creating the cart handler.\nimport {createCartHandler_unstable as createCartHandler} from '@shopify/hydrogen';\n\nconst cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n});\n\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    metafields(\n      identifiers: [{\n        namespace: \"public\",\n        key: \"gift\"\n      ])\n    {\n      namespace\n      key\n      type\n      value\n    }\n\n  }\n`;\n",
                     "language": "js"
                   }
                 ]
@@ -1569,7 +1569,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\ncart.get();\n\n// Optional parameters\ncart.get({\n  cartId: '123', // override the cart id\n  numCartLines: 50, //override to return 50 cart lines\n  country: 'US', // override the country code to 'US'\n  language: 'EN', // override the language code to 'EN'\n});\n",
+                    "code": "export async function loader({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.get();\n\n  // Optional parameters\n  const result2 = await cart.get({\n    cartId: '123', // override the cart id\n    numCartLines: 50, //override to return 50 cart lines\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  });\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1582,7 +1582,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\ncart.getCartId(); // 'gid://shopify/Cart/123'\n\nconst header = new Headers();\ncart.setCartId('gid://shopify/Cart/456', header);\n",
+                    "code": "export async function loader({context}) {\n  // Usage\n  context.cart.getCartId(); // 'gid://shopify/Cart/123'\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1595,7 +1595,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export async function action({request, context}) {\n  const formData = await request.formData();\n  const {action, inputs} = context.cart.getFormInput(formData);\n\n  // Do something with the action and inputs\n}\n",
+                    "code": "export async function action({request, context}) {\n  const formData = await request.formData();\n  const {\n    action,\n    inputs\n  } = context.cart.getFormInput(formData);\n\n  // Do something with the action and inputs\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1608,7 +1608,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\nconst result = await cart.removeLines(\n  ['123'],\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 0\n//   },\n//   errors: []\n// }\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.removeLines(\n    ['123'],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n      country: 'US', // override the country code to 'US'\n      language: 'EN', // override the language code to 'EN'\n    },\n  );\n\n  // Output of result:\n  // {\n  //   cart: {\n  //     id: 'c1-123',\n  //     totalQuantity: 0\n  //   },\n  //   errors: []\n  // }\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1621,7 +1621,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\ncart.getCartId(); // 'gid://shopify/Cart/123'\n\nconst header = new Headers();\ncart.setCartId('gid://shopify/Cart/456', header);\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  const result = await cart.addLines([\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ]);\n\n  // Usage\n  const headers = new Headers();\n  cart.setCartId(result.cart.id, headers);\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1634,7 +1634,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\ncart.setMetafields(\n  [\n    {\n      key: 'public.gift',\n      type: 'boolean',\n      value: 'true',\n    },\n  ],\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n  },\n);\n\ncart.deleteMetafield(\n  'public.gift',\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n  },\n);\n\n// To query for metafields, use the `cartQueryFragment` option when creating the cart handler.\nconst cart = createCartHandler_unstable({\n  storefront,\n  requestHeaders: request.headers,\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n});\n\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    metafields(\n      identifiers: [{\n        namespace: \"public\",\n        key: \"gift\"\n      ])\n    {\n      namespace\n      key\n      type\n      value\n    }\n\n  }\n`;\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.setMetafields(\n    [\n      {\n        key: 'public.gift',\n        type: 'boolean',\n        value: 'true',\n      },\n    ],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n\n  const result2 = await cart.deleteMetafield(\n    'public.gift',\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n}\n\n// server.js\n// To query for metafields, use the `cartQueryFragment` option when creating the cart handler.\nimport {createCartHandler_unstable as createCartHandler} from '@shopify/hydrogen';\n\nconst cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n});\n\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    metafields(\n      identifiers: [{\n        namespace: \"public\",\n        key: \"gift\"\n      ])\n    {\n      namespace\n      key\n      type\n      value\n    }\n\n  }\n`;\n",
                     "language": "js"
                   }
                 ]
@@ -1647,7 +1647,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\nconst result = await cart.updateAttributes(\n  [\n    {\n      key: 'Somekey',\n      value: '1',\n    },\n  ],\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1\n//   },\n//   errors: []\n// }\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.updateAttributes(\n    [\n      {\n        key: 'Somekey',\n        value: '1',\n      },\n    ],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n\n  // Output of result:\n  // {\n  //   cart: {\n  //     id: 'c1-123',\n  //     totalQuantity: 1\n  //   },\n  //   errors: []\n  // }\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1660,7 +1660,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\nconst result = await cart.updateBuyerIdentity(\n  {\n    customerAccessToken: '123',\n  },\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1\n//   },\n//   errors: []\n// }\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.updateBuyerIdentity(\n    {\n      customerAccessToken: '123',\n    },\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n      country: 'US', // override the country code to 'US'\n      language: 'EN', // override the language code to 'EN'\n    },\n  );\n\n  // Output of result:\n  // {\n  //   cart: {\n  //     id: 'c1-123',\n  //     totalQuantity: 1\n  //   },\n  //   errors: []\n  // }\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1673,7 +1673,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\nconst result = await cart.updateDiscountCodes(\n  ['FREE_SHIPPING'],\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 1\n//   },\n//   errors: []\n// }\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.updateDiscountCodes(\n    ['FREE_SHIPPING'],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n      country: 'US', // override the country code to 'US'\n      language: 'EN', // override the language code to 'EN'\n    },\n  );\n\n  // Output of result:\n  // {\n  //   cart: {\n  //     id: 'c1-123',\n  //     totalQuantity: 1\n  //   },\n  //   errors: []\n  // }\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1686,7 +1686,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\nconst result = await cart.updateLines(\n  [\n    {\n      merchandiseId: '123',\n      quantity: 2,\n    },\n  ],\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 2\n//   },\n//   errors: []\n// }\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.updateLines(\n    [\n      {\n        merchandiseId: '123',\n        quantity: 2,\n      },\n    ],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n      country: 'US', // override the country code to 'US'\n      language: 'EN', // override the language code to 'EN'\n    },\n  );\n\n  // Output of result:\n  // {\n  //   cart: {\n  //     id: 'c1-123',\n  //     totalQuantity: 2\n  //   },\n  //   errors: []\n  // }\n}\n",
                     "language": "js"
                   }
                 ]
@@ -1699,7 +1699,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\nconst result = await cart.updateNote(\n  'Some notes',\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 0\n//   },\n//   errors: []\n// }\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.updateNote(\n    'Some notes',\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n\n  // Output of result:\n  // {\n  //   cart: {\n  //     id: 'c1-123',\n  //     totalQuantity: 0\n  //   },\n  //   errors: []\n  // }\n  }\n",
                     "language": "js"
                   }
                 ]
@@ -1712,7 +1712,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "// Usage\nconst result = await cart.updateSelectedDeliveryOptions(\n  {\n    deliveryGroupId: '123',\n    deliveryOptionHandle: 'Canada Post',\n  },\n  // Optional parameters\n  {\n    cartId: '123', // override the cart id\n    country: 'US', // override the country code to 'US'\n    language: 'EN', // override the language code to 'EN'\n  },\n);\n\n// Output of result:\n// {\n//   cart: {\n//     id: 'c1-123',\n//     totalQuantity: 2\n//   },\n//   errors: []\n// }\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.updateSelectedDeliveryOptions(\n    {\n      deliveryGroupId: '123',\n      deliveryOptionHandle: 'Canada Post',\n    },\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n      country: 'US', // override the country code to 'US'\n      language: 'EN', // override the language code to 'EN'\n    },\n  );\n\n  // Output of result:\n  // {\n  //   cart: {\n  //     id: 'c1-123',\n  //     totalQuantity: 2\n  //   },\n  //   errors: []\n  // }\n}\n",
                     "language": "js"
                   }
                 ]
