@@ -1129,7 +1129,7 @@
             "filePath": "/pagination/Pagination.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Connection",
-            "value": "{\n      nodes: Array<NodesType>;\n      pageInfo: PageInfo;\n    } | {\n      edges: {\n        nodes: Array<NodesType>;\n      };\n      pageInfo: PageInfo;\n    }",
+            "value": "{\n      nodes: Array<NodesType>;\n      pageInfo: PageInfo;\n    } | {\n      edges: {\n        node: Array<NodesType>;\n      };\n      pageInfo: PageInfo;\n    }",
             "description": ""
           },
           "PaginationRenderProp": {

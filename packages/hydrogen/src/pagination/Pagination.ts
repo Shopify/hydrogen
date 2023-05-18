@@ -10,7 +10,7 @@ type Connection<NodesType> =
     }
   | {
       edges: {
-        nodes: Array<NodesType>;
+        node: Array<NodesType>;
       };
       pageInfo: PageInfo;
     };
@@ -141,12 +141,6 @@ export function Pagination<NodesType>({
   });
 }
 
-function getNodes<NodesType>(connection: Connection<NodesType>) {
-  return 'edges' in connection
-    ? flattenConnection(connection.edges)
-    : connection.nodes;
-}
-
 /**
  * Get cumulative pagination logic for a given connection
  */
@@ -159,7 +153,7 @@ export function usePagination<NodesType>(
   startCursor: Maybe<string> | undefined;
   endCursor: Maybe<string> | undefined;
 } {
-  const [nodes, setNodes] = useState<Array<NodesType>>(getNodes(connection));
+  const [nodes, setNodes] = useState(flattenConnection(connection));
   const wow = useLocation();
   const {state, search} = useLocation() as {
     state?: PaginationState<NodesType>;
@@ -234,14 +228,14 @@ export function usePagination<NodesType>(
   // the only way to prevent hydration mismatches
   useEffect(() => {
     if (!state || !state?.nodes) {
-      setNodes(getNodes(connection));
+      setNodes(flattenConnection(connection));
       return;
     }
 
     if (isPrevious) {
-      setNodes([...getNodes(connection), ...state.nodes]);
+      setNodes([...flattenConnection(connection), ...state.nodes]);
     } else {
-      setNodes([...state.nodes, ...getNodes(connection)]);
+      setNodes([...state.nodes, ...flattenConnection(connection)]);
     }
   }, [state, isPrevious, connection]);
 
