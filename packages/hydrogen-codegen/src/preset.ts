@@ -3,7 +3,6 @@ import * as addPlugin from '@graphql-codegen/add';
 import * as typescriptOperationPlugin from '@graphql-codegen/typescript-operations';
 import {processSources} from './sources.js';
 import {plugin as dtsPlugin} from './plugin.js';
-import {getSchema} from './schema.js';
 
 export type GqlTagConfig = {};
 
@@ -11,8 +10,8 @@ export const namespacedImportName = 'StorefrontAPI';
 
 export const interfaceExtensionCode = `
 declare module '@shopify/hydrogen' {
-  interface QueryTypes extends GeneratedQueryTypes {}
-  interface MutationTypes extends GeneratedMutationTypes {}
+  interface StorefrontQueries extends GeneratedQueryTypes {}
+  interface StorefrontMutations extends GeneratedMutationTypes {}
 }`;
 
 export const preset: Types.OutputPreset<GqlTagConfig> = {
@@ -72,7 +71,7 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
         filename: options.baseOutputDir,
         plugins,
         pluginMap,
-        schema: options.schema || getSchema(),
+        schema: options.schema,
         config: {
           ...options.config,
           // This is for the operations plugin

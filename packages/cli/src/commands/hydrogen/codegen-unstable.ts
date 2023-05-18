@@ -1,6 +1,7 @@
 import path from 'path';
 import Command from '@shopify/cli-kit/node/base-command';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {Flags} from '@oclif/core';
 import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
@@ -54,11 +55,19 @@ async function runCodegen({
   await patchGqlPluck();
 
   try {
-    await generateTypes({
+    const generatedFiles = await generateTypes({
       ...remixConfig,
       configFilePath: codegenConfigPath,
       watch,
     });
+
+    if (!watch) {
+      console.log('');
+      renderSuccess({
+        headline: 'Generated types for GraphQL:',
+        body: generatedFiles.map((file) => `- ${file}`).join('\n'),
+      });
+    }
   } catch (error) {
     const {message, details} = normalizeCodegenError(
       (error as Error).message,

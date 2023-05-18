@@ -141,9 +141,14 @@ export async function generateTypes({
     },
     true,
   );
+
+  return Object.keys(codegenConfig.generates);
 }
 
-function generateDefaultConfig({rootDirectory, appDirectory}: ProjectDirs) {
+function generateDefaultConfig({
+  rootDirectory,
+  appDirectory,
+}: ProjectDirs): LoadCodegenConfigResult {
   const tsDefaultGlob = '*!(*.d).{ts,tsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
 
