@@ -141,6 +141,8 @@ export async function generateTypes({
     },
     true,
   );
+
+  return Object.keys(codegenConfig.generates);
 }
 
 function generateDefaultConfig({rootDirectory, appDirectory}: ProjectDirs) {
