@@ -233,7 +233,7 @@ type CartGetForDocs = {
 
 export type CartHandlerReturnBaseForDocs = {
   /**
-   * Add lines to the cart with the storefront api.
+   * Add lines to the cart with the Storefront API.
    * If the cart does not exist, a new cart will be created.
    */
   addLines?: (
@@ -241,21 +241,21 @@ export type CartHandlerReturnBaseForDocs = {
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
-   * Creates a new cart with the storefront api.
+   * Creates a new cart with the Storefront API.
    */
   create?: (
     input: CartInput,
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
-   * Delete metafield in the cart with the storefront api.
+   * Delete metafield in the cart with the Storefront API.
    */
   deleteMetafield?: (
     key: Scalars['String'],
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
-   * Gets the cart with the storefront api.
+   * Gets the cart with the Storefront API.
    */
   get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;
   /**
@@ -268,7 +268,7 @@ export type CartHandlerReturnBaseForDocs = {
    */
   getFormInput?: (formData: any) => CartActionInput;
   /**
-   * Remove lines from the cart with the storefront api.
+   * Remove lines from the cart with the Storefront API.
    */
   removeLines?: (
     lineIds: string[],
@@ -279,7 +279,7 @@ export type CartHandlerReturnBaseForDocs = {
    */
   setCartId?: (cartId: string, headers: Headers) => void;
   /**
-   * Set metafields in the cart with the storefront api.
+   * Set metafields in the cart with the Storefront API.
    * If the cart does not exist, a new cart will be created.
    */
   setMetafields?: (
@@ -287,14 +287,14 @@ export type CartHandlerReturnBaseForDocs = {
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
-   * Update attributes in the cart with the storefront api.
+   * Update attributes in the cart with the Storefront API.
    */
   updateAttributes?: (
     attributes: AttributeInput[],
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
-   * Update buyer identity in the cart with the storefront api.
+   * Update buyer identity in the cart with the Storefront API.
    * If the cart does not exist, a new cart will be created.
    */
   updateBuyerIdentity?: (
@@ -302,21 +302,21 @@ export type CartHandlerReturnBaseForDocs = {
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
-   * Update discount codes in the cart with the storefront api.
+   * Update discount codes in the cart with the Storefront API.
    */
   updateDiscountCodes?: (
     discountCodes: string[],
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
-   * Update lines in the cart with the storefront api.
+   * Update lines in the cart with the Storefront API.
    */
   updateLines?: (
     lines: CartLineUpdateInput[],
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
-   * Update note in the cart with the storefront api.
+   * Update note in the cart with the Storefront API.
    * If the cart does not exist, a new cart will be created.
    */
   updateNote?: (
@@ -324,7 +324,7 @@ export type CartHandlerReturnBaseForDocs = {
     optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
-   * Update selected delivery options in the cart with the storefront api.
+   * Update selected delivery options in the cart with the Storefront API.
    * Only available for cart associated with an `buyerIdentity.customerAccessToken`.
    */
   updateSelectedDeliveryOption?: (

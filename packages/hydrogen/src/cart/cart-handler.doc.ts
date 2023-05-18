@@ -88,7 +88,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
         examples: [
           {
             description:
-              'Add lines to the cart with the storefront api. If the cart does not exist, a new cart will be created.',
+              'Add lines to the cart with the Storefront API. If the cart does not exist, a new cart will be created.',
             codeblock: {
               title: 'cart.addLines',
               tabs: [
@@ -101,7 +101,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
             },
           },
           {
-            description: 'Create a new cart with the storefront api.',
+            description: 'Create a new cart with the Storefront API.',
             codeblock: {
               title: 'cart.create',
               tabs: [
@@ -127,7 +127,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
             },
           },
           {
-            description: 'Get the cart with the storefront api.',
+            description: 'Get the cart with the Storefront API.',
             codeblock: {
               title: 'cart.get',
               tabs: [
@@ -167,7 +167,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
             },
           },
           {
-            description: 'Remove lines from the cart with the storefront api.',
+            description: 'Remove lines from the cart with the Storefront API.',
             codeblock: {
               title: 'cart.removeLines',
               tabs: [
@@ -194,7 +194,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
           },
           {
             description:
-              'Set metafields in the cart with the storefront api. If the cart does not exist, a new cart will be created.',
+              'Set metafields in the cart with the Storefront API. If the cart does not exist, a new cart will be created.',
             codeblock: {
               title: 'cart.setMetafields',
               tabs: [
@@ -208,7 +208,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
           },
           {
             description:
-              'Update attributes in the cart with the storefront api.',
+              'Update attributes in the cart with the Storefront API.',
             codeblock: {
               title: 'cart.updateAttributes',
               tabs: [
@@ -222,7 +222,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
           },
           {
             description:
-              'Update buyer identity in the cart with the storefront api. If the cart does not exist, a new cart will be created.',
+              'Update buyer identity in the cart with the Storefront API. If the cart does not exist, a new cart will be created.',
             codeblock: {
               title: 'cart.updateBuyerIdentity',
               tabs: [
@@ -236,7 +236,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
           },
           {
             description:
-              'Update discount codes in the cart with the storefront api.',
+              'Update discount codes in the cart with the Storefront API.',
             codeblock: {
               title: 'cart.updateDiscountCodes',
               tabs: [
@@ -249,7 +249,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
             },
           },
           {
-            description: 'Update lines in the cart with the storefront api.',
+            description: 'Update lines in the cart with the Storefront API.',
             codeblock: {
               title: 'cart.updateLines',
               tabs: [
@@ -263,7 +263,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
           },
           {
             description:
-              'Update note in the cart with the storefront api. If the cart does not exist, a new cart will be created.',
+              'Update note in the cart with the Storefront API. If the cart does not exist, a new cart will be created.',
             codeblock: {
               title: 'cart.updateNote',
               tabs: [
@@ -277,7 +277,7 @@ Creates a cart API instance that can be used to interact with the cart.`,
           },
           {
             description:
-              'Update selected delivery options in the cart with the storefront api. Only available for cart associated with an `buyerIdentity.customerAccessToken`.',
+              'Update selected delivery options in the cart with the Storefront API. Only available for cart associated with an `buyerIdentity.customerAccessToken`.',
             codeblock: {
               title: 'cart.updateSelectedDeliveryOptions',
               tabs: [
