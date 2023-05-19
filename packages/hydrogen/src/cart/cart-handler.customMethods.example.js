@@ -34,7 +34,7 @@ const cart = createCartHandler({
   },
 });
 
-// Usage custom method editInPlace that delete and add items in one method
+// Use custom method editInPlace that delete and add items in one method
 cart.editInPlace(
   ['123'],
   [
