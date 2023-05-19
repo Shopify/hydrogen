@@ -29,6 +29,13 @@ export const commonFlags = {
     env: 'SHOPIFY_SHOP',
     parse: async (input) => normalizeStoreFqdn(input),
   }),
+  ['env-branch']: Flags.string({
+    description:
+      "Specify an environment's branch name when using remote environment variables.",
+    env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
+    char: 'e',
+    hidden: true,
+  }),
 };
 
 export function flagsToCamelObject(obj: Record<string, any>) {

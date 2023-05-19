@@ -5,7 +5,7 @@ import {outputSuccess, outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists, writeFile} from '@shopify/cli-kit/node/fs';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 
-import {commonFlags} from '../../../lib/flags.js';
+import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {pullRemoteEnvironmentVariables} from '../../../lib/pull-environment-variables.js';
 import {getConfig} from '../../../lib/shopify-config.js';
 
@@ -16,6 +16,7 @@ export default class Pull extends Command {
   static hidden = true;
 
   static flags = {
+    ['env-branch']: commonFlags['env-branch'],
     path: commonFlags.path,
     shop: commonFlags.shop,
     force: commonFlags.force,
@@ -23,22 +24,29 @@ export default class Pull extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Pull);
-    await pullVariables(flags);
+    await pullVariables({...flagsToCamelObject(flags)});
   }
 }
 
 interface Flags {
+  envBranch?: string;
   force?: boolean;
   path?: string;
   shop?: string;
 }
 
-export async function pullVariables({force, path, shop: flagShop}: Flags) {
+export async function pullVariables({
+  envBranch,
+  force,
+  path,
+  shop: flagShop,
+}: Flags) {
   const actualPath = path ?? process.cwd();
 
   const environmentVariables = await pullRemoteEnvironmentVariables({
     root: actualPath,
     flagShop,
+    envBranch,
   });
 
   if (!environmentVariables.length) {

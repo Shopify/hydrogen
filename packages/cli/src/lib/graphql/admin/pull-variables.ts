@@ -1,8 +1,8 @@
 export const PullVariablesQuery = `#graphql
-  query ListStorefronts($id: ID!) {
+  query PullVariables($id: ID!, $branch: String) {
     hydrogenStorefront(id: $id) {
       id
-      environmentVariables {
+      environmentVariables(branchName: $branch) {
         id
         isSecret
         key

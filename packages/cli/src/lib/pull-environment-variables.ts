@@ -22,6 +22,7 @@ import {
 } from './graphql/admin/pull-variables.js';
 
 interface Arguments {
+  envBranch?: string;
   root: string;
   /**
    * Optional shop override that developers would have passed using the --shop
@@ -36,6 +37,7 @@ interface Arguments {
 }
 
 export async function pullRemoteEnvironmentVariables({
+  envBranch,
   root,
   flagShop,
   silent,
@@ -78,14 +80,16 @@ export async function pullRemoteEnvironmentVariables({
 
   if (!silent) {
     outputInfo(
-      `Fetching Preview environment variables from ${configStorefront.title}...`,
+      `Fetching environment variables from ${configStorefront.title}...`,
     );
   }
+
   const result: PullVariablesSchema = await adminRequest(
     PullVariablesQuery,
     adminSession,
     {
       id: configStorefront.id,
+      branch: envBranch,
     },
   );
 
@@ -117,7 +121,7 @@ export async function pullRemoteEnvironmentVariables({
 
   if (!storefront.environmentVariables.length) {
     if (!silent) {
-      outputInfo(`No Preview environment variables found.`);
+      outputInfo(`No environment variables found.`);
     }
     return [];
   }
