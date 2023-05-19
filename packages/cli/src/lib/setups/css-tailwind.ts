@@ -47,7 +47,11 @@ export async function setupTailwind({
   }
 
   const updatingFiles = Promise.all([
-    copyAssets('tailwind', assetMap, rootDirectory),
+    copyAssets('tailwind', assetMap, rootDirectory, (content, filepath) =>
+      filepath === 'tailwind.config.js'
+        ? content.replace('{src-dir}', relativeAppDirectory)
+        : content,
+    ),
     getCodeFormatOptions(rootDirectory).then((formatConfig) =>
       Promise.all([
         replaceRemixConfig(rootDirectory, formatConfig),

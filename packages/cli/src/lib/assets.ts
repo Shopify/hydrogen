@@ -1,5 +1,5 @@
 import {fileURLToPath} from 'node:url';
-import {fileExists, copyFile} from '@shopify/cli-kit/node/fs';
+import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
@@ -7,18 +7,20 @@ export function copyAssets(
   feature: 'tailwind',
   assets: Record<string, string>,
   rootDirectory: string,
+  replacer = (content: string, filename: string) => content,
 ) {
   const setupAssetsPath = fileURLToPath(
     new URL(`../setup-assets/${feature}`, import.meta.url),
   );
 
   return Promise.all(
-    Object.entries(assets).map(([source, destination]) =>
-      copyFile(
-        joinPath(setupAssetsPath, source),
+    Object.entries(assets).map(async ([source, destination]) => {
+      const content = await readFile(joinPath(setupAssetsPath, source));
+      await writeFile(
         joinPath(rootDirectory, destination),
-      ),
-    ),
+        replacer(content, source),
+      );
+    }),
   );
 }
 
