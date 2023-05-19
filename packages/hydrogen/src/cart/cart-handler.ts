@@ -16,7 +16,20 @@ import {
 } from './cart-query-wrapper';
 import {parse as parseCookie} from 'worktop/cookie';
 
-type CartHandlerOptions = {
+export const cartGetIdDefault = (requestHeaders: Headers) => {
+  return () => {
+    const cookies = parseCookie(requestHeaders.get('Cookie') || '');
+    return cookies.cart ? `gid://shopify/Cart/${cookies.cart}` : undefined;
+  };
+};
+
+export const cartSetIdDefault = () => {
+  return (cartId: string, headers: Headers) => {
+    headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
+  };
+};
+
+export type CartHandlerOptions = {
   storefront: Storefront;
   requestHeaders: Headers;
   getCartId?: () => string | undefined;
@@ -74,19 +87,10 @@ export function createCartHandler_unstable<
     options;
 
   // Default get cartId in cookie
-  const getCartId =
-    options.getCartId ||
-    (() => {
-      const cookies = parseCookie(requestHeaders.get('Cookie') || '');
-      return cookies.cart ? `gid://shopify/Cart/${cookies.cart}` : undefined;
-    });
+  const getCartId = options.getCartId || cartGetIdDefault(requestHeaders);
 
   // Default set cartId in cookie
-  const setCartId =
-    options.setCartId ||
-    ((cartId: string, headers: Headers) => {
-      headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
-    });
+  const setCartId = options.setCartId || cartSetIdDefault();
 
   const mutateOptions = {
     storefront,

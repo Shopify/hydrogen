@@ -37,6 +37,8 @@ export {
   type CartHandlerReturnCustom,
   type CartHandlerReturnBase,
   createCartHandler_unstable,
+  cartGetIdDefault,
+  cartSetIdDefault,
 } from './cart/cart-handler';
 export {type MetafieldWithoutOwnerId} from './cart/cart-types';
 
