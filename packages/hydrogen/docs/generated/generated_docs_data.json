@@ -566,10 +566,10 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "> Caution:\n> This component is in an unstable pre-release state and may have breaking changes in a future release.\n\nCreates a cart API instance that can be used to interact with the cart.",
+    "description": "> Caution:\n> This component is in an unstable pre-release state and may have breaking changes in a future release.\n\nCreates an API that can be used to interact with the cart.",
     "type": "utility",
     "defaultExample": {
-      "description": "I am the default example",
+      "description": "This is the default example",
       "codeblock": {
         "tabs": [
           {
@@ -596,7 +596,7 @@
             "filePath": "/cart/cart-handler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerOptionsForDocs",
-            "value": "{\n  /**\n   * The request headers.\n   */\n  requestHeaders: Headers;\n  /**\n   * The storefront client instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient)).\n   */\n  storefront: Storefront;\n  /**\n   * Cart mutate fragment is used in all mutation requests except for `setMetafields` and `deleteMetafield`.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.\n   */\n  cartMutateFragment?: string;\n  /**\n   * Cart query fragment to be used by `cart.get()`.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or overriding methods to be used in your cart api instance.\n   * See [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.\n   */\n  customMethods?: TCustomMethods;\n  /**\n   * A function that returns the cart id.\n   * @default () => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * A function that sets the cart id.\n   * @default (cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n}",
+            "value": "{\n  /**\n   * The request headers.\n   */\n  requestHeaders: Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n  /**\n   * A function that returns the cart ID.\n   * @default () => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   * @default (cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n}",
             "description": "",
             "members": [
               {
@@ -611,14 +611,14 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storefront",
                 "value": "Storefront",
-                "description": "The storefront client instance created by [createStorefrontClient](](docs/api/hydrogen/latest/utilities/createstorefrontclient))."
+                "description": "The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient)."
               },
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartMutateFragment",
                 "value": "string",
-                "description": "Cart mutate fragment is used in all mutation requests except for `setMetafields` and `deleteMetafield`.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.",
+                "description": "The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\nSee the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) in the documentation.",
                 "isOptional": true
               },
               {
@@ -626,7 +626,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "cartQueryFragment",
                 "value": "string",
-                "description": "Cart query fragment to be used by `cart.get()`.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) usage.",
+                "description": "The cart query fragment used by `cart.get()`.\nSee the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-fragments) in the documentation.",
                 "isOptional": true
               },
               {
@@ -634,7 +634,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "customMethods",
                 "value": "TCustomMethods",
-                "description": "Define custom methods or overriding methods to be used in your cart api instance.\nSee [example](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) usage.",
+                "description": "Define custom methods or override existing methods for your cart API instance.\nSee the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) in the documentation.",
                 "isOptional": true
               },
               {
@@ -642,7 +642,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getCartId",
                 "value": "() => string",
-                "description": "A function that returns the cart id.",
+                "description": "A function that returns the cart ID.",
                 "isOptional": true,
                 "defaultValue": "() => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']"
               },
@@ -651,7 +651,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "setCartId",
                 "value": "(cartId: string, headers: Headers) => void",
-                "description": "A function that sets the cart id.",
+                "description": "A function that sets the cart ID.",
                 "isOptional": true,
                 "defaultValue": "(cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)"
               }
@@ -880,7 +880,7 @@
             "filePath": "/cart/cart-handler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerReturnBaseForDocs",
-            "value": "{\n  /**\n   * Add lines to the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  addLines?: (\n    lines: CartLineInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Creates a new cart with the storefront api.\n   */\n  create?: (\n    input: CartInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Delete metafield in the cart with the storefront api.\n   */\n  deleteMetafield?: (\n    key: Scalars['String'],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Gets the cart with the storefront api.\n   */\n  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;\n  /**\n   * Gets the cart id. Default behavior is to get the cart id from the request cookie.\n   * Returns the cart id in the form of `gid://shopify/Cart/123`\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Gets the form input created by CartForm action request.\n   */\n  getFormInput?: (formData: any) => CartActionInput;\n  /**\n   * Remove lines from the cart with the storefront api.\n   */\n  removeLines?: (\n    lineIds: string[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Sets the cart id. Default behavior is to set the cart id in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Set metafields in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  setMetafields?: (\n    metafields: MetafieldWithoutOwnerId[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update attributes in the cart with the storefront api.\n   */\n  updateAttributes?: (\n    attributes: AttributeInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update buyer identity in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateBuyerIdentity?: (\n    buyerIdentity: CartBuyerIdentityInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update discount codes in the cart with the storefront api.\n   */\n  updateDiscountCodes?: (\n    discountCodes: string[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update lines in the cart with the storefront api.\n   */\n  updateLines?: (\n    lines: CartLineUpdateInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update note in the cart with the storefront api.\n   * If the cart does not exist, a new cart will be created.\n   */\n  updateNote?: (\n    note: string,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Update selected delivery options in the cart with the storefront api.\n   * Only available for cart associated with an `buyerIdentity.customerAccessToken`.\n   */\n  updateSelectedDeliveryOption?: (\n    selectedDeliveryOptions: CartSelectedDeliveryOptionInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n}",
+            "value": "{\n  /**\n   * Adds items to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  addLines?: (\n    lines: CartLineInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Creates a new cart.\n   */\n  create?: (\n    input: CartInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Removes a custom field (metafield) from the cart.\n   */\n  deleteMetafield?: (\n    key: Scalars['String'],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Retrieves the cart information.\n   */\n  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;\n  /**\n   * Retrieves the unique identifier of the cart.\n   * By default, it gets the ID from the request cookie.\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Retrieves the form input created by the CartForm action request.\n   */\n  getFormInput?: (formData: any) => CartActionInput;\n  /**\n   * Removes items from the cart.\n   */\n  removeLines?: (\n    lineIds: string[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Sets the unique identifier of the cart.\n   * By default, it sets the ID in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Adds extra information (metafields) to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  setMetafields?: (\n    metafields: MetafieldWithoutOwnerId[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Updates additional information (attributes) in the cart.\n   */\n  updateAttributes?: (\n    attributes: AttributeInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Updates the buyer's information in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateBuyerIdentity?: (\n    buyerIdentity: CartBuyerIdentityInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Updates discount codes in the cart.\n   */\n  updateDiscountCodes?: (\n    discountCodes: string[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Updates items in the cart.\n   */\n  updateLines?: (\n    lines: CartLineUpdateInput[],\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Updates the note in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateNote?: (\n    note: string,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n  /**\n   * Updates the selected delivery options in the cart.\n   * Only available for carts associated with a customer access token.\n   */\n  updateSelectedDeliveryOption?: (\n    selectedDeliveryOptions: CartSelectedDeliveryOptionInput,\n    optionalParams: CartOptionalInput,\n  ) => Promise<CartQueryData>;\n}",
             "description": "",
             "members": [
               {
@@ -888,7 +888,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "addLines",
                 "value": "(lines: CartLineInput[], optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Add lines to the cart with the storefront api.\nIf the cart does not exist, a new cart will be created.",
+                "description": "Adds items to the cart.\nIf the cart doesn't exist, a new one will be created.",
                 "isOptional": true
               },
               {
@@ -896,7 +896,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "create",
                 "value": "(input: CartInput, optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Creates a new cart with the storefront api.",
+                "description": "Creates a new cart.",
                 "isOptional": true
               },
               {
@@ -904,7 +904,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "deleteMetafield",
                 "value": "(key: string, optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Delete metafield in the cart with the storefront api.",
+                "description": "Removes a custom field (metafield) from the cart.",
                 "isOptional": true
               },
               {
@@ -912,7 +912,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "get",
                 "value": "(cartInput?: CartGetForDocs) => Promise<Cart>",
-                "description": "Gets the cart with the storefront api.",
+                "description": "Retrieves the cart information.",
                 "isOptional": true
               },
               {
@@ -920,7 +920,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getCartId",
                 "value": "() => string",
-                "description": "Gets the cart id. Default behavior is to get the cart id from the request cookie.\nReturns the cart id in the form of `gid://shopify/Cart/123`",
+                "description": "Retrieves the unique identifier of the cart.\nBy default, it gets the ID from the request cookie.",
                 "isOptional": true
               },
               {
@@ -928,7 +928,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getFormInput",
                 "value": "(formData: any) => CartActionInput",
-                "description": "Gets the form input created by CartForm action request.",
+                "description": "Retrieves the form input created by the CartForm action request.",
                 "isOptional": true
               },
               {
@@ -936,7 +936,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "removeLines",
                 "value": "(lineIds: string[], optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Remove lines from the cart with the storefront api.",
+                "description": "Removes items from the cart.",
                 "isOptional": true
               },
               {
@@ -944,7 +944,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "setCartId",
                 "value": "(cartId: string, headers: Headers) => void",
-                "description": "Sets the cart id. Default behavior is to set the cart id in the header cookie.",
+                "description": "Sets the unique identifier of the cart.\nBy default, it sets the ID in the header cookie.",
                 "isOptional": true
               },
               {
@@ -952,7 +952,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "setMetafields",
                 "value": "(metafields: MetafieldWithoutOwnerId[], optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Set metafields in the cart with the storefront api.\nIf the cart does not exist, a new cart will be created.",
+                "description": "Adds extra information (metafields) to the cart.\nIf the cart doesn't exist, a new one will be created.",
                 "isOptional": true
               },
               {
@@ -960,7 +960,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "updateAttributes",
                 "value": "(attributes: AttributeInput[], optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Update attributes in the cart with the storefront api.",
+                "description": "Updates additional information (attributes) in the cart.",
                 "isOptional": true
               },
               {
@@ -968,7 +968,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "updateBuyerIdentity",
                 "value": "(buyerIdentity: CartBuyerIdentityInput, optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Update buyer identity in the cart with the storefront api.\nIf the cart does not exist, a new cart will be created.",
+                "description": "Updates the buyer's information in the cart.\nIf the cart doesn't exist, a new one will be created.",
                 "isOptional": true
               },
               {
@@ -976,7 +976,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "updateDiscountCodes",
                 "value": "(discountCodes: string[], optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Update discount codes in the cart with the storefront api.",
+                "description": "Updates discount codes in the cart.",
                 "isOptional": true
               },
               {
@@ -984,7 +984,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "updateLines",
                 "value": "(lines: CartLineUpdateInput[], optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Update lines in the cart with the storefront api.",
+                "description": "Updates items in the cart.",
                 "isOptional": true
               },
               {
@@ -992,7 +992,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "updateNote",
                 "value": "(note: string, optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Update note in the cart with the storefront api.\nIf the cart does not exist, a new cart will be created.",
+                "description": "Updates the note in the cart.\nIf the cart doesn't exist, a new one will be created.",
                 "isOptional": true
               },
               {
@@ -1000,7 +1000,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "updateSelectedDeliveryOption",
                 "value": "(selectedDeliveryOptions: CartSelectedDeliveryOptionInput, optionalParams: CartOptionalInput) => Promise<CartQueryData>",
-                "description": "Update selected delivery options in the cart with the storefront api.\nOnly available for cart associated with an `buyerIdentity.customerAccessToken`.",
+                "description": "Updates the selected delivery options in the cart.\nOnly available for carts associated with a customer access token.",
                 "isOptional": true
               }
             ]
@@ -1052,7 +1052,7 @@
             "filePath": "/cart/cart-query-wrapper.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartQueryData",
-            "value": "{\n  cart: Cart;\n  errors?: CartUserError[] | MetafieldsSetUserError[];\n}",
+            "value": "{\n  cart: Cart;\n  errors?:\n    | CartUserError[]\n    | MetafieldsSetUserError[]\n    | MetafieldDeleteUserError[];\n}",
             "description": "",
             "members": [
               {
@@ -1066,7 +1066,7 @@
                 "filePath": "/cart/cart-query-wrapper.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "errors",
-                "value": "CartUserError[] | MetafieldsSetUserError[]",
+                "value": "CartUserError[] | MetafieldsSetUserError[] | MetafieldDeleteUserError[]",
                 "description": "",
                 "isOptional": true
               }
@@ -1093,6 +1093,13 @@
             "members": [],
             "override": "[MetafieldsSetUserError](/docs/api/storefront/2023-04/objects/MetafieldsSetUserError) - Storefront API type"
           },
+          "MetafieldDeleteUserError": {
+            "description": "",
+            "name": "MetafieldDeleteUserError",
+            "value": "MetafieldDeleteUserError",
+            "members": [],
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2023-04/objects/MetafieldDeleteUserError) - Storefront API type"
+          },
           "CartInput": {
             "description": "",
             "name": "CartInput",
@@ -1104,7 +1111,7 @@
             "filePath": "/cart/cart-handler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartGetForDocs",
-            "value": "{\n  /**\n   * The cart id.\n   * @default cart.getCartId();\n   */\n  cartId?: string;\n  /**\n   * The country code.\n   * @default storefront.i18n.country\n   */\n  country?: CountryCode;\n  /**\n   * The language code.\n   * @default storefront.i18n.language\n   */\n  language?: LanguageCode;\n  /**\n   * The number of cart lines to be returned.\n   * @default 100\n   */\n  numCartLines?: number;\n}",
+            "value": "{\n  /**\n   * The cart ID.\n   * @default cart.getCartId();\n   */\n  cartId?: string;\n  /**\n   * The country code.\n   * @default storefront.i18n.country\n   */\n  country?: CountryCode;\n  /**\n   * The language code.\n   * @default storefront.i18n.language\n   */\n  language?: LanguageCode;\n  /**\n   * The number of cart lines to be returned.\n   * @default 100\n   */\n  numCartLines?: number;\n}",
             "description": "",
             "members": [
               {
@@ -1112,7 +1119,7 @@
                 "syntaxKind": "PropertySignature",
                 "name": "cartId",
                 "value": "string",
-                "description": "The cart id.",
+                "description": "The cart ID.",
                 "isOptional": true,
                 "defaultValue": "cart.getCartId();"
               },
@@ -1506,13 +1513,13 @@
           "title": "Custom methods",
           "examples": [
             {
-              "description": "Define or override methods in your cart handler instance. \n\nFor `addLines`, `updateDiscountCodes`, `updateBuyerIdentity`, and `setMetafields`, if you override any of these methods, a new cart will not be create unless you implemented the cart create logic in your overriding method.",
+              "description": "Define or override methods in your cart handler instance. Note that for addLines, updateDiscountCodes, updateBuyerIdentity, and setMetafields, if you override any of these methods, a new cart will not be created unless you implement the cart creation logic in your overriding method.",
               "codeblock": {
                 "title": "Example",
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "import {createCartHandler_unstable as createCartHandler} from '@shopify/hydrogen';\n\nconst cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  customMethods: {\n    example: () => 'example',\n    addLines: async (lines, optionalParams) => {\n      return await storefront.mutate(CART_LINES_ADD_MUTATION, {\n        variables: {\n          id: optionalParams.cartId,\n          lines,\n        },\n      });\n    },\n  },\n});\n\n// Example usage\ncart.example(); // 'example'\nconst result = await cart.addLines(\n  [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n  {\n    cartId: 'c-123',\n  },\n);\n// Output of result:\n// {\n//   cartLinesAdd: {\n//     cart: {\n//       id: 'c-123',\n//       totalQuantity: 1\n//     },\n//     errors: []\n//   }\n// }\n\nconst CART_LINES_ADD_MUTATION = `#graphql\n  mutation CartLinesAdd(\n    $cartId: ID!\n    $lines: [CartLineInput!]!\n    $country: CountryCode = ZZ\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    cartLinesAdd(cartId: $cartId, lines: $lines) {\n      cart {\n        id\n        totalQuantity\n      }\n      errors: userErrors {\n        message\n        field\n        code\n      }\n    }\n  }\n`;\n",
+                    "code": "import {\n  createCartHandler_unstable as createCartHandler,\n  cartGetIdDefault,\n  cartLinesAddDefault,\n  cartLinesRemoveDefault,\n} from '@shopify/hydrogen';\n\nconst mutationOptions = {\n  storefront,\n  getCartId: cartGetIdDefault(request.headers),\n};\n\nconst cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  customMethods: {\n    editInPlace: async (removeLineIds, addLines) => {\n      // Using Hydrogen default cart query methods\n      await cartLinesAddDefault(mutationOptions)(addLines);\n      return await cartLinesRemoveDefault(mutationOptions)(removeLineIds);\n    },\n    addLines: async (lines, optionalParams) => {\n      // With your own Storefront API graphql query\n      return await storefront.mutate(CART_LINES_ADD_MUTATION, {\n        variables: {\n          id: optionalParams.cartId,\n          lines,\n        },\n      });\n    },\n  },\n});\n\n// Usage custom method editInPlace that delete and add items in one method\ncart.editInPlace(['123'], [{\n  merchandiseId: '456',\n  quantity: 1,\n}]);\n\n// Use overridden cart.addLines\nconst result = await cart.addLines(\n  [\n    {\n      merchandiseId: '123',\n      quantity: 1,\n    },\n  ],\n  {\n    cartId: 'c-123',\n  },\n);\n// Output of result:\n// {\n//   cartLinesAdd: {\n//     cart: {\n//       id: 'c-123',\n//       totalQuantity: 1\n//     },\n//     errors: []\n//   }\n// }\n\nconst CART_LINES_ADD_MUTATION = `#graphql\n  mutation CartLinesAdd(\n    $cartId: ID!\n    $lines: [CartLineInput!]!\n    $country: CountryCode = ZZ\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    cartLinesAdd(cartId: $cartId, lines: $lines) {\n      cart {\n        id\n        totalQuantity\n      }\n      errors: userErrors {\n        message\n        field\n        code\n      }\n    }\n  }\n`;\n",
                     "language": "js"
                   }
                 ]
@@ -1524,7 +1531,7 @@
           "title": "Cart instance usage",
           "examples": [
             {
-              "description": "Add lines to the cart with the storefront api. If the cart does not exist, a new cart will be created.",
+              "description": "Add items to the cart. If the cart does not exist, a new cart will be created.",
               "codeblock": {
                 "title": "cart.addLines",
                 "tabs": [
@@ -1537,7 +1544,7 @@
               }
             },
             {
-              "description": "Create a new cart with the storefront api.",
+              "description": "Create a new cart.",
               "codeblock": {
                 "title": "cart.create",
                 "tabs": [
@@ -1550,7 +1557,7 @@
               }
             },
             {
-              "description": "Delete a metafield on the cart.",
+              "description": "Delete extra information (metafield) from the cart.",
               "codeblock": {
                 "title": "cart.deleteMetafield",
                 "tabs": [
@@ -1563,7 +1570,7 @@
               }
             },
             {
-              "description": "Get the cart with the storefront api.",
+              "description": "Retrieve the cart information.",
               "codeblock": {
                 "title": "cart.get",
                 "tabs": [
@@ -1576,7 +1583,7 @@
               }
             },
             {
-              "description": "Get the cart id.",
+              "description": "Get the unique identifier of the cart.",
               "codeblock": {
                 "title": "cart.getCartId",
                 "tabs": [
@@ -1589,20 +1596,20 @@
               }
             },
             {
-              "description": "Get the form input created by CartForm action request.",
+              "description": "Get the form input created by the CartForm action request.",
               "codeblock": {
                 "title": "cart.getFormInput",
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export async function action({request, context}) {\n  const formData = await request.formData();\n  const {\n    action,\n    inputs\n  } = context.cart.getFormInput(formData);\n\n  // Do something with the action and inputs\n}\n",
+                    "code": "export async function action({request, context}) {\n  const formData = await request.formData();\n  const {action, inputs} = context.cart.getFormInput(formData);\n\n  // Do something with the action and inputs\n}\n",
                     "language": "js"
                   }
                 ]
               }
             },
             {
-              "description": "Remove lines from the cart with the storefront api.",
+              "description": "Remove items from the cart.",
               "codeblock": {
                 "title": "cart.removeLines",
                 "tabs": [
@@ -1615,7 +1622,7 @@
               }
             },
             {
-              "description": "Sets the cart id.",
+              "description": "Set the unique identifier of the cart.",
               "codeblock": {
                 "title": "cart.setCartId",
                 "tabs": [
@@ -1628,7 +1635,7 @@
               }
             },
             {
-              "description": "Set metafields in the cart with the storefront api. If the cart does not exist, a new cart will be created.",
+              "description": "Add extra information (metafields) to the cart. If the cart does not exist, a new cart will be created.",
               "codeblock": {
                 "title": "cart.setMetafields",
                 "tabs": [
@@ -1641,7 +1648,7 @@
               }
             },
             {
-              "description": "Update attributes in the cart with the storefront api.",
+              "description": "Update additional information (attributes) in the cart.",
               "codeblock": {
                 "title": "cart.updateAttributes",
                 "tabs": [
@@ -1654,7 +1661,7 @@
               }
             },
             {
-              "description": "Update buyer identity in the cart with the storefront api. If the cart does not exist, a new cart will be created.",
+              "description": "Update the buyer’s information in the cart. If the cart does not exist, a new cart will be created.",
               "codeblock": {
                 "title": "cart.updateBuyerIdentity",
                 "tabs": [
@@ -1667,7 +1674,7 @@
               }
             },
             {
-              "description": "Update discount codes in the cart with the storefront api.",
+              "description": "Update discount codes in the cart.",
               "codeblock": {
                 "title": "cart.updateDiscountCodes",
                 "tabs": [
@@ -1680,7 +1687,7 @@
               }
             },
             {
-              "description": "Update lines in the cart with the storefront api.",
+              "description": "Update items in the cart.",
               "codeblock": {
                 "title": "cart.updateLines",
                 "tabs": [
@@ -1693,20 +1700,20 @@
               }
             },
             {
-              "description": "Update note in the cart with the storefront api. If the cart does not exist, a new cart will be created.",
+              "description": "Update the note in the cart. If the cart does not exist, a new cart will be created.",
               "codeblock": {
                 "title": "cart.updateNote",
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.updateNote(\n    'Some notes',\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n\n  // Output of result:\n  // {\n  //   cart: {\n  //     id: 'c1-123',\n  //     totalQuantity: 0\n  //   },\n  //   errors: []\n  // }\n  }\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.updateNote(\n    'Some notes',\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n\n  // Output of result:\n  // {\n  //   cart: {\n  //     id: 'c1-123',\n  //     totalQuantity: 0\n  //   },\n  //   errors: []\n  // }\n}\n",
                     "language": "js"
                   }
                 ]
               }
             },
             {
-              "description": "Update selected delivery options in the cart with the storefront api. Only available for cart associated with an `buyerIdentity.customerAccessToken`.",
+              "description": "Update the selected delivery options in the cart. Only available for carts associated with a customer access token.",
               "codeblock": {
                 "title": "cart.updateSelectedDeliveryOptions",
                 "tabs": [

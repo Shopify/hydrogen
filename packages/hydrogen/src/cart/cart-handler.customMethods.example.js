@@ -1,11 +1,26 @@
-import {createCartHandler_unstable as createCartHandler} from '@shopify/hydrogen';
+import {
+  createCartHandler_unstable as createCartHandler,
+  cartGetIdDefault,
+  cartLinesAddDefault,
+  cartLinesRemoveDefault,
+} from '@shopify/hydrogen';
+
+const mutationOptions = {
+  storefront,
+  getCartId: cartGetIdDefault(request.headers),
+};
 
 const cart = createCartHandler({
   storefront,
   requestHeaders: request.headers,
   customMethods: {
-    example: () => 'example',
+    editInPlace: async (removeLineIds, addLines) => {
+      // Using Hydrogen default cart query methods
+      await cartLinesAddDefault(mutationOptions)(addLines);
+      return await cartLinesRemoveDefault(mutationOptions)(removeLineIds);
+    },
     addLines: async (lines, optionalParams) => {
+      // With your own Storefront API graphql query
       return await storefront.mutate(CART_LINES_ADD_MUTATION, {
         variables: {
           id: optionalParams.cartId,
@@ -16,8 +31,18 @@ const cart = createCartHandler({
   },
 });
 
-// Example usage
-cart.example(); // 'example'
+// Usage custom method editInPlace that delete and add items in one method
+cart.editInPlace(
+  ['123'],
+  [
+    {
+      merchandiseId: '456',
+      quantity: 1,
+    },
+  ],
+);
+
+// Use overridden cart.addLines
 const result = await cart.addLines(
   [
     {
