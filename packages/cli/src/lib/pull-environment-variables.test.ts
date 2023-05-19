@@ -11,6 +11,7 @@ import {
 import {getAdminSession} from './admin-session.js';
 import {adminRequest} from './graphql.js';
 import {getConfig} from './shopify-config.js';
+import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
 import {linkStorefront} from '../commands/hydrogen/link.js';
 
 import {pullRemoteEnvironmentVariables} from './pull-environment-variables.js';
@@ -27,6 +28,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 vi.mock('../commands/hydrogen/link.js');
 vi.mock('./admin-session.js');
 vi.mock('./shopify-config.js');
+vi.mock('./render-errors.js');
 vi.mock('./graphql.js', async () => {
   const original = await vi.importActual<typeof import('./graphql.js')>(
     './graphql.js',
@@ -142,15 +144,11 @@ describe('pullRemoteEnvironmentVariables', () => {
       });
     });
 
-    it('renders an error message', async () => {
+    it('calls renderMissingLink', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const outputMock = mockAndCaptureOutput();
-
         await pullRemoteEnvironmentVariables({root: tmpDir});
 
-        expect(outputMock.error()).toMatch(
-          /No linked Hydrogen storefront on my-shop/,
-        );
+        expect(renderMissingLink).toHaveBeenCalledOnce();
       });
     });
 
@@ -192,15 +190,11 @@ describe('pullRemoteEnvironmentVariables', () => {
       });
     });
 
-    it('renders an error message', async () => {
+    it('calls renderMissingStorefront', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const outputMock = mockAndCaptureOutput();
-
         await pullRemoteEnvironmentVariables({root: tmpDir});
 
-        expect(outputMock.error()).toMatch(
-          /Couldn’t find Hydrogen storefront\./,
-        );
+        expect(renderMissingStorefront).toHaveBeenCalledOnce();
       });
     });
 
