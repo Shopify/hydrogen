@@ -31,6 +31,7 @@
     "@shopify/remix-oxygen": "^1.0.5"
   },
   "dependencies": {
+    "@ast-grep/napi": "^0.5.3",
     "@oclif/core": "2.1.4",
     "@remix-run/dev": "1.15.0",
     "@shopify/cli-kit": "3.45.0",
