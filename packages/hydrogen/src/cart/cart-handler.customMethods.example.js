@@ -14,10 +14,13 @@ const cart = createCartHandler({
   storefront,
   requestHeaders: request.headers,
   customMethods: {
-    editInPlace: async (removeLineIds, addLines) => {
+    editInPlace: async (removeLineIds, addLines, optionalParams) => {
       // Using Hydrogen default cart query methods
-      await cartLinesAddDefault(mutationOptions)(addLines);
-      return await cartLinesRemoveDefault(mutationOptions)(removeLineIds);
+      await cartLinesAddDefault(mutationOptions)(addLines, optionalParams);
+      return await cartLinesRemoveDefault(mutationOptions)(
+        removeLineIds,
+        optionalParams,
+      );
     },
     addLines: async (lines, optionalParams) => {
       // With your own Storefront API graphql query
