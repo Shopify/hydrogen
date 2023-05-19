@@ -39,7 +39,7 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
     variables: {
       pageBy: PAGINATION_SIZE,
       searchTerm,
-      cursor,
+      after: cursor,
       country: storefront.i18n.country,
       language: storefront.i18n.language,
     },
