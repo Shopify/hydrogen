@@ -12,7 +12,7 @@
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup --clean --config ../../tsup.config.ts && npm run copy-hydrogen-react",
+    "build": "npm run copy-hydrogen-react && tsup --clean --config ../../tsup.config.ts",
     "copy-hydrogen-react": "node ../../scripts/copy-hydrogen-react.mjs",
     "dev": "tsup --config ../../tsup.config.ts --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
     "typecheck": "tsc --noEmit",

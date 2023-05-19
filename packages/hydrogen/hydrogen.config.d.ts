@@ -1,4 +1,4 @@
-import type {Storefront} from './types';
+import type {Storefront} from '@shopify/hydrogen';
 
 declare global {
   /**
