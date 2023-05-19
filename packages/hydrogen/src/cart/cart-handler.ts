@@ -1,6 +1,6 @@
-import { CountryCode } from "@shopify/hydrogen-react/storefront-api-types";
-import { Storefront } from "../storefront";
-import { getFormInput, CartActionInput } from "./CartForm";
+import {CountryCode} from '@shopify/hydrogen-react/storefront-api-types';
+import {Storefront} from '../storefront';
+import {getFormInput, CartActionInput} from './CartForm';
 import {
   cartCreateDefault,
   cartGetDefault,
@@ -15,8 +15,8 @@ import {
   cartSelectedDeliveryOptionsUpdateDefault,
   cartAttributesUpdateDefault,
   type CartQueryData,
-} from "./cart-query-wrapper";
-import type { CartOptionalInput, MetafieldWithoutOwnerId } from "./cart-types";
+} from './cart-query-wrapper';
+import type {CartOptionalInput, MetafieldWithoutOwnerId} from './cart-types';
 import {
   AttributeInput,
   Cart,
@@ -26,9 +26,9 @@ import {
   CartLineUpdateInput,
   CartSelectedDeliveryOptionInput,
   Scalars,
-} from "@shopify/hydrogen-react/storefront-api-types";
-import { parse as parseCookie } from "worktop/cookie";
-import { LanguageCode } from "@shopify/hydrogen-react/storefront-api-types";
+} from '@shopify/hydrogen-react/storefront-api-types';
+import {parse as parseCookie} from 'worktop/cookie';
+import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartHandlerOptions = {
   storefront: Storefront;
@@ -41,7 +41,7 @@ export type CartHandlerOptions = {
 
 export type CustomMethodsBase = Record<string, Function>;
 export type CartHandlerOptionsWithCustom<
-  TCustomMethods extends CustomMethodsBase
+  TCustomMethods extends CustomMethodsBase,
 > = CartHandlerOptions & {
   customMethods?: TCustomMethods;
 };
@@ -66,33 +66,33 @@ export type CartHandlerReturnBase = {
 };
 
 export type CartHandlerReturnCustom<
-  TCustomMethods extends Partial<CartHandlerReturnBase>
+  TCustomMethods extends Partial<CartHandlerReturnBase>,
 > = Omit<CartHandlerReturnBase, keyof TCustomMethods> & TCustomMethods;
 export type CartHandlerReturn<TCustomMethods extends CustomMethodsBase> =
   | CartHandlerReturnCustom<TCustomMethods>
   | CartHandlerReturnBase;
 
 export function createCartHandler_unstable(
-  options: CartHandlerOptions
+  options: CartHandlerOptions,
 ): CartHandlerReturnBase;
 export function createCartHandler_unstable<
-  TCustomMethods extends CustomMethodsBase
+  TCustomMethods extends CustomMethodsBase,
 >(
-  options: CartHandlerOptionsWithCustom<TCustomMethods>
+  options: CartHandlerOptionsWithCustom<TCustomMethods>,
 ): CartHandlerReturnCustom<TCustomMethods>;
 export function createCartHandler_unstable<
-  TCustomMethods extends CustomMethodsBase
+  TCustomMethods extends CustomMethodsBase,
 >(
-  options: CartHandlerOptions | CartHandlerOptionsWithCustom<TCustomMethods>
+  options: CartHandlerOptions | CartHandlerOptionsWithCustom<TCustomMethods>,
 ): CartHandlerReturn<TCustomMethods> {
-  const { requestHeaders, storefront, cartQueryFragment, cartMutateFragment } =
+  const {requestHeaders, storefront, cartQueryFragment, cartMutateFragment} =
     options;
 
   // Default get cartId in cookie
   const getCartId =
     options.getCartId ||
     (() => {
-      const cookies = parseCookie(requestHeaders.get("Cookie") || "");
+      const cookies = parseCookie(requestHeaders.get('Cookie') || '');
       return cookies.cart ? `gid://shopify/Cart/${cookies.cart}` : undefined;
     });
 
@@ -100,7 +100,7 @@ export function createCartHandler_unstable<
   const setCartId =
     options.setCartId ||
     ((cartId: string, headers: Headers) => {
-      headers.append("Set-Cookie", `cart=${cartId.split("/").pop()}`);
+      headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
     });
 
   const mutateOptions = {
@@ -125,7 +125,7 @@ export function createCartHandler_unstable<
     addLines: async (lines, optionalParams) => {
       return cartId
         ? await cartLinesAddDefault(mutateOptions)(lines, optionalParams)
-        : await cartCreate({ lines }, optionalParams);
+        : await cartCreate({lines}, optionalParams);
     },
     updateLines: cartLinesUpdateDefault(mutateOptions),
     removeLines: cartLinesRemoveDefault(mutateOptions),
@@ -133,17 +133,17 @@ export function createCartHandler_unstable<
       return cartId
         ? await cartDiscountCodesUpdateDefault(mutateOptions)(
             discountCodes,
-            optionalParams
+            optionalParams,
           )
-        : await cartCreate({ discountCodes }, optionalParams);
+        : await cartCreate({discountCodes}, optionalParams);
     },
     updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
       return cartId
         ? await cartBuyerIdentityUpdateDefault(mutateOptions)(
             buyerIdentity,
-            optionalParams
+            optionalParams,
           )
-        : await cartCreate({ buyerIdentity }, optionalParams);
+        : await cartCreate({buyerIdentity}, optionalParams);
     },
     updateNote: cartNoteUpdateDefault(mutateOptions),
     updateSelectedDeliveryOption:
@@ -153,14 +153,14 @@ export function createCartHandler_unstable<
       return cartId
         ? await cartMetafieldsSetDefault(mutateOptions)(
             metafields,
-            optionalParams
+            optionalParams,
           )
-        : await cartCreate({ metafields }, optionalParams);
+        : await cartCreate({metafields}, optionalParams);
     },
     deleteMetafield: cartMetafieldDeleteDefault(mutateOptions),
   };
 
-  if ("customMethods" in options) {
+  if ('customMethods' in options) {
     return {
       ...methods,
       ...(options.customMethods ?? {}),
@@ -171,7 +171,7 @@ export function createCartHandler_unstable<
 }
 
 export type CartHandlerOptionsForDocs<
-  TCustomMethods extends CustomMethodsBase
+  TCustomMethods extends CustomMethodsBase,
 > = {
   /**
    * The request headers.
@@ -238,21 +238,21 @@ export type CartHandlerReturnBaseForDocs = {
    */
   addLines?: (
     lines: CartLineInput[],
-    optionalParams: CartOptionalInput
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Creates a new cart.
    */
   create?: (
     input: CartInput,
-    optionalParams: CartOptionalInput
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Removes a custom field (metafield) from the cart.
    */
   deleteMetafield?: (
-    key: Scalars["String"],
-    optionalParams: CartOptionalInput
+    key: Scalars['String'],
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Retrieves the cart information.
@@ -272,7 +272,7 @@ export type CartHandlerReturnBaseForDocs = {
    */
   removeLines?: (
     lineIds: string[],
-    optionalParams: CartOptionalInput
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Sets the unique identifier of the cart.
@@ -285,14 +285,14 @@ export type CartHandlerReturnBaseForDocs = {
    */
   setMetafields?: (
     metafields: MetafieldWithoutOwnerId[],
-    optionalParams: CartOptionalInput
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Updates additional information (attributes) in the cart.
    */
   updateAttributes?: (
     attributes: AttributeInput[],
-    optionalParams: CartOptionalInput
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Updates the buyer's information in the cart.
@@ -300,21 +300,21 @@ export type CartHandlerReturnBaseForDocs = {
    */
   updateBuyerIdentity?: (
     buyerIdentity: CartBuyerIdentityInput,
-    optionalParams: CartOptionalInput
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Updates discount codes in the cart.
    */
   updateDiscountCodes?: (
     discountCodes: string[],
-    optionalParams: CartOptionalInput
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Updates items in the cart.
    */
   updateLines?: (
     lines: CartLineUpdateInput[],
-    optionalParams: CartOptionalInput
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Updates the note in the cart.
@@ -322,7 +322,7 @@ export type CartHandlerReturnBaseForDocs = {
    */
   updateNote?: (
     note: string,
-    optionalParams: CartOptionalInput
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
   /**
    * Updates the selected delivery options in the cart.
@@ -330,6 +330,6 @@ export type CartHandlerReturnBaseForDocs = {
    */
   updateSelectedDeliveryOption?: (
     selectedDeliveryOptions: CartSelectedDeliveryOptionInput,
-    optionalParams: CartOptionalInput
+    optionalParams: CartOptionalInput,
   ) => Promise<CartQueryData>;
 };
