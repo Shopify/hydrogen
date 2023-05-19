@@ -13,7 +13,6 @@ import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {getAdminSession} from '../../../lib/admin-session.js';
 import {pullRemoteEnvironmentVariables} from '../../../lib/pull-environment-variables.js';
 import {getConfig} from '../../../lib/shopify-config.js';
-import {linkStorefront} from '../link.js';
 
 import {pullVariables} from './pull.js';
 
@@ -71,10 +70,11 @@ describe('pullVariables', () => {
 
   it('calls pullRemoteEnvironmentVariables', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      await pullVariables({path: tmpDir});
+      await pullVariables({path: tmpDir, envBranch: 'staging'});
 
       expect(pullRemoteEnvironmentVariables).toHaveBeenCalledWith({
         root: tmpDir,
+        envBranch: 'staging',
       });
     });
   });

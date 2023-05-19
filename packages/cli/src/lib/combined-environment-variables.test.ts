@@ -35,9 +35,14 @@ describe('combinedEnvironmentVariables()', () => {
 
   test('calls pullRemoteEnvironmentVariables', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
+      await combinedEnvironmentVariables({
+        envBranch: 'main',
+        root: tmpDir,
+        shop: 'my-shop',
+      });
 
       expect(pullRemoteEnvironmentVariables).toHaveBeenCalledWith({
+        envBranch: 'main',
         root: tmpDir,
         flagShop: 'my-shop',
         silent: true,

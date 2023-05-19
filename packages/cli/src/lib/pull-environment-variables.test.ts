@@ -78,13 +78,17 @@ describe('pullRemoteEnvironmentVariables', () => {
 
   it('makes a GraphQL call to fetch environment variables', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      await pullRemoteEnvironmentVariables({root: tmpDir});
+      await pullRemoteEnvironmentVariables({
+        root: tmpDir,
+        envBranch: 'staging',
+      });
 
       expect(adminRequest).toHaveBeenCalledWith(
         PullVariablesQuery,
         ADMIN_SESSION,
         {
           id: 'gid://shopify/HydrogenStorefront/2',
+          branch: 'staging',
         },
       );
     });
@@ -116,9 +120,7 @@ describe('pullRemoteEnvironmentVariables', () => {
 
         await pullRemoteEnvironmentVariables({root: tmpDir});
 
-        expect(outputMock.info()).toMatch(
-          /No Preview environment variables found\./,
-        );
+        expect(outputMock.info()).toMatch(/No environment variables found\./);
       });
     });
 

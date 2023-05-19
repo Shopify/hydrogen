@@ -12,14 +12,20 @@ import {pullRemoteEnvironmentVariables} from './pull-environment-variables.js';
 import {getConfig} from './shopify-config.js';
 
 interface Arguments {
+  envBranch?: string;
   root: string;
   shop?: string;
 }
-export async function combinedEnvironmentVariables({root, shop}: Arguments) {
+export async function combinedEnvironmentVariables({
+  envBranch,
+  root,
+  shop,
+}: Arguments) {
   const remoteEnvironmentVariables = await pullRemoteEnvironmentVariables({
     root,
     flagShop: shop,
     silent: true,
+    envBranch,
   });
 
   const formattedRemoteVariables = remoteEnvironmentVariables?.reduce(
