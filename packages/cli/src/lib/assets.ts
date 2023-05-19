@@ -6,7 +6,7 @@ import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 export function copyAssets(
   feature: 'tailwind',
   assets: Record<string, string>,
-  appDirectory: string,
+  rootDirectory: string,
 ) {
   const setupAssetsPath = fileURLToPath(
     new URL(`../setup-assets/${feature}`, import.meta.url),
@@ -16,7 +16,7 @@ export function copyAssets(
     Object.entries(assets).map(([source, destination]) =>
       copyFile(
         joinPath(setupAssetsPath, source),
-        joinPath(appDirectory, destination),
+        joinPath(rootDirectory, destination),
       ),
     ),
   );

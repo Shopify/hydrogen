@@ -1,5 +1,7 @@
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {outputInfo} from '@shopify/cli-kit/node/output';
+import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
+import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {canWriteFiles, copyAssets} from '../assets.js';
 import {getCodeFormatOptions, type FormatOptions} from '../format-code.js';
 import {ts, tsx, js, jsx, type SgNode} from '@ast-grep/napi';
@@ -7,11 +9,7 @@ import {findFileWithExtension, replaceFileContent} from '../file.js';
 
 const astGrep = {ts, tsx, js, jsx};
 
-const assetMap = {
-  'tailwind.config.js': 'tailwind.config.js',
-  'postcss.config.js': 'postcss.config.js',
-  'tailwind.css': 'styles/tailwind.css',
-} as const;
+const tailwindCssPath = 'styles/tailwind.css';
 
 export async function setupTailwind({
   remixConfig,
@@ -21,7 +19,14 @@ export async function setupTailwind({
   force?: boolean;
 }) {
   const {rootDirectory, appDirectory} = remixConfig;
-  const formatConfig = await getCodeFormatOptions(rootDirectory);
+
+  const relativeAppDirectory = relativePath(rootDirectory, appDirectory);
+
+  const assetMap = {
+    'tailwind.config.js': 'tailwind.config.js',
+    'postcss.config.js': 'postcss.config.js',
+    'tailwind.css': joinPath(relativeAppDirectory, tailwindCssPath),
+  } as const;
 
   // @ts-expect-error Only available in Remix 1.16+
   if (remixConfig.tailwind && remixConfig.postcss) {
@@ -37,10 +42,34 @@ export async function setupTailwind({
     return;
   }
 
-  await copyAssets('tailwind', assetMap, appDirectory);
+  const updatingFiles = Promise.all([
+    copyAssets('tailwind', assetMap, rootDirectory),
+    getCodeFormatOptions(rootDirectory).then((formatConfig) =>
+      Promise.all([
+        replaceRemixConfig(rootDirectory, formatConfig),
+        replaceLinksFunction(appDirectory, formatConfig),
+      ]),
+    ),
+  ]);
 
-  await replaceRemixConfig(rootDirectory, formatConfig);
-  await replaceLinksFunction(appDirectory, formatConfig);
+  await renderTasks([
+    {
+      title: 'Updating files',
+      task: async () => {
+        await updatingFiles;
+      },
+    },
+  ]);
+
+  renderSuccess({
+    headline: 'Tailwind setup complete.',
+    body:
+      'You can now modify CSS configuration in the following files:\n' +
+      Object.values(assetMap)
+        .map((file) => `  - ${file}`)
+        .join('\n') +
+      '\n\nFor more information, visit https://tailwindcss.com/docs/configuration.',
+  });
 }
 
 async function replaceRemixConfig(
@@ -135,7 +164,7 @@ async function replaceLinksFunction(
   }
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
-    const tailwindImport = `import tailwindCss from './${assetMap['tailwind.css']}';`;
+    const tailwindImport = `import tailwindCss from './${tailwindCssPath}';`;
     if (content.includes(tailwindImport.split('from')[0]!)) {
       return null;
     }
