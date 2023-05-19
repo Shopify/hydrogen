@@ -107,6 +107,7 @@ export function Pagination<NodesType>({
               ...props,
               to: nextPageUrl,
               state,
+              replace: true,
             })
           : null;
       },
@@ -122,6 +123,7 @@ export function Pagination<NodesType>({
               ...props,
               to: previousPageUrl,
               state,
+              replace: true,
             })
           : null;
       },
@@ -153,15 +155,26 @@ export function usePagination<NodesType>(
   startCursor: Maybe<string> | undefined;
   endCursor: Maybe<string> | undefined;
 } {
-  const [nodes, setNodes] = useState(flattenConnection(connection));
-  const wow = useLocation();
   const {state, search} = useLocation() as {
     state?: PaginationState<NodesType>;
     search?: string;
   };
+
   const params = new URLSearchParams(search);
   const direction = params.get('direction');
   const isPrevious = direction === 'previous';
+
+  const nodes = useMemo(() => {
+    if (!state || !state?.nodes) {
+      return flattenConnection(connection);
+    }
+
+    if (isPrevious) {
+      return [...flattenConnection(connection), ...state.nodes];
+    } else {
+      return [...state.nodes, ...flattenConnection(connection)];
+    }
+  }, [state, connection]);
 
   // `connection` represents the data that came from the server
   // `state` represents the data that came from the client
@@ -224,20 +237,6 @@ export function usePagination<NodesType>(
       params.set('cursor', currentPageInfo.endCursor);
     return `?${params.toString()}`;
   }, [search, currentPageInfo.endCursor]);
-
-  // the only way to prevent hydration mismatches
-  useEffect(() => {
-    if (!state || !state?.nodes) {
-      setNodes(flattenConnection(connection));
-      return;
-    }
-
-    if (isPrevious) {
-      setNodes([...flattenConnection(connection), ...state.nodes]);
-    } else {
-      setNodes([...state.nodes, ...flattenConnection(connection)]);
-    }
-  }, [state, isPrevious, connection]);
 
   return {...currentPageInfo, previousPageUrl, nextPageUrl, nodes};
 }
