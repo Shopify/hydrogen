@@ -13,7 +13,7 @@ import {
   cartNoteUpdateDefault,
   cartSelectedDeliveryOptionsUpdateDefault,
   cartAttributesUpdateDefault,
-} from './cart-query-wrapper';
+} from './query-default/cart-query-wrapper';
 import {parse as parseCookie} from 'worktop/cookie';
 
 export const cartGetIdDefault = (requestHeaders: Headers) => {

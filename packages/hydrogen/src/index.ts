@@ -17,9 +17,6 @@ export type {SeoHandleFunction} from './seo/seo';
 
 export {CartForm, type CartActionInput} from './cart/CartForm';
 export {
-  type CartQueryData,
-  type CartQueryOptions,
-  type CartQueryReturn,
   cartCreateDefault,
   cartGetDefault,
   cartLinesAddDefault,
@@ -32,7 +29,7 @@ export {
   cartNoteUpdateDefault,
   cartSelectedDeliveryOptionsUpdateDefault,
   cartAttributesUpdateDefault,
-} from './cart/cart-query-wrapper';
+} from './cart/query-default/cart-query-wrapper';
 export {
   type CartHandlerReturnCustom,
   type CartHandlerReturnBase,
@@ -40,7 +37,12 @@ export {
   cartGetIdDefault,
   cartSetIdDefault,
 } from './cart/cart-handler';
-export {type MetafieldWithoutOwnerId} from './cart/cart-types';
+export type {
+  MetafieldWithoutOwnerId,
+  CartQueryData,
+  CartQueryOptions,
+  CartQueryReturn,
+} from './cart/query-default/cart-types';
 
 export {
   AnalyticsEventName,

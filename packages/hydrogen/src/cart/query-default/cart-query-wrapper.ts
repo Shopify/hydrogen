@@ -12,15 +12,15 @@ import {
   CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION,
   CART_ATTRIBUTES_UPDATE_MUTATION,
 } from './cart-queries';
-import type {Storefront} from '../storefront';
 import type {
   CartGet,
-  CartOptionalInput,
   MetafieldWithoutOwnerId,
+  CartQueryOptions,
+  CartQueryData,
+  CartQueryReturn,
 } from './cart-types';
 import type {
   Cart,
-  CartUserError,
   MetafieldsSetUserError,
   Scalars,
   AttributeInput,
@@ -31,26 +31,6 @@ import type {
   CartSelectedDeliveryOptionInput,
   MetafieldDeleteUserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
-
-export type CartQueryOptions = {
-  storefront: Storefront;
-  getCartId: () => string | undefined;
-  cartQueryFragment?: string;
-  cartMutateFragment?: string;
-};
-
-export type CartQueryData = {
-  cart: Cart;
-  errors?:
-    | CartUserError[]
-    | MetafieldsSetUserError[]
-    | MetafieldDeleteUserError[];
-};
-
-export type CartQueryReturn<T> = (
-  requiredParams: T,
-  optionalParams?: CartOptionalInput,
-) => Promise<CartQueryData>;
 
 export function cartGetDefault(
   options: CartQueryOptions,
