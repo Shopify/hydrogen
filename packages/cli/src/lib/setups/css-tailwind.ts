@@ -1,5 +1,9 @@
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {outputInfo} from '@shopify/cli-kit/node/output';
+import {
+  addNPMDependenciesIfNeeded,
+  getPackageManager,
+} from '@shopify/cli-kit/node/node-package-manager';
 import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {canWriteFiles, copyAssets} from '../assets.js';
@@ -52,11 +56,36 @@ export async function setupTailwind({
     ),
   ]);
 
+  const installingDeps = getPackageManager(rootDirectory).then(
+    (packageManager) =>
+      addNPMDependenciesIfNeeded(
+        [
+          {name: 'tailwindcss', version: '^3'},
+          {name: '@tailwindcss/forms', version: '^0'},
+          {name: '@tailwindcss/typography', version: '^0'},
+          {name: 'postcss', version: '^8'},
+          {name: 'postcss-import', version: '^15'},
+          {name: 'postcss-preset-env', version: '^8'},
+        ],
+        {
+          type: 'dev',
+          packageManager,
+          directory: rootDirectory,
+        },
+      ),
+  );
+
   await renderTasks([
     {
       title: 'Updating files',
       task: async () => {
         await updatingFiles;
+      },
+    },
+    {
+      title: 'Installing new dependencies',
+      task: async () => {
+        await installingDeps;
       },
     },
   ]);
