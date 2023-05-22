@@ -340,12 +340,25 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         errors = [{message: body}];
       }
 
-      throwError(response, errors);
+      throwError(
+        response,
+        errors,
+        undefined,
+        query,
+        JSON.stringify(queryVariables),
+      );
     }
 
     const {data, errors} = body as StorefrontApiResponse<T>;
 
-    if (errors?.length) throwError(response, errors, StorefrontApiError);
+    if (errors?.length)
+      throwError(
+        response,
+        errors,
+        StorefrontApiError,
+        query,
+        JSON.stringify(queryVariables),
+      );
 
     return data as T;
   }
@@ -432,9 +445,18 @@ function throwError<T>(
   response: Response,
   errors: StorefrontApiResponse<T>['errors'],
   ErrorConstructor = Error,
+  query?: string,
+  variables?: string,
 ) {
   const reqId = response.headers.get('x-request-id');
   const reqIdMessage = reqId ? ` - Request ID: ${reqId}` : '';
+  let graphiqlUrl = '';
+
+  if (query) {
+    graphiqlUrl = `\n\nTry running this query in isolotion to debug: http://localhost:3000/graphiql?query=${encodeURIComponent(
+      query,
+    )}${variables ? `&variables=${encodeURIComponent(variables)}` : ''}\n`;
+  }
 
   if (errors) {
     const errorMessages =
@@ -442,10 +464,10 @@ function throwError<T>(
         ? errors
         : errors.map((error) => error.message).join('\n');
 
-    throw new ErrorConstructor(errorMessages + reqIdMessage);
+    throw new ErrorConstructor(errorMessages + reqIdMessage + graphiqlUrl);
   }
 
   throw new ErrorConstructor(
-    `API response error: ${response.status}` + reqIdMessage,
+    `API response error: ${response.status}` + reqIdMessage + graphiqlUrl,
   );
 }
