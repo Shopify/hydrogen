@@ -1,4 +1,7 @@
-export const ListStorefrontsQuery = `#graphql
+import {adminRequest, parseGid} from '../../graphql.js';
+import {getAdminSession} from '../../admin-session.js';
+
+const ListStorefrontsQuery = `#graphql
   query ListStorefronts {
     hydrogenStorefronts {
       id
@@ -26,6 +29,23 @@ interface HydrogenStorefront {
   currentProductionDeployment: Deployment | null;
 }
 
-export interface ListStorefrontsSchema {
+interface ListStorefrontsSchema {
   hydrogenStorefronts: HydrogenStorefront[];
+}
+
+export async function getStorefrontsWithDeployment(shop: string) {
+  const adminSession = await getAdminSession(shop);
+
+  const {hydrogenStorefronts} = await adminRequest<ListStorefrontsSchema>(
+    ListStorefrontsQuery,
+    adminSession,
+  );
+
+  return {
+    adminSession,
+    storefronts: hydrogenStorefronts.map((storefront) => ({
+      ...storefront,
+      parsedId: parseGid(storefront.id),
+    })),
+  };
 }
