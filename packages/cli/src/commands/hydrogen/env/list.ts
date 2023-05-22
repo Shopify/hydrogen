@@ -8,7 +8,6 @@ import {
 } from '@shopify/cli-kit/node/output';
 
 import {linkStorefront} from '../link.js';
-import {adminRequest} from '../../../lib/graphql.js';
 import {commonFlags} from '../../../lib/flags.js';
 import {getHydrogenShop} from '../../../lib/shop.js';
 import {getAdminSession} from '../../../lib/admin-session.js';
@@ -19,7 +18,7 @@ import {
   renderMissingStorefront,
 } from '../../../lib/render-errors.js';
 
-export default class List extends Command {
+export default class EnvList extends Command {
   static description = 'List the environments on your Hydrogen storefront.';
 
   static hidden = true;
@@ -30,7 +29,7 @@ export default class List extends Command {
   };
 
   async run(): Promise<void> {
-    const {flags} = await this.parse(List);
+    const {flags} = await this.parse(EnvList);
     await listEnvironments(flags);
   }
 }
