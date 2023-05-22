@@ -22,6 +22,7 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {hyphenate} from '@shopify/cli-kit/common/string';
 import {
   commonFlags,
   parseProcessFlags,
@@ -33,8 +34,12 @@ import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {readdir} from 'fs/promises';
 import {fileURLToPath} from 'url';
 import {getStarterDir} from '../../lib/build.js';
+import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
+import {setShop, setStorefront} from '../../lib/shopify-config.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
+
+const DEFAULT_PROJECT_LOCATION = 'hydrogen-storefront';
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
@@ -101,6 +106,8 @@ export async function runInit(
     ? setupRemoteTemplate(options.template)
     : setupStarterTemplate();
 
+  const {defaultLocation} = await templateSetup.onStart();
+
   const language =
     options.language ??
     (await renderSelectPrompt({
@@ -116,7 +123,7 @@ export async function runInit(
     options.path ??
     (await renderTextPrompt({
       message: 'Where would you like to create your app?',
-      defaultValue: 'hydrogen-storefront',
+      defaultValue: defaultLocation,
     }));
 
   const projectName = basename(location);
@@ -141,7 +148,7 @@ export async function runInit(
     await rmdir(projectDir, {force: true});
   }
 
-  await templateSetup.run(projectDir);
+  await templateSetup.onProjectDirChosen(projectDir);
 
   if (language === 'js') {
     try {
@@ -224,7 +231,8 @@ function supressNodeExperimentalWarnings() {
 }
 
 type TemplateSetupHandler = {
-  run(projectDir: string): Promise<void>;
+  onStart(): Promise<{defaultLocation: string}>;
+  onProjectDirChosen(projectDir: string): Promise<void>;
   onEnd(projectDir: string): void;
 };
 
@@ -241,18 +249,23 @@ function setupRemoteTemplate(template: string): TemplateSetupHandler {
 
   // Start downloading templates early.
   let demoStoreTemplateDownloaded = false;
-  const demoStoreTemplatePromise = getLatestTemplates()
-    .then((result) => {
-      demoStoreTemplateDownloaded = true;
-      return result;
-    })
-    .catch((error) => {
-      renderFatalError(error);
-      process.exit(1);
-    });
+  let demoStoreTemplatePromise: ReturnType<typeof getLatestTemplates>;
 
   return {
-    async run(projectDir: string) {
+    async onStart() {
+      demoStoreTemplatePromise = getLatestTemplates()
+        .then((result) => {
+          demoStoreTemplateDownloaded = true;
+          return result;
+        })
+        .catch((error) => {
+          renderFatalError(error);
+          process.exit(1);
+        });
+
+      return {defaultLocation: DEFAULT_PROJECT_LOCATION};
+    },
+    async onProjectDirChosen(projectDir: string) {
       // Templates might be cached or the download might be finished already.
       // Only output progress if the download is still in progress.
       if (!demoStoreTemplateDownloaded) {
@@ -283,10 +296,66 @@ function setupRemoteTemplate(template: string): TemplateSetupHandler {
 
 function setupStarterTemplate(): TemplateSetupHandler {
   const starterDir = getStarterDir();
+  let templateAction: string;
+  let shop: string;
+  let selectedStorefront: {id: string; title: string};
 
   return {
-    async run(projectDir: string) {
+    async onStart() {
+      templateAction = await renderSelectPrompt({
+        message: 'Connect to Shopify',
+        choices: [
+          {
+            // TODO use Mock shop
+            label:
+              'Use sample data from Hydrogen Preview shop (no login required)',
+            value: 'preview',
+          },
+          {label: 'Link your Shopify account', value: 'link'},
+        ],
+        defaultValue: 'preview',
+      });
+
+      if (templateAction === 'link') {
+        shop = await renderTextPrompt({
+          message:
+            'Specify which Shop you would like to use (e.g. janes-goods.myshopify.com)',
+          allowEmpty: false,
+        });
+
+        const {storefronts} = await getStorefronts(shop);
+
+        if (storefronts.length === 0) {
+          throw new AbortError('No storefronts found for this shop.');
+        }
+
+        const storefrontId = await renderSelectPrompt({
+          message: 'Choose a Hydrogen storefront to link this project to:',
+          choices: storefronts.map((storefront) => ({
+            label: `${storefront.title} ${storefront.productionUrl}`,
+            value: storefront.id,
+          })),
+        });
+
+        selectedStorefront = storefronts.find(
+          (storefront) => storefront.id === storefrontId,
+        )!;
+
+        if (!selectedStorefront) {
+          throw new AbortError('No storefront found with this ID.');
+        }
+
+        return {defaultLocation: hyphenate(selectedStorefront.title)};
+      }
+
+      return {defaultLocation: DEFAULT_PROJECT_LOCATION};
+    },
+    async onProjectDirChosen(projectDir: string) {
       await copyFile(starterDir, projectDir);
+      if (shop && selectedStorefront) {
+        await setShop(projectDir, shop);
+        await setStorefront(projectDir, selectedStorefront);
+      }
     },
     onEnd() {},
   };
