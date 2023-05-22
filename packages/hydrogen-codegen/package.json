@@ -1,0 +1,51 @@
+{
+  "name": "@shopify/hydrogen-codegen",
+  "publishConfig": {
+    "access": "public",
+    "@shopify:registry": "https://registry.npmjs.org"
+  },
+  "version": "0.0.0-alpha.0",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "type": "module",
+  "main": "dist/cjs/index.cjs",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsup --clean --config ./tsup.config.ts",
+    "dev": "tsup --watch --config ./tsup.config.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "require": "./dist/cjs/index.cjs",
+      "import": "./dist/esm/index.js",
+      "default": "./dist/esm/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shopify/hydrogen.git",
+    "directory": "packages/hydrogen-codegen"
+  },
+  "files": [
+    "dist",
+    "vendor"
+  ],
+  "devDependencies": {
+    "@graphql-codegen/cli": "3.3.1",
+    "@graphql-codegen/plugin-helpers": "^4.1.0",
+    "@graphql-tools/utils": "^9.0.0"
+  },
+  "dependencies": {
+    "@graphql-codegen/add": "^4.0.1",
+    "@graphql-codegen/typescript-operations": "^3.0.1"
+  },
+  "peerDependencies": {
+    "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0"
+  }
+}

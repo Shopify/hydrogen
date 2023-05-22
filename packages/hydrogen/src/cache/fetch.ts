@@ -2,6 +2,9 @@ import {hashKey} from '../utils/hash.js';
 import {CacheShort, CachingStrategy} from './strategies';
 import {getItemFromCache, setItemInCache, isStale} from './sub-request';
 
+/**
+ * The cache key is used to uniquely identify a value in the cache.
+ */
 export type CacheKey = string | readonly unknown[];
 
 export type WithCacheOptions<T = unknown> = {

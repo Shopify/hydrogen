@@ -5,26 +5,22 @@ import type {
   CollectionConnection,
 } from '@shopify/hydrogen/storefront-api-types';
 import {
-  Grid,
-  Heading,
-  PageHeader,
-  Section,
-  Link,
-  Pagination,
-  getPaginationVariables,
-  Button,
-} from '~/components';
+  Image,
+  Pagination__unstable as Pagination,
+  getPaginationVariables__unstable as getPaginationVariables,
+} from '@shopify/hydrogen';
+
+import {Grid, Heading, PageHeader, Section, Link, Button} from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
-import {Image} from '@shopify/hydrogen';
 
-const PAGINATION_SIZE = 8;
+const PAGINATION_SIZE = 4;
 
 export const headers = routeHeaders;
 
 export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
-  const variables = getPaginationVariables(request, PAGINATION_SIZE);
+  const variables = getPaginationVariables(request, {pageBy: PAGINATION_SIZE});
   const {collections} = await storefront.query<{
     collections: CollectionConnection;
   }>(COLLECTIONS_QUERY, {
@@ -58,39 +54,13 @@ export default function Collections() {
       <PageHeader heading="Collections" />
       <Section>
         <Pagination connection={collections}>
-          {({
-            endCursor,
-            hasNextPage,
-            hasPreviousPage,
-            nextPageUrl,
-            nodes,
-            prevPageUrl,
-            startCursor,
-            nextLinkRef,
-            isLoading,
-          }) => (
+          {({nodes, isLoading, PreviousLink, NextLink}) => (
             <>
-              {hasPreviousPage && (
-                <div className="flex items-center justify-center mt-6">
-                  <Button
-                    to={prevPageUrl}
-                    variant="secondary"
-                    width="full"
-                    prefetch="intent"
-                    disabled={!isLoading}
-                    state={{
-                      pageInfo: {
-                        endCursor,
-                        hasNextPage,
-                        startCursor,
-                      },
-                      nodes,
-                    }}
-                  >
-                    {isLoading ? 'Loading...' : 'Previous products'}
-                  </Button>
-                </div>
-              )}
+              <div className="flex items-center justify-center mt-6">
+                <PreviousLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
+                  {isLoading ? 'Loading...' : 'Previous collections'}
+                </PreviousLink>
+              </div>
               <Grid
                 items={nodes.length === 3 ? 3 : 2}
                 data-test="collection-grid"
@@ -103,28 +73,11 @@ export default function Collections() {
                   />
                 ))}
               </Grid>
-              {hasNextPage && (
-                <div className="flex items-center justify-center mt-6">
-                  <Button
-                    ref={nextLinkRef}
-                    to={nextPageUrl}
-                    variant="secondary"
-                    width="full"
-                    prefetch="intent"
-                    disabled={!isLoading}
-                    state={{
-                      pageInfo: {
-                        endCursor,
-                        hasPreviousPage,
-                        startCursor,
-                      },
-                      nodes,
-                    }}
-                  >
-                    {isLoading ? 'Loading...' : 'Next products'}
-                  </Button>
-                </div>
-              )}
+              <div className="flex items-center justify-center mt-6">
+                <NextLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
+                  {isLoading ? 'Loading...' : 'Next collections'}
+                </NextLink>
+              </div>
             </>
           )}
         </Pagination>

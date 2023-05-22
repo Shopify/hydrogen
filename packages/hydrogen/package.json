@@ -5,20 +5,22 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2023.4.0",
+  "version": "2023.4.1",
   "license": "SEE LICENSE IN LICENSE.md",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup --clean --config ../../tsup.config.ts && npm run copy-hydrogen-react",
+    "build": "npm run copy-hydrogen-react && tsup --clean --config ../../tsup.config.ts",
     "copy-hydrogen-react": "node ../../scripts/copy-hydrogen-react.mjs",
     "dev": "tsup --config ../../tsup.config.ts --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "prepack": "npm run build",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "build-docs": "sh ./docs/build-docs.sh && npm run format",
+    "format": "prettier --write \"{src,docs}/**/*\" --ignore-unknown"
   },
   "exports": {
     ".": {
@@ -52,7 +54,7 @@
     "dist"
   ],
   "dependencies": {
-    "@shopify/hydrogen-react": "2023.4.0",
+    "@shopify/hydrogen-react": "2023.4.1",
     "react": "^18.2.0"
   },
   "peerDependencies": {
@@ -63,6 +65,7 @@
     "@testing-library/react": "^14.0.0",
     "happy-dom": "^8.9.0",
     "schema-dts": "^1.1.0",
-    "vitest": "^0.27.2"
+    "vitest": "^0.27.2",
+    "@shopify/generate-docs": "0.10.7"
   }
 }

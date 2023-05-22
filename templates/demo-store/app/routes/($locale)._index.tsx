@@ -1,15 +1,16 @@
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
-import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
-import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
-import {getHeroPlaceholder} from '~/lib/placeholders';
-import {seoPayload} from '~/lib/seo.server';
 import type {
   CollectionConnection,
   ProductConnection,
 } from '@shopify/hydrogen/storefront-api-types';
 import {AnalyticsPageType} from '@shopify/hydrogen';
+
+import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
+import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
+import {getHeroPlaceholder} from '~/lib/placeholders';
+import {seoPayload} from '~/lib/seo.server';
 import {routeHeaders, CACHE_SHORT} from '~/data/cache';
 import {type CollectionHero} from '~/components/Hero';
 
@@ -209,7 +210,7 @@ const COLLECTION_CONTENT_FRAGMENT = `#graphql
 `;
 
 const HOMEPAGE_SEO_QUERY = `#graphql
-  query collectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
+  query seoCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     hero: collection(handle: $handle) {
       ...CollectionContent
@@ -223,7 +224,7 @@ const HOMEPAGE_SEO_QUERY = `#graphql
 `;
 
 const COLLECTION_HERO_QUERY = `#graphql
-  query collectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
+  query heroCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
   @inContext(country: $country, language: $language) {
     hero: collection(handle: $handle) {
       ...CollectionContent
