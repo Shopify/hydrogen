@@ -3,6 +3,7 @@ import {fileURLToPath} from 'node:url';
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 export const GENERATOR_SETUP_ASSETS_DIR = 'assets';
 export const GENERATOR_ROUTES_DIR = 'routes';
+export const GENERATOR_STARTERS_DIR = 'starters';
 
 export function getAssetDir(feature: string) {
   return fileURLToPath(
