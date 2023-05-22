@@ -1,7 +1,7 @@
-import {fileURLToPath} from 'node:url';
 import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
+import {getAssetDir} from './build.js';
 
 export function copyAssets(
   feature: 'tailwind',
@@ -9,9 +9,7 @@ export function copyAssets(
   rootDirectory: string,
   replacer = (content: string, filename: string) => content,
 ) {
-  const setupAssetsPath = fileURLToPath(
-    new URL(`../setup-assets/${feature}`, import.meta.url),
-  );
+  const setupAssetsPath = getAssetDir(feature);
 
   return Promise.all(
     Object.entries(assets).map(async ([source, destination]) => {

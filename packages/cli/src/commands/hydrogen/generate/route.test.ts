@@ -1,10 +1,11 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
-import {runGenerate, GENERATOR_TEMPLATES_DIR} from './route.js';
+import {runGenerate} from './route.js';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {convertRouteToV2} from '../../../lib/remix-version-interop.js';
+import {getRouteFile} from '../../../lib/build.js';
 
 describe('generate/route', () => {
   beforeEach(() => {
@@ -155,12 +156,8 @@ async function createHydrogen(
 
   for (const item of templates) {
     const [filePath, fileContent] = item;
-    const fullFilePath = joinPath(
-      directory,
-      GENERATOR_TEMPLATES_DIR,
-      'routes',
-      `${filePath}.tsx`,
-    );
+    const fullFilePath = getRouteFile(filePath, directory);
+    console.log('AAAA', fullFilePath);
     await mkdir(dirname(fullFilePath));
     await writeFile(fullFilePath, fileContent);
   }

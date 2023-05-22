@@ -17,14 +17,13 @@ import {commonFlags} from '../../../lib/flags.js';
 import {Flags, Args} from '@oclif/core';
 import {transpileFile} from '../../../lib/transpile-ts.js';
 import {formatCode, getCodeFormatOptions} from '../../../lib/format-code.js';
+import {getRouteFile} from '../../../lib/build.js';
 import {
   convertRouteToV2,
   convertTemplateToRemixVersion,
   getV2Flags,
   type RemixV2Flags,
 } from '../../../lib/remix-version-interop.js';
-
-export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 
 // Fix for a TypeScript bug:
 // https://github.com/microsoft/TypeScript/issues/42873
@@ -154,7 +153,7 @@ export async function runGenerate(
     typescript,
     force,
     adapter,
-    templatesRoot = fileURLToPath(new URL('../../../', import.meta.url)),
+    templatesRoot,
     v2Flags = {},
   }: {
     directory: string;
@@ -166,18 +165,12 @@ export async function runGenerate(
   },
 ): Promise<Result> {
   let operation;
-  const extension = typescript ? '.tsx' : '.jsx';
-  const templatePath = joinPath(
-    templatesRoot,
-    GENERATOR_TEMPLATES_DIR,
-    'routes',
-    `${routeFrom}.tsx`,
-  );
+  const templatePath = getRouteFile(routeFrom, templatesRoot);
   const destinationPath = joinPath(
     directory,
     'app',
     'routes',
-    `${routeTo}${extension}`,
+    `${routeTo}.${typescript ? 'tsx' : 'jsx'}`,
   );
   const relativeDestinationPath = relativePath(directory, destinationPath);
 
