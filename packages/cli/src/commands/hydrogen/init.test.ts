@@ -27,18 +27,12 @@ describe('init', () => {
   });
 
   const defaultOptions = (stubs: Record<any, unknown>) => ({
-    template: 'hello-world',
     language: 'js',
     path: 'path/to/project',
     ...stubs,
   });
 
   describe.each([
-    {
-      flag: 'template',
-      value: 'hello-world',
-      condition: {fn: renderSelectPrompt, match: /template/i},
-    },
     {
       flag: 'installDeps',
       value: true,
@@ -156,7 +150,6 @@ describe('init', () => {
         installDeps: false,
         path: tmpDir,
         // Not demo-store
-        template: 'pizza-store',
       });
 
       // When

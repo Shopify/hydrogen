@@ -20,11 +20,8 @@ import {
   fileExists,
   isDirectory,
 } from '@shopify/cli-kit/node/fs';
-import {
-  outputInfo,
-  outputContent,
-  outputToken,
-} from '@shopify/cli-kit/node/output';
+import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   commonFlags,
   parseProcessFlags,
@@ -35,8 +32,8 @@ import {getLatestTemplates} from '../../lib/template-downloader.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {readdir} from 'fs/promises';
 import {fileURLToPath} from 'url';
+import {getStarterDir} from '../../lib/build.js';
 
-const STARTER_TEMPLATES = ['hello-world', 'demo-store'];
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
 export default class Init extends Command {
@@ -54,8 +51,7 @@ export default class Init extends Command {
     }),
     template: Flags.string({
       description:
-        'Sets the template to use. One of `demo-store` or `hello-world`.',
-      choices: STARTER_TEMPLATES,
+        'Sets the template to use. Pass `demo-store` for a fully-featured store template.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
     'install-deps': Flags.boolean({
@@ -101,30 +97,9 @@ export async function runInit(
     );
   }
 
-  // Start downloading templates early.
-  let templatesDownloaded = false;
-  const templatesPromise = getLatestTemplates()
-    .then((result) => {
-      templatesDownloaded = true;
-      return result;
-    })
-    .catch((error) => {
-      renderFatalError(error);
-      process.exit(1);
-    });
-
-  const appTemplate =
-    options.template ??
-    (await renderSelectPrompt({
-      message: 'Choose a template',
-      defaultValue: 'hello-world',
-      choices: STARTER_TEMPLATES.map((value) => ({
-        label: value
-          .replace(/-/g, ' ')
-          .replace(/\b\w/g, (l) => l.toUpperCase()),
-        value,
-      })),
-    }));
+  const templateSetup = options.template
+    ? setupRemoteTemplate(options.template)
+    : setupStarterTemplate();
 
   const language =
     options.language ??
@@ -166,22 +141,7 @@ export async function runInit(
     await rmdir(projectDir, {force: true});
   }
 
-  // Templates might be cached or the download might be finished already.
-  // Only output progress if the download is still in progress.
-  if (!templatesDownloaded) {
-    await renderTasks([
-      {
-        title: 'Downloading templates',
-        task: async () => {
-          await templatesPromise;
-        },
-      },
-    ]);
-  }
-
-  const {templatesDir} = await templatesPromise;
-
-  await copyFile(joinPath(templatesDir, appTemplate), projectDir);
+  await templateSetup.run(projectDir);
 
   if (language === 'js') {
     try {
@@ -240,12 +200,7 @@ export async function runInit(
     ],
   });
 
-  if (appTemplate === 'demo-store') {
-    renderInfo({
-      headline: `Your project will display inventory from the Hydrogen Demo Store.`,
-      body: `To connect this project to your Shopify store’s inventory, update \`${projectName}/.env\` with your store ID and Storefront API key.`,
-    });
-  }
+  templateSetup.onEnd(projectDir);
 }
 
 async function projectExists(projectDir: string) {
@@ -266,4 +221,73 @@ function supressNodeExperimentalWarnings() {
       }
     });
   }
+}
+
+type TemplateSetupHandler = {
+  run(projectDir: string): Promise<void>;
+  onEnd(projectDir: string): void;
+};
+
+function setupRemoteTemplate(template: string): TemplateSetupHandler {
+  const isDemoStoreTemplate = template === 'demo-store';
+
+  if (!isDemoStoreTemplate) {
+    // TODO: support GitHub repos as templates
+    throw new AbortError(
+      'Only `demo-store` is supported in --template flag for now.',
+      'Skip the --template flag to run the setup flow.',
+    );
+  }
+
+  // Start downloading templates early.
+  let demoStoreTemplateDownloaded = false;
+  const demoStoreTemplatePromise = getLatestTemplates()
+    .then((result) => {
+      demoStoreTemplateDownloaded = true;
+      return result;
+    })
+    .catch((error) => {
+      renderFatalError(error);
+      process.exit(1);
+    });
+
+  return {
+    async run(projectDir: string) {
+      // Templates might be cached or the download might be finished already.
+      // Only output progress if the download is still in progress.
+      if (!demoStoreTemplateDownloaded) {
+        await renderTasks([
+          {
+            title: 'Downloading templates',
+            task: async () => {
+              await demoStoreTemplatePromise;
+            },
+          },
+        ]);
+      }
+
+      const {templatesDir} = await demoStoreTemplatePromise;
+
+      await copyFile(joinPath(templatesDir, template), projectDir);
+    },
+    onEnd(projectName: string) {
+      if (isDemoStoreTemplate) {
+        renderInfo({
+          headline: `Your project will display inventory from the Hydrogen Demo Store.`,
+          body: `To connect this project to your Shopify store’s inventory, update \`${projectName}/.env\` with your store ID and Storefront API key.`,
+        });
+      }
+    },
+  };
+}
+
+function setupStarterTemplate(): TemplateSetupHandler {
+  const starterDir = getStarterDir();
+
+  return {
+    async run(projectDir: string) {
+      await copyFile(starterDir, projectDir);
+    },
+    onEnd() {},
+  };
 }

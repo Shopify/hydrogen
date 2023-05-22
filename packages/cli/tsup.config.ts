@@ -3,7 +3,7 @@ import fs from 'fs-extra';
 import {
   GENERATOR_TEMPLATES_DIR,
   GENERATOR_SETUP_ASSETS_DIR,
-  GENERATOR_STARTERS_DIR,
+  GENERATOR_STARTER_DIR,
   GENERATOR_ROUTES_DIR,
 } from './src/lib/build';
 
@@ -46,7 +46,7 @@ export default defineConfig([
       );
       await fs.copy(
         '../../templates/hello-world',
-        `${outDir}/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTERS_DIR}/hello-world`,
+        `${outDir}/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
         {filter: filterArtifacts},
       );
 
