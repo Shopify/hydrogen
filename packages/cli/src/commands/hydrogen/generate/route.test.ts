@@ -157,7 +157,6 @@ async function createHydrogen(
   for (const item of templates) {
     const [filePath, fileContent] = item;
     const fullFilePath = getRouteFile(filePath, directory);
-    console.log('AAAA', fullFilePath);
     await mkdir(dirname(fullFilePath));
     await writeFile(fullFilePath, fileContent);
   }

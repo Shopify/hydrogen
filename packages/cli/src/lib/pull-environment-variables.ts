@@ -7,7 +7,6 @@ import {
 
 import {linkStorefront} from '../commands/hydrogen/link.js';
 
-import {adminRequest} from './graphql.js';
 import {getHydrogenShop} from './shop.js';
 import {getAdminSession} from './admin-session.js';
 import {getConfig} from './shopify-config.js';

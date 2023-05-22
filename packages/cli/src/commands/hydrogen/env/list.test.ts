@@ -15,7 +15,6 @@ import {
   renderMissingStorefront,
 } from '../../../lib/render-errors.js';
 import {linkStorefront} from '../link.js';
-
 import {listEnvironments} from './list.js';
 
 const SHOP = 'my-shop';
