@@ -299,33 +299,48 @@ async function handleLanguage(projectDir: string, flagLanguage?: string) {
 }
 
 async function handleDependencies(projectDir: string, installDeps?: boolean) {
-  let depsInstalled = false;
-  let packageManager = await packageManagerUsedForCreating();
+  const detectedPackageManager = await packageManagerUsedForCreating();
+  let actualPackageManager: Exclude<typeof detectedPackageManager, 'unknown'> =
+    'npm';
 
-  if (packageManager !== 'unknown') {
-    installDeps =
-      installDeps ??
-      (await renderConfirmationPrompt({
-        message: `Install dependencies with ${packageManager}?`,
-      }));
-
-    if (installDeps) {
-      await installNodeModules({
-        directory: projectDir,
-        packageManager,
-        args: [],
-        stdout: process.stdout,
-        stderr: process.stderr,
+  if (installDeps !== false) {
+    if (detectedPackageManager === 'unknown') {
+      const result = await renderSelectPrompt<'no' | 'npm' | 'pnpm' | 'yarn'>({
+        message: `Install dependencies?`,
+        choices: [
+          {label: 'No', value: 'no'},
+          {label: 'Yes, use NPM', value: 'npm'},
+          {label: 'Yes, use PNPM', value: 'pnpm'},
+          {label: 'Yes, use Yarn v1', value: 'yarn'},
+        ],
+        defaultValue: 'no',
       });
 
-      depsInstalled = true;
+      if (result === 'no') {
+        installDeps = false;
+      } else {
+        actualPackageManager = result;
+        installDeps = true;
+      }
+    } else if (installDeps === undefined) {
+      actualPackageManager = detectedPackageManager;
+      installDeps = await renderConfirmationPrompt({
+        message: `Install dependencies with ${detectedPackageManager}?`,
+      });
     }
-  } else {
-    // Assume npm for showing next steps
-    packageManager = 'npm';
   }
 
-  return {depsInstalled, packageManager};
+  if (installDeps) {
+    await installNodeModules({
+      directory: projectDir,
+      packageManager: actualPackageManager,
+      args: [],
+      stdout: process.stdout,
+      stderr: process.stderr,
+    });
+  }
+
+  return {depsInstalled: installDeps, packageManager: actualPackageManager};
 }
 
 function renderProjectReady(
