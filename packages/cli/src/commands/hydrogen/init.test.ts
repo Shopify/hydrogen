@@ -5,10 +5,10 @@ import {
   renderConfirmationPrompt,
   renderSelectPrompt,
   renderTextPrompt,
+  renderInfo,
 } from '@shopify/cli-kit/node/ui';
 import {outputContent} from '@shopify/cli-kit/node/output';
 import {installNodeModules} from '@shopify/cli-kit/node/node-package-manager';
-import {renderInfo} from '@shopify/cli-kit/node/ui';
 
 describe('init', () => {
   beforeEach(() => {
@@ -22,8 +22,24 @@ describe('init', () => {
     vi.mocked(outputContent).mockImplementation(() => ({
       value: '',
     }));
-    vi.mock('@shopify/cli-kit/node/ui');
-    vi.mock('@shopify/cli-kit/node/fs');
+    vi.mock('@shopify/cli-kit/node/ui', async () => {
+      const original = await vi.importActual<
+        typeof import('@shopify/cli-kit/node/ui')
+      >('@shopify/cli-kit/node/ui');
+
+      return {
+        ...original,
+        renderConfirmationPrompt: vi.fn(),
+        renderSelectPrompt: vi.fn(),
+        renderTextPrompt: vi.fn(),
+        renderInfo: vi.fn(),
+      };
+    });
+    vi.mock('@shopify/cli-kit/node/fs', async () => ({
+      fileExists: () => Promise.resolve(true),
+      isDirectory: () => Promise.resolve(false),
+      copyFile: () => Promise.resolve(),
+    }));
   });
 
   const defaultOptions = (stubs: Record<any, unknown>) => ({

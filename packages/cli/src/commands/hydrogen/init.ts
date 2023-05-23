@@ -121,45 +121,59 @@ async function setupRemoteTemplate(options: InitOptions) {
   const appTemplate = options.template!;
 
   // Start downloading templates early.
-  let demoStoreTemplateDownloaded = false;
-  const demoStoreTemplatePromise = getLatestTemplates()
-    .then((result) => {
-      demoStoreTemplateDownloaded = true;
-      return result;
-    })
-    .catch((error) => {
-      renderFatalError(error);
-      process.exit(1);
-    });
+  const backgroundDownloadPromise = getLatestTemplates();
 
   const project = await handleProjectLocation({...options});
   if (!project) return;
 
   // Templates might be cached or the download might be finished already.
   // Only output progress if the download is still in progress.
-  if (!demoStoreTemplateDownloaded) {
-    await renderTasks([
-      {
-        title: 'Downloading templates',
-        task: async () => {
-          await demoStoreTemplatePromise;
-        },
-      },
-    ]);
-  }
+  const backgroundWorkPromise = Promise.resolve().then(async () => {
+    const {templatesDir} = await backgroundDownloadPromise;
+    return templatesDir;
+  });
 
-  const {templatesDir} = await demoStoreTemplatePromise;
+  backgroundWorkPromise.then(async (templatesDir) => {
+    await copyFile(joinPath(templatesDir, appTemplate), project.directory);
+  });
 
-  await copyFile(joinPath(templatesDir, appTemplate), project.directory);
-
-  await handleLanguage(project.directory, options.language);
-
-  const depsInfo = await handleDependencies(
+  const convertFiles = await handleLanguage(
     project.directory,
-    options.installDeps,
+    options.language,
   );
 
-  renderProjectReady(project, depsInfo);
+  backgroundWorkPromise.then(() => convertFiles());
+
+  const {packageManager, shouldInstallDeps, installDeps} =
+    await handleDependencies(project.directory, options.installDeps);
+
+  const tasks = [
+    {
+      title: 'Downloading template',
+      task: async () => {
+        await backgroundDownloadPromise;
+      },
+    },
+    {
+      title: 'Setting up project',
+      task: async () => {
+        await backgroundWorkPromise;
+      },
+    },
+  ];
+
+  if (shouldInstallDeps) {
+    tasks.push({
+      title: 'Installing dependencies',
+      task: async () => {
+        await installDeps();
+      },
+    });
+  }
+
+  await renderTasks(tasks);
+
+  renderProjectReady(project, packageManager, shouldInstallDeps);
 
   if (isDemoStoreTemplate) {
     renderInfo({
@@ -170,10 +184,6 @@ async function setupRemoteTemplate(options: InitOptions) {
 }
 
 async function setupLocalStarterTemplate(options: InitOptions) {
-  const starterDir = getStarterDir();
-  let shop: string | undefined = undefined;
-  let selectedStorefront: {id: string; title: string} | undefined = undefined;
-
   const templateAction = await renderSelectPrompt({
     message: 'Connect to Shopify',
     choices: [
@@ -187,62 +197,95 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     defaultValue: 'preview',
   });
 
-  if (templateAction === 'link') {
-    shop = await renderTextPrompt({
-      message:
-        'Specify which Store you would like to use (e.g. {store}.myshopify.com)',
-      allowEmpty: false,
-    });
-
-    shop = shop.trim().toLowerCase();
-
-    if (!shop.endsWith('.myshopify.com')) {
-      shop += '.myshopify.com';
-    }
-
-    const {storefronts} = await getStorefronts(shop);
-
-    if (storefronts.length === 0) {
-      throw new AbortError('No storefronts found for this shop.');
-    }
-
-    const storefrontId = await renderSelectPrompt({
-      message: 'Choose a Hydrogen storefront to link this project to:',
-      choices: storefronts.map((storefront) => ({
-        label: `${storefront.title} ${storefront.productionUrl}`,
-        value: storefront.id,
-      })),
-    });
-
-    selectedStorefront = storefronts.find(
-      (storefront) => storefront.id === storefrontId,
-    )!;
-
-    if (!selectedStorefront) {
-      throw new AbortError('No storefront found with this ID.');
-    }
-  }
+  const storefrontInfo =
+    templateAction === 'link' ? await handleStorefrontLink() : null;
 
   const project = await handleProjectLocation({
     ...options,
-    defaultLocation: selectedStorefront?.title,
+    defaultLocation: storefrontInfo?.title,
   });
+
   if (!project) return;
 
-  await copyFile(starterDir, project.directory);
-  if (shop && selectedStorefront) {
-    await setShop(project.directory, shop);
-    await setStorefront(project.directory, selectedStorefront);
+  const backgroundWorkPromise = copyFile(getStarterDir(), project.directory);
+
+  if (storefrontInfo) {
+    backgroundWorkPromise.then(async () => {
+      await setShop(project.directory, storefrontInfo.shop);
+      await setStorefront(project.directory, storefrontInfo);
+    });
   }
 
-  await handleLanguage(project.directory, options.language);
-
-  const depsInfo = await handleDependencies(
+  const convertFiles = await handleLanguage(
     project.directory,
-    options.installDeps,
+    options.language,
   );
 
-  renderProjectReady(project, depsInfo);
+  backgroundWorkPromise.then(() => convertFiles());
+
+  const {packageManager, shouldInstallDeps, installDeps} =
+    await handleDependencies(project.directory, options.installDeps);
+
+  const tasks = [
+    {
+      title: 'Setting up project',
+      task: async () => {
+        await backgroundWorkPromise;
+      },
+    },
+  ];
+
+  if (shouldInstallDeps) {
+    tasks.push({
+      title: 'Installing dependencies',
+      task: async () => {
+        await installDeps();
+      },
+    });
+  }
+
+  await renderTasks(tasks);
+
+  renderProjectReady(project, packageManager, shouldInstallDeps);
+}
+
+async function handleStorefrontLink() {
+  let shop = await renderTextPrompt({
+    message:
+      'Specify which Store you would like to use (e.g. {store}.myshopify.com)',
+    allowEmpty: false,
+  });
+
+  shop = shop.trim().toLowerCase();
+
+  if (!shop.endsWith('.myshopify.com')) {
+    shop += '.myshopify.com';
+  }
+
+  // Triggers a browser login flow if necessary.
+  const {storefronts} = await getStorefronts(shop);
+
+  if (storefronts.length === 0) {
+    throw new AbortError('No storefronts found for this shop.');
+  }
+
+  const storefrontId = await renderSelectPrompt({
+    message: 'Choose a Hydrogen storefront to link this project to:',
+    choices: storefronts.map((storefront) => ({
+      label: `${storefront.title} ${storefront.productionUrl}`,
+      value: storefront.id,
+    })),
+  });
+
+  let selected = storefronts.find(
+    (storefront) => storefront.id === storefrontId,
+  )!;
+
+  if (!selected) {
+    throw new AbortError('No storefront found with this ID.');
+  }
+
+  return {...selected, shop};
 }
 
 async function handleProjectLocation(options: {
@@ -294,22 +337,27 @@ async function handleLanguage(projectDir: string, flagLanguage?: string) {
       defaultValue: 'js',
     }));
 
-  if (language === 'js') {
-    try {
-      await transpileProject(projectDir);
-    } catch (error) {
-      await rmdir(projectDir, {force: true});
-      throw error;
+  return async () => {
+    if (language === 'js') {
+      try {
+        await transpileProject(projectDir);
+      } catch (error) {
+        await rmdir(projectDir, {force: true});
+        throw error;
+      }
     }
-  }
+  };
 }
 
-async function handleDependencies(projectDir: string, installDeps?: boolean) {
+async function handleDependencies(
+  projectDir: string,
+  shouldInstallDeps?: boolean,
+) {
   const detectedPackageManager = await packageManagerUsedForCreating();
   let actualPackageManager: Exclude<typeof detectedPackageManager, 'unknown'> =
     'npm';
 
-  if (installDeps !== false) {
+  if (shouldInstallDeps !== false) {
     if (detectedPackageManager === 'unknown') {
       const result = await renderSelectPrompt<'no' | 'npm' | 'pnpm' | 'yarn'>({
         message: `Install dependencies?`,
@@ -323,38 +371,37 @@ async function handleDependencies(projectDir: string, installDeps?: boolean) {
       });
 
       if (result === 'no') {
-        installDeps = false;
+        shouldInstallDeps = false;
       } else {
         actualPackageManager = result;
-        installDeps = true;
+        shouldInstallDeps = true;
       }
-    } else if (installDeps === undefined) {
+    } else if (shouldInstallDeps === undefined) {
       actualPackageManager = detectedPackageManager;
-      installDeps = await renderConfirmationPrompt({
+      shouldInstallDeps = await renderConfirmationPrompt({
         message: `Install dependencies with ${detectedPackageManager}?`,
       });
     }
   }
 
-  if (installDeps) {
-    await installNodeModules({
-      directory: projectDir,
-      packageManager: actualPackageManager,
-      args: [],
-      stdout: process.stdout,
-      stderr: process.stderr,
-    });
-  }
-
-  return {depsInstalled: installDeps, packageManager: actualPackageManager};
+  return {
+    packageManager: actualPackageManager,
+    shouldInstallDeps,
+    installDeps: shouldInstallDeps
+      ? () =>
+          installNodeModules({
+            directory: projectDir,
+            packageManager: actualPackageManager,
+            args: [],
+          })
+      : () => {},
+  };
 }
 
 function renderProjectReady(
   project: NonNullable<Awaited<ReturnType<typeof handleProjectLocation>>>,
-  {
-    depsInstalled,
-    packageManager,
-  }: Awaited<ReturnType<typeof handleDependencies>>,
+  packageManager: 'npm' | 'pnpm' | 'yarn',
+  depsInstalled?: boolean,
 ) {
   renderSuccess({
     headline: `${project.name} is ready to build.`,
