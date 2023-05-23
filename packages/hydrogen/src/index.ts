@@ -16,23 +16,18 @@ export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
 
 export {CartForm, type CartActionInput} from './cart/CartForm';
-export {
-  type CartQueryData,
-  type CartQueryOptions,
-  type CartQueryReturn,
-  cartCreateDefault,
-  cartGetDefault,
-  cartLinesAddDefault,
-  cartLinesUpdateDefault,
-  cartLinesRemoveDefault,
-  cartDiscountCodesUpdateDefault,
-  cartBuyerIdentityUpdateDefault,
-  cartMetafieldDeleteDefault,
-  cartMetafieldsSetDefault,
-  cartNoteUpdateDefault,
-  cartSelectedDeliveryOptionsUpdateDefault,
-  cartAttributesUpdateDefault,
-} from './cart/cart-query-wrapper';
+export {cartCreateDefault} from './cart/queries/cartCreateDefault';
+export {cartGetDefault} from './cart/queries/cartGetDefault';
+export {cartLinesAddDefault} from './cart/queries/cartLinesAddDefault';
+export {cartLinesUpdateDefault} from './cart/queries/cartLinesUpdateDefault';
+export {cartLinesRemoveDefault} from './cart/queries/cartLinesRemoveDefault';
+export {cartDiscountCodesUpdateDefault} from './cart/queries/cartDiscountCodesUpdateDefault';
+export {cartBuyerIdentityUpdateDefault} from './cart/queries/cartBuyerIdentityUpdateDefault';
+export {cartNoteUpdateDefault} from './cart/queries/cartNoteUpdateDefault';
+export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelectedDeliveryOptionsUpdateDefault';
+export {cartAttributesUpdateDefault} from './cart/queries/cartAttributesUpdateDefault';
+export {cartMetafieldsSetDefault} from './cart/queries/cartMetafieldsSetDefault';
+export {cartMetafieldDeleteDefault} from './cart/queries/cartMetafieldDeleteDefault';
 export {
   type CartHandlerReturnCustom,
   type CartHandlerReturnBase,
@@ -40,7 +35,12 @@ export {
   cartGetIdDefault,
   cartSetIdDefault,
 } from './cart/cart-handler';
-export {type MetafieldWithoutOwnerId} from './cart/cart-types';
+export type {
+  MetafieldWithoutOwnerId,
+  CartQueryData,
+  CartQueryOptions,
+  CartQueryReturn,
+} from './cart/queries/cart-types';
 
 export {
   AnalyticsEventName,

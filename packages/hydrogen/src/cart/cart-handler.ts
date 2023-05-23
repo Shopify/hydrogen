@@ -1,22 +1,11 @@
 import {CountryCode} from '@shopify/hydrogen-react/storefront-api-types';
 import {Storefront} from '../storefront';
 import {getFormInput, CartActionInput} from './CartForm';
-import {
-  cartCreateDefault,
-  cartGetDefault,
-  cartLinesAddDefault,
-  cartLinesUpdateDefault,
-  cartLinesRemoveDefault,
-  cartDiscountCodesUpdateDefault,
-  cartBuyerIdentityUpdateDefault,
-  cartMetafieldDeleteDefault,
-  cartMetafieldsSetDefault,
-  cartNoteUpdateDefault,
-  cartSelectedDeliveryOptionsUpdateDefault,
-  cartAttributesUpdateDefault,
-  type CartQueryData,
-} from './cart-query-wrapper';
-import type {CartOptionalInput, MetafieldWithoutOwnerId} from './cart-types';
+import type {
+  CartOptionalInput,
+  CartQueryData,
+  MetafieldWithoutOwnerId,
+} from './queries/cart-types';
 import {
   AttributeInput,
   Cart,
@@ -25,10 +14,22 @@ import {
   CartLineInput,
   CartLineUpdateInput,
   CartSelectedDeliveryOptionInput,
+  LanguageCode,
   Scalars,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
-import {LanguageCode} from '@shopify/hydrogen-react/storefront-api-types';
+import {cartGetDefault} from './queries/cartGetDefault';
+import {cartCreateDefault} from './queries/cartCreateDefault';
+import {cartLinesAddDefault} from './queries/cartLinesAddDefault';
+import {cartLinesUpdateDefault} from './queries/cartLinesUpdateDefault';
+import {cartLinesRemoveDefault} from './queries/cartLinesRemoveDefault';
+import {cartDiscountCodesUpdateDefault} from './queries/cartDiscountCodesUpdateDefault';
+import {cartBuyerIdentityUpdateDefault} from './queries/cartBuyerIdentityUpdateDefault';
+import {cartNoteUpdateDefault} from './queries/cartNoteUpdateDefault';
+import {cartSelectedDeliveryOptionsUpdateDefault} from './queries/cartSelectedDeliveryOptionsUpdateDefault';
+import {cartAttributesUpdateDefault} from './queries/cartAttributesUpdateDefault';
+import {cartMetafieldsSetDefault} from './queries/cartMetafieldsSetDefault';
+import {cartMetafieldDeleteDefault} from './queries/cartMetafieldDeleteDefault';
 
 export const cartGetIdDefault = (requestHeaders: Headers) => {
   return () => {
@@ -110,7 +111,7 @@ export function createCartHandler_unstable<
   const mutateOptions = {
     storefront,
     getCartId,
-    cartMutateFragment,
+    cartFragment: cartMutateFragment,
   };
 
   const cartId = getCartId();
@@ -121,7 +122,7 @@ export function createCartHandler_unstable<
     get: cartGetDefault({
       storefront,
       getCartId,
-      cartQueryFragment,
+      cartFragment: cartQueryFragment,
     }),
     getCartId,
     setCartId,

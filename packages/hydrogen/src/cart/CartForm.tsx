@@ -1,5 +1,5 @@
 import {type FetcherWithComponents, useFetcher} from '@remix-run/react';
-import {type MetafieldWithoutOwnerId} from './cart-types';
+import {type MetafieldWithoutOwnerId} from './queries/cart-types';
 import React from 'react';
 import {
   AttributeInput,
