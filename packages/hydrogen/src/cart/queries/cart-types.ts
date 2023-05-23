@@ -25,8 +25,7 @@ export type CartGet = {
 export type CartQueryOptions = {
   storefront: Storefront;
   getCartId: () => string | undefined;
-  cartQueryFragment?: string;
-  cartMutateFragment?: string;
+  cartFragment?: string;
 };
 
 export type CartQueryData = {
