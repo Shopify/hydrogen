@@ -1,5 +1,19 @@
 # demo-store
 
+## 1.0.1
+
+### Patch Changes
+
+- Fix the load more results button on the /search route ([#909](https://github.com/Shopify/hydrogen/pull/909)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Adds pagination support on /search results ([#918](https://github.com/Shopify/hydrogen/pull/918)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Added import/order ESLint rule and @remix-run/eslint plugin to demo-store template eslint configuration. ([#895](https://github.com/Shopify/hydrogen/pull/895)) by [@QuintonC](https://github.com/QuintonC)
+
+- Updated dependencies [[`1a9f4025`](https://github.com/Shopify/hydrogen/commit/1a9f4025d765bff672cf3c02d87c5303e8b027f9), [`112ac42a`](https://github.com/Shopify/hydrogen/commit/112ac42a095afc5269ae75ff15828f27b90c9687), [`a8d5fefe`](https://github.com/Shopify/hydrogen/commit/a8d5fefe79140c09a58e77aae329e5034d030a93), [`24b82fcf`](https://github.com/Shopify/hydrogen/commit/24b82fcf457d82f456d9661b8a44e4f51b5fbdf5), [`3cc6d751`](https://github.com/Shopify/hydrogen/commit/3cc6d75194df4007ebc2f023c46086f093482a87), [`112ac42a`](https://github.com/Shopify/hydrogen/commit/112ac42a095afc5269ae75ff15828f27b90c9687), [`ba54a3b6`](https://github.com/Shopify/hydrogen/commit/ba54a3b650b85191d3417647f08a6fb932f20d44)]:
+  - @shopify/cli-hydrogen@4.2.0
+  - @shopify/hydrogen@2023.4.2
+
 ## 1.0.0
 
 ### Major Changes
