@@ -6,7 +6,7 @@
   },
   "type": "module",
   "version": "2023.4.1",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",

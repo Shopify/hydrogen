@@ -4,7 +4,7 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "license": "SEE LICENSE IN LICENSE.md",
+  "license": "MIT",
   "version": "4.1.1",
   "type": "module",
   "scripts": {
