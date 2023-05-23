@@ -1,9 +1,18 @@
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {commonFlags} from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
+import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
+import {capitalize} from '@shopify/cli-kit/common/string';
+import {
+  getPackageManager,
+  installNodeModules,
+} from '@shopify/cli-kit/node/node-package-manager';
 import {Args} from '@oclif/core';
 import {getRemixConfig} from '../../../lib/config.js';
-import {setupTailwind} from '../../../lib/setups/css-tailwind.js';
+import {
+  type SetupResult,
+  setupTailwind,
+} from '../../../lib/setups/css-tailwind.js';
 
 const STRATEGIES = ['tailwind' /*'css-modules', 'vanilla-extract'*/];
 
@@ -47,12 +56,47 @@ export async function runSetupCSS({
   force?: boolean;
 }) {
   const remixConfig = await getRemixConfig(directory);
+  let setupOutput: SetupResult | undefined;
 
   switch (strategy) {
     case 'tailwind':
-      await setupTailwind({remixConfig, force});
+      setupOutput = await setupTailwind({remixConfig, force});
       break;
     default:
       throw new Error('Unknown strategy');
   }
+
+  if (!setupOutput) return;
+  const {workPromise, generatedAssets, helpUrl} = setupOutput;
+
+  await renderTasks([
+    {
+      title: 'Updating files',
+      task: async () => {
+        await workPromise;
+      },
+    },
+    {
+      title: 'Installing new dependencies',
+      task: async () => {
+        await getPackageManager(remixConfig.rootDirectory).then(
+          async (packageManager) => {
+            await installNodeModules({
+              directory: remixConfig.rootDirectory,
+              packageManager,
+              args: [],
+            });
+          },
+        );
+      },
+    },
+  ]);
+
+  renderSuccess({
+    headline: `${capitalize(strategy)} setup complete.`,
+    body:
+      'You can now modify CSS configuration in the following files:\n' +
+      generatedAssets.map((file) => `  - ${file}`).join('\n') +
+      `\n\nFor more information, visit ${helpUrl}.`,
+  });
 }

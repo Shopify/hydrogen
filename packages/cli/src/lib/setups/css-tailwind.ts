@@ -1,12 +1,7 @@
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {outputInfo} from '@shopify/cli-kit/node/output';
-import {
-  addNPMDependenciesIfNeeded,
-  getPackageManager,
-} from '@shopify/cli-kit/node/node-package-manager';
-import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
-import {canWriteFiles, copyAssets} from '../assets.js';
+import {canWriteFiles, copyAssets, mergePackageJson} from '../assets.js';
 import {getCodeFormatOptions, type FormatOptions} from '../format-code.js';
 import {ts, tsx, js, jsx, type SgNode} from '@ast-grep/napi';
 import {findFileWithExtension, replaceFileContent} from '../file.js';
@@ -15,13 +10,19 @@ const astGrep = {ts, tsx, js, jsx};
 
 const tailwindCssPath = 'styles/tailwind.css';
 
+export type SetupResult = {
+  workPromise: Promise<unknown>;
+  generatedAssets: string[];
+  helpUrl: string;
+};
+
 export async function setupTailwind({
   remixConfig,
   force = false,
 }: {
   remixConfig: RemixConfig;
   force?: boolean;
-}) {
+}): Promise<undefined | SetupResult> {
   const {rootDirectory, appDirectory} = remixConfig;
 
   const relativeAppDirectory = relativePath(rootDirectory, appDirectory);
@@ -46,7 +47,8 @@ export async function setupTailwind({
     return;
   }
 
-  const updatingFiles = Promise.all([
+  const workPromise = Promise.all([
+    mergePackageJson('tailwind', rootDirectory),
     copyAssets('tailwind', assetMap, rootDirectory, (content, filepath) =>
       filepath === 'tailwind.config.js'
         ? content.replace('{src-dir}', relativeAppDirectory)
@@ -60,49 +62,11 @@ export async function setupTailwind({
     ),
   ]);
 
-  const installingDeps = getPackageManager(rootDirectory).then(
-    (packageManager) =>
-      addNPMDependenciesIfNeeded(
-        [
-          {name: 'tailwindcss', version: '^3'},
-          {name: '@tailwindcss/forms', version: '^0'},
-          {name: '@tailwindcss/typography', version: '^0'},
-          {name: 'postcss', version: '^8'},
-          {name: 'postcss-import', version: '^15'},
-          {name: 'postcss-preset-env', version: '^8'},
-        ],
-        {
-          type: 'dev',
-          packageManager,
-          directory: rootDirectory,
-        },
-      ),
-  );
-
-  await renderTasks([
-    {
-      title: 'Updating files',
-      task: async () => {
-        await updatingFiles;
-      },
-    },
-    {
-      title: 'Installing new dependencies',
-      task: async () => {
-        await installingDeps;
-      },
-    },
-  ]);
-
-  renderSuccess({
-    headline: 'Tailwind setup complete.',
-    body:
-      'You can now modify CSS configuration in the following files:\n' +
-      Object.values(assetMap)
-        .map((file) => `  - ${file}`)
-        .join('\n') +
-      '\n\nFor more information, visit https://tailwindcss.com/docs/configuration.',
-  });
+  return {
+    workPromise,
+    generatedAssets: Object.values(assetMap),
+    helpUrl: 'https://tailwindcss.com/docs/configuration',
+  };
 }
 
 async function replaceRemixConfig(
