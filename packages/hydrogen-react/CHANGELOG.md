@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2023.4.3
+
+### Patch Changes
+
+- Fix release ([#926](https://github.com/Shopify/hydrogen/pull/926)) by [@blittle](https://github.com/blittle)
+
 ## 2023.4.2
 
 ### Patch Changes
