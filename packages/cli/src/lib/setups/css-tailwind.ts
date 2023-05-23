@@ -16,15 +16,17 @@ export type SetupResult = {
   helpUrl: string;
 };
 
-export async function setupTailwind({
-  remixConfig,
-  force = false,
-}: {
-  remixConfig: RemixConfig;
-  force?: boolean;
-}): Promise<undefined | SetupResult> {
-  const {rootDirectory, appDirectory} = remixConfig;
+export type SetupTailwindConfig = {
+  rootDirectory: string;
+  appDirectory: string;
+  tailwind?: boolean;
+  postcss?: boolean;
+};
 
+export async function setupTailwind(
+  {rootDirectory, appDirectory, ...futureOptions}: SetupTailwindConfig,
+  force = false,
+): Promise<undefined | SetupResult> {
   const relativeAppDirectory = relativePath(rootDirectory, appDirectory);
 
   const assetMap = {
@@ -33,8 +35,7 @@ export async function setupTailwind({
     'tailwind.css': joinPath(relativeAppDirectory, tailwindCssPath),
   } as const;
 
-  // @ts-expect-error Only available in Remix 1.16+
-  if (remixConfig.tailwind && remixConfig.postcss) {
+  if (futureOptions.tailwind && futureOptions.postcss) {
     outputInfo(`Tailwind and PostCSS are already setup in ${rootDirectory}.`);
     return;
   }

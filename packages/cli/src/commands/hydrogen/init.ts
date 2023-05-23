@@ -4,7 +4,6 @@ import {
   packageManagerUsedForCreating,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {
-  renderFatalError,
   renderSuccess,
   renderInfo,
   renderSelectPrompt,
@@ -22,7 +21,7 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {hyphenate} from '@shopify/cli-kit/common/string';
+import {hyphenate, capitalize} from '@shopify/cli-kit/common/string';
 import {
   commonFlags,
   parseProcessFlags,
@@ -37,6 +36,7 @@ import {getStarterDir} from '../../lib/build.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {setShop, setStorefront} from '../../lib/shopify-config.js';
 import {replaceFileContent} from '../../lib/file.js';
+import {SETUP_CSS_STRATEGIES, setupCssStrategy} from './setup/css-unstable.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
@@ -235,6 +235,10 @@ async function setupLocalStarterTemplate(options: InitOptions) {
 
   backgroundWorkPromise.then(() => convertFiles());
 
+  const {setupCss} = await handleCssStrategy(project.directory);
+
+  backgroundWorkPromise.then(() => setupCss());
+
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(project.directory, options.installDeps);
 
@@ -358,6 +362,44 @@ async function handleLanguage(projectDir: string, flagLanguage?: string) {
         throw error;
       }
     }
+  };
+}
+
+async function handleCssStrategy(projectDir: string) {
+  const selectedCssStrategy = await renderSelectPrompt<
+    'no' | (typeof SETUP_CSS_STRATEGIES)[number]
+  >({
+    message: `Select a styling library`,
+    choices: [
+      {label: 'No', value: 'no'},
+      ...SETUP_CSS_STRATEGIES.map((strategy) => ({
+        label: capitalize(strategy),
+        value: strategy,
+      })),
+    ],
+    defaultValue: 'no',
+  });
+
+  const skipCssSetup = selectedCssStrategy === 'no';
+
+  return {
+    cssStrategy: skipCssSetup ? null : selectedCssStrategy,
+    async setupCss() {
+      if (skipCssSetup) return;
+
+      const result = await setupCssStrategy(
+        selectedCssStrategy,
+        {
+          rootDirectory: projectDir,
+          appDirectory: joinPath(projectDir, 'app'), // Default value in new projects
+        },
+        true,
+      );
+
+      if (result) {
+        await result.workPromise;
+      }
+    },
   };
 }
 

@@ -10,11 +10,13 @@ import {
 import {Args} from '@oclif/core';
 import {getRemixConfig} from '../../../lib/config.js';
 import {
-  type SetupResult,
+  type SetupTailwindConfig,
   setupTailwind,
 } from '../../../lib/setups/css-tailwind.js';
 
-const STRATEGIES = ['tailwind' /*'css-modules', 'vanilla-extract'*/];
+export const SETUP_CSS_STRATEGIES = [
+  'tailwind' /*'css-modules', 'vanilla-extract'*/,
+] as const;
 
 export default class SetupCSS extends Command {
   static description = 'Setup CSS strategies for your project.';
@@ -29,9 +31,9 @@ export default class SetupCSS extends Command {
   static args = {
     strategy: Args.string({
       name: 'strategy',
-      description: `The CSS strategy to setup. One of ${STRATEGIES.join()}`,
+      description: `The CSS strategy to setup. One of ${SETUP_CSS_STRATEGIES.join()}`,
       required: true,
-      options: STRATEGIES,
+      options: SETUP_CSS_STRATEGIES as unknown as string[],
     }),
   };
 
@@ -56,17 +58,10 @@ export async function runSetupCSS({
   force?: boolean;
 }) {
   const remixConfig = await getRemixConfig(directory);
-  let setupOutput: SetupResult | undefined;
 
-  switch (strategy) {
-    case 'tailwind':
-      setupOutput = await setupTailwind({remixConfig, force});
-      break;
-    default:
-      throw new Error('Unknown strategy');
-  }
-
+  const setupOutput = await setupCssStrategy(strategy, remixConfig, force);
   if (!setupOutput) return;
+
   const {workPromise, generatedAssets, helpUrl} = setupOutput;
 
   await renderTasks([
@@ -99,4 +94,17 @@ export async function runSetupCSS({
       generatedAssets.map((file) => `  - ${file}`).join('\n') +
       `\n\nFor more information, visit ${helpUrl}.`,
   });
+}
+
+export function setupCssStrategy(
+  strategy: string,
+  options: SetupTailwindConfig,
+  force?: boolean,
+) {
+  switch (strategy) {
+    case 'tailwind':
+      return setupTailwind(options, force);
+    default:
+      throw new Error('Unknown strategy');
+  }
 }
