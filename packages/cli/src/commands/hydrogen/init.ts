@@ -36,6 +36,7 @@ import {fileURLToPath} from 'url';
 import {getStarterDir} from '../../lib/build.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {setShop, setStorefront} from '../../lib/shopify-config.js';
+import {replaceFileContent} from '../../lib/file.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
@@ -210,10 +211,21 @@ async function setupLocalStarterTemplate(options: InitOptions) {
   const backgroundWorkPromise = copyFile(getStarterDir(), project.directory);
 
   if (storefrontInfo) {
-    backgroundWorkPromise.then(async () => {
-      await setShop(project.directory, storefrontInfo.shop);
-      await setStorefront(project.directory, storefrontInfo);
-    });
+    backgroundWorkPromise.then(() =>
+      Promise.all([
+        // Save linked shop/storefront in project
+        setShop(project.directory, storefrontInfo.shop).then(() =>
+          setStorefront(project.directory, storefrontInfo),
+        ),
+        // Remove public env variables to fallback to remote Oxygen variables
+        replaceFileContent(
+          joinPath(project.directory, '.env'),
+          false,
+          (content) =>
+            content.replace(/PUBLIC_.*\n/gm, '').replace(/\n\n$/gm, '\n'),
+        ),
+      ]),
+    );
   }
 
   const convertFiles = await handleLanguage(

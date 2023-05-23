@@ -5,15 +5,19 @@ import {formatCode, type FormatOptions} from './format-code.js';
 
 export async function replaceFileContent(
   filepath: string,
-  formatConfig: FormatOptions,
+  formatConfig: FormatOptions | false,
   replacer: (
     content: string,
-  ) => Promise<string | null | undefined> | null | undefined,
+  ) => Promise<string | null | undefined> | string | null | undefined,
 ) {
-  const content = await replacer(await readFile(filepath));
+  let content = await replacer(await readFile(filepath));
   if (typeof content !== 'string') return;
 
-  return writeFile(filepath, formatCode(content, formatConfig, filepath));
+  if (formatConfig) {
+    content = formatCode(content, formatConfig, filepath);
+  }
+
+  return writeFile(filepath, content);
 }
 
 const DEFAULT_EXTENSIONS = ['tsx', 'ts', 'jsx', 'js', 'mjs', 'cjs'] as const;
