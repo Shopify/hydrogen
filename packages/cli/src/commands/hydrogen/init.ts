@@ -190,9 +190,15 @@ async function setupLocalStarterTemplate(options: InitOptions) {
   if (templateAction === 'link') {
     shop = await renderTextPrompt({
       message:
-        'Specify which Shop you would like to use (e.g. janes-goods.myshopify.com)',
+        'Specify which Store you would like to use (e.g. {store}.myshopify.com)',
       allowEmpty: false,
     });
+
+    shop = shop.trim().toLowerCase();
+
+    if (!shop.endsWith('.myshopify.com')) {
+      shop += '.myshopify.com';
+    }
 
     const {storefronts} = await getStorefronts(shop);
 
