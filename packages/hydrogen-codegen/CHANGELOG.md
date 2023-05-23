@@ -1,5 +1,11 @@
 # @shopify/hydrogen-codegen
 
+## 0.0.1
+
+### Patch Changes
+
+- Fix release ([#926](https://github.com/Shopify/hydrogen/pull/926)) by [@blittle](https://github.com/blittle)
+
 ## 0.0.0
 
 ### Patch Changes

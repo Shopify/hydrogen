@@ -1,5 +1,16 @@
 # @shopify/cli-hydrogen
 
+## 4.2.1
+
+### Patch Changes
+
+- Fix release ([#926](https://github.com/Shopify/hydrogen/pull/926)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`7aaa4e86`](https://github.com/Shopify/hydrogen/commit/7aaa4e86739e22b2d9a517e2b2cfc20110c87acd)]:
+  - @shopify/hydrogen-codegen@0.0.1
+  - @shopify/hydrogen-react@2023.4.3
+  - @shopify/remix-oxygen@1.0.7
+
 ## 4.2.0
 
 ### Minor Changes
