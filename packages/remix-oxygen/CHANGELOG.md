@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.0.7
+
+### Patch Changes
+
+- Fix release ([#926](https://github.com/Shopify/hydrogen/pull/926)) by [@blittle](https://github.com/blittle)
+
 ## 1.0.6
 
 ### Patch Changes
