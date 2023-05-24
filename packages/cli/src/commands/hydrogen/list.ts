@@ -2,14 +2,11 @@ import Command from '@shopify/cli-kit/node/base-command';
 import {renderTable} from '@shopify/cli-kit/node/ui';
 import {outputContent, outputInfo} from '@shopify/cli-kit/node/output';
 
-import {adminRequest, parseGid} from '../../lib/graphql.js';
 import {commonFlags} from '../../lib/flags.js';
 import {getHydrogenShop} from '../../lib/shop.js';
-import {getAdminSession} from '../../lib/admin-session.js';
 import {
-  ListStorefrontsQuery,
-  ListStorefrontsSchema,
-  Deployment,
+  type Deployment,
+  getStorefrontsWithDeployment,
 } from '../../lib/graphql/admin/list-storefronts.js';
 import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
 
@@ -37,24 +34,19 @@ interface Flags {
 
 export async function listStorefronts({path, shop: flagShop}: Flags) {
   const shop = await getHydrogenShop({path, shop: flagShop});
-  const adminSession = await getAdminSession(shop);
 
-  const result: ListStorefrontsSchema = await adminRequest(
-    ListStorefrontsQuery,
-    adminSession,
-  );
+  const {storefronts, adminSession} = await getStorefrontsWithDeployment(shop);
 
-  const storefrontsCount = result.hydrogenStorefronts.length;
-
-  if (storefrontsCount > 0) {
+  if (storefronts.length > 0) {
     outputInfo(
-      outputContent`Found ${storefrontsCount.toString()} Hydrogen storefronts on ${shop}:\n`
-        .value,
+      outputContent`Found ${String(
+        storefronts.length,
+      )} Hydrogen storefronts on ${shop}:\n`.value,
     );
 
-    const rows = result.hydrogenStorefronts.map(
-      ({id, title, productionUrl, currentProductionDeployment}) => ({
-        id: parseGid(id),
+    const rows = storefronts.map(
+      ({parsedId, title, productionUrl, currentProductionDeployment}) => ({
+        id: parsedId,
         title,
         productionUrl,
         currentDeployment: formatDeployment(currentProductionDeployment),

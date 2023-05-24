@@ -66,7 +66,7 @@ export async function setShop(
  */
 export async function setStorefront(
   root: string,
-  storefront: Storefront,
+  {id, title}: Storefront,
 ): Promise<ShopifyConfig> {
   try {
     const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
@@ -75,7 +75,7 @@ export async function setStorefront(
 
     const config = {
       ...existingConfig,
-      storefront,
+      storefront: {id, title},
     };
 
     await writeFile(filePath, JSON.stringify(config));

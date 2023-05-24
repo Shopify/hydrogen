@@ -1,4 +1,7 @@
-export const ListEnvironmentsQuery = `#graphql
+import {type AdminSession} from '../../admin-session.js';
+import {adminRequest} from '../../graphql.js';
+
+const ListEnvironmentsQuery = `#graphql
   query ListStorefronts($id: ID!) {
     hydrogenStorefront(id: $id) {
       id
@@ -15,7 +18,7 @@ export const ListEnvironmentsQuery = `#graphql
   }
 `;
 
-export type EnvironmentType = 'PREVIEW' | 'PRODUCTION' | 'CUSTOM';
+type EnvironmentType = 'PREVIEW' | 'PRODUCTION' | 'CUSTOM';
 
 export interface Environment {
   branch: string | null;
@@ -32,6 +35,19 @@ interface HydrogenStorefront {
   productionUrl: string;
 }
 
-export interface ListEnvironmentsSchema {
+interface ListEnvironmentsSchema {
   hydrogenStorefront: HydrogenStorefront | null;
+}
+
+export async function getStorefrontEnvironments(
+  adminSession: AdminSession,
+  storefrontId: string,
+) {
+  const {hydrogenStorefront} = await adminRequest<ListEnvironmentsSchema>(
+    ListEnvironmentsQuery,
+    adminSession,
+    {id: storefrontId},
+  );
+
+  return {storefront: hydrogenStorefront};
 }

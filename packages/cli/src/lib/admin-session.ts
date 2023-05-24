@@ -2,6 +2,8 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {ensureAuthenticatedAdmin} from '@shopify/cli-kit/node/session';
 import type {AdminSession} from '@shopify/cli-kit/node/session';
 
+export {type AdminSession} from '@shopify/cli-kit/node/session';
+
 export async function getAdminSession(shop: string): Promise<AdminSession> {
   let adminSession;
   try {

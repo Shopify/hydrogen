@@ -1,40 +1,27 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import type {AdminSession} from '@shopify/cli-kit/node/session';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
-
-import {
-  ListStorefrontsQuery,
-  ListStorefrontsSchema,
-} from '../../lib/graphql/admin/list-storefronts.js';
-import {getAdminSession} from '../../lib/admin-session.js';
-import {adminRequest} from '../../lib/graphql.js';
-
+import {getStorefrontsWithDeployment} from '../../lib/graphql/admin/list-storefronts.js';
 import {formatDeployment, listStorefronts} from './list.js';
 
-vi.mock('../../lib/admin-session.js');
-vi.mock('../../lib/graphql.js', async () => {
-  const original = await vi.importActual<typeof import('../../lib/graphql.js')>(
-    '../../lib/graphql.js',
-  );
-  return {
-    ...original,
-    adminRequest: vi.fn(),
-  };
+const SHOP_NAME = 'my-shop';
+vi.mock('../../lib/graphql/admin/list-storefronts.js', async () => {
+  return {getStorefrontsWithDeployment: vi.fn()};
 });
 vi.mock('../../lib/shop.js', () => ({
-  getHydrogenShop: () => 'my-shop',
+  getHydrogenShop: () => SHOP_NAME,
 }));
 
 describe('list', () => {
   const ADMIN_SESSION: AdminSession = {
     token: 'abc123',
-    storeFqdn: 'my-shop',
+    storeFqdn: SHOP_NAME,
   };
 
   beforeEach(async () => {
-    vi.mocked(getAdminSession).mockResolvedValue(ADMIN_SESSION);
-    vi.mocked(adminRequest<ListStorefrontsSchema>).mockResolvedValue({
-      hydrogenStorefronts: [],
+    vi.mocked(getStorefrontsWithDeployment).mockResolvedValue({
+      adminSession: ADMIN_SESSION,
+      storefronts: [],
     });
   });
 
@@ -46,24 +33,24 @@ describe('list', () => {
   it('makes a GraphQL call to fetch the storefronts', async () => {
     await listStorefronts({});
 
-    expect(adminRequest).toHaveBeenCalledWith(
-      ListStorefrontsQuery,
-      ADMIN_SESSION,
-    );
+    expect(getStorefrontsWithDeployment).toHaveBeenCalledWith(SHOP_NAME);
   });
 
   describe('and there are storefronts', () => {
     beforeEach(() => {
-      vi.mocked(adminRequest<ListStorefrontsSchema>).mockResolvedValue({
-        hydrogenStorefronts: [
+      vi.mocked(getStorefrontsWithDeployment).mockResolvedValue({
+        adminSession: ADMIN_SESSION,
+        storefronts: [
           {
             id: 'gid://shopify/HydrogenStorefront/1',
+            parsedId: '1',
             title: 'Hydrogen',
             productionUrl: 'https://example.com',
             currentProductionDeployment: null,
           },
           {
             id: 'gid://shopify/HydrogenStorefront/2',
+            parsedId: '2',
             title: 'Demo Store',
             productionUrl: 'https://demo.example.com',
             currentProductionDeployment: {
@@ -130,6 +117,7 @@ describe('formatDeployment', () => {
     it('only returns the date', () => {
       const deployment = {
         id: 'gid://shopify/HydrogenStorefrontDeployment/1',
+        parsedId: '1',
         createdAt,
         commitMessage: null,
       };

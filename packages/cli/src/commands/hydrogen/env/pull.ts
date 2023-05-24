@@ -9,7 +9,7 @@ import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {pullRemoteEnvironmentVariables} from '../../../lib/pull-environment-variables.js';
 import {getConfig} from '../../../lib/shopify-config.js';
 
-export default class Pull extends Command {
+export default class EnvPull extends Command {
   static description =
     'Populate your .env with variables from your Hydrogen storefront.';
 
@@ -23,7 +23,7 @@ export default class Pull extends Command {
   };
 
   async run(): Promise<void> {
-    const {flags} = await this.parse(Pull);
+    const {flags} = await this.parse(EnvPull);
     await pullVariables({...flagsToCamelObject(flags)});
   }
 }
