@@ -93,7 +93,7 @@ type CartMetafieldDeleteProps = {
 };
 
 type CartCustomProps = {
-  action: 'Custom';
+  action: `Custom${string}`;
   inputs: Record<string, unknown>;
 };
 
@@ -155,8 +155,7 @@ CartForm.ACTIONS = {
   NoteUpdate: 'NoteUpdate',
   SelectedDeliveryOptionsUpdate: 'SelectedDeliveryOptionsUpdate',
   MetafieldsSet: 'MetafieldsSet',
-  MetafieldsDelete: 'MetafieldsDelete',
-  Custom: 'Custom',
+  MetafieldDelete: 'MetafieldDelete',
 } as const;
 
 export function getFormInput(formData: any): CartActionInput {
