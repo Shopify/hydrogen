@@ -13,7 +13,7 @@ type Media_MediaImage_Fragment = {__typename: 'MediaImage'} & Pick<
   'id' | 'mediaContentType' | 'alt'
 > & {
     image?: StorefrontAPI.Maybe<
-      Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>
+      Pick<StorefrontAPI.Image, 'id' | 'url' | 'width' | 'height'>
     >;
     previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>>;
   };
@@ -294,7 +294,7 @@ export type CollectionContentFragment = Pick<
           'id' | 'mediaContentType' | 'alt'
         > & {
             image?: StorefrontAPI.Maybe<
-              Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>
+              Pick<StorefrontAPI.Image, 'id' | 'url' | 'width' | 'height'>
             >;
             previewImage?: StorefrontAPI.Maybe<
               Pick<StorefrontAPI.Image, 'url'>
@@ -319,7 +319,7 @@ export type CollectionContentFragment = Pick<
           'id' | 'mediaContentType' | 'alt'
         > & {
             image?: StorefrontAPI.Maybe<
-              Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>
+              Pick<StorefrontAPI.Image, 'id' | 'url' | 'width' | 'height'>
             >;
             previewImage?: StorefrontAPI.Maybe<
               Pick<StorefrontAPI.Image, 'url'>
@@ -361,7 +361,7 @@ export type SeoCollectionContentQuery = {
               'id' | 'mediaContentType' | 'alt'
             > & {
                 image?: StorefrontAPI.Maybe<
-                  Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>
+                  Pick<StorefrontAPI.Image, 'id' | 'url' | 'width' | 'height'>
                 >;
                 previewImage?: StorefrontAPI.Maybe<
                   Pick<StorefrontAPI.Image, 'url'>
@@ -388,7 +388,7 @@ export type SeoCollectionContentQuery = {
               'id' | 'mediaContentType' | 'alt'
             > & {
                 image?: StorefrontAPI.Maybe<
-                  Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>
+                  Pick<StorefrontAPI.Image, 'id' | 'url' | 'width' | 'height'>
                 >;
                 previewImage?: StorefrontAPI.Maybe<
                   Pick<StorefrontAPI.Image, 'url'>
@@ -435,7 +435,7 @@ export type HeroCollectionContentQuery = {
               'id' | 'mediaContentType' | 'alt'
             > & {
                 image?: StorefrontAPI.Maybe<
-                  Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>
+                  Pick<StorefrontAPI.Image, 'id' | 'url' | 'width' | 'height'>
                 >;
                 previewImage?: StorefrontAPI.Maybe<
                   Pick<StorefrontAPI.Image, 'url'>
@@ -462,7 +462,7 @@ export type HeroCollectionContentQuery = {
               'id' | 'mediaContentType' | 'alt'
             > & {
                 image?: StorefrontAPI.Maybe<
-                  Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>
+                  Pick<StorefrontAPI.Image, 'id' | 'url' | 'width' | 'height'>
                 >;
                 previewImage?: StorefrontAPI.Maybe<
                   Pick<StorefrontAPI.Image, 'url'>
@@ -1609,7 +1609,7 @@ export type ProductQuery = {
               'id' | 'mediaContentType' | 'alt'
             > & {
                 image?: StorefrontAPI.Maybe<
-                  Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>
+                  Pick<StorefrontAPI.Image, 'id' | 'url' | 'width' | 'height'>
                 >;
                 previewImage?: StorefrontAPI.Maybe<
                   Pick<StorefrontAPI.Image, 'url'>
@@ -1928,11 +1928,11 @@ interface GeneratedQueryTypes {
     return: GetShopPrimaryDomainQuery;
     variables: GetShopPrimaryDomainQueryVariables;
   };
-  '#graphql\n  query seoCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)\n  @inContext(country: $country, language: $language) {\n    hero: collection(handle: $handle) {\n      ...CollectionContent\n    }\n    shop {\n      name\n      description\n    }\n  }\n  #graphql\n  fragment CollectionContent on Collection {\n    id\n    handle\n    title\n    descriptionHtml\n    heading: metafield(namespace: "hero", key: "title") {\n      value\n    }\n    byline: metafield(namespace: "hero", key: "byline") {\n      value\n    }\n    cta: metafield(namespace: "hero", key: "cta") {\n      value\n    }\n    spread: metafield(namespace: "hero", key: "spread") {\n      reference {\n        ...Media\n      }\n    }\n    spreadSecondary: metafield(namespace: "hero", key: "spread_secondary") {\n      reference {\n        ...Media\n      }\n    }\n  }\n  #graphql\n  fragment Media on Media {\n    __typename\n    mediaContentType\n    alt\n    previewImage {\n      url\n    }\n    ... on MediaImage {\n      id\n      image {\n        url\n        width\n        height\n      }\n    }\n    ... on Video {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on Model3d {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on ExternalVideo {\n      id\n      embedUrl\n      host\n    }\n  }\n\n\n': {
+  '#graphql\n  query seoCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)\n  @inContext(country: $country, language: $language) {\n    hero: collection(handle: $handle) {\n      ...CollectionContent\n    }\n    shop {\n      name\n      description\n    }\n  }\n  #graphql\n  fragment CollectionContent on Collection {\n    id\n    handle\n    title\n    descriptionHtml\n    heading: metafield(namespace: "hero", key: "title") {\n      value\n    }\n    byline: metafield(namespace: "hero", key: "byline") {\n      value\n    }\n    cta: metafield(namespace: "hero", key: "cta") {\n      value\n    }\n    spread: metafield(namespace: "hero", key: "spread") {\n      reference {\n        ...Media\n      }\n    }\n    spreadSecondary: metafield(namespace: "hero", key: "spread_secondary") {\n      reference {\n        ...Media\n      }\n    }\n  }\n  #graphql\n  fragment Media on Media {\n    __typename\n    mediaContentType\n    alt\n    previewImage {\n      url\n    }\n    ... on MediaImage {\n      id\n      image {\n        id\n        url\n        width\n        height\n      }\n    }\n    ... on Video {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on Model3d {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on ExternalVideo {\n      id\n      embedUrl\n      host\n    }\n  }\n\n\n': {
     return: SeoCollectionContentQuery;
     variables: SeoCollectionContentQueryVariables;
   };
-  '#graphql\n  query heroCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)\n  @inContext(country: $country, language: $language) {\n    hero: collection(handle: $handle) {\n      ...CollectionContent\n    }\n  }\n  #graphql\n  fragment CollectionContent on Collection {\n    id\n    handle\n    title\n    descriptionHtml\n    heading: metafield(namespace: "hero", key: "title") {\n      value\n    }\n    byline: metafield(namespace: "hero", key: "byline") {\n      value\n    }\n    cta: metafield(namespace: "hero", key: "cta") {\n      value\n    }\n    spread: metafield(namespace: "hero", key: "spread") {\n      reference {\n        ...Media\n      }\n    }\n    spreadSecondary: metafield(namespace: "hero", key: "spread_secondary") {\n      reference {\n        ...Media\n      }\n    }\n  }\n  #graphql\n  fragment Media on Media {\n    __typename\n    mediaContentType\n    alt\n    previewImage {\n      url\n    }\n    ... on MediaImage {\n      id\n      image {\n        url\n        width\n        height\n      }\n    }\n    ... on Video {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on Model3d {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on ExternalVideo {\n      id\n      embedUrl\n      host\n    }\n  }\n\n\n': {
+  '#graphql\n  query heroCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)\n  @inContext(country: $country, language: $language) {\n    hero: collection(handle: $handle) {\n      ...CollectionContent\n    }\n  }\n  #graphql\n  fragment CollectionContent on Collection {\n    id\n    handle\n    title\n    descriptionHtml\n    heading: metafield(namespace: "hero", key: "title") {\n      value\n    }\n    byline: metafield(namespace: "hero", key: "byline") {\n      value\n    }\n    cta: metafield(namespace: "hero", key: "cta") {\n      value\n    }\n    spread: metafield(namespace: "hero", key: "spread") {\n      reference {\n        ...Media\n      }\n    }\n    spreadSecondary: metafield(namespace: "hero", key: "spread_secondary") {\n      reference {\n        ...Media\n      }\n    }\n  }\n  #graphql\n  fragment Media on Media {\n    __typename\n    mediaContentType\n    alt\n    previewImage {\n      url\n    }\n    ... on MediaImage {\n      id\n      image {\n        id\n        url\n        width\n        height\n      }\n    }\n    ... on Video {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on Model3d {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on ExternalVideo {\n      id\n      embedUrl\n      host\n    }\n  }\n\n\n': {
     return: HeroCollectionContentQuery;
     variables: HeroCollectionContentQueryVariables;
   };
@@ -1988,7 +1988,7 @@ interface GeneratedQueryTypes {
     return: PoliciesIndexQuery;
     variables: PoliciesIndexQueryVariables;
   };
-  '#graphql\n  query Product(\n    $country: CountryCode\n    $language: LanguageCode\n    $handle: String!\n    $selectedOptions: [SelectedOptionInput!]!\n  ) @inContext(country: $country, language: $language) {\n    product(handle: $handle) {\n      id\n      title\n      vendor\n      handle\n      descriptionHtml\n      description\n      options {\n        name\n        values\n      }\n      selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {\n        ...ProductVariantFragment\n      }\n      media(first: 7) {\n        nodes {\n          ...Media\n        }\n      }\n      variants(first: 1) {\n        nodes {\n          ...ProductVariantFragment\n        }\n      }\n      seo {\n        description\n        title\n      }\n    }\n    shop {\n      name\n      primaryDomain {\n        url\n      }\n      shippingPolicy {\n        body\n        handle\n      }\n      refundPolicy {\n        body\n        handle\n      }\n    }\n  }\n  #graphql\n  fragment Media on Media {\n    __typename\n    mediaContentType\n    alt\n    previewImage {\n      url\n    }\n    ... on MediaImage {\n      id\n      image {\n        url\n        width\n        height\n      }\n    }\n    ... on Video {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on Model3d {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on ExternalVideo {\n      id\n      embedUrl\n      host\n    }\n  }\n\n  #graphql\n  fragment ProductVariantFragment on ProductVariant {\n    id\n    availableForSale\n    selectedOptions {\n      name\n      value\n    }\n    image {\n      id\n      url\n      altText\n      width\n      height\n    }\n    price {\n      amount\n      currencyCode\n    }\n    compareAtPrice {\n      amount\n      currencyCode\n    }\n    sku\n    title\n    unitPrice {\n      amount\n      currencyCode\n    }\n    product {\n      title\n      handle\n    }\n  }\n\n': {
+  '#graphql\n  query Product(\n    $country: CountryCode\n    $language: LanguageCode\n    $handle: String!\n    $selectedOptions: [SelectedOptionInput!]!\n  ) @inContext(country: $country, language: $language) {\n    product(handle: $handle) {\n      id\n      title\n      vendor\n      handle\n      descriptionHtml\n      description\n      options {\n        name\n        values\n      }\n      selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {\n        ...ProductVariantFragment\n      }\n      media(first: 7) {\n        nodes {\n          ...Media\n        }\n      }\n      variants(first: 1) {\n        nodes {\n          ...ProductVariantFragment\n        }\n      }\n      seo {\n        description\n        title\n      }\n    }\n    shop {\n      name\n      primaryDomain {\n        url\n      }\n      shippingPolicy {\n        body\n        handle\n      }\n      refundPolicy {\n        body\n        handle\n      }\n    }\n  }\n  #graphql\n  fragment Media on Media {\n    __typename\n    mediaContentType\n    alt\n    previewImage {\n      url\n    }\n    ... on MediaImage {\n      id\n      image {\n        id\n        url\n        width\n        height\n      }\n    }\n    ... on Video {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on Model3d {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on ExternalVideo {\n      id\n      embedUrl\n      host\n    }\n  }\n\n  #graphql\n  fragment ProductVariantFragment on ProductVariant {\n    id\n    availableForSale\n    selectedOptions {\n      name\n      value\n    }\n    image {\n      id\n      url\n      altText\n      width\n      height\n    }\n    price {\n      amount\n      currencyCode\n    }\n    compareAtPrice {\n      amount\n      currencyCode\n    }\n    sku\n    title\n    unitPrice {\n      amount\n      currencyCode\n    }\n    product {\n      title\n      handle\n    }\n  }\n\n': {
     return: ProductQuery;
     variables: ProductQueryVariables;
   };

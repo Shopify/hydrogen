@@ -9,7 +9,8 @@ import type {
   ProductVariant,
   ShopPolicy,
   Shop,
-} from '@shopify/hydrogen-react/storefront-api-types';
+  Image,
+} from '@shopify/hydrogen/storefront-api-types';
 import type {
   Article as SeoArticle,
   BreadcrumbList,
@@ -77,13 +78,31 @@ function home(): SeoConfig<WebPage> {
   };
 }
 
+type SelectedVariantRequiredFields = Pick<ProductVariant, 'sku'> & {
+  image?: null | Partial<Image>;
+};
+
+type ProductRequiredFields = Pick<
+  Product,
+  'title' | 'description' | 'vendor' | 'seo'
+> & {
+  variants: {
+    nodes: Array<
+      Pick<
+        ProductVariant,
+        'sku' | 'price' | 'selectedOptions' | 'availableForSale'
+      >
+    >;
+  };
+};
+
 function productJsonLd({
   product,
   selectedVariant,
   url,
 }: {
-  product: Product;
-  selectedVariant: ProductVariant;
+  product: ProductRequiredFields;
+  selectedVariant: SelectedVariantRequiredFields;
   url: Request['url'];
 }): SeoConfig<SeoProduct | BreadcrumbList>['jsonLd'] {
   const origin = new URL(url).origin;
@@ -149,8 +168,8 @@ function product({
   url,
   selectedVariant,
 }: {
-  product: Product;
-  selectedVariant: ProductVariant;
+  product: ProductRequiredFields;
+  selectedVariant: SelectedVariantRequiredFields;
   url: Request['url'];
 }): SeoConfig<SeoProduct | BreadcrumbList> {
   const description = truncate(
