@@ -355,7 +355,7 @@ function page({
   page,
   url,
 }: {
-  page: Page;
+  page: Pick<Page, 'title' | 'seo'>;
   url: Request['url'];
 }): SeoConfig<WebPage> {
   return {
