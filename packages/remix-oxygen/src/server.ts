@@ -1,21 +1,37 @@
 import {
+  ActionArgs,
   createRequestHandler as createRemixRequestHandler,
+  LoaderArgs,
   type AppLoadContext,
   type ServerBuild,
 } from '@remix-run/server-runtime';
+import type {Logger} from '@shopify/hydrogen';
 
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
   poweredByHeader = true,
   getLoadContext,
+  log,
 }: {
   build: ServerBuild;
   mode?: string;
   poweredByHeader?: boolean;
   getLoadContext?: (request: Request) => Promise<Context> | Context;
+  log?: Logger;
 }) {
-  const handleRequest = createRemixRequestHandler(build, mode);
+  const routes: typeof build.routes = {};
+
+  for (const [id, route] of Object.entries(build.routes)) {
+    const wrappedRoute = {...route, module: {...route.module}};
+
+    fill(wrappedRoute.module, 'action', log);
+    fill(wrappedRoute.module, 'loader', log);
+
+    routes[id] = wrappedRoute;
+  }
+
+  const handleRequest = createRemixRequestHandler({...build, routes}, mode);
 
   return async (request: Request) => {
     const response = await handleRequest(
@@ -28,6 +44,23 @@ export function createRequestHandler<Context = unknown>({
     }
 
     return response;
+  };
+}
+
+type RemixModule = ServerBuild['routes'][0]['module'];
+
+function fill(module: RemixModule, name: 'loader' | 'action', log?: Logger) {
+  const original = module[name];
+
+  if (!original) return;
+
+  module[name] = async (args: LoaderArgs | ActionArgs) => {
+    try {
+      return await original(args);
+    } catch (e) {
+      (log || console).error(e);
+      throw e;
+    }
   };
 }
 
