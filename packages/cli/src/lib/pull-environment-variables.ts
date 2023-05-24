@@ -7,16 +7,12 @@ import {
 
 import {linkStorefront} from '../commands/hydrogen/link.js';
 
-import {adminRequest} from './graphql.js';
 import {getHydrogenShop} from './shop.js';
 import {getAdminSession} from './admin-session.js';
 import {getConfig} from './shopify-config.js';
 import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
 
-import {
-  PullVariablesQuery,
-  PullVariablesSchema,
-} from './graphql/admin/pull-variables.js';
+import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
 
 interface Arguments {
   envBranch?: string;
@@ -73,16 +69,11 @@ export async function pullRemoteEnvironmentVariables({
     );
   }
 
-  const result: PullVariablesSchema = await adminRequest(
-    PullVariablesQuery,
+  const {storefront} = await getStorefrontEnvVariables(
     adminSession,
-    {
-      id: configStorefront.id,
-      branch: envBranch,
-    },
+    configStorefront.id,
+    envBranch,
   );
-
-  const storefront = result.hydrogenStorefront;
 
   if (!storefront) {
     if (!silent) {

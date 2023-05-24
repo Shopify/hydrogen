@@ -8,21 +8,17 @@ import {
 } from '@shopify/cli-kit/node/output';
 
 import {linkStorefront} from '../link.js';
-import {adminRequest} from '../../../lib/graphql.js';
 import {commonFlags} from '../../../lib/flags.js';
 import {getHydrogenShop} from '../../../lib/shop.js';
 import {getAdminSession} from '../../../lib/admin-session.js';
-import {
-  ListEnvironmentsQuery,
-  ListEnvironmentsSchema,
-} from '../../../lib/graphql/admin/list-environments.js';
+import {getStorefrontEnvironments} from '../../../lib/graphql/admin/list-environments.js';
 import {getConfig} from '../../../lib/shopify-config.js';
 import {
   renderMissingLink,
   renderMissingStorefront,
 } from '../../../lib/render-errors.js';
 
-export default class List extends Command {
+export default class EnvList extends Command {
   static description = 'List the environments on your Hydrogen storefront.';
 
   static hidden = true;
@@ -33,7 +29,7 @@ export default class List extends Command {
   };
 
   async run(): Promise<void> {
-    const {flags} = await this.parse(List);
+    const {flags} = await this.parse(EnvList);
     await listEnvironments(flags);
   }
 }
@@ -71,46 +67,39 @@ export async function listEnvironments({path, shop: flagShop}: Flags) {
     return;
   }
 
-  const result: ListEnvironmentsSchema = await adminRequest(
-    ListEnvironmentsQuery,
+  const {storefront} = await getStorefrontEnvironments(
     adminSession,
-    {
-      id: configStorefront.id,
-    },
+    configStorefront.id,
   );
 
-  const hydrogenStorefront = result.hydrogenStorefront;
-
-  if (!hydrogenStorefront) {
+  if (!storefront) {
     renderMissingStorefront({adminSession, storefront: configStorefront});
     return;
   }
 
   // Make sure we always show the preview environment last because it doesn't
   // have a branch or a URL.
-  const previewEnvironmentIndex = hydrogenStorefront.environments.findIndex(
+  const previewEnvironmentIndex = storefront.environments.findIndex(
     (env) => env.type === 'PREVIEW',
   );
-  const previewEnvironment = hydrogenStorefront.environments.splice(
+  const previewEnvironment = storefront.environments.splice(
     previewEnvironmentIndex,
     1,
   );
-  hydrogenStorefront.environments.push(previewEnvironment[0]!);
+  storefront.environments.push(previewEnvironment[0]!);
 
-  const rows = hydrogenStorefront.environments.map(
-    ({branch, name, url, type}) => {
-      // If a custom domain is set it will be available on the storefront itself
-      // so we want to use that value instead.
-      const environmentUrl =
-        type === 'PRODUCTION' ? hydrogenStorefront.productionUrl : url;
+  const rows = storefront.environments.map(({branch, name, url, type}) => {
+    // If a custom domain is set it will be available on the storefront itself
+    // so we want to use that value instead.
+    const environmentUrl =
+      type === 'PRODUCTION' ? storefront.productionUrl : url;
 
-      return {
-        name,
-        branch: branch ? branch : '-',
-        url: environmentUrl ? environmentUrl : '-',
-      };
-    },
-  );
+    return {
+      name,
+      branch: branch ? branch : '-',
+      url: environmentUrl ? environmentUrl : '-',
+    };
+  });
 
   outputNewline();
 

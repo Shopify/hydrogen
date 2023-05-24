@@ -12,15 +12,10 @@ import {
   outputToken,
 } from '@shopify/cli-kit/node/output';
 
-import {adminRequest, parseGid} from '../../lib/graphql.js';
 import {commonFlags} from '../../lib/flags.js';
 import {getHydrogenShop} from '../../lib/shop.js';
-import {getAdminSession} from '../../lib/admin-session.js';
 import {hydrogenStorefrontUrl} from '../../lib/admin-urls.js';
-import {
-  LinkStorefrontQuery,
-  LinkStorefrontSchema,
-} from '../../lib/graphql/admin/link-storefront.js';
+import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {getConfig, setStorefront} from '../../lib/shopify-config.js';
 import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
 
@@ -75,14 +70,9 @@ export async function linkStorefront({
     }
   }
 
-  const adminSession = await getAdminSession(shop);
+  const {storefronts, adminSession} = await getStorefronts(shop);
 
-  const result: LinkStorefrontSchema = await adminRequest(
-    LinkStorefrontQuery,
-    adminSession,
-  );
-
-  if (!result.hydrogenStorefronts.length) {
+  if (storefronts.length === 0) {
     logMissingStorefronts(adminSession);
     return;
   }
@@ -90,8 +80,8 @@ export async function linkStorefront({
   let selectedStorefront;
 
   if (flagStorefront) {
-    selectedStorefront = result.hydrogenStorefronts.find(
-      (storefront) => storefront.title === flagStorefront,
+    selectedStorefront = storefronts.find(
+      ({title}) => title === flagStorefront,
     );
 
     if (!selectedStorefront) {
@@ -105,11 +95,11 @@ export async function linkStorefront({
       return;
     }
   } else {
-    const choices = result.hydrogenStorefronts.map((storefront) => ({
-      label: `${storefront.title} ${storefront.productionUrl}${
-        storefront.id === configStorefront?.id ? ' (Current)' : ''
+    const choices = storefronts.map(({id, title, productionUrl}) => ({
+      value: id,
+      label: `${title} ${productionUrl}${
+        id === configStorefront?.id ? ' (Current)' : ''
       }`,
-      value: storefront.id,
     }));
 
     const storefrontId = await renderSelectPrompt({
@@ -118,9 +108,7 @@ export async function linkStorefront({
       defaultValue: 'true',
     });
 
-    selectedStorefront = result.hydrogenStorefronts.find(
-      (storefront) => storefront.id === storefrontId,
-    );
+    selectedStorefront = storefronts.find(({id}) => id === storefrontId);
   }
 
   if (!selectedStorefront) {
@@ -135,7 +123,7 @@ export async function linkStorefront({
     outputInfo(
       `Admin URL: ${hydrogenStorefrontUrl(
         adminSession,
-        parseGid(selectedStorefront.id),
+        selectedStorefront.parsedId,
       )}`,
     );
     outputInfo(`Site URL: ${selectedStorefront.productionUrl}`);
