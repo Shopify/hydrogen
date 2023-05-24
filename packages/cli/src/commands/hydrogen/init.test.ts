@@ -15,6 +15,7 @@ describe('init', () => {
     vi.resetAllMocks();
     vi.mock('@shopify/cli-kit/node/output');
     vi.mock('../../lib/transpile-ts.js');
+    vi.mock('../../lib/setups/css/index.js');
     vi.mock('../../lib/template-downloader.js', async () => ({
       getLatestTemplates: () => Promise.resolve({}),
     }));

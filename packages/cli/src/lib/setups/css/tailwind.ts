@@ -1,10 +1,10 @@
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
-import {canWriteFiles, copyAssets, mergePackageJson} from '../assets.js';
-import {getCodeFormatOptions, type FormatOptions} from '../format-code.js';
+import {canWriteFiles, copyAssets, mergePackageJson} from '../../assets.js';
+import {getCodeFormatOptions, type FormatOptions} from '../../format-code.js';
 import {ts, tsx, js, jsx, type SgNode} from '@ast-grep/napi';
-import {findFileWithExtension, replaceFileContent} from '../file.js';
+import {findFileWithExtension, replaceFileContent} from '../../file.js';
 
 const astGrep = {ts, tsx, js, jsx};
 

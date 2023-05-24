@@ -36,7 +36,11 @@ import {getStarterDir} from '../../lib/build.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {setShop, setStorefront} from '../../lib/shopify-config.js';
 import {replaceFileContent} from '../../lib/file.js';
-import {SETUP_CSS_STRATEGIES, setupCssStrategy} from './setup/css-unstable.js';
+import {
+  SETUP_CSS_STRATEGIES,
+  setupCssStrategy,
+  type CssStrategy,
+} from './../../lib/setups/css/index.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
@@ -366,9 +370,7 @@ async function handleLanguage(projectDir: string, flagLanguage?: string) {
 }
 
 async function handleCssStrategy(projectDir: string) {
-  const selectedCssStrategy = await renderSelectPrompt<
-    'no' | (typeof SETUP_CSS_STRATEGIES)[number]
-  >({
+  const selectedCssStrategy = await renderSelectPrompt<'no' | CssStrategy>({
     message: `Select a styling library`,
     choices: [
       {label: 'No', value: 'no'},

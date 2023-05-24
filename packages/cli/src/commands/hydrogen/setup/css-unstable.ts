@@ -10,13 +10,10 @@ import {
 import {Args} from '@oclif/core';
 import {getRemixConfig} from '../../../lib/config.js';
 import {
-  type SetupTailwindConfig,
-  setupTailwind,
-} from '../../../lib/setups/css-tailwind.js';
-
-export const SETUP_CSS_STRATEGIES = [
-  'tailwind' /*'css-modules', 'vanilla-extract'*/,
-] as const;
+  setupCssStrategy,
+  SETUP_CSS_STRATEGIES,
+  type CssStrategy,
+} from '../../../lib/setups/css/index.js';
 
 export default class SetupCSS extends Command {
   static description = 'Setup CSS strategies for your project.';
@@ -38,13 +35,10 @@ export default class SetupCSS extends Command {
   };
 
   async run(): Promise<void> {
-    const {
-      flags,
-      args: {strategy},
-    } = await this.parse(SetupCSS);
+    const {flags, args} = await this.parse(SetupCSS);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runSetupCSS({strategy, directory});
+    await runSetupCSS({strategy: args.strategy as CssStrategy, directory});
   }
 }
 
@@ -53,7 +47,7 @@ export async function runSetupCSS({
   directory,
   force = false,
 }: {
-  strategy: string;
+  strategy: CssStrategy;
   directory: string;
   force?: boolean;
 }) {
@@ -94,17 +88,4 @@ export async function runSetupCSS({
       generatedAssets.map((file) => `  - ${file}`).join('\n') +
       `\n\nFor more information, visit ${helpUrl}.`,
   });
-}
-
-export function setupCssStrategy(
-  strategy: string,
-  options: SetupTailwindConfig,
-  force?: boolean,
-) {
-  switch (strategy) {
-    case 'tailwind':
-      return setupTailwind(options, force);
-    default:
-      throw new Error('Unknown strategy');
-  }
 }
