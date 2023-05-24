@@ -164,12 +164,16 @@ function product({
   };
 }
 
+type CollectionRequiredFields = Omit<Collection, 'products'> & {
+  products: {nodes: Pick<Product, 'handle'>[]};
+};
+
 function collectionJsonLd({
   url,
   collection,
 }: {
   url: Request['url'];
-  collection: Collection;
+  collection: CollectionRequiredFields;
 }): SeoConfig<CollectionPage | BreadcrumbList>['jsonLd'] {
   const siteUrl = new URL(url);
   const itemListElement: CollectionPage['mainEntity'] =
@@ -220,7 +224,7 @@ function collection({
   collection,
   url,
 }: {
-  collection: Collection;
+  collection: CollectionRequiredFields;
   url: Request['url'];
 }): SeoConfig<CollectionPage | BreadcrumbList> {
   return {

@@ -2,6 +2,7 @@ import clsx from 'clsx';
 import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
 import {flattenConnection, Image, Money, useMoney} from '@shopify/hydrogen';
 import type {MoneyV2, Product} from '@shopify/hydrogen/storefront-api-types';
+import type {ProductCardFragment} from 'storefrontapi.generated';
 
 import {Text, Link, AddToCartButton} from '~/components';
 import {isDiscounted, isNewArrival} from '~/lib/utils';
@@ -15,7 +16,7 @@ export function ProductCard({
   onClick,
   quickAdd,
 }: {
-  product: Product;
+  product: ProductCardFragment;
   label?: string;
   className?: string;
   loading?: HTMLImageElement['loading'];
