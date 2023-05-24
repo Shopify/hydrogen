@@ -250,8 +250,8 @@ const SEARCH_NO_RESULTS_QUERY = `#graphql
         ...ProductCard
       }
     }
-
-    ${PRODUCT_CARD_FRAGMENT}
-    ${FEATURED_COLLECTION_FRAGMENT}
   }
+
+  ${PRODUCT_CARD_FRAGMENT}
+  ${FEATURED_COLLECTION_FRAGMENT}
 ` as const;
