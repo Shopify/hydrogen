@@ -1,12 +1,12 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'cartLinesAddDefault',
+  name: 'cartCreateDefault',
   category: 'utilities',
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a function that accepts an array of [CartLineInput](/docs/api/storefront/2023-04/input-objects/CartLineInput) and adds the line items to a cart',
+    'Creates a function that accepts an object of [CartInput](/docs/api/storefront/2023-04/input-objects/CartInput) and returns a new cart',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',
@@ -14,7 +14,7 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './cartLinesAddDefault.example.js',
+          code: './cartCreateDefault.example.js',
           language: 'js',
         },
       ],
@@ -23,8 +23,8 @@ const data: ReferenceEntityTemplateSchema = {
   },
   definitions: [
     {
-      title: 'cartLinesAddDefault',
-      type: 'CartLinesAddDefaultGeneratedType',
+      title: 'cartCreateDefault',
+      type: 'CartCreateDefaultGeneratedType',
       description: '',
     },
   ],

@@ -5,7 +5,9 @@ const cartAdd = cartLinesAddDefault({
   getCartId,
 });
 
-cartAdd({
-  merchandiseId: 'gid://shopify/ProductVariant/123456789',
-  quantity: 1,
-});
+const result = await cartAdd([
+  {
+    merchandiseId: 'gid://shopify/ProductVariant/123456789',
+    quantity: 1,
+  },
+]);

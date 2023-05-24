@@ -1738,11 +1738,11 @@
     }
   },
   {
-    "name": "cartLinesAddDefault",
+    "name": "cartCreateDefault",
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that can add items to a cart.",
+    "description": "Creates a function that accepts an object of [CartInput](/docs/api/storefront/2023-04/input-objects/CartInput) and returns a new cart",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",
@@ -1750,7 +1750,395 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {cartLinesAddDefault} from '@shopify/hydrogen';\n\nconst cartAdd = cartLinesAddDefault({\n  storefront,\n  getCartId,\n});\n\ncartAdd({\n  merchandiseId: 'gid://shopify/ProductVariant/123456789',\n  quantity: 1,\n});\n",
+            "code": "import {cartCreateDefault} from '@shopify/hydrogen';\n\nconst cartCreate = cartCreateDefault({\n  storefront,\n  getCartId,\n});\n\ncartCreate({\n  lines: [\n    {\n      merchandiseId: 'gid://shopify/ProductVariant/123456789',\n      quantity: 1,\n    },\n  ],\n});\n",
+            "language": "js"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "cartCreateDefault",
+        "description": "",
+        "type": "CartCreateDefaultGeneratedType",
+        "typeDefinitions": {
+          "CartCreateDefaultGeneratedType": {
+            "filePath": "/cart/queries/cartCreateDefault.ts",
+            "name": "CartCreateDefaultGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "options",
+                "description": "",
+                "value": "CartQueryOptions",
+                "filePath": "/cart/queries/cartCreateDefault.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/cart/queries/cartCreateDefault.ts",
+              "description": "",
+              "name": "CartCreateFunction",
+              "value": "CartCreateFunction"
+            },
+            "value": "export function cartCreateDefault(\n  options: CartQueryOptions,\n): CartCreateFunction {\n  return async (input, optionalParams) => {\n    const {cartId, ...restOfOptionalParams} = optionalParams || {};\n    const {cartCreate} = await options.storefront.mutate<{\n      cartCreate: CartQueryData;\n    }>(CART_CREATE_MUTATION(options.cartFragment), {\n      variables: {\n        input,\n        ...restOfOptionalParams,\n      },\n    });\n    return cartCreate;\n  };\n}"
+          },
+          "CartQueryOptions": {
+            "filePath": "/cart/queries/cart-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartQueryOptions",
+            "value": "{\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * A function that returns the cart ID.\n   */\n  getCartId: () => string | undefined;\n  /**\n   * The cart fragment to override the one used in this query.\n   */\n  cartFragment?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/queries/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefront",
+                "value": "Storefront",
+                "description": "The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient)."
+              },
+              {
+                "filePath": "/cart/queries/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getCartId",
+                "value": "() => string",
+                "description": "A function that returns the cart ID."
+              },
+              {
+                "filePath": "/cart/queries/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cartFragment",
+                "value": "string",
+                "description": "The cart fragment to override the one used in this query.",
+                "isOptional": true
+              }
+            ]
+          },
+          "Storefront": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "Storefront",
+            "value": "{\n  /** The function to run a query on storefront api. */\n  query: <T>(\n    query: string,\n    payload?: StorefrontCommonOptions & {\n      cache?: CachingStrategy;\n    },\n  ) => Promise<T>;\n  /** The function to run a mutation on storefront api. */\n  mutate: <T>(\n    mutation: string,\n    payload?: StorefrontCommonOptions,\n  ) => Promise<T>;\n  /** The cache instance passed in from the `createStorefrontClient` argument. */\n  cache?: Cache;\n  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2023-04/utilities/cachenone). */\n  CacheNone: typeof CacheNone;\n  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2023-04/utilities/cachelong). */\n  CacheLong: typeof CacheLong;\n  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2023-04/utilities/cacheshort). */\n  CacheShort: typeof CacheShort;\n  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-04/utilities/cachecustom). */\n  CacheCustom: typeof CacheCustom;\n  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-04/utilities/generatecachecontrolheader). */\n  generateCacheControlHeader: typeof generateCacheControlHeader;\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */\n  getPublicTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPublicTokenHeaders'];\n  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/\n  getPrivateTokenHeaders: ReturnType<\n    typeof createStorefrontUtilities\n  >['getPrivateTokenHeaders'];\n  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */\n  getShopifyDomain: ReturnType<\n    typeof createStorefrontUtilities\n  >['getShopifyDomain'];\n  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/\n  getApiUrl: ReturnType<\n    typeof createStorefrontUtilities\n  >['getStorefrontApiUrl'];\n  /** Determines if the error is resulted from a Storefront API call. */\n  isApiError: (error: any) => boolean;\n  /** The `i18n` object passed in from the `createStorefrontClient` argument. */\n  i18n: TI18n;\n}",
+            "description": "some deswcription",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "query",
+                "value": "<T>(query: string, payload?: StorefrontCommonOptions & { cache?: AllCacheOptions; }) => Promise<T>",
+                "description": "The function to run a query on storefront api."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mutate",
+                "value": "<T>(mutation: string, payload?: StorefrontCommonOptions) => Promise<T>",
+                "description": "The function to run a mutation on storefront api."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cache",
+                "value": "Cache",
+                "description": "The cache instance passed in from the `createStorefrontClient` argument.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheNone",
+                "value": "() => NoStoreStrategy",
+                "description": "Re-export of [`CacheNone`](/docs/api/hydrogen/2023-04/utilities/cachenone)."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheLong",
+                "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
+                "description": "Re-export of [`CacheLong`](/docs/api/hydrogen/2023-04/utilities/cachelong)."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheShort",
+                "value": "(overrideOptions?: AllCacheOptions) => AllCacheOptions",
+                "description": "Re-export of [`CacheShort`](/docs/api/hydrogen/2023-04/utilities/cacheshort)."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "CacheCustom",
+                "value": "(overrideOptions: AllCacheOptions) => AllCacheOptions",
+                "description": "Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-04/utilities/cachecustom)."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "generateCacheControlHeader",
+                "value": "(cacheOptions: AllCacheOptions) => string",
+                "description": "Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-04/utilities/generatecachecontrolheader)."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getPublicTokenHeaders",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"publicStorefrontToken\">) => Record<string, string>",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getPrivateTokenHeaders",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"contentType\">> & Pick<StorefrontClientProps, \"privateStorefrontToken\"> & { buyerIp?: string; }) => Record<string, string>",
+                "description": "Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getShopifyDomain",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\">>) => string",
+                "description": "Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "getApiUrl",
+                "value": "(props?: Partial<Pick<StorefrontClientProps, \"storeDomain\" | \"storefrontApiVersion\">>) => string",
+                "description": "Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isApiError",
+                "value": "(error: any) => boolean",
+                "description": "Determines if the error is resulted from a Storefront API call."
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "i18n",
+                "value": "TI18n",
+                "description": "The `i18n` object passed in from the `createStorefrontClient` argument."
+              }
+            ]
+          },
+          "StorefrontCommonOptions": {
+            "filePath": "/storefront.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "StorefrontCommonOptions",
+            "value": "{\n  variables?: ExecutionArgs['variableValues'] & {\n    country?: CountryCode;\n    language?: LanguageCode;\n  };\n  headers?: HeadersInit;\n  storefrontApiVersion?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "variables",
+                "value": "{ readonly [variable: string]: unknown; } & { country?: CountryCode; language?: LanguageCode; }",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "headers",
+                "value": "HeadersInit",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/storefront.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "storefrontApiVersion",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "AllCacheOptions": {
+            "filePath": "/cache/strategies.ts",
+            "name": "AllCacheOptions",
+            "description": "Override options for a cache strategy.",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": "The caching mode, generally `public`, `private`, or `no-store`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxAge",
+                "value": "number",
+                "description": "The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleWhileRevalidate",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "sMaxAge",
+                "value": "number",
+                "description": "Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "staleIfError",
+                "value": "number",
+                "description": "Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface AllCacheOptions {\n  /**\n   * The caching mode, generally `public`, `private`, or `no-store`.\n   */\n  mode?: string;\n  /**\n   * The maximum amount of time in seconds that a resource will be considered fresh. See `max-age` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#:~:text=Response%20Directives-,max%2Dage,-The%20max%2Dage).\n   */\n  maxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response in the background while revalidating the cache. See `stale-while-revalidate` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-while-revalidate).\n   */\n  staleWhileRevalidate?: number;\n  /**\n   * Similar to `maxAge` but specific to shared caches. See `s-maxage` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#s-maxage).\n   */\n  sMaxAge?: number;\n  /**\n   * Indicate that the cache should serve the stale response if an error occurs while revalidating the cache. See `stale-if-error` in the [MDN docs](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Cache-Control#stale-if-error).\n   */\n  staleIfError?: number;\n}"
+          },
+          "NoStoreStrategy": {
+            "filePath": "/cache/strategies.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "NoStoreStrategy",
+            "value": "{\n  mode: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cache/strategies.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "mode",
+                "value": "string",
+                "description": ""
+              }
+            ]
+          },
+          "CartCreateFunction": {
+            "filePath": "/cart/queries/cartCreateDefault.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartCreateFunction",
+            "value": "(\n  input: CartInput,\n  optionalParams: CartOptionalInput,\n) => Promise<CartQueryData>",
+            "description": ""
+          },
+          "CartInput": {
+            "description": "",
+            "name": "CartInput",
+            "value": "CartInput",
+            "members": [],
+            "override": "[CartInput](/docs/api/storefront/2023-04/input-objects/CartInput) - Storefront API type"
+          },
+          "CartOptionalInput": {
+            "filePath": "/cart/queries/cart-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartOptionalInput",
+            "value": "{\n  /**\n   * The cart id.\n   * @default cart.getCartId();\n   */\n  cartId?: Scalars['ID'];\n  /**\n   * The country code.\n   * @default storefront.i18n.country\n   */\n  country?: CountryCode;\n  /**\n   * The language code.\n   * @default storefront.i18n.language\n   */\n  language?: LanguageCode;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/queries/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cartId",
+                "value": "string",
+                "description": "The cart id.",
+                "isOptional": true,
+                "defaultValue": "cart.getCartId();"
+              },
+              {
+                "filePath": "/cart/queries/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "country",
+                "value": "CountryCode",
+                "description": "The country code.",
+                "isOptional": true,
+                "defaultValue": "storefront.i18n.country"
+              },
+              {
+                "filePath": "/cart/queries/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "language",
+                "value": "LanguageCode",
+                "description": "The language code.",
+                "isOptional": true,
+                "defaultValue": "storefront.i18n.language"
+              }
+            ]
+          },
+          "CartQueryData": {
+            "filePath": "/cart/queries/cart-types.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartQueryData",
+            "value": "{\n  cart: Cart;\n  errors?:\n    | CartUserError[]\n    | MetafieldsSetUserError[]\n    | MetafieldDeleteUserError[];\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/queries/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cart",
+                "value": "Cart",
+                "description": ""
+              },
+              {
+                "filePath": "/cart/queries/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "errors",
+                "value": "CartUserError[] | MetafieldsSetUserError[] | MetafieldDeleteUserError[]",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          },
+          "Cart": {
+            "description": "",
+            "name": "Cart",
+            "value": "Cart",
+            "members": [],
+            "override": "[Cart](/docs/api/storefront/2023-04/objects/Cart) - Storefront API type"
+          },
+          "CartUserError": {
+            "description": "",
+            "name": "CartUserError",
+            "value": "CartUserError",
+            "members": [],
+            "override": "[CartUserError](/docs/api/storefront/2023-04/objects/CartUserError) - Storefront API type"
+          },
+          "MetafieldsSetUserError": {
+            "description": "",
+            "name": "MetafieldsSetUserError",
+            "value": "MetafieldsSetUserError",
+            "members": [],
+            "override": "[MetafieldsSetUserError](/docs/api/storefront/2023-04/objects/MetafieldsSetUserError) - Storefront API type"
+          },
+          "MetafieldDeleteUserError": {
+            "description": "",
+            "name": "MetafieldDeleteUserError",
+            "value": "MetafieldDeleteUserError",
+            "members": [],
+            "override": "[MetafieldDeleteUserError](/docs/api/storefront/2023-04/objects/MetafieldDeleteUserError) - Storefront API type"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "cartLinesAddDefault",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Creates a function that accepts an array of [CartLineInput](/docs/api/storefront/2023-04/input-objects/CartLineInput) and adds the line items to a cart",
+    "type": "utility",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {cartLinesAddDefault} from '@shopify/hydrogen';\n\nconst cartAdd = cartLinesAddDefault({\n  storefront,\n  getCartId,\n});\n\ncartAdd([\n  {\n    merchandiseId: 'gid://shopify/ProductVariant/123456789',\n    quantity: 1,\n  },\n]);\n",
             "language": "js"
           }
         ],
