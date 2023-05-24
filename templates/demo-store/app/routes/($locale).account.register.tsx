@@ -6,7 +6,6 @@ import {
 } from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 import {useState} from 'react';
-import type {CustomerCreatePayload} from '@shopify/hydrogen/storefront-api-types';
 
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
@@ -48,9 +47,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
   }
 
   try {
-    const data = await storefront.mutate<{
-      customerCreate: CustomerCreatePayload;
-    }>(CUSTOMER_CREATE_MUTATION, {
+    const data = await storefront.mutate(CUSTOMER_CREATE_MUTATION, {
       variables: {
         input: {email, password},
       },

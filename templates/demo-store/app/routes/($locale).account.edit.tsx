@@ -8,7 +8,6 @@ import {
 import type {
   Customer,
   CustomerUpdateInput,
-  CustomerUpdatePayload,
 } from '@shopify/hydrogen/storefront-api-types';
 import clsx from 'clsx';
 import invariant from 'tiny-invariant';
@@ -100,9 +99,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
     formDataHas(formData, 'newPassword') &&
       (customer.password = formData.get('newPassword') as string);
 
-    const data = await context.storefront.mutate<{
-      customerUpdate: CustomerUpdatePayload;
-    }>(CUSTOMER_UPDATE_MUTATION, {
+    const data = await context.storefront.mutate(CUSTOMER_UPDATE_MUTATION, {
       variables: {
         customerAccessToken,
         customer,
