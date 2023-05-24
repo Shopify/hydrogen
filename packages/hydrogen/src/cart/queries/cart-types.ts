@@ -35,8 +35,17 @@ export type CartGet = {
 } & CartOptionalInput;
 
 export type CartQueryOptions = {
+  /**
+   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).
+   */
   storefront: Storefront;
+  /**
+   * A function that returns the cart ID.
+   */
   getCartId: () => string | undefined;
+  /**
+   * The cart fragment to override the one used in this query.
+   */
   cartFragment?: string;
 };
 

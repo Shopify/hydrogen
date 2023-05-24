@@ -20,7 +20,10 @@ import {
 import {parse as parseCookie} from 'worktop/cookie';
 import {cartGetDefault} from './queries/cartGetDefault';
 import {cartCreateDefault} from './queries/cartCreateDefault';
-import {cartLinesAddDefault} from './queries/cartLinesAddDefault';
+import {
+  type CartLinesAddFunction,
+  cartLinesAddDefault,
+} from './queries/cartLinesAddDefault';
 import {cartLinesUpdateDefault} from './queries/cartLinesUpdateDefault';
 import {cartLinesRemoveDefault} from './queries/cartLinesRemoveDefault';
 import {cartDiscountCodesUpdateDefault} from './queries/cartDiscountCodesUpdateDefault';
@@ -241,10 +244,7 @@ export type CartHandlerReturnBaseForDocs = {
    * Adds items to the cart.
    * If the cart doesn't exist, a new one will be created.
    */
-  addLines?: (
-    lines: CartLineInput[],
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  addLines?: CartLinesAddFunction;
   /**
    * Creates a new cart.
    */

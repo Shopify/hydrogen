@@ -38,7 +38,7 @@ Creates an API that can be used to interact with the cart.`,
       title: 'Returns',
       type: 'CartHandlerReturnBaseForDocs',
       description:
-        'The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-cart-instance-usage) or overwritten methods will also be available in the returned cart instance.',
+        'The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) or overwritten methods will also be available in the returned cart instance.',
     },
   ],
   examples: {

@@ -5,7 +5,7 @@ export async function action({context}) {
   const result = await cart.addLines(
     [
       {
-        merchandiseId: '123',
+        merchandiseId: 'gid://shopify/ProductVariant/123456789',
         quantity: 1,
       },
     ],

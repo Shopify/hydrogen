@@ -1,14 +1,19 @@
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
+  CartOptionalInput,
   CartQueryData,
   CartQueryOptions,
-  CartQueryReturn,
 } from './cart-types';
 import type {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
 
+export type CartLinesAddFunction = (
+  lines: CartLineInput[],
+  optionalParams?: CartOptionalInput,
+) => Promise<CartQueryData>;
+
 export function cartLinesAddDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartLineInput[]> {
+): CartLinesAddFunction {
   return async (lines, optionalParams) => {
     const {cartLinesAdd} = await options.storefront.mutate<{
       cartLinesAdd: CartQueryData;

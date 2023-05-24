@@ -39,7 +39,7 @@ cart.editInPlace(
   ['123'],
   [
     {
-      merchandiseId: '456',
+      merchandiseId: 'gid://shopify/ProductVariant/456789123',
       quantity: 1,
     },
   ],
@@ -49,7 +49,7 @@ cart.editInPlace(
 const result = await cart.addLines(
   [
     {
-      merchandiseId: '123',
+      merchandiseId: 'gid://shopify/ProductVariant/123456789',
       quantity: 1,
     },
   ],
