@@ -1,12 +1,11 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
-import type {
-  CollectionConnection,
-  ProductConnection,
-} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 
-import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
+import {
+  PRODUCT_CARD_FRAGMENT,
+  FEATURED_COLLECTION_FRAGMENT,
+} from '~/data/fragments';
 
 export async function loader({context: {storefront}}: LoaderArgs) {
   return json(await getFeaturedData(storefront));
@@ -45,17 +44,6 @@ const FEATURED_QUERY = `#graphql
     }
   }
 
-  fragment FeaturedCollectionDetails on Collection {
-    id
-    title
-    handle
-    image {
-      altText
-      width
-      height
-      url
-    }
-  }
-
   ${PRODUCT_CARD_FRAGMENT}
+  ${FEATURED_COLLECTION_FRAGMENT}
 ` as const;

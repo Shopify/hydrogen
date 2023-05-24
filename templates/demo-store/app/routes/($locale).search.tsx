@@ -1,16 +1,6 @@
-import {
-  defer,
-  type LoaderArgs,
-  type SerializeFrom,
-} from '@shopify/remix-oxygen';
+import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
 import {Await, Form, useLoaderData} from '@remix-run/react';
-import type {
-  Collection,
-  CollectionConnection,
-  Product,
-  ProductConnection,
-} from '@shopify/hydrogen/storefront-api-types';
 import {Suspense} from 'react';
 import {
   Pagination__unstable as Pagination,
@@ -29,7 +19,10 @@ import {
   Text,
 } from '~/components';
 import {PAGINATION_SIZE} from '~/lib/const';
-import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
+import {
+  FEATURED_COLLECTION_FRAGMENT,
+  PRODUCT_CARD_FRAGMENT,
+} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
 
@@ -38,9 +31,7 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
   const searchTerm = searchParams.get('q')!;
   const variables = getPaginationVariables(request, {pageBy: 8});
 
-  const {products} = await storefront.query<{
-    products: ProductConnection;
-  }>(SEARCH_QUERY, {
+  const {products} = await storefront.query(SEARCH_QUERY, {
     variables: {
       searchTerm,
       ...variables,
@@ -49,32 +40,31 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
     },
   });
 
-  const getRecommendations = !searchTerm || products?.nodes?.length === 0;
-  const seoCollection = {
-    id: 'search',
-    title: 'Search',
-    handle: 'search',
-    descriptionHtml: 'Search results',
-    description: 'Search results',
-    seo: {
-      title: 'Search',
-      description: `Showing ${products.nodes.length} search results for "${searchTerm}"`,
-    },
-    metafields: [],
-    products,
-    updatedAt: new Date().toISOString(),
-  } satisfies Collection;
+  const shouldGetRecommendations = !searchTerm || products?.nodes?.length === 0;
 
   const seo = seoPayload.collection({
-    collection: seoCollection,
     url: request.url,
+    collection: {
+      id: 'search',
+      title: 'Search',
+      handle: 'search',
+      descriptionHtml: 'Search results',
+      description: 'Search results',
+      seo: {
+        title: 'Search',
+        description: `Showing ${products.nodes.length} search results for "${searchTerm}"`,
+      },
+      metafields: [],
+      products,
+      updatedAt: new Date().toISOString(),
+    },
   });
 
   return defer({
     seo,
     searchTerm,
     products,
-    noResultRecommendations: getRecommendations
+    noResultRecommendations: shouldGetRecommendations
       ? getNoResultRecommendations(storefront)
       : Promise.resolve(null),
   });
@@ -107,11 +97,7 @@ export default function Search() {
       {!searchTerm || noResults ? (
         <NoResults
           noResults={noResults}
-          recommendations={
-            noResultRecommendations as ReturnType<
-              typeof getNoResultRecommendations
-            >
-          }
+          recommendations={noResultRecommendations}
         />
       ) : (
         <Section>
@@ -153,7 +139,7 @@ function NoResults({
   recommendations,
 }: {
   noResults: boolean;
-  recommendations: ReturnType<typeof getNoResultRecommendations>;
+  recommendations: Promise<null | NotResultRecommendations>;
 }) {
   return (
     <>
@@ -169,18 +155,23 @@ function NoResults({
           errorElement="There was a problem loading related products"
           resolve={recommendations}
         >
-          {({featuredCollections, featuredProducts}) => (
-            <>
-              <FeaturedCollections
-                title="Trending Collections"
-                collections={featuredCollections as SerializeFrom<Collection[]>}
-              />
-              <ProductSwimlane
-                title="Trending Products"
-                products={featuredProducts as SerializeFrom<Product[]>}
-              />
-            </>
-          )}
+          {(result) => {
+            if (!result) return null;
+            const {featuredCollections, featuredProducts} = result;
+
+            return (
+              <>
+                <FeaturedCollections
+                  title="Trending Collections"
+                  collections={featuredCollections}
+                />
+                <ProductSwimlane
+                  title="Trending Products"
+                  products={featuredProducts}
+                />
+              </>
+            );
+          }}
         </Await>
       </Suspense>
     </>
@@ -190,22 +181,26 @@ function NoResults({
 export async function getNoResultRecommendations(
   storefront: LoaderArgs['context']['storefront'],
 ) {
-  const {featuredProducts, featuredCollections} = await storefront.query<{
-    featuredProducts: ProductConnection;
-    featuredCollections: CollectionConnection;
-  }>(SEARCH_NO_RESULTS_QUERY, {
-    variables: {
-      pageBy: PAGINATION_SIZE,
-      country: storefront.i18n.country,
-      language: storefront.i18n.language,
+  const {featuredProducts, featuredCollections} = await storefront.query(
+    SEARCH_NO_RESULTS_QUERY,
+    {
+      variables: {
+        pageBy: PAGINATION_SIZE,
+        country: storefront.i18n.country,
+        language: storefront.i18n.language,
+      },
     },
-  });
+  );
 
   return {
     featuredCollections: flattenConnection(featuredCollections),
     featuredProducts: flattenConnection(featuredProducts),
   };
 }
+
+type NotResultRecommendations = Awaited<
+  ReturnType<typeof getNoResultRecommendations>
+>;
 
 const SEARCH_QUERY = `#graphql
   ${PRODUCT_CARD_FRAGMENT}
@@ -240,7 +235,6 @@ const SEARCH_QUERY = `#graphql
 ` as const;
 
 const SEARCH_NO_RESULTS_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
   query NoSearchResults(
     $country: CountryCode
     $language: LanguageCode
@@ -248,15 +242,7 @@ const SEARCH_NO_RESULTS_QUERY = `#graphql
   ) @inContext(country: $country, language: $language) {
     featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
       nodes {
-        id
-        title
-        handle
-        image {
-          altText
-          width
-          height
-          url
-        }
+        ...FeaturedCollectionDetails
       }
     }
     featuredProducts: products(first: $pageBy) {
@@ -264,5 +250,8 @@ const SEARCH_NO_RESULTS_QUERY = `#graphql
         ...ProductCard
       }
     }
+
+    ${PRODUCT_CARD_FRAGMENT}
+    ${FEATURED_COLLECTION_FRAGMENT}
   }
 ` as const;
