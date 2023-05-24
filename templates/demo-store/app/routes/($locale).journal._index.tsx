@@ -1,7 +1,7 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {flattenConnection, Image} from '@shopify/hydrogen';
-import type {Article, Blog} from '@shopify/hydrogen/storefront-api-types';
+import type {Article} from '@shopify/hydrogen/storefront-api-types';
 
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
@@ -14,9 +14,7 @@ export const headers = routeHeaders;
 
 export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   const {language, country} = storefront.i18n;
-  const {blog} = await storefront.query<{
-    blog: Blog;
-  }>(BLOGS_QUERY, {
+  const {blog} = await storefront.query(BLOGS_QUERY, {
     variables: {
       blogHandle: BLOG_HANDLE,
       pageBy: PAGINATION_SIZE,
@@ -28,17 +26,20 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
     throw new Response('Not found', {status: 404});
   }
 
-  const articles = flattenConnection(blog.articles).map((article: Article) => {
-    const {publishedAt} = article;
-    return {
-      ...article,
-      publishedAt: new Intl.DateTimeFormat(`${language}-${country}`, {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }).format(new Date(publishedAt!)),
-    };
-  });
+  // @ts-ignore TODO: Fix flattenConnection types
+  const articles = (flattenConnection(blog.articles) as Article[]).map(
+    (article) => {
+      const {publishedAt} = article!;
+      return {
+        ...article,
+        publishedAt: new Intl.DateTimeFormat(`${language}-${country}`, {
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        }).format(new Date(publishedAt!)),
+      };
+    },
+  );
 
   const seo = seoPayload.blog({blog, url: request.url});
 

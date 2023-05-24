@@ -207,7 +207,7 @@ const COLLECTION_CONTENT_FRAGMENT = `#graphql
     }
   }
   ${MEDIA_FRAGMENT}
-`;
+` as const;
 
 const HOMEPAGE_SEO_QUERY = `#graphql
   query seoCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
@@ -221,7 +221,7 @@ const HOMEPAGE_SEO_QUERY = `#graphql
     }
   }
   ${COLLECTION_CONTENT_FRAGMENT}
-`;
+` as const;
 
 const COLLECTION_HERO_QUERY = `#graphql
   query heroCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
@@ -231,7 +231,7 @@ const COLLECTION_HERO_QUERY = `#graphql
     }
   }
   ${COLLECTION_CONTENT_FRAGMENT}
-`;
+` as const;
 
 // @see: https://shopify.dev/api/storefront/2023-04/queries/products
 export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
@@ -244,7 +244,7 @@ export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
     }
   }
   ${PRODUCT_CARD_FRAGMENT}
-`;
+` as const;
 
 // @see: https://shopify.dev/api/storefront/2023-04/queries/collections
 export const FEATURED_COLLECTIONS_QUERY = `#graphql
