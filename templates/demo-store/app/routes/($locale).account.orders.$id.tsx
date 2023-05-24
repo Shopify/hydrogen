@@ -3,11 +3,6 @@ import clsx from 'clsx';
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, type V2_MetaFunction} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
-import type {
-  Order,
-  OrderLineItem,
-  DiscountApplicationConnection,
-} from '@shopify/hydrogen/storefront-api-types';
 
 import {statusMessage} from '~/lib/utils';
 import {Link, Heading, PageHeader, Text} from '~/components';
@@ -36,22 +31,17 @@ export async function loader({request, context, params}: LoaderArgs) {
 
   const orderId = `gid://shopify/Order/${params.id}?key=${orderToken}`;
 
-  const data = await context.storefront.query<{node: Order}>(
-    CUSTOMER_ORDER_QUERY,
-    {variables: {orderId}},
-  );
+  const {node: order} = await context.storefront.query(CUSTOMER_ORDER_QUERY, {
+    variables: {orderId},
+  });
 
-  const order = data?.node;
-
-  if (!order) {
+  if (!order || !('lineItems' in order)) {
     throw new Response('Order not found', {status: 404});
   }
 
-  const lineItems = flattenConnection(order.lineItems!) as Array<OrderLineItem>;
+  const lineItems = flattenConnection(order.lineItems);
 
-  const discountApplications = flattenConnection(
-    order.discountApplications as DiscountApplicationConnection,
-  );
+  const discountApplications = flattenConnection(order.discountApplications);
 
   const firstDiscount = discountApplications[0]?.value;
 
@@ -119,8 +109,7 @@ export default function OrderRoute() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-200">
-                {/* @ts-ignore */}
-                {lineItems.map((lineItem: OrderLineItem) => (
+                {lineItems.map((lineItem) => (
                   <tr key={lineItem.variant!.id}>
                     <td className="w-full py-4 pl-0 pr-3 align-top sm:align-middle max-w-0 sm:w-auto sm:max-w-none">
                       <div className="flex gap-6">
@@ -339,6 +328,7 @@ const CUSTOMER_ORDER_QUERY = `#graphql
   }
   fragment DiscountApplication on DiscountApplication {
     value {
+      __typename
       ... on MoneyV2 {
         amount
         currencyCode
@@ -403,13 +393,13 @@ const CUSTOMER_ORDER_QUERY = `#graphql
         orderNumber
         processedAt
         fulfillmentStatus
-        totalTax {
+        totalTaxV2 {
           ...Money
         }
-        totalPrice {
+        totalPriceV2 {
           ...Money
         }
-        subtotalPrice {
+        subtotalPriceV2 {
           ...Money
         }
         shippingAddress {

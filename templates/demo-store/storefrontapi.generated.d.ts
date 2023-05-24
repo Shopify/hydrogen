@@ -272,6 +272,14 @@ export type ImageFragmentFragment = Pick<
   'id' | 'url' | 'altText' | 'width' | 'height'
 >;
 
+export type GetShopPrimaryDomainQueryVariables = StorefrontAPI.Exact<{
+  [key: string]: never;
+}>;
+
+export type GetShopPrimaryDomainQuery = {
+  shop: {primaryDomain: Pick<StorefrontAPI.Domain, 'url'>};
+};
+
 export type CollectionContentFragment = Pick<
   StorefrontAPI.Collection,
   'id' | 'handle' | 'title' | 'descriptionHtml'
@@ -664,26 +672,50 @@ export type AddressFullFragment = Pick<
 
 type DiscountApplication_AutomaticDiscountApplication_Fragment = {
   value:
-    | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-    | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+    | ({__typename: 'MoneyV2'} & Pick<
+        StorefrontAPI.MoneyV2,
+        'amount' | 'currencyCode'
+      >)
+    | ({__typename: 'PricingPercentageValue'} & Pick<
+        StorefrontAPI.PricingPercentageValue,
+        'percentage'
+      >);
 };
 
 type DiscountApplication_DiscountCodeApplication_Fragment = {
   value:
-    | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-    | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+    | ({__typename: 'MoneyV2'} & Pick<
+        StorefrontAPI.MoneyV2,
+        'amount' | 'currencyCode'
+      >)
+    | ({__typename: 'PricingPercentageValue'} & Pick<
+        StorefrontAPI.PricingPercentageValue,
+        'percentage'
+      >);
 };
 
 type DiscountApplication_ManualDiscountApplication_Fragment = {
   value:
-    | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-    | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+    | ({__typename: 'MoneyV2'} & Pick<
+        StorefrontAPI.MoneyV2,
+        'amount' | 'currencyCode'
+      >)
+    | ({__typename: 'PricingPercentageValue'} & Pick<
+        StorefrontAPI.PricingPercentageValue,
+        'percentage'
+      >);
 };
 
 type DiscountApplication_ScriptDiscountApplication_Fragment = {
   value:
-    | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-    | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+    | ({__typename: 'MoneyV2'} & Pick<
+        StorefrontAPI.MoneyV2,
+        'amount' | 'currencyCode'
+      >)
+    | ({__typename: 'PricingPercentageValue'} & Pick<
+        StorefrontAPI.PricingPercentageValue,
+        'percentage'
+      >);
 };
 
 export type DiscountApplicationFragment =
@@ -719,23 +751,47 @@ export type LineItemFullFragment = Pick<
     discountApplication:
       | {
           value:
-            | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-            | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+            | ({__typename: 'MoneyV2'} & Pick<
+                StorefrontAPI.MoneyV2,
+                'amount' | 'currencyCode'
+              >)
+            | ({__typename: 'PricingPercentageValue'} & Pick<
+                StorefrontAPI.PricingPercentageValue,
+                'percentage'
+              >);
         }
       | {
           value:
-            | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-            | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+            | ({__typename: 'MoneyV2'} & Pick<
+                StorefrontAPI.MoneyV2,
+                'amount' | 'currencyCode'
+              >)
+            | ({__typename: 'PricingPercentageValue'} & Pick<
+                StorefrontAPI.PricingPercentageValue,
+                'percentage'
+              >);
         }
       | {
           value:
-            | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-            | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+            | ({__typename: 'MoneyV2'} & Pick<
+                StorefrontAPI.MoneyV2,
+                'amount' | 'currencyCode'
+              >)
+            | ({__typename: 'PricingPercentageValue'} & Pick<
+                StorefrontAPI.PricingPercentageValue,
+                'percentage'
+              >);
         }
       | {
           value:
-            | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-            | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+            | ({__typename: 'MoneyV2'} & Pick<
+                StorefrontAPI.MoneyV2,
+                'amount' | 'currencyCode'
+              >)
+            | ({__typename: 'PricingPercentageValue'} & Pick<
+                StorefrontAPI.PricingPercentageValue,
+                'percentage'
+              >);
         };
   }>;
   originalTotalPrice: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
@@ -765,11 +821,11 @@ export type CustomerOrderQuery = {
         StorefrontAPI.Order,
         'id' | 'name' | 'orderNumber' | 'processedAt' | 'fulfillmentStatus'
       > & {
-        totalTax?: StorefrontAPI.Maybe<
+        totalTaxV2?: StorefrontAPI.Maybe<
           Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
         >;
-        totalPrice: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
-        subtotalPrice?: StorefrontAPI.Maybe<
+        totalPriceV2: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+        subtotalPriceV2?: StorefrontAPI.Maybe<
           Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
         >;
         shippingAddress?: StorefrontAPI.Maybe<
@@ -796,23 +852,47 @@ export type CustomerOrderQuery = {
           nodes: Array<
             | {
                 value:
-                  | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-                  | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+                  | ({__typename: 'MoneyV2'} & Pick<
+                      StorefrontAPI.MoneyV2,
+                      'amount' | 'currencyCode'
+                    >)
+                  | ({__typename: 'PricingPercentageValue'} & Pick<
+                      StorefrontAPI.PricingPercentageValue,
+                      'percentage'
+                    >);
               }
             | {
                 value:
-                  | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-                  | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+                  | ({__typename: 'MoneyV2'} & Pick<
+                      StorefrontAPI.MoneyV2,
+                      'amount' | 'currencyCode'
+                    >)
+                  | ({__typename: 'PricingPercentageValue'} & Pick<
+                      StorefrontAPI.PricingPercentageValue,
+                      'percentage'
+                    >);
               }
             | {
                 value:
-                  | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-                  | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+                  | ({__typename: 'MoneyV2'} & Pick<
+                      StorefrontAPI.MoneyV2,
+                      'amount' | 'currencyCode'
+                    >)
+                  | ({__typename: 'PricingPercentageValue'} & Pick<
+                      StorefrontAPI.PricingPercentageValue,
+                      'percentage'
+                    >);
               }
             | {
                 value:
-                  | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-                  | Pick<StorefrontAPI.PricingPercentageValue, 'percentage'>;
+                  | ({__typename: 'MoneyV2'} & Pick<
+                      StorefrontAPI.MoneyV2,
+                      'amount' | 'currencyCode'
+                    >)
+                  | ({__typename: 'PricingPercentageValue'} & Pick<
+                      StorefrontAPI.PricingPercentageValue,
+                      'percentage'
+                    >);
               }
           >;
         };
@@ -827,35 +907,47 @@ export type CustomerOrderQuery = {
                 discountApplication:
                   | {
                       value:
-                        | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-                        | Pick<
+                        | ({__typename: 'MoneyV2'} & Pick<
+                            StorefrontAPI.MoneyV2,
+                            'amount' | 'currencyCode'
+                          >)
+                        | ({__typename: 'PricingPercentageValue'} & Pick<
                             StorefrontAPI.PricingPercentageValue,
                             'percentage'
-                          >;
+                          >);
                     }
                   | {
                       value:
-                        | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-                        | Pick<
+                        | ({__typename: 'MoneyV2'} & Pick<
+                            StorefrontAPI.MoneyV2,
+                            'amount' | 'currencyCode'
+                          >)
+                        | ({__typename: 'PricingPercentageValue'} & Pick<
                             StorefrontAPI.PricingPercentageValue,
                             'percentage'
-                          >;
+                          >);
                     }
                   | {
                       value:
-                        | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-                        | Pick<
+                        | ({__typename: 'MoneyV2'} & Pick<
+                            StorefrontAPI.MoneyV2,
+                            'amount' | 'currencyCode'
+                          >)
+                        | ({__typename: 'PricingPercentageValue'} & Pick<
                             StorefrontAPI.PricingPercentageValue,
                             'percentage'
-                          >;
+                          >);
                     }
                   | {
                       value:
-                        | Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-                        | Pick<
+                        | ({__typename: 'MoneyV2'} & Pick<
+                            StorefrontAPI.MoneyV2,
+                            'amount' | 'currencyCode'
+                          >)
+                        | ({__typename: 'PricingPercentageValue'} & Pick<
                             StorefrontAPI.PricingPercentageValue,
                             'percentage'
-                          >;
+                          >);
                     };
               }>;
               originalTotalPrice: Pick<
@@ -1750,6 +1842,10 @@ interface GeneratedQueryTypes {
     return: CartQueryQuery;
     variables: CartQueryQueryVariables;
   };
+  '#graphql\n      query getShopPrimaryDomain { shop { primaryDomain { url } } }\n    ': {
+    return: GetShopPrimaryDomainQuery;
+    variables: GetShopPrimaryDomainQueryVariables;
+  };
   '#graphql\n  query seoCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)\n  @inContext(country: $country, language: $language) {\n    hero: collection(handle: $handle) {\n      ...CollectionContent\n    }\n    shop {\n      name\n      description\n    }\n  }\n  #graphql\n  fragment CollectionContent on Collection {\n    id\n    handle\n    title\n    descriptionHtml\n    heading: metafield(namespace: "hero", key: "title") {\n      value\n    }\n    byline: metafield(namespace: "hero", key: "byline") {\n      value\n    }\n    cta: metafield(namespace: "hero", key: "cta") {\n      value\n    }\n    spread: metafield(namespace: "hero", key: "spread") {\n      reference {\n        ...Media\n      }\n    }\n    spreadSecondary: metafield(namespace: "hero", key: "spread_secondary") {\n      reference {\n        ...Media\n      }\n    }\n  }\n  #graphql\n  fragment Media on Media {\n    __typename\n    mediaContentType\n    alt\n    previewImage {\n      url\n    }\n    ... on MediaImage {\n      id\n      image {\n        url\n        width\n        height\n      }\n    }\n    ... on Video {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on Model3d {\n      id\n      sources {\n        mimeType\n        url\n      }\n    }\n    ... on ExternalVideo {\n      id\n      embedUrl\n      host\n    }\n  }\n\n\n': {
     return: SeoCollectionContentQuery;
     variables: SeoCollectionContentQueryVariables;
@@ -1766,7 +1862,7 @@ interface GeneratedQueryTypes {
     return: HomepageFeaturedCollectionsQuery;
     variables: HomepageFeaturedCollectionsQueryVariables;
   };
-  '#graphql\n  fragment Money on MoneyV2 {\n    amount\n    currencyCode\n  }\n  fragment AddressFull on MailingAddress {\n    address1\n    address2\n    city\n    company\n    country\n    countryCodeV2\n    firstName\n    formatted\n    id\n    lastName\n    name\n    phone\n    province\n    provinceCode\n    zip\n  }\n  fragment DiscountApplication on DiscountApplication {\n    value {\n      ... on MoneyV2 {\n        amount\n        currencyCode\n      }\n      ... on PricingPercentageValue {\n        percentage\n      }\n    }\n  }\n  fragment Image on Image {\n    altText\n    height\n    src: url(transform: {crop: CENTER, maxHeight: 96, maxWidth: 96, scale: 2})\n    id\n    width\n  }\n  fragment ProductVariant on ProductVariant {\n    id\n    image {\n      ...Image\n    }\n    price {\n      ...Money\n    }\n    product {\n      handle\n    }\n    sku\n    title\n  }\n  fragment LineItemFull on OrderLineItem {\n    title\n    quantity\n    discountAllocations {\n      allocatedAmount {\n        ...Money\n      }\n      discountApplication {\n        ...DiscountApplication\n      }\n    }\n    originalTotalPrice {\n      ...Money\n    }\n    discountedTotalPrice {\n      ...Money\n    }\n    variant {\n      ...ProductVariant\n    }\n  }\n\n  query CustomerOrder(\n    $country: CountryCode\n    $language: LanguageCode\n    $orderId: ID!\n  ) @inContext(country: $country, language: $language) {\n    node(id: $orderId) {\n      ... on Order {\n        id\n        name\n        orderNumber\n        processedAt\n        fulfillmentStatus\n        totalTax {\n          ...Money\n        }\n        totalPrice {\n          ...Money\n        }\n        subtotalPrice {\n          ...Money\n        }\n        shippingAddress {\n          ...AddressFull\n        }\n        discountApplications(first: 100) {\n          nodes {\n            ...DiscountApplication\n          }\n        }\n        lineItems(first: 100) {\n          nodes {\n            ...LineItemFull\n          }\n        }\n      }\n    }\n  }\n': {
+  '#graphql\n  fragment Money on MoneyV2 {\n    amount\n    currencyCode\n  }\n  fragment AddressFull on MailingAddress {\n    address1\n    address2\n    city\n    company\n    country\n    countryCodeV2\n    firstName\n    formatted\n    id\n    lastName\n    name\n    phone\n    province\n    provinceCode\n    zip\n  }\n  fragment DiscountApplication on DiscountApplication {\n    value {\n      __typename\n      ... on MoneyV2 {\n        amount\n        currencyCode\n      }\n      ... on PricingPercentageValue {\n        percentage\n      }\n    }\n  }\n  fragment Image on Image {\n    altText\n    height\n    src: url(transform: {crop: CENTER, maxHeight: 96, maxWidth: 96, scale: 2})\n    id\n    width\n  }\n  fragment ProductVariant on ProductVariant {\n    id\n    image {\n      ...Image\n    }\n    price {\n      ...Money\n    }\n    product {\n      handle\n    }\n    sku\n    title\n  }\n  fragment LineItemFull on OrderLineItem {\n    title\n    quantity\n    discountAllocations {\n      allocatedAmount {\n        ...Money\n      }\n      discountApplication {\n        ...DiscountApplication\n      }\n    }\n    originalTotalPrice {\n      ...Money\n    }\n    discountedTotalPrice {\n      ...Money\n    }\n    variant {\n      ...ProductVariant\n    }\n  }\n\n  query CustomerOrder(\n    $country: CountryCode\n    $language: LanguageCode\n    $orderId: ID!\n  ) @inContext(country: $country, language: $language) {\n    node(id: $orderId) {\n      ... on Order {\n        id\n        name\n        orderNumber\n        processedAt\n        fulfillmentStatus\n        totalTaxV2 {\n          ...Money\n        }\n        totalPriceV2 {\n          ...Money\n        }\n        subtotalPriceV2 {\n          ...Money\n        }\n        shippingAddress {\n          ...AddressFull\n        }\n        discountApplications(first: 100) {\n          nodes {\n            ...DiscountApplication\n          }\n        }\n        lineItems(first: 100) {\n          nodes {\n            ...LineItemFull\n          }\n        }\n      }\n    }\n  }\n': {
     return: CustomerOrderQuery;
     variables: CustomerOrderQueryVariables;
   };
