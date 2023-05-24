@@ -4,8 +4,8 @@
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
   },
-  "version": "0.0.0-alpha.0",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "version": "0.0.1",
+  "license": "MIT",
   "type": "module",
   "main": "dist/cjs/index.cjs",
   "module": "dist/esm/index.js",
