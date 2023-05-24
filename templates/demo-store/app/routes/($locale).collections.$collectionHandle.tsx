@@ -2,8 +2,8 @@ import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {
   Collection as CollectionType,
-  CollectionConnection,
   Filter,
+  ProductCollectionSortKeys,
 } from '@shopify/hydrogen/storefront-api-types';
 import {flattenConnection, AnalyticsPageType} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
@@ -89,27 +89,29 @@ export async function loader({params, request, context}: LoaderArgs) {
     });
   }
 
-  const {collection, collections} = await context.storefront.query<{
-    collection: CollectionType;
-    collections: CollectionConnection;
-  }>(COLLECTION_QUERY, {
-    variables: {
-      handle: collectionHandle,
-      pageBy: PAGINATION_SIZE,
-      cursor,
-      filters,
-      sortKey,
-      reverse,
-      country: context.storefront.i18n.country,
-      language: context.storefront.i18n.language,
+  const {collection, collections} = await context.storefront.query(
+    COLLECTION_QUERY,
+    {
+      variables: {
+        handle: collectionHandle,
+        pageBy: PAGINATION_SIZE,
+        cursor,
+        filters,
+        sortKey,
+        reverse,
+        country: context.storefront.i18n.country,
+        language: context.storefront.i18n.language,
+      },
     },
-  });
+  );
 
   if (!collection) {
     throw new Response('collection', {status: 404});
   }
 
-  const collectionNodes = flattenConnection(collections);
+  // @ts-ignore TODO: Fix flattenConnection types
+  const collectionNodes = flattenConnection(collections) as CollectionType[];
+
   const seo = seoPayload.collection({collection, url: request.url});
 
   return json(
@@ -231,9 +233,12 @@ const COLLECTION_QUERY = `#graphql
     }
   }
   ${PRODUCT_CARD_FRAGMENT}
-`;
+` as const;
 
-function getSortValuesFromParam(sortParam: SortParam | null) {
+function getSortValuesFromParam(sortParam: SortParam | null): {
+  sortKey: ProductCollectionSortKeys;
+  reverse: boolean;
+} {
   switch (sortParam) {
     case 'price-high-low':
       return {

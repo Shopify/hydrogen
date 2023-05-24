@@ -3,7 +3,6 @@ import type {
   Article,
   Blog,
   Collection,
-  CollectionConnection,
   Page,
   Product,
   ProductVariant,
@@ -183,8 +182,15 @@ function product({
   };
 }
 
-type CollectionRequiredFields = Omit<Collection, 'products'> & {
+type CollectionRequiredFields = Omit<
+  Collection,
+  'products' | 'descriptionHtml' | 'metafields' | 'image' | 'updatedAt'
+> & {
   products: {nodes: Pick<Product, 'handle'>[]};
+  image?: null | Pick<Image, 'url' | 'height' | 'width' | 'altText'>;
+  descriptionHtml?: null | Collection['descriptionHtml'];
+  updatedAt?: null | Collection['updatedAt'];
+  metafields?: null | Collection['metafields'];
 };
 
 function collectionJsonLd({
@@ -263,12 +269,16 @@ function collection({
   };
 }
 
+type CollectionListRequiredFields = {
+  nodes: Omit<CollectionRequiredFields, 'products'>[];
+};
+
 function collectionsJsonLd({
   url,
   collections,
 }: {
   url: Request['url'];
-  collections: CollectionConnection;
+  collections: CollectionListRequiredFields;
 }): SeoConfig<CollectionPage>['jsonLd'] {
   const itemListElement: CollectionPage['mainEntity'] = collections.nodes.map(
     (collection, index) => {
@@ -297,7 +307,7 @@ function listCollections({
   collections,
   url,
 }: {
-  collections: CollectionConnection;
+  collections: CollectionListRequiredFields;
   url: Request['url'];
 }): SeoConfig<CollectionPage> {
   return {
