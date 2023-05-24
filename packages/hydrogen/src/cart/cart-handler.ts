@@ -10,8 +10,6 @@ import {
   AttributeInput,
   Cart,
   CartBuyerIdentityInput,
-  CartInput,
-  CartLineInput,
   CartLineUpdateInput,
   CartSelectedDeliveryOptionInput,
   LanguageCode,
@@ -19,7 +17,10 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
 import {cartGetDefault} from './queries/cartGetDefault';
-import {cartCreateDefault} from './queries/cartCreateDefault';
+import {
+  type CartCreateFunction,
+  cartCreateDefault,
+} from './queries/cartCreateDefault';
 import {
   type CartLinesAddFunction,
   cartLinesAddDefault,
@@ -248,10 +249,7 @@ export type CartHandlerReturnBaseForDocs = {
   /**
    * Creates a new cart.
    */
-  create?: (
-    input: CartInput,
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  create?: CartCreateFunction;
   /**
    * Removes a custom field (metafield) from the cart.
    */
