@@ -1,5 +1,5 @@
 import {Image} from '@shopify/hydrogen';
-import type {Collection} from '@shopify/hydrogen/storefront-api-types';
+import type {FeaturedCollectionDetailsFragment} from 'storefrontapi.generated';
 
 import {Heading, Section, Grid, Link} from '~/components';
 
@@ -8,7 +8,7 @@ export function FeaturedCollections({
   title = 'Collections',
   ...props
 }: {
-  collections: Collection[];
+  collections: FeaturedCollectionDetailsFragment[];
   title?: string;
   [key: string]: any;
 }) {

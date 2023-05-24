@@ -1,8 +1,6 @@
 import {Form} from '@remix-run/react';
-import type {
-  Customer,
-  MailingAddress,
-} from '@shopify/hydrogen/storefront-api-types';
+import type {MailingAddress} from '@shopify/hydrogen/storefront-api-types';
+import type {CustomerDetailsFragment} from 'storefrontapi.generated';
 
 import {Button, Link, Text} from '~/components';
 
@@ -10,7 +8,7 @@ export function AccountAddressBook({
   customer,
   addresses,
 }: {
-  customer: Customer;
+  customer: CustomerDetailsFragment;
   addresses: MailingAddress[];
 }) {
   return (

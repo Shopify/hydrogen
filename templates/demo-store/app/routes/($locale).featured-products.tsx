@@ -15,10 +15,7 @@ export async function loader({context: {storefront}}: LoaderArgs) {
 export async function getFeaturedData(
   storefront: LoaderArgs['context']['storefront'],
 ) {
-  const data = await storefront.query<{
-    featuredCollections: CollectionConnection;
-    featuredProducts: ProductConnection;
-  }>(FEATURED_QUERY, {
+  const data = await storefront.query(FEATURED_QUERY, {
     variables: {
       country: storefront.i18n.country,
       language: storefront.i18n.language,
@@ -38,15 +35,7 @@ const FEATURED_QUERY = `#graphql
   @inContext(country: $country, language: $language) {
     featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
       nodes {
-        id
-        title
-        handle
-        image {
-          altText
-          width
-          height
-          url
-        }
+        ...FeaturedCollectionDetails
       }
     }
     featuredProducts: products(first: 12) {
@@ -55,5 +44,18 @@ const FEATURED_QUERY = `#graphql
       }
     }
   }
+
+  fragment FeaturedCollectionDetails on Collection {
+    id
+    title
+    handle
+    image {
+      altText
+      width
+      height
+      url
+    }
+  }
+
   ${PRODUCT_CARD_FRAGMENT}
-`;
+` as const;

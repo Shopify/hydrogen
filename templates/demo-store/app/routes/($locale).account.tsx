@@ -7,8 +7,6 @@ import {
   useOutlet,
 } from '@remix-run/react';
 import type {
-  Collection,
-  Customer,
   MailingAddress,
   Order,
 } from '@shopify/hydrogen/storefront-api-types';
@@ -21,6 +19,11 @@ import {
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
+import type {
+  CustomerDetailsFragment,
+  FeaturedCollectionDetailsFragment,
+  ProductCardFragment,
+} from 'storefrontapi.generated';
 
 import {
   Button,
@@ -69,6 +72,7 @@ export async function loader({request, context, params}: LoaderArgs) {
       : `Welcome to your account.`
     : 'Account Details';
 
+  // @ts-ignore TODO: Fix flattenConnection types
   const orders = flattenConnection(customer.orders) as Order[];
 
   return defer(
@@ -77,6 +81,7 @@ export async function loader({request, context, params}: LoaderArgs) {
       customer,
       heading,
       orders,
+      // @ts-ignore TODO: Fix flattenConnection types
       addresses: flattenConnection(customer.addresses) as MailingAddress[],
       featuredData: getFeaturedData(context.storefront),
     },
@@ -123,11 +128,14 @@ export default function Authenticated() {
 }
 
 interface AccountType {
-  customer: Customer;
+  customer: CustomerDetailsFragment;
   orders: Order[];
   heading: string;
   addresses: MailingAddress[];
-  featuredData: any; // @todo: help please
+  featuredData: Promise<{
+    featuredProducts: ProductCardFragment[];
+    featuredCollections: FeaturedCollectionDetailsFragment[];
+  }>;
 }
 
 function Account({
@@ -147,10 +155,10 @@ function Account({
         </Form>
       </PageHeader>
       {orders && <AccountOrderHistory orders={orders as Order[]} />}
-      <AccountDetails customer={customer as Customer} />
+      <AccountDetails customer={customer} />
       <AccountAddressBook
         addresses={addresses as MailingAddress[]}
-        customer={customer as Customer}
+        customer={customer}
       />
       {!orders.length && (
         <Suspense>
@@ -162,7 +170,7 @@ function Account({
               <>
                 <FeaturedCollections
                   title="Popular Collections"
-                  collections={data.featuredCollections as Collection[]}
+                  collections={data.featuredCollections}
                 />
                 <ProductSwimlane products={data.featuredProducts} />
               </>
@@ -221,67 +229,71 @@ const CUSTOMER_QUERY = `#graphql
     $language: LanguageCode
   ) @inContext(country: $country, language: $language) {
     customer(customerAccessToken: $customerAccessToken) {
+      ...CustomerDetails
+    }
+  }
+
+  fragment CustomerDetails on Customer {
+    firstName
+    lastName
+    phone
+    email
+    defaultAddress {
+      id
+      formatted
       firstName
       lastName
+      company
+      address1
+      address2
+      country
+      province
+      city
+      zip
       phone
-      email
-      defaultAddress {
-        id
-        formatted
-        firstName
-        lastName
-        company
-        address1
-        address2
-        country
-        province
-        city
-        zip
-        phone
-      }
-      addresses(first: 6) {
-        edges {
-          node {
-            id
-            formatted
-            firstName
-            lastName
-            company
-            address1
-            address2
-            country
-            province
-            city
-            zip
-            phone
-          }
+    }
+    addresses(first: 6) {
+      edges {
+        node {
+          id
+          formatted
+          firstName
+          lastName
+          company
+          address1
+          address2
+          country
+          province
+          city
+          zip
+          phone
         }
       }
-      orders(first: 250, sortKey: PROCESSED_AT, reverse: true) {
-        edges {
-          node {
-            id
-            orderNumber
-            processedAt
-            financialStatus
-            fulfillmentStatus
-            currentTotalPrice {
-              amount
-              currencyCode
-            }
-            lineItems(first: 2) {
-              edges {
-                node {
-                  variant {
-                    image {
-                      url
-                      altText
-                      height
-                      width
-                    }
+    }
+    orders(first: 250, sortKey: PROCESSED_AT, reverse: true) {
+      edges {
+        node {
+          id
+          orderNumber
+          processedAt
+          financialStatus
+          fulfillmentStatus
+          currentTotalPrice {
+            amount
+            currencyCode
+          }
+          lineItems(first: 2) {
+            edges {
+              node {
+                variant {
+                  image {
+                    url
+                    altText
+                    height
+                    width
                   }
-                  title
                 }
+                title
               }
             }
           }
@@ -297,9 +309,7 @@ export async function getCustomer(
 ) {
   const {storefront} = context;
 
-  const data = await storefront.query<{
-    customer: Customer;
-  }>(CUSTOMER_QUERY, {
+  const data = await storefront.query(CUSTOMER_QUERY, {
     variables: {
       customerAccessToken,
       country: context.storefront.i18n.country,

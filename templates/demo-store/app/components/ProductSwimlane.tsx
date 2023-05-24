@@ -1,4 +1,4 @@
-import type {Product} from '@shopify/hydrogen/storefront-api-types';
+import type {ProductCardFragment} from 'storefrontapi.generated';
 
 import {ProductCard, Section} from '~/components';
 
@@ -11,7 +11,7 @@ export function ProductSwimlane({
   ...props
 }: {
   title?: string;
-  products?: Product[];
+  products?: ProductCardFragment[];
   count?: number;
 }) {
   return (
