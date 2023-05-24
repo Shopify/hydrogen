@@ -290,7 +290,15 @@ function article({
   article,
   url,
 }: {
-  article: Article;
+  article: Pick<
+    Article,
+    'title' | 'contentHtml' | 'seo' | 'publishedAt' | 'excerpt'
+  > & {
+    image?: null | Pick<
+      NonNullable<Article['image']>,
+      'url' | 'height' | 'width' | 'altText'
+    >;
+  };
   url: Request['url'];
 }): SeoConfig<SeoArticle> {
   return {
