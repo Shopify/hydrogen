@@ -333,7 +333,7 @@ function blog({
   blog,
   url,
 }: {
-  blog: Blog;
+  blog: Pick<Blog, 'seo' | 'title'>;
   url: Request['url'];
 }): SeoConfig<SeoBlog> {
   return {
@@ -375,7 +375,7 @@ function policy({
   policy,
   url,
 }: {
-  policy: ShopPolicy;
+  policy: Pick<ShopPolicy, 'title' | 'body'>;
   url: Request['url'];
 }): SeoConfig<WebPage> {
   return {
@@ -390,7 +390,7 @@ function policies({
   policies,
   url,
 }: {
-  policies: ShopPolicy[];
+  policies: Array<Pick<ShopPolicy, 'title' | 'handle'>>;
   url: Request['url'];
 }): SeoConfig<WebPage | BreadcrumbList> {
   const origin = new URL(url).origin;
