@@ -1,13 +1,18 @@
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
+  CartOptionalInput,
   CartQueryData,
   CartQueryOptions,
-  CartQueryReturn,
 } from './cart-types';
+
+export type CartLinesRemoveFunction = (
+  lineIds: string[],
+  optionalParams?: CartOptionalInput,
+) => Promise<CartQueryData>;
 
 export function cartLinesRemoveDefault(
   options: CartQueryOptions,
-): CartQueryReturn<string[]> {
+): CartLinesRemoveFunction {
   return async (lineIds, optionalParams) => {
     const {cartLinesRemove} = await options.storefront.mutate<{
       cartLinesRemove: CartQueryData;

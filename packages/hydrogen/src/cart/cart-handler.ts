@@ -1,22 +1,7 @@
-import {CountryCode} from '@shopify/hydrogen-react/storefront-api-types';
 import {Storefront} from '../storefront';
 import {getFormInput, CartActionInput} from './CartForm';
-import type {
-  CartOptionalInput,
-  CartQueryData,
-  MetafieldWithoutOwnerId,
-} from './queries/cart-types';
-import {
-  AttributeInput,
-  Cart,
-  CartBuyerIdentityInput,
-  CartLineUpdateInput,
-  CartSelectedDeliveryOptionInput,
-  LanguageCode,
-  Scalars,
-} from '@shopify/hydrogen-react/storefront-api-types';
 import {parse as parseCookie} from 'worktop/cookie';
-import {cartGetDefault} from './queries/cartGetDefault';
+import {type CartGetFunction, cartGetDefault} from './queries/cartGetDefault';
 import {
   type CartCreateFunction,
   cartCreateDefault,
@@ -25,15 +10,42 @@ import {
   type CartLinesAddFunction,
   cartLinesAddDefault,
 } from './queries/cartLinesAddDefault';
-import {cartLinesUpdateDefault} from './queries/cartLinesUpdateDefault';
-import {cartLinesRemoveDefault} from './queries/cartLinesRemoveDefault';
-import {cartDiscountCodesUpdateDefault} from './queries/cartDiscountCodesUpdateDefault';
-import {cartBuyerIdentityUpdateDefault} from './queries/cartBuyerIdentityUpdateDefault';
-import {cartNoteUpdateDefault} from './queries/cartNoteUpdateDefault';
-import {cartSelectedDeliveryOptionsUpdateDefault} from './queries/cartSelectedDeliveryOptionsUpdateDefault';
-import {cartAttributesUpdateDefault} from './queries/cartAttributesUpdateDefault';
-import {cartMetafieldsSetDefault} from './queries/cartMetafieldsSetDefault';
-import {cartMetafieldDeleteDefault} from './queries/cartMetafieldDeleteDefault';
+import {
+  type CartLinesUpdateFunction,
+  cartLinesUpdateDefault,
+} from './queries/cartLinesUpdateDefault';
+import {
+  type CartLinesRemoveFunction,
+  cartLinesRemoveDefault,
+} from './queries/cartLinesRemoveDefault';
+import {
+  type CartDiscountCodesUpdateFunction,
+  cartDiscountCodesUpdateDefault,
+} from './queries/cartDiscountCodesUpdateDefault';
+import {
+  type CartBuyerIdentityUpdateFunction,
+  cartBuyerIdentityUpdateDefault,
+} from './queries/cartBuyerIdentityUpdateDefault';
+import {
+  type CartNoteUpdateFunction,
+  cartNoteUpdateDefault,
+} from './queries/cartNoteUpdateDefault';
+import {
+  type CartSelectedDeliveryOptionsUpdateFunction,
+  cartSelectedDeliveryOptionsUpdateDefault,
+} from './queries/cartSelectedDeliveryOptionsUpdateDefault';
+import {
+  type CartAttributesUpdateFunction,
+  cartAttributesUpdateDefault,
+} from './queries/cartAttributesUpdateDefault';
+import {
+  type CartMetafieldsSetFunction,
+  cartMetafieldsSetDefault,
+} from './queries/cartMetafieldsSetDefault';
+import {
+  type CartMetafieldDeleteFunction,
+  cartMetafieldDeleteDefault,
+} from './queries/cartMetafieldDeleteDefault';
 
 export const cartGetIdDefault = (requestHeaders: Headers) => {
   return () => {
@@ -217,29 +229,6 @@ export type CartHandlerOptionsForDocs<
   setCartId?: (cartId: string, headers: Headers) => void;
 };
 
-type CartGetForDocs = {
-  /**
-   * The cart ID.
-   * @default cart.getCartId();
-   */
-  cartId?: string;
-  /**
-   * The country code.
-   * @default storefront.i18n.country
-   */
-  country?: CountryCode;
-  /**
-   * The language code.
-   * @default storefront.i18n.language
-   */
-  language?: LanguageCode;
-  /**
-   * The number of cart lines to be returned.
-   * @default 100
-   */
-  numCartLines?: number;
-};
-
 export type CartHandlerReturnBaseForDocs = {
   /**
    * Adds items to the cart.
@@ -253,14 +242,11 @@ export type CartHandlerReturnBaseForDocs = {
   /**
    * Removes a custom field (metafield) from the cart.
    */
-  deleteMetafield?: (
-    key: Scalars['String'],
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  deleteMetafield?: CartMetafieldDeleteFunction;
   /**
    * Retrieves the cart information.
    */
-  get?: (cartInput?: CartGetForDocs) => Promise<Cart | null | undefined>;
+  get?: CartGetFunction;
   /**
    * Retrieves the unique identifier of the cart.
    * By default, it gets the ID from the request cookie.
@@ -273,10 +259,7 @@ export type CartHandlerReturnBaseForDocs = {
   /**
    * Removes items from the cart.
    */
-  removeLines?: (
-    lineIds: string[],
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  removeLines?: CartLinesRemoveFunction;
   /**
    * Sets the unique identifier of the cart.
    * By default, it sets the ID in the header cookie.
@@ -286,53 +269,32 @@ export type CartHandlerReturnBaseForDocs = {
    * Adds extra information (metafields) to the cart.
    * If the cart doesn't exist, a new one will be created.
    */
-  setMetafields?: (
-    metafields: MetafieldWithoutOwnerId[],
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  setMetafields?: CartMetafieldsSetFunction;
   /**
    * Updates additional information (attributes) in the cart.
    */
-  updateAttributes?: (
-    attributes: AttributeInput[],
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  updateAttributes?: CartAttributesUpdateFunction;
   /**
    * Updates the buyer's information in the cart.
    * If the cart doesn't exist, a new one will be created.
    */
-  updateBuyerIdentity?: (
-    buyerIdentity: CartBuyerIdentityInput,
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  updateBuyerIdentity?: CartBuyerIdentityUpdateFunction;
   /**
    * Updates discount codes in the cart.
    */
-  updateDiscountCodes?: (
-    discountCodes: string[],
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  updateDiscountCodes?: CartDiscountCodesUpdateFunction;
   /**
    * Updates items in the cart.
    */
-  updateLines?: (
-    lines: CartLineUpdateInput[],
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  updateLines?: CartLinesUpdateFunction;
   /**
    * Updates the note in the cart.
    * If the cart doesn't exist, a new one will be created.
    */
-  updateNote?: (
-    note: string,
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  updateNote?: CartNoteUpdateFunction;
   /**
    * Updates the selected delivery options in the cart.
    * Only available for carts associated with a customer access token.
    */
-  updateSelectedDeliveryOption?: (
-    selectedDeliveryOptions: CartSelectedDeliveryOptionInput,
-    optionalParams: CartOptionalInput,
-  ) => Promise<CartQueryData>;
+  updateSelectedDeliveryOption?: CartSelectedDeliveryOptionsUpdateFunction;
 };

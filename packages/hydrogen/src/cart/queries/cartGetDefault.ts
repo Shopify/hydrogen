@@ -1,13 +1,42 @@
-import type {CartGet, CartQueryOptions} from './cart-types';
-import type {Cart} from '@shopify/hydrogen-react/storefront-api-types';
+import type {CartQueryOptions} from './cart-types';
+import type {
+  Cart,
+  CountryCode,
+  LanguageCode,
+} from '@shopify/hydrogen-react/storefront-api-types';
 
-export function cartGetDefault(
-  options: CartQueryOptions,
-): (cartInput?: CartGet) => Promise<Cart | null | undefined> {
-  return async (cartInput?: CartGet) => {
+type CartGetProps = {
+  /**
+   * The cart ID.
+   * @default cart.getCartId();
+   */
+  cartId?: string;
+  /**
+   * The country code.
+   * @default storefront.i18n.country
+   */
+  country?: CountryCode;
+  /**
+   * The language code.
+   * @default storefront.i18n.language
+   */
+  language?: LanguageCode;
+  /**
+   * The number of cart lines to be returned.
+   * @default 100
+   */
+  numCartLines?: number;
+};
+
+export type CartGetFunction = (
+  cartInput?: CartGetProps,
+) => Promise<Cart | undefined>;
+
+export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
+  return async (cartInput?: CartGetProps) => {
     const cartId = options.getCartId();
 
-    if (!cartId) return null;
+    if (!cartId) return;
 
     const {cart} = await options.storefront.query<{cart?: Cart}>(
       CART_QUERY(options.cartFragment),

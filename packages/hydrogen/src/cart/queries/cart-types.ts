@@ -30,10 +30,6 @@ export type CartOptionalInput = {
 
 export type MetafieldWithoutOwnerId = Omit<CartMetafieldsSetInput, 'ownerId'>;
 
-export type CartGet = {
-  numCartLines?: number;
-} & CartOptionalInput;
-
 export type CartQueryOptions = {
   /**
    * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).
