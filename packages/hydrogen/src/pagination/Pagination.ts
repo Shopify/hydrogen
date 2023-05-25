@@ -9,9 +9,9 @@ type Connection<NodesType> =
       pageInfo: PageInfo;
     }
   | {
-      edges: {
-        node: Array<NodesType>;
-      };
+      edges: Array<{
+        node: NodesType;
+      }>;
       pageInfo: PageInfo;
     };
 
