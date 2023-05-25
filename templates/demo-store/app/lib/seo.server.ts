@@ -7,7 +7,6 @@ import type {
   Product,
   ProductVariant,
   ShopPolicy,
-  Shop,
   Image,
 } from '@shopify/hydrogen/storefront-api-types';
 import type {
@@ -20,12 +19,13 @@ import type {
   Product as SeoProduct,
   WebPage,
 } from 'schema-dts';
+import type {ShopFragment} from 'storefrontapi.generated';
 
 function root({
   shop,
   url,
 }: {
-  shop: Shop;
+  shop: ShopFragment;
   url: Request['url'];
 }): SeoConfig<Organization> {
   return {
