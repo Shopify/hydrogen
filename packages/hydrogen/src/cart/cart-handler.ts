@@ -214,13 +214,13 @@ export type CartHandlerOptionsForDocs<
    */
   customMethods?: TCustomMethods;
   /**
-   * A function that returns the cart ID.
-   * @default () => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']
+   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.
+   * Reads from a cookie named `cart` from the `requestHeaders`.
    */
   getCartId?: () => string | undefined;
   /**
-   * A function that sets the cart ID.
-   * @default (cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)
+   * A function that sets the cart ID. Appends a `Set-Cookie` header with value `cart=${cartId}` in `headers`.
+   * The cookie is a session cookie by default.
    */
   setCartId?: (cartId: string, headers: Headers) => void;
 };

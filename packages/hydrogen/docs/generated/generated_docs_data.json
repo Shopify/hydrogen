@@ -1052,7 +1052,7 @@
             "filePath": "/cart/cart-handler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerOptionsForDocs",
-            "value": "{\n  /**\n   * The request headers.\n   */\n  requestHeaders: Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n  /**\n   * A function that returns the cart ID.\n   * @default () => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   * @default (cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n}",
+            "value": "{\n  /**\n   * The request headers.\n   */\n  requestHeaders: Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   * Reads from a cookie named `cart` from the `requestHeaders`.\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * A function that sets the cart ID. Appends a `Set-Cookie` header with value `cart=${cartId}` in `headers`.\n   * The cookie is a session cookie by default.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n}",
             "description": "",
             "members": [
               {
@@ -1098,18 +1098,16 @@
                 "syntaxKind": "PropertySignature",
                 "name": "getCartId",
                 "value": "() => string",
-                "description": "A function that returns the cart ID.",
-                "isOptional": true,
-                "defaultValue": "() => parseCookie(requestHeaders.get('cookie') ?? '')['cart_id']"
+                "description": "A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\nReads from a cookie named `cart` from the `requestHeaders`.",
+                "isOptional": true
               },
               {
                 "filePath": "/cart/cart-handler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "setCartId",
                 "value": "(cartId: string, headers: Headers) => void",
-                "description": "A function that sets the cart ID.",
-                "isOptional": true,
-                "defaultValue": "(cartId, headers) => headers.set('cookie', `cart_id=${cartId}`)"
+                "description": "A function that sets the cart ID. Appends a `Set-Cookie` header with value `cart=${cartId}` in `headers`.\nThe cookie is a session cookie by default.",
+                "isOptional": true
               }
             ]
           },
