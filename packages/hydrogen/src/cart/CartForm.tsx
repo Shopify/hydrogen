@@ -98,7 +98,7 @@ type CartCustomProps = {
 };
 
 type CartFormCommonProps = {
-  children?:
+  children:
     | React.ReactNode
     | ((fetcher: FetcherWithComponents<any>) => React.ReactNode);
   route?: string;
