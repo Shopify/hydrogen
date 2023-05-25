@@ -9,6 +9,7 @@ import {
   createStorefrontClient,
   storefrontRedirect,
 } from '@shopify/hydrogen';
+
 import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
 

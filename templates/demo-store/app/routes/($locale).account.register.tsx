@@ -6,9 +6,11 @@ import {
 } from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 import {useState} from 'react';
-import {getInputStyleClasses} from '~/lib/utils';
-import {doLogin} from './($locale).account.login';
 import type {CustomerCreatePayload} from '@shopify/hydrogen/storefront-api-types';
+
+import {doLogin} from './($locale).account.login';
+
+import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
 
 export async function loader({context, params}: LoaderArgs) {

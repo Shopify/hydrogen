@@ -1,7 +1,8 @@
 import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
-import {Button} from '~/components';
 import {CartForm} from '@shopify/hydrogen';
-import {FetcherWithComponents} from '@remix-run/react';
+import type {FetcherWithComponents} from '@remix-run/react';
+
+import {Button} from '~/components';
 
 export function AddToCartButton({
   children,

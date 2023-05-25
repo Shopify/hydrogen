@@ -7,6 +7,7 @@ import type {
   Metafield,
   Video as MediaVideo,
 } from '@shopify/hydrogen/storefront-api-types';
+
 import {Heading, Text, Link} from '~/components';
 
 export interface CollectionHero {

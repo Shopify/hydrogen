@@ -12,9 +12,11 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import clsx from 'clsx';
 import invariant from 'tiny-invariant';
+
+import {getCustomer} from './($locale).account';
+
 import {Button, Text} from '~/components';
 import {getInputStyleClasses, assertApiErrors} from '~/lib/utils';
-import {getCustomer} from './($locale).account';
 
 export interface AccountOutletContext {
   customer: Customer;

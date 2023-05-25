@@ -14,6 +14,18 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {Suspense} from 'react';
 import {
+  json,
+  defer,
+  redirect,
+  type LoaderArgs,
+  type AppLoadContext,
+} from '@shopify/remix-oxygen';
+import {flattenConnection} from '@shopify/hydrogen';
+
+import {getFeaturedData} from './($locale).featured-products';
+import {doLogout} from './($locale).account.logout';
+
+import {
   Button,
   OrderCard,
   PageHeader,
@@ -24,16 +36,6 @@ import {
   ProductSwimlane,
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
-import {
-  json,
-  defer,
-  redirect,
-  type LoaderArgs,
-  type AppLoadContext,
-} from '@shopify/remix-oxygen';
-import {flattenConnection} from '@shopify/hydrogen';
-import {getFeaturedData} from './($locale).featured-products';
-import {doLogout} from './($locale).account.logout';
 import {usePrefixPathWithLocale} from '~/lib/utils';
 import {CACHE_NONE, routeHeaders} from '~/data/cache';
 
@@ -109,7 +111,7 @@ export default function Authenticated() {
           <Modal cancelLink="/account">
             <Outlet context={{customer: data.customer}} />
           </Modal>
-          <Account {...(data as Account)} />
+          <Account {...(data as AccountType)} />
         </>
       );
     } else {
@@ -117,10 +119,10 @@ export default function Authenticated() {
     }
   }
 
-  return <Account {...(data as Account)} />;
+  return <Account {...(data as AccountType)} />;
 }
 
-interface Account {
+interface AccountType {
   customer: Customer;
   orders: Order[];
   heading: string;
@@ -134,7 +136,7 @@ function Account({
   heading,
   addresses,
   featuredData,
-}: Account) {
+}: AccountType) {
   return (
     <>
       <PageHeader heading={heading}>

@@ -37,53 +37,123 @@ export type I18nBase = {
 };
 
 /**
- * other description
+ * Wraps all the returned utilities from `createStorefrontClient`.
  */
 export type StorefrontClient<TI18n extends I18nBase> = {
   storefront: Storefront<TI18n>;
 };
 
 /**
- * some deswcription
+ * Maps all the queries found in the project to variables and return types.
+ */
+export interface StorefrontQueries {
+  // Example of how a generated query type looks like:
+  // '#graphql query q1 {...}': {return: Q1Query; variables: Q1QueryVariables};
+}
+
+/**
+ * Maps all the mutations found in the project to variables and return types.
+ */
+export interface StorefrontMutations {
+  // Example of how a generated mutation type looks like:
+  // '#graphql mutation m1 {...}': {return: M1Mutation; variables: M1MutationVariables};
+}
+
+// Default type for `variables` in storefront client
+type GenericVariables = ExecutionArgs['variableValues'];
+
+// Use this type to make parameters optional in storefront client
+// when no variables need to be passed.
+type EmptyVariables = {[key: string]: never};
+
+// These are the variables that are automatically added to the storefront API.
+// We use this type to make parameters optional in storefront client
+// when these are the only variables that can be passed.
+type AutoAddedVariableNames = 'country' | 'language';
+
+type IsOptionalVariables<OperationTypeValue extends {variables: any}> = Omit<
+  OperationTypeValue['variables'],
+  AutoAddedVariableNames
+> extends EmptyVariables
+  ? true // No need to pass variables
+  : GenericVariables extends OperationTypeValue['variables']
+  ? true // We don't know what variables are needed
+  : false; // Variables are known and required
+
+type StorefrontCommonOptions<Variables extends GenericVariables> = {
+  headers?: HeadersInit;
+  storefrontApiVersion?: string;
+} & (IsOptionalVariables<{variables: Variables}> extends true
+  ? {variables?: Variables}
+  : {variables: Variables});
+
+type StorefrontQuerySecondParam<
+  RawGqlString extends keyof StorefrontQueries | string = string,
+> = (RawGqlString extends keyof StorefrontQueries
+  ? StorefrontCommonOptions<StorefrontQueries[RawGqlString]['variables']>
+  : StorefrontCommonOptions<GenericVariables>) & {cache?: CachingStrategy};
+
+type StorefrontMutateSecondParam<
+  RawGqlString extends keyof StorefrontMutations | string = string,
+> = RawGqlString extends keyof StorefrontMutations
+  ? StorefrontCommonOptions<StorefrontMutations[RawGqlString]['variables']>
+  : StorefrontCommonOptions<GenericVariables>;
+
+/**
+ * Interface to interact with the Storefront API.
  */
 export type Storefront<TI18n extends I18nBase = I18nBase> = {
-  /** The function to run a query on storefront api. */
-  query: <T>(
-    query: string,
-    payload?: StorefrontCommonOptions & {
-      cache?: CachingStrategy;
-    },
-  ) => Promise<T>;
-  /** The function to run a mutation on storefront api. */
-  mutate: <T>(
-    mutation: string,
-    payload?: StorefrontCommonOptions,
-  ) => Promise<T>;
+  /** The function to run a query on Storefront API. */
+  query: <OverrideReturnType = any, RawGqlString extends string = string>(
+    query: RawGqlString,
+    ...options: RawGqlString extends keyof StorefrontQueries // Do we have any generated query types?
+      ? IsOptionalVariables<StorefrontQueries[RawGqlString]> extends true
+        ? [StorefrontQuerySecondParam<RawGqlString>?] // Using codegen, query has no variables
+        : [StorefrontQuerySecondParam<RawGqlString>] // Using codegen, query needs variables
+      : [StorefrontQuerySecondParam?] // No codegen, variables always optional
+  ) => Promise<
+    RawGqlString extends keyof StorefrontQueries // Do we have any generated query types?
+      ? StorefrontQueries[RawGqlString]['return'] // Using codegen, return type is known
+      : OverrideReturnType // No codegen, let user specify return type
+  >;
+  /** The function to run a mutation on Storefront API. */
+  mutate: <OverrideReturnType = any, RawGqlString extends string = string>(
+    mutation: RawGqlString,
+    ...options: RawGqlString extends keyof StorefrontMutations // Do we have any generated mutation types?
+      ? IsOptionalVariables<StorefrontMutations[RawGqlString]> extends true
+        ? [StorefrontMutateSecondParam<RawGqlString>?] // Using codegen, mutation has no variables
+        : [StorefrontMutateSecondParam<RawGqlString>] // Using codegen, mutation needs variables
+      : [StorefrontMutateSecondParam?] // No codegen, variables always optional
+  ) => Promise<
+    RawGqlString extends keyof StorefrontMutations // Do we have any generated mutation types?
+      ? StorefrontMutations[RawGqlString]['return'] // Using codegen, return type is known
+      : OverrideReturnType // No codegen, let user specify return type
+  >;
   /** The cache instance passed in from the `createStorefrontClient` argument. */
   cache?: Cache;
-  /** Re-export of [`CacheNone`](/docs/api/hydrogen/2023-04/utilities/cachenone). */
+  /** Re-export of [`CacheNone`](/docs/api/hydrogen/utilities/cachenone). */
   CacheNone: typeof CacheNone;
-  /** Re-export of [`CacheLong`](/docs/api/hydrogen/2023-04/utilities/cachelong). */
+  /** Re-export of [`CacheLong`](/docs/api/hydrogen/utilities/cachelong). */
   CacheLong: typeof CacheLong;
-  /** Re-export of [`CacheShort`](/docs/api/hydrogen/2023-04/utilities/cacheshort). */
+  /** Re-export of [`CacheShort`](/docs/api/hydrogen/utilities/cacheshort). */
   CacheShort: typeof CacheShort;
-  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/2023-04/utilities/cachecustom). */
+  /** Re-export of [`CacheCustom`](/docs/api/hydrogen/utilities/cachecustom). */
   CacheCustom: typeof CacheCustom;
-  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/2023-04/utilities/generatecachecontrolheader). */
+  /** Re-export of [`generateCacheControlHeader`](/docs/api/hydrogen/utilities/generatecachecontrolheader). */
   generateCacheControlHeader: typeof generateCacheControlHeader;
-  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */
+  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint. See [`getPublicTokenHeaders` in Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=%27graphql%27.-,getPublicTokenHeaders,-(props%3F%3A) for more details. */
   getPublicTokenHeaders: ReturnType<
     typeof createStorefrontUtilities
   >['getPublicTokenHeaders'];
-  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/
+  /** Returns an object that contains headers that are needed for each query to Storefront API GraphQL endpoint for API calls made from a server. See [`getPrivateTokenHeaders` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=storefrontApiVersion-,getPrivateTokenHeaders,-(props%3F%3A) for more details.*/
   getPrivateTokenHeaders: ReturnType<
     typeof createStorefrontUtilities
   >['getPrivateTokenHeaders'];
-  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */
+  /** Creates the fully-qualified URL to your myshopify.com domain. See [`getShopifyDomain` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=StorefrontClientReturn-,getShopifyDomain,-(props%3F%3A) for more details. */
   getShopifyDomain: ReturnType<
     typeof createStorefrontUtilities
   >['getShopifyDomain'];
-  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/
+  /** Creates the fully-qualified URL to your store's GraphQL endpoint. See [`getStorefrontApiUrl` in  Hydrogen React](/docs/api/hydrogen-react/utilities/createstorefrontclient#:~:text=storeDomain-,getStorefrontApiUrl,-(props%3F%3A) for more details.*/
   getApiUrl: ReturnType<
     typeof createStorefrontUtilities
   >['getStorefrontApiUrl'];
@@ -122,22 +192,12 @@ type StorefrontHeaders = {
   cookie: string | null;
 };
 
-type StorefrontCommonOptions = {
-  variables?: ExecutionArgs['variableValues'] & {
-    country?: CountryCode;
-    language?: LanguageCode;
-  };
-  headers?: HeadersInit;
-  storefrontApiVersion?: string;
-};
-
-export type StorefrontQueryOptions = StorefrontCommonOptions & {
+type StorefrontQueryOptions = StorefrontQuerySecondParam & {
   query: string;
   mutation?: never;
-  cache?: CachingStrategy;
 };
 
-export type StorefrontMutationOptions = StorefrontCommonOptions & {
+type StorefrontMutationOptions = StorefrontMutateSecondParam & {
   query?: never;
   mutation: string;
   cache?: never;
@@ -306,16 +366,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * }
        * ```
        */
-      query: <T>(
-        query: string,
-        payload?: StorefrontCommonOptions & {cache?: CachingStrategy},
-      ) => {
+      query: <Storefront['query']>((query: string, payload) => {
         query = minifyQuery(query);
         if (isMutationRE.test(query))
           throw new Error('storefront.query cannot execute mutations');
 
-        return fetchStorefrontApi<T>({...payload, query});
-      },
+        return fetchStorefrontApi({...payload, query});
+      }),
       /**
        * Sends a GraphQL mutation to the Storefront API.
        *
@@ -329,13 +386,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        * }
        * ```
        */
-      mutate: <T>(mutation: string, payload?: StorefrontCommonOptions) => {
+      mutate: <Storefront['mutate']>((mutation: string, payload) => {
         mutation = minifyQuery(mutation);
         if (isQueryRE.test(mutation))
           throw new Error('storefront.mutate cannot execute queries');
 
-        return fetchStorefrontApi<T>({...payload, mutation});
-      },
+        return fetchStorefrontApi({...payload, mutation});
+      }),
       cache,
       CacheNone,
       CacheLong,

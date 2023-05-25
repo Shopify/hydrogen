@@ -10,14 +10,9 @@ import {
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
-import {
-  PullVariablesQuery,
-  PullVariablesSchema,
-} from '../../../lib/graphql/admin/pull-variables.js';
 import {getAdminSession} from '../../../lib/admin-session.js';
-import {adminRequest} from '../../../lib/graphql.js';
+import {pullRemoteEnvironmentVariables} from '../../../lib/pull-environment-variables.js';
 import {getConfig} from '../../../lib/shopify-config.js';
-import {linkStorefront} from '../link.js';
 
 import {pullVariables} from './pull.js';
 
@@ -33,15 +28,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
 vi.mock('../link.js');
 vi.mock('../../../lib/admin-session.js');
 vi.mock('../../../lib/shopify-config.js');
-vi.mock('../../../lib/graphql.js', async () => {
-  const original = await vi.importActual<
-    typeof import('../../../lib/graphql.js')
-  >('../../../lib/graphql.js');
-  return {
-    ...original,
-    adminRequest: vi.fn(),
-  };
-});
+vi.mock('../../../lib/pull-environment-variables.js');
 vi.mock('../../../lib/shop.js', () => ({
   getHydrogenShop: () => 'my-shop',
 }));
@@ -60,25 +47,20 @@ describe('pullVariables', () => {
         title: 'Existing Link',
       },
     });
-    vi.mocked(adminRequest<PullVariablesSchema>).mockResolvedValue({
-      hydrogenStorefront: {
-        id: 'gid://shopify/HydrogenStorefront/1',
-        environmentVariables: [
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-            key: 'PUBLIC_API_TOKEN',
-            value: 'abc123',
-            isSecret: false,
-          },
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-            key: 'PRIVATE_API_TOKEN',
-            value: '',
-            isSecret: true,
-          },
-        ],
+    vi.mocked(pullRemoteEnvironmentVariables).mockResolvedValue([
+      {
+        id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+        key: 'PUBLIC_API_TOKEN',
+        value: 'abc123',
+        isSecret: false,
       },
-    });
+      {
+        id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/2',
+        key: 'PRIVATE_API_TOKEN',
+        value: '',
+        isSecret: true,
+      },
+    ]);
   });
 
   afterEach(() => {
@@ -86,17 +68,14 @@ describe('pullVariables', () => {
     mockAndCaptureOutput().clear();
   });
 
-  it('makes a GraphQL call to fetch environment variables', async () => {
+  it('calls pullRemoteEnvironmentVariables', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      await pullVariables({path: tmpDir});
+      await pullVariables({path: tmpDir, envBranch: 'staging'});
 
-      expect(adminRequest).toHaveBeenCalledWith(
-        PullVariablesQuery,
-        ADMIN_SESSION,
-        {
-          id: 'gid://shopify/HydrogenStorefront/2',
-        },
-      );
+      expect(pullRemoteEnvironmentVariables).toHaveBeenCalledWith({
+        root: tmpDir,
+        envBranch: 'staging',
+      });
     });
   });
 
@@ -116,21 +95,7 @@ describe('pullVariables', () => {
     });
   });
 
-  it('warns if there are any variables marked as secret', async () => {
-    vi.mocked(adminRequest<PullVariablesSchema>).mockResolvedValue({
-      hydrogenStorefront: {
-        id: 'gid://shopify/HydrogenStorefront/1',
-        environmentVariables: [
-          {
-            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-            key: 'PRIVATE_API_TOKEN',
-            value: '',
-            isSecret: true,
-          },
-        ],
-      },
-    });
-
+  it('warns about secret environment variables', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const outputMock = mockAndCaptureOutput();
 
@@ -173,86 +138,6 @@ describe('pullVariables', () => {
 
           expect(renderConfirmationPrompt).not.toHaveBeenCalled();
         });
-      });
-    });
-  });
-
-  describe('when there are no environment variables to update', () => {
-    beforeEach(() => {
-      vi.mocked(adminRequest<PullVariablesSchema>).mockResolvedValue({
-        hydrogenStorefront: {
-          id: 'gid://shopify/HydrogenStorefront/1',
-          environmentVariables: [],
-        },
-      });
-    });
-
-    it('renders a message', async () => {
-      await inTemporaryDirectory(async (tmpDir) => {
-        const outputMock = mockAndCaptureOutput();
-
-        await pullVariables({path: tmpDir});
-
-        expect(outputMock.info()).toMatch(
-          /No Preview environment variables found\./,
-        );
-      });
-    });
-  });
-
-  describe('when there is no linked storefront', () => {
-    beforeEach(() => {
-      vi.mocked(getConfig).mockResolvedValue({
-        storefront: undefined,
-      });
-    });
-
-    it('renders an error message', async () => {
-      await inTemporaryDirectory(async (tmpDir) => {
-        const outputMock = mockAndCaptureOutput();
-
-        await pullVariables({path: tmpDir});
-
-        expect(outputMock.error()).toMatch(
-          /No linked Hydrogen storefront on my-shop/,
-        );
-      });
-    });
-
-    it('prompts the user to create a link', async () => {
-      vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
-
-      await inTemporaryDirectory(async (tmpDir) => {
-        await pullVariables({path: tmpDir});
-
-        expect(renderConfirmationPrompt).toHaveBeenCalledWith({
-          message: expect.stringMatching(/Run .*npx shopify hydrogen link.*\?/),
-        });
-
-        expect(linkStorefront).toHaveBeenCalledWith({
-          path: tmpDir,
-          silent: true,
-        });
-      });
-    });
-  });
-
-  describe('when there is no matching storefront in the shop', () => {
-    beforeEach(() => {
-      vi.mocked(adminRequest<PullVariablesSchema>).mockResolvedValue({
-        hydrogenStorefront: null,
-      });
-    });
-
-    it('renders an error message', async () => {
-      await inTemporaryDirectory(async (tmpDir) => {
-        const outputMock = mockAndCaptureOutput();
-
-        await pullVariables({path: tmpDir});
-
-        expect(outputMock.error()).toMatch(
-          /Couldn’t find Hydrogen storefront\./,
-        );
       });
     });
   });

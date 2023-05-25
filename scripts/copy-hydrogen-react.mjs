@@ -9,6 +9,8 @@ import {fileURLToPath} from 'url';
   const schemaFile = 'storefront.schema.json';
   const typeFile = 'storefront-api-types.d.ts';
 
+  await fs.mkdir(path.resolve(root, hydrogenPkgDist), {recursive: true});
+
   await fs.copyFile(
     path.resolve(root, hydrogenReact, schemaFile),
     path.resolve(root, hydrogenPkgDist, schemaFile),
