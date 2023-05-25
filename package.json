@@ -59,7 +59,7 @@
       "prettier --write"
     ],
     "*.{ts,tsx}": [
-      "npm run lint",
+      "npm run lint --",
       "prettier --parser=typescript --write"
     ],
     "*.html": [
