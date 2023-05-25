@@ -1,8 +1,9 @@
 import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import {PageHeader, Section, Button} from '~/components';
 import invariant from 'tiny-invariant';
-import {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
+import type {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
+
+import {PageHeader, Section, Button} from '~/components';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
 
@@ -82,7 +83,7 @@ export default function Policies() {
 }
 
 const POLICY_CONTENT_QUERY = `#graphql
-  fragment Policy on ShopPolicy {
+  fragment PolicyHandle on ShopPolicy {
     body
     handle
     id
@@ -90,7 +91,7 @@ const POLICY_CONTENT_QUERY = `#graphql
     url
   }
 
-  query PoliciesQuery(
+  query PoliciesHandle(
     $language: LanguageCode
     $privacyPolicy: Boolean!
     $shippingPolicy: Boolean!
@@ -99,16 +100,16 @@ const POLICY_CONTENT_QUERY = `#graphql
   ) @inContext(language: $language) {
     shop {
       privacyPolicy @include(if: $privacyPolicy) {
-        ...Policy
+        ...PolicyHandle
       }
       shippingPolicy @include(if: $shippingPolicy) {
-        ...Policy
+        ...PolicyHandle
       }
       termsOfService @include(if: $termsOfService) {
-        ...Policy
+        ...PolicyHandle
       }
       refundPolicy @include(if: $refundPolicy) {
-        ...Policy
+        ...PolicyHandle
       }
     }
   }

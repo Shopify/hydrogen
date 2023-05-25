@@ -1,11 +1,12 @@
 import clsx from 'clsx';
 import {useEffect, useId, useMemo} from 'react';
 import {useFetcher} from '@remix-run/react';
-import {Heading, ProductCard, Skeleton, Text} from '~/components';
 import type {
   Product,
   ProductSortKeys,
 } from '@shopify/hydrogen/storefront-api-types';
+
+import {Heading, ProductCard, Skeleton, Text} from '~/components';
 import {usePrefixPathWithLocale} from '~/lib/utils';
 
 interface FeaturedProductsProps {

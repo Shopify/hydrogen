@@ -1,5 +1,32 @@
 # @shopify/remix-oxygen
 
+## 1.0.7
+
+### Patch Changes
+
+- Fix release ([#926](https://github.com/Shopify/hydrogen/pull/926)) by [@blittle](https://github.com/blittle)
+
+## 1.0.6
+
+### Patch Changes
+
+- Add a default `Powered-By: Shopify-Hydrogen` header. It can be disabled by passing `poweredByHeader: false` in the configuration object of `createRequestHandler`: ([#872](https://github.com/Shopify/hydrogen/pull/872)) by [@blittle](https://github.com/blittle)
+
+  ```ts
+  import {createRequestHandler} from '@shopify/remix-oxygen';
+
+  export default {
+    async fetch(request) {
+      // ...
+      const handleRequest = createRequestHandler({
+        // ... other properties included
+        poweredByHeader: false,
+      });
+      // ...
+    },
+  };
+  ```
+
 ## 1.0.5
 
 ### Patch Changes

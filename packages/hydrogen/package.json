@@ -5,14 +5,14 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2023.4.0",
-  "license": "SEE LICENSE IN LICENSE.md",
+  "version": "2023.4.3",
+  "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
   "types": "dist/production/index.d.ts",
   "sideEffects": false,
   "scripts": {
-    "build": "tsup --clean --config ../../tsup.config.ts && npm run copy-hydrogen-react",
+    "build": "npm run copy-hydrogen-react && tsup --clean --config ../../tsup.config.ts",
     "copy-hydrogen-react": "node ../../scripts/copy-hydrogen-react.mjs",
     "dev": "tsup --config ../../tsup.config.ts --watch ./src --watch ../../node_modules/@shopify/hydrogen-react/dist/browser-prod/index.mjs",
     "typecheck": "tsc --noEmit",
@@ -54,7 +54,7 @@
     "dist"
   ],
   "dependencies": {
-    "@shopify/hydrogen-react": "2023.4.0",
+    "@shopify/hydrogen-react": "2023.4.3",
     "react": "^18.2.0"
   },
   "peerDependencies": {

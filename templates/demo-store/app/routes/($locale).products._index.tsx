@@ -6,14 +6,11 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {
-  PageHeader,
-  Section,
-  ProductCard,
-  Grid,
-  Pagination,
-  getPaginationVariables,
-  Button,
-} from '~/components';
+  Pagination__unstable as Pagination,
+  getPaginationVariables__unstable as getPaginationVariables,
+} from '@shopify/hydrogen';
+
+import {PageHeader, Section, ProductCard, Grid, Button} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
@@ -24,7 +21,7 @@ const PAGE_BY = 8;
 export const headers = routeHeaders;
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
-  const variables = getPaginationVariables(request, PAGE_BY);
+  const variables = getPaginationVariables(request, {pageBy: PAGE_BY});
 
   const data = await storefront.query<{
     products: ProductConnection;
@@ -79,17 +76,7 @@ export default function AllProducts() {
       <PageHeader heading="All Products" variant="allCollections" />
       <Section>
         <Pagination connection={products}>
-          {({
-            endCursor,
-            hasNextPage,
-            hasPreviousPage,
-            nextPageUrl,
-            nodes,
-            prevPageUrl,
-            startCursor,
-            nextLinkRef,
-            isLoading,
-          }) => {
+          {({nodes, isLoading, NextLink, PreviousLink}) => {
             const itemsMarkup = nodes.map((product, i) => (
               <ProductCard
                 key={product.id}
@@ -100,50 +87,17 @@ export default function AllProducts() {
 
             return (
               <>
-                {hasPreviousPage && (
-                  <div className="flex items-center justify-center mt-6">
-                    <Button
-                      to={prevPageUrl}
-                      variant="secondary"
-                      prefetch="intent"
-                      width="full"
-                      disabled={!isLoading}
-                      state={{
-                        pageInfo: {
-                          endCursor,
-                          hasNextPage,
-                          startCursor,
-                        },
-                        nodes,
-                      }}
-                    >
-                      {isLoading ? 'Loading...' : 'Previous'}
-                    </Button>
-                  </div>
-                )}
+                <div className="flex items-center justify-center mt-6">
+                  <PreviousLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
+                    {isLoading ? 'Loading...' : 'Previous'}
+                  </PreviousLink>
+                </div>
                 <Grid data-test="product-grid">{itemsMarkup}</Grid>
-                {hasNextPage && (
-                  <div className="flex items-center justify-center mt-6">
-                    <Button
-                      ref={nextLinkRef}
-                      to={nextPageUrl}
-                      variant="secondary"
-                      prefetch="intent"
-                      width="full"
-                      disabled={!isLoading}
-                      state={{
-                        pageInfo: {
-                          endCursor,
-                          hasPreviousPage,
-                          startCursor,
-                        },
-                        nodes,
-                      }}
-                    >
-                      {isLoading ? 'Loading...' : 'Next'}
-                    </Button>
-                  </div>
-                )}
+                <div className="flex items-center justify-center mt-6">
+                  <NextLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
+                    {isLoading ? 'Loading...' : 'Next'}
+                  </NextLink>
+                </div>
               </>
             );
           }}

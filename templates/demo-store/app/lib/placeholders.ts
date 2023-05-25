@@ -1,4 +1,4 @@
-import {Product} from '@shopify/hydrogen/storefront-api-types';
+import type {Product} from '@shopify/hydrogen/storefront-api-types';
 
 // Demo store placeholders
 const PLACEHOLDERS = {

@@ -1,5 +1,32 @@
 # @shopify/hydrogen-react
 
+## 2023.4.3
+
+### Patch Changes
+
+- Fix release ([#926](https://github.com/Shopify/hydrogen/pull/926)) by [@blittle](https://github.com/blittle)
+
+## 2023.4.2
+
+### Patch Changes
+
+- Fix issue where the `<BuyNowButton/>` would incorrectly redirect to checkout when React re-renders in certain situations. ([#827](https://github.com/Shopify/hydrogen/pull/827)) by [@tiwac100](https://github.com/tiwac100)
+
+## 2023.4.1
+
+### Patch Changes
+
+- Adds `parseGid()` which is a helper function that takes in a [Shopify GID](https://shopify.dev/docs/api/usage/gids) and returns the `resource` and `id` from it. For example: ([#845](https://github.com/Shopify/hydrogen/pull/845)) by [@frehner](https://github.com/frehner)
+
+  ```js
+  import {parseGid} from '@shopify/hydrogen-react';
+
+  const {id, resource} = parseGid('gid://shopify/Order/123');
+
+  console.log(id); // 123
+  console.log(resource); // Order
+  ```
+
 ## 2023.4.0
 
 ### Major Changes

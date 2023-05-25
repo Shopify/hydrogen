@@ -2,6 +2,7 @@ import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import type {Page as PageType} from '@shopify/hydrogen/storefront-api-types';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
+
 import {PageHeader} from '~/components';
 import {CACHE_LONG, routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';

@@ -14,8 +14,15 @@ export {graphiqlLoader} from './routing/graphiql';
 export {Seo} from './seo/seo';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
+export {
+  Pagination as Pagination__unstable,
+  getPaginationVariables as getPaginationVariables__unstable,
+} from './pagination/Pagination';
 
-export {CartForm, type CartActionInput} from './cart/CartForm';
+export {
+  CartForm as CartForm__unstable,
+  type CartActionInput,
+} from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
 export {cartGetDefault} from './cart/queries/cartGetDefault';
 export {cartLinesAddDefault} from './cart/queries/cartLinesAddDefault';
@@ -31,7 +38,7 @@ export {cartMetafieldDeleteDefault} from './cart/queries/cartMetafieldDeleteDefa
 export {
   type CartHandlerReturnCustom,
   type CartHandlerReturnBase,
-  createCartHandler_unstable,
+  createCartHandler as createCartHandler_unstable,
   cartGetIdDefault,
   cartSetIdDefault,
 } from './cart/cart-handler';

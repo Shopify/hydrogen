@@ -6054,14 +6054,14 @@
             "filePath": "/flatten-connection.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ConnectionEdges",
-            "value": "{\n  edges: {node: Array<unknown>};\n}",
+            "value": "{\n  edges: Array<{node: unknown}>;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "edges",
-                "value": "{ node: unknown[]; }",
+                "value": "{ node: unknown; }[]",
                 "description": ""
               }
             ]
@@ -6495,7 +6495,7 @@
         "url": "/api/hydrogen-react/utilities/storefront-schema"
       }
     ],
-    "description": "\n    If you are using TypeScript, Hydrogen React ships with pre-generated TypeScript types that match the Storefront API's GraphQL schema. These types can be used when you need to manually create an object that matches a Storefront API object's shape.\n\nThese types also work really well with the new [`satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator) introduced in TypeScript 4.9, though you don't need to use `satisfies` to use these types.\n  ",
+    "description": "\n    If you are using TypeScript, pre-generated TypeScript types are available that match the Storefront API's GraphQL schema. These types can be used when you need to manually create an object that matches a Storefront API object's shape.\n\nThese types also work really well with the new [`satisfies` operator](https://www.typescriptlang.org/docs/handbook/release-notes/typescript-4-9.html#the-satisfies-operator) introduced in TypeScript 4.9, though you don't need to use `satisfies` to use these types.\n  ",
     "type": "utility",
     "defaultExample": {
       "description": "I am the default example",
