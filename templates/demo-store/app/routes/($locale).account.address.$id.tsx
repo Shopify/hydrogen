@@ -16,10 +16,10 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 
-import type {AccountOutletContext} from './($locale).account.edit';
-
 import {Button, Text} from '~/components';
 import {assertApiErrors, getInputStyleClasses} from '~/lib/utils';
+
+import type {AccountOutletContext} from './($locale).account.edit';
 
 interface ActionData {
   formError?: string;

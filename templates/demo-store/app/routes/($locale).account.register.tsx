@@ -8,10 +8,10 @@ import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 import {useState} from 'react';
 import type {CustomerCreatePayload} from '@shopify/hydrogen/storefront-api-types';
 
-import {doLogin} from './($locale).account.login';
-
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
+
+import {doLogin} from './($locale).account.login';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');

@@ -4,11 +4,11 @@ import {Image} from '@shopify/hydrogen';
 import type {Blog} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 
-import styles from '../styles/custom-font.css';
-
 import {PageHeader, Section} from '~/components';
 import {seoPayload} from '~/lib/seo.server';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
+
+import styles from '../styles/custom-font.css';
 
 const BLOG_HANDLE = 'journal';
 

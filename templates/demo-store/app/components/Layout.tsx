@@ -3,8 +3,6 @@ import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
 
-import type {LayoutData} from '../root';
-
 import {
   Drawer,
   useDrawer,
@@ -30,6 +28,8 @@ import {
 } from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
+
+import type {LayoutData} from '../root';
 
 export function Layout({
   children,

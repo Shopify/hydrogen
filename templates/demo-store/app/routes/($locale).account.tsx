@@ -22,9 +22,6 @@ import {
 } from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
 
-import {getFeaturedData} from './($locale).featured-products';
-import {doLogout} from './($locale).account.logout';
-
 import {
   Button,
   OrderCard,
@@ -38,6 +35,9 @@ import {
 import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {usePrefixPathWithLocale} from '~/lib/utils';
 import {CACHE_NONE, routeHeaders} from '~/data/cache';
+
+import {getFeaturedData} from './($locale).featured-products';
+import {doLogout} from './($locale).account.logout';
 
 // Combining json + Response + defer in a loader breaks the
 // types returned by useLoaderData. This is a temporary fix.

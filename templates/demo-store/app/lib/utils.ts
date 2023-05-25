@@ -7,9 +7,9 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import typographicBase from 'typographic-base';
 
-import type {I18nLocale} from './type';
-
 import {countries} from '~/data/countries';
+
+import type {I18nLocale} from './type';
 
 export interface EnhancedMenuItem extends MenuItem {
   to: string;
