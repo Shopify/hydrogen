@@ -2,7 +2,7 @@ import {type ActionArgs, json} from '@remix-run/server-runtime';
 import {
   type CartQueryData,
   type CartHandlerReturnBase,
-  CartForm,
+  CartForm__unstable as CartForm,
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 

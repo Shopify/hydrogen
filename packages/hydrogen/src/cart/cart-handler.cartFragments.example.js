@@ -1,4 +1,4 @@
-import {createCartHandler_unstable as createCartHandler} from '@shopify/hydrogen';
+import {createCartHandler__unstable as createCartHandler} from '@shopify/hydrogen';
 
 // Override cart fragments
 const cart = createCartHandler({

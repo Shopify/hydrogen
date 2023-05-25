@@ -38,7 +38,7 @@ export {cartMetafieldDeleteDefault} from './cart/queries/cartMetafieldDeleteDefa
 export {
   type CartHandlerReturnCustom,
   type CartHandlerReturnBase,
-  createCartHandler as createCartHandler_unstable,
+  createCartHandler as createCartHandler__unstable,
   cartGetIdDefault,
   cartSetIdDefault,
 } from './cart/cart-handler';

@@ -5,8 +5,10 @@ const data: ReferenceEntityTemplateSchema = {
   category: 'components',
   isVisualComponent: false,
   related: [],
-  description:
-    'Creates a form for managing cart operations. Use `CartActionInput` to accept form inputs of known type.',
+  description: `> Caution:
+> This component is in an unstable pre-release state and may have breaking changes in a future release.
+
+Creates a form for managing cart operations. Use \`CartActionInput\` to accept form inputs of known type.`,
   type: 'component',
   defaultExample: {
     description: 'This is the default example',

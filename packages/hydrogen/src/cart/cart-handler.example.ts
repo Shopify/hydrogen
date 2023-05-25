@@ -1,6 +1,6 @@
 import {
   createStorefrontClient,
-  createCartHandler_unstable as createCartHandler,
+  createCartHandler__unstable as createCartHandler,
 } from '@shopify/hydrogen';
 import * as remixBuild from '@remix-run/dev/server-build';
 import {

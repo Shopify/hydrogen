@@ -5,7 +5,7 @@ import {
   getStorefrontHeaders,
 } from '@shopify/remix-oxygen';
 import {
-  createCartHandler_unstable as createCartHandler,
+  createCartHandler__unstable as createCartHandler,
   createStorefrontClient,
   storefrontRedirect,
 } from '@shopify/hydrogen';

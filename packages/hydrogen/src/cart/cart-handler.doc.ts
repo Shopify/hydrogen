@@ -1,7 +1,7 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'createCartHandler_unstable',
+  name: 'createCartHandler',
   category: 'utilities',
   isVisualComponent: false,
   related: [],
@@ -30,7 +30,7 @@ Creates an API that can be used to interact with the cart.`,
   },
   definitions: [
     {
-      title: 'createCartHandler_unstable(options)',
+      title: 'createCartHandler(options)',
       type: 'CartHandlerOptionsForDocs',
       description: '',
     },
@@ -38,12 +38,12 @@ Creates an API that can be used to interact with the cart.`,
       title: 'Returns',
       type: 'CartHandlerReturnBaseForDocs',
       description:
-        'The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2023-04/utilities/createcarthandler_unstable#example-custom-methods) or overwritten methods will also be available in the returned cart instance.',
+        'The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.',
     },
   ],
   examples: {
     description:
-      'Examples of various ways to use the `createCartHandler_unstable` utility.',
+      'Examples of various ways to use the `createCartHandler` utility.',
     exampleGroups: [
       {
         title: 'Cart fragments',

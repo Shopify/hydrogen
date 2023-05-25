@@ -1,5 +1,5 @@
 import {json} from '@remix-run/server-runtime';
-import {CartForm} from '@shopify/hydrogen';
+import {CartForm__unstable as CartForm} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
 export default function Cart() {
