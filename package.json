@@ -59,7 +59,7 @@
       "prettier --write"
     ],
     "*.{ts,tsx}": [
-      "eslint",
+      "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages",
       "prettier --parser=typescript --write"
     ],
     "*.html": [
