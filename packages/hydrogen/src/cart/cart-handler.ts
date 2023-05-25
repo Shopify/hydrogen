@@ -68,17 +68,13 @@ export type CartHandlerReturn<TCustomMethods extends CustomMethodsBase> =
   | CartHandlerReturnCustom<TCustomMethods>
   | CartHandlerReturnBase;
 
-export function createCartHandler_unstable(
+export function createCartHandler(
   options: CartHandlerOptions,
 ): CartHandlerReturnBase;
-export function createCartHandler_unstable<
-  TCustomMethods extends CustomMethodsBase,
->(
+export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   options: CartHandlerOptionsWithCustom<TCustomMethods>,
 ): CartHandlerReturnCustom<TCustomMethods>;
-export function createCartHandler_unstable<
-  TCustomMethods extends CustomMethodsBase,
->(
+export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   options: CartHandlerOptions | CartHandlerOptionsWithCustom<TCustomMethods>,
 ): CartHandlerReturn<TCustomMethods> {
   const {requestHeaders, storefront, cartQueryFragment, cartMutateFragment} =
