@@ -1,6 +1,7 @@
 import {flattenConnection} from '@shopify/hydrogen';
 import type {LoaderArgs} from '@shopify/remix-oxygen';
 import invariant from 'tiny-invariant';
+
 import type {SitemapsQuery} from 'storefrontapi.generated';
 
 const MAX_URLS = 250; // the google limit is 50K, however, SF API only allow querying for 250 resources each time

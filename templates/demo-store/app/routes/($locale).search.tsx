@@ -21,6 +21,7 @@ import {PAGINATION_SIZE} from '~/lib/const';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
+
 import {
   getFeaturedData,
   type FeaturedData,

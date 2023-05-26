@@ -2,15 +2,15 @@ import {useLocation, useMatches} from '@remix-run/react';
 import {parse as parseCookie} from 'worktop/cookie';
 import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 import typographicBase from 'typographic-base';
+
 import type {
   ChildMenuItemFragment,
   MenuFragment,
   ParentMenuItemFragment,
 } from 'storefrontapi.generated';
+import {countries} from '~/data/countries';
 
 import type {I18nLocale} from './type';
-
-import {countries} from '~/data/countries';
 
 type EnhancedMenuItemProps = {
   to: string;

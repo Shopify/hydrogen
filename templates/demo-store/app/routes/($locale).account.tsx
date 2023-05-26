@@ -19,12 +19,12 @@ import {
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
+
 import type {
   CustomerDetailsFragment,
   FeaturedCollectionDetailsFragment,
   ProductCardFragment,
 } from 'storefrontapi.generated';
-
 import {
   Button,
   OrderCard,

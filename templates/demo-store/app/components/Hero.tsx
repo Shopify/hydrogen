@@ -5,8 +5,8 @@ import type {
   Media,
   Video as MediaVideo,
 } from '@shopify/hydrogen/storefront-api-types';
-import type {CollectionContentFragment} from 'storefrontapi.generated';
 
+import type {CollectionContentFragment} from 'storefrontapi.generated';
 import {Heading, Text, Link} from '~/components';
 
 type HeroProps = CollectionContentFragment & {

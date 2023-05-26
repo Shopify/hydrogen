@@ -5,7 +5,7 @@ import invariant from 'tiny-invariant';
 import {PageHeader, Section, Heading, Link} from '~/components';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
-import {NonNullableFields} from '~/lib/type';
+import type {NonNullableFields} from '~/lib/type';
 
 export const headers = routeHeaders;
 

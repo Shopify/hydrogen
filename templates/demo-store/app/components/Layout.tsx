@@ -2,8 +2,8 @@ import {useParams, Form, Await, useMatches} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
-import type {LayoutQuery} from 'storefrontapi.generated';
 
+import type {LayoutQuery} from 'storefrontapi.generated';
 import {
   Drawer,
   useDrawer,
