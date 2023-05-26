@@ -1,34 +1,35 @@
-import type {Collection, Product} from '@shopify/hydrogen/storefront-api-types';
+import type {PageInfo} from '@shopify/hydrogen/storefront-api-types';
 import {useFetcher} from '@remix-run/react';
 import {useEffect, useState} from 'react';
 
 import {getImageLoadingPriority} from '~/lib/const';
 import {Button, Grid, ProductCard, Link} from '~/components';
+import type {ProductCardFragment} from 'storefrontapi.generated';
 
 export function ProductGrid({
   url,
-  collection,
+  products: productProps,
   ...props
 }: {
   url: string;
-  collection: Collection;
+  products: {
+    nodes: ProductCardFragment[];
+    pageInfo: Pick<PageInfo, 'hasNextPage' | 'endCursor'>;
+  };
 }) {
   const [initialProducts, setInitialProducts] = useState(
-    collection?.products?.nodes || [],
+    productProps?.nodes || [],
   );
-  const [nextPage, setNextPage] = useState(
-    collection?.products?.pageInfo?.hasNextPage,
-  );
-  const [endCursor, setEndCursor] = useState(
-    collection?.products?.pageInfo?.endCursor,
-  );
+  const [nextPage, setNextPage] = useState(productProps?.pageInfo?.hasNextPage);
+  const [endCursor, setEndCursor] = useState(productProps?.pageInfo?.endCursor);
   const [products, setProducts] = useState(initialProducts);
 
   // props have changes, reset component state
-  const productProps = collection?.products?.nodes || [];
-  if (initialProducts !== productProps) {
-    setInitialProducts(productProps);
-    setProducts(productProps);
+  // const productProps = collection?.products?.nodes || [];
+  const originalProducts = productProps?.nodes || [];
+  if (initialProducts !== originalProducts) {
+    setInitialProducts(originalProducts);
+    setProducts(originalProducts);
   }
 
   const fetcher = useFetcher();
@@ -48,7 +49,7 @@ export function ProductGrid({
 
     if (!pageProducts) return;
 
-    setProducts((prev: Product[]) => [...prev, ...pageProducts.nodes]);
+    setProducts((prev) => [...prev, ...pageProducts.nodes]);
     setNextPage(products.pageInfo.hasNextPage);
     setEndCursor(products.pageInfo.endCursor);
   }, [fetcher.data]);

@@ -1,7 +1,6 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import type {
-  Collection as CollectionType,
   Filter,
   ProductCollectionSortKeys,
 } from '@shopify/hydrogen/storefront-api-types';
@@ -109,16 +108,13 @@ export async function loader({params, request, context}: LoaderArgs) {
     throw new Response('collection', {status: 404});
   }
 
-  // @ts-ignore TODO: Fix flattenConnection types
-  const collectionNodes = flattenConnection(collections) as CollectionType[];
-
   const seo = seoPayload.collection({collection, url: request.url});
 
   return json(
     {
       collection,
       appliedFilters,
-      collections: collectionNodes,
+      collections: flattenConnection(collections),
       analytics: {
         pageType: AnalyticsPageType.collection,
         collectionHandle,
@@ -155,11 +151,11 @@ export default function Collection() {
         <SortFilter
           filters={collection.products.filters as Filter[]}
           appliedFilters={appliedFilters}
-          collections={collections as CollectionType[]}
+          collections={collections}
         >
           <ProductGrid
             key={collection.id}
-            collection={collection as CollectionType}
+            products={collection.products}
             url={`/collections/${collection.handle}`}
             data-test="product-grid"
           />
