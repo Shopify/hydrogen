@@ -1018,6 +1018,179 @@
     }
   },
   {
+    "name": "cartGetIdDefault",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Creates a function that returns the cart id from request header cookie.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {cartGetIdDefault, cartSetIdDefault} from '@shopify/hydrogen';\n\n// server.js\nexport default {\n  async fetch(request) {\n    const cart = createCartHandler({\n      storefront,\n      getCartId: cartGetIdDefault(request.headers),\n      setCartId: cartSetIdDefault(),\n    });\n  },\n};\n\n// Some route\nexport async function loader({context}) {\n  const {cart} = context;\n\n  cart.getCartId(); // gid://shopify/Cart/1234567890\n}\n",
+            "language": "js"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "cartGetIdDefault",
+        "description": "",
+        "type": "CartGetIdDefaultGeneratedType",
+        "typeDefinitions": {
+          "CartGetIdDefaultGeneratedType": {
+            "filePath": "/cart/cartGetIdDefault.ts",
+            "name": "CartGetIdDefaultGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "requestHeaders",
+                "description": "",
+                "value": "Headers",
+                "filePath": "/cart/cartGetIdDefault.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/cart/cartGetIdDefault.ts",
+              "description": "",
+              "name": "",
+              "value": ""
+            },
+            "value": "cartGetIdDefault = (requestHeaders: Headers) => {\n  const cookies = parse(requestHeaders.get('Cookie') || '');\n  return () => {\n    return cookies.cart ? `gid://shopify/Cart/${cookies.cart}` : undefined;\n  };\n}"
+          },
+          "Headers": {
+            "description": "",
+            "name": "Headers",
+            "value": "Headers",
+            "members": [],
+            "override": "[Headers](https://developer.mozilla.org/en-US/docs/Web/API/Headers) - Web API"
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "cartSetIdDefault",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "Creates a function that sets the cart id in the form of a cookie named `cart` to the provided header",
+    "type": "utility",
+    "defaultExample": {
+      "description": "This is the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {json} from '@remix-run/server-runtime';\nimport {cartGetIdDefault, cartSetIdDefault} from '@shopify/hydrogen';\n\n// server.js\nexport default {\n  async fetch(request) {\n    const cart = createCartHandler({\n      storefront,\n      getCartId: cartGetIdDefault(request.headers),\n      setCartId: cartSetIdDefault(), // defaults to session cookie\n      // setCartId: cartSetIdDefault({maxage: 60 * 60 * 24 * 365}), // 1 year expiry\n    });\n  },\n};\n\n// Some route\nexport async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.updateNote('Some note');\n\n  const headers = new Headers();\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {headers});\n}\n",
+            "language": "js"
+          }
+        ],
+        "title": "example"
+      }
+    },
+    "definitions": [
+      {
+        "title": "cartSetIdDefault",
+        "description": "",
+        "type": "CartSetIdDefaultGeneratedType",
+        "typeDefinitions": {
+          "CartSetIdDefaultGeneratedType": {
+            "filePath": "/cart/cartSetIdDefault.ts",
+            "name": "CartSetIdDefaultGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "cookieOptions",
+                "description": "",
+                "value": "CookieOptions",
+                "isOptional": true,
+                "filePath": "/cart/cartSetIdDefault.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/cart/cartSetIdDefault.ts",
+              "description": "",
+              "name": "",
+              "value": ""
+            },
+            "value": "cartSetIdDefault = (cookieOptions?: CookieOptions) => {\n  return (cartId: string, headers: Headers) => {\n    headers.append(\n      'Set-Cookie',\n      stringify('cart', cartId.split('/').pop() || '', cookieOptions),\n    );\n  };\n}"
+          },
+          "CookieOptions": {
+            "filePath": "/cart/cartSetIdDefault.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CookieOptions",
+            "value": "{\n  maxage?: number;\n  expires?: Date | number | string;\n  samesite?: 'Lax' | 'Strict' | 'None';\n  secure?: boolean;\n  httponly?: boolean;\n  domain?: string;\n  path?: string;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart/cartSetIdDefault.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "maxage",
+                "value": "number",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cartSetIdDefault.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "expires",
+                "value": "string | number | Date",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cartSetIdDefault.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "samesite",
+                "value": "\"Lax\" | \"Strict\" | \"None\"",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cartSetIdDefault.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "secure",
+                "value": "boolean",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cartSetIdDefault.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "httponly",
+                "value": "boolean",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cartSetIdDefault.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "domain",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart/cartSetIdDefault.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "path",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "createCartHandler",
     "category": "utilities",
     "isVisualComponent": false,
