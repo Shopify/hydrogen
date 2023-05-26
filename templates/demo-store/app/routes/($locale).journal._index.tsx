@@ -1,12 +1,12 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {flattenConnection, Image} from '@shopify/hydrogen';
-import type {Article} from '@shopify/hydrogen/storefront-api-types';
 
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
+import type {ArticleFragment} from 'storefrontapi.generated';
 
 const BLOG_HANDLE = 'Journal';
 
@@ -26,20 +26,17 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
     throw new Response('Not found', {status: 404});
   }
 
-  // @ts-ignore TODO: Fix flattenConnection types
-  const articles = (flattenConnection(blog.articles) as Article[]).map(
-    (article) => {
-      const {publishedAt} = article!;
-      return {
-        ...article,
-        publishedAt: new Intl.DateTimeFormat(`${language}-${country}`, {
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        }).format(new Date(publishedAt!)),
-      };
-    },
-  );
+  const articles = flattenConnection(blog.articles).map((article) => {
+    const {publishedAt} = article!;
+    return {
+      ...article,
+      publishedAt: new Intl.DateTimeFormat(`${language}-${country}`, {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }).format(new Date(publishedAt!)),
+    };
+  });
 
   const seo = seoPayload.blog({blog, url: request.url});
 
@@ -64,7 +61,7 @@ export default function Journals() {
           {articles.map((article, i) => (
             <ArticleCard
               blogHandle={BLOG_HANDLE.toLowerCase()}
-              article={article as Article}
+              article={article}
               key={article.id}
               loading={getImageLoadingPriority(i, 2)}
             />
@@ -81,7 +78,7 @@ function ArticleCard({
   loading,
 }: {
   blogHandle: string;
-  article: Article;
+  article: ArticleFragment;
   loading?: HTMLImageElement['loading'];
 }) {
   return (
@@ -122,24 +119,28 @@ query Blog(
     articles(first: $pageBy, after: $cursor) {
       edges {
         node {
-          author: authorV2 {
-            name
-          }
-          contentHtml
-          handle
-          id
-          image {
-            id
-            altText
-            url
-            width
-            height
-          }
-          publishedAt
-          title
+          ...Article
         }
       }
     }
   }
+}
+
+fragment Article on Article {
+  author: authorV2 {
+    name
+  }
+  contentHtml
+  handle
+  id
+  image {
+    id
+    altText
+    url
+    width
+    height
+  }
+  publishedAt
+  title
 }
 `;
