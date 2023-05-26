@@ -50,8 +50,8 @@ export function ProductGrid({
     if (!pageProducts) return;
 
     setProducts((prev) => [...prev, ...pageProducts.nodes]);
-    setNextPage(products.pageInfo.hasNextPage);
-    setEndCursor(products.pageInfo.endCursor);
+    setNextPage(products?.pageInfo?.hasNextPage);
+    setEndCursor(products?.pageInfo?.endCursor);
   }, [fetcher.data]);
 
   const haveProducts = initialProducts.length > 0;
