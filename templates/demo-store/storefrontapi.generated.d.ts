@@ -191,159 +191,6 @@ export type MenuFragment = Pick<StorefrontAPI.Menu, 'id'> & {
   >;
 };
 
-export type CartQueryQueryVariables = StorefrontAPI.Exact<{
-  cartId: StorefrontAPI.Scalars['ID'];
-  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
-  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-}>;
-
-export type CartQueryQuery = {
-  cart?: StorefrontAPI.Maybe<
-    Pick<
-      StorefrontAPI.Cart,
-      'id' | 'checkoutUrl' | 'totalQuantity' | 'note'
-    > & {
-      buyerIdentity: Pick<
-        StorefrontAPI.CartBuyerIdentity,
-        'countryCode' | 'email' | 'phone'
-      > & {
-        customer?: StorefrontAPI.Maybe<
-          Pick<
-            StorefrontAPI.Customer,
-            'id' | 'email' | 'firstName' | 'lastName' | 'displayName'
-          >
-        >;
-      };
-      lines: {
-        edges: Array<{
-          node: Pick<StorefrontAPI.CartLine, 'id' | 'quantity'> & {
-            attributes: Array<Pick<StorefrontAPI.Attribute, 'key' | 'value'>>;
-            cost: {
-              totalAmount: Pick<
-                StorefrontAPI.MoneyV2,
-                'amount' | 'currencyCode'
-              >;
-              amountPerQuantity: Pick<
-                StorefrontAPI.MoneyV2,
-                'amount' | 'currencyCode'
-              >;
-              compareAtAmountPerQuantity?: StorefrontAPI.Maybe<
-                Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-              >;
-            };
-            merchandise: Pick<
-              StorefrontAPI.ProductVariant,
-              'id' | 'availableForSale' | 'requiresShipping' | 'title'
-            > & {
-              compareAtPrice?: StorefrontAPI.Maybe<
-                Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>
-              >;
-              price: Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>;
-              image?: StorefrontAPI.Maybe<
-                Pick<
-                  StorefrontAPI.Image,
-                  'id' | 'url' | 'altText' | 'width' | 'height'
-                >
-              >;
-              product: Pick<StorefrontAPI.Product, 'handle' | 'title' | 'id'>;
-              selectedOptions: Array<
-                Pick<StorefrontAPI.SelectedOption, 'name' | 'value'>
-              >;
-            };
-          };
-        }>;
-      };
-      cost: {
-        subtotalAmount: Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>;
-        totalAmount: Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>;
-        totalDutyAmount?: StorefrontAPI.Maybe<
-          Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>
-        >;
-        totalTaxAmount?: StorefrontAPI.Maybe<
-          Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>
-        >;
-      };
-      attributes: Array<Pick<StorefrontAPI.Attribute, 'key' | 'value'>>;
-      discountCodes: Array<Pick<StorefrontAPI.CartDiscountCode, 'code'>>;
-    }
-  >;
-};
-
-export type CartFragmentFragment = Pick<
-  StorefrontAPI.Cart,
-  'id' | 'checkoutUrl' | 'totalQuantity' | 'note'
-> & {
-  buyerIdentity: Pick<
-    StorefrontAPI.CartBuyerIdentity,
-    'countryCode' | 'email' | 'phone'
-  > & {
-    customer?: StorefrontAPI.Maybe<
-      Pick<
-        StorefrontAPI.Customer,
-        'id' | 'email' | 'firstName' | 'lastName' | 'displayName'
-      >
-    >;
-  };
-  lines: {
-    edges: Array<{
-      node: Pick<StorefrontAPI.CartLine, 'id' | 'quantity'> & {
-        attributes: Array<Pick<StorefrontAPI.Attribute, 'key' | 'value'>>;
-        cost: {
-          totalAmount: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
-          amountPerQuantity: Pick<
-            StorefrontAPI.MoneyV2,
-            'amount' | 'currencyCode'
-          >;
-          compareAtAmountPerQuantity?: StorefrontAPI.Maybe<
-            Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-          >;
-        };
-        merchandise: Pick<
-          StorefrontAPI.ProductVariant,
-          'id' | 'availableForSale' | 'requiresShipping' | 'title'
-        > & {
-          compareAtPrice?: StorefrontAPI.Maybe<
-            Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>
-          >;
-          price: Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>;
-          image?: StorefrontAPI.Maybe<
-            Pick<
-              StorefrontAPI.Image,
-              'id' | 'url' | 'altText' | 'width' | 'height'
-            >
-          >;
-          product: Pick<StorefrontAPI.Product, 'handle' | 'title' | 'id'>;
-          selectedOptions: Array<
-            Pick<StorefrontAPI.SelectedOption, 'name' | 'value'>
-          >;
-        };
-      };
-    }>;
-  };
-  cost: {
-    subtotalAmount: Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>;
-    totalAmount: Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>;
-    totalDutyAmount?: StorefrontAPI.Maybe<
-      Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>
-    >;
-    totalTaxAmount?: StorefrontAPI.Maybe<
-      Pick<StorefrontAPI.MoneyV2, 'currencyCode' | 'amount'>
-    >;
-  };
-  attributes: Array<Pick<StorefrontAPI.Attribute, 'key' | 'value'>>;
-  discountCodes: Array<Pick<StorefrontAPI.CartDiscountCode, 'code'>>;
-};
-
-export type MoneyFragmentFragment = Pick<
-  StorefrontAPI.MoneyV2,
-  'currencyCode' | 'amount'
->;
-
-export type ImageFragmentFragment = Pick<
-  StorefrontAPI.Image,
-  'id' | 'url' | 'altText' | 'width' | 'height'
->;
-
 export type GetShopPrimaryDomainQueryVariables = StorefrontAPI.Exact<{
   [key: string]: never;
 }>;
@@ -1304,35 +1151,6 @@ export type ApiAllProductsQuery = {
   };
 };
 
-export type ErrorFragmentFragment = Pick<
-  StorefrontAPI.CartUserError,
-  'message' | 'field' | 'code'
->;
-
-export type CartLinesFragmentFragment = Pick<
-  StorefrontAPI.Cart,
-  'id' | 'totalQuantity'
->;
-
-export type CartDiscountCodesUpdateMutationVariables = StorefrontAPI.Exact<{
-  cartId: StorefrontAPI.Scalars['ID'];
-  discountCodes?: StorefrontAPI.InputMaybe<
-    Array<StorefrontAPI.Scalars['String']> | StorefrontAPI.Scalars['String']
-  >;
-  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
-}>;
-
-export type CartDiscountCodesUpdateMutation = {
-  cartDiscountCodesUpdate?: StorefrontAPI.Maybe<{
-    cart?: StorefrontAPI.Maybe<
-      Pick<StorefrontAPI.Cart, 'id'> & {
-        discountCodes: Array<Pick<StorefrontAPI.CartDiscountCode, 'code'>>;
-      }
-    >;
-    errors: Array<Pick<StorefrontAPI.CartUserError, 'field' | 'message'>>;
-  }>;
-};
-
 export type CollectionDetailsQueryVariables = StorefrontAPI.Exact<{
   handle: StorefrontAPI.Scalars['String'];
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
@@ -1963,10 +1781,6 @@ interface GeneratedQueryTypes {
     return: LayoutQuery;
     variables: LayoutQueryVariables;
   };
-  '#graphql\n  query cartQuery($cartId: ID!, $country: CountryCode, $language: LanguageCode)\n    @inContext(country: $country, language: $language) {\n    cart(id: $cartId) {\n      ...CartFragment\n    }\n  }\n  fragment CartFragment on Cart {\n    id\n    checkoutUrl\n    totalQuantity\n    buyerIdentity {\n      countryCode\n      customer {\n        id\n        email\n        firstName\n        lastName\n        displayName\n      }\n      email\n      phone\n    }\n    lines(first: 100) {\n      edges {\n        node {\n          id\n          quantity\n          attributes {\n            key\n            value\n          }\n          cost {\n            totalAmount {\n              amount\n              currencyCode\n            }\n            amountPerQuantity {\n              amount\n              currencyCode\n            }\n            compareAtAmountPerQuantity {\n              amount\n              currencyCode\n            }\n          }\n          merchandise {\n            ... on ProductVariant {\n              id\n              availableForSale\n              compareAtPrice {\n                ...MoneyFragment\n              }\n              price {\n                ...MoneyFragment\n              }\n              requiresShipping\n              title\n              image {\n                ...ImageFragment\n              }\n              product {\n                handle\n                title\n                id\n              }\n              selectedOptions {\n                name\n                value\n              }\n            }\n          }\n        }\n      }\n    }\n    cost {\n      subtotalAmount {\n        ...MoneyFragment\n      }\n      totalAmount {\n        ...MoneyFragment\n      }\n      totalDutyAmount {\n        ...MoneyFragment\n      }\n      totalTaxAmount {\n        ...MoneyFragment\n      }\n    }\n    note\n    attributes {\n      key\n      value\n    }\n    discountCodes {\n      code\n    }\n  }\n\n  fragment MoneyFragment on MoneyV2 {\n    currencyCode\n    amount\n  }\n\n  fragment ImageFragment on Image {\n    id\n    url\n    altText\n    width\n    height\n  }\n': {
-    return: CartQueryQuery;
-    variables: CartQueryQueryVariables;
-  };
   '#graphql\n      query getShopPrimaryDomain { shop { primaryDomain { url } } }\n    ': {
     return: GetShopPrimaryDomainQuery;
     variables: GetShopPrimaryDomainQueryVariables;
@@ -2093,10 +1907,6 @@ interface GeneratedMutationTypes {
   '#graphql\n  mutation customerReset($id: ID!, $input: CustomerResetInput!) {\n    customerReset(id: $id, input: $input) {\n      customerAccessToken {\n        accessToken\n        expiresAt\n      }\n      customerUserErrors {\n        code\n        field\n        message\n      }\n    }\n  }\n': {
     return: CustomerResetMutation;
     variables: CustomerResetMutationVariables;
-  };
-  '#graphql\n  mutation cartDiscountCodesUpdate($cartId: ID!, $discountCodes: [String!], $country: CountryCode = ZZ)\n    @inContext(country: $country) {\n    cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {\n      cart {\n        id\n        discountCodes {\n          code\n        }\n      }\n      errors: userErrors {\n        field\n        message\n      }\n    }\n  }\n': {
-    return: CartDiscountCodesUpdateMutation;
-    variables: CartDiscountCodesUpdateMutationVariables;
   };
 }
 

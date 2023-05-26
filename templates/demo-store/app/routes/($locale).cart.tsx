@@ -2,7 +2,10 @@ import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
 import {json, type ActionArgs} from '@shopify/remix-oxygen';
-import {CartForm, type CartQueryData} from '@shopify/hydrogen';
+import {
+  CartForm__unstable as CartForm,
+  type CartQueryData,
+} from '@shopify/hydrogen';
 
 import {isLocalPath} from '~/lib/utils';
 import {CartLoading, Cart} from '~/components';
