@@ -1,6 +1,5 @@
 import {Storefront} from '../storefront';
 import {getFormInput, CartActionInput} from './CartForm';
-import {parse as parseCookie} from 'worktop/cookie';
 import {cartGetDefault} from './queries/cartGetDefault';
 import {cartCreateDefault} from './queries/cartCreateDefault';
 import {cartLinesAddDefault} from './queries/cartLinesAddDefault';
@@ -14,24 +13,10 @@ import {cartAttributesUpdateDefault} from './queries/cartAttributesUpdateDefault
 import {cartMetafieldsSetDefault} from './queries/cartMetafieldsSetDefault';
 import {cartMetafieldDeleteDefault} from './queries/cartMetafieldDeleteDefault';
 
-export const cartGetIdDefault = (requestHeaders: Headers) => {
-  return () => {
-    const cookies = parseCookie(requestHeaders.get('Cookie') || '');
-    return cookies.cart ? `gid://shopify/Cart/${cookies.cart}` : undefined;
-  };
-};
-
-export const cartSetIdDefault = () => {
-  return (cartId: string, headers: Headers) => {
-    headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
-  };
-};
-
 export type CartHandlerOptions = {
   storefront: Storefront;
-  requestHeaders: Headers;
-  getCartId?: () => string | undefined;
-  setCartId?: (cartId: string, headers: Headers) => void;
+  getCartId: () => string | undefined;
+  setCartId: (cartId: string, headers: Headers) => void;
   cartQueryFragment?: string;
   cartMutateFragment?: string;
 };
@@ -77,14 +62,13 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
 export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   options: CartHandlerOptions | CartHandlerOptionsWithCustom<TCustomMethods>,
 ): CartHandlerReturn<TCustomMethods> {
-  const {requestHeaders, storefront, cartQueryFragment, cartMutateFragment} =
-    options;
-
-  // Default get cartId in cookie
-  const getCartId = options.getCartId || cartGetIdDefault(requestHeaders);
-
-  // Default set cartId in cookie
-  const setCartId = options.setCartId || cartSetIdDefault();
+  const {
+    getCartId,
+    setCartId,
+    storefront,
+    cartQueryFragment,
+    cartMutateFragment,
+  } = options;
 
   const mutateOptions = {
     storefront,
@@ -106,14 +90,14 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     setCartId,
     create: cartCreate,
     addLines: async (lines, optionalParams) => {
-      return cartId
+      return cartId || optionalParams?.cartId
         ? await cartLinesAddDefault(mutateOptions)(lines, optionalParams)
         : await cartCreate({lines}, optionalParams);
     },
     updateLines: cartLinesUpdateDefault(mutateOptions),
     removeLines: cartLinesRemoveDefault(mutateOptions),
     updateDiscountCodes: async (discountCodes, optionalParams) => {
-      return cartId
+      return cartId || optionalParams?.cartId
         ? await cartDiscountCodesUpdateDefault(mutateOptions)(
             discountCodes,
             optionalParams,
@@ -121,7 +105,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
         : await cartCreate({discountCodes}, optionalParams);
     },
     updateBuyerIdentity: async (buyerIdentity, optionalParams) => {
-      return cartId
+      return cartId || optionalParams?.cartId
         ? await cartBuyerIdentityUpdateDefault(mutateOptions)(
             buyerIdentity,
             optionalParams,
@@ -133,7 +117,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
       cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
     updateAttributes: cartAttributesUpdateDefault(mutateOptions),
     setMetafields: async (metafields, optionalParams) => {
-      return cartId
+      return cartId || optionalParams?.cartId
         ? await cartMetafieldsSetDefault(mutateOptions)(
             metafields,
             optionalParams,

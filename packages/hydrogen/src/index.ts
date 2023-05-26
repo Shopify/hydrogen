@@ -35,13 +35,13 @@ export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelec
 export {cartAttributesUpdateDefault} from './cart/queries/cartAttributesUpdateDefault';
 export {cartMetafieldsSetDefault} from './cart/queries/cartMetafieldsSetDefault';
 export {cartMetafieldDeleteDefault} from './cart/queries/cartMetafieldDeleteDefault';
+export {cartGetIdDefault} from './cart/cartGetIdDefault';
+export {cartSetIdDefault} from './cart/cartSetIdDefault';
 export {
   type CartHandlerReturnCustom,
   type CartHandlerReturnBase,
   createCartHandler as createCartHandler__unstable,
-  cartGetIdDefault,
-  cartSetIdDefault,
-} from './cart/cart-handler';
+} from './cart/createCartHandler';
 export type {
   MetafieldWithoutOwnerId,
   CartQueryData,

@@ -3,15 +3,30 @@ import {
   CartHandlerReturnBase,
   CartHandlerReturnCustom,
   createCartHandler,
-} from './cart-handler';
+} from './createCartHandler';
 import {mockCreateStorefrontClient, mockHeaders} from './cart-test-helper';
+
+type MockCarthandler = {
+  cartId?: string;
+  cartQueryFragment?: string;
+  cartMutateFragment?: string;
+  customMethods?: Record<string, Function>;
+};
+
+function getCartHandler(options: MockCarthandler = {}) {
+  const {cartId, ...rest} = options;
+  return createCartHandler({
+    storefront: mockCreateStorefrontClient(),
+    getCartId: () =>
+      options.cartId ? `gid://shopify/Cart/${options.cartId}` : undefined,
+    setCartId: () => {},
+    ...rest,
+  });
+}
 
 describe('createCartHandler', () => {
   it('returns a cart handler instance', () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
-    });
+    const cart = getCartHandler();
 
     expectTypeOf(cart).toEqualTypeOf<CartHandlerReturnBase>;
     expect(Object.keys(cart)).toHaveLength(15);
@@ -35,7 +50,8 @@ describe('createCartHandler', () => {
   it('can add custom methods', () => {
     const cart = createCartHandler({
       storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
+      getCartId: () => undefined,
+      setCartId: () => {},
       customMethods: {
         foo() {
           return 'bar';
@@ -49,9 +65,7 @@ describe('createCartHandler', () => {
   });
 
   it('can override default methods', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
+    const cart = getCartHandler({
       customMethods: {
         get() {
           return Promise.resolve('bar');
@@ -64,61 +78,10 @@ describe('createCartHandler', () => {
     expect(await cart.get()).toBe('bar');
   });
 
-  it('function getCartId has a default implementation', () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
-    });
-
-    expect(cart.getCartId()).toBeUndefined();
-
-    const cart2 = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
-
-    expect(cart2.getCartId()).toBe('gid://shopify/Cart/c1-123');
-  });
-
-  it('can override getCartId', () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
-      getCartId: () => 'c1-abc',
-    });
-
-    expect(cart.getCartId()).toBe('c1-abc');
-  });
-
-  it('function setCartId has a default implementation', () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
-    });
-
-    const headers = mockHeaders();
-    cart.setCartId('gid://shopify/Cart/c1-456', headers);
-
-    expect(headers.get('Set-Cookie')).toBe('cart=c1-456');
-  });
-
-  it('can override setCartId', () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
-      setCartId: (cartId, headers) => cartId,
-    });
-
-    expect(cart.setCartId).not.toBeUndefined();
-    expectTypeOf(cart.setCartId).toEqualTypeOf<() => string>;
-    expect(cart.setCartId('c1-123', mockHeaders())).toBe('c1-123');
-  });
-
   it('cartQueryFragment can override default get query fragment', async () => {
     const cartQueryFragment = 'cartQueryFragmentOverride';
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
+    const cart = getCartHandler({
+      cartId: 'c1-123',
       cartQueryFragment,
     });
 
@@ -128,11 +91,10 @@ describe('createCartHandler', () => {
     expect(result.query).toContain(cartQueryFragment);
   });
 
-  it('cartQueryFragment can override default get query fragment', async () => {
+  it('cartMutateFragment can override default get query fragment', async () => {
     const cartMutateFragment = 'cartMutateFragmentOverride';
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
+    const cart = getCartHandler({
+      cartId: 'c1-123',
       cartMutateFragment,
     });
 
@@ -174,10 +136,7 @@ describe('createCartHandler', () => {
   });
 
   it('function get has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.get();
 
@@ -185,10 +144,7 @@ describe('createCartHandler', () => {
   });
 
   it('function get can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.get({cartId: 'gid://shopify/Cart/c1-456'});
 
@@ -196,10 +152,7 @@ describe('createCartHandler', () => {
   });
 
   it('function create has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.create({});
 
@@ -207,10 +160,7 @@ describe('createCartHandler', () => {
   });
 
   it('function addLines has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.addLines([]);
 
@@ -218,10 +168,7 @@ describe('createCartHandler', () => {
   });
 
   it('function addLines can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.addLines([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -231,10 +178,7 @@ describe('createCartHandler', () => {
   });
 
   it('function addLines to create a cart if cart id is not found', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
-    });
+    const cart = getCartHandler();
 
     const result = await cart.addLines([]);
 
@@ -242,10 +186,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateLines has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateLines([]);
 
@@ -253,10 +194,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateLines can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateLines([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -266,10 +204,7 @@ describe('createCartHandler', () => {
   });
 
   it('function removeLines has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.removeLines([]);
 
@@ -277,10 +212,7 @@ describe('createCartHandler', () => {
   });
 
   it('function removeLines can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.removeLines([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -290,10 +222,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateDiscountCodes has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateDiscountCodes([]);
 
@@ -301,10 +230,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateDiscountCodes can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateDiscountCodes([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -314,10 +240,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateDiscountCodes to create a cart if cart id is not found', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
-    });
+    const cart = getCartHandler();
 
     const result = await cart.updateDiscountCodes([]);
 
@@ -325,10 +248,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateBuyerIdentity has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateBuyerIdentity({});
 
@@ -336,10 +256,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateBuyerIdentity can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateBuyerIdentity(
       {},
@@ -350,10 +267,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateBuyerIdentity to create a cart if cart id is not found', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
-    });
+    const cart = getCartHandler();
 
     const result = await cart.updateBuyerIdentity({});
 
@@ -361,10 +275,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateNote has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateNote('');
 
@@ -372,10 +283,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateNote can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateNote('', {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -385,10 +293,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateSelectedDeliveryOption has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateSelectedDeliveryOption({
       deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
@@ -399,10 +304,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateSelectedDeliveryOption can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateSelectedDeliveryOption(
       {
@@ -416,10 +318,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateAttributes has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateAttributes([]);
 
@@ -427,10 +326,7 @@ describe('createCartHandler', () => {
   });
 
   it('function updateAttributes can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler();
 
     const result = await cart.updateAttributes([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -440,10 +336,7 @@ describe('createCartHandler', () => {
   });
 
   it('function setMetafields has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.setMetafields([]);
 
@@ -451,10 +344,7 @@ describe('createCartHandler', () => {
   });
 
   it('function setMetafields can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler();
 
     const result = await cart.setMetafields([], {
       cartId: 'gid://shopify/Cart/c1-456',
@@ -464,10 +354,7 @@ describe('createCartHandler', () => {
   });
 
   it('function setMetafields to create a cart if cart id is not found', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders(),
-    });
+    const cart = getCartHandler();
 
     const result = await cart.setMetafields([]);
 
@@ -475,10 +362,7 @@ describe('createCartHandler', () => {
   });
 
   it('function deleteMetafield has a working default implementation', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.deleteMetafield('some.key');
 
@@ -486,10 +370,7 @@ describe('createCartHandler', () => {
   });
 
   it('function deleteMetafield can provide overridable parameter', async () => {
-    const cart = createCartHandler({
-      storefront: mockCreateStorefrontClient(),
-      requestHeaders: mockHeaders('c1-123'),
-    });
+    const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.deleteMetafield('some.key', {
       cartId: 'gid://shopify/Cart/c1-456',
