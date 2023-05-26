@@ -13,10 +13,8 @@ import {AnalyticsPageType, Money, ShopPayButton} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 import type {
-  ProductVariant,
   SelectedOptionInput,
   Product as ProductType,
-  Shop,
   ProductConnection,
 } from '@shopify/hydrogen/storefront-api-types';
 
@@ -53,10 +51,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     selectedOptions.push({name, value});
   });
 
-  const {shop, product} = await context.storefront.query<{
-    product: ProductType & {selectedVariant?: ProductVariant};
-    shop: Shop;
-  }>(PRODUCT_QUERY, {
+  const {shop, product} = await context.storefront.query(PRODUCT_QUERY, {
     variables: {
       handle: productHandle,
       selectedOptions,
@@ -296,7 +291,7 @@ function ProductOptions({
   options,
   searchParamsWithDefaults,
 }: {
-  options: ProductType['options'];
+  options: Array<{name: string; values: string[]}>;
   searchParamsWithDefaults: URLSearchParams;
 }) {
   const closeRef = useRef<HTMLButtonElement>(null);
@@ -585,7 +580,7 @@ const PRODUCT_QUERY = `#graphql
   }
   ${MEDIA_FRAGMENT}
   ${PRODUCT_VARIANT_FRAGMENT}
-`;
+` as const;
 
 const RECOMMENDED_PRODUCTS_QUERY = `#graphql
   query productRecommendations(
@@ -604,33 +599,30 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
     }
   }
   ${PRODUCT_CARD_FRAGMENT}
-`;
+` as const;
 
 async function getRecommendedProducts(
   storefront: Storefront,
   productId: string,
 ) {
-  const products = await storefront.query<{
-    recommended: ProductType[];
-    additional: ProductConnection;
-  }>(RECOMMENDED_PRODUCTS_QUERY, {
+  const products = await storefront.query(RECOMMENDED_PRODUCTS_QUERY, {
     variables: {productId, count: 12},
   });
 
   invariant(products, 'No data returned from Shopify API');
 
-  const mergedProducts = products.recommended
+  const mergedProducts = (products.recommended ?? [])
     .concat(products.additional.nodes)
     .filter(
       (value, index, array) =>
         array.findIndex((value2) => value2.id === value.id) === index,
     );
 
-  const originalProduct = mergedProducts
-    .map((item: ProductType) => item.id)
-    .indexOf(productId);
+  const originalProduct = mergedProducts.findIndex(
+    (item) => item.id === productId,
+  );
 
   mergedProducts.splice(originalProduct, 1);
 
-  return mergedProducts;
+  return {nodes: mergedProducts};
 }
