@@ -6,7 +6,8 @@ import {
   type ServerBuild,
 } from '@remix-run/server-runtime';
 import {isDeferredData} from '@remix-run/server-runtime/dist/responses';
-import type {Logger} from '@shopify/hydrogen';
+
+type Logger = {error: (...data: any[]) => any};
 
 export function createRequestHandler<Context = unknown>({
   build,
