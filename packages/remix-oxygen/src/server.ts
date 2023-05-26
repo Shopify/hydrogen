@@ -5,6 +5,7 @@ import {
   type AppLoadContext,
   type ServerBuild,
 } from '@remix-run/server-runtime';
+import {isDeferredData} from '@remix-run/server-runtime/dist/responses';
 import type {Logger} from '@shopify/hydrogen';
 
 export function createRequestHandler<Context = unknown>({
@@ -56,7 +57,20 @@ function fill(module: RemixModule, name: 'loader' | 'action', log?: Logger) {
 
   module[name] = async (args: LoaderArgs | ActionArgs) => {
     try {
-      return await original(args);
+      const result = await original(args);
+
+      if (isDeferredData(result)) {
+        for (const key of result.deferredKeys) {
+          const promise = result.data[key] as Promise<any>;
+          // Add logs around rejected deferred data,
+          // which is normally swallowed by Remix.
+          promise.catch((e) => {
+            (log || console).error(e);
+          });
+        }
+      }
+
+      return result;
     } catch (e) {
       (log || console).error(e);
       throw e;
