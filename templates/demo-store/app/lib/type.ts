@@ -5,6 +5,10 @@ import type {
   LanguageCode,
 } from '@shopify/hydrogen/storefront-api-types';
 
+export type NonNullableFields<T> = {
+  [P in keyof T]: NonNullable<T[P]>;
+};
+
 export type Locale = {
   language: LanguageCode;
   country: CountryCode;

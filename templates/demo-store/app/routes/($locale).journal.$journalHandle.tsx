@@ -1,7 +1,6 @@
 import {json, type LinksFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen';
-import type {Blog} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 
 import {PageHeader, Section} from '~/components';
@@ -23,9 +22,7 @@ export async function loader({request, params, context}: LoaderArgs) {
 
   invariant(params.journalHandle, 'Missing journal handle');
 
-  const {blog} = await context.storefront.query<{
-    blog: Blog;
-  }>(ARTICLE_QUERY, {
+  const {blog} = await context.storefront.query(ARTICLE_QUERY, {
     variables: {
       blogHandle: BLOG_HANDLE,
       articleHandle: params.journalHandle,
@@ -66,7 +63,7 @@ export default function Article() {
     <>
       <PageHeader heading={title} variant="blogPost">
         <span>
-          {formattedDate} &middot; {author.name}
+          {formattedDate} &middot; {author?.name}
         </span>
       </PageHeader>
       <Section as="article" padding="x">

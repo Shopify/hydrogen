@@ -12,7 +12,7 @@ export const headers = routeHeaders;
 export async function loader({request, params, context}: LoaderArgs) {
   invariant(params.pageHandle, 'Missing page handle');
 
-  const {page} = await context.storefront.query<{page: PageType}>(PAGE_QUERY, {
+  const {page} = await context.storefront.query(PAGE_QUERY, {
     variables: {
       handle: params.pageHandle,
       language: context.storefront.i18n.language,

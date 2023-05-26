@@ -7,13 +7,7 @@ import {
   useNavigation,
 } from '@remix-run/react';
 import {flattenConnection} from '@shopify/hydrogen';
-import type {
-  MailingAddressInput,
-  CustomerAddressUpdatePayload,
-  CustomerAddressDeletePayload,
-  CustomerDefaultAddressUpdatePayload,
-  CustomerAddressCreatePayload,
-} from '@shopify/hydrogen/storefront-api-types';
+import type {MailingAddressInput} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 
 import {Button, Text} from '~/components';
@@ -43,9 +37,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   if (request.method === 'DELETE') {
     try {
-      const data = await storefront.mutate<{
-        customerAddressDelete: CustomerAddressDeletePayload;
-      }>(DELETE_ADDRESS_MUTATION, {
+      const data = await storefront.mutate(DELETE_ADDRESS_MUTATION, {
         variables: {customerAccessToken, id: addressId},
       });
 
@@ -83,9 +75,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
 
   if (addressId === 'add') {
     try {
-      const data = await storefront.mutate<{
-        customerAddressCreate: CustomerAddressCreatePayload;
-      }>(CREATE_ADDRESS_MUTATION, {
+      const data = await storefront.mutate(CREATE_ADDRESS_MUTATION, {
         variables: {customerAccessToken, address},
       });
 
@@ -95,9 +85,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       invariant(newId, 'Expected customer address to be created');
 
       if (defaultAddress) {
-        const data = await storefront.mutate<{
-          customerDefaultAddressUpdate: CustomerDefaultAddressUpdatePayload;
-        }>(UPDATE_DEFAULT_ADDRESS_MUTATION, {
+        const data = await storefront.mutate(UPDATE_DEFAULT_ADDRESS_MUTATION, {
           variables: {customerAccessToken, addressId: newId},
         });
 
@@ -110,9 +98,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
     }
   } else {
     try {
-      const data = await storefront.mutate<{
-        customerAddressUpdate: CustomerAddressUpdatePayload;
-      }>(UPDATE_ADDRESS_MUTATION, {
+      const data = await storefront.mutate(UPDATE_ADDRESS_MUTATION, {
         variables: {
           address,
           customerAccessToken,
@@ -123,9 +109,7 @@ export const action: ActionFunction = async ({request, context, params}) => {
       assertApiErrors(data.customerAddressUpdate);
 
       if (defaultAddress) {
-        const data = await storefront.mutate<{
-          customerDefaultAddressUpdate: CustomerDefaultAddressUpdatePayload;
-        }>(UPDATE_DEFAULT_ADDRESS_MUTATION, {
+        const data = await storefront.mutate(UPDATE_DEFAULT_ADDRESS_MUTATION, {
           variables: {
             customerAccessToken,
             addressId: decodeURIComponent(addressId),

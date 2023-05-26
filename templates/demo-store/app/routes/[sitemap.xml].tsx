@@ -1,19 +1,10 @@
 import {flattenConnection} from '@shopify/hydrogen';
 import type {LoaderArgs} from '@shopify/remix-oxygen';
-import type {
-  CollectionConnection,
-  PageConnection,
-  ProductConnection,
-} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 
-const MAX_URLS = 250; // the google limit is 50K, however, SF API only allow querying for 250 resources each time
+import type {SitemapsQuery} from 'storefrontapi.generated';
 
-interface SitemapQueryData {
-  products: ProductConnection;
-  collections: CollectionConnection;
-  pages: PageConnection;
-}
+const MAX_URLS = 250; // the google limit is 50K, however, SF API only allow querying for 250 resources each time
 
 interface ProductEntry {
   url: string;
@@ -27,7 +18,7 @@ interface ProductEntry {
 }
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
-  const data = await storefront.query<SitemapQueryData>(SITEMAP_QUERY, {
+  const data = await storefront.query(SITEMAP_QUERY, {
     variables: {
       urlLimits: MAX_URLS,
       language: storefront.i18n.language,
@@ -52,13 +43,7 @@ function xmlEncode(string: string) {
   return string.replace(/[&<>'"]/g, (char) => `&#${char.charCodeAt(0)};`);
 }
 
-function shopSitemap({
-  data,
-  baseUrl,
-}: {
-  data: SitemapQueryData;
-  baseUrl: string;
-}) {
+function shopSitemap({data, baseUrl}: {data: SitemapsQuery; baseUrl: string}) {
   const productsData = flattenConnection(data.products)
     .filter((product) => product.onlineStoreUrl)
     .map((product) => {

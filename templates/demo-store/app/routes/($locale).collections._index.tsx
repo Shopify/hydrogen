@@ -1,9 +1,6 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import type {
-  Collection,
-  CollectionConnection,
-} from '@shopify/hydrogen/storefront-api-types';
+import type {Collection} from '@shopify/hydrogen/storefront-api-types';
 import {
   Image,
   Pagination__unstable as Pagination,
@@ -21,9 +18,7 @@ export const headers = routeHeaders;
 
 export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   const variables = getPaginationVariables(request, {pageBy: PAGINATION_SIZE});
-  const {collections} = await storefront.query<{
-    collections: CollectionConnection;
-  }>(COLLECTIONS_QUERY, {
+  const {collections} = await storefront.query(COLLECTIONS_QUERY, {
     variables: {
       ...variables,
       country: storefront.i18n.country,

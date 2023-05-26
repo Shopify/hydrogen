@@ -12,7 +12,6 @@ import {
   type V2_MetaFunction,
 } from '@remix-run/react';
 import {useState} from 'react';
-import type {CustomerAccessTokenCreatePayload} from '@shopify/hydrogen/storefront-api-types';
 
 import {getInputStyleClasses} from '~/lib/utils';
 import {Link} from '~/components';
@@ -227,9 +226,7 @@ export async function doLogin(
     password: string;
   },
 ) {
-  const data = await storefront.mutate<{
-    customerAccessTokenCreate: CustomerAccessTokenCreatePayload;
-  }>(LOGIN_MUTATION, {
+  const data = await storefront.mutate(LOGIN_MUTATION, {
     variables: {
       input: {
         email,

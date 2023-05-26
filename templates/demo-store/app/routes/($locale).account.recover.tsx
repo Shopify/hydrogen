@@ -6,7 +6,6 @@ import {
 } from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 import {useState} from 'react';
-import type {CustomerRecoverPayload} from '@shopify/hydrogen/storefront-api-types';
 
 import {Link} from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
@@ -39,9 +38,7 @@ export const action: ActionFunction = async ({request, context}) => {
   }
 
   try {
-    await context.storefront.mutate<{
-      customerRecover: CustomerRecoverPayload;
-    }>(CUSTOMER_RECOVER_MUTATION, {
+    await context.storefront.mutate(CUSTOMER_RECOVER_MUTATION, {
       variables: {email},
     });
 

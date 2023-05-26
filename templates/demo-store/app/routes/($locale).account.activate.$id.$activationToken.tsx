@@ -1,7 +1,6 @@
 import {json, redirect, type ActionFunction} from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 import {useRef, useState} from 'react';
-import type {CustomerActivatePayload} from '@shopify/hydrogen/storefront-api-types';
 
 import {getInputStyleClasses} from '~/lib/utils';
 
@@ -51,9 +50,7 @@ export const action: ActionFunction = async ({
   const {session, storefront} = context;
 
   try {
-    const data = await storefront.mutate<{
-      customerActivate: CustomerActivatePayload;
-    }>(CUSTOMER_ACTIVATE_MUTATION, {
+    const data = await storefront.mutate(CUSTOMER_ACTIVATE_MUTATION, {
       variables: {
         id: `gid://shopify/Customer/${id}`,
         input: {

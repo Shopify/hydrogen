@@ -1,10 +1,6 @@
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
-import type {
-  CollectionConnection,
-  ProductConnection,
-} from '@shopify/hydrogen/storefront-api-types';
 import {AnalyticsPageType} from '@shopify/hydrogen';
 
 import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
@@ -12,14 +8,6 @@ import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import {seoPayload} from '~/lib/seo.server';
 import {routeHeaders, CACHE_SHORT} from '~/data/cache';
-import {type CollectionHero} from '~/components/Hero';
-
-interface HomeSeoData {
-  shop: {
-    name: string;
-    description: string;
-  };
-}
 
 export const headers = routeHeaders;
 
@@ -35,10 +23,7 @@ export async function loader({params, context}: LoaderArgs) {
     throw new Response(null, {status: 404});
   }
 
-  const {shop, hero} = await context.storefront.query<{
-    hero: CollectionHero;
-    shop: HomeSeoData;
-  }>(HOMEPAGE_SEO_QUERY, {
+  const {shop, hero} = await context.storefront.query(HOMEPAGE_SEO_QUERY, {
     variables: {handle: 'freestyle'},
   });
 
@@ -50,47 +35,43 @@ export async function loader({params, context}: LoaderArgs) {
       primaryHero: hero,
       // These different queries are separated to illustrate how 3rd party content
       // fetching can be optimized for both above and below the fold.
-      featuredProducts: context.storefront.query<{
-        products: ProductConnection;
-      }>(HOMEPAGE_FEATURED_PRODUCTS_QUERY, {
-        variables: {
-          /**
-           * Country and language properties are automatically injected
-           * into all queries. Passing them is unnecessary unless you
-           * want to override them from the following default:
-           */
-          country,
-          language,
-        },
-      }),
-      secondaryHero: context.storefront.query<{hero: CollectionHero}>(
-        COLLECTION_HERO_QUERY,
+      featuredProducts: context.storefront.query(
+        HOMEPAGE_FEATURED_PRODUCTS_QUERY,
         {
           variables: {
-            handle: 'backcountry',
+            /**
+             * Country and language properties are automatically injected
+             * into all queries. Passing them is unnecessary unless you
+             * want to override them from the following default:
+             */
             country,
             language,
           },
         },
       ),
-      featuredCollections: context.storefront.query<{
-        collections: CollectionConnection;
-      }>(FEATURED_COLLECTIONS_QUERY, {
+      secondaryHero: context.storefront.query(COLLECTION_HERO_QUERY, {
         variables: {
+          handle: 'backcountry',
           country,
           language,
         },
       }),
-      tertiaryHero: context.storefront.query<{hero: CollectionHero}>(
-        COLLECTION_HERO_QUERY,
+      featuredCollections: context.storefront.query(
+        FEATURED_COLLECTIONS_QUERY,
         {
           variables: {
-            handle: 'winter-2022',
             country,
             language,
           },
         },
       ),
+      tertiaryHero: context.storefront.query(COLLECTION_HERO_QUERY, {
+        variables: {
+          handle: 'winter-2022',
+          country,
+          language,
+        },
+      }),
       analytics: {
         pageType: AnalyticsPageType.home,
       },
@@ -129,7 +110,7 @@ export default function Homepage() {
               if (!products?.nodes) return <></>;
               return (
                 <ProductSwimlane
-                  products={products.nodes}
+                  products={products}
                   title="Featured Products"
                   count={4}
                 />
@@ -157,7 +138,7 @@ export default function Homepage() {
               if (!collections?.nodes) return <></>;
               return (
                 <FeaturedCollections
-                  collections={collections.nodes}
+                  collections={collections}
                   title="Collections"
                 />
               );
@@ -207,7 +188,7 @@ const COLLECTION_CONTENT_FRAGMENT = `#graphql
     }
   }
   ${MEDIA_FRAGMENT}
-`;
+` as const;
 
 const HOMEPAGE_SEO_QUERY = `#graphql
   query seoCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
@@ -221,7 +202,7 @@ const HOMEPAGE_SEO_QUERY = `#graphql
     }
   }
   ${COLLECTION_CONTENT_FRAGMENT}
-`;
+` as const;
 
 const COLLECTION_HERO_QUERY = `#graphql
   query heroCollectionContent($handle: String, $country: CountryCode, $language: LanguageCode)
@@ -231,7 +212,7 @@ const COLLECTION_HERO_QUERY = `#graphql
     }
   }
   ${COLLECTION_CONTENT_FRAGMENT}
-`;
+` as const;
 
 // @see: https://shopify.dev/api/storefront/2023-04/queries/products
 export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
@@ -244,7 +225,7 @@ export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
     }
   }
   ${PRODUCT_CARD_FRAGMENT}
-`;
+` as const;
 
 // @see: https://shopify.dev/api/storefront/2023-04/queries/collections
 export const FEATURED_COLLECTIONS_QUERY = `#graphql
@@ -267,4 +248,4 @@ export const FEATURED_COLLECTIONS_QUERY = `#graphql
       }
     }
   }
-`;
+` as const;

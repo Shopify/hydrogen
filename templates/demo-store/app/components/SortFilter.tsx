@@ -37,7 +37,7 @@ type Props = {
   filters: Filter[];
   appliedFilters?: AppliedFilter[];
   children: React.ReactNode;
-  collections?: Collection[];
+  collections?: Array<{handle: string; title: string}>;
 };
 
 export function SortFilter({
@@ -84,11 +84,7 @@ export function FiltersDrawer({
   filters = [],
   appliedFilters = [],
   collections = [],
-}: {
-  filters: Filter[];
-  appliedFilters: AppliedFilter[];
-  collections: Collection[];
-}) {
+}: Omit<Props, 'children'>) {
   const [params] = useSearchParams();
   const location = useLocation();
 
