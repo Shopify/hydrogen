@@ -1,5 +1,4 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
-import {flattenConnection} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
 import {
@@ -13,31 +12,36 @@ export async function loader({context: {storefront}}: LoaderArgs) {
 
 export async function getFeaturedData(
   storefront: LoaderArgs['context']['storefront'],
+  variables: {pageBy?: number} = {},
 ) {
-  const data = await storefront.query(FEATURED_QUERY, {
+  const data = await storefront.query(FEATURED_ITEMS_QUERY, {
     variables: {
+      pageBy: 12,
       country: storefront.i18n.country,
       language: storefront.i18n.language,
+      ...variables,
     },
   });
 
-  invariant(data, 'No data returned from Shopify API');
+  invariant(data, 'No featured items data returned from Shopify API');
 
-  return {
-    featuredCollections: flattenConnection(data.featuredCollections),
-    featuredProducts: flattenConnection(data.featuredProducts),
-  };
+  return data;
 }
 
-const FEATURED_QUERY = `#graphql
-  query homepage($country: CountryCode, $language: LanguageCode)
-  @inContext(country: $country, language: $language) {
+export type FeaturedData = Awaited<ReturnType<typeof getFeaturedData>>;
+
+export const FEATURED_ITEMS_QUERY = `#graphql
+  query FeaturedItems(
+    $country: CountryCode
+    $language: LanguageCode
+    $pageBy: Int = 12
+  ) @inContext(country: $country, language: $language) {
     featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
       nodes {
         ...FeaturedCollectionDetails
       }
     }
-    featuredProducts: products(first: 12) {
+    featuredProducts: products(first: $pageBy) {
       nodes {
         ...ProductCard
       }

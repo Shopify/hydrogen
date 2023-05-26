@@ -1,19 +1,14 @@
 import {useEffect} from 'react';
 import {useFetcher} from '@remix-run/react';
-import type {Collection, Product} from '@shopify/hydrogen/storefront-api-types';
 
 import {usePrefixPathWithLocale} from '~/lib/utils';
 
 import {FeaturedCollections} from './FeaturedCollections';
 import {ProductSwimlane} from './ProductSwimlane';
-
-export interface FeaturedData {
-  featuredCollections: Collection[];
-  featuredProducts: Product[];
-}
+import type {FeaturedData} from '~/routes/($locale).featured-products';
 
 export function FeaturedSection() {
-  const {load, data} = useFetcher();
+  const {load, data} = useFetcher<FeaturedData>();
   const path = usePrefixPathWithLocale('/featured-products');
 
   useEffect(() => {
@@ -22,11 +17,11 @@ export function FeaturedSection() {
 
   if (!data) return null;
 
-  const {featuredCollections, featuredProducts} = data as FeaturedData;
+  const {featuredCollections, featuredProducts} = data;
 
   return (
     <>
-      {featuredCollections.length < 2 && (
+      {featuredCollections.nodes.length < 2 && (
         <FeaturedCollections
           title="Popular Collections"
           collections={featuredCollections}

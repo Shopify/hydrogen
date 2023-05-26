@@ -1,5 +1,4 @@
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {flattenConnection} from '@shopify/hydrogen';
 import {Await, Form, useLoaderData} from '@remix-run/react';
 import {Suspense} from 'react';
 import {
@@ -19,12 +18,13 @@ import {
   Text,
 } from '~/components';
 import {PAGINATION_SIZE} from '~/lib/const';
-import {
-  FEATURED_COLLECTION_FRAGMENT,
-  PRODUCT_CARD_FRAGMENT,
-} from '~/data/fragments';
+import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
+import {
+  getFeaturedData,
+  type FeaturedData,
+} from './($locale).featured-products';
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
   const searchParams = new URL(request.url).searchParams;
@@ -139,7 +139,7 @@ function NoResults({
   recommendations,
 }: {
   noResults: boolean;
-  recommendations: Promise<null | NotResultRecommendations>;
+  recommendations: Promise<null | FeaturedData>;
 }) {
   return (
     <>
@@ -178,32 +178,13 @@ function NoResults({
   );
 }
 
-export async function getNoResultRecommendations(
+export function getNoResultRecommendations(
   storefront: LoaderArgs['context']['storefront'],
 ) {
-  const {featuredProducts, featuredCollections} = await storefront.query(
-    SEARCH_NO_RESULTS_QUERY,
-    {
-      variables: {
-        pageBy: PAGINATION_SIZE,
-        country: storefront.i18n.country,
-        language: storefront.i18n.language,
-      },
-    },
-  );
-
-  return {
-    featuredCollections: flattenConnection(featuredCollections),
-    featuredProducts: flattenConnection(featuredProducts),
-  };
+  return getFeaturedData(storefront, {pageBy: PAGINATION_SIZE});
 }
 
-type NotResultRecommendations = Awaited<
-  ReturnType<typeof getNoResultRecommendations>
->;
-
 const SEARCH_QUERY = `#graphql
-  ${PRODUCT_CARD_FRAGMENT}
   query PaginatedProductsSearch(
     $country: CountryCode
     $endCursor: String
@@ -232,26 +213,6 @@ const SEARCH_QUERY = `#graphql
       }
     }
   }
-` as const;
-
-const SEARCH_NO_RESULTS_QUERY = `#graphql
-  query NoSearchResults(
-    $country: CountryCode
-    $language: LanguageCode
-    $pageBy: Int!
-  ) @inContext(country: $country, language: $language) {
-    featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
-      nodes {
-        ...FeaturedCollectionDetails
-      }
-    }
-    featuredProducts: products(first: $pageBy) {
-      nodes {
-        ...ProductCard
-      }
-    }
-  }
 
   ${PRODUCT_CARD_FRAGMENT}
-  ${FEATURED_COLLECTION_FRAGMENT}
 ` as const;

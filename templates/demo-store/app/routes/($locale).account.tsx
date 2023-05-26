@@ -39,7 +39,10 @@ import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {usePrefixPathWithLocale} from '~/lib/utils';
 import {CACHE_NONE, routeHeaders} from '~/data/cache';
 
-import {getFeaturedData} from './($locale).featured-products';
+import {
+  getFeaturedData,
+  type FeaturedData,
+} from './($locale).featured-products';
 import {doLogout} from './($locale).account.logout';
 
 // Combining json + Response + defer in a loader breaks the
@@ -132,10 +135,7 @@ interface AccountType {
   orders: Order[];
   heading: string;
   addresses: MailingAddress[];
-  featuredData: Promise<{
-    featuredProducts: ProductCardFragment[];
-    featuredCollections: FeaturedCollectionDetailsFragment[];
-  }>;
+  featuredData: Promise<FeaturedData>;
 }
 
 function Account({

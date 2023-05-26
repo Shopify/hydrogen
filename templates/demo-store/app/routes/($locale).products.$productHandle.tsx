@@ -618,11 +618,11 @@ async function getRecommendedProducts(
         array.findIndex((value2) => value2.id === value.id) === index,
     );
 
-  const originalProduct = mergedProducts
-    .map((item) => item.id)
-    .indexOf(productId);
+  const originalProduct = mergedProducts.findIndex(
+    (item) => item.id === productId,
+  );
 
   mergedProducts.splice(originalProduct, 1);
 
-  return mergedProducts;
+  return {nodes: mergedProducts};
 }
