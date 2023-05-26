@@ -1030,12 +1030,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {\n  createStorefrontClient,\n  createCartHandler__unstable as createCartHandler,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler({\n      storefront,\n      requestHeaders: request.headers,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
+            "code": "import {\n  createStorefrontClient,\n  createCartHandler__unstable as createCartHandler,\n  cartGetIdDefault,\n  cartSetIdDefault,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(request, env, executionContext) {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler({\n      storefront,\n      getCartId: cartGetIdDefault(request.headers),\n      setCartId: cartSetIdDefault(),\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  createStorefrontClient,\n  createCartHandler__unstable as createCartHandler,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record<string, string>,\n    executionContext: ExecutionContext,\n  ): Promise<Response> {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler({\n      storefront,\n      requestHeaders: request.headers,\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
+            "code": "import {\n  createStorefrontClient,\n  createCartHandler__unstable as createCartHandler,\n  cartGetIdDefault,\n  cartSetIdDefault,\n} from '@shopify/hydrogen';\nimport * as remixBuild from '@remix-run/dev/server-build';\nimport {\n  createRequestHandler,\n  getStorefrontHeaders,\n} from '@shopify/remix-oxygen';\n\nexport default {\n  async fetch(\n    request: Request,\n    env: Record<string, string>,\n    executionContext: ExecutionContext,\n  ): Promise<Response> {\n    const {storefront} = createStorefrontClient({\n      /* client parameters */\n    });\n\n    // Create a cart api instance.\n    const cart = createCartHandler({\n      storefront,\n      getCartId: cartGetIdDefault(request.headers),\n      setCartId: cartSetIdDefault(),\n    });\n\n    const handleRequest = createRequestHandler({\n      build: remixBuild,\n      mode: process.env.NODE_ENV,\n      getLoadContext: () => ({\n        storefront,\n        cart, // Pass the cart api instance to the loader context.\n      }),\n    });\n\n    return await handleRequest(request);\n  },\n};\n",
             "language": "ts"
           }
         ],
@@ -1049,28 +1049,35 @@
         "type": "CartHandlerOptionsForDocs",
         "typeDefinitions": {
           "CartHandlerOptionsForDocs": {
-            "filePath": "/cart/cart-handler.ts",
+            "filePath": "/cart/createCartHandler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerOptionsForDocs",
-            "value": "{\n  /**\n   * The request headers.\n   */\n  requestHeaders: Headers;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   * Reads from a cookie named `cart` from the `requestHeaders`.\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * A function that sets the cart ID. Appends a `Set-Cookie` header with value `cart=${cartId}` in `headers`.\n   * The cookie is a session cookie by default.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n}",
+            "value": "{\n  /**\n   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\n   */\n  getCartId: () => string | undefined;\n  /**\n   * A function that sets the cart ID.\n   */\n  setCartId: (cartId: string, headers: Headers) => void;\n  /**\n   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).\n   */\n  storefront: Storefront;\n  /**\n   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartMutateFragment?: string;\n  /**\n   * The cart query fragment used by `cart.get()`.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-cart-fragments) in the documentation.\n   */\n  cartQueryFragment?: string;\n  /**\n   * Define custom methods or override existing methods for your cart API instance.\n   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) in the documentation.\n   */\n  customMethods?: TCustomMethods;\n}",
             "description": "",
             "members": [
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "requestHeaders",
-                "value": "Headers",
-                "description": "The request headers."
+                "name": "getCartId",
+                "value": "() => string",
+                "description": "A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`."
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "setCartId",
+                "value": "(cartId: string, headers: Headers) => void",
+                "description": "A function that sets the cart ID."
+              },
+              {
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "storefront",
                 "value": "Storefront",
                 "description": "The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient)."
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartMutateFragment",
                 "value": "string",
@@ -1078,7 +1085,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "cartQueryFragment",
                 "value": "string",
@@ -1086,27 +1093,11 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "customMethods",
                 "value": "TCustomMethods",
                 "description": "Define custom methods or override existing methods for your cart API instance.\nSee the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) in the documentation.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "getCartId",
-                "value": "() => string",
-                "description": "A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.\nReads from a cookie named `cart` from the `requestHeaders`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/cart/cart-handler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "setCartId",
-                "value": "(cartId: string, headers: Headers) => void",
-                "description": "A function that sets the cart ID. Appends a `Set-Cookie` header with value `cart=${cartId}` in `headers`.\nThe cookie is a session cookie by default.",
                 "isOptional": true
               }
             ]
@@ -1411,14 +1402,14 @@
         "type": "CartHandlerReturnBaseForDocs",
         "typeDefinitions": {
           "CartHandlerReturnBaseForDocs": {
-            "filePath": "/cart/cart-handler.ts",
+            "filePath": "/cart/createCartHandler.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartHandlerReturnBaseForDocs",
             "value": "{\n  /**\n   * Adds items to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  addLines?: CartLinesAddFunction;\n  /**\n   * Creates a new cart.\n   */\n  create?: CartCreateFunction;\n  /**\n   * Removes a custom field (metafield) from the cart.\n   */\n  deleteMetafield?: CartMetafieldDeleteFunction;\n  /**\n   * Retrieves the cart information.\n   */\n  get?: CartGetFunction;\n  /**\n   * Retrieves the unique identifier of the cart.\n   * By default, it gets the ID from the request cookie.\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Retrieves the form input created by the CartForm action request.\n   */\n  getFormInput?: (formData: any) => CartActionInput;\n  /**\n   * Removes items from the cart.\n   */\n  removeLines?: CartLinesRemoveFunction;\n  /**\n   * Sets the unique identifier of the cart.\n   * By default, it sets the ID in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Adds extra information (metafields) to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  setMetafields?: CartMetafieldsSetFunction;\n  /**\n   * Updates additional information (attributes) in the cart.\n   */\n  updateAttributes?: CartAttributesUpdateFunction;\n  /**\n   * Updates the buyer's information in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateBuyerIdentity?: CartBuyerIdentityUpdateFunction;\n  /**\n   * Updates discount codes in the cart.\n   */\n  updateDiscountCodes?: CartDiscountCodesUpdateFunction;\n  /**\n   * Updates items in the cart.\n   */\n  updateLines?: CartLinesUpdateFunction;\n  /**\n   * Updates the note in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateNote?: CartNoteUpdateFunction;\n  /**\n   * Updates the selected delivery options in the cart.\n   * Only available for carts associated with a customer access token.\n   */\n  updateSelectedDeliveryOption?: CartSelectedDeliveryOptionsUpdateFunction;\n}",
             "description": "",
             "members": [
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "addLines",
                 "value": "CartLinesAddFunction",
@@ -1426,7 +1417,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "create",
                 "value": "CartCreateFunction",
@@ -1434,7 +1425,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "deleteMetafield",
                 "value": "CartMetafieldDeleteFunction",
@@ -1442,7 +1433,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "get",
                 "value": "CartGetFunction",
@@ -1450,7 +1441,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getCartId",
                 "value": "() => string",
@@ -1458,7 +1449,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "getFormInput",
                 "value": "(formData: any) => CartActionInput",
@@ -1466,7 +1457,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "removeLines",
                 "value": "CartLinesRemoveFunction",
@@ -1474,7 +1465,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "setCartId",
                 "value": "(cartId: string, headers: Headers) => void",
@@ -1482,7 +1473,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "setMetafields",
                 "value": "CartMetafieldsSetFunction",
@@ -1490,7 +1481,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "updateAttributes",
                 "value": "CartAttributesUpdateFunction",
@@ -1498,7 +1489,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "updateBuyerIdentity",
                 "value": "CartBuyerIdentityUpdateFunction",
@@ -1506,7 +1497,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "updateDiscountCodes",
                 "value": "CartDiscountCodesUpdateFunction",
@@ -1514,7 +1505,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "updateLines",
                 "value": "CartLinesUpdateFunction",
@@ -1522,7 +1513,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "updateNote",
                 "value": "CartNoteUpdateFunction",
@@ -1530,7 +1521,7 @@
                 "isOptional": true
               },
               {
-                "filePath": "/cart/cart-handler.ts",
+                "filePath": "/cart/createCartHandler.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "updateSelectedDeliveryOption",
                 "value": "CartSelectedDeliveryOptionsUpdateFunction",
@@ -2118,7 +2109,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "import {createCartHandler__unstable as createCartHandler} from '@shopify/hydrogen';\n\n// Override cart fragments\nconst cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n  cartMutateFragment: CART_MUTATE_FRAGMENT,\n});\n\n// cartQueryFragment requirements:\n// - Must be named `CartFragment`\n// - Only have access to the following query variables:\n//   - $cartId: ID!\n//   - $country: CountryCode\n//   - $language: LanguageCode\n//   - $numCartLines: Int\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    totalQuantity\n    checkoutUrl\n    note\n  }\n`;\n\n// cartMutateFragment requirements:\n// - Must be named `CartFragment`\n// - Only have access to the following query variables:\n//   - $cartId: ID!\n//   - $country: CountryCode\n//   - $language: LanguageCode\nconst CART_MUTATE_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    totalQuantity\n    checkoutUrl\n    lines(first: 100) {\n      edges {\n        node {\n          id\n          quantity\n        }\n      }\n    }\n  }\n`;\n",
+                    "code": "import {\n  createCartHandler__unstable as createCartHandler,\n  cartGetIdDefault,\n  cartSetIdDefault,\n} from '@shopify/hydrogen';\n\n// Override cart fragments\nconst cart = createCartHandler({\n  storefront,\n  getCartId: cartGetIdDefault(request.headers),\n  setCartId: cartSetIdDefault(),\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n  cartMutateFragment: CART_MUTATE_FRAGMENT,\n});\n\n// cartQueryFragment requirements:\n// - Must be named `CartFragment`\n// - Only have access to the following query variables:\n//   - $cartId: ID!\n//   - $country: CountryCode\n//   - $language: LanguageCode\n//   - $numCartLines: Int\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    totalQuantity\n    checkoutUrl\n    note\n  }\n`;\n\n// cartMutateFragment requirements:\n// - Must be named `CartFragment`\n// - Only have access to the following query variables:\n//   - $cartId: ID!\n//   - $country: CountryCode\n//   - $language: LanguageCode\nconst CART_MUTATE_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    totalQuantity\n    checkoutUrl\n    lines(first: 100) {\n      edges {\n        node {\n          id\n          quantity\n        }\n      }\n    }\n  }\n`;\n",
                     "language": "js"
                   }
                 ]
@@ -2136,7 +2127,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "import {\n  createCartHandler__unstable as createCartHandler,\n  cartGetIdDefault,\n  cartLinesAddDefault,\n  cartLinesRemoveDefault,\n} from '@shopify/hydrogen';\n\nconst mutationOptions = {\n  storefront,\n  getCartId: cartGetIdDefault(request.headers),\n};\n\nconst cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  customMethods: {\n    editInPlace: async (removeLineIds, addLines, optionalParams) => {\n      // Using Hydrogen default cart query methods\n      await cartLinesAddDefault(mutationOptions)(addLines, optionalParams);\n      return await cartLinesRemoveDefault(mutationOptions)(\n        removeLineIds,\n        optionalParams,\n      );\n    },\n    addLines: async (lines, optionalParams) => {\n      // With your own Storefront API graphql query\n      return await storefront.mutate(CART_LINES_ADD_MUTATION, {\n        variables: {\n          id: optionalParams.cartId,\n          lines,\n        },\n      });\n    },\n  },\n});\n\n// Use custom method editInPlace that delete and add items in one method\ncart.editInPlace(\n  ['123'],\n  [\n    {\n      merchandiseId: 'gid://shopify/ProductVariant/456789123',\n      quantity: 1,\n    },\n  ],\n);\n\n// Use overridden cart.addLines\nconst result = await cart.addLines(\n  [\n    {\n      merchandiseId: 'gid://shopify/ProductVariant/123456789',\n      quantity: 1,\n    },\n  ],\n  {\n    cartId: 'c-123',\n  },\n);\n// Output of result:\n// {\n//   cartLinesAdd: {\n//     cart: {\n//       id: 'c-123',\n//       totalQuantity: 1\n//     },\n//     errors: []\n//   }\n// }\n\nconst CART_LINES_ADD_MUTATION = `#graphql\n  mutation CartLinesAdd(\n    $cartId: ID!\n    $lines: [CartLineInput!]!\n    $country: CountryCode = ZZ\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    cartLinesAdd(cartId: $cartId, lines: $lines) {\n      cart {\n        id\n        totalQuantity\n      }\n      errors: userErrors {\n        message\n        field\n        code\n      }\n    }\n  }\n`;\n",
+                    "code": "import {\n  createCartHandler__unstable as createCartHandler,\n  cartGetIdDefault,\n  cartSetIdDefault,\n  cartLinesAddDefault,\n  cartLinesRemoveDefault,\n} from '@shopify/hydrogen';\n\nconst mutationOptions = {\n  storefront,\n  getCartId: cartGetIdDefault(request.headers),\n};\n\nconst cart = createCartHandler({\n  storefront,\n  getCartId: cartGetIdDefault(request.headers),\n  setCartId: cartSetIdDefault(),\n  customMethods: {\n    editInPlace: async (removeLineIds, addLines, optionalParams) => {\n      // Using Hydrogen default cart query methods\n      await cartLinesAddDefault(mutationOptions)(addLines, optionalParams);\n      return await cartLinesRemoveDefault(mutationOptions)(\n        removeLineIds,\n        optionalParams,\n      );\n    },\n    addLines: async (lines, optionalParams) => {\n      // With your own Storefront API graphql query\n      return await storefront.mutate(CART_LINES_ADD_MUTATION, {\n        variables: {\n          id: optionalParams.cartId,\n          lines,\n        },\n      });\n    },\n  },\n});\n\n// Use custom method editInPlace that delete and add items in one method\ncart.editInPlace(\n  ['123'],\n  [\n    {\n      merchandiseId: 'gid://shopify/ProductVariant/456789123',\n      quantity: 1,\n    },\n  ],\n);\n\n// Use overridden cart.addLines\nconst result = await cart.addLines(\n  [\n    {\n      merchandiseId: 'gid://shopify/ProductVariant/123456789',\n      quantity: 1,\n    },\n  ],\n  {\n    cartId: 'c-123',\n  },\n);\n// Output of result:\n// {\n//   cartLinesAdd: {\n//     cart: {\n//       id: 'c-123',\n//       totalQuantity: 1\n//     },\n//     errors: []\n//   }\n// }\n\nconst CART_LINES_ADD_MUTATION = `#graphql\n  mutation CartLinesAdd(\n    $cartId: ID!\n    $lines: [CartLineInput!]!\n    $country: CountryCode = ZZ\n    $language: LanguageCode\n  ) @inContext(country: $country, language: $language) {\n    cartLinesAdd(cartId: $cartId, lines: $lines) {\n      cart {\n        id\n        totalQuantity\n      }\n      errors: userErrors {\n        message\n        field\n        code\n      }\n    }\n  }\n`;\n",
                     "language": "js"
                   }
                 ]
@@ -2180,7 +2171,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.setMetafields(\n    [\n      {\n        key: 'public.gift',\n        type: 'boolean',\n        value: 'true',\n      },\n    ],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n\n  const result2 = await cart.deleteMetafield(\n    'public.gift',\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n}\n\n// server.js\n// To query for metafields, use the `cartQueryFragment` option when creating the cart handler.\nimport {createCartHandler__unstable as createCartHandler} from '@shopify/hydrogen';\n\nconst cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n});\n\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    metafields(\n      identifiers: [{\n        namespace: \"public\",\n        key: \"gift\"\n      ])\n    {\n      namespace\n      key\n      type\n      value\n    }\n\n  }\n`;\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.setMetafields(\n    [\n      {\n        key: 'public.gift',\n        type: 'boolean',\n        value: 'true',\n      },\n    ],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n\n  const result2 = await cart.deleteMetafield(\n    'public.gift',\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n}\n\n// server.js\n// To query for metafields, use the `cartQueryFragment` option when creating the cart handler.\nimport {\n  createCartHandler__unstable as createCartHandler,\n  cartGetIdDefault,\n  cartSetIdDefault,\n} from '@shopify/hydrogen';\n\nconst cart = createCartHandler({\n  storefront,\n  getCartId: cartGetIdDefault(request.headers),\n  setCartId: cartSetIdDefault(),\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n});\n\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    metafields(\n      identifiers: [{\n        namespace: \"public\",\n        key: \"gift\"\n      ])\n    {\n      namespace\n      key\n      type\n      value\n    }\n\n  }\n`;\n",
                     "language": "js"
                   }
                 ]
@@ -2258,7 +2249,7 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.setMetafields(\n    [\n      {\n        key: 'public.gift',\n        type: 'boolean',\n        value: 'true',\n      },\n    ],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n\n  const result2 = await cart.deleteMetafield(\n    'public.gift',\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n}\n\n// server.js\n// To query for metafields, use the `cartQueryFragment` option when creating the cart handler.\nimport {createCartHandler__unstable as createCartHandler} from '@shopify/hydrogen';\n\nconst cart = createCartHandler({\n  storefront,\n  requestHeaders: request.headers,\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n});\n\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    metafields(\n      identifiers: [{\n        namespace: \"public\",\n        key: \"gift\"\n      ])\n    {\n      namespace\n      key\n      type\n      value\n    }\n\n  }\n`;\n",
+                    "code": "export async function action({context}) {\n  const {cart} = context;\n\n  // Usage\n  const result = await cart.setMetafields(\n    [\n      {\n        key: 'public.gift',\n        type: 'boolean',\n        value: 'true',\n      },\n    ],\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n\n  const result2 = await cart.deleteMetafield(\n    'public.gift',\n    // Optional parameters\n    {\n      cartId: '123', // override the cart id\n    },\n  );\n}\n\n// server.js\n// To query for metafields, use the `cartQueryFragment` option when creating the cart handler.\nimport {\n  createCartHandler__unstable as createCartHandler,\n  cartGetIdDefault,\n  cartSetIdDefault,\n} from '@shopify/hydrogen';\n\nconst cart = createCartHandler({\n  storefront,\n  getCartId: cartGetIdDefault(request.headers),\n  setCartId: cartSetIdDefault(),\n  cartQueryFragment: CART_QUERY_FRAGMENT,\n});\n\nconst CART_QUERY_FRAGMENT = `#graphql\n  fragment CartFragment on Cart {\n    id\n    metafields(\n      identifiers: [{\n        namespace: \"public\",\n        key: \"gift\"\n      ])\n    {\n      namespace\n      key\n      type\n      value\n    }\n\n  }\n`;\n",
                     "language": "js"
                   }
                 ]

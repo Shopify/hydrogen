@@ -175,9 +175,13 @@ export type CartHandlerOptionsForDocs<
   TCustomMethods extends CustomMethodsBase,
 > = {
   /**
-   * The request headers.
+   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.
    */
-  requestHeaders: Headers;
+  getCartId: () => string | undefined;
+  /**
+   * A function that sets the cart ID.
+   */
+  setCartId: (cartId: string, headers: Headers) => void;
   /**
    * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).
    */
@@ -197,16 +201,6 @@ export type CartHandlerOptionsForDocs<
    * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) in the documentation.
    */
   customMethods?: TCustomMethods;
-  /**
-   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.
-   * Reads from a cookie named `cart` from the `requestHeaders`.
-   */
-  getCartId?: () => string | undefined;
-  /**
-   * A function that sets the cart ID. Appends a `Set-Cookie` header with value `cart=${cartId}` in `headers`.
-   * The cookie is a session cookie by default.
-   */
-  setCartId?: (cartId: string, headers: Headers) => void;
 };
 
 export type CartHandlerReturnBaseForDocs = {

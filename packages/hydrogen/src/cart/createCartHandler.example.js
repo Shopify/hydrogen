@@ -1,6 +1,8 @@
 import {
   createStorefrontClient,
   createCartHandler__unstable as createCartHandler,
+  cartGetIdDefault,
+  cartSetIdDefault,
 } from '@shopify/hydrogen';
 import * as remixBuild from '@remix-run/dev/server-build';
 import {
@@ -9,11 +11,7 @@ import {
 } from '@shopify/remix-oxygen';
 
 export default {
-  async fetch(
-    request: Request,
-    env: Record<string, string>,
-    executionContext: ExecutionContext,
-  ): Promise<Response> {
+  async fetch(request, env, executionContext) {
     const {storefront} = createStorefrontClient({
       /* client parameters */
     });
@@ -21,7 +19,8 @@ export default {
     // Create a cart api instance.
     const cart = createCartHandler({
       storefront,
-      requestHeaders: request.headers,
+      getCartId: cartGetIdDefault(request.headers),
+      setCartId: cartSetIdDefault(),
     });
 
     const handleRequest = createRequestHandler({

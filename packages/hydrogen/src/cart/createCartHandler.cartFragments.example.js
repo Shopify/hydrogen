@@ -1,9 +1,14 @@
-import {createCartHandler__unstable as createCartHandler} from '@shopify/hydrogen';
+import {
+  createCartHandler__unstable as createCartHandler,
+  cartGetIdDefault,
+  cartSetIdDefault,
+} from '@shopify/hydrogen';
 
 // Override cart fragments
 const cart = createCartHandler({
   storefront,
-  requestHeaders: request.headers,
+  getCartId: cartGetIdDefault(request.headers),
+  setCartId: cartSetIdDefault(),
   cartQueryFragment: CART_QUERY_FRAGMENT,
   cartMutateFragment: CART_MUTATE_FRAGMENT,
 });

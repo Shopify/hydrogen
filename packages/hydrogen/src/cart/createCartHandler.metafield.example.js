@@ -27,11 +27,16 @@ export async function action({context}) {
 
 // server.js
 // To query for metafields, use the `cartQueryFragment` option when creating the cart handler.
-import {createCartHandler__unstable as createCartHandler} from '@shopify/hydrogen';
+import {
+  createCartHandler__unstable as createCartHandler,
+  cartGetIdDefault,
+  cartSetIdDefault,
+} from '@shopify/hydrogen';
 
 const cart = createCartHandler({
   storefront,
-  requestHeaders: request.headers,
+  getCartId: cartGetIdDefault(request.headers),
+  setCartId: cartSetIdDefault(),
   cartQueryFragment: CART_QUERY_FRAGMENT,
 });
 

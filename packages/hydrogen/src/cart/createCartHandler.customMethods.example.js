@@ -1,6 +1,7 @@
 import {
   createCartHandler__unstable as createCartHandler,
   cartGetIdDefault,
+  cartSetIdDefault,
   cartLinesAddDefault,
   cartLinesRemoveDefault,
 } from '@shopify/hydrogen';
@@ -12,7 +13,8 @@ const mutationOptions = {
 
 const cart = createCartHandler({
   storefront,
-  requestHeaders: request.headers,
+  getCartId: cartGetIdDefault(request.headers),
+  setCartId: cartSetIdDefault(),
   customMethods: {
     editInPlace: async (removeLineIds, addLines, optionalParams) => {
       // Using Hydrogen default cart query methods

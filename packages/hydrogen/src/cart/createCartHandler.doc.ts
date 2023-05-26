@@ -16,12 +16,12 @@ Creates an API that can be used to interact with the cart.`,
       tabs: [
         {
           title: 'JavaScript',
-          code: './cart-handler.example.js',
+          code: './createCartHandler.example.js',
           language: 'js',
         },
         {
           title: 'TypeScript',
-          code: './cart-handler.example.ts',
+          code: './createCartHandler.example.ts',
           language: 'ts',
         },
       ],
@@ -56,7 +56,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.cartFragments.example.js',
+                  code: './createCartHandler.cartFragments.example.js',
                   language: 'js',
                 },
               ],
@@ -75,7 +75,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.customMethods.example.js',
+                  code: './createCartHandler.customMethods.example.js',
                   language: 'js',
                 },
               ],
@@ -94,7 +94,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.addLines.example.js',
+                  code: './createCartHandler.addLines.example.js',
                   language: 'js',
                 },
               ],
@@ -107,7 +107,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.create.example.js',
+                  code: './createCartHandler.create.example.js',
                   language: 'js',
                 },
               ],
@@ -120,7 +120,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.metafield.example.js',
+                  code: './createCartHandler.metafield.example.js',
                   language: 'js',
                 },
               ],
@@ -133,7 +133,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.get.example.js',
+                  code: './createCartHandler.get.example.js',
                   language: 'js',
                 },
               ],
@@ -146,7 +146,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.getCartId.example.js',
+                  code: './createCartHandler.getCartId.example.js',
                   language: 'js',
                 },
               ],
@@ -160,7 +160,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.getFormInput.example.js',
+                  code: './createCartHandler.getFormInput.example.js',
                   language: 'js',
                 },
               ],
@@ -173,7 +173,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.removeLines.example.js',
+                  code: './createCartHandler.removeLines.example.js',
                   language: 'js',
                 },
               ],
@@ -186,7 +186,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.setCartId.example.js',
+                  code: './createCartHandler.setCartId.example.js',
                   language: 'js',
                 },
               ],
@@ -200,7 +200,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.metafield.example.js',
+                  code: './createCartHandler.metafield.example.js',
                   language: 'js',
                 },
               ],
@@ -214,7 +214,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.updateAttributes.example.js',
+                  code: './createCartHandler.updateAttributes.example.js',
                   language: 'js',
                 },
               ],
@@ -228,7 +228,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.updateBuyerIdentity.example.js',
+                  code: './createCartHandler.updateBuyerIdentity.example.js',
                   language: 'js',
                 },
               ],
@@ -241,7 +241,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.updateDiscountCodes.example.js',
+                  code: './createCartHandler.updateDiscountCodes.example.js',
                   language: 'js',
                 },
               ],
@@ -254,7 +254,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.updateLines.example.js',
+                  code: './createCartHandler.updateLines.example.js',
                   language: 'js',
                 },
               ],
@@ -268,7 +268,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.updateNote.example.js',
+                  code: './createCartHandler.updateNote.example.js',
                   language: 'js',
                 },
               ],
@@ -282,7 +282,7 @@ Creates an API that can be used to interact with the cart.`,
               tabs: [
                 {
                   title: 'JavaScript',
-                  code: './cart-handler.updateSelectedDeliveryOptions.example.js',
+                  code: './createCartHandler.updateSelectedDeliveryOptions.example.js',
                   language: 'js',
                 },
               ],
