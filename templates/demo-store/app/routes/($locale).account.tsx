@@ -273,6 +273,7 @@ export async function getCustomer(
       country: context.storefront.i18n.country,
       language: context.storefront.i18n.language,
     },
+    cache: storefront.CacheNone(),
   });
 
   /**
