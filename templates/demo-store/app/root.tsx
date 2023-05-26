@@ -17,7 +17,6 @@ import {
 } from '@remix-run/react';
 import {ShopifySalesChannel, Seo} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
-import type {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
 
 import {seoPayload} from '~/lib/seo.server';
 import {Layout} from '~/components';
@@ -27,7 +26,7 @@ import favicon from '../public/favicon.svg';
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
-import {DEFAULT_LOCALE, parseMenu, type EnhancedMenu} from './lib/utils';
+import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
 import {useAnalytics} from './hooks/useAnalytics';
 
 export const links: LinksFunction = () => {
@@ -85,8 +84,8 @@ export default function App() {
       </head>
       <body>
         <Layout
-          layout={data.layout as LayoutData}
           key={`${locale.language}-${locale.country}`}
+          layout={data.layout}
         >
           <Outlet />
         </Layout>
@@ -146,41 +145,32 @@ export function ErrorBoundary({error}: {error: Error}) {
 }
 
 const LAYOUT_QUERY = `#graphql
-  query layoutMenus(
+  query layout(
     $language: LanguageCode
     $headerMenuHandle: String!
     $footerMenuHandle: String!
   ) @inContext(language: $language) {
     shop {
-      id
-      name
-      description
-      primaryDomain {
-        url
-      }
-      brand {
-       logo {
-         image {
-          url
-         }
-       }
-     }
+      ...Shop
     }
     headerMenu: menu(handle: $headerMenuHandle) {
-      id
-      items {
-        ...MenuItem
-        items {
-          ...MenuItem
-        }
-      }
+      ...Menu
     }
     footerMenu: menu(handle: $footerMenuHandle) {
-      id
-      items {
-        ...MenuItem
-        items {
-          ...MenuItem
+      ...Menu
+    }
+  }
+  fragment Shop on Shop {
+    id
+    name
+    description
+    primaryDomain {
+      url
+    }
+    brand {
+      logo {
+        image {
+          url
         }
       }
     }
@@ -193,23 +183,28 @@ const LAYOUT_QUERY = `#graphql
     type
     url
   }
-`;
-
-export interface LayoutData {
-  headerMenu: EnhancedMenu;
-  footerMenu: EnhancedMenu;
-  shop: Shop;
-  cart?: Promise<Cart>;
-}
+  fragment ChildMenuItem on MenuItem {
+    ...MenuItem
+  }
+  fragment ParentMenuItem on MenuItem {
+    ...MenuItem
+    items {
+      ...ChildMenuItem
+    }
+  }
+  fragment Menu on Menu {
+    id
+    items {
+      ...ParentMenuItem
+    }
+  }
+` as const;
 
 async function getLayoutData({storefront}: AppLoadContext) {
-  const HEADER_MENU_HANDLE = 'main-menu';
-  const FOOTER_MENU_HANDLE = 'footer';
-
-  const data = await storefront.query<LayoutData>(LAYOUT_QUERY, {
+  const data = await storefront.query(LAYOUT_QUERY, {
     variables: {
-      headerMenuHandle: HEADER_MENU_HANDLE,
-      footerMenuHandle: FOOTER_MENU_HANDLE,
+      headerMenuHandle: 'main-menu',
+      footerMenuHandle: 'footer',
       language: storefront.i18n.language,
     },
   });

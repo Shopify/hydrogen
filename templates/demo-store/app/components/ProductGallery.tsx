@@ -1,6 +1,6 @@
 import {Image} from '@shopify/hydrogen';
-import type {MediaEdge} from '@shopify/hydrogen/storefront-api-types';
-import type {MediaImage} from '@shopify/hydrogen/storefront-api-types';
+
+import type {MediaFragment} from 'storefrontapi.generated';
 
 /**
  * A client component that defines a media gallery for hosting images, 3D models, and videos of products
@@ -9,7 +9,7 @@ export function ProductGallery({
   media,
   className,
 }: {
-  media: MediaEdge['node'][];
+  media: MediaFragment[];
   className?: string;
 }) {
   if (!media.length) {
@@ -25,14 +25,10 @@ export function ProductGallery({
         const isFourth = i === 3;
         const isFullWidth = i % 3 === 0;
 
-        const data = {
-          ...med,
-          image: {
-            // @ts-ignore
-            ...med.image,
-            altText: med.alt || 'Product image',
-          },
-        } as MediaImage;
+        const image =
+          med.__typename === 'MediaImage'
+            ? {...med.image, altText: med.alt || 'Product image'}
+            : null;
 
         const style = [
           isFullWidth ? 'md:col-span-2' : 'md:col-span-1',
@@ -41,15 +37,11 @@ export function ProductGallery({
         ].join(' ');
 
         return (
-          <div
-            className={style}
-            // @ts-ignore
-            key={med.id || med.image.id}
-          >
-            {(med as MediaImage).image && (
+          <div className={style} key={med.id || image?.id}>
+            {image && (
               <Image
                 loading={i === 0 ? 'eager' : 'lazy'}
-                data={data.image!}
+                data={image}
                 aspectRatio={!isFirst && !isFourth ? '4/5' : undefined}
                 sizes={
                   isFirst || isFourth
