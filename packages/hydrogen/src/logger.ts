@@ -1,5 +1,3 @@
-import {yellow, red} from 'kolorist';
-
 type LoggerMethod = (
   context: {request: Request},
   ...args: Array<any>
@@ -83,21 +81,21 @@ export class Logger {
     },
 
     warn: (context, ...args) => {
-      console.warn(yellow('WARN: '), ...args);
+      console.warn('WARN: ', ...args);
     },
 
     error: (context, error, ...extra) => {
       const url = context ? ` ${context.request.url}` : '';
 
       if (error instanceof Error) {
-        console.error(red(`Error processing route:${url}\n${error.stack}`));
+        console.error(`Error processing route:${url}\n${error.stack}`);
       } else {
-        console.error(red(`Error:${url} ${error}`));
+        console.error(`Error:${url} ${error}`);
       }
     },
 
     fatal: (context, ...args) => {
-      console.error(red('FATAL: '), ...args);
+      console.error('FATAL: ', ...args);
     },
   };
 }
