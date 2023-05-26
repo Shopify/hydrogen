@@ -1,12 +1,12 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {flattenConnection, Image} from '@shopify/hydrogen';
-import type {Article, Blog} from '@shopify/hydrogen/storefront-api-types';
 
 import {Grid, PageHeader, Section, Link} from '~/components';
 import {getImageLoadingPriority, PAGINATION_SIZE} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
 import {CACHE_SHORT, routeHeaders} from '~/data/cache';
+import type {ArticleFragment} from 'storefrontapi.generated';
 
 const BLOG_HANDLE = 'Journal';
 
@@ -14,9 +14,7 @@ export const headers = routeHeaders;
 
 export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   const {language, country} = storefront.i18n;
-  const {blog} = await storefront.query<{
-    blog: Blog;
-  }>(BLOGS_QUERY, {
+  const {blog} = await storefront.query(BLOGS_QUERY, {
     variables: {
       blogHandle: BLOG_HANDLE,
       pageBy: PAGINATION_SIZE,
@@ -28,8 +26,8 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
     throw new Response('Not found', {status: 404});
   }
 
-  const articles = flattenConnection(blog.articles).map((article: Article) => {
-    const {publishedAt} = article;
+  const articles = flattenConnection(blog.articles).map((article) => {
+    const {publishedAt} = article!;
     return {
       ...article,
       publishedAt: new Intl.DateTimeFormat(`${language}-${country}`, {
@@ -63,7 +61,7 @@ export default function Journals() {
           {articles.map((article, i) => (
             <ArticleCard
               blogHandle={BLOG_HANDLE.toLowerCase()}
-              article={article as Article}
+              article={article}
               key={article.id}
               loading={getImageLoadingPriority(i, 2)}
             />
@@ -80,7 +78,7 @@ function ArticleCard({
   loading,
 }: {
   blogHandle: string;
-  article: Article;
+  article: ArticleFragment;
   loading?: HTMLImageElement['loading'];
 }) {
   return (
@@ -121,24 +119,28 @@ query Blog(
     articles(first: $pageBy, after: $cursor) {
       edges {
         node {
-          author: authorV2 {
-            name
-          }
-          contentHtml
-          handle
-          id
-          image {
-            id
-            altText
-            url
-            width
-            height
-          }
-          publishedAt
-          title
+          ...Article
         }
       }
     }
   }
+}
+
+fragment Article on Article {
+  author: authorV2 {
+    name
+  }
+  contentHtml
+  handle
+  id
+  image {
+    id
+    altText
+    url
+    width
+    height
+  }
+  publishedAt
+  title
 }
 `;

@@ -1,7 +1,6 @@
 import {json, type MetaFunction, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
-import type {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 
 import {PageHeader, Section, Button} from '~/components';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
@@ -11,15 +10,13 @@ export const headers = routeHeaders;
 
 export async function loader({request, params, context}: LoaderArgs) {
   invariant(params.policyHandle, 'Missing policy handle');
-  const handle = params.policyHandle;
 
-  const policyName = handle.replace(/-([a-z])/g, (_: unknown, m1: string) =>
-    m1.toUpperCase(),
-  );
+  const policyName = params.policyHandle.replace(
+    /-([a-z])/g,
+    (_: unknown, m1: string) => m1.toUpperCase(),
+  ) as 'privacyPolicy' | 'shippingPolicy' | 'termsOfService' | 'refundPolicy';
 
-  const data = await context.storefront.query<{
-    shop: Record<string, ShopPolicy>;
-  }>(POLICY_CONTENT_QUERY, {
+  const data = await context.storefront.query(POLICY_CONTENT_QUERY, {
     variables: {
       privacyPolicy: false,
       shippingPolicy: false,

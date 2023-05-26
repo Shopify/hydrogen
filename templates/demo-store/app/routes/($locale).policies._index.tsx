@@ -1,21 +1,21 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import type {ShopPolicy} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 
 import {PageHeader, Section, Heading, Link} from '~/components';
 import {routeHeaders, CACHE_LONG} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
+import type {NonNullableFields} from '~/lib/type';
 
 export const headers = routeHeaders;
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
-  const data = await storefront.query<{
-    shop: Record<string, ShopPolicy>;
-  }>(POLICIES_QUERY);
+  const data = await storefront.query(POLICIES_QUERY);
 
   invariant(data, 'No data returned from Shopify API');
-  const policies = Object.values(data.shop || {});
+  const policies = Object.values(
+    data.shop as NonNullableFields<typeof data.shop>,
+  ).filter(Boolean);
 
   if (policies.length === 0) {
     throw new Response('Not found', {status: 404});

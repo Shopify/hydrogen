@@ -1,16 +1,12 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
-import type {
-  ProductConnection,
-  Collection,
-} from '@shopify/hydrogen/storefront-api-types';
 import invariant from 'tiny-invariant';
 import {
   Pagination__unstable as Pagination,
   getPaginationVariables__unstable as getPaginationVariables,
 } from '@shopify/hydrogen';
 
-import {PageHeader, Section, ProductCard, Grid, Button} from '~/components';
+import {PageHeader, Section, ProductCard, Grid} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
@@ -23,9 +19,7 @@ export const headers = routeHeaders;
 export async function loader({request, context: {storefront}}: LoaderArgs) {
   const variables = getPaginationVariables(request, {pageBy: PAGE_BY});
 
-  const data = await storefront.query<{
-    products: ProductConnection;
-  }>(ALL_PRODUCTS_QUERY, {
+  const data = await storefront.query(ALL_PRODUCTS_QUERY, {
     variables: {
       ...variables,
       country: storefront.i18n.country,
@@ -35,24 +29,22 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
 
   invariant(data, 'No data returned from Shopify API');
 
-  const seoCollection = {
-    id: 'all-products',
-    title: 'All Products',
-    handle: 'products',
-    descriptionHtml: 'All the store products',
-    description: 'All the store products',
-    seo: {
-      title: 'All Products',
-      description: 'All the store products',
-    },
-    metafields: [],
-    products: data.products,
-    updatedAt: '',
-  } satisfies Collection;
-
   const seo = seoPayload.collection({
-    collection: seoCollection,
     url: request.url,
+    collection: {
+      id: 'all-products',
+      title: 'All Products',
+      handle: 'products',
+      descriptionHtml: 'All the store products',
+      description: 'All the store products',
+      seo: {
+        title: 'All Products',
+        description: 'All the store products',
+      },
+      metafields: [],
+      products: data.products,
+      updatedAt: '',
+    },
   });
 
   return json(
@@ -129,4 +121,4 @@ const ALL_PRODUCTS_QUERY = `#graphql
     }
   }
   ${PRODUCT_CARD_FRAGMENT}
-`;
+` as const;

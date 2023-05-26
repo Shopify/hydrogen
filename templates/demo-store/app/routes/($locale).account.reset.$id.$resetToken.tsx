@@ -1,7 +1,6 @@
 import {json, redirect, type ActionFunction} from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 import {useRef, useState} from 'react';
-import type {CustomerResetPayload} from '@shopify/hydrogen/storefront-api-types';
 
 import {getInputStyleClasses} from '~/lib/utils';
 
@@ -47,18 +46,15 @@ export const action: ActionFunction = async ({
   const {session, storefront} = context;
 
   try {
-    const data = await storefront.mutate<{customerReset: CustomerResetPayload}>(
-      CUSTOMER_RESET_MUTATION,
-      {
-        variables: {
-          id: `gid://shopify/Customer/${id}`,
-          input: {
-            password,
-            resetToken,
-          },
+    const data = await storefront.mutate(CUSTOMER_RESET_MUTATION, {
+      variables: {
+        id: `gid://shopify/Customer/${id}`,
+        input: {
+          password,
+          resetToken,
         },
       },
-    );
+    });
 
     const {accessToken} = data?.customerReset?.customerAccessToken ?? {};
 

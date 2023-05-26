@@ -195,6 +195,13 @@ export async function transpileProject(projectDir: string) {
       }
     }
 
+    if (pkgJson.scripts?.dev) {
+      pkgJson.scripts.dev = pkgJson.scripts.dev.replace(
+        /\s*--codegen(-unstable)?/,
+        '',
+      );
+    }
+
     await fs.writeFile(
       path.join(projectDir, 'package.json'),
       JSON.stringify(pkgJson, null, 2),
