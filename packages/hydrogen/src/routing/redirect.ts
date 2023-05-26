@@ -38,7 +38,7 @@ export async function storefrontRedirect(
     const location = urlRedirects?.edges?.[0]?.node?.target;
 
     if (location) {
-      return new Response(null, {status: 302, headers: {location}});
+      return new Response(null, {status: 301, headers: {location}});
     }
 
     const searchParams = new URLSearchParams(search);

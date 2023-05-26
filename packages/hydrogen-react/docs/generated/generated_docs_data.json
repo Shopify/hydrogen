@@ -6054,14 +6054,14 @@
             "filePath": "/flatten-connection.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ConnectionEdges",
-            "value": "{\n  edges: {node: Array<unknown>};\n}",
+            "value": "{\n  edges: Array<{node: unknown}>;\n}",
             "description": "",
             "members": [
               {
                 "filePath": "/flatten-connection.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "edges",
-                "value": "{ node: unknown[]; }",
+                "value": "{ node: unknown; }[]",
                 "description": ""
               }
             ]
