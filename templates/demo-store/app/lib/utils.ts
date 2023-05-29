@@ -1,27 +1,34 @@
 import {useLocation, useMatches} from '@remix-run/react';
 import {parse as parseCookie} from 'worktop/cookie';
-import type {
-  MenuItem,
-  Menu,
-  MoneyV2,
-} from '@shopify/hydrogen/storefront-api-types';
+import type {MoneyV2} from '@shopify/hydrogen/storefront-api-types';
 import typographicBase from 'typographic-base';
 
+import type {
+  ChildMenuItemFragment,
+  MenuFragment,
+  ParentMenuItemFragment,
+} from 'storefrontapi.generated';
 import {countries} from '~/data/countries';
 
 import type {I18nLocale} from './type';
-import {Locale} from './type';
 
-export interface EnhancedMenuItem extends MenuItem {
+type EnhancedMenuItemProps = {
   to: string;
   target: string;
   isExternal?: boolean;
-  items: EnhancedMenuItem[];
-}
+};
 
-export interface EnhancedMenu extends Menu {
-  items: EnhancedMenuItem[];
-}
+export type ChildEnhancedMenuItem = ChildMenuItemFragment &
+  EnhancedMenuItemProps;
+
+export type ParentEnhancedMenuItem = (ParentMenuItemFragment &
+  EnhancedMenuItemProps) & {
+  items: ChildEnhancedMenuItem[];
+};
+
+export type EnhancedMenu = Pick<MenuFragment, 'id'> & {
+  items: ParentEnhancedMenuItem[];
+};
 
 export function missingClass(string?: string, prefix?: string) {
   if (!string) {
@@ -139,12 +146,18 @@ function resolveToFromType(
   Parse each menu link and adding, isExternal, to and target
 */
 function parseItem(customPrefixes = {}) {
-  return function (item: MenuItem): EnhancedMenuItem {
+  return function (
+    item:
+      | MenuFragment['items'][number]
+      | MenuFragment['items'][number]['items'][number],
+  ):
+    | EnhancedMenu['items'][0]
+    | EnhancedMenu['items'][number]['items'][0]
+    | null {
     if (!item?.url || !item?.type) {
       // eslint-disable-next-line no-console
       console.warn('Invalid menu item.  Must include a url and type.');
-      // @ts-ignore
-      return;
+      return null;
     }
 
     // extract path from url because we don't need the origin on internal to attributes
@@ -172,10 +185,14 @@ function parseItem(customPrefixes = {}) {
           to: item.url,
         };
 
-    return {
-      ...parsedItem,
-      items: item.items?.map(parseItem(customPrefixes)),
-    };
+    if ('items' in item) {
+      return {
+        ...parsedItem,
+        items: item.items.map(parseItem(customPrefixes)).filter(Boolean),
+      } as EnhancedMenu['items'][number];
+    } else {
+      return parsedItem as EnhancedMenu['items'][number]['items'][number];
+    }
   };
 }
 
@@ -184,18 +201,24 @@ function parseItem(customPrefixes = {}) {
   and resource type.
   It optionally overwrites url paths based on item.type
 */
-export function parseMenu(menu: Menu, customPrefixes = {}): EnhancedMenu {
+export function parseMenu(
+  menu: MenuFragment,
+  customPrefixes = {},
+): EnhancedMenu | null {
   if (!menu?.items) {
     // eslint-disable-next-line no-console
     console.warn('Invalid menu passed to parseMenu');
-    // @ts-ignore
-    return menu;
+    return null;
   }
 
-  return {
+  const parser = parseItem(customPrefixes);
+
+  const parsedMenu = {
     ...menu,
-    items: menu.items.map(parseItem(customPrefixes)),
-  };
+    items: menu.items.map(parser).filter(Boolean),
+  } as EnhancedMenu;
+
+  return parsedMenu;
 }
 
 export const INPUT_STYLE_CLASSES =

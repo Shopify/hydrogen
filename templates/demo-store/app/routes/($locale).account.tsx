@@ -6,12 +6,6 @@ import {
   useMatches,
   useOutlet,
 } from '@remix-run/react';
-import type {
-  Collection,
-  Customer,
-  MailingAddress,
-  Order,
-} from '@shopify/hydrogen/storefront-api-types';
 import {Suspense} from 'react';
 import {
   json,
@@ -22,6 +16,10 @@ import {
 } from '@shopify/remix-oxygen';
 import {flattenConnection} from '@shopify/hydrogen';
 
+import type {
+  CustomerDetailsFragment,
+  OrderCardFragment,
+} from 'storefrontapi.generated';
 import {
   Button,
   OrderCard,
@@ -35,8 +33,12 @@ import {
 import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {usePrefixPathWithLocale} from '~/lib/utils';
 import {CACHE_NONE, routeHeaders} from '~/data/cache';
+import {ORDER_CARD_FRAGMENT} from '~/components/OrderCard';
 
-import {getFeaturedData} from './($locale).featured-products';
+import {
+  getFeaturedData,
+  type FeaturedData,
+} from './($locale).featured-products';
 import {doLogout} from './($locale).account.logout';
 
 // Combining json + Response + defer in a loader breaks the
@@ -69,15 +71,11 @@ export async function loader({request, context, params}: LoaderArgs) {
       : `Welcome to your account.`
     : 'Account Details';
 
-  const orders = flattenConnection(customer.orders) as Order[];
-
   return defer(
     {
       isAuthenticated,
       customer,
       heading,
-      orders,
-      addresses: flattenConnection(customer.addresses) as MailingAddress[],
       featuredData: getFeaturedData(context.storefront),
     },
     {
@@ -111,7 +109,7 @@ export default function Authenticated() {
           <Modal cancelLink="/account">
             <Outlet context={{customer: data.customer}} />
           </Modal>
-          <Account {...(data as AccountType)} />
+          <Account {...data} />
         </>
       );
     } else {
@@ -119,24 +117,19 @@ export default function Authenticated() {
     }
   }
 
-  return <Account {...(data as AccountType)} />;
+  return <Account {...data} />;
 }
 
 interface AccountType {
-  customer: Customer;
-  orders: Order[];
+  customer: CustomerDetailsFragment;
+  featuredData: Promise<FeaturedData>;
   heading: string;
-  addresses: MailingAddress[];
-  featuredData: any; // @todo: help please
 }
 
-function Account({
-  customer,
-  orders,
-  heading,
-  addresses,
-  featuredData,
-}: AccountType) {
+function Account({customer, heading, featuredData}: AccountType) {
+  const orders = flattenConnection(customer.orders);
+  const addresses = flattenConnection(customer.addresses);
+
   return (
     <>
       <PageHeader heading={heading}>
@@ -146,12 +139,9 @@ function Account({
           </button>
         </Form>
       </PageHeader>
-      {orders && <AccountOrderHistory orders={orders as Order[]} />}
-      <AccountDetails customer={customer as Customer} />
-      <AccountAddressBook
-        addresses={addresses as MailingAddress[]}
-        customer={customer as Customer}
-      />
+      {orders && <AccountOrderHistory orders={orders} />}
+      <AccountDetails customer={customer} />
+      <AccountAddressBook addresses={addresses} customer={customer} />
       {!orders.length && (
         <Suspense>
           <Await
@@ -162,7 +152,7 @@ function Account({
               <>
                 <FeaturedCollections
                   title="Popular Collections"
-                  collections={data.featuredCollections as Collection[]}
+                  collections={data.featuredCollections}
                 />
                 <ProductSwimlane products={data.featuredProducts} />
               </>
@@ -174,7 +164,11 @@ function Account({
   );
 }
 
-function AccountOrderHistory({orders}: {orders: Order[]}) {
+type OrderCardsProps = {
+  orders: OrderCardFragment[];
+};
+
+function AccountOrderHistory({orders}: OrderCardsProps) {
   return (
     <div className="mt-6">
       <div className="grid w-full gap-4 p-4 py-6 md:gap-8 md:p-8 lg:p-12">
@@ -204,7 +198,7 @@ function EmptyOrders() {
   );
 }
 
-function Orders({orders}: {orders: Order[]}) {
+function Orders({orders}: OrderCardsProps) {
   return (
     <ul className="grid grid-flow-row grid-cols-1 gap-2 gap-y-6 md:gap-4 lg:gap-6 false sm:grid-cols-3">
       {orders.map((order) => (
@@ -221,74 +215,50 @@ const CUSTOMER_QUERY = `#graphql
     $language: LanguageCode
   ) @inContext(country: $country, language: $language) {
     customer(customerAccessToken: $customerAccessToken) {
-      firstName
-      lastName
-      phone
-      email
-      defaultAddress {
-        id
-        formatted
-        firstName
-        lastName
-        company
-        address1
-        address2
-        country
-        province
-        city
-        zip
-        phone
-      }
-      addresses(first: 6) {
-        edges {
-          node {
-            id
-            formatted
-            firstName
-            lastName
-            company
-            address1
-            address2
-            country
-            province
-            city
-            zip
-            phone
-          }
+      ...CustomerDetails
+    }
+  }
+
+  fragment AddressPartial on MailingAddress {
+    id
+    formatted
+    firstName
+    lastName
+    company
+    address1
+    address2
+    country
+    province
+    city
+    zip
+    phone
+  }
+
+  fragment CustomerDetails on Customer {
+    firstName
+    lastName
+    phone
+    email
+    defaultAddress {
+      ...AddressPartial
+    }
+    addresses(first: 6) {
+      edges {
+        node {
+          ...AddressPartial
         }
       }
-      orders(first: 250, sortKey: PROCESSED_AT, reverse: true) {
-        edges {
-          node {
-            id
-            orderNumber
-            processedAt
-            financialStatus
-            fulfillmentStatus
-            currentTotalPrice {
-              amount
-              currencyCode
-            }
-            lineItems(first: 2) {
-              edges {
-                node {
-                  variant {
-                    image {
-                      url
-                      altText
-                      height
-                      width
-                    }
-                  }
-                  title
-                }
-              }
-            }
-          }
+    }
+    orders(first: 250, sortKey: PROCESSED_AT, reverse: true) {
+      edges {
+        node {
+          ...OrderCard
         }
       }
     }
   }
+
+  ${ORDER_CARD_FRAGMENT}
 `;
 
 export async function getCustomer(
@@ -297,14 +267,13 @@ export async function getCustomer(
 ) {
   const {storefront} = context;
 
-  const data = await storefront.query<{
-    customer: Customer;
-  }>(CUSTOMER_QUERY, {
+  const data = await storefront.query(CUSTOMER_QUERY, {
     variables: {
       customerAccessToken,
       country: context.storefront.i18n.country,
       language: context.storefront.i18n.language,
     },
+    cache: storefront.CacheNone(),
   });
 
   /**

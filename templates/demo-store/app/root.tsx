@@ -17,22 +17,16 @@ import {
 } from '@remix-run/react';
 import {ShopifySalesChannel, Seo} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
-import type {Shop, Cart} from '@shopify/hydrogen/storefront-api-types';
 
-import {Layout} from '~/components';
 import {seoPayload} from '~/lib/seo.server';
+import {Layout} from '~/components';
 
 import favicon from '../public/favicon.svg';
 
 import {GenericError} from './components/GenericError';
 import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
-import {
-  DEFAULT_LOCALE,
-  parseMenu,
-  getCartId,
-  type EnhancedMenu,
-} from './lib/utils';
+import {DEFAULT_LOCALE, parseMenu, getCartId} from './lib/utils';
 import {useAnalytics} from './hooks/useAnalytics';
 
 export const links: LinksFunction = () => {
@@ -90,8 +84,8 @@ export default function App() {
       </head>
       <body>
         <Layout
-          layout={data.layout as LayoutData}
           key={`${locale.language}-${locale.country}`}
+          layout={data.layout}
         >
           <Outlet />
         </Layout>
@@ -151,41 +145,32 @@ export function ErrorBoundary({error}: {error: Error}) {
 }
 
 const LAYOUT_QUERY = `#graphql
-  query layoutMenus(
+  query layout(
     $language: LanguageCode
     $headerMenuHandle: String!
     $footerMenuHandle: String!
   ) @inContext(language: $language) {
     shop {
-      id
-      name
-      description
-      primaryDomain {
-        url
-      }
-      brand {
-       logo {
-         image {
-          url
-         }
-       }
-     }
+      ...Shop
     }
     headerMenu: menu(handle: $headerMenuHandle) {
-      id
-      items {
-        ...MenuItem
-        items {
-          ...MenuItem
-        }
-      }
+      ...Menu
     }
     footerMenu: menu(handle: $footerMenuHandle) {
-      id
-      items {
-        ...MenuItem
-        items {
-          ...MenuItem
+      ...Menu
+    }
+  }
+  fragment Shop on Shop {
+    id
+    name
+    description
+    primaryDomain {
+      url
+    }
+    brand {
+      logo {
+        image {
+          url
         }
       }
     }
@@ -198,23 +183,28 @@ const LAYOUT_QUERY = `#graphql
     type
     url
   }
-`;
-
-export interface LayoutData {
-  headerMenu: EnhancedMenu;
-  footerMenu: EnhancedMenu;
-  shop: Shop;
-  cart?: Promise<Cart>;
-}
+  fragment ChildMenuItem on MenuItem {
+    ...MenuItem
+  }
+  fragment ParentMenuItem on MenuItem {
+    ...MenuItem
+    items {
+      ...ChildMenuItem
+    }
+  }
+  fragment Menu on Menu {
+    id
+    items {
+      ...ParentMenuItem
+    }
+  }
+` as const;
 
 async function getLayoutData({storefront}: AppLoadContext) {
-  const HEADER_MENU_HANDLE = 'main-menu';
-  const FOOTER_MENU_HANDLE = 'footer';
-
-  const data = await storefront.query<LayoutData>(LAYOUT_QUERY, {
+  const data = await storefront.query(LAYOUT_QUERY, {
     variables: {
-      headerMenuHandle: HEADER_MENU_HANDLE,
-      footerMenuHandle: FOOTER_MENU_HANDLE,
+      headerMenuHandle: 'main-menu',
+      footerMenuHandle: 'footer',
       language: storefront.i18n.language,
     },
   });
@@ -243,13 +233,12 @@ async function getLayoutData({storefront}: AppLoadContext) {
 }
 
 const CART_QUERY = `#graphql
-  query CartQuery($cartId: ID!, $country: CountryCode, $language: LanguageCode)
+  query cartQuery($cartId: ID!, $country: CountryCode, $language: LanguageCode)
     @inContext(country: $country, language: $language) {
     cart(id: $cartId) {
       ...CartFragment
     }
   }
-
   fragment CartFragment on Cart {
     id
     checkoutUrl
@@ -354,12 +343,12 @@ const CART_QUERY = `#graphql
     width
     height
   }
-`;
+` as const;
 
 export async function getCart({storefront}: AppLoadContext, cartId: string) {
   invariant(storefront, 'missing storefront client in cart query');
 
-  const {cart} = await storefront.query<{cart?: Cart}>(CART_QUERY, {
+  const {cart} = await storefront.query(CART_QUERY, {
     variables: {
       cartId,
       country: storefront.i18n.country,
