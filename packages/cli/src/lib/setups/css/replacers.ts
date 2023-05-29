@@ -181,7 +181,6 @@ export async function replaceRootLinks(
     const newLinkReturnItem = importer.isConditional
       ? `...(${importer.name} ? [{ rel: 'stylesheet', href: ${importer.name} }] : [])`
       : `{rel: 'stylesheet', href: ${importer.name}}`;
-    console.log({importStatement, newLinkReturnItem});
 
     return content
       .replace(lastImportContent, lastImportContent + '\n' + importStatement)
@@ -189,5 +188,18 @@ export async function replaceRootLinks(
         linksExportReturnContent,
         linksExportReturnContent.replace('[', `[${newLinkReturnItem},`),
       );
+  });
+}
+
+export function injectCssBundlingLink(
+  appDirectory: string,
+  formatConfig: FormatOptions,
+) {
+  return replaceRootLinks(appDirectory, formatConfig, {
+    name: 'cssBundleHref',
+    path: '@remix-run/css-bundle',
+    isDefault: false,
+    isConditional: true,
+    isAbsolute: true,
   });
 }
