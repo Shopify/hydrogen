@@ -1,4 +1,5 @@
 import {setupTailwind} from './tailwind.js';
+import {setupPostCss} from './postcss.js';
 import type {SetupConfig} from './common.js';
 
 import type {CssStrategy} from './assets.js';
@@ -13,6 +14,8 @@ export function setupCssStrategy(
   switch (strategy) {
     case 'tailwind':
       return setupTailwind(options, force);
+    case 'postcss':
+      return setupPostCss(options, force);
     default:
       throw new Error('Unknown strategy');
   }
