@@ -1,4 +1,5 @@
-import {type SetupTailwindConfig, setupTailwind} from './tailwind.js';
+import {setupTailwind} from './tailwind.js';
+import type {SetupConfig} from './common.js';
 
 export const SETUP_CSS_STRATEGIES = [
   'tailwind' /*'css-modules', 'vanilla-extract'*/,
@@ -8,7 +9,7 @@ export type CssStrategy = (typeof SETUP_CSS_STRATEGIES)[number];
 
 export function setupCssStrategy(
   strategy: CssStrategy,
-  options: SetupTailwindConfig,
+  options: SetupConfig,
   force?: boolean,
 ) {
   switch (strategy) {
