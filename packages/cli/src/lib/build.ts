@@ -6,7 +6,8 @@ export const GENERATOR_STARTER_DIR = 'starter';
 export const GENERATOR_SETUP_ASSETS_DIR = 'assets';
 export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
   'tailwind',
-  'postcss' /*'css-modules', 'vanilla-extract'*/,
+  'postcss',
+  'css-modules' /*'vanilla-extract'*/,
 ] as const;
 
 export type AssetDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];

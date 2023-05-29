@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@remix-run/css-bundle": "^1.16.1"
+  }
+}
