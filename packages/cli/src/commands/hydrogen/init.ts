@@ -41,6 +41,7 @@ import {
   setupCssStrategy,
   type CssStrategy,
 } from './../../lib/setups/css/index.js';
+import {ALIAS_NAME, createPlatformShortcut} from './shortcut.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
@@ -217,6 +218,15 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     project.directory,
   );
 
+  const tasks = [
+    {
+      title: 'Setting up project',
+      task: async () => {
+        await backgroundWorkPromise;
+      },
+    },
+  ];
+
   if (storefrontInfo) {
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
       Promise.all([
@@ -235,12 +245,12 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     );
   }
 
-  const convertFiles = await handleLanguage(
+  const transpileFiles = await handleLanguage(
     project.directory,
     options.language,
   );
 
-  backgroundWorkPromise = backgroundWorkPromise.then(() => convertFiles());
+  backgroundWorkPromise = backgroundWorkPromise.then(() => transpileFiles());
 
   const {setupCss} = await handleCssStrategy(project.directory);
 
@@ -248,15 +258,6 @@ async function setupLocalStarterTemplate(options: InitOptions) {
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(project.directory, options.installDeps);
-
-  const tasks = [
-    {
-      title: 'Setting up project',
-      task: async () => {
-        await backgroundWorkPromise;
-      },
-    },
-  ];
 
   if (shouldInstallDeps) {
     const installingDepsPromise = backgroundWorkPromise.then(() =>
@@ -271,9 +272,43 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     });
   }
 
+  let hasCreatedShortcut = false;
+  const createShortcut = await handleCliAlias();
+  if (createShortcut) {
+    backgroundWorkPromise = backgroundWorkPromise.then(async () => {
+      try {
+        const shortcuts = await createShortcut();
+        hasCreatedShortcut = shortcuts.length > 0;
+      } catch {
+        // Ignore errors.
+        // We'll inform the user to create the
+        // shortcut manually in the next step.
+      }
+    });
+  }
+
   await renderTasks(tasks);
 
-  renderProjectReady(project, packageManager, shouldInstallDeps);
+  renderProjectReady(
+    project,
+    packageManager,
+    shouldInstallDeps,
+    hasCreatedShortcut,
+  );
+}
+
+async function handleCliAlias() {
+  const shouldCreateShortcut = await renderConfirmationPrompt({
+    message: outputContent`Create a global ${outputToken.genericShellCommand(
+      ALIAS_NAME,
+    )} alias for the Hydrogen CLI?`.value,
+    confirmationMessage: 'Yes',
+    cancellationMessage: 'No',
+  });
+
+  if (!shouldCreateShortcut) return;
+
+  return () => createPlatformShortcut();
 }
 
 async function handleStorefrontLink() {
@@ -465,6 +500,7 @@ function renderProjectReady(
   project: NonNullable<Awaited<ReturnType<typeof handleProjectLocation>>>,
   packageManager: 'npm' | 'pnpm' | 'yarn',
   depsInstalled?: boolean,
+  hasCreatedShortcut?: boolean,
 ) {
   renderSuccess({
     headline: `${project.name} is ready to build.`,

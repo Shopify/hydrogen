@@ -8,12 +8,11 @@ import {
   shellRunScript,
   shellWriteFile,
   supportsShell,
-  type Shell,
   type UnixShell,
   type WindowsShell,
 } from '../../lib/shell.js';
 
-const ALIAS_NAME = 'h2';
+export const ALIAS_NAME = 'h2';
 
 export default class Shortcut extends Command {
   static description = `Creates a global \`${ALIAS_NAME}\` shortcut for the Hydrogen CLI`;
@@ -24,10 +23,7 @@ export default class Shortcut extends Command {
 }
 
 export async function runCreateShortcut() {
-  const shortcuts: Array<Shell> =
-    isWindows() && !isGitBash()
-      ? await createShortcutsForWindows() // Windows without Git Bash
-      : await createShortcutsForUnix(); // Unix and Windows with Git Bash
+  const shortcuts = await createPlatformShortcut();
 
   if (shortcuts.length > 0) {
     renderSuccess({
@@ -43,6 +39,15 @@ export async function runCreateShortcut() {
       tryMessage: 'Please create a shortcut manually.',
     });
   }
+}
+
+export async function createPlatformShortcut() {
+  const shortcuts =
+    isWindows() && !isGitBash()
+      ? await createShortcutsForWindows() // Windows without Git Bash
+      : await createShortcutsForUnix(); // Unix and Windows with Git Bash
+
+  return shortcuts;
 }
 
 const BASH_ZSH_COMMAND = `
