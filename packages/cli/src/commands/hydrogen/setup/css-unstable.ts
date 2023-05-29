@@ -15,6 +15,11 @@ import {
   type CssStrategy,
 } from '../../../lib/setups/css/index.js';
 
+export const STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
+  tailwind: 'Tailwind CSS',
+  postcss: 'PostCSS',
+};
+
 export default class SetupCSS extends Command {
   static description = 'Setup CSS strategies for your project.';
 

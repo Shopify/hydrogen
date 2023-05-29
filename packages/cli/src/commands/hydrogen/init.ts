@@ -21,7 +21,7 @@ import {
 } from '@shopify/cli-kit/node/fs';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {hyphenate, capitalize} from '@shopify/cli-kit/common/string';
+import {hyphenate} from '@shopify/cli-kit/common/string';
 import {
   commonFlags,
   parseProcessFlags,
@@ -42,6 +42,7 @@ import {
   type CssStrategy,
 } from './../../lib/setups/css/index.js';
 import {ALIAS_NAME, createPlatformShortcut} from './shortcut.js';
+import {STRATEGY_NAME_MAP} from './setup/css-unstable.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
@@ -434,9 +435,9 @@ async function handleCssStrategy(projectDir: string) {
   const selectedCssStrategy = await renderSelectPrompt<'no' | CssStrategy>({
     message: `Select a styling library`,
     choices: [
-      {label: 'No', value: 'no'},
+      {label: 'No styling', value: 'no'},
       ...SETUP_CSS_STRATEGIES.map((strategy) => ({
-        label: capitalize(strategy),
+        label: STRATEGY_NAME_MAP[strategy],
         value: strategy,
       })),
     ],
