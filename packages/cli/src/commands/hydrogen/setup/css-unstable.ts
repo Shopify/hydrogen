@@ -22,6 +22,7 @@ export const STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
   tailwind: 'Tailwind CSS',
   postcss: 'PostCSS',
   'css-modules': 'CSS Modules',
+  'vanilla-extract': 'Vanilla Extract',
 };
 
 export default class SetupCSS extends Command {
