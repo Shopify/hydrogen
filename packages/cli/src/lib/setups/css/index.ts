@@ -1,11 +1,9 @@
 import {setupTailwind} from './tailwind.js';
 import type {SetupConfig} from './common.js';
 
-export const SETUP_CSS_STRATEGIES = [
-  'tailwind' /*'css-modules', 'vanilla-extract'*/,
-] as const;
+import type {CssStrategy} from './assets.js';
 
-export type CssStrategy = (typeof SETUP_CSS_STRATEGIES)[number];
+export {type CssStrategy, SETUP_CSS_STRATEGIES} from './assets.js';
 
 export function setupCssStrategy(
   strategy: CssStrategy,

@@ -6,10 +6,18 @@ import {
   writePackageJSON,
   type PackageJson as _PackageJson,
 } from '@shopify/cli-kit/node/node-package-manager';
-import {getAssetDir} from './build.js';
+import {
+  type AssetDir,
+  getAssetDir,
+  GENERATOR_SETUP_ASSETS_SUB_DIRS,
+} from '../../build.js';
+
+// Alias
+export const SETUP_CSS_STRATEGIES = GENERATOR_SETUP_ASSETS_SUB_DIRS;
+export type CssStrategy = AssetDir;
 
 export function copyAssets(
-  feature: 'tailwind',
+  feature: AssetDir,
   assets: Record<string, string>,
   rootDirectory: string,
   replacer = (content: string, filename: string) => content,
@@ -72,7 +80,7 @@ const MANAGED_PACKAGE_JSON_KEYS = Object.freeze([
 
 type ManagedKey = (typeof MANAGED_PACKAGE_JSON_KEYS)[number];
 
-export async function mergePackageJson(feature: string, projectDir: string) {
+export async function mergePackageJson(feature: AssetDir, projectDir: string) {
   const targetPkgJson: PackageJson = await readAndParsePackageJson(
     joinPath(projectDir, 'package.json'),
   );

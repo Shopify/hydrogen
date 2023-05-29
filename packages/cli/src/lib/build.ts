@@ -1,11 +1,17 @@
 import {fileURLToPath} from 'node:url';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
-export const GENERATOR_SETUP_ASSETS_DIR = 'assets';
 export const GENERATOR_ROUTES_DIR = 'routes';
 export const GENERATOR_STARTER_DIR = 'starter';
+export const GENERATOR_SETUP_ASSETS_DIR = 'assets';
+export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
+  'tailwind',
+  'postcss' /*'css-modules', 'vanilla-extract'*/,
+] as const;
 
-export function getAssetDir(feature: string) {
+export type AssetDir = (typeof GENERATOR_SETUP_ASSETS_SUB_DIRS)[number];
+
+export function getAssetDir(feature: AssetDir) {
   return fileURLToPath(
     new URL(
       `../${GENERATOR_TEMPLATES_DIR}/${GENERATOR_SETUP_ASSETS_DIR}/${feature}`,
