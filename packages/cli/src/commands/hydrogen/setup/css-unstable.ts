@@ -6,7 +6,6 @@ import {
 } from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
-import {capitalize} from '@shopify/cli-kit/common/string';
 import {
   getPackageManager,
   installNodeModules,
@@ -105,10 +104,12 @@ export async function runSetupCSS({
   await renderTasks(tasks);
 
   renderSuccess({
-    headline: `${capitalize(strategy)} setup complete.`,
+    headline: `${STRATEGY_NAME_MAP[strategy]} setup complete.`,
     body:
-      'You can now modify CSS configuration in the following files:\n' +
-      generatedAssets.map((file) => `  - ${file}`).join('\n') +
-      `\n\nFor more information, visit ${helpUrl}.`,
+      (generatedAssets.length > 0
+        ? 'You can now modify CSS configuration in the following files:\n' +
+          generatedAssets.map((file) => `  - ${file}`).join('\n') +
+          '\n'
+        : '') + `\nFor more information, visit ${helpUrl}.`,
   });
 }
