@@ -1,11 +1,12 @@
-name: Conditionally add issues to project boards
+name: Add issues/PRs to project boards
 
 on:
   issues:
-    types: [labeled]
+    types: [opened]
+  pull_request:
+    types: [opened]
 
 jobs:
-  # add epics to overarching Oxygen board
   oxygen-board:
     name: add-to-oxygen-board
     runs-on: shopify-ubuntu-latest
@@ -14,4 +15,3 @@ jobs:
         with:
           project-url: https://github.com/orgs/Shopify/projects/4534
           github-token: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
-          labeled: epic
