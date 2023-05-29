@@ -212,10 +212,13 @@ async function setupLocalStarterTemplate(options: InitOptions) {
 
   if (!project) return;
 
-  const backgroundWorkPromise = copyFile(getStarterDir(), project.directory);
+  let backgroundWorkPromise: Promise<any> = copyFile(
+    getStarterDir(),
+    project.directory,
+  );
 
   if (storefrontInfo) {
-    backgroundWorkPromise.then(() =>
+    backgroundWorkPromise = backgroundWorkPromise.then(() =>
       Promise.all([
         // Save linked shop/storefront in project
         setShop(project.directory, storefrontInfo.shop).then(() =>
@@ -237,11 +240,11 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     options.language,
   );
 
-  backgroundWorkPromise.then(() => convertFiles());
+  backgroundWorkPromise = backgroundWorkPromise.then(() => convertFiles());
 
   const {setupCss} = await handleCssStrategy(project.directory);
 
-  backgroundWorkPromise.then(() => setupCss());
+  backgroundWorkPromise = backgroundWorkPromise.then(() => setupCss());
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(project.directory, options.installDeps);
@@ -256,10 +259,14 @@ async function setupLocalStarterTemplate(options: InitOptions) {
   ];
 
   if (shouldInstallDeps) {
+    const installingDepsPromise = backgroundWorkPromise.then(() =>
+      installDeps(),
+    );
+
     tasks.push({
       title: 'Installing dependencies',
       task: async () => {
-        await installDeps();
+        await installingDepsPromise;
       },
     });
   }
