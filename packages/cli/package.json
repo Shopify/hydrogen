@@ -23,6 +23,7 @@
     "@types/tar-fs": "^2.0.1",
     "oclif": "2.1.4",
     "tempy": "^3.0.0",
+    "type-fest": "^3.6.0",
     "vitest": "^0.28.1"
   },
   "peerDependencies": {

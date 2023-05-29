@@ -3,6 +3,7 @@ import {camelize} from '@shopify/cli-kit/common/string';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 import {colors} from './colors.js';
+import type {CamelCasedProperties} from 'type-fest';
 
 export const commonFlags = {
   path: Flags.string({
@@ -38,11 +39,11 @@ export const commonFlags = {
   }),
 };
 
-export function flagsToCamelObject(obj: Record<string, any>) {
+export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {
   return Object.entries(obj).reduce((acc, [key, value]) => {
-    acc[camelize(key)] = value;
+    acc[camelize(key) as any] = value;
     return acc;
-  }, {} as any);
+  }, {} as any) as CamelCasedProperties<T>;
 }
 
 /**

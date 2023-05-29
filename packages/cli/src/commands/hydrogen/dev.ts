@@ -82,7 +82,7 @@ async function runDev({
   disableVirtualRoutes?: boolean;
   shop?: string;
   envBranch?: string;
-  debug?: false;
+  debug?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
