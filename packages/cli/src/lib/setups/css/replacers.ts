@@ -1,6 +1,7 @@
+import {AbortError} from '@shopify/cli-kit/node/error';
+import {ts, tsx, js, jsx, type SgNode} from '@ast-grep/napi';
 import {type FormatOptions} from '../../format-code.js';
 import {findFileWithExtension, replaceFileContent} from '../../file.js';
-import {ts, tsx, js, jsx, type SgNode} from '@ast-grep/napi';
 
 const astGrep = {ts, tsx, js, jsx};
 
@@ -111,18 +112,25 @@ export async function replaceRemixConfig(
 export async function replaceRootLinks(
   appDirectory: string,
   formatConfig: FormatOptions,
-  importer: [string, string],
+  importer: {
+    name: string;
+    path: string;
+    isDefault: boolean;
+    isConditional?: boolean;
+    isAbsolute?: boolean;
+  },
 ) {
   const {filepath, astType} = await findFileWithExtension(appDirectory, 'root');
 
   if (!filepath || !astType) {
-    // TODO throw
-    return;
+    throw new AbortError(`Could not find root file in ${appDirectory}`);
   }
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
-    const tailwindImport = `import ${importer[0]} from './${importer[1]}';`;
-    if (content.includes(tailwindImport.split('from')[0]!)) {
+    const importStatement = `import ${
+      importer.isDefault ? importer.name : `{${importer.name}}`
+    } from '${(importer.isAbsolute ? '' : './') + importer.path}';`;
+    if (content.includes(importStatement.split('from')[0]!)) {
       return null;
     }
 
@@ -170,14 +178,16 @@ export async function replaceRootLinks(
 
     const lastImportContent = lastImportNode.text();
     const linksExportReturnContent = linksReturnNode.text();
+    const newLinkReturnItem = importer.isConditional
+      ? `...(${importer.name} ? [{ rel: 'stylesheet', href: ${importer.name} }] : [])`
+      : `{rel: 'stylesheet', href: ${importer.name}}`;
+    console.log({importStatement, newLinkReturnItem});
+
     return content
-      .replace(lastImportContent, lastImportContent + '\n' + tailwindImport)
+      .replace(lastImportContent, lastImportContent + '\n' + importStatement)
       .replace(
         linksExportReturnContent,
-        linksExportReturnContent.replace(
-          '[',
-          `[{rel: 'stylesheet', href: ${importer[0]}},`,
-        ),
+        linksExportReturnContent.replace('[', `[${newLinkReturnItem},`),
       );
   });
 }

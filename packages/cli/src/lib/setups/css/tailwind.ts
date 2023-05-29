@@ -45,10 +45,11 @@ export async function setupTailwind(
           tailwind: true,
           postcss: true,
         }),
-        replaceRootLinks(appDirectory, formatConfig, [
-          'tailwindCss',
-          tailwindCssPath,
-        ]),
+        replaceRootLinks(appDirectory, formatConfig, {
+          name: 'tailwindCss',
+          path: tailwindCssPath,
+          isDefault: true,
+        }),
       ]),
     ),
   ]);
