@@ -132,23 +132,16 @@ async function setupRemoteTemplate(options: InitOptions) {
   const project = await handleProjectLocation({...options});
   if (!project) return;
 
-  // Templates might be cached or the download might be finished already.
-  // Only output progress if the download is still in progress.
-  const backgroundWorkPromise = Promise.resolve().then(async () => {
-    const {templatesDir} = await backgroundDownloadPromise;
-    return templatesDir;
-  });
+  let backgroundWorkPromise = backgroundDownloadPromise.then(({templatesDir}) =>
+    copyFile(joinPath(templatesDir, appTemplate), project.directory),
+  );
 
-  backgroundWorkPromise.then(async (templatesDir) => {
-    await copyFile(joinPath(templatesDir, appTemplate), project.directory);
-  });
-
-  const convertFiles = await handleLanguage(
+  const transpileFiles = await handleLanguage(
     project.directory,
     options.language,
   );
 
-  backgroundWorkPromise.then(() => convertFiles());
+  backgroundWorkPromise = backgroundWorkPromise.then(() => transpileFiles());
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(project.directory, options.installDeps);
