@@ -30,7 +30,12 @@ export const commonFlags = {
     env: 'SHOPIFY_SHOP',
     parse: async (input) => normalizeStoreFqdn(input),
   }),
-  ['env-branch']: Flags.string({
+  'install-deps': Flags.boolean({
+    description: 'Auto install dependencies using the active package manager',
+    env: 'SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS',
+    allowNo: true,
+  }),
+  'env-branch': Flags.string({
     description:
       "Specify an environment's branch name when using remote environment variables.",
     env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
@@ -99,4 +104,14 @@ export function deprecated(name: string) {
     },
     hidden: true,
   });
+}
+
+export function overrideFlag<T extends Record<string, any>>(
+  flag: T,
+  extra: Partial<T>,
+) {
+  return {
+    ...flag,
+    ...extra,
+  };
 }

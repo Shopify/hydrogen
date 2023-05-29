@@ -1,5 +1,9 @@
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {commonFlags} from '../../../lib/flags.js';
+import {
+  commonFlags,
+  overrideFlag,
+  flagsToCamelObject,
+} from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {capitalize} from '@shopify/cli-kit/common/string';
@@ -18,6 +22,7 @@ import {
 export const STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
   tailwind: 'Tailwind CSS',
   postcss: 'PostCSS',
+  'css-modules': 'CSS Modules',
 };
 
 export default class SetupCSS extends Command {
@@ -28,6 +33,7 @@ export default class SetupCSS extends Command {
   static flags = {
     path: commonFlags.path,
     force: commonFlags.force,
+    'install-deps': overrideFlag(commonFlags['install-deps'], {default: true}),
   };
 
   static args = {
@@ -43,7 +49,11 @@ export default class SetupCSS extends Command {
     const {flags, args} = await this.parse(SetupCSS);
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runSetupCSS({strategy: args.strategy as CssStrategy, directory});
+    await runSetupCSS({
+      ...flagsToCamelObject(flags),
+      strategy: args.strategy as CssStrategy,
+      directory,
+    });
   }
 }
 
@@ -51,10 +61,12 @@ export async function runSetupCSS({
   strategy,
   directory,
   force = false,
+  installDeps = true,
 }: {
   strategy: CssStrategy;
   directory: string;
   force?: boolean;
+  installDeps: boolean;
 }) {
   const remixConfig = await getRemixConfig(directory);
 
@@ -63,28 +75,34 @@ export async function runSetupCSS({
 
   const {workPromise, generatedAssets, helpUrl} = setupOutput;
 
-  await renderTasks([
+  const tasks = [
     {
       title: 'Updating files',
       task: async () => {
         await workPromise;
       },
     },
-    {
+  ];
+
+  if (installDeps) {
+    const gettingPkgManagerPromise = getPackageManager(
+      remixConfig.rootDirectory,
+    );
+
+    tasks.push({
       title: 'Installing new dependencies',
       task: async () => {
-        await getPackageManager(remixConfig.rootDirectory).then(
-          async (packageManager) => {
-            await installNodeModules({
-              directory: remixConfig.rootDirectory,
-              packageManager,
-              args: [],
-            });
-          },
-        );
+        const packageManager = await gettingPkgManagerPromise;
+        await installNodeModules({
+          directory: remixConfig.rootDirectory,
+          packageManager,
+          args: [],
+        });
       },
-    },
-  ]);
+    });
+  }
+
+  await renderTasks(tasks);
 
   renderSuccess({
     headline: `${capitalize(strategy)} setup complete.`,
