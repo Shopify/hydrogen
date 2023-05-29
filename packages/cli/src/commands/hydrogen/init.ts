@@ -113,6 +113,9 @@ export async function runInit(
     : setupLocalStarterTemplate(options);
 }
 
+/**
+ * Flow for creating a project starting from a remote template (e.g. demo-store).
+ */
 async function setupRemoteTemplate(options: InitOptions) {
   const isDemoStoreTemplate = options.template === 'demo-store';
 
@@ -182,6 +185,9 @@ async function setupRemoteTemplate(options: InitOptions) {
   }
 }
 
+/**
+ * Flow for setting up a project from the locally bundled starter template (hello-world).
+ */
 async function setupLocalStarterTemplate(options: InitOptions) {
   const templateAction = await renderSelectPrompt({
     message: 'Connect to Shopify',
@@ -290,6 +296,10 @@ async function setupLocalStarterTemplate(options: InitOptions) {
   );
 }
 
+/**
+ * Prompts the user to create a global alias (h2) for the Hydrogen CLI.
+ * @returns A function that creates the shortcut, or undefined if the user chose not to create a shortcut.
+ */
 async function handleCliAlias() {
   const shouldCreateShortcut = await renderConfirmationPrompt({
     message: outputContent`Create a global ${outputToken.genericShellCommand(
@@ -304,6 +314,10 @@ async function handleCliAlias() {
   return () => createPlatformShortcut();
 }
 
+/**
+ * Prompts the user to link a Hydrogen storefront to their project.
+ * @returns The linked shop and storefront.
+ */
 async function handleStorefrontLink() {
   let shop = await renderTextPrompt({
     message:
@@ -343,6 +357,10 @@ async function handleStorefrontLink() {
   return {...selected, shop};
 }
 
+/**
+ * Prompts the user to select a project directory location.
+ * @returns Project information, or undefined if the user chose not to force project creation.
+ */
 async function handleProjectLocation(options: {
   path?: string;
   defaultLocation?: string;
@@ -380,6 +398,10 @@ async function handleProjectLocation(options: {
   return {location, name, directory};
 }
 
+/**
+ * Prompts the user to select a JS or TS.
+ * @returns A function that optionally transpiles the project to JS, if that was chosen.
+ */
 async function handleLanguage(projectDir: string, flagLanguage?: string) {
   const language =
     flagLanguage ??
@@ -404,6 +426,10 @@ async function handleLanguage(projectDir: string, flagLanguage?: string) {
   };
 }
 
+/**
+ * Prompts the user to select a CSS strategy.
+ * @returns The chosen strategy name and a function that sets up the CSS strategy.
+ */
 async function handleCssStrategy(projectDir: string) {
   const selectedCssStrategy = await renderSelectPrompt<'no' | CssStrategy>({
     message: `Select a styling library`,
@@ -440,6 +466,11 @@ async function handleCssStrategy(projectDir: string) {
   };
 }
 
+/**
+ * Prompts the user to choose whether to install dependencies and which package manager to use.
+ * It infers the package manager used for creating the project and uses that as the default.
+ * @returns The chosen pacakge manager and a function that optionally installs dependencies.
+ */
 async function handleDependencies(
   projectDir: string,
   shouldInstallDeps?: boolean,
@@ -489,6 +520,9 @@ async function handleDependencies(
   };
 }
 
+/**
+ * Shows a summary success message with next steps.
+ */
 function renderProjectReady(
   project: NonNullable<Awaited<ReturnType<typeof handleProjectLocation>>>,
   packageManager: 'npm' | 'pnpm' | 'yarn',
@@ -519,6 +553,9 @@ function renderProjectReady(
   });
 }
 
+/**
+ * @returns Whether the project directory exists and is not empty.
+ */
 async function projectExists(projectDir: string) {
   return (
     (await fileExists(projectDir)) &&
@@ -527,6 +564,9 @@ async function projectExists(projectDir: string) {
   );
 }
 
+/**
+ * Prevents Node.js from printing warnings about experimental features (VM Modules).
+ */
 function supressNodeExperimentalWarnings() {
   const warningListener = process.listeners('warning')[0]!;
   if (warningListener) {
