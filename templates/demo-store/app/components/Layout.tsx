@@ -5,27 +5,30 @@ import {Suspense, useEffect, useMemo} from 'react';
 
 import type {LayoutQuery} from 'storefrontapi.generated';
 import {
-  Drawer,
-  useDrawer,
-  Text,
-  Input,
-  IconLogin,
-  IconAccount,
-  IconBag,
-  IconSearch,
-  Heading,
-  IconMenu,
-  IconCaret,
-  Section,
-  CountrySelector,
   Cart,
   CartLoading,
+  CountrySelector,
+  Drawer,
+  Heading,
+  IconAccount,
+  IconBag,
+  IconCaret,
+  IconLogin,
+  IconMenu,
+  IconSearch,
+  Input,
   Link,
+  SearchInput,
+  SearchResultsDrawer,
+  Section,
+  Text,
+  useDrawer,
 } from '~/components';
 import type {ChildEnhancedMenuItem} from '~/lib/utils';
 import {type EnhancedMenu, useIsHomePath} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
+import {useSearch} from '~/hooks/useSearch';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -251,8 +254,9 @@ function DesktopHeader({
   menu?: EnhancedMenu;
   title: string;
 }) {
-  const params = useParams();
   const {y} = useWindowScroll();
+  const {searchInputRef, searchFetcher, searchResults} = useSearch();
+
   return (
     <header
       role="banner"
@@ -286,29 +290,20 @@ function DesktopHeader({
         </nav>
       </div>
       <div className="flex items-center gap-1">
-        <Form
-          method="get"
-          action={params.locale ? `/${params.locale}/search` : '/search'}
-          className="flex items-center gap-2"
-        >
-          <Input
-            className={
-              isHome
-                ? 'focus:border-contrast/20 dark:focus:border-primary/20'
-                : 'focus:border-primary/20'
-            }
-            type="search"
-            variant="minisearch"
-            placeholder="Search"
-            name="q"
-          />
-          <button
-            type="submit"
+        <div className="relative">
+          <SearchInput
             className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
-          >
-            <IconSearch />
-          </button>
-        </Form>
+            isHome={isHome}
+            searchFetcher={searchFetcher}
+            searchInputRef={searchInputRef}
+          />
+          {searchResults && (
+            <SearchResultsDrawer
+              searchInputRef={searchInputRef}
+              searchResults={searchResults}
+            />
+          )}
+        </div>
         <AccountLink className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5" />
         <CartCount isHome={isHome} openCart={openCart} />
       </div>
