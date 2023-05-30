@@ -221,10 +221,11 @@ export function ModelViewer(props: ModelViewerProps): JSX.Element | null {
 
   return (
     <model-viewer
-      // @ts-expect-error ref should exist
       ref={callbackRef}
       {...passthroughProps}
-      className={className}
+      // @ts-expect-error src should exist
+      // @eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      class={className}
       id={passthroughProps.id ?? data.id}
       src={data.sources[0].url}
       alt={data.alt ?? null}
