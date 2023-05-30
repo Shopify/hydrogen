@@ -5,7 +5,11 @@ import {
   flagsToCamelObject,
 } from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
+import {
+  renderSelectPrompt,
+  renderSuccess,
+  renderTasks,
+} from '@shopify/cli-kit/node/ui';
 import {
   getPackageManager,
   installNodeModules,
@@ -19,8 +23,8 @@ import {
 } from '../../../lib/setups/css/index.js';
 
 export const STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
+  postcss: 'CSS (with PostCSS)',
   tailwind: 'Tailwind CSS',
-  postcss: 'PostCSS',
   'css-modules': 'CSS Modules',
   'vanilla-extract': 'Vanilla Extract',
 };
@@ -40,7 +44,6 @@ export default class SetupCSS extends Command {
     strategy: Args.string({
       name: 'strategy',
       description: `The CSS strategy to setup. One of ${SETUP_CSS_STRATEGIES.join()}`,
-      required: true,
       options: SETUP_CSS_STRATEGIES as unknown as string[],
     }),
   };
@@ -63,11 +66,21 @@ export async function runSetupCSS({
   force = false,
   installDeps = true,
 }: {
-  strategy: CssStrategy;
+  strategy?: CssStrategy;
   directory: string;
   force?: boolean;
   installDeps: boolean;
 }) {
+  if (!strategy) {
+    strategy = await renderSelectPrompt<CssStrategy>({
+      message: `Select a styling library`,
+      choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
+        label: STRATEGY_NAME_MAP[strategy],
+        value: strategy,
+      })),
+    });
+  }
+
   const remixConfig = await getRemixConfig(directory);
 
   const setupOutput = await setupCssStrategy(strategy, remixConfig, force);

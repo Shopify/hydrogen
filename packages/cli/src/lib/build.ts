@@ -5,8 +5,8 @@ export const GENERATOR_ROUTES_DIR = 'routes';
 export const GENERATOR_STARTER_DIR = 'starter';
 export const GENERATOR_SETUP_ASSETS_DIR = 'assets';
 export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
-  'tailwind',
   'postcss',
+  'tailwind',
   'css-modules',
   'vanilla-extract',
 ] as const;
