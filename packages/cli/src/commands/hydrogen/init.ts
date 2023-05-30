@@ -336,7 +336,7 @@ async function handleStorefrontLink() {
   }
 
   const storefrontId = await renderSelectPrompt({
-    message: 'Choose a Hydrogen storefront to link this project to:',
+    message: 'Select a storefront',
     choices: storefronts.map((storefront) => ({
       label: `${storefront.title} ${storefront.productionUrl}`,
       value: storefront.id,
@@ -366,7 +366,7 @@ async function handleProjectLocation(options: {
   const location =
     options.path ??
     (await renderTextPrompt({
-      message: 'Where would you like to create your app?',
+      message: 'Name the app directory',
       defaultValue: options.defaultLocation
         ? hyphenate(options.defaultLocation)
         : 'hydrogen-storefront',
@@ -499,6 +499,8 @@ async function handleDependencies(
       actualPackageManager = detectedPackageManager;
       shouldInstallDeps = await renderConfirmationPrompt({
         message: `Install dependencies with ${detectedPackageManager}?`,
+        confirmationMessage: 'Yes',
+        cancellationMessage: 'No',
       });
     }
   }
