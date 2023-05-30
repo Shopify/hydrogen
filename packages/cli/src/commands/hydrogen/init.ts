@@ -45,6 +45,8 @@ import {ALIAS_NAME, createPlatformShortcut} from './shortcut.js';
 import {STRATEGY_NAME_MAP} from './setup/css-unstable.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
+const languageChoices = ['js', 'ts'] as const;
+type Language = (typeof languageChoices)[number];
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
@@ -56,7 +58,7 @@ export default class Init extends Command {
     }),
     language: Flags.string({
       description: 'Sets the template language to use. One of `js` or `ts`.',
-      choices: ['js', 'ts'],
+      choices: languageChoices,
       env: 'SHOPIFY_HYDROGEN_FLAG_LANGUAGE',
     }),
     template: Flags.string({
@@ -70,14 +72,14 @@ export default class Init extends Command {
   async run(): Promise<void> {
     const {flags} = await this.parse(Init);
 
-    await runInit(flagsToCamelObject(flags));
+    await runInit(flagsToCamelObject(flags) as InitOptions);
   }
 }
 
 type InitOptions = {
   path?: string;
   template?: string;
-  language?: string;
+  language?: Language;
   token?: string;
   force?: boolean;
   installDeps?: boolean;
@@ -136,12 +138,12 @@ async function setupRemoteTemplate(options: InitOptions) {
     copyFile(joinPath(templatesDir, appTemplate), project.directory),
   );
 
-  const transpileFiles = await handleLanguage(
+  const {transpileProject} = await handleLanguage(
     project.directory,
     options.language,
   );
 
-  backgroundWorkPromise = backgroundWorkPromise.then(() => transpileFiles());
+  backgroundWorkPromise = backgroundWorkPromise.then(() => transpileProject());
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(project.directory, options.installDeps);
@@ -241,12 +243,12 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     );
   }
 
-  const transpileFiles = await handleLanguage(
+  const {language, transpileProject} = await handleLanguage(
     project.directory,
     options.language,
   );
 
-  backgroundWorkPromise = backgroundWorkPromise.then(() => transpileFiles());
+  backgroundWorkPromise = backgroundWorkPromise.then(() => transpileProject());
 
   const {setupCss} = await handleCssStrategy(project.directory);
 
@@ -266,6 +268,30 @@ async function setupLocalStarterTemplate(options: InitOptions) {
         await installingDepsPromise;
       },
     });
+  }
+
+  const summary: ExtraSetupSummary = {routes: [], i18n: 'none'};
+  const continueWithSetup = await renderConfirmationPrompt({
+    message: 'Scaffold boilerplate for i18n and routes',
+    confirmationMessage: 'Yes, set up now',
+    cancellationMessage: 'No, set up later',
+  });
+
+  if (continueWithSetup) {
+    const {i18nStrategy, setupI18n} = await handleI18n();
+    const i18nPromise = setupI18n(project.directory, language);
+    const {routes, setupRoutes} = await handleRouteGeneration();
+    const routesPromise = setupRoutes(
+      project.directory,
+      language,
+      i18nStrategy,
+    );
+
+    summary.i18n = i18nStrategy;
+    summary.routes = routes;
+    backgroundWorkPromise = backgroundWorkPromise.then(() =>
+      Promise.all([i18nPromise, routesPromise]),
+    );
   }
 
   let hasCreatedShortcut = false;
@@ -290,7 +316,43 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     packageManager,
     shouldInstallDeps,
     hasCreatedShortcut,
+    summary,
   );
+}
+
+const i18nStrategies = {
+  none: 'No internationalization',
+  path: 'Subdirectories (example.com/fr-ca/...)',
+  subdomain: 'Subdomains (de.example.com/...)',
+  domain: 'Domains (example.jp/...)',
+};
+
+type I18nStrategy = keyof typeof i18nStrategies;
+
+async function handleI18n() {
+  const i18nStrategy = await renderSelectPrompt<I18nStrategy>({
+    message: 'Select an internationalization strategy',
+    choices: Object.entries(i18nStrategies).map(([value, label]) => ({
+      value: value as I18nStrategy,
+      label,
+    })),
+  });
+
+  return {
+    i18nStrategy,
+    setupI18n: (rootDir: string, language: Language) => Promise.resolve(),
+  };
+}
+
+async function handleRouteGeneration() {
+  return {
+    routes: [],
+    setupRoutes: (
+      rootDir: string,
+      language: Language,
+      i18nStrategy: I18nStrategy,
+    ) => Promise.resolve(),
+  };
 }
 
 /**
@@ -399,7 +461,7 @@ async function handleProjectLocation(options: {
  * Prompts the user to select a JS or TS.
  * @returns A function that optionally transpiles the project to JS, if that was chosen.
  */
-async function handleLanguage(projectDir: string, flagLanguage?: string) {
+async function handleLanguage(projectDir: string, flagLanguage?: Language) {
   const language =
     flagLanguage ??
     (await renderSelectPrompt({
@@ -411,15 +473,18 @@ async function handleLanguage(projectDir: string, flagLanguage?: string) {
       defaultValue: 'js',
     }));
 
-  return async () => {
-    if (language === 'js') {
-      try {
-        await transpileProject(projectDir);
-      } catch (error) {
-        await rmdir(projectDir, {force: true});
-        throw error;
+  return {
+    language,
+    async transpileProject() {
+      if (language === 'js') {
+        try {
+          await transpileProject(projectDir);
+        } catch (error) {
+          await rmdir(projectDir, {force: true});
+          throw error;
+        }
       }
-    }
+    },
   };
 }
 
@@ -519,6 +584,11 @@ async function handleDependencies(
   };
 }
 
+type ExtraSetupSummary = {
+  routes: string[];
+  i18n: I18nStrategy;
+};
+
 /**
  * Shows a summary success message with next steps.
  */
@@ -527,6 +597,7 @@ function renderProjectReady(
   packageManager: 'npm' | 'pnpm' | 'yarn',
   depsInstalled?: boolean,
   hasCreatedShortcut?: boolean,
+  summary?: ExtraSetupSummary,
 ) {
   renderSuccess({
     headline: `${project.name} is ready to build.`,
