@@ -27,8 +27,7 @@ export default {
       }
 
       const waitUntil = (p: Promise<any>) => executionContext.waitUntil(p);
-      const [cache, session] = await Promise.all([
-        caches.open('hydrogen'),
+      const [session] = await Promise.all([
         HydrogenSession.init(request, [env.SESSION_SECRET]),
       ]);
 
@@ -36,7 +35,6 @@ export default {
        * Create Hydrogen's Storefront client.
        */
       const {storefront} = createStorefrontClient({
-        cache,
         waitUntil,
         i18n: getLocaleFromRequest(request),
         publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
