@@ -43,6 +43,8 @@ import {
 } from './../../lib/setups/css/index.js';
 import {ALIAS_NAME, createPlatformShortcut} from './shortcut.js';
 import {STRATEGY_NAME_MAP} from './setup/css-unstable.js';
+import {I18nStrategy, setupI18nStrategy} from '../../lib/setups/i18n/index.js';
+import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 const languageChoices = ['js', 'ts'] as const;
@@ -270,7 +272,7 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     });
   }
 
-  const summary: ExtraSetupSummary = {routes: [], i18n: 'none'};
+  let extraSetupSummary: ExtraSetupSummary | undefined;
   const continueWithSetup = await renderConfirmationPrompt({
     message: 'Scaffold boilerplate for i18n and routes',
     confirmationMessage: 'Yes, set up now',
@@ -287,8 +289,7 @@ async function setupLocalStarterTemplate(options: InitOptions) {
       i18nStrategy,
     );
 
-    summary.i18n = i18nStrategy;
-    summary.routes = routes;
+    extraSetupSummary = {i18n: i18nStrategy, routes};
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
       Promise.all([i18nPromise, routesPromise]),
     );
@@ -316,21 +317,17 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     packageManager,
     shouldInstallDeps,
     hasCreatedShortcut,
-    summary,
+    extraSetupSummary,
   );
 }
 
 const i18nStrategies = {
   none: 'No internationalization',
-  path: 'Subdirectories (example.com/fr-ca/...)',
-  subdomain: 'Subdomains (de.example.com/...)',
-  domain: 'Domains (example.jp/...)',
+  ...I18N_STRATEGY_NAME_MAP,
 };
 
-type I18nStrategy = keyof typeof i18nStrategies;
-
 async function handleI18n() {
-  const i18nStrategy = await renderSelectPrompt<I18nStrategy>({
+  let selection = await renderSelectPrompt<keyof typeof i18nStrategies>({
     message: 'Select an internationalization strategy',
     choices: Object.entries(i18nStrategies).map(([value, label]) => ({
       value: value as I18nStrategy,
@@ -338,19 +335,28 @@ async function handleI18n() {
     })),
   });
 
+  const i18nStrategy = selection === 'none' ? undefined : selection;
+
   return {
     i18nStrategy,
-    setupI18n: (rootDir: string, language: Language) => Promise.resolve(),
+    setupI18n: (rootDirectory: string, language: Language) =>
+      i18nStrategy &&
+      setupI18nStrategy(i18nStrategy, {
+        rootDirectory,
+        serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
+      }),
   };
 }
 
 async function handleRouteGeneration() {
+  // TODO: Need a multi-select UI component
+
   return {
     routes: [],
     setupRoutes: (
       rootDir: string,
       language: Language,
-      i18nStrategy: I18nStrategy,
+      i18nStrategy?: I18nStrategy,
     ) => Promise.resolve(),
   };
 }
@@ -585,8 +591,8 @@ async function handleDependencies(
 }
 
 type ExtraSetupSummary = {
-  routes: string[];
-  i18n: I18nStrategy;
+  routes?: string[];
+  i18n?: I18nStrategy;
 };
 
 /**
@@ -597,7 +603,7 @@ function renderProjectReady(
   packageManager: 'npm' | 'pnpm' | 'yarn',
   depsInstalled?: boolean,
   hasCreatedShortcut?: boolean,
-  summary?: ExtraSetupSummary,
+  extraSetupSummary?: ExtraSetupSummary,
 ) {
   renderSuccess({
     headline: `${project.name} is ready to build.`,
