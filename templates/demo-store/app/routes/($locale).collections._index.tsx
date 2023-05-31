@@ -51,10 +51,10 @@ export default function Collections() {
         <Pagination connection={collections}>
           {({nodes, isLoading, PreviousLink, NextLink}) => (
             <>
-              <div className="flex items-center justify-center mt-6">
-                <PreviousLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
+              <div className="flex items-center justify-center mb-6">
+                <Button as={PreviousLink} variant="secondary" width="full">
                   {isLoading ? 'Loading...' : 'Previous collections'}
-                </PreviousLink>
+                </Button>
               </div>
               <Grid
                 items={nodes.length === 3 ? 3 : 2}
@@ -69,9 +69,9 @@ export default function Collections() {
                 ))}
               </Grid>
               <div className="flex items-center justify-center mt-6">
-                <NextLink className="inline-block rounded font-medium text-center py-3 px-6 border border-primary/10 bg-contrast text-primary w-full">
+                <Button as={NextLink} variant="secondary" width="full">
                   {isLoading ? 'Loading...' : 'Next collections'}
-                </NextLink>
+                </Button>
               </div>
             </>
           )}
