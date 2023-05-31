@@ -8,25 +8,25 @@ const data: ReferenceEntityTemplateSchema = {
     {
       name: 'CacheNone',
       type: 'utilities',
-      url: '/docs/api/hydrogen/utilities/cachenone',
+      url: '/docs/api/hydrogen/2023-04/utilities/cachenone',
     },
     {
       name: 'CacheShort',
       type: 'utilities',
-      url: '/docs/api/hydrogen/utilities/cacheshort',
+      url: '/docs/api/hydrogen/2023-04/utilities/cacheshort',
     },
     {
       name: 'CacheLong',
       type: 'utilities',
-      url: '/docs/api/hydrogen/utilities/cachelong',
+      url: '/docs/api/hydrogen/2023-04/utilities/cachelong',
     },
     {
       name: 'CacheCustom',
       type: 'utilities',
-      url: '/docs/api/hydrogen/utilities/cachecustom',
+      url: '/docs/api/hydrogen/2023-04/utilities/cachecustom',
     },
   ],
-  description: `This function extends \`createStorefrontClient\` from [Hydrogen React](/docs/api/hydrogen-react/latest/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
+  description: `This function extends \`createStorefrontClient\` from [Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
 
 Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).`,
   type: 'utility',
