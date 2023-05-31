@@ -24,6 +24,7 @@ import {
   CartMachineEvent,
   CartMachineTypeState,
   CartWithActions,
+  CartWithActionsDocs,
 } from './cart-types.js';
 import {useCartAPIStateMachine} from './useCartAPIStateMachine.js';
 import {CART_ID_STORAGE_KEY} from './cart-constants.js';
@@ -31,6 +32,9 @@ import {PartialDeep} from 'type-fest';
 import {defaultCartFragment} from './cart-queries.js';
 
 export const CartContext = createContext<CartWithActions | null>(null);
+
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+type UseCartDocs = () => CartWithActionsDocs;
 
 /**
  * The `useCart` hook provides access to the cart object. It must be a descendent of a `CartProvider` component.
