@@ -15,21 +15,22 @@ export async function setupI18nPathname(options: SetupConfig) {
   return {workPromise};
 }
 
-export function getPathnameLocaleExtractorFunction(isTs: boolean) {
+export function getPathnameLocaleExtractorFunction(
+  isTs: boolean,
+  typeName: string,
+) {
   let serializedFn = extractLocale.toString();
   if (process.env.NODE_ENV !== 'test') {
     serializedFn = serializedFn.replaceAll('//!', '');
   }
 
   return isTs
-    ? serializedFn
-        .replace(
-          ')',
-          ': string): {language: LanguageCode; country: CountryCode; pathPrefix: string}',
-        )
-        .replace(`let language`, '$&: LanguageCode')
-        .replace(`let country`, '$&: CountryCode')
-        .replace(/\.split\(['"]-['"]\)/, '$& as [LanguageCode, CountryCode]')
+    ? `export type ${typeName} = {language: LanguageCode; country: CountryCode; pathPrefix: string};\n\n` +
+        serializedFn
+          .replace(')', `: string): ${typeName}`)
+          .replace(`let language`, '$&: LanguageCode')
+          .replace(`let country`, '$&: CountryCode')
+          .replace(/\.split\(['"]-['"]\)/, '$& as [LanguageCode, CountryCode]')
     : serializedFn;
 }
 

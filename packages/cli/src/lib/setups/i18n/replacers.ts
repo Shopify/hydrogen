@@ -7,10 +7,12 @@ import type {SetupConfig} from './index.js';
 
 const astGrep = {ts, tsx, js, jsx};
 
+export const i18nTypeName = 'I18nLocale';
+
 export async function replaceServerI18n(
   {rootDirectory, serverEntryPoint = 'server'}: SetupConfig,
   formatConfig: FormatOptions,
-  localeExtractImplementation: (isTs: boolean) => string,
+  localeExtractImplementation: (isTs: boolean, typeName: string) => string,
 ) {
   const match = serverEntryPoint.match(/\.([jt]sx?)$/)?.[1] as
     | 'ts'
@@ -168,10 +170,10 @@ export async function replaceServerI18n(
       }
     }
 
-    const localeExtractorFn = localeExtractImplementation(isTs).replace(
-      /function \w+\(/,
-      `function ${i18nFunctionName}(`,
-    );
+    const localeExtractorFn = localeExtractImplementation(
+      isTs,
+      i18nTypeName,
+    ).replace(/function \w+\(/, `function ${i18nFunctionName}(`);
 
     return content + `\n\n${localeExtractorFn}\n`;
   });

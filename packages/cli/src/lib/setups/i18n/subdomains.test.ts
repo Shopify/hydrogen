@@ -4,6 +4,7 @@ import {
   getSubdomainLocaleExtractorFunction,
 } from './subdomains.js';
 import {transformWithEsbuild} from 'vite';
+import {i18nTypeName} from './replacers.js';
 
 describe('Setup i18n with subdomains', () => {
   it('extracts the locale from the subdomain', () => {
@@ -22,9 +23,14 @@ describe('Setup i18n with subdomains', () => {
   });
 
   it('adds TS types correctly', async () => {
-    const tsFn = getSubdomainLocaleExtractorFunction(true);
+    const tsFn = getSubdomainLocaleExtractorFunction(true, i18nTypeName);
 
-    expect(tsFn).toMatch(/function \w+\(\w+:\s*\w+\):\s*[{},\w\s;:]+{\n/i);
+    expect(tsFn).toMatch(
+      new RegExp(
+        `export type ${i18nTypeName} = .*?\\s*function \\w+\\(\\w+:\\s*\\w+\\):\\s*${i18nTypeName}\\s*{\\n`,
+        'gmi',
+      ),
+    );
 
     const {code} = await transformWithEsbuild(tsFn, 'file.ts', {
       sourcemap: false,

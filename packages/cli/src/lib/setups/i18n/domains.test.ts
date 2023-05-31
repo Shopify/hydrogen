@@ -1,6 +1,7 @@
 import {describe, it, expect} from 'vitest';
 import {extractLocale, getDomainLocaleExtractorFunction} from './domains.js';
 import {transformWithEsbuild} from 'vite';
+import {i18nTypeName} from './replacers.js';
 
 describe('Setup i18n with domains', () => {
   it('extracts the locale from the domain', () => {
@@ -19,9 +20,14 @@ describe('Setup i18n with domains', () => {
   });
 
   it('adds TS types correctly', async () => {
-    const tsFn = getDomainLocaleExtractorFunction(true);
+    const tsFn = getDomainLocaleExtractorFunction(true, i18nTypeName);
 
-    expect(tsFn).toMatch(/function \w+\(\w+:\s*\w+\):\s*[{},\w\s;:]+{\n/i);
+    expect(tsFn).toMatch(
+      new RegExp(
+        `export type ${i18nTypeName} = .*?\\s*function \\w+\\(\\w+:\\s*\\w+\\):\\s*${i18nTypeName}\\s*{\\n`,
+        'gmi',
+      ),
+    );
 
     const {code} = await transformWithEsbuild(tsFn, 'file.ts', {
       sourcemap: false,

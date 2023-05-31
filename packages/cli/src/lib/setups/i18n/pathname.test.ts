@@ -1,6 +1,7 @@
 import {describe, it, expect} from 'vitest';
 import {extractLocale, getPathnameLocaleExtractorFunction} from './pathname.js';
 import {transformWithEsbuild} from 'vite';
+import {i18nTypeName} from './replacers.js';
 
 describe('Setup i18n with pathname', () => {
   it('extracts the locale from the pathname', () => {
@@ -19,9 +20,14 @@ describe('Setup i18n with pathname', () => {
   });
 
   it('adds TS types correctly', async () => {
-    const tsFn = getPathnameLocaleExtractorFunction(true);
+    const tsFn = getPathnameLocaleExtractorFunction(true, i18nTypeName);
 
-    expect(tsFn).toMatch(/function \w+\(\w+:\s*\w+\):\s*[{},\w\s;:]+{\n/i);
+    expect(tsFn).toMatch(
+      new RegExp(
+        `export type ${i18nTypeName} = .*?\\s*function \\w+\\(\\w+:\\s*\\w+\\):\\s*${i18nTypeName}\\s*{\\n`,
+        'gmi',
+      ),
+    );
 
     const {code} = await transformWithEsbuild(tsFn, 'file.ts', {
       sourcemap: false,

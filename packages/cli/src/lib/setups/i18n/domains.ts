@@ -15,19 +15,20 @@ export async function setupI18nDomains(options: SetupConfig) {
   return {workPromise};
 }
 
-export function getDomainLocaleExtractorFunction(isTs: boolean) {
+export function getDomainLocaleExtractorFunction(
+  isTs: boolean,
+  typeName: string,
+) {
   let serializedFn = extractLocale.toString();
   if (process.env.NODE_ENV !== 'test') {
     serializedFn = serializedFn.replaceAll('//!', '');
   }
 
   return isTs
-    ? serializedFn
-        .replace(
-          ')',
-          ': string): {language: LanguageCode; country: CountryCode}',
-        )
-        .replace('.toUpperCase()', '$& as keyof typeof supportedLocales')
+    ? `export type ${typeName} = {language: LanguageCode; country: CountryCode};\n\n` +
+        serializedFn
+          .replace(')', `: string): ${typeName}`)
+          .replace('.toUpperCase()', '$& as keyof typeof supportedLocales')
     : serializedFn;
 }
 
