@@ -91,21 +91,27 @@ function Header({title, menu}: HeaderProps) {
   return (
     <>
       <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
-      <SearchDrawer isOpen={serchDrawer} onClose={closeSearch} />
+      <SearchDrawer
+        closeSearch={closeSearch}
+        isOpen={serchDrawer}
+        onClose={closeSearch}
+      />
       {menu && (
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
       )}
       <DesktopHeader
-        title={title}
+        closeSearch={closeSearch}
         menu={menu}
         openCart={openCart}
         openSearch={openSearch}
+        title={title}
       />
       <MobileHeader
-        title={title}
+        closeSearch={closeSearch}
         openCart={openCart}
         openMenu={openMenu}
         openSearch={openSearch}
+        title={title}
       />
     </>
   );
@@ -132,7 +138,10 @@ function CartDrawer({isOpen, onClose}: BaseDrawerProps) {
   );
 }
 
-function SearchDrawer({isOpen, onClose}: BaseDrawerProps) {
+type SearchDrawerProps = BaseDrawerProps &
+  Pick<CommonHeaderProps, 'closeSearch'>;
+
+function SearchDrawer({isOpen, onClose, closeSearch}: SearchDrawerProps) {
   return (
     <Drawer
       heading={
@@ -142,7 +151,7 @@ function SearchDrawer({isOpen, onClose}: BaseDrawerProps) {
       onClose={onClose}
       openFrom="right"
     >
-      <SearchResults />
+      <SearchResults closeSearch={closeSearch} />
     </Drawer>
   );
 }
@@ -189,7 +198,8 @@ function MenuMobileNav({menu, onClose}: MenuMobileNavProps) {
   );
 }
 
-type CommonHeaderProps = {
+export type CommonHeaderProps = {
+  closeSearch: () => void;
   openCart: () => void;
   openSearch: () => void;
 };
@@ -487,7 +497,6 @@ function FooterMenu({menu}: FooterProps) {
   );
 }
 
-// FIX: this type should be infered from layoutProps['layout']['footerMenu'][0]
 function FooterLink({item}: {item: ChildEnhancedMenuItem}) {
   if (item.to.startsWith('http')) {
     return (

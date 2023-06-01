@@ -1,58 +1,62 @@
 import React from 'react';
-import {useEffect, useRef} from 'react';
-import {Image} from '@shopify/hydrogen-react';
-import {useFetchers, useParams} from '@remix-run/react';
 import clsx from 'clsx';
+import {Image} from '@shopify/hydrogen-react';
+import {useEffect, useRef} from 'react';
+import {useFetchers, useParams} from '@remix-run/react';
 
 import {IconSearch, Link} from '~/components';
 import type {
   ParsedSearchResults,
   ParsedSearchResultItem,
 } from '~/routes/($locale).api.predictive-search';
+import type {CommonHeaderProps} from '~/components/Layout';
 
-export function SearchResults() {
+export function SearchResults({
+  closeSearch,
+}: Pick<CommonHeaderProps, 'closeSearch'>) {
   const params = useParams();
+  const fetchers = useFetchers();
+  const searchTerm = useRef<string>('');
   const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchFetcher = fetchers.find((fetcher) => fetcher.data?.searchResults);
   const searchInputFocused =
     searchInputRef.current ===
     (typeof document !== 'undefined' && document.activeElement);
-  const fetchers = useFetchers();
-  const searchFetcher = fetchers.find((fetcher) => fetcher.data?.searchResults);
-  const searchTerm = useRef<string>('');
 
   if (searchFetcher?.state === 'loading') {
     searchTerm.current = (searchFetcher.formData?.get('q') || '') as string;
   }
 
-  const searchResults = (searchFetcher?.data?.searchResults || {
+  const search = (searchFetcher?.data?.searchResults || {
     results: null,
     totalResults: 0,
   }) as ParsedSearchResults;
 
-  const {results, totalResults} = searchResults;
+  const {results, totalResults} = search;
 
   const searchRoute = params.locale
     ? `/${params.locale}/search?q=${searchTerm}`
     : `/search?q=${searchTerm}`;
 
   const {setHovered, hovered} = useSearchKeyboardNav({
-    totalResults: searchResults.totalResults,
+    totalResults,
     searchTerm: searchTerm.current,
     searchInputFocused,
   });
 
-  function resetSearchInput() {
+  function goToSearchResult() {
+    closeSearch();
     if (!searchInputRef.current) return;
     searchInputRef.current.blur();
     searchInputRef.current.value = '';
   }
 
+  // capture the search input element as a ref
   useEffect(() => {
     if (searchInputRef.current) return;
     searchInputRef.current = document.querySelector('input[type="search"]');
   }, []);
 
-  // return searchInputFocused && searchTerm ? (
   return searchInputFocused ? (
     <div className="mt-2 w-full">
       <div className="p-4 flex flex-col gap-4">
@@ -73,19 +77,19 @@ export function SearchResults() {
                       >
                         <Link
                           className="flex items-center gap-x-2"
-                          to={item.url}
-                          onClick={resetSearchInput}
+                          id={`item-${item.position}`}
+                          onClick={goToSearchResult}
                           onMouseEnter={() => setHovered(item.position)}
                           onMouseLeave={() => setHovered(null)}
-                          id={`item-${item.position}`}
+                          to={item.url}
                         >
                           {item.image?.url && (
                             <Image
-                              width={36}
+                              alt={item.image.altText ?? ''}
+                              className="w-6 h-6 object-cover"
                               height={36}
                               src={item.image.url}
-                              className="w-6 h-6 object-cover"
-                              alt={item.image.altText ?? ''}
+                              width={36}
                             />
                           )}
                           <span className="truncate flex-grow">
@@ -102,15 +106,15 @@ export function SearchResults() {
         )}
 
         <Link
-          id={`item-${totalResults}`}
           className={clsx(
             'flex gap-1 items-center',
             hovered === totalResults && 'bg-gray-300',
           )}
-          to={searchRoute}
-          onClick={resetSearchInput}
+          id={`item-${totalResults}`}
+          onClick={goToSearchResult}
           onMouseEnter={() => setHovered(totalResults)}
           onMouseLeave={() => setHovered(null)}
+          to={searchRoute}
         >
           <div>
             <IconSearch />
@@ -124,19 +128,22 @@ export function SearchResults() {
   ) : null;
 }
 
+/*
+ * This hook handles keyboard navigation for the search results.
+ * It adds cmd+n and cmd+p to navigate to the next and previous result.
+ * It also adds enter to navigate to the hovered result.
+ */
 function useSearchKeyboardNav({
   searchInputFocused,
   searchTerm,
   totalResults,
 }: {
-  searchTerm: string;
   searchInputFocused: boolean;
+  searchTerm: string;
   totalResults: number;
 }) {
   const [hovered, setHovered] = React.useState<number | null>(null);
 
-  // if ctrl+n is pressed select the next result,
-  // if ctrl+p is pressed select the previous result
   useEffect(() => {
     if (!searchInputFocused) return;
     function handleKeyDown(event: KeyboardEvent) {
