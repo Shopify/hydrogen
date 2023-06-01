@@ -2,6 +2,7 @@ import {
   type ActionFunction,
   type LoaderArgs,
   redirect,
+  ErrorBoundaryComponent,
 } from '@shopify/remix-oxygen';
 import {
   Form,

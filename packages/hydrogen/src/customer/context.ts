@@ -12,7 +12,7 @@ import type {
   CustomerUpdateInput,
   CustomerAccessTokenCreateInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {createStorefrontClient} from '@shopify/hydrogen';
+import {createStorefrontClient} from '../storefront';
 
 const debug =
   (prefix: string) =>
