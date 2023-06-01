@@ -1,20 +1,51 @@
 import type {Types} from '@graphql-codegen/plugin-helpers';
 import * as addPlugin from '@graphql-codegen/add';
+import * as typescriptPlugin from '@graphql-codegen/typescript';
 import * as typescriptOperationPlugin from '@graphql-codegen/typescript-operations';
 import {processSources} from './sources.js';
-import {plugin as dtsPlugin} from './plugin.js';
+import {
+  plugin as dtsPlugin,
+  GENERATED_MUTATION_INTERFACE_NAME,
+  GENERATED_QUERY_INTERFACE_NAME,
+} from './plugin.js';
 
-export type GqlTagConfig = {};
+export type HydrogenPresetConfig = {
+  /**
+   * Name for the variable that contains the imported types.
+   * @default 'StorefrontAPI'
+   */
+  namespacedImportName?: string;
+  /**
+   * Module to import the types from.
+   * @default '@shopify/hydrogen/storefront-api-types'
+   */
+  importTypesFrom?: string;
+  /**
+   * Whether types should be imported from the `importTypesFrom` module, or generated inline.
+   * @default true
+   */
+  importTypes?: boolean;
+  /**
+   * Whether to skip adding `__typename` to generated operation types.
+   * @default true
+   */
+  skipTypenameInOperations?: boolean;
+  /**
+   * Override the default interface extension.
+   */
+  interfaceExtension?: (options: {
+    queryType: string;
+    mutationType: string;
+  }) => string;
+};
 
-export const namespacedImportName = 'StorefrontAPI';
-
-export const interfaceExtensionCode = `
+export const defaultInterfaceExtensionCode = `
 declare module '@shopify/hydrogen' {
-  interface StorefrontQueries extends GeneratedQueryTypes {}
-  interface StorefrontMutations extends GeneratedMutationTypes {}
+  interface StorefrontQueries extends ${GENERATED_QUERY_INTERFACE_NAME} {}
+  interface StorefrontMutations extends ${GENERATED_MUTATION_INTERFACE_NAME} {}
 }`;
 
-export const preset: Types.OutputPreset<GqlTagConfig> = {
+export const preset: Types.OutputPreset<HydrogenPresetConfig> = {
   buildGeneratesSection: (options) => {
     if (!options.baseOutputDir.endsWith('.d.ts')) {
       throw new Error('[hydrogen-preset] target output should be a .d.ts file');
@@ -32,9 +63,23 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
     const sourcesWithOperations = processSources(options.documents);
     const sources = sourcesWithOperations.map(({source}) => source);
 
+    const importTypes = options.presetConfig.importTypes ?? true;
+    const namespacedImportName =
+      options.presetConfig.namespacedImportName ?? 'StorefrontAPI';
+    const importTypesFrom =
+      options.presetConfig.importTypesFrom ??
+      '@shopify/hydrogen/storefront-api-types';
+
+    const interfaceExtensionCode =
+      options.presetConfig.interfaceExtension?.({
+        queryType: GENERATED_QUERY_INTERFACE_NAME,
+        mutationType: GENERATED_MUTATION_INTERFACE_NAME,
+      }) ?? defaultInterfaceExtensionCode;
+
     const pluginMap = {
       ...options.pluginMap,
       [`add`]: addPlugin,
+      [`typescript`]: typescriptPlugin,
       [`typescript-operations`]: typescriptOperationPlugin,
       [`gen-dts`]: {plugin: dtsPlugin},
     };
@@ -46,18 +91,27 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
           content: `/* eslint-disable eslint-comments/disable-enable-pair */\n/* eslint-disable eslint-comments/no-unlimited-disable */\n/* eslint-disable */`,
         },
       },
-      // 2. Import all the generated API types from Hydrogen
-      {
-        [`add`]: {
-          content: `import * as ${namespacedImportName} from '@shopify/hydrogen/storefront-api-types';\n`,
-        },
-      },
+      // 2. Import all the generated API types from Hydrogen or generate all the types from the schema.
+      importTypes
+        ? {
+            [`add`]: {
+              content: `import * as ${namespacedImportName} from '${importTypesFrom}';\n`,
+            },
+          }
+        : {
+            [`typescript`]: {
+              useTypeImports: true,
+              useImplementingTypes: true,
+              enumsAsTypes: true,
+            },
+          },
       // 3. Generate the operations (i.e. queries, mutations, and fragments types)
       {
         [`typescript-operations`]: {
-          skipTypename: true, // Skip __typename fields
           useTypeImports: true, // Use `import type` instead of `import`
           preResolveTypes: false, // Use Pick<...> instead of primitives
+          skipTypename: options.presetConfig.skipTypenameInOperations ?? true, // Skip __typename fields
+          namespacedImportName: importTypes ? namespacedImportName : undefined,
         },
       },
       // 4.  Augment Hydrogen query/mutation interfaces with the generated operations
@@ -73,9 +127,10 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
         pluginMap,
         schema: options.schema,
         config: {
+          // For the TS plugin:
+          defaultScalarType: 'unknown',
+          // Allow overwriting defaults:
           ...options.config,
-          // This is for the operations plugin
-          namespacedImportName,
         },
         documents: sources,
         documentTransforms: options.documentTransforms,
