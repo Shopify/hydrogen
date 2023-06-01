@@ -110,13 +110,15 @@ type ProjectDirs = {
 };
 
 type CodegenOptions = ProjectDirs & {
-  configFilePath?: string;
   watch?: boolean;
+  configFilePath?: string;
+  forceSfapiVersion?: string;
 };
 
 export async function generateTypes({
-  configFilePath,
   watch,
+  configFilePath,
+  forceSfapiVersion,
   ...dirs
 }: CodegenOptions) {
   const {config: codegenConfig} =
@@ -126,7 +128,7 @@ export async function generateTypes({
       searchPlaces: [dirs.rootDirectory],
     })) ||
     // Fall back to default config
-    generateDefaultConfig(dirs);
+    generateDefaultConfig(dirs, forceSfapiVersion);
 
   await addHooksToHydrogenOptions(codegenConfig, dirs);
 
@@ -145,10 +147,10 @@ export async function generateTypes({
   return Object.keys(codegenConfig.generates);
 }
 
-function generateDefaultConfig({
-  rootDirectory,
-  appDirectory,
-}: ProjectDirs): LoadCodegenConfigResult {
+function generateDefaultConfig(
+  {rootDirectory, appDirectory}: ProjectDirs,
+  forceSfapiVersion?: string,
+): LoadCodegenConfigResult {
   const tsDefaultGlob = '*!(*.d).{ts,tsx}'; // No d.ts files
   const appDirRelative = relativePath(rootDirectory, appDirectory);
 
@@ -165,6 +167,24 @@ function generateDefaultConfig({
             tsDefaultGlob, // E.g. ./server.ts
             joinPath(appDirRelative, '**', tsDefaultGlob), // E.g. app/routes/_index.tsx
           ],
+
+          ...(!!forceSfapiVersion && {
+            presetConfig: {importTypes: false},
+            schema: {
+              [`https://hydrogen-preview.myshopify.com/api/${forceSfapiVersion}/graphql.json`]:
+                {
+                  headers: {
+                    'content-type': 'application/json',
+                    'X-Shopify-Storefront-Access-Token':
+                      '3b580e70970c4528da70c98e097c2fa0',
+                  },
+                },
+            },
+            config: {
+              defaultScalarType: 'string',
+              scalars: {JSON: 'unknown'},
+            },
+          }),
         },
       },
     },
