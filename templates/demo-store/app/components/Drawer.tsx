@@ -18,7 +18,7 @@ export function Drawer({
   openFrom = 'right',
   children,
 }: {
-  heading?: string;
+  heading?: string | React.ReactNode;
   open: boolean;
   onClose: () => void;
   openFrom: 'right' | 'left';
@@ -62,25 +62,30 @@ export function Drawer({
               >
                 <Dialog.Panel className="w-screen max-w-lg text-left align-middle transition-all transform shadow-xl h-screen-dynamic bg-contrast">
                   <header
-                    className={`sticky top-0 flex items-center px-6 h-nav sm:px-8 md:px-12 ${
+                    className={`sticky top-0 flex items-center px-6 h-nav sm:px-8 md:px-12 w-100 ${
                       heading ? 'justify-between' : 'justify-end'
                     }`}
                   >
-                    {heading !== null && (
-                      <Dialog.Title>
-                        <Heading as="span" size="lead" id="cart-contents">
-                          {heading}
-                        </Heading>
-                      </Dialog.Title>
-                    )}
-                    <button
-                      type="button"
-                      className="p-4 -m-4 transition text-primary hover:text-primary/50"
-                      onClick={onClose}
-                      data-test="close-cart"
-                    >
-                      <IconClose aria-label="Close panel" />
-                    </button>
+                    <>
+                      {heading &&
+                        (typeof heading === 'object' ? (
+                          heading
+                        ) : (
+                          <Dialog.Title>
+                            <Heading as="span" size="lead" id="cart-contents">
+                              {heading}
+                            </Heading>
+                          </Dialog.Title>
+                        ))}
+                      <button
+                        type="button"
+                        className="p-4 -m-4 transition text-primary hover:text-primary/50"
+                        onClick={onClose}
+                        data-test="close-cart"
+                      >
+                        <IconClose aria-label="Close panel" />
+                      </button>
+                    </>
                   </header>
                   {children}
                 </Dialog.Panel>

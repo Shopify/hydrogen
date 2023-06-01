@@ -76,25 +76,47 @@ export type ParsedSearchResults = {
   totalResults: number;
 };
 
-export async function loader({request, context: {storefront}}: LoaderArgs) {
-  const searchParams = new URL(request.url).searchParams;
-  const searchTerm = searchParams.get('q')!;
+export async function action({request, context: {storefront}}: LoaderArgs) {
+  try {
+    if (request.method !== 'POST') {
+      throw new Error('Invalid request method');
+    }
 
-  const data = await storefront.query<{
-    predictiveSearch: PredictiveSearchResult;
-  }>(PREDICTIVE_SEARCH_QUERY, {
-    variables: {
-      pageBy: 4,
-      searchTerm,
-      country: storefront.i18n.country,
-      language: storefront.i18n.language,
-    },
-    storefrontApiVersion: 'unstable',
-  });
+    const body = await request.formData();
+    const searchTerm = body.get('q')!;
 
-  invariant(data, 'No data returned from Shopify API');
-  const searchResults = parseSearchResults(data.predictiveSearch);
-  return json({searchResults});
+    if (!searchTerm) {
+      throw new Error('No search term provided');
+    }
+
+    const data = await storefront.query<{
+      predictiveSearch: PredictiveSearchResult;
+    }>(PREDICTIVE_SEARCH_QUERY, {
+      variables: {
+        pageBy: 4,
+        searchTerm,
+        country: storefront.i18n.country,
+        language: storefront.i18n.language,
+      },
+      storefrontApiVersion: 'unstable',
+    });
+
+    invariant(data, 'No data returned from Shopify API');
+
+    const searchResults = parseSearchResults(data.predictiveSearch);
+    return json({searchResults});
+  } catch (error) {
+    if (error instanceof Error) {
+      const predictiveSearchNotEnabled =
+        error.message.includes(`predictiveSearch`);
+      if (predictiveSearchNotEnabled) {
+        console.warn(
+          '\nTo use the predictiveSearch API please install the Search & Discovery app\nhttps://apps.shopify.com/search-and-discovery\n',
+        );
+      }
+    }
+    throw error;
+  }
 }
 
 function parseSearchResults(
@@ -204,7 +226,8 @@ function parseSearchResults(
   return {results, totalResults};
 }
 
-const PREDICTIVE_SEARCH_QUERY = `#graphql
+// FIX: add #graphql tag to query when we switch to the new api version
+const PREDICTIVE_SEARCH_QUERY = `
   query predictiveSearch(
     $searchTerm: String!
     $country: CountryCode

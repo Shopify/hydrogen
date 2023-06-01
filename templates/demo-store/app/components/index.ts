@@ -23,6 +23,6 @@ export {Grid} from './Grid';
 export {FeaturedProducts} from './FeaturedProducts';
 export {AddToCartButton} from './AddToCartButton';
 export {SearchInput} from './SearchInput';
-export {SearchResultsDrawer} from './SearchResultsDrawer';
+export {SearchResults} from './SearchResults';
 // Sue me
 export * from './Icon';

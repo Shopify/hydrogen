@@ -1,4 +1,4 @@
-import {useParams, Form, Await, useMatches} from '@remix-run/react';
+import {Await, useMatches} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
@@ -16,10 +16,9 @@ import {
   IconLogin,
   IconMenu,
   IconSearch,
-  Input,
   Link,
   SearchInput,
-  SearchResultsDrawer,
+  SearchResults,
   Section,
   Text,
   useDrawer,
@@ -28,11 +27,10 @@ import type {ChildEnhancedMenuItem} from '~/lib/utils';
 import {type EnhancedMenu, useIsHomePath} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
-import {useSearch} from '~/hooks/useSearch';
 
 type LayoutProps = {
   children: React.ReactNode;
-  layout: LayoutQuery & {
+  layout: Pick<LayoutQuery, 'shop'> & {
     headerMenu?: EnhancedMenu | null;
     footerMenu?: EnhancedMenu | null;
   };
@@ -58,8 +56,17 @@ export function Layout({children, layout}: LayoutProps) {
   );
 }
 
-function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
-  const isHome = useIsHomePath();
+type HeaderProps = {
+  title: LayoutProps['layout']['shop']['name'];
+  menu: LayoutProps['layout']['headerMenu'];
+};
+
+function Header({title, menu}: HeaderProps) {
+  const {
+    isOpen: serchDrawer,
+    openDrawer: openSearch,
+    closeDrawer: closeSearch,
+  } = useDrawer();
 
   const {
     isOpen: isCartOpen,
@@ -84,26 +91,32 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
   return (
     <>
       <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
+      <SearchDrawer isOpen={serchDrawer} onClose={closeSearch} />
       {menu && (
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
       )}
       <DesktopHeader
-        isHome={isHome}
         title={title}
         menu={menu}
         openCart={openCart}
+        openSearch={openSearch}
       />
       <MobileHeader
-        isHome={isHome}
         title={title}
         openCart={openCart}
         openMenu={openMenu}
+        openSearch={openSearch}
       />
     </>
   );
 }
 
-function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
+type BaseDrawerProps = {
+  isOpen: boolean;
+  onClose: () => void;
+};
+
+function CartDrawer({isOpen, onClose}: BaseDrawerProps) {
   const [root] = useMatches();
 
   return (
@@ -119,15 +132,26 @@ function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
   );
 }
 
-export function MenuDrawer({
-  isOpen,
-  onClose,
-  menu,
-}: {
-  isOpen: boolean;
-  onClose: () => void;
-  menu: EnhancedMenu;
-}) {
+function SearchDrawer({isOpen, onClose}: BaseDrawerProps) {
+  return (
+    <Drawer
+      heading={
+        <SearchInput className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5" />
+      }
+      open={isOpen}
+      onClose={onClose}
+      openFrom="right"
+    >
+      <SearchResults />
+    </Drawer>
+  );
+}
+
+type MenuDrawerProps = BaseDrawerProps & {
+  menu: HeaderProps['menu'];
+};
+
+export function MenuDrawer({isOpen, onClose, menu}: MenuDrawerProps) {
   return (
     <Drawer open={isOpen} onClose={onClose} openFrom="left" heading="Menu">
       <div className="grid">
@@ -137,13 +161,11 @@ export function MenuDrawer({
   );
 }
 
-function MenuMobileNav({
-  menu,
-  onClose,
-}: {
-  menu: EnhancedMenu;
-  onClose: () => void;
-}) {
+type MenuMobileNavProps = Pick<BaseDrawerProps, 'onClose'> & {
+  menu: HeaderProps['menu'];
+};
+
+function MenuMobileNav({menu, onClose}: MenuMobileNavProps) {
   return (
     <nav className="grid gap-4 p-6 sm:gap-6 sm:px-12 sm:py-8">
       {/* Top level menu items */}
@@ -167,21 +189,23 @@ function MenuMobileNav({
   );
 }
 
+type CommonHeaderProps = {
+  openCart: () => void;
+  openSearch: () => void;
+};
+
+type MobileHeaderProps = Pick<HeaderProps, 'title'> &
+  CommonHeaderProps & {
+    openMenu: () => void;
+  };
+
 function MobileHeader({
   title,
-  isHome,
   openCart,
   openMenu,
-}: {
-  title: string;
-  isHome: boolean;
-  openCart: () => void;
-  openMenu: () => void;
-}) {
-  // useHeaderStyleFix(containerStyle, setContainerStyle, isHome);
-
-  const params = useParams();
-
+  openSearch,
+}: MobileHeaderProps) {
+  const isHome = useIsHomePath();
   return (
     <header
       role="banner"
@@ -198,29 +222,7 @@ function MobileHeader({
         >
           <IconMenu />
         </button>
-        <Form
-          method="get"
-          action={params.locale ? `/${params.locale}/search` : '/search'}
-          className="items-center gap-2 sm:flex"
-        >
-          <button
-            type="submit"
-            className="relative flex items-center justify-center w-8 h-8"
-          >
-            <IconSearch />
-          </button>
-          <Input
-            className={
-              isHome
-                ? 'focus:border-contrast/20 dark:focus:border-primary/20'
-                : 'focus:border-primary/20'
-            }
-            type="search"
-            variant="minisearch"
-            placeholder="Search"
-            name="q"
-          />
-        </Form>
+        <SearchIcon openSearch={openSearch} />
       </div>
 
       <Link
@@ -237,25 +239,22 @@ function MobileHeader({
 
       <div className="flex items-center justify-end w-full gap-4">
         <AccountLink className="relative flex items-center justify-center w-8 h-8" />
-        <CartCount isHome={isHome} openCart={openCart} />
+        <CartCount openCart={openCart} />
       </div>
     </header>
   );
 }
 
+type DesktopHeaderProps = HeaderProps & CommonHeaderProps;
+
 function DesktopHeader({
-  isHome,
-  menu,
   openCart,
+  openSearch,
   title,
-}: {
-  isHome: boolean;
-  openCart: () => void;
-  menu?: EnhancedMenu;
-  title: string;
-}) {
+  menu,
+}: DesktopHeaderProps) {
+  const isHome = useIsHomePath();
   const {y} = useWindowScroll();
-  const {searchInputRef, searchFetcher, searchResults} = useSearch();
 
   return (
     <header
@@ -290,24 +289,44 @@ function DesktopHeader({
         </nav>
       </div>
       <div className="flex items-center gap-1">
-        <div className="relative">
-          <SearchInput
-            className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5"
-            isHome={isHome}
-            searchFetcher={searchFetcher}
-            searchInputRef={searchInputRef}
-          />
-          {searchResults && (
-            <SearchResultsDrawer
-              searchInputRef={searchInputRef}
-              searchResults={searchResults}
-            />
-          )}
-        </div>
+        <SearchIcon openSearch={openSearch} />
         <AccountLink className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5" />
-        <CartCount isHome={isHome} openCart={openCart} />
+        <CartCount openCart={openCart} />
       </div>
     </header>
+  );
+}
+
+function SearchIcon({openSearch}: Pick<CommonHeaderProps, 'openSearch'>) {
+  // If cmd+K is pressed, open the search drawer
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.metaKey && event.key === 'k') {
+        event.preventDefault();
+        openSearch();
+        const searchInput: HTMLInputElement | null = document.querySelector(
+          'input[type="search"]',
+        );
+        searchInput?.focus();
+      }
+    }
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [openSearch]);
+
+  return (
+    <div className="flex items-center justify-center">
+      <p className="mr-4 hidden md:block">
+        <span className="mr-4">Search</span>
+        <span>
+          <kbd>⌘</kbd>
+          <kbd>K</kbd>
+        </span>
+      </p>
+      <button onClick={openSearch} className="w-8 h-8 focus:ring-primary/5">
+        <IconSearch />
+      </button>
+    </div>
   );
 }
 
@@ -325,13 +344,8 @@ function AccountLink({className}: {className?: string}) {
   );
 }
 
-function CartCount({
-  isHome,
-  openCart,
-}: {
-  isHome: boolean;
-  openCart: () => void;
-}) {
+function CartCount({openCart}: Pick<CommonHeaderProps, 'openCart'>) {
+  const isHome = useIsHomePath();
   const [root] = useMatches();
 
   return (
@@ -349,15 +363,12 @@ function CartCount({
   );
 }
 
-function Badge({
-  openCart,
-  dark,
-  count,
-}: {
-  count: number;
+type BadgeProps = Pick<CommonHeaderProps, 'openCart'> & {
   dark: boolean;
-  openCart: () => void;
-}) {
+  count: number;
+};
+
+function Badge({openCart, dark, count}: BadgeProps) {
   const isHydrated = useIsHydrated();
 
   const BadgeCounter = useMemo(
@@ -395,7 +406,11 @@ function Badge({
   );
 }
 
-function Footer({menu}: {menu?: EnhancedMenu}) {
+type FooterProps = {
+  menu: LayoutProps['layout']['footerMenu'];
+};
+
+function Footer({menu}: FooterProps) {
   const isHome = useIsHomePath();
   const itemsCount = menu
     ? menu?.items?.length + 1 > 4
@@ -423,23 +438,7 @@ function Footer({menu}: {menu?: EnhancedMenu}) {
   );
 }
 
-function FooterLink({item}: {item: ChildEnhancedMenuItem}) {
-  if (item.to.startsWith('http')) {
-    return (
-      <a href={item.to} target={item.target} rel="noopener noreferrer">
-        {item.title}
-      </a>
-    );
-  }
-
-  return (
-    <Link to={item.to} target={item.target} prefetch="intent">
-      {item.title}
-    </Link>
-  );
-}
-
-function FooterMenu({menu}: {menu?: EnhancedMenu}) {
+function FooterMenu({menu}: FooterProps) {
   const styles = {
     section: 'grid gap-4',
     nav: 'grid gap-2 pb-6',
@@ -485,5 +484,22 @@ function FooterMenu({menu}: {menu?: EnhancedMenu}) {
         </section>
       ))}
     </>
+  );
+}
+
+// FIX: this type should be infered from layoutProps['layout']['footerMenu'][0]
+function FooterLink({item}: {item: ChildEnhancedMenuItem}) {
+  if (item.to.startsWith('http')) {
+    return (
+      <a href={item.to} target={item.target} rel="noopener noreferrer">
+        {item.title}
+      </a>
+    );
+  }
+
+  return (
+    <Link to={item.to} target={item.target} prefetch="intent">
+      {item.title}
+    </Link>
   );
 }

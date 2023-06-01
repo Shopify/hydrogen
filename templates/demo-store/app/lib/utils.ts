@@ -27,7 +27,8 @@ export type ParentEnhancedMenuItem = (ParentMenuItemFragment &
 };
 
 export type EnhancedMenu = Pick<MenuFragment, 'id'> & {
-  items: ParentEnhancedMenuItem[];
+  id: string;
+  items: Array<ParentEnhancedMenuItem>;
 };
 
 export function missingClass(string?: string, prefix?: string) {

@@ -1,50 +1,32 @@
 import clsx from 'clsx';
-import React, {useEffect} from 'react';
-import {useParams, Form} from '@remix-run/react';
-import type {FetcherWithComponents} from '@remix-run/react';
+import {useRef} from 'react';
+import {useParams, useFetcher} from '@remix-run/react';
 
 import {IconSearch, Input} from '~/components';
+import {useIsHomePath} from '~/lib/utils';
 
-export function SearchInput({
-  isHome,
-  searchInputRef,
-  searchFetcher,
-  className,
-}: {
-  isHome: boolean;
-  searchInputRef: React.RefObject<HTMLInputElement>;
-  // FIX: type this <FetcherWithComponent
-  searchFetcher: FetcherWithComponents<any>;
-  className?: string;
-}) {
+export function SearchInput({className}: {className?: string}) {
+  const isHome = useIsHomePath();
   const params = useParams();
+  const fetcher = useFetcher();
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
 
   function fetchSearchResults(event: React.ChangeEvent<HTMLInputElement>) {
     const newSearchTerm = event.target.value;
     if (!newSearchTerm) return;
-    const searchTermURI = encodeURIComponent(newSearchTerm);
     const searchEndpoint = `${
       params.locale
-        ? `/${params.locale}/api/predictive-search?q=${searchTermURI}`
-        : `/api/predictive-search?q=${searchTermURI}`
+        ? `/${params.locale}/api/predictive-search`
+        : `/api/predictive-search`
     }`;
-    searchFetcher.load(searchEndpoint);
+    fetcher.submit(
+      {q: newSearchTerm},
+      {method: 'POST', action: searchEndpoint},
+    );
   }
 
-  // If cmd+K is pressed, focus the search input
-  useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
-      if (event.metaKey && event.key === 'k') {
-        event.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    }
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [searchInputRef]);
-
   return (
-    <Form
+    <fetcher.Form
       method="get"
       className="flex items-center gap-2"
       onSubmit={(event) => {
@@ -73,7 +55,7 @@ export function SearchInput({
       <button type="submit" className={className}>
         <IconSearch />
       </button>
-    </Form>
+    </fetcher.Form>
   );
 }
 
