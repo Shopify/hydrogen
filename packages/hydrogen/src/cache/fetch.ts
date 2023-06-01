@@ -1,5 +1,5 @@
 import {hashKey} from '../utils/hash.js';
-import {CacheShort, CachingStrategy} from './strategies';
+import {CacheShort, CachingStrategy, NO_STORE} from './strategies';
 import {getItemFromCache, setItemInCache, isStale} from './sub-request';
 
 /**
@@ -59,7 +59,9 @@ export async function runWithCache<T = unknown>(
     waitUntil,
   }: WithCacheOptions<T>,
 ): Promise<T> {
-  if (!cacheInstance || !strategy) return actionFn();
+  if (!cacheInstance || !strategy || strategy.mode === NO_STORE) {
+    return actionFn();
+  }
 
   const key = hashKey([
     // '__HYDROGEN_CACHE_ID__', // TODO purgeQueryCacheOnBuild
