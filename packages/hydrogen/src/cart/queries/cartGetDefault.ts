@@ -158,6 +158,7 @@ export const DEFAULT_CART_FRAGMENT = `#graphql
       value
     }
     discountCodes {
+      applicable
       code
     }
   }

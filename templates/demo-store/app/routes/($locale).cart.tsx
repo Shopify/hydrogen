@@ -37,10 +37,21 @@ export async function action({request, context}: ActionArgs) {
       break;
     case CartForm.ACTIONS.DiscountCodesUpdate:
       const formDiscountCode = formData.get('discountCode');
+
+      // User inputted discount code
       const discountCodes = (
         formDiscountCode ? [formDiscountCode] : ['']
       ) as string[];
-      result = await cart.updateDiscountCodes(discountCodes);
+
+      // Combine discount codes already applied on cart
+      discountCodes.push(...inputs.discountCodes);
+
+      // Ensure the discount codes are unique
+      const uniqueCodes = discountCodes.filter((value, index, array) => {
+        return array.indexOf(value) === index;
+      });
+
+      result = await cart.updateDiscountCodes(uniqueCodes);
       break;
     case CartForm.ACTIONS.BuyerIdentityUpdate:
       result = await cart.updateBuyerIdentity({
