@@ -82,12 +82,15 @@ function CartDiscounts({
 }: {
   discountCodes: CartType['discountCodes'];
 }) {
-  const codes = discountCodes?.map(({code}) => code).join(', ') || null;
+  const applicableDiscounts = discountCodes?.filter(
+    (discount) => discount.applicable,
+  );
+  const codes: string[] = applicableDiscounts.map(({code}) => code);
 
   return (
     <>
       {/* Have existing discount, display it with a remove option */}
-      <dl className={codes ? 'grid' : 'hidden'}>
+      <dl className={codes && codes.length !== 0 ? 'grid' : 'hidden'}>
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Discount(s)</Text>
           <div className="flex items-center justify-between">
@@ -99,16 +102,16 @@ function CartDiscounts({
                 />
               </button>
             </UpdateDiscountForm>
-            <Text as="dd">{codes}</Text>
+            <Text as="dd">{codes?.join(', ')}</Text>
           </div>
         </div>
       </dl>
 
-      {/* No discounts, show an input to apply a discount */}
-      <UpdateDiscountForm>
+      {/* Show an input to apply a discount */}
+      <UpdateDiscountForm discountCodes={codes}>
         <div
           className={clsx(
-            codes ? 'hidden' : 'flex',
+            'flex',
             'items-center gap-4 justify-between text-copy',
           )}
         >
@@ -127,13 +130,19 @@ function CartDiscounts({
   );
 }
 
-function UpdateDiscountForm({children}: {children: React.ReactNode}) {
+function UpdateDiscountForm({
+  discountCodes,
+  children,
+}: {
+  discountCodes?: string[];
+  children: React.ReactNode;
+}) {
   return (
     <CartForm
       route="/cart"
       action={CartForm.ACTIONS.DiscountCodesUpdate}
       inputs={{
-        discountCodes: [],
+        discountCodes: discountCodes || [],
       }}
     >
       {children}
