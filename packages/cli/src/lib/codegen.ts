@@ -171,14 +171,16 @@ function generateDefaultConfig(
           ...(!!forceSfapiVersion && {
             presetConfig: {importTypes: false},
             schema: {
-              [`https://hydrogen-preview.myshopify.com/api/${forceSfapiVersion}/graphql.json`]:
-                {
-                  headers: {
-                    'content-type': 'application/json',
-                    'X-Shopify-Storefront-Access-Token':
-                      '3b580e70970c4528da70c98e097c2fa0',
-                  },
+              [`https://hydrogen-preview.myshopify.com/api/${
+                forceSfapiVersion.split(':')[0]
+              }/graphql.json`]: {
+                headers: {
+                  'content-type': 'application/json',
+                  'X-Shopify-Storefront-Access-Token':
+                    forceSfapiVersion.split(':')[1] ??
+                    '3b580e70970c4528da70c98e097c2fa0',
                 },
+              },
             },
             config: {
               defaultScalarType: 'string',

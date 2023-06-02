@@ -23,7 +23,7 @@ export default class Codegen extends Command {
     }),
     ['force-sfapi-version']: Flags.string({
       description:
-        'Force generating Storefront API types for a specific version instead of using the one provided in Hydrogen.',
+        'Force generating Storefront API types for a specific version instead of using the one provided in Hydrogen. A token can also be provided with this format: `<version>:<token>`.',
       hidden: true,
     }),
     watch: Flags.boolean({
