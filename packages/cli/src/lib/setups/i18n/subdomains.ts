@@ -1,5 +1,5 @@
 import {getCodeFormatOptions} from '../../format-code.js';
-import {replaceServerI18n} from './replacers.js';
+import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
 import type {SetupConfig} from './index.js';
 
 export async function setupI18nSubdomains(options: SetupConfig) {
@@ -9,7 +9,7 @@ export async function setupI18nSubdomains(options: SetupConfig) {
         options,
         formatConfig,
         getSubdomainLocaleExtractorFunction,
-      ),
+      ).then(() => replaceRemixEnv(options, formatConfig)),
   );
 
   return {workPromise};

@@ -1,5 +1,6 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {joinPath} from '@shopify/cli-kit/node/path';
+import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
+import {fileExists} from '@shopify/cli-kit/node/fs';
 import {ts, tsx, js, jsx} from '@ast-grep/napi';
 import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import type {FormatOptions} from '../../format-code.js';
@@ -9,29 +10,20 @@ const astGrep = {ts, tsx, js, jsx};
 
 export const i18nTypeName = 'I18nLocale';
 
+/**
+ * Adds the `getLocaleFromRequest` function to the server entrypoint and calls it.
+ */
 export async function replaceServerI18n(
   {rootDirectory, serverEntryPoint = 'server'}: SetupConfig,
   formatConfig: FormatOptions,
   localeExtractImplementation: (isTs: boolean, typeName: string) => string,
 ) {
-  const match = serverEntryPoint.match(/\.([jt]sx?)$/)?.[1] as
-    | 'ts'
-    | 'tsx'
-    | 'js'
-    | 'jsx'
-    | undefined;
-
-  const {filepath, astType} = match
-    ? {filepath: joinPath(rootDirectory, serverEntryPoint), astType: match}
-    : await findFileWithExtension(rootDirectory, serverEntryPoint);
+  const {filepath, astType} = await findEntryFile({
+    rootDirectory,
+    serverEntryPoint,
+  });
 
   const isTs = astType === 'ts' || astType === 'tsx';
-
-  if (!filepath || !astType) {
-    throw new AbortError(
-      `Could not find a server entry point at ${serverEntryPoint}`,
-    );
-  }
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
     const root = astGrep[astType].parse(content).root();
@@ -177,4 +169,130 @@ export async function replaceServerI18n(
 
     return content + `\n\n${localeExtractorFn}\n`;
   });
+}
+
+/**
+ * Adds I18nLocale import and pass it to Storefront<I18nLocale> type as generic in `remix.env.d.ts`
+ */
+export async function replaceRemixEnv(
+  {rootDirectory, serverEntryPoint}: SetupConfig,
+  formatConfig: FormatOptions,
+) {
+  const remixEnvPath = joinPath(rootDirectory, 'remix.env.d.ts');
+
+  if (!(await fileExists(remixEnvPath))) {
+    return; // Skip silently
+  }
+
+  const {filepath: entryFilepath} = await findEntryFile({
+    rootDirectory,
+    serverEntryPoint,
+  });
+
+  const relativePathToEntry = relativePath(
+    rootDirectory,
+    entryFilepath,
+  ).replace(/.[tj]sx?$/, '');
+
+  await replaceFileContent(remixEnvPath, formatConfig, (content) => {
+    if (content.includes(`Storefront<`)) return; // Already set up
+
+    const root = astGrep.ts.parse(content).root();
+
+    const storefrontTypeNode = root.find({
+      rule: {
+        kind: 'property_signature',
+        has: {
+          kind: 'type_annotation',
+          has: {
+            regex: '^Storefront$',
+          },
+        },
+        inside: {
+          kind: 'interface_declaration',
+          stopBy: 'end',
+          regex: 'AppLoadContext',
+        },
+      },
+    });
+
+    if (!storefrontTypeNode) {
+      return; // Skip silently
+    }
+
+    // Replace this first to avoid changing indexes in code below
+    const {end} = storefrontTypeNode.range();
+    content =
+      content.slice(0, end.index) +
+      `<${i18nTypeName}>` +
+      content.slice(end.index);
+
+    console.log(
+      'AAAA',
+      {relativePathToEntry, remixEnvPath, entryFilepath},
+      relativePathToEntry.replaceAll('.', '\\.'),
+    );
+    const serverImportNode = root
+      .findAll({
+        rule: {
+          kind: 'import_statement',
+          has: {
+            kind: 'string_fragment',
+            stopBy: 'end',
+            regex: `^(\\./)?${relativePathToEntry.replaceAll(
+              '.',
+              '\\.',
+            )}(\\.[jt]sx?)?$`,
+          },
+        },
+      })
+      .pop();
+
+    if (serverImportNode) {
+      content = content.replace(
+        serverImportNode.text(),
+        serverImportNode.text().replace('{', `{${i18nTypeName},`),
+      );
+    } else {
+      const lastImportNode =
+        root.findAll({rule: {kind: 'import_statement'}}).pop() ??
+        root.findAll({rule: {kind: 'comment', regex: '^/// <reference'}}).pop();
+
+      const {end} = lastImportNode?.range() ?? {end: {index: 0}};
+
+      const typeImport = `\nimport type {${i18nTypeName}} from './${serverEntryPoint!.replace(
+        /\.[jt]s$/,
+        '',
+      )}';`;
+
+      content =
+        content.slice(0, end.index) + typeImport + content.slice(end.index);
+    }
+
+    return content;
+  });
+}
+
+async function findEntryFile({
+  rootDirectory,
+  serverEntryPoint = 'server',
+}: SetupConfig) {
+  const match = serverEntryPoint.match(/\.([jt]sx?)$/)?.[1] as
+    | 'ts'
+    | 'tsx'
+    | 'js'
+    | 'jsx'
+    | undefined;
+
+  const {filepath, astType} = match
+    ? {filepath: joinPath(rootDirectory, serverEntryPoint), astType: match}
+    : await findFileWithExtension(rootDirectory, serverEntryPoint);
+
+  if (!filepath || !astType) {
+    throw new AbortError(
+      `Could not find a server entry point at ${serverEntryPoint}`,
+    );
+  }
+
+  return {filepath, astType};
 }
