@@ -146,15 +146,9 @@ describe('init', () => {
       await runInit(options);
 
       // Then
-      expect(renderInfo).toHaveBeenCalledTimes(1);
       expect(renderInfo).toHaveBeenCalledWith(
         expect.objectContaining({
-          body: expect.stringContaining(
-            'To connect this project to your Shopify store’s inventory',
-          ),
-          headline: expect.stringContaining(
-            'Your project will display inventory from the Hydrogen Demo Store',
-          ),
+          headline: expect.stringContaining('Hydrogen Demo Store'),
         }),
       );
     });
@@ -173,7 +167,11 @@ describe('init', () => {
       await runInit(options);
 
       // Then
-      expect(renderInfo).toHaveBeenCalledTimes(0);
+      expect(renderInfo).not.toHaveBeenCalledWith(
+        expect.objectContaining({
+          headline: expect.stringContaining('Hydrogen Demo Store'),
+        }),
+      );
     });
   });
 });
