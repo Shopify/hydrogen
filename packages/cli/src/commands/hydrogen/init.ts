@@ -513,25 +513,18 @@ async function handleLanguage(projectDir: string, flagLanguage?: Language) {
  * @returns The chosen strategy name and a function that sets up the CSS strategy.
  */
 async function handleCssStrategy(projectDir: string) {
-  const selectedCssStrategy = await renderSelectPrompt<'no' | CssStrategy>({
+  const selectedCssStrategy = await renderSelectPrompt<CssStrategy>({
     message: `Select a styling library`,
-    choices: [
-      {label: 'No styling', value: 'no'},
-      ...SETUP_CSS_STRATEGIES.map((strategy) => ({
-        label: CSS_STRATEGY_NAME_MAP[strategy],
-        value: strategy,
-      })),
-    ],
-    defaultValue: 'no',
+    choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
+      label: CSS_STRATEGY_NAME_MAP[strategy],
+      value: strategy,
+    })),
+    defaultValue: 'tailwind',
   });
 
-  const skipCssSetup = selectedCssStrategy === 'no';
-
   return {
-    cssStrategy: skipCssSetup ? undefined : selectedCssStrategy,
+    cssStrategy: selectedCssStrategy,
     async setupCss() {
-      if (skipCssSetup) return;
-
       const result = await setupCssStrategy(
         selectedCssStrategy,
         {
