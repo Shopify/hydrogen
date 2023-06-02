@@ -79,7 +79,9 @@ async function getContext(req) {
   const session = await HydrogenSession.init(req, [env.SESSION_SECRET]);
 
   const {storefront} = createStorefrontClient({
+    // A [`cache` instance](https://developer.mozilla.org/en-US/docs/Web/API/Cache) is necessary for sub-request caching to work. We don't yet have a Node-compatible cache implementation.
     cache: null,
+    // `waitUntil` is only needed on worker environments. For Express/Node, it isn't applicable
     waitUntil: null,
     i18n: {language: 'EN', country: 'US'},
     publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
