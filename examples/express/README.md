@@ -1,8 +1,13 @@
-# Welcome to Remix!
+# Hydrogen Express Example
 
-- [Remix Docs](https://remix.run/docs)
+This is a Hydrogen example using NodeJS [Express](https://expressjs.com/). Hydrogen works best with Oxygen, and any project initialized with `npm create @shopify/hydrogen@latest` will create a template that uses Oxygen. If you don't want to use Oxygen, adapting the starter template to another platform is tricky. Instead we suggest generating a new app from the [Remix CLI](https://remix.run/docs/en/1.16.1/tutorials/blog) `npx create-remix@latest` and adapting it with Hydrogen functionality.
 
-## Development
+This is an example setup where we have adapted the Remix Express starter app to use Hydrogen. A few things are not yet functional:
+
+1. The app does not have a cache implementation. So sub-requests to the Storefront API won't be cachable.
+1. The app does not yet utilize [`storefrontRedirect`](https://shopify.dev/docs/api/hydrogen/2023-04/unstable/utilities/storefrontredirect)
+
+## Setup
 
 Start the Remix development asset server and the Express server by running:
 
@@ -34,18 +39,3 @@ If you're familiar with deploying express applications you should be right at ho
 
 - `build/`
 - `public/build/`
-
-### Using a Template
-
-When you ran `npx create-remix@latest` there were a few choices for hosting. You can run that again to create a new project, then copy over your `app/` folder to the new project that's pre-configured for your target server.
-
-```sh
-cd ..
-# create a new project, and pick a pre-configured host
-npx create-remix@latest
-cd my-new-remix-app
-# remove the new project's app (not the old one!)
-rm -rf app
-# copy your app over
-cp -R ../my-old-remix-app/app app
-```
