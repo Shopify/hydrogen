@@ -22,7 +22,7 @@ import {
   type CssStrategy,
 } from '../../../lib/setups/css/index.js';
 
-export const STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
+export const CSS_STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
   postcss: 'CSS (with PostCSS)',
   tailwind: 'Tailwind CSS',
   'css-modules': 'CSS Modules',
@@ -75,7 +75,7 @@ export async function runSetupCSS({
     strategy = await renderSelectPrompt<CssStrategy>({
       message: `Select a styling library`,
       choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
-        label: STRATEGY_NAME_MAP[strategy],
+        label: CSS_STRATEGY_NAME_MAP[strategy],
         value: strategy,
       })),
     });
@@ -118,7 +118,7 @@ export async function runSetupCSS({
   await renderTasks(tasks);
 
   renderSuccess({
-    headline: `${STRATEGY_NAME_MAP[strategy]} setup complete.`,
+    headline: `${CSS_STRATEGY_NAME_MAP[strategy]} setup complete.`,
     body:
       (generatedAssets.length > 0
         ? 'You can now modify CSS configuration in the following files:\n' +

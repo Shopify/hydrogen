@@ -227,11 +227,6 @@ export async function replaceRemixEnv(
       `<${i18nTypeName}>` +
       content.slice(end.index);
 
-    console.log(
-      'AAAA',
-      {relativePathToEntry, remixEnvPath, entryFilepath},
-      relativePathToEntry.replaceAll('.', '\\.'),
-    );
     const serverImportNode = root
       .findAll({
         rule: {

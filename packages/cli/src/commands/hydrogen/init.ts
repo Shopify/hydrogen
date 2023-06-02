@@ -42,13 +42,17 @@ import {
   type CssStrategy,
 } from './../../lib/setups/css/index.js';
 import {ALIAS_NAME, createPlatformShortcut} from './shortcut.js';
-import {STRATEGY_NAME_MAP} from './setup/css-unstable.js';
+import {CSS_STRATEGY_NAME_MAP} from './setup/css-unstable.js';
 import {I18nStrategy, setupI18nStrategy} from '../../lib/setups/i18n/index.js';
 import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
+import {colors} from '../../lib/colors.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
-const languageChoices = ['js', 'ts'] as const;
-type Language = (typeof languageChoices)[number];
+const LANGUAGES = {
+  js: 'JavaScript',
+  ts: 'TypeScript',
+} as const;
+type Language = keyof typeof LANGUAGES;
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
@@ -60,7 +64,7 @@ export default class Init extends Command {
     }),
     language: Flags.string({
       description: 'Sets the template language to use. One of `js` or `ts`.',
-      choices: languageChoices,
+      choices: Object.keys(LANGUAGES),
       env: 'SHOPIFY_HYDROGEN_FLAG_LANGUAGE',
     }),
     template: Flags.string({
@@ -140,7 +144,7 @@ async function setupRemoteTemplate(options: InitOptions) {
     copyFile(joinPath(templatesDir, appTemplate), project.directory),
   );
 
-  const {transpileProject} = await handleLanguage(
+  const {language, transpileProject} = await handleLanguage(
     project.directory,
     options.language,
   );
@@ -149,6 +153,13 @@ async function setupRemoteTemplate(options: InitOptions) {
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(project.directory, options.installDeps);
+
+  const setupSummary: SetupSummary = {
+    language,
+    packageManager,
+    depsInstalled: false,
+    hasCreatedShortcut: false,
+  };
 
   const tasks = [
     {
@@ -170,13 +181,14 @@ async function setupRemoteTemplate(options: InitOptions) {
       title: 'Installing dependencies',
       task: async () => {
         await installDeps();
+        setupSummary.depsInstalled = true;
       },
     });
   }
 
   await renderTasks(tasks);
 
-  renderProjectReady(project, packageManager, shouldInstallDeps);
+  renderProjectReady(project, setupSummary);
 
   if (isDemoStoreTemplate) {
     renderInfo({
@@ -252,17 +264,26 @@ async function setupLocalStarterTemplate(options: InitOptions) {
 
   backgroundWorkPromise = backgroundWorkPromise.then(() => transpileProject());
 
-  const {setupCss} = await handleCssStrategy(project.directory);
+  const {setupCss, cssStrategy} = await handleCssStrategy(project.directory);
 
   backgroundWorkPromise = backgroundWorkPromise.then(() => setupCss());
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(project.directory, options.installDeps);
 
+  const setupSummary: SetupSummary = {
+    language,
+    packageManager,
+    cssStrategy,
+    depsInstalled: false,
+    hasCreatedShortcut: false,
+  };
+
   if (shouldInstallDeps) {
-    const installingDepsPromise = backgroundWorkPromise.then(() =>
-      installDeps(),
-    );
+    const installingDepsPromise = backgroundWorkPromise.then(async () => {
+      await installDeps();
+      setupSummary.depsInstalled = true;
+    });
 
     tasks.push({
       title: 'Installing dependencies',
@@ -272,7 +293,6 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     });
   }
 
-  let extraSetupSummary: ExtraSetupSummary | undefined;
   const continueWithSetup = await renderConfirmationPrompt({
     message: 'Scaffold boilerplate for i18n and routes',
     confirmationMessage: 'Yes, set up now',
@@ -289,19 +309,19 @@ async function setupLocalStarterTemplate(options: InitOptions) {
       i18nStrategy,
     );
 
-    extraSetupSummary = {i18n: i18nStrategy, routes};
+    setupSummary.i18n = i18nStrategy;
+    setupSummary.routes = routes;
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
       Promise.all([i18nPromise, routesPromise]),
     );
   }
 
-  let hasCreatedShortcut = false;
   const createShortcut = await handleCliAlias();
   if (createShortcut) {
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
       try {
         const shortcuts = await createShortcut();
-        hasCreatedShortcut = shortcuts.length > 0;
+        setupSummary.hasCreatedShortcut = shortcuts.length > 0;
       } catch {
         // Ignore errors.
         // We'll inform the user to create the
@@ -312,13 +332,7 @@ async function setupLocalStarterTemplate(options: InitOptions) {
 
   await renderTasks(tasks);
 
-  renderProjectReady(
-    project,
-    packageManager,
-    shouldInstallDeps,
-    hasCreatedShortcut,
-    extraSetupSummary,
-  );
+  renderProjectReady(project, setupSummary);
 }
 
 const i18nStrategies = {
@@ -504,7 +518,7 @@ async function handleCssStrategy(projectDir: string) {
     choices: [
       {label: 'No styling', value: 'no'},
       ...SETUP_CSS_STRATEGIES.map((strategy) => ({
-        label: STRATEGY_NAME_MAP[strategy],
+        label: CSS_STRATEGY_NAME_MAP[strategy],
         value: strategy,
       })),
     ],
@@ -514,7 +528,7 @@ async function handleCssStrategy(projectDir: string) {
   const skipCssSetup = selectedCssStrategy === 'no';
 
   return {
-    cssStrategy: skipCssSetup ? null : selectedCssStrategy,
+    cssStrategy: skipCssSetup ? undefined : selectedCssStrategy,
     async setupCss() {
       if (skipCssSetup) return;
 
@@ -590,9 +604,14 @@ async function handleDependencies(
   };
 }
 
-type ExtraSetupSummary = {
-  routes?: string[];
+type SetupSummary = {
+  language: Language;
+  packageManager: 'npm' | 'pnpm' | 'yarn';
+  depsInstalled: boolean;
+  cssStrategy?: CssStrategy;
+  hasCreatedShortcut: boolean;
   i18n?: I18nStrategy;
+  routes?: string[];
 };
 
 /**
@@ -600,31 +619,87 @@ type ExtraSetupSummary = {
  */
 function renderProjectReady(
   project: NonNullable<Awaited<ReturnType<typeof handleProjectLocation>>>,
-  packageManager: 'npm' | 'pnpm' | 'yarn',
-  depsInstalled?: boolean,
-  hasCreatedShortcut?: boolean,
-  extraSetupSummary?: ExtraSetupSummary,
+  {
+    language,
+    packageManager,
+    depsInstalled,
+    cssStrategy,
+    hasCreatedShortcut,
+    routes,
+    i18n,
+  }: SetupSummary,
 ) {
+  const bodyLines: [string, string][] = [
+    ['Store account', project.name],
+    ['Language', LANGUAGES[language]],
+  ];
+
+  if (cssStrategy) {
+    bodyLines.push(['Styling library', CSS_STRATEGY_NAME_MAP[cssStrategy]]);
+  }
+
+  if (i18n) {
+    bodyLines.push(['i18n strategy', I18N_STRATEGY_NAME_MAP[i18n]]);
+  }
+
+  if (routes?.length) {
+    bodyLines.push(['Routes', routes.join(', ')]);
+  }
+
+  const padMin =
+    1 + bodyLines.reduce((max, [label]) => Math.max(max, label.length), 0);
+
   renderSuccess({
-    headline: `${project.name} is ready to build.`,
+    headline: `Storefront setup complete!`,
+
+    body: bodyLines
+      .map(
+        ([label, value]) =>
+          outputContent`${label.padEnd(padMin, ' ')}${colors.dim(
+            ':',
+          )} ${colors.dim(value)}`.value,
+      )
+      .join('\n'),
+
     nextSteps: [
       outputContent`Run ${outputToken.genericShellCommand(
         `cd ${project.location}`,
       )}`.value,
+
       depsInstalled
         ? undefined
         : outputContent`Run ${outputToken.genericShellCommand(
             `${packageManager} install`,
           )} to install the dependencies`.value,
-      outputContent`Run ${outputToken.packagejsonScript(
-        packageManager,
-        'dev',
-      )} to start your local development server and start building`.value,
+
+      hasCreatedShortcut
+        ? undefined
+        : outputContent`Optionally, run ${outputToken.genericShellCommand(
+            `npx shopify hydrogen shortcut`,
+          )} to create a global ${outputToken.genericShellCommand(
+            ALIAS_NAME,
+          )} alias for the Shopify Hydrogen CLI`.value,
+
+      outputContent`Run ${
+        hasCreatedShortcut
+          ? outputToken.genericShellCommand(`${ALIAS_NAME} dev`)
+          : outputToken.packagejsonScript(packageManager, 'dev')
+      } to start your local development server and start building`.value,
     ].filter((step): step is string => Boolean(step)),
+
     reference: [
-      'Getting started with Hydrogen: https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development',
-      'Hydrogen project structure: https://shopify.dev/docs/custom-storefronts/hydrogen/project-structure',
-      'Setting up Hydrogen environment variables: https://shopify.dev/docs/custom-storefronts/hydrogen/environment-variables',
+      outputContent`${outputToken.link(
+        'Tutorials',
+        'https://shopify.dev/docs/custom-storefronts/hydrogen/building',
+      )}`.value,
+      outputContent`${outputToken.link(
+        'API documentation',
+        'https://shopify.dev/docs/api/storefront',
+      )}`.value,
+      outputContent`${outputToken.link(
+        'Demo Store',
+        'https://github.com/Shopify/hydrogen/tree/HEAD/templates/demo-store',
+      )}`.value,
     ],
   });
 }

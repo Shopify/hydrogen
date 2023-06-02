@@ -28,7 +28,6 @@ export default class SetupI18n extends Command {
 
   static flags = {
     path: commonFlags.path,
-    force: commonFlags.force,
   };
 
   static args = {
@@ -54,11 +53,9 @@ export default class SetupI18n extends Command {
 export async function runSetupI18n({
   strategy,
   directory,
-  force = false,
 }: {
   strategy?: I18nStrategy;
   directory: string;
-  force?: boolean;
 }) {
   if (!strategy) {
     strategy = await renderSelectPrompt<I18nStrategy>({
