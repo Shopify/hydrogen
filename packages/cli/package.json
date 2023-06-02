@@ -34,7 +34,7 @@
   "dependencies": {
     "@graphql-codegen/cli": "3.3.1",
     "@oclif/core": "2.1.4",
-    "@remix-run/dev": "1.16.0",
+    "@remix-run/dev": "1.16.1",
     "@shopify/cli-kit": "3.45.0",
     "@shopify/hydrogen-codegen": "^0.0.1",
     "@shopify/mini-oxygen": "^1.6.0",
