@@ -65,7 +65,7 @@ async function runCodegen({
       console.log('');
       renderSuccess({
         headline: 'Generated types for GraphQL:',
-        body: generatedFiles.map((file) => `- ${file}`).join('\n'),
+        body: generatedFiles.map((file) => `  • ${file}`).join('\n'),
       });
     }
   } catch (error) {

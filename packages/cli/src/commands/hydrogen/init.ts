@@ -216,11 +216,11 @@ async function setupLocalStarterTemplate(options: InitOptions) {
   });
 
   const storefrontInfo =
-    templateAction === 'link' ? await handleStorefrontLink() : null;
+    templateAction === 'link' ? await handleStorefrontLink() : undefined;
 
   const project = await handleProjectLocation({
     ...options,
-    defaultLocation: storefrontInfo?.title,
+    storefrontInfo,
   });
 
   if (!project) return;
@@ -440,17 +440,20 @@ async function handleStorefrontLink() {
  * Prompts the user to select a project directory location.
  * @returns Project information, or undefined if the user chose not to force project creation.
  */
-async function handleProjectLocation(options: {
+async function handleProjectLocation({
+  storefrontInfo,
+  ...options
+}: {
   path?: string;
-  defaultLocation?: string;
   force?: boolean;
+  storefrontInfo?: {title: string; shop: string};
 }) {
   const location =
     options.path ??
     (await renderTextPrompt({
       message: 'Name the app directory',
-      defaultValue: options.defaultLocation
-        ? hyphenate(options.defaultLocation)
+      defaultValue: storefrontInfo
+        ? hyphenate(storefrontInfo.title)
         : 'hydrogen-storefront',
     }));
 
@@ -474,7 +477,7 @@ async function handleProjectLocation(options: {
     }
   }
 
-  return {location, name, directory};
+  return {location, name, directory, storefrontInfo};
 }
 
 /**
@@ -623,7 +626,7 @@ function renderProjectReady(
   }: SetupSummary,
 ) {
   const bodyLines: [string, string][] = [
-    ['Store account', project.name],
+    ['Store account', project.storefrontInfo?.title ?? '-'],
     ['Language', LANGUAGES[language]],
   ];
 
@@ -657,13 +660,13 @@ function renderProjectReady(
     nextSteps: [
       outputContent`Run ${outputToken.genericShellCommand(
         `cd ${project.location}`,
-      )}`.value,
+      )} to enter your app directory.`.value,
 
       depsInstalled
         ? undefined
         : outputContent`Run ${outputToken.genericShellCommand(
             `${packageManager} install`,
-          )} to install the dependencies`.value,
+          )} to install the dependencies.`.value,
 
       hasCreatedShortcut
         ? undefined
@@ -671,13 +674,13 @@ function renderProjectReady(
             `npx shopify hydrogen shortcut`,
           )} to create a global ${outputToken.genericShellCommand(
             ALIAS_NAME,
-          )} alias for the Shopify Hydrogen CLI`.value,
+          )} alias for the Shopify Hydrogen CLI.`.value,
 
       outputContent`Run ${
         hasCreatedShortcut
           ? outputToken.genericShellCommand(`${ALIAS_NAME} dev`)
           : outputToken.packagejsonScript(packageManager, 'dev')
-      } to start your local development server and start building`.value,
+      } to start your local development server and start building.`.value,
     ].filter((step): step is string => Boolean(step)),
 
     reference: [
