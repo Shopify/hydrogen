@@ -24,9 +24,16 @@ export function getDomainLocaleExtractorFunction(
     serializedFn = serializedFn.replaceAll('//!', '');
   }
 
+  const returnType = `{language: LanguageCode; country: CountryCode}`;
+
   return isTs
-    ? `export type ${typeName} = {language: LanguageCode; country: CountryCode};\n\n` +
+    ? `export type ${typeName} = ${returnType};\n\n` +
         serializedFn
+          .replace('defaultLocale', `$&: ${returnType}`)
+          .replace(
+            /supportedLocales[^}]+\}/,
+            `$& as Record<CountryCode, LanguageCode>`,
+          )
           .replace(')', `: string): ${typeName}`)
           .replace('.toUpperCase()', '$& as keyof typeof supportedLocales')
     : serializedFn;
