@@ -698,6 +698,23 @@ function renderProjectReady(
       )}`.value,
     ],
   });
+
+  const cliCommand = hasCreatedShortcut ? ALIAS_NAME : 'npx shopify hydrogen';
+
+  renderInfo({
+    headline: 'Helpful commands',
+    body: [
+      // TODO: show `h2 deploy` here when it's ready
+      `Run ${outputToken.genericShellCommand(
+        cliCommand + ' generate route',
+      )} to scaffold standard Shopify routes.`,
+      `Run ${outputToken.genericShellCommand(
+        cliCommand + ' --help',
+      )} to learn how to see the full list of commands available for building Hydrogen storefronts.`,
+    ]
+      .map((line) => outputContent`  • ${line}`.value)
+      .join('\n'),
+  });
 }
 
 /**
