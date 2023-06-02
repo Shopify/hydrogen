@@ -34,7 +34,8 @@ export async function replaceServerI18n(
       rule: {
         kind: 'identifier',
         inside: {
-          kind: 'required_parameter',
+          kind: 'formal_parameters',
+          stopBy: 'end',
           inside: {
             kind: 'method_definition',
             stopBy: 'end',
