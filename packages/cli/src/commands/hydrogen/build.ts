@@ -25,6 +25,7 @@ export default class Build extends Command {
       description: 'Generate sourcemaps for the build.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       default: true,
+      allowNo: true,
     }),
     ['disable-route-warning']: Flags.boolean({
       description: 'Disable warning about missing standard routes.',
