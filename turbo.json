@@ -59,6 +59,11 @@
         "@shopify/remix-oxygen#build"
       ],
       "outputs": ["dist/**"]
+    },
+    "hydrogen-express#build": {
+      "dependsOn": [
+        "@shopify/hydrogen#build"
+      ]
     }
   }
 }

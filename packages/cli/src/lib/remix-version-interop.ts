@@ -16,7 +16,7 @@ export function isRemixV2() {
 export async function getV2Flags(root: string) {
   const isV2 = isRemixV2();
   const futureFlags = {
-    ...(!isV2 && (await getRemixConfig(root)).future),
+    ...(!isV2 && (await getRemixConfig(root, true)).future),
   };
 
   return {
