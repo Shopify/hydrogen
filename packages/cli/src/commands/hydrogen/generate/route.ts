@@ -13,8 +13,15 @@ import {
 } from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../../lib/flags.js';
 import {Flags, Args} from '@oclif/core';
-import {transpileFile} from '../../../lib/transpile-ts.js';
-import {formatCode, getCodeFormatOptions} from '../../../lib/format-code.js';
+import {
+  transpileFile,
+  type TranspilerOptions,
+} from '../../../lib/transpile-ts.js';
+import {
+  type FormatOptions,
+  formatCode,
+  getCodeFormatOptions,
+} from '../../../lib/format-code.js';
 import {getRouteFile} from '../../../lib/build.js';
 import {
   convertRouteToV2,
@@ -28,7 +35,7 @@ import {
 import type {} from '@oclif/core/lib/interfaces/parser.js';
 import {getRemixConfig} from '../../../lib/config.js';
 
-const ROUTE_MAP: Record<string, string | string[]> = {
+export const ROUTE_MAP: Record<string, string | string[]> = {
   home: '/index',
   page: '/pages/$pageHandle',
   cart: '/cart',
@@ -83,23 +90,23 @@ export default class GenerateRoute extends Command {
     } = await this.parse(GenerateRoute);
 
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
-    const allRouteGenerations = await runGenerate({
+    const {routes} = await runGenerate({
       ...flags,
       directory,
       routeName,
     });
 
-    const successfulGenerationCount = allRouteGenerations.filter(
+    const successfulGenerationCount = routes.filter(
       ({operation}) => operation !== 'skipped',
     ).length;
 
     renderSuccess({
-      headline: `${successfulGenerationCount} of ${
-        allRouteGenerations.length
-      } route${allRouteGenerations.length > 1 ? 's' : ''} generated`,
+      headline: `${successfulGenerationCount} of ${routes.length} route${
+        routes.length > 1 ? 's' : ''
+      } generated`,
       body: {
         list: {
-          items: allRouteGenerations.map(
+          items: routes.map(
             ({operation, destinationRoute}) =>
               `[${operation}] ${destinationRoute}`,
           ),
@@ -126,35 +133,45 @@ export async function runGenerate(
     );
   }
 
-  const {rootDirectory, appDirectory, future} = await getRemixConfig(
-    options.directory,
-  );
-
-  const isTypescript =
-    options.typescript ||
-    (await fileExists(joinPath(rootDirectory, 'tsconfig.json')));
+  const {rootDirectory, appDirectory, future, tsconfigPath} =
+    await getRemixConfig(options.directory);
 
   const routesArray = Array.isArray(routePath) ? routePath : [routePath];
   const v2Flags = await getV2Flags(rootDirectory, future);
+  const formatOptions = await getCodeFormatOptions(rootDirectory);
+  const typescript = options.typescript || !!tsconfigPath;
+  const transpilerOptions = typescript
+    ? undefined
+    : await getJsTranspilerOptions(rootDirectory);
 
-  return Promise.all(
+  const routes = await Promise.all(
     routesArray.map((route) =>
       generateRoute(route, {
+        ...options,
+        typescript,
         rootDirectory,
         appDirectory,
-        typescript: isTypescript,
-        force: options.force,
-        adapter: options.adapter,
+        formatOptions,
+        transpilerOptions,
         v2Flags,
       }),
     ),
   );
+
+  return {
+    routes,
+    isTypescript: typescript,
+    transpilerOptions,
+    v2Flags,
+    formatOptions,
+  };
 }
 
 type GenerateOptions = {
   typescript?: boolean;
   force?: boolean;
   adapter?: string;
+  templatesRoot?: string;
 };
 
 export async function generateRoute(
@@ -166,11 +183,14 @@ export async function generateRoute(
     force,
     adapter,
     templatesRoot,
+    transpilerOptions,
+    formatOptions,
     v2Flags = {},
   }: GenerateOptions & {
     rootDirectory: string;
     appDirectory: string;
-    templatesRoot?: string;
+    transpilerOptions?: TranspilerOptions;
+    formatOptions?: FormatOptions;
     v2Flags?: RemixV2Flags;
   },
 ): Promise<GenerateRouteResult> {
@@ -206,22 +226,9 @@ export async function generateRoute(
     v2Flags,
   );
 
-  // If the project is not using TypeScript, we need to compile the template
-  // to JavaScript. We try to read the project's jsconfig.json, but if it
-  // doesn't exist, we use a default configuration.
+  // If the project is not using TS, we need to compile the template to JS.
   if (!typescript) {
-    const jsConfigPath = joinPath(rootDirectory, 'jsconfig.json');
-    const config = (await fileExists(jsConfigPath))
-      ? JSON.parse(
-          (await readFile(jsConfigPath, {encoding: 'utf8'})).replace(
-            /^\s*\/\/.*$/gm,
-            '',
-          ),
-        )
-      : undefined;
-
-    // We compile the template to JavaScript.
-    templateContent = transpileFile(templateContent, config?.compilerOptions);
+    templateContent = transpileFile(templateContent, transpilerOptions);
   }
 
   // If the command was run with an adapter flag, we replace the default
@@ -236,11 +243,7 @@ export async function generateRoute(
   // We format the template content with Prettier.
   // TODO use @shopify/cli-kit's format function once it supports TypeScript
   // templateContent = await file.format(templateContent, destinationPath);
-  templateContent = formatCode(
-    templateContent,
-    await getCodeFormatOptions(destinationPath),
-    destinationPath,
-  );
+  templateContent = formatCode(templateContent, formatOptions, destinationPath);
 
   // Create the directory if it doesn't exist.
   if (!(await fileExists(dirname(destinationPath)))) {
@@ -251,4 +254,16 @@ export async function generateRoute(
   await writeFile(destinationPath, templateContent);
 
   return result;
+}
+
+async function getJsTranspilerOptions(rootDirectory: string) {
+  const jsConfigPath = joinPath(rootDirectory, 'jsconfig.json');
+  if (!(await fileExists(jsConfigPath))) return;
+
+  return JSON.parse(
+    (await readFile(jsConfigPath, {encoding: 'utf8'})).replace(
+      /^\s*\/\/.*$/gm,
+      '',
+    ),
+  )?.compilerOptions as undefined | TranspilerOptions;
 }

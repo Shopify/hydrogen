@@ -1,137 +1,181 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
-import {generateRoute} from './route.js';
+import {generateRoute, ROUTE_MAP, runGenerate} from './route.js';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {getRouteFile} from '../../../lib/build.js';
+import {getRemixConfig} from '../../../lib/config.js';
 
 describe('generate/route', () => {
   beforeEach(() => {
     vi.resetAllMocks();
     vi.mock('@shopify/cli-kit/node/output');
     vi.mock('@shopify/cli-kit/node/ui');
+    vi.mock('../../../lib/config.js', async () => ({getRemixConfig: vi.fn()}));
   });
 
-  it('generates a route file', async () => {
-    await temporaryDirectoryTask(async (tmpDir) => {
-      // Given
-      const route = 'pages/$pageHandle';
-      const directories = await createHydrogenFixture(tmpDir, {
-        files: [],
-        templates: [[route, `const str = "hello world"`]],
+  describe('runGenerate', () => {
+    it('generates all routes with correct configuration', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [
+            ['jsconfig.json', JSON.stringify({compilerOptions: {test: 'js'}})],
+            ['.prettierrc.json', JSON.stringify({singleQuote: false})],
+          ],
+          templates: Object.values(ROUTE_MAP).flatMap((item) => {
+            const files = Array.isArray(item) ? item : [item];
+            return files.map(
+              (filepath) => [filepath.replace('/', ''), ''] as [string, string],
+            );
+          }),
+        });
+
+        vi.mocked(getRemixConfig).mockResolvedValue(directories as any);
+
+        const result = await runGenerate({
+          routeName: 'all',
+          directory: directories.rootDirectory,
+          templatesRoot: directories.templatesRoot,
+        });
+
+        expect(result).toMatchObject(
+          expect.objectContaining({
+            isTypescript: false,
+            transpilerOptions: {test: 'js'},
+            formatOptions: {singleQuote: false},
+            routes: expect.any(Array),
+          }),
+        );
+
+        expect(result.routes).toHaveLength(
+          Object.values(ROUTE_MAP).flat().length,
+        );
       });
-
-      // When
-      await generateRoute(route, directories);
-
-      // Then
-      expect(
-        await readFile(
-          joinPath(directories.appDirectory, 'routes', `${route}.jsx`),
-        ),
-      ).toContain(`const str = 'hello world'`);
     });
   });
 
-  it('generates a route file for Remix v2', async () => {
-    await temporaryDirectoryTask(async (tmpDir) => {
-      // Given
-      const route = 'custom/path/$handle/index';
-      const directories = await createHydrogenFixture(tmpDir, {
-        files: [],
-        templates: [[route, `const str = "hello world"`]],
-      });
+  describe('generateRoute', () => {
+    it('generates a route file', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        // Given
+        const route = 'pages/$pageHandle';
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [],
+          templates: [[route, `const str = "hello world"`]],
+        });
 
-      // When
-      await generateRoute(route, {
-        ...directories,
-        v2Flags: {isV2RouteConvention: true},
-      });
+        // When
+        await generateRoute(route, directories);
 
-      // Then
-      expect(
-        await readFile(
-          joinPath(
-            directories.appDirectory,
-            'routes',
-            `custom.path.$handle._index.jsx`,
+        // Then
+        expect(
+          await readFile(
+            joinPath(directories.appDirectory, 'routes', `${route}.jsx`),
           ),
-        ),
-      ).toContain(`const str = 'hello world'`);
+        ).toContain(`const str = 'hello world'`);
+      });
     });
-  });
 
-  it('produces a typescript file when typescript argument is true', async () => {
-    await temporaryDirectoryTask(async (tmpDir) => {
-      // Given
-      const route = 'pages/$pageHandle';
-      const directories = await createHydrogenFixture(tmpDir, {
-        files: [],
-        templates: [[route, 'const str = "hello typescript"']],
+    it('generates a route file for Remix v2', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        // Given
+        const route = 'custom/path/$handle/index';
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [],
+          templates: [[route, `const str = "hello world"`]],
+        });
+
+        // When
+        await generateRoute(route, {
+          ...directories,
+          v2Flags: {isV2RouteConvention: true},
+        });
+
+        // Then
+        expect(
+          await readFile(
+            joinPath(
+              directories.appDirectory,
+              'routes',
+              `custom.path.$handle._index.jsx`,
+            ),
+          ),
+        ).toContain(`const str = 'hello world'`);
       });
-
-      // When
-      await generateRoute(route, {
-        ...directories,
-        typescript: true,
-      });
-
-      // Then
-      expect(
-        await readFile(
-          joinPath(directories.appDirectory, 'routes', `${route}.tsx`),
-        ),
-      ).toContain(`const str = 'hello typescript'`);
     });
-  });
 
-  it('prompts the user if there the file already exists', async () => {
-    await temporaryDirectoryTask(async (tmpDir) => {
-      // Given
-      vi.mocked(renderConfirmationPrompt).mockImplementationOnce(
-        async () => true,
-      );
+    it('produces a typescript file when typescript argument is true', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        // Given
+        const route = 'pages/$pageHandle';
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [],
+          templates: [[route, 'const str = "hello typescript"']],
+        });
 
-      const route = 'page/$pageHandle';
-      const directories = await createHydrogenFixture(tmpDir, {
-        files: [[`app/routes/${route}.jsx`, 'const str = "I exist"']],
-        templates: [[route, 'const str = "hello world"']],
+        // When
+        await generateRoute(route, {
+          ...directories,
+          typescript: true,
+        });
+
+        // Then
+        expect(
+          await readFile(
+            joinPath(directories.appDirectory, 'routes', `${route}.tsx`),
+          ),
+        ).toContain(`const str = 'hello typescript'`);
       });
-
-      // When
-      await generateRoute(route, directories);
-
-      // Then
-      expect(renderConfirmationPrompt).toHaveBeenCalledWith(
-        expect.objectContaining({
-          message: expect.stringContaining('already exists'),
-        }),
-      );
     });
-  });
 
-  it('does not prompt the user if the force property is true', async () => {
-    await temporaryDirectoryTask(async (tmpDir) => {
-      // Given
-      vi.mocked(renderConfirmationPrompt).mockImplementationOnce(
-        async () => true,
-      );
+    it('prompts the user if there the file already exists', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        // Given
+        vi.mocked(renderConfirmationPrompt).mockImplementationOnce(
+          async () => true,
+        );
 
-      const route = 'page/$pageHandle';
-      const directories = await createHydrogenFixture(tmpDir, {
-        files: [[`app/routes/${route}.jsx`, 'const str = "I exist"']],
-        templates: [[route, 'const str = "hello world"']],
+        const route = 'page/$pageHandle';
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [[`app/routes/${route}.jsx`, 'const str = "I exist"']],
+          templates: [[route, 'const str = "hello world"']],
+        });
+
+        // When
+        await generateRoute(route, directories);
+
+        // Then
+        expect(renderConfirmationPrompt).toHaveBeenCalledWith(
+          expect.objectContaining({
+            message: expect.stringContaining('already exists'),
+          }),
+        );
       });
+    });
 
-      // When
-      await generateRoute(route, {
-        ...directories,
-        force: true,
+    it('does not prompt the user if the force property is true', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        // Given
+        vi.mocked(renderConfirmationPrompt).mockImplementationOnce(
+          async () => true,
+        );
+
+        const route = 'page/$pageHandle';
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [[`app/routes/${route}.jsx`, 'const str = "I exist"']],
+          templates: [[route, 'const str = "hello world"']],
+        });
+
+        // When
+        await generateRoute(route, {
+          ...directories,
+          force: true,
+        });
+
+        // Then
+        expect(renderConfirmationPrompt).not.toHaveBeenCalled();
       });
-
-      // Then
-      expect(renderConfirmationPrompt).not.toHaveBeenCalled();
     });
   });
 });

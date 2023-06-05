@@ -21,7 +21,7 @@ export async function getCodeFormatOptions(filePath = process.cwd()) {
 
 export function formatCode(
   content: string,
-  config: FormatOptions,
+  config: FormatOptions = DEFAULT_PRETTIER_CONFIG,
   filePath = '',
 ) {
   const ext = extname(filePath);

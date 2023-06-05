@@ -10,7 +10,9 @@ const escapeNewLines = (code: string) =>
 const restoreNewLines = (code: string) =>
   code.replace(/\/\* :newline: \*\//g, '\n');
 
-const DEFAULT_TS_CONFIG: Omit<CompilerOptions, 'target'> = {
+export type TranspilerOptions = Omit<CompilerOptions, 'target'>;
+
+const DEFAULT_TS_CONFIG: TranspilerOptions = {
   lib: ['DOM', 'DOM.Iterable', 'ES2022'],
   isolatedModules: true,
   esModuleInterop: true,
