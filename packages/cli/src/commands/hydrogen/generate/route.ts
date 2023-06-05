@@ -48,7 +48,8 @@ export const ROUTE_MAP: Record<string, string | string[]> = {
   account: ['account/login', 'account/register'],
 };
 
-const ROUTES = [...Object.keys(ROUTE_MAP), 'all'];
+export const ALL_ROUTES_NAMES = Object.keys(ROUTE_MAP);
+const ALL_ROUTE_CHOICES = [...ALL_ROUTES_NAMES, 'all'];
 
 type GenerateRouteResult = {
   sourceRoute: string;
@@ -77,9 +78,9 @@ export default class GenerateRoute extends Command {
   static args = {
     routeName: Args.string({
       name: 'routeName',
-      description: `The route to generate. One of ${ROUTES.join()}.`,
+      description: `The route to generate. One of ${ALL_ROUTE_CHOICES.join()}.`,
       required: true,
-      options: ROUTES,
+      options: ALL_ROUTE_CHOICES,
       env: 'SHOPIFY_HYDROGEN_ARG_ROUTE',
     }),
   };
@@ -136,7 +137,9 @@ export async function runGenerate(
 
   if (!routePath) {
     throw new AbortError(
-      `No route found for ${options.routeName}. Try one of ${ROUTES.join()}.`,
+      `No route found for ${
+        options.routeName
+      }. Try one of ${ALL_ROUTE_CHOICES.join()}.`,
     );
   }
 
@@ -146,7 +149,7 @@ export async function runGenerate(
   const routesArray = Array.isArray(routePath) ? routePath : [routePath];
   const v2Flags = await getV2Flags(rootDirectory, future);
   const formatOptions = await getCodeFormatOptions(rootDirectory);
-  const typescript = options.typescript || !!tsconfigPath;
+  const typescript = options.typescript ?? !!tsconfigPath;
   const transpilerOptions = typescript
     ? undefined
     : await getJsTranspilerOptions(rootDirectory);
@@ -180,6 +183,7 @@ type GenerateOptions = {
   force?: boolean;
   adapter?: string;
   templatesRoot?: string;
+  localePrefix?: string;
 };
 
 export async function generateRoute(
@@ -193,6 +197,7 @@ export async function generateRoute(
     templatesRoot,
     transpilerOptions,
     formatOptions,
+    localePrefix,
     v2Flags = {},
   }: GenerateOptions & {
     rootDirectory: string;
@@ -202,11 +207,17 @@ export async function generateRoute(
     v2Flags?: RemixV2Flags;
   },
 ): Promise<GenerateRouteResult> {
+  const filePrefix =
+    localePrefix && !/\.(txt|xml)/.test(routeFrom)
+      ? '$' + localePrefix + (v2Flags.isV2RouteConvention ? '.' : '/')
+      : '';
+
   const templatePath = getRouteFile(routeFrom, templatesRoot);
   const destinationPath = joinPath(
     appDirectory,
     'routes',
-    (v2Flags.isV2RouteConvention ? convertRouteToV2(routeFrom) : routeFrom) +
+    filePrefix +
+      (v2Flags.isV2RouteConvention ? convertRouteToV2(routeFrom) : routeFrom) +
       `.${typescript ? 'tsx' : 'jsx'}`,
   );
 

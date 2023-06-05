@@ -7,6 +7,9 @@ import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {getRouteFile} from '../../../lib/build.js';
 import {getRemixConfig} from '../../../lib/config.js';
 
+const readRouteFile = (dir: string, fileBasename: string, ext = 'tsx') =>
+  readFile(joinPath(dir, 'routes', `${fileBasename}.${ext}`));
+
 describe('generate/route', () => {
   beforeEach(() => {
     vi.resetAllMocks();
@@ -16,7 +19,7 @@ describe('generate/route', () => {
   });
 
   describe('runGenerate', () => {
-    it.only('generates all routes with correct configuration', async () => {
+    it('generates all routes with correct configuration', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         const directories = await createHydrogenFixture(tmpDir, {
           files: [
@@ -68,9 +71,7 @@ describe('generate/route', () => {
 
         // Then
         expect(
-          await readFile(
-            joinPath(directories.appDirectory, 'routes', `${route}.jsx`),
-          ),
+          await readRouteFile(directories.appDirectory, route, 'jsx'),
         ).toContain(`const str = 'hello world'`);
       });
     });
@@ -92,14 +93,79 @@ describe('generate/route', () => {
 
         // Then
         expect(
-          await readFile(
-            joinPath(
-              directories.appDirectory,
-              'routes',
-              `custom.path.$handle._index.jsx`,
-            ),
+          await readRouteFile(
+            directories.appDirectory,
+            'custom.path.$handle._index',
+            'jsx',
           ),
         ).toContain(`const str = 'hello world'`);
+      });
+    });
+
+    it('generates route files with locale prefix', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        const routeCode = `const str = 'hello world'`;
+        const pageRoute = 'pages/$pageHandle';
+        // Given
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [],
+          templates: [
+            ['index', routeCode],
+            [pageRoute, routeCode],
+            ['[robots.txt]', routeCode],
+            ['[sitemap.xml]', routeCode],
+          ],
+        });
+
+        const localePrefix = 'locale';
+
+        // When
+        await generateRoute('index', {
+          ...directories,
+          v2Flags: {isV2RouteConvention: true},
+          localePrefix,
+          typescript: true,
+        });
+        await generateRoute(pageRoute, {
+          ...directories,
+          v2Flags: {isV2RouteConvention: false},
+          localePrefix,
+          typescript: true,
+        });
+
+        await generateRoute('[sitemap.xml]', {
+          ...directories,
+          localePrefix,
+          typescript: true,
+        });
+
+        await generateRoute('[robots.txt]', {
+          ...directories,
+          localePrefix,
+          typescript: true,
+        });
+
+        const {appDirectory} = directories;
+
+        // Then
+
+        // v2 locale:
+        await expect(
+          readRouteFile(appDirectory, `$locale._index`),
+        ).resolves.toContain(routeCode);
+
+        // v1 locale:
+        await expect(
+          readRouteFile(appDirectory, `$locale/${pageRoute}`),
+        ).resolves.toContain(routeCode);
+
+        // No locale added for assets:
+        await expect(
+          readRouteFile(appDirectory, `[sitemap.xml]`),
+        ).resolves.toContain(routeCode);
+        await expect(
+          readRouteFile(appDirectory, `[robots.txt]`),
+        ).resolves.toContain(routeCode);
       });
     });
 
@@ -119,11 +185,9 @@ describe('generate/route', () => {
         });
 
         // Then
-        expect(
-          await readFile(
-            joinPath(directories.appDirectory, 'routes', `${route}.tsx`),
-          ),
-        ).toContain(`const str = 'hello typescript'`);
+        expect(await readRouteFile(directories.appDirectory, route)).toContain(
+          `const str = 'hello typescript'`,
+        );
       });
     });
 
