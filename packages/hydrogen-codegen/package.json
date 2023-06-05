@@ -43,6 +43,7 @@
   },
   "dependencies": {
     "@graphql-codegen/add": "^4.0.1",
+    "@graphql-codegen/typescript": "^3.0.1",
     "@graphql-codegen/typescript-operations": "^3.0.1"
   },
   "peerDependencies": {
