@@ -1,4 +1,5 @@
 import Command from '@shopify/cli-kit/node/base-command';
+import {readdir} from 'fs/promises';
 import {fileExists, readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
 import {
   joinPath,
@@ -154,12 +155,15 @@ export async function runGenerate(
     ? undefined
     : await getJsTranspilerOptions(rootDirectory);
 
+  const localePrefix = await getLocalePrefix(appDirectory, options);
+
   const routes: GenerateRouteResult[] = [];
   for (const route of routesArray) {
     routes.push(
       await generateRoute(route, {
         ...options,
         typescript,
+        localePrefix,
         rootDirectory,
         appDirectory,
         formatOptions,
@@ -185,6 +189,29 @@ type GenerateOptions = {
   templatesRoot?: string;
   localePrefix?: string;
 };
+
+async function getLocalePrefix(
+  appDirectory: string,
+  {
+    localePrefix,
+    routeName,
+  }: GenerateOptions & {routeName: string; directory: string},
+) {
+  if (localePrefix || routeName === 'all') return localePrefix;
+
+  const existingFiles = await readdir(joinPath(appDirectory, 'routes')).catch(
+    () => [],
+  );
+
+  const homeRouteWithLocaleRE = /^\$(\w+)\._index.[jt]sx?$/;
+  const homeRouteWithLocale = existingFiles.find((file) =>
+    homeRouteWithLocaleRE.test(file),
+  );
+
+  if (homeRouteWithLocale) {
+    return homeRouteWithLocale.match(homeRouteWithLocaleRE)?.[1];
+  }
+}
 
 export async function generateRoute(
   routeFrom: string,

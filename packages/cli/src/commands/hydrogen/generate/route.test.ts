@@ -54,6 +54,50 @@ describe('generate/route', () => {
         );
       });
     });
+
+    it('figures out the locale if a home route already exists', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        const route = 'pages/$pageHandle';
+
+        const directories = await createHydrogenFixture(tmpDir, {
+          files: [
+            ['tsconfig.json', JSON.stringify({compilerOptions: {test: 'ts'}})],
+            ['app/routes/$locale._index.tsx', 'export const test = true;'],
+          ],
+          templates: [[route, `const str = "hello world"`]],
+        });
+
+        vi.mocked(getRemixConfig).mockResolvedValue({
+          ...directories,
+          tsconfigPath: 'somewhere',
+          future: {
+            v2_routeConvention: true,
+          },
+        } as any);
+
+        const result = await runGenerate({
+          routeName: 'page',
+          directory: directories.rootDirectory,
+          templatesRoot: directories.templatesRoot,
+        });
+
+        expect(result).toMatchObject(
+          expect.objectContaining({
+            isTypescript: true,
+            transpilerOptions: undefined,
+            routes: expect.any(Array),
+            formatOptions: expect.any(Object),
+          }),
+        );
+
+        expect(result.routes).toHaveLength(1);
+        expect(result.routes[0]).toMatchObject({
+          destinationRoute: expect.stringContaining(
+            '$locale.pages.$pageHandle',
+          ),
+        });
+      });
+    });
   });
 
   describe('generateRoute', () => {
