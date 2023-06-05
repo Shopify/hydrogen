@@ -4,7 +4,7 @@ This is a Hydrogen example using NodeJS [Express](https://expressjs.com/). Hydro
 
 This is an example setup where we have adapted the Remix Express starter app to use Hydrogen. A few things are not yet functional:
 
-1. The app does not have a cache implementation. So sub-requests to the Storefront API won't be cachable.
+1. The app only uses an in-memory cache implementation. In production, you probably would want to use redis, memcached, or another cache implementation. Just make sure any custom cache implements the [Cache interface](https://developer.mozilla.org/en-US/docs/Web/API/Cache).
 1. The app does not yet utilize [`storefrontRedirect`](https://shopify.dev/docs/api/hydrogen/2023-04/unstable/utilities/storefrontredirect). This will be added when Remix releases middleware.
 1. The app only includes a single index route. If you'd like to add more routes, run the Shopify CLI: `npx shopify hydrogen generate route`
 

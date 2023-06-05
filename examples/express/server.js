@@ -5,7 +5,7 @@ const {installGlobals, createCookieSessionStorage} = require('@remix-run/node');
 const compression = require('compression');
 const express = require('express');
 const morgan = require('morgan');
-const {createStorefrontClient} = require('@shopify/hydrogen');
+const {createStorefrontClient, InMemoryCache} = require('@shopify/hydrogen');
 
 installGlobals();
 
@@ -79,8 +79,9 @@ async function getContext(req) {
   const session = await HydrogenSession.init(req, [env.SESSION_SECRET]);
 
   const {storefront} = createStorefrontClient({
-    // A [`cache` instance](https://developer.mozilla.org/en-US/docs/Web/API/Cache) is necessary for sub-request caching to work. We don't yet have a Node-compatible cache implementation.
-    cache: null,
+    // A [`cache` instance](https://developer.mozilla.org/en-US/docs/Web/API/Cache) is necessary for sub-request caching to work.
+    // We provide only an in-memory implementation
+    cache: new InMemoryCache(),
     // `waitUntil` is only needed on worker environments. For Express/Node, it isn't applicable
     waitUntil: null,
     i18n: {language: 'EN', country: 'US'},
