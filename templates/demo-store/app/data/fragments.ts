@@ -48,7 +48,7 @@ export const PRODUCT_CARD_FRAGMENT = `#graphql
       nodes {
         id
         image {
-          url
+          url: transformedSrc(maxWidth: 800, crop: CENTER)
           altText
           width
           height

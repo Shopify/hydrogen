@@ -14,7 +14,7 @@ export function Grid({
   flow?: 'row' | 'col';
   gap?: 'default' | 'blog';
   items?: number;
-  layout?: 'default' | 'products' | 'auto' | 'blog';
+  layout?: 'default' | 'products' | 'auto' | 'blog' | 'searchDrawer';
   [key: string]: any;
 }) {
   const layouts = {
@@ -26,6 +26,7 @@ export function Grid({
     }`,
     auto: 'auto-cols-auto',
     blog: 'grid-cols-1 md:grid-cols-2',
+    searchDrawer: 'grid-cols-2',
   };
 
   const gaps = {

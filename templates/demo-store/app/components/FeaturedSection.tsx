@@ -1,19 +1,11 @@
-import {useEffect} from 'react';
-import {useFetcher} from '@remix-run/react';
-
-import {usePrefixPathWithLocale} from '~/lib/utils';
-import type {FeaturedData} from '~/routes/($locale).featured-products';
+import {useFeaturedItems} from '~/hooks/useFeaturedItems';
 
 import {FeaturedCollections} from './FeaturedCollections';
 import {ProductSwimlane} from './ProductSwimlane';
+import {Section} from './Text';
 
-export function FeaturedSection() {
-  const {load, data} = useFetcher<FeaturedData>();
-  const path = usePrefixPathWithLocale('/featured-products');
-
-  useEffect(() => {
-    load(path);
-  }, [load, path]);
+export function FeaturedSection({withSection = true}: {withSection?: boolean}) {
+  const data = useFeaturedItems();
 
   if (!data) return null;
 
@@ -21,13 +13,21 @@ export function FeaturedSection() {
 
   return (
     <>
-      {featuredCollections.nodes.length < 2 && (
-        <FeaturedCollections
-          title="Popular Collections"
-          collections={featuredCollections}
-        />
+      {featuredCollections.nodes.length &&
+        (withSection ? (
+          <Section title="Popular Collections">
+            <FeaturedCollections collections={featuredCollections} />
+          </Section>
+        ) : (
+          <FeaturedCollections collections={featuredCollections} />
+        ))}
+      {withSection ? (
+        <Section title="Popular Products" padding="y">
+          <ProductSwimlane products={featuredProducts} />
+        </Section>
+      ) : (
+        <ProductSwimlane products={featuredProducts} />
       )}
-      <ProductSwimlane products={featuredProducts} />
     </>
   );
 }

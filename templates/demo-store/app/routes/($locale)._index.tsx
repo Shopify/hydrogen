@@ -3,7 +3,12 @@ import {Suspense} from 'react';
 import {Await, useLoaderData} from '@remix-run/react';
 import {AnalyticsPageType} from '@shopify/hydrogen';
 
-import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
+import {
+  ProductSwimlane,
+  FeaturedCollections,
+  Hero,
+  Section,
+} from '~/components';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import {seoPayload} from '~/lib/seo.server';
@@ -109,11 +114,9 @@ export default function Homepage() {
             {({products}) => {
               if (!products?.nodes) return <></>;
               return (
-                <ProductSwimlane
-                  products={products}
-                  title="Featured Products"
-                  count={4}
-                />
+                <Section title="Featured Products" padding="y">
+                  <ProductSwimlane products={products} count={4} />
+                </Section>
               );
             }}
           </Await>
@@ -137,10 +140,9 @@ export default function Homepage() {
             {({collections}) => {
               if (!collections?.nodes) return <></>;
               return (
-                <FeaturedCollections
-                  collections={collections}
-                  title="Collections"
-                />
+                <Section title="Collections">
+                  <FeaturedCollections collections={collections} />
+                </Section>
               );
             }}
           </Await>

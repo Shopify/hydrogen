@@ -21,11 +21,9 @@ import {PAGINATION_SIZE} from '~/lib/const';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
+import type {FeaturedItemsQuery} from 'storefrontapi.generated';
 
-import {
-  getFeaturedData,
-  type FeaturedData,
-} from './($locale).featured-products';
+import {getFeaturedData} from './($locale).featured-products';
 
 export async function loader({request, context: {storefront}}: LoaderArgs) {
   const searchParams = new URL(request.url).searchParams;
@@ -140,7 +138,7 @@ function NoResults({
   recommendations,
 }: {
   noResults: boolean;
-  recommendations: Promise<null | FeaturedData>;
+  recommendations: Promise<null | FeaturedItemsQuery>;
 }) {
   return (
     <>
@@ -162,14 +160,12 @@ function NoResults({
 
             return (
               <>
-                <FeaturedCollections
-                  title="Trending Collections"
-                  collections={featuredCollections}
-                />
-                <ProductSwimlane
-                  title="Trending Products"
-                  products={featuredProducts}
-                />
+                <Section title="Trending Collections">
+                  <FeaturedCollections collections={featuredCollections} />
+                </Section>
+                <Section title="Trending Products" padding="y">
+                  <ProductSwimlane products={featuredProducts} />
+                </Section>
               </>
             );
           }}

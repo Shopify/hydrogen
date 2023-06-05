@@ -22,7 +22,8 @@ export {SortFilter} from './SortFilter';
 export {Grid} from './Grid';
 export {FeaturedProducts} from './FeaturedProducts';
 export {AddToCartButton} from './AddToCartButton';
-export {SearchInput} from './SearchInput';
+export {SearchForm} from './SearchForm';
 export {SearchResults} from './SearchResults';
+export {FeaturedSection} from './FeaturedSection';
 // Sue me
 export * from './Icon';

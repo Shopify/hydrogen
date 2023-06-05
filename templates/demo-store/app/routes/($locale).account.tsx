@@ -29,16 +29,15 @@ import {
   AccountAddressBook,
   Modal,
   ProductSwimlane,
+  Section,
 } from '~/components';
 import {FeaturedCollections} from '~/components/FeaturedCollections';
 import {usePrefixPathWithLocale} from '~/lib/utils';
 import {CACHE_NONE, routeHeaders} from '~/data/cache';
 import {ORDER_CARD_FRAGMENT} from '~/components/OrderCard';
+import type {FeaturedItemsQuery} from 'storefrontapi.generated';
 
-import {
-  getFeaturedData,
-  type FeaturedData,
-} from './($locale).featured-products';
+import {getFeaturedData} from './($locale).featured-products';
 import {doLogout} from './($locale).account.logout';
 
 // Combining json + Response + defer in a loader breaks the
@@ -122,7 +121,7 @@ export default function Authenticated() {
 
 interface AccountType {
   customer: CustomerDetailsFragment;
-  featuredData: Promise<FeaturedData>;
+  featuredData: Promise<FeaturedItemsQuery>;
   heading: string;
 }
 
@@ -150,11 +149,12 @@ function Account({customer, heading, featuredData}: AccountType) {
           >
             {(data) => (
               <>
-                <FeaturedCollections
-                  title="Popular Collections"
-                  collections={data.featuredCollections}
-                />
-                <ProductSwimlane products={data.featuredProducts} />
+                <Section title="Popular Collections">
+                  <FeaturedCollections collections={data.featuredCollections} />
+                </Section>
+                <Section title="Popular Products" padding="y">
+                  <ProductSwimlane products={data.featuredProducts} />
+                </Section>
               </>
             )}
           </Await>

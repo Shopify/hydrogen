@@ -1,7 +1,8 @@
 import {Await, useMatches} from '@remix-run/react';
-import {useWindowScroll} from 'react-use';
+import {useLocation, useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
-import {Suspense, useEffect, useMemo} from 'react';
+import {Suspense, useEffect, useMemo, useState} from 'react';
+import clsx from 'clsx';
 
 import type {LayoutQuery} from 'storefrontapi.generated';
 import {
@@ -17,7 +18,7 @@ import {
   IconMenu,
   IconSearch,
   Link,
-  SearchInput,
+  SearchForm,
   SearchResults,
   Section,
   Text,
@@ -142,10 +143,41 @@ type SearchDrawerProps = BaseDrawerProps &
   Pick<CommonHeaderProps, 'closeSearch'>;
 
 function SearchDrawer({isOpen, onClose, closeSearch}: SearchDrawerProps) {
+  const isHome = useIsHomePath();
   return (
     <Drawer
       heading={
-        <SearchInput className="relative flex items-center justify-center w-8 h-8 focus:ring-primary/5" />
+        <SearchForm className="flex items-center gap-2 w-full">
+          {({fetchResults, inputRef}) => (
+            <>
+              <fieldset className="w-full border flex items-center gap-2 mr-4">
+                <label htmlFor="q" className="sr-only">
+                  Search
+                </label>
+                <input
+                  className={clsx(
+                    'w-full bg-transparent inline-block text-left transition border-transparent -mb-px appearance-none py-1 focus:ring-transparent placeholder:opacity-20 placeholder:text-inherit',
+                    isHome
+                      ? 'focus:border-contrast/20 dark:focus:border-primary/20'
+                      : 'focus:border-primary/20',
+                  )}
+                  name="q"
+                  onChange={fetchResults}
+                  onFocus={fetchResults}
+                  placeholder="Search"
+                  ref={inputRef}
+                  type="search"
+                />
+                <button
+                  type="submit"
+                  className="flex items-center justify-center w-8 h-8 border-left focus:ring-primary/5 mr-2"
+                >
+                  <IconSearch />
+                </button>
+              </fieldset>
+            </>
+          )}
+        </SearchForm>
       }
       open={isOpen}
       onClose={onClose}
@@ -308,8 +340,11 @@ function DesktopHeader({
 }
 
 function SearchIcon({openSearch}: Pick<CommonHeaderProps, 'openSearch'>) {
-  // If cmd+K is pressed, open the search drawer
+  const {pathname} = useLocation();
+  const isSearchPage = pathname?.includes('/search');
+
   useEffect(() => {
+    // If cmd+K is pressed, open the search drawer
     function handleKeyDown(event: KeyboardEvent) {
       if (event.metaKey && event.key === 'k') {
         event.preventDefault();
@@ -325,10 +360,15 @@ function SearchIcon({openSearch}: Pick<CommonHeaderProps, 'openSearch'>) {
   }, [openSearch]);
 
   return (
-    <div className="flex items-center justify-center">
+    <div
+      className={clsx(
+        'flex items-center justify-center',
+        isSearchPage && 'hidden',
+      )}
+    >
       <p className="mr-4 hidden md:block">
-        <span className="mr-4">Search</span>
-        <span>
+        <span className="mr-4 text-xs text-gray-500">Search</span>
+        <span className="border border-gray-500 rounded p-2 h-4 text-xs text-gray-500">
           <kbd>⌘</kbd>
           <kbd>K</kbd>
         </span>

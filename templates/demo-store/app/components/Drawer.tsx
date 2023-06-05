@@ -1,7 +1,16 @@
 import {Fragment, useState} from 'react';
 import {Dialog, Transition} from '@headlessui/react';
+import clsx from 'clsx';
 
 import {Heading, IconClose} from '~/components';
+
+type DrawerProps = {
+  heading?: string | React.ReactNode;
+  open: boolean;
+  onClose: () => void;
+  openFrom: 'right' | 'left';
+  children: React.ReactNode;
+};
 
 /**
  * Drawer component that opens on user click.
@@ -17,13 +26,7 @@ export function Drawer({
   onClose,
   openFrom = 'right',
   children,
-}: {
-  heading?: string | React.ReactNode;
-  open: boolean;
-  onClose: () => void;
-  openFrom: 'right' | 'left';
-  children: React.ReactNode;
-}) {
+}: DrawerProps) {
   const offScreen = {
     right: 'translate-x-full',
     left: '-translate-x-full',
@@ -60,11 +63,12 @@ export function Drawer({
                 leaveFrom="translate-x-0"
                 leaveTo={offScreen[openFrom]}
               >
-                <Dialog.Panel className="w-screen max-w-lg text-left align-middle transition-all transform shadow-xl h-screen-dynamic bg-contrast">
+                <Dialog.Panel className="w-screen max-w-lg text-left align-middle transition-all transform shadow-xl h-screen-dynamic bg-contrast overflow-y-scroll">
                   <header
-                    className={`sticky top-0 flex items-center px-6 h-nav sm:px-8 md:px-12 w-100 ${
-                      heading ? 'justify-between' : 'justify-end'
-                    }`}
+                    className={clsx(
+                      'sticky top-0 flex items-center px-6 h-nav sm:px-8 md:px-12 bg-contrast',
+                      heading ? 'justify-between' : 'justify-end',
+                    )}
                   >
                     <>
                       {heading &&

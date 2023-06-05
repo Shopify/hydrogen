@@ -14,7 +14,7 @@ import type {
 
 export type SearchQuerySuggestion = {
   __typename?: 'SearchQuerySuggestion';
-  styleText: Scalars['String'];
+  styledText: Scalars['String'];
   text: Scalars['String'];
   trackingParameters: Scalars['String'];
 };
@@ -63,6 +63,7 @@ export type ParsedSearchResultItem = {
   position: number;
   title: string;
   url: string;
+  styledTitle?: string;
 };
 
 export type ParsedSearchResults = {
@@ -77,46 +78,33 @@ export type ParsedSearchResults = {
 };
 
 export async function action({request, context: {storefront}}: LoaderArgs) {
-  try {
-    if (request.method !== 'POST') {
-      throw new Error('Invalid request method');
-    }
-
-    const body = await request.formData();
-    const searchTerm = body.get('q')!;
-
-    if (!searchTerm) {
-      throw new Error('No search term provided');
-    }
-
-    const data = await storefront.query<{
-      predictiveSearch: PredictiveSearchResult;
-    }>(PREDICTIVE_SEARCH_QUERY, {
-      variables: {
-        pageBy: 4,
-        searchTerm,
-        country: storefront.i18n.country,
-        language: storefront.i18n.language,
-      },
-      storefrontApiVersion: 'unstable',
-    });
-
-    invariant(data, 'No data returned from Shopify API');
-
-    const searchResults = parseSearchResults(data.predictiveSearch);
-    return json({searchResults});
-  } catch (error) {
-    if (error instanceof Error) {
-      const predictiveSearchNotEnabled =
-        error.message.includes(`predictiveSearch`);
-      if (predictiveSearchNotEnabled) {
-        console.warn(
-          '\nTo use the predictiveSearch API please install the Search & Discovery app\nhttps://apps.shopify.com/search-and-discovery\n',
-        );
-      }
-    }
-    throw error;
+  if (request.method !== 'POST') {
+    throw new Error('Invalid request method');
   }
+
+  const body = await request.formData();
+  const searchTerm = body.get('q')!;
+
+  if (!searchTerm) {
+    return json({searchResults: {results: null, totalResults: 0}});
+  }
+
+  const data = await storefront.query<{
+    predictiveSearch: PredictiveSearchResult;
+  }>(PREDICTIVE_SEARCH_QUERY, {
+    variables: {
+      pageBy: 4,
+      searchTerm,
+      country: storefront.i18n.country,
+      language: storefront.i18n.language,
+    },
+    storefrontApiVersion: 'unstable',
+  });
+
+  invariant(data, 'No data returned from Shopify API');
+
+  const searchResults = parseSearchResults(data.predictiveSearch);
+  return json({searchResults});
 }
 
 function parseSearchResults(
@@ -218,6 +206,7 @@ function parseSearchResults(
         image: undefined,
         position: totalResults++,
         title: query.text,
+        styledTitle: query.styledText,
         url: `/search${queryParams}`,
       };
     });

@@ -161,7 +161,9 @@ export default function Product() {
           resolve={recommended}
         >
           {(products) => (
-            <ProductSwimlane title="Related Products" products={products} />
+            <Section title="Related Products" padding="y">
+              <ProductSwimlane products={products} />
+            </Section>
           )}
         </Await>
       </Suspense>

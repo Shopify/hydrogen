@@ -28,8 +28,6 @@ export async function getFeaturedData(
   return data;
 }
 
-export type FeaturedData = Awaited<ReturnType<typeof getFeaturedData>>;
-
 export const FEATURED_ITEMS_QUERY = `#graphql
   query FeaturedItems(
     $country: CountryCode

@@ -296,6 +296,15 @@ export function getLocaleFromRequest(request: Request): I18nLocale {
       };
 }
 
+/**
+ * Returns the localized version of a url path
+ * @param path - the path to localize
+ * @example
+ * ```ts
+ * const localizedPath = usePrefixPathWithLocale('/products');
+ * // -> localizedPath === '/en-ca/products'
+ * ```
+ **/
 export function usePrefixPathWithLocale(path: string) {
   const [root] = useMatches();
   const selectedLocale = root.data?.selectedLocale ?? DEFAULT_LOCALE;
