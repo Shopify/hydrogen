@@ -62,7 +62,7 @@ describe('generate/route', () => {
         const directories = await createHydrogenFixture(tmpDir, {
           files: [
             ['tsconfig.json', JSON.stringify({compilerOptions: {test: 'ts'}})],
-            ['app/routes/$locale._index.tsx', 'export const test = true;'],
+            ['app/routes/($locale)._index.tsx', 'export const test = true;'],
           ],
           templates: [[route, `const str = "hello world"`]],
         });
@@ -93,7 +93,7 @@ describe('generate/route', () => {
         expect(result.routes).toHaveLength(1);
         expect(result.routes[0]).toMatchObject({
           destinationRoute: expect.stringContaining(
-            '$locale.pages.$pageHandle',
+            '($locale).pages.$pageHandle',
           ),
         });
       });
@@ -195,12 +195,12 @@ describe('generate/route', () => {
 
         // v2 locale:
         await expect(
-          readRouteFile(appDirectory, `$locale._index`),
+          readRouteFile(appDirectory, `($locale)._index`),
         ).resolves.toContain(routeCode);
 
         // v1 locale:
         await expect(
-          readRouteFile(appDirectory, `$locale/${pageRoute}`),
+          readRouteFile(appDirectory, `($locale)/${pageRoute}`),
         ).resolves.toContain(routeCode);
 
         // No locale added for assets:

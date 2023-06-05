@@ -203,7 +203,7 @@ async function getLocalePrefix(
     () => [],
   );
 
-  const homeRouteWithLocaleRE = /^\$(\w+)\._index.[jt]sx?$/;
+  const homeRouteWithLocaleRE = /^\(\$(\w+)\)\._index.[jt]sx?$/;
   const homeRouteWithLocale = existingFiles.find((file) =>
     homeRouteWithLocaleRE.test(file),
   );
@@ -236,7 +236,7 @@ export async function generateRoute(
 ): Promise<GenerateRouteResult> {
   const filePrefix =
     localePrefix && !/\.(txt|xml)/.test(routeFrom)
-      ? '$' + localePrefix + (v2Flags.isV2RouteConvention ? '.' : '/')
+      ? `($${localePrefix})` + (v2Flags.isV2RouteConvention ? '.' : '/')
       : '';
 
   const templatePath = getRouteFile(routeFrom, templatesRoot);
