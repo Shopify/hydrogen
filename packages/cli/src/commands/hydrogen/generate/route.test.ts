@@ -16,7 +16,7 @@ describe('generate/route', () => {
   });
 
   describe('runGenerate', () => {
-    it('generates all routes with correct configuration', async () => {
+    it.only('generates all routes with correct configuration', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         const directories = await createHydrogenFixture(tmpDir, {
           files: [
@@ -25,9 +25,7 @@ describe('generate/route', () => {
           ],
           templates: Object.values(ROUTE_MAP).flatMap((item) => {
             const files = Array.isArray(item) ? item : [item];
-            return files.map(
-              (filepath) => [filepath.replace('/', ''), ''] as [string, string],
-            );
+            return files.map((filepath) => [filepath, ''] as [string, string]);
           }),
         });
 

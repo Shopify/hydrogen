@@ -37,15 +37,15 @@ import {getRemixConfig} from '../../../lib/config.js';
 import {colors} from '../../../lib/colors.js';
 
 export const ROUTE_MAP: Record<string, string | string[]> = {
-  home: '/index',
-  page: '/pages/$pageHandle',
-  cart: '/cart',
-  products: '/products/$productHandle',
-  collections: '/collections/$collectionHandle',
-  policies: ['/policies/index', '/policies/$policyHandle'],
-  robots: '/[robots.txt]',
-  sitemap: '/[sitemap.xml]',
-  account: ['/account/login', '/account/register'],
+  home: 'index',
+  page: 'pages/$pageHandle',
+  cart: 'cart',
+  products: 'products/$productHandle',
+  collections: 'collections/$collectionHandle',
+  policies: ['policies/index', 'policies/$policyHandle'],
+  robots: '[robots.txt]',
+  sitemap: '[sitemap.xml]',
+  account: ['account/login', 'account/register'],
 };
 
 const ROUTES = [...Object.keys(ROUTE_MAP), 'all'];
@@ -53,7 +53,7 @@ const ROUTES = [...Object.keys(ROUTE_MAP), 'all'];
 type GenerateRouteResult = {
   sourceRoute: string;
   destinationRoute: string;
-  operation: 'generated' | 'skipped' | 'overwritten';
+  operation: 'created' | 'skipped' | 'replaced';
 };
 
 export default class GenerateRoute extends Command {
@@ -97,7 +97,7 @@ export default class GenerateRoute extends Command {
       routeName,
     });
     const padEnd =
-      4 +
+      3 +
       routes.reduce(
         (acc, route) => Math.max(acc, route.destinationRoute.length),
         0,
@@ -151,9 +151,10 @@ export async function runGenerate(
     ? undefined
     : await getJsTranspilerOptions(rootDirectory);
 
-  const routes = await Promise.all(
-    routesArray.map((route) =>
-      generateRoute(route, {
+  const routes: GenerateRouteResult[] = [];
+  for (const route of routesArray) {
+    routes.push(
+      await generateRoute(route, {
         ...options,
         typescript,
         rootDirectory,
@@ -162,8 +163,8 @@ export async function runGenerate(
         transpilerOptions,
         v2Flags,
       }),
-    ),
-  );
+    );
+  }
 
   return {
     routes,
@@ -210,14 +211,14 @@ export async function generateRoute(
   );
 
   const result: GenerateRouteResult = {
-    operation: 'generated',
+    operation: 'created',
     sourceRoute: routeFrom,
     destinationRoute: relativizePath(destinationPath, rootDirectory),
   };
 
   if (!force && (await fileExists(destinationPath))) {
     const shouldOverwrite = await renderConfirmationPrompt({
-      message: `The file ${result.destinationRoute} already exists. Do you want to overwrite it?`,
+      message: `The file ${result.destinationRoute} already exists. Do you want to replace it?`,
       defaultValue: false,
       confirmationMessage: 'Yes',
       cancellationMessage: 'No',
@@ -225,7 +226,7 @@ export async function generateRoute(
 
     if (!shouldOverwrite) return {...result, operation: 'skipped'};
 
-    result.operation = 'overwritten';
+    result.operation = 'replaced';
   }
 
   let templateContent = convertTemplateToRemixVersion(
