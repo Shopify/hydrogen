@@ -34,6 +34,7 @@ import {
 // https://github.com/microsoft/TypeScript/issues/42873
 import type {} from '@oclif/core/lib/interfaces/parser.js';
 import {getRemixConfig} from '../../../lib/config.js';
+import {colors} from '../../../lib/colors.js';
 
 export const ROUTE_MAP: Record<string, string | string[]> = {
   home: '/index',
@@ -95,6 +96,12 @@ export default class GenerateRoute extends Command {
       directory,
       routeName,
     });
+    const padEnd =
+      4 +
+      routes.reduce(
+        (acc, route) => Math.max(acc, route.destinationRoute.length),
+        0,
+      );
 
     const successfulGenerationCount = routes.filter(
       ({operation}) => operation !== 'skipped',
@@ -108,7 +115,7 @@ export default class GenerateRoute extends Command {
         list: {
           items: routes.map(
             ({operation, destinationRoute}) =>
-              `[${operation}] ${destinationRoute}`,
+              destinationRoute.padEnd(padEnd) + colors.dim(`[${operation}]`),
           ),
         },
       },
