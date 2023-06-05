@@ -1,10 +1,4 @@
-import {type ErrorBoundaryComponent} from '@remix-run/node';
-import {
-  useCatch,
-  useRouteError,
-  isRouteErrorResponse,
-  Link,
-} from '@remix-run/react';
+import {useRouteError, isRouteErrorResponse, Link} from '@remix-run/react';
 
 export default function Index() {
   return (
@@ -16,24 +10,6 @@ export default function Index() {
         <Link to="/collections/freestyle">Freestyle Collection</Link>
       </p>
     </>
-  );
-}
-
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  console.error(caught);
-
-  return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
-    </div>
   );
 }
 
