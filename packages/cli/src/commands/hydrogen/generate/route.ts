@@ -125,12 +125,13 @@ export default class GenerateRoute extends Command {
   }
 }
 
-export async function runGenerate(
-  options: GenerateOptions & {
-    routeName: string;
-    directory: string;
-  },
-) {
+type RunGenerateOptions = Omit<GenerateRouteOptions, 'localePrefix'> & {
+  routeName: string;
+  directory: string;
+  localePrefix?: GenerateRouteOptions['localePrefix'] | false;
+};
+
+export async function runGenerate(options: RunGenerateOptions) {
   const routePath =
     options.routeName === 'all'
       ? Object.values(ROUTE_MAP).flat()
@@ -150,12 +151,11 @@ export async function runGenerate(
   const routesArray = Array.isArray(routePath) ? routePath : [routePath];
   const v2Flags = await getV2Flags(rootDirectory, future);
   const formatOptions = await getCodeFormatOptions(rootDirectory);
+  const localePrefix = await getLocalePrefix(appDirectory, options);
   const typescript = options.typescript ?? !!tsconfigPath;
   const transpilerOptions = typescript
     ? undefined
     : await getJsTranspilerOptions(rootDirectory);
-
-  const localePrefix = await getLocalePrefix(appDirectory, options);
 
   const routes: GenerateRouteResult[] = [];
   for (const route of routesArray) {
@@ -182,7 +182,7 @@ export async function runGenerate(
   };
 }
 
-type GenerateOptions = {
+type GenerateRouteOptions = {
   typescript?: boolean;
   force?: boolean;
   adapter?: string;
@@ -192,12 +192,10 @@ type GenerateOptions = {
 
 async function getLocalePrefix(
   appDirectory: string,
-  {
-    localePrefix,
-    routeName,
-  }: GenerateOptions & {routeName: string; directory: string},
+  {localePrefix, routeName}: RunGenerateOptions,
 ) {
-  if (localePrefix || routeName === 'all') return localePrefix;
+  if (localePrefix) return localePrefix;
+  if (localePrefix !== undefined || routeName === 'all') return;
 
   const existingFiles = await readdir(joinPath(appDirectory, 'routes')).catch(
     () => [],
@@ -226,7 +224,7 @@ export async function generateRoute(
     formatOptions,
     localePrefix,
     v2Flags = {},
-  }: GenerateOptions & {
+  }: GenerateRouteOptions & {
     rootDirectory: string;
     appDirectory: string;
     transpilerOptions?: TranspilerOptions;

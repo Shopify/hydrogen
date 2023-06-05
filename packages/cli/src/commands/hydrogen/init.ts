@@ -46,6 +46,7 @@ import {CSS_STRATEGY_NAME_MAP} from './setup/css-unstable.js';
 import {I18nStrategy, setupI18nStrategy} from '../../lib/setups/i18n/index.js';
 import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
 import {colors} from '../../lib/colors.js';
+import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 const LANGUAGES = {
@@ -364,14 +365,31 @@ async function handleI18n() {
 
 async function handleRouteGeneration() {
   // TODO: Need a multi-select UI component
+  const shouldScaffoldAllRoutes = await renderConfirmationPrompt({
+    message: 'Scaffold all standard routes?',
+    confirmationMessage: 'Yes',
+    cancellationMessage: 'No',
+  });
+
+  const routes = shouldScaffoldAllRoutes ? ALL_ROUTES_NAMES : [];
 
   return {
-    routes: [],
-    setupRoutes: (
-      rootDir: string,
+    routes,
+    setupRoutes: async (
+      directory: string,
       language: Language,
       i18nStrategy?: I18nStrategy,
-    ) => Promise.resolve(),
+    ) => {
+      if (shouldScaffoldAllRoutes) {
+        await runGenerate({
+          routeName: 'all',
+          directory,
+          force: true,
+          typescript: language === 'ts',
+          localePrefix: i18nStrategy === 'pathname' ? 'locale' : false,
+        });
+      }
+    },
   };
 }
 
@@ -639,7 +657,10 @@ function renderProjectReady(
   }
 
   if (routes?.length) {
-    bodyLines.push(['Routes', routes.join(', ')]);
+    bodyLines.push([
+      'Routes',
+      `Scaffolded ${routes.length} route${routes.length > 1 ? 's' : ''}`,
+    ]);
   }
 
   const padMin =
