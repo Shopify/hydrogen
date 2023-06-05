@@ -1,10 +1,9 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
-import {runGenerate} from './route.js';
+import {generateRoute} from './route.js';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
-import {convertRouteToV2} from '../../../lib/remix-version-interop.js';
 import {getRouteFile} from '../../../lib/build.js';
 
 describe('generate/route', () => {
@@ -18,20 +17,19 @@ describe('generate/route', () => {
     await temporaryDirectoryTask(async (tmpDir) => {
       // Given
       const route = 'pages/$pageHandle';
-      const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
+      const directories = await createHydrogenFixture(tmpDir, {
         files: [],
         templates: [[route, `const str = "hello world"`]],
       });
 
       // When
-      await runGenerate(route, route, {
-        directory: appRoot,
-        templatesRoot,
-      });
+      await generateRoute(route, directories);
 
       // Then
       expect(
-        await readFile(joinPath(appRoot, 'app/routes', `${route}.jsx`)),
+        await readFile(
+          joinPath(directories.appDirectory, 'routes', `${route}.jsx`),
+        ),
       ).toContain(`const str = 'hello world'`);
     });
   });
@@ -40,21 +38,25 @@ describe('generate/route', () => {
     await temporaryDirectoryTask(async (tmpDir) => {
       // Given
       const route = 'custom/path/$handle/index';
-      const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
+      const directories = await createHydrogenFixture(tmpDir, {
         files: [],
         templates: [[route, `const str = "hello world"`]],
       });
 
       // When
-      await runGenerate(route, convertRouteToV2(route), {
-        directory: appRoot,
-        templatesRoot,
+      await generateRoute(route, {
+        ...directories,
+        v2Flags: {isV2RouteConvention: true},
       });
 
       // Then
       expect(
         await readFile(
-          joinPath(appRoot, 'app/routes', `custom.path.$handle._index.jsx`),
+          joinPath(
+            directories.appDirectory,
+            'routes',
+            `custom.path.$handle._index.jsx`,
+          ),
         ),
       ).toContain(`const str = 'hello world'`);
     });
@@ -64,21 +66,22 @@ describe('generate/route', () => {
     await temporaryDirectoryTask(async (tmpDir) => {
       // Given
       const route = 'pages/$pageHandle';
-      const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
+      const directories = await createHydrogenFixture(tmpDir, {
         files: [],
         templates: [[route, 'const str = "hello typescript"']],
       });
 
       // When
-      await runGenerate(route, route, {
-        directory: appRoot,
-        templatesRoot,
+      await generateRoute(route, {
+        ...directories,
         typescript: true,
       });
 
       // Then
       expect(
-        await readFile(joinPath(appRoot, 'app/routes', `${route}.tsx`)),
+        await readFile(
+          joinPath(directories.appDirectory, 'routes', `${route}.tsx`),
+        ),
       ).toContain(`const str = 'hello typescript'`);
     });
   });
@@ -91,16 +94,13 @@ describe('generate/route', () => {
       );
 
       const route = 'page/$pageHandle';
-      const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
+      const directories = await createHydrogenFixture(tmpDir, {
         files: [[`app/routes/${route}.jsx`, 'const str = "I exist"']],
         templates: [[route, 'const str = "hello world"']],
       });
 
       // When
-      await runGenerate(route, route, {
-        directory: appRoot,
-        templatesRoot,
-      });
+      await generateRoute(route, directories);
 
       // Then
       expect(renderConfirmationPrompt).toHaveBeenCalledWith(
@@ -119,15 +119,14 @@ describe('generate/route', () => {
       );
 
       const route = 'page/$pageHandle';
-      const {appRoot, templatesRoot} = await createHydrogen(tmpDir, {
+      const directories = await createHydrogenFixture(tmpDir, {
         files: [[`app/routes/${route}.jsx`, 'const str = "I exist"']],
         templates: [[route, 'const str = "hello world"']],
       });
 
       // When
-      await runGenerate(route, route, {
-        directory: appRoot,
-        templatesRoot,
+      await generateRoute(route, {
+        ...directories,
         force: true,
       });
 
@@ -137,7 +136,7 @@ describe('generate/route', () => {
   });
 });
 
-async function createHydrogen(
+async function createHydrogenFixture(
   directory: string,
   {
     files,
@@ -147,9 +146,11 @@ async function createHydrogen(
     templates: [],
   },
 ) {
+  const projectDir = 'project';
+
   for (const item of files) {
     const [filePath, fileContent] = item;
-    const fullFilePath = joinPath(directory, 'app', filePath);
+    const fullFilePath = joinPath(directory, projectDir, filePath);
     await mkdir(dirname(fullFilePath));
     await writeFile(fullFilePath, fileContent);
   }
@@ -162,7 +163,8 @@ async function createHydrogen(
   }
 
   return {
-    appRoot: joinPath(directory, 'app'),
+    rootDirectory: joinPath(directory, projectDir),
+    appDirectory: joinPath(directory, projectDir, 'app'),
     templatesRoot: directory,
   };
 }

@@ -7,6 +7,8 @@ import {fileURLToPath} from 'url';
 import path from 'path';
 import fs from 'fs/promises';
 
+export type {RemixConfig};
+
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
 const WORKER_SUBDIR = 'worker'; // Hardcoded in Oxygen

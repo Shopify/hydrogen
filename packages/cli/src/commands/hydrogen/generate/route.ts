@@ -1,11 +1,9 @@
-import {fileURLToPath} from 'url';
 import Command from '@shopify/cli-kit/node/base-command';
 import {fileExists, readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
 import {
   joinPath,
   dirname,
   resolvePath,
-  relativePath,
   relativizePath,
 } from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -28,6 +26,7 @@ import {
 // Fix for a TypeScript bug:
 // https://github.com/microsoft/TypeScript/issues/42873
 import type {} from '@oclif/core/lib/interfaces/parser.js';
+import {getRemixConfig} from '../../../lib/config.js';
 
 const ROUTE_MAP: Record<string, string | string[]> = {
   home: '/index',
@@ -43,9 +42,11 @@ const ROUTE_MAP: Record<string, string | string[]> = {
 
 const ROUTES = [...Object.keys(ROUTE_MAP), 'all'];
 
-interface Result {
+type GenerateRouteResult = {
+  sourceRoute: string;
+  destinationRoute: string;
   operation: 'generated' | 'skipped' | 'overwritten';
-}
+};
 
 export default class GenerateRoute extends Command {
   static description = 'Generates a standard Shopify route.';
@@ -66,8 +67,8 @@ export default class GenerateRoute extends Command {
   static hidden: true;
 
   static args = {
-    route: Args.string({
-      name: 'route',
+    routeName: Args.string({
+      name: 'routeName',
       description: `The route to generate. One of ${ROUTES.join()}.`,
       required: true,
       options: ROUTES,
@@ -76,68 +77,31 @@ export default class GenerateRoute extends Command {
   };
 
   async run(): Promise<void> {
-    const result = new Map<string, Result>();
     const {
       flags,
-      args: {route},
+      args: {routeName},
     } = await this.parse(GenerateRoute);
 
-    const routePath =
-      route === 'all'
-        ? Object.values(ROUTE_MAP).flat()
-        : ROUTE_MAP[route as keyof typeof ROUTE_MAP];
-
-    if (!routePath) {
-      throw new AbortError(
-        `No route found for ${route}. Try one of ${ROUTES.join()}.`,
-      );
-    }
-
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
+    const allRouteGenerations = await runGenerate({
+      ...flags,
+      directory,
+      routeName,
+    });
 
-    const isTypescript =
-      flags.typescript ||
-      (await fileExists(joinPath(directory, 'tsconfig.json')));
-
-    const routesArray = Array.isArray(routePath) ? routePath : [routePath];
-
-    try {
-      const {isV2RouteConvention, ...v2Flags} = await getV2Flags(directory);
-
-      for (const item of routesArray) {
-        const routeFrom = item;
-        const routeTo = isV2RouteConvention ? convertRouteToV2(item) : item;
-
-        result.set(
-          routeTo,
-          await runGenerate(routeFrom, routeTo, {
-            directory,
-            typescript: isTypescript,
-            force: flags.force,
-            adapter: flags.adapter,
-            v2Flags,
-          }),
-        );
-      }
-    } catch (err: unknown) {
-      throw new AbortError((err as Error).message);
-    }
-
-    const extension = isTypescript ? '.tsx' : '.jsx';
-
-    const success = Array.from(result.values()).filter(
-      (result) => result.operation !== 'skipped',
-    );
+    const successfulGenerationCount = allRouteGenerations.filter(
+      ({operation}) => operation !== 'skipped',
+    ).length;
 
     renderSuccess({
-      headline: `${success.length} of ${result.size} route${
-        result.size > 1 ? 's' : ''
-      } generated`,
+      headline: `${successfulGenerationCount} of ${
+        allRouteGenerations.length
+      } route${allRouteGenerations.length > 1 ? 's' : ''} generated`,
       body: {
         list: {
-          items: Array.from(result.entries()).map(
-            ([path, {operation}]) =>
-              `[${operation}] app/routes${path}${extension}`,
+          items: allRouteGenerations.map(
+            ({operation, destinationRoute}) =>
+              `[${operation}] ${destinationRoute}`,
           ),
         },
       },
@@ -146,60 +110,107 @@ export default class GenerateRoute extends Command {
 }
 
 export async function runGenerate(
+  options: GenerateOptions & {
+    routeName: string;
+    directory: string;
+  },
+) {
+  const routePath =
+    options.routeName === 'all'
+      ? Object.values(ROUTE_MAP).flat()
+      : ROUTE_MAP[options.routeName as keyof typeof ROUTE_MAP];
+
+  if (!routePath) {
+    throw new AbortError(
+      `No route found for ${options.routeName}. Try one of ${ROUTES.join()}.`,
+    );
+  }
+
+  const {rootDirectory, appDirectory, future} = await getRemixConfig(
+    options.directory,
+  );
+
+  const isTypescript =
+    options.typescript ||
+    (await fileExists(joinPath(rootDirectory, 'tsconfig.json')));
+
+  const routesArray = Array.isArray(routePath) ? routePath : [routePath];
+  const v2Flags = await getV2Flags(rootDirectory, future);
+
+  return Promise.all(
+    routesArray.map((route) =>
+      generateRoute(route, {
+        rootDirectory,
+        appDirectory,
+        typescript: isTypescript,
+        force: options.force,
+        adapter: options.adapter,
+        v2Flags,
+      }),
+    ),
+  );
+}
+
+type GenerateOptions = {
+  typescript?: boolean;
+  force?: boolean;
+  adapter?: string;
+};
+
+export async function generateRoute(
   routeFrom: string,
-  routeTo: string,
   {
-    directory,
+    rootDirectory,
+    appDirectory,
     typescript,
     force,
     adapter,
     templatesRoot,
     v2Flags = {},
-  }: {
-    directory: string;
-    typescript?: boolean;
-    force?: boolean;
-    adapter?: string;
+  }: GenerateOptions & {
+    rootDirectory: string;
+    appDirectory: string;
     templatesRoot?: string;
     v2Flags?: RemixV2Flags;
   },
-): Promise<Result> {
-  let operation;
+): Promise<GenerateRouteResult> {
   const templatePath = getRouteFile(routeFrom, templatesRoot);
   const destinationPath = joinPath(
-    directory,
-    'app',
+    appDirectory,
     'routes',
-    `${routeTo}.${typescript ? 'tsx' : 'jsx'}`,
+    (v2Flags.isV2RouteConvention ? convertRouteToV2(routeFrom) : routeFrom) +
+      `.${typescript ? 'tsx' : 'jsx'}`,
   );
-  const relativeDestinationPath = relativePath(directory, destinationPath);
+
+  const result: GenerateRouteResult = {
+    operation: 'generated',
+    sourceRoute: routeFrom,
+    destinationRoute: relativizePath(destinationPath, rootDirectory),
+  };
 
   if (!force && (await fileExists(destinationPath))) {
     const shouldOverwrite = await renderConfirmationPrompt({
-      message: `The file ${relativizePath(
-        relativeDestinationPath,
-      )} already exists. Do you want to overwrite it?`,
+      message: `The file ${result.destinationRoute} already exists. Do you want to overwrite it?`,
       defaultValue: false,
+      confirmationMessage: 'Yes',
+      cancellationMessage: 'No',
     });
 
-    operation = shouldOverwrite ? 'overwritten' : 'skipped';
+    if (!shouldOverwrite) return {...result, operation: 'skipped'};
 
-    if (operation === 'skipped') {
-      return {operation};
-    }
-  } else {
-    operation = 'generated';
+    result.operation = 'overwritten';
   }
 
-  let templateContent = await readFile(templatePath);
-
-  templateContent = convertTemplateToRemixVersion(templateContent, v2Flags);
+  let templateContent = convertTemplateToRemixVersion(
+    await readFile(templatePath),
+    v2Flags,
+  );
 
   // If the project is not using TypeScript, we need to compile the template
   // to JavaScript. We try to read the project's jsconfig.json, but if it
   // doesn't exist, we use a default configuration.
   if (!typescript) {
-    const jsConfigPath = joinPath(directory, 'jsconfig.json');
+    const jsConfigPath = joinPath(rootDirectory, 'jsconfig.json');
     const config = (await fileExists(jsConfigPath))
       ? JSON.parse(
           (await readFile(jsConfigPath, {encoding: 'utf8'})).replace(
@@ -235,10 +246,9 @@ export async function runGenerate(
   if (!(await fileExists(dirname(destinationPath)))) {
     await mkdir(dirname(destinationPath));
   }
+
   // Write the final file to the user's project.
   await writeFile(destinationPath, templateContent);
 
-  return {
-    operation: operation as 'generated' | 'overwritten',
-  };
+  return result;
 }
