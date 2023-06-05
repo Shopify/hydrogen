@@ -88,9 +88,7 @@ describe('pullVariables', () => {
       await pullVariables({path: tmpDir});
 
       expect(await readFile(filePath)).toStrictEqual(
-        'PUBLIC_API_TOKEN="abc123"\n' +
-          '# PRIVATE_API_TOKEN is marked as secret and its value is hidden\n' +
-          'PRIVATE_API_TOKEN=""\n',
+        'PUBLIC_API_TOKEN=abc123\n' + 'PRIVATE_API_TOKEN=""',
       );
     });
   });
@@ -101,9 +99,21 @@ describe('pullVariables', () => {
 
       await pullVariables({path: tmpDir});
 
-      expect(outputMock.warn()).toStrictEqual(
-        'Existing Link contains environment variables marked as ' +
-          'secret, so their values weren’t pulled.',
+      expect(outputMock.warn()).toMatch(
+        /Existing Link contains environment variables marked as secret, so their/,
+      );
+      expect(outputMock.warn()).toMatch(/values weren’t pulled./);
+    });
+  });
+
+  it('renders a success message', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      const outputMock = mockAndCaptureOutput();
+
+      await pullVariables({path: tmpDir});
+
+      expect(outputMock.info()).toMatch(
+        /Changes have been made to your \.env file/,
       );
     });
   });
@@ -121,8 +131,10 @@ describe('pullVariables', () => {
         await pullVariables({path: tmpDir});
 
         expect(renderConfirmationPrompt).toHaveBeenCalledWith({
+          confirmationMessage: `Yes, confirm changes`,
+          cancellationMessage: `No, make changes later`,
           message: expect.stringMatching(
-            /Warning: \.env file already exists\. Do you want to overwrite it\?/,
+            /We'll make the following changes to your \.env file:/,
           ),
         });
       });
