@@ -58,6 +58,7 @@ export const preset: Types.OutputPreset<GqlTagConfig> = {
           skipTypename: true, // Skip __typename fields
           useTypeImports: true, // Use `import type` instead of `import`
           preResolveTypes: false, // Use Pick<...> instead of primitives
+          mergeFragmentTypes: true, // Merge equal fragment interfaces. Avoids adding `| {}` to Metaobject
         },
       },
       // 4.  Augment Hydrogen query/mutation interfaces with the generated operations
