@@ -5,7 +5,7 @@ import {vi, beforeEach, describe, expect, it} from 'vitest';
 import {ComponentProps, PropsWithChildren} from 'react';
 import {renderHook, act} from '@testing-library/react';
 import {getCartMock, getCartLineMock} from './CartProvider.test.helpers.js';
-import {ShopifyProvider} from './ShopifyProvider.js';
+import {ShopifyProvider, type ShopifyProviderProps} from './ShopifyProvider.js';
 import {getShopifyConfig} from './ShopifyProvider.test.js';
 
 const mockUseCartActions = vi.fn();
@@ -23,13 +23,15 @@ vi.mock('./cart-hooks.js', () => ({
 import {CartProvider, useCart} from './CartProvider.js';
 import {cartFromGraphQL} from './useCartAPIStateMachine.js';
 import {CART_ID_STORAGE_KEY} from './cart-constants.js';
+import {CountryCode} from './storefront-api-types.js';
 
 function ShopifyCartProvider(
   props: Omit<ComponentProps<typeof CartProvider>, 'children'> = {},
+  shopifyProviderProps?: Omit<ShopifyProviderProps, 'children'>,
 ) {
   return function Wrapper({children}: PropsWithChildren) {
     return (
-      <ShopifyProvider {...getShopifyConfig()}>
+      <ShopifyProvider {...getShopifyConfig()} {...shopifyProviderProps}>
         <CartProvider {...props}>{children}</CartProvider>
       </ShopifyProvider>
     );
@@ -47,6 +49,82 @@ describe('<CartProvider />', () => {
     mockUseCartActions.mockClear();
     mockUseCartFetch.mockClear();
     vi.spyOn(window.localStorage, 'getItem').mockReturnValue('');
+  });
+
+  describe('localization', () => {
+    it('uses the default countryCode provided to the shopify provider', async () => {
+      const discountCodesUpdateSpy = vi.fn(() => ({
+        data: {cartDiscountCodesUpdate: {cart: cartMock}},
+      }));
+
+      const buyerIdentityUpdateSpy = vi.fn(() => ({
+        data: {cartBuyerIdentityUpdate: {cart: cartMock}},
+      }));
+
+      const result = await useCartWithInitializedCart(
+        {
+          discountCodesUpdate: discountCodesUpdateSpy,
+          buyerIdentityUpdate: buyerIdentityUpdateSpy,
+        },
+        undefined,
+        {
+          ...getShopifyConfig(),
+          countryIsoCode: 'KG' as CountryCode,
+        },
+      );
+
+      void act(() => {
+        result.current.discountCodesUpdate(['DiscountCode']);
+      });
+
+      expect(result.current.status).toEqual('updating');
+
+      // wait till idle
+      await act(async () => {});
+
+      expect(buyerIdentityUpdateSpy).toHaveBeenCalledWith('abc', {
+        countryCode: 'KG',
+        customerAccessToken: undefined,
+      });
+    });
+
+    it('uses countryCode override to the CartProvider component', async () => {
+      const discountCodesUpdateSpy = vi.fn(() => ({
+        data: {cartDiscountCodesUpdate: {cart: cartMock}},
+      }));
+
+      const buyerIdentityUpdateSpy = vi.fn(() => ({
+        data: {cartBuyerIdentityUpdate: {cart: cartMock}},
+      }));
+
+      const result = await useCartWithInitializedCart(
+        {
+          discountCodesUpdate: discountCodesUpdateSpy,
+          buyerIdentityUpdate: buyerIdentityUpdateSpy,
+        },
+        {
+          countryCode: 'UK' as CountryCode,
+        },
+        {
+          ...getShopifyConfig(),
+          countryIsoCode: 'KG' as CountryCode,
+        },
+      );
+
+      void act(() => {
+        result.current.discountCodesUpdate(['DiscountCode']);
+      });
+
+      expect(result.current.status).toEqual('updating');
+
+      // wait till idle
+      await act(async () => {});
+
+      expect(buyerIdentityUpdateSpy).toHaveBeenCalledWith('abc', {
+        countryCode: 'UK',
+        customerAccessToken: undefined,
+      });
+    });
   });
 
   describe('`data` prop', () => {
@@ -1458,6 +1536,7 @@ describe('<CartProvider />', () => {
 async function useCartWithInitializedCart(
   cartActionsMocks = {},
   cartProviderProps: Omit<ComponentProps<typeof CartProvider>, 'children'> = {},
+  shopifyProviderProps?: Omit<ShopifyProviderProps, 'children'>,
 ) {
   const cartCreateSpy = vi.fn(() => ({
     data: {cartCreate: {cart: cartMock}},
@@ -1470,7 +1549,7 @@ async function useCartWithInitializedCart(
 
   // eslint-disable-next-line react-hooks/rules-of-hooks
   const {result} = renderHook(() => useCart(), {
-    wrapper: ShopifyCartProvider(cartProviderProps),
+    wrapper: ShopifyCartProvider(cartProviderProps, shopifyProviderProps),
   });
 
   // creates a cart and wait till idle
