@@ -2,6 +2,7 @@ import os from 'node:os';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {outputDebug} from '@shopify/cli-kit/node/output';
+import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import {execAsync} from './process.js';
 
 export type UnixShell = 'zsh' | 'bash' | 'fish';
@@ -45,9 +46,9 @@ function getShellAliasDefinitionFile(shell: UnixShell) {
 }
 
 async function hasAliasDefinition(aliasName: string, shell: UnixShell) {
-  try {
-    const filepath = getShellAliasDefinitionFile(shell);
+  const filepath = getShellAliasDefinitionFile(shell);
 
+  try {
     if (shell === 'fish') {
       return await homeFileExists(filepath);
     }
@@ -108,4 +109,37 @@ export async function shellRunScript(script: string, shellBin: string) {
     );
     return false;
   }
+}
+
+function isKnownUnixShell(shell: string): shell is UnixShell {
+  return ['zsh', 'bash', 'fish'].includes(shell);
+}
+
+async function hasCliAlias() {
+  try {
+    if (isWindows() && !isGitBash()) {
+      await execAsync(`Get-Alias -Name ${ALIAS_NAME}`);
+    } else {
+      const shell = os.userInfo().shell?.split('/').pop() ?? 'bash';
+      if (!isKnownUnixShell(shell)) return false;
+
+      return await hasAliasDefinition(ALIAS_NAME, shell);
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function getCliCommand() {
+  if (await hasCliAlias()) {
+    return ALIAS_NAME;
+  }
+
+  let cli: 'npx' | 'pnpm' | 'yarn' = 'npx';
+  const pkgManager = await getPackageManager(process.cwd()).catch(() => null);
+  if (pkgManager === 'pnpm' || pkgManager === 'yarn') cli = pkgManager;
+
+  return `${cli} shopify hydrogen` as const;
 }

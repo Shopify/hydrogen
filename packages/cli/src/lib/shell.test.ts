@@ -1,6 +1,7 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {shellWriteAlias} from './shell.js';
+import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
+import {getCliCommand, shellWriteAlias} from './shell.js';
 import {execAsync} from './process.js';
 
 describe('shell', () => {
@@ -8,6 +9,7 @@ describe('shell', () => {
     vi.resetAllMocks();
     vi.mock('node:child_process');
     vi.mock('@shopify/cli-kit/node/fs');
+    vi.mock('@shopify/cli-kit/node/node-package-manager');
     vi.mock('./process.js', async () => {
       const original = await vi.importActual<typeof import('./process.js')>(
         './process.js',
@@ -20,6 +22,7 @@ describe('shell', () => {
     });
 
     vi.mocked(fileExists).mockResolvedValue(false);
+    vi.mocked(getPackageManager).mockResolvedValue('npm');
   });
 
   describe('shellWriteAlias', () => {
@@ -75,6 +78,38 @@ describe('shell', () => {
           expect.stringMatching(/^printf/),
         );
       });
+    });
+  });
+
+  describe('getCliCommand', () => {
+    it('returns the shortcut alias if available', async () => {
+      vi.mocked(execAsync).mockImplementation((shellCommand) =>
+        shellCommand.startsWith('grep')
+          ? (Promise.resolve({stdout: 'stuff', stderr: ''}) as any)
+          : Promise.reject(null),
+      );
+
+      await expect(getCliCommand()).resolves.toEqual('h2');
+    });
+
+    it('returns the used package manager command', async () => {
+      vi.mocked(execAsync).mockImplementation(() => Promise.reject(null));
+
+      // No package manager found
+      vi.mocked(getPackageManager).mockRejectedValueOnce(null);
+      await expect(getCliCommand()).resolves.toEqual('npx shopify hydrogen');
+
+      // NPM
+      vi.mocked(getPackageManager).mockResolvedValue('npm');
+      await expect(getCliCommand()).resolves.toEqual('npx shopify hydrogen');
+
+      // Yarn
+      vi.mocked(getPackageManager).mockResolvedValue('yarn');
+      await expect(getCliCommand()).resolves.toEqual('yarn shopify hydrogen');
+
+      // Pnpm
+      vi.mocked(getPackageManager).mockResolvedValue('pnpm');
+      await expect(getCliCommand()).resolves.toEqual('pnpm shopify hydrogen');
     });
   });
 });
