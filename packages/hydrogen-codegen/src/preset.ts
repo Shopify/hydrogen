@@ -110,6 +110,7 @@ export const preset: Types.OutputPreset<HydrogenPresetConfig> = {
         [`typescript-operations`]: {
           useTypeImports: true, // Use `import type` instead of `import`
           preResolveTypes: false, // Use Pick<...> instead of primitives
+          mergeFragmentTypes: true, // Merge equal fragment interfaces. Avoids adding `| {}` to Metaobject
           skipTypename: options.presetConfig.skipTypenameInOperations ?? true, // Skip __typename fields
           namespacedImportName: importTypes ? namespacedImportName : undefined,
         },

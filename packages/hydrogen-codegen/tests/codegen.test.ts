@@ -153,7 +153,7 @@ describe('Hydrogen Codegen', async () => {
             { __typename: 'Video' }
             & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
             & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
-          ) | {}> }>, spreadSecondary?: StorefrontAPI.Maybe<{ reference?: StorefrontAPI.Maybe<(
+          )> }>, spreadSecondary?: StorefrontAPI.Maybe<{ reference?: StorefrontAPI.Maybe<(
             { __typename: 'MediaImage' }
             & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
             & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
@@ -161,7 +161,7 @@ describe('Hydrogen Codegen', async () => {
             { __typename: 'Video' }
             & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
             & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
-          ) | {}> }> }
+          )> }> }
       );
 
       export type CollectionContentTestQueryVariables = StorefrontAPI.Exact<{
@@ -181,7 +181,7 @@ describe('Hydrogen Codegen', async () => {
               { __typename: 'Video' }
               & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
               & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
-            ) | {}> }>, spreadSecondary?: StorefrontAPI.Maybe<{ reference?: StorefrontAPI.Maybe<(
+            )> }>, spreadSecondary?: StorefrontAPI.Maybe<{ reference?: StorefrontAPI.Maybe<(
               { __typename: 'MediaImage' }
               & Pick<StorefrontAPI.MediaImage, 'id' | 'mediaContentType' | 'alt'>
               & { image?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url' | 'width' | 'height'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
@@ -189,7 +189,7 @@ describe('Hydrogen Codegen', async () => {
               { __typename: 'Video' }
               & Pick<StorefrontAPI.Video, 'id' | 'mediaContentType' | 'alt'>
               & { sources: Array<Pick<StorefrontAPI.VideoSource, 'mimeType' | 'url'>>, previewImage?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Image, 'url'>> }
-            ) | {}> }> }
+            )> }> }
         )>, shop: Pick<StorefrontAPI.Shop, 'name' | 'description'> };
 
       interface GeneratedQueryTypes {
