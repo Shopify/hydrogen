@@ -136,7 +136,7 @@ export function CartForm({
         <input
           type="hidden"
           name={INPUT_NAME}
-          value={JSON.stringify({action, ...inputs})}
+          value={JSON.stringify({action, inputs})}
         />
       )}
       {typeof children === 'function' ? children(fetcher) : children}
@@ -159,7 +159,7 @@ CartForm.ACTIONS = {
 } as const;
 
 export function getFormInput(formData: any): CartActionInput {
-  const {action, ...inputs}: CartActionInput = formData.has(INPUT_NAME)
+  const {action, inputs}: CartActionInput = formData.has(INPUT_NAME)
     ? JSON.parse(String(formData.get(INPUT_NAME)))
     : {};
 

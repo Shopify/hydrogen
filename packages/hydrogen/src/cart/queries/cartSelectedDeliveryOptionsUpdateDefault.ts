@@ -8,7 +8,7 @@ import type {CartSelectedDeliveryOptionInput} from '@shopify/hydrogen-react/stor
 
 export function cartSelectedDeliveryOptionsUpdateDefault(
   options: CartQueryOptions,
-): CartQueryReturn<CartSelectedDeliveryOptionInput> {
+): CartQueryReturn<CartSelectedDeliveryOptionInput[]> {
   return async (selectedDeliveryOptions, optionalParams) => {
     const {cartSelectedDeliveryOptionsUpdate} =
       await options.storefront.mutate<{
