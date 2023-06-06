@@ -21,6 +21,7 @@ export {
 
 export {
   CartForm as CartForm__unstable,
+  getFormInput,
   type CartActionInput,
 } from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
