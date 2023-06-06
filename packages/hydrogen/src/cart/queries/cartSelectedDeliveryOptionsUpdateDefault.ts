@@ -7,7 +7,7 @@ import type {
 import type {CartSelectedDeliveryOptionInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 export type CartSelectedDeliveryOptionsUpdateFunction = (
-  selectedDeliveryOptions: CartSelectedDeliveryOptionInput,
+  selectedDeliveryOptions: CartSelectedDeliveryOptionInput[],
   optionalParams?: CartOptionalInput,
 ) => Promise<CartQueryData>;
 
