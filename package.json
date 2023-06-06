@@ -26,6 +26,7 @@
     "templates/hello-world",
     "templates/demo-store",
     "templates/skeleton",
+    "examples/express",
     "packages/remix-oxygen",
     "packages/hydrogen",
     "packages/create-hydrogen",
