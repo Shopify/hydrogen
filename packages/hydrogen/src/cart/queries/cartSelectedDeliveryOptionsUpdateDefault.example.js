@@ -5,7 +5,9 @@ const cartDeliveryOption = cartSelectedDeliveryOptionsUpdateDefault({
   getCartId,
 });
 
-const result = await cartDeliveryOption({
-  deliveryGroupId: '123',
-  deliveryOptionHandle: 'Canada Post',
-});
+const result = await cartDeliveryOption([
+  {
+    deliveryGroupId: '123',
+    deliveryOptionHandle: 'Canada Post',
+  },
+]);

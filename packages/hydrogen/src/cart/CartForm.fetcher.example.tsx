@@ -1,38 +1,49 @@
-import {FetcherWithComponents} from '@remix-run/react';
+import {useFetcher} from '@remix-run/react';
 import {type ActionArgs, json} from '@remix-run/server-runtime';
 import {
   type CartQueryData,
   type CartHandlerReturnBase,
   CartForm__unstable as CartForm,
+  type CartActionInput,
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
+import type {Cart} from '@shopify/hydrogen/storefront-api-types';
 
-export default function Cart() {
+export function ThisIsGift({metafield}: {metafield: Cart['metafield']}) {
+  const fetcher = useFetcher();
+
+  const buildFormInput: (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => CartActionInput = (event) => ({
+    action: CartForm.ACTIONS.MetafieldsSet,
+    inputs: {
+      metafields: [
+        {
+          key: 'public.gift',
+          type: 'boolean',
+          value: event.target.checked.toString(),
+        },
+      ],
+    },
+  });
+
   return (
-    <CartForm action={CartForm.ACTIONS.NoteUpdate} inputs={{note: ''}}>
-      {(fetcher: FetcherWithComponents<any>) => {
-        return (
-          <>
-            <input
-              id="isGiftCheckbox"
-              type="checkbox"
-              onChange={(event) =>
-                fetcher.submit(
-                  {
-                    [CartForm.INPUT_NAME]: JSON.stringify({
-                      action: CartForm.ACTIONS.NoteUpdate,
-                      note: event.target.checked ? 'gift' : '',
-                    }),
-                  },
-                  {method: 'post', action: '/cart'},
-                )
-              }
-            />
-            <label htmlFor="isGiftCheckbox">This is a gift</label>
-          </>
-        );
-      }}
-    </CartForm>
+    <div>
+      <input
+        checked={metafield?.value === 'true'}
+        type="checkbox"
+        id="isGift"
+        onChange={(event) => {
+          fetcher.submit(
+            {
+              [CartForm.INPUT_NAME]: JSON.stringify(buildFormInput(event)),
+            },
+            {method: 'POST', action: '/cart'},
+          );
+        }}
+      />
+      <label htmlFor="isGift">This is a gift</label>
+    </div>
   );
 }
 
@@ -49,8 +60,8 @@ export async function action({request, context}: ActionArgs) {
   let status = 200;
   let result: CartQueryData;
 
-  if (action === CartForm.ACTIONS.NoteUpdate) {
-    result = await cart.updateNote(inputs.note);
+  if (action === CartForm.ACTIONS.MetafieldsSet) {
+    result = await cart.setMetafields(inputs.metafields);
   } else {
     invariant(false, `${action} cart action is not defined`);
   }

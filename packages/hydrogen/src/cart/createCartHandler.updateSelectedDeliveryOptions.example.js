@@ -3,10 +3,12 @@ export async function action({context}) {
 
   // Usage
   const result = await cart.updateSelectedDeliveryOptions(
-    {
-      deliveryGroupId: '123',
-      deliveryOptionHandle: 'Canada Post',
-    },
+    [
+      {
+        deliveryGroupId: '123',
+        deliveryOptionHandle: 'Canada Post',
+      },
+    ],
     // Optional parameters
     {
       cartId: '123', // override the cart id
