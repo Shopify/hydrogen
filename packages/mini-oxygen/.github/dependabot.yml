@@ -10,4 +10,6 @@ updates:
     directory: "/"
     registries: "*"
     schedule:
-      interval: "weekly"
+      interval: daily # Check for updates every weekday (Mon-Fri)
+      time: "10:00"
+      timezone: "Canada/Eastern"
