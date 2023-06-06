@@ -25,5 +25,7 @@ export {AddToCartButton} from './AddToCartButton';
 export {SearchForm} from './SearchForm';
 export {SearchResults} from './SearchResults';
 export {FeaturedSection} from './FeaturedSection';
+export {Footer} from './Footer';
+export {Header} from './Header';
 // Sue me
 export * from './Icon';
