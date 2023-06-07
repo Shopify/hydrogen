@@ -53,13 +53,22 @@ export function createStorefrontClient(
     );
   }
 
+  const prependProtocol = (domain: string): string =>
+    domain.includes('://') ? domain : `https://${domain}`;
+
   return {
     getShopifyDomain(overrideProps): string {
-      return overrideProps?.storeDomain ?? storeDomain;
+      return prependProtocol(overrideProps?.storeDomain ?? storeDomain);
     },
     getStorefrontApiUrl(overrideProps): string {
-      const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;
-      return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${
+      const finalDomainUrl = prependProtocol(
+        overrideProps?.storeDomain ?? storeDomain,
+      );
+
+      const apiUrl =
+        finalDomainUrl + (finalDomainUrl.endsWith('/') ? 'api' : '/api');
+
+      return `${apiUrl}/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
       }/graphql.json`;
     },
