@@ -39,7 +39,7 @@ describe('<CartForm />', () => {
     );
 
     expect(getRenderFormInput(container)).toBe(
-      '{"action":"LinesAdd","lines":[]}',
+      '{"action":"LinesAdd","inputs":{"lines":[]}}',
     );
   });
 
@@ -54,7 +54,7 @@ describe('<CartForm />', () => {
     );
 
     expect(getRenderFormInput(container)).toBe(
-      '{"action":"LinesAdd","lines":[],"test":"test"}',
+      '{"action":"LinesAdd","inputs":{"lines":[],"test":"test"}}',
     );
   });
 
@@ -108,7 +108,9 @@ describe('getFormInput', () => {
     const result = getFormInput(
       mockFormData({
         action: 'CustomTest',
-        test: 'test',
+        inputs: {
+          test: 'test',
+        },
       }),
     );
 
