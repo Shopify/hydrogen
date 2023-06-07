@@ -35,14 +35,7 @@ export async function storefrontRedirect(
   const redirectFrom = pathname + search;
 
   if (pathname === '/admin' && !noAdminRedirect) {
-    const match = /https:\/\/([^.]+)\.myshopify\.com/g.exec(
-      storefront.getShopifyDomain(),
-    );
-    return redirect(
-      match && match[1]
-        ? `https://admin.shopify.com/store/${match[1]}`
-        : `${storefront.getShopifyDomain()}/admin`,
-    );
+    return redirect(`${storefront.getShopifyDomain()}/admin`);
   }
 
   try {
