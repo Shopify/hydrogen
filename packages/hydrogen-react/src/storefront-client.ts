@@ -53,6 +53,7 @@ export function createStorefrontClient(
     );
   }
 
+  const isMockShop = (domain: string): boolean => domain.includes('mock.shop');
   const prependProtocol = (domain: string): string =>
     domain.includes('://') ? domain : `https://${domain}`;
 
@@ -68,14 +69,18 @@ export function createStorefrontClient(
       const apiUrl =
         finalDomainUrl + (finalDomainUrl.endsWith('/') ? 'api' : '/api');
 
-      if (apiUrl.includes('://mock.shop/')) return apiUrl;
+      if (isMockShop(finalDomainUrl)) return apiUrl;
 
       return `${apiUrl}/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
       }/graphql.json`;
     },
     getPrivateTokenHeaders(overrideProps): Record<string, string> {
-      if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {
+      if (
+        !privateStorefrontToken &&
+        !overrideProps?.privateStorefrontToken &&
+        !isMockShop(storeDomain)
+      ) {
         throw new Error(
           `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`,
         );
@@ -106,7 +111,11 @@ export function createStorefrontClient(
       };
     },
     getPublicTokenHeaders(overrideProps): Record<string, string> {
-      if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {
+      if (
+        !publicStorefrontToken &&
+        !overrideProps?.publicStorefrontToken &&
+        !isMockShop(storeDomain)
+      ) {
         throw new Error(
           `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`,
         );
