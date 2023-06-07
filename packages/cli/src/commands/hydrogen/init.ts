@@ -1,4 +1,6 @@
 import Command from '@shopify/cli-kit/node/base-command';
+import {readdir} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
 import {
   installNodeModules,
   packageManagerUsedForCreating,
@@ -33,8 +35,7 @@ import {
 import {transpileProject} from '../../lib/transpile-ts.js';
 import {getLatestTemplates} from '../../lib/template-downloader.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
-import {readdir} from 'fs/promises';
-import {fileURLToPath} from 'url';
+import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 
 const STARTER_TEMPLATES = ['hello-world', 'demo-store'];
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
@@ -254,16 +255,4 @@ async function projectExists(projectDir: string) {
     (await isDirectory(projectDir)) &&
     (await readdir(projectDir)).length > 0
   );
-}
-
-function supressNodeExperimentalWarnings() {
-  const warningListener = process.listeners('warning')[0]!;
-  if (warningListener) {
-    process.removeAllListeners('warning');
-    process.prependListener('warning', (warning) => {
-      if (warning.name != 'ExperimentalWarning') {
-        warningListener(warning);
-      }
-    });
-  }
 }
