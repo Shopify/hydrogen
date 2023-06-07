@@ -3,9 +3,14 @@ import type {UrlRedirectConnection} from '@shopify/hydrogen-react/storefront-api
 import type {I18nBase, Storefront} from '../storefront';
 
 type StorefrontRedirect = {
+  /** The [Storefront client](/docs/api/hydrogen/2023-04/utilities/createstorefrontclient) instance */
   storefront: Storefront<I18nBase>;
+  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */
   request: Request;
+  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */
   response?: Response;
+  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */
+  noAdminRedirect?: boolean;
 };
 
 /**
@@ -22,11 +27,23 @@ export async function storefrontRedirect(
   const {
     storefront,
     request,
+    noAdminRedirect,
     response = new Response('Not Found', {status: 404}),
   } = options;
 
   const {pathname, search} = new URL(request.url);
   const redirectFrom = pathname + search;
+
+  if (pathname === '/admin' && !noAdminRedirect) {
+    const match = /https:\/\/([^.]+)\.myshopify\.com/g.exec(
+      storefront.getShopifyDomain(),
+    );
+    return redirect(
+      match && match[1]
+        ? `https://admin.shopify.com/store/${match[1]}`
+        : `${storefront.getShopifyDomain()}/admin`,
+    );
+  }
 
   try {
     const {urlRedirects} = await storefront.query<{
