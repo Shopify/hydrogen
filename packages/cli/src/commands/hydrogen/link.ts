@@ -25,7 +25,6 @@ export default class Link extends Command {
     path: commonFlags.path,
     shop: commonFlags.shop,
     storefront: Flags.string({
-      char: 'h',
       description: 'The name of a Hydrogen Storefront (e.g. "Jane\'s Apparel")',
       env: 'SHOPIFY_HYDROGEN_STOREFRONT',
     }),
