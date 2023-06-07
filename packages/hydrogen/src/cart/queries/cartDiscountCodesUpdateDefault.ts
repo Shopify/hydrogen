@@ -40,10 +40,10 @@ export const CART_DISCOUNT_CODE_UPDATE_MUTATION = (
   ) @inContext(country: $country, language: $language) {
     cartDiscountCodesUpdate(cartId: $cartId, discountCodes: $discountCodes) {
       cart {
-        ...CartFragment
+        ...CartApiMutation
       }
       errors: userErrors {
-        ...ErrorFragment
+        ...CartApiError
       }
     }
   }

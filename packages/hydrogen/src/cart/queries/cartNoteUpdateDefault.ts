@@ -39,10 +39,10 @@ export const CART_NOTE_UPDATE_MUTATION = (
   ) @inContext(country: $country, language: $language) {
     cartNoteUpdate(cartId: $cartId, note: $note) {
       cart {
-        ...CartFragment
+        ...CartApiMutation
       }
       errors: userErrors {
-        ...ErrorFragment
+        ...CartApiError
       }
     }
   }

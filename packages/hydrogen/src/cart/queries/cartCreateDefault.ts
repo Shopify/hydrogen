@@ -39,11 +39,11 @@ export const CART_CREATE_MUTATION = (
   ) @inContext(country: $country, language: $language) {
     cartCreate(input: $input) {
       cart {
-        ...CartFragment
+        ...CartApiMutation
         checkoutUrl
       }
       errors: userErrors {
-        ...ErrorFragment
+        ...CartApiError
       }
     }
   }

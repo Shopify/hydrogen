@@ -1,5 +1,5 @@
 export const USER_ERROR_FRAGMENT = `#graphql
-  fragment ErrorFragment on CartUserError {
+  fragment CartApiError on CartUserError {
     message
     field
     code
@@ -7,7 +7,7 @@ export const USER_ERROR_FRAGMENT = `#graphql
 `;
 
 export const MINIMAL_CART_FRAGMENT = `#graphql
-  fragment CartFragment on Cart {
+  fragment CartApiMutation on Cart {
     id
     totalQuantity
   }

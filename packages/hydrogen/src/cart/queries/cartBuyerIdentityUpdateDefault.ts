@@ -40,10 +40,10 @@ export const CART_BUYER_IDENTITY_UPDATE_MUTATION = (
   ) @inContext(country: $country, language: $language) {
     cartBuyerIdentityUpdate(cartId: $cartId, buyerIdentity: $buyerIdentity) {
       cart {
-        ...CartFragment
+        ...CartApiMutation
       }
       errors: userErrors {
-        ...ErrorFragment
+        ...CartApiError
       }
     }
   }

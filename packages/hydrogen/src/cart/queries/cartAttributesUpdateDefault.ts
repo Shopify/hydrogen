@@ -36,10 +36,10 @@ export const CART_ATTRIBUTES_UPDATE_MUTATION = (
   ) {
     cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
       cart {
-        ...CartFragment
+        ...CartApiMutation
       }
       errors: userErrors {
-        ...ErrorFragment
+        ...CartApiError
       }
     }
   }
