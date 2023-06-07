@@ -68,6 +68,8 @@ export function createStorefrontClient(
       const apiUrl =
         finalDomainUrl + (finalDomainUrl.endsWith('/') ? 'api' : '/api');
 
+      if (apiUrl.includes('://mock.shop/')) return apiUrl;
+
       return `${apiUrl}/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
       }/graphql.json`;
