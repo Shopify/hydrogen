@@ -9,10 +9,12 @@ describe('cartSelectedDeliveryOptionsUpdateDefault', () => {
       getCartId: () => CART_ID,
     });
 
-    const result = await cartUpdate({
-      deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
-      deliveryOptionHandle: 'Postal Service',
-    });
+    const result = await cartUpdate([
+      {
+        deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
+        deliveryOptionHandle: 'Postal Service',
+      },
+    ]);
 
     expect(result.cart).toHaveProperty('id', CART_ID);
   });
@@ -25,10 +27,12 @@ describe('cartSelectedDeliveryOptionsUpdateDefault', () => {
       cartFragment,
     });
 
-    const result = await cartUpdate({
-      deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
-      deliveryOptionHandle: 'Postal Service',
-    });
+    const result = await cartUpdate([
+      {
+        deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
+        deliveryOptionHandle: 'Postal Service',
+      },
+    ]);
 
     expect(result.cart).toHaveProperty('id', CART_ID);
     expect(result.errors?.[0]).toContain(cartFragment);
