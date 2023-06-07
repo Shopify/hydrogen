@@ -36,10 +36,10 @@ export const CART_SELECTED_DELIVERY_OPTIONS_UPDATE_MUTATION = (
   ) @inContext(country: $country, language: $language) {
     cartSelectedDeliveryOptionsUpdate(cartId: $cartId, selectedDeliveryOptions: $selectedDeliveryOptions) {
       cart {
-        ...CartFragment
+        ...CartApiMutation
       }
       errors: userErrors {
-        ...ErrorFragment
+        ...CartApiError
       }
     }
   }

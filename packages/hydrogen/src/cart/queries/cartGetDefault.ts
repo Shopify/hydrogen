@@ -33,7 +33,7 @@ const CART_QUERY = (cartFragment = DEFAULT_CART_FRAGMENT) => `#graphql
     $language: LanguageCode
   ) @inContext(country: $country, language: $language) {
     cart(id: $cartId) {
-      ...CartFragment
+      ...CartApiQuery
     }
   }
 
@@ -41,7 +41,7 @@ const CART_QUERY = (cartFragment = DEFAULT_CART_FRAGMENT) => `#graphql
 `;
 
 export const DEFAULT_CART_FRAGMENT = `#graphql
-  fragment CartFragment on Cart {
+  fragment CartApiQuery on Cart {
     id
     checkoutUrl
     totalQuantity
@@ -85,15 +85,15 @@ export const DEFAULT_CART_FRAGMENT = `#graphql
               id
               availableForSale
               compareAtPrice {
-                ...MoneyFragment
+                ...CartApiMoney
               }
               price {
-                ...MoneyFragment
+                ...CartApiMoney
               }
               requiresShipping
               title
               image {
-                ...ImageFragment
+                ...CartApiImage
               }
               product {
                 handle
@@ -111,16 +111,16 @@ export const DEFAULT_CART_FRAGMENT = `#graphql
     }
     cost {
       subtotalAmount {
-        ...MoneyFragment
+        ...CartApiMoney
       }
       totalAmount {
-        ...MoneyFragment
+        ...CartApiMoney
       }
       totalDutyAmount {
-        ...MoneyFragment
+        ...CartApiMoney
       }
       totalTaxAmount {
-        ...MoneyFragment
+        ...CartApiMoney
       }
     }
     note
@@ -134,12 +134,12 @@ export const DEFAULT_CART_FRAGMENT = `#graphql
     }
   }
 
-  fragment MoneyFragment on MoneyV2 {
+  fragment CartApiMoney on MoneyV2 {
     currencyCode
     amount
   }
 
-  fragment ImageFragment on Image {
+  fragment CartApiImage on Image {
     id
     url
     altText
