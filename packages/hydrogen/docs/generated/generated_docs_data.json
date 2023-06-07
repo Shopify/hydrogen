@@ -1381,13 +1381,13 @@
               "name": "Promise<Response>",
               "value": "Promise<Response>"
             },
-            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const {pathname, search} = new URL(request.url);\n  const redirectFrom = pathname + search;\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return new Response(null, {status: 301, headers: {location}});\n    }\n\n    const searchParams = new URLSearchParams(search);\n    const redirectTo =\n      searchParams.get('return_to') || searchParams.get('redirect');\n\n    if (redirectTo) {\n      if (isLocalPath(redirectTo)) {\n        return redirect(redirectTo);\n      } else {\n        console.warn(\n          `Cross-domain redirects are not supported. Tried to redirect from ${redirectFrom} to ${redirectTo}`,\n        );\n      }\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
+            "value": "export async function storefrontRedirect(\n  options: StorefrontRedirect,\n): Promise<Response> {\n  const {\n    storefront,\n    request,\n    noAdminRedirect,\n    response = new Response('Not Found', {status: 404}),\n  } = options;\n\n  const {pathname, search} = new URL(request.url);\n  const redirectFrom = pathname + search;\n\n  if (pathname === '/admin' && !noAdminRedirect) {\n    const match = /https:\\/\\/([^.]+)\\.myshopify\\.com/g.exec(\n      storefront.getShopifyDomain(),\n    );\n    return redirect(\n      match && match[1]\n        ? `https://admin.shopify.com/store/${match[1]}`\n        : `${storefront.getShopifyDomain()}/admin`,\n    );\n  }\n\n  try {\n    const {urlRedirects} = await storefront.query<{\n      urlRedirects: UrlRedirectConnection;\n    }>(REDIRECT_QUERY, {\n      variables: {query: 'path:' + redirectFrom},\n    });\n\n    const location = urlRedirects?.edges?.[0]?.node?.target;\n\n    if (location) {\n      return new Response(null, {status: 301, headers: {location}});\n    }\n\n    const searchParams = new URLSearchParams(search);\n    const redirectTo =\n      searchParams.get('return_to') || searchParams.get('redirect');\n\n    if (redirectTo) {\n      if (isLocalPath(redirectTo)) {\n        return redirect(redirectTo);\n      } else {\n        console.warn(\n          `Cross-domain redirects are not supported. Tried to redirect from ${redirectFrom} to ${redirectTo}`,\n        );\n      }\n    }\n  } catch (error) {\n    console.error(\n      `Failed to fetch redirects from Storefront API for route ${redirectFrom}`,\n      error,\n    );\n  }\n\n  return response;\n}"
           },
           "StorefrontRedirect": {
             "filePath": "/routing/redirect.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontRedirect",
-            "value": "{\n  storefront: Storefront<I18nBase>;\n  request: Request;\n  response?: Response;\n}",
+            "value": "{\n  /** The [Storefront client](/docs/api/hydrogen/2023-04/utilities/createstorefrontclient) instance */\n  storefront: Storefront<I18nBase>;\n  /** The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler. */\n  request: Request;\n  /** The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest` */\n  response?: Response;\n  /** By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`. */\n  noAdminRedirect?: boolean;\n}",
             "description": "",
             "members": [
               {
@@ -1395,21 +1395,29 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storefront",
                 "value": "Storefront<I18nBase>",
-                "description": ""
+                "description": "The [Storefront client](/docs/api/hydrogen/2023-04/utilities/createstorefrontclient) instance"
               },
               {
                 "filePath": "/routing/redirect.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "request",
                 "value": "Request",
-                "description": ""
+                "description": "The [MDN Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object that was passed to the `server.ts` request handler."
               },
               {
                 "filePath": "/routing/redirect.ts",
                 "syntaxKind": "PropertySignature",
                 "name": "response",
                 "value": "Response",
-                "description": "",
+                "description": "The [MDN Response](https://developer.mozilla.org/en-US/docs/Web/API/Response) object created by `handleRequest`",
+                "isOptional": true
+              },
+              {
+                "filePath": "/routing/redirect.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "noAdminRedirect",
+                "value": "boolean",
+                "description": "By default the `/admin` route is redirected to the Shopify Admin page for the current storefront. Disable this redirect by passing `true`.",
                 "isOptional": true
               }
             ]
