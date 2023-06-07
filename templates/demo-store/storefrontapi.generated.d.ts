@@ -228,7 +228,6 @@ export type CollectionContentFragment = Pick<
               Pick<StorefrontAPI.Image, 'url'>
             >;
           })
-      | {}
     >;
   }>;
   spreadSecondary?: StorefrontAPI.Maybe<{
@@ -253,7 +252,6 @@ export type CollectionContentFragment = Pick<
               Pick<StorefrontAPI.Image, 'url'>
             >;
           })
-      | {}
     >;
   }>;
 };
@@ -297,7 +295,6 @@ export type SeoCollectionContentQuery = {
                   Pick<StorefrontAPI.Image, 'url'>
                 >;
               })
-          | {}
         >;
       }>;
       spreadSecondary?: StorefrontAPI.Maybe<{
@@ -324,7 +321,6 @@ export type SeoCollectionContentQuery = {
                   Pick<StorefrontAPI.Image, 'url'>
                 >;
               })
-          | {}
         >;
       }>;
     }
@@ -371,7 +367,6 @@ export type HeroCollectionContentQuery = {
                   Pick<StorefrontAPI.Image, 'url'>
                 >;
               })
-          | {}
         >;
       }>;
       spreadSecondary?: StorefrontAPI.Maybe<{
@@ -398,7 +393,6 @@ export type HeroCollectionContentQuery = {
                   Pick<StorefrontAPI.Image, 'url'>
                 >;
               })
-          | {}
         >;
       }>;
     }
@@ -589,7 +583,7 @@ export type AddressFullFragment = Pick<
   | 'zip'
 >;
 
-type DiscountApplication_AutomaticDiscountApplication_Fragment = {
+export type DiscountApplicationFragment = {
   value:
     | ({__typename: 'MoneyV2'} & Pick<
         StorefrontAPI.MoneyV2,
@@ -600,48 +594,6 @@ type DiscountApplication_AutomaticDiscountApplication_Fragment = {
         'percentage'
       >);
 };
-
-type DiscountApplication_DiscountCodeApplication_Fragment = {
-  value:
-    | ({__typename: 'MoneyV2'} & Pick<
-        StorefrontAPI.MoneyV2,
-        'amount' | 'currencyCode'
-      >)
-    | ({__typename: 'PricingPercentageValue'} & Pick<
-        StorefrontAPI.PricingPercentageValue,
-        'percentage'
-      >);
-};
-
-type DiscountApplication_ManualDiscountApplication_Fragment = {
-  value:
-    | ({__typename: 'MoneyV2'} & Pick<
-        StorefrontAPI.MoneyV2,
-        'amount' | 'currencyCode'
-      >)
-    | ({__typename: 'PricingPercentageValue'} & Pick<
-        StorefrontAPI.PricingPercentageValue,
-        'percentage'
-      >);
-};
-
-type DiscountApplication_ScriptDiscountApplication_Fragment = {
-  value:
-    | ({__typename: 'MoneyV2'} & Pick<
-        StorefrontAPI.MoneyV2,
-        'amount' | 'currencyCode'
-      >)
-    | ({__typename: 'PricingPercentageValue'} & Pick<
-        StorefrontAPI.PricingPercentageValue,
-        'percentage'
-      >);
-};
-
-export type DiscountApplicationFragment =
-  | DiscountApplication_AutomaticDiscountApplication_Fragment
-  | DiscountApplication_DiscountCodeApplication_Fragment
-  | DiscountApplication_ManualDiscountApplication_Fragment
-  | DiscountApplication_ScriptDiscountApplication_Fragment;
 
 export type ImageFragment = Pick<
   StorefrontAPI.Image,
@@ -667,51 +619,17 @@ export type LineItemFullFragment = Pick<
 > & {
   discountAllocations: Array<{
     allocatedAmount: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
-    discountApplication:
-      | {
-          value:
-            | ({__typename: 'MoneyV2'} & Pick<
-                StorefrontAPI.MoneyV2,
-                'amount' | 'currencyCode'
-              >)
-            | ({__typename: 'PricingPercentageValue'} & Pick<
-                StorefrontAPI.PricingPercentageValue,
-                'percentage'
-              >);
-        }
-      | {
-          value:
-            | ({__typename: 'MoneyV2'} & Pick<
-                StorefrontAPI.MoneyV2,
-                'amount' | 'currencyCode'
-              >)
-            | ({__typename: 'PricingPercentageValue'} & Pick<
-                StorefrontAPI.PricingPercentageValue,
-                'percentage'
-              >);
-        }
-      | {
-          value:
-            | ({__typename: 'MoneyV2'} & Pick<
-                StorefrontAPI.MoneyV2,
-                'amount' | 'currencyCode'
-              >)
-            | ({__typename: 'PricingPercentageValue'} & Pick<
-                StorefrontAPI.PricingPercentageValue,
-                'percentage'
-              >);
-        }
-      | {
-          value:
-            | ({__typename: 'MoneyV2'} & Pick<
-                StorefrontAPI.MoneyV2,
-                'amount' | 'currencyCode'
-              >)
-            | ({__typename: 'PricingPercentageValue'} & Pick<
-                StorefrontAPI.PricingPercentageValue,
-                'percentage'
-              >);
-        };
+    discountApplication: {
+      value:
+        | ({__typename: 'MoneyV2'} & Pick<
+            StorefrontAPI.MoneyV2,
+            'amount' | 'currencyCode'
+          >)
+        | ({__typename: 'PricingPercentageValue'} & Pick<
+            StorefrontAPI.PricingPercentageValue,
+            'percentage'
+          >);
+    };
   }>;
   originalTotalPrice: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
   discountedTotalPrice: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
@@ -736,40 +654,59 @@ export type CustomerOrderQueryVariables = StorefrontAPI.Exact<{
 
 export type CustomerOrderQuery = {
   node?: StorefrontAPI.Maybe<
-    | (Pick<
-        StorefrontAPI.Order,
-        'id' | 'name' | 'orderNumber' | 'processedAt' | 'fulfillmentStatus'
-      > & {
-        totalTaxV2?: StorefrontAPI.Maybe<
-          Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-        >;
-        totalPriceV2: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
-        subtotalPriceV2?: StorefrontAPI.Maybe<
-          Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
-        >;
-        shippingAddress?: StorefrontAPI.Maybe<
-          Pick<
-            StorefrontAPI.MailingAddress,
-            | 'address1'
-            | 'address2'
-            | 'city'
-            | 'company'
-            | 'country'
-            | 'countryCodeV2'
-            | 'firstName'
-            | 'formatted'
-            | 'id'
-            | 'lastName'
-            | 'name'
-            | 'phone'
-            | 'province'
-            | 'provinceCode'
-            | 'zip'
-          >
-        >;
-        discountApplications: {
-          nodes: Array<
-            | {
+    Pick<
+      StorefrontAPI.Order,
+      'id' | 'name' | 'orderNumber' | 'processedAt' | 'fulfillmentStatus'
+    > & {
+      totalTaxV2?: StorefrontAPI.Maybe<
+        Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
+      >;
+      totalPriceV2: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+      subtotalPriceV2?: StorefrontAPI.Maybe<
+        Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>
+      >;
+      shippingAddress?: StorefrontAPI.Maybe<
+        Pick<
+          StorefrontAPI.MailingAddress,
+          | 'address1'
+          | 'address2'
+          | 'city'
+          | 'company'
+          | 'country'
+          | 'countryCodeV2'
+          | 'firstName'
+          | 'formatted'
+          | 'id'
+          | 'lastName'
+          | 'name'
+          | 'phone'
+          | 'province'
+          | 'provinceCode'
+          | 'zip'
+        >
+      >;
+      discountApplications: {
+        nodes: Array<{
+          value:
+            | ({__typename: 'MoneyV2'} & Pick<
+                StorefrontAPI.MoneyV2,
+                'amount' | 'currencyCode'
+              >)
+            | ({__typename: 'PricingPercentageValue'} & Pick<
+                StorefrontAPI.PricingPercentageValue,
+                'percentage'
+              >);
+        }>;
+      };
+      lineItems: {
+        nodes: Array<
+          Pick<StorefrontAPI.OrderLineItem, 'title' | 'quantity'> & {
+            discountAllocations: Array<{
+              allocatedAmount: Pick<
+                StorefrontAPI.MoneyV2,
+                'amount' | 'currencyCode'
+              >;
+              discountApplication: {
                 value:
                   | ({__typename: 'MoneyV2'} & Pick<
                       StorefrontAPI.MoneyV2,
@@ -779,121 +716,32 @@ export type CustomerOrderQuery = {
                       StorefrontAPI.PricingPercentageValue,
                       'percentage'
                     >);
-              }
-            | {
-                value:
-                  | ({__typename: 'MoneyV2'} & Pick<
-                      StorefrontAPI.MoneyV2,
-                      'amount' | 'currencyCode'
-                    >)
-                  | ({__typename: 'PricingPercentageValue'} & Pick<
-                      StorefrontAPI.PricingPercentageValue,
-                      'percentage'
-                    >);
-              }
-            | {
-                value:
-                  | ({__typename: 'MoneyV2'} & Pick<
-                      StorefrontAPI.MoneyV2,
-                      'amount' | 'currencyCode'
-                    >)
-                  | ({__typename: 'PricingPercentageValue'} & Pick<
-                      StorefrontAPI.PricingPercentageValue,
-                      'percentage'
-                    >);
-              }
-            | {
-                value:
-                  | ({__typename: 'MoneyV2'} & Pick<
-                      StorefrontAPI.MoneyV2,
-                      'amount' | 'currencyCode'
-                    >)
-                  | ({__typename: 'PricingPercentageValue'} & Pick<
-                      StorefrontAPI.PricingPercentageValue,
-                      'percentage'
-                    >);
-              }
-          >;
-        };
-        lineItems: {
-          nodes: Array<
-            Pick<StorefrontAPI.OrderLineItem, 'title' | 'quantity'> & {
-              discountAllocations: Array<{
-                allocatedAmount: Pick<
-                  StorefrontAPI.MoneyV2,
-                  'amount' | 'currencyCode'
+              };
+            }>;
+            originalTotalPrice: Pick<
+              StorefrontAPI.MoneyV2,
+              'amount' | 'currencyCode'
+            >;
+            discountedTotalPrice: Pick<
+              StorefrontAPI.MoneyV2,
+              'amount' | 'currencyCode'
+            >;
+            variant?: StorefrontAPI.Maybe<
+              Pick<StorefrontAPI.ProductVariant, 'id' | 'sku' | 'title'> & {
+                image?: StorefrontAPI.Maybe<
+                  Pick<
+                    StorefrontAPI.Image,
+                    'altText' | 'height' | 'id' | 'width'
+                  > & {src: StorefrontAPI.Image['url']}
                 >;
-                discountApplication:
-                  | {
-                      value:
-                        | ({__typename: 'MoneyV2'} & Pick<
-                            StorefrontAPI.MoneyV2,
-                            'amount' | 'currencyCode'
-                          >)
-                        | ({__typename: 'PricingPercentageValue'} & Pick<
-                            StorefrontAPI.PricingPercentageValue,
-                            'percentage'
-                          >);
-                    }
-                  | {
-                      value:
-                        | ({__typename: 'MoneyV2'} & Pick<
-                            StorefrontAPI.MoneyV2,
-                            'amount' | 'currencyCode'
-                          >)
-                        | ({__typename: 'PricingPercentageValue'} & Pick<
-                            StorefrontAPI.PricingPercentageValue,
-                            'percentage'
-                          >);
-                    }
-                  | {
-                      value:
-                        | ({__typename: 'MoneyV2'} & Pick<
-                            StorefrontAPI.MoneyV2,
-                            'amount' | 'currencyCode'
-                          >)
-                        | ({__typename: 'PricingPercentageValue'} & Pick<
-                            StorefrontAPI.PricingPercentageValue,
-                            'percentage'
-                          >);
-                    }
-                  | {
-                      value:
-                        | ({__typename: 'MoneyV2'} & Pick<
-                            StorefrontAPI.MoneyV2,
-                            'amount' | 'currencyCode'
-                          >)
-                        | ({__typename: 'PricingPercentageValue'} & Pick<
-                            StorefrontAPI.PricingPercentageValue,
-                            'percentage'
-                          >);
-                    };
-              }>;
-              originalTotalPrice: Pick<
-                StorefrontAPI.MoneyV2,
-                'amount' | 'currencyCode'
-              >;
-              discountedTotalPrice: Pick<
-                StorefrontAPI.MoneyV2,
-                'amount' | 'currencyCode'
-              >;
-              variant?: StorefrontAPI.Maybe<
-                Pick<StorefrontAPI.ProductVariant, 'id' | 'sku' | 'title'> & {
-                  image?: StorefrontAPI.Maybe<
-                    Pick<
-                      StorefrontAPI.Image,
-                      'altText' | 'height' | 'id' | 'width'
-                    > & {src: StorefrontAPI.Image['url']}
-                  >;
-                  price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
-                  product: Pick<StorefrontAPI.Product, 'handle'>;
-                }
-              >;
-            }
-          >;
-        };
-      })
-    | {}
+                price: Pick<StorefrontAPI.MoneyV2, 'amount' | 'currencyCode'>;
+                product: Pick<StorefrontAPI.Product, 'handle'>;
+              }
+            >;
+          }
+        >;
+      };
+    }
   >;
 };
 
@@ -1155,13 +1003,15 @@ export type CollectionDetailsQueryVariables = StorefrontAPI.Exact<{
   handle: StorefrontAPI.Scalars['String'];
   country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
-  pageBy: StorefrontAPI.Scalars['Int'];
-  cursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
   filters?: StorefrontAPI.InputMaybe<
     Array<StorefrontAPI.ProductFilter> | StorefrontAPI.ProductFilter
   >;
   sortKey: StorefrontAPI.ProductCollectionSortKeys;
   reverse?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Boolean']>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  last?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+  endCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
 }>;
 
 export type CollectionDetailsQuery = {
@@ -1215,7 +1065,10 @@ export type CollectionDetailsQuery = {
             };
           }
         >;
-        pageInfo: Pick<StorefrontAPI.PageInfo, 'hasNextPage' | 'endCursor'>;
+        pageInfo: Pick<
+          StorefrontAPI.PageInfo,
+          'hasPreviousPage' | 'hasNextPage' | 'endCursor'
+        >;
       };
     }
   >;
@@ -1816,7 +1669,7 @@ interface GeneratedQueryTypes {
     return: ApiAllProductsQuery;
     variables: ApiAllProductsQueryVariables;
   };
-  '#graphql\n  query CollectionDetails(\n    $handle: String!\n    $country: CountryCode\n    $language: LanguageCode\n    $pageBy: Int!\n    $cursor: String\n    $filters: [ProductFilter!]\n    $sortKey: ProductCollectionSortKeys!\n    $reverse: Boolean\n  ) @inContext(country: $country, language: $language) {\n    collection(handle: $handle) {\n      id\n      handle\n      title\n      description\n      seo {\n        description\n        title\n      }\n      image {\n        id\n        url\n        width\n        height\n        altText\n      }\n      products(\n        first: $pageBy,\n        after: $cursor,\n        filters: $filters,\n        sortKey: $sortKey,\n        reverse: $reverse\n      ) {\n        filters {\n          id\n          label\n          type\n          values {\n            id\n            label\n            count\n            input\n          }\n        }\n        nodes {\n          ...ProductCard\n        }\n        pageInfo {\n          hasNextPage\n          endCursor\n        }\n      }\n    }\n    collections(first: 100) {\n      edges {\n        node {\n          title\n          handle\n        }\n      }\n    }\n  }\n  #graphql\n  fragment ProductCard on Product {\n    id\n    title\n    publishedAt\n    handle\n    vendor\n    variants(first: 1) {\n      nodes {\n        id\n        availableForSale\n        image {\n          url\n          altText\n          width\n          height\n        }\n        price {\n          amount\n          currencyCode\n        }\n        compareAtPrice {\n          amount\n          currencyCode\n        }\n        selectedOptions {\n          name\n          value\n        }\n        product {\n          handle\n          title\n        }\n      }\n    }\n  }\n\n': {
+  '#graphql\n  query CollectionDetails(\n    $handle: String!\n    $country: CountryCode\n    $language: LanguageCode\n    $filters: [ProductFilter!]\n    $sortKey: ProductCollectionSortKeys!\n    $reverse: Boolean\n    $first: Int\n    $last: Int\n    $startCursor: String\n    $endCursor: String \n  ) @inContext(country: $country, language: $language) {\n    collection(handle: $handle) {\n      id\n      handle\n      title\n      description\n      seo {\n        description\n        title\n      }\n      image {\n        id\n        url\n        width\n        height\n        altText\n      }\n      products(\n        first: $first,\n        last: $last,\n        before: $startCursor,\n        after: $endCursor, \n        filters: $filters,\n        sortKey: $sortKey,\n        reverse: $reverse\n      ) {\n        filters {\n          id\n          label\n          type\n          values {\n            id\n            label\n            count\n            input\n          }\n        }\n        nodes {\n          ...ProductCard\n        }\n        pageInfo {\n          hasPreviousPage\n          hasNextPage\n          hasNextPage\n          endCursor\n        }\n      }\n    }\n    collections(first: 100) {\n      edges {\n        node {\n          title\n          handle\n        }\n      }\n    }\n  }\n  #graphql\n  fragment ProductCard on Product {\n    id\n    title\n    publishedAt\n    handle\n    vendor\n    variants(first: 1) {\n      nodes {\n        id\n        availableForSale\n        image {\n          url\n          altText\n          width\n          height\n        }\n        price {\n          amount\n          currencyCode\n        }\n        compareAtPrice {\n          amount\n          currencyCode\n        }\n        selectedOptions {\n          name\n          value\n        }\n        product {\n          handle\n          title\n        }\n      }\n    }\n  }\n\n': {
     return: CollectionDetailsQuery;
     variables: CollectionDetailsQueryVariables;
   };

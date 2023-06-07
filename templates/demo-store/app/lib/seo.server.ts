@@ -394,7 +394,7 @@ function page({
 }): SeoConfig<WebPage> {
   return {
     description: truncate(page?.seo?.description || ''),
-    title: page?.seo?.title,
+    title: page?.seo?.title ?? page?.title,
     titleTemplate: '%s | Page',
     url,
     jsonLd: {

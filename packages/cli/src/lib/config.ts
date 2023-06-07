@@ -31,6 +31,7 @@ export function getProjectPaths(appPath?: string, entry?: string) {
 
 export async function getRemixConfig(
   root: string,
+  skipOxygenChecks = false,
   mode = process.env.NODE_ENV as ServerMode,
 ) {
   const {readConfig} = await import('@remix-run/dev/dist/config.js');
@@ -40,86 +41,92 @@ export async function getRemixConfig(
     serverDependenciesToBundle?: string;
   };
 
-  if (!config.serverEntryPoint) {
-    throwConfigError(
-      'Could not find a server entry point.',
-      'Please add a server option to your remix.config.js pointing to an Oxygen worker entry file.',
-    );
-  } else {
-    assertEntryFileExists(config.rootDirectory, config.serverEntryPoint);
-  }
+  if (!skipOxygenChecks) {
+    if (!config.serverEntryPoint) {
+      throwConfigError(
+        'Could not find a server entry point.',
+        'Please add a server option to your remix.config.js pointing to an Oxygen worker entry file.',
+      );
+    } else {
+      assertEntryFileExists(config.rootDirectory, config.serverEntryPoint);
+    }
 
-  if (config.serverPlatform !== 'neutral') {
-    throwConfigError(
-      'The serverPlatform in remix.config.js must be "neutral".',
-    );
-  }
+    if (config.serverPlatform !== 'neutral') {
+      throwConfigError(
+        'The serverPlatform in remix.config.js must be "neutral".',
+      );
+    }
 
-  if (config.serverModuleFormat !== 'esm') {
-    throwConfigError(
-      'The serverModuleFormat in remix.config.js must be "esm".',
-    );
-  }
+    if (config.serverModuleFormat !== 'esm') {
+      throwConfigError(
+        'The serverModuleFormat in remix.config.js must be "esm".',
+      );
+    }
 
-  if (config.serverDependenciesToBundle !== 'all') {
-    throwConfigError(
-      'The serverDependenciesToBundle in remix.config.js must be "all".',
-    );
-  }
+    if (config.serverDependenciesToBundle !== 'all') {
+      throwConfigError(
+        'The serverDependenciesToBundle in remix.config.js must be "all".',
+      );
+    }
 
-  if (!config.serverConditions?.includes('worker')) {
-    throwConfigError(
-      'The serverConditions in remix.config.js must include "worker".',
-    );
-  }
+    if (!config.serverConditions?.includes('worker')) {
+      throwConfigError(
+        'The serverConditions in remix.config.js must include "worker".',
+      );
+    }
 
-  if (
-    process.env.NODE_ENV === 'development' &&
-    !config.serverConditions?.includes('development')
-  ) {
-    outputWarn(
-      'Add `process.env.NODE_ENV` value to serverConditions in remix.config.js to enable debugging features in development.',
-    );
-  }
+    if (
+      process.env.NODE_ENV === 'development' &&
+      !config.serverConditions?.includes('development')
+    ) {
+      outputWarn(
+        'Add `process.env.NODE_ENV` value to serverConditions in remix.config.js to enable debugging features in development.',
+      );
+    }
 
-  if (
-    !config.serverMainFields ||
-    !oxygenServerMainFields.every((v, i) => config.serverMainFields?.[i] === v)
-  ) {
-    throwConfigError(
-      `The serverMainFields in remix.config.js must be ${JSON.stringify(
-        oxygenServerMainFields,
-      )}.`,
-    );
-  }
+    if (
+      !config.serverMainFields ||
+      !oxygenServerMainFields.every(
+        (v, i) => config.serverMainFields?.[i] === v,
+      )
+    ) {
+      throwConfigError(
+        `The serverMainFields in remix.config.js must be ${JSON.stringify(
+          oxygenServerMainFields,
+        )}.`,
+      );
+    }
 
-  const cdnUrl = process.env.HYDROGEN_ASSET_BASE_URL;
-  if (cdnUrl && !config.publicPath.startsWith(cdnUrl)) {
-    throwConfigError(
-      'The publicPath in remix.config.js must be prepended with the value of `process.env.HYDROGEN_ASSET_BASE_URL`.',
-    );
-  }
+    const cdnUrl = process.env.HYDROGEN_ASSET_BASE_URL;
+    if (cdnUrl && !config.publicPath.startsWith(cdnUrl)) {
+      throwConfigError(
+        'The publicPath in remix.config.js must be prepended with the value of `process.env.HYDROGEN_ASSET_BASE_URL`.',
+      );
+    }
 
-  const expectedServerBuildPath = path.join(
-    BUILD_DIR,
-    WORKER_SUBDIR,
-    'index.js',
-  );
-  if (config.serverBuildPath !== path.resolve(root, expectedServerBuildPath)) {
-    throwConfigError(
-      `The serverBuildPath in remix.config.js must be "${expectedServerBuildPath}".`,
+    const expectedServerBuildPath = path.join(
+      BUILD_DIR,
+      WORKER_SUBDIR,
+      'index.js',
     );
-  }
+    if (
+      config.serverBuildPath !== path.resolve(root, expectedServerBuildPath)
+    ) {
+      throwConfigError(
+        `The serverBuildPath in remix.config.js must be "${expectedServerBuildPath}".`,
+      );
+    }
 
-  const expectedAssetsBuildDirectory = path.join(BUILD_DIR, CLIENT_SUBDIR);
-  if (
-    !config.assetsBuildDirectory.startsWith(
-      path.resolve(root, expectedAssetsBuildDirectory),
-    )
-  ) {
-    throwConfigError(
-      `The assetsBuildDirectory in remix.config.js must be in "${expectedAssetsBuildDirectory}".`,
-    );
+    const expectedAssetsBuildDirectory = path.join(BUILD_DIR, CLIENT_SUBDIR);
+    if (
+      !config.assetsBuildDirectory.startsWith(
+        path.resolve(root, expectedAssetsBuildDirectory),
+      )
+    ) {
+      throwConfigError(
+        `The assetsBuildDirectory in remix.config.js must be in "${expectedAssetsBuildDirectory}".`,
+      );
+    }
   }
 
   if (process.env.LOCAL_DEV) {
