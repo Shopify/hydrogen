@@ -119,10 +119,12 @@ describe('createCartHandler', () => {
     const result7 = await cart.updateNote('');
     expect(result7.errors?.[0]).toContain(cartMutateFragment);
 
-    const result8 = await cart.updateSelectedDeliveryOption({
-      deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
-      deliveryOptionHandle: 'Postal Service',
-    });
+    const result8 = await cart.updateSelectedDeliveryOption([
+      {
+        deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
+        deliveryOptionHandle: 'Postal Service',
+      },
+    ]);
     expect(result8.errors?.[0]).toContain(cartMutateFragment);
 
     const result9 = await cart.updateAttributes([]);
@@ -295,10 +297,12 @@ describe('createCartHandler', () => {
   it('function updateSelectedDeliveryOption has a working default implementation', async () => {
     const cart = getCartHandler({cartId: 'c1-123'});
 
-    const result = await cart.updateSelectedDeliveryOption({
-      deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
-      deliveryOptionHandle: 'Postal Service',
-    });
+    const result = await cart.updateSelectedDeliveryOption([
+      {
+        deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
+        deliveryOptionHandle: 'Postal Service',
+      },
+    ]);
 
     expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-123');
   });
@@ -307,10 +311,12 @@ describe('createCartHandler', () => {
     const cart = getCartHandler({cartId: 'c1-123'});
 
     const result = await cart.updateSelectedDeliveryOption(
-      {
-        deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
-        deliveryOptionHandle: 'Postal Service',
-      },
+      [
+        {
+          deliveryGroupId: 'gid://shopify/DeliveryGroup/123',
+          deliveryOptionHandle: 'Postal Service',
+        },
+      ],
       {cartId: 'gid://shopify/Cart/c1-456'},
     );
 
