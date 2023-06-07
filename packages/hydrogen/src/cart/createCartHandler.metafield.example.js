@@ -41,7 +41,7 @@ const cart = createCartHandler({
 });
 
 const CART_QUERY_FRAGMENT = `#graphql
-  fragment CartFragment on Cart {
+  fragment CartApiQuery on Cart {
     id
     metafields(
       identifiers: [{

@@ -14,14 +14,14 @@ const cart = createCartHandler({
 });
 
 // cartQueryFragment requirements:
-// - Must be named `CartFragment`
+// - Must be named `CartApiQuery`
 // - Only have access to the following query variables:
 //   - $cartId: ID!
 //   - $country: CountryCode
 //   - $language: LanguageCode
 //   - $numCartLines: Int
 const CART_QUERY_FRAGMENT = `#graphql
-  fragment CartFragment on Cart {
+  fragment CartApiQuery on Cart {
     id
     totalQuantity
     checkoutUrl
@@ -30,13 +30,13 @@ const CART_QUERY_FRAGMENT = `#graphql
 `;
 
 // cartMutateFragment requirements:
-// - Must be named `CartFragment`
+// - Must be named `CartApiMutation`
 // - Only have access to the following query variables:
 //   - $cartId: ID!
 //   - $country: CountryCode
 //   - $language: LanguageCode
 const CART_MUTATE_FRAGMENT = `#graphql
-  fragment CartFragment on Cart {
+  fragment CartApiMutation on Cart {
     id
     totalQuantity
     checkoutUrl
