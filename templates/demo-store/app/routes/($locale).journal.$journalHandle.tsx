@@ -5,7 +5,7 @@ import invariant from 'tiny-invariant';
 
 import {PageHeader, Section} from '~/components';
 import {seoPayload} from '~/lib/seo.server';
-import {routeHeaders, CACHE_LONG} from '~/data/cache';
+import {routeHeaders} from '~/data/cache';
 
 import styles from '../styles/custom-font.css';
 
@@ -44,14 +44,7 @@ export async function loader({request, params, context}: LoaderArgs) {
 
   const seo = seoPayload.article({article, url: request.url});
 
-  return json(
-    {article, formattedDate, seo},
-    {
-      headers: {
-        'Cache-Control': CACHE_LONG,
-      },
-    },
-  );
+  return json({article, formattedDate, seo});
 }
 
 export default function Article() {
