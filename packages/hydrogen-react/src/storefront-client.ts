@@ -53,6 +53,7 @@ export function createStorefrontClient(
     );
   }
 
+  const isMockShop = (domain: string): boolean => domain.includes('mock.shop');
   const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (
     overrideProps,
   ) => {
@@ -66,12 +67,18 @@ export function createStorefrontClient(
       const domain = getShopifyDomain(overrideProps);
       const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');
 
+      if (isMockShop(domain)) return apiUrl;
+
       return `${apiUrl}/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
       }/graphql.json`;
     },
     getPrivateTokenHeaders(overrideProps): Record<string, string> {
-      if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {
+      if (
+        !privateStorefrontToken &&
+        !overrideProps?.privateStorefrontToken &&
+        !isMockShop(storeDomain)
+      ) {
         throw new Error(
           `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`,
         );
@@ -102,7 +109,11 @@ export function createStorefrontClient(
       };
     },
     getPublicTokenHeaders(overrideProps): Record<string, string> {
-      if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {
+      if (
+        !publicStorefrontToken &&
+        !overrideProps?.publicStorefrontToken &&
+        !isMockShop(storeDomain)
+      ) {
         throw new Error(
           `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`,
         );

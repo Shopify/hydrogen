@@ -115,6 +115,14 @@ describe(`createStorefrontClient`, () => {
         `https://newdomain.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
       );
     });
+
+    it(`generates a URL correctly for mock.shop`, () => {
+      const client = createStorefrontClient(
+        generateConfig({storeDomain: 'mock.shop'}),
+      );
+
+      expect(client.getStorefrontApiUrl()).toBe(`https://mock.shop/api`);
+    });
   });
 
   describe(`getPrivateTokenHeaders`, () => {
