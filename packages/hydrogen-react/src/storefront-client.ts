@@ -54,22 +54,20 @@ export function createStorefrontClient(
   }
 
   const isMockShop = (domain: string): boolean => domain.includes('mock.shop');
-  const prependProtocol = (domain: string): string =>
-    domain.includes('://') ? domain : `https://${domain}`;
+  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (
+    overrideProps,
+  ) => {
+    const domain = overrideProps?.storeDomain ?? storeDomain;
+    return domain.includes('://') ? domain : `https://${domain}`;
+  };
 
   return {
-    getShopifyDomain(overrideProps): string {
-      return prependProtocol(overrideProps?.storeDomain ?? storeDomain);
-    },
+    getShopifyDomain,
     getStorefrontApiUrl(overrideProps): string {
-      const finalDomainUrl = prependProtocol(
-        overrideProps?.storeDomain ?? storeDomain,
-      );
+      const domain = getShopifyDomain(overrideProps);
+      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');
 
-      const apiUrl =
-        finalDomainUrl + (finalDomainUrl.endsWith('/') ? 'api' : '/api');
-
-      if (isMockShop(finalDomainUrl)) return apiUrl;
+      if (isMockShop(domain)) return apiUrl;
 
       return `${apiUrl}/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
