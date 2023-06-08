@@ -66,12 +66,14 @@ export async function runBuild({
 
   outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
-  const [remixConfig, {build}, {logThrown}] = await Promise.all([
-    getRemixConfig(root),
-    import('@remix-run/dev/dist/compiler/build.js'),
-    import('@remix-run/dev/dist/compiler/utils/log.js'),
-    rmdir(buildPath, {force: true}),
-  ]);
+  const [remixConfig, {build}, {logThrown}, {createFileWatchCache}] =
+    await Promise.all([
+      getRemixConfig(root),
+      import('@remix-run/dev/dist/compiler/build.js'),
+      import('@remix-run/dev/dist/compiler/utils/log.js'),
+      import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+      rmdir(buildPath, {force: true}),
+    ]);
 
   await Promise.all([
     copyPublicFiles(publicPath, buildPathClient),
@@ -82,6 +84,7 @@ export async function runBuild({
         onWarning: warnOnce,
         sourcemap,
       },
+      fileWatchCache: createFileWatchCache(),
     }).catch((thrown) => {
       logThrown(thrown);
       process.exit(1);

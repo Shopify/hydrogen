@@ -147,7 +147,10 @@ async function runDev({
   }
 
   let isInitialBuild = true;
-  const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
+  const [{watch}, {createFileWatchCache}] = await Promise.all([
+    import('@remix-run/dev/dist/compiler/watch.js'),
+    import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+  ]);
 
   await watch(
     {
@@ -157,6 +160,7 @@ async function runDev({
         onWarning: warnOnce,
         sourcemap,
       },
+      fileWatchCache: createFileWatchCache(),
     },
     {
       reloadConfig,
