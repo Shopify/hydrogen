@@ -13,6 +13,7 @@ import {
   renderConfirmationPrompt,
   renderTasks,
   renderFatalError,
+  renderWarning,
 } from '@shopify/cli-kit/node/ui';
 import {Flags} from '@oclif/core';
 import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
@@ -58,7 +59,7 @@ import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
 import {colors} from '../../lib/colors.js';
 import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
-import {ALIAS_NAME} from '../../lib/shell.js';
+import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 const LANGUAGES = {
@@ -236,7 +237,7 @@ async function setupRemoteTemplate(
 
   await renderTasks(tasks);
 
-  renderProjectReady(project, setupSummary);
+  await renderProjectReady(project, setupSummary);
 
   if (isDemoStoreTemplate) {
     renderInfo({
@@ -430,7 +431,7 @@ async function setupLocalStarterTemplate(
 
   await renderTasks(tasks);
 
-  renderProjectReady(project, setupSummary);
+  await renderProjectReady(project, setupSummary);
 }
 
 const i18nStrategies = {
@@ -451,12 +452,14 @@ async function handleI18n() {
 
   return {
     i18nStrategy,
-    setupI18n: async (rootDirectory: string, language: Language) =>
-      i18nStrategy &&
-      setupI18nStrategy(i18nStrategy, {
-        rootDirectory,
-        serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
-      }),
+    setupI18n: async (rootDirectory: string, language: Language) => {
+      if (i18nStrategy) {
+        await setupI18nStrategy(i18nStrategy, {
+          rootDirectory,
+          serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
+        });
+      }
+    },
   };
 }
 
@@ -718,13 +721,14 @@ async function handleDependencies(
     packageManager: actualPackageManager,
     shouldInstallDeps,
     installDeps: shouldInstallDeps
-      ? () =>
-          installNodeModules({
+      ? async () => {
+          await installNodeModules({
             directory: projectDir,
             packageManager: actualPackageManager,
             args: [],
             signal: controller.signal,
-          })
+          });
+        }
       : () => {},
   };
 }
@@ -758,7 +762,7 @@ type SetupSummary = {
 /**
  * Shows a summary success message with next steps.
  */
-function renderProjectReady(
+async function renderProjectReady(
   project: NonNullable<Awaited<ReturnType<typeof handleProjectLocation>>>,
   {
     language,
@@ -768,8 +772,12 @@ function renderProjectReady(
     hasCreatedShortcut,
     routes,
     i18n,
+    depsError,
+    i18nError,
+    routesError,
   }: SetupSummary,
 ) {
+  const hasErrors = Boolean(depsError || i18nError || routesError);
   const bodyLines: [string, string][] = [
     ['Store account', project.storefrontInfo?.title ?? '-'],
     ['Language', LANGUAGES[language]],
@@ -779,11 +787,11 @@ function renderProjectReady(
     bodyLines.push(['Styling library', CSS_STRATEGY_NAME_MAP[cssStrategy]]);
   }
 
-  if (i18n) {
+  if (!i18nError && i18n) {
     bodyLines.push(['i18n strategy', I18N_STRATEGY_NAME_MAP[i18n]]);
   }
 
-  if (routes?.length) {
+  if (!routesError && routes?.length) {
     bodyLines.push([
       'Routes',
       `Scaffolded ${routes.length} route${routes.length > 1 ? 's' : ''}`,
@@ -793,8 +801,16 @@ function renderProjectReady(
   const padMin =
     2 + bodyLines.reduce((max, [label]) => Math.max(max, label.length), 0);
 
-  renderSuccess({
-    headline: `Storefront setup complete!`,
+  const cliCommand = hasCreatedShortcut
+    ? ALIAS_NAME
+    : await getCliCommand(project.directory, packageManager);
+
+  const render = hasErrors ? renderWarning : renderSuccess;
+
+  render({
+    headline:
+      `Storefront setup complete` +
+      (hasErrors ? ' with errors (see warnings below).' : '!'),
 
     body: bodyLines
       .map(
@@ -808,6 +824,29 @@ function renderProjectReady(
     // Use `customSections` instead of `nextSteps` and `references`
     // here to enforce a newline between title and items.
     customSections: [
+      hasErrors && {
+        title: 'Warnings\n',
+        body: [
+          {
+            list: {
+              items: [
+                depsError && [
+                  'Failed to install dependencies:',
+                  {subdued: depsError.message},
+                ],
+                i18nError && [
+                  'Failed to scaffold i18n:',
+                  {subdued: i18nError.message},
+                ],
+                routesError && [
+                  'Failed to scaffold routes:',
+                  {subdued: routesError.message},
+                ],
+              ].filter((step): step is string[] => Boolean(step)),
+            },
+          },
+        ],
+      },
       {
         title: 'Next steps\n',
         body: [
@@ -820,23 +859,23 @@ function renderProjectReady(
                   'to enter your app directory.',
                 ],
 
-                depsInstalled
-                  ? undefined
-                  : [
-                      'Run',
-                      {command: `${packageManager} install`},
-                      'to install the dependencies.',
-                    ],
+                !depsInstalled && [
+                  'Run',
+                  {command: `${packageManager} install`},
+                  'to install the dependencies.',
+                ],
 
-                hasCreatedShortcut
-                  ? undefined
-                  : [
-                      'Optionally, run',
-                      {command: 'npx shopify hydrogen shortcut'},
-                      'to create a global',
-                      {command: ALIAS_NAME},
-                      'alias for the Shopify Hydrogen CLI.',
-                    ],
+                i18nError && [
+                  'Run',
+                  {command: `${cliCommand} setup i18n-unstable`},
+                  'to scaffold internationalization.',
+                ],
+
+                hasCreatedShortcut && [
+                  'Restart your terminal session to make the new',
+                  {command: ALIAS_NAME},
+                  'alias available.',
+                ],
 
                 [
                   'Run',
@@ -879,10 +918,8 @@ function renderProjectReady(
           },
         },
       },
-    ],
+    ].filter((step): step is {title: string; body: any} => Boolean(step)),
   });
-
-  const cliCommand = hasCreatedShortcut ? ALIAS_NAME : 'npx shopify hydrogen';
 
   renderInfo({
     headline: 'Helpful commands',
@@ -890,9 +927,20 @@ function renderProjectReady(
       list: {
         items: [
           // TODO: show `h2 deploy` here when it's ready
+
+          !hasCreatedShortcut && [
+            'Run',
+            {command: `${cliCommand} shortcut`},
+            'to create a global',
+            {command: ALIAS_NAME},
+            'alias for the Shopify Hydrogen CLI.',
+          ],
           [
             'Run',
             {command: `${cliCommand} generate route`},
+            ...(hasCreatedShortcut
+              ? ['or', {command: `${cliCommand} g r`}]
+              : []),
             'to scaffold standard Shopify routes.',
           ],
           [
@@ -900,10 +948,9 @@ function renderProjectReady(
             {command: `${cliCommand} --help`},
             'to learn how to see the full list of commands available for building Hydrogen storefronts.',
           ],
-        ],
+        ].filter((step): step is string[] => Boolean(step)),
       },
     },
-    // .join('\n'),
   });
 }
 

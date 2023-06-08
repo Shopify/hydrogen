@@ -132,13 +132,18 @@ async function hasCliAlias() {
   }
 }
 
-export async function getCliCommand() {
-  if (await hasCliAlias()) {
+export async function getCliCommand(
+  directory = process.cwd(),
+  forcePkgManager?: 'npm' | 'pnpm' | 'yarn',
+) {
+  if (!forcePkgManager && (await hasCliAlias())) {
     return ALIAS_NAME;
   }
 
   let cli: 'npx' | 'pnpm' | 'yarn' = 'npx';
-  const pkgManager = await getPackageManager(process.cwd()).catch(() => null);
+  const pkgManager =
+    forcePkgManager ?? (await getPackageManager(directory).catch(() => null));
+
   if (pkgManager === 'pnpm' || pkgManager === 'yarn') cli = pkgManager;
 
   return `${cli} shopify hydrogen` as const;
