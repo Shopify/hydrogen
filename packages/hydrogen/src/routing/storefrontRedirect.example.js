@@ -12,8 +12,7 @@ export default {
       waitUntil: (p) => executionContext.waitUntil(p),
       privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
       publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION,
-      storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,
+      storeDomain: env.PUBLIC_STORE_DOMAIN,
       storefrontHeaders: getStorefrontHeaders(request),
     });
 

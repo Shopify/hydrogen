@@ -1,18 +1,14 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderFatalError, renderSuccess} from '@shopify/cli-kit/node/ui';
 import {
-  hasAlias,
-  homeFileExists,
   isGitBash,
   isWindows,
+  ALIAS_NAME,
   shellRunScript,
-  shellWriteFile,
-  supportsShell,
+  shellWriteAlias,
   type UnixShell,
   type WindowsShell,
 } from '../../lib/shell.js';
-
-export const ALIAS_NAME = 'h2';
 
 export default class Shortcut extends Command {
   static description = `Creates a global \`${ALIAS_NAME}\` shortcut for the Hydrogen CLI`;
@@ -64,27 +60,15 @@ end
 async function createShortcutsForUnix() {
   const shells: UnixShell[] = [];
 
-  if (
-    supportsShell('zsh') &&
-    (hasAlias(ALIAS_NAME, '~/.zshrc') ||
-      shellWriteFile('~/.zshrc', BASH_ZSH_COMMAND, true))
-  ) {
+  if (await shellWriteAlias('zsh', ALIAS_NAME, BASH_ZSH_COMMAND)) {
     shells.push('zsh');
   }
 
-  if (
-    supportsShell('bash') &&
-    (hasAlias(ALIAS_NAME, '~/.bashrc') ||
-      shellWriteFile('~/.bashrc', BASH_ZSH_COMMAND, true))
-  ) {
+  if (await shellWriteAlias('bash', ALIAS_NAME, BASH_ZSH_COMMAND)) {
     shells.push('bash');
   }
 
-  if (
-    supportsShell('fish') &&
-    (await homeFileExists('~/.config/fish/functions')) &&
-    shellWriteFile(`~/.config/fish/functions/${ALIAS_NAME}.fish`, FISH_FUNCTION)
-  ) {
+  if (await shellWriteAlias('fish', ALIAS_NAME, FISH_FUNCTION)) {
     shells.push('fish');
   }
 
@@ -110,13 +94,13 @@ async function createShortcutsForWindows() {
   const shells: WindowsShell[] = [];
 
   // Legacy PowerShell
-  if (shellRunScript(PS_APPEND_PROFILE_COMMAND, 'powershell.exe')) {
+  if (await shellRunScript(PS_APPEND_PROFILE_COMMAND, 'powershell.exe')) {
     shells.push('PowerShell');
   }
 
   // PowerShell 7+ has a different executable name and installation path:
   // https://learn.microsoft.com/en-us/powershell/scripting/whats-new/migrating-from-windows-powershell-51-to-powershell-7?view=powershell-7.3#separate-installation-path-and-executable-name
-  if (shellRunScript(PS_APPEND_PROFILE_COMMAND, 'pwsh.exe')) {
+  if (await shellRunScript(PS_APPEND_PROFILE_COMMAND, 'pwsh.exe')) {
     shells.push('PowerShell 7+');
   }
 

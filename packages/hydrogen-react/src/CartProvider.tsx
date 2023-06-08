@@ -30,6 +30,7 @@ import {useCartAPIStateMachine} from './useCartAPIStateMachine.js';
 import {CART_ID_STORAGE_KEY} from './cart-constants.js';
 import {PartialDeep} from 'type-fest';
 import {defaultCartFragment} from './cart-queries.js';
+import {useShop} from './ShopifyProvider.js';
 
 export const CartContext = createContext<CartWithActions | null>(null);
 
@@ -128,8 +129,21 @@ export function CartProvider({
   data: cart,
   cartFragment = defaultCartFragment,
   customerAccessToken,
-  countryCode = 'US',
+  countryCode,
 }: CartProviderProps): JSX.Element {
+  const shop = useShop();
+
+  if (!shop)
+    throw new Error(
+      '<CartProvider> needs to be a descendant of <ShopifyProvider>',
+    );
+
+  countryCode = (
+    (countryCode as string) ??
+    shop.countryIsoCode ??
+    'US'
+  ).toUpperCase() as CountryCode;
+
   if (countryCode) countryCode = countryCode.toUpperCase() as CountryCode;
   const [prevCountryCode, setPrevCountryCode] = useState(countryCode);
   const [prevCustomerAccessToken, setPrevCustomerAccessToken] =

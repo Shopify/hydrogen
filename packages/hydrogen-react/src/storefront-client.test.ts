@@ -64,6 +64,14 @@ describe(`createStorefrontClient`, () => {
         }),
       ).toBe(`https://newdomain.myshopify.com`);
     });
+
+    it(`automatically adds protocol if missing`, () => {
+      const client = createStorefrontClient(
+        generateConfig({storeDomain: 'newdomain.myshopify.com'}),
+      );
+
+      expect(client.getShopifyDomain()).toBe(`https://newdomain.myshopify.com`);
+    });
   });
 
   describe(`getStorefrontApiUrl`, () => {
@@ -96,6 +104,24 @@ describe(`createStorefrontClient`, () => {
       expect(client.getStorefrontApiUrl()).toBe(
         `https://testing.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
       );
+    });
+
+    it(`automatically adds protocol if missing`, () => {
+      const client = createStorefrontClient(
+        generateConfig({storeDomain: 'newdomain.myshopify.com'}),
+      );
+
+      expect(client.getStorefrontApiUrl()).toBe(
+        `https://newdomain.myshopify.com/api/${SFAPI_VERSION}/graphql.json`,
+      );
+    });
+
+    it(`generates a URL correctly for mock.shop`, () => {
+      const client = createStorefrontClient(
+        generateConfig({storeDomain: 'mock.shop'}),
+      );
+
+      expect(client.getStorefrontApiUrl()).toBe(`https://mock.shop/api`);
     });
   });
 
@@ -178,7 +204,6 @@ function generateConfig(
   props?: Partial<StorefrontClientProps>,
 ): StorefrontClientProps {
   return {
-    storefrontApiVersion: SFAPI_VERSION,
     storeDomain: 'https://testing.myshopify.com',
     ...props,
   };

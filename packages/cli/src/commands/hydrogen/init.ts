@@ -1,4 +1,6 @@
 import Command from '@shopify/cli-kit/node/base-command';
+import {readdir} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
 import {
   installNodeModules,
   packageManagerUsedForCreating,
@@ -30,8 +32,6 @@ import {
 import {transpileProject} from '../../lib/transpile-ts.js';
 import {getLatestTemplates} from '../../lib/template-downloader.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
-import {readdir} from 'fs/promises';
-import {fileURLToPath} from 'url';
 import {getStarterDir} from '../../lib/build.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {setShop, setStorefront} from '../../lib/shopify-config.js';
@@ -41,12 +41,14 @@ import {
   setupCssStrategy,
   type CssStrategy,
 } from './../../lib/setups/css/index.js';
-import {ALIAS_NAME, createPlatformShortcut} from './shortcut.js';
+import {createPlatformShortcut} from './shortcut.js';
 import {CSS_STRATEGY_NAME_MAP} from './setup/css-unstable.js';
 import {I18nStrategy, setupI18nStrategy} from '../../lib/setups/i18n/index.js';
 import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
 import {colors} from '../../lib/colors.js';
 import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
+import {supressNodeExperimentalWarnings} from '../../lib/process.js';
+import {ALIAS_NAME} from '../../lib/shell.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 const LANGUAGES = {
@@ -771,19 +773,4 @@ async function projectExists(projectDir: string) {
     (await isDirectory(projectDir)) &&
     (await readdir(projectDir)).length > 0
   );
-}
-
-/**
- * Prevents Node.js from printing warnings about experimental features (VM Modules).
- */
-function supressNodeExperimentalWarnings() {
-  const warningListener = process.listeners('warning')[0]!;
-  if (warningListener) {
-    process.removeAllListeners('warning');
-    process.prependListener('warning', (warning) => {
-      if (warning.name != 'ExperimentalWarning') {
-        warningListener(warning);
-      }
-    });
-  }
 }

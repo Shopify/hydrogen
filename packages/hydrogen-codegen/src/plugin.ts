@@ -26,6 +26,9 @@ export const plugin: PluginFunction<{
   return code.join('') + '\n';
 };
 
+export const GENERATED_QUERY_INTERFACE_NAME = 'GeneratedQueryTypes';
+export const GENERATED_MUTATION_INTERFACE_NAME = 'GeneratedMutationTypes';
+
 const isMutationRE = /(^|}\s|\n\s*)mutation[\s({]/im;
 
 // Iteratively replace fragment annotations with the actual fragment content
@@ -59,7 +62,7 @@ const normalizeOperation = (
 };
 
 const buildTypeLines = (name: string, operations: Map<string, string[]>) => {
-  const lines = [`interface Generated${name} {\n`];
+  const lines = [`interface ${name} {\n`];
 
   for (const [originalString, typeNames] of operations) {
     lines.push(
@@ -108,8 +111,8 @@ function getDocumentRegistryChunk(
   }
 
   return [
-    ...buildTypeLines('QueryTypes', queries),
+    ...buildTypeLines(GENERATED_QUERY_INTERFACE_NAME, queries),
     '\n',
-    ...buildTypeLines('MutationTypes', mutations),
+    ...buildTypeLines(GENERATED_MUTATION_INTERFACE_NAME, mutations),
   ];
 }

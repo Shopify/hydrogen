@@ -21,6 +21,11 @@ export default class Codegen extends Command {
         'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
       required: false,
     }),
+    ['force-sfapi-version']: Flags.string({
+      description:
+        'Force generating Storefront API types for a specific version instead of using the one provided in Hydrogen. A token can also be provided with this format: `<version>:<token>`.',
+      hidden: true,
+    }),
     watch: Flags.boolean({
       description:
         'Watch the project for changes to update types on file save.',
@@ -43,10 +48,12 @@ export default class Codegen extends Command {
 async function runCodegen({
   path: appPath,
   codegenConfigPath,
+  forceSfapiVersion,
   watch,
 }: {
   path?: string;
   codegenConfigPath?: string;
+  forceSfapiVersion?: string;
   watch?: boolean;
 }) {
   const {root} = getProjectPaths(appPath);
@@ -58,6 +65,7 @@ async function runCodegen({
     const generatedFiles = await generateTypes({
       ...remixConfig,
       configFilePath: codegenConfigPath,
+      forceSfapiVersion,
       watch,
     });
 

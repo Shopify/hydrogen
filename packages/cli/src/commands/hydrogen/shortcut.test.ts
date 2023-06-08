@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {runCreateShortcut} from './shortcut.js';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
-import {isWindows, isGitBash, supportsShell} from '../../lib/shell.js';
+import {isWindows, isGitBash, shellWriteAlias} from '../../lib/shell.js';
 import {execSync, exec} from 'child_process';
 
 describe('shortcut', () => {
@@ -11,19 +11,21 @@ describe('shortcut', () => {
     vi.resetAllMocks();
     vi.mock('child_process');
     vi.mock('../../lib/shell.js', async () => {
+      const original = await vi.importActual<
+        typeof import('../../lib/shell.js')
+      >('../../lib/shell.js');
+
       return {
+        ...original,
         isWindows: vi.fn(),
         isGitBash: vi.fn(),
-        supportsShell: vi.fn(),
-        shellWriteFile: () => true,
-        shellRunScript: () => true,
-        hasAlias: () => false,
-        homeFileExists: () => Promise.resolve(true),
+        shellWriteAlias: vi.fn(),
+        shellRunScript: async () => true,
       };
     });
 
-    vi.mocked(supportsShell).mockImplementation(
-      (shell: string) => !isWindows() || shell === 'bash',
+    vi.mocked(shellWriteAlias).mockImplementation(
+      async (shell: string) => !isWindows() || shell === 'bash',
     );
   });
 
@@ -74,7 +76,7 @@ describe('shortcut', () => {
   it('warns when not finding shells', async () => {
     // Given
     vi.mocked(isWindows).mockReturnValue(false);
-    vi.mocked(supportsShell).mockReturnValue(false);
+    vi.mocked(shellWriteAlias).mockResolvedValue(false);
 
     // When
     await runCreateShortcut();
