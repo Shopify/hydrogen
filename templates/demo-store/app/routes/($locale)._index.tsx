@@ -7,7 +7,7 @@ import {ProductSwimlane, FeaturedCollections, Hero} from '~/components';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getHeroPlaceholder} from '~/lib/placeholders';
 import {seoPayload} from '~/lib/seo.server';
-import {routeHeaders, CACHE_SHORT} from '~/data/cache';
+import {routeHeaders} from '~/data/cache';
 
 export const headers = routeHeaders;
 
@@ -29,60 +29,50 @@ export async function loader({params, context}: LoaderArgs) {
 
   const seo = seoPayload.home();
 
-  return defer(
-    {
-      shop,
-      primaryHero: hero,
-      // These different queries are separated to illustrate how 3rd party content
-      // fetching can be optimized for both above and below the fold.
-      featuredProducts: context.storefront.query(
-        HOMEPAGE_FEATURED_PRODUCTS_QUERY,
-        {
-          variables: {
-            /**
-             * Country and language properties are automatically injected
-             * into all queries. Passing them is unnecessary unless you
-             * want to override them from the following default:
-             */
-            country,
-            language,
-          },
-        },
-      ),
-      secondaryHero: context.storefront.query(COLLECTION_HERO_QUERY, {
+  return defer({
+    shop,
+    primaryHero: hero,
+    // These different queries are separated to illustrate how 3rd party content
+    // fetching can be optimized for both above and below the fold.
+    featuredProducts: context.storefront.query(
+      HOMEPAGE_FEATURED_PRODUCTS_QUERY,
+      {
         variables: {
-          handle: 'backcountry',
+          /**
+           * Country and language properties are automatically injected
+           * into all queries. Passing them is unnecessary unless you
+           * want to override them from the following default:
+           */
           country,
           language,
         },
-      }),
-      featuredCollections: context.storefront.query(
-        FEATURED_COLLECTIONS_QUERY,
-        {
-          variables: {
-            country,
-            language,
-          },
-        },
-      ),
-      tertiaryHero: context.storefront.query(COLLECTION_HERO_QUERY, {
-        variables: {
-          handle: 'winter-2022',
-          country,
-          language,
-        },
-      }),
-      analytics: {
-        pageType: AnalyticsPageType.home,
       },
-      seo,
-    },
-    {
-      headers: {
-        'Cache-Control': CACHE_SHORT,
+    ),
+    secondaryHero: context.storefront.query(COLLECTION_HERO_QUERY, {
+      variables: {
+        handle: 'backcountry',
+        country,
+        language,
       },
+    }),
+    featuredCollections: context.storefront.query(FEATURED_COLLECTIONS_QUERY, {
+      variables: {
+        country,
+        language,
+      },
+    }),
+    tertiaryHero: context.storefront.query(COLLECTION_HERO_QUERY, {
+      variables: {
+        handle: 'winter-2022',
+        country,
+        language,
+      },
+    }),
+    analytics: {
+      pageType: AnalyticsPageType.home,
     },
-  );
+    seo,
+  });
 }
 
 export default function Homepage() {

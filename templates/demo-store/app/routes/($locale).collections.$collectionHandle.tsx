@@ -22,7 +22,7 @@ import {
   Button,
 } from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
-import {CACHE_SHORT, routeHeaders} from '~/data/cache';
+import {routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
 import type {AppliedFilter, SortParam} from '~/components/SortFilter';
 import {getImageLoadingPriority} from '~/lib/const';
@@ -122,24 +122,17 @@ export async function loader({params, request, context}: LoaderArgs) {
 
   const seo = seoPayload.collection({collection, url: request.url});
 
-  return json(
-    {
-      collection,
-      appliedFilters,
-      collections: flattenConnection(collections),
-      analytics: {
-        pageType: AnalyticsPageType.collection,
-        collectionHandle,
-        resourceId: collection.id,
-      },
-      seo,
+  return json({
+    collection,
+    appliedFilters,
+    collections: flattenConnection(collections),
+    analytics: {
+      pageType: AnalyticsPageType.collection,
+      collectionHandle,
+      resourceId: collection.id,
     },
-    {
-      headers: {
-        'Cache-Control': CACHE_SHORT,
-      },
-    },
-  );
+    seo,
+  });
 }
 
 export default function Collection() {
@@ -207,7 +200,7 @@ const COLLECTION_QUERY = `#graphql
     $first: Int
     $last: Int
     $startCursor: String
-    $endCursor: String 
+    $endCursor: String
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -229,7 +222,7 @@ const COLLECTION_QUERY = `#graphql
         first: $first,
         last: $last,
         before: $startCursor,
-        after: $endCursor, 
+        after: $endCursor,
         filters: $filters,
         sortKey: $sortKey,
         reverse: $reverse
