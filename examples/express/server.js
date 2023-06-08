@@ -87,7 +87,7 @@ async function getContext(req) {
     i18n: {language: 'EN', country: 'US'},
     publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
     privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
-    storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,
+    storeDomain: env.PUBLIC_STORE_DOMAIN,
     storefrontId: env.PUBLIC_STOREFRONT_ID,
     storefrontHeaders: {
       requestGroupId: req.get('request-id'),
