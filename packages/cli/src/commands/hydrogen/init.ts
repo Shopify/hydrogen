@@ -21,7 +21,7 @@ import {
   fileExists,
   isDirectory,
 } from '@shopify/cli-kit/node/fs';
-import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
+import {formatPackageManagerCommand} from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import {
@@ -401,11 +401,13 @@ async function handleRouteGeneration() {
  */
 async function handleCliAlias() {
   const shouldCreateShortcut = await renderConfirmationPrompt({
-    message: outputContent`Create a global ${outputToken.genericShellCommand(
-      ALIAS_NAME,
-    )} alias for the Shopify Hydrogen CLI?`.value,
     confirmationMessage: 'Yes',
     cancellationMessage: 'No',
+    message: [
+      'Create a global',
+      {command: ALIAS_NAME},
+      'alias for the Shopify Hydrogen CLI?',
+    ],
   });
 
   if (!shouldCreateShortcut) return;
@@ -674,9 +676,9 @@ function renderProjectReady(
     body: bodyLines
       .map(
         ([label, value]) =>
-          outputContent`  ${label.padEnd(padMin, ' ')}${colors.dim(
-            ':',
-          )}  ${colors.dim(value)}`.value,
+          `  ${label.padEnd(padMin, ' ')}${colors.dim(':')}  ${colors.dim(
+            value,
+          )}`,
       )
       .join('\n'),
 
@@ -689,31 +691,40 @@ function renderProjectReady(
           {
             list: {
               items: [
-                outputContent`Run ${outputToken.genericShellCommand(
-                  `cd ${project.location}`,
-                )} to enter your app directory.`.value,
+                [
+                  'Run',
+                  {command: `cd ${project.location}`},
+                  'to enter your app directory.',
+                ],
 
                 depsInstalled
                   ? undefined
-                  : outputContent`Run ${outputToken.genericShellCommand(
-                      `${packageManager} install`,
-                    )} to install the dependencies.`.value,
+                  : [
+                      'Run',
+                      {command: `${packageManager} install`},
+                      'to install the dependencies.',
+                    ],
 
                 hasCreatedShortcut
                   ? undefined
-                  : outputContent`Optionally, run ${outputToken.genericShellCommand(
-                      `npx shopify hydrogen shortcut`,
-                    )} to create a global ${outputToken.genericShellCommand(
-                      ALIAS_NAME,
-                    )} alias for the Shopify Hydrogen CLI.`.value,
+                  : [
+                      'Optionally, run',
+                      {command: 'npx shopify hydrogen shortcut'},
+                      'to create a global',
+                      {command: ALIAS_NAME},
+                      'alias for the Shopify Hydrogen CLI.',
+                    ],
 
-                outputContent`Run ${
-                  hasCreatedShortcut
-                    ? outputToken.genericShellCommand(`${ALIAS_NAME} dev`)
-                    : outputToken.packagejsonScript(packageManager, 'dev')
-                } to start your local development server and start building.`
-                  .value,
-              ].filter((step): step is string => Boolean(step)),
+                [
+                  'Run',
+                  {
+                    command: hasCreatedShortcut
+                      ? `${ALIAS_NAME} dev`
+                      : formatPackageManagerCommand(packageManager, 'dev'),
+                  },
+                  'to start your local development server and start building.',
+                ],
+              ].filter((step): step is string[] => Boolean(step)),
             },
           },
         ],
@@ -723,18 +734,24 @@ function renderProjectReady(
         body: {
           list: {
             items: [
-              outputContent`${outputToken.link(
-                'Tutorials',
-                'https://shopify.dev/docs/custom-storefronts/hydrogen/building',
-              )}`.value,
-              outputContent`${outputToken.link(
-                'API documentation',
-                'https://shopify.dev/docs/api/storefront',
-              )}`.value,
-              outputContent`${outputToken.link(
-                'Demo Store',
-                'https://github.com/Shopify/hydrogen/tree/HEAD/templates/demo-store',
-              )}`.value,
+              {
+                link: {
+                  label: 'Tutorials',
+                  url: 'https://shopify.dev/docs/custom-storefronts/hydrogen/building',
+                },
+              },
+              {
+                link: {
+                  label: 'API documentation',
+                  url: 'https://shopify.dev/docs/api/storefront',
+                },
+              },
+              {
+                link: {
+                  label: 'Demo Store',
+                  url: 'https://github.com/Shopify/hydrogen/tree/HEAD/templates/demo-store',
+                },
+              },
             ],
           },
         },
@@ -750,13 +767,16 @@ function renderProjectReady(
       list: {
         items: [
           // TODO: show `h2 deploy` here when it's ready
-          outputContent`Run ${outputToken.genericShellCommand(
-            cliCommand + ' generate route',
-          )} to scaffold standard Shopify routes.`.value,
-          outputContent`Run ${outputToken.genericShellCommand(
-            cliCommand + ' --help',
-          )} to learn how to see the full list of commands available for building Hydrogen storefronts.`
-            .value,
+          [
+            'Run',
+            {command: `${cliCommand} generate route`},
+            'to scaffold standard Shopify routes.',
+          ],
+          [
+            'Run',
+            {command: `${cliCommand} --help`},
+            'to learn how to see the full list of commands available for building Hydrogen storefronts.',
+          ],
         ],
       },
     },
