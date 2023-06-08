@@ -16,12 +16,20 @@ import {
 import {Flags} from '@oclif/core';
 import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
 import {
+  initializeGitRepository,
+  addAllToGitFromDirectory,
+  createGitCommit,
+} from '@shopify/cli-kit/node/git';
+import {
   rmdir,
   copyFile,
   fileExists,
   isDirectory,
 } from '@shopify/cli-kit/node/fs';
-import {formatPackageManagerCommand} from '@shopify/cli-kit/node/output';
+import {
+  outputDebug,
+  formatPackageManagerCommand,
+} from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import {
@@ -152,7 +160,9 @@ async function setupRemoteTemplate(options: InitOptions) {
     options.language,
   );
 
-  backgroundWorkPromise = backgroundWorkPromise.then(() => transpileProject());
+  backgroundWorkPromise = backgroundWorkPromise
+    .then(() => transpileProject())
+    .then(() => createInitialCommit(project.directory));
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(project.directory, options.installDeps);
@@ -334,6 +344,11 @@ async function setupLocalStarterTemplate(options: InitOptions) {
       Promise.all([i18nPromise, routesPromise]),
     );
   }
+
+  // Directory files are all setup, commit them to git
+  backgroundWorkPromise = backgroundWorkPromise.then(() =>
+    createInitialCommit(project.directory),
+  );
 
   const createShortcut = await handleCliAlias();
   if (createShortcut) {
@@ -636,6 +651,19 @@ async function handleDependencies(
           })
       : () => {},
   };
+}
+
+async function createInitialCommit(directory: string) {
+  try {
+    await initializeGitRepository(directory);
+    await addAllToGitFromDirectory(directory);
+    await createGitCommit('Scaffold Storefront', {directory});
+  } catch (error: any) {
+    // Ignore errors
+    outputDebug(
+      'Failed to initialize Git.\n' + error?.stack ?? error?.message ?? error,
+    );
+  }
 }
 
 type SetupSummary = {
