@@ -12,6 +12,7 @@ import {
   renderTextPrompt,
   renderConfirmationPrompt,
   renderTasks,
+  renderFatalError,
 } from '@shopify/cli-kit/node/ui';
 import {Flags} from '@oclif/core';
 import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
@@ -31,6 +32,7 @@ import {
   formatPackageManagerCommand,
 } from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {AbortController} from '@shopify/cli-kit/node/abort';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import {
   commonFlags,
@@ -124,15 +126,25 @@ export async function runInit(
     );
   }
 
-  return options.template
-    ? setupRemoteTemplate(options)
-    : setupLocalStarterTemplate(options);
+  const controller = new AbortController();
+
+  try {
+    return options.template
+      ? await setupRemoteTemplate(options, controller)
+      : await setupLocalStarterTemplate(options, controller);
+  } catch (error) {
+    controller.abort();
+    throw error;
+  }
 }
 
 /**
  * Flow for creating a project starting from a remote template (e.g. demo-store).
  */
-async function setupRemoteTemplate(options: InitOptions) {
+async function setupRemoteTemplate(
+  options: InitOptions,
+  controller: AbortController,
+) {
   const isDemoStoreTemplate = options.template === 'demo-store';
 
   if (!isDemoStoreTemplate) {
@@ -146,13 +158,28 @@ async function setupRemoteTemplate(options: InitOptions) {
   const appTemplate = options.template!;
 
   // Start downloading templates early.
-  const backgroundDownloadPromise = getLatestTemplates();
+  const backgroundDownloadPromise = getLatestTemplates({
+    signal: controller.signal,
+  }).catch((error) => {
+    throw abort(error); // Throw to fix TS error
+  });
 
   const project = await handleProjectLocation({...options});
   if (!project) return;
 
+  async function abort(error: AbortError) {
+    controller.abort();
+    if (typeof project !== 'undefined') {
+      await rmdir(project.directory, {force: true}).catch(() => {});
+    }
+    renderFatalError(error);
+    process.exit(1);
+  }
+
   let backgroundWorkPromise = backgroundDownloadPromise.then(({templatesDir}) =>
-    copyFile(joinPath(templatesDir, appTemplate), project.directory),
+    copyFile(joinPath(templatesDir, appTemplate), project.directory).catch(
+      abort,
+    ),
   );
 
   const {language, transpileProject} = await handleLanguage(
@@ -161,11 +188,15 @@ async function setupRemoteTemplate(options: InitOptions) {
   );
 
   backgroundWorkPromise = backgroundWorkPromise
-    .then(() => transpileProject())
+    .then(() => transpileProject().catch(abort))
     .then(() => createInitialCommit(project.directory));
 
   const {packageManager, shouldInstallDeps, installDeps} =
-    await handleDependencies(project.directory, options.installDeps);
+    await handleDependencies(
+      project.directory,
+      controller,
+      options.installDeps,
+    );
 
   const setupSummary: SetupSummary = {
     language,
@@ -193,8 +224,12 @@ async function setupRemoteTemplate(options: InitOptions) {
     tasks.push({
       title: 'Installing dependencies',
       task: async () => {
-        await installDeps();
-        setupSummary.depsInstalled = true;
+        try {
+          await installDeps();
+          setupSummary.depsInstalled = true;
+        } catch (error) {
+          setupSummary.depsError = error as AbortError;
+        }
       },
     });
   }
@@ -214,7 +249,10 @@ async function setupRemoteTemplate(options: InitOptions) {
 /**
  * Flow for setting up a project from the locally bundled starter template (hello-world).
  */
-async function setupLocalStarterTemplate(options: InitOptions) {
+async function setupLocalStarterTemplate(
+  options: InitOptions,
+  controller: AbortController,
+) {
   const templateAction = await renderSelectPrompt({
     message: 'Connect to Shopify',
     choices: [
@@ -241,10 +279,24 @@ async function setupLocalStarterTemplate(options: InitOptions) {
 
   if (!project) return;
 
+  async function abort(error: AbortError) {
+    controller.abort();
+    await rmdir(project!.directory, {force: true}).catch(() => {});
+
+    renderFatalError(
+      new AbortError(
+        'Failed to initialize project: ' + error?.message ?? '',
+        error?.tryMessage ?? error?.stack,
+      ),
+    );
+
+    process.exit(1);
+  }
+
   let backgroundWorkPromise: Promise<any> = copyFile(
     getStarterDir(),
     project.directory,
-  );
+  ).catch(abort);
 
   const tasks = [
     {
@@ -269,7 +321,7 @@ async function setupLocalStarterTemplate(options: InitOptions) {
           (content) =>
             content.replace(/PUBLIC_.*\n/gm, '').replace(/\n\n$/gm, '\n'),
         ),
-      ]),
+      ]).catch(abort),
     );
   } else if (templateAction === 'mock') {
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
@@ -282,7 +334,7 @@ async function setupLocalStarterTemplate(options: InitOptions) {
             .replace(/(PUBLIC_\w+)="[^"]*?"\n/gm, '$1=""\n')
             .replace(/(PUBLIC_STORE_DOMAIN)=""\n/gm, '$1="mock.shop"\n')
             .replace(/\n\n$/gm, '\n'),
-      ),
+      ).catch(abort),
     );
   }
 
@@ -291,14 +343,22 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     options.language,
   );
 
-  backgroundWorkPromise = backgroundWorkPromise.then(() => transpileProject());
+  backgroundWorkPromise = backgroundWorkPromise.then(() =>
+    transpileProject().catch(abort),
+  );
 
   const {setupCss, cssStrategy} = await handleCssStrategy(project.directory);
 
-  backgroundWorkPromise = backgroundWorkPromise.then(() => setupCss());
+  backgroundWorkPromise = backgroundWorkPromise.then(() =>
+    setupCss().catch(abort),
+  );
 
   const {packageManager, shouldInstallDeps, installDeps} =
-    await handleDependencies(project.directory, options.installDeps);
+    await handleDependencies(
+      project.directory,
+      controller,
+      options.installDeps,
+    );
 
   const setupSummary: SetupSummary = {
     language,
@@ -310,8 +370,12 @@ async function setupLocalStarterTemplate(options: InitOptions) {
 
   if (shouldInstallDeps) {
     const installingDepsPromise = backgroundWorkPromise.then(async () => {
-      await installDeps();
-      setupSummary.depsInstalled = true;
+      try {
+        await installDeps();
+        setupSummary.depsInstalled = true;
+      } catch (error) {
+        setupSummary.depsError = error as AbortError;
+      }
     });
 
     tasks.push({
@@ -330,13 +394,20 @@ async function setupLocalStarterTemplate(options: InitOptions) {
 
   if (continueWithSetup) {
     const {i18nStrategy, setupI18n} = await handleI18n();
-    const i18nPromise = setupI18n(project.directory, language);
+    const i18nPromise = setupI18n(project.directory, language).catch(
+      (error) => {
+        setupSummary.i18nError = error as AbortError;
+      },
+    );
+
     const {routes, setupRoutes} = await handleRouteGeneration();
     const routesPromise = setupRoutes(
       project.directory,
       language,
       i18nStrategy,
-    );
+    ).catch((error) => {
+      setupSummary.routesError = error as AbortError;
+    });
 
     setupSummary.i18n = i18nStrategy;
     setupSummary.routes = routes;
@@ -353,14 +424,7 @@ async function setupLocalStarterTemplate(options: InitOptions) {
   const createShortcut = await handleCliAlias();
   if (createShortcut) {
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
-      try {
-        const shortcuts = await createShortcut();
-        setupSummary.hasCreatedShortcut = shortcuts.length > 0;
-      } catch {
-        // Ignore errors.
-        // We'll inform the user to create the
-        // shortcut manually in the next step.
-      }
+      setupSummary.hasCreatedShortcut = await createShortcut();
     });
   }
 
@@ -387,7 +451,7 @@ async function handleI18n() {
 
   return {
     i18nStrategy,
-    setupI18n: (rootDirectory: string, language: Language) =>
+    setupI18n: async (rootDirectory: string, language: Language) =>
       i18nStrategy &&
       setupI18nStrategy(i18nStrategy, {
         rootDirectory,
@@ -443,7 +507,22 @@ async function handleCliAlias() {
 
   if (!shouldCreateShortcut) return;
 
-  return () => createPlatformShortcut();
+  return async () => {
+    try {
+      const shortcuts = await createPlatformShortcut();
+      return shortcuts.length > 0;
+    } catch (error: any) {
+      // Ignore errors.
+      // We'll inform the user to create the
+      // shortcut manually in the next step.
+      outputDebug(
+        'Failed to create shortcut.' +
+          (error?.stack ?? error?.message ?? error),
+      );
+
+      return false;
+    }
+  };
 }
 
 /**
@@ -553,12 +632,7 @@ async function handleLanguage(projectDir: string, flagLanguage?: Language) {
     language,
     async transpileProject() {
       if (language === 'js') {
-        try {
-          await transpileProject(projectDir);
-        } catch (error) {
-          await rmdir(projectDir, {force: true});
-          throw error;
-        }
+        await transpileProject(projectDir);
       }
     },
   };
@@ -604,6 +678,7 @@ async function handleCssStrategy(projectDir: string) {
  */
 async function handleDependencies(
   projectDir: string,
+  controller: AbortController,
   shouldInstallDeps?: boolean,
 ) {
   const detectedPackageManager = await packageManagerUsedForCreating();
@@ -648,6 +723,7 @@ async function handleDependencies(
             directory: projectDir,
             packageManager: actualPackageManager,
             args: [],
+            signal: controller.signal,
           })
       : () => {},
   };
@@ -669,11 +745,14 @@ async function createInitialCommit(directory: string) {
 type SetupSummary = {
   language: Language;
   packageManager: 'npm' | 'pnpm' | 'yarn';
-  depsInstalled: boolean;
   cssStrategy?: CssStrategy;
   hasCreatedShortcut: boolean;
+  depsInstalled: boolean;
+  depsError?: Error;
   i18n?: I18nStrategy;
+  i18nError?: Error;
   routes?: string[];
+  routesError?: Error;
 };
 
 /**
