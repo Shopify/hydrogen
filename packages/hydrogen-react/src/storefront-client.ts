@@ -53,13 +53,20 @@ export function createStorefrontClient(
     );
   }
 
+  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (
+    overrideProps,
+  ) => {
+    const domain = overrideProps?.storeDomain ?? storeDomain;
+    return domain.includes('://') ? domain : `https://${domain}`;
+  };
+
   return {
-    getShopifyDomain(overrideProps): string {
-      return overrideProps?.storeDomain ?? storeDomain;
-    },
+    getShopifyDomain,
     getStorefrontApiUrl(overrideProps): string {
-      const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;
-      return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${
+      const domain = getShopifyDomain(overrideProps);
+      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');
+
+      return `${apiUrl}/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
       }/graphql.json`;
     },
