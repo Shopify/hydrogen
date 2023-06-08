@@ -209,13 +209,16 @@ async function setupLocalStarterTemplate(options: InitOptions) {
     message: 'Connect to Shopify',
     choices: [
       {
-        // TODO use Mock shop
+        label: 'Use sample data from Mock.shop (no login required)',
+        value: 'mock',
+      },
+      {
         label: 'Use sample data from Hydrogen Preview shop (no login required)',
         value: 'preview',
       },
       {label: 'Link your Shopify account', value: 'link'},
     ],
-    defaultValue: 'preview',
+    defaultValue: 'mock',
   });
 
   const storefrontInfo =
@@ -257,6 +260,19 @@ async function setupLocalStarterTemplate(options: InitOptions) {
             content.replace(/PUBLIC_.*\n/gm, '').replace(/\n\n$/gm, '\n'),
         ),
       ]),
+    );
+  } else if (templateAction === 'mock') {
+    backgroundWorkPromise = backgroundWorkPromise.then(() =>
+      // Empty tokens and set mock shop domain
+      replaceFileContent(
+        joinPath(project.directory, '.env'),
+        false,
+        (content) =>
+          content
+            .replace(/(PUBLIC_\w+)="[^"]*?"\n/gm, '$1=""\n')
+            .replace(/(PUBLIC_STORE_DOMAIN)=""\n/gm, '$1="mock.shop"\n')
+            .replace(/\n\n$/gm, '\n'),
+      ),
     );
   }
 
