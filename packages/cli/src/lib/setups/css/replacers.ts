@@ -22,8 +22,9 @@ export async function replaceRemixConfig(
   );
 
   if (!filepath || !astType) {
-    // TODO throw
-    return;
+    throw new AbortError(
+      `Could not find remix.config.js file in ${rootDirectory}`,
+    );
   }
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
@@ -51,8 +52,9 @@ export async function replaceRemixConfig(
     });
 
     if (!remixConfigNode) {
-      // TODO
-      return;
+      throw new AbortError(
+        'Could not find a default export in remix.config.js',
+      );
     }
 
     newProperties = {...newProperties};
@@ -76,8 +78,8 @@ export async function replaceRemixConfig(
     }
 
     if (Object.keys(newProperties).length === 0) {
-      // TODO throw?
-      return null;
+      // Nothign to change
+      return;
     }
 
     const childrenNodes = remixConfigNode.children();
@@ -89,8 +91,7 @@ export async function replaceRemixConfig(
       childrenNodes.pop();
 
     if (!lastNode) {
-      // TODO
-      return;
+      throw new AbortError('Could not add properties to Remix config');
     }
 
     const {start} = lastNode.range();
@@ -130,8 +131,9 @@ export async function replaceRootLinks(
     const importStatement = `import ${
       importer.isDefault ? importer.name : `{${importer.name}}`
     } from '${(importer.isAbsolute ? '' : './') + importer.path}';`;
+
     if (content.includes(importStatement.split('from')[0]!)) {
-      return null;
+      return; // Already installed
     }
 
     const root = astGrep[astType].parse(content).root();
@@ -173,7 +175,9 @@ export async function replaceRootLinks(
     });
 
     if (!lastImportNode || !linksReturnNode) {
-      return content;
+      throw new AbortError(
+        'Could not find a "links" export in root file. Please add one and try again.',
+      );
     }
 
     const lastImportContent = lastImportNode.text();
