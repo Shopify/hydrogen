@@ -19,7 +19,17 @@ describe('init', () => {
     vi.mock('../../lib/template-downloader.js', async () => ({
       getLatestTemplates: () => Promise.resolve({}),
     }));
-    vi.mock('@shopify/cli-kit/node/node-package-manager');
+    vi.mock('@shopify/cli-kit/node/node-package-manager', async () => {
+      const original = await vi.importActual<
+        typeof import('@shopify/cli-kit/node/node-package-manager')
+      >('@shopify/cli-kit/node/node-package-manager');
+
+      return {
+        ...original,
+        installNodeModules: vi.fn(),
+        getPackageManager: () => Promise.resolve('npm'),
+      };
+    });
     vi.mocked(outputContent).mockImplementation(() => ({
       value: '',
     }));
