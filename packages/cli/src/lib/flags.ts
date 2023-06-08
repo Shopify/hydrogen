@@ -34,7 +34,6 @@ export const commonFlags = {
       "Specify an environment's branch name when using remote environment variables.",
     env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
     char: 'e',
-    hidden: true,
   }),
 };
 

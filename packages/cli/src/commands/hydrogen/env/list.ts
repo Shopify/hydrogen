@@ -22,9 +22,8 @@ import {
 } from '../../../lib/render-errors.js';
 
 export default class EnvList extends Command {
-  static description = 'List the environments on your Hydrogen storefront.';
-
-  static hidden = true;
+  static description =
+    'List the environments on your linked Hydrogen storefront.';
 
   static flags = {
     path: commonFlags.path,

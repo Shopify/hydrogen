@@ -21,8 +21,6 @@ export default class List extends Command {
   static description =
     'Returns a list of Hydrogen storefronts available on a given shop.';
 
-  static hidden = true;
-
   static flags = {
     path: commonFlags.path,
     shop: commonFlags.shop,
