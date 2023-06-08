@@ -1,13 +1,16 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderConfirmationPrompt, renderTable} from '@shopify/cli-kit/node/ui';
+import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
+import {pluralize} from '@shopify/cli-kit/common/string';
 import {
   outputContent,
+  outputInfo,
   outputToken,
   outputNewline,
 } from '@shopify/cli-kit/node/output';
 
 import {linkStorefront} from '../link.js';
+import {colors} from '../../../lib/colors.js';
 import {commonFlags} from '../../../lib/flags.js';
 import {getHydrogenShop} from '../../../lib/shop.js';
 import {getAdminSession} from '../../../lib/admin-session.js';
@@ -88,36 +91,50 @@ export async function listEnvironments({path, shop: flagShop}: Flags) {
   );
   storefront.environments.push(previewEnvironment[0]!);
 
-  const rows = storefront.environments.map(({branch, name, url, type}) => {
+  outputNewline();
+
+  outputInfo(
+    pluralizedEnvironments({
+      environments: storefront.environments,
+      storefrontTitle: configStorefront.title,
+    }).toString(),
+  );
+
+  storefront.environments.forEach(({name, branch, type, url}) => {
+    outputNewline();
+
     // If a custom domain is set it will be available on the storefront itself
     // so we want to use that value instead.
     const environmentUrl =
       type === 'PRODUCTION' ? storefront.productionUrl : url;
 
-    return {
-      name,
-      branch: branch ? branch : '-',
-      url: environmentUrl ? environmentUrl : '-',
-    };
-  });
-
-  outputNewline();
-
-  renderTable({
-    rows,
-    columns: {
-      name: {
-        header: 'Name',
-        color: 'whiteBright',
-      },
-      branch: {
-        header: 'Branch',
-        color: 'yellow',
-      },
-      url: {
-        header: 'URL',
-        color: 'green',
-      },
-    },
+    outputInfo(
+      outputContent`${colors.whiteBright(name)}${
+        branch ? ` ${colors.dim(`(Branch: ${branch})`)}` : ''
+      }`.value,
+    );
+    if (environmentUrl) {
+      outputInfo(
+        outputContent`    ${colors.whiteBright(environmentUrl)}`.value,
+      );
+    }
   });
 }
+
+const pluralizedEnvironments = ({
+  environments,
+  storefrontTitle,
+}: {
+  environments: any[];
+  storefrontTitle: string;
+}) => {
+  return pluralize(
+    environments,
+    (environments) =>
+      `Showing ${environments.length} environments for the Hydrogen storefront ${storefrontTitle}`,
+    (_environment) =>
+      `Showing 1 environment for the Hydrogen storefront ${storefrontTitle}`,
+    () =>
+      `There are no environments for the Hydrogen storefront ${storefrontTitle}`,
+  );
+};

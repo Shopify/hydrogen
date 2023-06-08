@@ -22,7 +22,7 @@ export interface Deployment {
   commitMessage: string | null;
 }
 
-interface HydrogenStorefront {
+export interface HydrogenStorefront {
   id: string;
   title: string;
   productionUrl?: string;

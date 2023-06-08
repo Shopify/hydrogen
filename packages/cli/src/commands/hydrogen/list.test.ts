@@ -69,14 +69,13 @@ describe('list', () => {
       await listStorefronts({});
 
       expect(outputMock.info()).toMatch(
-        /Found 2 Hydrogen storefronts on my-shop/g,
+        /Showing 2 Hydrogen storefronts for the store my-shop/g,
       );
-      expect(outputMock.info()).toMatch(
-        /1   Hydrogen    https:\/\/example.com/g,
-      );
-      expect(outputMock.info()).toMatch(
-        /2   Demo Store  https:\/\/demo.example.com  March 22, 2023, Update README.md/g,
-      );
+      expect(outputMock.info()).toMatch(/Hydrogen \(id: 1\)/g);
+      expect(outputMock.info()).toMatch(/https:\/\/example.com/g);
+      expect(outputMock.info()).toMatch(/Demo Store \(id: 2\)/g);
+      expect(outputMock.info()).toMatch(/https:\/\/demo.example.com/g);
+      expect(outputMock.info()).toMatch(/3\/22\/2023, Update README.md/g);
     });
   });
 
@@ -109,7 +108,7 @@ describe('formatDeployment', () => {
     };
 
     expect(formatDeployment(deployment)).toStrictEqual(
-      'March 22, 2023, Update README.md',
+      '3/22/2023, Update README.md',
     );
   });
 
@@ -122,7 +121,7 @@ describe('formatDeployment', () => {
         commitMessage: null,
       };
 
-      expect(formatDeployment(deployment)).toStrictEqual('March 22, 2023');
+      expect(formatDeployment(deployment)).toStrictEqual('3/22/2023');
     });
   });
 });

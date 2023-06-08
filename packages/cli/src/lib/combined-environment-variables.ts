@@ -1,15 +1,11 @@
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {
-  outputContent,
-  outputInfo,
-  outputToken,
-} from '@shopify/cli-kit/node/output';
+import {linesToColumns} from '@shopify/cli-kit/common/string';
+import {outputInfo} from '@shopify/cli-kit/node/output';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 
 import {colors} from './colors.js';
 import {pullRemoteEnvironmentVariables} from './pull-environment-variables.js';
-import {getConfig} from './shopify-config.js';
 
 interface Arguments {
   envBranch?: string;
@@ -45,52 +41,39 @@ export async function combinedEnvironmentVariables({
   const localKeys = new Set(Object.keys(localEnvironmentVariables));
 
   if ([...remoteKeys, ...localKeys].length) {
-    outputInfo(
-      `${colors.bold('Injecting environment variables into MiniOxygen...')}`,
-    );
+    outputInfo('\nEnvironment variables injected into MiniOxygen:\n');
   }
 
-  let storefrontTitle = '';
+  let rows: [string, string][] = [];
 
-  if (remoteEnvironmentVariables.length) {
-    const {storefront} = await getConfig(root);
-    if (storefront) {
-      storefrontTitle = storefront.title;
-    }
-  }
+  remoteEnvironmentVariables
+    .filter(({isSecret}) => !isSecret)
+    .forEach(({key}) => {
+      if (!localKeys.has(key)) {
+        rows.push([key, 'from Oxygen']);
+      }
+    });
 
-  remoteEnvironmentVariables.forEach(({key, isSecret}) => {
-    if (localKeys.has(key)) {
-      outputIgnoringKey(key, `overwritten via ${colors.yellow('.env')}`);
-    } else if (isSecret) {
-      outputIgnoringKey(key, 'value is marked as secret');
-    } else {
-      outputUsingKey(key, storefrontTitle);
-    }
+  localKeys.forEach((key) => {
+    rows.push([key, 'from local .env']);
   });
 
-  [...localKeys].forEach((keyName: string) => {
-    outputUsingKey(keyName, '.env');
-  });
+  // Ensure secret variables always get added to the bottom of the list
+  remoteEnvironmentVariables
+    .filter(({isSecret}) => isSecret)
+    .forEach(({key}) => {
+      if (!localKeys.has(key)) {
+        rows.push([
+          colors.dim(key),
+          colors.dim(`from Oxygen (Marked as secret)`),
+        ]);
+      }
+    });
+
+  outputInfo(linesToColumns(rows));
 
   return {
     ...formattedRemoteVariables,
     ...localEnvironmentVariables,
   };
-}
-
-function outputUsingKey(keyName: string, source: string) {
-  outputInfo(
-    outputContent`  Using ${outputToken.green(
-      keyName,
-    )} from ${outputToken.yellow(source)}`.value,
-  );
-}
-
-function outputIgnoringKey(keyName: string, reason: string) {
-  outputInfo(
-    outputContent`${colors.dim(
-      `  Ignoring ${colors.green(keyName)} (${reason})`,
-    )}`.value,
-  );
 }

@@ -34,6 +34,9 @@ vi.mock('../../lib/graphql/admin/link-storefront.js');
 vi.mock('../../lib/shop.js', () => ({
   getHydrogenShop: () => SHOP,
 }));
+vi.mock('../../lib/shell.js', () => ({
+  getCliCommand: () => 'h2',
+}));
 
 describe('link', () => {
   const outputMock = mockAndCaptureOutput();
@@ -77,6 +80,19 @@ describe('link', () => {
         id: 'gid://shopify/HydrogenStorefront/1',
         title: 'Hydrogen',
       }),
+    );
+  });
+
+  it('renders a success message', async () => {
+    vi.mocked(renderSelectPrompt).mockResolvedValue(
+      'gid://shopify/HydrogenStorefront/1',
+    );
+
+    await linkStorefront({path: 'my-path'});
+
+    expect(outputMock.info()).toMatch(/Hydrogen is now linked/g);
+    expect(outputMock.info()).toMatch(
+      /Run `h2 dev` to start your local development server and start building/g,
     );
   });
 

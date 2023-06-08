@@ -116,12 +116,14 @@ describe('listEnvironments', () => {
       await listEnvironments({path: tmpDir});
 
       expect(output.info()).toMatch(
-        /Production\s*main\s*https:\/\/example\.com/,
+        /Showing 3 environments for the Hydrogen storefront Existing Link/,
       );
-      expect(output.info()).toMatch(
-        /Staging\s*staging\s*https:\/\/oxygen-456\.example\.com/,
-      );
-      expect(output.info()).toMatch(/Preview\s*-\s*-/);
+
+      expect(output.info()).toMatch(/Production \(Branch: main\)/);
+      expect(output.info()).toMatch(/https:\/\/example\.com/);
+      expect(output.info()).toMatch(/Staging \(Branch: staging\)/);
+      expect(output.info()).toMatch(/https:\/\/oxygen-456\.example\.com/);
+      expect(output.info()).toMatch(/Preview/);
     });
   });
 

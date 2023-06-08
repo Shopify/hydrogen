@@ -63,12 +63,6 @@ export async function pullRemoteEnvironmentVariables({
     return [];
   }
 
-  if (!silent) {
-    outputInfo(
-      `Fetching environment variables from ${configStorefront.title}...`,
-    );
-  }
-
   const {storefront} = await getStorefrontEnvVariables(
     adminSession,
     configStorefront.id,
