@@ -224,10 +224,10 @@ async function getEnvVariables(
   shop?: string,
   envBranch?: string,
 ) {
-  const {storefront} = await getConfig(root);
-  if (!storefront?.id) return;
-
   try {
+    const {storefront} = await getConfig(root);
+    if (!storefront?.id) return;
+
     return await combinedEnvironmentVariables({
       root,
       shop,
