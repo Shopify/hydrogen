@@ -152,4 +152,24 @@ describe('preview()', () => {
     await miniOxygen.close();
     proxyServer.close();
   });
+
+  it('reloads environment variables', async () => {
+    const miniOxygen = await preview({
+      ...defaultOptions,
+      log: mockLogger,
+      port: testPort,
+      workerFile: fixture.paths.workerFile,
+      env: {test: 'foo'},
+    });
+
+    let response = (await sendRequest(testPort, '/')) as {data: string};
+    expect(response.data).toEqual(JSON.stringify({test: 'foo'}));
+
+    await miniOxygen.reload({env: {test: 'bar'}});
+
+    response = (await sendRequest(testPort, '/')) as {data: string};
+    expect(response.data).toEqual(JSON.stringify({test: 'bar'}));
+
+    await miniOxygen.close();
+  });
 });

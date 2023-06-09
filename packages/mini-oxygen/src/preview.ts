@@ -29,7 +29,17 @@ export type MiniOxygenPreviewOptions = MiniOxygenServerOptions &
 
 export const configFileName = 'mini-oxygen.config.json';
 
-export async function preview(opts: MiniOxygenPreviewOptions) {
+interface MiniOxygenPublicInstance {
+  port: number;
+  close: () => Promise<void>;
+  reload: (
+    options?: Partial<Pick<MiniOxygenPreviewOptions, 'env'>>,
+  ) => Promise<void>;
+}
+
+export async function preview(
+  opts: MiniOxygenPreviewOptions,
+): Promise<MiniOxygenPublicInstance> {
   const {
     // eslint-disable-next-line no-console
     log = (message: string) => console.log(message),
@@ -114,13 +124,17 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
   });
 
   // eslint-disable-next-line promise/param-names
-  return new Promise<{port: number; close: () => Promise<void>}>((res) => {
+  return new Promise((res) => {
     app.listen(actualPort, () => {
       log(
         `\nStarted miniOxygen server. Listening at http://localhost:${actualPort}\n`,
       );
+
       res({
         port: actualPort,
+        reload(options) {
+          return mf.setOptions({bindings: options?.env});
+        },
         close() {
           return new Promise((resolve, reject) => {
             sockets.forEach((socket) => socket.destroy());
