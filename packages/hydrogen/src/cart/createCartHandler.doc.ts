@@ -208,7 +208,7 @@ Creates an API that can be used to interact with the cart.`,
           },
           {
             description:
-              'Update additional information (attributes) in the cart.',
+              'Update additional information (attributes) in the cart. If the cart does not exist, a new cart will be created.',
             codeblock: {
               title: 'cart.updateAttributes',
               tabs: [

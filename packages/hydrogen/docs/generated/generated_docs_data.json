@@ -2429,7 +2429,7 @@
               }
             },
             {
-              "description": "Update additional information (attributes) in the cart.",
+              "description": "Update additional information (attributes) in the cart. If the cart does not exist, a new cart will be created.",
               "codeblock": {
                 "title": "cart.updateAttributes",
                 "tabs": [
@@ -7132,7 +7132,7 @@
     "category": "utilities",
     "isVisualComponent": false,
     "related": [],
-    "description": "Creates a function that accepts a string and attaches it as a note to a cart",
+    "description": "Creates a function that accepts a string and attaches it as a note to a cart.",
     "type": "utility",
     "defaultExample": {
       "description": "This is the default example",

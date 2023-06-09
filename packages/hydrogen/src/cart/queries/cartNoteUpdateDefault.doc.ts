@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a function that accepts a string and attaches it as a note to a cart',
+    'Creates a function that accepts a string and attaches it as a note to a cart.',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',
