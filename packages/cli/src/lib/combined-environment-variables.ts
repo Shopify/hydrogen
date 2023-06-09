@@ -26,7 +26,7 @@ export async function combinedEnvironmentVariables({
 
   const formattedRemoteVariables = remoteEnvironmentVariables?.reduce(
     (a, v) => ({...a, [v.key]: v.value}),
-    {},
+    {} as Record<string, string>,
   );
 
   const dotEnvPath = resolvePath(root, '.env');

@@ -2,6 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {copyPublicFiles} from './build.js';
 import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
 import {muteDevLogs} from '../../lib/log.js';
@@ -110,14 +111,7 @@ async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
-  const hasLinkedStorefront = !!(await getConfig(root))?.storefront?.id;
-  const environmentVariables = hasLinkedStorefront
-    ? await combinedEnvironmentVariables({
-        root,
-        shop,
-        envBranch,
-      })
-    : undefined;
+  const envPromise = getEnvVariables(root, shop, envBranch);
 
   let miniOxygenStarted = false;
   async function safeStartMiniOxygen() {
@@ -129,7 +123,7 @@ async function runDev({
       watch: true,
       buildPathWorkerFile,
       buildPathClient,
-      environmentVariables,
+      environmentVariables: await envPromise,
     });
 
     miniOxygenStarted = true;
@@ -163,6 +157,9 @@ async function runDev({
             'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
         });
       }
+
+      await envPromise; // Await here to ensure env vars are logged before initial build
+      // TODO: log initial build time without counting env vars after upgrading to Remix 1.17
 
       console.timeEnd(LOG_INITIAL_BUILD);
       await safeStartMiniOxygen();
@@ -210,4 +207,27 @@ async function runDev({
       }
     },
   });
+}
+
+async function getEnvVariables(
+  root: string,
+  shop?: string,
+  envBranch?: string,
+) {
+  const {storefront} = await getConfig(root);
+  if (!storefront?.id) return;
+
+  try {
+    return await combinedEnvironmentVariables({
+      root,
+      shop,
+      envBranch,
+    });
+  } catch (error: any) {
+    // Do not throw here, as the development server should still start
+    renderWarning({
+      headline: `Failed to load environment variables. The development server will still start, but the following error occurred:`,
+      body: error?.stack ?? error?.message ?? error,
+    });
+  }
 }
