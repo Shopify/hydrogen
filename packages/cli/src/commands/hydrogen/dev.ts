@@ -152,6 +152,8 @@ async function runDev({
     import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
   ]);
 
+  const fileWatchCache = createFileWatchCache();
+
   await watch(
     {
       config: await reloadConfig(),
@@ -160,7 +162,7 @@ async function runDev({
         onWarning: warnOnce,
         sourcemap,
       },
-      fileWatchCache: createFileWatchCache(),
+      fileWatchCache,
     },
     {
       reloadConfig,
@@ -209,6 +211,8 @@ async function runDev({
         }
       },
       async onFileChanged(file: string) {
+        fileWatchCache.invalidateFile(file);
+
         const [relative, absolute] = getFilePaths(file);
         outputInfo(`\n📄 File changed: ${relative}`);
 
@@ -220,6 +224,8 @@ async function runDev({
         }
       },
       async onFileDeleted(file: string) {
+        fileWatchCache.invalidateFile(file);
+
         const [relative, absolute] = getFilePaths(file);
         outputInfo(`\n📄 File deleted: ${relative}`);
 
