@@ -122,10 +122,13 @@ export async function preview(opts: MiniOxygenPreviewOptions) {
       res({
         port: actualPort,
         close() {
-          return new Promise((resolve) => {
+          return new Promise((resolve, reject) => {
             sockets.forEach((socket) => socket.destroy());
             sockets.clear();
-            app.close(() => resolve());
+            app.closeAllConnections();
+            app.close(() => {
+              mf.dispose().then(resolve).catch(reject);
+            });
           });
         },
       });
