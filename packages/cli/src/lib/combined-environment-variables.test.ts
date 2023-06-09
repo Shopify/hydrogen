@@ -57,7 +57,7 @@ describe('combinedEnvironmentVariables()', () => {
       await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
 
       expect(outputMock.info()).toMatch(
-        /Injecting environment variables into MiniOxygen/,
+        /Environment variables injected into MiniOxygen:/,
       );
     });
   });
@@ -68,7 +68,7 @@ describe('combinedEnvironmentVariables()', () => {
 
       await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
 
-      expect(outputMock.info()).toMatch(/Using PUBLIC_API_TOKEN from Hydrogen/);
+      expect(outputMock.info()).toMatch(/PUBLIC_API_TOKEN\s+from Oxygen/);
     });
   });
 
@@ -91,7 +91,7 @@ describe('combinedEnvironmentVariables()', () => {
         await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
 
         expect(outputMock.info()).toMatch(
-          /Ignoring PUBLIC_API_TOKEN \(value is marked as secret\)/,
+          /PUBLIC_API_TOKEN\s+from Oxygen \(Marked as secret\)/,
         );
       });
     });
@@ -107,7 +107,7 @@ describe('combinedEnvironmentVariables()', () => {
 
         await combinedEnvironmentVariables({root: tmpDir});
 
-        expect(outputMock.info()).toMatch(/Using LOCAL_TOKEN from \.env/);
+        expect(outputMock.info()).toMatch(/LOCAL_TOKEN\s+from local \.env/);
       });
     });
 
@@ -121,11 +121,11 @@ describe('combinedEnvironmentVariables()', () => {
 
           await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
 
-          expect(outputMock.info()).toMatch(
-            /Ignoring PUBLIC_API_TOKEN \(overwritten via \.env\)/,
+          expect(outputMock.info()).not.toMatch(
+            /PUBLIC_API_TOKEN\s+from Oxygen/,
           );
           expect(outputMock.info()).toMatch(
-            /Using PUBLIC_API_TOKEN from \.env/,
+            /PUBLIC_API_TOKEN\s+from local \.env/,
           );
         });
       });
