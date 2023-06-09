@@ -11,8 +11,7 @@ import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {patchEnvFile} from '@shopify/cli-kit/node/dot-env';
-
-import {colors} from '../../../lib/colors.js';
+import colors from '@shopify/cli-kit/node/colors';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {pullRemoteEnvironmentVariables} from '../../../lib/pull-environment-variables.js';
 import {getConfig} from '../../../lib/shopify-config.js';
