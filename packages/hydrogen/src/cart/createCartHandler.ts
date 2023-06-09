@@ -146,10 +146,21 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
           )
         : await cartCreate({buyerIdentity}, optionalParams);
     },
-    updateNote: cartNoteUpdateDefault(mutateOptions),
+    updateNote: async (note, optionalParams) => {
+      return cartId || optionalParams?.cartId
+        ? await cartNoteUpdateDefault(mutateOptions)(note, optionalParams)
+        : await cartCreate({note}, optionalParams);
+    },
     updateSelectedDeliveryOption:
       cartSelectedDeliveryOptionsUpdateDefault(mutateOptions),
-    updateAttributes: cartAttributesUpdateDefault(mutateOptions),
+    updateAttributes: async (attributes, optionalParams) => {
+      return cartId || optionalParams?.cartId
+        ? await cartAttributesUpdateDefault(mutateOptions)(
+            attributes,
+            optionalParams,
+          )
+        : await cartCreate({attributes}, optionalParams);
+    },
     setMetafields: async (metafields, optionalParams) => {
       return cartId || optionalParams?.cartId
         ? await cartMetafieldsSetDefault(mutateOptions)(
