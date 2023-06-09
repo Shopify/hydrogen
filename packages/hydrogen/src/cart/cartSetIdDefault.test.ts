@@ -10,7 +10,7 @@ describe('cartSetIdDefault', () => {
     expectTypeOf(setCartId).toEqualTypeOf<
       (cartId: string, headers: Headers) => void
     >;
-    expect(headers.get('Set-Cookie')).toBe('cart=c1-123');
+    expect(headers.get('Set-Cookie')).toBe('cart=c1-123; Path=/');
   });
 
   it('sets a Set-Cookie in the provided header with cookie options', () => {
@@ -21,6 +21,6 @@ describe('cartSetIdDefault', () => {
     expectTypeOf(setCartId).toEqualTypeOf<
       (cartId: string, headers: Headers) => void
     >;
-    expect(headers.get('Set-Cookie')).toBe('cart=c1-123; Max-Age=1000');
+    expect(headers.get('Set-Cookie')).toBe('cart=c1-123; Max-Age=1000; Path=/');
   });
 });
