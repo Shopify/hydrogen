@@ -13,8 +13,10 @@ type MiniOxygenOptions = {
   watch?: boolean;
   buildPathClient: string;
   buildPathWorkerFile: string;
-  environmentVariables?: {[key: string]: string};
+  env?: {[key: string]: string};
 };
+
+export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygen>>;
 
 export async function startMiniOxygen({
   root,
@@ -22,15 +24,16 @@ export async function startMiniOxygen({
   watch = false,
   buildPathWorkerFile,
   buildPathClient,
-  environmentVariables = {},
+  env,
 }: MiniOxygenOptions) {
-  const {default: miniOxygen} = await import('@shopify/mini-oxygen');
+  const {default: miniOxygenImport} = await import('@shopify/mini-oxygen');
   const miniOxygenPreview =
-    miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
+    miniOxygenImport.default ??
+    (miniOxygenImport as unknown as typeof miniOxygenImport.default);
 
   const dotenvPath = resolvePath(root, '.env');
 
-  const {port: actualPort} = await miniOxygenPreview({
+  const miniOxygen = await miniOxygenPreview({
     workerFile: buildPathWorkerFile,
     assetsDir: buildPathClient,
     publicPath: '',
@@ -39,14 +42,10 @@ export async function startMiniOxygen({
     autoReload: watch,
     modules: true,
     env: {
-      ...environmentVariables,
+      ...env,
       ...process.env,
     },
-    envPath:
-      !Object.keys(environmentVariables).length &&
-      (await fileExists(dotenvPath))
-        ? dotenvPath
-        : undefined,
+    envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
     buildWatchPaths: watch
       ? [resolvePath(root, buildPathWorkerFile)]
@@ -60,7 +59,7 @@ export async function startMiniOxygen({
       ),
   });
 
-  const listeningAt = `http://localhost:${actualPort}`;
+  const listeningAt = `http://localhost:${miniOxygen.port}`;
 
   outputInfo(
     outputContent`🚥 MiniOxygen server started at ${outputToken.link(
@@ -68,6 +67,19 @@ export async function startMiniOxygen({
       listeningAt,
     )}\n`,
   );
+
+  return {
+    port: miniOxygen.port,
+    close: miniOxygen.close,
+    reload(nextOptions?: Partial<Pick<MiniOxygenOptions, 'env'>>) {
+      return miniOxygen.reload({
+        env: {
+          ...(nextOptions?.env ?? env),
+          ...process.env,
+        },
+      });
+    },
+  };
 }
 
 export function logResponse(request: Request, response: Response) {

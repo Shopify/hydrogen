@@ -9,7 +9,7 @@ import {muteDevLogs} from '../../lib/log.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {startMiniOxygen} from '../../lib/mini-oxygen.js';
+import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -113,20 +113,18 @@ async function runDev({
 
   const envPromise = getEnvVariables(root, shop, envBranch);
 
-  let miniOxygenStarted = false;
+  let miniOxygen: MiniOxygen;
   async function safeStartMiniOxygen() {
-    if (miniOxygenStarted) return;
+    if (miniOxygen) return;
 
-    await startMiniOxygen({
+    miniOxygen = await startMiniOxygen({
       root,
       port,
       watch: true,
       buildPathWorkerFile,
       buildPathClient,
-      environmentVariables: await envPromise,
+      env: await envPromise,
     });
-
-    miniOxygenStarted = true;
 
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
@@ -139,6 +137,8 @@ async function runDev({
   if (codegen) {
     spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
   }
+
+  let skipRebuildLogs = false;
 
   await watch(remixConfig, {
     reloadConfig,
@@ -179,6 +179,13 @@ async function runDev({
       const [relative, absolute] = getFilePaths(file);
       outputInfo(`\n📄 File changed: ${relative}`);
 
+      if (relative.endsWith('.env')) {
+        skipRebuildLogs = true;
+        await miniOxygen.reload({
+          env: await getEnvVariables(root, shop, envBranch),
+        });
+      }
+
       if (absolute.startsWith(publicPath)) {
         await copyPublicFiles(
           absolute,
@@ -195,13 +202,16 @@ async function runDev({
       }
     },
     onRebuildStart() {
-      outputInfo(LOG_REBUILDING);
-      console.time(LOG_REBUILT);
+      if (!skipRebuildLogs) {
+        outputInfo(LOG_REBUILDING);
+        console.time(LOG_REBUILT);
+      }
     },
     async onRebuildFinish() {
-      console.timeEnd(LOG_REBUILT);
+      !skipRebuildLogs && console.timeEnd(LOG_REBUILT);
+      skipRebuildLogs = false;
 
-      if (!miniOxygenStarted && (await serverBundleExists())) {
+      if (!miniOxygen && (await serverBundleExists())) {
         console.log(''); // New line
         await safeStartMiniOxygen();
       }
