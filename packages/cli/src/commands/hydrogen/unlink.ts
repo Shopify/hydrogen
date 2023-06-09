@@ -1,5 +1,6 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {outputSuccess, outputWarn} from '@shopify/cli-kit/node/output';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {outputWarn} from '@shopify/cli-kit/node/output';
 
 import {commonFlags} from '../../lib/flags.js';
 import {getConfig, unsetStorefront} from '../../lib/shopify-config.js';
@@ -36,5 +37,7 @@ export async function unlinkStorefront({path}: LinkFlags) {
 
   await unsetStorefront(actualPath);
 
-  outputSuccess(`You are no longer linked to ${storefrontTitle}`);
+  renderSuccess({
+    body: ['You are no longer linked to', {bold: storefrontTitle}],
+  });
 }

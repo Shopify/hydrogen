@@ -179,7 +179,7 @@ describe('createCartHandler', () => {
     expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
   });
 
-  it('function addLines to create a cart if cart id is not found', async () => {
+  it('function addLines creates a cart if cart id is not found', async () => {
     const cart = getCartHandler();
 
     const result = await cart.addLines([]);
@@ -241,7 +241,7 @@ describe('createCartHandler', () => {
     expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
   });
 
-  it('function updateDiscountCodes to create a cart if cart id is not found', async () => {
+  it('function updateDiscountCodes creates a cart if cart id is not found', async () => {
     const cart = getCartHandler();
 
     const result = await cart.updateDiscountCodes([]);
@@ -268,7 +268,7 @@ describe('createCartHandler', () => {
     expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
   });
 
-  it('function updateBuyerIdentity to create a cart if cart id is not found', async () => {
+  it('function updateBuyerIdentity creates a cart if cart id is not found', async () => {
     const cart = getCartHandler();
 
     const result = await cart.updateBuyerIdentity({});
@@ -292,6 +292,14 @@ describe('createCartHandler', () => {
     });
 
     expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
+  });
+
+  it('function updateNote creates a cart if cart id is not found', async () => {
+    const cart = getCartHandler();
+
+    const result = await cart.updateNote('');
+
+    expect(result.cart).toHaveProperty('id', 'c1-new-cart-id');
   });
 
   it('function updateSelectedDeliveryOption has a working default implementation', async () => {
@@ -341,6 +349,14 @@ describe('createCartHandler', () => {
     expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
   });
 
+  it('function updateAttributes creates a cart if cart id is not found', async () => {
+    const cart = getCartHandler();
+
+    const result = await cart.updateAttributes([]);
+
+    expect(result.cart).toHaveProperty('id', 'c1-new-cart-id');
+  });
+
   it('function setMetafields has a working default implementation', async () => {
     const cart = getCartHandler({cartId: 'c1-123'});
 
@@ -359,7 +375,7 @@ describe('createCartHandler', () => {
     expect(result.cart).toHaveProperty('id', 'gid://shopify/Cart/c1-456');
   });
 
-  it('function setMetafields to create a cart if cart id is not found', async () => {
+  it('function setMetafields creates a cart if cart id is not found', async () => {
     const cart = getCartHandler();
 
     const result = await cart.setMetafields([]);

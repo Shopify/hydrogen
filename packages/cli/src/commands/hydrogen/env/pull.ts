@@ -1,10 +1,18 @@
+import {diffLines} from 'diff';
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {outputSuccess, outputWarn} from '@shopify/cli-kit/node/output';
-import {fileExists, writeFile} from '@shopify/cli-kit/node/fs';
+import {
+  renderConfirmationPrompt,
+  renderInfo,
+  renderWarning,
+  renderSuccess,
+} from '@shopify/cli-kit/node/ui';
+import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
+import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {resolvePath} from '@shopify/cli-kit/node/path';
+import {patchEnvFile} from '@shopify/cli-kit/node/dot-env';
 
+import {colors} from '../../../lib/colors.js';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import {pullRemoteEnvironmentVariables} from '../../../lib/pull-environment-variables.js';
 import {getConfig} from '../../../lib/shopify-config.js';
@@ -53,47 +61,64 @@ export async function pullVariables({
     return;
   }
 
+  const fileName = colors.whiteBright(`.env`);
+
   const dotEnvPath = resolvePath(actualPath, '.env');
 
+  const fetchedEnv: Record<string, string> = {};
+  environmentVariables.forEach(({isSecret, key, value}) => {
+    // We need to force an empty string for secret variables, otherwise
+    // patchEnvFile will treat them as new values even if they already exist.
+    fetchedEnv[key] = isSecret ? `""` : value;
+  });
+
   if ((await fileExists(dotEnvPath)) && !force) {
+    const existingEnv = await readFile(dotEnvPath);
+    const patchedEnv = patchEnvFile(existingEnv, fetchedEnv);
+
+    if (existingEnv === patchedEnv) {
+      renderInfo({
+        body: `No changes to your ${fileName} file`,
+      });
+      return;
+    }
+
+    const diff = diffLines(existingEnv, patchedEnv);
+
     const overwrite = await renderConfirmationPrompt({
-      message:
-        'Warning: .env file already exists. Do you want to overwrite it?',
+      confirmationMessage: `Yes, confirm changes`,
+      cancellationMessage: `No, make changes later`,
+      message: outputContent`We'll make the following changes to your .env file:
+
+${outputToken.linesDiff(diff)}
+Continue?`.value,
     });
 
     if (!overwrite) {
       return;
     }
+
+    await writeFile(dotEnvPath, patchedEnv);
+  } else {
+    const newEnv = patchEnvFile(null, fetchedEnv);
+    await writeFile(dotEnvPath, newEnv);
   }
 
-  let hasSecretVariables = false;
-  const contents =
-    environmentVariables
-      .map(({key, value, isSecret}) => {
-        let line = `${key}="${value}"`;
-
-        if (isSecret) {
-          hasSecretVariables = true;
-          line =
-            `# ${key} is marked as secret and its value is hidden\n` + line;
-        }
-
-        return line;
-      })
-      .join('\n') + '\n';
+  const hasSecretVariables = environmentVariables.some(
+    ({isSecret}) => isSecret,
+  );
 
   if (hasSecretVariables) {
     const {storefront: configStorefront} = await getConfig(actualPath);
 
-    outputWarn(
-      `${
+    renderWarning({
+      body: `${
         configStorefront!.title
-      } contains environment variables marked as secret, \
-so their values weren’t pulled.`,
-    );
+      } contains environment variables marked as secret, so their values weren’t pulled.`,
+    });
   }
 
-  await writeFile(dotEnvPath, contents);
-
-  outputSuccess('Updated .env');
+  renderSuccess({
+    body: ['Changes have been made to your', {filePath: fileName}, 'file'],
+  });
 }

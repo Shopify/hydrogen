@@ -10,7 +10,7 @@ import {
 import {Grid, Heading, PageHeader, Section, Link, Button} from '~/components';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
-import {CACHE_SHORT, routeHeaders} from '~/data/cache';
+import {routeHeaders} from '~/data/cache';
 
 const PAGINATION_SIZE = 4;
 
@@ -31,14 +31,7 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
     url: request.url,
   });
 
-  return json(
-    {collections, seo},
-    {
-      headers: {
-        'Cache-Control': CACHE_SHORT,
-      },
-    },
-  );
+  return json({collections, seo});
 };
 
 export default function Collections() {
