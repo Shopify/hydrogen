@@ -21,8 +21,6 @@ export default class EnvPull extends Command {
   static description =
     'Populate your .env with variables from your Hydrogen storefront.';
 
-  static hidden = true;
-
   static flags = {
     ['env-branch']: commonFlags['env-branch'],
     path: commonFlags.path,
