@@ -1,0 +1,34 @@
+import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
+
+const data: ReferenceEntityTemplateSchema = {
+  name: 'InMemoryCache',
+  category: 'utilities',
+  isVisualComponent: false,
+  related: [
+    {
+      name: 'createStorefrontClient',
+      type: 'utilities',
+      url: '/docs/api/hydrogen/2023-04/utilities/createstorefrontclient',
+    },
+  ],
+  description: `If you are deploying Hydrogen to a Node environment, you can use this limited implementation of an in-memory cache. It only supports the \`cache-control\` header. It does NOT support \`age\` or \`expires\` headers. 
+
+Learn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).`,
+  type: 'utility',
+  defaultExample: {
+    description: 'I am the default example',
+    codeblock: {
+      tabs: [
+        {
+          title: 'JavaScript',
+          code: './InMemoryCache.example.js',
+          language: 'js',
+        },
+      ],
+      title: 'Example code',
+    },
+  },
+  definitions: [],
+};
+
+export default data;
