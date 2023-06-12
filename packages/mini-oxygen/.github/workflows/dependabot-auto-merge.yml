@@ -22,6 +22,7 @@ jobs:
         uses: dependabot/fetch-metadata@v1
         with:
           github-token: "${{ secrets.GITHUB_TOKEN }}"
+          skip-verification: true
       - name: Auto-merge Dependabot PRs
         uses: Shopify/github-actions/dependabot-auto-merge-action@v1
         with:
