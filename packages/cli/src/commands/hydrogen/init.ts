@@ -165,7 +165,7 @@ async function setupRemoteTemplate(
     throw abort(error); // Throw to fix TS error
   });
 
-  const project = await handleProjectLocation({...options});
+  const project = await handleProjectLocation({...options, controller});
   if (!project) return;
 
   async function abort(error: AbortError) {
@@ -185,6 +185,7 @@ async function setupRemoteTemplate(
 
   const {language, transpileProject} = await handleLanguage(
     project.directory,
+    controller,
     options.language,
   );
 
@@ -264,14 +265,18 @@ async function setupLocalStarterTemplate(
       {label: 'Link your Shopify account', value: 'link'},
     ],
     defaultValue: 'mock',
+    abortSignal: controller.signal,
   });
 
   const storefrontInfo =
-    templateAction === 'link' ? await handleStorefrontLink() : undefined;
+    templateAction === 'link'
+      ? await handleStorefrontLink(controller)
+      : undefined;
 
   const project = await handleProjectLocation({
     ...options,
     storefrontInfo,
+    controller,
   });
 
   if (!project) return;
@@ -337,6 +342,7 @@ async function setupLocalStarterTemplate(
 
   const {language, transpileProject} = await handleLanguage(
     project.directory,
+    controller,
     options.language,
   );
 
@@ -344,7 +350,10 @@ async function setupLocalStarterTemplate(
     transpileProject().catch(abort),
   );
 
-  const {setupCss, cssStrategy} = await handleCssStrategy(project.directory);
+  const {setupCss, cssStrategy} = await handleCssStrategy(
+    project.directory,
+    controller,
+  );
 
   backgroundWorkPromise = backgroundWorkPromise.then(() =>
     setupCss().catch(abort),
@@ -387,17 +396,18 @@ async function setupLocalStarterTemplate(
     message: 'Scaffold boilerplate for internationalization and routes',
     confirmationMessage: 'Yes, set up now',
     cancellationMessage: 'No, set up later',
+    abortSignal: controller.signal,
   });
 
   if (continueWithSetup) {
-    const {i18nStrategy, setupI18n} = await handleI18n();
+    const {i18nStrategy, setupI18n} = await handleI18n(controller);
     const i18nPromise = setupI18n(project.directory, language).catch(
       (error) => {
         setupSummary.i18nError = error as AbortError;
       },
     );
 
-    const {routes, setupRoutes} = await handleRouteGeneration();
+    const {routes, setupRoutes} = await handleRouteGeneration(controller);
     const routesPromise = setupRoutes(
       project.directory,
       language,
@@ -418,7 +428,7 @@ async function setupLocalStarterTemplate(
     createInitialCommit(project.directory),
   );
 
-  const createShortcut = await handleCliAlias();
+  const createShortcut = await handleCliAlias(controller);
   if (createShortcut) {
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
       setupSummary.hasCreatedShortcut = await createShortcut();
@@ -435,13 +445,14 @@ const i18nStrategies = {
   none: 'No internationalization',
 };
 
-async function handleI18n() {
+async function handleI18n(controller: AbortController) {
   let selection = await renderSelectPrompt<keyof typeof i18nStrategies>({
     message: 'Select an internationalization strategy',
     choices: Object.entries(i18nStrategies).map(([value, label]) => ({
       value: value as I18nStrategy,
       label,
     })),
+    abortSignal: controller.signal,
   });
 
   const i18nStrategy = selection === 'none' ? undefined : selection;
@@ -459,13 +470,14 @@ async function handleI18n() {
   };
 }
 
-async function handleRouteGeneration() {
+async function handleRouteGeneration(controller: AbortController) {
   // TODO: Need a multi-select UI component
   const shouldScaffoldAllRoutes = await renderConfirmationPrompt({
     message:
       'Scaffold all standard route files? ' + ALL_ROUTES_NAMES.join(', '),
     confirmationMessage: 'Yes',
     cancellationMessage: 'No',
+    abortSignal: controller.signal,
   });
 
   const routes = shouldScaffoldAllRoutes ? ALL_ROUTES_NAMES : [];
@@ -484,6 +496,7 @@ async function handleRouteGeneration() {
           force: true,
           typescript: language === 'ts',
           localePrefix: i18nStrategy === 'pathname' ? 'locale' : false,
+          signal: controller.signal,
         });
       }
     },
@@ -494,7 +507,7 @@ async function handleRouteGeneration() {
  * Prompts the user to create a global alias (h2) for the Hydrogen CLI.
  * @returns A function that creates the shortcut, or undefined if the user chose not to create a shortcut.
  */
-async function handleCliAlias() {
+async function handleCliAlias(controller: AbortController) {
   const shouldCreateShortcut = await renderConfirmationPrompt({
     confirmationMessage: 'Yes',
     cancellationMessage: 'No',
@@ -505,6 +518,7 @@ async function handleCliAlias() {
       {command: 'npx shopify hydrogen'},
       '?',
     ],
+    abortSignal: controller.signal,
   });
 
   if (!shouldCreateShortcut) return;
@@ -531,11 +545,12 @@ async function handleCliAlias() {
  * Prompts the user to link a Hydrogen storefront to their project.
  * @returns The linked shop and storefront.
  */
-async function handleStorefrontLink() {
+async function handleStorefrontLink(controller: AbortController) {
   let shop = await renderTextPrompt({
     message:
       'Specify which Store you would like to use (e.g. {store}.myshopify.com)',
     allowEmpty: false,
+    abortSignal: controller.signal,
   });
 
   shop = shop.trim().toLowerCase();
@@ -557,6 +572,7 @@ async function handleStorefrontLink() {
       label: `${storefront.title} ${storefront.productionUrl}`,
       value: storefront.id,
     })),
+    abortSignal: controller.signal,
   });
 
   let selected = storefronts.find(
@@ -576,10 +592,12 @@ async function handleStorefrontLink() {
  */
 async function handleProjectLocation({
   storefrontInfo,
+  controller,
   ...options
 }: {
   path?: string;
   force?: boolean;
+  controller: AbortController;
   storefrontInfo?: {title: string; shop: string};
 }) {
   const location =
@@ -589,6 +607,7 @@ async function handleProjectLocation({
       defaultValue: storefrontInfo
         ? hyphenate(storefrontInfo.title)
         : 'hydrogen-storefront',
+      abortSignal: controller.signal,
     }));
 
   const name = basename(location);
@@ -599,6 +618,7 @@ async function handleProjectLocation({
       const deleteFiles = await renderConfirmationPrompt({
         message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
         defaultValue: false,
+        abortSignal: controller.signal,
       });
 
       if (!deleteFiles) {
@@ -618,7 +638,11 @@ async function handleProjectLocation({
  * Prompts the user to select a JS or TS.
  * @returns A function that optionally transpiles the project to JS, if that was chosen.
  */
-async function handleLanguage(projectDir: string, flagLanguage?: Language) {
+async function handleLanguage(
+  projectDir: string,
+  controller: AbortController,
+  flagLanguage?: Language,
+) {
   const language =
     flagLanguage ??
     (await renderSelectPrompt({
@@ -628,6 +652,7 @@ async function handleLanguage(projectDir: string, flagLanguage?: Language) {
         {label: 'TypeScript', value: 'ts'},
       ],
       defaultValue: 'js',
+      abortSignal: controller.signal,
     }));
 
   return {
@@ -644,7 +669,10 @@ async function handleLanguage(projectDir: string, flagLanguage?: Language) {
  * Prompts the user to select a CSS strategy.
  * @returns The chosen strategy name and a function that sets up the CSS strategy.
  */
-async function handleCssStrategy(projectDir: string) {
+async function handleCssStrategy(
+  projectDir: string,
+  controller: AbortController,
+) {
   const selectedCssStrategy = await renderSelectPrompt<CssStrategy>({
     message: `Select a styling library`,
     choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
@@ -652,6 +680,7 @@ async function handleCssStrategy(projectDir: string) {
       value: strategy,
     })),
     defaultValue: 'postcss',
+    abortSignal: controller.signal,
   });
 
   return {
@@ -698,6 +727,7 @@ async function handleDependencies(
           {label: 'Skip, install later', value: 'no'},
         ],
         defaultValue: 'npm',
+        abortSignal: controller.signal,
       });
 
       if (result === 'no') {
@@ -712,6 +742,7 @@ async function handleDependencies(
         message: `Install dependencies with ${detectedPackageManager}?`,
         confirmationMessage: 'Yes',
         cancellationMessage: 'No',
+        abortSignal: controller.signal,
       });
     }
   }

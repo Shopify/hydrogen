@@ -8,6 +8,7 @@ import {
   relativizePath,
 } from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {
   renderSuccess,
   renderConfirmationPrompt,
@@ -188,6 +189,7 @@ type GenerateRouteOptions = {
   adapter?: string;
   templatesRoot?: string;
   localePrefix?: string;
+  signal?: AbortSignal;
 };
 
 async function getLocalePrefix(
@@ -224,6 +226,7 @@ export async function generateRoute(
     formatOptions,
     localePrefix,
     v2Flags = {},
+    signal,
   }: GenerateRouteOptions & {
     rootDirectory: string;
     appDirectory: string;
@@ -258,6 +261,7 @@ export async function generateRoute(
       defaultValue: false,
       confirmationMessage: 'Yes',
       cancellationMessage: 'No',
+      abortSignal: signal,
     });
 
     if (!shouldOverwrite) return {...result, operation: 'skipped'};
