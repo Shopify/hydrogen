@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.1.0
+
+### Minor Changes
+
+- Updates default `powered-by` header to `Shopify, Hydrogen` ([#961](https://github.com/Shopify/hydrogen/pull/961)) by [@benjaminsehl](https://github.com/benjaminsehl)
+
 ## 1.0.7
 
 ### Patch Changes
