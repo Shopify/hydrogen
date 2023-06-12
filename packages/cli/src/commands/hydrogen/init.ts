@@ -261,10 +261,6 @@ async function setupLocalStarterTemplate(
         label: 'Use sample data from Mock.shop (no login required)',
         value: 'mock',
       },
-      {
-        label: 'Use sample data from Hydrogen Preview shop (no login required)',
-        value: 'preview',
-      },
       {label: 'Link your Shopify account', value: 'link'},
     ],
     defaultValue: 'mock',
@@ -388,7 +384,7 @@ async function setupLocalStarterTemplate(
   }
 
   const continueWithSetup = await renderConfirmationPrompt({
-    message: 'Scaffold boilerplate for i18n and routes',
+    message: 'Scaffold boilerplate for internationalization and routes',
     confirmationMessage: 'Yes, set up now',
     cancellationMessage: 'No, set up later',
   });
@@ -435,8 +431,8 @@ async function setupLocalStarterTemplate(
 }
 
 const i18nStrategies = {
-  none: 'No internationalization',
   ...I18N_STRATEGY_NAME_MAP,
+  none: 'No internationalization',
 };
 
 async function handleI18n() {
@@ -466,7 +462,8 @@ async function handleI18n() {
 async function handleRouteGeneration() {
   // TODO: Need a multi-select UI component
   const shouldScaffoldAllRoutes = await renderConfirmationPrompt({
-    message: 'Scaffold all standard routes?',
+    message:
+      'Scaffold all standard route files? ' + ALL_ROUTES_NAMES.join(', '),
     confirmationMessage: 'Yes',
     cancellationMessage: 'No',
   });
@@ -504,7 +501,9 @@ async function handleCliAlias() {
     message: [
       'Create a global',
       {command: ALIAS_NAME},
-      'alias for the Shopify Hydrogen CLI?',
+      'alias to run commands instead of',
+      {command: 'npx shopify hydrogen'},
+      '?',
     ],
   });
 
@@ -652,7 +651,7 @@ async function handleCssStrategy(projectDir: string) {
       label: CSS_STRATEGY_NAME_MAP[strategy],
       value: strategy,
     })),
-    defaultValue: 'tailwind',
+    defaultValue: 'postcss',
   });
 
   return {
@@ -691,14 +690,14 @@ async function handleDependencies(
   if (shouldInstallDeps !== false) {
     if (detectedPackageManager === 'unknown') {
       const result = await renderSelectPrompt<'no' | 'npm' | 'pnpm' | 'yarn'>({
-        message: `Install dependencies?`,
+        message: `Select package manager to install dependencies`,
         choices: [
-          {label: 'No', value: 'no'},
-          {label: 'Yes, use NPM', value: 'npm'},
-          {label: 'Yes, use PNPM', value: 'pnpm'},
-          {label: 'Yes, use Yarn v1', value: 'yarn'},
+          {label: 'NPM', value: 'npm'},
+          {label: 'PNPM', value: 'pnpm'},
+          {label: 'Yarn v1', value: 'yarn'},
+          {label: 'Skip, install later', value: 'no'},
         ],
-        defaultValue: 'no',
+        defaultValue: 'npm',
       });
 
       if (result === 'no') {
