@@ -35,6 +35,7 @@ import {
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {hyphenate} from '@shopify/cli-kit/common/string';
+import colors from '@shopify/cli-kit/node/colors';
 import {
   commonFlags,
   parseProcessFlags,
@@ -56,7 +57,6 @@ import {createPlatformShortcut} from './shortcut.js';
 import {CSS_STRATEGY_NAME_MAP} from './setup/css-unstable.js';
 import {I18nStrategy, setupI18nStrategy} from '../../lib/setups/i18n/index.js';
 import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
-import {colors} from '../../lib/colors.js';
 import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';

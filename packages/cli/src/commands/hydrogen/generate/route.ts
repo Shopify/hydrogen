@@ -12,6 +12,7 @@ import {
   renderSuccess,
   renderConfirmationPrompt,
 } from '@shopify/cli-kit/node/ui';
+import colors from '@shopify/cli-kit/node/colors';
 import {commonFlags} from '../../../lib/flags.js';
 import {Flags, Args} from '@oclif/core';
 import {
@@ -35,7 +36,6 @@ import {
 // https://github.com/microsoft/TypeScript/issues/42873
 import type {} from '@oclif/core/lib/interfaces/parser.js';
 import {getRemixConfig} from '../../../lib/config.js';
-import {colors} from '../../../lib/colors.js';
 
 export const ROUTE_MAP: Record<string, string | string[]> = {
   home: 'index',

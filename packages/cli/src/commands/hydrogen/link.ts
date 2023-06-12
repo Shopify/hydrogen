@@ -3,34 +3,26 @@ import Command from '@shopify/cli-kit/node/base-command';
 import {
   renderConfirmationPrompt,
   renderSelectPrompt,
+  renderSuccess,
   renderWarning,
 } from '@shopify/cli-kit/node/ui';
-import {
-  outputContent,
-  outputInfo,
-  outputSuccess,
-  outputToken,
-} from '@shopify/cli-kit/node/output';
 
 import {commonFlags} from '../../lib/flags.js';
 import {getHydrogenShop} from '../../lib/shop.js';
-import {hydrogenStorefrontUrl} from '../../lib/admin-urls.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {getConfig, setStorefront} from '../../lib/shopify-config.js';
 import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
+import {getCliCommand} from '../../lib/shell.js';
 
 export default class Link extends Command {
   static description =
     "Link a local project to one of your shop's Hydrogen storefronts.";
-
-  static hidden = true;
 
   static flags = {
     force: commonFlags.force,
     path: commonFlags.path,
     shop: commonFlags.shop,
     storefront: Flags.string({
-      char: 'h',
       description: 'The name of a Hydrogen Storefront (e.g. "Jane\'s Apparel")',
       env: 'SHOPIFY_HYDROGEN_STOREFRONT',
     }),
@@ -78,6 +70,7 @@ export async function linkStorefront({
   }
 
   let selectedStorefront;
+  const cliCommand = await getCliCommand();
 
   if (flagStorefront) {
     selectedStorefront = storefronts.find(
@@ -87,9 +80,16 @@ export async function linkStorefront({
     if (!selectedStorefront) {
       renderWarning({
         headline: `Couldn't find ${flagStorefront}`,
-        body: outputContent`There's no storefront matching ${flagStorefront} on your ${shop} shop. To see all available Hydrogen storefronts, run ${outputToken.genericShellCommand(
-          `npx shopify hydrogen list`,
-        )}`.value,
+        body: [
+          "There's no storefront matching",
+          {userInput: flagStorefront},
+          'on your',
+          {userInput: shop},
+          'shop. To see all available Hydrogen storefronts, run',
+          {
+            command: `${cliCommand} list`,
+          },
+        ],
       });
 
       return;
@@ -97,15 +97,12 @@ export async function linkStorefront({
   } else {
     const choices = storefronts.map(({id, title, productionUrl}) => ({
       value: id,
-      label: `${title} ${productionUrl}${
-        id === configStorefront?.id ? ' (Current)' : ''
-      }`,
+      label: `${title} (${productionUrl})`,
     }));
 
     const storefrontId = await renderSelectPrompt({
-      message: 'Choose a Hydrogen storefront to link this project to:',
+      message: 'Choose a Hydrogen storefront to link',
       choices,
-      defaultValue: 'true',
     });
 
     selectedStorefront = storefronts.find(({id}) => id === storefrontId);
@@ -117,15 +114,16 @@ export async function linkStorefront({
 
   await setStorefront(path ?? process.cwd(), selectedStorefront);
 
-  outputSuccess(`Linked to ${selectedStorefront.title}`);
-
   if (!silent) {
-    outputInfo(
-      `Admin URL: ${hydrogenStorefrontUrl(
-        adminSession,
-        selectedStorefront.parsedId,
-      )}`,
-    );
-    outputInfo(`Site URL: ${selectedStorefront.productionUrl}`);
+    renderSuccess({
+      body: [{userInput: selectedStorefront.title}, 'is now linked'],
+      nextSteps: [
+        [
+          'Run',
+          {command: `${cliCommand} dev`},
+          'to start your local development server and start building',
+        ],
+      ],
+    });
   }
 }

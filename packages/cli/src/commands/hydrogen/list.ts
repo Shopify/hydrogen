@@ -1,11 +1,17 @@
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderTable} from '@shopify/cli-kit/node/ui';
-import {outputContent, outputInfo} from '@shopify/cli-kit/node/output';
-
+import {pluralize} from '@shopify/cli-kit/common/string';
+import colors from '@shopify/cli-kit/node/colors';
+import {
+  outputContent,
+  outputInfo,
+  outputNewline,
+} from '@shopify/cli-kit/node/output';
 import {commonFlags} from '../../lib/flags.js';
 import {getHydrogenShop} from '../../lib/shop.js';
+import {parseGid} from '../../lib/graphql.js';
 import {
   type Deployment,
+  type HydrogenStorefront,
   getStorefrontsWithDeployment,
 } from '../../lib/graphql/admin/list-storefronts.js';
 import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
@@ -13,8 +19,6 @@ import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
 export default class List extends Command {
   static description =
     'Returns a list of Hydrogen storefronts available on a given shop.';
-
-  static hidden = true;
 
   static flags = {
     path: commonFlags.path,
@@ -38,39 +42,40 @@ export async function listStorefronts({path, shop: flagShop}: Flags) {
   const {storefronts, adminSession} = await getStorefrontsWithDeployment(shop);
 
   if (storefronts.length > 0) {
+    outputNewline();
+
     outputInfo(
-      outputContent`Found ${String(
-        storefronts.length,
-      )} Hydrogen storefronts on ${shop}:\n`.value,
+      pluralizedStorefronts({
+        storefronts,
+        shop,
+      }).toString(),
     );
 
-    const rows = storefronts.map(
-      ({parsedId, title, productionUrl, currentProductionDeployment}) => ({
-        id: parsedId,
-        title,
-        productionUrl,
-        currentDeployment: formatDeployment(currentProductionDeployment),
-      }),
-    );
+    storefronts.forEach(
+      ({currentProductionDeployment, id, productionUrl, title}) => {
+        outputNewline();
 
-    renderTable({
-      rows,
-      columns: {
-        id: {
-          header: 'ID',
-        },
-        title: {
-          header: 'Name',
-          color: 'whiteBright',
-        },
-        productionUrl: {
-          header: 'Production URL',
-        },
-        currentDeployment: {
-          header: 'Current deployment',
-        },
+        outputInfo(
+          outputContent`${colors.whiteBright(title)} ${colors.dim(
+            `(id: ${parseGid(id)})`,
+          )}`.value,
+        );
+
+        if (productionUrl) {
+          outputInfo(
+            outputContent`    ${colors.whiteBright(productionUrl)}`.value,
+          );
+        }
+
+        if (currentProductionDeployment) {
+          outputInfo(
+            outputContent`    ${colors.dim(
+              formatDeployment(currentProductionDeployment),
+            )}`.value,
+          );
+        }
       },
-    });
+    );
   } else {
     logMissingStorefronts(adminSession);
   }
@@ -78,11 +83,11 @@ export async function listStorefronts({path, shop: flagShop}: Flags) {
 
 const dateFormat = new Intl.DateTimeFormat('default', {
   year: 'numeric',
-  month: 'long',
+  month: 'numeric',
   day: 'numeric',
 });
 
-export function formatDeployment(deployment: Deployment | null) {
+export function formatDeployment(deployment: Deployment) {
   let message = '';
 
   if (!deployment) {
@@ -98,3 +103,18 @@ export function formatDeployment(deployment: Deployment | null) {
 
   return message;
 }
+
+const pluralizedStorefronts = ({
+  storefronts,
+  shop,
+}: {
+  storefronts: HydrogenStorefront[];
+  shop: string;
+}) => {
+  return pluralize(
+    storefronts,
+    (storefronts) =>
+      `Showing ${storefronts.length} Hydrogen storefronts for the store ${shop}`,
+    (_storefront) => `Showing 1 Hydrogen storefront for the store ${shop}`,
+  );
+};
