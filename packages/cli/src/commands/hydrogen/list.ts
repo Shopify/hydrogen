@@ -1,12 +1,11 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {pluralize} from '@shopify/cli-kit/common/string';
+import colors from '@shopify/cli-kit/node/colors';
 import {
   outputContent,
   outputInfo,
   outputNewline,
 } from '@shopify/cli-kit/node/output';
-
-import {colors} from '../../lib/colors.js';
 import {commonFlags} from '../../lib/flags.js';
 import {getHydrogenShop} from '../../lib/shop.js';
 import {parseGid} from '../../lib/graphql.js';

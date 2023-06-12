@@ -2,7 +2,7 @@ import {Flags} from '@oclif/core';
 import {camelize} from '@shopify/cli-kit/common/string';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
-import {colors} from './colors.js';
+import colors from '@shopify/cli-kit/node/colors';
 
 export const commonFlags = {
   path: Flags.string({

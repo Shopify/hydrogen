@@ -3,8 +3,7 @@ import {resolvePath} from '@shopify/cli-kit/node/path';
 import {linesToColumns} from '@shopify/cli-kit/common/string';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
-
-import {colors} from './colors.js';
+import colors from '@shopify/cli-kit/node/colors';
 import {pullRemoteEnvironmentVariables} from './pull-environment-variables.js';
 
 interface Arguments {

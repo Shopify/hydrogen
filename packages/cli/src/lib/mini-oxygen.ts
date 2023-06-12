@@ -5,7 +5,7 @@ import {
 } from '@shopify/cli-kit/node/output';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {colors} from './colors.js';
+import colors from '@shopify/cli-kit/node/colors';
 
 type MiniOxygenOptions = {
   root: string;
