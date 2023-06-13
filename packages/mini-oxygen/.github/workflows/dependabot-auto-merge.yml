@@ -1,6 +1,7 @@
 name: Dependabot Auto-Merge
 on:
   pull_request:
+    types: [opened, reopened]
     branches:
       - main
 
