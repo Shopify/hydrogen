@@ -1,7 +1,6 @@
 name: Dependabot Auto-Merge
 on:
   pull_request:
-    types: [opened, reopened]
     branches:
       - main
 
@@ -12,7 +11,7 @@ permissions:
 jobs:
   approve-dependabot-pr:
     runs-on: shopify-ubuntu-latest
-    if: ${{ github.actor == 'dependabot[bot]' }}
+    if: ${{ github.triggering_actor == 'dependabot[bot]' }}
     steps:
       - uses: actions/checkout@v3
         with:
