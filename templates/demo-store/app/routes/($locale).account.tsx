@@ -259,7 +259,7 @@ const CUSTOMER_QUERY = `#graphql
   }
 
   ${ORDER_CARD_FRAGMENT}
-`;
+` as const;
 
 export async function getCustomer(
   context: AppLoadContext,
