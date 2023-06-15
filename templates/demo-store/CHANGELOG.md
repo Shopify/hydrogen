@@ -1,5 +1,28 @@
 # demo-store
 
+## 1.0.4
+
+### Patch Changes
+
+- Update Remix to the latest version (`1.17.1`). ([#852](https://github.com/Shopify/hydrogen/pull/852)) by [@frandiox](https://github.com/frandiox)
+
+  When updating your app, remember to also update your Remix dependencies to `1.17.1` in your `package.json` file:
+
+  ```diff
+  -"@remix-run/react": "1.15.0",
+  +"@remix-run/react": "1.17.1",
+
+  -"@remix-run/dev": "1.15.0",
+  -"@remix-run/eslint-config": "1.15.0",
+  +"@remix-run/dev": "1.17.1",
+  +"@remix-run/eslint-config": "1.17.1",
+  ```
+
+- Updated dependencies [[`f29e178a`](https://github.com/Shopify/hydrogen/commit/f29e178ada608ef3797c5049fd498afeed272152)]:
+  - @shopify/remix-oxygen@1.1.1
+  - @shopify/hydrogen@2023.4.5
+  - @shopify/cli-hydrogen@5.0.1
+
 ## 1.0.3
 
 ### Patch Changes
