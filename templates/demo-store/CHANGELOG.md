@@ -1,5 +1,30 @@
 # demo-store
 
+## 1.0.3
+
+### Patch Changes
+
+- A default `https://` protocol is now added automatically to `storeDomain` if missing. ([#985](https://github.com/Shopify/hydrogen/pull/985)) by [@frandiox](https://github.com/frandiox)
+
+- Start using GraphQL code generation. This allows us to have full-stack type-safety and better developer experience. ([#937](https://github.com/Shopify/hydrogen/pull/937)) by [@frandiox](https://github.com/frandiox)
+
+  As a result of the above, we've fixed issues where the frontend was accessing data that was not correctly fetched from the Storefront API. For example, missing `product.vendor` or accessing `totalPrice` instead of `totalPriceV2`.
+
+  To enable the unstable codegen feature in your project, run your dev command as `shopify hydrogen dev --codegen-unstable`. See the [changes associated here](https://github.com/Shopify/hydrogen/pull/937/files) for examples.
+
+- Update the demostore to not cache the customer query. This is important to update in your app if you copied the logic from the demo store. ([#950](https://github.com/Shopify/hydrogen/pull/950)) by [@blittle](https://github.com/blittle)
+
+- Remove wrong cache control headers from route. Demo store is setting `cache-control` header when it is not suppose to. The demo store server renders cart information. Cart information is consider personalized content and should never be cached in any way. ([#991](https://github.com/Shopify/hydrogen/pull/991)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  Route `($locale).api.countries.tsx` can have cache control header because it is an API endpoint that doesn't render the cart.
+
+- Make `storefrontApiVersion` parameter optional. By default, it will use the current version of Hydrogen as the Storefront API version. ([#984](https://github.com/Shopify/hydrogen/pull/984)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`b2195520`](https://github.com/Shopify/hydrogen/commit/b219552030ed9cdb3fcd3343deaf5c502d12411b), [`4c5cdfd6`](https://github.com/Shopify/hydrogen/commit/4c5cdfd61b4634c76db7ecca05972102071109f9), [`7b4afea2`](https://github.com/Shopify/hydrogen/commit/7b4afea29a050f9c77482540e321d9bc60351b2e), [`42683d0a`](https://github.com/Shopify/hydrogen/commit/42683d0a1b6288d8f6a6e58bfbf2e2650f0d82d2), [`7d6a1a7c`](https://github.com/Shopify/hydrogen/commit/7d6a1a7cd3adb6ee0cf4cf242b72d5650509639b), [`808ceb51`](https://github.com/Shopify/hydrogen/commit/808ceb518a30389d0df4226bed23aead65ccd11f), [`442f602a`](https://github.com/Shopify/hydrogen/commit/442f602a45902beeb188575a85151f45b8be23ca), [`be912b2f`](https://github.com/Shopify/hydrogen/commit/be912b2ff7f4bc7a45688ff96d76f482b164efe5), [`8ccf6dbe`](https://github.com/Shopify/hydrogen/commit/8ccf6dbe7fb9cb2dec161dea2653c4ef6ba212c4), [`428c78dc`](https://github.com/Shopify/hydrogen/commit/428c78dcb6005c369c0c60e4c4cffb869afa7eb1), [`93a7c3c6`](https://github.com/Shopify/hydrogen/commit/93a7c3c65fc10c8b1a16cee5fa57ad932d278dc8), [`5124d618`](https://github.com/Shopify/hydrogen/commit/5124d6189ccfc208b65d4e8894be1a9a2bfb7db9)]:
+  - @shopify/cli-hydrogen@5.0.0
+  - @shopify/hydrogen@2023.4.4
+  - @shopify/remix-oxygen@1.1.0
+
 ## 1.0.2
 
 ### Patch Changes

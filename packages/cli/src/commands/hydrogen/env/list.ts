@@ -2,15 +2,14 @@ import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {pluralize} from '@shopify/cli-kit/common/string';
+import colors from '@shopify/cli-kit/node/colors';
 import {
   outputContent,
   outputInfo,
   outputToken,
   outputNewline,
 } from '@shopify/cli-kit/node/output';
-
 import {linkStorefront} from '../link.js';
-import {colors} from '../../../lib/colors.js';
 import {commonFlags} from '../../../lib/flags.js';
 import {getHydrogenShop} from '../../../lib/shop.js';
 import {getAdminSession} from '../../../lib/admin-session.js';
@@ -22,9 +21,8 @@ import {
 } from '../../../lib/render-errors.js';
 
 export default class EnvList extends Command {
-  static description = 'List the environments on your Hydrogen storefront.';
-
-  static hidden = true;
+  static description =
+    'List the environments on your linked Hydrogen storefront.';
 
   static flags = {
     path: commonFlags.path,
