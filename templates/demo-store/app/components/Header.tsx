@@ -1,5 +1,5 @@
-import {Await, useMatches} from '@remix-run/react';
-import {useLocation, useWindowScroll} from 'react-use';
+import {Await, useLocation, useMatches} from '@remix-run/react';
+import {useWindowScroll} from 'react-use';
 import {Suspense, useEffect, useMemo} from 'react';
 import clsx from 'clsx';
 
@@ -14,8 +14,8 @@ import {
   IconMenu,
   IconSearch,
   Link,
-  SearchForm,
-  SearchResults,
+  PredictiveSearchForm,
+  PredictiveSearchResults,
   Text,
   useDrawer,
 } from '~/components';
@@ -58,12 +58,12 @@ export function Header({title, menu}: HeaderProps) {
 
   return (
     <>
-      <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
       <SearchDrawer
         closeSearch={closeSearch}
         isOpen={serchDrawer}
         onClose={closeSearch}
       />
+      <CartDrawer isOpen={isCartOpen} onClose={closeCart} />
       {menu && (
         <MenuDrawer isOpen={isMenuOpen} onClose={closeMenu} menu={menu} />
       )}
@@ -110,23 +110,22 @@ type SearchDrawerProps = BaseDrawerProps &
   Pick<CommonHeaderProps, 'closeSearch'>;
 
 function SearchDrawer({isOpen, onClose, closeSearch}: SearchDrawerProps) {
-  const isHome = useIsHomePath();
   return (
     <Drawer
       heading={
-        <SearchForm className="flex items-center gap-2 w-full">
+        <PredictiveSearchForm className="flex items-center gap-2 w-full">
           {({fetchResults, inputRef}) => (
             <>
-              <fieldset className="w-full border flex items-center gap-2 mr-4">
+              <fieldset className="w-full flex items-center gap-2 mr-4">
                 <label htmlFor="q" className="sr-only">
                   Search
                 </label>
                 <input
                   className={clsx(
-                    'w-full bg-transparent inline-block text-left transition border-transparent -mb-px appearance-none py-1 focus:ring-transparent placeholder:opacity-20 placeholder:text-inherit',
-                    isHome
-                      ? 'focus:border-contrast/20 dark:focus:border-primary/20'
-                      : 'focus:border-primary/20',
+                    'w-full bg-transparent inline-block text-left transition -mb-px px-0 py-1',
+                    'appearance-none border-b border-transparent border-b-gray-400 focus:border-transparent focus:border-b-gray-300',
+                    'dark:focus:border-b-primary dark:focus:border-transparent dark:focus:ring-transparent',
+                    'placeholder:opacity-20 placeholder:text-inherit',
                   )}
                   name="q"
                   onChange={fetchResults}
@@ -136,21 +135,21 @@ function SearchDrawer({isOpen, onClose, closeSearch}: SearchDrawerProps) {
                   type="search"
                 />
                 <button
-                  type="submit"
                   className="flex items-center justify-center w-8 h-8 border-left focus:ring-primary/5 mr-2"
+                  type="submit"
                 >
                   <IconSearch />
                 </button>
               </fieldset>
             </>
           )}
-        </SearchForm>
+        </PredictiveSearchForm>
       }
       open={isOpen}
       onClose={onClose}
       openFrom="right"
     >
-      <SearchResults closeSearch={closeSearch} />
+      <PredictiveSearchResults closeSearch={closeSearch} />
     </Drawer>
   );
 }
@@ -308,12 +307,17 @@ function DesktopHeader({
 
 function SearchToggle({openSearch}: Pick<CommonHeaderProps, 'openSearch'>) {
   const {pathname} = useLocation();
-  const isSearchPage = pathname?.includes('/search');
+  const isSearchPage = Boolean(pathname?.includes('/search'));
 
   useEffect(() => {
-    // If cmd+K is pressed, open the search drawer
+    if (isSearchPage) return;
+
+    // If cmd+k or cmd+f is pressed, open the search drawer
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.metaKey && event.key === 'k') {
+      if (
+        (event.metaKey && event.key === 'k') ||
+        (event.metaKey && event.key === 'f')
+      ) {
         event.preventDefault();
         openSearch();
         const searchInput: HTMLInputElement | null = document.querySelector(
@@ -324,19 +328,20 @@ function SearchToggle({openSearch}: Pick<CommonHeaderProps, 'openSearch'>) {
     }
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [openSearch]);
+  }, [openSearch, isSearchPage]);
 
   return (
     <div
       className={clsx(
-        'flex items-center justify-center',
-        isSearchPage && 'hidden',
+        'hidden md:flex items-center justify-center',
+        isSearchPage && 'md:hidden',
       )}
     >
-      <p className="mr-4 hidden md:block">
-        <span className="mr-4 text-xs text-gray-500">Search</span>
-        <span className="border border-gray-500 rounded p-2 h-4 text-xs text-gray-500">
+      <p className="mr-4">
+        <span className="mr-4 text-xs text-gray-400">Search</span>
+        <span className="border border-gray-400 rounded-md p-2 h-4 text-xs text-gray-400">
           <kbd>⌘</kbd>
+          <kbd>&nbsp;</kbd>
           <kbd>K</kbd>
         </span>
       </p>

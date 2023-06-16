@@ -37,7 +37,7 @@ import {CACHE_NONE, routeHeaders} from '~/data/cache';
 import {ORDER_CARD_FRAGMENT} from '~/components/OrderCard';
 import type {FeaturedItemsQuery} from 'storefrontapi.generated';
 
-import {getFeaturedData} from './($locale).featured-products';
+import {getFeaturedItems} from './($locale).featured-items';
 import {doLogout} from './($locale).account.logout';
 
 // Combining json + Response + defer in a loader breaks the
@@ -75,7 +75,7 @@ export async function loader({request, context, params}: LoaderArgs) {
       isAuthenticated,
       customer,
       heading,
-      featuredData: getFeaturedData(context.storefront),
+      featuredData: getFeaturedItems(context.storefront),
     },
     {
       headers: {

@@ -12,7 +12,7 @@ export function Grid({
   as?: React.ElementType;
   className?: string;
   flow?: 'row' | 'col';
-  gap?: 'default' | 'blog';
+  gap?: 'default' | 'blog' | 'searchDrawer';
   items?: number;
   layout?: 'default' | 'products' | 'auto' | 'blog' | 'searchDrawer';
   [key: string]: any;
@@ -32,6 +32,7 @@ export function Grid({
   const gaps = {
     default: 'grid gap-2 gap-y-6 md:gap-4 lg:gap-6',
     blog: 'grid gap-6',
+    searchDrawer: 'grid gap-y-10 gap-x-6',
   };
 
   const flows = {

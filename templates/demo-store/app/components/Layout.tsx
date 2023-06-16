@@ -1,4 +1,5 @@
 import type {LayoutQuery} from 'storefrontapi.generated';
+
 import {Footer, Header} from '~/components';
 import {type EnhancedMenu} from '~/lib/utils';
 

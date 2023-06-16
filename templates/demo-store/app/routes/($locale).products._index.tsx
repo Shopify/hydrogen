@@ -71,7 +71,7 @@ export default function AllProducts() {
           {({nodes, isLoading, NextLink, PreviousLink}) => {
             const itemsMarkup = nodes.map((product, i) => (
               <ProductCard
-                key={product.id}
+                key={product.handle}
                 product={product}
                 loading={getImageLoadingPriority(i)}
               />

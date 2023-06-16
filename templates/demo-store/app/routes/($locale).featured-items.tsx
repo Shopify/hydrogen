@@ -1,22 +1,33 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import invariant from 'tiny-invariant';
 
+import type {FeaturedItemsQuery} from 'storefrontapi.generated';
 import {
   PRODUCT_CARD_FRAGMENT,
   FEATURED_COLLECTION_FRAGMENT,
 } from '~/data/fragments';
 
-export async function loader({context: {storefront}}: LoaderArgs) {
-  return json(await getFeaturedData(storefront));
+export async function loader({request, context: {storefront}}: LoaderArgs) {
+  const queryParams = new URL(request.url).searchParams;
+  const productsCount = Number(queryParams.get('productsCount') ?? 12);
+  const collectionsCount = Number(queryParams.get('collectionsCount') ?? 3);
+  const data = await getFeaturedItems(storefront, {
+    productsCount,
+    collectionsCount,
+  });
+  return json(data);
 }
 
-export async function getFeaturedData(
+export async function getFeaturedItems(
   storefront: LoaderArgs['context']['storefront'],
-  variables: {pageBy?: number} = {},
-) {
+  variables: {productsCount?: number; collectionsCount?: number} = {
+    productsCount: 12,
+    collectionsCount: 3,
+  },
+): Promise<FeaturedItemsQuery> {
+  // TODO: cache this query aggresively
   const data = await storefront.query(FEATURED_ITEMS_QUERY, {
     variables: {
-      pageBy: 12,
       country: storefront.i18n.country,
       language: storefront.i18n.language,
       ...variables,
@@ -32,14 +43,15 @@ export const FEATURED_ITEMS_QUERY = `#graphql
   query FeaturedItems(
     $country: CountryCode
     $language: LanguageCode
-    $pageBy: Int = 12
+    $productsCount: Int = 12
+    $collectionsCount: Int = 3
   ) @inContext(country: $country, language: $language) {
-    featuredCollections: collections(first: 3, sortKey: UPDATED_AT) {
+    featuredCollections: collections(first: $collectionsCount, sortKey: UPDATED_AT) {
       nodes {
         ...FeaturedCollectionDetails
       }
     }
-    featuredProducts: products(first: $pageBy) {
+    featuredProducts: products(first: $productsCount) {
       nodes {
         ...ProductCard
       }

@@ -270,3 +270,34 @@ export function IconFilters(props: IconProps) {
     </Icon>
   );
 }
+
+export function IconRightArrow(props: IconProps) {
+  return (
+    <Icon {...props} fill="transparent" stroke={props.stroke || 'currentColor'}>
+      <g clipPath="url(#clip0_1_6)">
+        <path
+          d="M12 14L14 12L16 10L12 6"
+          stroke={props.stroke || 'currentColor'}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M4 10H16"
+          stroke={props.stroke || 'currentColor'}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </g>
+      <defs>
+        <clipPath id="clip0_1_6">
+          <rect
+            width="14"
+            height="10"
+            fill="white"
+            transform="translate(3 5)"
+          />
+        </clipPath>
+      </defs>
+    </Icon>
+  );
+}

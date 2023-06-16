@@ -12,10 +12,10 @@ type FooterProps = {
 
 export function Footer({menu}: FooterProps) {
   const isHome = useIsHomePath();
-  const itemsCount = menu
-    ? menu?.items?.length + 1 > 4
+  const itemsCount = menu?.items?.length
+    ? menu.items.length + 1 > 4
       ? 4
-      : menu?.items?.length + 1
+      : menu.items.length + 1
     : [];
 
   return (

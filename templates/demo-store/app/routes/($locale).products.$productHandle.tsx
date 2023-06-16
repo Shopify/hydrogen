@@ -12,11 +12,7 @@ import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
 import {AnalyticsPageType, Money, ShopPayButton} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
-import type {
-  SelectedOptionInput,
-  Product as ProductType,
-  ProductConnection,
-} from '@shopify/hydrogen/storefront-api-types';
+import type {SelectedOptionInput} from '@shopify/hydrogen/storefront-api-types';
 
 import {
   Heading,
