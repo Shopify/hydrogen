@@ -8,7 +8,7 @@ export default class Preview extends Command {
   static description =
     'Runs a Hydrogen storefront in an Oxygen worker for production.';
 
-  static flags = {
+  static flags: any = {
     path: commonFlags.path,
     port: commonFlags.port,
   };

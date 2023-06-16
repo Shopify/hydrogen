@@ -10,11 +10,11 @@ export default class GenerateRoute extends Command {
   static description =
     'Returns diagnostic information about a Hydrogen storefront.';
 
-  static flags = {
+  static flags: any = {
     path: commonFlags.path,
   };
 
-  static args = {
+  static args: any = {
     resource: Args.string({
       name: 'resource',
       description: `The resource to check. Currently only 'routes' is supported.`,

@@ -9,7 +9,7 @@ import {codegen} from '../../lib/codegen.js';
 export default class Codegen extends Command {
   static description =
     'Generate types for the Storefront API queries found in your project.';
-  static flags = {
+  static flags: any = {
     path: commonFlags.path,
     ['codegen-config-path']: Flags.string({
       description:

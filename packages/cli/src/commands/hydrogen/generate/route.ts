@@ -15,7 +15,7 @@ import {
 
 export default class GenerateRoute extends Command {
   static description = 'Generates a standard Shopify route.';
-  static flags = {
+  static flags: any = {
     adapter: Flags.string({
       description:
         'Remix adapter used in the route. The default is `@shopify/remix-oxygen`.',

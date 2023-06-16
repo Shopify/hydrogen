@@ -34,7 +34,7 @@ const LOG_WORKER_BUILT = '📦 Worker built';
 
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
-  static flags = {
+  static flags: any = {
     path: commonFlags.path,
     sourcemap: Flags.boolean({
       description: 'Generate sourcemaps for the build.',
