@@ -91,8 +91,6 @@ export async function runBuild({
     }),
   ]);
 
-  console.log(result);
-
   await writeFile(
     path.resolve(process.cwd(), 'dist/client/build/metafile.json'),
     // @ts-expect-error
