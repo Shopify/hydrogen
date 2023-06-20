@@ -16,6 +16,7 @@ class WorkerNotFoundError extends Error {
 export type MiniOxygenOptions = Partial<{
   log(message: string): unknown;
   workerFile: string;
+  workDir: string;
   watch: boolean;
   modules: boolean;
   buildCommand: string;
@@ -53,6 +54,7 @@ export function createMiniOxygen(
     // eslint-disable-next-line no-console
     log = (message: string) => console.log(message),
     workerFile,
+    workDir,
     watch = false,
     buildWatchPaths,
     buildCommand,
@@ -62,7 +64,7 @@ export function createMiniOxygen(
     env = {},
   } = opts;
 
-  const root = process.cwd();
+  const root = workDir ?? process.cwd();
 
   if (!workerFile || !fs.existsSync(workerFile)) {
     throw new WorkerNotFoundError();

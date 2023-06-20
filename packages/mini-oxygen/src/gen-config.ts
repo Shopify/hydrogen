@@ -12,6 +12,7 @@ const DEFAULTS: Required<
   Omit<
     MiniOxygenPreviewOptions,
     | 'log'
+    | 'workDir'
     | 'envPath'
     | 'oxygenHeaders'
     | 'onRequest'
