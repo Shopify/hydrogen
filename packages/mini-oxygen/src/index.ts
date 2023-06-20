@@ -1,1 +1,1 @@
-export {preview as default} from './preview';
+export {preview as default, createMiniOxygen} from './preview';
