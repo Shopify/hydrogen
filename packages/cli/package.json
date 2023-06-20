@@ -13,7 +13,8 @@
     "typecheck": "tsc --noEmit",
     "generate:manifest": "oclif manifest",
     "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest",
+    "postinstall": "patch-package"
   },
   "devDependencies": {
     "@types/diff": "^5.0.2",
@@ -45,7 +46,8 @@
     "prettier": "^2.8.4",
     "recursive-readdir": "^2.2.3",
     "tar-fs": "^2.1.1",
-    "typescript": "^4.9.5"
+    "typescript": "^4.9.5",
+    "patch-package": "^6.4.7"
   },
   "bin": "dist/create-app.js",
   "exports": {

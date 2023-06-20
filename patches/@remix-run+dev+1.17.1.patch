@@ -1,0 +1,54 @@
+diff --git a/node_modules/@remix-run/dev/dist/compiler/build.js b/node_modules/@remix-run/dev/dist/compiler/build.js
+index c1c7c91..0271a96 100644
+--- a/node_modules/@remix-run/dev/dist/compiler/build.js
++++ b/node_modules/@remix-run/dev/dist/compiler/build.js
+@@ -16,7 +16,7 @@ var compiler = require('./compiler.js');
+ 
+ async function build(ctx) {
+   let compiler$1 = await compiler.create(ctx);
+-  await compiler$1.compile();
++  return await compiler$1.compile();
+ }
+ 
+ exports.build = build;
+diff --git a/node_modules/@remix-run/dev/dist/compiler/compiler.js b/node_modules/@remix-run/dev/dist/compiler/compiler.js
+index 8d0b3e4..eed30cd 100644
+--- a/node_modules/@remix-run/dev/dist/compiler/compiler.js
++++ b/node_modules/@remix-run/dev/dist/compiler/compiler.js
+@@ -128,9 +128,9 @@ let create = async ctx => {
+     let server = await tasks.server;
+     if (!server.ok) throw error ?? server.error;
+     // artifacts/server
+-    writes.server = write.write(ctx.config, server.value);
++    writes.server = write.write(ctx.config, server.value.outputFiles);
+     await Promise.all(Object.values(writes));
+-    return manifest$1;
++    return {manifest: manifest$1, metafile: {client: metafile, server: server.value.metafile}};
+   };
+   return {
+     compile,
+diff --git a/node_modules/@remix-run/dev/dist/compiler/server/compiler.js b/node_modules/@remix-run/dev/dist/compiler/server/compiler.js
+index ad30727..5cb31e4 100644
+--- a/node_modules/@remix-run/dev/dist/compiler/server/compiler.js
++++ b/node_modules/@remix-run/dev/dist/compiler/server/compiler.js
+@@ -83,6 +83,7 @@ const createEsbuildConfig = (ctx, refs) => {
+     platform: ctx.config.serverPlatform,
+     format: ctx.config.serverModuleFormat,
+     treeShaking: true,
++    metafile: true,
+     // The type of dead code elimination we want to do depends on the
+     // minify syntax property: https://github.com/evanw/esbuild/issues/672#issuecomment-1029682369
+     // Dev builds are leaving code that should be optimized away in the
+@@ -127,9 +128,10 @@ const create = async (ctx, refs) => {
+   });
+   let compile = async () => {
+     let {
+-      outputFiles
++      outputFiles,
++      metafile
+     } = await compiler.rebuild();
+-    return outputFiles;
++    return {outputFiles, metafile};
+   };
+   return {
+     compile,

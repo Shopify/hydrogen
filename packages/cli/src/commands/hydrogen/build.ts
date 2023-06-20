@@ -7,7 +7,7 @@ import {
   outputContent,
   outputToken,
 } from '@shopify/cli-kit/node/output';
-import {fileSize, copyFile, rmdir} from '@shopify/cli-kit/node/fs';
+import {fileSize, copyFile, rmdir, writeFile} from '@shopify/cli-kit/node/fs';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import colors from '@shopify/cli-kit/node/colors';
 import {
@@ -75,7 +75,7 @@ export async function runBuild({
       rmdir(buildPath, {force: true}),
     ]);
 
-  await Promise.all([
+  const [, result] = await Promise.all([
     copyPublicFiles(publicPath, buildPathClient),
     build({
       config: remixConfig,
@@ -90,6 +90,20 @@ export async function runBuild({
       process.exit(1);
     }),
   ]);
+
+  console.log(result);
+
+  await writeFile(
+    path.resolve(process.cwd(), 'dist/client/build/metafile.json'),
+    // @ts-expect-error
+    JSON.stringify(result.metafile.client, null, 2),
+  );
+
+  await writeFile(
+    path.resolve(process.cwd(), 'dist/worker/metafile.json'),
+    // @ts-expect-error
+    JSON.stringify(result.metafile.server, null, 2),
+  );
 
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
