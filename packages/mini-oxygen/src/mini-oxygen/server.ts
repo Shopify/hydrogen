@@ -12,6 +12,8 @@ import bodyParser from 'body-parser';
 
 import type {MiniOxygen} from './core';
 
+export type {Request, Response} from '@miniflare/core';
+
 export interface MiniOxygenServerHooks {
   onRequest?: (request: Request) => void | Promise<void>;
   onResponse?: (request: Request, response: Response) => void | Promise<void>;
