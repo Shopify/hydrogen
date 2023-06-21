@@ -7,7 +7,7 @@ import {fileURLToPath} from 'url';
 import path from 'path';
 import fs from 'fs/promises';
 
-export type {RemixConfig};
+export type {RemixConfig, ServerMode};
 
 const BUILD_DIR = 'dist'; // Hardcoded in Oxygen
 const CLIENT_SUBDIR = 'client';
