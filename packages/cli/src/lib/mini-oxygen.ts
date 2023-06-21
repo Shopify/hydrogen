@@ -4,8 +4,10 @@ import {
   outputContent,
 } from '@shopify/cli-kit/node/output';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {fileExists} from '@shopify/cli-kit/node/fs';
+import {fileExists, writeFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
+import type {Request, Response} from '@shopify/mini-oxygen';
+import {startProfiler} from './profiling.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -14,6 +16,7 @@ type MiniOxygenOptions = {
   buildPathClient: string;
   buildPathWorkerFile: string;
   environmentVariables?: {[key: string]: string};
+  profiling?: boolean;
 };
 
 export async function startMiniOxygen({
@@ -23,20 +26,16 @@ export async function startMiniOxygen({
   buildPathWorkerFile,
   buildPathClient,
   environmentVariables = {},
+  profiling = true,
 }: MiniOxygenOptions) {
-  const {default: miniOxygen} = await import('@shopify/mini-oxygen');
-  const miniOxygenPreview =
-    miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
+  const {createMiniOxygen} = await import('@shopify/mini-oxygen');
 
   const dotenvPath = resolvePath(root, '.env');
 
-  const {port: actualPort} = await miniOxygenPreview({
+  const miniOxygenOptions = {
+    workDir: root,
     workerFile: buildPathWorkerFile,
-    assetsDir: buildPathClient,
-    publicPath: '',
-    port,
     watch,
-    autoReload: watch,
     modules: true,
     env: {
       ...environmentVariables,
@@ -51,13 +50,24 @@ export async function startMiniOxygen({
     buildWatchPaths: watch
       ? [resolvePath(root, buildPathWorkerFile)]
       : undefined,
-    onResponse: (request, response) =>
-      // 'Request' and 'Response' types in MiniOxygen comes from
-      // Miniflare and are slightly different from standard types.
-      logResponse(
-        request as unknown as Request,
-        response as unknown as Response,
-      ),
+  };
+
+  const stopProfiler = profiling && (await startProfiler());
+
+  const miniOxygen = createMiniOxygen(miniOxygenOptions);
+
+  if (stopProfiler) {
+    await miniOxygen.init();
+    const profile = await stopProfiler();
+    await writeFile('./profile.cpuprofile', JSON.stringify(profile));
+  }
+
+  const {port: actualPort} = await miniOxygen.createServer({
+    port,
+    assetsDir: buildPathClient,
+    publicPath: '',
+    autoReload: watch,
+    onResponse: logResponse,
   });
 
   const listeningAt = `http://localhost:${actualPort}`;
