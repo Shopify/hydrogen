@@ -35,20 +35,21 @@ export type MoneyProps<ComponentGeneric extends React.ElementType> =
  * ```js
  * // basic usage, outputs: $100.00
  * <Money data={{amount: '100.00', currencyCode: 'USD'}} />
+ * &nbsp;
  *
  * // without currency, outputs: 100.00
  * <Money
  *   data={{amount: '100.00', currencyCode: 'USD'}}
  *   withoutCurrency
  * />
- *
+ * &nbsp;
  *
  * // without trailing zeros: outputs: $100
  * <Money
  *   data={{amount: '100.00', currencyCode: 'USD'}}
  *   withoutTrailingZeros
  * />
- *
+ * &nbsp;
  *
  * // with per-unit measurement: outputs: $100.00 per G
  * <Money
@@ -56,8 +57,7 @@ export type MoneyProps<ComponentGeneric extends React.ElementType> =
  *   measurement={{referenceUnit: 'G'}}
  *   measurementSeparator=" per "
  * />
- *
- *
+ * &nbsp;
  * ```
  */
 export function Money<ComponentGeneric extends React.ElementType = 'div'>({
