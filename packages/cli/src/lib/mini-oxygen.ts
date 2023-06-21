@@ -67,10 +67,8 @@ export async function startMiniOxygen({
   renderSuccess({
     headline: 'MiniOxygen development server running.',
     body: [
-      'View Hydrogen app:',
-      {link: {url: listeningAt}},
-      '\nView GraphiQL API browser:',
-      {link: {url: graphiqlUrl}},
+      `View Hydrogen app: ${listeningAt}`,
+      `\nView GraphiQL API browser: ${graphiqlUrl}`,
     ],
   });
 }
