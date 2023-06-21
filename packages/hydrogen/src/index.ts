@@ -59,3 +59,5 @@ export type {
   StorefrontApiResponseOkPartial,
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
+
+export {createLoaderDataTracker} from './devtools/use-loader-data';
