@@ -57,46 +57,39 @@ export type UseMoneyValue = {
  * Uses `locale` from `ShopifyProvider`
  * @example
  * ```js
- * // basic usage, outputs: $100.00
  * const money = useMoney({
  *   amount: '100.00',
  *   currencyCode: 'USD'
  * })
  * &nbsp;
+
+ * // basic usage outputs: $100.00
+ * money.localizedString
+ * &nbsp;
  *
- * // without currency, outputs: 100.00
- * const money = useMoney({
- *   amount: '100.00',
- *   currencyCode: 'USD',
- *   withoutCurrency: true
- * })
+ * // without currency, money. outputs: 100.00
+ * money.amount
  * &nbsp;
  *
  * // without trailing zeros, outputs: $100
- * const money = useMoney({
- *   amount: '100.00',
- *   currencyCode: 'USD',
- *   withoutTrailingZeros: true
- * })
+ * money.withoutTrailingZeros
+ * &nbsp;
+ *
+ * // parts, outputs: [ { type: 'currency', value: '$' }, { type: 'integer', value: '100' }, { type: 'decimal', value: '.' }, { type: 'fraction', value: '00' } ]
+ * money.parts
+ * &nbsp;
+ *
+ * // currency name, outputs: US dollars
+ * money.currencyCode
+ * &nbsp;
+ *
+ * // currency symbol, outputs: $
+ * money.currencySymbol
  * &nbsp;
  *
  * // without currency and without trailing zeros, outputs: 100
- * const money = useMoney({
- *   amount: '100.00',
- *   currencyCode: 'USD',
- *   withoutCurrency: true,
- *   withoutTrailingZeros: true
- * })
+ * money.withoutTrailingZerosAndCurrency
  * &nbsp;
- *
- * // with measurement, outputs: $100.00 / G
- * const money = useMoney({
- *   amount: '100.00',
- *   currencyCode: 'USD',
- *   measurement: {referenceUnit: 'G'}
- * })
- * &nbsp;
- *
  *```
  */
 export function useMoney(money: MoneyV2): UseMoneyValue {
