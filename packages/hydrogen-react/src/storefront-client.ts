@@ -8,7 +8,7 @@ export type StorefrontClientProps = {
   /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */
   publicStorefrontToken?: string;
   /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */
-  storefrontApiVersion: string;
+  storefrontApiVersion?: string;
   /**
    * Customizes which `"content-type"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `"json"`. When fetching with a `body` that is a plain string, use `"graphql"`. Defaults to `"json"`
    *
@@ -29,7 +29,7 @@ export function createStorefrontClient(
     storeDomain,
     privateStorefrontToken,
     publicStorefrontToken,
-    storefrontApiVersion,
+    storefrontApiVersion = SFAPI_VERSION,
     contentType,
   } = props;
 
@@ -53,18 +53,32 @@ export function createStorefrontClient(
     );
   }
 
+  const isMockShop = (domain: string): boolean => domain.includes('mock.shop');
+  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (
+    overrideProps,
+  ) => {
+    const domain = overrideProps?.storeDomain ?? storeDomain;
+    return domain.includes('://') ? domain : `https://${domain}`;
+  };
+
   return {
-    getShopifyDomain(overrideProps): string {
-      return overrideProps?.storeDomain ?? storeDomain;
-    },
+    getShopifyDomain,
     getStorefrontApiUrl(overrideProps): string {
-      const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;
-      return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${
+      const domain = getShopifyDomain(overrideProps);
+      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');
+
+      if (isMockShop(domain)) return apiUrl;
+
+      return `${apiUrl}/${
         overrideProps?.storefrontApiVersion ?? storefrontApiVersion
       }/graphql.json`;
     },
     getPrivateTokenHeaders(overrideProps): Record<string, string> {
-      if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {
+      if (
+        !privateStorefrontToken &&
+        !overrideProps?.privateStorefrontToken &&
+        !isMockShop(storeDomain)
+      ) {
         throw new Error(
           `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`,
         );
@@ -95,7 +109,11 @@ export function createStorefrontClient(
       };
     },
     getPublicTokenHeaders(overrideProps): Record<string, string> {
-      if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {
+      if (
+        !publicStorefrontToken &&
+        !overrideProps?.publicStorefrontToken &&
+        !isMockShop(storeDomain)
+      ) {
         throw new Error(
           `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`,
         );

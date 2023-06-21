@@ -4,19 +4,30 @@ import type {
   Filter,
   ProductCollectionSortKeys,
 } from '@shopify/hydrogen/storefront-api-types';
-import {flattenConnection, AnalyticsPageType} from '@shopify/hydrogen';
+import {
+  flattenConnection,
+  AnalyticsPageType,
+  Pagination__unstable as Pagination,
+  getPaginationVariables__unstable as getPaginationVariables,
+} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
-import {PageHeader, Section, Text, SortFilter} from '~/components';
-import {ProductGrid} from '~/components/ProductGrid';
+import {
+  PageHeader,
+  Section,
+  Text,
+  SortFilter,
+  Grid,
+  ProductCard,
+  Button,
+} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
-import {CACHE_SHORT, routeHeaders} from '~/data/cache';
+import {routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
 import type {AppliedFilter, SortParam} from '~/components/SortFilter';
+import {getImageLoadingPriority} from '~/lib/const';
 
 export const headers = routeHeaders;
-
-const PAGINATION_SIZE = 48;
 
 type VariantFilterParam = Record<string, string | boolean>;
 type PriceFiltersQueryParam = Record<'price', {max?: number; min?: number}>;
@@ -29,6 +40,9 @@ type FiltersQueryParams = Array<
 >;
 
 export async function loader({params, request, context}: LoaderArgs) {
+  const paginationVariables = getPaginationVariables(request, {
+    pageBy: 8,
+  });
   const {collectionHandle} = params;
 
   invariant(collectionHandle, 'Missing collectionHandle param');
@@ -40,7 +54,6 @@ export async function loader({params, request, context}: LoaderArgs) {
   const {sortKey, reverse} = getSortValuesFromParam(
     searchParams.get('sort') as SortParam,
   );
-  const cursor = searchParams.get('cursor');
   const filters: FiltersQueryParams = [];
   const appliedFilters: AppliedFilter[] = [];
 
@@ -92,9 +105,8 @@ export async function loader({params, request, context}: LoaderArgs) {
     COLLECTION_QUERY,
     {
       variables: {
+        ...paginationVariables,
         handle: collectionHandle,
-        pageBy: PAGINATION_SIZE,
-        cursor,
         filters,
         sortKey,
         reverse,
@@ -110,24 +122,17 @@ export async function loader({params, request, context}: LoaderArgs) {
 
   const seo = seoPayload.collection({collection, url: request.url});
 
-  return json(
-    {
-      collection,
-      appliedFilters,
-      collections: flattenConnection(collections),
-      analytics: {
-        pageType: AnalyticsPageType.collection,
-        collectionHandle,
-        resourceId: collection.id,
-      },
-      seo,
+  return json({
+    collection,
+    appliedFilters,
+    collections: flattenConnection(collections),
+    analytics: {
+      pageType: AnalyticsPageType.collection,
+      collectionHandle,
+      resourceId: collection.id,
     },
-    {
-      headers: {
-        'Cache-Control': CACHE_SHORT,
-      },
-    },
-  );
+    seo,
+  });
 }
 
 export default function Collection() {
@@ -153,12 +158,31 @@ export default function Collection() {
           appliedFilters={appliedFilters}
           collections={collections}
         >
-          <ProductGrid
-            key={collection.id}
-            products={collection.products}
-            url={`/collections/${collection.handle}`}
-            data-test="product-grid"
-          />
+          <Pagination connection={collection.products}>
+            {({nodes, isLoading, PreviousLink, NextLink}) => (
+              <>
+                <div className="flex items-center justify-center mb-6">
+                  <Button as={PreviousLink} variant="secondary" width="full">
+                    {isLoading ? 'Loading...' : 'Load previous'}
+                  </Button>
+                </div>
+                <Grid layout="products">
+                  {nodes.map((product, i) => (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      loading={getImageLoadingPriority(i)}
+                    />
+                  ))}
+                </Grid>
+                <div className="flex items-center justify-center mt-6">
+                  <Button as={NextLink} variant="secondary" width="full">
+                    {isLoading ? 'Loading...' : 'Load more products'}
+                  </Button>
+                </div>
+              </>
+            )}
+          </Pagination>
         </SortFilter>
       </Section>
     </>
@@ -170,11 +194,13 @@ const COLLECTION_QUERY = `#graphql
     $handle: String!
     $country: CountryCode
     $language: LanguageCode
-    $pageBy: Int!
-    $cursor: String
     $filters: [ProductFilter!]
     $sortKey: ProductCollectionSortKeys!
     $reverse: Boolean
+    $first: Int
+    $last: Int
+    $startCursor: String
+    $endCursor: String
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -193,8 +219,10 @@ const COLLECTION_QUERY = `#graphql
         altText
       }
       products(
-        first: $pageBy,
-        after: $cursor,
+        first: $first,
+        last: $last,
+        before: $startCursor,
+        after: $endCursor,
         filters: $filters,
         sortKey: $sortKey,
         reverse: $reverse
@@ -214,6 +242,8 @@ const COLLECTION_QUERY = `#graphql
           ...ProductCard
         }
         pageInfo {
+          hasPreviousPage
+          hasNextPage
           hasNextPage
           endCursor
         }

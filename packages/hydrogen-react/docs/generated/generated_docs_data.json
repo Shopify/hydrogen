@@ -817,8 +817,86 @@
             "filePath": "/cart-types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "Cart",
-            "value": "PartialDeep<\n  {\n    /** The cart's ID if it has been created through the Storefront API. */\n    id?: string;\n    /** The cart lines. */\n    lines: CartLine[];\n    /** The checkout URL for the cart, if the cart has been created in the Storefront API. */\n    checkoutUrl?: string;\n    /** The cart's note. */\n    note?: string;\n    /** The cart's buyer identity. */\n    buyerIdentity?: CartType['buyerIdentity'];\n    /** The cart's attributes. */\n    attributes: CartType['attributes'];\n    /** The discount codes applied to the cart. */\n    discountCodes?: CartType['discountCodes'];\n    /** The cost for the cart, including the subtotal, total, taxes, and duties. */\n    cost?: CartType['cost'];\n    /** The total number of items in the cart, across all lines. If there are no lines, then the value is 0. */\n    totalQuantity: number;\n  },\n  {recurseIntoArrays: true}\n>",
+            "value": "PartialDeep<CartBase, {recurseIntoArrays: true}>",
             "description": ""
+          },
+          "CartBase": {
+            "filePath": "/cart-types.ts",
+            "name": "CartBase",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "id",
+                "value": "string",
+                "description": "The cart's ID if it has been created through the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "lines",
+                "value": "CartLine[]",
+                "description": "The cart lines."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "checkoutUrl",
+                "value": "string",
+                "description": "The checkout URL for the cart, if the cart has been created in the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "note",
+                "value": "string",
+                "description": "The cart's note.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "buyerIdentity",
+                "value": "CartBuyerIdentity",
+                "description": "The cart's buyer identity.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "attributes",
+                "value": "Attribute[]",
+                "description": "The cart's attributes."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "discountCodes",
+                "value": "CartDiscountCode[]",
+                "description": "The discount codes applied to the cart.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cost",
+                "value": "CartCost",
+                "description": "The cost for the cart, including the subtotal, total, taxes, and duties.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "totalQuantity",
+                "value": "number",
+                "description": "The total number of items in the cart, across all lines. If there are no lines, then the value is 0.",
+                "isOptional": true
+              }
+            ],
+            "value": "export interface CartBase {\n  /** The cart's ID if it has been created through the Storefront API. */\n  id?: string;\n  /** The cart lines. */\n  lines: CartLine[];\n  /** The checkout URL for the cart, if the cart has been created in the Storefront API. */\n  checkoutUrl?: string;\n  /** The cart's note. */\n  note?: string;\n  /** The cart's buyer identity. */\n  buyerIdentity?: CartType['buyerIdentity'];\n  /** The cart's attributes. */\n  attributes: CartType['attributes'];\n  /** The discount codes applied to the cart. */\n  discountCodes?: CartType['discountCodes'];\n  /** The cost for the cart, including the subtotal, total, taxes, and duties. */\n  cost?: CartType['cost'];\n  /** The total number of items in the cart, across all lines. If there are no lines, then the value is 0. */\n  totalQuantity?: number;\n}"
           }
         }
       }
@@ -6719,31 +6797,96 @@
       {
         "title": "Props",
         "description": "`useCart` hook must be a descendent of a `CartProvider` component.",
-        "type": "UseCartGeneratedType",
+        "type": "UseCartDocs",
         "typeDefinitions": {
-          "UseCartGeneratedType": {
+          "UseCartDocs": {
             "filePath": "/CartProvider.tsx",
-            "name": "UseCartGeneratedType",
-            "params": [],
-            "returns": {
-              "filePath": "/CartProvider.tsx",
-              "description": "",
-              "name": "CartWithActions",
-              "value": "CartWithActions"
-            },
-            "value": "export function useCart(): CartWithActions {\n  const context = useContext(CartContext);\n\n  if (!context) {\n    throw new Error('Expected a Cart Context, but no Cart Context was found');\n  }\n\n  return context;\n}"
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "UseCartDocs",
+            "value": "() => CartWithActionsDocs",
+            "description": ""
           },
-          "CartWithActions": {
+          "CartWithActionsDocs": {
             "filePath": "/cart-types.ts",
-            "name": "CartWithActions",
+            "name": "CartWithActionsDocs",
             "description": "",
             "members": [
               {
                 "filePath": "/cart-types.ts",
                 "syntaxKind": "PropertySignature",
+                "name": "id",
+                "value": "string",
+                "description": "The cart's ID if it has been created through the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "lines",
+                "value": "CartLine[]",
+                "description": "The cart lines."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "checkoutUrl",
+                "value": "string",
+                "description": "The checkout URL for the cart, if the cart has been created in the Storefront API.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "note",
+                "value": "string",
+                "description": "The cart's note.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "buyerIdentity",
+                "value": "CartBuyerIdentity",
+                "description": "The cart's buyer identity.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "attributes",
+                "value": "Attribute[]",
+                "description": "The cart's attributes."
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "discountCodes",
+                "value": "CartDiscountCode[]",
+                "description": "The discount codes applied to the cart.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "cost",
+                "value": "CartCost",
+                "description": "The cost for the cart, including the subtotal, total, taxes, and duties.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "totalQuantity",
+                "value": "number",
+                "description": "The total number of items in the cart, across all lines. If there are no lines, then the value is 0.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/cart-types.ts",
+                "syntaxKind": "PropertySignature",
                 "name": "status",
                 "value": "\"uninitialized\" | \"fetching\" | \"creating\" | \"updating\" | \"idle\"",
-                "description": "The status of the cart. This returns 'uninitialized' when the cart is not yet created, `creating` when the cart is being created, `fetching` when an existing cart is being fetched, `updating` when the cart is updating, and `idle` when the cart isn't being created or updated."
+                "description": "The status of the cart. This returns `uninitialized` when the cart is not yet created, `creating` when the cart is being created, `fetching` when an existing cart is being fetched, `updating` when the cart is updating, and `idle` when the cart isn't being created or updated."
               },
               {
                 "filePath": "/cart-types.ts",
@@ -6812,19 +6955,12 @@
               {
                 "filePath": "/cart-types.ts",
                 "syntaxKind": "PropertySignature",
-                "name": "totalQuantity",
-                "value": "number",
-                "description": "The total number of items in the cart, across all lines. If there are no lines, then the value is 0."
-              },
-              {
-                "filePath": "/cart-types.ts",
-                "syntaxKind": "PropertySignature",
                 "name": "cartFragment",
                 "value": "string",
                 "description": "The fragment used to query the cart object for all queries and mutations."
               }
             ],
-            "value": "export interface CartWithActions extends Cart {\n  /** The status of the cart. This returns 'uninitialized' when the cart is not yet created, `creating` when the cart is being created, `fetching` when an existing cart is being fetched, `updating` when the cart is updating, and `idle` when the cart isn't being created or updated. */\n  status: CartStatus;\n  /** If an error occurred on the previous cart action, then `error` will exist and `cart` will be put back into the last valid status it was in. */\n  error?: unknown;\n  /** A callback that creates a cart. Expects the same input you would provide to the Storefront API's `cartCreate` mutation. */\n  cartCreate: (cart: CartInput) => void;\n  /** A callback that adds lines to the cart. Expects the same `lines` input that you would provide to the Storefront API's `cartLinesAdd` mutation. If a cart doesn't already exist, then it will create the cart for you. */\n  linesAdd: (lines: CartLineInput[]) => void;\n  /** A callback that removes lines from the cart. Expects the same `lines` input that you would provide to the Storefront API's `cartLinesRemove` mutation. Only lines that are included in the `lines` parameter will be in the cart afterwards. */\n  linesRemove: (lines: string[]) => void;\n  /** A callback that updates lines in the cart. Expects the same `lines` input that you would provide to the Storefront API's `cartLinesUpdate` mutation. If a line item is not included in the `lines` parameter, it will still exist in the cart and will not be changed. */\n  linesUpdate: (lines: CartLineUpdateInput[]) => void;\n  /** A callback that updates the note in the cart. Expects the same `note` input that you would provide to the Storefront API's `cartNoteUpdate` mutation. */\n  noteUpdate: (note: MutationCartNoteUpdateArgs['note']) => void;\n  /** A callback that updates the buyer identity in the cart. Expects the same `buyerIdentity` input that you would provide to the Storefront API's `cartBuyerIdentityUpdate` mutation. */\n  buyerIdentityUpdate: (buyerIdenity: CartBuyerIdentityInput) => void;\n  /** A callback that updates the cart attributes. Expects the same `attributes` input that you would provide to the Storefront API's `cartAttributesUpdate` mutation. */\n  cartAttributesUpdate: (\n    attributes: MutationCartAttributesUpdateArgs['attributes'],\n  ) => void;\n  /** A callback that updates the cart's discount codes. Expects the same `codes` input that you would provide to the Storefront API's `cartDiscountCodesUpdate` mutation. */\n  discountCodesUpdate: (discountCodes: string[]) => void;\n  /** The total number of items in the cart, across all lines. If there are no lines, then the value is 0. */\n  totalQuantity: number;\n  /** The fragment used to query the cart object for all queries and mutations. */\n  cartFragment: string;\n}"
+            "value": "export interface CartWithActionsDocs extends CartBase, CartActions {}"
           }
         }
       }

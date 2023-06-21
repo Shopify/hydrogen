@@ -21,10 +21,8 @@ export default {
       privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
       /* Public Storefront API token for your store */
       publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
-      /* Desired Storefront API version to use */
-      storefrontApiVersion: env.PUBLIC_STOREFRONT_API_VERSION,
-      /* Your store domain: "https://{shop}.myshopify.com" */
-      storeDomain: `https://${env.PUBLIC_STORE_DOMAIN}`,
+      /* Your store domain: "{shop}.myshopify.com" */
+      storeDomain: env.PUBLIC_STORE_DOMAIN,
       /**
        * Storefront API headers containing:
        * - buyerIp: The IP address of the customer.

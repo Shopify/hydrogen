@@ -3,7 +3,7 @@ import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 
 import {PageHeader, Section, Heading, Link} from '~/components';
-import {routeHeaders, CACHE_LONG} from '~/data/cache';
+import {routeHeaders} from '~/data/cache';
 import {seoPayload} from '~/lib/seo.server';
 import type {NonNullableFields} from '~/lib/type';
 
@@ -23,17 +23,10 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
 
   const seo = seoPayload.policies({policies, url: request.url});
 
-  return json(
-    {
-      policies,
-      seo,
-    },
-    {
-      headers: {
-        'Cache-Control': CACHE_LONG,
-      },
-    },
-  );
+  return json({
+    policies,
+    seo,
+  });
 }
 
 export default function Policies() {

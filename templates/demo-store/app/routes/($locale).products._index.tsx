@@ -10,7 +10,7 @@ import {PageHeader, Section, ProductCard, Grid} from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {getImageLoadingPriority} from '~/lib/const';
 import {seoPayload} from '~/lib/seo.server';
-import {routeHeaders, CACHE_SHORT} from '~/data/cache';
+import {routeHeaders} from '~/data/cache';
 
 const PAGE_BY = 8;
 
@@ -47,17 +47,10 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
     },
   });
 
-  return json(
-    {
-      products: data.products,
-      seo,
-    },
-    {
-      headers: {
-        'Cache-Control': CACHE_SHORT,
-      },
-    },
-  );
+  return json({
+    products: data.products,
+    seo,
+  });
 }
 
 export default function AllProducts() {

@@ -32,7 +32,7 @@ import {getExcerpt} from '~/lib/utils';
 import {seoPayload} from '~/lib/seo.server';
 import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
-import {routeHeaders, CACHE_SHORT} from '~/data/cache';
+import {routeHeaders} from '~/data/cache';
 
 export const headers = routeHeaders;
 
@@ -79,26 +79,19 @@ export async function loader({params, request, context}: LoaderArgs) {
     url: request.url,
   });
 
-  return defer(
-    {
-      product,
-      shop,
-      storeDomain: shop.primaryDomain.url,
-      recommended,
-      analytics: {
-        pageType: AnalyticsPageType.product,
-        resourceId: product.id,
-        products: [productAnalytics],
-        totalValue: parseFloat(selectedVariant.price.amount),
-      },
-      seo,
+  return defer({
+    product,
+    shop,
+    storeDomain: shop.primaryDomain.url,
+    recommended,
+    analytics: {
+      pageType: AnalyticsPageType.product,
+      resourceId: product.id,
+      products: [productAnalytics],
+      totalValue: parseFloat(selectedVariant.price.amount),
     },
-    {
-      headers: {
-        'Cache-Control': CACHE_SHORT,
-      },
-    },
-  );
+    seo,
+  });
 }
 
 export default function Product() {

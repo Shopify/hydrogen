@@ -1,5 +1,23 @@
 # @shopify/hydrogen-codegen
 
+## 0.0.2
+
+### Patch Changes
+
+- Merge equal fragment interfaces in one to avoid adding `| {}` to the Metaobject types. ([#978](https://github.com/Shopify/hydrogen/pull/978)) by [@frandiox](https://github.com/frandiox)
+
+- The preset now accepts options to modify the default behavior. ([#970](https://github.com/Shopify/hydrogen/pull/970)) by [@frandiox](https://github.com/frandiox)
+
+  ```ts
+  type HydrogenPresetConfig = {
+    namespacedImportName?: string;
+    importTypesFrom?: string;
+    importTypes?: boolean;
+    skipTypenameInOperations?: boolean;
+    interfaceExtension?: (options) => string;
+  };
+  ```
+
 ## 0.0.1
 
 ### Patch Changes
