@@ -19,6 +19,7 @@ import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {combinedEnvironmentVariables} from '../../lib/combined-environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
+import {patchRemix} from '../../lib/very-dirty-remix-patch.js';
 
 const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -147,6 +148,8 @@ async function runDev({
   }
 
   let isInitialBuild = true;
+
+  patchRemix(); // Run before importing files
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
     import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
