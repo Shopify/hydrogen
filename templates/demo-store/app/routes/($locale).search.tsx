@@ -21,6 +21,7 @@ import {
 } from '~/components';
 import {PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import {seoPayload} from '~/lib/seo.server';
+
 import {getFeaturedItems} from './($locale).featured-items';
 
 export type FetchSearchResultsReturn = {
@@ -36,53 +37,48 @@ export type FetchSearchResultsReturn = {
 };
 
 export async function loader({request, context}: LoaderArgs) {
-  try {
-    const {searchTerm, searchResults} = await fetchSearchPageResults({
-      request,
-      context,
-    });
+  const {searchTerm, searchResults} = await fetchSearchPageResults({
+    request,
+    context,
+  });
 
-    const seoDescription = searchResults.results?.products
-      ? `Showing ${searchResults.results.products.edges.length} search results for "${searchTerm}"`
-      : `No search results for "${searchTerm}"`;
+  const seoDescription = searchResults.results?.products
+    ? `Showing ${searchResults.results.products.edges.length} search results for "${searchTerm}"`
+    : `No search results for "${searchTerm}"`;
 
-    const productNodes = searchResults.results?.products
-      ? {nodes: flattenConnection(searchResults.results.products)}
-      : {nodes: []};
+  const productNodes = searchResults.results?.products
+    ? {nodes: flattenConnection(searchResults.results.products)}
+    : {nodes: []};
 
-    const seo = searchResults.results?.products
-      ? seoPayload.collection({
-          url: request.url,
-          collection: {
-            id: 'search',
+  const seo = searchResults.results?.products
+    ? seoPayload.collection({
+        url: request.url,
+        collection: {
+          id: 'search',
+          title: 'Search',
+          handle: 'search',
+          descriptionHtml: 'Search results',
+          description: 'Search results',
+          seo: {
             title: 'Search',
-            handle: 'search',
-            descriptionHtml: 'Search results',
-            description: 'Search results',
-            seo: {
-              title: 'Search',
-              description: seoDescription,
-            },
-            products: productNodes,
-            updatedAt: new Date().toISOString(),
+            description: seoDescription,
           },
-        })
-      : null;
+          products: productNodes,
+          updatedAt: new Date().toISOString(),
+        },
+      })
+    : null;
 
-    const shouldGetRecommendations = !searchTerm || !searchResults.totalResults;
+  const shouldGetRecommendations = !searchTerm || !searchResults.totalResults;
 
-    return defer({
-      seo,
-      searchTerm,
-      searchResults,
-      recommendations: shouldGetRecommendations
-        ? await getFeaturedItems(context.storefront, {productsCount: 12})
-        : null,
-    });
-  } catch (error) {
-    console.error('loader error:', error);
-    throw error;
-  }
+  return defer({
+    seo,
+    searchTerm,
+    searchResults,
+    recommendations: shouldGetRecommendations
+      ? await getFeaturedItems(context.storefront, {productsCount: 12})
+      : null,
+  });
 }
 
 export default function SearchPage() {
@@ -150,7 +146,7 @@ async function fetchSearchPageResults({
   return {searchResults, searchTerm};
 }
 
-// FIX: add #graphql tag when API is released
+// FIX: add #graphql tag when 2023-07 API is released
 const SEARCH_QUERY = `
   query search(
     $query: String!,

@@ -333,18 +333,11 @@ function SearchToggle({openSearch}: Pick<CommonHeaderProps, 'openSearch'>) {
   return (
     <div
       className={clsx(
-        'hidden md:flex items-center justify-center',
-        isSearchPage && 'md:hidden',
+        'flex items-center justify-center',
+        isSearchPage && 'hidden',
+        'hover:cursor-pointer',
       )}
     >
-      <p className="mr-4">
-        <span className="mr-4 text-xs text-gray-400">Search</span>
-        <span className="border border-gray-400 rounded-md p-2 h-4 text-xs text-gray-400">
-          <kbd>⌘</kbd>
-          <kbd>&nbsp;</kbd>
-          <kbd>K</kbd>
-        </span>
-      </p>
       <button onClick={openSearch} className="w-8 h-8 focus:ring-primary/5">
         <IconSearch />
       </button>
@@ -412,7 +405,7 @@ function Badge({openCart, dark, count}: BadgeProps) {
         </div>
       </>
     ),
-    [count, dark],
+    [count, counterClass],
   );
 
   return isHydrated ? (

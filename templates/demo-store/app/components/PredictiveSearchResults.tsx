@@ -4,7 +4,6 @@ import {useEffect, useRef} from 'react';
 import {useFetchers} from '@remix-run/react';
 import {Money} from '@shopify/hydrogen-react';
 
-import type {PredictiveSearchType} from 'temp.search-types';
 import {Grid, IconRightArrow, Link} from '~/components';
 import type {CommonHeaderProps} from '~/components/Header';
 import {useFeaturedItems} from '~/hooks/useFeaturedItems';
@@ -86,7 +85,6 @@ function NoPredictiveSearchResults({
   );
 }
 
-// FIX: can we reuse the FeaturedItems component that is used in an empty cart?
 function PopularItems({goToSearchResult}: {goToSearchResult: () => void}) {
   const data = useFeaturedItems({productsCount: 4, collectionsCount: 4});
 
@@ -102,7 +100,7 @@ function PopularItems({goToSearchResult}: {goToSearchResult: () => void}) {
               const firstVariant = product.variants.nodes[0];
               return (
                 <Link
-                  className="flex flex-col border-b border-b-transparent hover:border-b-primary"
+                  className="flex flex-col"
                   key={product.id}
                   onClick={goToSearchResult}
                   to={`/products/${product.handle}`}
@@ -116,7 +114,9 @@ function PopularItems({goToSearchResult}: {goToSearchResult: () => void}) {
                         height={196}
                       />
                     )}
-                  <h6 className="mt-4">{product.title}</h6>
+                  <h6 className="mt-4 truncate text-ellipsis">
+                    {product.title}
+                  </h6>
                   <Money
                     className="text-sm mt-1"
                     data={firstVariant?.price}
@@ -134,7 +134,7 @@ function PopularItems({goToSearchResult}: {goToSearchResult: () => void}) {
           <Grid layout="searchDrawer" gap="searchDrawer">
             {data.featuredCollections.nodes.map((collection) => (
               <Link
-                className="flex flex-col border-b border-b-transparent hover:border-b-primary"
+                className="flex flex-col"
                 key={collection.id}
                 onClick={goToSearchResult}
                 to={`/collections/${collection.handle}`}
@@ -148,7 +148,9 @@ function PopularItems({goToSearchResult}: {goToSearchResult: () => void}) {
                     height={196}
                   />
                 )}
-                <h6 className="mt-4">{collection.title}</h6>
+                <h6 className="mt-4 truncate text-ellipsis">
+                  {collection.title}
+                </h6>
               </Link>
             ))}
           </Grid>
@@ -202,11 +204,8 @@ type SearchResultItemProps = Pick<SearchResultTypeProps, 'goToSearchResult'> & {
 
 function SearchResultItem({goToSearchResult, item}: SearchResultItemProps) {
   return (
-    <li
-      key={item.id}
-      className="overflow-hidden flex border-b border-b-transparent hover:border-b-primary"
-    >
-      <Link className="block" onClick={goToSearchResult} to={item.url}>
+    <li key={item.id}>
+      <Link className="flex flex-col" onClick={goToSearchResult} to={item.url}>
         {item.image?.url && (
           <Image
             alt={item.image.altText ?? ''}
@@ -223,7 +222,9 @@ function SearchResultItem({goToSearchResult, item}: SearchResultItemProps) {
             }}
           />
         ) : (
-          <h6 className="truncate flex-grow">{item.title}</h6>
+          <h6 className="truncate text-ellipsis flex-grow w-100">
+            {item.title}
+          </h6>
         )}
       </Link>
     </li>
@@ -289,21 +290,3 @@ function pluralToSingularSearchType(
 
   return type.map((t) => plural[t]).join(',');
 }
-
-// function singularToPluralSeachType(
-//   type: PredictiveSearchType | PredictiveSearchType[],
-// ) {
-//   const singular = {
-//     COLLECTION: 'collections',
-//     PRODUCT: 'products',
-//     PAGE: 'pages',
-//     ARTICLE: 'articles',
-//     QUERY: 'queries',
-//   };
-//
-//   if (typeof type === 'string') {
-//     return singular[type];
-//   }
-//
-//   return type.map((t) => singular[t]);
-// }
