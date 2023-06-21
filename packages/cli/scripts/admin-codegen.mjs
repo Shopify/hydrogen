@@ -2,19 +2,25 @@ import {fileURLToPath} from 'node:url';
 import {ensureAuthenticatedAdmin} from '@shopify/cli-kit/node/session';
 import {generate} from '@graphql-codegen/cli';
 
-const {token} = await ensureAuthenticatedAdmin('hydrogen-preview');
+const shopDomain = process.argv[2];
+if (!shopDomain) {
+  throw new Error(
+    `Pass a shop domain as the first argument. E.g. 'hydrogen-preview'`,
+  );
+}
+
+const {token} = await ensureAuthenticatedAdmin(shopDomain);
 
 await generate(
   {
     overwrite: true,
     schema: {
-      'https://hydrogen-preview.myshopify.com/admin/api/unstable/graphql.json':
-        {
-          headers: {
-            authorization: `Bearer ${token}`,
-            'content-type': 'application/json',
-          },
+      [`https://${shopDomain}.myshopify.com/admin/api/unstable/graphql.json`]: {
+        headers: {
+          authorization: `Bearer ${token}`,
+          'content-type': 'application/json',
         },
+      },
     },
     generates: {
       // The schema file, which is the local representation of the GraphQL endpoint
