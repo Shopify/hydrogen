@@ -55,6 +55,49 @@ export type UseMoneyValue = {
  * default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by
  * [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).
  * Uses `locale` from `ShopifyProvider`
+ * @example
+ * ```js
+ * // basic usage, outputs: $100.00
+ * const money = useMoney({
+ *   amount: '100.00',
+ *   currencyCode: 'USD'
+ * })
+ * &nbsp;
+ *
+ * // without currency, outputs: 100.00
+ * const money = useMoney({
+ *   amount: '100.00',
+ *   currencyCode: 'USD',
+ *   withoutCurrency: true
+ * })
+ * &nbsp;
+ *
+ * // without trailing zeros, outputs: $100
+ * const money = useMoney({
+ *   amount: '100.00',
+ *   currencyCode: 'USD',
+ *   withoutTrailingZeros: true
+ * })
+ * &nbsp;
+ *
+ * // without currency and without trailing zeros, outputs: 100
+ * const money = useMoney({
+ *   amount: '100.00',
+ *   currencyCode: 'USD',
+ *   withoutCurrency: true,
+ *   withoutTrailingZeros: true
+ * })
+ * &nbsp;
+ *
+ * // with measurement, outputs: $100.00 / G
+ * const money = useMoney({
+ *   amount: '100.00',
+ *   currencyCode: 'USD',
+ *   measurement: {referenceUnit: 'G'}
+ * })
+ * &nbsp;
+ *
+ *```
  */
 export function useMoney(money: MoneyV2): UseMoneyValue {
   const {countryIsoCode, languageIsoCode} = useShop();
