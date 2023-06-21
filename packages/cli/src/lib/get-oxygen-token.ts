@@ -3,11 +3,12 @@ import {
   outputContent,
   outputInfo,
   outputToken,
+  outputWarn,
 } from '@shopify/cli-kit/node/output';
 
 import {linkStorefront} from '../commands/hydrogen/link.js';
-import {getHydrogenShop} from './shop.js';
-import {getAdminSession} from './admin-session.js';
+import {login} from './auth.js';
+import {getCliCommand} from './shell.js';
 import {getConfig} from './shopify-config.js';
 import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
 import {getOxygenToken} from './graphql/admin/oxygen-token.js';
@@ -28,16 +29,17 @@ interface Arguments {
 
 export async function getOxygenDeploymentToken({
   root,
-  flagShop,
   silent,
-}: Arguments) {
-  const shop = await getHydrogenShop({path: root, shop: flagShop});
-  const adminSession = await getAdminSession(shop);
+}: Arguments): Promise<string | undefined> {
+  const [{session, config}, cliCommand] = await Promise.all([
+    login(root),
+    getCliCommand(),
+  ]);
   let configStorefront = (await getConfig(root)).storefront;
 
   if (!configStorefront?.id) {
     if (!silent) {
-      renderMissingLink({adminSession});
+      renderMissingLink({session, cliCommand});
 
       const runLink = await renderConfirmationPrompt({
         message: outputContent`Run ${outputToken.genericShellCommand(
@@ -46,36 +48,40 @@ export async function getOxygenDeploymentToken({
       });
 
       if (!runLink) {
-        return [];
+        return;
       }
 
-      await linkStorefront({path: root, shop: flagShop, silent});
+      config.storefront = await linkStorefront(root, session, config, {
+        cliCommand,
+      });
     }
   }
 
   configStorefront = (await getConfig(root)).storefront;
 
   if (!configStorefront) {
-    return [];
+    return;
   }
 
-  const {storefront} = await getOxygenToken(adminSession, configStorefront.id);
+  const {storefront} = await getOxygenToken(session, configStorefront.id);
 
   if (!storefront) {
     if (!silent) {
-      renderMissingStorefront({adminSession, storefront: configStorefront});
+      renderMissingStorefront({
+        session,
+        storefront: configStorefront,
+        cliCommand,
+      });
     }
 
-    return [];
+    return;
   }
 
   if (!storefront.oxygenDeploymentToken) {
     if (!silent) {
-      outputInfo(
-        `Deployment token not found. Use the "token" flag to supply a token.`,
-      );
+      outputWarn(`Could not retrieve a deployment token.`);
     }
-    return [];
+    return;
   }
 
   return storefront.oxygenDeploymentToken;

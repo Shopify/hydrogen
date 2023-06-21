@@ -27,7 +27,7 @@ const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
-  static flags: any = {
+  static flags = {
     force: commonFlags.force,
     path: Flags.string({
       description: 'The path to the directory of the new Hydrogen storefront.',

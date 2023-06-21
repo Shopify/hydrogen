@@ -26,7 +26,7 @@ export default class Link extends Command {
   static description =
     "Link a local project to one of your shop's Hydrogen storefronts.";
 
-  static flags: any = {
+  static flags = {
     force: commonFlags.force,
     path: commonFlags.path,
     storefront: Flags.string({

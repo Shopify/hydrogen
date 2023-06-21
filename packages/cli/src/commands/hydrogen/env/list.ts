@@ -22,7 +22,7 @@ export default class EnvList extends Command {
   static description =
     'List the environments on your linked Hydrogen storefront.';
 
-  static flags: any = {
+  static flags = {
     path: commonFlags.path,
   };
 

@@ -2,8 +2,8 @@ import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 
 import {getOxygenDeploymentToken} from './get-oxygen-token.js';
-import {getHydrogenShop} from './shop.js';
-import {getAdminSession} from './admin-session.js';
+import {login} from './auth.js';
+import {getCliCommand} from './shell.js';
 import {getConfig} from './shopify-config.js';
 import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
 import {linkStorefront} from '../commands/hydrogen/link.js';
@@ -18,7 +18,7 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     renderConfirmationPrompt: vi.fn(),
   };
 });
-vi.mock('./shop.js');
+vi.mock('./auth.js');
 vi.mock('./admin-session.js');
 vi.mock('./shopify-config.js');
 vi.mock('./render-errors.js');
@@ -29,10 +29,20 @@ describe('getOxygenDeploymentToken', () => {
   const OXYGEN_DEPLOYMENT_TOKEN = 'a-lovely-token';
 
   beforeEach(() => {
-    vi.mocked(getHydrogenShop).mockResolvedValue('my-shop');
-    vi.mocked(getAdminSession).mockResolvedValue({
-      token: 'abc123',
-      storeFqdn: 'my-shop',
+    vi.mocked(login).mockResolvedValue({
+      session: {
+        token: '123',
+        storeFqdn: 'www.snowdevil.com',
+      },
+      config: {
+        shop: 'snowdevil.myshopify.com',
+        shopName: 'Snowdevil',
+        email: 'merchant@shop.com',
+        storefront: {
+          id: '1',
+          title: 'Snowboards',
+        },
+      },
     });
     vi.mocked(getConfig).mockResolvedValue({
       storefront: {id: 'storefront-id', title: 'Existing Link'},
@@ -64,10 +74,10 @@ describe('getOxygenDeploymentToken', () => {
       expect(linkStorefront).toHaveBeenCalled();
     });
 
-    it('returns an empty array if the user does not create a new link', async () => {
+    it('returns nothing if the user does not create a new link', async () => {
       vi.mocked(renderConfirmationPrompt).mockResolvedValue(false);
       const token = await getOxygenDeploymentToken({root: 'test-root'});
-      expect(token).toEqual([]);
+      expect(token).toEqual(undefined);
     });
   });
 
@@ -76,10 +86,10 @@ describe('getOxygenDeploymentToken', () => {
       vi.mocked(getOxygenToken).mockResolvedValue({storefront: null});
     });
 
-    it('calls renderMissingStorefront and returns an empty array', async () => {
+    it('calls renderMissingStorefront and returns nothing', async () => {
       const token = await getOxygenDeploymentToken({root: 'test-root'});
       expect(renderMissingStorefront).toHaveBeenCalled();
-      expect(token).toEqual([]);
+      expect(token).toEqual(undefined);
     });
   });
 
@@ -90,9 +100,9 @@ describe('getOxygenDeploymentToken', () => {
       });
     });
 
-    it('returns an empty array', async () => {
+    it('returns nothing', async () => {
       const token = await getOxygenDeploymentToken({root: 'test-root'});
-      expect(token).toEqual([]);
+      expect(token).toEqual(undefined);
     });
   });
 });

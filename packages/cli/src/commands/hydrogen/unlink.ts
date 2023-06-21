@@ -8,7 +8,7 @@ import {getConfig, unsetStorefront} from '../../lib/shopify-config.js';
 export default class Unlink extends Command {
   static description = 'Unlink a local project from a Hydrogen storefront.';
 
-  static flags: any = {
+  static flags = {
     path: commonFlags.path,
   };
 

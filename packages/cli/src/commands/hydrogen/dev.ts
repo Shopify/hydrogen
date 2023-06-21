@@ -36,7 +36,7 @@ const LOG_REBUILT = '🚀 Rebuilt';
 export default class Dev extends Command {
   static description =
     'Runs Hydrogen storefront in an Oxygen worker for development.';
-  static flags: any = {
+  static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
     ['codegen-unstable']: Flags.boolean({

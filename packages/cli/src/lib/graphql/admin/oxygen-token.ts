@@ -1,5 +1,4 @@
-import {type AdminSession} from '../../admin-session.js';
-import {adminRequest} from '../../graphql.js';
+import {type AdminSession, adminRequest} from './client.js';
 
 export const GetDeploymentTokenQuery = `#graphql
   query GetDeploymentToken($id: ID!) {
