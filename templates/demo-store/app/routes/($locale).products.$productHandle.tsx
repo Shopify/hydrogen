@@ -13,6 +13,7 @@ import {
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
+import type {ProductVariantConnection} from '@shopify/hydrogen/storefront-api-types';
 
 import {
   Heading,
@@ -51,6 +52,22 @@ export async function loader({params, request, context}: LoaderArgs) {
     },
   });
 
+  const variants = context.storefront
+    .query(VARIANTS_QUERY, {
+      variables: {
+        handle: productHandle,
+        country: context.storefront.i18n.country,
+        language: context.storefront.i18n.language,
+      },
+    })
+    .then((resp) => {
+      return new Promise((resolve, reject) => {
+        setTimeout(() => {
+          resolve(resp);
+        }, 2000);
+      });
+    });
+
   if (!product?.id) {
     throw new Response('product', {status: 404});
   }
@@ -75,6 +92,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   return defer({
+    variants,
     product,
     shop,
     storeDomain: shop.primaryDomain.url,
@@ -90,7 +108,7 @@ export async function loader({params, request, context}: LoaderArgs) {
 }
 
 export default function Product() {
-  const {product, shop, recommended} = useLoaderData<typeof loader>();
+  const {product, shop, recommended, variants} = useLoaderData<typeof loader>();
   const {media, title, vendor, descriptionHtml} = product;
   const {shippingPolicy, refundPolicy} = shop;
 
@@ -112,7 +130,15 @@ export default function Product() {
                   <Text className={'opacity-50 font-medium'}>{vendor}</Text>
                 )}
               </div>
-              <ProductForm />
+
+              <Suspense fallback={<ProductForm variants={{nodes: []}} />}>
+                <Await
+                  errorElement="There was a problem loading related products"
+                  resolve={variants}
+                >
+                  {(resp) => <ProductForm variants={resp.product?.variants} />}
+                </Await>
+              </Suspense>
               <div className="grid gap-4 py-4">
                 {descriptionHtml && (
                   <ProductDetail
@@ -153,7 +179,7 @@ export default function Product() {
   );
 }
 
-export function ProductForm() {
+export function ProductForm({variants}: {variants: Array<any>}) {
   const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
   const firstVariant =
     getFirstAvailableVariant(product) ?? product.variants.nodes[0];
@@ -183,7 +209,7 @@ export function ProductForm() {
       <div className="grid gap-4">
         <VariantSelector
           options={product.options}
-          variants={product.variants}
+          variants={variants as unknown as ProductVariantConnection}
           defaultVariant={firstVariant}
         >
           {({option}) => {
@@ -445,7 +471,7 @@ const PRODUCT_QUERY = `#graphql
           ...Media
         }
       }
-      variants(first: 10) {
+      variants(first: 1) {
         nodes {
           ...ProductVariantFragment
         }
@@ -471,6 +497,23 @@ const PRODUCT_QUERY = `#graphql
     }
   }
   ${MEDIA_FRAGMENT}
+  ${PRODUCT_VARIANT_FRAGMENT}
+` as const;
+
+const VARIANTS_QUERY = `#graphql
+  query variants(
+    $country: CountryCode
+    $language: LanguageCode
+    $handle: String!
+  ) @inContext(country: $country, language: $language) {
+    product(handle: $handle) {
+      variants(first: 250) {
+        nodes {
+          ...ProductVariantFragment
+        }
+      }
+    }
+  }
   ${PRODUCT_VARIANT_FRAGMENT}
 ` as const;
 
