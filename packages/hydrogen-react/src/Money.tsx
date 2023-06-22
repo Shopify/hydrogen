@@ -31,33 +31,32 @@ export type MoneyProps<ComponentGeneric extends React.ElementType> =
  * [MoneyV2 object](https://shopify.dev/api/storefront/reference/common-objects/moneyv2)
  * according to the `locale` in the `ShopifyProvider` component.
  * &nbsp;
- * @example
- * ```js
- * // basic usage, outputs: $100.00
+ * @see {@link https://shopify.dev/api/hydrogen/components/money}
+ * @example basic usage, outputs: $100.00
+ * ```ts
  * <Money data={{amount: '100.00', currencyCode: 'USD'}} />
+ * ```
  * &nbsp;
  *
- * // without currency, outputs: 100.00
- * <Money
- *   data={{amount: '100.00', currencyCode: 'USD'}}
- *   withoutCurrency
- * />
+ * @example without currency, outputs: 100.00
+ * ```ts
+ * <Money data={{amount: '100.00', currencyCode: 'USD'}} withoutCurrency />
+ * ```
  * &nbsp;
  *
- * // without trailing zeros: outputs: $100
- * <Money
- *   data={{amount: '100.00', currencyCode: 'USD'}}
- *   withoutTrailingZeros
- * />
+ * @example without trailing zeros, outputs: $100
+ * ```ts
+ * <Money data={{amount: '100.00', currencyCode: 'USD'}} withoutTrailingZeros />
+ * ```
  * &nbsp;
  *
- * // with per-unit measurement: outputs: $100.00 per G
+ * @example with per-unit measurement, outputs: $100.00 per G
+ * ```ts
  * <Money
  *   data={{amount: '100.00', currencyCode: 'USD'}}
  *   measurement={{referenceUnit: 'G'}}
  *   measurementSeparator=" per "
  * />
- * &nbsp;
  * ```
  */
 export function Money<ComponentGeneric extends React.ElementType = 'div'>({
