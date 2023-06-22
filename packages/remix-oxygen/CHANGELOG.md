@@ -1,5 +1,29 @@
 # @shopify/remix-oxygen
 
+## 1.1.1
+
+### Patch Changes
+
+- Update Remix to the latest version (`1.17.1`). ([#852](https://github.com/Shopify/hydrogen/pull/852)) by [@frandiox](https://github.com/frandiox)
+
+  When updating your app, remember to also update your Remix dependencies to `1.17.1` in your `package.json` file:
+
+  ```diff
+  -"@remix-run/react": "1.15.0",
+  +"@remix-run/react": "1.17.1",
+
+  -"@remix-run/dev": "1.15.0",
+  -"@remix-run/eslint-config": "1.15.0",
+  +"@remix-run/dev": "1.17.1",
+  +"@remix-run/eslint-config": "1.17.1",
+  ```
+
+## 1.1.0
+
+### Minor Changes
+
+- Updates default `powered-by` header to `Shopify, Hydrogen` ([#961](https://github.com/Shopify/hydrogen/pull/961)) by [@benjaminsehl](https://github.com/benjaminsehl)
+
 ## 1.0.7
 
 ### Patch Changes

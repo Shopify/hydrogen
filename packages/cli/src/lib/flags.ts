@@ -2,7 +2,7 @@ import {Flags} from '@oclif/core';
 import {camelize} from '@shopify/cli-kit/common/string';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
-import {colors} from './colors.js';
+import colors from '@shopify/cli-kit/node/colors';
 
 export const commonFlags = {
   path: Flags.string({
@@ -34,7 +34,12 @@ export const commonFlags = {
       "Specify an environment's branch name when using remote environment variables.",
     env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
     char: 'e',
-    hidden: true,
+  }),
+  sourcemap: Flags.boolean({
+    description: 'Generate sourcemaps for the build.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
+    default: true,
+    allowNo: true,
   }),
 };
 
