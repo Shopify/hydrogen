@@ -158,7 +158,7 @@ CartForm.ACTIONS = {
   MetafieldDelete: 'MetafieldDelete',
 } as const;
 
-export function getFormInput(formData: FormData): CartActionInput {
+function getFormInput(formData: FormData): CartActionInput {
   // Get all form data
   const data: Record<string, any> = {};
   for (const pair of formData.entries()) {

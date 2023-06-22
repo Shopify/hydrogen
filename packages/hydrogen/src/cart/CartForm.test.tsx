@@ -1,6 +1,6 @@
 import {describe, expect, it, vi} from 'vitest';
 import {render} from '@testing-library/react';
-import {CartForm, getFormInput} from './CartForm';
+import {CartForm} from './CartForm';
 
 function MockForm({
   children,
@@ -116,7 +116,7 @@ function mockFormData(data: Record<string, unknown>) {
 
 describe('getFormInput', () => {
   it('returns an object with action and inputs', () => {
-    const result = getFormInput(
+    const result = CartForm.getFormInput(
       mockFormData({
         action: 'CustomTest',
         inputs: {
@@ -141,7 +141,7 @@ describe('getFormInput', () => {
       },
     });
     formData.append('other', 'other');
-    const result = getFormInput(formData);
+    const result = CartForm.getFormInput(formData);
 
     expect(result).toEqual({
       action: 'CustomTest',
@@ -160,7 +160,7 @@ describe('getFormInput', () => {
       },
     });
     formData.append('test', 'test2');
-    const result = getFormInput(formData);
+    const result = CartForm.getFormInput(formData);
 
     expect(result).toEqual({
       action: 'CustomTest',

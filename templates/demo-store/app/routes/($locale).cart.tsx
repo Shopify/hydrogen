@@ -18,7 +18,7 @@ export async function action({request, context}: ActionArgs) {
     session.get('customerAccessToken'),
   ]);
 
-  const {action, inputs} = cart.getFormInput(formData);
+  const {action, inputs} = CartForm.getFormInput(formData);
   invariant(action, 'No cartAction defined');
 
   let status = 200;

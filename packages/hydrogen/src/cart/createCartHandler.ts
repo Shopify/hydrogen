@@ -1,5 +1,4 @@
 import {Storefront} from '../storefront';
-import {getFormInput, CartActionInput} from './CartForm';
 import {cartGetDefault} from './queries/cartGetDefault';
 import {cartCreateDefault} from './queries/cartCreateDefault';
 import {cartLinesAddDefault} from './queries/cartLinesAddDefault';
@@ -27,7 +26,6 @@ type CartHandlerOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
     customMethods?: TCustomMethods;
   };
 export type HydrogenCart = {
-  getFormInput: (formData: any) => CartActionInput;
   get: ReturnType<typeof cartGetDefault>;
   getCartId: () => string | undefined;
   setCartId: (cartId: string) => Headers;
@@ -77,7 +75,6 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   const cartCreate = cartCreateDefault(mutateOptions);
 
   const methods: HydrogenCart = {
-    getFormInput,
     get: cartGetDefault({
       storefront,
       getCartId,
