@@ -1,81 +1,59 @@
-import {
-  Await,
-  useMatches,
-  useCatch,
-  useRouteError,
-  isRouteErrorResponse,
-} from '@remix-run/react';
+import {Await, useMatches, Link} from '@remix-run/react';
 import {Suspense} from 'react';
 import {flattenConnection} from '@shopify/hydrogen';
-import type {Cart as CartType} from '@shopify/hydrogen/storefront-api-types';
-import {type ErrorBoundaryComponent} from '@shopify/remix-oxygen';
+import type {CartFragment} from 'storefrontapi.generated';
 
 export async function action() {
-  // @TODO implement cart action
+  // TODO: implement cart action
 }
 
-export default function CartRoute() {
+export default function Cart() {
   const [root] = useMatches();
+
   return (
-    <Suspense fallback="loading">
-      <Await
-        resolve={root.data?.cart as CartType}
-        errorElement={<div>An error occurred</div>}
-      >
-        {(cart) => {
-          const linesCount = Boolean(cart?.lines?.edges?.length || 0);
-          if (!linesCount) {
+    <section className="cart">
+      <Suspense fallback="loading">
+        <Await
+          errorElement={<div>An error occurred</div>}
+          resolve={root.data?.cart as Promise<CartFragment>}
+        >
+          {(cart) => {
+            if (!cart || !cart.lines.edges.length) {
+              return <CartEmpty />;
+            }
             return (
-              <p>Looks like you haven&rsquo;t added anything to your cart.</p>
+              <>
+                <h1>Cart</h1>
+                <CartLines lines={cart.lines} />
+              </>
             );
-          }
-
-          const cartLines = cart?.lines ? flattenConnection(cart?.lines) : [];
-
-          return (
-            <>
-              <h1>Cart</h1>
-              <ul>
-                {cartLines.map((line) => (
-                  <div key={line.id}>
-                    <h2>{line?.merchandise?.title}</h2>
-                  </div>
-                ))}
-              </ul>
-            </>
-          );
-        }}
-      </Await>
-    </Suspense>
+          }}
+        </Await>
+      </Suspense>
+    </section>
   );
 }
 
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  console.error(caught);
-
+function CartEmpty() {
   return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
-    </div>
+    <>
+      <p>Looks like you haven&rsquo;t added anything to your cart.</p>
+      <Link prefetch="intent" to="/collections">
+        Browse our collections <symbol>→</symbol>
+      </Link>
+    </>
   );
 }
 
-export function ErrorBoundary() {
-  const error = useRouteError();
-
-  if (isRouteErrorResponse(error)) {
-    console.error(error.status, error.statusText, error.data);
-    return <div>Route Error</div>;
-  } else {
-    console.error((error as Error).message);
-    return <div>Thrown Error</div>;
-  }
+function CartLines({lines}: Pick<CartFragment, 'lines'>) {
+  const cartLines = lines ? flattenConnection(lines) : [];
+  return (
+    <ul>
+      {cartLines.map((line) => (
+        <div key={line.id}>
+          <h2>{line.merchandise.title}</h2>
+        </div>
+      ))}
+    </ul>
+  );
 }

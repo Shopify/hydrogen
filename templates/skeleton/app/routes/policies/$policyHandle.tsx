@@ -1,17 +1,11 @@
-import {
-  json,
-  type MetaFunction,
-  type LoaderArgs,
-  type ErrorBoundaryComponent,
-} from '@shopify/remix-oxygen';
-import {
-  useLoaderData,
-  type V2_MetaFunction,
-  useCatch,
-  useRouteError,
-  isRouteErrorResponse,
-} from '@remix-run/react';
-import {Shop} from '@shopify/hydrogen/storefront-api-types';
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {useLoaderData} from '@remix-run/react';
+import {type Shop} from '@shopify/hydrogen-react/storefront-api-types';
+
+type SelectedPolicies = keyof Pick<
+  Shop,
+  'privacyPolicy' | 'shippingPolicy' | 'termsOfService' | 'refundPolicy'
+>;
 
 export async function loader({params, context}: LoaderArgs) {
   const handle = params.policyHandle;
@@ -24,9 +18,7 @@ export async function loader({params, context}: LoaderArgs) {
     m1.toUpperCase(),
   ) as SelectedPolicies;
 
-  const data = await context.storefront.query<{
-    shop: Pick<Shop, SelectedPolicies>;
-  }>(POLICY_CONTENT_QUERY, {
+  const data = await context.storefront.query(POLICY_CONTENT_QUERY, {
     variables: {
       privacyPolicy: false,
       shippingPolicy: false,
@@ -46,55 +38,15 @@ export async function loader({params, context}: LoaderArgs) {
   return json({policy});
 }
 
-export const metaV1: MetaFunction<typeof loader> = ({data}) => {
-  const title = data?.policy?.title ?? 'Policies';
-  return {title};
-};
-
-export const meta: V2_MetaFunction<typeof loader> = ({data}) => {
-  const title = data?.policy?.title ?? 'Policies';
-  return [{title}];
-};
-
-export default function Policies() {
+export default function Policy() {
   const {policy} = useLoaderData<typeof loader>();
 
   return (
-    <>
+    <section className="policy">
       <h1>{policy.title}</h1>
       <div dangerouslySetInnerHTML={{__html: policy.body}} />
-    </>
+    </section>
   );
-}
-
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  console.error(caught);
-
-  return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
-    </div>
-  );
-}
-
-export function ErrorBoundary() {
-  const error = useRouteError();
-
-  if (isRouteErrorResponse(error)) {
-    console.error(error.status, error.statusText, error.data);
-    return <div>Route Error</div>;
-  } else {
-    console.error((error as Error).message);
-    return <div>Thrown Error</div>;
-  }
 }
 
 const POLICY_CONTENT_QUERY = `#graphql
@@ -106,7 +58,7 @@ const POLICY_CONTENT_QUERY = `#graphql
     url
   }
 
-  query policy_query(
+  query StorePolicy(
     $language: LanguageCode
     $privacyPolicy: Boolean!
     $shippingPolicy: Boolean!
@@ -128,13 +80,4 @@ const POLICY_CONTENT_QUERY = `#graphql
       }
     }
   }
-`;
-
-const policies = [
-  'privacyPolicy',
-  'shippingPolicy',
-  'refundPolicy',
-  'termsOfService',
-] as const;
-
-type SelectedPolicies = (typeof policies)[number];
+` as const;

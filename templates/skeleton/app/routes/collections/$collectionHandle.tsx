@@ -1,34 +1,34 @@
+import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {useLoaderData, Link} from '@remix-run/react';
 import {
-  json,
-  type LoaderArgs,
-  type ErrorBoundaryComponent,
-} from '@shopify/remix-oxygen';
-import {
-  useLoaderData,
-  Link,
-  useCatch,
-  useRouteError,
-  isRouteErrorResponse,
-} from '@remix-run/react';
-import type {Collection as CollectionType} from '@shopify/hydrogen/storefront-api-types';
+  Pagination__unstable as Pagination,
+  getPaginationVariables__unstable as getPaginationVariables,
+  Image,
+} from '@shopify/hydrogen';
+import {ProductItemFragment} from 'storefrontapi.generated';
 
-export async function loader({params, context}: LoaderArgs) {
+// TODO: add SEO
+
+export async function loader({request, params, context}: LoaderArgs) {
   const {collectionHandle} = params;
+  const {storefront} = context;
+  const paginationVariables = getPaginationVariables(request, {
+    pageBy: 8,
+  });
 
-  const {collection} = await context.storefront.query<{
-    collection: CollectionType;
-  }>(COLLECTION_QUERY, {
-    variables: {
-      handle: collectionHandle,
-      country: context.storefront.i18n?.country,
-      language: context.storefront.i18n?.language,
-    },
+  if (!collectionHandle) {
+    return redirect('/collections');
+  }
+
+  const {collection} = await storefront.query(COLLECTION_QUERY, {
+    variables: {handle: collectionHandle, ...paginationVariables},
   });
 
   if (!collection) {
-    throw new Response(null, {status: 404});
+    throw new Response(`Collection ${collectionHandle} not found`, {
+      status: 404,
+    });
   }
-
   return json({collection});
 }
 
@@ -36,53 +36,114 @@ export default function Collection() {
   const {collection} = useLoaderData<typeof loader>();
 
   return (
-    <>
+    <section className="collection">
       <h1>{collection.title}</h1>
-      {collection.products.nodes.map((product) => (
-        <div key={product.id}>
-          <Link to={`/products/${product.handle}`}>{product.title}</Link>
-        </div>
-      ))}
-    </>
+      <p style={{maxWidth: '370px'}}>{collection.description}</p>
+      <br />
+      <div className="collection-grid">
+        <Pagination connection={collection.products}>
+          {({nodes, isLoading, PreviousLink, NextLink}) => (
+            <>
+              <PreviousLink>
+                {isLoading ? (
+                  'Loading...'
+                ) : (
+                  <span>
+                    <mark>↑</mark> Load previous
+                  </span>
+                )}
+              </PreviousLink>
+              <ProductsGrid products={nodes} />
+              <NextLink>
+                {isLoading ? (
+                  'Loading...'
+                ) : (
+                  <span>
+                    Load more <mark>↓</mark>
+                  </span>
+                )}
+              </NextLink>
+            </>
+          )}
+        </Pagination>
+      </div>
+    </section>
   );
 }
 
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  console.error(caught);
-
+function ProductsGrid({products}: {products: ProductItemFragment[]}) {
   return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
+    <div
+      style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+        gridGap: '1rem',
+      }}
+    >
+      {products.map((product, index) => (
+        <Link
+          key={product.id}
+          to={`/products/${product.handle}`}
+          prefetch="intent"
+        >
+          {/* TODO: @ben welp with sizes */}
+          {product.featuredImage && (
+            <Image
+              alt={product.featuredImage.altText || product.title}
+              aspectRatio={`${product.featuredImage.width}/${product.featuredImage.height}`}
+              data={product.featuredImage}
+              loading={index < 8 ? 'eager' : undefined}
+              style={{width: '100%', height: 'auto'}}
+            />
+          )}
+          <h5>{product.title}</h5>
+        </Link>
+      ))}
     </div>
   );
 }
 
-export function ErrorBoundary() {
-  const error = useRouteError();
-
-  if (isRouteErrorResponse(error)) {
-    console.error(error.status, error.statusText, error.data);
-    return <div>Route Error</div>;
-  } else {
-    console.error((error as Error).message);
-    return <div>Thrown Error</div>;
+const MONEY_FRAGMENT = `#graphql
+  fragment MoneyProductItem on MoneyV2 {
+    amount
+    currencyCode
   }
-}
+` as const;
+
+const PRODUCT_ITEM_FRAGMENT = `#graphql
+  fragment ProductItem on Product {
+    id
+    handle
+    title
+    featuredImage {
+      id
+      altText
+      ## url: transformedSrc(maxWidth: 800, maxHeight: 800, crop: CENTER)
+      url
+      width
+      height
+    }
+    priceRange {
+      minVariantPrice {
+        ...MoneyProductItem
+      }
+      maxVariantPrice {
+        ...MoneyProductItem
+      }
+    }
+  }
+  ${MONEY_FRAGMENT}
+` as const;
 
 const COLLECTION_QUERY = `#graphql
-  query collection_details(
+  query StoreCollection(
     $handle: String!
     $country: CountryCode
     $language: LanguageCode
-
+    $first: Int
+    $last: Int
+    $startCursor: String
+    $endCursor: String
   ) @inContext(country: $country, language: $language) {
     collection(handle: $handle) {
       id
@@ -90,15 +151,22 @@ const COLLECTION_QUERY = `#graphql
       title
       description
       products(
-        first: 100,
+        first: $first,
+        last: $last,
+        before: $startCursor,
+        after: $endCursor
       ) {
         nodes {
-          title
-          id
-          handle
+          ...ProductItem
+        }
+        pageInfo {
+          hasPreviousPage
+          hasNextPage
+          hasNextPage
+          endCursor
         }
       }
     }
-
   }
-`;
+  ${PRODUCT_ITEM_FRAGMENT}
+` as const;

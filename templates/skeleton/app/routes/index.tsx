@@ -1,40 +1,32 @@
-import {type ErrorBoundaryComponent} from '@shopify/remix-oxygen';
-import {useCatch, useRouteError, isRouteErrorResponse} from '@remix-run/react';
+// TODO: add seo
+// TODO: read this markup from a markdown file
 
-export default function Index() {
+export default function Homepage() {
   return (
-    <p>
-      Edit this route in <em>app/routes/index.tsx</em>.
-    </p>
+    <section className="home">
+      <h1>SKELETON TEMPLATE</h1>
+      <p>
+        This template seeds the <code>shopify hydrogen generate</code> command
+        from the <code>hydrogen cli</code>.
+      </p>
+      <h4>Principles</h4>
+      <p>
+        Describe the principles of this template/starter here. Designed with
+        agencies and startups in mind...
+      </p>
+      <ul>
+        <li>Styling inline and in app.css</li>
+        <li>Focus on functional correctness and performance</li>
+        <li>Focus on sematic HTML</li>
+        <li>Focus on accessibility</li>
+      </ul>
+      <h4>Ideas</h4>
+      <ul>
+        <li>Show link to the docs</li>
+        <li>Show link to our blog</li>
+        <li>Show link to our github discussions</li>
+        <li>Show link to our Editions videos</li>
+      </ul>
+    </section>
   );
-}
-
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  console.error(caught);
-
-  return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
-    </div>
-  );
-}
-
-export function ErrorBoundary() {
-  const error = useRouteError();
-
-  if (isRouteErrorResponse(error)) {
-    console.error(error.status, error.statusText, error.data);
-    return <div>Route Error</div>;
-  } else {
-    console.error((error as Error).message);
-    return <div>Thrown Error</div>;
-  }
 }

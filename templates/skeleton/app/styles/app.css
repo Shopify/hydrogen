@@ -16,15 +16,20 @@ p {
 h1 {
   font-size: 1.6rem;
   font-weight: 700;
-  margin-bottom: 1rem;
   line-height: 1.4;
+  margin-bottom: 1rem;
 }
 
 h2 {
   font-size: 1.2rem;
   font-weight: 700;
-  margin-bottom: 1rem;
   line-height: 1.4;
+  margin-bottom: 1rem;
+}
+
+h5 {
+  margin-bottom: 1rem;
+  margin-top: 0.5rem;
 }
 
 p {
@@ -32,7 +37,48 @@ p {
   line-height: 1.4;
 }
 
-.Layout {
-  padding: 2rem;
-  max-width: 25rem;
+a {
+  text-decoration: none;
+  color: #000;
+}
+
+hr {
+  border-top: 1px solid #000;
+  border-bottom: none;
+  margin: 0;
+}
+
+pre {
+  white-space: pre-wrap;
+}
+
+header {
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+main {
+  margin: 1rem auto;
+  width: 100%;
+}
+
+footer {
+  background: #fff;
+  margin-top: auto;
+}
+
+nav a {
+  font-size: 0.75rem;
+}
+
+section {
+  padding: 1rem 2rem;
 }

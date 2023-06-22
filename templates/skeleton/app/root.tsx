@@ -1,8 +1,5 @@
-import {
-  defer,
-  type LinksFunction,
-  type LoaderArgs,
-} from '@shopify/remix-oxygen';
+import {useRouteError, isRouteErrorResponse} from '@remix-run/react';
+import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -11,12 +8,11 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from '@remix-run/react';
-import {Cart, Shop} from '@shopify/hydrogen-react/storefront-api-types';
-import {Layout} from '~/components';
+import {Layout} from '~/components/Layout';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 
-export const links: LinksFunction = () => {
+export function links() {
   return [
     {rel: 'stylesheet', href: styles},
     {
@@ -29,33 +25,27 @@ export const links: LinksFunction = () => {
     },
     {rel: 'icon', type: 'image/svg+xml', href: favicon},
   ];
-};
+}
 
 export async function loader({context}: LoaderArgs) {
+  const {storefront, session} = context;
+
+  // TODO: implement new cart
   const [customerAccessToken, cartId] = await Promise.all([
-    context.session.get('customerAccessToken'),
-    context.session.get('cartId'),
+    session.get('customerAccessToken'),
+    session.get('cartId'),
   ]);
 
   const [cart, layout] = await Promise.all([
     cartId
-      ? (
-          await context.storefront.query<{cart: Cart}>(CART_QUERY, {
-            variables: {
-              cartId,
-              /**
-              Country and language properties are automatically injected
-              into all queries. Passing them is unnecessary unless you
-              want to override them from the following default:
-              */
-              country: context.storefront.i18n?.country,
-              language: context.storefront.i18n?.language,
-            },
-            cache: context.storefront.CacheNone(),
-          })
-        ).cart
+      ? await storefront.query(CART_QUERY, {
+          variables: {cartId},
+          cache: storefront.CacheNone(),
+        })
       : null,
-    await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY),
+    await storefront.query(LAYOUT_QUERY, {
+      cache: storefront.CacheLong(),
+    }),
   ]);
 
   return defer({
@@ -66,9 +56,7 @@ export async function loader({context}: LoaderArgs) {
 }
 
 export default function App() {
-  const data = useLoaderData<typeof loader>();
-
-  const {name, description} = data.layout.shop;
+  const {layout} = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -79,7 +67,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout description={description} title={name}>
+        <Layout shop={layout.shop}>
           <Outlet />
         </Layout>
         <ScrollRestoration />
@@ -89,14 +77,41 @@ export default function App() {
   );
 }
 
-const CART_QUERY = `#graphql
-  query CartQuery($cartId: ID!) {
-    cart(id: $cartId) {
-      ...CartFragment
-    }
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  if (isRouteErrorResponse(error)) {
+    return (
+      <div>
+        <h1>Oops</h1>
+        <p>Status: {error.status}</p>
+        <p>{error.data.message}</p>
+      </div>
+    );
   }
 
-  fragment CartFragment on Cart {
+  let errorMessage = 'Unknown error';
+  if (error instanceof Error) {
+    errorMessage = error.message;
+  }
+
+  return (
+    <div>
+      <h1>Uh oh ...</h1>
+      <p>Something went wrong.</p>
+      <pre>{errorMessage}</pre>
+    </div>
+  );
+}
+
+// TODO: decide prefixing for queries Storefront vs Store vs _ ...
+const CART_QUERY = `#graphql
+  query StoreCart($cartId: ID!) {
+    cart(id: $cartId) {
+      ...Cart
+    }
+  }
+  fragment Cart on Cart {
     id
     checkoutUrl
     totalQuantity
@@ -123,16 +138,13 @@ const CART_QUERY = `#graphql
           }
           cost {
             totalAmount {
-              amount
-              currencyCode
+              ...Money
             }
             amountPerQuantity {
-              amount
-              currencyCode
+              ...Money
             }
             compareAtAmountPerQuantity {
-              amount
-              currencyCode
+              ...Money
             }
           }
           merchandise {
@@ -140,15 +152,15 @@ const CART_QUERY = `#graphql
               id
               availableForSale
               compareAtPrice {
-                ...MoneyFragment
+                ...Money
               }
               price {
-                ...MoneyFragment
+                ...Money
               }
               requiresShipping
               title
               image {
-                ...ImageFragment
+                ...Image
               }
               product {
                 handle
@@ -166,16 +178,16 @@ const CART_QUERY = `#graphql
     }
     cost {
       subtotalAmount {
-        ...MoneyFragment
+        ...Money
       }
       totalAmount {
-        ...MoneyFragment
+        ...Money
       }
       totalDutyAmount {
-        ...MoneyFragment
+        ...Money
       }
       totalTaxAmount {
-        ...MoneyFragment
+        ...Money
       }
     }
     note
@@ -188,25 +200,24 @@ const CART_QUERY = `#graphql
     }
   }
 
-  fragment MoneyFragment on MoneyV2 {
+  fragment Money on MoneyV2 {
     currencyCode
     amount
   }
 
-  fragment ImageFragment on Image {
+  fragment Image on Image {
     id
     url
     altText
     width
     height
   }
-`;
+` as const;
 
 const LAYOUT_QUERY = `#graphql
-  query layout {
+  query StoreLayout {
     shop {
       name
-      description
     }
   }
-`;
+` as const;
