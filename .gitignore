@@ -131,3 +131,5 @@ artifacts
 
 yarn.lock
 !/yarn.lock
+
+business-platform.schema.json

@@ -3,4 +3,6 @@
 projects:
   default:
     schema: 'packages/hydrogen-react/storefront.schema.json'
-    exclude: 'packages/cli/**/graphql/admin/**/*.ts'
+  business-platform:
+    schema: 'packages/cli/business-platform.schema.json'
+    documents: 'packages/cli/src/**/graphql/business-platform/**/*.ts'
