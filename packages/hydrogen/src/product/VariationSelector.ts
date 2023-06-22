@@ -24,10 +24,13 @@ type Variant = {
 };
 
 type VariantSelectorProps = {
+  /** Product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */
   options: Array<PartialDeep<ProductOption>> | undefined;
-  variants: PartialDeep<ProductVariantConnection>;
-  children: ({option}: {option: AvailableOption}) => ReactNode;
+  /** Product variants from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
+  variants?: PartialDeep<ProductVariantConnection>;
+  /** Provide a default variant when no options are selected. You can use the utility `getFirstAvailableVariant` to get a default variant. */
   defaultVariant?: ProductVariant;
+  children: ({option}: {option: AvailableOption}) => ReactNode;
 };
 
 export function VariantSelector({
@@ -63,60 +66,73 @@ export function VariantSelector({
     Fragment,
     null,
     ...useMemo(() => {
-      return options
-        .filter((option) => option?.values?.length! > 1)
-        .map((option) => {
-          let activeValue;
-          let availableVariants: Variant[] = [];
+      return (
+        options
+          // Only show options with more than one value
+          .filter((option) => option?.values?.length! > 1)
+          .map((option) => {
+            let activeValue;
+            let availableVariants: Variant[] = [];
 
-          for (let value of option.values!) {
-            const clonedSearchParams = new URLSearchParams(searchParams);
-            clonedSearchParams.set(option.name!, value!);
+            for (let value of option.values!) {
+              // The clone the search params for each value, so we can calculate
+              // a new URL for each option value pair
+              const clonedSearchParams = new URLSearchParams(searchParams);
+              clonedSearchParams.set(option.name!, value!);
 
-            optionsWithOnlyOneValue.forEach((option) => {
-              clonedSearchParams.set(option.name!, option.values![0]!);
-            });
+              // Because we hide options with only one value, they aren't selectable,
+              // but they still need to get into the URL
+              optionsWithOnlyOneValue.forEach((option) => {
+                clonedSearchParams.set(option.name!, option.values![0]!);
+              });
 
-            const variant = flattenConnection(variants).find((variant) =>
-              variant?.selectedOptions?.every(
-                (selectedOption) =>
-                  clonedSearchParams.get(selectedOption?.name!) ===
-                  selectedOption?.value,
-              ),
-            );
-
-            const currentParam = searchParams.get(option.name!);
-
-            const calculatedActiveValue = currentParam
-              ? currentParam === value!
-              : defaultVariant
-              ? defaultVariant.selectedOptions?.some(
+              // Find a variant that matches all selected options.
+              const variant = flattenConnection(variants).find((variant) =>
+                variant?.selectedOptions?.every(
                   (selectedOption) =>
-                    selectedOption?.name === option.name &&
-                    selectedOption?.value === value,
-                )
-              : false;
+                    clonedSearchParams.get(selectedOption?.name!) ===
+                    selectedOption?.value,
+                ),
+              );
 
-            if (calculatedActiveValue) {
-              activeValue = value;
+              const currentParam = searchParams.get(option.name!);
+
+              //
+              const calculatedActiveValue = currentParam
+                ? // If a URL parameter exists for the current option, check if it equals the current value
+                  currentParam === value!
+                : defaultVariant
+                ? // Else check if the default variant has the current option value
+                  defaultVariant.selectedOptions?.some(
+                    (selectedOption) =>
+                      selectedOption?.name === option.name &&
+                      selectedOption?.value === value,
+                  )
+                : false;
+
+              if (calculatedActiveValue) {
+                // Save out the current value if it's active. This should only ever happen once.
+                // Should we throw if it happens a second time?
+                activeValue = value;
+              }
+
+              availableVariants.push({
+                value: value!,
+                isAvailable: variant ? variant.availableForSale! : true,
+                path: path + '?' + clonedSearchParams.toString(),
+                isActive: calculatedActiveValue,
+              });
             }
 
-            availableVariants.push({
-              value: value!,
-              isAvailable: variant ? variant.availableForSale! : true,
-              path: path + '?' + clonedSearchParams.toString(),
-              isActive: calculatedActiveValue,
+            return children({
+              option: {
+                name: option.name!,
+                value: activeValue,
+                variants: availableVariants,
+              },
             });
-          }
-
-          return children({
-            option: {
-              name: option.name!,
-              value: activeValue,
-              variants: availableVariants,
-            },
-          });
-        });
+          })
+      );
     }, [options, variants, children]),
   );
 }
