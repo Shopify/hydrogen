@@ -93,6 +93,7 @@ describe('<CartForm />', () => {
   });
 });
 
+// vitest doesn't have FormData, so we mock it here
 function mockFormData(data: Record<string, unknown>) {
   const formatData: any = {
     cartFormInput: JSON.stringify(data),
@@ -100,7 +101,17 @@ function mockFormData(data: Record<string, unknown>) {
   return {
     has: (key: string) => !!formatData[key],
     get: (key: string) => formatData[key],
-  };
+    append: (key: string, value: any) => {
+      formatData[key] = value;
+    },
+    entries: () => {
+      const entries: any[] = [];
+      Object.keys(formatData).forEach((key: string) => {
+        entries.push([key, formatData[key]]);
+      });
+      return entries;
+    },
+  } as unknown as FormData;
 }
 
 describe('getFormInput', () => {
@@ -118,6 +129,43 @@ describe('getFormInput', () => {
       action: 'CustomTest',
       inputs: {
         test: 'test',
+      },
+    });
+  });
+
+  it('collects other form inputs', () => {
+    const formData = mockFormData({
+      action: 'CustomTest',
+      inputs: {
+        test: 'test',
+      },
+    });
+    formData.append('other', 'other');
+    const result = getFormInput(formData);
+
+    expect(result).toEqual({
+      action: 'CustomTest',
+      inputs: {
+        test: 'test',
+        other: 'other',
+      },
+    });
+  });
+
+  it('overrides same key form inputs', () => {
+    const formData = mockFormData({
+      action: 'CustomTest',
+      inputs: {
+        test: 'test',
+      },
+    });
+    formData.append('test', 'test2');
+    const result = getFormInput(formData);
+
+    expect(result).toEqual({
+      action: 'CustomTest',
+      inputs: {
+        test: 'test2',
       },
     });
   });

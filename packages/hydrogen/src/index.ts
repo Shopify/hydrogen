@@ -38,8 +38,8 @@ export {cartMetafieldDeleteDefault} from './cart/queries/cartMetafieldDeleteDefa
 export {cartGetIdDefault} from './cart/cartGetIdDefault';
 export {cartSetIdDefault} from './cart/cartSetIdDefault';
 export {
-  type CartHandlerReturnCustom,
-  type CartHandlerReturnBase,
+  type HydrogenCartCustom,
+  type HydrogenCart,
   createCartHandler as createCartHandler__unstable,
 } from './cart/createCartHandler';
 export type {

@@ -27,7 +27,7 @@ export function cartLinesUpdateDefault(
 export const CART_LINES_UPDATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
 ) => `#graphql
-  mutation CartLinesUpdate(
+  mutation cartLinesUpdate(
     $cartId: ID!
     $lines: [CartLineUpdateInput!]!
     $language: LanguageCode

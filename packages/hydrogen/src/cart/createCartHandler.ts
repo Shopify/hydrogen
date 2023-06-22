@@ -16,7 +16,7 @@ import {cartMetafieldDeleteDefault} from './queries/cartMetafieldDeleteDefault';
 export type CartHandlerOptions = {
   storefront: Storefront;
   getCartId: () => string | undefined;
-  setCartId: (cartId: string, headers: Headers) => void;
+  setCartId: (cartId: string) => Headers;
   cartQueryFragment?: string;
   cartMutateFragment?: string;
 };
@@ -26,11 +26,11 @@ type CartHandlerOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
   CartHandlerOptions & {
     customMethods?: TCustomMethods;
   };
-export type CartHandlerReturnBase = {
+export type HydrogenCart = {
   getFormInput: (formData: any) => CartActionInput;
   get: ReturnType<typeof cartGetDefault>;
   getCartId: () => string | undefined;
-  setCartId: (cartId: string, headers: Headers) => void;
+  setCartId: (cartId: string) => Headers;
   create: ReturnType<typeof cartCreateDefault>;
   addLines: ReturnType<typeof cartLinesAddDefault>;
   updateLines: ReturnType<typeof cartLinesUpdateDefault>;
@@ -46,19 +46,16 @@ export type CartHandlerReturnBase = {
   deleteMetafield: ReturnType<typeof cartMetafieldDeleteDefault>;
 };
 
-export type CartHandlerReturnCustom<
-  TCustomMethods extends Partial<CartHandlerReturnBase>,
-> = Omit<CartHandlerReturnBase, keyof TCustomMethods> & TCustomMethods;
+export type HydrogenCartCustom<TCustomMethods extends Partial<HydrogenCart>> =
+  Omit<HydrogenCart, keyof TCustomMethods> & TCustomMethods;
 export type CartHandlerReturn<TCustomMethods extends CustomMethodsBase> =
-  | CartHandlerReturnCustom<TCustomMethods>
-  | CartHandlerReturnBase;
+  | HydrogenCartCustom<TCustomMethods>
+  | HydrogenCart;
 
-export function createCartHandler(
-  options: CartHandlerOptions,
-): CartHandlerReturnBase;
+export function createCartHandler(options: CartHandlerOptions): HydrogenCart;
 export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   options: CartHandlerOptionsWithCustom<TCustomMethods>,
-): CartHandlerReturnCustom<TCustomMethods>;
+): HydrogenCartCustom<TCustomMethods>;
 export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   options: CartHandlerOptions | CartHandlerOptionsWithCustom<TCustomMethods>,
 ): CartHandlerReturn<TCustomMethods> {
@@ -79,7 +76,7 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
   const cartId = getCartId();
   const cartCreate = cartCreateDefault(mutateOptions);
 
-  const methods: CartHandlerReturnBase = {
+  const methods: HydrogenCart = {
     getFormInput,
     get: cartGetDefault({
       storefront,

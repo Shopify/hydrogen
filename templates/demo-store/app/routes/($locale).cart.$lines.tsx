@@ -39,8 +39,6 @@ export async function loader({request, context, params}: LoaderArgs) {
   const discount = searchParams.get('discount');
   const discountArray = discount ? [discount] : [];
 
-  const headers = new Headers();
-
   //! create a cart
   const {cart: cartResult, errors: graphqlCartErrors} = await cart.create({
     lines: linesMap,
@@ -53,8 +51,8 @@ export async function loader({request, context, params}: LoaderArgs) {
     });
   }
 
-  //! cart created - set and replace the session cart if there is one
-  cart.setCartId(cartResult.id, headers);
+  // Update cart id in cookie
+  const headers = cart.setCartId(cart.id);
 
   //! redirect to checkout
   if (cartResult.checkoutUrl) {

@@ -1,7 +1,7 @@
 import {describe, expect, expectTypeOf, it} from 'vitest';
 import {
-  CartHandlerReturnBase,
-  CartHandlerReturnCustom,
+  HydrogenCart,
+  HydrogenCartCustom,
   createCartHandler,
 } from './createCartHandler';
 import {mockCreateStorefrontClient, mockHeaders} from './cart-test-helper';
@@ -19,7 +19,7 @@ function getCartHandler(options: MockCarthandler = {}) {
     storefront: mockCreateStorefrontClient(),
     getCartId: () =>
       options.cartId ? `gid://shopify/Cart/${options.cartId}` : undefined,
-    setCartId: () => {},
+    setCartId: () => new Headers(),
     ...rest,
   });
 }
@@ -28,7 +28,7 @@ describe('createCartHandler', () => {
   it('returns a cart handler instance', () => {
     const cart = getCartHandler();
 
-    expectTypeOf(cart).toEqualTypeOf<CartHandlerReturnBase>;
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
     expect(Object.keys(cart)).toHaveLength(15);
     expect(cart).toHaveProperty('getFormInput');
     expect(cart).toHaveProperty('get');
@@ -59,7 +59,7 @@ describe('createCartHandler', () => {
       },
     });
 
-    expectTypeOf(cart).toEqualTypeOf<CartHandlerReturnCustom<{}>>;
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{}>>;
     expect(Object.keys(cart)).toHaveLength(16);
     expect(cart.foo()).toBe('bar');
   });
@@ -73,7 +73,7 @@ describe('createCartHandler', () => {
       },
     });
 
-    expectTypeOf(cart).toEqualTypeOf<CartHandlerReturnBase>;
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
     expect(Object.keys(cart)).toHaveLength(15);
     expect(await cart.get()).toBe('bar');
   });

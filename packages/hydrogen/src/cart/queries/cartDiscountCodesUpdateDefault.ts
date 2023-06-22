@@ -9,12 +9,17 @@ export function cartDiscountCodesUpdateDefault(
   options: CartQueryOptions,
 ): CartQueryReturn<string[]> {
   return async (discountCodes, optionalParams) => {
+    // Ensure the discount codes are unique
+    const uniqueCodes = discountCodes.filter((value, index, array) => {
+      return array.indexOf(value) === index;
+    });
+
     const {cartDiscountCodesUpdate} = await options.storefront.mutate<{
       cartDiscountCodesUpdate: CartQueryData;
     }>(CART_DISCOUNT_CODE_UPDATE_MUTATION(options.cartFragment), {
       variables: {
         cartId: options.getCartId(),
-        discountCodes,
+        discountCodes: uniqueCodes,
         ...optionalParams,
       },
     });

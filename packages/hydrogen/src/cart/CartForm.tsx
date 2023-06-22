@@ -158,13 +158,26 @@ CartForm.ACTIONS = {
   MetafieldDelete: 'MetafieldDelete',
 } as const;
 
-export function getFormInput(formData: any): CartActionInput {
-  const {action, inputs}: CartActionInput = formData.has(INPUT_NAME)
-    ? JSON.parse(String(formData.get(INPUT_NAME)))
+export function getFormInput(formData: FormData): CartActionInput {
+  // Get all form data
+  const data: Record<string, any> = {};
+  for (const pair of formData.entries()) {
+    data[pair[0]] = pair[1];
+  }
+
+  // Parse cartFormInput
+  const {cartFormInput, ...otherData} = data;
+  const {action, inputs}: CartActionInput = cartFormInput
+    ? JSON.parse(String(cartFormInput))
     : {};
 
   return {
     action,
-    inputs,
+    inputs: {
+      ...inputs,
+      ...otherData,
+    },
   } as unknown as CartActionInput;
 }
+
+CartForm.getFormInput = getFormInput;
