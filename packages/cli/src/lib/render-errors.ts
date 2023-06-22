@@ -1,20 +1,20 @@
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
-import type {AdminSession} from '@shopify/cli-kit/node/session';
+import type {AdminSession} from './auth.js';
 
 import {hydrogenStorefrontsUrl} from './admin-urls.js';
-import {parseGid} from './graphql.js';
+import {parseGid} from './gid.js';
 
 interface MissingStorefront {
-  adminSession: AdminSession;
-  storefront: {
-    id: string;
-    title: string;
-  };
+  session: AdminSession;
+  storefront: {id: string; title: string};
+  cliCommand: string;
 }
+
 export function renderMissingStorefront({
-  adminSession,
+  session,
   storefront,
+  cliCommand,
 }: MissingStorefront) {
   renderFatalError({
     name: 'NoStorefrontError',
@@ -25,27 +25,29 @@ export function renderMissingStorefront({
     tryMessage: outputContent`Couldn’t find ${storefront.title} (ID: ${parseGid(
       storefront.id,
     )}) on ${
-      adminSession.storeFqdn
+      session.storeFqdn
     }. Check that the storefront exists and run ${outputToken.genericShellCommand(
-      `npx shopify hydrogen link`,
+      `${cliCommand} link`,
     )} to link this project to it.\n\n${outputToken.link(
       'Hydrogen Storefronts Admin',
-      hydrogenStorefrontsUrl(adminSession),
+      hydrogenStorefrontsUrl(session),
     )}`.value,
   });
 }
 
 interface MissingLink {
-  adminSession: AdminSession;
+  session: AdminSession;
+  cliCommand: string;
 }
-export function renderMissingLink({adminSession}: MissingLink) {
+
+export function renderMissingLink({session, cliCommand}: MissingLink) {
   renderFatalError({
     name: 'NoLinkedStorefrontError',
     type: 0,
-    message: `No linked Hydrogen storefront on ${adminSession.storeFqdn}`,
-    tryMessage:
-      outputContent`To pull environment variables, link this project to a Hydrogen storefront. To select a storefront to link, run ${outputToken.genericShellCommand(
-        `npx shopify hydrogen link`,
-      )}.`.value,
+    message: `No linked Hydrogen storefront on ${session.storeFqdn}`,
+    tryMessage: [
+      '`To pull environment variables, link this project to a Hydrogen storefront. To select a storefront to link, run',
+      {command: `${cliCommand} link`},
+    ],
   });
 }
