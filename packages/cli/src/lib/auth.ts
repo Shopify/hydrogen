@@ -7,6 +7,7 @@ import {
 } from '@shopify/cli-kit/node/session';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 import {getConfig, resetConfig, setShop} from './shopify-config.js';
+import {muteAuthLogs} from './log.js';
 
 export type {AdminSession};
 
@@ -40,6 +41,8 @@ export async function login(root: string, shop?: string | true) {
   }
 
   shop = await normalizeStoreFqdn(shop);
+
+  muteAuthLogs();
 
   const session = await ensureAuthenticatedAdmin(shop).catch(() => {
     throw new AbortError('Unable to authenticate with Shopify', undefined, [

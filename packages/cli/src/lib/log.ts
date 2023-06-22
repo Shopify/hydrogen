@@ -22,8 +22,13 @@ function injectLogReplacer(method: ConsoleMethod) {
 }
 
 injectLogReplacer('log');
+injectLogReplacer('info');
 
+let devMuted = false;
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
+  if (devMuted) return;
+  else devMuted = true;
+
   let isFirstWorkerReload = true;
   messageReplacers.push([
     ([first]) => typeof first === 'string' && first.includes('[mf:'),
@@ -46,6 +51,30 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
       }
     },
   ]);
+}
+
+let authMuted = false;
+export function muteAuthLogs() {
+  if (authMuted) return;
+  else authMuted = true;
+
+  messageReplacers.push(
+    [
+      ([first]) => typeof first === 'string' && first.includes('Auto-open'),
+      ([first]) => {
+        return [first.replace(' to Shopify Partners', '')];
+      },
+    ],
+    [
+      ([first]) =>
+        typeof first === 'string' &&
+        (first.includes('Shopify Partners') || first.includes('Logged in')),
+      () => {
+        // Hide logs
+        return;
+      },
+    ],
+  );
 }
 
 const warnings = new Set<string>();

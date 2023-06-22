@@ -42,8 +42,6 @@ async function runLogin({
     getCliCommand(),
   ]);
 
-  console.log(''); // new line
-
   renderSuccess({
     body: ['You are logged in to', {userInput: session.storeFqdn}],
     nextSteps: [
