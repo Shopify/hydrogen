@@ -31,7 +31,7 @@ vi.mock('../../../lib/auth.js');
 vi.mock('../../../lib/shopify-config.js');
 vi.mock('../../../lib/render-errors.js');
 vi.mock('../../../lib/graphql/admin/list-environments.js');
-vi.mock('../../lib/shell.js', () => ({getCliCommand: () => 'h2'}));
+vi.mock('../../../lib/shell.js', () => ({getCliCommand: () => 'h2'}));
 
 describe('listEnvironments', () => {
   const ADMIN_SESSION: AdminSession = {
