@@ -49,7 +49,6 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
-    shop: commonFlags.shop,
     debug: Flags.boolean({
       description: 'Attaches a Node inspector',
       env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
@@ -77,7 +76,6 @@ async function runDev({
   codegen = false,
   codegenConfigPath,
   disableVirtualRoutes,
-  shop,
   envBranch,
   debug = false,
   sourcemap = true,
@@ -87,7 +85,6 @@ async function runDev({
   codegen?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
-  shop?: string;
   envBranch?: string;
   debug?: false;
   sourcemap?: boolean;
@@ -118,14 +115,11 @@ async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
-  const hasLinkedStorefront = !!(await getConfig(root))?.storefront?.id;
-  const environmentVariables = hasLinkedStorefront
-    ? await combinedEnvironmentVariables({
-        root,
-        shop,
-        envBranch,
-      })
-    : undefined;
+  const {shop, storefront} = await getConfig(root);
+  const environmentVariables =
+    !!shop && !!storefront?.id
+      ? await combinedEnvironmentVariables({root, shop, envBranch})
+      : undefined;
 
   let isMiniOxygenStarted = false;
   async function safeStartMiniOxygen() {
