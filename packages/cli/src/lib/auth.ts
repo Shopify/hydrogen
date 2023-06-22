@@ -1,13 +1,15 @@
-import {renderTextPrompt} from '@shopify/cli-kit/node/ui';
+import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {
+  type AdminSession,
   logout as adminLogout,
   ensureAuthenticatedAdmin,
-  type AdminSession,
+  ensureAuthenticatedBusinessPlatform,
 } from '@shopify/cli-kit/node/session';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 import {getConfig, resetConfig, setShop} from './shopify-config.js';
 import {muteAuthLogs} from './log.js';
+import {getActiveShops} from './graphql/business-platform/active-shops.js';
 
 export type {AdminSession};
 
@@ -28,21 +30,28 @@ export async function logout(root: string) {
  * prompted to enter a shop domain.
  */
 export async function login(root: string, shop?: string | true) {
-  if (typeof shop !== 'string') {
-    if (shop === true) shop = (await getConfig(root)).shop;
-
-    if (!shop) {
-      shop = await renderTextPrompt({
-        message:
-          'Specify which Store you would like to use (e.g. {store}.myshopify.com)',
-        allowEmpty: false,
-      });
-    }
-  }
-
-  shop = await normalizeStoreFqdn(shop);
+  if (shop === true) shop = (await getConfig(root)).shop;
+  if (shop) shop = await normalizeStoreFqdn(shop);
 
   muteAuthLogs();
+
+  if (!shop) {
+    const token = await ensureAuthenticatedBusinessPlatform().catch(() => {
+      throw new AbortError(
+        'Unable to authenticate with Shopify. Please report this issue.',
+      );
+    });
+
+    const activeShops = await getActiveShops(token);
+
+    shop = await renderSelectPrompt({
+      message: 'Select a shop to log in to',
+      choices: activeShops.map(({name, fqdn}) => ({
+        label: `${name} (${fqdn})`,
+        value: fqdn,
+      })),
+    });
+  }
 
   const session = await ensureAuthenticatedAdmin(shop).catch(() => {
     throw new AbortError('Unable to authenticate with Shopify', undefined, [
