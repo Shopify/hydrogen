@@ -1,4 +1,4 @@
-import {type ReactNode, useRef, Suspense, useMemo} from 'react';
+import {useRef, Suspense} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Await} from '@remix-run/react';
@@ -13,8 +13,8 @@ import {
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
-import type {ProductVariantConnection} from '@shopify/hydrogen/storefront-api-types';
 
+import type {VariantsQuery} from 'storefrontapi.generated';
 import {
   Heading,
   IconCaret,
@@ -31,9 +31,9 @@ import {
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
 import {seoPayload} from '~/lib/seo.server';
-import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 import type {Storefront} from '~/lib/type';
 import {routeHeaders} from '~/data/cache';
+import {MEDIA_FRAGMENT, PRODUCT_CARD_FRAGMENT} from '~/data/fragments';
 
 export const headers = routeHeaders;
 
@@ -52,21 +52,13 @@ export async function loader({params, request, context}: LoaderArgs) {
     },
   });
 
-  const variants = context.storefront
-    .query(VARIANTS_QUERY, {
-      variables: {
-        handle: productHandle,
-        country: context.storefront.i18n.country,
-        language: context.storefront.i18n.language,
-      },
-    })
-    .then((resp) => {
-      return new Promise((resolve, reject) => {
-        setTimeout(() => {
-          resolve(resp);
-        }, 2000);
-      });
-    });
+  const variants = context.storefront.query(VARIANTS_QUERY, {
+    variables: {
+      handle: productHandle,
+      country: context.storefront.i18n.country,
+      language: context.storefront.i18n.language,
+    },
+  });
 
   if (!product?.id) {
     throw new Response('product', {status: 404});
@@ -130,13 +122,16 @@ export default function Product() {
                   <Text className={'opacity-50 font-medium'}>{vendor}</Text>
                 )}
               </div>
-
-              <Suspense fallback={<ProductForm variants={{nodes: []}} />}>
+              <Suspense
+                fallback={
+                  <ProductForm productWithVariants={{variants: {nodes: []}}} />
+                }
+              >
                 <Await
                   errorElement="There was a problem loading related products"
                   resolve={variants}
                 >
-                  {(resp) => <ProductForm variants={resp.product?.variants} />}
+                  {(resp) => <ProductForm productWithVariants={resp.product} />}
                 </Await>
               </Suspense>
               <div className="grid gap-4 py-4">
@@ -179,10 +174,14 @@ export default function Product() {
   );
 }
 
-export function ProductForm({variants}: {variants: Array<any>}) {
+export function ProductForm({
+  productWithVariants,
+}: {
+  productWithVariants: VariantsQuery['product'];
+}) {
   const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
   const firstVariant =
-    getFirstAvailableVariant(product) ?? product.variants.nodes[0];
+    getFirstAvailableVariant(product.variants) ?? product.variants.nodes[0];
 
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -209,7 +208,7 @@ export function ProductForm({variants}: {variants: Array<any>}) {
       <div className="grid gap-4">
         <VariantSelector
           options={product.options}
-          variants={variants as unknown as ProductVariantConnection}
+          variants={productWithVariants?.variants}
           defaultVariant={firstVariant}
         >
           {({option}) => {
@@ -314,7 +313,7 @@ export function ProductForm({variants}: {variants: Array<any>}) {
               <AddToCartButton
                 lines={[
                   {
-                    merchandiseId: selectedVariant.id,
+                    merchandiseId: selectedVariant.id!,
                     quantity: 1,
                   },
                 ]}

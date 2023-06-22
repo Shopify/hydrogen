@@ -1,7 +1,6 @@
 import {useLocation} from '@remix-run/react';
 import {flattenConnection} from '@shopify/hydrogen-react';
-import {
-  Product,
+import type {
   ProductOption,
   ProductVariant,
   ProductVariantConnection,
@@ -29,7 +28,7 @@ type VariantSelectorProps = {
   /** Product variants from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
   variants?: PartialDeep<ProductVariantConnection>;
   /** Provide a default variant when no options are selected. You can use the utility `getFirstAvailableVariant` to get a default variant. */
-  defaultVariant?: ProductVariant;
+  defaultVariant?: PartialDeep<ProductVariant>;
   children: ({option}: {option: AvailableOption}) => ReactNode;
 };
 
@@ -120,7 +119,7 @@ export function VariantSelector({
                 value: value!,
                 isAvailable: variant ? variant.availableForSale! : true,
                 path: path + '?' + clonedSearchParams.toString(),
-                isActive: calculatedActiveValue,
+                isActive: Boolean(calculatedActiveValue),
               });
             }
 
@@ -154,8 +153,10 @@ export function getSelectedProductOptions(
   return selectedOptions;
 }
 
-export function getFirstAvailableVariant(product: Product) {
-  return flattenConnection(product.variants).find(
+export function getFirstAvailableVariant(
+  variants: PartialDeep<ProductVariantConnection>,
+): PartialDeep<ProductVariant> | undefined {
+  return flattenConnection(variants).find(
     (variant) => variant?.availableForSale,
   );
 }
