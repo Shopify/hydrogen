@@ -55,42 +55,51 @@ export type UseMoneyValue = {
  * default-formatted string of the amount with the correct currency indicator, along with some of the parts provided by
  * [Intl.NumberFormat](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Intl/NumberFormat).
  * Uses `locale` from `ShopifyProvider`
- * @example
- * ```js
+ * &nbsp;
+ * @see {@link https://shopify.dev/api/hydrogen/hooks/usemoney}
+ * @example initialize the money object
+ * ```ts
  * const money = useMoney({
  *   amount: '100.00',
  *   currencyCode: 'USD'
  * })
+ * ```
  * &nbsp;
-
- * // basic usage outputs: $100.00
+ *
+ * @example basic usage, outputs: $100.00
+ * ```ts
  * money.localizedString
+ * ```
  * &nbsp;
  *
- * // without currency, money. outputs: 100.00
+ * @example without currency, outputs: 100.00
+ * ```ts
  * money.amount
+ * ```
  * &nbsp;
  *
- * // without trailing zeros, outputs: $100
+ * @example without trailing zeros, outputs: $100
+ * ```ts
  * money.withoutTrailingZeros
+ * ```
  * &nbsp;
  *
- * // parts, outputs: [ { type: 'currency', value: '$' }, { type: 'integer', value: '100' }, { type: 'decimal', value: '.' }, { type: 'fraction', value: '00' } ]
- * money.parts
- * &nbsp;
- *
- * // currency name, outputs: US dollars
+ * @example currency name, outputs: US dollars
+ * ```ts
  * money.currencyCode
+ * ```
  * &nbsp;
  *
- * // currency symbol, outputs: $
+ * @example currency symbol, outputs: $
+ * ```ts
  * money.currencySymbol
+ * ```
  * &nbsp;
  *
- * // without currency and without trailing zeros, outputs: 100
+ * @example without currency and without trailing zeros, outputs: 100
+ * ```ts
  * money.withoutTrailingZerosAndCurrency
- * &nbsp;
- *```
+ * ```
  */
 export function useMoney(money: MoneyV2): UseMoneyValue {
   const {countryIsoCode, languageIsoCode} = useShop();
