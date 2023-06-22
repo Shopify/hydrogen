@@ -6,13 +6,15 @@ import {
   renderSuccess,
   renderWarning,
 } from '@shopify/cli-kit/node/ui';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 import {commonFlags} from '../../lib/flags.js';
-import {getHydrogenShop} from '../../lib/shop.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
-import {getConfig, setStorefront} from '../../lib/shopify-config.js';
+import {setStorefront, type ShopifyConfig} from '../../lib/shopify-config.js';
 import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
 import {getCliCommand} from '../../lib/shell.js';
+import {login} from '../../lib/auth.js';
+import type {AdminSession} from '../../lib/auth.js';
 
 export default class Link extends Command {
   static description =
@@ -21,7 +23,6 @@ export default class Link extends Command {
   static flags = {
     force: commonFlags.force,
     path: commonFlags.path,
-    shop: commonFlags.shop,
     storefront: Flags.string({
       description: 'The name of a Hydrogen Storefront (e.g. "Jane\'s Apparel")',
       env: 'SHOPIFY_HYDROGEN_STOREFRONT',
@@ -30,31 +31,63 @@ export default class Link extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Link);
-    await linkStorefront(flags);
+    await runLink(flags);
   }
 }
 
 export interface LinkStorefrontArguments {
   force?: boolean;
   path?: string;
-  shop?: string;
   storefront?: string;
-  silent?: boolean;
 }
 
-export async function linkStorefront({
+export async function runLink({
   force,
-  path,
-  shop: flagShop,
+  path: root = process.cwd(),
   storefront: flagStorefront,
-  silent = false,
 }: LinkStorefrontArguments) {
-  const shop = await getHydrogenShop({path, shop: flagShop});
-  const {storefront: configStorefront} = await getConfig(path ?? process.cwd());
+  const [{session, config}, cliCommand] = await Promise.all([
+    login(root, true),
+    getCliCommand(),
+  ]);
 
-  if (configStorefront && !force) {
+  const linkedStore = await linkStorefront(root, session, config, {
+    force,
+    flagStorefront,
+    cliCommand,
+  });
+
+  if (!linkedStore) return;
+
+  renderSuccess({
+    body: [{userInput: linkedStore.title}, 'is now linked'],
+    nextSteps: [
+      [
+        'Run',
+        {command: `${cliCommand} dev`},
+        'to start your local development server and start building',
+      ],
+    ],
+  });
+}
+
+export async function linkStorefront(
+  root: string,
+  session: AdminSession,
+  config: ShopifyConfig,
+  {
+    force = false,
+    flagStorefront,
+    cliCommand,
+  }: {force?: boolean; flagStorefront?: string; cliCommand: string},
+) {
+  if (!config.shop) {
+    throw new AbortError('No shop found in local config, login first.');
+  }
+
+  if (config.storefront?.id && !force) {
     const overwriteLink = await renderConfirmationPrompt({
-      message: `Your project is currently linked to ${configStorefront.title}. Do you want to link to a different Hydrogen storefront on Shopify?`,
+      message: `Your project is currently linked to ${config.storefront.title}. Do you want to link to a different Hydrogen storefront on Shopify?`,
     });
 
     if (!overwriteLink) {
@@ -62,15 +95,14 @@ export async function linkStorefront({
     }
   }
 
-  const {storefronts, adminSession} = await getStorefronts(shop);
+  const storefronts = await getStorefronts(session);
 
   if (storefronts.length === 0) {
-    logMissingStorefronts(adminSession);
+    logMissingStorefronts(session);
     return;
   }
 
   let selectedStorefront;
-  const cliCommand = await getCliCommand();
 
   if (flagStorefront) {
     selectedStorefront = storefronts.find(
@@ -84,7 +116,7 @@ export async function linkStorefront({
           "There's no storefront matching",
           {userInput: flagStorefront},
           'on your',
-          {userInput: shop},
+          {userInput: config.shop},
           'shop. To see all available Hydrogen storefronts, run',
           {
             command: `${cliCommand} list`,
@@ -112,18 +144,7 @@ export async function linkStorefront({
     return;
   }
 
-  await setStorefront(path ?? process.cwd(), selectedStorefront);
+  await setStorefront(root, selectedStorefront);
 
-  if (!silent) {
-    renderSuccess({
-      body: [{userInput: selectedStorefront.title}, 'is now linked'],
-      nextSteps: [
-        [
-          'Run',
-          {command: `${cliCommand} dev`},
-          'to start your local development server and start building',
-        ],
-      ],
-    });
-  }
+  return selectedStorefront;
 }
