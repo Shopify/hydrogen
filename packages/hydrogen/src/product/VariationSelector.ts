@@ -12,10 +12,10 @@ import type {PartialDeep} from 'type-fest';
 type AvailableOption = {
   name: string;
   value?: string;
-  variants: Array<Variant>;
+  values: Array<Value>;
 };
 
-type Variant = {
+type Value = {
   value: string;
   isAvailable: boolean;
   path: string;
@@ -71,7 +71,7 @@ export function VariantSelector({
           .filter((option) => option?.values?.length! > 1)
           .map((option) => {
             let activeValue;
-            let availableVariants: Variant[] = [];
+            let availableValues: Value[] = [];
 
             for (let value of option.values!) {
               // The clone the search params for each value, so we can calculate
@@ -96,7 +96,6 @@ export function VariantSelector({
 
               const currentParam = searchParams.get(option.name!);
 
-              //
               const calculatedActiveValue = currentParam
                 ? // If a URL parameter exists for the current option, check if it equals the current value
                   currentParam === value!
@@ -115,7 +114,7 @@ export function VariantSelector({
                 activeValue = value;
               }
 
-              availableVariants.push({
+              availableValues.push({
                 value: value!,
                 isAvailable: variant ? variant.availableForSale! : true,
                 path: path + '?' + clonedSearchParams.toString(),
@@ -127,7 +126,7 @@ export function VariantSelector({
               option: {
                 name: option.name!,
                 value: activeValue,
-                variants: availableVariants,
+                values: availableValues,
               },
             });
           })

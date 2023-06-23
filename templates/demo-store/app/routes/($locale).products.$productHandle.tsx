@@ -226,7 +226,7 @@ export function ProductForm({
                   {option.name}
                 </Heading>
                 <div className="flex flex-wrap items-baseline gap-4">
-                  {option.variants.length > 7 ? (
+                  {option.values.length > 7 ? (
                     <div className="relative w-full">
                       <Listbox>
                         {({open}) => (
@@ -249,16 +249,16 @@ export function ProductForm({
                                 open ? 'max-h-48' : 'max-h-0',
                               )}
                             >
-                              {option.variants
-                                .filter((variant) => variant.isAvailable)
-                                .map((variant) => (
+                              {option.values
+                                .filter((value) => value.isAvailable)
+                                .map(({value, path, isActive}) => (
                                   <Listbox.Option
-                                    key={`option-${option.name}-${variant.value}`}
-                                    value={variant.value}
+                                    key={`option-${option.name}-${value}`}
+                                    value={value}
                                   >
                                     {({active}) => (
                                       <Link
-                                        to={variant.path}
+                                        to={path}
                                         className={clsx(
                                           'text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer',
                                           active && 'bg-primary/10',
@@ -268,8 +268,8 @@ export function ProductForm({
                                           closeRef.current.click();
                                         }}
                                       >
-                                        {variant.value}
-                                        {variant.isActive && (
+                                        {value}
+                                        {isActive && (
                                           <span className="ml-2">
                                             <IconCheck />
                                           </span>
@@ -284,7 +284,7 @@ export function ProductForm({
                       </Listbox>
                     </div>
                   ) : (
-                    option.variants.map(
+                    option.values.map(
                       ({value, isAvailable, isActive, path}) => (
                         <Link
                           key={option.name + value}
