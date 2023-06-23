@@ -62,15 +62,26 @@ export async function startMiniOxygen({
   });
 
   const listeningAt = `http://localhost:${actualPort}`;
-  const graphiqlUrl = `${listeningAt}/graphiql`;
 
-  renderSuccess({
-    headline: 'MiniOxygen development server running.',
-    body: [
-      `View Hydrogen app: ${listeningAt}`,
-      colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`),
-    ],
-  });
+  return {
+    listeningAt,
+    port: actualPort,
+    showBanner(options?: {
+      mode?: string;
+      headlinePrefix?: string;
+      extraLines?: string[];
+    }) {
+      renderSuccess({
+        headline: `${options?.headlinePrefix ?? ''}MiniOxygen ${
+          options?.mode ?? 'development'
+        } server running.`,
+        body: [
+          `View Hydrogen app: ${listeningAt}`,
+          ...(options?.extraLines ?? []),
+        ],
+      });
+    },
+  };
 }
 
 export function logResponse(request: Request, response: Response) {
