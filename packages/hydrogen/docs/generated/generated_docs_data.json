@@ -8536,6 +8536,232 @@
     ]
   },
   {
+    "name": "VariantSelector",
+    "category": "components",
+    "isVisualComponent": true,
+    "related": [
+      {
+        "name": "getSelectedProductOptions",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/2023-04/utilities/getselectedproductoptions"
+      },
+      {
+        "name": "getFirstAvailableVariant",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/2023-04/utilities/getfirstavailablevariant"
+      }
+    ],
+    "description": "> Caution:\n> This component is in an unstable pre-release state and may have breaking changes in a future release.\n\nThe `VariantSelector` component helps you build a form for selecting available variants of a product. It is important for variant selection state to be maintained in the URL, so that the user can navigate to a product and return back to the same variant selection. It is also important that the variant selection state is shareable via URL. The `VariantSelector` component provides a render prop that renders for each product option.",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {VariantSelector__unstable as VariantSelector} from '@shopify/hydrogen';\nimport {Link} from '@remix-run/react';\n\nconst ProductForm = ({product}) => {\n  return (\n    <VariantSelector options={product.options} variants={product.variants}>\n      {({option}) => (\n        <>\n          <div>{option.name}</div>\n          <div>\n            {option.values.map(({value, isAvailable, path, isActive}) => (\n              <Link\n                to={path}\n                prefetch=\"intent\"\n                className={\n                  isActive ? 'active' : isAvailable ? '' : 'opacity-80'\n                }\n              >\n                {value}\n              </Link>\n            ))}\n          </div>\n        </>\n      )}\n    </VariantSelector>\n  );\n};\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {VariantSelector__unstable as VariantSelector} from '@shopify/hydrogen';\nimport type {Product} from '@shopify/hydrogen/storefront-api-types';\nimport {Link} from '@remix-run/react';\n\nconst ProductForm = ({product}: {product: Product}) => {\n  return (\n    <VariantSelector options={product.options} variants={product.variants}>\n      {({option}) => (\n        <>\n          <div>{option.name}</div>\n          <div>\n            {option.values.map(({value, isAvailable, path, isActive}) => (\n              <Link\n                to={path}\n                prefetch=\"intent\"\n                className={\n                  isActive ? 'active' : isAvailable ? '' : 'opacity-80'\n                }\n              >\n                {value}\n              </Link>\n            ))}\n          </div>\n        </>\n      )}\n    </VariantSelector>\n  );\n};\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "VariantSelectorGeneratedType",
+        "typeDefinitions": {
+          "VariantSelectorGeneratedType": {
+            "filePath": "/product/VariantSelector.ts",
+            "name": "VariantSelectorGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "input1",
+                "description": "",
+                "value": "VariantSelectorProps",
+                "filePath": "/product/VariantSelector.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/product/VariantSelector.ts",
+              "description": "",
+              "name": "",
+              "value": ""
+            },
+            "value": "export function VariantSelector({\n  options = [],\n  variants: _variants = [],\n  children,\n  defaultVariant,\n}: VariantSelectorProps) {\n  const variants =\n    _variants instanceof Array ? _variants : flattenConnection(_variants);\n  const {pathname, search} = useLocation();\n\n  const {searchParams, path} = useMemo(() => {\n    const isLocalePathname = /\\/[a-zA-Z]{2}-[a-zA-Z]{2}\\//g.test(pathname);\n    const path = isLocalePathname\n      ? `/${pathname.split('/').slice(2).join('/')}`\n      : pathname;\n\n    const searchParams = new URLSearchParams(search);\n\n    return {\n      searchParams: searchParams,\n      path,\n    };\n  }, [pathname, search]);\n\n  // If an option only has one value, it doesn't need a UI to select it\n  // But instead it always needs to be added to the product options so\n  // the SFAPI properly finds the variant\n  const optionsWithOnlyOneValue = options.filter(\n    (option) => option?.values?.length === 1,\n  );\n\n  return createElement(\n    Fragment,\n    null,\n    ...useMemo(() => {\n      return (\n        options\n          // Only show options with more than one value\n          .filter((option) => option?.values?.length! > 1)\n          .map((option) => {\n            let activeValue;\n            let availableValues: Value[] = [];\n\n            for (let value of option.values!) {\n              // The clone the search params for each value, so we can calculate\n              // a new URL for each option value pair\n              const clonedSearchParams = new URLSearchParams(searchParams);\n              clonedSearchParams.set(option.name!, value!);\n\n              // Because we hide options with only one value, they aren't selectable,\n              // but they still need to get into the URL\n              optionsWithOnlyOneValue.forEach((option) => {\n                clonedSearchParams.set(option.name!, option.values![0]!);\n              });\n\n              // Find a variant that matches all selected options.\n              const variant = variants.find((variant) =>\n                variant?.selectedOptions?.every(\n                  (selectedOption) =>\n                    clonedSearchParams.get(selectedOption?.name!) ===\n                    selectedOption?.value,\n                ),\n              );\n\n              const currentParam = searchParams.get(option.name!);\n\n              const calculatedActiveValue = currentParam\n                ? // If a URL parameter exists for the current option, check if it equals the current value\n                  currentParam === value!\n                : defaultVariant\n                ? // Else check if the default variant has the current option value\n                  defaultVariant.selectedOptions?.some(\n                    (selectedOption) =>\n                      selectedOption?.name === option.name &&\n                      selectedOption?.value === value,\n                  )\n                : false;\n\n              if (calculatedActiveValue) {\n                // Save out the current value if it's active. This should only ever happen once.\n                // Should we throw if it happens a second time?\n                activeValue = value;\n              }\n\n              availableValues.push({\n                value: value!,\n                isAvailable: variant ? variant.availableForSale! : true,\n                path: path + '?' + clonedSearchParams.toString(),\n                isActive: Boolean(calculatedActiveValue),\n              });\n            }\n\n            return children({\n              option: {\n                name: option.name!,\n                value: activeValue,\n                values: availableValues,\n              },\n            });\n          })\n      );\n    }, [options, variants, children]),\n  );\n}"
+          },
+          "VariantSelectorProps": {
+            "filePath": "/product/VariantSelector.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "VariantSelectorProps",
+            "value": "{\n  /** Product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */\n  options: Array<PartialDeep<ProductOption>> | undefined;\n  /** Product variants from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */\n  variants?:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>;\n  /** Provide a default variant when no options are selected. You can use the utility `getFirstAvailableVariant` to get a default variant. */\n  defaultVariant?: PartialDeep<ProductVariant>;\n  children: ({option}: {option: AvailableOption}) => ReactNode;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "options",
+                "value": "PartialObjectDeep<ProductOption, {}>[]",
+                "description": "Product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption). Make sure both `name` and `values` are apart of your query."
+              },
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "variants",
+                "value": "PartialObjectDeep<ProductVariantConnection, {}> | PartialObjectDeep<ProductVariant, {}>[]",
+                "description": "Product variants from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "defaultVariant",
+                "value": "PartialDeep<ProductVariant>",
+                "description": "Provide a default variant when no options are selected. You can use the utility `getFirstAvailableVariant` to get a default variant.",
+                "isOptional": true
+              },
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "children",
+                "value": "({ option }: { option: AvailableOption; }) => ReactNode",
+                "description": ""
+              }
+            ]
+          },
+          "AvailableOption": {
+            "filePath": "/product/VariantSelector.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "AvailableOption",
+            "value": "{\n  name: string;\n  value?: string;\n  values: Array<Value>;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "name",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "value",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "values",
+                "value": "Array<Value>",
+                "description": ""
+              }
+            ]
+          },
+          "Value": {
+            "filePath": "/product/VariantSelector.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "Value",
+            "value": "{\n  value: string;\n  isAvailable: boolean;\n  path: string;\n  isActive: boolean;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "value",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isAvailable",
+                "value": "boolean",
+                "description": ""
+              },
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "path",
+                "value": "string",
+                "description": ""
+              },
+              {
+                "filePath": "/product/VariantSelector.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "isActive",
+                "value": "boolean",
+                "description": ""
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "getSelectedProductOptions",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "VariantSelector",
+        "type": "components",
+        "url": "/docs/api/hydrogen/2023-04/components/variantselector"
+      },
+      {
+        "name": "getFirstAvailableVariant",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/2023-04/utilities/getfirstavailablevariant"
+      }
+    ],
+    "description": "> Caution:\n> This utility is in an unstable pre-release state and may have breaking changes in a future release.\n\nThe `getSelectedProductOptions` returns the selected options from the Request search parameters. The selected options can then be easily passed to your GraphQL query with [`variantBySelectedOptions`](https://shopify.dev/docs/api/storefront/2023-04/objects/product#field-product-variantbyselectedoptions).",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {getSelectedProductOptions__unstable as getSelectedProductOptions} from '@shopify/hydrogen';\nimport {json} from '@shopify/remix-oxygen';\n\nexport async function loader({request, params, context}) {\n  const selectedOptions = getSelectedProductOptions(request);\n\n  const {product} = await context.storefront.query(PRODUCT_QUERY, {\n    variables: {\n      handle: params.productHandle,\n      selectedOptions,\n    },\n  });\n\n  return json({product});\n}\n\nconst PRODUCT_QUERY = `#graphql\n  query Product($handle: String!, $selectedOptions: [SelectedOptionInput!]!) {\n    product(handle: $handle) {\n      title\n      description\n      options {\n        name\n        values \n      }\n      selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {\n        ...ProductVariantFragment\n      }\n    }\n  }\n`;\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {getSelectedProductOptions__unstable as getSelectedProductOptions} from '@shopify/hydrogen';\nimport {json, type LoaderArgs} from '@shopify/remix-oxygen';\n\nexport async function loader({request, params, context}: LoaderArgs) {\n  const selectedOptions = getSelectedProductOptions(request);\n\n  const {product} = await context.storefront.query(PRODUCT_QUERY, {\n    variables: {\n      handle: params.productHandle,\n      selectedOptions,\n    },\n  });\n\n  return json({product});\n}\n\nconst PRODUCT_QUERY = `#graphql\n  query Product($handle: String!, $selectedOptions: [SelectedOptionInput!]!) {\n    product(handle: $handle) {\n      title\n      description\n      options {\n        name\n        values \n      }\n      selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {\n        ...ProductVariantFragment\n      }\n    }\n  }\n`;\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "GetSelectedProductOptions",
+        "typeDefinitions": {
+          "GetSelectedProductOptions": {
+            "filePath": "/product/VariantSelector.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GetSelectedProductOptions",
+            "value": "(request: Request) => SelectedOptionInput[]",
+            "description": ""
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "graphiqlLoader",
     "category": "utilities",
     "isVisualComponent": false,
