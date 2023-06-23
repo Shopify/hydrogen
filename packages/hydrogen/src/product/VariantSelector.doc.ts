@@ -42,7 +42,7 @@ The \`VariantSelector\` component helps you build a form for selecting available
   definitions: [
     {
       title: 'Props',
-      type: 'VariantSelectorGeneratedType',
+      type: 'VariantSelectorProps',
       description: '',
     },
   ],

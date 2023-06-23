@@ -158,12 +158,18 @@ export const getSelectedProductOptions: GetSelectedProductOptions = (
   return selectedOptions;
 };
 
-export function getFirstAvailableVariant(
+type GetFirstAvailableVariant = (
+  variants:
+    | PartialDeep<ProductVariantConnection>
+    | Array<PartialDeep<ProductVariant>>,
+) => PartialDeep<ProductVariant> | undefined;
+
+export const getFirstAvailableVariant: GetFirstAvailableVariant = (
   variants:
     | PartialDeep<ProductVariantConnection>
     | Array<PartialDeep<ProductVariant>> = [],
-): PartialDeep<ProductVariant> | undefined {
+): PartialDeep<ProductVariant> | undefined => {
   return (
     variants instanceof Array ? variants : flattenConnection(variants)
   ).find((variant) => variant?.availableForSale);
-}
+};

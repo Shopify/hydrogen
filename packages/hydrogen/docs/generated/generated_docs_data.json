@@ -8575,28 +8575,8 @@
       {
         "title": "Props",
         "description": "",
-        "type": "VariantSelectorGeneratedType",
+        "type": "VariantSelectorProps",
         "typeDefinitions": {
-          "VariantSelectorGeneratedType": {
-            "filePath": "/product/VariantSelector.ts",
-            "name": "VariantSelectorGeneratedType",
-            "description": "",
-            "params": [
-              {
-                "name": "input1",
-                "description": "",
-                "value": "VariantSelectorProps",
-                "filePath": "/product/VariantSelector.ts"
-              }
-            ],
-            "returns": {
-              "filePath": "/product/VariantSelector.ts",
-              "description": "",
-              "name": "",
-              "value": ""
-            },
-            "value": "export function VariantSelector({\n  options = [],\n  variants: _variants = [],\n  children,\n  defaultVariant,\n}: VariantSelectorProps) {\n  const variants =\n    _variants instanceof Array ? _variants : flattenConnection(_variants);\n  const {pathname, search} = useLocation();\n\n  const {searchParams, path} = useMemo(() => {\n    const isLocalePathname = /\\/[a-zA-Z]{2}-[a-zA-Z]{2}\\//g.test(pathname);\n    const path = isLocalePathname\n      ? `/${pathname.split('/').slice(2).join('/')}`\n      : pathname;\n\n    const searchParams = new URLSearchParams(search);\n\n    return {\n      searchParams: searchParams,\n      path,\n    };\n  }, [pathname, search]);\n\n  // If an option only has one value, it doesn't need a UI to select it\n  // But instead it always needs to be added to the product options so\n  // the SFAPI properly finds the variant\n  const optionsWithOnlyOneValue = options.filter(\n    (option) => option?.values?.length === 1,\n  );\n\n  return createElement(\n    Fragment,\n    null,\n    ...useMemo(() => {\n      return (\n        options\n          // Only show options with more than one value\n          .filter((option) => option?.values?.length! > 1)\n          .map((option) => {\n            let activeValue;\n            let availableValues: Value[] = [];\n\n            for (let value of option.values!) {\n              // The clone the search params for each value, so we can calculate\n              // a new URL for each option value pair\n              const clonedSearchParams = new URLSearchParams(searchParams);\n              clonedSearchParams.set(option.name!, value!);\n\n              // Because we hide options with only one value, they aren't selectable,\n              // but they still need to get into the URL\n              optionsWithOnlyOneValue.forEach((option) => {\n                clonedSearchParams.set(option.name!, option.values![0]!);\n              });\n\n              // Find a variant that matches all selected options.\n              const variant = variants.find((variant) =>\n                variant?.selectedOptions?.every(\n                  (selectedOption) =>\n                    clonedSearchParams.get(selectedOption?.name!) ===\n                    selectedOption?.value,\n                ),\n              );\n\n              const currentParam = searchParams.get(option.name!);\n\n              const calculatedActiveValue = currentParam\n                ? // If a URL parameter exists for the current option, check if it equals the current value\n                  currentParam === value!\n                : defaultVariant\n                ? // Else check if the default variant has the current option value\n                  defaultVariant.selectedOptions?.some(\n                    (selectedOption) =>\n                      selectedOption?.name === option.name &&\n                      selectedOption?.value === value,\n                  )\n                : false;\n\n              if (calculatedActiveValue) {\n                // Save out the current value if it's active. This should only ever happen once.\n                // Should we throw if it happens a second time?\n                activeValue = value;\n              }\n\n              availableValues.push({\n                value: value!,\n                isAvailable: variant ? variant.availableForSale! : true,\n                path: path + '?' + clonedSearchParams.toString(),\n                isActive: Boolean(calculatedActiveValue),\n              });\n            }\n\n            return children({\n              option: {\n                name: option.name!,\n                value: activeValue,\n                values: availableValues,\n              },\n            });\n          })\n      );\n    }, [options, variants, children]),\n  );\n}"
-          },
           "VariantSelectorProps": {
             "filePath": "/product/VariantSelector.ts",
             "syntaxKind": "TypeAliasDeclaration",
@@ -8703,6 +8683,59 @@
                 "description": ""
               }
             ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "getFirstAvailableVariant",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "VariantSelector",
+        "type": "components",
+        "url": "/docs/api/hydrogen/2023-04/components/variantselector"
+      },
+      {
+        "name": "getSelectedProductOptions",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/2023-04/utilities/getselectedproductoptions"
+      }
+    ],
+    "description": "> Caution:\n> This utility is in an unstable pre-release state and may have breaking changes in a future release.\n\nThe `getFirstAvailableVariant` returns the first variant that is available for purchase.",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {getFirstAvailableVariant__unstable as getFirstAvailableVariant} from '@shopify/hydrogen';\nimport {json} from '@shopify/remix-oxygen';\n\nexport async function loader({params, context}) {\n  const {product} = await context.storefront.query(PRODUCT_QUERY, {\n    variables: {\n      handle: params.productHandle,\n    },\n  });\n\n  const firstAvailableVariant = getFirstAvailableVariant(product.variants);\n\n  return json({product, firstAvailableVariant});\n}\n\nconst PRODUCT_QUERY = `#graphql\n  query Product($handle: String!) {\n    product(handle: $handle) {\n      title\n      description\n      options {\n        name\n        values \n      }\n      variants(first: 250) {\n        nodes {\n          ...ProductVariantFragment\n        }\n      }\n    }\n  }\n`;\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {getFirstAvailableVariant__unstable as getFirstAvailableVariant} from '@shopify/hydrogen';\nimport {json, type LoaderArgs} from '@shopify/remix-oxygen';\n\nexport async function loader({params, context}: LoaderArgs) {\n  const {product} = await context.storefront.query(PRODUCT_QUERY, {\n    variables: {\n      handle: params.productHandle,\n    },\n  });\n\n  const firstAvailableVariant = getFirstAvailableVariant(product.variants);\n\n  return json({product, firstAvailableVariant});\n}\n\nconst PRODUCT_QUERY = `#graphql\n  query Product($handle: String!) {\n    product(handle: $handle) {\n      title\n      description\n      options {\n        name\n        values \n      }\n      variants(first: 250) {\n        nodes {\n          ...ProductVariantFragment\n        }\n      }\n    }\n  }\n`;\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "GetFirstAvailableVariant",
+        "typeDefinitions": {
+          "GetFirstAvailableVariant": {
+            "filePath": "/product/VariantSelector.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "GetFirstAvailableVariant",
+            "value": "(\n  variants:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>,\n) => PartialDeep<ProductVariant> | undefined",
+            "description": ""
           }
         }
       }
