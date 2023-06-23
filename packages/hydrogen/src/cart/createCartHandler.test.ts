@@ -29,8 +29,7 @@ describe('createCartHandler', () => {
     const cart = getCartHandler();
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
-    expect(Object.keys(cart)).toHaveLength(15);
-    expect(cart).toHaveProperty('getFormInput');
+    expect(Object.keys(cart)).toHaveLength(14);
     expect(cart).toHaveProperty('get');
     expect(cart).toHaveProperty('getCartId');
     expect(cart).toHaveProperty('setCartId');
@@ -51,7 +50,7 @@ describe('createCartHandler', () => {
     const cart = createCartHandler({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => undefined,
-      setCartId: () => {},
+      setCartId: () => new Headers(),
       customMethods: {
         foo() {
           return 'bar';
@@ -60,7 +59,7 @@ describe('createCartHandler', () => {
     });
 
     expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{}>>;
-    expect(Object.keys(cart)).toHaveLength(16);
+    expect(Object.keys(cart)).toHaveLength(15);
     expect(cart.foo()).toBe('bar');
   });
 
