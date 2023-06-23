@@ -321,7 +321,7 @@ async function setupLocalStarterTemplate(
           joinPath(project.directory, '.env'),
           false,
           (content) =>
-            content.replace(/PUBLIC_.*\n/gm, '').replace(/\n\n$/gm, '\n'),
+            content.replace(/^[^#].*\n/gm, '').replace(/\n\n$/gm, '\n'),
         ),
       ]).catch(abort),
     );
