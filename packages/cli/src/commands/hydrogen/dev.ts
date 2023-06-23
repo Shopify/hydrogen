@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
   getProjectPaths,
@@ -153,6 +154,11 @@ async function runDev({
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
+      extraLines: [
+        colors.dim(
+          `\nView GraphiQL API browser: ${miniOxygen.listeningAt}/graphiql`,
+        ),
+      ],
     });
 
     const showUpgrade = await checkingHydrogenVersion;

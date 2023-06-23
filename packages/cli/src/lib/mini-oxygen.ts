@@ -66,14 +66,18 @@ export async function startMiniOxygen({
   return {
     listeningAt,
     port: actualPort,
-    showBanner(options?: {headlinePrefix?: string}) {
+    showBanner(options?: {
+      mode?: string;
+      headlinePrefix?: string;
+      extraLines?: string[];
+    }) {
       renderSuccess({
-        headline: `${
-          options?.headlinePrefix ?? ''
-        }MiniOxygen development server running.`,
+        headline: `${options?.headlinePrefix ?? ''}MiniOxygen ${
+          options?.mode ?? 'development'
+        } server running.`,
         body: [
           `View Hydrogen app: ${listeningAt}`,
-          colors.dim(`\nView GraphiQL API browser: ${listeningAt}/graphiql`),
+          ...(options?.extraLines ?? []),
         ],
       });
     },

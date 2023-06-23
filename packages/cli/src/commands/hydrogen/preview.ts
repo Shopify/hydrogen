@@ -40,5 +40,5 @@ export async function runPreview({
     buildPathWorkerFile,
   });
 
-  miniOxygen.showBanner();
+  miniOxygen.showBanner({mode: 'preview'});
 }
