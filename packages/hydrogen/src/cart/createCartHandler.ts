@@ -209,7 +209,7 @@ export type CartHandlerOptionsForDocs<
   customMethods?: TCustomMethods;
 };
 
-export type CartHandlerReturnBaseForDocs = {
+export type HydrogenCartForDocs = {
   /**
    * Adds items to the cart.
    * If the cart doesn't exist, a new one will be created.
@@ -240,7 +240,7 @@ export type CartHandlerReturnBaseForDocs = {
    * Sets the unique identifier of the cart.
    * By default, it sets the ID in the header cookie.
    */
-  setCartId?: (cartId: string, headers: Headers) => void;
+  setCartId?: (cartId: string) => Headers;
   /**
    * Adds extra information (metafields) to the cart.
    * If the cart doesn't exist, a new one will be created.

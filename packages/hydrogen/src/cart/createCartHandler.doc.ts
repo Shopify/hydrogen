@@ -36,7 +36,7 @@ Creates an API that can be used to interact with the cart.`,
     },
     {
       title: 'Returns',
-      type: 'CartHandlerReturnBaseForDocs',
+      type: 'HydrogenCartForDocs',
       description:
         'The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.',
     },
@@ -147,20 +147,6 @@ Creates an API that can be used to interact with the cart.`,
                 {
                   title: 'JavaScript',
                   code: './createCartHandler.getCartId.example.js',
-                  language: 'js',
-                },
-              ],
-            },
-          },
-          {
-            description:
-              'Get the form input created by the CartForm action request.',
-            codeblock: {
-              title: 'cart.getFormInput',
-              tabs: [
-                {
-                  title: 'JavaScript',
-                  code: './createCartHandler.getFormInput.example.js',
                   language: 'js',
                 },
               ],

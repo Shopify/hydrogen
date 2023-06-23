@@ -26,7 +26,7 @@ export async function action({request, context}) {
   const headers = new Headers();
 
   const formData = await request.formData();
-  const {action, inputs} = cart.getFormInput(formData);
+  const {action, inputs} = CartForm.getFormInput(formData);
 
   let status = 200;
   let result;

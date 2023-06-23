@@ -602,12 +602,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {json} from '@remix-run/server-runtime';\nimport {CartForm__unstable as CartForm} from '@shopify/hydrogen';\nimport invariant from 'tiny-invariant';\n\nexport default function Cart() {\n  return (\n    <CartForm\n      action={CartForm.ACTIONS.LinesUpdate}\n      inputs={{\n        lines: [\n          {\n            id: 'gid://shopify/CartLine/123456789',\n            quantity: 3,\n          },\n        ],\n        other: 'data',\n      }}\n    >\n      <button>Quantity up</button>\n    </CartForm>\n  );\n}\n\nexport async function action({request, context}) {\n  const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = cart.getFormInput(formData);\n\n  let status = 200;\n  let result;\n\n  if (action === CartForm.ACTIONS.LinesUpdate) {\n    result = await cart.updateLines(inputs.lines);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
+            "code": "import {json} from '@remix-run/server-runtime';\nimport {CartForm__unstable as CartForm} from '@shopify/hydrogen';\nimport invariant from 'tiny-invariant';\n\nexport default function Cart() {\n  return (\n    <CartForm\n      action={CartForm.ACTIONS.LinesUpdate}\n      inputs={{\n        lines: [\n          {\n            id: 'gid://shopify/CartLine/123456789',\n            quantity: 3,\n          },\n        ],\n        other: 'data',\n      }}\n    >\n      <button>Quantity up</button>\n    </CartForm>\n  );\n}\n\nexport async function action({request, context}) {\n  const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = CartForm.getFormInput(formData);\n\n  let status = 200;\n  let result;\n\n  if (action === CartForm.ACTIONS.LinesUpdate) {\n    result = await cart.updateLines(inputs.lines);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
             "language": "js"
           },
           {
             "title": "TypeScript",
-            "code": "import {type ActionArgs, json} from '@remix-run/server-runtime';\nimport {\n  type CartQueryData,\n  type CartHandlerReturnBase,\n  CartForm__unstable as CartForm,\n} from '@shopify/hydrogen';\nimport invariant from 'tiny-invariant';\n\nexport default function Cart() {\n  return (\n    <CartForm\n      action={CartForm.ACTIONS.LinesUpdate}\n      inputs={{\n        lines: [\n          {\n            id: 'gid://shopify/CartLine/123456789',\n            quantity: 3,\n          },\n        ],\n        other: 'data',\n      }}\n    >\n      <button>Quantity up</button>\n    </CartForm>\n  );\n}\n\nexport async function action({request, context}: ActionArgs) {\n  const cart = context.cart as CartHandlerReturnBase;\n  // cart is type CartHandlerReturnBase or CartHandlerReturnCustom\n  // Declare cart type in remix.env.d.ts for interface AppLoadContext to avoid type casting\n  // const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = cart.getFormInput(formData);\n\n  let status = 200;\n  let result: CartQueryData;\n\n  if (action === CartForm.ACTIONS.LinesUpdate) {\n    result = await cart.updateLines(inputs.lines);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
+            "code": "import {type ActionArgs, json} from '@remix-run/server-runtime';\nimport {\n  type CartQueryData,\n  type HydrogenCart,\n  CartForm__unstable as CartForm,\n} from '@shopify/hydrogen';\nimport invariant from 'tiny-invariant';\n\nexport default function Cart() {\n  return (\n    <CartForm\n      action={CartForm.ACTIONS.LinesUpdate}\n      inputs={{\n        lines: [\n          {\n            id: 'gid://shopify/CartLine/123456789',\n            quantity: 3,\n          },\n        ],\n        other: 'data',\n      }}\n    >\n      <button>Quantity up</button>\n    </CartForm>\n  );\n}\n\nexport async function action({request, context}: ActionArgs) {\n  const cart = context.cart as HydrogenCart;\n  // cart is type HydrogenCart or HydrogenCartCustom\n  // Declare cart type in remix.env.d.ts for interface AppLoadContext to avoid type casting\n  // const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = CartForm.getFormInput(formData);\n\n  let status = 200;\n  let result: CartQueryData;\n\n  if (action === CartForm.ACTIONS.LinesUpdate) {\n    result = await cart.updateLines(inputs.lines);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
             "language": "ts"
           }
         ],
@@ -1006,12 +1006,12 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "import {json} from '@remix-run/server-runtime';\nimport {CartForm__unstable as CartForm} from '@shopify/hydrogen';\nimport invariant from 'tiny-invariant';\n\nexport default function Cart() {\n  return (\n    <CartForm\n      action=\"CustomEditInPlace\"\n      inputs={{\n        addLines: [\n          {\n            merchandiseId: 'gid://shopify/Product/123456789',\n            quantity: 1,\n          },\n        ],\n        removeLines: ['gid://shopify/CartLine/123456789'],\n      }}\n    >\n      <button>Green color swatch</button>\n    </CartForm>\n  );\n}\n\nexport async function action({request, context}) {\n  const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = cart.getFormInput(formData);\n\n  let status = 200;\n  let result;\n\n  if (action === 'CustomEditInPlace') {\n    result = await cart.addLines(inputs.addLines);\n    result = await cart.removeLines(inputs.removeLines);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
+                    "code": "import {json} from '@remix-run/server-runtime';\nimport {CartForm__unstable as CartForm} from '@shopify/hydrogen';\nimport invariant from 'tiny-invariant';\n\nexport default function Cart() {\n  return (\n    <CartForm\n      action=\"CustomEditInPlace\"\n      inputs={{\n        addLines: [\n          {\n            merchandiseId: 'gid://shopify/Product/123456789',\n            quantity: 1,\n          },\n        ],\n        removeLines: ['gid://shopify/CartLine/123456789'],\n      }}\n    >\n      <button>Green color swatch</button>\n    </CartForm>\n  );\n}\n\nexport async function action({request, context}) {\n  const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = CartForm.getFormInput(formData);\n\n  let status = 200;\n  let result;\n\n  if (action === 'CustomEditInPlace') {\n    result = await cart.addLines(inputs.addLines);\n    result = await cart.removeLines(inputs.removeLines);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
                     "language": "jsx"
                   },
                   {
                     "title": "TypeScript",
-                    "code": "import {type ActionArgs, json} from '@remix-run/server-runtime';\nimport {\n  type CartQueryData,\n  type CartHandlerReturnBase,\n  CartForm__unstable as CartForm,\n} from '@shopify/hydrogen';\nimport {type CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';\nimport invariant from 'tiny-invariant';\n\nexport default function Cart() {\n  return (\n    <CartForm\n      action=\"CustomEditInPlace\"\n      inputs={{\n        addLines: [\n          {\n            merchandiseId: 'gid://shopify/Product/123456789',\n            quantity: 1,\n          },\n        ],\n        removeLines: ['gid://shopify/CartLine/123456789'],\n      }}\n    >\n      <button>Green color swatch</button>\n    </CartForm>\n  );\n}\n\nexport async function action({request, context}: ActionArgs) {\n  const cart = context.cart as CartHandlerReturnBase;\n  // cart is type CartHandlerReturnBase or CartHandlerReturnCustom\n  // Declare cart type in remix.env.d.ts for interface AppLoadContext to avoid type casting\n  // const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = cart.getFormInput(formData);\n\n  let status = 200;\n  let result: CartQueryData;\n\n  if (action === 'CustomEditInPlace') {\n    result = await cart.addLines(inputs.addLines as CartLineInput[]);\n    result = await cart.removeLines(inputs.removeLines as string[]);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
+                    "code": "import {type ActionArgs, json} from '@remix-run/server-runtime';\nimport {\n  type CartQueryData,\n  type HydrogenCart,\n  CartForm__unstable as CartForm,\n} from '@shopify/hydrogen';\nimport {type CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';\nimport invariant from 'tiny-invariant';\n\nexport default function Cart() {\n  return (\n    <CartForm\n      action=\"CustomEditInPlace\"\n      inputs={{\n        addLines: [\n          {\n            merchandiseId: 'gid://shopify/Product/123456789',\n            quantity: 1,\n          },\n        ],\n        removeLines: ['gid://shopify/CartLine/123456789'],\n      }}\n    >\n      <button>Green color swatch</button>\n    </CartForm>\n  );\n}\n\nexport async function action({request, context}: ActionArgs) {\n  const cart = context.cart as HydrogenCart;\n  // cart is type HydrogenCart or HydrogenCartCustom\n  // Declare cart type in remix.env.d.ts for interface AppLoadContext to avoid type casting\n  // const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = CartForm.getFormInput(formData);\n\n  let status = 200;\n  let result: CartQueryData;\n\n  if (action === 'CustomEditInPlace') {\n    result = await cart.addLines(inputs.addLines as CartLineInput[]);\n    result = await cart.removeLines(inputs.removeLines as string[]);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
                     "language": "tsx"
                   }
                 ]
@@ -1029,12 +1029,12 @@
                 "tabs": [
                   {
                     "title": "JavaScript",
-                    "code": "import {useFetcher} from '@remix-run/react';\nimport {json} from '@remix-run/server-runtime';\nimport {CartForm__unstable as CartForm} from '@shopify/hydrogen';\nimport invariant from 'tiny-invariant';\n\nexport function ThisIsGift({metafield}) {\n  const fetcher = useFetcher();\n\n  const buildFormInput = (event) => ({\n    action: CartForm.ACTIONS.MetafieldsSet,\n    inputs: {\n      metafields: [\n        {\n          key: 'public.gift',\n          type: 'boolean',\n          value: event.target.checked.toString(),\n        },\n      ],\n    },\n  });\n\n  return (\n    <div>\n      <input\n        checked={metafield?.value === 'true'}\n        type=\"checkbox\"\n        id=\"isGift\"\n        onChange={(event) => {\n          fetcher.submit(\n            {\n              [CartForm.INPUT_NAME]: JSON.stringify(buildFormInput(event)),\n            },\n            {method: 'POST', action: '/cart'},\n          );\n        }}\n      />\n      <label htmlFor=\"isGift\">This is a gift</label>\n    </div>\n  );\n}\n\nexport async function action({request, context}) {\n  const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = cart.getFormInput(formData);\n\n  let status = 200;\n  let result;\n\n  if (action === CartForm.ACTIONS.MetafieldsSet) {\n    result = await cart.setMetafields(inputs.metafields);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
+                    "code": "import {useFetcher} from '@remix-run/react';\nimport {json} from '@remix-run/server-runtime';\nimport {CartForm__unstable as CartForm} from '@shopify/hydrogen';\nimport invariant from 'tiny-invariant';\n\nexport function ThisIsGift({metafield}) {\n  const fetcher = useFetcher();\n\n  const buildFormInput = (event) => ({\n    action: CartForm.ACTIONS.MetafieldsSet,\n    inputs: {\n      metafields: [\n        {\n          key: 'public.gift',\n          type: 'boolean',\n          value: event.target.checked.toString(),\n        },\n      ],\n    },\n  });\n\n  return (\n    <div>\n      <input\n        checked={metafield?.value === 'true'}\n        type=\"checkbox\"\n        id=\"isGift\"\n        onChange={(event) => {\n          fetcher.submit(\n            {\n              [CartForm.INPUT_NAME]: JSON.stringify(buildFormInput(event)),\n            },\n            {method: 'POST', action: '/cart'},\n          );\n        }}\n      />\n      <label htmlFor=\"isGift\">This is a gift</label>\n    </div>\n  );\n}\n\nexport async function action({request, context}) {\n  const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = CartForm.getFormInput(formData);\n\n  let status = 200;\n  let result;\n\n  if (action === CartForm.ACTIONS.MetafieldsSet) {\n    result = await cart.setMetafields(inputs.metafields);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
                     "language": "jsx"
                   },
                   {
                     "title": "TypeScript",
-                    "code": "import {useFetcher} from '@remix-run/react';\nimport {type ActionArgs, json} from '@remix-run/server-runtime';\nimport {\n  type CartQueryData,\n  type CartHandlerReturnBase,\n  CartForm__unstable as CartForm,\n  type CartActionInput,\n} from '@shopify/hydrogen';\nimport invariant from 'tiny-invariant';\nimport type {Cart} from '@shopify/hydrogen/storefront-api-types';\n\nexport function ThisIsGift({metafield}: {metafield: Cart['metafield']}) {\n  const fetcher = useFetcher();\n\n  const buildFormInput: (\n    event: React.ChangeEvent<HTMLInputElement>,\n  ) => CartActionInput = (event) => ({\n    action: CartForm.ACTIONS.MetafieldsSet,\n    inputs: {\n      metafields: [\n        {\n          key: 'public.gift',\n          type: 'boolean',\n          value: event.target.checked.toString(),\n        },\n      ],\n    },\n  });\n\n  return (\n    <div>\n      <input\n        checked={metafield?.value === 'true'}\n        type=\"checkbox\"\n        id=\"isGift\"\n        onChange={(event) => {\n          fetcher.submit(\n            {\n              [CartForm.INPUT_NAME]: JSON.stringify(buildFormInput(event)),\n            },\n            {method: 'POST', action: '/cart'},\n          );\n        }}\n      />\n      <label htmlFor=\"isGift\">This is a gift</label>\n    </div>\n  );\n}\n\nexport async function action({request, context}: ActionArgs) {\n  const cart = context.cart as CartHandlerReturnBase;\n  // cart is type CartHandlerReturnBase or CartHandlerReturnCustom\n  // Declare cart type in remix.env.d.ts for interface AppLoadContext to avoid type casting\n  // const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = cart.getFormInput(formData);\n\n  let status = 200;\n  let result: CartQueryData;\n\n  if (action === CartForm.ACTIONS.MetafieldsSet) {\n    result = await cart.setMetafields(inputs.metafields);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
+                    "code": "import {useFetcher} from '@remix-run/react';\nimport {type ActionArgs, json} from '@remix-run/server-runtime';\nimport {\n  type CartQueryData,\n  type HydrogenCart,\n  CartForm__unstable as CartForm,\n  type CartActionInput,\n} from '@shopify/hydrogen';\nimport invariant from 'tiny-invariant';\nimport type {Cart} from '@shopify/hydrogen/storefront-api-types';\n\nexport function ThisIsGift({metafield}: {metafield: Cart['metafield']}) {\n  const fetcher = useFetcher();\n\n  const buildFormInput: (\n    event: React.ChangeEvent<HTMLInputElement>,\n  ) => CartActionInput = (event) => ({\n    action: CartForm.ACTIONS.MetafieldsSet,\n    inputs: {\n      metafields: [\n        {\n          key: 'public.gift',\n          type: 'boolean',\n          value: event.target.checked.toString(),\n        },\n      ],\n    },\n  });\n\n  return (\n    <div>\n      <input\n        checked={metafield?.value === 'true'}\n        type=\"checkbox\"\n        id=\"isGift\"\n        onChange={(event) => {\n          fetcher.submit(\n            {\n              [CartForm.INPUT_NAME]: JSON.stringify(buildFormInput(event)),\n            },\n            {method: 'POST', action: '/cart'},\n          );\n        }}\n      />\n      <label htmlFor=\"isGift\">This is a gift</label>\n    </div>\n  );\n}\n\nexport async function action({request, context}: ActionArgs) {\n  const cart = context.cart as HydrogenCart;\n  // cart is type HydrogenCart or HydrogenCartCustom\n  // Declare cart type in remix.env.d.ts for interface AppLoadContext to avoid type casting\n  // const {cart} = context;\n  const headers = new Headers();\n\n  const formData = await request.formData();\n  const {action, inputs} = CartForm.getFormInput(formData);\n\n  let status = 200;\n  let result: CartQueryData;\n\n  if (action === CartForm.ACTIONS.MetafieldsSet) {\n    result = await cart.setMetafields(inputs.metafields);\n  } else {\n    invariant(false, `${action} cart action is not defined`);\n  }\n\n  cart.setCartId(result.cart.id, headers);\n\n  return json(result, {status, headers});\n}\n",
                     "language": "tsx"
                   }
                 ]
@@ -1147,7 +1147,7 @@
               "name": "",
               "value": ""
             },
-            "value": "cartSetIdDefault = (cookieOptions?: CookieOptions) => {\n  return (cartId: string, headers: Headers) => {\n    headers.append(\n      'Set-Cookie',\n      stringify('cart', cartId.split('/').pop() || '', cookieOptions),\n    );\n  };\n}"
+            "value": "cartSetIdDefault = (cookieOptions?: CookieOptions) => {\n  return (cartId: string) => {\n    const headers = new Headers();\n    headers.append(\n      'Set-Cookie',\n      stringify('cart', cartId.split('/').pop() || '', {\n        path: '/',\n        ...cookieOptions,\n      }),\n    );\n    return headers;\n  };\n}"
           },
           "CookieOptions": {
             "filePath": "/cart/cartSetIdDefault.ts",
@@ -1600,13 +1600,13 @@
       {
         "title": "Returns",
         "description": "The handler returns the following default methods. Any [custom](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) or overwritten methods will also be available in the returned cart instance.",
-        "type": "CartHandlerReturnBaseForDocs",
+        "type": "HydrogenCartForDocs",
         "typeDefinitions": {
-          "CartHandlerReturnBaseForDocs": {
+          "HydrogenCartForDocs": {
             "filePath": "/cart/createCartHandler.ts",
             "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartHandlerReturnBaseForDocs",
-            "value": "{\n  /**\n   * Adds items to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  addLines?: CartLinesAddFunction;\n  /**\n   * Creates a new cart.\n   */\n  create?: CartCreateFunction;\n  /**\n   * Removes a custom field (metafield) from the cart.\n   */\n  deleteMetafield?: CartMetafieldDeleteFunction;\n  /**\n   * Retrieves the cart information.\n   */\n  get?: CartGetFunction;\n  /**\n   * Retrieves the unique identifier of the cart.\n   * By default, it gets the ID from the request cookie.\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Retrieves the form input created by the CartForm action request.\n   */\n  getFormInput?: (formData: any) => CartActionInput;\n  /**\n   * Removes items from the cart.\n   */\n  removeLines?: CartLinesRemoveFunction;\n  /**\n   * Sets the unique identifier of the cart.\n   * By default, it sets the ID in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Adds extra information (metafields) to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  setMetafields?: CartMetafieldsSetFunction;\n  /**\n   * Updates additional information (attributes) in the cart.\n   */\n  updateAttributes?: CartAttributesUpdateFunction;\n  /**\n   * Updates the buyer's information in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateBuyerIdentity?: CartBuyerIdentityUpdateFunction;\n  /**\n   * Updates discount codes in the cart.\n   */\n  updateDiscountCodes?: CartDiscountCodesUpdateFunction;\n  /**\n   * Updates items in the cart.\n   */\n  updateLines?: CartLinesUpdateFunction;\n  /**\n   * Updates the note in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateNote?: CartNoteUpdateFunction;\n  /**\n   * Updates the selected delivery options in the cart.\n   * Only available for carts associated with a customer access token.\n   */\n  updateSelectedDeliveryOption?: CartSelectedDeliveryOptionsUpdateFunction;\n}",
+            "name": "HydrogenCartForDocs",
+            "value": "{\n  /**\n   * Adds items to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  addLines?: CartLinesAddFunction;\n  /**\n   * Creates a new cart.\n   */\n  create?: CartCreateFunction;\n  /**\n   * Removes a custom field (metafield) from the cart.\n   */\n  deleteMetafield?: CartMetafieldDeleteFunction;\n  /**\n   * Retrieves the cart information.\n   */\n  get?: CartGetFunction;\n  /**\n   * Retrieves the unique identifier of the cart.\n   * By default, it gets the ID from the request cookie.\n   */\n  getCartId?: () => string | undefined;\n  /**\n   * Removes items from the cart.\n   */\n  removeLines?: CartLinesRemoveFunction;\n  /**\n   * Sets the unique identifier of the cart.\n   * By default, it sets the ID in the header cookie.\n   */\n  setCartId?: (cartId: string, headers: Headers) => void;\n  /**\n   * Adds extra information (metafields) to the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  setMetafields?: CartMetafieldsSetFunction;\n  /**\n   * Updates additional information (attributes) in the cart.\n   */\n  updateAttributes?: CartAttributesUpdateFunction;\n  /**\n   * Updates the buyer's information in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateBuyerIdentity?: CartBuyerIdentityUpdateFunction;\n  /**\n   * Updates discount codes in the cart.\n   */\n  updateDiscountCodes?: CartDiscountCodesUpdateFunction;\n  /**\n   * Updates items in the cart.\n   */\n  updateLines?: CartLinesUpdateFunction;\n  /**\n   * Updates the note in the cart.\n   * If the cart doesn't exist, a new one will be created.\n   */\n  updateNote?: CartNoteUpdateFunction;\n  /**\n   * Updates the selected delivery options in the cart.\n   * Only available for carts associated with a customer access token.\n   */\n  updateSelectedDeliveryOption?: CartSelectedDeliveryOptionsUpdateFunction;\n}",
             "description": "",
             "members": [
               {
@@ -1647,14 +1647,6 @@
                 "name": "getCartId",
                 "value": "() => string",
                 "description": "Retrieves the unique identifier of the cart.\nBy default, it gets the ID from the request cookie.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/cart/createCartHandler.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "getFormInput",
-                "value": "(formData: any) => CartActionInput",
-                "description": "Retrieves the form input created by the CartForm action request.",
                 "isOptional": true
               },
               {
@@ -1906,331 +1898,6 @@
               }
             ]
           },
-          "CartActionInput": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartActionInput",
-            "value": "CartAttributesUpdateProps | CartBuyerIdentityUpdateProps | CartCreateProps | CartDiscountCodesUpdateProps | CartLinesAddProps | CartLinesUpdateProps | CartLinesRemoveProps | CartNoteUpdateProps | CartSelectedDeliveryOptionsUpdateProps | CartMetafieldsSetProps | CartMetafieldDeleteProps | CartCustomProps",
-            "description": ""
-          },
-          "CartAttributesUpdateProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartAttributesUpdateProps",
-            "value": "{\n  action: 'AttributesUpdateInput';\n  inputs: {\n    attributes: AttributeInput[];\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"AttributesUpdateInput\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ attributes: AttributeInput[]; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "AttributeInput": {
-            "description": "",
-            "name": "AttributeInput",
-            "value": "AttributeInput",
-            "members": [],
-            "override": "[AttributeInput](/docs/api/storefront/2023-04/input-objects/AttributeInput) - Storefront API type"
-          },
-          "OtherFormData": {
-            "description": "",
-            "name": "OtherFormData",
-            "value": "OtherFormData",
-            "members": [],
-            "override": "Any `<key: string, value: unknown>` pair"
-          },
-          "CartBuyerIdentityUpdateProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartBuyerIdentityUpdateProps",
-            "value": "{\n  action: 'BuyerIdentityUpdate';\n  inputs: {\n    buyerIdentity: CartBuyerIdentityInput;\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"BuyerIdentityUpdate\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ buyerIdentity: CartBuyerIdentityInput; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "CartBuyerIdentityInput": {
-            "description": "",
-            "name": "CartBuyerIdentityInput",
-            "value": "CartBuyerIdentityInput",
-            "members": [],
-            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2023-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
-          },
-          "CartCreateProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartCreateProps",
-            "value": "{\n  action: 'Create';\n  inputs: {\n    input: CartInput;\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"Create\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ input: CartInput; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "CartDiscountCodesUpdateProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartDiscountCodesUpdateProps",
-            "value": "{\n  action: 'DiscountCodesUpdate';\n  inputs: {\n    discountCodes: string[];\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"DiscountCodesUpdate\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ discountCodes: string[]; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "CartLinesAddProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartLinesAddProps",
-            "value": "{\n  action: 'LinesAdd';\n  inputs: {\n    lines: CartLineInput[];\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"LinesAdd\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ lines: CartLineInput[]; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "CartLinesUpdateProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartLinesUpdateProps",
-            "value": "{\n  action: 'LinesUpdate';\n  inputs: {\n    lines: CartLineUpdateInput[];\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"LinesUpdate\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ lines: CartLineUpdateInput[]; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "CartLineUpdateInput": {
-            "description": "",
-            "name": "CartLineUpdateInput",
-            "value": "CartLineUpdateInput",
-            "members": [],
-            "override": "[CartLineUpdateInput](/docs/api/storefront/2023-04/input-objects/CartLineUpdateInput) - Storefront API type"
-          },
-          "CartLinesRemoveProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartLinesRemoveProps",
-            "value": "{\n  action: 'LinesRemove';\n  inputs: {\n    lineIds: string[];\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"LinesRemove\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ lineIds: string[]; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "CartNoteUpdateProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartNoteUpdateProps",
-            "value": "{\n  action: 'NoteUpdate';\n  inputs: {\n    note: string;\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"NoteUpdate\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ note: string; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "CartSelectedDeliveryOptionsUpdateProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartSelectedDeliveryOptionsUpdateProps",
-            "value": "{\n  action: 'SelectedDeliveryOptionsUpdate';\n  inputs: {\n    selectedDeliveryOptions: CartSelectedDeliveryOptionInput[];\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"SelectedDeliveryOptionsUpdate\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ selectedDeliveryOptions: CartSelectedDeliveryOptionInput[]; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "CartSelectedDeliveryOptionInput": {
-            "description": "",
-            "name": "CartSelectedDeliveryOptionInput",
-            "value": "CartSelectedDeliveryOptionInput",
-            "members": [],
-            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2023-04/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
-          },
-          "CartMetafieldsSetProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartMetafieldsSetProps",
-            "value": "{\n  action: 'MetafieldsSet';\n  inputs: {\n    metafields: MetafieldWithoutOwnerId[];\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"MetafieldsSet\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ metafields: MetafieldWithoutOwnerId[]; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "MetafieldWithoutOwnerId": {
-            "description": "",
-            "name": "MetafieldWithoutOwnerId",
-            "value": "MetafieldWithoutOwnerId",
-            "members": [],
-            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2023-04/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
-          },
-          "CartMetafieldDeleteProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartMetafieldDeleteProps",
-            "value": "{\n  action: 'MetafieldsDelete';\n  inputs: {\n    key: Scalars['String'];\n  } & OtherFormData;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "\"MetafieldsDelete\"",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "{ key: string; } & OtherFormData",
-                "description": ""
-              }
-            ]
-          },
-          "CartCustomProps": {
-            "filePath": "/cart/CartForm.tsx",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "CartCustomProps",
-            "value": "{\n  action: `Custom${string}`;\n  inputs: Record<string, unknown>;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "action",
-                "value": "`Custom${string}`",
-                "description": ""
-              },
-              {
-                "filePath": "/cart/CartForm.tsx",
-                "syntaxKind": "PropertySignature",
-                "name": "inputs",
-                "value": "Record<string, unknown>",
-                "description": ""
-              }
-            ]
-          },
           "CartLinesRemoveFunction": {
             "filePath": "/cart/queries/cartLinesRemoveDefault.ts",
             "syntaxKind": "TypeAliasDeclaration",
@@ -2252,6 +1919,13 @@
             "value": "(\n  metafields: MetafieldWithoutOwnerId[],\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryData>",
             "description": ""
           },
+          "MetafieldWithoutOwnerId": {
+            "description": "",
+            "name": "MetafieldWithoutOwnerId",
+            "value": "MetafieldWithoutOwnerId",
+            "members": [],
+            "override": "Same as [CartMetafieldsSetInput](https://shopify.dev/docs/api/storefront/2023-04/input-objects/CartMetafieldsSetInput) Storefront API type but without `ownerId`. `ownerId` is always set to the cart id."
+          },
           "CartAttributesUpdateFunction": {
             "filePath": "/cart/queries/cartAttributesUpdateDefault.ts",
             "syntaxKind": "TypeAliasDeclaration",
@@ -2259,12 +1933,26 @@
             "value": "(\n  attributes: AttributeInput[],\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryData>",
             "description": ""
           },
+          "AttributeInput": {
+            "description": "",
+            "name": "AttributeInput",
+            "value": "AttributeInput",
+            "members": [],
+            "override": "[AttributeInput](/docs/api/storefront/2023-04/input-objects/AttributeInput) - Storefront API type"
+          },
           "CartBuyerIdentityUpdateFunction": {
             "filePath": "/cart/queries/cartBuyerIdentityUpdateDefault.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartBuyerIdentityUpdateFunction",
             "value": "(\n  buyerIdentity: CartBuyerIdentityInput,\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryData>",
             "description": ""
+          },
+          "CartBuyerIdentityInput": {
+            "description": "",
+            "name": "CartBuyerIdentityInput",
+            "value": "CartBuyerIdentityInput",
+            "members": [],
+            "override": "[CartBuyerIdentityInput](/docs/api/storefront/2023-04/input-objects/CartBuyerIdentityInput) - Storefront API type"
           },
           "CartDiscountCodesUpdateFunction": {
             "filePath": "/cart/queries/cartDiscountCodesUpdateDefault.ts",
@@ -2280,6 +1968,13 @@
             "value": "(\n  lines: CartLineUpdateInput[],\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryData>",
             "description": ""
           },
+          "CartLineUpdateInput": {
+            "description": "",
+            "name": "CartLineUpdateInput",
+            "value": "CartLineUpdateInput",
+            "members": [],
+            "override": "[CartLineUpdateInput](/docs/api/storefront/2023-04/input-objects/CartLineUpdateInput) - Storefront API type"
+          },
           "CartNoteUpdateFunction": {
             "filePath": "/cart/queries/cartNoteUpdateDefault.ts",
             "syntaxKind": "TypeAliasDeclaration",
@@ -2293,6 +1988,13 @@
             "name": "CartSelectedDeliveryOptionsUpdateFunction",
             "value": "(\n  selectedDeliveryOptions: CartSelectedDeliveryOptionInput[],\n  optionalParams?: CartOptionalInput,\n) => Promise<CartQueryData>",
             "description": ""
+          },
+          "CartSelectedDeliveryOptionInput": {
+            "description": "",
+            "name": "CartSelectedDeliveryOptionInput",
+            "value": "CartSelectedDeliveryOptionInput",
+            "members": [],
+            "override": "[CartSelectedDeliveryOptionInput](/docs/api/storefront/2023-04/input-objects/CartSelectedDeliveryOptionInput) - Storefront API type"
           }
         }
       }
@@ -2399,19 +2101,6 @@
                   {
                     "title": "JavaScript",
                     "code": "export async function loader({context}) {\n  // Usage\n  context.cart.getCartId(); // 'gid://shopify/Cart/123'\n}\n",
-                    "language": "js"
-                  }
-                ]
-              }
-            },
-            {
-              "description": "Get the form input created by the CartForm action request.",
-              "codeblock": {
-                "title": "cart.getFormInput",
-                "tabs": [
-                  {
-                    "title": "JavaScript",
-                    "code": "export async function action({request, context}) {\n  const formData = await request.formData();\n  const {action, inputs} = context.cart.getFormInput(formData);\n\n  // Do something with the action and inputs\n}\n",
                     "language": "js"
                   }
                 ]
@@ -3987,7 +3676,7 @@
               "name": "CartDiscountCodesUpdateFunction",
               "value": "CartDiscountCodesUpdateFunction"
             },
-            "value": "export function cartDiscountCodesUpdateDefault(\n  options: CartQueryOptions,\n): CartDiscountCodesUpdateFunction {\n  return async (discountCodes, optionalParams) => {\n    const {cartDiscountCodesUpdate} = await options.storefront.mutate<{\n      cartDiscountCodesUpdate: CartQueryData;\n    }>(CART_DISCOUNT_CODE_UPDATE_MUTATION(options.cartFragment), {\n      variables: {\n        cartId: options.getCartId(),\n        discountCodes,\n        ...optionalParams,\n      },\n    });\n    return cartDiscountCodesUpdate;\n  };\n}"
+            "value": "export function cartDiscountCodesUpdateDefault(\n  options: CartQueryOptions,\n): CartDiscountCodesUpdateFunction {\n  return async (discountCodes, optionalParams) => {\n    // Ensure the discount codes are unique\n    const uniqueCodes = discountCodes.filter((value, index, array) => {\n      return array.indexOf(value) === index;\n    });\n\n    const {cartDiscountCodesUpdate} = await options.storefront.mutate<{\n      cartDiscountCodesUpdate: CartQueryData;\n    }>(CART_DISCOUNT_CODE_UPDATE_MUTATION(options.cartFragment), {\n      variables: {\n        cartId: options.getCartId(),\n        discountCodes: uniqueCodes,\n        ...optionalParams,\n      },\n    });\n    return cartDiscountCodesUpdate;\n  };\n}"
           },
           "CartQueryOptions": {
             "filePath": "/cart/queries/cart-types.ts",

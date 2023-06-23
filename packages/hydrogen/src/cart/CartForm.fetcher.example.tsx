@@ -2,7 +2,7 @@ import {useFetcher} from '@remix-run/react';
 import {type ActionArgs, json} from '@remix-run/server-runtime';
 import {
   type CartQueryData,
-  type CartHandlerReturnBase,
+  type HydrogenCart,
   CartForm__unstable as CartForm,
   type CartActionInput,
 } from '@shopify/hydrogen';
@@ -48,14 +48,14 @@ export function ThisIsGift({metafield}: {metafield: Cart['metafield']}) {
 }
 
 export async function action({request, context}: ActionArgs) {
-  const cart = context.cart as CartHandlerReturnBase;
-  // cart is type CartHandlerReturnBase or CartHandlerReturnCustom
+  const cart = context.cart as HydrogenCart;
+  // cart is type HydrogenCart or HydrogenCartCustom
   // Declare cart type in remix.env.d.ts for interface AppLoadContext to avoid type casting
   // const {cart} = context;
   const headers = new Headers();
 
   const formData = await request.formData();
-  const {action, inputs} = cart.getFormInput(formData);
+  const {action, inputs} = CartForm.getFormInput(formData);
 
   let status = 200;
   let result: CartQueryData;
