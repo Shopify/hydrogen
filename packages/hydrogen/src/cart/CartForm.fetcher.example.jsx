@@ -41,7 +41,6 @@ export function ThisIsGift({metafield}) {
 
 export async function action({request, context}) {
   const {cart} = context;
-  const headers = new Headers();
 
   const formData = await request.formData();
   const {action, inputs} = CartForm.getFormInput(formData);
@@ -55,7 +54,7 @@ export async function action({request, context}) {
     invariant(false, `${action} cart action is not defined`);
   }
 
-  cart.setCartId(result.cart.id, headers);
+  const headers = cart.setCartId(result.cart.id);
 
   return json(result, {status, headers});
 }

@@ -20,8 +20,7 @@ export async function action({context}) {
   // Usage
   const result = await cart.updateNote('Some note');
 
-  const headers = new Headers();
-  cart.setCartId(result.cart.id, headers);
+  const headers = cart.setCartId(result.cart.id);
 
   return json(result, {headers});
 }

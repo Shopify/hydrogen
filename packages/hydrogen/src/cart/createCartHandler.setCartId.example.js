@@ -9,6 +9,5 @@ export async function action({context}) {
   ]);
 
   // Usage
-  const headers = new Headers();
-  cart.setCartId(result.cart.id, headers);
+  const headers = cart.setCartId(result.cart.id);
 }
