@@ -153,22 +153,10 @@ describe('link', () => {
       });
     });
 
-    it('chooses to create a new storefront without directory path', async () => {
-      await runLink({});
-
-      expect(renderTextPrompt).toHaveBeenCalledWith({
-        message: expect.stringMatching(/name/i),
-        defaultValue: 'Hydrogen Storefront',
-      });
-    });
-
     it('handles the successful creation of the storefront on Admin', async () => {
       await runLink({});
 
-      expect(waitForJob).toHaveBeenCalledWith(
-        FULL_SHOPIFY_CONFIG.shop,
-        expectedJobId,
-      );
+      expect(waitForJob).toHaveBeenCalledWith(ADMIN_SESSION, expectedJobId);
 
       expect(outputMock.info()).toContain(
         `${expectedStorefrontName} is now linked`,

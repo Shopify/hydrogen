@@ -184,14 +184,14 @@ export async function linkStorefront(
 }
 
 async function createNewStorefront(
-  root: string | undefined,
+  root: string,
   session: AdminSession,
 ): Promise<HydrogenStorefront | undefined> {
-  const projectDirectory = root && basename(root);
+  const projectDirectory = basename(root);
 
   const projectName = await renderTextPrompt({
-    message: 'What do you want to name the Hydrogen storefront on Shopify?',
-    defaultValue: titleize(projectDirectory) || 'Hydrogen Storefront',
+    message: 'New storefront name',
+    defaultValue: titleize(projectDirectory),
   });
 
   let storefront: HydrogenStorefront | undefined;
