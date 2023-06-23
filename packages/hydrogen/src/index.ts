@@ -50,7 +50,7 @@ export {
   VariantSelector as VariantSelector__unstable,
   getSelectedProductOptions as getSelectedProductOptions__unstable,
   getFirstAvailableVariant as getFirstAvailableVariant__unstable,
-} from './product/VariationSelector';
+} from './product/VariantSelector';
 
 export {
   AnalyticsEventName,
