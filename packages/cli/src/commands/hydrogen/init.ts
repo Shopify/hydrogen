@@ -815,16 +815,19 @@ async function renderProjectReady(
 ) {
   const hasErrors = Boolean(depsError || i18nError || routesError);
   const bodyLines: [string, string][] = [
-    ['Store account', project.storefrontInfo?.title ?? '-'],
+    ['Shopify', project.storefrontInfo?.title ?? 'Mock.shop'],
     ['Language', LANGUAGES[language]],
   ];
 
   if (cssStrategy) {
-    bodyLines.push(['Styling library', CSS_STRATEGY_NAME_MAP[cssStrategy]]);
+    bodyLines.push(['Styling', CSS_STRATEGY_NAME_MAP[cssStrategy]]);
   }
 
   if (!i18nError && i18n) {
-    bodyLines.push(['i18n strategy', I18N_STRATEGY_NAME_MAP[i18n]]);
+    bodyLines.push([
+      'i18n strategy',
+      I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!,
+    ]);
   }
 
   if (!routesError && routes?.length) {
@@ -884,6 +887,39 @@ async function renderProjectReady(
         ],
       },
       {
+        title: 'Help\n',
+        body: {
+          list: {
+            items: [
+              {
+                link: {
+                  label: 'Guides',
+                  url: 'https://shopify.dev/docs/custom-storefronts/hydrogen/building',
+                },
+              },
+              {
+                link: {
+                  label: 'API reference',
+                  url: 'https://shopify.dev/docs/api/storefront',
+                },
+              },
+              {
+                link: {
+                  label: 'Demo Store code',
+                  url: 'https://github.com/Shopify/hydrogen/tree/HEAD/templates/demo-store',
+                },
+              },
+              [
+                'Run',
+                {
+                  command: `${cliCommand} --help`,
+                },
+              ],
+            ],
+          },
+        },
+      },
+      {
         title: 'Next steps\n',
         body: [
           {
@@ -920,39 +956,12 @@ async function renderProjectReady(
                       ? `${ALIAS_NAME} dev`
                       : formatPackageManagerCommand(packageManager, 'dev'),
                   },
-                  'to start your local development server and start building.',
+                  'to start your local development server.',
                 ],
               ].filter((step): step is string[] => Boolean(step)),
             },
           },
         ],
-      },
-      {
-        title: 'References\n',
-        body: {
-          list: {
-            items: [
-              {
-                link: {
-                  label: 'Tutorials',
-                  url: 'https://shopify.dev/docs/custom-storefronts/hydrogen/building',
-                },
-              },
-              {
-                link: {
-                  label: 'API documentation',
-                  url: 'https://shopify.dev/docs/api/storefront',
-                },
-              },
-              {
-                link: {
-                  label: 'Demo Store',
-                  url: 'https://github.com/Shopify/hydrogen/tree/HEAD/templates/demo-store',
-                },
-              },
-            ],
-          },
-        },
       },
     ].filter((step): step is {title: string; body: any} => Boolean(step)),
   });
