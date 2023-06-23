@@ -146,11 +146,17 @@ async function runDev({
     import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
   ]);
 
+  const remixConfig = await reloadConfig();
+
+  if (codegen) {
+    spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
+  }
+
   const fileWatchCache = createFileWatchCache();
 
   await watch(
     {
-      config: await reloadConfig(),
+      config: remixConfig,
       options: {
         mode: process.env.NODE_ENV as ServerMode,
         onWarning: warnOnce,

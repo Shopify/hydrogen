@@ -1,9 +1,13 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
+import {basename} from '@shopify/cli-kit/node/path';
+
 import {
   renderConfirmationPrompt,
   renderSelectPrompt,
   renderSuccess,
+  renderTasks,
+  renderTextPrompt,
   renderWarning,
 } from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -11,10 +15,14 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {commonFlags} from '../../lib/flags.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {setStorefront, type ShopifyConfig} from '../../lib/shopify-config.js';
+import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
+import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
 import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
+import {titleize} from '../../lib/string.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {login} from '../../lib/auth.js';
 import type {AdminSession} from '../../lib/auth.js';
+import {renderError, renderUserErrors} from '../../lib/user-errors.js';
 
 export default class Link extends Command {
   static description =
@@ -40,6 +48,14 @@ export interface LinkStorefrontArguments {
   path?: string;
   storefront?: string;
 }
+
+interface HydrogenStorefront {
+  id: string;
+  title: string;
+  productionUrl: string;
+}
+
+const CREATE_NEW_STOREFRONT_ID = 'NEW_STOREFRONT';
 
 export async function runLink({
   force,
@@ -102,7 +118,8 @@ export async function linkStorefront(
     return;
   }
 
-  let selectedStorefront;
+  let selectedStorefront: HydrogenStorefront | undefined;
+  let selectCreateNewStorefront = false;
 
   if (flagStorefront) {
     selectedStorefront = storefronts.find(
@@ -132,19 +149,83 @@ export async function linkStorefront(
       label: `${title} (${productionUrl})`,
     }));
 
+    choices.unshift({
+      value: CREATE_NEW_STOREFRONT_ID,
+      label: 'Create a new storefront',
+    });
+
     const storefrontId = await renderSelectPrompt({
       message: 'Choose a Hydrogen storefront to link',
       choices,
     });
 
-    selectedStorefront = storefronts.find(({id}) => id === storefrontId);
+    if (storefrontId === CREATE_NEW_STOREFRONT_ID) {
+      selectCreateNewStorefront = true;
+    } else {
+      selectedStorefront = storefronts.find(({id}) => id === storefrontId);
+    }
   }
 
-  if (!selectedStorefront) {
-    return;
+  if (selectCreateNewStorefront) {
+    const storefront = await createNewStorefront(root, session);
+
+    if (!storefront) {
+      return;
+    }
+
+    selectedStorefront = storefront;
   }
 
-  await setStorefront(root, selectedStorefront);
+  if (selectedStorefront) {
+    await setStorefront(root, selectedStorefront);
+  }
 
   return selectedStorefront;
+}
+
+async function createNewStorefront(
+  root: string | undefined,
+  session: AdminSession,
+): Promise<HydrogenStorefront | undefined> {
+  const projectDirectory = root && basename(root);
+
+  const projectName = await renderTextPrompt({
+    message: 'What do you want to name the Hydrogen storefront on Shopify?',
+    defaultValue: titleize(projectDirectory) || 'Hydrogen Storefront',
+  });
+
+  let storefront: HydrogenStorefront | undefined;
+  let jobId: string | undefined;
+
+  await renderTasks([
+    {
+      title: 'Creating storefront',
+      task: async () => {
+        const result = await createStorefront(session, projectName);
+
+        storefront = result.storefront;
+        jobId = result.jobId;
+
+        if (result.userErrors.length > 0) {
+          renderUserErrors(result.userErrors);
+        }
+      },
+    },
+    {
+      title: 'Creating API tokens',
+      task: async () => {
+        try {
+          await waitForJob(session, jobId!);
+        } catch (_err) {
+          storefront = undefined;
+          renderError(
+            'Please try again or contact support if the error persists.',
+          );
+        }
+      },
+      skip: () => !jobId,
+    },
+  ]);
+
+  return storefront;
 }
