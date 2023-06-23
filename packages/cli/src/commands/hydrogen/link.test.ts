@@ -11,7 +11,6 @@ import {runLink} from './link.js';
 import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
 import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
 import {setStorefront} from '../../lib/shopify-config.js';
-import {renderError, renderUserErrors} from '../../lib/user-errors.js';
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
@@ -30,7 +29,6 @@ vi.mock('../../lib/shopify-config.js');
 vi.mock('../../lib/graphql/admin/link-storefront.js');
 vi.mock('../../lib/graphql/admin/create-storefront.js');
 vi.mock('../../lib/graphql/admin/fetch-job.js');
-vi.mock('../../lib/user-errors.js');
 vi.mock('../../lib/shell.js', () => ({getCliCommand: () => 'h2'}));
 
 describe('link', () => {
@@ -67,6 +65,8 @@ describe('link', () => {
         productionUrl: 'https://example.com',
       },
     ]);
+
+    vi.mocked(renderSelectPrompt).mockResolvedValue(FULL_SHOPIFY_CONFIG.shop);
   });
 
   afterEach(() => {
@@ -130,7 +130,7 @@ describe('link', () => {
     const expectedJobId = 'gid://shopify/Job/1';
 
     beforeEach(async () => {
-      vi.mocked(renderSelectPrompt).mockResolvedValue('NEW_STOREFRONT');
+      vi.mocked(renderSelectPrompt).mockResolvedValue(null);
 
       vi.mocked(createStorefront).mockResolvedValue({
         adminSession: ADMIN_SESSION,
@@ -179,18 +179,14 @@ describe('link', () => {
         jobId: undefined,
       });
 
-      await runLink({});
-
+      await expect(runLink({})).rejects.toThrow('Bad thing happend.');
       expect(waitForJob).not.toHaveBeenCalled();
-      expect(renderUserErrors).toHaveBeenCalledWith(expectedUserErrors);
     });
 
     it('handles the job errors when creating the storefront on Admin', async () => {
       vi.mocked(waitForJob).mockRejectedValue(undefined);
 
-      await runLink({});
-
-      expect(renderError).toHaveBeenCalled();
+      await expect(runLink({})).rejects.toThrow(Error);
     });
   });
 
@@ -203,16 +199,6 @@ describe('link', () => {
       expect(outputMock.info()).toMatch(/no Hydrogen storefronts/i);
 
       expect(renderSelectPrompt).not.toHaveBeenCalled();
-      expect(setStorefront).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('when no storefront gets selected', () => {
-    it('does not call setStorefront', async () => {
-      vi.mocked(renderSelectPrompt).mockResolvedValue('');
-
-      await runLink({});
-
       expect(setStorefront).not.toHaveBeenCalled();
     });
   });

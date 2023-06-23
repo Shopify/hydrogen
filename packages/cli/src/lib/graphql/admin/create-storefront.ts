@@ -1,5 +1,4 @@
 import {adminRequest, type AdminSession} from './client.js';
-import {type UserError} from '../../user-errors.js';
 
 export const CreateStorefrontMutation = `#graphql
   mutation CreateStorefront($title: String!) {
@@ -23,6 +22,12 @@ interface HydrogenStorefront {
   id: string;
   title: string;
   productionUrl: string;
+}
+
+interface UserError {
+  code: string | undefined;
+  field: string[];
+  message: string;
 }
 
 interface CreateStorefrontSchema {

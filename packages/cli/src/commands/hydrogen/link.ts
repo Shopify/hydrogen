@@ -22,7 +22,6 @@ import {titleize} from '../../lib/string.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {login} from '../../lib/auth.js';
 import type {AdminSession} from '../../lib/auth.js';
-import {renderError, renderUserErrors} from '../../lib/user-errors.js';
 
 export default class Link extends Command {
   static description =
@@ -54,8 +53,6 @@ interface HydrogenStorefront {
   title: string;
   productionUrl: string;
 }
-
-const CREATE_NEW_STOREFRONT_ID = 'NEW_STOREFRONT';
 
 export async function runLink({
   force,
@@ -119,7 +116,6 @@ export async function linkStorefront(
   }
 
   let selectedStorefront: HydrogenStorefront | undefined;
-  let selectCreateNewStorefront = false;
 
   if (flagStorefront) {
     selectedStorefront = storefronts.find(
@@ -144,36 +140,27 @@ export async function linkStorefront(
       return;
     }
   } else {
-    const choices = storefronts.map(({id, title, productionUrl}) => ({
-      value: id,
-      label: `${title} (${productionUrl})`,
-    }));
-
-    choices.unshift({
-      value: CREATE_NEW_STOREFRONT_ID,
-      label: 'Create a new storefront',
-    });
+    const choices = [
+      {
+        label: 'Create a new storefront',
+        value: null,
+      },
+      ...storefronts.map(({id, title, productionUrl}) => ({
+        label: `${title} (${productionUrl})`,
+        value: id,
+      })),
+    ];
 
     const storefrontId = await renderSelectPrompt({
       message: 'Choose a Hydrogen storefront to link',
       choices,
     });
 
-    if (storefrontId === CREATE_NEW_STOREFRONT_ID) {
-      selectCreateNewStorefront = true;
-    } else {
+    if (storefrontId) {
       selectedStorefront = storefronts.find(({id}) => id === storefrontId);
+    } else {
+      selectedStorefront = await createNewStorefront(root, session);
     }
-  }
-
-  if (selectCreateNewStorefront) {
-    const storefront = await createNewStorefront(root, session);
-
-    if (!storefront) {
-      return;
-    }
-
-    selectedStorefront = storefront;
   }
 
   if (selectedStorefront) {
@@ -183,10 +170,7 @@ export async function linkStorefront(
   return selectedStorefront;
 }
 
-async function createNewStorefront(
-  root: string,
-  session: AdminSession,
-): Promise<HydrogenStorefront | undefined> {
+async function createNewStorefront(root: string, session: AdminSession) {
   const projectDirectory = basename(root);
 
   const projectName = await renderTextPrompt({
@@ -207,7 +191,11 @@ async function createNewStorefront(
         jobId = result.jobId;
 
         if (result.userErrors.length > 0) {
-          renderUserErrors(result.userErrors);
+          const errorMessages = result.userErrors
+            .map(({message}) => message)
+            .join(', ');
+
+          throw new AbortError('Could not create storefront: ' + errorMessages);
         }
       },
     },
@@ -218,14 +206,17 @@ async function createNewStorefront(
           await waitForJob(session, jobId!);
         } catch (_err) {
           storefront = undefined;
-          renderError(
-            'Please try again or contact support if the error persists.',
-          );
         }
       },
       skip: () => !jobId,
     },
   ]);
+
+  if (!storefront) {
+    throw new AbortError(
+      'Unknown error ocurred. Please try again or contact support if the error persists.',
+    );
+  }
 
   return storefront;
 }
