@@ -157,9 +157,11 @@ export function getSelectedProductOptions(
 }
 
 export function getFirstAvailableVariant(
-  variants: PartialDeep<ProductVariantConnection>,
+  variants:
+    | PartialDeep<ProductVariantConnection>
+    | Array<PartialDeep<ProductVariant>> = [],
 ): PartialDeep<ProductVariant> | undefined {
-  return flattenConnection(variants).find(
-    (variant) => variant?.availableForSale,
-  );
+  return (
+    variants instanceof Array ? variants : flattenConnection(variants)
+  ).find((variant) => variant?.availableForSale);
 }
