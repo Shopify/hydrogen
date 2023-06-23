@@ -26,7 +26,11 @@ export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
   static flags = {
     path: commonFlags.path,
-    sourcemap: commonFlags.sourcemap,
+    sourcemap: Flags.boolean({
+      description: 'Generate sourcemaps for the build.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
+      default: false,
+    }),
     'disable-route-warning': Flags.boolean({
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
@@ -46,7 +50,7 @@ export default class Build extends Command {
 
 export async function runBuild({
   path: appPath,
-  sourcemap = true,
+  sourcemap = false,
   disableRouteWarning = false,
 }: {
   path?: string;
