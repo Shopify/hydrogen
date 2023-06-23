@@ -32,7 +32,7 @@ export function cartLinesAddDefault(
 export const CART_LINES_ADD_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
 ) => `#graphql
-  mutation CartLinesAdd(
+  mutation cartLinesAdd(
     $cartId: ID!
     $lines: [CartLineInput!]!
     $country: CountryCode = ZZ

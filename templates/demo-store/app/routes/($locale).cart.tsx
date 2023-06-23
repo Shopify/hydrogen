@@ -12,14 +12,13 @@ import {CartLoading, Cart} from '~/components';
 
 export async function action({request, context}: ActionArgs) {
   const {session, cart} = context;
-  const headers = new Headers();
 
   const [formData, customerAccessToken] = await Promise.all([
     request.formData(),
     session.get('customerAccessToken'),
   ]);
 
-  const {action, inputs} = cart.getFormInput(formData);
+  const {action, inputs} = CartForm.getFormInput(formData);
   invariant(action, 'No cartAction defined');
 
   let status = 200;
@@ -36,7 +35,7 @@ export async function action({request, context}: ActionArgs) {
       result = await cart.removeLines(inputs.lineIds);
       break;
     case CartForm.ACTIONS.DiscountCodesUpdate:
-      const formDiscountCode = formData.get('discountCode');
+      const formDiscountCode = inputs.discountCode;
 
       // User inputted discount code
       const discountCodes = (
@@ -46,12 +45,7 @@ export async function action({request, context}: ActionArgs) {
       // Combine discount codes already applied on cart
       discountCodes.push(...inputs.discountCodes);
 
-      // Ensure the discount codes are unique
-      const uniqueCodes = discountCodes.filter((value, index, array) => {
-        return array.indexOf(value) === index;
-      });
-
-      result = await cart.updateDiscountCodes(uniqueCodes);
+      result = await cart.updateDiscountCodes(discountCodes);
       break;
     case CartForm.ACTIONS.BuyerIdentityUpdate:
       result = await cart.updateBuyerIdentity({
@@ -67,7 +61,7 @@ export async function action({request, context}: ActionArgs) {
    * The Cart ID may change after each mutation. We need to update it each time in the session.
    */
   const cartId = result.cart.id;
-  cart.setCartId(cartId, headers);
+  const headers = cart.setCartId(result.cart.id);
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string' && isLocalPath(redirectTo)) {

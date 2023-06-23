@@ -31,7 +31,7 @@ export function cartLinesRemoveDefault(
 export const CART_LINES_REMOVE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
 ) => `#graphql
-  mutation CartLinesRemove(
+  mutation cartLinesRemove(
     $cartId: ID!
     $lineIds: [ID!]!
     $language: LanguageCode

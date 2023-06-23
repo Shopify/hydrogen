@@ -1,7 +1,7 @@
 import {describe, expect, expectTypeOf, it} from 'vitest';
 import {
-  CartHandlerReturnBase,
-  CartHandlerReturnCustom,
+  HydrogenCart,
+  HydrogenCartCustom,
   createCartHandler,
 } from './createCartHandler';
 import {mockCreateStorefrontClient, mockHeaders} from './cart-test-helper';
@@ -19,7 +19,7 @@ function getCartHandler(options: MockCarthandler = {}) {
     storefront: mockCreateStorefrontClient(),
     getCartId: () =>
       options.cartId ? `gid://shopify/Cart/${options.cartId}` : undefined,
-    setCartId: () => {},
+    setCartId: () => new Headers(),
     ...rest,
   });
 }
@@ -28,9 +28,8 @@ describe('createCartHandler', () => {
   it('returns a cart handler instance', () => {
     const cart = getCartHandler();
 
-    expectTypeOf(cart).toEqualTypeOf<CartHandlerReturnBase>;
-    expect(Object.keys(cart)).toHaveLength(15);
-    expect(cart).toHaveProperty('getFormInput');
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
+    expect(Object.keys(cart)).toHaveLength(14);
     expect(cart).toHaveProperty('get');
     expect(cart).toHaveProperty('getCartId');
     expect(cart).toHaveProperty('setCartId');
@@ -51,7 +50,7 @@ describe('createCartHandler', () => {
     const cart = createCartHandler({
       storefront: mockCreateStorefrontClient(),
       getCartId: () => undefined,
-      setCartId: () => {},
+      setCartId: () => new Headers(),
       customMethods: {
         foo() {
           return 'bar';
@@ -59,8 +58,8 @@ describe('createCartHandler', () => {
       },
     });
 
-    expectTypeOf(cart).toEqualTypeOf<CartHandlerReturnCustom<{}>>;
-    expect(Object.keys(cart)).toHaveLength(16);
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCartCustom<{}>>;
+    expect(Object.keys(cart)).toHaveLength(15);
     expect(cart.foo()).toBe('bar');
   });
 
@@ -73,8 +72,8 @@ describe('createCartHandler', () => {
       },
     });
 
-    expectTypeOf(cart).toEqualTypeOf<CartHandlerReturnBase>;
-    expect(Object.keys(cart)).toHaveLength(15);
+    expectTypeOf(cart).toEqualTypeOf<HydrogenCart>;
+    expect(Object.keys(cart)).toHaveLength(14);
     expect(await cart.get()).toBe('bar');
   });
 

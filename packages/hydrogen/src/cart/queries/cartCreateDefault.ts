@@ -32,7 +32,7 @@ export function cartCreateDefault(
 export const CART_CREATE_MUTATION = (
   cartFragment = MINIMAL_CART_FRAGMENT,
 ) => `#graphql
-  mutation CartCreate(
+  mutation cartCreate(
     $input: CartInput!
     $country: CountryCode = ZZ
     $language: LanguageCode

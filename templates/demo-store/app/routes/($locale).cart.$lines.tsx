@@ -39,22 +39,22 @@ export async function loader({request, context, params}: LoaderArgs) {
   const discount = searchParams.get('discount');
   const discountArray = discount ? [discount] : [];
 
-  const headers = new Headers();
-
   //! create a cart
-  const {cart: cartResult, errors: graphqlCartErrors} = await cart.create({
+  const result = await cart.create({
     lines: linesMap,
     discountCodes: discountArray,
   });
 
-  if (graphqlCartErrors?.length || !cartResult) {
+  const cartResult = result.cart;
+
+  if (result.errors?.length || !cartResult) {
     throw new Response('Link may be expired. Try checking the URL.', {
       status: 410,
     });
   }
 
-  //! cart created - set and replace the session cart if there is one
-  cart.setCartId(cartResult.id, headers);
+  // Update cart id in cookie
+  const headers = cart.setCartId(cartResult.id);
 
   //! redirect to checkout
   if (cartResult.checkoutUrl) {

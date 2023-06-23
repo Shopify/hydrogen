@@ -61,12 +61,15 @@ export const action: ActionFunction = async ({request, context, params}) => {
     session.set('customerAccessToken', customerAccessToken);
 
     // Sync customerAccessToken with existing cart
-    await cart.updateBuyerIdentity({customerAccessToken});
+    const result = await cart.updateBuyerIdentity({customerAccessToken});
+
+    // Update cart id in cookie
+    const headers = cart.setCartId(result.cart.id);
+
+    headers.append('Set-Cookie', await session.commit());
 
     return redirect(params.locale ? `/${params.locale}/account` : '/account', {
-      headers: {
-        'Set-Cookie': await session.commit(),
-      },
+      headers,
     });
   } catch (error: any) {
     if (storefront.isApiError(error)) {

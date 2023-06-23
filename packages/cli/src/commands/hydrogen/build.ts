@@ -1,4 +1,6 @@
 import path from 'path';
+import {Flags} from '@oclif/core';
+import Command from '@shopify/cli-kit/node/base-command';
 import {
   outputInfo,
   outputWarn,
@@ -6,14 +8,17 @@ import {
   outputToken,
 } from '@shopify/cli-kit/node/output';
 import {fileSize, copyFile, rmdir} from '@shopify/cli-kit/node/fs';
-import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
+import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
+import colors from '@shopify/cli-kit/node/colors';
+import {
+  getProjectPaths,
+  getRemixConfig,
+  type ServerMode,
+} from '../../lib/config.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
-import Command from '@shopify/cli-kit/node/base-command';
-import {Flags} from '@oclif/core';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
-import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
-import {colors} from '../../lib/colors.js';
+import {warnOnce} from '../../lib/log.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -21,13 +26,8 @@ export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
   static flags = {
     path: commonFlags.path,
-    sourcemap: Flags.boolean({
-      description: 'Generate sourcemaps for the build.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
-      default: true,
-      allowNo: true,
-    }),
-    ['disable-route-warning']: Flags.boolean({
+    sourcemap: commonFlags.sourcemap,
+    'disable-route-warning': Flags.boolean({
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
@@ -64,28 +64,30 @@ export async function runBuild({
 
   console.time(LOG_WORKER_BUILT);
 
-  const [remixConfig] = await Promise.all([
-    getRemixConfig(root),
-    rmdir(buildPath, {force: true}),
-  ]);
-
   outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
-  const {build} = await import('@remix-run/dev/dist/compiler/build.js');
-  const {logCompileFailure} = await import(
-    '@remix-run/dev/dist/compiler/onCompileFailure.js'
-  );
+  const [remixConfig, {build}, {logThrown}, {createFileWatchCache}] =
+    await Promise.all([
+      getRemixConfig(root),
+      import('@remix-run/dev/dist/compiler/build.js'),
+      import('@remix-run/dev/dist/compiler/utils/log.js'),
+      import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+      rmdir(buildPath, {force: true}),
+    ]);
 
   await Promise.all([
     copyPublicFiles(publicPath, buildPathClient),
-    build(remixConfig, {
-      mode: process.env.NODE_ENV as any,
-      sourcemap,
-      onCompileFailure: (failure: Error) => {
-        logCompileFailure(failure);
-        // Stop here and prevent waterfall errors
-        throw Error();
+    build({
+      config: remixConfig,
+      options: {
+        mode: process.env.NODE_ENV as ServerMode,
+        onWarning: warnOnce,
+        sourcemap,
       },
+      fileWatchCache: createFileWatchCache(),
+    }).catch((thrown) => {
+      logThrown(thrown);
+      process.exit(1);
     }),
   ]);
 

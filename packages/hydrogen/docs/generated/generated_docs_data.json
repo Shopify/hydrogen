@@ -459,6 +459,34 @@
     ]
   },
   {
+    "name": "InMemoryCache",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "createStorefrontClient",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/2023-04/utilities/createstorefrontclient"
+      }
+    ],
+    "description": "> Caution:\n> This utility should only be used when deploying Hydrogen to a Node.js environment. It should *not* be used when deploying Hydrogen to Oxygen.\n\nIf you are deploying Hydrogen to a Node.js environment, you can use this limited implementation of an in-memory cache. It only supports the `cache-control` header. It does NOT support `age` or `expires` headers. \n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "const {createRequestHandler} = require('@remix-run/express');\nconst path = require('path');\nconst {installGlobals} = require('@remix-run/node');\nconst express = require('express');\nconst {createStorefrontClient, InMemoryCache} = require('@shopify/hydrogen');\n\ninstallGlobals();\n\nconst app = express();\n\nconst BUILD_DIR = path.join(process.cwd(), 'build');\n\napp.use(\n  '/build',\n  express.static('public/build', {immutable: true, maxAge: '1y'}),\n);\n\napp.all('*', async (req) => {\n  const {storefront} = createStorefrontClient({\n    cache: new InMemoryCache(),\n    // `waitUntil` is only needed on worker environments. For Express/Node, it isn't applicable\n    waitUntil: null,\n    i18n: {language: 'EN', country: 'US'},\n    publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,\n    privateStorefrontToken: process.env.PRIVATE_STOREFRONT_API_TOKEN,\n    storeDomain: process.env.PUBLIC_STORE_DOMAIN,\n    storefrontId: process.env.PUBLIC_STOREFRONT_ID,\n    storefrontHeaders: {\n      cookie: req.get('cookie'),\n    },\n  });\n\n  return createRequestHandler({\n    build: require(BUILD_DIR),\n    mode: process.env.NODE_ENV,\n    getLoadContext: () => ({storefront}),\n  });\n});\n\nconst port = process.env.PORT || 3000;\n\napp.listen(port, () => {\n  console.log(`Express server listening on port ${port}`);\n});\n",
+            "language": "js"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": []
+  },
+  {
     "name": "generateCacheControlHeader",
     "category": "utilities",
     "isVisualComponent": false,
@@ -8080,6 +8108,11 @@
         "name": "CacheCustom",
         "type": "utilities",
         "url": "/docs/api/hydrogen/2023-04/utilities/cachecustom"
+      },
+      {
+        "name": "InMemoryCache",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/2023-04/utilities/inmemorycache"
       }
     ],
     "description": "This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2023-04/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.\n\nLearn more about [data fetching in Hydrogen](/docs/custom-storefronts/hydrogen/data-fetching/fetch-data).",

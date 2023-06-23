@@ -11,10 +11,15 @@ export type CookieOptions = {
 };
 
 export const cartSetIdDefault = (cookieOptions?: CookieOptions) => {
-  return (cartId: string, headers: Headers) => {
+  return (cartId: string) => {
+    const headers = new Headers();
     headers.append(
       'Set-Cookie',
-      stringify('cart', cartId.split('/').pop() || '', cookieOptions),
+      stringify('cart', cartId.split('/').pop() || '', {
+        path: '/',
+        ...cookieOptions,
+      }),
     );
+    return headers;
   };
 };

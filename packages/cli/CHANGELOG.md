@@ -1,5 +1,45 @@
 # @shopify/cli-hydrogen
 
+## 5.0.1
+
+### Patch Changes
+
+- Update Remix to the latest version (`1.17.1`). ([#852](https://github.com/Shopify/hydrogen/pull/852)) by [@frandiox](https://github.com/frandiox)
+
+  When updating your app, remember to also update your Remix dependencies to `1.17.1` in your `package.json` file:
+
+  ```diff
+  -"@remix-run/react": "1.15.0",
+  +"@remix-run/react": "1.17.1",
+
+  -"@remix-run/dev": "1.15.0",
+  -"@remix-run/eslint-config": "1.15.0",
+  +"@remix-run/dev": "1.17.1",
+  +"@remix-run/eslint-config": "1.17.1",
+  ```
+
+- Updated dependencies [[`f29e178a`](https://github.com/Shopify/hydrogen/commit/f29e178ada608ef3797c5049fd498afeed272152)]:
+  - @shopify/remix-oxygen@1.1.1
+
+## 5.0.0
+
+### Patch Changes
+
+- Remove `--codegen-unstable` flag from scripts when transpiling projects from TypeScript to JavaScript. ([#937](https://github.com/Shopify/hydrogen/pull/937)) by [@frandiox](https://github.com/frandiox)
+
+- Allow disabling sourcemaps with `shopify hydrogen build --no-sourcemap` ([#975](https://github.com/Shopify/hydrogen/pull/975)) by [@blittle](https://github.com/blittle)
+
+- Allow the CLI route generate to work in non-oxygen deploys ([#976](https://github.com/Shopify/hydrogen/pull/976)) by [@blittle](https://github.com/blittle)
+
+- Hidden flag removed from new CLI commands ([#995](https://github.com/Shopify/hydrogen/pull/995)) by [@graygilmore](https://github.com/graygilmore)
+
+  You can now link your local Hydrogen storefront to a storefront you have created in the Shopify admin. This allows you to pull your environment variables into your local environment or have them be automatically injected into your runtime when you run `dev`.
+
+- Updated dependencies [[`7b4afea2`](https://github.com/Shopify/hydrogen/commit/7b4afea29a050f9c77482540e321d9bc60351b2e), [`32515232`](https://github.com/Shopify/hydrogen/commit/32515232aa03077b542f5fcf95f38a715af09327), [`7d6a1a7c`](https://github.com/Shopify/hydrogen/commit/7d6a1a7cd3adb6ee0cf4cf242b72d5650509639b), [`442f602a`](https://github.com/Shopify/hydrogen/commit/442f602a45902beeb188575a85151f45b8be23ca), [`be912b2f`](https://github.com/Shopify/hydrogen/commit/be912b2ff7f4bc7a45688ff96d76f482b164efe5), [`b9ab8eb7`](https://github.com/Shopify/hydrogen/commit/b9ab8eb70f1506ab7516804ea69ecb9a693c420a), [`d3817b9c`](https://github.com/Shopify/hydrogen/commit/d3817b9c5e15db0c997089387fd9d43ab0fae027), [`93a7c3c6`](https://github.com/Shopify/hydrogen/commit/93a7c3c65fc10c8b1a16cee5fa57ad932d278dc8), [`6b8537ba`](https://github.com/Shopify/hydrogen/commit/6b8537ba1b4ce320a6b59a398ca12df731f97483)]:
+  - @shopify/hydrogen-react@2023.4.4
+  - @shopify/remix-oxygen@1.1.0
+  - @shopify/hydrogen-codegen@0.0.2
+
 ## 4.2.1
 
 ### Patch Changes
