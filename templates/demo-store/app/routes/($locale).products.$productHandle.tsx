@@ -14,7 +14,10 @@ import {
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 
-import type {VariantsQuery} from 'storefrontapi.generated';
+import type {
+  VariantsQuery,
+  ProductVariantFragmentFragment,
+} from 'storefrontapi.generated';
 import {
   Heading,
   IconCaret,
@@ -127,16 +130,16 @@ export default function Product() {
                   <Text className={'opacity-50 font-medium'}>{vendor}</Text>
                 )}
               </div>
-              <Suspense
-                fallback={
-                  <ProductForm productWithVariants={{variants: {nodes: []}}} />
-                }
-              >
+              <Suspense fallback={<ProductForm variants={[]} />}>
                 <Await
                   errorElement="There was a problem loading related products"
                   resolve={variants}
                 >
-                  {(resp) => <ProductForm productWithVariants={resp.product} />}
+                  {(resp) => (
+                    <ProductForm
+                      variants={resp.product?.variants.nodes || []}
+                    />
+                  )}
                 </Await>
               </Suspense>
               <div className="grid gap-4 py-4">
@@ -180,7 +183,7 @@ export default function Product() {
 }
 
 export function ProductForm({
-  productWithVariants,
+  variants,
 }: {
   productWithVariants: VariantsQuery['product'];
 }) {
@@ -213,7 +216,7 @@ export function ProductForm({
       <div className="grid gap-4">
         <VariantSelector
           options={product.options}
-          variants={productWithVariants?.variants}
+          variants={variants}
           defaultVariant={firstVariant}
         >
           {({option}) => {

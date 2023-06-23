@@ -26,7 +26,9 @@ type VariantSelectorProps = {
   /** Product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */
   options: Array<PartialDeep<ProductOption>> | undefined;
   /** Product variants from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
-  variants?: PartialDeep<ProductVariantConnection>;
+  variants?:
+    | PartialDeep<ProductVariantConnection>
+    | Array<PartialDeep<ProductVariant>>;
   /** Provide a default variant when no options are selected. You can use the utility `getFirstAvailableVariant` to get a default variant. */
   defaultVariant?: PartialDeep<ProductVariant>;
   children: ({option}: {option: AvailableOption}) => ReactNode;
@@ -34,10 +36,12 @@ type VariantSelectorProps = {
 
 export function VariantSelector({
   options = [],
-  variants,
+  variants: _variants = [],
   children,
   defaultVariant,
 }: VariantSelectorProps) {
+  const variants =
+    _variants instanceof Array ? _variants : flattenConnection(_variants);
   const {pathname, search} = useLocation();
 
   const {searchParams, path} = useMemo(() => {
@@ -86,7 +90,7 @@ export function VariantSelector({
               });
 
               // Find a variant that matches all selected options.
-              const variant = flattenConnection(variants).find((variant) =>
+              const variant = variants.find((variant) =>
                 variant?.selectedOptions?.every(
                   (selectedOption) =>
                     clonedSearchParams.get(selectedOption?.name!) ===
