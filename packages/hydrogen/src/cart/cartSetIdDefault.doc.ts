@@ -6,7 +6,7 @@ const data: ReferenceEntityTemplateSchema = {
   isVisualComponent: false,
   related: [],
   description:
-    'Creates a function that sets the cart id in the form of a cookie named `cart` to the provided header',
+    'Creates a function that returns a header with a Set-Cookie on the cart ID.',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',

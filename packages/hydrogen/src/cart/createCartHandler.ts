@@ -187,7 +187,7 @@ export type CartHandlerOptionsForDocs<
   /**
    * A function that sets the cart ID.
    */
-  setCartId: (cartId: string, headers: Headers) => void;
+  setCartId: (cartId: string) => Headers;
   /**
    * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).
    */
