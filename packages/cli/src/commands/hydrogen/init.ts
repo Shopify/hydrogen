@@ -508,6 +508,12 @@ async function handleRouteGeneration(controller: AbortController) {
  * @returns A function that creates the shortcut, or undefined if the user chose not to create a shortcut.
  */
 async function handleCliAlias(controller: AbortController) {
+  const packageManager = await packageManagerUsedForCreating();
+  const cliCommand = await getCliCommand(
+    '',
+    packageManager === 'unknown' ? 'npm' : packageManager,
+  );
+
   const shouldCreateShortcut = await renderConfirmationPrompt({
     confirmationMessage: 'Yes',
     cancellationMessage: 'No',
@@ -515,7 +521,7 @@ async function handleCliAlias(controller: AbortController) {
       'Create a global',
       {command: ALIAS_NAME},
       'alias to run commands instead of',
-      {command: 'npx shopify hydrogen'},
+      {command: cliCommand},
       '?',
     ],
     abortSignal: controller.signal,
@@ -679,7 +685,7 @@ async function handleCssStrategy(
       label: CSS_STRATEGY_NAME_MAP[strategy],
       value: strategy,
     })),
-    defaultValue: 'postcss',
+    defaultValue: 'tailwind',
     abortSignal: controller.signal,
   });
 
