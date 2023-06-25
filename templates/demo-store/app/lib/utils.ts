@@ -145,7 +145,7 @@ function resolveToFromType(
 /*
   Parse each menu link and adding, isExternal, to and target
 */
-function parseItem(customPrefixes = {}) {
+function parseItem(primaryDomain: string, customPrefixes = {}) {
   return function (
     item:
       | MenuFragment['items'][number]
@@ -161,13 +161,9 @@ function parseItem(customPrefixes = {}) {
     }
 
     // extract path from url because we don't need the origin on internal to attributes
-    const {pathname} = new URL(item.url);
+    const {host, pathname} = new URL(item.url);
 
-    /*
-      Currently the MenuAPI only returns online store urls e.g — xyz.myshopify.com/..
-      Note: update logic when API is updated to include the active qualified domain
-    */
-    const isInternalLink = /\.myshopify\.com/g.test(item.url);
+    const isInternalLink = host === new URL(primaryDomain).host;
 
     const parsedItem = isInternalLink
       ? // internal links
@@ -188,7 +184,7 @@ function parseItem(customPrefixes = {}) {
     if ('items' in item) {
       return {
         ...parsedItem,
-        items: item.items.map(parseItem(customPrefixes)).filter(Boolean),
+        items: item.items.map(parseItem(primaryDomain, customPrefixes)).filter(Boolean),
       } as EnhancedMenu['items'][number];
     } else {
       return parsedItem as EnhancedMenu['items'][number]['items'][number];
@@ -203,6 +199,7 @@ function parseItem(customPrefixes = {}) {
 */
 export function parseMenu(
   menu: MenuFragment,
+  primaryDomain: string,
   customPrefixes = {},
 ): EnhancedMenu | null {
   if (!menu?.items) {
@@ -211,7 +208,7 @@ export function parseMenu(
     return null;
   }
 
-  const parser = parseItem(customPrefixes);
+  const parser = parseItem(primaryDomain, customPrefixes);
 
   const parsedMenu = {
     ...menu,
