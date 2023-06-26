@@ -1,4 +1,8 @@
-import {type LinksFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  type LinksFunction,
+  type LoaderArgs,
+  defer,
+} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -27,14 +31,14 @@ export const links: LinksFunction = () => {
 };
 
 export async function loader({context}: LoaderArgs) {
-  const layout = await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY);
+  const {layout} = await context.storefront.query(LAYOUT_QUERY);
   return {layout};
 }
 
 export default function App() {
-  const data = useLoaderData<typeof loader>();
+  const {layout} = useLoaderData<typeof loader>();
 
-  const {name} = data.layout.shop;
+  const {name} = layout.shop;
 
   return (
     <html lang="en">
