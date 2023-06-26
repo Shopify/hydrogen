@@ -6,7 +6,7 @@ import {
   cartLinesRemoveDefault,
 } from '@shopify/hydrogen';
 
-const mutationOptions = {
+const cartQueryOptions = {
   storefront,
   getCartId: cartGetIdDefault(request.headers),
 };
@@ -16,10 +16,10 @@ const cart = createCartHandler({
   getCartId: cartGetIdDefault(request.headers),
   setCartId: cartSetIdDefault(),
   customMethods: {
-    editInPlace: async (removeLineIds, addLines, optionalParams) => {
+    editInLine: async (addLines, removeLineIds, optionalParams) => {
       // Using Hydrogen default cart query methods
-      await cartLinesAddDefault(mutationOptions)(addLines, optionalParams);
-      return await cartLinesRemoveDefault(mutationOptions)(
+      await cartLinesAddDefault(cartQueryOptions)(addLines, optionalParams);
+      return await cartLinesRemoveDefault(cartQueryOptions)(
         removeLineIds,
         optionalParams,
       );
@@ -36,8 +36,8 @@ const cart = createCartHandler({
   },
 });
 
-// Use custom method editInPlace that delete and add items in one method
-cart.editInPlace(
+// Use custom method editInLine that delete and add items in one method
+cart.editInLine(
   ['123'],
   [
     {
