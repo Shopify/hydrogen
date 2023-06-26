@@ -3,6 +3,7 @@ import fs from 'fs/promises';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
   getProjectPaths,
@@ -20,7 +21,6 @@ import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {combinedEnvironmentVariables} from '../../lib/combined-environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 
-const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
 
@@ -95,8 +95,6 @@ async function runDev({
 
   if (debug) (await import('node:inspector')).open();
 
-  console.time(LOG_INITIAL_BUILD);
-
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
 
@@ -121,11 +119,20 @@ async function runDev({
       ? await combinedEnvironmentVariables({root, shop, envBranch})
       : undefined;
 
+  const [{watch}, {createFileWatchCache}] = await Promise.all([
+    import('@remix-run/dev/dist/compiler/watch.js'),
+    import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+  ]);
+
+  let isInitialBuild = true;
+  let initialBuildDurationMs = 0;
+  let initialBuildStartTimeMs = Date.now();
+
   let isMiniOxygenStarted = false;
   async function safeStartMiniOxygen() {
     if (isMiniOxygenStarted) return;
 
-    await startMiniOxygen({
+    const miniOxygen = await startMiniOxygen({
       root,
       port,
       watch: true,
@@ -136,15 +143,21 @@ async function runDev({
 
     isMiniOxygenStarted = true;
 
+    miniOxygen.showBanner({
+      headlinePrefix:
+        initialBuildDurationMs > 0
+          ? `Initial build: ${initialBuildDurationMs}ms\n`
+          : '',
+      extraLines: [
+        colors.dim(
+          `\nView GraphiQL API browser: ${miniOxygen.listeningAt}/graphiql`,
+        ),
+      ],
+    });
+
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
   }
-
-  let isInitialBuild = true;
-  const [{watch}, {createFileWatchCache}] = await Promise.all([
-    import('@remix-run/dev/dist/compiler/watch.js'),
-    import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
-  ]);
 
   const remixConfig = await reloadConfig();
 
@@ -167,9 +180,7 @@ async function runDev({
     {
       reloadConfig,
       onBuildStart() {
-        if (isInitialBuild) {
-          console.time(LOG_INITIAL_BUILD);
-        } else {
+        if (!isInitialBuild) {
           console.time(LOG_REBUILT);
           outputInfo(LOG_REBUILDING);
         }
@@ -177,7 +188,7 @@ async function runDev({
       async onBuildFinish() {
         if (isInitialBuild) {
           await copyingFiles;
-          console.timeEnd(LOG_INITIAL_BUILD);
+          initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
           isInitialBuild = false;
         } else {
           console.timeEnd(LOG_REBUILT);

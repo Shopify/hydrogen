@@ -33,10 +33,12 @@ export async function runPreview({
 
   const {root, buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
 
-  await startMiniOxygen({
+  const miniOxygen = await startMiniOxygen({
     root,
     port,
     buildPathClient,
     buildPathWorkerFile,
   });
+
+  miniOxygen.showBanner({mode: 'preview'});
 }

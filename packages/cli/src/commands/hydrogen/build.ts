@@ -1,4 +1,3 @@
-import path from 'path';
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
 import {
@@ -7,7 +6,14 @@ import {
   outputContent,
   outputToken,
 } from '@shopify/cli-kit/node/output';
-import {fileSize, copyFile, rmdir} from '@shopify/cli-kit/node/fs';
+import {
+  fileSize,
+  copyFile,
+  rmdir,
+  glob,
+  removeFile,
+} from '@shopify/cli-kit/node/fs';
+import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import colors from '@shopify/cli-kit/node/colors';
 import {
@@ -26,7 +32,11 @@ export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
   static flags = {
     path: commonFlags.path,
-    sourcemap: commonFlags.sourcemap,
+    sourcemap: Flags.boolean({
+      description: 'Generate sourcemaps for the build.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
+      default: false,
+    }),
     'disable-route-warning': Flags.boolean({
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
@@ -38,7 +48,7 @@ export default class Build extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Build);
-    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
     await runBuild({...flagsToCamelObject(flags), path: directory});
   }
@@ -46,7 +56,7 @@ export default class Build extends Command {
 
 export async function runBuild({
   path: appPath,
-  sourcemap = true,
+  sourcemap = false,
   disableRouteWarning = false,
 }: {
   path?: string;
@@ -97,7 +107,7 @@ export async function runBuild({
 
     outputInfo(
       outputContent`   ${colors.dim(
-        path.relative(root, buildPathWorkerFile),
+        relativePath(root, buildPathWorkerFile),
       )}  ${outputToken.yellow(sizeMB.toFixed(2))} MB\n`,
     );
 
@@ -109,6 +119,20 @@ export async function runBuild({
             : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
         }\n`,
       );
+    }
+
+    if (sourcemap) {
+      if (process.env.HYDROGEN_ASSET_BASE_URL) {
+        // Oxygen build
+        const filepaths = await glob(joinPath(buildPathClient, '**/*.js.map'));
+        for (const filepath of filepaths) {
+          await removeFile(filepath);
+        }
+      } else {
+        outputWarn(
+          '🚨 Sourcemaps are enabled in production! Use this only for testing.\n',
+        );
+      }
     }
   }
 
