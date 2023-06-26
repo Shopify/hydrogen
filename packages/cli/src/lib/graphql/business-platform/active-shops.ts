@@ -48,9 +48,7 @@ const CurrentUserAccountQuery = `#graphql
 
   fragment destinationFields on Destination {
     name
-    # shortName
     status
-    # publicId
     webUrl
   }
 `;
@@ -64,9 +62,7 @@ interface PageInfo {
 
 interface Destination {
   name: string;
-  // shortName: string;
   status: string;
-  // publicId: string;
   webUrl: string;
 }
 
