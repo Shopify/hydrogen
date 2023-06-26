@@ -31,6 +31,10 @@ export class HydrogenSession {
     return new this(storage, session);
   }
 
+  has(key: string) {
+    return this.session.has(key);
+  }
+
   get(key: string) {
     return this.session.get(key);
   }
