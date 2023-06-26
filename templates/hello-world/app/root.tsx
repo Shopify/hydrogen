@@ -1,4 +1,4 @@
-import {type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -27,7 +27,7 @@ export function links() {
 
 export async function loader({context}: LoaderArgs) {
   const layout = await context.storefront.query(LAYOUT_QUERY);
-  return {layout};
+  return json({layout});
 }
 
 export default function App() {
