@@ -1,6 +1,6 @@
 import type {SyntheticEvent} from 'react';
 import {useMemo, useState} from 'react';
-import {Menu} from '@headlessui/react';
+import {Menu, Disclosure} from '@headlessui/react';
 import type {Location} from '@remix-run/react';
 import {
   Link,
@@ -9,12 +9,7 @@ import {
   useNavigate,
 } from '@remix-run/react';
 import {useDebounce} from 'react-use';
-import {Disclosure} from '@headlessui/react';
-import type {
-  FilterType,
-  Filter,
-  Collection,
-} from '@shopify/hydrogen/storefront-api-types';
+import type {FilterType, Filter} from '@shopify/hydrogen/storefront-api-types';
 
 import {Heading, IconFilters, IconCaret, IconXMark, Text} from '~/components';
 
