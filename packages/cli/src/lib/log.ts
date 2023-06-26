@@ -23,9 +23,10 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
 }
 
 const warnings = new Set<string>();
-export const warnOnce = (string: string) => {
+export const hasWarnedAlready = (string: string) => {
   if (!warnings.has(string)) {
-    console.warn(string);
     warnings.add(string);
+    return false;
   }
+  return true;
 };

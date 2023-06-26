@@ -10,7 +10,7 @@ import {
   getRemixConfig,
   type ServerMode,
 } from '../../lib/config.js';
-import {muteDevLogs, warnOnce} from '../../lib/log.js';
+import {muteDevLogs, hasWarnedAlready} from '../../lib/log.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
@@ -125,9 +125,10 @@ async function runDev({
       })
     : undefined;
 
-  const [{watch}, {createFileWatchCache}] = await Promise.all([
+  const [{watch}, {createFileWatchCache}, {logger}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
     import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+    import('@remix-run/dev/dist/tux/logger.js'),
   ]);
 
   let isInitialBuild = true;
@@ -178,10 +179,15 @@ async function runDev({
       config: remixConfig,
       options: {
         mode: process.env.NODE_ENV as ServerMode,
-        onWarning: warnOnce,
         sourcemap,
       },
       fileWatchCache,
+      logger: {
+        ...logger,
+        warn: (message: string) => {
+          hasWarnedAlready(message) ? logger.warn(message) : null;
+        },
+      },
     },
     {
       reloadConfig,

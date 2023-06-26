@@ -24,7 +24,7 @@ import {
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
-import {warnOnce} from '../../lib/log.js';
+import {hasWarnedAlready} from '../../lib/log.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -76,12 +76,13 @@ export async function runBuild({
 
   outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
-  const [remixConfig, {build}, {logThrown}, {createFileWatchCache}] =
+  const [remixConfig, {build}, {logThrown}, {createFileWatchCache}, {logger}] =
     await Promise.all([
       getRemixConfig(root),
       import('@remix-run/dev/dist/compiler/build.js'),
       import('@remix-run/dev/dist/compiler/utils/log.js'),
       import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+      import('@remix-run/dev/dist/tux/logger.js'),
       rmdir(buildPath, {force: true}),
     ]);
 
@@ -91,10 +92,15 @@ export async function runBuild({
       config: remixConfig,
       options: {
         mode: process.env.NODE_ENV as ServerMode,
-        onWarning: warnOnce,
         sourcemap,
       },
       fileWatchCache: createFileWatchCache(),
+      logger: {
+        ...logger,
+        warn: (message: string) => {
+          hasWarnedAlready(message) ? logger.warn(message) : null;
+        },
+      },
     }).catch((thrown) => {
       logThrown(thrown);
       process.exit(1);
