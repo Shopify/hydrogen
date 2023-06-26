@@ -1,5 +1,18 @@
 # @shopify/cli-hydrogen
 
+## 5.0.2
+
+### Patch Changes
+
+- Add more context on MiniOxygen local dev server startup ([#1005](https://github.com/Shopify/hydrogen/pull/1005)) by [@gfscott](https://github.com/gfscott)
+
+- Fix `--sourcemap` flag for build command. ([#1032](https://github.com/Shopify/hydrogen/pull/1032)) by [@frandiox](https://github.com/frandiox)
+
+- Fix `dev --codegen-unstable` flag, which was removed by mistake in the previous release. ([#1018](https://github.com/Shopify/hydrogen/pull/1018)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`b8f41ad7`](https://github.com/Shopify/hydrogen/commit/b8f41ad7174056f304301022a2aa77cecfdf0824)]:
+  - @shopify/hydrogen-react@2023.4.5
+
 ## 5.0.1
 
 ### Patch Changes
