@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Disable sourcemaps by default at build time.
+Fix `--sourcemap` flag for build command.
