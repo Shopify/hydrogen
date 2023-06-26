@@ -4,11 +4,15 @@ import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {
   renderConfirmationPrompt,
   renderSelectPrompt,
+  renderTextPrompt,
 } from '@shopify/cli-kit/node/ui';
 
 import {adminRequest} from '../../lib/graphql.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
+import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
+import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
 import {getConfig, setStorefront} from '../../lib/shopify-config.js';
+import {renderError, renderUserErrors} from '../../lib/user-errors.js';
 
 import {linkStorefront} from './link.js';
 
@@ -22,15 +26,20 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
     typeof import('@shopify/cli-kit/node/ui')
   >('@shopify/cli-kit/node/ui');
+
   return {
     ...original,
     renderConfirmationPrompt: vi.fn(),
     renderSelectPrompt: vi.fn(),
+    renderTextPrompt: vi.fn(),
   };
 });
 vi.mock('../../lib/graphql.js');
 vi.mock('../../lib/shopify-config.js');
 vi.mock('../../lib/graphql/admin/link-storefront.js');
+vi.mock('../../lib/graphql/admin/create-storefront.js');
+vi.mock('../../lib/graphql/admin/fetch-job.js');
+vi.mock('../../lib/user-errors.js');
 vi.mock('../../lib/shop.js', () => ({
   getHydrogenShop: () => SHOP,
 }));
@@ -67,33 +76,111 @@ describe('link', () => {
     expect(getStorefronts).toHaveBeenCalledWith(SHOP);
   });
 
-  it('renders a list of choices and forwards the selection to setStorefront', async () => {
-    vi.mocked(renderSelectPrompt).mockResolvedValue(
-      'gid://shopify/HydrogenStorefront/1',
-    );
+  describe('when you want to link an existing Hydrogen storefront', () => {
+    beforeEach(async () => {
+      vi.mocked(renderSelectPrompt).mockResolvedValue(
+        'gid://shopify/HydrogenStorefront/1',
+      );
+    });
 
-    await linkStorefront({path: 'my-path'});
+    it('renders a list of choices and forwards the selection to setStorefront', async () => {
+      await linkStorefront({path: 'my-path'});
 
-    expect(setStorefront).toHaveBeenCalledWith(
-      'my-path',
-      expect.objectContaining({
-        id: 'gid://shopify/HydrogenStorefront/1',
-        title: 'Hydrogen',
-      }),
-    );
+      expect(setStorefront).toHaveBeenCalledWith(
+        'my-path',
+        expect.objectContaining({
+          id: 'gid://shopify/HydrogenStorefront/1',
+          title: 'Hydrogen',
+        }),
+      );
+    });
+
+    it('renders a success message', async () => {
+      await linkStorefront({path: 'my-path'});
+
+      expect(outputMock.info()).toMatch(/Hydrogen is now linked/g);
+      expect(outputMock.info()).toMatch(
+        /Run `h2 dev` to start your local development server and start building/g,
+      );
+    });
   });
 
-  it('renders a success message', async () => {
-    vi.mocked(renderSelectPrompt).mockResolvedValue(
-      'gid://shopify/HydrogenStorefront/1',
-    );
+  describe('when you want to link a new Hydrogen storefront', () => {
+    const expectedStorefrontName = 'New Storefront';
+    const expectedJobId = 'gid://shopify/Job/1';
 
-    await linkStorefront({path: 'my-path'});
+    beforeEach(async () => {
+      vi.mocked(renderSelectPrompt).mockResolvedValue('NEW_STOREFRONT');
 
-    expect(outputMock.info()).toMatch(/Hydrogen is now linked/g);
-    expect(outputMock.info()).toMatch(
-      /Run `h2 dev` to start your local development server and start building/g,
-    );
+      vi.mocked(createStorefront).mockResolvedValue({
+        adminSession: ADMIN_SESSION,
+        storefront: {
+          id: 'gid://shopify/HydrogenStorefront/1',
+          title: expectedStorefrontName,
+          productionUrl: 'https://example.com',
+        },
+        userErrors: [],
+        jobId: expectedJobId,
+      });
+    });
+
+    it('chooses to create a new storefront given the directory path', async () => {
+      await linkStorefront({path: 'my-path'});
+
+      expect(renderTextPrompt).toHaveBeenCalledWith({
+        message: expect.stringMatching(/name/i),
+        defaultValue: 'My Path',
+      });
+    });
+
+    it('chooses to create a new storefront without directory path', async () => {
+      await linkStorefront({});
+
+      expect(renderTextPrompt).toHaveBeenCalledWith({
+        message: expect.stringMatching(/name/i),
+        defaultValue: 'Hydrogen Storefront',
+      });
+    });
+
+    it('handles the successful creation of the storefront on Admin', async () => {
+      await linkStorefront({});
+
+      expect(waitForJob).toHaveBeenCalledWith(SHOP, expectedJobId);
+
+      expect(outputMock.info()).toContain(
+        `${expectedStorefrontName} is now linked`,
+      );
+    });
+
+    it('handles the user-errors when creating the storefront on Admin', async () => {
+      const expectedUserErrors = [
+        {
+          code: 'INVALID',
+          field: [],
+          message: 'Bad thing happend.',
+        },
+      ];
+
+      vi.mocked(createStorefront).mockResolvedValue({
+        adminSession: ADMIN_SESSION,
+        storefront: undefined,
+        userErrors: expectedUserErrors,
+        jobId: undefined,
+      });
+
+      await linkStorefront({});
+
+      expect(waitForJob).not.toHaveBeenCalled();
+      expect(renderUserErrors).toHaveBeenCalledWith(expectedUserErrors);
+    });
+
+    it('handles the job errors when creating the storefront on Admin', async () => {
+      vi.mocked(waitForJob).mockRejectedValue(undefined);
+
+      await linkStorefront({});
+
+      expect(renderError).toHaveBeenCalled();
+    });
   });
 
   describe('when there are no Hydrogen storefronts', () => {
