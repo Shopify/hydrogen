@@ -6,6 +6,7 @@ import {
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
 
 type MiniOxygenOptions = {
   root: string;
@@ -62,12 +63,25 @@ export async function startMiniOxygen({
 
   const listeningAt = `http://localhost:${actualPort}`;
 
-  outputInfo(
-    outputContent`🚥 MiniOxygen server started at ${outputToken.link(
-      listeningAt,
-      listeningAt,
-    )}\n`,
-  );
+  return {
+    listeningAt,
+    port: actualPort,
+    showBanner(options?: {
+      mode?: string;
+      headlinePrefix?: string;
+      extraLines?: string[];
+    }) {
+      renderSuccess({
+        headline: `${options?.headlinePrefix ?? ''}MiniOxygen ${
+          options?.mode ?? 'development'
+        } server running.`,
+        body: [
+          `View Hydrogen app: ${listeningAt}`,
+          ...(options?.extraLines ?? []),
+        ],
+      });
+    },
+  };
 }
 
 export function logResponse(request: Request, response: Response) {
