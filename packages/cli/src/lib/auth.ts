@@ -11,6 +11,7 @@ import {getConfig, resetConfig, setShop} from './shopify-config.js';
 import {muteAuthLogs} from './log.js';
 import {getActiveShops} from './graphql/business-platform/active-shops.js';
 import {renderTasks} from '@shopify/cli-kit/node/ui';
+import colors from '@shopify/cli-kit/node/colors';
 import ansiEscapes from 'ansi-escapes';
 
 export type {AdminSession};
@@ -90,7 +91,7 @@ function showLoginInfo() {
           headline: 'Log in to Shopify',
           body: [
             `\nTimed out. Click to open your browser:`,
-            {link: {url, label: 'Open'}},
+            {link: {url, label: colors.white('Open')}},
           ],
         });
       }
