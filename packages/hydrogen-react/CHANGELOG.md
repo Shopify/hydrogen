@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2023.4.5
+
+### Patch Changes
+
+- Add JSDoc examples to <Money /> and useMoney ([#1021](https://github.com/Shopify/hydrogen/pull/1021)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 2023.4.4
 
 ### Patch Changes
