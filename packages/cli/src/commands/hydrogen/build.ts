@@ -98,7 +98,7 @@ export async function runBuild({
       logger: {
         ...logger,
         warn: (message: string) => {
-          hasWarnedAlready(message) ? logger.warn(message) : null;
+          hasWarnedAlready(message) ? null : logger.warn(message);
         },
       },
     }).catch((thrown) => {

@@ -185,7 +185,7 @@ async function runDev({
       logger: {
         ...logger,
         warn: (message: string) => {
-          hasWarnedAlready(message) ? logger.warn(message) : null;
+          hasWarnedAlready(message) ? null : logger.warn(message);
         },
       },
     },
