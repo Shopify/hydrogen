@@ -14,10 +14,7 @@ import {
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 
-import type {
-  VariantsQuery,
-  ProductVariantFragmentFragment,
-} from 'storefrontapi.generated';
+import type {ProductVariantFragmentFragment} from 'storefrontapi.generated';
 import {
   Heading,
   IconCaret,
@@ -185,7 +182,7 @@ export default function Product() {
 export function ProductForm({
   variants,
 }: {
-  productWithVariants: VariantsQuery['product'];
+  variants: ProductVariantFragmentFragment[];
 }) {
   const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
   const firstVariant =
