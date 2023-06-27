@@ -131,6 +131,25 @@ export default class Init extends Command {
   async run(): Promise<void> {
     const {flags} = await this.parse(Init);
 
+    if (flags.i18n && !I18N_CHOICES.includes(flags.i18n as I18nChoice)) {
+      throw new AbortError(
+        `Invalid i18n strategy: ${
+          flags.i18n
+        }. Must be one of ${I18N_CHOICES.join(', ')}`,
+      );
+    }
+
+    if (
+      flags.styling &&
+      !SETUP_CSS_STRATEGIES.includes(flags.styling as StylingChoice)
+    ) {
+      throw new AbortError(
+        `Invalid styling strategy: ${
+          flags.styling
+        }. Must be one of ${SETUP_CSS_STRATEGIES.join(', ')}`,
+      );
+    }
+
     await runInit(flagsToCamelObject(flags) as InitOptions);
   }
 }
