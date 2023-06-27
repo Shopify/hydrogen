@@ -1,4 +1,3 @@
-import path from 'path';
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
 import {
@@ -7,7 +6,14 @@ import {
   outputContent,
   outputToken,
 } from '@shopify/cli-kit/node/output';
-import {fileSize, copyFile, rmdir} from '@shopify/cli-kit/node/fs';
+import {
+  fileSize,
+  copyFile,
+  rmdir,
+  glob,
+  removeFile,
+} from '@shopify/cli-kit/node/fs';
+import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import colors from '@shopify/cli-kit/node/colors';
 import {
@@ -19,6 +25,7 @@ import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {warnOnce} from '../../lib/log.js';
+import {codegen} from '../../lib/codegen.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -35,6 +42,14 @@ export default class Build extends Command {
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
+    ['codegen-unstable']: Flags.boolean({
+      description:
+        'Generate types for the Storefront API queries found in your project.',
+      required: false,
+      default: false,
+    }),
+    ['codegen-config-path']: commonFlags.codegenConfigPath,
+
     base: deprecated('--base')(),
     entry: deprecated('--entry')(),
     target: deprecated('--target')(),
@@ -42,18 +57,26 @@ export default class Build extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Build);
-    const directory = flags.path ? path.resolve(flags.path) : process.cwd();
+    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
 
-    await runBuild({...flagsToCamelObject(flags), path: directory});
+    await runBuild({
+      ...flagsToCamelObject(flags),
+      useCodegen: flags['codegen-unstable'],
+      path: directory,
+    });
   }
 }
 
 export async function runBuild({
   path: appPath,
+  useCodegen = false,
+  codegenConfigPath,
   sourcemap = false,
   disableRouteWarning = false,
 }: {
   path?: string;
+  useCodegen?: boolean;
+  codegenConfigPath?: string;
   sourcemap?: boolean;
   disableRouteWarning?: boolean;
 }) {
@@ -93,6 +116,7 @@ export async function runBuild({
       logThrown(thrown);
       process.exit(1);
     }),
+    useCodegen && codegen({...remixConfig, configFilePath: codegenConfigPath}),
   ]);
 
   if (process.env.NODE_ENV !== 'development') {
@@ -101,7 +125,7 @@ export async function runBuild({
 
     outputInfo(
       outputContent`   ${colors.dim(
-        path.relative(root, buildPathWorkerFile),
+        relativePath(root, buildPathWorkerFile),
       )}  ${outputToken.yellow(sizeMB.toFixed(2))} MB\n`,
     );
 
@@ -113,6 +137,20 @@ export async function runBuild({
             : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
         }\n`,
       );
+    }
+
+    if (sourcemap) {
+      if (process.env.HYDROGEN_ASSET_BASE_URL) {
+        // Oxygen build
+        const filepaths = await glob(joinPath(buildPathClient, '**/*.js.map'));
+        for (const filepath of filepaths) {
+          await removeFile(filepath);
+        }
+      } else {
+        outputWarn(
+          '🚨 Sourcemaps are enabled in production! Use this only for testing.\n',
+        );
+      }
     }
   }
 

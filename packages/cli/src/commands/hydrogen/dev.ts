@@ -36,12 +36,7 @@ export default class Dev extends Command {
       required: false,
       default: false,
     }),
-    ['codegen-config-path']: Flags.string({
-      description:
-        'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
-      required: false,
-      dependsOn: ['codegen-unstable'],
-    }),
+    ['codegen-config-path']: commonFlags.codegenConfigPath,
     sourcemap: commonFlags.sourcemap,
     'disable-virtual-routes': Flags.boolean({
       description:
@@ -65,7 +60,7 @@ export default class Dev extends Command {
 
     await runDev({
       ...flagsToCamelObject(flags),
-      codegen: flags['codegen-unstable'],
+      useCodegen: flags['codegen-unstable'],
       path: directory,
     });
   }
@@ -74,7 +69,7 @@ export default class Dev extends Command {
 async function runDev({
   port,
   path: appPath,
-  codegen = false,
+  useCodegen = false,
   codegenConfigPath,
   disableVirtualRoutes,
   shop,
@@ -84,7 +79,7 @@ async function runDev({
 }: {
   port?: number;
   path?: string;
-  codegen?: boolean;
+  useCodegen?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   shop?: string;
@@ -167,7 +162,7 @@ async function runDev({
 
   const remixConfig = await reloadConfig();
 
-  if (codegen) {
+  if (useCodegen) {
     spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
   }
 

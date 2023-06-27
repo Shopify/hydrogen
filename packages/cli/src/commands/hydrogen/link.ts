@@ -117,10 +117,10 @@ export async function linkStorefront({
       label: `${title} (${productionUrl})`,
     }));
 
-    choices.unshift({
-      value: CREATE_NEW_STOREFRONT_ID,
-      label: 'Create a new storefront',
-    });
+    // choices.unshift({
+    //   value: CREATE_NEW_STOREFRONT_ID,
+    //   label: 'Create a new storefront',
+    // });
 
     const storefrontId = await renderSelectPrompt({
       message: 'Choose a Hydrogen storefront to link',
