@@ -87,6 +87,11 @@ export default class Init extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
     'install-deps': commonFlags['install-deps'],
+    'mock-shop': Flags.boolean({
+      description: 'Use mock.shop as the data source for the storefront.',
+      default: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
+    }),
     styling: Flags.string({
       description: `Sets the styling strategy to use. One of ${Object.keys(
         CSS_STRATEGY_NAME_MAP,
@@ -109,6 +114,7 @@ type InitOptions = {
   path?: string;
   template?: string;
   language?: Language;
+  mockShop?: boolean;
   styling?: keyof typeof CSS_STRATEGY_NAME_MAP;
   token?: string;
   force?: boolean;
@@ -265,18 +271,20 @@ async function setupLocalStarterTemplate(
   options: InitOptions,
   controller: AbortController,
 ) {
-  const templateAction = await renderSelectPrompt({
-    message: 'Connect to Shopify',
-    choices: [
-      {
-        label: 'Use sample data from Mock.shop (no login required)',
-        value: 'mock',
-      },
-      {label: 'Link your Shopify account', value: 'link'},
-    ],
-    defaultValue: 'mock',
-    abortSignal: controller.signal,
-  });
+  const templateAction = options.mockShop
+    ? 'mock'
+    : await renderSelectPrompt<'mock' | 'link'>({
+        message: 'Connect to Shopify',
+        choices: [
+          {
+            label: 'Use sample data from Mock.shop (no login required)',
+            value: 'mock',
+          },
+          {label: 'Link your Shopify account', value: 'link'},
+        ],
+        defaultValue: 'mock',
+        abortSignal: controller.signal,
+      });
 
   const storefrontInfo =
     templateAction === 'link'
