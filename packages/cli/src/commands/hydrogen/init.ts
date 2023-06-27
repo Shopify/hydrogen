@@ -97,9 +97,18 @@ export default class Init extends Command {
         CSS_STRATEGY_NAME_MAP,
       )
         .map((item) => `\`${item}\``)
-        .join(', ')}`,
+        .join(', ')}.`,
       choices: Object.keys(CSS_STRATEGY_NAME_MAP),
       env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
+    }),
+    i18n: Flags.string({
+      description: `Sets the internationalization strategy to use. One of ${Object.keys(
+        I18N_STRATEGY_NAME_MAP,
+      )
+        .map((item) => `\`${item}\``)
+        .join(', ')}.`,
+      choices: Object.keys(I18N_STRATEGY_NAME_MAP),
+      env: 'SHOPIFY_HYDROGEN_FLAG_I18N',
     }),
   };
 
@@ -116,6 +125,7 @@ type InitOptions = {
   language?: Language;
   mockShop?: boolean;
   styling?: keyof typeof CSS_STRATEGY_NAME_MAP;
+  i18n?: keyof typeof I18N_STRATEGY_NAME_MAP;
   token?: string;
   force?: boolean;
   installDeps?: boolean;
@@ -411,15 +421,21 @@ async function setupLocalStarterTemplate(
     });
   }
 
-  const continueWithSetup = await renderConfirmationPrompt({
-    message: 'Scaffold boilerplate for internationalization and routes',
-    confirmationMessage: 'Yes, set up now',
-    cancellationMessage: 'No, set up later',
-    abortSignal: controller.signal,
-  });
+  const continueWithSetup =
+    options.i18n ??
+    (await renderConfirmationPrompt({
+      message: 'Scaffold boilerplate for internationalization and routes',
+      confirmationMessage: 'Yes, set up now',
+      cancellationMessage: 'No, set up later',
+      abortSignal: controller.signal,
+    }));
 
   if (continueWithSetup) {
-    const {i18nStrategy, setupI18n} = await handleI18n(controller);
+    const {i18nStrategy, setupI18n} = await handleI18n(
+      controller,
+      options.i18n,
+    );
+
     const i18nPromise = setupI18n(project.directory, language).catch(
       (error) => {
         setupSummary.i18nError = error as AbortError;
@@ -464,15 +480,20 @@ const i18nStrategies = {
   none: 'No internationalization',
 };
 
-async function handleI18n(controller: AbortController) {
-  let selection = await renderSelectPrompt<keyof typeof i18nStrategies>({
-    message: 'Select an internationalization strategy',
-    choices: Object.entries(i18nStrategies).map(([value, label]) => ({
-      value: value as I18nStrategy,
-      label,
-    })),
-    abortSignal: controller.signal,
-  });
+async function handleI18n(
+  controller: AbortController,
+  flagI18n?: keyof typeof i18nStrategies,
+) {
+  let selection =
+    flagI18n ??
+    (await renderSelectPrompt<keyof typeof i18nStrategies>({
+      message: 'Select an internationalization strategy',
+      choices: Object.entries(i18nStrategies).map(([value, label]) => ({
+        value: value as I18nStrategy,
+        label,
+      })),
+      abortSignal: controller.signal,
+    }));
 
   const i18nStrategy = selection === 'none' ? undefined : selection;
 
