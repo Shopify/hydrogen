@@ -87,6 +87,15 @@ export default class Init extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
     'install-deps': commonFlags['install-deps'],
+    styling: Flags.string({
+      description: `Sets the styling strategy to use. One of ${Object.keys(
+        CSS_STRATEGY_NAME_MAP,
+      )
+        .map((item) => `\`${item}\``)
+        .join(', ')}`,
+      choices: Object.keys(CSS_STRATEGY_NAME_MAP),
+      env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
+    }),
   };
 
   async run(): Promise<void> {
@@ -100,6 +109,7 @@ type InitOptions = {
   path?: string;
   template?: string;
   language?: Language;
+  styling?: keyof typeof CSS_STRATEGY_NAME_MAP;
   token?: string;
   force?: boolean;
   installDeps?: boolean;
@@ -353,6 +363,7 @@ async function setupLocalStarterTemplate(
   const {setupCss, cssStrategy} = await handleCssStrategy(
     project.directory,
     controller,
+    options.styling,
   );
 
   backgroundWorkPromise = backgroundWorkPromise.then(() =>
@@ -678,16 +689,19 @@ async function handleLanguage(
 async function handleCssStrategy(
   projectDir: string,
   controller: AbortController,
+  styling?: keyof typeof CSS_STRATEGY_NAME_MAP,
 ) {
-  const selectedCssStrategy = await renderSelectPrompt<CssStrategy>({
-    message: `Select a styling library`,
-    choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
-      label: CSS_STRATEGY_NAME_MAP[strategy],
-      value: strategy,
-    })),
-    defaultValue: 'tailwind',
-    abortSignal: controller.signal,
-  });
+  const selectedCssStrategy =
+    styling ??
+    (await renderSelectPrompt<CssStrategy>({
+      message: `Select a styling library`,
+      choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
+        label: CSS_STRATEGY_NAME_MAP[strategy],
+        value: strategy,
+      })),
+      defaultValue: 'tailwind',
+      abortSignal: controller.signal,
+    }));
 
   return {
     cssStrategy: selectedCssStrategy,

@@ -23,10 +23,10 @@ import {
 } from '../../../lib/setups/css/index.js';
 
 export const CSS_STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
-  postcss: 'CSS (with PostCSS)',
   tailwind: 'Tailwind CSS',
   'css-modules': 'CSS Modules',
   'vanilla-extract': 'Vanilla Extract',
+  postcss: 'CSS (with PostCSS)',
 };
 
 export default class SetupCSS extends Command {
