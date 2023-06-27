@@ -55,7 +55,11 @@ import {
 } from './../../lib/setups/css/index.js';
 import {createPlatformShortcut} from './shortcut.js';
 import {CSS_STRATEGY_NAME_MAP} from './setup/css-unstable.js';
-import {I18nStrategy, setupI18nStrategy} from '../../lib/setups/i18n/index.js';
+import {
+  I18nStrategy,
+  setupI18nStrategy,
+  SETUP_I18N_STRATEGIES,
+} from '../../lib/setups/i18n/index.js';
 import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
 import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
@@ -67,6 +71,11 @@ const LANGUAGES = {
   ts: 'TypeScript',
 } as const;
 type Language = keyof typeof LANGUAGES;
+
+type StylingChoice = (typeof SETUP_CSS_STRATEGIES)[number];
+
+type I18nChoice = I18nStrategy | 'none';
+const I18N_CHOICES = [...SETUP_I18N_STRATEGIES, 'none'] as const;
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
@@ -93,27 +102,29 @@ export default class Init extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
     }),
     styling: Flags.string({
-      description: `Sets the styling strategy to use. One of ${Object.keys(
-        CSS_STRATEGY_NAME_MAP,
-      )
-        .map((item) => `\`${item}\``)
-        .join(', ')}.`,
-      choices: Object.keys(CSS_STRATEGY_NAME_MAP),
+      description: `Sets the styling strategy to use. One of ${SETUP_CSS_STRATEGIES.map(
+        (item) => `\`${item}\``,
+      ).join(', ')}.`,
+      choices: SETUP_CSS_STRATEGIES,
       env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
     }),
     i18n: Flags.string({
-      description: `Sets the internationalization strategy to use. One of ${Object.keys(
-        I18N_STRATEGY_NAME_MAP,
-      )
-        .map((item) => `\`${item}\``)
-        .join(', ')}.`,
-      choices: Object.keys(I18N_STRATEGY_NAME_MAP),
+      description: `Sets the internationalization strategy to use. One of ${I18N_CHOICES.map(
+        (item) => `\`${item}\``,
+      ).join(', ')}.`,
+      choices: I18N_CHOICES,
       env: 'SHOPIFY_HYDROGEN_FLAG_I18N',
     }),
     routes: Flags.boolean({
       description: 'Generate routes for all pages.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
+      allowNo: true,
       hidden: true,
+    }),
+    shortcut: Flags.boolean({
+      description: 'Create a shortcut to the Shopify Hydrogen CLI.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_SHORTCUT',
+      allowNo: true,
     }),
   };
 
@@ -129,11 +140,12 @@ type InitOptions = {
   template?: string;
   language?: Language;
   mockShop?: boolean;
-  styling?: keyof typeof CSS_STRATEGY_NAME_MAP;
-  i18n?: keyof typeof I18N_STRATEGY_NAME_MAP;
+  styling?: StylingChoice;
+  i18n?: I18nChoice;
   token?: string;
   force?: boolean;
   routes?: boolean;
+  shortcut?: boolean;
   installDeps?: boolean;
 };
 
@@ -428,7 +440,7 @@ async function setupLocalStarterTemplate(
   }
 
   const continueWithSetup =
-    Boolean(options.i18n || options.routes) ||
+    (options.i18n ?? options.routes) !== undefined ||
     (await renderConfirmationPrompt({
       message: 'Scaffold boilerplate for internationalization and routes',
       confirmationMessage: 'Yes, set up now',
@@ -473,7 +485,7 @@ async function setupLocalStarterTemplate(
     createInitialCommit(project.directory),
   );
 
-  const createShortcut = await handleCliAlias(controller);
+  const createShortcut = await handleCliAlias(controller, options.shortcut);
   if (createShortcut) {
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
       setupSummary.hasCreatedShortcut = await createShortcut();
@@ -490,13 +502,10 @@ const i18nStrategies = {
   none: 'No internationalization',
 };
 
-async function handleI18n(
-  controller: AbortController,
-  flagI18n?: keyof typeof i18nStrategies,
-) {
+async function handleI18n(controller: AbortController, flagI18n?: I18nChoice) {
   let selection =
     flagI18n ??
-    (await renderSelectPrompt<keyof typeof i18nStrategies>({
+    (await renderSelectPrompt<I18nChoice>({
       message: 'Select an internationalization strategy',
       choices: Object.entries(i18nStrategies).map(([value, label]) => ({
         value: value as I18nStrategy,
@@ -562,25 +571,30 @@ async function handleRouteGeneration(
  * Prompts the user to create a global alias (h2) for the Hydrogen CLI.
  * @returns A function that creates the shortcut, or undefined if the user chose not to create a shortcut.
  */
-async function handleCliAlias(controller: AbortController) {
+async function handleCliAlias(
+  controller: AbortController,
+  flagShortcut?: boolean,
+) {
   const packageManager = await packageManagerUsedForCreating();
   const cliCommand = await getCliCommand(
     '',
     packageManager === 'unknown' ? 'npm' : packageManager,
   );
 
-  const shouldCreateShortcut = await renderConfirmationPrompt({
-    confirmationMessage: 'Yes',
-    cancellationMessage: 'No',
-    message: [
-      'Create a global',
-      {command: ALIAS_NAME},
-      'alias to run commands instead of',
-      {command: cliCommand},
-      '?',
-    ],
-    abortSignal: controller.signal,
-  });
+  const shouldCreateShortcut =
+    flagShortcut ??
+    (await renderConfirmationPrompt({
+      confirmationMessage: 'Yes',
+      cancellationMessage: 'No',
+      message: [
+        'Create a global',
+        {command: ALIAS_NAME},
+        'alias to run commands instead of',
+        {command: cliCommand},
+        '?',
+      ],
+      abortSignal: controller.signal,
+    }));
 
   if (!shouldCreateShortcut) return;
 
@@ -733,10 +747,10 @@ async function handleLanguage(
 async function handleCssStrategy(
   projectDir: string,
   controller: AbortController,
-  styling?: keyof typeof CSS_STRATEGY_NAME_MAP,
+  flagStyling?: StylingChoice,
 ) {
   const selectedCssStrategy =
-    styling ??
+    flagStyling ??
     (await renderSelectPrompt<CssStrategy>({
       message: `Select a styling library`,
       choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
