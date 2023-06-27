@@ -1,14 +1,10 @@
 import {Await, useMatches} from '@remix-run/react';
-import {Suspense} from 'react';
 import invariant from 'tiny-invariant';
 import {json, type ActionArgs} from '@shopify/remix-oxygen';
-import {
-  CartForm__unstable as CartForm,
-  type CartQueryData,
-} from '@shopify/hydrogen';
+import {CartForm, type CartQueryData} from '@shopify/hydrogen';
 
 import {isLocalPath} from '~/lib/utils';
-import {CartLoading, Cart} from '~/components';
+import {Cart} from '~/components';
 
 export async function action({request, context}: ActionArgs) {
   const {session, cart} = context;
@@ -87,11 +83,9 @@ export default function CartRoute() {
   // @todo: finish on a separate PR
   return (
     <div className="grid w-full gap-8 p-6 py-8 md:p-8 lg:p-12 justify-items-start">
-      <Suspense fallback={<CartLoading />}>
-        <Await resolve={root.data?.cart}>
-          {(cart) => <Cart layout="page" cart={cart} />}
-        </Await>
-      </Suspense>
+      <Await resolve={root.data?.cart}>
+        {(cart) => <Cart layout="page" cart={cart} />}
+      </Await>
     </div>
   );
 }

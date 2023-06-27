@@ -1,12 +1,7 @@
 import clsx from 'clsx';
 import {useRef} from 'react';
 import {useScroll} from 'react-use';
-import {
-  flattenConnection,
-  CartForm__unstable as CartForm,
-  Image,
-  Money,
-} from '@shopify/hydrogen';
+import {flattenConnection, CartForm, Image, Money} from '@shopify/hydrogen';
 import type {
   Cart as CartType,
   CartCost,

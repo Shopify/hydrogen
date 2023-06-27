@@ -3,7 +3,7 @@ import {useCallback, useEffect, useRef} from 'react';
 import {useInView} from 'react-intersection-observer';
 import clsx from 'clsx';
 import type {CartBuyerIdentityInput} from '@shopify/hydrogen/storefront-api-types';
-import {CartForm__unstable as CartForm} from '@shopify/hydrogen';
+import {CartForm} from '@shopify/hydrogen';
 
 import {Heading, Button, IconCheck} from '~/components';
 import type {Localizations, Locale} from '~/lib/type';

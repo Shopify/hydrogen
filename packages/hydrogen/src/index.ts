@@ -19,10 +19,7 @@ export {
   getPaginationVariables as getPaginationVariables__unstable,
 } from './pagination/Pagination';
 
-export {
-  CartForm as CartForm__unstable,
-  type CartActionInput,
-} from './cart/CartForm';
+export {CartForm, type CartActionInput} from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
 export {cartGetDefault} from './cart/queries/cartGetDefault';
 export {cartLinesAddDefault} from './cart/queries/cartLinesAddDefault';
@@ -40,7 +37,7 @@ export {cartSetIdDefault} from './cart/cartSetIdDefault';
 export {
   type HydrogenCartCustom,
   type HydrogenCart,
-  createCartHandler as createCartHandler__unstable,
+  createCartHandler,
 } from './cart/createCartHandler';
 export type {
   MetafieldWithoutOwnerId,

@@ -1,5 +1,5 @@
 import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
-import {CartForm__unstable as CartForm} from '@shopify/hydrogen';
+import {CartForm} from '@shopify/hydrogen';
 import type {FetcherWithComponents} from '@remix-run/react';
 
 import {Button} from '~/components';
