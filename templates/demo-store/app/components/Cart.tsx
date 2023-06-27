@@ -77,10 +77,10 @@ function CartDiscounts({
 }: {
   discountCodes: CartType['discountCodes'];
 }) {
-  const applicableDiscounts = discountCodes?.filter(
-    (discount) => discount.applicable,
-  );
-  const codes: string[] = applicableDiscounts.map(({code}) => code);
+  const codes: string[] =
+    discountCodes
+      ?.filter((discount) => discount.applicable)
+      ?.map(({code}) => code) || [];
 
   return (
     <>
