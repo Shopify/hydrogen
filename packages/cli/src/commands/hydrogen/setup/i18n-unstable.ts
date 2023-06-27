@@ -15,7 +15,7 @@ import {
 } from '../../../lib/setups/i18n/index.js';
 
 export const I18N_STRATEGY_NAME_MAP: Record<I18nStrategy, string> = {
-  pathname: 'Pathname (example.com/fr-ca/...)',
+  subfolders: 'Subfolders (example.com/fr-ca/...)',
   subdomains: 'Subdomains (de.example.com/...)',
   domains: 'Top-level Domains (example.jp/...)',
 };

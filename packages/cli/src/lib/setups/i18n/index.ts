@@ -4,7 +4,7 @@ import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
 import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
 
 export const SETUP_I18N_STRATEGIES = [
-  'pathname',
+  'subfolders',
   'domains',
   'subdomains',
 ] as const;

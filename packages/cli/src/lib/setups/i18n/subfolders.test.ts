@@ -1,7 +1,7 @@
 import {describe, it, expect} from 'vitest';
-import {getLocaleFromRequest} from './templates/pathname.js';
+import {getLocaleFromRequest} from './templates/subfolders.js';
 
-describe('Setup i18n with pathname', () => {
+describe('Setup i18n with subfolders', () => {
   it('extracts the locale from the pathname', () => {
     expect(
       getLocaleFromRequest(new Request('https://example.com')),

@@ -579,7 +579,7 @@ async function handleRouteGeneration(
           directory,
           force: true,
           typescript: language === 'ts',
-          localePrefix: i18nStrategy === 'pathname' ? 'locale' : false,
+          localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
           signal: controller.signal,
         });
       }
