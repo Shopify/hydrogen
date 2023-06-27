@@ -392,13 +392,12 @@ async function setupLocalStarterTemplate(
     });
   }
 
-  const continueWithSetup = false;
-  // await renderConfirmationPrompt({
-  //   message: 'Scaffold boilerplate for internationalization and routes',
-  //   confirmationMessage: 'Yes, set up now',
-  //   cancellationMessage: 'No, set up later',
-  //   abortSignal: controller.signal,
-  // });
+  const continueWithSetup = await renderConfirmationPrompt({
+    message: 'Scaffold boilerplate for internationalization and routes',
+    confirmationMessage: 'Yes, set up now',
+    cancellationMessage: 'No, set up later',
+    abortSignal: controller.signal,
+  });
 
   if (continueWithSetup) {
     const {i18nStrategy, setupI18n} = await handleI18n(controller);
