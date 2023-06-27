@@ -110,6 +110,11 @@ export default class Init extends Command {
       choices: Object.keys(I18N_STRATEGY_NAME_MAP),
       env: 'SHOPIFY_HYDROGEN_FLAG_I18N',
     }),
+    routes: Flags.boolean({
+      description: 'Generate routes for all pages.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
+      hidden: true,
+    }),
   };
 
   async run(): Promise<void> {
@@ -128,6 +133,7 @@ type InitOptions = {
   i18n?: keyof typeof I18N_STRATEGY_NAME_MAP;
   token?: string;
   force?: boolean;
+  routes?: boolean;
   installDeps?: boolean;
 };
 
@@ -422,7 +428,7 @@ async function setupLocalStarterTemplate(
   }
 
   const continueWithSetup =
-    options.i18n ??
+    Boolean(options.i18n || options.routes) ||
     (await renderConfirmationPrompt({
       message: 'Scaffold boilerplate for internationalization and routes',
       confirmationMessage: 'Yes, set up now',
@@ -442,7 +448,11 @@ async function setupLocalStarterTemplate(
       },
     );
 
-    const {routes, setupRoutes} = await handleRouteGeneration(controller);
+    const {routes, setupRoutes} = await handleRouteGeneration(
+      controller,
+      options.routes,
+    );
+
     const routesPromise = setupRoutes(
       project.directory,
       language,
@@ -510,15 +520,20 @@ async function handleI18n(
   };
 }
 
-async function handleRouteGeneration(controller: AbortController) {
+async function handleRouteGeneration(
+  controller: AbortController,
+  flagRoutes?: boolean,
+) {
   // TODO: Need a multi-select UI component
-  const shouldScaffoldAllRoutes = await renderConfirmationPrompt({
-    message:
-      'Scaffold all standard route files? ' + ALL_ROUTES_NAMES.join(', '),
-    confirmationMessage: 'Yes',
-    cancellationMessage: 'No',
-    abortSignal: controller.signal,
-  });
+  const shouldScaffoldAllRoutes =
+    flagRoutes ??
+    (await renderConfirmationPrompt({
+      message:
+        'Scaffold all standard route files? ' + ALL_ROUTES_NAMES.join(', '),
+      confirmationMessage: 'Yes',
+      cancellationMessage: 'No',
+      abortSignal: controller.signal,
+    }));
 
   const routes = shouldScaffoldAllRoutes ? ALL_ROUTES_NAMES : [];
 
