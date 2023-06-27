@@ -34,7 +34,7 @@ import {
 } from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
-import {hyphenate} from '@shopify/cli-kit/common/string';
+import {capitalize, hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
 import {
   commonFlags,
@@ -61,7 +61,7 @@ import {
   SETUP_I18N_STRATEGIES,
 } from '../../lib/setups/i18n/index.js';
 import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
-import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
+import {ROUTE_MAP, runGenerate} from './generate/route.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';
 
@@ -538,13 +538,14 @@ async function handleRouteGeneration(
     flagRoutes ??
     (await renderConfirmationPrompt({
       message:
-        'Scaffold all standard route files? ' + ALL_ROUTES_NAMES.join(', '),
+        'Scaffold all standard route files? ' +
+        Object.keys(ROUTE_MAP).join(', '),
       confirmationMessage: 'Yes',
       cancellationMessage: 'No',
       abortSignal: controller.signal,
     }));
 
-  const routes = shouldScaffoldAllRoutes ? ALL_ROUTES_NAMES : [];
+  const routes = shouldScaffoldAllRoutes ? ROUTE_MAP : {};
 
   return {
     routes,
@@ -863,7 +864,7 @@ type SetupSummary = {
   depsError?: Error;
   i18n?: I18nStrategy;
   i18nError?: Error;
-  routes?: string[];
+  routes?: Record<string, string | string[]>;
   routesError?: Error;
 };
 
@@ -896,21 +897,27 @@ async function renderProjectReady(
   }
 
   if (!i18nError && i18n) {
-    bodyLines.push([
-      'i18n strategy',
-      I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!,
-    ]);
+    bodyLines.push(['i18n', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
   }
 
-  if (!routesError && routes?.length) {
-    bodyLines.push([
-      'Routes',
-      `Scaffolded ${routes.length} route${routes.length > 1 ? 's' : ''}`,
-    ]);
+  let routeSummary = '';
+
+  if (!routesError && routes && Object.keys(routes).length) {
+    bodyLines.push(['Routes', '']);
+
+    for (let [routeName, routePaths] of Object.entries(routes)) {
+      routePaths = Array.isArray(routePaths) ? routePaths : [routePaths];
+
+      routeSummary += `\n    • ${capitalize(routeName)} ${colors.dim(
+        '(' +
+          routePaths.map((item) => '/' + normalizeRoutePath(item)).join(' & ') +
+          ')',
+      )}`;
+    }
   }
 
   const padMin =
-    2 + bodyLines.reduce((max, [label]) => Math.max(max, label.length), 0);
+    8 + bodyLines.reduce((max, [label]) => Math.max(max, label.length), 0);
 
   const cliCommand = hasCreatedShortcut
     ? ALIAS_NAME
@@ -923,14 +930,15 @@ async function renderProjectReady(
       `Storefront setup complete` +
       (hasErrors ? ' with errors (see warnings below).' : '!'),
 
-    body: bodyLines
-      .map(
-        ([label, value]) =>
-          `  ${label.padEnd(padMin, ' ')}${colors.dim(':')}  ${colors.dim(
-            value,
-          )}`,
-      )
-      .join('\n'),
+    body:
+      bodyLines
+        .map(
+          ([label, value]) =>
+            `  ${label.padEnd(padMin, ' ')}${colors.dim(':')}  ${colors.dim(
+              value,
+            )}`,
+        )
+        .join('\n') + routeSummary,
 
     // Use `customSections` instead of `nextSteps` and `references`
     // here to enforce a newline between title and items.
@@ -1080,4 +1088,14 @@ async function projectExists(projectDir: string) {
     (await isDirectory(projectDir)) &&
     (await readdir(projectDir)).length > 0
   );
+}
+
+function normalizeRoutePath(routePath: string) {
+  const isIndex = /(^|\/)index$/.test(routePath);
+  return isIndex
+    ? routePath.slice(0, -'index'.length).replace(/\/$/, '')
+    : routePath
+        .replace(/\$/g, ':')
+        .replace(/[\[\]]/g, '')
+        .replace(/:(\w+)Handle/i, ':handle');
 }
