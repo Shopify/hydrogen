@@ -57,7 +57,7 @@ export type CustomMethodsBase = Record<string, Function>;
 export type CartHandlerOptionsWithCustom<
   TCustomMethods extends CustomMethodsBase,
 > = CartHandlerOptions & {
-  customMethods?: TCustomMethods;
+  customMethods__unstable?: TCustomMethods;
 };
 
 export type HydrogenCart = {
@@ -167,10 +167,10 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     deleteMetafield: cartMetafieldDeleteDefault(mutateOptions),
   };
 
-  if ('customMethods' in options) {
+  if ('customMethods__unstable' in options) {
     return {
       ...methods,
-      ...(options.customMethods ?? {}),
+      ...(options.customMethods__unstable ?? {}),
     };
   } else {
     return methods;

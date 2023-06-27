@@ -5,7 +5,6 @@
 import type {WithCache, HydrogenCart} from '@shopify/hydrogen';
 import type {Storefront} from '~/lib/type';
 import type {HydrogenSession} from '~/lib/session.server';
-import {CartCustomMethods} from './server';
 
 declare global {
   /**

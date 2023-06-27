@@ -7,7 +7,7 @@ import {
 import {
   cartGetIdDefault,
   cartSetIdDefault,
-  createCartHandler__unstable as createCartHandler,
+  createCartHandler,
   createStorefrontClient,
   storefrontRedirect,
 } from '@shopify/hydrogen';

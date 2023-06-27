@@ -1,5 +1,5 @@
 import {useFetchers} from '@remix-run/react';
-import {CartForm__unstable as CartForm} from '@shopify/hydrogen';
+import {CartForm} from '@shopify/hydrogen';
 
 export function useCartFetchers(actionName: string) {
   const fetchers = useFetchers();
