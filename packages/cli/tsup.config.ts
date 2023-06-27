@@ -1,5 +1,6 @@
 import {defineConfig} from 'tsup';
 import fs from 'fs-extra';
+import path from 'path';
 import {
   GENERATOR_TEMPLATES_DIR,
   GENERATOR_SETUP_ASSETS_DIR,
@@ -25,6 +26,14 @@ export default defineConfig([
     ...commonConfig,
     entry: ['src/**/*.ts'],
     outDir,
+    async onSuccess() {
+      // Copy TS templates
+      const i18nTemplatesPath = 'lib/setups/i18n/templates';
+      await fs.copy(
+        path.join('src', i18nTemplatesPath),
+        path.join(outDir, i18nTemplatesPath),
+      );
+    },
   },
   {
     ...commonConfig,

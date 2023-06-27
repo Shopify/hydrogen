@@ -8,22 +8,18 @@ import type {SetupConfig} from './index.js';
 
 const astGrep = {ts, tsx, js, jsx};
 
-export const i18nTypeName = 'I18nLocale';
-
 /**
  * Adds the `getLocaleFromRequest` function to the server entrypoint and calls it.
  */
 export async function replaceServerI18n(
   {rootDirectory, serverEntryPoint = 'server'}: SetupConfig,
   formatConfig: FormatOptions,
-  localeExtractImplementation: (isTs: boolean, typeName: string) => string,
+  localeExtractImplementation: string,
 ) {
   const {filepath, astType} = await findEntryFile({
     rootDirectory,
     serverEntryPoint,
   });
-
-  const isTs = astType === 'ts' || astType === 'tsx';
 
   await replaceFileContent(filepath, formatConfig, async (content) => {
     const root = astGrep[astType].parse(content).root();
@@ -53,8 +49,15 @@ export async function replaceServerI18n(
     });
 
     const requestIdentifierName = requestIdentifier?.text() ?? 'request';
-    const i18nFunctionName = 'getLocaleFromRequest';
-    const i18nFunctionCall = `${i18nFunctionName}(${requestIdentifierName}.url)`;
+    const i18nFunctionName = localeExtractImplementation.match(
+      /^(export )?function (\w+)/m,
+    )?.[2];
+
+    if (!i18nFunctionName) {
+      throw new Error('Could not find the i18n function name');
+    }
+
+    const i18nFunctionCall = `${i18nFunctionName}(${requestIdentifierName})`;
 
     const hydrogenImportPath = '@shopify/hydrogen';
     const hydrogenImportName = 'createStorefrontClient';
@@ -148,7 +151,16 @@ export async function replaceServerI18n(
         content.slice(end.index - 1);
     }
 
-    if (isTs) {
+    const importTypes = localeExtractImplementation.match(
+      /import\s+type\s+[^;]+?;/,
+    )?.[0];
+
+    if (importTypes) {
+      localeExtractImplementation = localeExtractImplementation.replace(
+        importTypes,
+        '',
+      );
+
       const lastImportNode = root
         .findAll({rule: {kind: 'import_statement'}})
         .pop();
@@ -157,18 +169,17 @@ export async function replaceServerI18n(
         const lastImportContent = lastImportNode.text();
         content = content.replace(
           lastImportContent,
-          lastImportContent +
-            `\nimport type {LanguageCode, CountryCode} from '@shopify/hydrogen/storefront-api-types';`,
+          lastImportContent + '\n' + importTypes,
         );
       }
     }
 
-    const localeExtractorFn = localeExtractImplementation(
-      isTs,
-      i18nTypeName,
-    ).replace(/function \w+\(/, `function ${i18nFunctionName}(`);
-
-    return content + `\n\n${localeExtractorFn}\n`;
+    return (
+      content +
+      `\n\n${localeExtractImplementation
+        .replace(/^export function/m, 'function')
+        .replace(/^export {.*?;/m, '')}\n`
+    );
   });
 }
 
@@ -178,11 +189,21 @@ export async function replaceServerI18n(
 export async function replaceRemixEnv(
   {rootDirectory, serverEntryPoint}: SetupConfig,
   formatConfig: FormatOptions,
+  localeExtractImplementation: string,
 ) {
   const remixEnvPath = joinPath(rootDirectory, 'remix.env.d.ts');
 
   if (!(await fileExists(remixEnvPath))) {
     return; // Skip silently
+  }
+
+  const i18nTypeName =
+    localeExtractImplementation.match(/export type (\w+)/)?.[1];
+
+  if (!i18nTypeName) {
+    // JavaScript project
+    return; // Skip silently
+    // TODO: support d.ts files in JS
   }
 
   const {filepath: entryFilepath} = await findEntryFile({

@@ -1,6 +1,7 @@
-import {setupI18nPathname} from './pathname.js';
-import {setupI18nSubdomains} from './subdomains.js';
-import {setupI18nDomains} from './domains.js';
+import {fileURLToPath} from 'node:url';
+import {getCodeFormatOptions} from '../../format-code.js';
+import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
+import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
 
 export const SETUP_I18N_STRATEGIES = [
   'pathname',
@@ -13,20 +14,26 @@ export type I18nStrategy = (typeof SETUP_I18N_STRATEGIES)[number];
 export type SetupConfig = {
   rootDirectory: string;
   serverEntryPoint?: string;
+  tsconfigPath?: string;
 };
 
-export function setupI18nStrategy(
+export async function setupI18nStrategy(
   strategy: I18nStrategy,
   options: SetupConfig,
 ) {
-  switch (strategy) {
-    case 'pathname':
-      return setupI18nPathname(options);
-    case 'domains':
-      return setupI18nDomains(options);
-    case 'subdomains':
-      return setupI18nSubdomains(options);
-    default:
-      throw new Error('Unknown strategy');
+  const isTs = !!options.tsconfigPath;
+
+  const templatePath = fileURLToPath(
+    new URL(`./templates/${strategy}${isTs ? '.ts' : '.js'}`, import.meta.url),
+  );
+
+  if (!(await fileExists(templatePath))) {
+    throw new Error('Unknown strategy');
   }
+
+  const template = await readFile(templatePath);
+  const formatConfig = await getCodeFormatOptions(options.rootDirectory);
+
+  await replaceServerI18n(options, formatConfig, template);
+  await replaceRemixEnv(options, formatConfig, template);
 }

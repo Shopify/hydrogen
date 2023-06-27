@@ -69,10 +69,7 @@ export async function runSetupI18n({
 
   const remixConfig = await getRemixConfig(directory);
 
-  const setupOutput = await setupI18nStrategy(strategy, remixConfig);
-  if (!setupOutput) return;
-
-  const {workPromise} = setupOutput;
+  const workPromise = setupI18nStrategy(strategy, remixConfig);
 
   await renderTasks([
     {
