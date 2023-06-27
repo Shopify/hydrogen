@@ -206,7 +206,7 @@ export type CartHandlerOptionsForDocs<
    * Define custom methods or override existing methods for your cart API instance.
    * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) in the documentation.
    */
-  customMethods?: TCustomMethods;
+  customMethods__unstable?: TCustomMethods;
 };
 
 export type HydrogenCartForDocs = {

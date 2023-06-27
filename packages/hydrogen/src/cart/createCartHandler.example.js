@@ -1,6 +1,6 @@
 import {
   createStorefrontClient,
-  createCartHandler__unstable as createCartHandler,
+  createCartHandler,
   cartGetIdDefault,
   cartSetIdDefault,
 } from '@shopify/hydrogen';

@@ -1,6 +1,6 @@
 import {useFetcher} from '@remix-run/react';
 import {json} from '@remix-run/server-runtime';
-import {CartForm__unstable as CartForm} from '@shopify/hydrogen';
+import {CartForm} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
 export function ThisIsGift({metafield}) {

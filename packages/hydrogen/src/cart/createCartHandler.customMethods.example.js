@@ -1,5 +1,5 @@
 import {
-  createCartHandler__unstable as createCartHandler,
+  createCartHandler,
   cartGetIdDefault,
   cartSetIdDefault,
   cartLinesAddDefault,
@@ -15,7 +15,7 @@ const cart = createCartHandler({
   storefront,
   getCartId: cartGetIdDefault(request.headers),
   setCartId: cartSetIdDefault(),
-  customMethods: {
+  customMethods__unstable: {
     editInLine: async (addLines, removeLineIds, optionalParams) => {
       // Using Hydrogen default cart query methods
       await cartLinesAddDefault(cartQueryOptions)(addLines, optionalParams);
