@@ -252,10 +252,7 @@ CartForm.ACTIONS = {
 
 function getFormInput(formData: FormData): CartActionInput {
   // Get all form data
-  const data: Record<string, unknown> = {};
-  for (const pair of formData.entries()) {
-    data[pair[0]] = pair[1];
-  }
+  const data: Record<string, unknown> = Object.fromEntries(formData.entries());
 
   // Parse cartFormInput
   const {cartFormInput, ...otherData} = data;
