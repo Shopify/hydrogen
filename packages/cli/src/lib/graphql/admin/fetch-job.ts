@@ -1,5 +1,4 @@
-import {adminRequest} from '../../graphql.js';
-import {getAdminSession} from '../../admin-session.js';
+import {adminRequest, type AdminSession} from './client.js';
 
 export const FetchJobQuery = `#graphql
   query FetchJob($id: ID!) {
@@ -27,9 +26,7 @@ export interface JobSchema {
   };
 }
 
-export async function fetchJob(shop: string, jobId: string) {
-  const adminSession = await getAdminSession(shop);
-
+export async function fetchJob(adminSession: AdminSession, jobId: string) {
   const {hydrogenStorefrontJob} = await adminRequest<JobSchema>(
     FetchJobQuery,
     adminSession,
@@ -46,10 +43,10 @@ export async function fetchJob(shop: string, jobId: string) {
   };
 }
 
-export function waitForJob(shop: string, jobId: string) {
+export function waitForJob(adminSession: AdminSession, jobId: string) {
   return new Promise<void>((resolve, reject) => {
     const interval = setInterval(async () => {
-      const job = await fetchJob(shop, jobId);
+      const job = await fetchJob(adminSession, jobId);
 
       if (job.errors.length > 0) {
         clearInterval(interval);
