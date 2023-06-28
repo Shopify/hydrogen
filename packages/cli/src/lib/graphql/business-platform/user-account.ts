@@ -1,8 +1,10 @@
 import {businessPlatformRequest} from '@shopify/cli-kit/node/api/business-platform';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 const CurrentUserAccountQuery = `#graphql
   query currentUserAccount {
     currentUserAccount {
+      email
       organizations(first: 100) {
         edges {
           node {
@@ -71,6 +73,7 @@ type NodeCollection<T, U = {}> = U & {
 };
 
 interface CurrentUserAccount {
+  email: string;
   organizations: NodeCollection<
     {
       id: string;
@@ -92,25 +95,32 @@ export interface UserAccountSchema {
   currentUserAccount: CurrentUserAccount | null;
 }
 
-export async function getActiveShops(token: string) {
+export async function getUserAccount(token: string) {
   const {currentUserAccount} = await businessPlatformRequest<UserAccountSchema>(
     CurrentUserAccountQuery,
     token,
   );
 
-  return [
-    ...(currentUserAccount?.organizations?.edges?.flatMap((edge) =>
-      edge.node?.categories.flatMap((category) =>
-        category?.destinations?.edges?.map((edge) => edge.node),
-      ),
-    ) ?? []),
-    ...(currentUserAccount?.orphanDestinations?.categories?.flatMap(
-      (category) => category.destinations?.edges?.map((edge) => edge.node),
-    ) ?? []),
-  ]
-    .filter(({status}) => status === 'ACTIVE')
-    .map(({name, webUrl}) => ({
-      name,
-      fqdn: webUrl.replace(/^https?:\/\//, '').replace(/\/admin$/, ''),
-    }));
+  if (!currentUserAccount) {
+    throw new AbortError('Unable to get current user account');
+  }
+
+  return {
+    email: currentUserAccount.email,
+    activeShops: [
+      ...(currentUserAccount.organizations?.edges?.flatMap((edge) =>
+        edge.node?.categories.flatMap((category) =>
+          category?.destinations?.edges?.map((edge) => edge.node),
+        ),
+      ) ?? []),
+      ...(currentUserAccount.orphanDestinations?.categories?.flatMap(
+        (category) => category.destinations?.edges?.map((edge) => edge.node),
+      ) ?? []),
+    ]
+      .filter(({status}) => status === 'ACTIVE')
+      .map(({name, webUrl}) => ({
+        name,
+        fqdn: webUrl.replace(/^https?:\/\//, '').replace(/\/admin$/, ''),
+      })),
+  };
 }
