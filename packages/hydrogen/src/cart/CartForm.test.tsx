@@ -1,6 +1,15 @@
-import {describe, expect, it, vi} from 'vitest';
+import {describe, expect, expectTypeOf, it, vi} from 'vitest';
 import {render} from '@testing-library/react';
 import {CartForm} from './CartForm';
+import {
+  AttributeInput,
+  CartBuyerIdentityInput,
+  CartInput,
+  CartLineInput,
+  CartLineUpdateInput,
+  CartSelectedDeliveryOptionInput,
+  Scalars,
+} from '@shopify/hydrogen-react/storefront-api-types';
 
 function MockForm({
   children,
@@ -41,6 +50,7 @@ describe('<CartForm />', () => {
     expect(getRenderFormInput(container)).toBe(
       '{"action":"LinesAdd","inputs":{"lines":[]}}',
     );
+    expect(container.querySelector('button')).toBeTruthy();
   });
 
   it('renders a form with render prop', () => {
@@ -168,5 +178,49 @@ describe('getFormInput', () => {
         test: 'test2',
       },
     });
+  });
+
+  it('combines prop inputs with form inputs', () => {
+    const formData = mockFormData({
+      action: 'NoteUpdate',
+    });
+    formData.append('note', 'test');
+    const result = CartForm.getFormInput(formData);
+
+    expect(result).toEqual({
+      action: 'NoteUpdate',
+      inputs: {
+        note: 'test',
+      },
+    });
+  });
+
+  it('recognize LinesAdd action with lines inputs with the correct type', () => {
+    const formData = mockFormData({
+      action: 'LinesAdd',
+      inputs: {
+        lines: [
+          {
+            quantity: 1,
+            merchandiseId: '1',
+          },
+        ],
+      },
+    });
+
+    const result = CartForm.getFormInput(formData);
+
+    expect(result).toEqual({
+      action: 'LinesAdd',
+      inputs: {
+        lines: [
+          {
+            quantity: 1,
+            merchandiseId: '1',
+          },
+        ],
+      },
+    });
+    expectTypeOf(result.inputs.lines).toEqualTypeOf<CartLineInput[]>;
   });
 });

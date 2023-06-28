@@ -118,7 +118,8 @@ export type CartActionInput =
   | CartMetafieldDeleteProps
   | CartCustomProps;
 
-type CartFormProps = CartActionInput & CartFormCommonProps;
+type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+type CartFormProps = PartialBy<CartActionInput & CartFormCommonProps, 'inputs'>;
 
 const INPUT_NAME = 'cartFormInput';
 
@@ -160,7 +161,7 @@ CartForm.ACTIONS = {
 
 function getFormInput(formData: FormData): CartActionInput {
   // Get all form data
-  const data: Record<string, any> = {};
+  const data: Record<string, unknown> = {};
   for (const pair of formData.entries()) {
     data[pair[0]] = pair[1];
   }
