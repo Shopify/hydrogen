@@ -5,10 +5,7 @@ const data: ReferenceEntityTemplateSchema = {
   category: 'utilities',
   isVisualComponent: false,
   related: [],
-  description: `> Caution:
-> This component is in an unstable pre-release state and may have breaking changes in a future release.
-
-Creates an API that can be used to interact with the cart.`,
+  description: 'Creates an API that can be used to interact with the cart.',
   type: 'utility',
   defaultExample: {
     description: 'This is the default example',

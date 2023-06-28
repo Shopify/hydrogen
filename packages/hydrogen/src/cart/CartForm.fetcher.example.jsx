@@ -11,7 +11,7 @@ export function ThisIsGift({metafield}) {
     inputs: {
       metafields: [
         {
-          key: 'public.gift',
+          key: 'custom.gift',
           type: 'boolean',
           value: event.target.checked.toString(),
         },

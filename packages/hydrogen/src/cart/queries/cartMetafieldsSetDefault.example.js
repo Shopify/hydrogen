@@ -7,7 +7,7 @@ const cartSetMetafields = cartMetafieldsSetDefault({
 
 const result = await cartSetMetafields([
   {
-    key: 'public.gift',
+    key: 'custom.gift',
     type: 'boolean',
     value: 'true',
   },

@@ -17,12 +17,24 @@ type OtherFormData = {
 
 type CartAttributesUpdateProps = {
   action: 'AttributesUpdateInput';
+  inputs?: {
+    attributes: AttributeInput[];
+  } & OtherFormData;
+};
+type CartAttributesUpdateRequire = {
+  action: 'AttributesUpdateInput';
   inputs: {
     attributes: AttributeInput[];
   } & OtherFormData;
 };
 
 type CartBuyerIdentityUpdateProps = {
+  action: 'BuyerIdentityUpdate';
+  inputs?: {
+    buyerIdentity: CartBuyerIdentityInput;
+  } & OtherFormData;
+};
+type CartBuyerIdentityUpdateRequire = {
   action: 'BuyerIdentityUpdate';
   inputs: {
     buyerIdentity: CartBuyerIdentityInput;
@@ -31,12 +43,24 @@ type CartBuyerIdentityUpdateProps = {
 
 type CartCreateProps = {
   action: 'Create';
+  inputs?: {
+    input: CartInput;
+  } & OtherFormData;
+};
+type CartCreateRequire = {
+  action: 'Create';
   inputs: {
     input: CartInput;
   } & OtherFormData;
 };
 
 type CartDiscountCodesUpdateProps = {
+  action: 'DiscountCodesUpdate';
+  inputs?: {
+    discountCodes: string[];
+  } & OtherFormData;
+};
+type CartDiscountCodesUpdateRequire = {
   action: 'DiscountCodesUpdate';
   inputs: {
     discountCodes: string[];
@@ -45,12 +69,24 @@ type CartDiscountCodesUpdateProps = {
 
 type CartLinesAddProps = {
   action: 'LinesAdd';
+  inputs?: {
+    lines: CartLineInput[];
+  } & OtherFormData;
+};
+type CartLinesAddRequire = {
+  action: 'LinesAdd';
   inputs: {
     lines: CartLineInput[];
   } & OtherFormData;
 };
 
 type CartLinesUpdateProps = {
+  action: 'LinesUpdate';
+  inputs?: {
+    lines: CartLineUpdateInput[];
+  } & OtherFormData;
+};
+type CartLinesUpdateRequire = {
   action: 'LinesUpdate';
   inputs: {
     lines: CartLineUpdateInput[];
@@ -59,12 +95,24 @@ type CartLinesUpdateProps = {
 
 type CartLinesRemoveProps = {
   action: 'LinesRemove';
+  inputs?: {
+    lineIds: string[];
+  } & OtherFormData;
+};
+type CartLinesRemoveRequire = {
+  action: 'LinesRemove';
   inputs: {
     lineIds: string[];
   } & OtherFormData;
 };
 
 type CartNoteUpdateProps = {
+  action: 'NoteUpdate';
+  inputs?: {
+    note: string;
+  } & OtherFormData;
+};
+type CartNoteUpdateRequire = {
   action: 'NoteUpdate';
   inputs: {
     note: string;
@@ -73,12 +121,25 @@ type CartNoteUpdateProps = {
 
 type CartSelectedDeliveryOptionsUpdateProps = {
   action: 'SelectedDeliveryOptionsUpdate';
+  inputs?: {
+    selectedDeliveryOptions: CartSelectedDeliveryOptionInput[];
+  } & OtherFormData;
+};
+
+type CartSelectedDeliveryOptionsUpdateRequire = {
+  action: 'SelectedDeliveryOptionsUpdate';
   inputs: {
     selectedDeliveryOptions: CartSelectedDeliveryOptionInput[];
   } & OtherFormData;
 };
 
 type CartMetafieldsSetProps = {
+  action: 'MetafieldsSet';
+  inputs?: {
+    metafields: MetafieldWithoutOwnerId[];
+  } & OtherFormData;
+};
+type CartMetafieldsSetRequire = {
   action: 'MetafieldsSet';
   inputs: {
     metafields: MetafieldWithoutOwnerId[];
@@ -87,6 +148,12 @@ type CartMetafieldsSetProps = {
 
 type CartMetafieldDeleteProps = {
   action: 'MetafieldsDelete';
+  inputs?: {
+    key: Scalars['String'];
+  } & OtherFormData;
+};
+type CartMetafieldDeleteRequire = {
+  action: 'MetafieldsDelete';
   inputs: {
     key: Scalars['String'];
   } & OtherFormData;
@@ -94,17 +161,28 @@ type CartMetafieldDeleteProps = {
 
 type CartCustomProps = {
   action: `Custom${string}`;
+  inputs?: Record<string, unknown>;
+};
+type CartCustomRequire = {
+  action: `Custom${string}`;
   inputs: Record<string, unknown>;
 };
 
 type CartFormCommonProps = {
+  /**
+   * Children nodes of CartForm.
+   * Children can be a render prop that receives the fetcher.
+   */
   children:
     | React.ReactNode
     | ((fetcher: FetcherWithComponents<any>) => React.ReactNode);
+  /**
+   * The route to submit the form to. Defaults to the current route.
+   */
   route?: string;
 };
 
-export type CartActionInput =
+type CartActionInputProps =
   | CartAttributesUpdateProps
   | CartBuyerIdentityUpdateProps
   | CartCreateProps
@@ -118,8 +196,21 @@ export type CartActionInput =
   | CartMetafieldDeleteProps
   | CartCustomProps;
 
-type PartialBy<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
-type CartFormProps = PartialBy<CartActionInput & CartFormCommonProps, 'inputs'>;
+export type CartActionInput =
+  | CartAttributesUpdateRequire
+  | CartBuyerIdentityUpdateRequire
+  | CartCreateRequire
+  | CartDiscountCodesUpdateRequire
+  | CartLinesAddRequire
+  | CartLinesUpdateRequire
+  | CartLinesRemoveRequire
+  | CartNoteUpdateRequire
+  | CartSelectedDeliveryOptionsUpdateRequire
+  | CartMetafieldsSetRequire
+  | CartMetafieldDeleteRequire
+  | CartCustomRequire;
+
+type CartFormProps = CartActionInputProps & CartFormCommonProps;
 
 const INPUT_NAME = 'cartFormInput';
 

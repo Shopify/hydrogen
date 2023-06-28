@@ -5,10 +5,8 @@ const data: ReferenceEntityTemplateSchema = {
   category: 'components',
   isVisualComponent: false,
   related: [],
-  description: `> Caution:
-> This component is in an unstable pre-release state and may have breaking changes in a future release.
-
-Creates a form for managing cart operations. Use \`CartActionInput\` to accept form inputs of known type.`,
+  description:
+    'Creates a form for managing cart operations. Use `CartActionInput` to accept form inputs of known type.',
   type: 'component',
   defaultExample: {
     description: 'This is the default example',
@@ -39,6 +37,30 @@ Creates a form for managing cart operations. Use \`CartActionInput\` to accept f
     description: 'Examples of various ways to use the `CartForm` component.',
     exampleGroups: [
       {
+        title: 'CartForm using HTML input tags as form inputs',
+        examples: [
+          {
+            description:
+              'Use HTML input tags with CartForm to accept form inputs.',
+            codeblock: {
+              title: 'Example',
+              tabs: [
+                {
+                  title: 'JavaScript',
+                  code: './CartForm.input-tag.example.jsx',
+                  language: 'jsx',
+                },
+                {
+                  title: 'TypeScript',
+                  code: './CartForm.input-tag.example.tsx',
+                  language: 'tsx',
+                },
+              ],
+            },
+          },
+        ],
+      },
+      {
         title: 'Custom actions',
         examples: [
           {
@@ -63,7 +85,7 @@ Creates a form for managing cart operations. Use \`CartActionInput\` to accept f
         ],
       },
       {
-        title: '`CartForm` with fetcher',
+        title: 'CartForm with fetcher',
         examples: [
           {
             description:

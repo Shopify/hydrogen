@@ -5,7 +5,7 @@ export async function action({context}) {
   const result = await cart.setMetafields(
     [
       {
-        key: 'public.gift',
+        key: 'custom.gift',
         type: 'boolean',
         value: 'true',
       },
@@ -17,7 +17,7 @@ export async function action({context}) {
   );
 
   const result2 = await cart.deleteMetafield(
-    'public.gift',
+    'custom.gift',
     // Optional parameters
     {
       cartId: '123', // override the cart id
@@ -45,7 +45,7 @@ const CART_QUERY_FRAGMENT = `#graphql
     id
     metafields(
       identifiers: [{
-        namespace: "public",
+        namespace: "custom",
         key: "gift"
       ])
     {
