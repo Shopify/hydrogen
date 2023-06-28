@@ -4,26 +4,26 @@ import {linesToColumns} from '@shopify/cli-kit/common/string';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
 import colors from '@shopify/cli-kit/node/colors';
-import {pullRemoteEnvironmentVariables} from './pull-environment-variables.js';
+import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
+import {login} from './auth.js';
 
 interface Arguments {
   envBranch?: string;
   root: string;
-  shop?: string;
+  shop: string;
 }
 export async function combinedEnvironmentVariables({
   envBranch,
   root,
   shop,
 }: Arguments) {
-  const remoteEnvironmentVariables = await pullRemoteEnvironmentVariables({
-    root,
-    flagShop: shop,
-    silent: true,
-    envBranch,
-  });
+  const {session, config} = await login(root, shop);
 
-  const formattedRemoteVariables = remoteEnvironmentVariables?.reduce(
+  const remoteVariables =
+    (await getStorefrontEnvVariables(session, config.storefront!.id, envBranch))
+      ?.environmentVariables || [];
+
+  const formattedRemoteVariables = remoteVariables?.reduce(
     (a, v) => ({...a, [v.key]: v.value}),
     {},
   );
@@ -33,9 +33,7 @@ export async function combinedEnvironmentVariables({
     ? (await readAndParseDotEnv(dotEnvPath)).variables
     : {};
 
-  const remoteKeys = new Set(
-    remoteEnvironmentVariables.map((variable) => variable.key),
-  );
+  const remoteKeys = new Set(remoteVariables.map((variable) => variable.key));
 
   const localKeys = new Set(Object.keys(localEnvironmentVariables));
 
@@ -45,7 +43,7 @@ export async function combinedEnvironmentVariables({
 
   let rows: [string, string][] = [];
 
-  remoteEnvironmentVariables
+  remoteVariables
     .filter(({isSecret}) => !isSecret)
     .forEach(({key}) => {
       if (!localKeys.has(key)) {
@@ -58,7 +56,7 @@ export async function combinedEnvironmentVariables({
   });
 
   // Ensure secret variables always get added to the bottom of the list
-  remoteEnvironmentVariables
+  remoteVariables
     .filter(({isSecret}) => isSecret)
     .forEach(({key}) => {
       if (!localKeys.has(key)) {

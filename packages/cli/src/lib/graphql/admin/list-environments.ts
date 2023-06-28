@@ -1,5 +1,4 @@
-import {type AdminSession} from '../../admin-session.js';
-import {adminRequest} from '../../graphql.js';
+import {adminRequest, type AdminSession} from './client.js';
 
 const ListEnvironmentsQuery = `#graphql
   query ListStorefronts($id: ID!) {
@@ -35,7 +34,7 @@ interface HydrogenStorefront {
   productionUrl: string;
 }
 
-interface ListEnvironmentsSchema {
+export interface ListEnvironmentsSchema {
   hydrogenStorefront: HydrogenStorefront | null;
 }
 
@@ -49,5 +48,5 @@ export async function getStorefrontEnvironments(
     {id: storefrontId},
   );
 
-  return {storefront: hydrogenStorefront};
+  return hydrogenStorefront;
 }

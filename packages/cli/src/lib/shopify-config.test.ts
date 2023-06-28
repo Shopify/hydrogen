@@ -11,6 +11,7 @@ import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {
   getConfig,
   setShop,
+  resetConfig,
   setStorefront,
   unsetStorefront,
   ensureShopifyGitIgnore,
@@ -18,6 +19,24 @@ import {
   SHOPIFY_DIR_PROJECT,
 } from './shopify-config.js';
 import type {ShopifyConfig} from './shopify-config.js';
+
+async function writeExistingConfig(dir: string, config?: ShopifyConfig) {
+  const existingConfig: ShopifyConfig = config ?? {
+    shop: 'previous-shop',
+    storefront: {
+      id: 'gid://shopify/HydrogenStorefront/1',
+      title: 'Hydrogen',
+    },
+  };
+
+  const filePath = joinPath(dir, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
+  await mkdir(dirname(filePath));
+  await writeFile(filePath, JSON.stringify(existingConfig));
+
+  expect(JSON.parse(await readFile(filePath))).toStrictEqual(existingConfig);
+
+  return {existingConfig, filePath};
+}
 
 describe('getConfig()', () => {
   describe('when no config exists', () => {
@@ -44,6 +63,18 @@ describe('getConfig()', () => {
 
         expect(config).toStrictEqual(existingConfig);
       });
+    });
+  });
+});
+
+describe('resetConfig()', () => {
+  it('writes an empty object', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      await writeExistingConfig(tmpDir);
+      await resetConfig(tmpDir);
+
+      const config = await getConfig(tmpDir);
+      expect(config).toStrictEqual({});
     });
   });
 });
@@ -76,20 +107,7 @@ describe('setShop()', () => {
   describe('when a config exists', () => {
     it('updates the config file', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const existingConfig: ShopifyConfig = {
-          shop: 'previous-shop',
-          storefront: {
-            id: 'gid://shopify/HydrogenStorefront/1',
-            title: 'Hydrogen',
-          },
-        };
-        const filePath = joinPath(tmpDir, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
-        await mkdir(dirname(filePath));
-        await writeFile(filePath, JSON.stringify(existingConfig));
-
-        expect(JSON.parse(await readFile(filePath))).toStrictEqual(
-          existingConfig,
-        );
+        const {existingConfig, filePath} = await writeExistingConfig(tmpDir);
 
         await setShop(tmpDir, 'new-shop');
 
@@ -102,16 +120,7 @@ describe('setShop()', () => {
 
     it('returns the new config', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const existingConfig: ShopifyConfig = {
-          shop: 'previous-shop',
-          storefront: {
-            id: 'gid://shopify/HydrogenStorefront/1',
-            title: 'Hydrogen',
-          },
-        };
-        const filePath = joinPath(tmpDir, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
-        await mkdir(dirname(filePath));
-        await writeFile(filePath, JSON.stringify(existingConfig));
+        const {existingConfig} = await writeExistingConfig(tmpDir);
 
         const config = await setShop(tmpDir, 'new-shop');
 
@@ -127,20 +136,7 @@ describe('setShop()', () => {
 describe('setStorefront()', () => {
   it('updates the config file', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      const existingConfig: ShopifyConfig = {
-        shop: 'previous-shop',
-        storefront: {
-          id: 'gid://shopify/HydrogenStorefront/1',
-          title: 'Hydrogen',
-        },
-      };
-      const filePath = joinPath(tmpDir, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
-      await mkdir(dirname(filePath));
-      await writeFile(filePath, JSON.stringify(existingConfig));
-
-      expect(JSON.parse(await readFile(filePath))).toStrictEqual(
-        existingConfig,
-      );
+      const {existingConfig, filePath} = await writeExistingConfig(tmpDir);
 
       const newStorefront = {
         id: 'gid://shopify/HydrogenStorefront/2',
@@ -158,16 +154,7 @@ describe('setStorefront()', () => {
 
   it('returns the new config', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      const existingConfig: ShopifyConfig = {
-        shop: 'previous-shop',
-        storefront: {
-          id: 'gid://shopify/HydrogenStorefront/1',
-          title: 'Hydrogen',
-        },
-      };
-      const filePath = joinPath(tmpDir, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
-      await mkdir(dirname(filePath));
-      await writeFile(filePath, JSON.stringify(existingConfig));
+      const {existingConfig} = await writeExistingConfig(tmpDir);
 
       const newStorefront = {
         id: 'gid://shopify/HydrogenStorefront/2',
@@ -187,20 +174,7 @@ describe('setStorefront()', () => {
 describe('unsetStorefront()', () => {
   it('removes the storefront configuration and returns the config', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      const existingConfig: ShopifyConfig = {
-        shop: 'previous-shop',
-        storefront: {
-          id: 'gid://shopify/HydrogenStorefront/1',
-          title: 'Hydrogen',
-        },
-      };
-      const filePath = joinPath(tmpDir, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
-      await mkdir(dirname(filePath));
-      await writeFile(filePath, JSON.stringify(existingConfig));
-
-      expect(JSON.parse(await readFile(filePath))).toStrictEqual(
-        existingConfig,
-      );
+      const {filePath} = await writeExistingConfig(tmpDir);
 
       const config = await unsetStorefront(tmpDir);
 

@@ -21,14 +21,6 @@ export const commonFlags = {
     env: 'SHOPIFY_HYDROGEN_FLAG_FORCE',
     char: 'f',
   }),
-  shop: Flags.string({
-    char: 's',
-    description:
-      'Shop URL. It can be the shop prefix (janes-apparel)' +
-      ' or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).',
-    env: 'SHOPIFY_SHOP',
-    parse: async (input) => normalizeStoreFqdn(input),
-  }),
   ['env-branch']: Flags.string({
     description:
       "Specify an environment's branch name when using remote environment variables.",

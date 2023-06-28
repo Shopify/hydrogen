@@ -16,6 +16,16 @@ export interface ShopifyConfig {
   storefront?: Storefront;
 }
 
+export async function resetConfig(root: string): Promise<void> {
+  const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
+
+  if (!(await fileExists(filePath))) {
+    return;
+  }
+
+  await writeFile(filePath, JSON.stringify({}));
+}
+
 export async function getConfig(root: string): Promise<ShopifyConfig> {
   const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
 
