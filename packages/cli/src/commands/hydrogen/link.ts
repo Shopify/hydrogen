@@ -110,11 +110,6 @@ export async function linkStorefront(
 
   const storefronts = await getStorefronts(session);
 
-  if (storefronts.length === 0) {
-    logMissingStorefronts(session);
-    return;
-  }
-
   let selectedStorefront: HydrogenStorefront | undefined;
 
   if (flagStorefront) {
