@@ -7,6 +7,7 @@ import {
   ensureAuthenticatedBusinessPlatform,
 } from '@shopify/cli-kit/node/session';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
+import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import {renderTasks} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import ansiEscapes from 'ansi-escapes';
@@ -96,17 +97,26 @@ function showLoginInfo() {
   let hasLoggedPressKey = false;
 
   const restoreLogs = muteAuthLogs({
-    onKeyTimeout: (url) => {
-      if (url) {
+    onKeyTimeout: (link) => {
+      if (link) {
         hasLoggedTimeout = true;
         process.stdout.write(ansiEscapes.eraseLines(9));
-        renderInfo({
-          headline: 'Log in to Shopify',
-          body: [
-            `\nTimed out. Click to open your browser:`,
-            {link: {url, label: colors.white('Open')}},
-          ],
-        });
+
+        try {
+          const secureLink = link.replace('http://', 'https://');
+          const url = new URL(secureLink);
+          const label = url.origin + '/...' + url.search.slice(-14);
+
+          renderInfo({
+            headline: 'Log in to Shopify',
+            body: outputContent`Timed out. Click to open your browser:\n${outputToken.link(
+              colors.white(label),
+              secureLink,
+            )}`.value,
+          });
+        } catch {
+          // Parsed wrong link
+        }
       }
     },
     onPressKey: () => {
@@ -132,7 +142,7 @@ function showLoginInfo() {
   promise.then(() => {
     restoreLogs();
     if (hasLoggedPressKey) {
-      process.stdout.write(ansiEscapes.eraseLines(hasLoggedTimeout ? 12 : 10));
+      process.stdout.write(ansiEscapes.eraseLines(hasLoggedTimeout ? 11 : 10));
     }
   });
 
