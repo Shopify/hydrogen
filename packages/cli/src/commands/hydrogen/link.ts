@@ -17,7 +17,6 @@ import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
 import {setStorefront, type ShopifyConfig} from '../../lib/shopify-config.js';
 import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
 import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
-import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
 import {titleize} from '../../lib/string.js';
 import {getCliCommand} from '../../lib/shell.js';
 import {login} from '../../lib/auth.js';
@@ -109,11 +108,6 @@ export async function linkStorefront(
   }
 
   const storefronts = await getStorefronts(session);
-
-  if (storefronts.length === 0) {
-    logMissingStorefronts(session);
-    return;
-  }
 
   let selectedStorefront: HydrogenStorefront | undefined;
 
