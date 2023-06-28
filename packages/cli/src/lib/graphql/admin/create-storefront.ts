@@ -1,6 +1,4 @@
-import {adminRequest} from '../../graphql.js';
-import {getAdminSession} from '../../admin-session.js';
-import {type UserError} from '../../user-errors.js';
+import {adminRequest, type AdminSession} from './client.js';
 
 export const CreateStorefrontMutation = `#graphql
   mutation CreateStorefront($title: String!) {
@@ -26,6 +24,12 @@ interface HydrogenStorefront {
   productionUrl: string;
 }
 
+interface UserError {
+  code: string | undefined;
+  field: string[];
+  message: string;
+}
+
 interface CreateStorefrontSchema {
   hydrogenStorefrontCreate: {
     hydrogenStorefront: HydrogenStorefront | undefined;
@@ -34,15 +38,14 @@ interface CreateStorefrontSchema {
   };
 }
 
-export async function createStorefront(shop: string, title: string) {
-  const adminSession = await getAdminSession(shop);
-
+export async function createStorefront(
+  adminSession: AdminSession,
+  title: string,
+) {
   const {hydrogenStorefrontCreate} = await adminRequest<CreateStorefrontSchema>(
     CreateStorefrontMutation,
     adminSession,
-    {
-      title: title,
-    },
+    {title: title},
   );
 
   return {
