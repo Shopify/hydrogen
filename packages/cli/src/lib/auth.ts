@@ -7,9 +7,9 @@ import {
   ensureAuthenticatedBusinessPlatform,
 } from '@shopify/cli-kit/node/session';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
-import {getConfig, resetConfig, setShop} from './shopify-config.js';
+import {getConfig, resetConfig, setUserAccount} from './shopify-config.js';
 import {muteAuthLogs} from './log.js';
-import {getActiveShops} from './graphql/business-platform/active-shops.js';
+import {getUserAccount} from './graphql/business-platform/user-account.js';
 
 export type {AdminSession};
 
@@ -29,28 +29,35 @@ export async function logout(root: string) {
  * from the local Shopify config. If not provided, the user will be
  * prompted to enter a shop domain.
  */
-export async function login(root?: string, shop?: string | true) {
-  if (shop === true) shop = root ? (await getConfig(root!)).shop : undefined;
+export async function login(root?: string, shop?: string) {
+  const existingConfig = root ? await getConfig(root) : {};
+  let {email, shopName} = existingConfig;
+  shop ??= existingConfig.shop;
+
   if (shop) shop = await normalizeStoreFqdn(shop);
 
   muteAuthLogs();
 
-  if (!shop) {
+  if (!shop || shop !== existingConfig.shop) {
     const token = await ensureAuthenticatedBusinessPlatform().catch(() => {
       throw new AbortError(
         'Unable to authenticate with Shopify. Please report this issue.',
       );
     });
 
-    const activeShops = await getActiveShops(token);
+    const userAccount = await getUserAccount(token);
 
-    shop = await renderSelectPrompt({
+    const selected = await renderSelectPrompt({
       message: 'Select a shop to log in to',
-      choices: activeShops.map(({name, fqdn}) => ({
+      choices: userAccount.activeShops.map(({name, fqdn}) => ({
         label: `${name} (${fqdn})`,
-        value: fqdn,
+        value: {name, fqdn},
       })),
     });
+
+    shop = selected.fqdn;
+    shopName = selected.name;
+    email = userAccount.email;
   }
 
   const session = await ensureAuthenticatedAdmin(shop).catch(() => {
@@ -59,7 +66,9 @@ export async function login(root?: string, shop?: string | true) {
     ]);
   });
 
-  const config = root ? await setShop(root, session.storeFqdn) : {shop};
+  const config = root
+    ? await setUserAccount(root, {shop, shopName, email})
+    : {shop, shopName, email};
 
   return {session, config};
 }

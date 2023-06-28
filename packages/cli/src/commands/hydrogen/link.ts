@@ -60,7 +60,7 @@ export async function runLink({
   storefront: flagStorefront,
 }: LinkStorefrontArguments) {
   const [{session, config}, cliCommand] = await Promise.all([
-    login(root, true),
+    login(root),
     getCliCommand(),
   ]);
 

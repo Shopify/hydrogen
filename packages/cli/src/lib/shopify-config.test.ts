@@ -10,7 +10,7 @@ import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 
 import {
   getConfig,
-  setShop,
+  setUserAccount,
   resetConfig,
   setStorefront,
   unsetStorefront,
@@ -79,7 +79,7 @@ describe('resetConfig()', () => {
   });
 });
 
-describe('setShop()', () => {
+describe('setUserAccount()', () => {
   describe('when no config exists', () => {
     it('creates a new config file', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
@@ -87,7 +87,7 @@ describe('setShop()', () => {
 
         expect(await fileExists(filePath)).toBeFalsy();
 
-        await setShop(tmpDir, 'new-shop');
+        await setUserAccount(tmpDir, {shop: 'new-shop'});
 
         expect(await fileExists(filePath)).toBeTruthy();
       });
@@ -95,10 +95,16 @@ describe('setShop()', () => {
 
     it('returns the new config', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const config = await setShop(tmpDir, 'new-shop');
+        const config = await setUserAccount(tmpDir, {
+          shop: 'new-shop',
+          shopName: 'New Shop',
+          email: 'email',
+        });
 
         expect(config).toStrictEqual({
           shop: 'new-shop',
+          shopName: 'New Shop',
+          email: 'email',
         });
       });
     });
@@ -109,7 +115,7 @@ describe('setShop()', () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const {existingConfig, filePath} = await writeExistingConfig(tmpDir);
 
-        await setShop(tmpDir, 'new-shop');
+        await setUserAccount(tmpDir, {shop: 'new-shop'});
 
         expect(JSON.parse(await readFile(filePath))).toStrictEqual({
           ...existingConfig,
@@ -122,7 +128,7 @@ describe('setShop()', () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const {existingConfig} = await writeExistingConfig(tmpDir);
 
-        const config = await setShop(tmpDir, 'new-shop');
+        const config = await setUserAccount(tmpDir, {shop: 'new-shop'});
 
         expect(config).toStrictEqual({
           ...existingConfig,
