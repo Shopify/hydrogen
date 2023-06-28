@@ -35,7 +35,7 @@ interface Flags {
 }
 
 export async function runList({path: root = process.cwd()}: Flags) {
-  const {session} = await login(root, true);
+  const {session} = await login(root);
 
   const storefronts = await getStorefrontsWithDeployment(session);
 

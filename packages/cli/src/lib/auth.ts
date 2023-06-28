@@ -1,13 +1,15 @@
-import {renderTextPrompt} from '@shopify/cli-kit/node/ui';
+import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {
+  type AdminSession,
   logout as adminLogout,
   ensureAuthenticatedAdmin,
-  type AdminSession,
+  ensureAuthenticatedBusinessPlatform,
 } from '@shopify/cli-kit/node/session';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
-import {getConfig, resetConfig, setShop} from './shopify-config.js';
+import {getConfig, resetConfig, setUserAccount} from './shopify-config.js';
 import {muteAuthLogs} from './log.js';
+import {getUserAccount} from './graphql/business-platform/user-account.js';
 
 export type {AdminSession};
 
@@ -28,21 +30,39 @@ export async function logout(root: string) {
  * prompted to enter a shop domain.
  */
 export async function login(root?: string, shop?: string | true) {
-  if (typeof shop !== 'string') {
-    if (shop === true) shop = root ? (await getConfig(root!)).shop : undefined;
+  const forcePrompt = shop === true;
+  const existingConfig = root ? await getConfig(root) : {};
+  let {email, shopName} = existingConfig;
 
-    if (!shop) {
-      shop = await renderTextPrompt({
-        message:
-          'Specify which Store you would like to use (e.g. {store}.myshopify.com)',
-        allowEmpty: false,
-      });
-    }
+  if (typeof shop !== 'string') {
+    shop = existingConfig.shop;
   }
 
-  shop = await normalizeStoreFqdn(shop);
+  if (shop) shop = await normalizeStoreFqdn(shop);
 
   muteAuthLogs();
+
+  if (!shop || shop !== existingConfig.shop || forcePrompt) {
+    const token = await ensureAuthenticatedBusinessPlatform().catch(() => {
+      throw new AbortError(
+        'Unable to authenticate with Shopify. Please report this issue.',
+      );
+    });
+
+    const userAccount = await getUserAccount(token);
+
+    const selected = await renderSelectPrompt({
+      message: 'Select a shop to log in to',
+      choices: userAccount.activeShops.map(({name, fqdn}) => ({
+        label: `${name} (${fqdn})`,
+        value: {name, fqdn},
+      })),
+    });
+
+    shop = selected.fqdn;
+    shopName = selected.name;
+    email = userAccount.email;
+  }
 
   const session = await ensureAuthenticatedAdmin(shop).catch(() => {
     throw new AbortError('Unable to authenticate with Shopify', undefined, [
@@ -50,7 +70,9 @@ export async function login(root?: string, shop?: string | true) {
     ]);
   });
 
-  const config = root ? await setShop(root, session.storeFqdn) : {shop};
+  const config = root
+    ? await setUserAccount(root, {shop, shopName, email})
+    : {shop, shopName, email};
 
   return {session, config};
 }

@@ -13,6 +13,8 @@ interface Storefront {
 
 export interface ShopifyConfig {
   shop?: string;
+  shopName?: string;
+  email?: string;
   storefront?: Storefront;
 }
 
@@ -36,36 +38,31 @@ export async function getConfig(root: string): Promise<ShopifyConfig> {
   return JSON.parse(await readFile(filePath));
 }
 
-export async function setShop(
+export async function setUserAccount(
   root: string,
-  shop: string,
+  {shop, shopName, email}: {shop: string; shopName?: string; email?: string},
 ): Promise<ShopifyConfig> {
   const filePath = resolvePath(root, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
 
-  if (!(await fileExists(filePath))) {
+  let existingConfig: ShopifyConfig = {};
+
+  if (await fileExists(filePath)) {
+    existingConfig = JSON.parse(await readFile(filePath));
+  } else {
     await mkdir(dirname(filePath));
-
-    const newConfig: ShopifyConfig = {
-      shop,
-    };
-
-    await writeFile(filePath, JSON.stringify(newConfig));
-    await ensureShopifyGitIgnore(root);
-
-    return newConfig;
   }
 
-  const existingConfig = JSON.parse(await readFile(filePath));
-
-  const config = {
+  const newConfig: ShopifyConfig = {
     ...existingConfig,
     shop,
+    shopName: shopName ?? existingConfig.shopName,
+    email: email ?? existingConfig.email,
   };
 
-  await writeFile(filePath, JSON.stringify(config));
+  await writeFile(filePath, JSON.stringify(newConfig));
   await ensureShopifyGitIgnore(root);
 
-  return config;
+  return newConfig;
 }
 
 /**
