@@ -29,8 +29,8 @@ export async function logout(root: string) {
  * from the local Shopify config. If not provided, the user will be
  * prompted to enter a shop domain.
  */
-export async function login(root: string, shop?: string | true) {
-  if (shop === true) shop = (await getConfig(root)).shop;
+export async function login(root?: string, shop?: string | true) {
+  if (shop === true) shop = root ? (await getConfig(root!)).shop : undefined;
   if (shop) shop = await normalizeStoreFqdn(shop);
 
   muteAuthLogs();
@@ -59,7 +59,7 @@ export async function login(root: string, shop?: string | true) {
     ]);
   });
 
-  const config = await setShop(root, session.storeFqdn);
+  const config = root ? await setShop(root, session.storeFqdn) : {shop};
 
   return {session, config};
 }
