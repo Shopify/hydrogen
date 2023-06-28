@@ -54,7 +54,7 @@ export async function runEnvPull({
   force,
 }: Flags) {
   const [{session, config}, cliCommand] = await Promise.all([
-    login(root, true),
+    login(root),
     getCliCommand(),
   ]);
 

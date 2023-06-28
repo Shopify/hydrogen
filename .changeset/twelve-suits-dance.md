@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': minor
 ---
 
-Link local storefront to a newly created storefront on Admin
+Support creating new storefronts from the `link` command.
