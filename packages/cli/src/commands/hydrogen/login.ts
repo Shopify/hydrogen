@@ -36,7 +36,7 @@ async function runLogin({
   path: root = process.cwd(),
   shop: shopFlag,
 }: LoginArguments) {
-  const {config} = await login(root, shopFlag);
+  const {config} = await login(root, shopFlag ?? true);
 
   renderSuccess({
     headline: 'Shopify authentication complete',

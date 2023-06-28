@@ -29,16 +29,20 @@ export async function logout(root: string) {
  * from the local Shopify config. If not provided, the user will be
  * prompted to enter a shop domain.
  */
-export async function login(root?: string, shop?: string) {
+export async function login(root?: string, shop?: string | true) {
+  const forcePrompt = shop === true;
   const existingConfig = root ? await getConfig(root) : {};
   let {email, shopName} = existingConfig;
-  shop ??= existingConfig.shop;
+
+  if (typeof shop !== 'string') {
+    shop = existingConfig.shop;
+  }
 
   if (shop) shop = await normalizeStoreFqdn(shop);
 
   muteAuthLogs();
 
-  if (!shop || shop !== existingConfig.shop) {
+  if (!shop || shop !== existingConfig.shop || forcePrompt) {
     const token = await ensureAuthenticatedBusinessPlatform().catch(() => {
       throw new AbortError(
         'Unable to authenticate with Shopify. Please report this issue.',

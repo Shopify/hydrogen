@@ -149,6 +149,29 @@ describe('auth', () => {
       expect(result).toStrictEqual(EXPECTED_LOGIN_RESULT);
     });
 
+    it('ignores local config and forces prompt when indicated', async () => {
+      vi.mocked(getConfig).mockResolvedValue(SHOPIFY_CONFIG);
+
+      const result = await login(ROOT, true);
+
+      expect(ensureAuthenticatedBusinessPlatform).toHaveBeenCalled();
+      expect(ensureAuthenticatedAdmin).toHaveBeenCalledWith(SHOP_DOMAIN);
+      expect(setUserAccount).toHaveBeenCalledWith(
+        ROOT,
+        expect.objectContaining({shop: SHOP_DOMAIN}),
+      );
+      expect(renderSelectPrompt).toHaveBeenCalledWith({
+        message: expect.any(String),
+        choices: [
+          {
+            label: expect.stringContaining(SHOP_DOMAIN),
+            value: {fqdn: SHOP_DOMAIN, name: SHOP_NAME},
+          },
+        ],
+      });
+      expect(result).toStrictEqual(EXPECTED_LOGIN_RESULT);
+    });
+
     it('skips config steps when root argument is not passed', async () => {
       const result = await login();
 
