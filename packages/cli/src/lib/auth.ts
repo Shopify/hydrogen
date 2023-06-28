@@ -116,14 +116,16 @@ function showLoginInfo() {
         body: 'Press any key to login with your default browser',
       });
 
-      renderTasks([
-        {
-          title: 'Waiting for Shopify authentication',
-          task: async () => {
-            await promise;
+      process.stdin.once('data', () => {
+        renderTasks([
+          {
+            title: 'Waiting for Shopify authentication',
+            task: async () => {
+              await promise;
+            },
           },
-        },
-      ]);
+        ]);
+      });
     },
   });
 
