@@ -2,8 +2,8 @@ import {describe, it, expect, vi, afterEach, beforeEach} from 'vitest';
 import {ensureAuthenticatedAdmin} from '@shopify/cli-kit/node/session';
 import {renderTextPrompt} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {login, type AdminSession} from './auth.js';
-import {setShop} from './shopify-config.js';
+import {login} from './auth.js';
+import {getConfig, setShop} from './shopify-config.js';
 
 vi.mock('@shopify/cli-kit/node/session');
 vi.mock('@shopify/cli-kit/node/ui');
@@ -11,17 +11,17 @@ vi.mock('./shopify-config.js');
 
 describe('auth', () => {
   const SHOP = 'my-shop';
-  const SHOP_DOMAIN = 'my-shop.myshopify.com';
-
-  const ADMIN_SESSION: AdminSession = {
-    token: 'abc123',
-    storeFqdn: SHOP_DOMAIN,
-  };
-
-  const root = '';
+  const SHOP_DOMAIN = SHOP + '.myshopify.com';
+  const TOKEN = 'abc123';
+  const ROOT = 'path/to/project';
 
   beforeEach(() => {
-    vi.mocked(setShop).mockResolvedValue({shop: SHOP_DOMAIN});
+    vi.mocked(setShop).mockImplementation((root, shop) =>
+      Promise.resolve({shop}),
+    );
+    vi.mocked(ensureAuthenticatedAdmin).mockImplementation((shop) =>
+      Promise.resolve({token: TOKEN, storeFqdn: shop}),
+    );
   });
 
   afterEach(() => {
@@ -32,46 +32,66 @@ describe('auth', () => {
     it('throws an error when it fails to authenticate', async () => {
       vi.mocked(ensureAuthenticatedAdmin).mockRejectedValue({});
 
-      await expect(login(root, SHOP)).rejects.toThrow(AbortError);
+      await expect(login(ROOT, SHOP)).rejects.toThrow(AbortError);
     });
 
-    it('writes shop to local config and returns it with the admin session', async () => {
-      vi.mocked(ensureAuthenticatedAdmin).mockResolvedValue(ADMIN_SESSION);
+    it('reads shop from local config when passing boolean', async () => {
+      vi.mocked(getConfig).mockResolvedValue({shop: SHOP_DOMAIN});
+      const result = await login(ROOT, true);
 
-      const result = await login(root, SHOP);
-
+      expect(getConfig).toHaveBeenCalledWith(ROOT);
       expect(ensureAuthenticatedAdmin).toHaveBeenCalledWith(SHOP_DOMAIN);
-      expect(setShop).toHaveBeenCalledWith(root, SHOP_DOMAIN);
+      expect(setShop).toHaveBeenCalledWith(ROOT, SHOP_DOMAIN);
 
       expect(result).toStrictEqual({
         config: {shop: SHOP_DOMAIN},
-        session: ADMIN_SESSION,
+        session: {token: TOKEN, storeFqdn: SHOP_DOMAIN},
+      });
+    });
+
+    it('writes shop to local config and returns it with the admin session', async () => {
+      const result = await login(ROOT, SHOP);
+
+      expect(ensureAuthenticatedAdmin).toHaveBeenCalledWith(SHOP_DOMAIN);
+      expect(setShop).toHaveBeenCalledWith(ROOT, SHOP_DOMAIN);
+
+      expect(result).toStrictEqual({
+        config: {shop: SHOP_DOMAIN},
+        session: {token: TOKEN, storeFqdn: SHOP_DOMAIN},
       });
     });
 
     it('prompts for shop when not passed in the arguments', async () => {
-      const ANOTHER_SHOP = 'another-shop';
-      const ANOTHER_SHOP_DOMAIN = ANOTHER_SHOP + '.myshopify.com';
+      vi.mocked(renderTextPrompt).mockResolvedValue(SHOP);
 
-      vi.mocked(renderTextPrompt).mockResolvedValue(ANOTHER_SHOP);
-      vi.mocked(setShop).mockResolvedValue({shop: ANOTHER_SHOP_DOMAIN});
-      vi.mocked(ensureAuthenticatedAdmin).mockResolvedValue({
-        ...ADMIN_SESSION,
-        storeFqdn: ANOTHER_SHOP_DOMAIN,
-      });
+      const result = await login(ROOT);
 
-      const result = await login(root);
-
-      expect(ensureAuthenticatedAdmin).toHaveBeenCalledWith(
-        ANOTHER_SHOP_DOMAIN,
-      );
-      expect(setShop).toHaveBeenCalledWith(root, ANOTHER_SHOP_DOMAIN);
+      expect(ensureAuthenticatedAdmin).toHaveBeenCalledWith(SHOP_DOMAIN);
+      expect(setShop).toHaveBeenCalledWith(ROOT, SHOP_DOMAIN);
 
       expect(result).toStrictEqual({
-        config: {shop: ANOTHER_SHOP_DOMAIN},
+        config: {shop: SHOP_DOMAIN},
         session: {
-          ...ADMIN_SESSION,
-          storeFqdn: ANOTHER_SHOP_DOMAIN,
+          token: TOKEN,
+          storeFqdn: SHOP_DOMAIN,
+        },
+      });
+    });
+
+    it('skips config steps when root argument is not passed', async () => {
+      vi.mocked(renderTextPrompt).mockResolvedValue(SHOP);
+
+      const result = await login();
+
+      expect(ensureAuthenticatedAdmin).toHaveBeenCalledWith(SHOP_DOMAIN);
+      expect(getConfig).not.toHaveBeenCalled();
+      expect(setShop).not.toHaveBeenCalled();
+
+      expect(result).toStrictEqual({
+        config: {shop: SHOP_DOMAIN},
+        session: {
+          token: TOKEN,
+          storeFqdn: SHOP_DOMAIN,
         },
       });
     });
