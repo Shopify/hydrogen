@@ -60,6 +60,7 @@ import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
 import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';
+import {login} from '../../lib/auth.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 const LANGUAGES = {
@@ -553,21 +554,8 @@ async function handleCliAlias(controller: AbortController) {
  * @returns The linked shop and storefront.
  */
 async function handleStorefrontLink(controller: AbortController) {
-  let shop = await renderTextPrompt({
-    message:
-      'Specify which Store you would like to use (e.g. {store}.myshopify.com)',
-    allowEmpty: false,
-    abortSignal: controller.signal,
-  });
-
-  shop = shop.trim().toLowerCase();
-
-  if (!shop.endsWith('.myshopify.com')) {
-    shop += '.myshopify.com';
-  }
-
-  // Triggers a browser login flow if necessary.
-  const {storefronts} = await getStorefronts(shop);
+  const {session} = await login();
+  const storefronts = await getStorefronts(session);
 
   if (storefronts.length === 0) {
     throw new AbortError('No storefronts found for this shop.');
@@ -590,7 +578,7 @@ async function handleStorefrontLink(controller: AbortController) {
     throw new AbortError('No storefront found with this ID.');
   }
 
-  return {...selected, shop};
+  return {...selected, shop: session.storeFqdn};
 }
 
 /**
