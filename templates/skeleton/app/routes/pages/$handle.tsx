@@ -4,13 +4,13 @@ import {useLoaderData} from '@remix-run/react';
 // TODO: add SEO
 
 export async function loader({params, context}: LoaderArgs) {
-  if (!params.pageHandle) {
+  if (!params.handle) {
     throw new Error('Missing page handle');
   }
 
   const {page} = await context.storefront.query(PAGE_QUERY, {
     variables: {
-      handle: params.pageHandle,
+      handle: params.handle,
     },
   });
 
@@ -37,7 +37,7 @@ export default function Page() {
 }
 
 const PAGE_QUERY = `#graphql
-  query StorePage($language: LanguageCode, $handle: String!)
+  query Page($language: LanguageCode, $handle: String!)
   @inContext(language: $language) {
     page(handle: $handle) {
       id
@@ -49,4 +49,4 @@ const PAGE_QUERY = `#graphql
       }
     }
   }
-`;
+` as const;

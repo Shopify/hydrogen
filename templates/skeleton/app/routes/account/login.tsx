@@ -1,103 +1,130 @@
 import {
-  type ActionFunction,
-  type LoaderArgs,
-  type ErrorBoundaryComponent,
+  json,
   redirect,
+  type ActionArgs,
+  type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {
-  Form,
-  useCatch,
-  useRouteError,
-  isRouteErrorResponse,
-} from '@remix-run/react';
+import {Form, Link, useActionData} from '@remix-run/react';
 
-export async function loader({context, params}: LoaderArgs) {
-  const customerAccessToken = await context.session.get('customerAccessToken');
+type ActionResponse = {
+  error: string | null;
+  success: boolean;
+};
 
-  if (customerAccessToken) {
-    return redirect(params.lang ? `${params.lang}/account` : '/account');
+export async function loader({context}: LoaderArgs) {
+  if (await context.session.get('customerAccessToken')) {
+    return redirect('/account');
   }
-
-  return new Response(null);
+  return json({});
 }
 
-export const action: ActionFunction = async ({request}) => {
-  const formData = await request.formData();
+export async function action({request, context}: ActionArgs) {
+  const {session, storefront} = context;
 
-  const email = formData.get('email');
-  const password = formData.get('password');
+  try {
+    const form = await request.formData();
+    const email = String(form.has('email') ? form.get('email') : '');
+    const password = String(form.has('password') ? form.get('password') : '');
+    const validInputs = Boolean(email && password);
 
-  if (
-    !email ||
-    !password ||
-    typeof email !== 'string' ||
-    typeof password !== 'string'
-  ) {
-    throw new Response('Please provide both an email and a password.', {
-      status: 400,
+    if (!validInputs) {
+      throw new Error('Please provide both an email and a password.');
+    }
+
+    const {customerAccessTokenCreate} = await storefront.mutate(
+      LOGIN_MUTATION,
+      {
+        variables: {
+          input: {email, password},
+        },
+      },
+    );
+
+    if (!customerAccessTokenCreate?.customerAccessToken?.accessToken) {
+      throw new Error(customerAccessTokenCreate?.customerUserErrors[0].message);
+    }
+
+    const {customerAccessToken} = customerAccessTokenCreate;
+    session.set('customerAccessToken', customerAccessToken);
+
+    return redirect('/account', {
+      headers: {
+        // eslint-disable-next-line @typescript-eslint/naming-convention
+        'Set-Cookie': await session.commit(),
+      },
     });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return json({error: error.message, success: false}, {status: 400});
+    }
+    return json({error, success: false}, {status: 400});
   }
-
-  // TODO Add login logic
-};
+}
 
 export default function Login() {
+  const data = useActionData<ActionResponse>();
+  const error = data?.error || null;
+  const success = Boolean(data?.success);
   return (
-    <Form method="post">
-      <input
-        id="email"
-        name="email"
-        type="email"
-        autoComplete="email"
-        required
-        placeholder="Email address"
-        aria-label="Email address"
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
-      />
-      <input
-        id="password"
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        placeholder="Password"
-        aria-label="Password"
-        minLength={8}
-        required
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
-      />
-      <button type="submit">Sign in</button>
-    </Form>
+    <section className="login">
+      <h1>Sign in</h1>
+      <Form method="post">
+        <fieldset>
+          <label htmlFor="email">Email address</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            placeholder="Email address"
+            aria-label="Email address"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus
+          />
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="Password"
+            aria-label="Password"
+            minLength={8}
+            required
+          />
+        </fieldset>
+        {error ? (
+          <p>
+            <mark>
+              <small>{error}</small>
+            </mark>
+          </p>
+        ) : (
+          <br />
+        )}
+        {success && <p>Successfully logged in!</p>}
+        <button type="submit">Sign in</button>
+      </Form>
+      <p>
+        Not yet registered? &nbsp;<Link to="/account/register">Register</Link>
+      </p>
+    </section>
   );
 }
 
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  console.error(caught);
-
-  return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
-    </div>
-  );
-}
-
-export function ErrorBoundary() {
-  const error = useRouteError();
-
-  if (isRouteErrorResponse(error)) {
-    console.error(error.status, error.statusText, error.data);
-    return <div>Route Error</div>;
-  } else {
-    console.error((error as Error).message);
-    return <div>Thrown Error</div>;
+export const LOGIN_MUTATION = `#graphql
+  mutation login($input: CustomerAccessTokenCreateInput!) {
+    customerAccessTokenCreate(input: $input) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+      customerAccessToken {
+        accessToken
+        expiresAt
+      }
+    }
   }
-}
+` as const;

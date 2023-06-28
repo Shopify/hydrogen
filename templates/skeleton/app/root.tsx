@@ -9,12 +9,14 @@ import {
   useLoaderData,
 } from '@remix-run/react';
 import {Layout} from '~/components/Layout';
-import styles from './styles/app.css';
+import resetStyles from './styles/reset.css';
+import skeletonStyles from './styles/skeleton.css';
 import favicon from '../public/favicon.svg';
 
 export function links() {
   return [
-    {rel: 'stylesheet', href: styles},
+    {rel: 'stylesheet', href: resetStyles},
+    {rel: 'stylesheet', href: skeletonStyles},
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
@@ -36,27 +38,58 @@ export async function loader({context}: LoaderArgs) {
     session.get('cartId'),
   ]);
 
-  const [cart, layout] = await Promise.all([
-    cartId
-      ? await storefront.query(CART_QUERY, {
-          variables: {cartId},
-          cache: storefront.CacheNone(),
-        })
-      : null,
-    await storefront.query(LAYOUT_QUERY, {
-      cache: storefront.CacheLong(),
-    }),
-  ]);
+  // validate the customer access token is valid
+  let isLoggedIn = false;
+  const headers = new Headers();
+  if (customerAccessToken?.accessToken && customerAccessToken?.expiresAt) {
+    const expiresAt = new Date(customerAccessToken.expiresAt);
+    const dateNow = new Date();
+    const customerAccessTokenExpired = expiresAt < dateNow;
+    isLoggedIn =
+      !customerAccessTokenExpired && Boolean(customerAccessToken.accessToken);
+    if (customerAccessTokenExpired) {
+      session.unset('customerAccessToken');
+      headers.append('Set-Cookie', await session.commit());
+    }
+  }
 
-  return defer({
-    isLoggedIn: Boolean(customerAccessToken),
-    cart,
-    layout,
+  // await the header query
+  const header = await storefront.query(HEADER_QUERY, {
+    cache: storefront.CacheLong(),
+    variables: {
+      headerMenuHandle: 'main-menu',
+    },
   });
+
+  // defer the footer query
+  const footer = storefront.query(FOOTER_QUERY, {
+    cache: storefront.CacheLong(),
+    variables: {
+      footerMenuHandle: 'footer',
+    },
+  });
+
+  // defer the cart query
+  const cart = cartId
+    ? storefront.query(CART_QUERY, {
+        variables: {cartId},
+        cache: storefront.CacheNone(),
+      })
+    : Promise.resolve({cart: null});
+
+  return defer(
+    {
+      cart,
+      footer,
+      header,
+      isLoggedIn,
+    },
+    {headers},
+  );
 }
 
 export default function App() {
-  const {layout} = useLoaderData<typeof loader>();
+  const data = useLoaderData<typeof loader>();
 
   return (
     <html lang="en">
@@ -67,7 +100,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout shop={layout.shop}>
+        <Layout {...data}>
           <Outlet />
         </Layout>
         <ScrollRestoration />
@@ -85,7 +118,7 @@ export function ErrorBoundary() {
       <div>
         <h1>Oops</h1>
         <p>Status: {error.status}</p>
-        <p>{error.data.message}</p>
+        <p>Message: {error.data.message}</p>
       </div>
     );
   }
@@ -104,9 +137,76 @@ export function ErrorBoundary() {
   );
 }
 
-// TODO: decide prefixing for queries Storefront vs Store vs _ ...
+const MENU_FRAGMENT = `#graphql
+  fragment MenuItem on MenuItem {
+    id
+    resourceId
+    tags
+    title
+    type
+    url
+  }
+  fragment ChildMenuItem on MenuItem {
+    ...MenuItem
+  }
+  fragment ParentMenuItem on MenuItem {
+    ...MenuItem
+    items {
+      ...ChildMenuItem
+    }
+  }
+  fragment Menu on Menu {
+    id
+    items {
+      ...ParentMenuItem
+    }
+  }
+` as const;
+
+const HEADER_QUERY = `#graphql
+  fragment Shop on Shop {
+    id
+    name
+    description
+    primaryDomain {
+      url
+    }
+    brand {
+      logo {
+        image {
+          url
+        }
+      }
+    }
+  }
+  query Header(
+    $language: LanguageCode
+    $headerMenuHandle: String!
+  ) @inContext(language: $language) {
+    shop {
+      ...Shop
+    }
+    menu(handle: $headerMenuHandle) {
+      ...Menu
+    }
+  }
+  ${MENU_FRAGMENT}
+` as const;
+
+const FOOTER_QUERY = `#graphql
+  query Footer(
+    $language: LanguageCode
+    $footerMenuHandle: String!
+  ) @inContext(language: $language) {
+    menu(handle: $footerMenuHandle) {
+      ...Menu
+    }
+  }
+  ${MENU_FRAGMENT}
+` as const;
+
 const CART_QUERY = `#graphql
-  query StoreCart($cartId: ID!) {
+  query Cart($cartId: ID!) {
     cart(id: $cartId) {
       ...Cart
     }
@@ -211,13 +311,5 @@ const CART_QUERY = `#graphql
     altText
     width
     height
-  }
-` as const;
-
-const LAYOUT_QUERY = `#graphql
-  query StoreLayout {
-    shop {
-      name
-    }
   }
 ` as const;

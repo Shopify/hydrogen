@@ -8,14 +8,13 @@ type SelectedPolicies = keyof Pick<
 >;
 
 export async function loader({params, context}: LoaderArgs) {
-  const handle = params.policyHandle;
-
-  if (!handle) {
+  if (!params.handle) {
     throw new Response('No handle was passed in', {status: 404});
   }
 
-  const policyName = handle.replace(/-([a-z])/g, (_: unknown, m1: string) =>
-    m1.toUpperCase(),
+  const policyName = params.handle.replace(
+    /-([a-z])/g,
+    (_: unknown, m1: string) => m1.toUpperCase(),
   ) as SelectedPolicies;
 
   const data = await context.storefront.query(POLICY_CONTENT_QUERY, {
@@ -58,7 +57,7 @@ const POLICY_CONTENT_QUERY = `#graphql
     url
   }
 
-  query StorePolicy(
+  query Policy(
     $language: LanguageCode
     $privacyPolicy: Boolean!
     $shippingPolicy: Boolean!

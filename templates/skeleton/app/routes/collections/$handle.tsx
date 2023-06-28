@@ -10,22 +10,22 @@ import {ProductItemFragment} from 'storefrontapi.generated';
 // TODO: add SEO
 
 export async function loader({request, params, context}: LoaderArgs) {
-  const {collectionHandle} = params;
+  const {handle} = params;
   const {storefront} = context;
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 8,
   });
 
-  if (!collectionHandle) {
+  if (!handle) {
     return redirect('/collections');
   }
 
   const {collection} = await storefront.query(COLLECTION_QUERY, {
-    variables: {handle: collectionHandle, ...paginationVariables},
+    variables: {handle, ...paginationVariables},
   });
 
   if (!collection) {
-    throw new Response(`Collection ${collectionHandle} not found`, {
+    throw new Response(`Collection ${handle} not found`, {
       status: 404,
     });
   }
@@ -93,6 +93,7 @@ function ProductsGrid({products}: {products: ProductItemFragment[]}) {
               aspectRatio={`${product.featuredImage.width}/${product.featuredImage.height}`}
               data={product.featuredImage}
               loading={index < 8 ? 'eager' : undefined}
+              sizes="(min-width: 45em) 400px, 100vw"
               style={{width: '100%', height: 'auto'}}
             />
           )}
@@ -136,7 +137,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
 ` as const;
 
 const COLLECTION_QUERY = `#graphql
-  query StoreCollection(
+  query Collection(
     $handle: String!
     $country: CountryCode
     $language: LanguageCode

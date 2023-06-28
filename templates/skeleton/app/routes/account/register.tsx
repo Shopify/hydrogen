@@ -1,103 +1,160 @@
 import {
+  json,
+  redirect,
   type ActionFunction,
   type LoaderArgs,
-  type ErrorBoundaryComponent,
-  redirect,
 } from '@shopify/remix-oxygen';
-import {
-  Form,
-  useCatch,
-  useRouteError,
-  isRouteErrorResponse,
-} from '@remix-run/react';
+import {Form, Link, useActionData} from '@remix-run/react';
+import {LOGIN_MUTATION} from './login';
+import type {CustomerCreateMutation} from 'storefrontapi.generated';
 
-export async function loader({context, params}: LoaderArgs) {
+type ActionResponse = {
+  error: string | null;
+  newCustomer:
+    | NonNullable<CustomerCreateMutation['customerCreate']>['customer']
+    | null;
+};
+
+export async function loader({context}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
 
   if (customerAccessToken) {
-    return redirect(params.lang ? `${params.lang}/account` : '/account');
+    return redirect('/account');
   }
 
-  return new Response(null);
+  return json({});
 }
 
-export const action: ActionFunction = async ({request}) => {
-  const formData = await request.formData();
+export const action: ActionFunction = async ({request, context}) => {
+  const {storefront, session} = context;
+  const form = await request.formData();
+  const email = String(form.has('email') ? form.get('email') : '');
+  const password = String(form.has('password') ? form.get('password') : '');
+  const validInputs = Boolean(email && password);
 
-  const email = formData.get('email');
-  const password = formData.get('password');
+  try {
+    if (!validInputs) {
+      throw new Error('Please provide both an email and a password.');
+    }
 
-  if (
-    !email ||
-    !password ||
-    typeof email !== 'string' ||
-    typeof password !== 'string'
-  ) {
-    throw new Response('Please provide both an email and a password.', {
-      status: 404,
+    const {customerCreate} = await storefront.mutate(CUSTOMER_CREATE_MUTATION, {
+      variables: {
+        input: {email, password},
+      },
     });
-  }
 
-  // TODO Add register logic
+    if (customerCreate?.customerUserErrors?.length) {
+      throw new Error(customerCreate?.customerUserErrors[0].message);
+    }
+
+    const newCustomer = customerCreate?.customer;
+    if (!newCustomer?.id) {
+      throw new Error('Could not create customer');
+    }
+
+    // get an access token for the new customer
+    const {customerAccessTokenCreate} = await storefront.mutate(
+      LOGIN_MUTATION,
+      {
+        variables: {
+          input: {
+            email,
+            password,
+          },
+        },
+      },
+    );
+
+    if (!customerAccessTokenCreate?.customerAccessToken?.accessToken) {
+      throw new Error('Missing access token');
+    }
+    session.set(
+      'customerAccessToken',
+      customerAccessTokenCreate?.customerAccessToken,
+    );
+
+    return json(
+      {error: null, newCustomer},
+      {
+        status: 302,
+        headers: {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          'Set-Cookie': await session.commit(),
+          Location: '/account',
+        },
+      },
+    );
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return json({error: error.message}, {status: 400});
+    }
+    return json({error}, {status: 400});
+  }
 };
 
 export default function Register() {
+  const data = useActionData<ActionResponse>();
+  const error = data?.error || null;
   return (
-    <Form method="post">
-      <input
-        id="email"
-        name="email"
-        type="email"
-        autoComplete="email"
-        required
-        placeholder="Email address"
-        aria-label="Email address"
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
-      />
-      <input
-        id="password"
-        name="password"
-        type="password"
-        autoComplete="current-password"
-        placeholder="Password"
-        aria-label="Password"
-        minLength={8}
-        required
-        // eslint-disable-next-line jsx-a11y/no-autofocus
-        autoFocus
-      />
-      <button type="submit">Sign up</button>
-    </Form>
+    <section className="login">
+      <h1>Register</h1>
+      <Form method="post">
+        <fieldset>
+          <label htmlFor="email">Email address</label>
+          <input
+            id="email"
+            name="email"
+            type="email"
+            autoComplete="email"
+            required
+            placeholder="Email address"
+            aria-label="Email address"
+            // eslint-disable-next-line jsx-a11y/no-autofocus
+            autoFocus
+          />
+          <label htmlFor="password">Password</label>
+          <input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            placeholder="Password"
+            aria-label="Password"
+            minLength={8}
+            required
+          />
+        </fieldset>
+        {error ? (
+          <p>
+            <mark>
+              <small>{error}</small>
+            </mark>
+          </p>
+        ) : (
+          <br />
+        )}
+        {data?.newCustomer && <p>Registered successfully!</p>}
+        <button type="submit">Register</button>
+      </Form>
+      <p>
+        Already registered? &nbsp;<Link to="/account/login">Login</Link>
+      </p>
+    </section>
   );
 }
 
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  console.error(caught);
-
-  return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
-    </div>
-  );
-}
-
-export function ErrorBoundary() {
-  const error = useRouteError();
-
-  if (isRouteErrorResponse(error)) {
-    console.error(error.status, error.statusText, error.data);
-    return <div>Route Error</div>;
-  } else {
-    console.error((error as Error).message);
-    return <div>Thrown Error</div>;
+// NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customerCreate
+const CUSTOMER_CREATE_MUTATION = `#graphql
+  mutation customerCreate($input: CustomerCreateInput!) {
+    customerCreate(input: $input) {
+      customer {
+        id
+      }
+      customerUserErrors {
+        code
+        field
+        message
+      }
+    }
   }
-}
+` as const;

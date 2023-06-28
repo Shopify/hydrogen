@@ -1,22 +1,53 @@
-import {Link} from '@remix-run/react';
-import {type StoreLayoutQuery} from 'storefrontapi.generated';
+import {Await, Link} from '@remix-run/react';
+import {Suspense} from 'react';
+import type {
+  CartQuery,
+  FooterQuery,
+  HeaderQuery,
+} from 'storefrontapi.generated';
+import {Aside} from '~/components/Aside';
 
 type LayoutProps = {
+  cart: Promise<CartQuery> | Promise<null>;
   children?: React.ReactNode;
-  shop: StoreLayoutQuery['shop'];
+  footer: Promise<FooterQuery>;
+  header: HeaderQuery;
+  isLoggedIn: boolean;
 };
 
-export function Layout({children = null, shop}: LayoutProps) {
+export function Layout({
+  children = null,
+  header,
+  footer,
+  cart,
+  isLoggedIn,
+}: LayoutProps) {
   return (
     <>
-      <Header name={shop.name} />
+      <Aside id="cart-aside">
+        <h1>Cart</h1>
+        <p>Cart contents go here.</p>
+      </Aside>
+      <Aside id="search-aside">
+        <input type="search" placeholder="Search" />
+        <p>Search results go here.</p>
+      </Aside>
+      <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />
       <main>{children}</main>
-      <Footer />
+      <Suspense fallback={<p>Loading...</p>}>
+        <Await resolve={footer}>
+          {(footer) => <Footer menu={footer.menu} />}
+        </Await>
+      </Suspense>
     </>
   );
 }
 
-function Header({name}: LayoutProps['shop']) {
+type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
+
+function Header({header, isLoggedIn, cart}: HeaderProps) {
+  if (!header.menu) return <p>Header menu not configured.</p>;
+  const {shop, menu} = header;
   return (
     <header>
       <br />
@@ -28,8 +59,8 @@ function Header({name}: LayoutProps['shop']) {
         }}
       >
         <Link prefetch="intent" to="/">
-          <em>{name}</em>
-        </Link>
+          <em>{shop.name}</em>
+        </Link>{' '}
         <nav
           role="navigation"
           style={{
@@ -57,13 +88,11 @@ function Header({name}: LayoutProps['shop']) {
             alignItems: 'center',
           }}
         >
-          <input type="search" placeholder="Search" />
+          <SearchToggle />
           <Link prefetch="intent" to="/account">
-            ACCOUNT
+            {isLoggedIn ? 'ACCOUNT' : 'SIGN IN'}
           </Link>
-          <Link prefetch="intent" to="/cart">
-            CART
-          </Link>
+          <CartToggle cart={cart} />
         </nav>
       </div>
       <br />
@@ -72,7 +101,30 @@ function Header({name}: LayoutProps['shop']) {
   );
 }
 
-function Footer() {
+function SearchToggle() {
+  return <a href="#search-aside">SEARCH</a>;
+}
+
+function CartBadge({count}: {count: number}) {
+  return (
+    <a href="#cart-aside">
+      CART&nbsp;<mark>{count}</mark>
+    </a>
+  );
+}
+
+function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
+  return (
+    <Suspense fallback={<CartBadge count={0} />}>
+      <Await resolve={cart}>
+        {(result) => <CartBadge count={result?.cart?.totalQuantity || 0} />}
+      </Await>
+    </Suspense>
+  );
+}
+
+function Footer({menu}: Awaited<LayoutProps['footer']>) {
+  if (!menu) return <p>Footer menu not configured.</p>;
   return (
     <footer>
       <hr />

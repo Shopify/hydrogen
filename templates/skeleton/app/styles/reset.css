@@ -82,3 +82,28 @@ nav a {
 section {
   padding: 1rem 2rem;
 }
+
+fieldset {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0.5rem;
+  padding: 1rem;
+}
+
+form {
+  max-width: 400px;
+}
+
+input {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid #000;
+  border-radius: 4px;
+  font-size: 1rem;
+  margin-top: 0.25rem;
+}
+
+legend {
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
