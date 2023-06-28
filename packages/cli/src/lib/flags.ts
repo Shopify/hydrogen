@@ -41,6 +41,12 @@ export const commonFlags = {
     default: true,
     allowNo: true,
   }),
+  codegenConfigPath: Flags.string({
+    description:
+      'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
+    required: false,
+    dependsOn: ['codegen-unstable'],
+  }),
 };
 
 export function flagsToCamelObject(obj: Record<string, any>) {

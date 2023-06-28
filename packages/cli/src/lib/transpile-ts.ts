@@ -195,11 +195,12 @@ export async function transpileProject(projectDir: string) {
       }
     }
 
+    const codegenFlag = /\s*--codegen(-unstable)?/;
     if (pkgJson.scripts?.dev) {
-      pkgJson.scripts.dev = pkgJson.scripts.dev.replace(
-        /\s*--codegen(-unstable)?/,
-        '',
-      );
+      pkgJson.scripts.dev = pkgJson.scripts.dev.replace(codegenFlag, '');
+    }
+    if (pkgJson.scripts?.build) {
+      pkgJson.scripts.build = pkgJson.scripts.build.replace(codegenFlag, '');
     }
 
     await fs.writeFile(
