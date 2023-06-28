@@ -66,7 +66,7 @@ const data: ReferenceEntityTemplateSchema = {
         examples: [
           {
             description:
-              'Define or override methods in your cart handler instance. Note that for addLines, updateDiscountCodes, updateBuyerIdentity, and setMetafields, if you override any of these methods, a new cart will not be created unless you implement the cart creation logic in your overriding method.',
+              'Define or override methods in your cart handler instance. Note that for addLines, updateDiscountCodes, updateBuyerIdentity, updateNote, updateAttributes, and setMetafields, if you override any of these methods, a new cart will not be created unless you implement the cart creation logic in your overriding method.',
             codeblock: {
               title: 'Example',
               tabs: [
