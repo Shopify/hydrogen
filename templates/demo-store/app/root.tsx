@@ -222,11 +222,11 @@ async function getLayoutData({storefront}: AppLoadContext) {
   const customPrefixes = {BLOG: '', CATALOG: 'products'};
 
   const headerMenu = data?.headerMenu
-    ? parseMenu(data.headerMenu, customPrefixes)
+    ? parseMenu(data.headerMenu, data.shop.primaryDomain.url, customPrefixes)
     : undefined;
 
   const footerMenu = data?.footerMenu
-    ? parseMenu(data.footerMenu, customPrefixes)
+    ? parseMenu(data.footerMenu, data.shop.primaryDomain.url, customPrefixes)
     : undefined;
 
   return {shop: data.shop, headerMenu, footerMenu};
