@@ -37,7 +37,7 @@ export default class SetupCSS extends Command {
   static flags = {
     path: commonFlags.path,
     force: commonFlags.force,
-    'install-deps': overrideFlag(commonFlags['install-deps'], {default: true}),
+    'install-deps': overrideFlag(commonFlags.installDeps, {default: true}),
   };
 
   static args = {

@@ -86,7 +86,7 @@ export default class Init extends Command {
         'Sets the template to use. Pass `demo-store` for a fully-featured store template.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
-    'install-deps': commonFlags['install-deps'],
+    'install-deps': commonFlags.installDeps,
   };
 
   async run(): Promise<void> {

@@ -36,12 +36,7 @@ export default class Dev extends Command {
       required: false,
       default: false,
     }),
-    ['codegen-config-path']: Flags.string({
-      description:
-        'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
-      required: false,
-      dependsOn: ['codegen-unstable'],
-    }),
+    ['codegen-config-path']: commonFlags.codegenConfigPath,
     sourcemap: commonFlags.sourcemap,
     'disable-virtual-routes': Flags.boolean({
       description:
@@ -49,14 +44,13 @@ export default class Dev extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
-    shop: commonFlags.shop,
     debug: Flags.boolean({
       description: 'Attaches a Node inspector',
       env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
       default: false,
     }),
     host: deprecated('--host')(),
-    ['env-branch']: commonFlags['env-branch'],
+    ['env-branch']: commonFlags.envBranch,
   };
 
   async run(): Promise<void> {
@@ -65,7 +59,7 @@ export default class Dev extends Command {
 
     await runDev({
       ...flagsToCamelObject(flags),
-      codegen: flags['codegen-unstable'],
+      useCodegen: flags['codegen-unstable'],
       path: directory,
     });
   }
@@ -74,20 +68,18 @@ export default class Dev extends Command {
 async function runDev({
   port,
   path: appPath,
-  codegen = false,
+  useCodegen = false,
   codegenConfigPath,
   disableVirtualRoutes,
-  shop,
   envBranch,
   debug = false,
   sourcemap = true,
 }: {
   port?: number;
   path?: string;
-  codegen?: boolean;
+  useCodegen?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
-  shop?: string;
   envBranch?: string;
   debug?: boolean;
   sourcemap?: boolean;
@@ -116,14 +108,11 @@ async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
-  const hasLinkedStorefront = !!(await getConfig(root))?.storefront?.id;
-  const environmentVariables = hasLinkedStorefront
-    ? await combinedEnvironmentVariables({
-        root,
-        shop,
-        envBranch,
-      })
-    : undefined;
+  const {shop, storefront} = await getConfig(root);
+  const environmentVariables =
+    !!shop && !!storefront?.id
+      ? await combinedEnvironmentVariables({root, shop, envBranch})
+      : undefined;
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
@@ -167,7 +156,7 @@ async function runDev({
 
   const remixConfig = await reloadConfig();
 
-  if (codegen) {
+  if (useCodegen) {
     spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
   }
 

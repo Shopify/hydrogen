@@ -1,31 +1,45 @@
-import {describe, test, expect, beforeEach, afterEach, vi} from 'vitest';
+import {describe, it, expect, beforeEach, afterEach, vi} from 'vitest';
 import {inTemporaryDirectory, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 
 import {combinedEnvironmentVariables} from './combined-environment-variables.js';
-import {pullRemoteEnvironmentVariables} from './pull-environment-variables.js';
-import {getConfig} from './shopify-config.js';
+import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
+import {login} from './auth.js';
 
-vi.mock('./shopify-config.js');
-vi.mock('./pull-environment-variables.js');
+vi.mock('./auth.js');
+vi.mock('./graphql/admin/pull-variables.js');
 
 describe('combinedEnvironmentVariables()', () => {
+  const ADMIN_SESSION = {
+    token: 'abc123',
+    storeFqdn: 'my-shop',
+  };
+
+  const SHOPIFY_CONFIG = {
+    storefront: {
+      id: 'gid://shopify/HydrogenStorefront/1',
+      title: 'Hydrogen',
+    },
+  };
+
   beforeEach(() => {
-    vi.mocked(getConfig).mockResolvedValue({
-      storefront: {
-        id: 'gid://shopify/HydrogenStorefront/1',
-        title: 'Hydrogen',
-      },
+    vi.mocked(login).mockResolvedValue({
+      session: ADMIN_SESSION,
+      config: SHOPIFY_CONFIG,
     });
-    vi.mocked(pullRemoteEnvironmentVariables).mockResolvedValue([
-      {
-        id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-        key: 'PUBLIC_API_TOKEN',
-        value: 'abc123',
-        isSecret: false,
-      },
-    ]);
+
+    vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+      id: SHOPIFY_CONFIG.storefront.id,
+      environmentVariables: [
+        {
+          id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+          key: 'PUBLIC_API_TOKEN',
+          value: 'abc123',
+          isSecret: false,
+        },
+      ],
+    });
   });
 
   afterEach(() => {
@@ -33,7 +47,7 @@ describe('combinedEnvironmentVariables()', () => {
     mockAndCaptureOutput().clear();
   });
 
-  test('calls pullRemoteEnvironmentVariables', async () => {
+  it('calls pullRemoteEnvironmentVariables', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       await combinedEnvironmentVariables({
         envBranch: 'main',
@@ -41,16 +55,15 @@ describe('combinedEnvironmentVariables()', () => {
         shop: 'my-shop',
       });
 
-      expect(pullRemoteEnvironmentVariables).toHaveBeenCalledWith({
-        envBranch: 'main',
-        root: tmpDir,
-        flagShop: 'my-shop',
-        silent: true,
-      });
+      expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
+        ADMIN_SESSION,
+        SHOPIFY_CONFIG.storefront.id,
+        'main',
+      );
     });
   });
 
-  test('renders a message about injection', async () => {
+  it('renders a message about injection', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const outputMock = mockAndCaptureOutput();
 
@@ -62,7 +75,7 @@ describe('combinedEnvironmentVariables()', () => {
     });
   });
 
-  test('lists all of the variables being used', async () => {
+  it('lists all of the variables being used', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const outputMock = mockAndCaptureOutput();
 
@@ -74,17 +87,20 @@ describe('combinedEnvironmentVariables()', () => {
 
   describe('when one of the variables is a secret', () => {
     beforeEach(() => {
-      vi.mocked(pullRemoteEnvironmentVariables).mockResolvedValue([
-        {
-          id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
-          key: 'PUBLIC_API_TOKEN',
-          value: '',
-          isSecret: true,
-        },
-      ]);
+      vi.mocked(getStorefrontEnvVariables).mockResolvedValue({
+        id: SHOPIFY_CONFIG.storefront.id,
+        environmentVariables: [
+          {
+            id: 'gid://shopify/HydrogenStorefrontEnvironmentVariable/1',
+            key: 'PUBLIC_API_TOKEN',
+            value: '',
+            isSecret: true,
+          },
+        ],
+      });
     });
 
-    test('uses special messaging to alert the user', async () => {
+    it('uses special messaging to alert the user', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const outputMock = mockAndCaptureOutput();
 
@@ -98,21 +114,21 @@ describe('combinedEnvironmentVariables()', () => {
   });
 
   describe('when there are local variables', () => {
-    test('includes local variables in the list', async () => {
+    it('includes local variables in the list', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const filePath = joinPath(tmpDir, '.env');
         await writeFile(filePath, 'LOCAL_TOKEN=1');
 
         const outputMock = mockAndCaptureOutput();
 
-        await combinedEnvironmentVariables({root: tmpDir});
+        await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
 
         expect(outputMock.info()).toMatch(/LOCAL_TOKEN\s+from local \.env/);
       });
     });
 
     describe('and they overwrite remote variables', () => {
-      test('uses special messaging to alert the user', async () => {
+      it('uses special messaging to alert the user', async () => {
         await inTemporaryDirectory(async (tmpDir) => {
           const filePath = joinPath(tmpDir, '.env');
           await writeFile(filePath, 'PUBLIC_API_TOKEN=abc');

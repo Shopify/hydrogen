@@ -30,12 +30,12 @@ export const commonFlags = {
     env: 'SHOPIFY_SHOP',
     parse: async (input) => normalizeStoreFqdn(input),
   }),
-  'install-deps': Flags.boolean({
+  installDeps: Flags.boolean({
     description: 'Auto install dependencies using the active package manager',
     env: 'SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS',
     allowNo: true,
   }),
-  'env-branch': Flags.string({
+  envBranch: Flags.string({
     description:
       "Specify an environment's branch name when using remote environment variables.",
     env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
@@ -46,6 +46,12 @@ export const commonFlags = {
     env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
     default: true,
     allowNo: true,
+  }),
+  codegenConfigPath: Flags.string({
+    description:
+      'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
+    required: false,
+    dependsOn: ['codegen-unstable'],
   }),
 };
 
