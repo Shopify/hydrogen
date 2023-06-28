@@ -61,6 +61,8 @@ import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';
 import {login} from '../../lib/auth.js';
+import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
+import {titleize} from '../../lib/string.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 const LANGUAGES = {
@@ -554,31 +556,21 @@ async function handleCliAlias(controller: AbortController) {
  * @returns The linked shop and storefront.
  */
 async function handleStorefrontLink(controller: AbortController) {
-  const {session} = await login();
-  const storefronts = await getStorefronts(session);
+  const {session, config} = await login();
 
-  if (storefronts.length === 0) {
-    throw new AbortError('No storefronts found for this shop.');
-  }
-
-  const storefrontId = await renderSelectPrompt({
-    message: 'Select a storefront',
-    choices: storefronts.map((storefront) => ({
-      label: `${storefront.title} ${storefront.productionUrl}`,
-      value: storefront.id,
-    })),
+  const projectName = await renderTextPrompt({
+    message: 'New storefront name',
+    defaultValue: titleize(config.shop?.replace('.myshopify.com', '')),
     abortSignal: controller.signal,
   });
 
-  let selected = storefronts.find(
-    (storefront) => storefront.id === storefrontId,
-  )!;
+  const {storefront} = await createStorefront(session, projectName);
 
-  if (!selected) {
+  if (!storefront) {
     throw new AbortError('No storefront found with this ID.');
   }
 
-  return {...selected, shop: session.storeFqdn};
+  return {...storefront, shop: session.storeFqdn};
 }
 
 /**
