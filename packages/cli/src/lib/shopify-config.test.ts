@@ -95,17 +95,15 @@ describe('setUserAccount()', () => {
 
     it('returns the new config', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        const config = await setUserAccount(tmpDir, {
+        const newConfig = {
           shop: 'new-shop',
-          shopName: 'New Shop',
           email: 'email',
-        });
+          shopName: 'New Shop',
+        };
 
-        expect(config).toStrictEqual({
-          shop: 'new-shop',
-          shopName: 'New Shop',
-          email: 'email',
-        });
+        const config = await setUserAccount(tmpDir, newConfig);
+
+        expect(config).toStrictEqual(newConfig);
       });
     });
   });
@@ -128,11 +126,17 @@ describe('setUserAccount()', () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const {existingConfig} = await writeExistingConfig(tmpDir);
 
-        const config = await setUserAccount(tmpDir, {shop: 'new-shop'});
+        const newConfig = {
+          shop: 'new-shop',
+          email: 'email',
+          shopName: 'New Shop',
+        };
+
+        const config = await setUserAccount(tmpDir, newConfig);
 
         expect(config).toStrictEqual({
           ...existingConfig,
-          shop: 'new-shop',
+          ...newConfig,
         });
       });
     });
