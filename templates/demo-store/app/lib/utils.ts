@@ -184,7 +184,9 @@ function parseItem(primaryDomain: string, customPrefixes = {}) {
     if ('items' in item) {
       return {
         ...parsedItem,
-        items: item.items.map(parseItem(primaryDomain, customPrefixes)).filter(Boolean),
+        items: item.items
+          .map(parseItem(primaryDomain, customPrefixes))
+          .filter(Boolean),
       } as EnhancedMenu['items'][number];
     } else {
       return parsedItem as EnhancedMenu['items'][number]['items'][number];
