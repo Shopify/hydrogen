@@ -40,6 +40,9 @@ describe('pullVariables', () => {
   };
 
   const SHOPIFY_CONFIG = {
+    shop: 'my-shop',
+    shopName: 'My Shop',
+    email: 'email',
     storefront: {
       id: 'gid://shopify/HydrogenStorefront/2',
       title: 'Existing Link',
@@ -150,7 +153,10 @@ describe('pullVariables', () => {
     beforeEach(async () => {
       vi.mocked(login).mockResolvedValue({
         session: ADMIN_SESSION,
-        config: {},
+        config: {
+          ...SHOPIFY_CONFIG,
+          storefront: undefined,
+        },
       });
     });
 
@@ -175,7 +181,7 @@ describe('pullVariables', () => {
         expect(linkStorefront).toHaveBeenCalledWith(
           tmpDir,
           ADMIN_SESSION,
-          {},
+          {...SHOPIFY_CONFIG, storefront: undefined},
           expect.anything(),
         );
       });

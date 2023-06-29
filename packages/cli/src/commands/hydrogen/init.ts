@@ -45,8 +45,7 @@ import {transpileProject} from '../../lib/transpile-ts.js';
 import {getLatestTemplates} from '../../lib/template-downloader.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {getStarterDir} from '../../lib/build.js';
-import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
-import {setShop, setStorefront} from '../../lib/shopify-config.js';
+import {setUserAccount, setStorefront} from '../../lib/shopify-config.js';
 import {replaceFileContent} from '../../lib/file.js';
 import {
   SETUP_CSS_STRATEGIES,
@@ -60,7 +59,10 @@ import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
 import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';
-import {login} from '../../lib/auth.js';
+import {type AdminSession, login} from '../../lib/auth.js';
+import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
+import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
+import {titleize} from '../../lib/string.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 const LANGUAGES = {
@@ -167,16 +169,10 @@ async function setupRemoteTemplate(
   });
 
   const project = await handleProjectLocation({...options, controller});
+
   if (!project) return;
 
-  async function abort(error: AbortError) {
-    controller.abort();
-    if (typeof project !== 'undefined') {
-      await rmdir(project.directory, {force: true}).catch(() => {});
-    }
-    renderFatalError(error);
-    process.exit(1);
-  }
+  const abort = createAbortHandler(controller, project);
 
   let backgroundWorkPromise = backgroundDownloadPromise.then(({templatesDir}) =>
     copyFile(joinPath(templatesDir, appTemplate), project.directory).catch(
@@ -282,19 +278,16 @@ async function setupLocalStarterTemplate(
 
   if (!project) return;
 
-  async function abort(error: AbortError) {
-    controller.abort();
-    await rmdir(project!.directory, {force: true}).catch(() => {});
+  const abort = createAbortHandler(controller, project);
 
-    renderFatalError(
-      new AbortError(
-        'Failed to initialize project: ' + error?.message ?? '',
-        error?.tryMessage ?? error?.stack,
-      ),
-    );
-
-    process.exit(1);
-  }
+  const createStorefrontPromise =
+    storefrontInfo &&
+    createStorefront(storefrontInfo.session, storefrontInfo.title)
+      .then(async ({storefront, jobId}) => {
+        if (jobId) await waitForJob(storefrontInfo.session, jobId);
+        return storefront;
+      })
+      .catch(abort);
 
   let backgroundWorkPromise: Promise<any> = copyFile(
     getStarterDir(),
@@ -303,6 +296,12 @@ async function setupLocalStarterTemplate(
 
   const tasks = [
     {
+      title: 'Creating storefront',
+      task: async () => {
+        await createStorefrontPromise;
+      },
+    },
+    {
       title: 'Setting up project',
       task: async () => {
         await backgroundWorkPromise;
@@ -310,12 +309,14 @@ async function setupLocalStarterTemplate(
     },
   ];
 
-  if (storefrontInfo) {
+  if (storefrontInfo && createStorefrontPromise) {
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
       Promise.all([
-        // Save linked shop/storefront in project
-        setShop(project.directory, storefrontInfo.shop).then(() =>
-          setStorefront(project.directory, storefrontInfo),
+        // Save linked storefront in project
+        setUserAccount(project.directory, storefrontInfo),
+        createStorefrontPromise.then((storefront) =>
+          // Save linked storefront in project
+          setStorefront(project.directory, storefront),
         ),
         // Remove public env variables to fallback to remote Oxygen variables
         replaceFileContent(
@@ -549,37 +550,38 @@ async function handleCliAlias(controller: AbortController) {
   };
 }
 
+type StorefrontInfo = {
+  title: string;
+  shop: string;
+  shopName: string;
+  email: string;
+  session: AdminSession;
+};
+
 /**
  * Prompts the user to link a Hydrogen storefront to their project.
  * @returns The linked shop and storefront.
  */
-async function handleStorefrontLink(controller: AbortController) {
-  const {session} = await login();
-  const storefronts = await getStorefronts(session);
+async function handleStorefrontLink(
+  controller: AbortController,
+): Promise<StorefrontInfo> {
+  const {session, config} = await login();
 
-  if (storefronts.length === 0) {
-    throw new AbortError('No storefronts found for this shop.');
-  }
-
-  const storefrontId = await renderSelectPrompt({
-    message: 'Select a storefront',
-    choices: storefronts.map((storefront) => ({
-      label: `${storefront.title} ${storefront.productionUrl}`,
-      value: storefront.id,
-    })),
+  const title = await renderTextPrompt({
+    message: 'New storefront name',
+    defaultValue: titleize(config.shopName),
     abortSignal: controller.signal,
   });
 
-  let selected = storefronts.find(
-    (storefront) => storefront.id === storefrontId,
-  )!;
-
-  if (!selected) {
-    throw new AbortError('No storefront found with this ID.');
-  }
-
-  return {...selected, shop: session.storeFqdn};
+  return {...config, title, session};
 }
+
+type Project = {
+  location: string;
+  name: string;
+  directory: string;
+  storefrontInfo?: Awaited<ReturnType<typeof handleStorefrontLink>>;
+};
 
 /**
  * Prompts the user to select a project directory location.
@@ -588,28 +590,43 @@ async function handleStorefrontLink(controller: AbortController) {
 async function handleProjectLocation({
   storefrontInfo,
   controller,
-  ...options
+  force,
+  path: flagPath,
 }: {
   path?: string;
   force?: boolean;
   controller: AbortController;
-  storefrontInfo?: {title: string; shop: string};
-}) {
-  const location =
-    options.path ??
+  storefrontInfo?: StorefrontInfo;
+}): Promise<Project | undefined> {
+  const storefrontDirectory = storefrontInfo && hyphenate(storefrontInfo.title);
+
+  let location =
+    flagPath ??
+    storefrontDirectory ??
     (await renderTextPrompt({
       message: 'Name the app directory',
-      defaultValue: storefrontInfo
-        ? hyphenate(storefrontInfo.title)
-        : 'hydrogen-storefront',
+      defaultValue: './hydrogen-storefront',
       abortSignal: controller.signal,
     }));
 
-  const name = basename(location);
-  const directory = resolvePath(process.cwd(), location);
+  let directory = resolvePath(process.cwd(), location);
 
   if (await projectExists(directory)) {
-    if (!options.force) {
+    if (!force && storefrontDirectory) {
+      location = await renderTextPrompt({
+        message: `There's already a folder called \`${storefrontDirectory}\`. Where do you want to create the app?`,
+        defaultValue: './' + storefrontDirectory,
+        abortSignal: controller.signal,
+      });
+
+      directory = resolvePath(process.cwd(), location);
+
+      if (!(await projectExists(directory))) {
+        force = true;
+      }
+    }
+
+    if (!force) {
       const deleteFiles = await renderConfirmationPrompt({
         message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
         defaultValue: false,
@@ -626,7 +643,7 @@ async function handleProjectLocation({
     }
   }
 
-  return {location, name, directory, storefrontInfo};
+  return {location, name: basename(location), directory, storefrontInfo};
 }
 
 /**
@@ -788,7 +805,7 @@ type SetupSummary = {
  * Shows a summary success message with next steps.
  */
 async function renderProjectReady(
-  project: NonNullable<Awaited<ReturnType<typeof handleProjectLocation>>>,
+  project: Project,
   {
     language,
     packageManager,
@@ -997,4 +1014,26 @@ async function projectExists(projectDir: string) {
     (await isDirectory(projectDir)) &&
     (await readdir(projectDir)).length > 0
   );
+}
+
+function createAbortHandler(
+  controller: AbortController,
+  project: {directory: string},
+) {
+  return async function abort(error: AbortError): Promise<never> {
+    controller.abort();
+
+    if (typeof project !== 'undefined') {
+      await rmdir(project!.directory, {force: true}).catch(() => {});
+    }
+
+    renderFatalError(
+      new AbortError(
+        'Failed to initialize project: ' + error?.message ?? '',
+        error?.tryMessage ?? error?.stack,
+      ),
+    );
+
+    process.exit(1);
+  };
 }
