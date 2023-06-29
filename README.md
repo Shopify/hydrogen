@@ -13,7 +13,7 @@ Hydrogen is Shopify’s stack for headless commerce. It provides a set of tools,
 
  </div>
 
-## Hydrogen Legacy v1
+## Hydrogen Legacy v1!
 
 Hydrogen legacy v1 has been moved [to a separate repo](https://github.com/Shopify/hydrogen-v1) and the [docs can be found here](https://shopify.github.io/hydrogen-v1/tutorials/getting-started).
 
