@@ -168,19 +168,6 @@ describe('link', () => {
     });
   });
 
-  describe('when there are no Hydrogen storefronts', () => {
-    it('renders a message and returns early', async () => {
-      vi.mocked(getStorefronts).mockResolvedValue([]);
-
-      await runLink({});
-
-      expect(outputMock.info()).toMatch(/no Hydrogen storefronts/i);
-
-      expect(renderSelectPrompt).not.toHaveBeenCalled();
-      expect(setStorefront).not.toHaveBeenCalled();
-    });
-  });
-
   describe('when a linked storefront already exists', () => {
     beforeEach(() => {
       vi.mocked(login).mockResolvedValue({

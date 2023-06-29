@@ -9,3 +9,6 @@ projects:
   admin:
     schema: 'packages/cli/admin.schema.json'
     documents: 'packages/cli/src/**/graphql/admin/**/*.ts'
+  business-platform:
+    schema: 'packages/cli/business-platform.schema.json'
+    documents: 'packages/cli/src/**/graphql/business-platform/**/*.ts'

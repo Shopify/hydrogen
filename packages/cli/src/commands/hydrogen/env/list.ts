@@ -38,7 +38,7 @@ interface Flags {
 
 export async function runEnvList({path: root = process.cwd()}: Flags) {
   const [{session, config}, cliCommand] = await Promise.all([
-    login(root, true),
+    login(root),
     getCliCommand(),
   ]);
 
