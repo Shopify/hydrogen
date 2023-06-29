@@ -1058,24 +1058,6 @@ async function renderProjectReady(
           {
             list: {
               items: [
-                [
-                  'Run',
-                  {command: `cd ${project.location}`},
-                  'to enter your app directory.',
-                ],
-
-                !depsInstalled && [
-                  'Run',
-                  {command: `${packageManager} install`},
-                  'to install the dependencies.',
-                ],
-
-                i18nError && [
-                  'Run',
-                  {command: `${cliCommand} setup i18n-unstable`},
-                  'to scaffold internationalization.',
-                ],
-
                 hasCreatedShortcut && [
                   'Restart your terminal session to make the new',
                   {command: ALIAS_NAME},
@@ -1085,11 +1067,22 @@ async function renderProjectReady(
                 [
                   'Run',
                   {
-                    command: hasCreatedShortcut
-                      ? `${ALIAS_NAME} dev`
-                      : formatPackageManagerCommand(packageManager, 'dev'),
+                    command: colors.cyan(
+                      `cd ${project.location}${
+                        depsInstalled ? '' : ` && ${packageManager} install`
+                      } && ${
+                        hasCreatedShortcut
+                          ? `${ALIAS_NAME} dev`
+                          : formatPackageManagerCommand(packageManager, 'dev')
+                      }`,
+                    ),
                   },
-                  'to start your local development server.',
+                ],
+
+                i18nError && [
+                  'Run',
+                  {command: `${cliCommand} setup i18n-unstable`},
+                  'to scaffold internationalization.',
                 ],
               ].filter((step): step is string[] => Boolean(step)),
             },
