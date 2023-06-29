@@ -1,3 +1,4 @@
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {adminRequest, type AdminSession} from './client.js';
 
 export const CreateStorefrontMutation = `#graphql
@@ -42,16 +43,18 @@ export async function createStorefront(
   adminSession: AdminSession,
   title: string,
 ) {
-  const {hydrogenStorefrontCreate} = await adminRequest<CreateStorefrontSchema>(
+  const {
+    hydrogenStorefrontCreate: {hydrogenStorefront, userErrors, jobId},
+  } = await adminRequest<CreateStorefrontSchema>(
     CreateStorefrontMutation,
     adminSession,
-    {title: title},
+    {title},
   );
 
-  return {
-    adminSession,
-    storefront: hydrogenStorefrontCreate.hydrogenStorefront,
-    userErrors: hydrogenStorefrontCreate.userErrors,
-    jobId: hydrogenStorefrontCreate.jobId,
-  };
+  if (!hydrogenStorefront || !jobId || userErrors.length > 0) {
+    const errorMessages = userErrors.map(({message}) => message).join(', ');
+    throw new AbortError('Could not create storefront. ' + errorMessages);
+  }
+
+  return {jobId, storefront: hydrogenStorefront};
 }

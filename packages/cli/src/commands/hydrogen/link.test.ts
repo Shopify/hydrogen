@@ -133,13 +133,11 @@ describe('link', () => {
       vi.mocked(renderSelectPrompt).mockResolvedValue(null);
 
       vi.mocked(createStorefront).mockResolvedValue({
-        adminSession: ADMIN_SESSION,
         storefront: {
           id: 'gid://shopify/HydrogenStorefront/1',
           title: expectedStorefrontName,
           productionUrl: 'https://example.com',
         },
-        userErrors: [],
         jobId: expectedJobId,
       });
     });
@@ -161,26 +159,6 @@ describe('link', () => {
       expect(outputMock.info()).toContain(
         `${expectedStorefrontName} is now linked`,
       );
-    });
-
-    it('handles the user-errors when creating the storefront on Admin', async () => {
-      const expectedUserErrors = [
-        {
-          code: 'INVALID',
-          field: [],
-          message: 'Bad thing happend.',
-        },
-      ];
-
-      vi.mocked(createStorefront).mockResolvedValue({
-        adminSession: ADMIN_SESSION,
-        storefront: undefined,
-        userErrors: expectedUserErrors,
-        jobId: undefined,
-      });
-
-      await expect(runLink({})).rejects.toThrow('Bad thing happend.');
-      expect(waitForJob).not.toHaveBeenCalled();
     });
 
     it('handles the job errors when creating the storefront on Admin', async () => {
