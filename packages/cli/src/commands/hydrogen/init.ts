@@ -580,28 +580,43 @@ async function handleStorefrontLink(controller: AbortController) {
 async function handleProjectLocation({
   storefrontInfo,
   controller,
-  ...options
+  force,
+  path: flagPath,
 }: {
   path?: string;
   force?: boolean;
   controller: AbortController;
-  storefrontInfo?: {title: string; shop: string};
-}) {
-  const location =
-    options.path ??
+  storefrontInfo?: StorefrontInfo;
+}): Promise<Project | undefined> {
+  const storefrontDirectory = storefrontInfo && hyphenate(storefrontInfo.title);
+
+  let location =
+    flagPath ??
+    storefrontDirectory ??
     (await renderTextPrompt({
       message: 'Name the app directory',
-      defaultValue: storefrontInfo
-        ? hyphenate(storefrontInfo.title)
-        : 'hydrogen-storefront',
+      defaultValue: './hydrogen-storefront',
       abortSignal: controller.signal,
     }));
 
-  const name = basename(location);
-  const directory = resolvePath(process.cwd(), location);
+  let directory = resolvePath(process.cwd(), location);
 
   if (await projectExists(directory)) {
-    if (!options.force) {
+    if (!force && storefrontDirectory) {
+      location = await renderTextPrompt({
+        message: `There's already a folder called \`${storefrontDirectory}\`. Where do you want to create the app?`,
+        defaultValue: './' + storefrontDirectory,
+        abortSignal: controller.signal,
+      });
+
+      directory = resolvePath(process.cwd(), location);
+
+      if (!(await projectExists(directory))) {
+        force = true;
+      }
+    }
+
+    if (!force) {
       const deleteFiles = await renderConfirmationPrompt({
         message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
         defaultValue: false,
@@ -618,7 +633,7 @@ async function handleProjectLocation({
     }
   }
 
-  return {location, name, directory, storefrontInfo};
+  return {location, name: basename(location), directory, storefrontInfo};
 }
 
 /**
