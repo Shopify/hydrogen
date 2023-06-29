@@ -70,6 +70,28 @@ export async function login(root?: string, shop?: string | true) {
     email = userAccount.email;
   }
 
+  if (!shop || shop !== existingConfig.shop || forcePrompt) {
+    const token = await ensureAuthenticatedBusinessPlatform().catch(() => {
+      throw new AbortError(
+        'Unable to authenticate with Shopify. Please report this issue.',
+      );
+    });
+
+    const userAccount = await getUserAccount(token);
+
+    const selected = await renderSelectPrompt({
+      message: 'Select a shop to log in to',
+      choices: userAccount.activeShops.map(({name, fqdn}) => ({
+        label: `${name} (${fqdn})`,
+        value: {name, fqdn},
+      })),
+    });
+
+    shop = selected.fqdn;
+    shopName = selected.name;
+    email = userAccount.email;
+  }
+
   const session = await ensureAuthenticatedAdmin(shop).catch(() => {
     throw new AbortError('Unable to authenticate with Shopify', undefined, [
       `Ensure the shop that you specified is correct (you are trying to use: ${shop})`,
