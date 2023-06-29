@@ -40,6 +40,9 @@ describe('listEnvironments', () => {
   };
 
   const SHOPIFY_CONFIG = {
+    shop: SHOP,
+    shopName: 'My Shop',
+    email: 'email',
     storefront: {
       id: 'gid://shopify/HydrogenStorefront/1',
       title: 'Existing Link',
@@ -128,7 +131,10 @@ describe('listEnvironments', () => {
     beforeEach(() => {
       vi.mocked(login).mockResolvedValue({
         session: ADMIN_SESSION,
-        config: {},
+        config: {
+          ...SHOPIFY_CONFIG,
+          storefront: undefined,
+        },
       });
     });
 
@@ -153,7 +159,7 @@ describe('listEnvironments', () => {
         expect(linkStorefront).toHaveBeenCalledWith(
           tmpDir,
           ADMIN_SESSION,
-          {},
+          {...SHOPIFY_CONFIG, storefront: undefined},
           expect.anything(),
         );
       });

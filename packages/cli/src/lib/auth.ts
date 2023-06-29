@@ -42,7 +42,13 @@ export async function login(root?: string, shop?: string | true) {
 
   muteAuthLogs();
 
-  if (!shop || shop !== existingConfig.shop || forcePrompt) {
+  if (
+    !shop ||
+    !shopName ||
+    !email ||
+    forcePrompt ||
+    shop !== existingConfig.shop
+  ) {
     const token = await ensureAuthenticatedBusinessPlatform().catch(() => {
       throw new AbortError(
         'Unable to authenticate with Shopify. Please report this issue.',
@@ -51,13 +57,20 @@ export async function login(root?: string, shop?: string | true) {
 
     const userAccount = await getUserAccount(token);
 
-    const selected = await renderSelectPrompt({
-      message: 'Select a shop to log in to',
-      choices: userAccount.activeShops.map(({name, fqdn}) => ({
-        label: `${name} (${fqdn})`,
-        value: {name, fqdn},
-      })),
-    });
+    const preselected =
+      !forcePrompt &&
+      shop &&
+      userAccount.activeShops.find(({fqdn}) => shop === fqdn);
+
+    const selected =
+      preselected ||
+      (await renderSelectPrompt({
+        message: 'Select a shop to log in to',
+        choices: userAccount.activeShops.map(({name, fqdn}) => ({
+          label: `${name} (${fqdn})`,
+          value: {name, fqdn},
+        })),
+      }));
 
     shop = selected.fqdn;
     shopName = selected.name;

@@ -41,6 +41,8 @@ describe('link', () => {
 
   const FULL_SHOPIFY_CONFIG = {
     shop: 'my-shop.myshopify.com',
+    shopName: 'My Shop',
+    email: 'email',
     storefront: {
       id: 'gid://shopify/HydrogenStorefront/1',
       title: 'Hydrogen',
@@ -48,8 +50,8 @@ describe('link', () => {
   };
 
   const UNLINKED_SHOPIFY_CONFIG = {
-    // Logged in, not linked
-    shop: FULL_SHOPIFY_CONFIG.shop,
+    ...FULL_SHOPIFY_CONFIG,
+    storefront: undefined,
   };
 
   beforeEach(async () => {
