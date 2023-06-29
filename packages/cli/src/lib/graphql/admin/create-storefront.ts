@@ -1,7 +1,7 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {adminRequest, type AdminSession} from './client.js';
 
-export const CreateStorefrontMutation = `#graphql
+const CreateStorefrontMutation = `#graphql
   mutation CreateStorefront($title: String!) {
     hydrogenStorefrontCreate(title: $title) {
       hydrogenStorefront {
@@ -31,7 +31,7 @@ interface UserError {
   message: string;
 }
 
-interface CreateStorefrontSchema {
+export interface CreateStorefrontSchema {
   hydrogenStorefrontCreate: {
     hydrogenStorefront: HydrogenStorefront | undefined;
     userErrors: UserError[];
