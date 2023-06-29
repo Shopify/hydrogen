@@ -16,6 +16,7 @@ import {
   renderFatalError,
   renderWarning,
 } from '@shopify/cli-kit/node/ui';
+import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import {Flags} from '@oclif/core';
 import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
 import {
@@ -122,7 +123,6 @@ export default class Init extends Command {
     routes: Flags.boolean({
       description: 'Generate routes for all pages.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
-      allowNo: true,
       hidden: true,
     }),
     shortcut: Flags.boolean({
@@ -475,12 +475,23 @@ async function setupLocalStarterTemplate(
     });
   }
 
+  renderSuccess({
+    headline: [
+      {userInput: storefrontInfo?.title ?? project.name},
+      'is ready to build.',
+    ],
+  });
+
   const continueWithSetup =
     (options.i18n ?? options.routes) !== undefined ||
     (await renderConfirmationPrompt({
-      message: 'Scaffold boilerplate for internationalization and routes',
+      message: 'Do you want to scaffold routes and core functionality?',
       confirmationMessage: 'Yes, set up now',
-      cancellationMessage: 'No, set up later',
+      cancellationMessage:
+        'No, set up later ' +
+        colors.dim(
+          `(run \`${createShortcut ? ALIAS_NAME : cliCommand} setup\`)`,
+        ),
       abortSignal: controller.signal,
     }));
 
@@ -560,7 +571,7 @@ async function handleI18n(controller: AbortController, flagI18n?: I18nChoice) {
 
 async function handleRouteGeneration(
   controller: AbortController,
-  flagRoutes?: boolean,
+  flagRoutes: boolean = true, // TODO: Remove default value when multi-select UI component is available
 ) {
   // TODO: Need a multi-select UI component
   const shouldScaffoldAllRoutes =
@@ -616,6 +627,7 @@ async function handleCliShortcut(
         {command: ALIAS_NAME},
         'alias to run commands instead of',
         {command: cliCommand},
+        '?',
       ],
       abortSignal: controller.signal,
     }));
@@ -694,7 +706,7 @@ async function handleProjectLocation({
     flagPath ??
     storefrontDirectory ??
     (await renderTextPrompt({
-      message: 'Name the app directory',
+      message: 'Where would you like to create your storefront?',
       defaultValue: './hydrogen-storefront',
       abortSignal: controller.signal,
     }));
@@ -718,7 +730,10 @@ async function handleProjectLocation({
 
     if (!force) {
       const deleteFiles = await renderConfirmationPrompt({
-        message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
+        message: outputContent`${outputToken.cyan(
+          location,
+        )} is not an empty directory. Do you want to delete the existing files and continue?`
+          .value,
         defaultValue: false,
         abortSignal: controller.signal,
       });
@@ -942,7 +957,7 @@ async function renderProjectReady(
   }
 
   const padMin =
-    8 + bodyLines.reduce((max, [label]) => Math.max(max, label.length), 0);
+    1 + bodyLines.reduce((max, [label]) => Math.max(max, label.length), 0);
 
   const cliCommand = hasCreatedShortcut
     ? ALIAS_NAME
@@ -959,9 +974,7 @@ async function renderProjectReady(
       bodyLines
         .map(
           ([label, value]) =>
-            `  ${label.padEnd(padMin, ' ')}${colors.dim(':')}  ${colors.dim(
-              value,
-            )}`,
+            `  ${(label + ':').padEnd(padMin, ' ')}  ${colors.dim(value)}`,
         )
         .join('\n') + routeSummary,
 
@@ -1069,38 +1082,6 @@ async function renderProjectReady(
         ],
       },
     ].filter((step): step is {title: string; body: any} => Boolean(step)),
-  });
-
-  renderInfo({
-    headline: 'Helpful commands',
-    body: {
-      list: {
-        items: [
-          // TODO: show `h2 deploy` here when it's ready
-
-          !hasCreatedShortcut && [
-            'Run',
-            {command: `${cliCommand} shortcut`},
-            'to create a global',
-            {command: ALIAS_NAME},
-            'alias for the Shopify Hydrogen CLI.',
-          ],
-          [
-            'Run',
-            {command: `${cliCommand} generate route`},
-            ...(hasCreatedShortcut
-              ? ['or', {command: `${cliCommand} g r`}]
-              : []),
-            'to scaffold standard Shopify routes.',
-          ],
-          [
-            'Run',
-            {command: `${cliCommand} --help`},
-            'to learn how to see the full list of commands available for building Hydrogen storefronts.',
-          ],
-        ].filter((step): step is string[] => Boolean(step)),
-      },
-    },
   });
 }
 

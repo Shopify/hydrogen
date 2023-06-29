@@ -17,7 +17,7 @@ import {
 export const I18N_STRATEGY_NAME_MAP: Record<I18nStrategy, string> = {
   subfolders: 'Subfolders (example.com/fr-ca/...)',
   subdomains: 'Subdomains (de.example.com/...)',
-  domains: 'Top-level Domains (example.jp/...)',
+  domains: 'Top-level domains (example.jp/...)',
 };
 
 export default class SetupI18n extends Command {
