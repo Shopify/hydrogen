@@ -4,7 +4,6 @@ import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 
 import {commonFlags} from '../../lib/flags.js';
-import {getCliCommand} from '../../lib/shell.js';
 import {login} from '../../lib/auth.js';
 
 export default class Login extends Command {
@@ -37,19 +36,14 @@ async function runLogin({
   path: root = process.cwd(),
   shop: shopFlag,
 }: LoginArguments) {
-  const [{session}, cliCommand] = await Promise.all([
-    login(root, shopFlag),
-    getCliCommand(),
-  ]);
+  const {config} = await login(root, shopFlag ?? true);
 
   renderSuccess({
-    body: ['You are logged in to', {userInput: session.storeFqdn}],
-    nextSteps: [
-      [
-        'Run',
-        {command: `${cliCommand} link`},
-        'to link your store to this project.',
-      ],
+    headline: 'Shopify authentication complete',
+    body: [
+      'You are now logged in to',
+      {userInput: config.shopName ?? config.shop ?? 'your store'},
+      ...(config.email ? ['as', {userInput: config.email!}] : []),
     ],
   });
 }
