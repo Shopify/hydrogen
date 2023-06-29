@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {
   installNodeModules,
   packageManagerUsedForCreating,
+  type PackageManager,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {
   renderSuccess,
@@ -62,7 +63,7 @@ import {
 import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
 import {ROUTE_MAP, runGenerate} from './generate/route.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
-import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';
+import {ALIAS_NAME, getCliCommand, type CliCommand} from '../../lib/shell.js';
 import {type AdminSession, login} from '../../lib/auth.js';
 import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
 import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
@@ -460,6 +461,20 @@ async function setupLocalStarterTemplate(
     });
   }
 
+  const cliCommand = await getCliCommand('', packageManager);
+
+  const createShortcut = await handleCliShortcut(
+    controller,
+    cliCommand,
+    options.shortcut,
+  );
+
+  if (createShortcut) {
+    backgroundWorkPromise = backgroundWorkPromise.then(async () => {
+      setupSummary.hasCreatedShortcut = await createShortcut();
+    });
+  }
+
   const continueWithSetup =
     (options.i18n ?? options.routes) !== undefined ||
     (await renderConfirmationPrompt({
@@ -505,13 +520,6 @@ async function setupLocalStarterTemplate(
   backgroundWorkPromise = backgroundWorkPromise.then(() =>
     createInitialCommit(project.directory),
   );
-
-  const createShortcut = await handleCliAlias(controller, options.shortcut);
-  if (createShortcut) {
-    backgroundWorkPromise = backgroundWorkPromise.then(async () => {
-      setupSummary.hasCreatedShortcut = await createShortcut();
-    });
-  }
 
   await renderTasks(tasks);
 
@@ -593,16 +601,11 @@ async function handleRouteGeneration(
  * Prompts the user to create a global alias (h2) for the Hydrogen CLI.
  * @returns A function that creates the shortcut, or undefined if the user chose not to create a shortcut.
  */
-async function handleCliAlias(
+async function handleCliShortcut(
   controller: AbortController,
+  cliCommand: CliCommand,
   flagShortcut?: boolean,
 ) {
-  const packageManager = await packageManagerUsedForCreating();
-  const cliCommand = await getCliCommand(
-    '',
-    packageManager === 'unknown' ? 'npm' : packageManager,
-  );
-
   const shouldCreateShortcut =
     flagShortcut ??
     (await renderConfirmationPrompt({
@@ -613,7 +616,6 @@ async function handleCliAlias(
         {command: ALIAS_NAME},
         'alias to run commands instead of',
         {command: cliCommand},
-        '?',
       ],
       abortSignal: controller.signal,
     }));
@@ -816,12 +818,11 @@ async function handleDependencies(
   shouldInstallDeps?: boolean,
 ) {
   const detectedPackageManager = await packageManagerUsedForCreating();
-  let actualPackageManager: Exclude<typeof detectedPackageManager, 'unknown'> =
-    'npm';
+  let actualPackageManager: PackageManager = 'npm';
 
   if (shouldInstallDeps !== false) {
     if (detectedPackageManager === 'unknown') {
-      const result = await renderSelectPrompt<'no' | 'npm' | 'pnpm' | 'yarn'>({
+      const result = await renderSelectPrompt<'no' | PackageManager>({
         message: `Select package manager to install dependencies`,
         choices: [
           {label: 'NPM', value: 'npm'},
