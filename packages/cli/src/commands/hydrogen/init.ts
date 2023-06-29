@@ -375,9 +375,22 @@ async function setupLocalStarterTemplate(
     },
   ];
 
-  if (storefrontInfo && createStorefrontPromise) {
-    backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      Promise.all([
+  backgroundWorkPromise = backgroundWorkPromise.then(() => {
+    const promises: Array<Promise<any>> = [
+      // Add project name to package.json
+      replaceFileContent(
+        joinPath(project.directory, 'package.json'),
+        false,
+        (content) =>
+          content.replace(
+            '"hello-world"',
+            `"${storefrontInfo?.title ?? titleize(project.name)}"`,
+          ),
+      ),
+    ];
+
+    if (storefrontInfo && createStorefrontPromise) {
+      promises.push(
         // Save linked storefront in project
         setUserAccount(project.directory, storefrontInfo),
         createStorefrontPromise.then((storefront) =>
@@ -391,22 +404,24 @@ async function setupLocalStarterTemplate(
           (content) =>
             content.replace(/^[^#].*\n/gm, '').replace(/\n\n$/gm, '\n'),
         ),
-      ]).catch(abort),
-    );
-  } else if (templateAction === 'mock') {
-    backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      // Empty tokens and set mock shop domain
-      replaceFileContent(
-        joinPath(project.directory, '.env'),
-        false,
-        (content) =>
-          content
-            .replace(/(PUBLIC_\w+)="[^"]*?"\n/gm, '$1=""\n')
-            .replace(/(PUBLIC_STORE_DOMAIN)=""\n/gm, '$1="mock.shop"\n')
-            .replace(/\n\n$/gm, '\n'),
-      ).catch(abort),
-    );
-  }
+      );
+    } else if (templateAction === 'mock') {
+      promises.push(
+        // Empty tokens and set mock.shop domain
+        replaceFileContent(
+          joinPath(project.directory, '.env'),
+          false,
+          (content) =>
+            content
+              .replace(/(PUBLIC_\w+)="[^"]*?"\n/gm, '$1=""\n')
+              .replace(/(PUBLIC_STORE_DOMAIN)=""\n/gm, '$1="mock.shop"\n')
+              .replace(/\n\n$/gm, '\n'),
+        ),
+      );
+    }
+
+    return Promise.all(promises).catch(abort);
+  });
 
   const {language, transpileProject} = await handleLanguage(
     project.directory,
