@@ -60,8 +60,9 @@ import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
 import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';
-import {login} from '../../lib/auth.js';
+import {type AdminSession, login} from '../../lib/auth.js';
 import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
+import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
 import {titleize} from '../../lib/string.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
@@ -169,16 +170,10 @@ async function setupRemoteTemplate(
   });
 
   const project = await handleProjectLocation({...options, controller});
+
   if (!project) return;
 
-  async function abort(error: AbortError) {
-    controller.abort();
-    if (typeof project !== 'undefined') {
-      await rmdir(project.directory, {force: true}).catch(() => {});
-    }
-    renderFatalError(error);
-    process.exit(1);
-  }
+  const abort = createAbortHandler(controller, project);
 
   let backgroundWorkPromise = backgroundDownloadPromise.then(({templatesDir}) =>
     copyFile(joinPath(templatesDir, appTemplate), project.directory).catch(
@@ -284,19 +279,16 @@ async function setupLocalStarterTemplate(
 
   if (!project) return;
 
-  async function abort(error: AbortError) {
-    controller.abort();
-    await rmdir(project!.directory, {force: true}).catch(() => {});
+  const abort = createAbortHandler(controller, project);
 
-    renderFatalError(
-      new AbortError(
-        'Failed to initialize project: ' + error?.message ?? '',
-        error?.tryMessage ?? error?.stack,
-      ),
-    );
-
-    process.exit(1);
-  }
+  const createStorefrontPromise =
+    storefrontInfo &&
+    createStorefront(storefrontInfo.session, storefrontInfo.title)
+      .then(async ({storefront, jobId}) => {
+        if (jobId) await waitForJob(storefrontInfo.session, jobId);
+        return storefront;
+      })
+      .catch(abort);
 
   let backgroundWorkPromise: Promise<any> = copyFile(
     getStarterDir(),
@@ -305,6 +297,12 @@ async function setupLocalStarterTemplate(
 
   const tasks = [
     {
+      title: 'Creating storefront',
+      task: async () => {
+        await createStorefrontPromise;
+      },
+    },
+    {
       title: 'Setting up project',
       task: async () => {
         await backgroundWorkPromise;
@@ -312,12 +310,14 @@ async function setupLocalStarterTemplate(
     },
   ];
 
-  if (storefrontInfo) {
+  if (storefrontInfo && createStorefrontPromise) {
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
       Promise.all([
-        // Save linked shop/storefront in project
-        setShop(project.directory, storefrontInfo.shop).then(() =>
-          setStorefront(project.directory, storefrontInfo),
+        // Save linked storefront in project
+        setShop(project.directory, storefrontInfo.shop),
+        createStorefrontPromise.then((storefront) =>
+          // Save linked storefront in project
+          setStorefront(project.directory, storefront),
         ),
         // Remove public env variables to fallback to remote Oxygen variables
         replaceFileContent(
@@ -551,27 +551,36 @@ async function handleCliAlias(controller: AbortController) {
   };
 }
 
+type StorefrontInfo = {
+  title: string;
+  shop: string;
+  session: AdminSession;
+};
+
 /**
  * Prompts the user to link a Hydrogen storefront to their project.
  * @returns The linked shop and storefront.
  */
-async function handleStorefrontLink(controller: AbortController) {
+async function handleStorefrontLink(
+  controller: AbortController,
+): Promise<StorefrontInfo> {
   const {session, config} = await login();
 
-  const projectName = await renderTextPrompt({
+  const title = await renderTextPrompt({
     message: 'New storefront name',
     defaultValue: titleize(config.shop?.replace('.myshopify.com', '')),
     abortSignal: controller.signal,
   });
 
-  const {storefront} = await createStorefront(session, projectName);
-
-  if (!storefront) {
-    throw new AbortError('No storefront found with this ID.');
-  }
-
-  return {...storefront, shop: session.storeFqdn};
+  return {title, shop: session.storeFqdn, session};
 }
+
+type Project = {
+  location: string;
+  name: string;
+  directory: string;
+  storefrontInfo?: Awaited<ReturnType<typeof handleStorefrontLink>>;
+};
 
 /**
  * Prompts the user to select a project directory location.
@@ -795,7 +804,7 @@ type SetupSummary = {
  * Shows a summary success message with next steps.
  */
 async function renderProjectReady(
-  project: NonNullable<Awaited<ReturnType<typeof handleProjectLocation>>>,
+  project: Project,
   {
     language,
     packageManager,
@@ -1004,4 +1013,26 @@ async function projectExists(projectDir: string) {
     (await isDirectory(projectDir)) &&
     (await readdir(projectDir)).length > 0
   );
+}
+
+function createAbortHandler(
+  controller: AbortController,
+  project: {directory: string},
+) {
+  return async function abort(error: AbortError): Promise<never> {
+    controller.abort();
+
+    if (typeof project !== 'undefined') {
+      await rmdir(project!.directory, {force: true}).catch(() => {});
+    }
+
+    renderFatalError(
+      new AbortError(
+        'Failed to initialize project: ' + error?.message ?? '',
+        error?.tryMessage ?? error?.stack,
+      ),
+    );
+
+    process.exit(1);
+  };
 }
