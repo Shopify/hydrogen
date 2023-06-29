@@ -45,8 +45,7 @@ import {transpileProject} from '../../lib/transpile-ts.js';
 import {getLatestTemplates} from '../../lib/template-downloader.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {getStarterDir} from '../../lib/build.js';
-import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
-import {setShop, setStorefront} from '../../lib/shopify-config.js';
+import {setUserAccount, setStorefront} from '../../lib/shopify-config.js';
 import {replaceFileContent} from '../../lib/file.js';
 import {
   SETUP_CSS_STRATEGIES,
@@ -314,7 +313,7 @@ async function setupLocalStarterTemplate(
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
       Promise.all([
         // Save linked storefront in project
-        setShop(project.directory, storefrontInfo.shop),
+        setUserAccount(project.directory, storefrontInfo),
         createStorefrontPromise.then((storefront) =>
           // Save linked storefront in project
           setStorefront(project.directory, storefront),
@@ -554,6 +553,8 @@ async function handleCliAlias(controller: AbortController) {
 type StorefrontInfo = {
   title: string;
   shop: string;
+  shopName: string;
+  email: string;
   session: AdminSession;
 };
 
@@ -568,11 +569,11 @@ async function handleStorefrontLink(
 
   const title = await renderTextPrompt({
     message: 'New storefront name',
-    defaultValue: titleize(config.shop?.replace('.myshopify.com', '')),
+    defaultValue: titleize(config.shopName),
     abortSignal: controller.signal,
   });
 
-  return {title, shop: session.storeFqdn, session};
+  return {...config, title, session};
 }
 
 type Project = {
