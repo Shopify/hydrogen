@@ -520,29 +520,24 @@ async function setupLocalStarterTemplate(
       options.i18n,
     );
 
-    const i18nPromise = setupI18n(project.directory, language).catch(
-      (error) => {
-        setupSummary.i18nError = error as AbortError;
-      },
-    );
-
     const {routes, setupRoutes} = await handleRouteGeneration(
       controller,
       options.routes,
     );
 
-    const routesPromise = setupRoutes(
-      project.directory,
-      language,
-      i18nStrategy,
-    ).catch((error) => {
-      setupSummary.routesError = error as AbortError;
-    });
-
     setupSummary.i18n = i18nStrategy;
     setupSummary.routes = routes;
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      Promise.all([i18nPromise, routesPromise]),
+      Promise.all([
+        setupI18n(project.directory, language).catch((error) => {
+          setupSummary.i18nError = error as AbortError;
+        }),
+        setupRoutes(project.directory, language, i18nStrategy).catch(
+          (error) => {
+            setupSummary.routesError = error as AbortError;
+          },
+        ),
+      ]),
     );
   }
 
