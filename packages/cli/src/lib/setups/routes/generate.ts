@@ -46,7 +46,7 @@ type GenerateMultipleRoutesOptions = Omit<
   GenerateRouteOptions,
   'localePrefix'
 > & {
-  routeName: string;
+  routeName: string | string[];
   directory: string;
   localePrefix?: GenerateRouteOptions['localePrefix'] | false;
 };
@@ -57,7 +57,14 @@ export async function generateMultipleRoutes(
   const routePath =
     options.routeName === 'all'
       ? Object.values(ROUTE_MAP).flat()
-      : ROUTE_MAP[options.routeName as keyof typeof ROUTE_MAP];
+      : typeof options.routeName === 'string'
+      ? ROUTE_MAP[options.routeName as keyof typeof ROUTE_MAP]
+      : options.routeName
+          .flatMap(
+            (item: keyof typeof ROUTE_MAP) =>
+              ROUTE_MAP[item as keyof typeof ROUTE_MAP] as string | string[],
+          )
+          .filter(Boolean);
 
   if (!routePath) {
     throw new AbortError(

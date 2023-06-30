@@ -76,7 +76,7 @@ describe('generate/route', () => {
         } as any);
 
         const result = await generateMultipleRoutes({
-          routeName: 'page',
+          routeName: ['page'],
           directory: directories.rootDirectory,
           templatesRoot: directories.templatesRoot,
         });
