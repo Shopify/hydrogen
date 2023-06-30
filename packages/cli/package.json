@@ -40,6 +40,7 @@
     "@shopify/cli-kit": "3.47.0",
     "@shopify/hydrogen-codegen": "^0.0.2",
     "@shopify/mini-oxygen": "^1.6.0",
+    "ansi-escapes": "^6.2.0",
     "diff": "^5.1.0",
     "fast-glob": "^3.2.12",
     "fs-extra": "^10.1.0",
