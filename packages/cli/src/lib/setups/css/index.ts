@@ -1,6 +1,7 @@
+import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
+import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import type {SetupConfig} from './common.js';
 import type {CssStrategy} from './assets.js';
-
 import {setupTailwind} from './tailwind.js';
 import {setupPostCss} from './postcss.js';
 import {setupCssModules} from './css-modules.js';
@@ -32,4 +33,23 @@ export function setupCssStrategy(
     default:
       throw new Error('Unknown strategy');
   }
+}
+
+export async function renderCssPrompt<
+  T extends string = CssStrategy,
+>(options?: {abortSignal?: AbortSignal; extraChoices?: Record<T, string>}) {
+  const cssStrategies = Object.entries({
+    ...CSS_STRATEGY_NAME_MAP,
+    ...options?.extraChoices,
+  }) as [[CssStrategy | T, string]];
+
+  return renderSelectPrompt<CssStrategy | T>({
+    message: 'Select an internationalization strategy',
+    ...options,
+    choices: cssStrategies.map(([value, label]) => ({
+      value,
+      label,
+    })),
+    defaultValue: 'tailwind',
+  });
 }

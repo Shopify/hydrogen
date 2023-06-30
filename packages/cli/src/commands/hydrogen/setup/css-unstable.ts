@@ -21,6 +21,7 @@ import {
   SETUP_CSS_STRATEGIES,
   CSS_STRATEGY_NAME_MAP,
   type CssStrategy,
+  renderCssPrompt,
 } from '../../../lib/setups/css/index.js';
 
 export default class SetupCSS extends Command {
@@ -55,7 +56,7 @@ export default class SetupCSS extends Command {
 }
 
 export async function runSetupCSS({
-  strategy,
+  strategy: flagStrategy,
   directory,
   force = false,
   installDeps = true,
@@ -65,17 +66,10 @@ export async function runSetupCSS({
   force?: boolean;
   installDeps: boolean;
 }) {
-  if (!strategy) {
-    strategy = await renderSelectPrompt<CssStrategy>({
-      message: `Select a styling library`,
-      choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
-        label: CSS_STRATEGY_NAME_MAP[strategy],
-        value: strategy,
-      })),
-    });
-  }
+  const remixConfigPromise = getRemixConfig(directory);
+  const strategy = flagStrategy ? flagStrategy : await renderCssPrompt();
 
-  const remixConfig = await getRemixConfig(directory);
+  const remixConfig = await remixConfigPromise;
 
   const setupOutput = await setupCssStrategy(strategy, remixConfig, force);
   if (!setupOutput) return;

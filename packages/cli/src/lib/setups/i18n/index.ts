@@ -1,7 +1,9 @@
 import {fileURLToPath} from 'node:url';
+import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
+import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
+import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {getCodeFormatOptions} from '../../format-code.js';
 import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
-import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
 
 export const SETUP_I18N_STRATEGIES = [
   'subfolders',
@@ -17,14 +19,14 @@ export const I18N_STRATEGY_NAME_MAP: Record<I18nStrategy, string> = {
   domains: 'Top-level domains (example.jp/...)',
 };
 
-export type SetupConfig = {
+export type I18nSetupConfig = {
   rootDirectory: string;
   serverEntryPoint?: string;
 };
 
 export async function setupI18nStrategy(
   strategy: I18nStrategy,
-  options: SetupConfig,
+  options: I18nSetupConfig,
 ) {
   const isTs = options.serverEntryPoint?.endsWith('.ts') ?? false;
 
@@ -41,4 +43,22 @@ export async function setupI18nStrategy(
 
   await replaceServerI18n(options, formatConfig, template);
   await replaceRemixEnv(options, formatConfig, template);
+}
+
+export async function renderI18nPrompt<
+  T extends string = I18nStrategy,
+>(options?: {abortSignal?: AbortSignal; extraChoices?: Record<T, string>}) {
+  const i18nStrategies = Object.entries({
+    ...I18N_STRATEGY_NAME_MAP,
+    ...options?.extraChoices,
+  }) as [[I18nStrategy | T, string]];
+
+  return renderSelectPrompt<I18nStrategy | T>({
+    message: 'Select an internationalization strategy',
+    ...options,
+    choices: i18nStrategies.map(([value, label]) => ({
+      value,
+      label,
+    })),
+  });
 }

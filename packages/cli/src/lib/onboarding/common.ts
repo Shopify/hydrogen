@@ -33,6 +33,7 @@ import {
   type I18nStrategy,
   I18N_STRATEGY_NAME_MAP,
   setupI18nStrategy,
+  renderI18nPrompt,
 } from '../setups/i18n/index.js';
 import {titleize} from '../string.js';
 import {
@@ -47,6 +48,7 @@ import {
   SETUP_CSS_STRATEGIES,
   setupCssStrategy,
   type CssStrategy,
+  renderCssPrompt,
 } from '../setups/css/index.js';
 import {generateMultipleRoutes, ROUTE_MAP} from '../setups/routes/generate.js';
 
@@ -74,24 +76,15 @@ export type StylingChoice = (typeof SETUP_CSS_STRATEGIES)[number];
 
 export type I18nChoice = I18nStrategy | 'none';
 
-const i18nStrategies = {
-  ...I18N_STRATEGY_NAME_MAP,
-  none: 'No internationalization',
-};
-
 export async function handleI18n(
   controller: AbortController,
   flagI18n?: I18nChoice,
 ) {
   let selection =
     flagI18n ??
-    (await renderSelectPrompt<I18nChoice>({
-      message: 'Select an internationalization strategy',
-      choices: Object.entries(i18nStrategies).map(([value, label]) => ({
-        value: value as I18nStrategy,
-        label,
-      })),
+    (await renderI18nPrompt({
       abortSignal: controller.signal,
+      extraChoices: {none: 'No internationalization'},
     }));
 
   const i18nStrategy = selection === 'none' ? undefined : selection;
@@ -335,23 +328,15 @@ export async function handleCssStrategy(
   controller: AbortController,
   flagStyling?: StylingChoice,
 ) {
-  const selectedCssStrategy =
-    flagStyling ??
-    (await renderSelectPrompt<CssStrategy>({
-      message: `Select a styling library`,
-      choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
-        label: CSS_STRATEGY_NAME_MAP[strategy],
-        value: strategy,
-      })),
-      defaultValue: 'tailwind',
-      abortSignal: controller.signal,
-    }));
+  const cssStrategy = flagStyling
+    ? flagStyling
+    : await renderCssPrompt({abortSignal: controller.signal});
 
   return {
-    cssStrategy: selectedCssStrategy,
+    cssStrategy,
     async setupCss() {
       const result = await setupCssStrategy(
-        selectedCssStrategy,
+        cssStrategy,
         {
           rootDirectory: projectDir,
           appDirectory: joinPath(projectDir, 'app'), // Default value in new projects

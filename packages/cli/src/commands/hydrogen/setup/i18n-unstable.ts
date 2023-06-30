@@ -13,6 +13,7 @@ import {
   SETUP_I18N_STRATEGIES,
   I18N_STRATEGY_NAME_MAP,
   type I18nStrategy,
+  renderI18nPrompt,
 } from '../../../lib/setups/i18n/index.js';
 
 export default class SetupI18n extends Command {
@@ -46,31 +47,23 @@ export default class SetupI18n extends Command {
 }
 
 export async function runSetupI18n({
-  strategy,
+  strategy: flagStrategy,
   directory,
 }: {
   strategy?: I18nStrategy;
   directory: string;
 }) {
-  if (!strategy) {
-    strategy = await renderSelectPrompt<I18nStrategy>({
-      message: `Select an internationalization strategy`,
-      choices: SETUP_I18N_STRATEGIES.map((strategy) => ({
-        label: I18N_STRATEGY_NAME_MAP[strategy],
-        value: strategy,
-      })),
-    });
-  }
+  const remixConfigPromise = getRemixConfig(directory);
 
-  const remixConfig = await getRemixConfig(directory);
+  const strategy = flagStrategy ? flagStrategy : await renderI18nPrompt();
 
-  const workPromise = setupI18nStrategy(strategy, remixConfig);
+  const remixConfig = await remixConfigPromise;
 
   await renderTasks([
     {
       title: 'Updating files',
       task: async () => {
-        await workPromise;
+        await setupI18nStrategy(strategy, remixConfig);
       },
     },
   ]);
