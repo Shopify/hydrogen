@@ -2,15 +2,15 @@ import {outputInfo} from '@shopify/cli-kit/node/output';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {canWriteFiles, copyAssets, mergePackageJson} from './assets.js';
 import {getCodeFormatOptions} from '../../format-code.js';
-import type {SetupConfig, SetupResult} from './common.js';
+import type {CssSetupConfig, CssSetupResult} from './common.js';
 import {replaceRemixConfig, replaceRootLinks} from './replacers.js';
 
 const tailwindCssPath = 'styles/tailwind.css';
 
 export async function setupTailwind(
-  {rootDirectory, appDirectory, ...futureOptions}: SetupConfig,
+  {rootDirectory, appDirectory, ...futureOptions}: CssSetupConfig,
   force = false,
-): Promise<undefined | SetupResult> {
+): Promise<undefined | CssSetupResult> {
   const relativeAppDirectory = relativePath(rootDirectory, appDirectory);
 
   const assetMap = {

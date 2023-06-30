@@ -1,10 +1,10 @@
-export type SetupResult = {
+export type CssSetupResult = {
   workPromise: Promise<unknown>;
   generatedAssets: string[];
   helpUrl: string;
 };
 
-export type SetupConfig = {
+export type CssSetupConfig = {
   rootDirectory: string;
   appDirectory: string;
   tailwind?: boolean;

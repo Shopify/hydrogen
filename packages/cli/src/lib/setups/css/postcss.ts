@@ -1,13 +1,13 @@
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {canWriteFiles, copyAssets, mergePackageJson} from './assets.js';
 import {getCodeFormatOptions} from '../../format-code.js';
-import type {SetupConfig, SetupResult} from './common.js';
+import type {CssSetupConfig, CssSetupResult} from './common.js';
 import {replaceRemixConfig} from './replacers.js';
 
 export async function setupPostCss(
-  {rootDirectory, appDirectory, ...futureOptions}: SetupConfig,
+  {rootDirectory, appDirectory, ...futureOptions}: CssSetupConfig,
   force = false,
-): Promise<undefined | SetupResult> {
+): Promise<undefined | CssSetupResult> {
   const assetMap = {
     'postcss.config.js': 'postcss.config.js',
   } as const;

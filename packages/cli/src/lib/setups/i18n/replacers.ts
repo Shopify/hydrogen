@@ -4,7 +4,7 @@ import {fileExists} from '@shopify/cli-kit/node/fs';
 import {ts, tsx, js, jsx} from '@ast-grep/napi';
 import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import type {FormatOptions} from '../../format-code.js';
-import type {SetupConfig} from './index.js';
+import type {I18nSetupConfig} from './index.js';
 
 const astGrep = {ts, tsx, js, jsx};
 
@@ -12,7 +12,7 @@ const astGrep = {ts, tsx, js, jsx};
  * Adds the `getLocaleFromRequest` function to the server entrypoint and calls it.
  */
 export async function replaceServerI18n(
-  {rootDirectory, serverEntryPoint = 'server'}: SetupConfig,
+  {rootDirectory, serverEntryPoint = 'server'}: I18nSetupConfig,
   formatConfig: FormatOptions,
   localeExtractImplementation: string,
 ) {
@@ -192,7 +192,7 @@ export async function replaceServerI18n(
  * Adds I18nLocale import and pass it to Storefront<I18nLocale> type as generic in `remix.env.d.ts`
  */
 export async function replaceRemixEnv(
-  {rootDirectory, serverEntryPoint}: SetupConfig,
+  {rootDirectory, serverEntryPoint}: I18nSetupConfig,
   formatConfig: FormatOptions,
   localeExtractImplementation: string,
 ) {
@@ -298,7 +298,7 @@ export async function replaceRemixEnv(
 async function findEntryFile({
   rootDirectory,
   serverEntryPoint = 'server',
-}: SetupConfig) {
+}: I18nSetupConfig) {
   const match = serverEntryPoint.match(/\.([jt]sx?)$/)?.[1] as
     | 'ts'
     | 'tsx'

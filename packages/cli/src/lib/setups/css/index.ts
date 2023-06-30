@@ -1,6 +1,6 @@
 import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
-import type {SetupConfig} from './common.js';
+import type {CssSetupConfig} from './common.js';
 import type {CssStrategy} from './assets.js';
 import {setupTailwind} from './tailwind.js';
 import {setupPostCss} from './postcss.js';
@@ -18,7 +18,7 @@ export const CSS_STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
 
 export function setupCssStrategy(
   strategy: CssStrategy,
-  options: SetupConfig,
+  options: CssSetupConfig,
   force?: boolean,
 ) {
   switch (strategy) {
