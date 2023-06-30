@@ -11,7 +11,7 @@ export type Shell = UnixShell | WindowsShell;
 
 export const ALIAS_NAME = 'h2';
 
-export const isWindows = () => process.platform === 'win32';
+export const isWindows = () => os.platform() === 'win32';
 export const isGitBash = () => !!process.env.MINGW_PREFIX; // Check Mintty/Mingw/Cygwin
 
 function resolveFromHome(filepath: string) {
