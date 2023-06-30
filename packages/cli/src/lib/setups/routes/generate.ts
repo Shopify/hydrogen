@@ -243,3 +243,15 @@ async function getJsTranspilerOptions(rootDirectory: string) {
     ),
   )?.compilerOptions as undefined | TranspilerOptions;
 }
+
+export async function renderRoutePrompt(options?: {abortSignal: AbortSignal}) {
+  const generateAll = await renderConfirmationPrompt({
+    message:
+      'Scaffold all standard route files? ' + Object.keys(ROUTE_MAP).join(', '),
+    confirmationMessage: 'Yes',
+    cancellationMessage: 'No',
+    ...options,
+  });
+
+  return generateAll ? 'all' : ([] as string[]);
+}

@@ -107,18 +107,20 @@ export async function handleRouteGeneration(
   flagRoutes: boolean = true, // TODO: Remove default value when multi-select UI component is available
 ) {
   // TODO: Need a multi-select UI component
-  const shouldScaffoldAllRoutes =
-    flagRoutes ??
-    (await renderConfirmationPrompt({
-      message:
-        'Scaffold all standard route files? ' +
-        Object.keys(ROUTE_MAP).join(', '),
-      confirmationMessage: 'Yes',
-      cancellationMessage: 'No',
-      abortSignal: controller.signal,
-    }));
+  const routesToScaffold = flagRoutes
+    ? 'all'
+    : await renderRoutePrompt({
+        abortSignal: controller.signal,
+      });
 
-  const routes = shouldScaffoldAllRoutes ? ROUTE_MAP : {};
+  const routes =
+    routesToScaffold === 'all'
+      ? ROUTE_MAP
+      : routesToScaffold.reduce((acc, item) => {
+          const value = ROUTE_MAP[item];
+          if (value) acc[item] = value;
+          return acc;
+        }, {} as typeof ROUTE_MAP);
 
   return {
     routes,
@@ -127,9 +129,9 @@ export async function handleRouteGeneration(
       language: Language,
       i18nStrategy?: I18nStrategy,
     ) => {
-      if (shouldScaffoldAllRoutes) {
+      if (routesToScaffold === 'all' || routesToScaffold.length > 0) {
         await generateMultipleRoutes({
-          routeName: 'all',
+          routeName: routesToScaffold,
           directory,
           force: true,
           typescript: language === 'ts',
