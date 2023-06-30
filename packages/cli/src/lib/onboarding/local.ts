@@ -2,10 +2,10 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {copyFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
+import {hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
 import {
   renderSuccess,
-  renderInfo,
   renderSelectPrompt,
   renderConfirmationPrompt,
   renderTasks,
@@ -29,7 +29,6 @@ import {createStorefront} from '../graphql/admin/create-storefront.js';
 import {waitForJob} from '../graphql/admin/fetch-job.js';
 import {getStarterDir} from '../build.js';
 import {replaceFileContent} from '../file.js';
-import {titleize} from '../string.js';
 import {setStorefront, setUserAccount} from '../shopify-config.js';
 import {ALIAS_NAME, getCliCommand} from '../shell.js';
 
@@ -110,7 +109,7 @@ export async function setupLocalStarterTemplate(
         (content) =>
           content.replace(
             '"hello-world"',
-            `"${storefrontInfo?.title ?? titleize(project.name)}"`,
+            `"${hyphenate(storefrontInfo?.title ?? project.name)}"`,
           ),
       ),
     ];
