@@ -23,6 +23,8 @@ import type {ShopifyConfig} from './shopify-config.js';
 async function writeExistingConfig(dir: string, config?: ShopifyConfig) {
   const existingConfig: ShopifyConfig = config ?? {
     shop: 'previous-shop',
+    shopName: 'Previous Shop',
+    email: 'email',
     storefront: {
       id: 'gid://shopify/HydrogenStorefront/1',
       title: 'Hydrogen',
@@ -54,6 +56,8 @@ describe('getConfig()', () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const existingConfig: ShopifyConfig = {
           shop: 'my-shop',
+          shopName: 'My Shop',
+          email: 'email',
         };
         const filePath = joinPath(tmpDir, SHOPIFY_DIR, SHOPIFY_DIR_PROJECT);
         await mkdir(dirname(filePath));
@@ -87,7 +91,11 @@ describe('setUserAccount()', () => {
 
         expect(await fileExists(filePath)).toBeFalsy();
 
-        await setUserAccount(tmpDir, {shop: 'new-shop'});
+        await setUserAccount(tmpDir, {
+          shop: 'new-shop',
+          shopName: 'New Shop',
+          email: 'email',
+        });
 
         expect(await fileExists(filePath)).toBeTruthy();
       });
@@ -113,11 +121,17 @@ describe('setUserAccount()', () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const {existingConfig, filePath} = await writeExistingConfig(tmpDir);
 
-        await setUserAccount(tmpDir, {shop: 'new-shop'});
+        const newConfig = {
+          shop: 'new-shop',
+          shopName: 'New Shop',
+          email: 'email',
+        };
+
+        await setUserAccount(tmpDir, newConfig);
 
         expect(JSON.parse(await readFile(filePath))).toStrictEqual({
           ...existingConfig,
-          shop: 'new-shop',
+          ...newConfig,
         });
       });
     });
@@ -184,18 +198,17 @@ describe('setStorefront()', () => {
 describe('unsetStorefront()', () => {
   it('removes the storefront configuration and returns the config', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      const {filePath} = await writeExistingConfig(tmpDir);
+      const {filePath, existingConfig} = await writeExistingConfig(tmpDir);
 
       const config = await unsetStorefront(tmpDir);
 
       expect(config).toStrictEqual({
-        shop: 'previous-shop',
+        ...existingConfig,
         storefront: undefined,
       });
 
-      expect(JSON.parse(await readFile(filePath))).toStrictEqual({
-        shop: 'previous-shop',
-      });
+      const {storefront, ...actualConfig} = existingConfig;
+      expect(JSON.parse(await readFile(filePath))).toStrictEqual(actualConfig);
     });
   });
 });

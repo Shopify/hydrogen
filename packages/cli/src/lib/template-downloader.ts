@@ -5,6 +5,7 @@ import {extract} from 'tar-fs';
 import {fetch} from '@shopify/cli-kit/node/http';
 import {mkdir, fileExists} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {fileURLToPath} from 'url';
 
 // Note: this skips pre-releases
@@ -15,8 +16,8 @@ const getTryMessage = (status: number) =>
     ? `If you are using a VPN, WARP, or similar service, consider disabling it momentarily.`
     : undefined;
 
-async function getLatestReleaseDownloadUrl() {
-  const response = await fetch(REPO_RELEASES_URL);
+async function getLatestReleaseDownloadUrl(signal?: AbortSignal) {
+  const response = await fetch(REPO_RELEASES_URL, {signal});
   if (!response.ok || response.status >= 400) {
     throw new AbortError(
       `Failed to fetch the latest release information. Status ${
@@ -38,8 +39,12 @@ async function getLatestReleaseDownloadUrl() {
   };
 }
 
-async function downloadTarball(url: string, storageDir: string) {
-  const response = await fetch(url);
+async function downloadTarball(
+  url: string,
+  storageDir: string,
+  signal?: AbortSignal,
+) {
+  const response = await fetch(url, {signal});
   if (!response.ok || response.status >= 400) {
     throw new AbortError(
       `Failed to download the latest release files. Status ${response.status} ${response.statusText}}`,
@@ -66,9 +71,11 @@ async function downloadTarball(url: string, storageDir: string) {
   );
 }
 
-export async function getLatestTemplates() {
+export async function getLatestTemplates({
+  signal,
+}: {signal?: AbortSignal} = {}) {
   try {
-    const {version, url} = await getLatestReleaseDownloadUrl();
+    const {version, url} = await getLatestReleaseDownloadUrl(signal);
     const templateStoragePath = fileURLToPath(
       new URL('../starter-templates', import.meta.url),
     );
@@ -79,7 +86,7 @@ export async function getLatestTemplates() {
 
     const templateStorageVersionPath = path.join(templateStoragePath, version);
     if (!(await fileExists(templateStorageVersionPath))) {
-      await downloadTarball(url, templateStorageVersionPath);
+      await downloadTarball(url, templateStorageVersionPath, signal);
     }
 
     return {

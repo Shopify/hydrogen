@@ -9,7 +9,7 @@ import {
   pluckConfig,
   patchGqlPluck,
 } from '@shopify/hydrogen-codegen';
-import {format, resolveFormatConfig} from './transpile-ts.js';
+import {formatCode, getCodeFormatOptions} from './format-code.js';
 import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
@@ -214,11 +214,11 @@ async function addHooksToHydrogenOptions(
   const hydrogenOptions = Array.isArray(options) ? options[0] : options;
 
   if (hydrogenOptions) {
-    const formatConfig = await resolveFormatConfig(rootDirectory);
+    const formatConfig = await getCodeFormatOptions(rootDirectory);
 
     hydrogenOptions.hooks = {
       beforeOneFileWrite: (file: string, content: string) =>
-        format(content, formatConfig, file), // Run Prettier before writing files
+        formatCode(content, formatConfig, file), // Run Prettier before writing files
       ...hydrogenOptions.hooks,
     };
   }

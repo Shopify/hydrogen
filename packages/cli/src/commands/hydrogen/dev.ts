@@ -50,7 +50,7 @@ export default class Dev extends Command {
       default: false,
     }),
     host: deprecated('--host')(),
-    ['env-branch']: commonFlags['env-branch'],
+    ['env-branch']: commonFlags.envBranch,
   };
 
   async run(): Promise<void> {
@@ -81,7 +81,7 @@ async function runDev({
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   envBranch?: string;
-  debug?: false;
+  debug?: boolean;
   sourcemap?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
@@ -139,6 +139,7 @@ async function runDev({
     isMiniOxygenStarted = true;
 
     miniOxygen.showBanner({
+      appName: storefront ? colors.cyan(storefront?.title) : undefined,
       headlinePrefix:
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`

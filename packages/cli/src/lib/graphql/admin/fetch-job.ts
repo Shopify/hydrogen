@@ -30,17 +30,10 @@ export async function fetchJob(adminSession: AdminSession, jobId: string) {
   const {hydrogenStorefrontJob} = await adminRequest<JobSchema>(
     FetchJobQuery,
     adminSession,
-    {
-      id: jobId,
-    },
+    {id: jobId},
   );
 
-  return {
-    adminSession,
-    id: hydrogenStorefrontJob.id,
-    done: hydrogenStorefrontJob.done,
-    errors: hydrogenStorefrontJob.errors,
-  };
+  return hydrogenStorefrontJob;
 }
 
 export function waitForJob(adminSession: AdminSession, jobId: string) {

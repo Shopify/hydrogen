@@ -16,6 +16,8 @@ describe('list', () => {
 
   const SHOPIFY_CONFIG = {
     shop: 'my-shop.myshopify.com',
+    shopName: 'My Shop',
+    email: 'email',
     storefront: {
       id: 'gid://shopify/HydrogenStorefront/1',
       title: 'Hydrogen',
