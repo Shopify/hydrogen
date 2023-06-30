@@ -1,4 +1,8 @@
-import {renderInfo, renderSelectPrompt} from '@shopify/cli-kit/node/ui';
+import {
+  renderInfo,
+  renderSelectPrompt,
+  renderSuccess,
+} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   type AdminSession,
@@ -11,7 +15,12 @@ import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import {renderTasks} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import ansiEscapes from 'ansi-escapes';
-import {getConfig, resetConfig, setUserAccount} from './shopify-config.js';
+import {
+  getConfig,
+  resetConfig,
+  setUserAccount,
+  type ShopifyConfig,
+} from './shopify-config.js';
 import {getUserAccount} from './graphql/business-platform/user-account.js';
 import {muteAuthLogs} from './log.js';
 
@@ -46,7 +55,13 @@ export async function login(root?: string, shop?: string | true) {
 
   const hideLoginInfo = showLoginInfo();
 
-  if (!shop || shop !== existingConfig.shop || forcePrompt) {
+  if (
+    !shop ||
+    !shopName ||
+    !email ||
+    forcePrompt ||
+    shop !== existingConfig.shop
+  ) {
     const token = await ensureAuthenticatedBusinessPlatform().catch(() => {
       throw new AbortError(
         'Unable to authenticate with Shopify. Please report this issue.',
@@ -57,13 +72,20 @@ export async function login(root?: string, shop?: string | true) {
 
     await hideLoginInfo();
 
-    const selected = await renderSelectPrompt({
-      message: 'Select a shop to log in to',
-      choices: userAccount.activeShops.map(({name, fqdn}) => ({
-        label: `${name} (${fqdn})`,
-        value: {name, fqdn},
-      })),
-    });
+    const preselected =
+      !forcePrompt &&
+      shop &&
+      userAccount.activeShops.find(({fqdn}) => shop === fqdn);
+
+    const selected =
+      preselected ||
+      (await renderSelectPrompt({
+        message: 'Select a shop to log in to',
+        choices: userAccount.activeShops.map(({name, fqdn}) => ({
+          label: `${name} (${fqdn})`,
+          value: {name, fqdn},
+        })),
+      }));
 
     shop = selected.fqdn;
     shopName = selected.name;
@@ -152,4 +174,15 @@ function showLoginInfo() {
     // right after `renderTasks` is done.
     await new Promise((resolve) => setTimeout(resolve, 0));
   };
+}
+
+export function renderLoginSuccess(config: ShopifyConfig) {
+  renderSuccess({
+    headline: 'Shopify authentication complete',
+    body: [
+      'You are logged in to',
+      {userInput: config.shopName ?? config.shop ?? 'your store'},
+      ...(config.email ? ['as', {userInput: config.email!}] : []),
+    ],
+  });
 }

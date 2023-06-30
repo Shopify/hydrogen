@@ -1,7 +1,18 @@
 import {describe, it, expect} from 'vitest';
-import {convertTemplateToRemixVersion} from './remix-version-interop.js';
+import {
+  convertRouteToV2,
+  convertTemplateToRemixVersion,
+} from './remix-version-interop.js';
 
 describe('remix-version-interop', () => {
+  describe('v2_routeConvention', () => {
+    it('converts routes to v2', () => {
+      expect(convertRouteToV2('index')).toEqual('_index');
+      expect(convertRouteToV2('path/to/file')).toEqual('path.to.file');
+      expect(convertRouteToV2('path/to/index')).toEqual('path.to._index');
+    });
+  });
+
   describe('v2_meta', () => {
     const META_TEMPLATE = `
     import {type MetaFunction} from '@shopify/remix-oxygen';

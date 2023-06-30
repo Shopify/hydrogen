@@ -17,6 +17,9 @@ describe('combinedEnvironmentVariables()', () => {
   };
 
   const SHOPIFY_CONFIG = {
+    shop: 'my-shop',
+    shopName: 'My Shop',
+    email: 'email',
     storefront: {
       id: 'gid://shopify/HydrogenStorefront/1',
       title: 'Hydrogen',
