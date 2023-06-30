@@ -69,6 +69,7 @@ import {type AdminSession, login} from '../../lib/auth.js';
 import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
 import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
 import {titleize} from '../../lib/string.js';
+import {renderLoginSuccess} from './login.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 const LANGUAGES = {
@@ -682,6 +683,7 @@ async function handleStorefrontLink(
   controller: AbortController,
 ): Promise<StorefrontInfo> {
   const {session, config} = await login();
+  renderLoginSuccess(config);
 
   const title = await renderTextPrompt({
     message: 'New storefront name',

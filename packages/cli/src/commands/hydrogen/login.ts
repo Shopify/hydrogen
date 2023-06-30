@@ -5,6 +5,7 @@ import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 
 import {commonFlags} from '../../lib/flags.js';
 import {login} from '../../lib/auth.js';
+import {type ShopifyConfig} from '../../lib/shopify-config.js';
 
 export default class Login extends Command {
   static description = 'Login to your Shopify account.';
@@ -37,11 +38,14 @@ async function runLogin({
   shop: shopFlag,
 }: LoginArguments) {
   const {config} = await login(root, shopFlag ?? true);
+  renderLoginSuccess(config);
+}
 
+export function renderLoginSuccess(config: ShopifyConfig) {
   renderSuccess({
     headline: 'Shopify authentication complete',
     body: [
-      'You are now logged in to',
+      'You are logged in to',
       {userInput: config.shopName ?? config.shop ?? 'your store'},
       ...(config.email ? ['as', {userInput: config.email!}] : []),
     ],
