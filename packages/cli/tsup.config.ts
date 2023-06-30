@@ -15,8 +15,11 @@ const commonConfig = {
   splitting: true,
   treeshake: true,
   sourcemap: false,
-  dts: true,
   publicDir: 'templates',
+  // Weird bug:
+  // When `dts: true`, Tsup will remove all the d.ts files copied to `dist`
+  // during `onSuccess` callbacks, thus removing part of the starter templates.
+  dts: false,
 };
 
 const outDir = 'dist';
@@ -40,7 +43,6 @@ export default defineConfig([
     entry: ['src/virtual-routes/**/*.tsx'],
     outDir: `${outDir}/virtual-routes`,
     clean: false, // Avoid deleting the assets folder
-    dts: false,
     outExtension: () => ({js: '.jsx'}),
     async onSuccess() {
       const filterArtifacts = (filepath: string) =>

@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@types/diff": "^5.0.2",
-    "@types/fs-extra": "^9.0.13",
+    "@types/fs-extra": "^11.0.1",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/prettier": "^2.7.2",
     "@types/recursive-readdir": "^2.2.1",
@@ -43,7 +43,7 @@
     "ansi-escapes": "^6.2.0",
     "diff": "^5.1.0",
     "fast-glob": "^3.2.12",
-    "fs-extra": "^10.1.0",
+    "fs-extra": "^11.1.0",
     "gunzip-maybe": "^1.4.2",
     "prettier": "^2.8.4",
     "recursive-readdir": "^2.2.3",
@@ -53,10 +53,7 @@
   "bin": "dist/create-app.js",
   "exports": {
     "./package.json": "./package.json",
-    "./commands/hydrogen/init": {
-      "types": "./dist/commands/hydrogen/init.d.ts",
-      "default": "./dist/commands/hydrogen/init.js"
-    }
+    "./commands/hydrogen/init": "./dist/commands/hydrogen/init.js"
   },
   "files": [
     "dist",
