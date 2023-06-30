@@ -70,6 +70,7 @@ export async function canWriteFiles(
 
 type PackageJson = _PackageJson & {
   peerDependencies?: _PackageJson['dependencies'];
+  comment?: string;
 };
 
 const MANAGED_PACKAGE_JSON_KEYS = Object.freeze([
@@ -87,6 +88,8 @@ export async function mergePackageJson(feature: AssetDir, projectDir: string) {
   const sourcePkgJson: PackageJson = await readAndParsePackageJson(
     joinPath(getAssetDir(feature), 'package.json'),
   );
+
+  delete sourcePkgJson.comment;
 
   const unmanagedKeys = Object.keys(sourcePkgJson).filter(
     (key) => !MANAGED_PACKAGE_JSON_KEYS.includes(key as ManagedKey),
@@ -106,6 +109,10 @@ export async function mergePackageJson(feature: AssetDir, projectDir: string) {
     targetPkgJson[key] = newValue as any;
   }
 
+  const remixVersion = Object.entries(targetPkgJson.dependencies || {}).find(
+    ([dep]) => dep.startsWith('@remix-run/'),
+  )?.[1];
+
   for (const key of MANAGED_PACKAGE_JSON_KEYS) {
     if (sourcePkgJson[key]) {
       targetPkgJson[key] = [
@@ -116,7 +123,14 @@ export async function mergePackageJson(feature: AssetDir, projectDir: string) {
       ]
         .sort()
         .reduce((acc, dep) => {
-          acc[dep] = (sourcePkgJson[key]?.[dep] ?? targetPkgJson[key]?.[dep])!;
+          let version = (sourcePkgJson[key]?.[dep] ??
+            targetPkgJson[key]?.[dep])!;
+
+          if (dep.startsWith('@remix-run/') && remixVersion) {
+            version = remixVersion;
+          }
+
+          acc[dep] = version;
           return acc;
         }, {} as Record<string, string>);
     }
