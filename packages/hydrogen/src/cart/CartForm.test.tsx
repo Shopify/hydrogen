@@ -1,15 +1,7 @@
 import {describe, expect, expectTypeOf, it, vi} from 'vitest';
 import {render} from '@testing-library/react';
 import {CartForm} from './CartForm';
-import {
-  AttributeInput,
-  CartBuyerIdentityInput,
-  CartInput,
-  CartLineInput,
-  CartLineUpdateInput,
-  CartSelectedDeliveryOptionInput,
-  Scalars,
-} from '@shopify/hydrogen-react/storefront-api-types';
+import {CartLineInput} from '@shopify/hydrogen-react/storefront-api-types';
 
 function MockForm({
   children,
@@ -110,9 +102,20 @@ function mockFormData(data: Record<string, unknown>) {
   };
   return {
     has: (key: string) => !!formatData[key],
-    get: (key: string) => formatData[key],
+    get: (key: string) =>
+      Array.isArray(formatData[key]) ? formatData[key][0] : formatData[key],
+    getAll: (key: string) => formatData[key],
     append: (key: string, value: any) => {
-      formatData[key] = value;
+      if (formatData[key]) {
+        if (Array.isArray(formatData[key])) {
+          formatData[key].push(value);
+        } else {
+          formatData[key] = [formatData[key], value];
+        }
+        return;
+      } else {
+        formatData[key] = value;
+      }
     },
     entries: () => {
       const entries: any[] = [];
@@ -191,6 +194,22 @@ describe('getFormInput', () => {
       action: 'NoteUpdate',
       inputs: {
         note: 'test',
+      },
+    });
+  });
+
+  it('combines same name inputs into an array', () => {
+    const formData = mockFormData({
+      action: 'NoteUpdate',
+    });
+    formData.append('note', 'test1');
+    formData.append('note', 'test2');
+    const result = CartForm.getFormInput(formData);
+
+    expect(result).toEqual({
+      action: 'NoteUpdate',
+      inputs: {
+        note: ['test1', 'test2'],
       },
     });
   });
