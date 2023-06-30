@@ -19,15 +19,9 @@ import {getRemixConfig} from '../../../lib/config.js';
 import {
   setupCssStrategy,
   SETUP_CSS_STRATEGIES,
+  CSS_STRATEGY_NAME_MAP,
   type CssStrategy,
 } from '../../../lib/setups/css/index.js';
-
-export const CSS_STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
-  tailwind: 'Tailwind',
-  'css-modules': 'CSS Modules',
-  'vanilla-extract': 'Vanilla Extract',
-  postcss: 'CSS',
-};
 
 export default class SetupCSS extends Command {
   static description = 'Setup CSS strategies for your project.';

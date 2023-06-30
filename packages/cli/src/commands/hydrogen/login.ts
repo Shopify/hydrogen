@@ -1,11 +1,9 @@
 import {Flags} from '@oclif/core';
 import Command from '@shopify/cli-kit/node/base-command';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 
 import {commonFlags} from '../../lib/flags.js';
-import {login} from '../../lib/auth.js';
-import {type ShopifyConfig} from '../../lib/shopify-config.js';
+import {login, renderLoginSuccess} from '../../lib/auth.js';
 
 export default class Login extends Command {
   static description = 'Login to your Shopify account.';
@@ -39,15 +37,4 @@ async function runLogin({
 }: LoginArguments) {
   const {config} = await login(root, shopFlag ?? true);
   renderLoginSuccess(config);
-}
-
-export function renderLoginSuccess(config: ShopifyConfig) {
-  renderSuccess({
-    headline: 'Shopify authentication complete',
-    body: [
-      'You are logged in to',
-      {userInput: config.shopName ?? config.shop ?? 'your store'},
-      ...(config.email ? ['as', {userInput: config.email!}] : []),
-    ],
-  });
 }

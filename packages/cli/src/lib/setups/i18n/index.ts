@@ -11,6 +11,12 @@ export const SETUP_I18N_STRATEGIES = [
 
 export type I18nStrategy = (typeof SETUP_I18N_STRATEGIES)[number];
 
+export const I18N_STRATEGY_NAME_MAP: Record<I18nStrategy, string> = {
+  subfolders: 'Subfolders (example.com/fr-ca/...)',
+  subdomains: 'Subdomains (de.example.com/...)',
+  domains: 'Top-level domains (example.jp/...)',
+};
+
 export type SetupConfig = {
   rootDirectory: string;
   serverEntryPoint?: string;

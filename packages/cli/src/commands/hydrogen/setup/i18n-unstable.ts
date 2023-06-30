@@ -11,14 +11,9 @@ import {getRemixConfig} from '../../../lib/config.js';
 import {
   setupI18nStrategy,
   SETUP_I18N_STRATEGIES,
+  I18N_STRATEGY_NAME_MAP,
   type I18nStrategy,
 } from '../../../lib/setups/i18n/index.js';
-
-export const I18N_STRATEGY_NAME_MAP: Record<I18nStrategy, string> = {
-  subfolders: 'Subfolders (example.com/fr-ca/...)',
-  subdomains: 'Subdomains (de.example.com/...)',
-  domains: 'Top-level domains (example.jp/...)',
-};
 
 export default class SetupI18n extends Command {
   static description =

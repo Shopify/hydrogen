@@ -8,6 +8,13 @@ import {setupVanillaExtract} from './vanilla-extract.js';
 
 export {type CssStrategy, SETUP_CSS_STRATEGIES} from './assets.js';
 
+export const CSS_STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
+  tailwind: 'Tailwind',
+  'css-modules': 'CSS Modules',
+  'vanilla-extract': 'Vanilla Extract',
+  postcss: 'CSS',
+};
+
 export function setupCssStrategy(
   strategy: CssStrategy,
   options: SetupConfig,
