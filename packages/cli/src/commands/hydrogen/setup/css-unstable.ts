@@ -5,11 +5,7 @@ import {
   flagsToCamelObject,
 } from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {
-  renderSelectPrompt,
-  renderSuccess,
-  renderTasks,
-} from '@shopify/cli-kit/node/ui';
+import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {
   getPackageManager,
   installNodeModules,

@@ -246,14 +246,17 @@ export async function setupLocalStarterTemplate(
 
     const {routes, setupRoutes} = await handleRouteGeneration(
       controller,
-      options.routes,
+      options.routes || true, // TODO: Remove default value when multi-select UI component is available
     );
 
     setupSummary.i18n = i18nStrategy;
     setupSummary.routes = routes;
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
       Promise.all([
-        setupI18n(project.directory, language).catch((error) => {
+        setupI18n({
+          rootDirectory: project.directory,
+          serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
+        }).catch((error) => {
           setupSummary.i18nError = error as AbortError;
         }),
         setupRoutes(project.directory, language, i18nStrategy).catch(

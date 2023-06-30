@@ -1,5 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import {getLocaleFromRequest} from './/templates/domains.js';
+import {getLocaleFromRequest} from './templates/domains.js';
 
 describe('Setup i18n with domains', () => {
   it('extracts the locale from the domain', () => {

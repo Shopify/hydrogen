@@ -33,6 +33,7 @@ import {
   type I18nStrategy,
   I18N_STRATEGY_NAME_MAP,
   setupI18nStrategy,
+  I18nSetupConfig,
   renderI18nPrompt,
 } from '../setups/i18n/index.js';
 import {titleize} from '../string.js';
@@ -50,7 +51,11 @@ import {
   type CssStrategy,
   renderCssPrompt,
 } from '../setups/css/index.js';
-import {generateMultipleRoutes, ROUTE_MAP} from '../setups/routes/generate.js';
+import {
+  generateMultipleRoutes,
+  renderRoutePrompt,
+  ROUTE_MAP,
+} from '../setups/routes/generate.js';
 
 export type InitOptions = {
   path?: string;
@@ -91,12 +96,9 @@ export async function handleI18n(
 
   return {
     i18nStrategy,
-    setupI18n: async (rootDirectory: string, language: Language) => {
+    setupI18n: async (options: I18nSetupConfig) => {
       if (i18nStrategy) {
-        await setupI18nStrategy(i18nStrategy, {
-          rootDirectory,
-          serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
-        });
+        await setupI18nStrategy(i18nStrategy, options);
       }
     },
   };
@@ -104,7 +106,7 @@ export async function handleI18n(
 
 export async function handleRouteGeneration(
   controller: AbortController,
-  flagRoutes: boolean = true, // TODO: Remove default value when multi-select UI component is available
+  flagRoutes?: boolean,
 ) {
   // TODO: Need a multi-select UI component
   const routesToScaffold = flagRoutes
