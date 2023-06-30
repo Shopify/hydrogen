@@ -218,7 +218,7 @@ type Project = {
   location: string;
   name: string;
   directory: string;
-  storefrontInfo?: Awaited<ReturnType<typeof handleStorefrontLink>>;
+  storefrontTitle?: string;
 };
 
 /**
@@ -287,7 +287,12 @@ export async function handleProjectLocation({
     await rmdir(directory);
   }
 
-  return {location, name: basename(location), directory, storefrontInfo};
+  return {
+    name: basename(location),
+    location, // User input. E.g. "./hydrogen-storefront"
+    directory, // Absolute path to location
+    storefrontTitle: storefrontInfo?.title,
+  };
 }
 
 /**
@@ -427,7 +432,7 @@ export async function createInitialCommit(directory: string) {
 }
 
 export type SetupSummary = {
-  language: Language;
+  language?: Language;
   packageManager: 'npm' | 'pnpm' | 'yarn';
   cssStrategy?: CssStrategy;
   hasCreatedShortcut: boolean;
@@ -458,10 +463,15 @@ export async function renderProjectReady(
   }: SetupSummary,
 ) {
   const hasErrors = Boolean(depsError || i18nError || routesError);
-  const bodyLines: [string, string][] = [
-    ['Shopify', project.storefrontInfo?.title ?? 'Mock.shop'],
-    ['Language', LANGUAGES[language]],
-  ];
+  const bodyLines: [string, string][] = [];
+
+  if (project.storefrontTitle) {
+    bodyLines.push(['Shopify', project.storefrontTitle]);
+  }
+
+  if (language) {
+    bodyLines.push(['Language', LANGUAGES[language]]);
+  }
 
   if (cssStrategy) {
     bodyLines.push(['Styling', CSS_STRATEGY_NAME_MAP[cssStrategy]]);
@@ -577,9 +587,15 @@ export async function renderProjectReady(
                 [
                   'Run',
                   {
-                    command: `cd ${project.location.replace(/^\.\//, '')}${
-                      depsInstalled ? '' : ` && ${packageManager} install`
-                    } && ${formatPackageManagerCommand(packageManager, 'dev')}`,
+                    command: [
+                      project.directory === process.cwd()
+                        ? undefined
+                        : `cd ${project.location.replace(/^\.\//, '')}`,
+                      depsInstalled ? undefined : `${packageManager} install`,
+                      formatPackageManagerCommand(packageManager, 'dev'),
+                    ]
+                      .filter(Boolean)
+                      .join(' && '),
                   },
                 ],
               ].filter((step): step is string[] => Boolean(step)),

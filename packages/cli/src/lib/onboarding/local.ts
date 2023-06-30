@@ -68,6 +68,8 @@ export async function setupLocalStarterTemplate(
 
   if (!project) return;
 
+  if (templateAction === 'mock') project.storefrontTitle = 'Mock.shop';
+
   const abort = createAbortHandler(controller, project);
 
   const createStorefrontPromise =
