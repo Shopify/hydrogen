@@ -14,14 +14,13 @@ export type I18nStrategy = (typeof SETUP_I18N_STRATEGIES)[number];
 export type SetupConfig = {
   rootDirectory: string;
   serverEntryPoint?: string;
-  tsconfigPath?: string;
 };
 
 export async function setupI18nStrategy(
   strategy: I18nStrategy,
   options: SetupConfig,
 ) {
-  const isTs = !!options.tsconfigPath;
+  const isTs = options.serverEntryPoint?.endsWith('.ts') ?? false;
 
   const templatePath = fileURLToPath(
     new URL(`./templates/${strategy}${isTs ? '.ts' : '.js'}`, import.meta.url),
