@@ -488,6 +488,10 @@ async function setupLocalStarterTemplate(
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
       setupSummary.hasCreatedShortcut = await createShortcut();
     });
+
+    renderInfo({
+      body: `You'll need to restart your terminal session to make \`${ALIAS_NAME}\` alias available.`,
+    });
   }
 
   renderSuccess({
@@ -745,17 +749,18 @@ async function handleProjectLocation({
 
     if (!force) {
       const deleteFiles = await renderConfirmationPrompt({
-        message: outputContent`${outputToken.cyan(
+        message: `The directory ${colors.cyan(
           location,
-        )} is not an empty directory. Do you want to delete the existing files and continue?`
-          .value,
+        )} is not empty. Do you want to delete the existing files and continue?`,
         defaultValue: false,
         abortSignal: controller.signal,
       });
 
       if (!deleteFiles) {
         renderInfo({
-          headline: `Destination path ${location} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to override it.`,
+          body: `Destination path ${colors.cyan(
+            location,
+          )} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to override it.`,
         });
 
         return;
@@ -1058,31 +1063,13 @@ async function renderProjectReady(
           {
             list: {
               items: [
-                hasCreatedShortcut && [
-                  'Restart your terminal session to make the new',
-                  {command: ALIAS_NAME},
-                  'alias available.',
-                ],
-
                 [
                   'Run',
                   {
-                    command: colors.cyan(
-                      `cd ${project.location}${
-                        depsInstalled ? '' : ` && ${packageManager} install`
-                      } && ${
-                        hasCreatedShortcut
-                          ? `${ALIAS_NAME} dev`
-                          : formatPackageManagerCommand(packageManager, 'dev')
-                      }`,
-                    ),
+                    command: `cd ${project.location.replace(/^\.\//, '')}${
+                      depsInstalled ? '' : ` && ${packageManager} install`
+                    } && ${formatPackageManagerCommand(packageManager, 'dev')}`,
                   },
-                ],
-
-                i18nError && [
-                  'Run',
-                  {command: `${cliCommand} setup i18n-unstable`},
-                  'to scaffold internationalization.',
                 ],
               ].filter((step): step is string[] => Boolean(step)),
             },
