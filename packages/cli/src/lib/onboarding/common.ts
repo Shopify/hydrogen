@@ -167,23 +167,29 @@ export async function handleCliShortcut(
       abortSignal: controller.signal,
     }));
 
-  if (!shouldCreateShortcut) return;
+  if (!shouldCreateShortcut) return {};
 
-  return async () => {
-    try {
-      const shortcuts = await createPlatformShortcut();
-      return shortcuts.length > 0;
-    } catch (error: any) {
-      // Ignore errors.
-      // We'll inform the user to create the
-      // shortcut manually in the next step.
-      outputDebug(
-        'Failed to create shortcut.' +
-          (error?.stack ?? error?.message ?? error),
-      );
+  return {
+    createShortcut: async () => {
+      try {
+        const shortcuts = await createPlatformShortcut();
+        return shortcuts.length > 0;
+      } catch (error: any) {
+        // Ignore errors.
+        // We'll inform the user to create the
+        // shortcut manually in the next step.
+        outputDebug(
+          'Failed to create shortcut.' +
+            (error?.stack ?? error?.message ?? error),
+        );
 
-      return false;
-    }
+        return false;
+      }
+    },
+    showShortcutBanner: () =>
+      renderInfo({
+        body: `You'll need to restart your terminal session to make \`${ALIAS_NAME}\` alias available.`,
+      }),
   };
 }
 

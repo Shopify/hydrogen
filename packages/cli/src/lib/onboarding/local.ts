@@ -204,7 +204,7 @@ export async function setupLocalStarterTemplate(
 
   const cliCommand = await getCliCommand('', packageManager);
 
-  const createShortcut = await handleCliShortcut(
+  const {createShortcut, showShortcutBanner} = await handleCliShortcut(
     controller,
     cliCommand,
     options.shortcut,
@@ -215,9 +215,7 @@ export async function setupLocalStarterTemplate(
       setupSummary.hasCreatedShortcut = await createShortcut();
     });
 
-    renderInfo({
-      body: `You'll need to restart your terminal session to make \`${ALIAS_NAME}\` alias available.`,
-    });
+    showShortcutBanner();
   }
 
   renderSuccess({
