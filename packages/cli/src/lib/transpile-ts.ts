@@ -1,16 +1,18 @@
 import path from 'path';
 import fs from 'fs/promises';
-import prettier, {type Options as FormatOptions} from 'prettier';
 import ts, {type CompilerOptions} from 'typescript';
 import glob from 'fast-glob';
 import {outputDebug} from '@shopify/cli-kit/node/output';
+import {formatCode, getCodeFormatOptions} from './format-code.js';
 
 const escapeNewLines = (code: string) =>
   code.replace(/\n\n/g, '\n/* :newline: */');
 const restoreNewLines = (code: string) =>
   code.replace(/\/\* :newline: \*\//g, '\n');
 
-const DEFAULT_TS_CONFIG: Omit<CompilerOptions, 'target'> = {
+export type TranspilerOptions = Omit<CompilerOptions, 'target'>;
+
+const DEFAULT_TS_CONFIG: TranspilerOptions = {
   lib: ['DOM', 'DOM.Iterable', 'ES2022'],
   isolatedModules: true,
   esModuleInterop: true,
@@ -40,36 +42,6 @@ export function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
 
   // Here we restore the new lines that were removed by TypeScript.
   return restoreNewLines(compiled.outputText);
-}
-
-const DEFAULT_PRETTIER_CONFIG: FormatOptions = {
-  arrowParens: 'always',
-  singleQuote: true,
-  bracketSpacing: false,
-  trailingComma: 'all',
-};
-
-export async function resolveFormatConfig(filePath = process.cwd()) {
-  try {
-    // Try to read a prettier config file from the project.
-    return (await prettier.resolveConfig(filePath)) || DEFAULT_PRETTIER_CONFIG;
-  } catch {
-    return DEFAULT_PRETTIER_CONFIG;
-  }
-}
-
-export function format(content: string, config: FormatOptions, filePath = '') {
-  const ext = path.extname(filePath);
-
-  const formattedContent = prettier.format(content, {
-    // Specify the TypeScript parser for ts/tsx files. Otherwise
-    // we need to use the babel parser because the default parser
-    // Otherwise prettier will print a warning.
-    parser: ext === '.tsx' || ext === '.ts' ? 'typescript' : 'babel',
-    ...config,
-  });
-
-  return formattedContent;
 }
 
 const DEFAULT_JS_CONFIG: Omit<CompilerOptions, 'jsx'> = {
@@ -129,7 +101,7 @@ export async function transpileProject(projectDir: string) {
     cwd: projectDir,
   });
 
-  const formatConfig = await resolveFormatConfig();
+  const formatConfig = await getCodeFormatOptions();
 
   for (const entry of entries) {
     if (entry.endsWith('.d.ts')) {
@@ -138,7 +110,7 @@ export async function transpileProject(projectDir: string) {
     }
 
     const tsx = await fs.readFile(entry, 'utf8');
-    const mjs = format(transpileFile(tsx), formatConfig);
+    const mjs = formatCode(transpileFile(tsx), formatConfig);
 
     await fs.rm(entry);
     await fs.writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs, 'utf8');

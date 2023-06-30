@@ -180,17 +180,8 @@ async function createNewStorefront(root: string, session: AdminSession) {
       title: 'Creating storefront',
       task: async () => {
         const result = await createStorefront(session, projectName);
-
         storefront = result.storefront;
         jobId = result.jobId;
-
-        if (result.userErrors.length > 0) {
-          const errorMessages = result.userErrors
-            .map(({message}) => message)
-            .join(', ');
-
-          throw new AbortError('Could not create storefront: ' + errorMessages);
-        }
       },
     },
     {

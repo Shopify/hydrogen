@@ -70,16 +70,19 @@ export async function startMiniOxygen({
       mode?: string;
       headlinePrefix?: string;
       extraLines?: string[];
+      appName?: string;
     }) {
+      console.log('');
       renderSuccess({
         headline: `${options?.headlinePrefix ?? ''}MiniOxygen ${
           options?.mode ?? 'development'
         } server running.`,
         body: [
-          `View Hydrogen app: ${listeningAt}`,
+          `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
           ...(options?.extraLines ?? []),
         ],
       });
+      console.log('');
     },
   };
 }
