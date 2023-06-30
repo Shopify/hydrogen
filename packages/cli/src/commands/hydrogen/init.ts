@@ -761,6 +761,8 @@ async function handleProjectLocation({
         return;
       }
     }
+
+    await rmdir(directory);
   }
 
   return {location, name: basename(location), directory, storefrontInfo};
