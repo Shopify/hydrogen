@@ -6,7 +6,18 @@ const methodsReplaced = new Set<ConsoleMethod>();
 
 type Matcher = (args: Array<any>) => boolean;
 type Replacer = (args: Array<any>) => void | string[];
+const addedReplacers = new Set<string>();
 const messageReplacers: Array<[Matcher, Replacer]> = [];
+
+export function addMessageReplacers(
+  key: string,
+  ...items: Array<[Matcher, Replacer]>
+) {
+  if (!addedReplacers.has(key)) {
+    addedReplacers.add(key);
+    messageReplacers.push(...items);
+  }
+}
 
 function injectLogReplacer(method: ConsoleMethod) {
   if (!methodsReplaced.has(method)) {
@@ -21,16 +32,11 @@ function injectLogReplacer(method: ConsoleMethod) {
   }
 }
 
-injectLogReplacer('log');
-injectLogReplacer('info');
-
-let devMuted = false;
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
-  if (devMuted) return;
-  else devMuted = true;
+  injectLogReplacer('log');
 
   let isFirstWorkerReload = true;
-  messageReplacers.push([
+  addMessageReplacers('dev', [
     ([first]) => typeof first === 'string' && first.includes('[mf:'),
     (args: string[]) => {
       const first = args[0] as string;
@@ -53,16 +59,51 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   ]);
 }
 
-let authMuted = false;
-export function muteAuthLogs() {
-  if (authMuted) return;
-  else authMuted = true;
+const originalWrite = process.stdout.write;
+export function muteAuthLogs({
+  onPressKey,
+  onKeyTimeout,
+}: {
+  onPressKey: () => void;
+  onKeyTimeout: (link?: string) => void;
+}) {
+  if (process.stdout.write === originalWrite) {
+    const write = originalWrite.bind(process.stdout);
 
-  messageReplacers.push(
+    process.stdout.write = ((item, cb: any) => {
+      if (typeof item !== 'string') return write(item, cb);
+
+      const replacer = messageReplacers.find(([matcher]) =>
+        matcher([item]),
+      )?.[1];
+      if (!replacer) return write(item, cb);
+
+      const result = replacer([item]);
+      if (result) return write(result[0] as string, cb);
+    }) as typeof write;
+  }
+
+  addMessageReplacers(
+    'auth',
     [
       ([first]) => typeof first === 'string' && first.includes('Auto-open'),
       ([first]) => {
-        return [first.replace(' to Shopify Partners', '')];
+        const content = (first as string).replace(' to Shopify Partners', '');
+
+        const link = content.match(/(https?:\/\/.*)Log in/)?.[1];
+        onKeyTimeout(link);
+
+        if (link) return;
+
+        return [content];
+      },
+    ],
+    [
+      ([first]) => typeof first === 'string' && first.includes('👉'),
+      () => {
+        onPressKey();
+        // Hide logs
+        return;
       },
     ],
     [
@@ -75,6 +116,10 @@ export function muteAuthLogs() {
       },
     ],
   );
+
+  return () => {
+    process.stdout.write = originalWrite;
+  };
 }
 
 const warnings = new Set<string>();
