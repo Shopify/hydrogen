@@ -17,7 +17,6 @@ type ActionResponse = {
 
 export async function loader({context}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
-
   if (customerAccessToken) {
     return redirect('/account');
   }
@@ -26,6 +25,10 @@ export async function loader({context}: LoaderArgs) {
 }
 
 export const action: ActionFunction = async ({request, context}) => {
+  if (request.method !== 'POST') {
+    return json({error: 'Method not allowed'}, {status: 405});
+  }
+
   const {storefront, session} = context;
   const form = await request.formData();
   const email = String(form.has('email') ? form.get('email') : '');
@@ -98,7 +101,7 @@ export default function Register() {
   return (
     <section className="login">
       <h1>Register</h1>
-      <Form method="post">
+      <Form method="POST">
         <fieldset>
           <label htmlFor="email">Email address</label>
           <input

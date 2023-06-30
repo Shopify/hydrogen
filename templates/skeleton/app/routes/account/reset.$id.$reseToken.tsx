@@ -1,4 +1,4 @@
-import {json, redirect, type ActionFunction} from '@shopify/remix-oxygen';
+import {type ActionArgs, json, redirect} from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 
 type ActionResponse = {
@@ -9,12 +9,13 @@ export const meta: V2_MetaFunction = () => {
   return [{title: 'Reset Password'}];
 };
 
-export const action: ActionFunction = async ({
-  request,
-  context,
-  params: {id, resetToken},
-}) => {
+export async function action({request, context, params}: ActionArgs) {
+  if (request.method !== 'POST') {
+    return json({error: 'Method not allowed'}, {status: 405});
+  }
+  const {id, resetToken} = params;
   const {session, storefront} = context;
+
   try {
     if (!id || !resetToken) {
       throw new Error('customer token or id not found');
@@ -59,7 +60,7 @@ export const action: ActionFunction = async ({
     }
     return json({error}, {status: 400});
   }
-};
+}
 
 export default function Reset() {
   const action = useActionData<ActionResponse>();
@@ -68,7 +69,7 @@ export default function Reset() {
     <div className="account-reset">
       <h1>Reset Password.</h1>
       <p>Enter a new password for your account.</p>
-      <Form method="post" noValidate>
+      <Form method="POST">
         <fieldset>
           <label htmlFor="password">Password</label>
           <input

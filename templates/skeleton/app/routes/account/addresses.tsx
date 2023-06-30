@@ -1,12 +1,18 @@
+import type {MailingAddressInput} from '@shopify/hydrogen/storefront-api-types';
 import type {AddressFragment, CustomerFragment} from 'storefrontapi.generated';
-import {ActionArgs, json, LoaderArgs, redirect} from '@shopify/remix-oxygen';
+import {
+  json,
+  redirect,
+  type ActionArgs,
+  type LoaderArgs,
+  type V2_MetaFunction,
+} from '@shopify/remix-oxygen';
 import {
   Form,
   useActionData,
   useNavigation,
   useOutletContext,
 } from '@remix-run/react';
-import type {MailingAddressInput} from '@shopify/hydrogen/storefront-api-types';
 
 export type ActionResponse = {
   addressId?: string | null;
@@ -15,6 +21,10 @@ export type ActionResponse = {
   deletedAddress?: string | null;
   error: Record<AddressFragment['id'], string> | null;
   updatedAddress?: AddressFragment;
+};
+
+export const meta: V2_MetaFunction = () => {
+  return [{title: 'Addresses'}];
 };
 
 export async function loader({context}: LoaderArgs) {
@@ -28,168 +38,179 @@ export async function loader({context}: LoaderArgs) {
 
 export async function action({request, context}: ActionArgs) {
   const {storefront, session} = context;
-  const form = await request.formData();
 
-  const addressId = form.has('addressId')
-    ? String(form.get('addressId'))
-    : null;
-  if (!addressId) {
-    throw new Error('You must provide an address id.');
-  }
+  try {
+    const form = await request.formData();
 
-  const customerAccessToken = await session.get('customerAccessToken');
-  if (!customerAccessToken) {
-    return json({error: {[addressId]: 'Unauthorized'}}, {status: 401});
-  }
-  const {accessToken} = customerAccessToken;
-
-  const defaultAddress = form.has('defaultAddress')
-    ? String(form.get('defaultAddress')) === 'on'
-    : null;
-  const address: MailingAddressInput = {};
-  const keys: (keyof MailingAddressInput)[] = [
-    'address1',
-    'address2',
-    'city',
-    'company',
-    'country',
-    'firstName',
-    'lastName',
-    'phone',
-    'province',
-    'zip',
-  ];
-
-  for (const key of keys) {
-    const value = form.get(key);
-    if (typeof value === 'string') {
-      address[key] = value;
+    const addressId = form.has('addressId')
+      ? String(form.get('addressId'))
+      : null;
+    if (!addressId) {
+      throw new Error('You must provide an address id.');
     }
-  }
 
-  switch (request.method) {
-    case 'POST': {
-      // handle new address creation
-      try {
-        const {customerAddressCreate} = await storefront.mutate(
-          CREATE_ADDRESS_MUTATION,
-          {
-            variables: {customerAccessToken: accessToken, address},
-          },
-        );
+    const customerAccessToken = await session.get('customerAccessToken');
+    if (!customerAccessToken) {
+      return json({error: {[addressId]: 'Unauthorized'}}, {status: 401});
+    }
+    const {accessToken} = customerAccessToken;
 
-        if (customerAddressCreate?.customerUserErrors?.length) {
-          const error = customerAddressCreate.customerUserErrors[0];
-          throw new Error(error.message);
-        }
+    const defaultAddress = form.has('defaultAddress')
+      ? String(form.get('defaultAddress')) === 'on'
+      : null;
+    const address: MailingAddressInput = {};
+    const keys: (keyof MailingAddressInput)[] = [
+      'address1',
+      'address2',
+      'city',
+      'company',
+      'country',
+      'firstName',
+      'lastName',
+      'phone',
+      'province',
+      'zip',
+    ];
 
-        const createdAddress = customerAddressCreate?.customerAddress;
-        if (!createdAddress?.id) {
-          throw new Error(
-            'Expected customer address to be created, but the id is missing',
+    for (const key of keys) {
+      const value = form.get(key);
+      if (typeof value === 'string') {
+        address[key] = value;
+      }
+    }
+
+    switch (request.method) {
+      case 'POST': {
+        // handle new address creation
+        try {
+          const {customerAddressCreate} = await storefront.mutate(
+            CREATE_ADDRESS_MUTATION,
+            {
+              variables: {customerAccessToken: accessToken, address},
+            },
           );
-        }
 
-        if (defaultAddress) {
-          const createdAddressId = decodeURIComponent(createdAddress.id);
-          const {customerDefaultAddressUpdate} = await storefront.mutate(
-            UPDATE_DEFAULT_ADDRESS_MUTATION,
+          if (customerAddressCreate?.customerUserErrors?.length) {
+            const error = customerAddressCreate.customerUserErrors[0];
+            throw new Error(error.message);
+          }
+
+          const createdAddress = customerAddressCreate?.customerAddress;
+          if (!createdAddress?.id) {
+            throw new Error(
+              'Expected customer address to be created, but the id is missing',
+            );
+          }
+
+          if (defaultAddress) {
+            const createdAddressId = decodeURIComponent(createdAddress.id);
+            const {customerDefaultAddressUpdate} = await storefront.mutate(
+              UPDATE_DEFAULT_ADDRESS_MUTATION,
+              {
+                variables: {
+                  customerAccessToken: accessToken,
+                  addressId: createdAddressId,
+                },
+              },
+            );
+
+            if (customerDefaultAddressUpdate?.customerUserErrors?.length) {
+              const error = customerDefaultAddressUpdate.customerUserErrors[0];
+              throw new Error(error.message);
+            }
+          }
+
+          return json({error: null, createdAddress, defaultAddress});
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            return json({error: {[addressId]: error.message}}, {status: 400});
+          }
+          return json({error: {[addressId]: error}}, {status: 400});
+        }
+      }
+
+      case 'PUT': {
+        // handle address updates
+        try {
+          const {customerAddressUpdate} = await storefront.mutate(
+            UPDATE_ADDRESS_MUTATION,
             {
               variables: {
+                address,
                 customerAccessToken: accessToken,
-                addressId: createdAddressId,
+                id: decodeURIComponent(addressId),
               },
             },
           );
 
-          if (customerDefaultAddressUpdate?.customerUserErrors?.length) {
-            const error = customerDefaultAddressUpdate.customerUserErrors[0];
+          const updatedAddress = customerAddressUpdate?.customerAddress;
+
+          if (customerAddressUpdate?.customerUserErrors?.length) {
+            const error = customerAddressUpdate.customerUserErrors[0];
             throw new Error(error.message);
           }
-        }
 
-        return json({error: null, createdAddress, defaultAddress});
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          return json({error: {[addressId]: error.message}}, {status: 400});
-        }
-        return json({error: {[addressId]: error}}, {status: 400});
-      }
-    }
-
-    case 'PUT': {
-      // handle address updates
-      try {
-        const {customerAddressUpdate} = await storefront.mutate(
-          UPDATE_ADDRESS_MUTATION,
-          {
-            variables: {
-              address,
-              customerAccessToken: accessToken,
-              id: decodeURIComponent(addressId),
-            },
-          },
-        );
-
-        const updatedAddress = customerAddressUpdate?.customerAddress;
-
-        if (customerAddressUpdate?.customerUserErrors?.length) {
-          const error = customerAddressUpdate.customerUserErrors[0];
-          throw new Error(error.message);
-        }
-
-        if (defaultAddress) {
-          const {customerDefaultAddressUpdate} = await storefront.mutate(
-            UPDATE_DEFAULT_ADDRESS_MUTATION,
-            {
-              variables: {
-                customerAccessToken: accessToken,
-                addressId: decodeURIComponent(addressId),
+          if (defaultAddress) {
+            const {customerDefaultAddressUpdate} = await storefront.mutate(
+              UPDATE_DEFAULT_ADDRESS_MUTATION,
+              {
+                variables: {
+                  customerAccessToken: accessToken,
+                  addressId: decodeURIComponent(addressId),
+                },
               },
+            );
+
+            if (customerDefaultAddressUpdate?.customerUserErrors?.length) {
+              const error = customerDefaultAddressUpdate.customerUserErrors[0];
+              throw new Error(error.message);
+            }
+          }
+
+          return json({error: null, updatedAddress, defaultAddress});
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            return json({error: {[addressId]: error.message}}, {status: 400});
+          }
+          return json({error: {[addressId]: error}}, {status: 400});
+        }
+      }
+
+      case 'DELETE': {
+        // handles address deletion
+        try {
+          const {customerAddressDelete} = await storefront.mutate(
+            DELETE_ADDRESS_MUTATION,
+            {
+              variables: {customerAccessToken: accessToken, id: addressId},
             },
           );
 
-          if (customerDefaultAddressUpdate?.customerUserErrors?.length) {
-            const error = customerDefaultAddressUpdate.customerUserErrors[0];
+          if (customerAddressDelete?.customerUserErrors?.length) {
+            const error = customerAddressDelete.customerUserErrors[0];
             throw new Error(error.message);
           }
+          return json({error: null, deletedAddress: addressId});
+        } catch (error: unknown) {
+          if (error instanceof Error) {
+            return json({error: {[addressId]: error.message}}, {status: 400});
+          }
+          return json({error: {[addressId]: error}}, {status: 400});
         }
-
-        return json({error: null, updatedAddress, defaultAddress});
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          return json({error: {[addressId]: error.message}}, {status: 400});
-        }
-        return json({error: {[addressId]: error}}, {status: 400});
       }
-    }
 
-    case 'DELETE': {
-      // handles address deletion
-      try {
-        const {customerAddressDelete} = await storefront.mutate(
-          DELETE_ADDRESS_MUTATION,
-          {
-            variables: {customerAccessToken: accessToken, id: addressId},
-          },
+      default: {
+        return json(
+          {error: {[addressId]: 'Method not allowed'}},
+          {status: 405},
         );
-
-        if (customerAddressDelete?.customerUserErrors?.length) {
-          const error = customerAddressDelete.customerUserErrors[0];
-          throw new Error(error.message);
-        }
-        return json({error: null, deletedAddress: addressId});
-      } catch (error: unknown) {
-        if (error instanceof Error) {
-          return json({error: {[addressId]: error.message}}, {status: 400});
-        }
-        return json({error: {[addressId]: error}}, {status: 400});
       }
     }
-
-    default: {
-      return json({error: {[addressId]: 'Method not allowed'}}, {status: 405});
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      return json({error: error.message}, {status: 400});
     }
+    return json({error}, {status: 400});
   }
 }
 

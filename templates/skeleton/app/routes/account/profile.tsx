@@ -1,6 +1,12 @@
 import type {CustomerFragment} from 'storefrontapi.generated';
 import type {CustomerUpdateInput} from '@shopify/hydrogen/storefront-api-types';
-import {ActionArgs, json, LoaderArgs, redirect} from '@shopify/remix-oxygen';
+import {
+  ActionArgs,
+  LoaderArgs,
+  json,
+  redirect,
+  type V2_MetaFunction,
+} from '@shopify/remix-oxygen';
 import {
   Form,
   useActionData,
@@ -13,9 +19,12 @@ export type ActionResponse = {
   customer: CustomerFragment | null;
 };
 
+export const meta: V2_MetaFunction = () => {
+  return [{title: 'Profile'}];
+};
+
 export async function loader({context}: LoaderArgs) {
-  const {session} = context;
-  const customerAccessToken = await session.get('customerAccessToken');
+  const customerAccessToken = await context.session.get('customerAccessToken');
   if (!customerAccessToken) {
     return redirect('/account/login');
   }
@@ -109,7 +118,7 @@ export default function AccountProfile() {
     <div className="account-profile">
       <h2>My profile</h2>
       <br />
-      <Form method="put">
+      <Form method="PUT">
         <legend>Personal information</legend>
         <fieldset>
           <label htmlFor="firstName">First name</label>

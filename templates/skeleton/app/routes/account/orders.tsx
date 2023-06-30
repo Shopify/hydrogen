@@ -1,15 +1,24 @@
 import {Link, useLoaderData} from '@remix-run/react';
 import {
+  Money,
   Pagination__unstable as Pagination,
   getPaginationVariables__unstable as getPaginationVariables,
-  Money,
 } from '@shopify/hydrogen';
-import {type LoaderArgs, redirect, json} from '@shopify/remix-oxygen';
+import {
+  json,
+  redirect,
+  type LoaderArgs,
+  type V2_MetaFunction,
+} from '@shopify/remix-oxygen';
 
 import type {
   CustomerOrdersFragment,
   OrderItemFragment,
 } from 'storefrontapi.generated';
+
+export const meta: V2_MetaFunction = () => {
+  return [{title: 'Orders'}];
+};
 
 export async function loader({request, context}: LoaderArgs) {
   const {session, storefront} = context;
@@ -106,7 +115,7 @@ function EmptyOrders() {
     <div>
       <p>You haven&apos;t placed any orders yet.</p>
       <div>
-        <Link to="/collections/all">Start Shopping</Link>
+        <Link to="/collections">Start Shopping</Link>
       </div>
     </div>
   );

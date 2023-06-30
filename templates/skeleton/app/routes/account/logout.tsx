@@ -1,14 +1,27 @@
-import {redirect, type ActionArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  redirect,
+  type ActionArgs,
+  type V2_MetaFunction,
+} from '@shopify/remix-oxygen';
+
+export const meta: V2_MetaFunction = () => {
+  return [{title: 'Logout'}];
+};
 
 export async function loader() {
   return redirect('/account/login');
 }
 
-export async function action({context}: ActionArgs) {
+export async function action({request, context}: ActionArgs) {
   const {session} = context;
   session.unset('customerAccessToken');
 
-  return redirect(`/account/login`, {
+  if (request.method !== 'POST') {
+    return json({error: 'Method not allowed'}, {status: 405});
+  }
+
+  return redirect('/', {
     headers: {
       // eslint-disable-next-line @typescript-eslint/naming-convention
       'Set-Cookie': await session.commit(),

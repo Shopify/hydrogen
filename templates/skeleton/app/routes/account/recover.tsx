@@ -8,7 +8,6 @@ type ActionResponse = {
 
 export async function loader({context}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
-
   if (customerAccessToken) {
     return redirect('/account');
   }
@@ -20,6 +19,10 @@ export async function action({request, context}: LoaderArgs) {
   const {storefront} = context;
   const form = await request.formData();
   const email = form.has('email') ? String(form.get('email')) : null;
+
+  if (request.method !== 'POST') {
+    return json({error: 'Method not allowed'}, {status: 405});
+  }
 
   try {
     if (!email) {
@@ -61,7 +64,7 @@ export default function Recover() {
               Enter the email address associated with your account to receive a
               link to reset your password.
             </p>
-            <Form method="post">
+            <Form method="POST">
               <fieldset>
                 <input
                   aria-label="Email address"

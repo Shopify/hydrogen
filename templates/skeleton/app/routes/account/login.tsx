@@ -3,12 +3,16 @@ import {
   redirect,
   type ActionArgs,
   type LoaderArgs,
+  type V2_MetaFunction,
 } from '@shopify/remix-oxygen';
 import {Form, Link, useActionData} from '@remix-run/react';
 
 type ActionResponse = {
   error: string | null;
-  success: boolean;
+};
+
+export const meta: V2_MetaFunction = () => {
+  return [{title: 'Login'}];
 };
 
 export async function loader({context}: LoaderArgs) {
@@ -20,6 +24,10 @@ export async function loader({context}: LoaderArgs) {
 
 export async function action({request, context}: ActionArgs) {
   const {session, storefront} = context;
+
+  if (request.method !== 'POST') {
+    return json({error: 'Method not allowed'}, {status: 405});
+  }
 
   try {
     const form = await request.formData();
@@ -55,20 +63,20 @@ export async function action({request, context}: ActionArgs) {
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
-      return json({error: error.message, success: false}, {status: 400});
+      return json({error: error.message}, {status: 400});
     }
-    return json({error, success: false}, {status: 400});
+    return json({error}, {status: 400});
   }
 }
 
 export default function Login() {
   const data = useActionData<ActionResponse>();
   const error = data?.error || null;
-  const success = Boolean(data?.success);
+
   return (
     <section className="login">
       <h1>Sign in</h1>
-      <Form method="post">
+      <Form method="POST">
         <fieldset>
           <label htmlFor="email">Email address</label>
           <input
@@ -103,7 +111,6 @@ export default function Login() {
         ) : (
           <br />
         )}
-        {success && <p>Successfully logged in!</p>}
         <button type="submit">Sign in</button>
       </Form>
       <p>
@@ -113,6 +120,7 @@ export default function Login() {
   );
 }
 
+// NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customeraccesstokencreate
 export const LOGIN_MUTATION = `#graphql
   mutation login($input: CustomerAccessTokenCreateInput!) {
     customerAccessTokenCreate(input: $input) {

@@ -12,7 +12,7 @@ export async function loader({request, context}: LoaderArgs) {
   const {pathname} = new URL(request.url);
   const customerAccessToken = await session.get('customerAccessToken');
   const isLoggedIn = Boolean(customerAccessToken?.accessToken);
-  const isAccountHome = pathname === '/account';
+  const isAccountHome = pathname === '/account' || pathname === '/account/';
   const isPrivateRoute =
     /^\/account\/(orders|orders\/.*|profile|addresses|addresses\/.*)$/.test(
       pathname,
