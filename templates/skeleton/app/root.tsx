@@ -205,6 +205,7 @@ const FOOTER_QUERY = `#graphql
   ${MENU_FRAGMENT}
 ` as const;
 
+// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/cart
 const CART_QUERY = `#graphql
   query Cart($cartId: ID!) {
     cart(id: $cartId) {
@@ -228,49 +229,47 @@ const CART_QUERY = `#graphql
       phone
     }
     lines(first: 100) {
-      edges {
-        node {
-          id
-          quantity
-          attributes {
-            key
-            value
+      nodes {
+        id
+        quantity
+        attributes {
+          key
+          value
+        }
+        cost {
+          totalAmount {
+            ...Money
           }
-          cost {
-            totalAmount {
-              ...Money
-            }
-            amountPerQuantity {
-              ...Money
-            }
-            compareAtAmountPerQuantity {
-              ...Money
-            }
+          amountPerQuantity {
+            ...Money
           }
-          merchandise {
-            ... on ProductVariant {
-              id
-              availableForSale
-              compareAtPrice {
-                ...Money
-              }
-              price {
-                ...Money
-              }
-              requiresShipping
+          compareAtAmountPerQuantity {
+            ...Money
+          }
+        }
+        merchandise {
+          ... on ProductVariant {
+            id
+            availableForSale
+            compareAtPrice {
+              ...Money
+            }
+            price {
+              ...Money
+            }
+            requiresShipping
+            title
+            image {
+              ...Image
+            }
+            product {
+              handle
               title
-              image {
-                ...Image
-              }
-              product {
-                handle
-                title
-                id
-              }
-              selectedOptions {
-                name
-                value
-              }
+              id
+            }
+            selectedOptions {
+              name
+              value
             }
           }
         }

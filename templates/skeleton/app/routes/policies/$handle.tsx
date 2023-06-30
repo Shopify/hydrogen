@@ -1,5 +1,5 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData} from '@remix-run/react';
+import {Link, useLoaderData} from '@remix-run/react';
 import {type Shop} from '@shopify/hydrogen-react/storefront-api-types';
 
 type SelectedPolicies = keyof Pick<
@@ -42,21 +42,20 @@ export default function Policy() {
 
   return (
     <section className="policy">
+      <div>
+        <Link to="/policies">
+          <mark>←</mark> Back to Policies
+        </Link>
+      </div>
+      <br />
       <h1>{policy.title}</h1>
       <div dangerouslySetInnerHTML={{__html: policy.body}} />
     </section>
   );
 }
 
+// NOTE: https://shopify.dev/docs/api/storefront/latest/objects/Shop
 const POLICY_CONTENT_QUERY = `#graphql
-  fragment Policy on ShopPolicy {
-    body
-    handle
-    id
-    title
-    url
-  }
-
   query Policy(
     $language: LanguageCode
     $privacyPolicy: Boolean!
@@ -78,5 +77,12 @@ const POLICY_CONTENT_QUERY = `#graphql
         ...Policy
       }
     }
+  }
+  fragment Policy on ShopPolicy {
+    body
+    handle
+    id
+    title
+    url
   }
 ` as const;

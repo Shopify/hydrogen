@@ -22,8 +22,8 @@ export const meta: V2_MetaFunction = () => {
 
 export async function loader({request, context}: LoaderArgs) {
   const {session, storefront} = context;
-  const customerAccessToken = await session.get('customerAccessToken');
 
+  const customerAccessToken = await session.get('customerAccessToken');
   if (!customerAccessToken?.accessToken) {
     return redirect('/account/login');
   }
@@ -114,9 +114,12 @@ function EmptyOrders() {
   return (
     <div>
       <p>You haven&apos;t placed any orders yet.</p>
-      <div>
-        <Link to="/collections">Start Shopping</Link>
-      </div>
+      <br />
+      <p>
+        <Link to="/collections">
+          Start Shopping <mark>→</mark>
+        </Link>
+      </p>
     </div>
   );
 }

@@ -80,26 +80,31 @@ function ProductsGrid({products}: {products: ProductItemFragment[]}) {
         gridGap: '1rem',
       }}
     >
-      {products.map((product, index) => (
-        <Link
-          key={product.id}
-          to={`/products/${product.handle}`}
-          prefetch="intent"
-        >
-          {/* TODO: @ben welp with sizes */}
-          {product.featuredImage && (
-            <Image
-              alt={product.featuredImage.altText || product.title}
-              aspectRatio={`${product.featuredImage.width}/${product.featuredImage.height}`}
-              data={product.featuredImage}
-              loading={index < 8 ? 'eager' : undefined}
-              sizes="(min-width: 45em) 400px, 100vw"
-              style={{width: '100%', height: 'auto'}}
-            />
-          )}
-          <h5>{product.title}</h5>
-        </Link>
-      ))}
+      {products.map((product, index) => {
+        const variant = product.variants.nodes[0];
+        const variantParams = new URLSearchParams(
+          variant.selectedOptions.reduce((param, op) => {
+            return {...param, [op.name]: op.value};
+          }, {}),
+        ).toString();
+        const url = `/products/${product.handle}?${variantParams}`;
+        return (
+          <Link key={product.id} to={url} prefetch="intent">
+            {/* TODO: @ben welp with sizes and url transform? */}
+            {product.featuredImage && (
+              <Image
+                alt={product.featuredImage.altText || product.title}
+                aspectRatio={`${product.featuredImage.width}/${product.featuredImage.height}`}
+                data={product.featuredImage}
+                loading={index < 8 ? 'eager' : undefined}
+                sizes="(min-width: 45em) 400px, 100vw"
+                style={{width: '100%', height: 'auto'}}
+              />
+            )}
+            <h5>{product.title}</h5>
+          </Link>
+        );
+      })}
     </div>
   );
 }
@@ -132,10 +137,19 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
         ...MoneyProductItem
       }
     }
+    variants(first: 1) {
+      nodes {
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
   }
   ${MONEY_FRAGMENT}
 ` as const;
 
+// NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
 const COLLECTION_QUERY = `#graphql
   query Collection(
     $handle: String!

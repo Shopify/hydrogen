@@ -5,7 +5,8 @@ export async function loader({context: {storefront}}: LoaderArgs) {
   const data = await storefront.query(POLICIES_QUERY);
   const policies = Object.values(data.shop || {});
 
-  if (policies.length === 0) {
+  // TODO: I need to sort out the 404 throwing response catching/page
+  if (!policies.length) {
     throw new Response('No policies found', {status: 404});
   }
 
@@ -16,27 +17,24 @@ export default function Policies() {
   const {policies} = useLoaderData<typeof loader>();
 
   return (
-    <ul className="policies">
-      {policies.map((policy) => {
-        if (!policy) return null;
-        return (
-          <li key={policy.id}>
-            <Link to={`/policies/${policy.handle}`}>{policy.title}</Link>
-          </li>
-        );
-      })}
-    </ul>
+    <section className="policies">
+      <h1>Policies</h1>
+      <div className="policies">
+        {policies.map((policy) => {
+          if (!policy) return null;
+          return (
+            <fieldset key={policy.id}>
+              <Link to={`/policies/${policy.handle}`}>{policy.title}</Link>
+            </fieldset>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
 const POLICIES_QUERY = `#graphql
-  fragment PolicyItem on ShopPolicy {
-    id
-    title
-    handle
-  }
-
-  query StorePolicies {
+  query Policies {
     shop {
       privacyPolicy {
         ...PolicyItem
@@ -56,5 +54,10 @@ const POLICIES_QUERY = `#graphql
         handle
       }
     }
+  }
+  fragment PolicyItem on ShopPolicy {
+    id
+    title
+    handle
   }
 ` as const;

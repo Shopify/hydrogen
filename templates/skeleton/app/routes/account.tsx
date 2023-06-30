@@ -99,7 +99,7 @@ function AccountLayout({
 }) {
   const heading = customer
     ? customer.firstName
-      ? `Welcome, ${customer.firstName} ${customer.lastName}`
+      ? `Welcome, ${customer.firstName}`
       : `Welcome to your account.`
     : 'Account Details';
 

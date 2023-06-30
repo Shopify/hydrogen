@@ -9,6 +9,8 @@ import type {
   StoreProductQuery,
 } from 'storefrontapi.generated';
 
+// TODO: add SEO
+
 export async function loader({params, request, context}: LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;

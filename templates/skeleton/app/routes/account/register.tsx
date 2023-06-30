@@ -32,10 +32,20 @@ export const action: ActionFunction = async ({request, context}) => {
   const {storefront, session} = context;
   const form = await request.formData();
   const email = String(form.has('email') ? form.get('email') : '');
-  const password = String(form.has('password') ? form.get('password') : '');
-  const validInputs = Boolean(email && password);
+  const password = form.has('password') ? String(form.get('password')) : null;
+  const passwordConfirm = form.has('passwordConfirm')
+    ? String(form.get('passwordConfirm'))
+    : null;
 
+  const validPasswords =
+    password && passwordConfirm && password === passwordConfirm;
+
+  const validInputs = Boolean(email && password);
   try {
+    if (!validPasswords) {
+      throw new Error('Passwords do not match');
+    }
+
     if (!validInputs) {
       throw new Error('Please provide both an email and a password.');
     }
@@ -123,6 +133,17 @@ export default function Register() {
             autoComplete="current-password"
             placeholder="Password"
             aria-label="Password"
+            minLength={8}
+            required
+          />
+          <label htmlFor="passwordConfirm">Re-enter password</label>
+          <input
+            id="passwordConfirm"
+            name="passwordConfirm"
+            type="password"
+            autoComplete="current-password"
+            placeholder="Re-enter password"
+            aria-label="Re-enter password"
             minLength={8}
             required
           />

@@ -1,6 +1,8 @@
 import invariant from 'tiny-invariant';
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 
+// TODO: delete when we implement VariantSelector
+
 export async function loader({params, request, context}: LoaderArgs) {
   const {handle} = params;
 
@@ -13,6 +15,7 @@ export async function loader({params, request, context}: LoaderArgs) {
       value: decodeURIComponent(value),
     })) || [];
 
+  // TODO: kill off invariant
   invariant(handle, 'Expected productHandle to be defined');
 
   const {product} = await context.storefront.query(PRODUCT_VARIANT_QUERY, {
