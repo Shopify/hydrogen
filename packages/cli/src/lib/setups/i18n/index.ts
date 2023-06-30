@@ -19,6 +19,8 @@ export const I18N_STRATEGY_NAME_MAP: Record<I18nStrategy, string> = {
   domains: 'Top-level domains (example.jp/...)',
 };
 
+export const I18N_CHOICES = [...SETUP_I18N_STRATEGIES, 'none'] as const;
+
 export type I18nSetupConfig = {
   rootDirectory: string;
   serverEntryPoint?: string;

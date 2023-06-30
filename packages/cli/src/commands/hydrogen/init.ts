@@ -11,7 +11,7 @@ import {
 } from '../../lib/flags.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {SETUP_CSS_STRATEGIES} from './../../lib/setups/css/index.js';
-import {SETUP_I18N_STRATEGIES} from '../../lib/setups/i18n/index.js';
+import {I18N_CHOICES} from '../../lib/setups/i18n/index.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {
   setupRemoteTemplate,
@@ -25,8 +25,6 @@ import {
 } from '../../lib/onboarding/common.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
-
-const I18N_CHOICES = [...SETUP_I18N_STRATEGIES, 'none'] as const;
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
@@ -52,29 +50,13 @@ export default class Init extends Command {
       default: false,
       env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
     }),
-    styling: Flags.string({
-      description: `Sets the styling strategy to use. One of ${SETUP_CSS_STRATEGIES.map(
-        (item) => `\`${item}\``,
-      ).join(', ')}.`,
-      choices: SETUP_CSS_STRATEGIES,
-      env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
-    }),
-    i18n: Flags.string({
-      description: `Sets the internationalization strategy to use. One of ${I18N_CHOICES.map(
-        (item) => `\`${item}\``,
-      ).join(', ')}.`,
-      choices: I18N_CHOICES,
-      env: 'SHOPIFY_HYDROGEN_FLAG_I18N',
-    }),
+    styling: commonFlags.styling,
+    i18n: commonFlags.i18n,
+    shortcut: commonFlags.shortcut,
     routes: Flags.boolean({
       description: 'Generate routes for all pages.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
       hidden: true,
-    }),
-    shortcut: Flags.boolean({
-      description: 'Create a shortcut to the Shopify Hydrogen CLI.',
-      env: 'SHOPIFY_HYDROGEN_FLAG_SHORTCUT',
-      allowNo: true,
     }),
   };
 

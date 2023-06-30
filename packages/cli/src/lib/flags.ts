@@ -4,6 +4,8 @@ import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 import colors from '@shopify/cli-kit/node/colors';
 import type {CamelCasedProperties} from 'type-fest';
+import {SETUP_CSS_STRATEGIES} from './setups/css/index.js';
+import {I18N_CHOICES} from './setups/i18n/index.js';
 
 export const commonFlags = {
   path: Flags.string({
@@ -52,6 +54,25 @@ export const commonFlags = {
       'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
     required: false,
     dependsOn: ['codegen-unstable'],
+  }),
+  styling: Flags.string({
+    description: `Sets the styling strategy to use. One of ${SETUP_CSS_STRATEGIES.map(
+      (item) => `\`${item}\``,
+    ).join(', ')}.`,
+    choices: SETUP_CSS_STRATEGIES,
+    env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
+  }),
+  i18n: Flags.string({
+    description: `Sets the internationalization strategy to use. One of ${I18N_CHOICES.map(
+      (item) => `\`${item}\``,
+    ).join(', ')}.`,
+    choices: I18N_CHOICES,
+    env: 'SHOPIFY_HYDROGEN_FLAG_I18N',
+  }),
+  shortcut: Flags.boolean({
+    description: 'Create a shortcut to the Shopify Hydrogen CLI.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_SHORTCUT',
+    allowNo: true,
   }),
 };
 
