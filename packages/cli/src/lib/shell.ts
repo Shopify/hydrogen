@@ -148,3 +148,5 @@ export async function getCliCommand(
 
   return `${cli} shopify hydrogen` as const;
 }
+
+export type CliCommand = Awaited<ReturnType<typeof getCliCommand>>;

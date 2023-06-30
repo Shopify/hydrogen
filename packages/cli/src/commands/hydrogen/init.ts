@@ -4,6 +4,7 @@ import {fileURLToPath} from 'node:url';
 import {
   installNodeModules,
   packageManagerUsedForCreating,
+  type PackageManager,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {
   renderSuccess,
@@ -15,6 +16,7 @@ import {
   renderFatalError,
   renderWarning,
 } from '@shopify/cli-kit/node/ui';
+import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import {Flags} from '@oclif/core';
 import {basename, resolvePath, joinPath} from '@shopify/cli-kit/node/path';
 import {
@@ -34,7 +36,7 @@ import {
 } from '@shopify/cli-kit/node/output';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
-import {hyphenate} from '@shopify/cli-kit/common/string';
+import {capitalize, hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
 import {
   commonFlags,
@@ -54,11 +56,15 @@ import {
 } from './../../lib/setups/css/index.js';
 import {createPlatformShortcut} from './shortcut.js';
 import {CSS_STRATEGY_NAME_MAP} from './setup/css-unstable.js';
-import {I18nStrategy, setupI18nStrategy} from '../../lib/setups/i18n/index.js';
+import {
+  I18nStrategy,
+  setupI18nStrategy,
+  SETUP_I18N_STRATEGIES,
+} from '../../lib/setups/i18n/index.js';
 import {I18N_STRATEGY_NAME_MAP} from './setup/i18n-unstable.js';
-import {ALL_ROUTES_NAMES, runGenerate} from './generate/route.js';
+import {ROUTE_MAP, runGenerate} from './generate/route.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
-import {ALIAS_NAME, getCliCommand} from '../../lib/shell.js';
+import {ALIAS_NAME, getCliCommand, type CliCommand} from '../../lib/shell.js';
 import {type AdminSession, login} from '../../lib/auth.js';
 import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
 import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
@@ -70,6 +76,11 @@ const LANGUAGES = {
   ts: 'TypeScript',
 } as const;
 type Language = keyof typeof LANGUAGES;
+
+type StylingChoice = (typeof SETUP_CSS_STRATEGIES)[number];
+
+type I18nChoice = I18nStrategy | 'none';
+const I18N_CHOICES = [...SETUP_I18N_STRATEGIES, 'none'] as const;
 
 export default class Init extends Command {
   static description = 'Creates a new Hydrogen storefront.';
@@ -90,10 +101,58 @@ export default class Init extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
     'install-deps': commonFlags.installDeps,
+    'mock-shop': Flags.boolean({
+      description: 'Use mock.shop as the data source for the storefront.',
+      default: false,
+      env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
+    }),
+    styling: Flags.string({
+      description: `Sets the styling strategy to use. One of ${SETUP_CSS_STRATEGIES.map(
+        (item) => `\`${item}\``,
+      ).join(', ')}.`,
+      choices: SETUP_CSS_STRATEGIES,
+      env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
+    }),
+    i18n: Flags.string({
+      description: `Sets the internationalization strategy to use. One of ${I18N_CHOICES.map(
+        (item) => `\`${item}\``,
+      ).join(', ')}.`,
+      choices: I18N_CHOICES,
+      env: 'SHOPIFY_HYDROGEN_FLAG_I18N',
+    }),
+    routes: Flags.boolean({
+      description: 'Generate routes for all pages.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
+      hidden: true,
+    }),
+    shortcut: Flags.boolean({
+      description: 'Create a shortcut to the Shopify Hydrogen CLI.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_SHORTCUT',
+      allowNo: true,
+    }),
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Init);
+
+    if (flags.i18n && !I18N_CHOICES.includes(flags.i18n as I18nChoice)) {
+      throw new AbortError(
+        `Invalid i18n strategy: ${
+          flags.i18n
+        }. Must be one of ${I18N_CHOICES.join(', ')}`,
+      );
+    }
+
+    if (
+      flags.styling &&
+      !SETUP_CSS_STRATEGIES.includes(flags.styling as StylingChoice)
+    ) {
+      throw new AbortError(
+        `Invalid styling strategy: ${
+          flags.styling
+        }. Must be one of ${SETUP_CSS_STRATEGIES.join(', ')}`,
+      );
+    }
 
     await runInit(flagsToCamelObject(flags) as InitOptions);
   }
@@ -103,8 +162,13 @@ type InitOptions = {
   path?: string;
   template?: string;
   language?: Language;
+  mockShop?: boolean;
+  styling?: StylingChoice;
+  i18n?: I18nChoice;
   token?: string;
   force?: boolean;
+  routes?: boolean;
+  shortcut?: boolean;
   installDeps?: boolean;
 };
 
@@ -252,18 +316,20 @@ async function setupLocalStarterTemplate(
   options: InitOptions,
   controller: AbortController,
 ) {
-  const templateAction = await renderSelectPrompt({
-    message: 'Connect to Shopify',
-    choices: [
-      {
-        label: 'Use sample data from Mock.shop (no login required)',
-        value: 'mock',
-      },
-      {label: 'Link your Shopify account', value: 'link'},
-    ],
-    defaultValue: 'mock',
-    abortSignal: controller.signal,
-  });
+  const templateAction = options.mockShop
+    ? 'mock'
+    : await renderSelectPrompt<'mock' | 'link'>({
+        message: 'Connect to Shopify',
+        choices: [
+          {
+            label: 'Use sample data from Mock.shop (no login required)',
+            value: 'mock',
+          },
+          {label: 'Link your Shopify account', value: 'link'},
+        ],
+        defaultValue: 'mock',
+        abortSignal: controller.signal,
+      });
 
   const storefrontInfo =
     templateAction === 'link'
@@ -309,9 +375,22 @@ async function setupLocalStarterTemplate(
     },
   ];
 
-  if (storefrontInfo && createStorefrontPromise) {
-    backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      Promise.all([
+  backgroundWorkPromise = backgroundWorkPromise.then(() => {
+    const promises: Array<Promise<any>> = [
+      // Add project name to package.json
+      replaceFileContent(
+        joinPath(project.directory, 'package.json'),
+        false,
+        (content) =>
+          content.replace(
+            '"hello-world"',
+            `"${storefrontInfo?.title ?? titleize(project.name)}"`,
+          ),
+      ),
+    ];
+
+    if (storefrontInfo && createStorefrontPromise) {
+      promises.push(
         // Save linked storefront in project
         setUserAccount(project.directory, storefrontInfo),
         createStorefrontPromise.then((storefront) =>
@@ -325,22 +404,24 @@ async function setupLocalStarterTemplate(
           (content) =>
             content.replace(/^[^#].*\n/gm, '').replace(/\n\n$/gm, '\n'),
         ),
-      ]).catch(abort),
-    );
-  } else if (templateAction === 'mock') {
-    backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      // Empty tokens and set mock shop domain
-      replaceFileContent(
-        joinPath(project.directory, '.env'),
-        false,
-        (content) =>
-          content
-            .replace(/(PUBLIC_\w+)="[^"]*?"\n/gm, '$1=""\n')
-            .replace(/(PUBLIC_STORE_DOMAIN)=""\n/gm, '$1="mock.shop"\n')
-            .replace(/\n\n$/gm, '\n'),
-      ).catch(abort),
-    );
-  }
+      );
+    } else if (templateAction === 'mock') {
+      promises.push(
+        // Empty tokens and set mock.shop domain
+        replaceFileContent(
+          joinPath(project.directory, '.env'),
+          false,
+          (content) =>
+            content
+              .replace(/(PUBLIC_\w+)="[^"]*?"\n/gm, '$1=""\n')
+              .replace(/(PUBLIC_STORE_DOMAIN)=""\n/gm, '$1="mock.shop"\n')
+              .replace(/\n\n$/gm, '\n'),
+        ),
+      );
+    }
+
+    return Promise.all(promises).catch(abort);
+  });
 
   const {language, transpileProject} = await handleLanguage(
     project.directory,
@@ -355,6 +436,7 @@ async function setupLocalStarterTemplate(
   const {setupCss, cssStrategy} = await handleCssStrategy(
     project.directory,
     controller,
+    options.styling,
   );
 
   backgroundWorkPromise = backgroundWorkPromise.then(() =>
@@ -394,35 +476,68 @@ async function setupLocalStarterTemplate(
     });
   }
 
-  const continueWithSetup = false;
-  // await renderConfirmationPrompt({
-  //   message: 'Scaffold boilerplate for internationalization and routes',
-  //   confirmationMessage: 'Yes, set up now',
-  //   cancellationMessage: 'No, set up later',
-  //   abortSignal: controller.signal,
-  // });
+  const cliCommand = await getCliCommand('', packageManager);
+
+  const createShortcut = await handleCliShortcut(
+    controller,
+    cliCommand,
+    options.shortcut,
+  );
+
+  if (createShortcut) {
+    backgroundWorkPromise = backgroundWorkPromise.then(async () => {
+      setupSummary.hasCreatedShortcut = await createShortcut();
+    });
+
+    renderInfo({
+      body: `You'll need to restart your terminal session to make \`${ALIAS_NAME}\` alias available.`,
+    });
+  }
+
+  renderSuccess({
+    headline: [
+      {userInput: storefrontInfo?.title ?? project.name},
+      'is ready to build.',
+    ],
+  });
+
+  const continueWithSetup =
+    (options.i18n ?? options.routes) !== undefined ||
+    (await renderConfirmationPrompt({
+      message: 'Do you want to scaffold routes and core functionality?',
+      confirmationMessage: 'Yes, set up now',
+      cancellationMessage:
+        'No, set up later ' +
+        colors.dim(
+          `(run \`${createShortcut ? ALIAS_NAME : cliCommand} setup\`)`,
+        ),
+      abortSignal: controller.signal,
+    }));
 
   if (continueWithSetup) {
-    const {i18nStrategy, setupI18n} = await handleI18n(controller);
-    const i18nPromise = setupI18n(project.directory, language).catch(
-      (error) => {
-        setupSummary.i18nError = error as AbortError;
-      },
+    const {i18nStrategy, setupI18n} = await handleI18n(
+      controller,
+      options.i18n,
     );
 
-    const {routes, setupRoutes} = await handleRouteGeneration(controller);
-    const routesPromise = setupRoutes(
-      project.directory,
-      language,
-      i18nStrategy,
-    ).catch((error) => {
-      setupSummary.routesError = error as AbortError;
-    });
+    const {routes, setupRoutes} = await handleRouteGeneration(
+      controller,
+      options.routes,
+    );
 
     setupSummary.i18n = i18nStrategy;
     setupSummary.routes = routes;
     backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      Promise.all([i18nPromise, routesPromise]),
+      Promise.all([
+        setupI18n(project.directory, language).catch((error) => {
+          setupSummary.i18nError = error as AbortError;
+        }),
+        setupRoutes(project.directory, language, i18nStrategy).catch(
+          (error) => {
+            setupSummary.routesError = error as AbortError;
+          },
+        ),
+      ]),
     );
   }
 
@@ -430,13 +545,6 @@ async function setupLocalStarterTemplate(
   backgroundWorkPromise = backgroundWorkPromise.then(() =>
     createInitialCommit(project.directory),
   );
-
-  const createShortcut = await handleCliAlias(controller);
-  if (createShortcut) {
-    backgroundWorkPromise = backgroundWorkPromise.then(async () => {
-      setupSummary.hasCreatedShortcut = await createShortcut();
-    });
-  }
 
   await renderTasks(tasks);
 
@@ -448,15 +556,17 @@ const i18nStrategies = {
   none: 'No internationalization',
 };
 
-async function handleI18n(controller: AbortController) {
-  let selection = await renderSelectPrompt<keyof typeof i18nStrategies>({
-    message: 'Select an internationalization strategy',
-    choices: Object.entries(i18nStrategies).map(([value, label]) => ({
-      value: value as I18nStrategy,
-      label,
-    })),
-    abortSignal: controller.signal,
-  });
+async function handleI18n(controller: AbortController, flagI18n?: I18nChoice) {
+  let selection =
+    flagI18n ??
+    (await renderSelectPrompt<I18nChoice>({
+      message: 'Select an internationalization strategy',
+      choices: Object.entries(i18nStrategies).map(([value, label]) => ({
+        value: value as I18nStrategy,
+        label,
+      })),
+      abortSignal: controller.signal,
+    }));
 
   const i18nStrategy = selection === 'none' ? undefined : selection;
 
@@ -473,17 +583,23 @@ async function handleI18n(controller: AbortController) {
   };
 }
 
-async function handleRouteGeneration(controller: AbortController) {
+async function handleRouteGeneration(
+  controller: AbortController,
+  flagRoutes: boolean = true, // TODO: Remove default value when multi-select UI component is available
+) {
   // TODO: Need a multi-select UI component
-  const shouldScaffoldAllRoutes = await renderConfirmationPrompt({
-    message:
-      'Scaffold all standard route files? ' + ALL_ROUTES_NAMES.join(', '),
-    confirmationMessage: 'Yes',
-    cancellationMessage: 'No',
-    abortSignal: controller.signal,
-  });
+  const shouldScaffoldAllRoutes =
+    flagRoutes ??
+    (await renderConfirmationPrompt({
+      message:
+        'Scaffold all standard route files? ' +
+        Object.keys(ROUTE_MAP).join(', '),
+      confirmationMessage: 'Yes',
+      cancellationMessage: 'No',
+      abortSignal: controller.signal,
+    }));
 
-  const routes = shouldScaffoldAllRoutes ? ALL_ROUTES_NAMES : [];
+  const routes = shouldScaffoldAllRoutes ? ROUTE_MAP : {};
 
   return {
     routes,
@@ -498,7 +614,7 @@ async function handleRouteGeneration(controller: AbortController) {
           directory,
           force: true,
           typescript: language === 'ts',
-          localePrefix: i18nStrategy === 'pathname' ? 'locale' : false,
+          localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
           signal: controller.signal,
         });
       }
@@ -510,25 +626,25 @@ async function handleRouteGeneration(controller: AbortController) {
  * Prompts the user to create a global alias (h2) for the Hydrogen CLI.
  * @returns A function that creates the shortcut, or undefined if the user chose not to create a shortcut.
  */
-async function handleCliAlias(controller: AbortController) {
-  const packageManager = await packageManagerUsedForCreating();
-  const cliCommand = await getCliCommand(
-    '',
-    packageManager === 'unknown' ? 'npm' : packageManager,
-  );
-
-  const shouldCreateShortcut = await renderConfirmationPrompt({
-    confirmationMessage: 'Yes',
-    cancellationMessage: 'No',
-    message: [
-      'Create a global',
-      {command: ALIAS_NAME},
-      'alias to run commands instead of',
-      {command: cliCommand},
-      '?',
-    ],
-    abortSignal: controller.signal,
-  });
+async function handleCliShortcut(
+  controller: AbortController,
+  cliCommand: CliCommand,
+  flagShortcut?: boolean,
+) {
+  const shouldCreateShortcut =
+    flagShortcut ??
+    (await renderConfirmationPrompt({
+      confirmationMessage: 'Yes',
+      cancellationMessage: 'No',
+      message: [
+        'Create a global',
+        {command: ALIAS_NAME},
+        'alias to run commands instead of',
+        {command: cliCommand},
+        '?',
+      ],
+      abortSignal: controller.signal,
+    }));
 
   if (!shouldCreateShortcut) return;
 
@@ -604,7 +720,7 @@ async function handleProjectLocation({
     flagPath ??
     storefrontDirectory ??
     (await renderTextPrompt({
-      message: 'Name the app directory',
+      message: 'Where would you like to create your storefront?',
       defaultValue: './hydrogen-storefront',
       abortSignal: controller.signal,
     }));
@@ -628,19 +744,25 @@ async function handleProjectLocation({
 
     if (!force) {
       const deleteFiles = await renderConfirmationPrompt({
-        message: `${location} is not an empty directory. Do you want to delete the existing files and continue?`,
+        message: `The directory ${colors.cyan(
+          location,
+        )} is not empty. Do you want to delete the existing files and continue?`,
         defaultValue: false,
         abortSignal: controller.signal,
       });
 
       if (!deleteFiles) {
         renderInfo({
-          headline: `Destination path ${location} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to override it.`,
+          body: `Destination path ${colors.cyan(
+            location,
+          )} already exists and is not an empty directory. You may use \`--force\` or \`-f\` to override it.`,
         });
 
         return;
       }
     }
+
+    await rmdir(directory);
   }
 
   return {location, name: basename(location), directory, storefrontInfo};
@@ -684,16 +806,19 @@ async function handleLanguage(
 async function handleCssStrategy(
   projectDir: string,
   controller: AbortController,
+  flagStyling?: StylingChoice,
 ) {
-  const selectedCssStrategy = await renderSelectPrompt<CssStrategy>({
-    message: `Select a styling library`,
-    choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
-      label: CSS_STRATEGY_NAME_MAP[strategy],
-      value: strategy,
-    })),
-    defaultValue: 'tailwind',
-    abortSignal: controller.signal,
-  });
+  const selectedCssStrategy =
+    flagStyling ??
+    (await renderSelectPrompt<CssStrategy>({
+      message: `Select a styling library`,
+      choices: SETUP_CSS_STRATEGIES.map((strategy) => ({
+        label: CSS_STRATEGY_NAME_MAP[strategy],
+        value: strategy,
+      })),
+      defaultValue: 'tailwind',
+      abortSignal: controller.signal,
+    }));
 
   return {
     cssStrategy: selectedCssStrategy,
@@ -725,12 +850,11 @@ async function handleDependencies(
   shouldInstallDeps?: boolean,
 ) {
   const detectedPackageManager = await packageManagerUsedForCreating();
-  let actualPackageManager: Exclude<typeof detectedPackageManager, 'unknown'> =
-    'npm';
+  let actualPackageManager: PackageManager = 'npm';
 
   if (shouldInstallDeps !== false) {
     if (detectedPackageManager === 'unknown') {
-      const result = await renderSelectPrompt<'no' | 'npm' | 'pnpm' | 'yarn'>({
+      const result = await renderSelectPrompt<'no' | PackageManager>({
         message: `Select package manager to install dependencies`,
         choices: [
           {label: 'NPM', value: 'npm'},
@@ -797,7 +921,7 @@ type SetupSummary = {
   depsError?: Error;
   i18n?: I18nStrategy;
   i18nError?: Error;
-  routes?: string[];
+  routes?: Record<string, string | string[]>;
   routesError?: Error;
 };
 
@@ -830,21 +954,27 @@ async function renderProjectReady(
   }
 
   if (!i18nError && i18n) {
-    bodyLines.push([
-      'i18n strategy',
-      I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!,
-    ]);
+    bodyLines.push(['i18n', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
   }
 
-  if (!routesError && routes?.length) {
-    bodyLines.push([
-      'Routes',
-      `Scaffolded ${routes.length} route${routes.length > 1 ? 's' : ''}`,
-    ]);
+  let routeSummary = '';
+
+  if (!routesError && routes && Object.keys(routes).length) {
+    bodyLines.push(['Routes', '']);
+
+    for (let [routeName, routePaths] of Object.entries(routes)) {
+      routePaths = Array.isArray(routePaths) ? routePaths : [routePaths];
+
+      routeSummary += `\n    • ${capitalize(routeName)} ${colors.dim(
+        '(' +
+          routePaths.map((item) => '/' + normalizeRoutePath(item)).join(' & ') +
+          ')',
+      )}`;
+    }
   }
 
   const padMin =
-    2 + bodyLines.reduce((max, [label]) => Math.max(max, label.length), 0);
+    1 + bodyLines.reduce((max, [label]) => Math.max(max, label.length), 0);
 
   const cliCommand = hasCreatedShortcut
     ? ALIAS_NAME
@@ -857,14 +987,13 @@ async function renderProjectReady(
       `Storefront setup complete` +
       (hasErrors ? ' with errors (see warnings below).' : '!'),
 
-    body: bodyLines
-      .map(
-        ([label, value]) =>
-          `  ${label.padEnd(padMin, ' ')}${colors.dim(':')}  ${colors.dim(
-            value,
-          )}`,
-      )
-      .join('\n'),
+    body:
+      bodyLines
+        .map(
+          ([label, value]) =>
+            `  ${(label + ':').padEnd(padMin, ' ')}  ${colors.dim(value)}`,
+        )
+        .join('\n') + routeSummary,
 
     // Use `customSections` instead of `nextSteps` and `references`
     // here to enforce a newline between title and items.
@@ -933,36 +1062,11 @@ async function renderProjectReady(
               items: [
                 [
                   'Run',
-                  {command: `cd ${project.location}`},
-                  'to enter your app directory.',
-                ],
-
-                !depsInstalled && [
-                  'Run',
-                  {command: `${packageManager} install`},
-                  'to install the dependencies.',
-                ],
-
-                i18nError && [
-                  'Run',
-                  {command: `${cliCommand} setup i18n-unstable`},
-                  'to scaffold internationalization.',
-                ],
-
-                hasCreatedShortcut && [
-                  'Restart your terminal session to make the new',
-                  {command: ALIAS_NAME},
-                  'alias available.',
-                ],
-
-                [
-                  'Run',
                   {
-                    command: hasCreatedShortcut
-                      ? `${ALIAS_NAME} dev`
-                      : formatPackageManagerCommand(packageManager, 'dev'),
+                    command: `cd ${project.location.replace(/^\.\//, '')}${
+                      depsInstalled ? '' : ` && ${packageManager} install`
+                    } && ${formatPackageManagerCommand(packageManager, 'dev')}`,
                   },
-                  'to start your local development server.',
                 ],
               ].filter((step): step is string[] => Boolean(step)),
             },
@@ -970,38 +1074,6 @@ async function renderProjectReady(
         ],
       },
     ].filter((step): step is {title: string; body: any} => Boolean(step)),
-  });
-
-  renderInfo({
-    headline: 'Helpful commands',
-    body: {
-      list: {
-        items: [
-          // TODO: show `h2 deploy` here when it's ready
-
-          !hasCreatedShortcut && [
-            'Run',
-            {command: `${cliCommand} shortcut`},
-            'to create a global',
-            {command: ALIAS_NAME},
-            'alias for the Shopify Hydrogen CLI.',
-          ],
-          [
-            'Run',
-            {command: `${cliCommand} generate route`},
-            ...(hasCreatedShortcut
-              ? ['or', {command: `${cliCommand} g r`}]
-              : []),
-            'to scaffold standard Shopify routes.',
-          ],
-          [
-            'Run',
-            {command: `${cliCommand} --help`},
-            'to learn how to see the full list of commands available for building Hydrogen storefronts.',
-          ],
-        ].filter((step): step is string[] => Boolean(step)),
-      },
-    },
   });
 }
 
@@ -1014,6 +1086,16 @@ async function projectExists(projectDir: string) {
     (await isDirectory(projectDir)) &&
     (await readdir(projectDir)).length > 0
   );
+}
+
+function normalizeRoutePath(routePath: string) {
+  const isIndex = /(^|\/)index$/.test(routePath);
+  return isIndex
+    ? routePath.slice(0, -'index'.length).replace(/\/$/, '')
+    : routePath
+        .replace(/\$/g, ':')
+        .replace(/[\[\]]/g, '')
+        .replace(/:(\w+)Handle/i, ':handle');
 }
 
 function createAbortHandler(

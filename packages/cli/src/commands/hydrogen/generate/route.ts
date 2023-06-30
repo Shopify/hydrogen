@@ -50,8 +50,7 @@ export const ROUTE_MAP: Record<string, string | string[]> = {
   account: ['account/login', 'account/register'],
 };
 
-export const ALL_ROUTES_NAMES = Object.keys(ROUTE_MAP);
-const ALL_ROUTE_CHOICES = [...ALL_ROUTES_NAMES, 'all'];
+const ALL_ROUTE_CHOICES = [...Object.keys(ROUTE_MAP), 'all'];
 
 type GenerateRouteResult = {
   sourceRoute: string;

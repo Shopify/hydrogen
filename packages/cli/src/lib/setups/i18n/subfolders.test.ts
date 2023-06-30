@@ -1,8 +1,8 @@
 import {describe, it, expect} from 'vitest';
-import {getLocaleFromRequest} from './templates/subdomains.js';
+import {getLocaleFromRequest} from './templates/subfolders.js';
 
-describe('Setup i18n with subdomains', () => {
-  it('extracts the locale from the subdomain', () => {
+describe('Setup i18n with subfolders', () => {
+  it('extracts the locale from the pathname', () => {
     expect(
       getLocaleFromRequest(new Request('https://example.com')),
     ).toMatchObject({
@@ -10,13 +10,13 @@ describe('Setup i18n with subdomains', () => {
       country: 'US',
     });
     expect(
-      getLocaleFromRequest(new Request('https://jp.example.com')),
+      getLocaleFromRequest(new Request('https://example.com/ja-jp')),
     ).toMatchObject({
       language: 'JA',
       country: 'JP',
     });
     expect(
-      getLocaleFromRequest(new Request('https://es.sub.example.com')),
+      getLocaleFromRequest(new Request('https://example.com/es-es/path')),
     ).toMatchObject({
       language: 'ES',
       country: 'ES',

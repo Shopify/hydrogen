@@ -139,6 +139,7 @@ async function runDev({
     isMiniOxygenStarted = true;
 
     miniOxygen.showBanner({
+      appName: storefront ? colors.cyan(storefront?.title) : undefined,
       headlinePrefix:
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`

@@ -15,9 +15,9 @@ import {
 } from '../../../lib/setups/i18n/index.js';
 
 export const I18N_STRATEGY_NAME_MAP: Record<I18nStrategy, string> = {
-  pathname: 'Pathname (example.com/fr-ca/...)',
+  subfolders: 'Subfolders (example.com/fr-ca/...)',
   subdomains: 'Subdomains (de.example.com/...)',
-  domains: 'Top-level Domains (example.jp/...)',
+  domains: 'Top-level domains (example.jp/...)',
 };
 
 export default class SetupI18n extends Command {
@@ -69,10 +69,7 @@ export async function runSetupI18n({
 
   const remixConfig = await getRemixConfig(directory);
 
-  const setupOutput = await setupI18nStrategy(strategy, remixConfig);
-  if (!setupOutput) return;
-
-  const {workPromise} = setupOutput;
+  const workPromise = setupI18nStrategy(strategy, remixConfig);
 
   await renderTasks([
     {
