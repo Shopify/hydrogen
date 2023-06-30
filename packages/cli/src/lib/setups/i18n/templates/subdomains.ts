@@ -1,7 +1,4 @@
-import type {
-  LanguageCode,
-  CountryCode,
-} from '@shopify/hydrogen-react/storefront-api-types';
+import type {LanguageCode, CountryCode} from '../mock-i18n-types.js';
 
 export type I18nLocale = {language: LanguageCode; country: CountryCode};
 

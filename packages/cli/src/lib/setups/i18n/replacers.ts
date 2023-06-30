@@ -169,7 +169,12 @@ export async function replaceServerI18n(
         const lastImportContent = lastImportNode.text();
         content = content.replace(
           lastImportContent,
-          lastImportContent + '\n' + importTypes,
+          lastImportContent +
+            '\n' +
+            importTypes.replace(
+              /'[^']+'/,
+              `'@shopify/hydrogen/storefront-api-types'`,
+            ),
         );
       }
     }
