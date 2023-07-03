@@ -15,10 +15,9 @@
     "test": "turbo run test --parallel",
     "test:watch": "turbo run test:watch",
     "version": "changeset version && npm run version:post",
-    "version:post": "npm run version:hydrogen && npm run version:cli && npm run version:create-hydrogen",
+    "version:post": "npm run version:hydrogen && npm run version:cli",
     "version:hydrogen": "node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "version:cli": "cd packages/cli && npm run generate:manifest",
-    "version:create-hydrogen": "cd packages/create-hydrogen && npm run build",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache"
   },
