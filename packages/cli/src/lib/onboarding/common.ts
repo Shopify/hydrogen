@@ -22,7 +22,12 @@ import {
 } from '@shopify/cli-kit/node/git';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
-import {rmdir, fileExists, isDirectory} from '@shopify/cli-kit/node/fs';
+import {
+  rmdir,
+  fileExists,
+  isDirectory,
+  writeFile,
+} from '@shopify/cli-kit/node/fs';
 import {
   outputDebug,
   formatPackageManagerCommand,
@@ -426,9 +431,21 @@ export async function handleDependencies(
   };
 }
 
+const gitIgnoreContent = `
+node_modules
+/.cache
+/build
+/dist
+/public/build
+/.mf
+.env
+.shopify
+`.slice(1);
+
 export async function createInitialCommit(directory: string) {
   try {
     await initializeGitRepository(directory);
+    await writeFile(joinPath(directory, '.gitignore'), gitIgnoreContent);
     await addAllToGitFromDirectory(directory);
     await createGitCommit('Scaffold Storefront', {directory});
   } catch (error: any) {
