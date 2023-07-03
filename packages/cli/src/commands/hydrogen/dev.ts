@@ -1,6 +1,6 @@
 import path from 'path';
 import fs from 'fs/promises';
-import {outputInfo} from '@shopify/cli-kit/node/output';
+import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
@@ -98,7 +98,19 @@ async function runDev({
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
     const config = await getRemixConfig(root);
-    return disableVirtualRoutes ? config : addVirtualRoutes(config);
+    return disableVirtualRoutes
+      ? config
+      : addVirtualRoutes(config).catch((error) => {
+          // Seen this fail when somehow NPM doesn't publish
+          // the full 'virtual-routes' directory.
+          // E.g. https://unpkg.com/browse/@shopify/cli-hydrogen@0.0.0-next-aa15969-20230703072007/dist/virtual-routes/
+          outputDebug(
+            'Could not add virtual routes: ' +
+              (error?.stack ?? error?.message ?? error),
+          );
+
+          return config;
+        });
   };
 
   const getFilePaths = (file: string) => {
