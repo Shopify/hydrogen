@@ -86,8 +86,7 @@ export async function replaceRemixConfig(
 
     // Place properties before `future` prop or at the end of the object.
     const lastNode: SgNode | undefined =
-      // @ts-ignore -- We need TS5 to use `findLast`
-      childrenNodes.findLast((node) => node.text().startsWith('future:')) ??
+      childrenNodes.find((node) => node.text().startsWith('future:')) ??
       childrenNodes.pop();
 
     if (!lastNode) {
