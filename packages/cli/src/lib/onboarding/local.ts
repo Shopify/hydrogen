@@ -1,6 +1,6 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
-import {copyFile} from '@shopify/cli-kit/node/fs';
+import {copyFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
@@ -114,6 +114,9 @@ export async function setupLocalStarterTemplate(
       ),
     ];
 
+    const envLeadingComment =
+      '# The variables added in this file are only available locally in MiniOxygen\n';
+
     if (storefrontInfo && createStorefrontPromise) {
       promises.push(
         // Save linked storefront in project
@@ -122,25 +125,23 @@ export async function setupLocalStarterTemplate(
           // Save linked storefront in project
           setStorefront(project.directory, storefront),
         ),
-        // Remove public env variables to fallback to remote Oxygen variables
-        replaceFileContent(
-          joinPath(project.directory, '.env'),
-          false,
-          (content) =>
-            content.replace(/^[^#].*\n/gm, '').replace(/\n\n$/gm, '\n'),
-        ),
+        // Write empty dotenv file to fallback to remote Oxygen variables
+        writeFile(joinPath(project.directory, '.env'), envLeadingComment),
       );
     } else if (templateAction === 'mock') {
       promises.push(
-        // Empty tokens and set mock.shop domain
-        replaceFileContent(
+        // Set required env vars
+        writeFile(
           joinPath(project.directory, '.env'),
-          false,
-          (content) =>
-            content
-              .replace(/(PUBLIC_\w+)="[^"]*?"\n/gm, '$1=""\n')
-              .replace(/(PUBLIC_STORE_DOMAIN)=""\n/gm, '$1="mock.shop"\n')
-              .replace(/\n\n$/gm, '\n'),
+          envLeadingComment +
+            '\n' +
+            [
+              ['SESSION_SECRET', 'foobar'],
+              ['PUBLIC_STORE_DOMAIN', 'mock.shop'],
+            ]
+              .map(([key, value]) => `${key}="${value}"`)
+              .join('\n') +
+            '\n',
         ),
       );
     }
