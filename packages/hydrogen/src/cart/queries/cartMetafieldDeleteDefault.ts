@@ -1,13 +1,23 @@
-import type {CartQueryOptions, CartQueryReturn} from './cart-types';
+import type {
+  CartQueryData,
+  CartQueryOptions,
+  CartQueryReturn,
+  CartOptionalInput,
+} from './cart-types';
 import type {
   Cart,
   MetafieldDeleteUserError,
   Scalars,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
+export type CartMetafieldDeleteFunction = (
+  key: Scalars['String'],
+  optionalParams?: CartOptionalInput,
+) => Promise<CartQueryData>;
+
 export function cartMetafieldDeleteDefault(
   options: CartQueryOptions,
-): CartQueryReturn<Scalars['String']> {
+): CartMetafieldDeleteFunction {
   return async (key, optionalParams) => {
     const ownerId = optionalParams?.cartId || options.getCartId();
     const {cartMetafieldDelete} = await options.storefront.mutate<{

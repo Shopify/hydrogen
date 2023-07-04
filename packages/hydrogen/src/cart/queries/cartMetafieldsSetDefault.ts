@@ -1,6 +1,7 @@
 import type {
+  CartQueryData,
+  CartOptionalInput,
   CartQueryOptions,
-  CartQueryReturn,
   MetafieldWithoutOwnerId,
 } from './cart-types';
 import type {
@@ -8,9 +9,14 @@ import type {
   MetafieldsSetUserError,
 } from '@shopify/hydrogen-react/storefront-api-types';
 
+export type CartMetafieldsSetFunction = (
+  metafields: MetafieldWithoutOwnerId[],
+  optionalParams?: CartOptionalInput,
+) => Promise<CartQueryData>;
+
 export function cartMetafieldsSetDefault(
   options: CartQueryOptions,
-): CartQueryReturn<MetafieldWithoutOwnerId[]> {
+): CartMetafieldsSetFunction {
   return async (metafields, optionalParams) => {
     const ownerId = optionalParams?.cartId || options.getCartId();
     const metafieldsWithOwnerId = metafields.map(

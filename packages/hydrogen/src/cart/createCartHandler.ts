@@ -1,16 +1,49 @@
 import {Storefront} from '../storefront';
-import {cartGetDefault} from './queries/cartGetDefault';
-import {cartCreateDefault} from './queries/cartCreateDefault';
-import {cartLinesAddDefault} from './queries/cartLinesAddDefault';
-import {cartLinesUpdateDefault} from './queries/cartLinesUpdateDefault';
-import {cartLinesRemoveDefault} from './queries/cartLinesRemoveDefault';
-import {cartDiscountCodesUpdateDefault} from './queries/cartDiscountCodesUpdateDefault';
-import {cartBuyerIdentityUpdateDefault} from './queries/cartBuyerIdentityUpdateDefault';
-import {cartNoteUpdateDefault} from './queries/cartNoteUpdateDefault';
-import {cartSelectedDeliveryOptionsUpdateDefault} from './queries/cartSelectedDeliveryOptionsUpdateDefault';
-import {cartAttributesUpdateDefault} from './queries/cartAttributesUpdateDefault';
-import {cartMetafieldsSetDefault} from './queries/cartMetafieldsSetDefault';
-import {cartMetafieldDeleteDefault} from './queries/cartMetafieldDeleteDefault';
+import {type CartGetFunction, cartGetDefault} from './queries/cartGetDefault';
+import {
+  type CartCreateFunction,
+  cartCreateDefault,
+} from './queries/cartCreateDefault';
+import {
+  type CartLinesAddFunction,
+  cartLinesAddDefault,
+} from './queries/cartLinesAddDefault';
+import {
+  type CartLinesUpdateFunction,
+  cartLinesUpdateDefault,
+} from './queries/cartLinesUpdateDefault';
+import {
+  type CartLinesRemoveFunction,
+  cartLinesRemoveDefault,
+} from './queries/cartLinesRemoveDefault';
+import {
+  type CartDiscountCodesUpdateFunction,
+  cartDiscountCodesUpdateDefault,
+} from './queries/cartDiscountCodesUpdateDefault';
+import {
+  type CartBuyerIdentityUpdateFunction,
+  cartBuyerIdentityUpdateDefault,
+} from './queries/cartBuyerIdentityUpdateDefault';
+import {
+  type CartNoteUpdateFunction,
+  cartNoteUpdateDefault,
+} from './queries/cartNoteUpdateDefault';
+import {
+  type CartSelectedDeliveryOptionsUpdateFunction,
+  cartSelectedDeliveryOptionsUpdateDefault,
+} from './queries/cartSelectedDeliveryOptionsUpdateDefault';
+import {
+  type CartAttributesUpdateFunction,
+  cartAttributesUpdateDefault,
+} from './queries/cartAttributesUpdateDefault';
+import {
+  type CartMetafieldsSetFunction,
+  cartMetafieldsSetDefault,
+} from './queries/cartMetafieldsSetDefault';
+import {
+  type CartMetafieldDeleteFunction,
+  cartMetafieldDeleteDefault,
+} from './queries/cartMetafieldDeleteDefault';
 
 export type CartHandlerOptions = {
   storefront: Storefront;
@@ -20,11 +53,13 @@ export type CartHandlerOptions = {
   cartMutateFragment?: string;
 };
 
-type CustomMethodsBase = Record<string, Function>;
-type CartHandlerOptionsWithCustom<TCustomMethods extends CustomMethodsBase> =
-  CartHandlerOptions & {
-    customMethods__unstable?: TCustomMethods;
-  };
+export type CustomMethodsBase = Record<string, Function>;
+export type CartHandlerOptionsWithCustom<
+  TCustomMethods extends CustomMethodsBase,
+> = CartHandlerOptions & {
+  customMethods__unstable?: TCustomMethods;
+};
+
 export type HydrogenCart = {
   get: ReturnType<typeof cartGetDefault>;
   getCartId: () => string | undefined;
@@ -141,3 +176,101 @@ export function createCartHandler<TCustomMethods extends CustomMethodsBase>(
     return methods;
   }
 }
+
+export type CartHandlerOptionsForDocs<
+  TCustomMethods extends CustomMethodsBase,
+> = {
+  /**
+   * A function that returns the cart id in the form of `gid://shopify/Cart/c1-123`.
+   */
+  getCartId: () => string | undefined;
+  /**
+   * A function that sets the cart ID.
+   */
+  setCartId: (cartId: string) => Headers;
+  /**
+   * The storefront client instance created by [`createStorefrontClient`](docs/api/hydrogen/latest/utilities/createstorefrontclient).
+   */
+  storefront: Storefront;
+  /**
+   * The cart mutation fragment used in most mutation requests, except for `setMetafields` and `deleteMetafield`.
+   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-cart-fragments) in the documentation.
+   */
+  cartMutateFragment?: string;
+  /**
+   * The cart query fragment used by `cart.get()`.
+   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-cart-fragments) in the documentation.
+   */
+  cartQueryFragment?: string;
+  /**
+   * Define custom methods or override existing methods for your cart API instance.
+   * See the [example usage](/docs/api/hydrogen/2023-04/utilities/createcarthandler#example-custom-methods) in the documentation.
+   */
+  customMethods__unstable?: TCustomMethods;
+};
+
+export type HydrogenCartForDocs = {
+  /**
+   * Adds items to the cart.
+   * If the cart doesn't exist, a new one will be created.
+   */
+  addLines?: CartLinesAddFunction;
+  /**
+   * Creates a new cart.
+   */
+  create?: CartCreateFunction;
+  /**
+   * Removes a custom field (metafield) from the cart.
+   */
+  deleteMetafield?: CartMetafieldDeleteFunction;
+  /**
+   * Retrieves the cart information.
+   */
+  get?: CartGetFunction;
+  /**
+   * Retrieves the unique identifier of the cart.
+   * By default, it gets the ID from the request cookie.
+   */
+  getCartId?: () => string | undefined;
+  /**
+   * Removes items from the cart.
+   */
+  removeLines?: CartLinesRemoveFunction;
+  /**
+   * Sets the unique identifier of the cart.
+   * By default, it sets the ID in the header cookie.
+   */
+  setCartId?: (cartId: string) => Headers;
+  /**
+   * Adds extra information (metafields) to the cart.
+   * If the cart doesn't exist, a new one will be created.
+   */
+  setMetafields?: CartMetafieldsSetFunction;
+  /**
+   * Updates additional information (attributes) in the cart.
+   */
+  updateAttributes?: CartAttributesUpdateFunction;
+  /**
+   * Updates the buyer's information in the cart.
+   * If the cart doesn't exist, a new one will be created.
+   */
+  updateBuyerIdentity?: CartBuyerIdentityUpdateFunction;
+  /**
+   * Updates discount codes in the cart.
+   */
+  updateDiscountCodes?: CartDiscountCodesUpdateFunction;
+  /**
+   * Updates items in the cart.
+   */
+  updateLines?: CartLinesUpdateFunction;
+  /**
+   * Updates the note in the cart.
+   * If the cart doesn't exist, a new one will be created.
+   */
+  updateNote?: CartNoteUpdateFunction;
+  /**
+   * Updates the selected delivery options in the cart.
+   * Only available for carts associated with a customer access token.
+   */
+  updateSelectedDeliveryOption?: CartSelectedDeliveryOptionsUpdateFunction;
+};

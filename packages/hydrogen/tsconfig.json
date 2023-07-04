@@ -6,5 +6,6 @@
     "paths": {
       "@shopify/hydrogen": ["./src"]
     }
-  }
+  },
+  "exclude": ["src/cart/createCartHandler.example.ts"]
 }

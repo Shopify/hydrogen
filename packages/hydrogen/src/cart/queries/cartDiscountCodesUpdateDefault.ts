@@ -1,13 +1,19 @@
 import {MINIMAL_CART_FRAGMENT, USER_ERROR_FRAGMENT} from './cart-fragments';
 import type {
+  CartOptionalInput,
   CartQueryData,
   CartQueryOptions,
   CartQueryReturn,
 } from './cart-types';
 
+export type CartDiscountCodesUpdateFunction = (
+  discountCodes: string[],
+  optionalParams?: CartOptionalInput,
+) => Promise<CartQueryData>;
+
 export function cartDiscountCodesUpdateDefault(
   options: CartQueryOptions,
-): CartQueryReturn<string[]> {
+): CartDiscountCodesUpdateFunction {
   return async (discountCodes, optionalParams) => {
     // Ensure the discount codes are unique
     const uniqueCodes = discountCodes.filter((value, index, array) => {
