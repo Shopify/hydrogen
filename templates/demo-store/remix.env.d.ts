@@ -2,7 +2,7 @@
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
-import type {WithCache} from '@shopify/hydrogen';
+import type {WithCache, HydrogenCart} from '@shopify/hydrogen';
 import type {Storefront} from '~/lib/type';
 import type {HydrogenSession} from '~/lib/session.server';
 
@@ -32,6 +32,7 @@ declare module '@shopify/remix-oxygen' {
     waitUntil: ExecutionContext['waitUntil'];
     session: HydrogenSession;
     storefront: Storefront;
+    cart: HydrogenCart;
     env: Env;
   }
 }

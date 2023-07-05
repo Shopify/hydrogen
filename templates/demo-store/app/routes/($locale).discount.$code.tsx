@@ -1,9 +1,5 @@
 import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 
-import {getCartId} from '~/lib/utils';
-
-import {cartCreate, cartDiscountCodesUpdate} from './($locale).cart';
-
 /**
  * Automatically applies a discount found on the url
  * If a cart exists it's updated with the discount, otherwise a cart is created with the discount already applied
@@ -17,7 +13,7 @@ import {cartCreate, cartDiscountCodesUpdate} from './($locale).cart';
  * @preserve
  */
 export async function loader({request, context, params}: LoaderArgs) {
-  const {storefront} = context;
+  const {cart} = context;
   // N.B. This route will probably be removed in the future.
   const session = context.session as any;
   const {code} = params;
@@ -31,36 +27,19 @@ export async function loader({request, context, params}: LoaderArgs) {
   searchParams.delete('return_to');
 
   const redirectUrl = `${redirectParam}?${searchParams}`;
-  const headers = new Headers();
 
   if (!code) {
     return redirect(redirectUrl);
   }
 
-  let cartId = getCartId(request);
+  const result = await cart.updateDiscountCodes([code]);
+  const headers = cart.setCartId(result.cart.id);
 
-  //! if no existing cart, create one
-  if (!cartId) {
-    const {cart, errors: graphqlCartErrors} = await cartCreate({
-      input: {},
-      storefront,
-    });
-
-    if (graphqlCartErrors?.length) {
-      return redirect(redirectUrl);
-    }
-
-    //! cart created - we only need a Set-Cookie header if we're creating
-    cartId = cart.id;
-    headers.append('Set-Cookie', `cart=${cartId.split('/').pop()}`);
-  }
-
-  //! apply discount to the cart
-  await cartDiscountCodesUpdate({
-    cartId,
-    discountCodes: [code],
-    storefront,
+  // Using set-cookie on a 303 redirect will not work if the domain origin have port number (:3000)
+  // If there is no cart id and a new cart id is created in the progress, it will not be set in the cookie
+  // on localhost:3000
+  return redirect(redirectUrl, {
+    status: 303,
+    headers,
   });
-
-  return redirect(redirectUrl, {headers});
 }
