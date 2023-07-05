@@ -200,7 +200,7 @@ const LAYOUT_QUERY = `#graphql
   }
 ` as const;
 
-async function getLayoutData({storefront}: AppLoadContext) {
+async function getLayoutData({storefront, env}: AppLoadContext) {
   const data = await storefront.query(LAYOUT_QUERY, {
     variables: {
       headerMenuHandle: 'main-menu',
@@ -222,11 +222,21 @@ async function getLayoutData({storefront}: AppLoadContext) {
   const customPrefixes = {BLOG: '', CATALOG: 'products'};
 
   const headerMenu = data?.headerMenu
-    ? parseMenu(data.headerMenu, data.shop.primaryDomain.url, customPrefixes)
+    ? parseMenu(
+        data.headerMenu,
+        data.shop.primaryDomain.url,
+        env,
+        customPrefixes,
+      )
     : undefined;
 
   const footerMenu = data?.footerMenu
-    ? parseMenu(data.footerMenu, data.shop.primaryDomain.url, customPrefixes)
+    ? parseMenu(
+        data.footerMenu,
+        data.shop.primaryDomain.url,
+        env,
+        customPrefixes,
+      )
     : undefined;
 
   return {shop: data.shop, headerMenu, footerMenu};
