@@ -145,7 +145,7 @@ function resolveToFromType(
 /*
   Parse each menu link and adding, isExternal, to and target
 */
-function parseItem(primaryDomain: string, customPrefixes = {}) {
+function parseItem(primaryDomain: string, env: Env, customPrefixes = {}) {
   return function (
     item:
       | MenuFragment['items'][number]
@@ -163,7 +163,8 @@ function parseItem(primaryDomain: string, customPrefixes = {}) {
     // extract path from url because we don't need the origin on internal to attributes
     const {host, pathname} = new URL(item.url);
 
-    const isInternalLink = host === new URL(primaryDomain).host;
+    const isInternalLink =
+      host === new URL(primaryDomain).host || host === env.PUBLIC_STORE_DOMAIN;
 
     const parsedItem = isInternalLink
       ? // internal links
@@ -185,7 +186,7 @@ function parseItem(primaryDomain: string, customPrefixes = {}) {
       return {
         ...parsedItem,
         items: item.items
-          .map(parseItem(primaryDomain, customPrefixes))
+          .map(parseItem(primaryDomain, env, customPrefixes))
           .filter(Boolean),
       } as EnhancedMenu['items'][number];
     } else {
@@ -202,6 +203,7 @@ function parseItem(primaryDomain: string, customPrefixes = {}) {
 export function parseMenu(
   menu: MenuFragment,
   primaryDomain: string,
+  env: Env,
   customPrefixes = {},
 ): EnhancedMenu | null {
   if (!menu?.items) {
@@ -210,7 +212,7 @@ export function parseMenu(
     return null;
   }
 
-  const parser = parseItem(primaryDomain, customPrefixes);
+  const parser = parseItem(primaryDomain, env, customPrefixes);
 
   const parsedMenu = {
     ...menu,
