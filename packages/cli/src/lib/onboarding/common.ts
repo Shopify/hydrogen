@@ -446,12 +446,23 @@ export async function createInitialCommit(directory: string) {
   try {
     await initializeGitRepository(directory);
     await writeFile(joinPath(directory, '.gitignore'), gitIgnoreContent);
-    await addAllToGitFromDirectory(directory);
-    await createGitCommit('Scaffold Storefront', {directory});
+    return commitAll(directory, 'Scaffold Storefront');
   } catch (error: any) {
     // Ignore errors
     outputDebug(
       'Failed to initialize Git.\n' + error?.stack ?? error?.message ?? error,
+    );
+  }
+}
+
+export async function commitAll(directory: string, message: string) {
+  try {
+    await addAllToGitFromDirectory(directory);
+    await createGitCommit(message, {directory});
+  } catch (error: any) {
+    // Ignore errors
+    outputDebug(
+      'Failed to commit code.\n' + error?.stack ?? error?.message ?? error,
     );
   }
 }

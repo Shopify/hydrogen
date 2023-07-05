@@ -24,6 +24,7 @@ import {
   handleRouteGeneration,
   createInitialCommit,
   renderProjectReady,
+  commitAll,
 } from './common.js';
 import {createStorefront} from '../graphql/admin/create-storefront.js';
 import {waitForJob} from '../graphql/admin/fetch-job.js';
@@ -31,6 +32,7 @@ import {getStarterDir} from '../build.js';
 import {replaceFileContent} from '../file.js';
 import {setStorefront, setUserAccount} from '../shopify-config.js';
 import {ALIAS_NAME, getCliCommand} from '../shell.js';
+import {CSS_STRATEGY_NAME_MAP} from '../setups/css/index.js';
 
 /**
  * Flow for setting up a project from the locally bundled starter template (hello-world).
@@ -155,9 +157,10 @@ export async function setupLocalStarterTemplate(
     options.language,
   );
 
-  backgroundWorkPromise = backgroundWorkPromise.then(() =>
-    transpileProject().catch(abort),
-  );
+  backgroundWorkPromise = backgroundWorkPromise
+    .then(() => transpileProject().catch(abort))
+    // Directory files are all setup, commit them to git
+    .then(() => createInitialCommit(project.directory));
 
   const {setupCss, cssStrategy} = await handleCssStrategy(
     project.directory,
@@ -165,9 +168,14 @@ export async function setupLocalStarterTemplate(
     options.styling,
   );
 
-  backgroundWorkPromise = backgroundWorkPromise.then(() =>
-    setupCss().catch(abort),
-  );
+  backgroundWorkPromise = backgroundWorkPromise
+    .then(() => setupCss().catch(abort))
+    .then(() =>
+      commitAll(
+        project.directory,
+        'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
+      ),
+    );
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(
@@ -251,29 +259,40 @@ export async function setupLocalStarterTemplate(
 
     setupSummary.i18n = i18nStrategy;
     setupSummary.routes = routes;
-    backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      Promise.all([
-        setupI18n({
-          rootDirectory: project.directory,
-          serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
-        }).catch((error) => {
+    backgroundWorkPromise = backgroundWorkPromise.then(async () => {
+      // These tasks need to be performed in
+      // sequence to ensure commits are clean.
+
+      await setupI18n({
+        rootDirectory: project.directory,
+        serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
+      })
+        .then(() =>
+          commitAll(
+            project.directory,
+            `Setup internationalization using ${i18nStrategy}`,
+          ),
+        )
+        .catch((error) => {
           setupSummary.i18nError = error as AbortError;
-        }),
-        setupRoutes(project.directory, language, i18nStrategy).catch(
-          (error) => {
-            setupSummary.routesError = error as AbortError;
-          },
-        ),
-      ]),
-    );
+        });
+
+      await setupRoutes(project.directory, language, i18nStrategy)
+        .then(() =>
+          commitAll(
+            project.directory,
+            `Generate routes for core functionality`,
+          ),
+        )
+        .catch((error) => {
+          setupSummary.routesError = error as AbortError;
+        });
+    });
   }
 
-  // Directory files are all setup, commit them to git
-  backgroundWorkPromise = backgroundWorkPromise.then(() =>
-    createInitialCommit(project.directory),
-  );
-
   await renderTasks(tasks);
+
+  await commitAll(project.directory, 'Lockfile');
 
   await renderProjectReady(project, setupSummary);
 }
