@@ -19,6 +19,33 @@ export {
   getPaginationVariables as getPaginationVariables__unstable,
 } from './pagination/Pagination';
 
+export {CartForm, type CartActionInput} from './cart/CartForm';
+export {cartCreateDefault} from './cart/queries/cartCreateDefault';
+export {cartGetDefault} from './cart/queries/cartGetDefault';
+export {cartLinesAddDefault} from './cart/queries/cartLinesAddDefault';
+export {cartLinesUpdateDefault} from './cart/queries/cartLinesUpdateDefault';
+export {cartLinesRemoveDefault} from './cart/queries/cartLinesRemoveDefault';
+export {cartDiscountCodesUpdateDefault} from './cart/queries/cartDiscountCodesUpdateDefault';
+export {cartBuyerIdentityUpdateDefault} from './cart/queries/cartBuyerIdentityUpdateDefault';
+export {cartNoteUpdateDefault} from './cart/queries/cartNoteUpdateDefault';
+export {cartSelectedDeliveryOptionsUpdateDefault} from './cart/queries/cartSelectedDeliveryOptionsUpdateDefault';
+export {cartAttributesUpdateDefault} from './cart/queries/cartAttributesUpdateDefault';
+export {cartMetafieldsSetDefault} from './cart/queries/cartMetafieldsSetDefault';
+export {cartMetafieldDeleteDefault} from './cart/queries/cartMetafieldDeleteDefault';
+export {cartGetIdDefault} from './cart/cartGetIdDefault';
+export {cartSetIdDefault} from './cart/cartSetIdDefault';
+export {
+  type HydrogenCartCustom,
+  type HydrogenCart,
+  createCartHandler,
+} from './cart/createCartHandler';
+export type {
+  MetafieldWithoutOwnerId,
+  CartQueryData,
+  CartQueryOptions,
+  CartQueryReturn,
+} from './cart/queries/cart-types';
+
 export {
   AnalyticsEventName,
   AnalyticsPageType,
