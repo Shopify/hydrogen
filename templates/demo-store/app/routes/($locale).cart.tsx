@@ -1,5 +1,6 @@
-import {Await, useMatches} from '@remix-run/react';
+import {useLoaderData} from '@remix-run/react';
 import invariant from 'tiny-invariant';
+import type {LoaderArgs} from '@shopify/remix-oxygen';
 import {json, type ActionArgs} from '@shopify/remix-oxygen';
 import {CartForm, type CartQueryData} from '@shopify/hydrogen';
 
@@ -78,14 +79,17 @@ export async function action({request, context}: ActionArgs) {
   );
 }
 
+export async function loader({context}: LoaderArgs) {
+  const {cart} = context;
+  return json(await cart.get());
+}
+
 export default function CartRoute() {
-  const [root] = useMatches();
+  const cart = useLoaderData<typeof loader>();
   // @todo: finish on a separate PR
   return (
     <div className="grid w-full gap-8 p-6 py-8 md:p-8 lg:p-12 justify-items-start">
-      <Await resolve={root.data?.cart}>
-        {(cart) => <Cart layout="page" cart={cart} />}
-      </Await>
+      <Cart layout="page" cart={cart} />
     </div>
   );
 }
