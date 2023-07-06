@@ -12,7 +12,7 @@ module.exports = {
   },
   overrides: [
     {
-      files: ['./templates/demo-store/*'],
+      files: ['./examples/tokengated-storefront/*', './templates/demo-store/*'],
       rules: {
         'import/order': [
           'error',
