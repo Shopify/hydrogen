@@ -49,12 +49,12 @@
           "tabs": [
             {
               "title": "client.js",
-              "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  // load environment variables according to your framework and runtime\n  storeDomain: process.env.PUBLIC_STORE_DOMAIN,\n  storefrontApiVersion: process.env.PUBLIC_STOREFRONT_API_VERSION,\n  publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,\n});\n",
+              "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  // load environment variables according to your framework and runtime\n  storeDomain: process.env.PUBLIC_STORE_DOMAIN,\n  publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,\n});\n",
               "language": "javascript"
             },
             {
               "title": ".env",
-              "code": "# Replace with your own store domain and Storefront API token\n\nPUBLIC_STOREFRONT_API_TOKEN=\"public_token\"\nPRIVATE_STOREFRONT_API_TOKEN=\"private_token\"\nPUBLIC_STOREFRONT_API_VERSION=\"2023-04\"\nPUBLIC_STORE_DOMAIN=\"store_id.myshopify.com\"\n"
+              "code": "# Replace with your own store domain and Storefront API token\n\nPUBLIC_STOREFRONT_API_TOKEN=\"public_token\"\nPRIVATE_STOREFRONT_API_TOKEN=\"private_token\"\nPUBLIC_STORE_DOMAIN=\"store_id.myshopify.com\"\n"
             },
             {
               "title": "server-side-query.js",

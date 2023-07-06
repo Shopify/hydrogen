@@ -1658,6 +1658,14 @@
               {
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
+                "name": "autoFocus",
+                "value": "boolean",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/MediaFile.tsx",
+                "syntaxKind": "PropertySignature",
                 "name": "className",
                 "value": "string",
                 "description": "",
@@ -1810,6 +1818,14 @@
               {
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
+                "name": "content",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/MediaFile.tsx",
+                "syntaxKind": "PropertySignature",
                 "name": "datatype",
                 "value": "string",
                 "description": "",
@@ -1842,7 +1858,23 @@
               {
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
+                "name": "rel",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/MediaFile.tsx",
+                "syntaxKind": "PropertySignature",
                 "name": "resource",
+                "value": "string",
+                "description": "",
+                "isOptional": true
+              },
+              {
+                "filePath": "/MediaFile.tsx",
+                "syntaxKind": "PropertySignature",
+                "name": "rev",
                 "value": "string",
                 "description": "",
                 "isOptional": true
@@ -2373,7 +2405,7 @@
                 "filePath": "/MediaFile.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "dangerouslySetInnerHTML",
-                "value": "{ __html: string; }",
+                "value": "{ __html: string | TrustedHTML; }",
                 "description": "",
                 "isOptional": true
               },
@@ -6432,6 +6464,48 @@
     ]
   },
   {
+    "name": "useLoadScript",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "The `useLoadScript` hook loads an external script tag in the browser. It allows React components to lazy-load third-party dependencies.",
+    "type": "hook",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import React, {useEffect} from 'react';\nimport {useLoadScript} from '@shopify/hydrogen-react';\n\nexport default function Homepage() {\n  const scriptStatus = useLoadScript('https://some-cdn.com/some-script.js');\n\n  useEffect(() => {\n    if (scriptStatus === 'done') {\n      // do something\n    }\n  }, [scriptStatus]);\n\n  return <div>{scriptStatus === 'done' && <p>Script loaded!</p>}</div>;\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import React, {useEffect} from 'react';\nimport {useLoadScript} from '@shopify/hydrogen-react';\n\nexport default function Homepage() {\n  const scriptStatus = useLoadScript('https://some-cdn.com/some-script.js');\n\n  useEffect(() => {\n    if (scriptStatus === 'done') {\n      // do something\n    }\n  }, [scriptStatus]);\n\n  return <div>{scriptStatus === 'done' && <p>Script loaded!</p>}</div>;\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "LoadScriptParams",
+        "typeDefinitions": {
+          "LoadScriptParams": {
+            "filePath": "/load-script.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LoadScriptParams",
+            "value": "Parameters<typeof loadScript>",
+            "description": ""
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "parseGid",
     "category": "utilities",
     "isVisualComponent": false,
@@ -6639,13 +6713,13 @@
               "name": "StorefrontClientReturn",
               "value": "StorefrontClientReturn"
             },
-            "value": "export function createStorefrontClient(\n  props: StorefrontClientProps,\n): StorefrontClientReturn {\n  const {\n    storeDomain,\n    privateStorefrontToken,\n    publicStorefrontToken,\n    storefrontApiVersion,\n    contentType,\n  } = props;\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`,\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {\n    warnOnce(\n      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`,\n    );\n  }\n\n  return {\n    getShopifyDomain(overrideProps): string {\n      return overrideProps?.storeDomain ?? storeDomain;\n    },\n    getStorefrontApiUrl(overrideProps): string {\n      const finalDomainUrl = overrideProps?.storeDomain ?? storeDomain;\n      return `${finalDomainUrl}${finalDomainUrl.endsWith('/') ? '' : '/'}api/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (!privateStorefrontToken && !overrideProps?.privateStorefrontToken) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`,\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`,\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (!publicStorefrontToken && !overrideProps?.publicStorefrontToken) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`,\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',\n      );\n    },\n  };\n}"
+            "value": "export function createStorefrontClient(\n  props: StorefrontClientProps,\n): StorefrontClientReturn {\n  const {\n    storeDomain,\n    privateStorefrontToken,\n    publicStorefrontToken,\n    storefrontApiVersion = SFAPI_VERSION,\n    contentType,\n  } = props;\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`,\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {\n    warnOnce(\n      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`,\n    );\n  }\n\n  const isMockShop = (domain: string): boolean => domain.includes('mock.shop');\n  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (\n    overrideProps,\n  ) => {\n    const domain = overrideProps?.storeDomain ?? storeDomain;\n    return domain.includes('://') ? domain : `https://${domain}`;\n  };\n\n  return {\n    getShopifyDomain,\n    getStorefrontApiUrl(overrideProps): string {\n      const domain = getShopifyDomain(overrideProps);\n      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');\n\n      if (isMockShop(domain)) return apiUrl;\n\n      return `${apiUrl}/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !privateStorefrontToken &&\n        !overrideProps?.privateStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`,\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`,\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !publicStorefrontToken &&\n        !overrideProps?.publicStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`,\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',\n      );\n    },\n  };\n}"
           },
           "StorefrontClientProps": {
             "filePath": "/storefront-client.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "StorefrontClientProps",
-            "value": "{\n  /** The host name of the domain (eg: `{shop}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API delegate access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) and [delegate access token](https://shopify.dev/apps/auth/oauth/delegate-access-tokens) documentation for more details. */\n  privateStorefrontToken?: string;\n  /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  publicStorefrontToken?: string;\n  /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion: string;\n  /**\n   * Customizes which `\"content-type\"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `\"json\"`. When fetching with a `body` that is a plain string, use `\"graphql\"`. Defaults to `\"json\"`\n   *\n   * Can also be customized on a call-by-call basis by passing in `'contentType'` to both `getPrivateTokenHeaders({...})` and `getPublicTokenHeaders({...})`, for example: `getPublicTokenHeaders({contentType: 'graphql'})`\n   */\n  contentType?: 'json' | 'graphql';\n}",
+            "value": "{\n  /** The host name of the domain (eg: `{shop}.myshopify.com`). */\n  storeDomain: string;\n  /** The Storefront API delegate access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) and [delegate access token](https://shopify.dev/apps/auth/oauth/delegate-access-tokens) documentation for more details. */\n  privateStorefrontToken?: string;\n  /** The Storefront API access token. Refer to the [authentication](https://shopify.dev/api/storefront#authentication) documentation for more details. */\n  publicStorefrontToken?: string;\n  /** The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.  */\n  storefrontApiVersion?: string;\n  /**\n   * Customizes which `\"content-type\"` header is added when using `getPrivateTokenHeaders()` and `getPublicTokenHeaders()`. When fetching with a `JSON.stringify()`-ed `body`, use `\"json\"`. When fetching with a `body` that is a plain string, use `\"graphql\"`. Defaults to `\"json\"`\n   *\n   * Can also be customized on a call-by-call basis by passing in `'contentType'` to both `getPrivateTokenHeaders({...})` and `getPublicTokenHeaders({...})`, for example: `getPublicTokenHeaders({contentType: 'graphql'})`\n   */\n  contentType?: 'json' | 'graphql';\n}",
             "description": "",
             "members": [
               {
@@ -6676,7 +6750,8 @@
                 "syntaxKind": "PropertySignature",
                 "name": "storefrontApiVersion",
                 "value": "string",
-                "description": "The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details."
+                "description": "The Storefront API version. This should almost always be the same as the version Hydrogen React was built for. Learn more about Shopify [API versioning](https://shopify.dev/api/usage/versioning) for more details.",
+                "isOptional": true
               },
               {
                 "filePath": "/storefront-client.ts",
