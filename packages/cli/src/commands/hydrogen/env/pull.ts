@@ -7,32 +7,38 @@ import {
   renderWarning,
   renderSuccess,
 } from '@shopify/cli-kit/node/ui';
-import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
+import {
+  outputContent,
+  outputInfo,
+  outputToken,
+} from '@shopify/cli-kit/node/output';
 import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {patchEnvFile} from '@shopify/cli-kit/node/dot-env';
-
-import {colors} from '../../../lib/colors.js';
+import colors from '@shopify/cli-kit/node/colors';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
-import {pullRemoteEnvironmentVariables} from '../../../lib/pull-environment-variables.js';
-import {getConfig} from '../../../lib/shopify-config.js';
+import {login} from '../../../lib/auth.js';
+import {getCliCommand} from '../../../lib/shell.js';
+import {
+  renderMissingLink,
+  renderMissingStorefront,
+} from '../../../lib/render-errors.js';
+import {linkStorefront} from '../link.js';
+import {getStorefrontEnvVariables} from '../../../lib/graphql/admin/pull-variables.js';
 
 export default class EnvPull extends Command {
   static description =
     'Populate your .env with variables from your Hydrogen storefront.';
 
-  static hidden = true;
-
   static flags = {
-    ['env-branch']: commonFlags['env-branch'],
+    ['env-branch']: commonFlags.envBranch,
     path: commonFlags.path,
-    shop: commonFlags.shop,
     force: commonFlags.force,
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(EnvPull);
-    await pullVariables({...flagsToCamelObject(flags)});
+    await runEnvPull({...flagsToCamelObject(flags)});
   }
 }
 
@@ -40,33 +46,65 @@ interface Flags {
   envBranch?: string;
   force?: boolean;
   path?: string;
-  shop?: string;
 }
 
-export async function pullVariables({
+export async function runEnvPull({
   envBranch,
+  path: root = process.cwd(),
   force,
-  path,
-  shop: flagShop,
 }: Flags) {
-  const actualPath = path ?? process.cwd();
+  const [{session, config}, cliCommand] = await Promise.all([
+    login(root),
+    getCliCommand(),
+  ]);
 
-  const environmentVariables = await pullRemoteEnvironmentVariables({
-    root: actualPath,
-    flagShop,
+  if (!config.storefront?.id) {
+    renderMissingLink({session, cliCommand});
+
+    const runLink = await renderConfirmationPrompt({
+      message: outputContent`Run ${outputToken.genericShellCommand(
+        `${cliCommand} link`,
+      )}?`.value,
+    });
+
+    if (!runLink) return;
+
+    config.storefront = await linkStorefront(root, session, config, {
+      cliCommand,
+    });
+  }
+
+  if (!config.storefront?.id) return;
+
+  const storefront = await getStorefrontEnvVariables(
+    session,
+    config.storefront.id,
     envBranch,
-  });
+  );
 
-  if (!environmentVariables.length) {
+  if (!storefront) {
+    renderMissingStorefront({
+      session,
+      storefront: config.storefront,
+      cliCommand,
+    });
+
     return;
   }
 
+  if (!storefront.environmentVariables.length) {
+    outputInfo(`No environment variables found.`);
+    return;
+  }
+
+  const variables = storefront.environmentVariables;
+  if (!variables.length) return;
+
   const fileName = colors.whiteBright(`.env`);
-
-  const dotEnvPath = resolvePath(actualPath, '.env');
-
+  const dotEnvPath = resolvePath(root, '.env');
   const fetchedEnv: Record<string, string> = {};
-  environmentVariables.forEach(({isSecret, key, value}) => {
+
+  variables.forEach(({isSecret, key, value}) => {
     // We need to force an empty string for secret variables, otherwise
     // patchEnvFile will treat them as new values even if they already exist.
     fetchedEnv[key] = isSecret ? `""` : value;
@@ -104,17 +142,11 @@ Continue?`.value,
     await writeFile(dotEnvPath, newEnv);
   }
 
-  const hasSecretVariables = environmentVariables.some(
-    ({isSecret}) => isSecret,
-  );
+  const hasSecretVariables = variables.some(({isSecret}) => isSecret);
 
   if (hasSecretVariables) {
-    const {storefront: configStorefront} = await getConfig(actualPath);
-
     renderWarning({
-      body: `${
-        configStorefront!.title
-      } contains environment variables marked as secret, so their values weren’t pulled.`,
+      body: `${config.storefront.title} contains environment variables marked as secret, so their values weren’t pulled.`,
     });
   }
 

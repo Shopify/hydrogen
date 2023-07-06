@@ -5,7 +5,8 @@ import {
 } from '@shopify/cli-kit/node/output';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {colors} from './colors.js';
+import colors from '@shopify/cli-kit/node/colors';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
 
 type MiniOxygenOptions = {
   root: string;
@@ -61,16 +62,9 @@ export async function startMiniOxygen({
 
   const listeningAt = `http://localhost:${miniOxygen.port}`;
 
-  outputInfo(
-    outputContent`🚥 MiniOxygen server started at ${outputToken.link(
-      listeningAt,
-      listeningAt,
-    )}\n`,
-  );
-
   return {
+    listeningAt,
     port: miniOxygen.port,
-    close: miniOxygen.close,
     reload(nextOptions?: Partial<Pick<MiniOxygenOptions, 'env'>>) {
       return miniOxygen.reload({
         env: {
@@ -78,6 +72,24 @@ export async function startMiniOxygen({
           ...process.env,
         },
       });
+    },
+    showBanner(options?: {
+      mode?: string;
+      headlinePrefix?: string;
+      extraLines?: string[];
+      appName?: string;
+    }) {
+      console.log('');
+      renderSuccess({
+        headline: `${options?.headlinePrefix ?? ''}MiniOxygen ${
+          options?.mode ?? 'development'
+        } server running.`,
+        body: [
+          `View ${options?.appName ?? 'Hydrogen'} app: ${listeningAt}`,
+          ...(options?.extraLines ?? []),
+        ],
+      });
+      console.log('');
     },
   };
 }

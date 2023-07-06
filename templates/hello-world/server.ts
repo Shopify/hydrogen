@@ -81,7 +81,7 @@ export default {
  * Feel free to customize it to your needs, add helper methods, or
  * swap out the cookie-based implementation with something else!
  */
-class HydrogenSession {
+export class HydrogenSession {
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,
@@ -101,6 +101,10 @@ class HydrogenSession {
     const session = await storage.getSession(request.headers.get('Cookie'));
 
     return new this(storage, session);
+  }
+
+  has(key: string) {
+    return this.session.has(key);
   }
 
   get(key: string) {

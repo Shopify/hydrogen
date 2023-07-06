@@ -4,7 +4,13 @@ import {
   createRequestHandler,
   getStorefrontHeaders,
 } from '@shopify/remix-oxygen';
-import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
+import {
+  cartGetIdDefault,
+  cartSetIdDefault,
+  createCartHandler,
+  createStorefrontClient,
+  storefrontRedirect,
+} from '@shopify/hydrogen';
 
 import {HydrogenSession} from '~/lib/session.server';
 import {getLocaleFromRequest} from '~/lib/utils';
@@ -46,6 +52,12 @@ export default {
         storefrontHeaders: getStorefrontHeaders(request),
       });
 
+      const cart = createCartHandler({
+        storefront,
+        getCartId: cartGetIdDefault(request.headers),
+        setCartId: cartSetIdDefault(),
+      });
+
       /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
@@ -57,6 +69,7 @@ export default {
           session,
           waitUntil,
           storefront,
+          cart,
           env,
         }),
       });

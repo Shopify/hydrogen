@@ -1,11 +1,16 @@
 import path from 'path';
 import fs from 'fs/promises';
-import {outputInfo} from '@shopify/cli-kit/node/output';
+import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
-import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
-import {muteDevLogs} from '../../lib/log.js';
+import {
+  getProjectPaths,
+  getRemixConfig,
+  type ServerMode,
+} from '../../lib/config.js';
+import {muteDevLogs, warnOnce} from '../../lib/log.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
@@ -16,7 +21,6 @@ import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {combinedEnvironmentVariables} from '../../lib/combined-environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 
-const LOG_INITIAL_BUILD = '\n🏁 Initial build';
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
 
@@ -32,26 +36,21 @@ export default class Dev extends Command {
       required: false,
       default: false,
     }),
-    ['codegen-config-path']: Flags.string({
-      description:
-        'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
-      required: false,
-      dependsOn: ['codegen-unstable'],
-    }),
-    ['disable-virtual-routes']: Flags.boolean({
+    ['codegen-config-path']: commonFlags.codegenConfigPath,
+    sourcemap: commonFlags.sourcemap,
+    'disable-virtual-routes': Flags.boolean({
       description:
         "Disable rendering fallback routes when a route file doesn't exist.",
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_VIRTUAL_ROUTES',
       default: false,
     }),
-    shop: commonFlags.shop,
     debug: Flags.boolean({
       description: 'Attaches a Node inspector',
       env: 'SHOPIFY_HYDROGEN_FLAG_DEBUG',
       default: false,
     }),
     host: deprecated('--host')(),
-    ['env-branch']: commonFlags['env-branch'],
+    ['env-branch']: commonFlags.envBranch,
   };
 
   async run(): Promise<void> {
@@ -60,7 +59,7 @@ export default class Dev extends Command {
 
     await runDev({
       ...flagsToCamelObject(flags),
-      codegen: flags['codegen-unstable'],
+      useCodegen: flags['codegen-unstable'],
       path: directory,
     });
   }
@@ -69,29 +68,27 @@ export default class Dev extends Command {
 async function runDev({
   port,
   path: appPath,
-  codegen = false,
+  useCodegen = false,
   codegenConfigPath,
   disableVirtualRoutes,
-  shop,
   envBranch,
   debug = false,
+  sourcemap = true,
 }: {
   port?: number;
   path?: string;
-  codegen?: boolean;
+  useCodegen?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
-  shop?: string;
   envBranch?: string;
-  debug?: false;
+  debug?: boolean;
+  sourcemap?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
 
   if (debug) (await import('node:inspector')).open();
-
-  console.time(LOG_INITIAL_BUILD);
 
   const {root, publicPath, buildPathClient, buildPathWorkerFile} =
     getProjectPaths(appPath);
@@ -101,7 +98,19 @@ async function runDev({
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
     const config = await getRemixConfig(root);
-    return disableVirtualRoutes ? config : addVirtualRoutes(config);
+    return disableVirtualRoutes
+      ? config
+      : addVirtualRoutes(config).catch((error) => {
+          // Seen this fail when somehow NPM doesn't publish
+          // the full 'virtual-routes' directory.
+          // E.g. https://unpkg.com/browse/@shopify/cli-hydrogen@0.0.0-next-aa15969-20230703072007/dist/virtual-routes/
+          outputDebug(
+            'Could not add virtual routes: ' +
+              (error?.stack ?? error?.message ?? error),
+          );
+
+          return config;
+        });
   };
 
   const getFilePaths = (file: string) => {
@@ -110,6 +119,21 @@ async function runDev({
   };
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
+
+  const {shop, storefront} = await getConfig(root);
+  // const environmentVariables =
+  //   !!shop && !!storefront?.id
+  //     ? await combinedEnvironmentVariables({root, shop, envBranch})
+  //     : undefined;
+
+  const [{watch}, {createFileWatchCache}] = await Promise.all([
+    import('@remix-run/dev/dist/compiler/watch.js'),
+    import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+  ]);
+
+  let isInitialBuild = true;
+  let initialBuildDurationMs = 0;
+  let initialBuildStartTimeMs = Date.now();
 
   const envPromise = getEnvVariables(root, shop, envBranch);
 
@@ -126,97 +150,122 @@ async function runDev({
       env: await envPromise,
     });
 
+    miniOxygen.showBanner({
+      appName: storefront ? colors.cyan(storefront?.title) : undefined,
+      headlinePrefix:
+        initialBuildDurationMs > 0
+          ? `Initial build: ${initialBuildDurationMs}ms\n`
+          : '',
+      extraLines: [
+        colors.dim(
+          `\nView GraphiQL API browser: ${miniOxygen.listeningAt}/graphiql`,
+        ),
+      ],
+    });
+
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
   }
 
-  const {watch} = await import('@remix-run/dev/dist/compiler/watch.js');
-
   const remixConfig = await reloadConfig();
 
-  if (codegen) {
+  if (useCodegen) {
     spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
   }
 
+  const fileWatchCache = createFileWatchCache();
   let skipRebuildLogs = false;
 
-  await watch(remixConfig, {
-    reloadConfig,
-    mode: process.env.NODE_ENV as any,
-    async onInitialBuild() {
-      await copyingFiles;
-
-      if (!(await serverBundleExists())) {
-        const {renderFatalError} = await import('@shopify/cli-kit/node/ui');
-        return renderFatalError({
-          name: 'BuildError',
-          type: 0,
-          message:
-            'MiniOxygen cannot start because the server bundle has not been generated.',
-          tryMessage:
-            'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
-        });
-      }
-
-      await envPromise; // Await here to ensure env vars are logged before initial build
-      // TODO: log initial build time without counting env vars after upgrading to Remix 1.17
-
-      console.timeEnd(LOG_INITIAL_BUILD);
-      await safeStartMiniOxygen();
+  await watch(
+    {
+      config: remixConfig,
+      options: {
+        mode: process.env.NODE_ENV as ServerMode,
+        onWarning: warnOnce,
+        sourcemap,
+      },
+      fileWatchCache,
     },
-    async onFileCreated(file: string) {
-      const [relative, absolute] = getFilePaths(file);
-      outputInfo(`\n📄 File created: ${relative}`);
+    {
+      reloadConfig,
+      onBuildStart() {
+        if (!isInitialBuild && !skipRebuildLogs) {
+          outputInfo(LOG_REBUILDING);
+          console.time(LOG_REBUILT);
+        }
+      },
+      async onBuildFinish() {
+        if (isInitialBuild) {
+          await copyingFiles;
+          initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
+          isInitialBuild = false;
+        } else if (!skipRebuildLogs) {
+          skipRebuildLogs = false;
+          console.timeEnd(LOG_REBUILT);
+          if (!miniOxygen) console.log(''); // New line
+        }
 
-      if (absolute.startsWith(publicPath)) {
-        await copyPublicFiles(
-          absolute,
-          absolute.replace(publicPath, buildPathClient),
-        );
-      }
-    },
-    async onFileChanged(file: string) {
-      const [relative, absolute] = getFilePaths(file);
-      outputInfo(`\n📄 File changed: ${relative}`);
+        if (!miniOxygen) {
+          if (!(await serverBundleExists())) {
+            return renderFatalError({
+              name: 'BuildError',
+              type: 0,
+              message:
+                'MiniOxygen cannot start because the server bundle has not been generated.',
+              tryMessage:
+                'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
+            });
+          }
 
-      if (relative.endsWith('.env')) {
-        skipRebuildLogs = true;
-        await miniOxygen.reload({
-          env: await getEnvVariables(root, shop, envBranch),
-        });
-      }
+          await envPromise; // Await here to ensure env vars are logged before initial build
+          // TODO: log initial build time without counting env vars after upgrading to Remix 1.17
 
-      if (absolute.startsWith(publicPath)) {
-        await copyPublicFiles(
-          absolute,
-          absolute.replace(publicPath, buildPathClient),
-        );
-      }
-    },
-    async onFileDeleted(file: string) {
-      const [relative, absolute] = getFilePaths(file);
-      outputInfo(`\n📄 File deleted: ${relative}`);
+          await safeStartMiniOxygen();
+        }
+      },
+      async onFileCreated(file: string) {
+        const [relative, absolute] = getFilePaths(file);
+        outputInfo(`\n📄 File created: ${relative}`);
 
-      if (absolute.startsWith(publicPath)) {
-        await fs.unlink(absolute.replace(publicPath, buildPathClient));
-      }
-    },
-    onRebuildStart() {
-      if (!skipRebuildLogs) {
-        outputInfo(LOG_REBUILDING);
-        console.time(LOG_REBUILT);
-      }
-    },
-    async onRebuildFinish() {
-      !skipRebuildLogs && console.timeEnd(LOG_REBUILT);
-      skipRebuildLogs = false;
+        if (absolute.startsWith(publicPath)) {
+          await copyPublicFiles(
+            absolute,
+            absolute.replace(publicPath, buildPathClient),
+          );
+        }
+      },
+      async onFileChanged(file: string) {
+        fileWatchCache.invalidateFile(file);
 
-      if (!miniOxygen && (await serverBundleExists())) {
-        console.log(''); // New line
-        await safeStartMiniOxygen();
-      }
+        const [relative, absolute] = getFilePaths(file);
+        outputInfo(`\n📄 File changed: ${relative}`);
+
+        if (relative.endsWith('.env')) {
+          skipRebuildLogs = true;
+          await miniOxygen.reload({
+            env: await getEnvVariables(root, shop, envBranch),
+          });
+        }
+
+        if (absolute.startsWith(publicPath)) {
+          await copyPublicFiles(
+            absolute,
+            absolute.replace(publicPath, buildPathClient),
+          );
+        }
+      },
+      async onFileDeleted(file: string) {
+        fileWatchCache.invalidateFile(file);
+
+        const [relative, absolute] = getFilePaths(file);
+        outputInfo(`\n📄 File deleted: ${relative}`);
+
+        if (absolute.startsWith(publicPath)) {
+          await fs.unlink(absolute.replace(publicPath, buildPathClient));
+        }
+      },
     },
-  });
+  );
 }
 
 async function getEnvVariables(
@@ -230,7 +279,7 @@ async function getEnvVariables(
 
     return await combinedEnvironmentVariables({
       root,
-      shop,
+      shop: shop!,
       envBranch,
     });
   } catch (error: any) {

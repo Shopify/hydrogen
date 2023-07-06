@@ -1,48 +1,43 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {pluralize} from '@shopify/cli-kit/common/string';
+import colors from '@shopify/cli-kit/node/colors';
 import {
   outputContent,
   outputInfo,
   outputNewline,
 } from '@shopify/cli-kit/node/output';
-
-import {colors} from '../../lib/colors.js';
 import {commonFlags} from '../../lib/flags.js';
-import {getHydrogenShop} from '../../lib/shop.js';
-import {parseGid} from '../../lib/graphql.js';
+import {parseGid} from '../../lib/gid.js';
 import {
   type Deployment,
   type HydrogenStorefront,
   getStorefrontsWithDeployment,
 } from '../../lib/graphql/admin/list-storefronts.js';
 import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
+import {login} from '../../lib/auth.js';
 
 export default class List extends Command {
   static description =
     'Returns a list of Hydrogen storefronts available on a given shop.';
 
-  static hidden = true;
-
   static flags = {
     path: commonFlags.path,
-    shop: commonFlags.shop,
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(List);
-    await listStorefronts(flags);
+    await runList(flags);
   }
 }
 
 interface Flags {
   path?: string;
-  shop?: string;
 }
 
-export async function listStorefronts({path, shop: flagShop}: Flags) {
-  const shop = await getHydrogenShop({path, shop: flagShop});
+export async function runList({path: root = process.cwd()}: Flags) {
+  const {session} = await login(root);
 
-  const {storefronts, adminSession} = await getStorefrontsWithDeployment(shop);
+  const storefronts = await getStorefrontsWithDeployment(session);
 
   if (storefronts.length > 0) {
     outputNewline();
@@ -50,7 +45,7 @@ export async function listStorefronts({path, shop: flagShop}: Flags) {
     outputInfo(
       pluralizedStorefronts({
         storefronts,
-        shop,
+        shop: session.storeFqdn,
       }).toString(),
     );
 
@@ -80,7 +75,7 @@ export async function listStorefronts({path, shop: flagShop}: Flags) {
       },
     );
   } else {
-    logMissingStorefronts(adminSession);
+    logMissingStorefronts(session);
   }
 }
 

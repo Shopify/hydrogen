@@ -1,5 +1,4 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
-import type {AdminSession} from '@shopify/cli-kit/node/session';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {inTemporaryDirectory} from '@shopify/cli-kit/node/fs';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
@@ -8,14 +7,13 @@ import {
   getStorefrontEnvironments,
   type Environment,
 } from '../../../lib/graphql/admin/list-environments.js';
-import {getAdminSession} from '../../../lib/admin-session.js';
-import {getConfig} from '../../../lib/shopify-config.js';
+import {type AdminSession, login} from '../../../lib/auth.js';
 import {
   renderMissingLink,
   renderMissingStorefront,
 } from '../../../lib/render-errors.js';
 import {linkStorefront} from '../link.js';
-import {listEnvironments} from './list.js';
+import {runEnvList} from './list.js';
 
 const SHOP = 'my-shop';
 
@@ -29,20 +27,26 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
   };
 });
 vi.mock('../link.js');
-vi.mock('../../../lib/admin-session.js');
+vi.mock('../../../lib/auth.js');
 vi.mock('../../../lib/shopify-config.js');
 vi.mock('../../../lib/render-errors.js');
-vi.mock('../../../lib/graphql/admin/list-environments.js', () => {
-  return {getStorefrontEnvironments: vi.fn()};
-});
-vi.mock('../../../lib/shop.js', () => ({
-  getHydrogenShop: () => SHOP,
-}));
+vi.mock('../../../lib/graphql/admin/list-environments.js');
+vi.mock('../../../lib/shell.js', () => ({getCliCommand: () => 'h2'}));
 
 describe('listEnvironments', () => {
   const ADMIN_SESSION: AdminSession = {
     token: 'abc123',
     storeFqdn: SHOP,
+  };
+
+  const SHOPIFY_CONFIG = {
+    shop: SHOP,
+    shopName: 'My Shop',
+    email: 'email',
+    storefront: {
+      id: 'gid://shopify/HydrogenStorefront/1',
+      title: 'Existing Link',
+    },
   };
 
   const PRODUCTION_ENVIRONMENT: Environment = {
@@ -73,23 +77,19 @@ describe('listEnvironments', () => {
   };
 
   beforeEach(async () => {
-    vi.mocked(getAdminSession).mockResolvedValue(ADMIN_SESSION);
-    vi.mocked(getConfig).mockResolvedValue({
-      storefront: {
-        id: 'gid://shopify/HydrogenStorefront/1',
-        title: 'Existing Link',
-      },
+    vi.mocked(login).mockResolvedValue({
+      session: ADMIN_SESSION,
+      config: SHOPIFY_CONFIG,
     });
+
     vi.mocked(getStorefrontEnvironments).mockResolvedValue({
-      storefront: {
-        id: 'gid://shopify/HydrogenStorefront/1',
-        productionUrl: 'https://example.com',
-        environments: [
-          PRODUCTION_ENVIRONMENT,
-          CUSTOM_ENVIRONMENT,
-          PREVIEW_ENVIRONMENT,
-        ],
-      },
+      id: 'gid://shopify/HydrogenStorefront/1',
+      productionUrl: 'https://example.com',
+      environments: [
+        PRODUCTION_ENVIRONMENT,
+        CUSTOM_ENVIRONMENT,
+        PREVIEW_ENVIRONMENT,
+      ],
     });
   });
 
@@ -98,13 +98,13 @@ describe('listEnvironments', () => {
     mockAndCaptureOutput().clear();
   });
 
-  it('makes a GraphQL call to fetch environment variables', async () => {
+  it('fetchs environment variables', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      await listEnvironments({path: tmpDir});
+      await runEnvList({path: tmpDir});
 
       expect(getStorefrontEnvironments).toHaveBeenCalledWith(
         ADMIN_SESSION,
-        'gid://shopify/HydrogenStorefront/1',
+        SHOPIFY_CONFIG.storefront.id,
       );
     });
   });
@@ -113,10 +113,10 @@ describe('listEnvironments', () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const output = mockAndCaptureOutput();
 
-      await listEnvironments({path: tmpDir});
+      await runEnvList({path: tmpDir});
 
       expect(output.info()).toMatch(
-        /Showing 3 environments for the Hydrogen storefront Existing Link/,
+        /Showing 3 environments for the Hydrogen storefront Existing Link/i,
       );
 
       expect(output.info()).toMatch(/Production \(Branch: main\)/);
@@ -129,14 +129,18 @@ describe('listEnvironments', () => {
 
   describe('when there is no linked storefront', () => {
     beforeEach(() => {
-      vi.mocked(getConfig).mockResolvedValue({
-        storefront: undefined,
+      vi.mocked(login).mockResolvedValue({
+        session: ADMIN_SESSION,
+        config: {
+          ...SHOPIFY_CONFIG,
+          storefront: undefined,
+        },
       });
     });
 
     it('calls renderMissingLink', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await listEnvironments({path: tmpDir});
+        await runEnvList({path: tmpDir});
 
         expect(renderMissingLink).toHaveBeenCalledOnce();
       });
@@ -146,30 +150,30 @@ describe('listEnvironments', () => {
       vi.mocked(renderConfirmationPrompt).mockResolvedValue(true);
 
       await inTemporaryDirectory(async (tmpDir) => {
-        await listEnvironments({path: tmpDir});
+        await runEnvList({path: tmpDir});
 
         expect(renderConfirmationPrompt).toHaveBeenCalledWith({
-          message: expect.stringMatching(/Run .*npx shopify hydrogen link.*\?/),
+          message: expect.arrayContaining([{command: 'h2 link'}]),
         });
 
-        expect(linkStorefront).toHaveBeenCalledWith({
-          path: tmpDir,
-          silent: true,
-        });
+        expect(linkStorefront).toHaveBeenCalledWith(
+          tmpDir,
+          ADMIN_SESSION,
+          {...SHOPIFY_CONFIG, storefront: undefined},
+          expect.anything(),
+        );
       });
     });
   });
 
   describe('when there is no matching storefront in the shop', () => {
     beforeEach(() => {
-      vi.mocked(getStorefrontEnvironments).mockResolvedValue({
-        storefront: null,
-      });
+      vi.mocked(getStorefrontEnvironments).mockResolvedValue(null);
     });
 
     it('calls renderMissingStorefront', async () => {
       await inTemporaryDirectory(async (tmpDir) => {
-        await listEnvironments({path: tmpDir});
+        await runEnvList({path: tmpDir});
 
         expect(renderMissingStorefront).toHaveBeenCalledOnce();
       });

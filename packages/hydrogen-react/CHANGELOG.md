@@ -1,5 +1,27 @@
 # @shopify/hydrogen-react
 
+## 2023.4.5
+
+### Patch Changes
+
+- Add JSDoc examples to <Money /> and useMoney ([#1021](https://github.com/Shopify/hydrogen/pull/1021)) by [@juanpprieto](https://github.com/juanpprieto)
+
+## 2023.4.4
+
+### Patch Changes
+
+- A default `https://` protocol is now added automatically to `storeDomain` if missing. ([#985](https://github.com/Shopify/hydrogen/pull/985)) by [@frandiox](https://github.com/frandiox)
+
+- Add support for [`mock.shop`](https://mock.shop/) as a `storeDomain`. ([#986](https://github.com/Shopify/hydrogen/pull/986)) by [@frandiox](https://github.com/frandiox)
+
+- Fix `flattenConnection()`'s TypeScript types when working with `edges.node` ([#945](https://github.com/Shopify/hydrogen/pull/945)) by [@frehner](https://github.com/frehner)
+
+- Make `storefrontApiVersion` parameter optional. By default, it will use the current version of Hydrogen as the Storefront API version. ([#984](https://github.com/Shopify/hydrogen/pull/984)) by [@frandiox](https://github.com/frandiox)
+
+- Fix the `<CartProvider>` to by default pull localization from `<ShopifyProvider>`. You can still override the countryCode by passing a prop directly to `<CartProvider>`. Resovles https://github.com/Shopify/hydrogen/issues/622 ([#980](https://github.com/Shopify/hydrogen/pull/980)) by [@blittle](https://github.com/blittle)
+
+- Fix `<ModelViewer>` to properly set className ([#966](https://github.com/Shopify/hydrogen/pull/966)) by [@blittle](https://github.com/blittle)
+
 ## 2023.4.3
 
 ### Patch Changes
