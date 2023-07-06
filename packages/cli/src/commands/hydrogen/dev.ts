@@ -18,7 +18,7 @@ import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
-import {combinedEnvironmentVariables} from '../../lib/combined-environment-variables.js';
+import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -121,10 +121,8 @@ async function runDev({
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
   const {shop, storefront} = await getConfig(root);
-  // const environmentVariables =
-  //   !!shop && !!storefront?.id
-  //     ? await combinedEnvironmentVariables({root, shop, envBranch})
-  //     : undefined;
+  const fetchRemote = !!shop && !!storefront?.id;
+  const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
@@ -134,8 +132,6 @@ async function runDev({
   let isInitialBuild = true;
   let initialBuildDurationMs = 0;
   let initialBuildStartTimeMs = Date.now();
-
-  const envPromise = getEnvVariables(root, shop, envBranch);
 
   let miniOxygen: MiniOxygen;
   async function safeStartMiniOxygen() {
@@ -217,9 +213,6 @@ async function runDev({
             });
           }
 
-          await envPromise; // Await here to ensure env vars are logged before initial build
-          // TODO: log initial build time without counting env vars after upgrading to Remix 1.17
-
           await safeStartMiniOxygen();
         }
       },
@@ -243,7 +236,11 @@ async function runDev({
         if (relative.endsWith('.env')) {
           skipRebuildLogs = true;
           await miniOxygen.reload({
-            env: await getEnvVariables(root, shop, envBranch),
+            env: await getAllEnvironmentVariables({
+              root,
+              fetchRemote,
+              envBranch,
+            }),
           });
         }
 
@@ -266,27 +263,4 @@ async function runDev({
       },
     },
   );
-}
-
-async function getEnvVariables(
-  root: string,
-  shop?: string,
-  envBranch?: string,
-) {
-  try {
-    const {storefront} = await getConfig(root);
-    if (!storefront?.id) return;
-
-    return await combinedEnvironmentVariables({
-      root,
-      shop: shop!,
-      envBranch,
-    });
-  } catch (error: any) {
-    // Do not throw here, as the development server should still start
-    renderWarning({
-      headline: `Failed to load environment variables. The development server will still start, but the following error occurred:`,
-      body: error?.stack ?? error?.message ?? error,
-    });
-  }
 }

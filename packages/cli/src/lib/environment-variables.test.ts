@@ -3,14 +3,14 @@ import {inTemporaryDirectory, writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 
-import {combinedEnvironmentVariables} from './combined-environment-variables.js';
+import {getAllEnvironmentVariables} from './environment-variables.js';
 import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
 import {login} from './auth.js';
 
 vi.mock('./auth.js');
 vi.mock('./graphql/admin/pull-variables.js');
 
-describe('combinedEnvironmentVariables()', () => {
+describe('getAllEnvironmentVariables()', () => {
   const ADMIN_SESSION = {
     token: 'abc123',
     storeFqdn: 'my-shop',
@@ -52,10 +52,9 @@ describe('combinedEnvironmentVariables()', () => {
 
   it('calls pullRemoteEnvironmentVariables', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
-      await combinedEnvironmentVariables({
+      await getAllEnvironmentVariables({
         envBranch: 'main',
         root: tmpDir,
-        shop: 'my-shop',
       });
 
       expect(getStorefrontEnvVariables).toHaveBeenCalledWith(
@@ -66,11 +65,23 @@ describe('combinedEnvironmentVariables()', () => {
     });
   });
 
+  it('does not call pullRemoteEnvironmentVariables when indicated', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      await getAllEnvironmentVariables({
+        envBranch: 'main',
+        root: tmpDir,
+        fetchRemote: false,
+      });
+
+      expect(getStorefrontEnvVariables).not.toHaveBeenCalled();
+    });
+  });
+
   it('renders a message about injection', async () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const outputMock = mockAndCaptureOutput();
 
-      await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
+      await getAllEnvironmentVariables({root: tmpDir});
 
       expect(outputMock.info()).toMatch(
         /Environment variables injected into MiniOxygen:/,
@@ -82,9 +93,24 @@ describe('combinedEnvironmentVariables()', () => {
     await inTemporaryDirectory(async (tmpDir) => {
       const outputMock = mockAndCaptureOutput();
 
-      await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
+      await getAllEnvironmentVariables({root: tmpDir});
 
       expect(outputMock.info()).toMatch(/PUBLIC_API_TOKEN\s+from Oxygen/);
+    });
+  });
+
+  it('doest not fail on network errors', async () => {
+    await inTemporaryDirectory(async (tmpDir) => {
+      vi.mocked(getStorefrontEnvVariables).mockRejectedValue(
+        new Error('Network error'),
+      );
+
+      const outputMock = mockAndCaptureOutput();
+
+      await getAllEnvironmentVariables({root: tmpDir});
+
+      expect(outputMock.info()).not.toMatch(/PUBLIC_API_TOKEN\s+from Oxygen/);
+      expect(outputMock.warn()).toMatch(/failed to load/i);
     });
   });
 
@@ -107,7 +133,7 @@ describe('combinedEnvironmentVariables()', () => {
       await inTemporaryDirectory(async (tmpDir) => {
         const outputMock = mockAndCaptureOutput();
 
-        await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
+        await getAllEnvironmentVariables({root: tmpDir});
 
         expect(outputMock.info()).toMatch(
           /PUBLIC_API_TOKEN\s+from Oxygen \(Marked as secret\)/,
@@ -124,7 +150,7 @@ describe('combinedEnvironmentVariables()', () => {
 
         const outputMock = mockAndCaptureOutput();
 
-        await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
+        await getAllEnvironmentVariables({root: tmpDir});
 
         expect(outputMock.info()).toMatch(/LOCAL_TOKEN\s+from local \.env/);
       });
@@ -138,7 +164,7 @@ describe('combinedEnvironmentVariables()', () => {
 
           const outputMock = mockAndCaptureOutput();
 
-          await combinedEnvironmentVariables({root: tmpDir, shop: 'my-shop'});
+          await getAllEnvironmentVariables({root: tmpDir});
 
           expect(outputMock.info()).not.toMatch(
             /PUBLIC_API_TOKEN\s+from Oxygen/,
