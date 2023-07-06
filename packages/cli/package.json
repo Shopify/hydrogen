@@ -17,13 +17,14 @@
   },
   "devDependencies": {
     "@types/diff": "^5.0.2",
-    "@types/fs-extra": "^9.0.13",
+    "@types/fs-extra": "^11.0.1",
     "@types/gunzip-maybe": "^1.4.0",
     "@types/prettier": "^2.7.2",
     "@types/recursive-readdir": "^2.2.1",
     "@types/tar-fs": "^2.0.1",
     "oclif": "2.1.4",
     "tempy": "^3.0.0",
+    "type-fest": "^3.6.0",
     "vitest": "^0.28.1"
   },
   "peerDependencies": {
@@ -32,15 +33,17 @@
     "@shopify/remix-oxygen": "^1.1.1"
   },
   "dependencies": {
+    "@ast-grep/napi": "^0.5.3",
     "@graphql-codegen/cli": "3.3.1",
-    "@oclif/core": "2.1.4",
+    "@oclif/core": "2.8.5",
     "@remix-run/dev": "1.17.1",
-    "@shopify/cli-kit": "3.46.3",
+    "@shopify/cli-kit": "3.47.0",
     "@shopify/hydrogen-codegen": "^0.0.2",
     "@shopify/mini-oxygen": "^1.6.0",
+    "ansi-escapes": "^6.2.0",
     "diff": "^5.1.0",
     "fast-glob": "^3.2.12",
-    "fs-extra": "^10.1.0",
+    "fs-extra": "^11.1.0",
     "gunzip-maybe": "^1.4.2",
     "prettier": "^2.8.4",
     "recursive-readdir": "^2.2.3",
@@ -50,10 +53,7 @@
   "bin": "dist/create-app.js",
   "exports": {
     "./package.json": "./package.json",
-    "./commands/hydrogen/init": {
-      "types": "./dist/commands/hydrogen/init.d.ts",
-      "default": "./dist/commands/hydrogen/init.js"
-    }
+    "./commands/hydrogen/init": "./dist/commands/hydrogen/init.js"
   },
   "files": [
     "dist",

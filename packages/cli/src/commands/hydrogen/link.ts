@@ -10,17 +10,17 @@ import {
   renderTextPrompt,
   renderWarning,
 } from '@shopify/cli-kit/node/ui';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 import {commonFlags} from '../../lib/flags.js';
-import {getHydrogenShop} from '../../lib/shop.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
+import {setStorefront, type ShopifyConfig} from '../../lib/shopify-config.js';
 import {createStorefront} from '../../lib/graphql/admin/create-storefront.js';
 import {waitForJob} from '../../lib/graphql/admin/fetch-job.js';
-import {getConfig, setStorefront} from '../../lib/shopify-config.js';
-import {logMissingStorefronts} from '../../lib/missing-storefronts.js';
 import {titleize} from '../../lib/string.js';
 import {getCliCommand} from '../../lib/shell.js';
-import {renderError, renderUserErrors} from '../../lib/user-errors.js';
+import {login} from '../../lib/auth.js';
+import type {AdminSession} from '../../lib/auth.js';
 
 export default class Link extends Command {
   static description =
@@ -29,7 +29,6 @@ export default class Link extends Command {
   static flags = {
     force: commonFlags.force,
     path: commonFlags.path,
-    shop: commonFlags.shop,
     storefront: Flags.string({
       description: 'The name of a Hydrogen Storefront (e.g. "Jane\'s Apparel")',
       env: 'SHOPIFY_HYDROGEN_STOREFRONT',
@@ -38,16 +37,14 @@ export default class Link extends Command {
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Link);
-    await linkStorefront(flags);
+    await runLink(flags);
   }
 }
 
 export interface LinkStorefrontArguments {
   force?: boolean;
   path?: string;
-  shop?: string;
   storefront?: string;
-  silent?: boolean;
 }
 
 interface HydrogenStorefront {
@@ -56,21 +53,53 @@ interface HydrogenStorefront {
   productionUrl: string;
 }
 
-const CREATE_NEW_STOREFRONT_ID = 'NEW_STOREFRONT';
-
-export async function linkStorefront({
+export async function runLink({
   force,
-  path,
-  shop: flagShop,
+  path: root = process.cwd(),
   storefront: flagStorefront,
-  silent = false,
 }: LinkStorefrontArguments) {
-  const shop = await getHydrogenShop({path, shop: flagShop});
-  const {storefront: configStorefront} = await getConfig(path ?? process.cwd());
+  const [{session, config}, cliCommand] = await Promise.all([
+    login(root),
+    getCliCommand(),
+  ]);
 
-  if (configStorefront && !force) {
+  const linkedStore = await linkStorefront(root, session, config, {
+    force,
+    flagStorefront,
+    cliCommand,
+  });
+
+  if (!linkedStore) return;
+
+  renderSuccess({
+    body: [{userInput: linkedStore.title}, 'is now linked'],
+    nextSteps: [
+      [
+        'Run',
+        {command: `${cliCommand} dev`},
+        'to start your local development server and start building',
+      ],
+    ],
+  });
+}
+
+export async function linkStorefront(
+  root: string,
+  session: AdminSession,
+  config: ShopifyConfig,
+  {
+    force = false,
+    flagStorefront,
+    cliCommand,
+  }: {force?: boolean; flagStorefront?: string; cliCommand: string},
+) {
+  if (!config.shop) {
+    throw new AbortError('No shop found in local config, login first.');
+  }
+
+  if (config.storefront?.id && !force) {
     const overwriteLink = await renderConfirmationPrompt({
-      message: `Your project is currently linked to ${configStorefront.title}. Do you want to link to a different Hydrogen storefront on Shopify?`,
+      message: `Your project is currently linked to ${config.storefront.title}. Do you want to link to a different Hydrogen storefront on Shopify?`,
     });
 
     if (!overwriteLink) {
@@ -78,16 +107,9 @@ export async function linkStorefront({
     }
   }
 
-  const {storefronts, adminSession} = await getStorefronts(shop);
-
-  if (storefronts.length === 0) {
-    logMissingStorefronts(adminSession);
-    return;
-  }
+  const storefronts = await getStorefronts(session);
 
   let selectedStorefront: HydrogenStorefront | undefined;
-  let selectCreateNewStorefront = false;
-  const cliCommand = await getCliCommand();
 
   if (flagStorefront) {
     selectedStorefront = storefronts.find(
@@ -101,7 +123,7 @@ export async function linkStorefront({
           "There's no storefront matching",
           {userInput: flagStorefront},
           'on your',
-          {userInput: shop},
+          {userInput: config.shop},
           'shop. To see all available Hydrogen storefronts, run',
           {
             command: `${cliCommand} list`,
@@ -112,52 +134,42 @@ export async function linkStorefront({
       return;
     }
   } else {
-    const choices = storefronts.map(({id, title, productionUrl}) => ({
-      value: id,
-      label: `${title} (${productionUrl})`,
-    }));
-
-    // choices.unshift({
-    //   value: CREATE_NEW_STOREFRONT_ID,
-    //   label: 'Create a new storefront',
-    // });
+    const choices = [
+      {
+        label: 'Create a new storefront',
+        value: null,
+      },
+      ...storefronts.map(({id, title, productionUrl}) => ({
+        label: `${title} (${productionUrl})`,
+        value: id,
+      })),
+    ];
 
     const storefrontId = await renderSelectPrompt({
       message: 'Choose a Hydrogen storefront to link',
       choices,
     });
 
-    if (storefrontId === CREATE_NEW_STOREFRONT_ID) {
-      selectCreateNewStorefront = true;
-    } else {
+    if (storefrontId) {
       selectedStorefront = storefronts.find(({id}) => id === storefrontId);
+    } else {
+      selectedStorefront = await createNewStorefront(root, session);
     }
-  }
-
-  if (selectCreateNewStorefront) {
-    const storefront = await createNewStorefront(path, shop);
-
-    if (!storefront) {
-      return;
-    }
-
-    selectedStorefront = storefront;
   }
 
   if (selectedStorefront) {
-    await linkExistingStorefront(path, selectedStorefront, silent, cliCommand);
+    await setStorefront(root, selectedStorefront);
   }
+
+  return selectedStorefront;
 }
 
-async function createNewStorefront(
-  path: string | undefined,
-  shop: string,
-): Promise<HydrogenStorefront | undefined> {
-  const projectDirectory = path && basename(path);
+async function createNewStorefront(root: string, session: AdminSession) {
+  const projectDirectory = basename(root);
 
   const projectName = await renderTextPrompt({
-    message: 'What do you want to name the Hydrogen storefront on Shopify?',
-    defaultValue: titleize(projectDirectory) || 'Hydrogen Storefront',
+    message: 'New storefront name',
+    defaultValue: titleize(projectDirectory),
   });
 
   let storefront: HydrogenStorefront | undefined;
@@ -167,53 +179,29 @@ async function createNewStorefront(
     {
       title: 'Creating storefront',
       task: async () => {
-        const result = await createStorefront(shop, projectName);
-
+        const result = await createStorefront(session, projectName);
         storefront = result.storefront;
         jobId = result.jobId;
-
-        if (result.userErrors.length > 0) {
-          renderUserErrors(result.userErrors);
-        }
       },
     },
     {
       title: 'Creating API tokens',
       task: async () => {
         try {
-          await waitForJob(shop, jobId!);
+          await waitForJob(session, jobId!);
         } catch (_err) {
           storefront = undefined;
-          renderError(
-            'Please try again or contact support if the error persists.',
-          );
         }
       },
       skip: () => !jobId,
     },
   ]);
 
-  return storefront;
-}
-
-async function linkExistingStorefront(
-  path: string | undefined,
-  selectedStorefront: HydrogenStorefront,
-  silent: boolean,
-  cliCommand: string,
-) {
-  await setStorefront(path ?? process.cwd(), selectedStorefront);
-
-  if (!silent) {
-    renderSuccess({
-      body: [{userInput: selectedStorefront.title}, 'is now linked'],
-      nextSteps: [
-        [
-          'Run',
-          {command: `${cliCommand} dev`},
-          'to start your local development server and start building',
-        ],
-      ],
-    });
+  if (!storefront) {
+    throw new AbortError(
+      'Unknown error ocurred. Please try again or contact support if the error persists.',
+    );
   }
+
+  return storefront;
 }

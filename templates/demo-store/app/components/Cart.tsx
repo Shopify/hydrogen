@@ -1,14 +1,13 @@
 import clsx from 'clsx';
 import {useRef} from 'react';
 import {useScroll} from 'react-use';
-import {flattenConnection, Image, Money} from '@shopify/hydrogen';
+import {flattenConnection, CartForm, Image, Money} from '@shopify/hydrogen';
 import type {
   Cart as CartType,
   CartCost,
   CartLine,
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
-import {useFetcher} from '@remix-run/react';
 
 import {
   Button,
@@ -19,7 +18,6 @@ import {
   FeaturedProducts,
 } from '~/components';
 import {getInputStyleClasses} from '~/lib/utils';
-import {CartAction} from '~/lib/type';
 
 type Layouts = 'page' | 'drawer';
 
@@ -79,12 +77,15 @@ function CartDiscounts({
 }: {
   discountCodes: CartType['discountCodes'];
 }) {
-  const codes = discountCodes?.map(({code}) => code).join(', ') || null;
+  const codes: string[] =
+    discountCodes
+      ?.filter((discount) => discount.applicable)
+      ?.map(({code}) => code) || [];
 
   return (
     <>
       {/* Have existing discount, display it with a remove option */}
-      <dl className={codes ? 'grid' : 'hidden'}>
+      <dl className={codes && codes.length !== 0 ? 'grid' : 'hidden'}>
         <div className="flex items-center justify-between font-medium">
           <Text as="dt">Discount(s)</Text>
           <div className="flex items-center justify-between">
@@ -96,16 +97,16 @@ function CartDiscounts({
                 />
               </button>
             </UpdateDiscountForm>
-            <Text as="dd">{codes}</Text>
+            <Text as="dd">{codes?.join(', ')}</Text>
           </div>
         </div>
       </dl>
 
-      {/* No discounts, show an input to apply a discount */}
-      <UpdateDiscountForm>
+      {/* Show an input to apply a discount */}
+      <UpdateDiscountForm discountCodes={codes}>
         <div
           className={clsx(
-            codes ? 'hidden' : 'flex',
+            'flex',
             'items-center gap-4 justify-between text-copy',
           )}
         >
@@ -124,17 +125,23 @@ function CartDiscounts({
   );
 }
 
-function UpdateDiscountForm({children}: {children: React.ReactNode}) {
-  const fetcher = useFetcher();
+function UpdateDiscountForm({
+  discountCodes,
+  children,
+}: {
+  discountCodes?: string[];
+  children: React.ReactNode;
+}) {
   return (
-    <fetcher.Form action="/cart" method="post">
-      <input
-        type="hidden"
-        name="cartAction"
-        value={CartAction.UPDATE_DISCOUNT}
-      />
+    <CartForm
+      route="/cart"
+      action={CartForm.ACTIONS.DiscountCodesUpdate}
+      inputs={{
+        discountCodes: discountCodes || [],
+      }}
+    >
       {children}
-    </fetcher.Form>
+    </CartForm>
   );
 }
 
@@ -279,16 +286,14 @@ function CartLineItem({line}: {line: CartLine}) {
 }
 
 function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
-  const fetcher = useFetcher();
-
   return (
-    <fetcher.Form action="/cart" method="post">
-      <input
-        type="hidden"
-        name="cartAction"
-        value={CartAction.REMOVE_FROM_CART}
-      />
-      <input type="hidden" name="linesIds" value={JSON.stringify(lineIds)} />
+    <CartForm
+      route="/cart"
+      action={CartForm.ACTIONS.LinesRemove}
+      inputs={{
+        lineIds,
+      }}
+    >
       <button
         className="flex items-center justify-center w-10 h-10 border rounded"
         type="submit"
@@ -296,7 +301,7 @@ function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
         <span className="sr-only">Remove</span>
         <IconRemove aria-hidden="true" />
       </button>
-    </fetcher.Form>
+    </CartForm>
   );
 }
 
@@ -350,14 +355,16 @@ function UpdateCartButton({
   children: React.ReactNode;
   lines: CartLineUpdateInput[];
 }) {
-  const fetcher = useFetcher();
-
   return (
-    <fetcher.Form action="/cart" method="post">
-      <input type="hidden" name="cartAction" value={CartAction.UPDATE_CART} />
-      <input type="hidden" name="lines" value={JSON.stringify(lines)} />
+    <CartForm
+      route="/cart"
+      action={CartForm.ACTIONS.LinesUpdate}
+      inputs={{
+        lines,
+      }}
+    >
       {children}
-    </fetcher.Form>
+    </CartForm>
   );
 }
 

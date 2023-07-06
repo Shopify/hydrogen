@@ -3,6 +3,9 @@ import {camelize} from '@shopify/cli-kit/common/string';
 import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 import colors from '@shopify/cli-kit/node/colors';
+import type {CamelCasedProperties} from 'type-fest';
+import {SETUP_CSS_STRATEGIES} from './setups/css/index.js';
+import {I18N_CHOICES} from './setups/i18n/index.js';
 
 export const commonFlags = {
   path: Flags.string({
@@ -29,7 +32,12 @@ export const commonFlags = {
     env: 'SHOPIFY_SHOP',
     parse: async (input) => normalizeStoreFqdn(input),
   }),
-  ['env-branch']: Flags.string({
+  installDeps: Flags.boolean({
+    description: 'Auto install dependencies using the active package manager',
+    env: 'SHOPIFY_HYDROGEN_FLAG_INSTALL_DEPS',
+    allowNo: true,
+  }),
+  envBranch: Flags.string({
     description:
       "Specify an environment's branch name when using remote environment variables.",
     env: 'SHOPIFY_HYDROGEN_ENVIRONMENT_BRANCH',
@@ -41,13 +49,38 @@ export const commonFlags = {
     default: true,
     allowNo: true,
   }),
+  codegenConfigPath: Flags.string({
+    description:
+      'Specify a path to a codegen configuration file. Defaults to `<root>/codegen.ts` if it exists.',
+    required: false,
+    dependsOn: ['codegen-unstable'],
+  }),
+  styling: Flags.string({
+    description: `Sets the styling strategy to use. One of ${SETUP_CSS_STRATEGIES.map(
+      (item) => `\`${item}\``,
+    ).join(', ')}.`,
+    choices: SETUP_CSS_STRATEGIES,
+    env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
+  }),
+  i18n: Flags.string({
+    description: `Sets the internationalization strategy to use. One of ${I18N_CHOICES.map(
+      (item) => `\`${item}\``,
+    ).join(', ')}.`,
+    choices: I18N_CHOICES,
+    env: 'SHOPIFY_HYDROGEN_FLAG_I18N',
+  }),
+  shortcut: Flags.boolean({
+    description: 'Create a shortcut to the Shopify Hydrogen CLI.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_SHORTCUT',
+    allowNo: true,
+  }),
 };
 
-export function flagsToCamelObject(obj: Record<string, any>) {
+export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {
   return Object.entries(obj).reduce((acc, [key, value]) => {
-    acc[camelize(key)] = value;
+    acc[camelize(key) as any] = value;
     return acc;
-  }, {} as any);
+  }, {} as any) as CamelCasedProperties<T>;
 }
 
 /**
@@ -103,4 +136,14 @@ export function deprecated(name: string) {
     },
     hidden: true,
   });
+}
+
+export function overrideFlag<T extends Record<string, any>>(
+  flag: T,
+  extra: Partial<T>,
+) {
+  return {
+    ...flag,
+    ...extra,
+  };
 }

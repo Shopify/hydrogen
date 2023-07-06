@@ -133,3 +133,4 @@ yarn.lock
 !/yarn.lock
 
 admin.schema.json
+business-platform.schema.json
