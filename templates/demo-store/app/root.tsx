@@ -18,8 +18,8 @@ import {
 import {ShopifySalesChannel, Seo} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
-import {seoPayload} from '~/lib/seo.server';
 import {Layout} from '~/components';
+import {seoPayload} from '~/lib/seo.server';
 
 import favicon from '../public/favicon.svg';
 
