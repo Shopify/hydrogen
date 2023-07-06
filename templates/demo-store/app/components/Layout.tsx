@@ -28,6 +28,8 @@ import {type EnhancedMenu, useIsHomePath} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
 
+import {useCart} from './CartProvider';
+
 type LayoutProps = {
   children: React.ReactNode;
   layout: LayoutQuery & {
@@ -102,16 +104,16 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 }
 
 function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
-  const [root] = useMatches();
+  const cart = useCart();
 
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
-        <Suspense fallback={<CartLoading />}>
-          <Await resolve={root.data?.cart}>
-            {(cart) => <Cart layout="drawer" onClose={onClose} cart={cart} />}
-          </Await>
-        </Suspense>
+        {cart ? (
+          <Cart layout="drawer" onClose={onClose} cart={cart} />
+        ) : (
+          <CartLoading />
+        )}
       </div>
     </Drawer>
   );
@@ -338,20 +340,20 @@ function CartCount({
   isHome: boolean;
   openCart: () => void;
 }) {
-  const [root] = useMatches();
+  const cart = useCart();
 
   return (
-    <Suspense fallback={<Badge count={0} dark={isHome} openCart={openCart} />}>
-      <Await resolve={root.data?.cart}>
-        {(cart) => (
-          <Badge
-            dark={isHome}
-            openCart={openCart}
-            count={cart?.totalQuantity || 0}
-          />
-        )}
-      </Await>
-    </Suspense>
+    <>
+      {cart ? (
+        <Badge
+          dark={isHome}
+          openCart={openCart}
+          count={cart?.totalQuantity || 0}
+        />
+      ) : (
+        <Badge count={0} dark={isHome} openCart={openCart} />
+      )}
+    </>
   );
 }
 
