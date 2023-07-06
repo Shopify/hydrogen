@@ -44,7 +44,7 @@ export async function renderCssPrompt<
   }) as [[CssStrategy | T, string]];
 
   return renderSelectPrompt<CssStrategy | T>({
-    message: 'Select an internationalization strategy',
+    message: 'Select a styling library',
     ...options,
     choices: cssStrategies.map(([value, label]) => ({
       value,
