@@ -239,6 +239,7 @@ export const defaultCartFragment = /* GraphQL */ `
     }
     discountCodes {
       code
+      applicable
     }
   }
 
