@@ -28,7 +28,6 @@ import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
 import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
 import {useAnalytics} from './hooks/useAnalytics';
-import {CartProvider} from './components/CartProvider';
 
 export const links: LinksFunction = () => {
   return [
@@ -46,7 +45,7 @@ export const links: LinksFunction = () => {
 };
 
 export async function loader({request, context}: LoaderArgs) {
-  const {session, storefront} = context;
+  const {session, storefront, cart} = context;
   const [customerAccessToken, layout] = await Promise.all([
     session.get('customerAccessToken'),
     getLayoutData(context),
@@ -58,6 +57,7 @@ export async function loader({request, context}: LoaderArgs) {
     isLoggedIn: Boolean(customerAccessToken),
     layout,
     selectedLocale: storefront.i18n,
+    cart: cart.get(),
     analytics: {
       shopifySalesChannel: ShopifySalesChannel.hydrogen,
       shopId: layout.shop.id,
@@ -83,14 +83,12 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <CartProvider>
-          <Layout
-            key={`${locale.language}-${locale.country}`}
-            layout={data.layout}
-          >
-            <Outlet />
-          </Layout>
-        </CartProvider>
+        <Layout
+          key={`${locale.language}-${locale.country}`}
+          layout={data.layout}
+        >
+          <Outlet />
+        </Layout>
         <ScrollRestoration />
         <Scripts />
       </body>

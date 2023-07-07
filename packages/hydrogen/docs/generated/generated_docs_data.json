@@ -1885,7 +1885,7 @@
             "filePath": "/cart/queries/cartGetDefault.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartGetFunction",
-            "value": "(\n  cartInput?: CartGetProps,\n) => Promise<Cart | undefined>",
+            "value": "(cartInput?: CartGetProps) => Promise<Cart | {}>",
             "description": ""
           },
           "CartGetProps": {
@@ -4172,7 +4172,7 @@
               "name": "CartGetFunction",
               "value": "CartGetFunction"
             },
-            "value": "export function cartGetDefault(options: CartQueryOptions): CartGetFunction {\n  return async (cartInput?: CartGetProps) => {\n    const cartId = options.getCartId();\n\n    if (!cartId) return;\n\n    const {cart} = await options.storefront.query<{cart?: Cart}>(\n      CART_QUERY(options.cartFragment),\n      {\n        variables: {\n          cartId,\n          ...cartInput,\n        },\n        cache: options.storefront.CacheNone(),\n      },\n    );\n\n    return cart;\n  };\n}"
+            "value": "export function cartGetDefault(options: CartQueryOptions): CartGetFunction {\n  return async (cartInput?: CartGetProps) => {\n    const cartId = options.getCartId();\n\n    if (!cartId) return {};\n\n    const {cart} = await options.storefront.query<{cart: Cart}>(\n      CART_QUERY(options.cartFragment),\n      {\n        variables: {\n          cartId,\n          ...cartInput,\n        },\n        cache: options.storefront.CacheNone(),\n      },\n    );\n\n    return cart;\n  };\n}"
           },
           "CartQueryOptions": {
             "filePath": "/cart/queries/cart-types.ts",
@@ -4494,7 +4494,7 @@
             "filePath": "/cart/queries/cartGetDefault.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartGetFunction",
-            "value": "(\n  cartInput?: CartGetProps,\n) => Promise<Cart | undefined>",
+            "value": "(cartInput?: CartGetProps) => Promise<Cart | {}>",
             "description": ""
           },
           "CartGetProps": {
