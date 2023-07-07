@@ -1,10 +1,6 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
-import {
-  generateProjectFile,
-  generateMultipleRoutes,
-  ROUTE_MAP,
-} from './generate.js';
+import {generateProjectFile, generateRoutes, ROUTE_MAP} from './generate.js';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
@@ -25,7 +21,7 @@ describe('generate/route', () => {
     vi.mock('../../config.js', async () => ({getRemixConfig: vi.fn()}));
   });
 
-  describe('generateMultipleRoutes', () => {
+  describe('generateRoutes', () => {
     it('generates all routes with correct configuration', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         const directories = await createHydrogenFixture(tmpDir, {
@@ -43,7 +39,7 @@ describe('generate/route', () => {
 
         vi.mocked(getRemixConfig).mockResolvedValue(directories as any);
 
-        const result = await generateMultipleRoutes({
+        const result = await generateRoutes({
           routeName: 'all',
           directory: directories.rootDirectory,
           templatesRoot: directories.templatesRoot,
@@ -84,7 +80,7 @@ describe('generate/route', () => {
           },
         } as any);
 
-        const result = await generateMultipleRoutes({
+        const result = await generateRoutes({
           routeName: ['page'],
           directory: directories.rootDirectory,
           templatesRoot: directories.templatesRoot,

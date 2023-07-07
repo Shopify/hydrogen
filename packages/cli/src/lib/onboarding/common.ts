@@ -57,7 +57,7 @@ import {
   renderCssPrompt,
 } from '../setups/css/index.js';
 import {
-  generateMultipleRoutes,
+  generateRoutes,
   renderRoutePrompt,
   ROUTE_MAP,
 } from '../setups/routes/generate.js';
@@ -137,7 +137,7 @@ export async function handleRouteGeneration(
       i18nStrategy?: I18nStrategy,
     ) => {
       if (routesToScaffold === 'all' || routesToScaffold.length > 0) {
-        await generateMultipleRoutes({
+        await generateRoutes({
           routeName: routesToScaffold,
           directory,
           force: true,

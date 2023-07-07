@@ -36,24 +36,22 @@ export const ROUTE_MAP: Record<string, string | string[]> = {
 
 export const ALL_ROUTE_CHOICES = [...Object.keys(ROUTE_MAP), 'all'];
 
-type GenerateMultipleRoutesResult = {
+type GenerateRoutesResult = {
   sourceRoute: string;
   destinationRoute: string;
   operation: 'created' | 'skipped' | 'replaced';
 };
 
-type GenerateMultipleRoutesOptions = Omit<
-  GenerateRouteOptions,
+type GenerateRoutesOptions = Omit<
+  GenerateProjectFileOptions,
   'localePrefix'
 > & {
   routeName: string | string[];
   directory: string;
-  localePrefix?: GenerateRouteOptions['localePrefix'] | false;
+  localePrefix?: GenerateProjectFileOptions['localePrefix'] | false;
 };
 
-export async function generateMultipleRoutes(
-  options: GenerateMultipleRoutesOptions,
-) {
+export async function generateRoutes(options: GenerateRoutesOptions) {
   const routePath =
     options.routeName === 'all'
       ? Object.values(ROUTE_MAP).flat()
@@ -89,7 +87,7 @@ export async function generateMultipleRoutes(
     ? undefined
     : await getJsTranspilerOptions(rootDirectory);
 
-  const routes: GenerateMultipleRoutesResult[] = [];
+  const routes: GenerateRoutesResult[] = [];
   for (const route of routesArray) {
     routes.push(
       await generateProjectFile(route, {
@@ -114,7 +112,7 @@ export async function generateMultipleRoutes(
   };
 }
 
-type GenerateRouteOptions = {
+type GenerateProjectFileOptions = {
   typescript?: boolean;
   force?: boolean;
   adapter?: string;
@@ -125,7 +123,7 @@ type GenerateRouteOptions = {
 
 async function getLocalePrefix(
   appDirectory: string,
-  {localePrefix, routeName}: GenerateMultipleRoutesOptions,
+  {localePrefix, routeName}: GenerateRoutesOptions,
 ) {
   if (localePrefix) return localePrefix;
   if (localePrefix !== undefined || routeName === 'all') return;
@@ -158,14 +156,14 @@ export async function generateProjectFile(
     localePrefix,
     v2Flags = {},
     signal,
-  }: GenerateRouteOptions & {
+  }: GenerateProjectFileOptions & {
     rootDirectory: string;
     appDirectory: string;
     transpilerOptions?: TranspilerOptions;
     formatOptions?: FormatOptions;
     v2Flags?: RemixV2Flags;
   },
-): Promise<GenerateMultipleRoutesResult> {
+): Promise<GenerateRoutesResult> {
   const isRoute = routeFrom.startsWith(GENERATOR_ROUTE_DIR + '/');
   const destinationPath = joinPath(
     appDirectory,
@@ -175,7 +173,7 @@ export async function generateProjectFile(
       : routeFrom.replace(/\.ts(x?)$/, `.${typescript ? 'ts$1' : 'js$1'}`),
   );
 
-  const result: GenerateMultipleRoutesResult = {
+  const result: GenerateRoutesResult = {
     operation: 'created',
     sourceRoute: routeFrom,
     destinationRoute: relativizePath(destinationPath, rootDirectory),
