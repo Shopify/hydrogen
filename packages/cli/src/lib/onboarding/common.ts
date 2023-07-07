@@ -256,7 +256,7 @@ export async function handleProjectLocation({
     storefrontDirectory ??
     (await renderTextPrompt({
       message: 'Where would you like to create your storefront?',
-      defaultValue: './hydrogen-storefront',
+      defaultValue: 'hydrogen-storefront',
       abortSignal: controller.signal,
     }));
 
@@ -266,7 +266,7 @@ export async function handleProjectLocation({
     if (!force && storefrontDirectory) {
       location = await renderTextPrompt({
         message: `There's already a folder called \`${storefrontDirectory}\`. Where do you want to create the app?`,
-        defaultValue: './' + storefrontDirectory,
+        defaultValue: storefrontDirectory,
         abortSignal: controller.signal,
       });
 
@@ -348,24 +348,31 @@ export async function handleCssStrategy(
   controller: AbortController,
   flagStyling?: StylingChoice,
 ) {
-  const cssStrategy = flagStyling
+  const selection = flagStyling
     ? flagStyling
-    : await renderCssPrompt({abortSignal: controller.signal});
+    : await renderCssPrompt({
+        abortSignal: controller.signal,
+        extraChoices: {none: 'Skip and set up later'},
+      });
+
+  const cssStrategy = selection === 'none' ? undefined : selection;
 
   return {
     cssStrategy,
     async setupCss() {
-      const result = await setupCssStrategy(
-        cssStrategy,
-        {
-          rootDirectory: projectDir,
-          appDirectory: joinPath(projectDir, 'app'), // Default value in new projects
-        },
-        true,
-      );
+      if (cssStrategy) {
+        const result = await setupCssStrategy(
+          cssStrategy,
+          {
+            rootDirectory: projectDir,
+            appDirectory: joinPath(projectDir, 'app'), // Default value in new projects
+          },
+          true,
+        );
 
-      if (result) {
-        await result.workPromise;
+        if (result) {
+          await result.workPromise;
+        }
       }
     },
   };
@@ -392,7 +399,7 @@ export async function handleDependencies(
           {label: 'NPM', value: 'npm'},
           {label: 'PNPM', value: 'pnpm'},
           {label: 'Yarn v1', value: 'yarn'},
-          {label: 'Skip, install later', value: 'no'},
+          {label: 'Skip and install later', value: 'no'},
         ],
         defaultValue: 'npm',
         abortSignal: controller.signal,
