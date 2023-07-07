@@ -99,7 +99,11 @@ export async function generateRoutes(options: GenerateRoutesOptions) {
 
   const v2Flags = await getV2Flags(rootDirectory, future);
   const formatOptions = await getCodeFormatOptions(rootDirectory);
-  const localePrefix = await getLocalePrefix(appDirectory, options);
+  const localePrefix = await getLocalePrefix(
+    appDirectory,
+    options,
+    v2Flags.isV2RouteConvention,
+  );
   const typescript = options.typescript ?? !!tsconfigPath;
   const transpilerOptions = typescript
     ? undefined
@@ -142,6 +146,7 @@ type GenerateProjectFileOptions = {
 async function getLocalePrefix(
   appDirectory: string,
   {localePrefix, routeName}: GenerateRoutesOptions,
+  isV2RouteConvention = true,
 ) {
   if (localePrefix) return localePrefix;
   if (localePrefix !== undefined || routeName === 'all') return;
@@ -150,7 +155,10 @@ async function getLocalePrefix(
     () => [],
   );
 
-  const homeRouteWithLocaleRE = /^\(\$(\w+)\)\._index.[jt]sx?$/;
+  const homeRouteWithLocaleRE = isV2RouteConvention
+    ? /^\(\$(\w+)\)\._index.[jt]sx?$/
+    : /^\(\$(\w+)\)$/;
+
   const homeRouteWithLocale = existingFiles.find((file) =>
     homeRouteWithLocaleRE.test(file),
   );
