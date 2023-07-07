@@ -1,7 +1,6 @@
 import {fileURLToPath} from 'node:url';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
-export const GENERATOR_ROUTES_DIR = 'routes';
 export const GENERATOR_STARTER_DIR = 'starter';
 export const GENERATOR_SETUP_ASSETS_DIR = 'assets';
 export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
@@ -22,12 +21,9 @@ export function getAssetDir(feature: AssetDir) {
   );
 }
 
-export function getRouteFile(routeFrom: string, root = '..') {
+export function getRouteFile(routeFrom: string, root = getStarterDir()) {
   return fileURLToPath(
-    new URL(
-      `${root}/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_ROUTES_DIR}/${routeFrom}.tsx`,
-      import.meta.url,
-    ),
+    new URL(`${root}/app/routes/${routeFrom}.tsx`, import.meta.url),
   );
 }
 
