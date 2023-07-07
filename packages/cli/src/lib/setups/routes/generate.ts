@@ -13,7 +13,7 @@ import {
   formatCode,
   getCodeFormatOptions,
 } from '../../../lib/format-code.js';
-import {getRouteFile} from '../../../lib/build.js';
+import {GENERATOR_ROUTE_DIR, getTemplateAppFile} from '../../../lib/build.js';
 import {
   convertRouteToV2,
   convertTemplateToRemixVersion,
@@ -77,7 +77,10 @@ export async function generateMultipleRoutes(
   const {rootDirectory, appDirectory, future, tsconfigPath} =
     await getRemixConfig(options.directory);
 
-  const routesArray = Array.isArray(routePath) ? routePath : [routePath];
+  const routesArray = (Array.isArray(routePath) ? routePath : [routePath]).map(
+    (item) => GENERATOR_ROUTE_DIR + '/' + item,
+  );
+
   const v2Flags = await getV2Flags(rootDirectory, future);
   const formatOptions = await getCodeFormatOptions(rootDirectory);
   const localePrefix = await getLocalePrefix(appDirectory, options);
@@ -89,7 +92,7 @@ export async function generateMultipleRoutes(
   const routes: GenerateMultipleRoutesResult[] = [];
   for (const route of routesArray) {
     routes.push(
-      await generateRoute(route, {
+      await generateProjectFile(route, {
         ...options,
         typescript,
         localePrefix,
@@ -141,7 +144,7 @@ async function getLocalePrefix(
   }
 }
 
-export async function generateRoute(
+export async function generateProjectFile(
   routeFrom: string,
   {
     rootDirectory,
@@ -163,18 +166,13 @@ export async function generateRoute(
     v2Flags?: RemixV2Flags;
   },
 ): Promise<GenerateMultipleRoutesResult> {
-  const filePrefix =
-    localePrefix && !/\.(txt|xml)/.test(routeFrom)
-      ? `($${localePrefix})` + (v2Flags.isV2RouteConvention ? '.' : '/')
-      : '';
-
-  const templatePath = getRouteFile(routeFrom, templatesRoot);
+  const isRoute = routeFrom.startsWith(GENERATOR_ROUTE_DIR + '/');
   const destinationPath = joinPath(
     appDirectory,
-    'routes',
-    filePrefix +
-      (v2Flags.isV2RouteConvention ? convertRouteToV2(routeFrom) : routeFrom) +
-      `.${typescript ? 'tsx' : 'jsx'}`,
+    isRoute
+      ? getDestinationRoute(routeFrom, localePrefix, v2Flags) +
+          `.${typescript ? 'tsx' : 'jsx'}`
+      : routeFrom.replace(/\.ts(x?)$/, `.${typescript ? 'ts$1' : 'js$1'}`),
   );
 
   const result: GenerateMultipleRoutesResult = {
@@ -197,6 +195,7 @@ export async function generateRoute(
     result.operation = 'replaced';
   }
 
+  const templatePath = getTemplateAppFile(routeFrom, templatesRoot);
   let templateContent = convertTemplateToRemixVersion(
     await readFile(templatePath),
     v2Flags,
@@ -230,6 +229,25 @@ export async function generateRoute(
   await writeFile(destinationPath, templateContent);
 
   return result;
+}
+
+function getDestinationRoute(
+  routeFrom: string,
+  localePrefix: string | undefined,
+  v2Flags: RemixV2Flags,
+) {
+  const routePath = routeFrom.replace(GENERATOR_ROUTE_DIR + '/', '');
+  const filePrefix =
+    localePrefix && !/\.(txt|xml)/.test(routePath)
+      ? `($${localePrefix})` + (v2Flags.isV2RouteConvention ? '.' : '/')
+      : '';
+
+  return (
+    GENERATOR_ROUTE_DIR +
+    '/' +
+    filePrefix +
+    (v2Flags.isV2RouteConvention ? convertRouteToV2(routePath) : routePath)
+  );
 }
 
 async function getJsTranspilerOptions(rootDirectory: string) {
