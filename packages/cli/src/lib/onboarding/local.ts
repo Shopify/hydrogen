@@ -34,6 +34,7 @@ import {replaceFileContent} from '../file.js';
 import {setStorefront, setUserAccount} from '../shopify-config.js';
 import {ALIAS_NAME, getCliCommand} from '../shell.js';
 import {CSS_STRATEGY_NAME_MAP} from '../setups/css/index.js';
+import {generateProjectFile} from '../setups/routes/generate.js';
 
 /**
  * Flow for setting up a project from the locally bundled starter template (hello-world).
@@ -86,11 +87,20 @@ export async function setupLocalStarterTemplate(
   let backgroundWorkPromise: Promise<any> = copyWithFilter(
     getStarterDir(),
     project.directory,
-    {
-      filter: (filepath: string) =>
-        !/\/app\//i.test(filepath) || /app\/entry\./i.test(filepath),
-    },
-  ).catch(abort);
+    {filter: (filepath: string) => !/\/app\//i.test(filepath)},
+  )
+    .then(() =>
+      Promise.all(
+        ['root', 'entry.server', 'entry.client'].map((filename) =>
+          generateProjectFile(filename, {
+            rootDirectory: project.directory,
+            appDirectory: joinPath(project.directory, 'app'),
+            typescript: true, // Will be transpiled later
+          }),
+        ),
+      ),
+    )
+    .catch(abort);
 
   const tasks = [
     {

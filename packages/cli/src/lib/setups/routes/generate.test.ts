@@ -2,7 +2,7 @@ import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
 import {generateProjectFile, generateRoutes, ROUTE_MAP} from './generate.js';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
+import {readFile, writeFile, mkdir, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {getTemplateAppFile} from '../../../lib/build.js';
 import {getRemixConfig} from '../../../lib/config.js';
@@ -32,7 +32,8 @@ describe('generate/route', () => {
           templates: Object.values(ROUTE_MAP).flatMap((item) => {
             const files = Array.isArray(item) ? item : [item];
             return files.map(
-              (filepath) => ['routes/' + filepath, ''] as [string, string],
+              (filepath) =>
+                ['routes/' + filepath + '.tsx', ''] as [string, string],
             );
           }),
         });
@@ -69,7 +70,7 @@ describe('generate/route', () => {
             ['tsconfig.json', JSON.stringify({compilerOptions: {test: 'ts'}})],
             ['app/routes/($locale)._index.tsx', 'export const test = true;'],
           ],
-          templates: [[route, `const str = "hello world"`]],
+          templates: [[route + '.tsx', `const str = "hello world"`]],
         });
 
         vi.mocked(getRemixConfig).mockResolvedValue({
@@ -112,7 +113,7 @@ describe('generate/route', () => {
         const route = 'routes/pages/$pageHandle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [],
-          templates: [[route, `const str = "hello world"`]],
+          templates: [[route + '.tsx', `const str = "hello world"`]],
         });
 
         // When
@@ -131,7 +132,7 @@ describe('generate/route', () => {
         const route = 'routes/custom/path/$handle/index';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [],
-          templates: [[route, `const str = "hello world"`]],
+          templates: [[route + '.tsx', `const str = "hello world"`]],
         });
 
         // When
@@ -158,10 +159,10 @@ describe('generate/route', () => {
         const directories = await createHydrogenFixture(tmpDir, {
           files: [],
           templates: [
-            ['routes/index', routeCode],
-            ['routes/pages/$pageHandle', routeCode],
-            ['routes/[robots.txt]', routeCode],
-            ['routes/[sitemap.xml]', routeCode],
+            ['routes/index.tsx', routeCode],
+            ['routes/pages/$pageHandle.tsx', routeCode],
+            ['routes/[robots.txt].tsx', routeCode],
+            ['routes/[sitemap.xml].tsx', routeCode],
           ],
         });
 
@@ -221,7 +222,7 @@ describe('generate/route', () => {
         const route = 'routes/pages/$pageHandle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [],
-          templates: [[route, 'const str = "hello typescript"']],
+          templates: [[route + '.tsx', 'const str = "hello typescript"']],
         });
 
         // When
@@ -247,7 +248,7 @@ describe('generate/route', () => {
         const route = 'routes/page/$pageHandle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [[`app/${route}.jsx`, 'const str = "I exist"']],
-          templates: [[route, 'const str = "hello world"']],
+          templates: [[route + '.tsx', 'const str = "hello world"']],
         });
 
         // When
@@ -272,7 +273,7 @@ describe('generate/route', () => {
         const route = 'routes/page/$pageHandle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [[`app/${route}.jsx`, 'const str = "I exist"']],
-          templates: [[route, 'const str = "hello world"']],
+          templates: [[route + '.tsx', 'const str = "hello world"']],
         });
 
         // When
@@ -285,18 +286,61 @@ describe('generate/route', () => {
         expect(renderConfirmationPrompt).not.toHaveBeenCalled();
       });
     });
+
+    it('generates all the route dependencies', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        const templates: [string, string][] = [
+          [
+            'routes/pages/$pageHandle.tsx',
+            `import Dep from 'some-node-dep';\n` + // <= Non-relative files are ignored
+              `import AnotherRoute from './AnotherRoute';\n` + // <= Routes are ignored
+              `import Form from '~/components/Form';\n` + // <= Transpiled
+              `import {Button} from '../../components/Button';\n` + // <= Transpiled
+              `import styles from '../../styles/app.css';\n` + // <= Copied as is
+              'export {Dep, AnotherRoute, Form, Button, styles};\n',
+          ],
+          [
+            'components/Form.tsx',
+            `import {Button} from './Button';\n` +
+              `import {Text} from './Text';\n` +
+              'export {Button, Text};\n',
+          ],
+          ['components/Button.tsx', `export const Button = '';\n`],
+          ['components/Text.tsx', `export const Text = '';\n`],
+          ['styles/app.css', `.red{color:red;}`],
+        ];
+
+        const directories = await createHydrogenFixture(tmpDir, {templates});
+
+        vi.mocked(getRemixConfig).mockResolvedValue(directories as any);
+
+        await generateProjectFile('routes/pages/$pageHandle', {
+          ...directories,
+          force: true,
+        });
+
+        await Promise.all(
+          templates.map(async ([file, content]) => {
+            const actualFile = joinPath(
+              directories.appDirectory,
+              file.replace('.tsx', '.jsx'),
+            );
+
+            await expect(fileExists(actualFile)).resolves.toBeTruthy();
+            await expect(readFile(actualFile)).resolves.toEqual(content);
+          }),
+        );
+      });
+    });
   });
 });
 
 async function createHydrogenFixture(
   directory: string,
   {
-    files,
-    templates,
-  }: {files: [string, string][]; templates: [string, string][]} = {
-    files: [],
-    templates: [],
-  },
+    files = [],
+    templates = [],
+  }: {files?: [string, string][]; templates?: [string, string][]},
 ) {
   const projectDir = 'project';
 

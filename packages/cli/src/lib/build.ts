@@ -2,6 +2,7 @@ import {fileURLToPath} from 'node:url';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 export const GENERATOR_STARTER_DIR = 'starter';
+export const GENERATOR_APP_DIR = 'app';
 export const GENERATOR_ROUTE_DIR = 'routes';
 export const GENERATOR_SETUP_ASSETS_DIR = 'assets';
 export const GENERATOR_SETUP_ASSETS_SUB_DIRS = [
@@ -25,7 +26,7 @@ export function getAssetDir(feature: AssetDir) {
 export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
   return fileURLToPath(
     new URL(
-      `${root}/app/${filepath}${filepath.includes('.') ? filepath : '.tsx'}`,
+      `${root}/${GENERATOR_APP_DIR}${filepath ? `/${filepath}` : ''}`,
       import.meta.url,
     ),
   );

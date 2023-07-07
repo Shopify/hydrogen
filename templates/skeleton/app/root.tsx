@@ -12,7 +12,7 @@ import {
   useLoaderData,
 } from '@remix-run/react';
 import {Cart, Shop} from '@shopify/hydrogen-react/storefront-api-types';
-import {Layout} from '~/components';
+import {Layout} from '~/components/Layout';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 

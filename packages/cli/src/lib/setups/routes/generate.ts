@@ -1,6 +1,19 @@
 import {readdir} from 'fs/promises';
-import {fileExists, readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
-import {joinPath, dirname, relativizePath} from '@shopify/cli-kit/node/path';
+import {
+  fileExists,
+  readFile,
+  writeFile,
+  copyFile,
+  mkdir,
+} from '@shopify/cli-kit/node/fs';
+import {
+  joinPath,
+  dirname,
+  relativizePath,
+  relativePath,
+  resolvePath,
+  basename,
+} from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
@@ -13,7 +26,12 @@ import {
   formatCode,
   getCodeFormatOptions,
 } from '../../../lib/format-code.js';
-import {GENERATOR_ROUTE_DIR, getTemplateAppFile} from '../../../lib/build.js';
+import {
+  GENERATOR_APP_DIR,
+  GENERATOR_ROUTE_DIR,
+  getStarterDir,
+  getTemplateAppFile,
+} from '../../../lib/build.js';
 import {
   convertRouteToV2,
   convertTemplateToRemixVersion,
@@ -150,7 +168,7 @@ export async function generateProjectFile(
     typescript,
     force,
     adapter,
-    templatesRoot,
+    templatesRoot = getStarterDir(),
     transpilerOptions,
     formatOptions,
     localePrefix,
@@ -164,22 +182,32 @@ export async function generateProjectFile(
     v2Flags?: RemixV2Flags;
   },
 ): Promise<GenerateRoutesResult> {
-  const isRoute = routeFrom.startsWith(GENERATOR_ROUTE_DIR + '/');
-  const destinationPath = joinPath(
+  const routeTemplatePath = getTemplateAppFile(
+    routeFrom + '.tsx',
+    templatesRoot,
+  );
+  const allFilesToGenerate = (
+    await findRouteDependencies(
+      routeTemplatePath,
+      getTemplateAppFile('', templatesRoot),
+    )
+  ).map((item) =>
+    relativePath(joinPath(templatesRoot, GENERATOR_APP_DIR), item),
+  );
+
+  const routeDestinationPath = joinPath(
     appDirectory,
-    isRoute
-      ? getDestinationRoute(routeFrom, localePrefix, v2Flags) +
-          `.${typescript ? 'tsx' : 'jsx'}`
-      : routeFrom.replace(/\.ts(x?)$/, `.${typescript ? 'ts$1' : 'js$1'}`),
+    getDestinationRoute(routeFrom, localePrefix, v2Flags) +
+      `.${typescript ? 'tsx' : 'jsx'}`,
   );
 
   const result: GenerateRoutesResult = {
     operation: 'created',
     sourceRoute: routeFrom,
-    destinationRoute: relativizePath(destinationPath, rootDirectory),
+    destinationRoute: relativizePath(routeDestinationPath, rootDirectory),
   };
 
-  if (!force && (await fileExists(destinationPath))) {
+  if (!force && (await fileExists(routeDestinationPath))) {
     const shouldOverwrite = await renderConfirmationPrompt({
       message: `The file ${result.destinationRoute} already exists. Do you want to replace it?`,
       defaultValue: false,
@@ -193,38 +221,60 @@ export async function generateProjectFile(
     result.operation = 'replaced';
   }
 
-  const templatePath = getTemplateAppFile(routeFrom, templatesRoot);
-  let templateContent = convertTemplateToRemixVersion(
-    await readFile(templatePath),
-    v2Flags,
-  );
+  for (const filePath of allFilesToGenerate) {
+    const isRoute = filePath.startsWith(GENERATOR_ROUTE_DIR + '/');
+    const destinationPath = isRoute
+      ? routeDestinationPath
+      : joinPath(
+          appDirectory,
+          filePath.replace(/\.ts(x?)$/, `.${typescript ? 'ts$1' : 'js$1'}`),
+        );
 
-  // If the project is not using TS, we need to compile the template to JS.
-  if (!typescript) {
-    templateContent = transpileFile(templateContent, transpilerOptions);
-  }
+    // Create the directory if it doesn't exist.
+    if (!(await fileExists(dirname(destinationPath)))) {
+      await mkdir(dirname(destinationPath));
+    }
 
-  // If the command was run with an adapter flag, we replace the default
-  // import with the adapter that was passed.
-  if (adapter) {
-    templateContent = templateContent.replace(
-      /@shopify\/remix-oxygen/g,
-      adapter,
+    if (!/\.[jt]sx?$/.test(filePath)) {
+      // Nothing to transform for non-JS files.
+      await copyFile(
+        getTemplateAppFile(filePath, templatesRoot),
+        destinationPath,
+      );
+      continue;
+    }
+
+    let templateContent = convertTemplateToRemixVersion(
+      await readFile(getTemplateAppFile(filePath, templatesRoot)),
+      v2Flags,
     );
+
+    // If the project is not using TS, we need to compile the template to JS.
+    if (!typescript) {
+      templateContent = transpileFile(templateContent, transpilerOptions);
+    }
+
+    // If the command was run with an adapter flag, we replace the default
+    // import with the adapter that was passed.
+    if (adapter) {
+      templateContent = templateContent.replace(
+        /@shopify\/remix-oxygen/g,
+        adapter,
+      );
+    }
+
+    // We format the template content with Prettier.
+    // TODO use @shopify/cli-kit's format function once it supports TypeScript
+    // templateContent = await file.format(templateContent, destinationPath);
+    templateContent = formatCode(
+      templateContent,
+      formatOptions,
+      destinationPath,
+    );
+
+    // Write the final file to the user's project.
+    await writeFile(destinationPath, templateContent);
   }
-
-  // We format the template content with Prettier.
-  // TODO use @shopify/cli-kit's format function once it supports TypeScript
-  // templateContent = await file.format(templateContent, destinationPath);
-  templateContent = formatCode(templateContent, formatOptions, destinationPath);
-
-  // Create the directory if it doesn't exist.
-  if (!(await fileExists(dirname(destinationPath)))) {
-    await mkdir(dirname(destinationPath));
-  }
-
-  // Write the final file to the user's project.
-  await writeFile(destinationPath, templateContent);
 
   return result;
 }
@@ -246,6 +296,44 @@ function getDestinationRoute(
     filePrefix +
     (v2Flags.isV2RouteConvention ? convertRouteToV2(routePath) : routePath)
   );
+}
+
+async function findRouteDependencies(
+  routeFilePath: string,
+  appDirectory: string,
+) {
+  const filesToCheck = new Set([routeFilePath]);
+  const fileDependencies = new Set([routeFilePath]);
+
+  for (const filePath of filesToCheck) {
+    const fileContent = await readFile(filePath, {encoding: 'utf8'});
+    const importMatches = fileContent.matchAll(
+      /import\s+.*?\s+from\s+['"](.*?)['"]/gi,
+    );
+
+    for (let [, match] of importMatches) {
+      if (match && /^(\.|~)/.test(match)) {
+        match = match.replace(
+          '~', // import from '~/components/...'
+          relativePath(dirname(filePath), appDirectory) || '.',
+        );
+
+        const absoluteFilepath =
+          resolvePath(dirname(filePath), match) +
+          (basename(match).includes('.') ? '' : '.tsx');
+
+        if (!absoluteFilepath.includes(`/${GENERATOR_ROUTE_DIR}/`)) {
+          fileDependencies.add(absoluteFilepath);
+          if (/\.[jt]sx?$/.test(absoluteFilepath)) {
+            // Check for dependencies in the imported file if it's a TS/JS file.
+            filesToCheck.add(absoluteFilepath);
+          }
+        }
+      }
+    }
+  }
+
+  return [...fileDependencies];
 }
 
 async function getJsTranspilerOptions(rootDirectory: string) {
