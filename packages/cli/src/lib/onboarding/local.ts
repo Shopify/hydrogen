@@ -168,14 +168,16 @@ export async function setupLocalStarterTemplate(
     options.styling,
   );
 
-  backgroundWorkPromise = backgroundWorkPromise
-    .then(() => setupCss().catch(abort))
-    .then(() =>
-      commitAll(
-        project.directory,
-        'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
-      ),
-    );
+  if (cssStrategy) {
+    backgroundWorkPromise = backgroundWorkPromise
+      .then(() => setupCss().catch(abort))
+      .then(() =>
+        commitAll(
+          project.directory,
+          'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
+        ),
+      );
+  }
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(
