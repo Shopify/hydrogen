@@ -1,4 +1,4 @@
-import {useLoaderData} from '@remix-run/react';
+import {Await, useMatches} from '@remix-run/react';
 import invariant from 'tiny-invariant';
 import type {LoaderArgs} from '@shopify/remix-oxygen';
 import {json, type ActionArgs} from '@shopify/remix-oxygen';
@@ -85,11 +85,13 @@ export async function loader({context}: LoaderArgs) {
 }
 
 export default function CartRoute() {
-  const cart = useLoaderData<typeof loader>();
+  const [root] = useMatches();
   // @todo: finish on a separate PR
   return (
     <div className="grid w-full gap-8 p-6 py-8 md:p-8 lg:p-12 justify-items-start">
-      <Cart layout="page" cart={cart} />
+      <Await resolve={root.data?.cart}>
+        {(cart) => <Cart layout="page" cart={cart} />}
+      </Await>
     </div>
   );
 }
