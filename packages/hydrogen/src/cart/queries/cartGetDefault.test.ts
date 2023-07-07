@@ -14,6 +14,18 @@ describe('cartGetDefault', () => {
     expect(result).toHaveProperty('id', CART_ID);
   });
 
+  it('should return an empty object when no cart id found', async () => {
+    const cartGet = cartGetDefault({
+      storefront: mockCreateStorefrontClient(),
+      getCartId: () => undefined,
+    });
+
+    const result = await cartGet();
+
+    console.log(result);
+    expect(result).toStrictEqual({});
+  });
+
   it('can override cartFragment', async () => {
     const cartFragment = 'cartFragmentOverride';
     const cartGet = cartGetDefault({

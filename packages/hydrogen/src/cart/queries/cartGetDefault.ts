@@ -28,17 +28,15 @@ type CartGetProps = {
   numCartLines?: number;
 };
 
-export type CartGetFunction = (
-  cartInput?: CartGetProps,
-) => Promise<Cart | undefined>;
+export type CartGetFunction = (cartInput?: CartGetProps) => Promise<Cart | {}>;
 
 export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
   return async (cartInput?: CartGetProps) => {
     const cartId = options.getCartId();
 
-    if (!cartId) return;
+    if (!cartId) return {};
 
-    const {cart} = await options.storefront.query<{cart?: Cart}>(
+    const {cart} = await options.storefront.query<{cart: Cart}>(
       CART_QUERY(options.cartFragment),
       {
         variables: {
