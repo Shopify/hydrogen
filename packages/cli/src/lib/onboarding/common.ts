@@ -256,7 +256,7 @@ export async function handleProjectLocation({
     storefrontDirectory ??
     (await renderTextPrompt({
       message: 'Where would you like to create your storefront?',
-      defaultValue: './hydrogen-storefront',
+      defaultValue: 'hydrogen-storefront',
       abortSignal: controller.signal,
     }));
 
@@ -266,7 +266,7 @@ export async function handleProjectLocation({
     if (!force && storefrontDirectory) {
       location = await renderTextPrompt({
         message: `There's already a folder called \`${storefrontDirectory}\`. Where do you want to create the app?`,
-        defaultValue: './' + storefrontDirectory,
+        defaultValue: storefrontDirectory,
         abortSignal: controller.signal,
       });
 
