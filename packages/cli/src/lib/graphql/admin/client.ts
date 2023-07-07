@@ -1,3 +1,4 @@
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   graphqlRequest,
   type GraphQLVariables,
@@ -5,6 +6,12 @@ import {
 import type {AdminSession} from '../../auth.js';
 
 export type {AdminSession};
+
+interface GraphqlError {
+  message: string;
+  locations: string[];
+  path: string[];
+}
 
 /**
  * This is a temporary workaround until cli-kit includes a way to specify
@@ -23,5 +30,28 @@ export async function adminRequest<T>(
 ): Promise<T> {
   const api = 'Admin';
   const url = `https://${session.storeFqdn}/admin/api/unstable/graphql.json`;
-  return graphqlRequest({query, api, url, token: session.token, variables});
+  const response: Promise<T> = graphqlRequest({
+    query,
+    api,
+    url,
+    token: session.token,
+    variables,
+  });
+
+  try {
+    return await response;
+  } catch (error: any) {
+    const errors: GraphqlError[] = error.errors;
+
+    if (
+      errors.some((error) => error.message.includes('app is not installed'))
+    ) {
+      throw new AbortError(
+        "Hydrogen sales channel isn't installed",
+        'Install the Hydrogen sales channel on your store to start creating and linking Hydrogen storefronts: https://apps.shopify.com/hydrogen',
+      );
+    }
+
+    throw error;
+  }
 }
