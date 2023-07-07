@@ -1,6 +1,7 @@
+import {copy as copyWithFilter} from 'fs-extra/esm';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
-import {copyFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
@@ -82,9 +83,13 @@ export async function setupLocalStarterTemplate(
       })
       .catch(abort);
 
-  let backgroundWorkPromise: Promise<any> = copyFile(
+  let backgroundWorkPromise: Promise<any> = copyWithFilter(
     getStarterDir(),
     project.directory,
+    {
+      filter: (filepath: string) =>
+        !/\/app\//i.test(filepath) || /app\/entry\./i.test(filepath),
+    },
   ).catch(abort);
 
   const tasks = [
