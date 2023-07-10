@@ -52,7 +52,7 @@ function CartDrawer({cart}: {cart: LayoutProps['cart']}) {
           window.location.href = '/cart';
         }}
       >
-        <h1>Cart</h1>
+        <h2>Cart</h2>
       </Link>
       <hr />
       <Suspense fallback={<p>Loading cart ...</p>}>

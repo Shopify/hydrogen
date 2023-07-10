@@ -37,62 +37,6 @@ export function CartDetails({layout, cart}: CartMainProps) {
   );
 }
 
-function CartDiscounts({
-  discountCodes,
-}: {
-  discountCodes: CartApiQueryFragment['discountCodes'];
-}) {
-  const codes: string[] =
-    discountCodes
-      ?.filter((discount) => discount.applicable)
-      ?.map(({code}) => code) || [];
-
-  return (
-    <>
-      {/* Have existing discount, display it with a remove option */}
-      <dl className={codes && codes.length !== 0 ? 'grid' : 'hidden'}>
-        <div>
-          <dt>Discount(s)</dt>
-          <div>
-            <UpdateDiscountForm>
-              <button>Remove</button>
-            </UpdateDiscountForm>
-            <dd>{codes?.join(', ')}</dd>
-          </div>
-        </div>
-      </dl>
-
-      {/* Show an input to apply a discount */}
-      <UpdateDiscountForm discountCodes={codes}>
-        <div>
-          <input type="text" name="discountCode" placeholder="Discount code" />
-          <button>Apply Discount</button>
-        </div>
-      </UpdateDiscountForm>
-    </>
-  );
-}
-
-function UpdateDiscountForm({
-  discountCodes,
-  children,
-}: {
-  discountCodes?: string[];
-  children: React.ReactNode;
-}) {
-  return (
-    <CartForm
-      route="/cart"
-      action={CartForm.ACTIONS.DiscountCodesUpdate}
-      inputs={{
-        discountCodes: discountCodes || [],
-      }}
-    >
-      {children}
-    </CartForm>
-  );
-}
-
 function CartLines({
   layout = 'aside',
   lines,
@@ -153,16 +97,12 @@ function CartSummary({
   );
 }
 
-function CartLineItem({
-  line,
-}: {
-  line: CartApiQueryFragment['lines']['nodes'][0];
-}) {
+function CartLineItem({line}: {line: CartLine}) {
   const {id, quantity, merchandise} = line;
   if (typeof quantity === 'undefined' || !merchandise?.product) return null;
 
   return (
-    <li key={id}>
+    <li key={id} style={{padding: '.75rem 0'}}>
       <div>
         {merchandise.image && (
           <Image
@@ -177,35 +117,22 @@ function CartLineItem({
       </div>
 
       <div>
-        <div>
-          <h3>
-            {merchandise?.product?.handle ? (
-              <Link to={`/products/${merchandise.product.handle}`}>
-                {merchandise?.product?.title || ''}
-              </Link>
-            ) : (
-              <p>{merchandise?.product?.title || ''}</p>
-            )}
-          </h3>
-
-          <div>
-            {(merchandise?.selectedOptions || []).map((option) => (
-              <p key={option.name}>
+        <Link to={`/products/${merchandise.product.handle}`}>
+          <p>
+            <strong>{merchandise.product.title}</strong>
+          </p>
+        </Link>
+        <CartLinePrice line={line} as="span" />
+        <ul>
+          {merchandise.selectedOptions.map((option) => (
+            <li key={option.name}>
+              <small>
                 {option.name}: {option.value}
-              </p>
-            ))}
-          </div>
-
-          <div>
-            <div>
-              <CartLineQuantityAdjust line={line} />
-            </div>
-            <ItemRemoveButton lineIds={[id]} />
-          </div>
-        </div>
-        <p>
-          <CartLinePrice line={line} as="span" />
-        </p>
+              </small>
+            </li>
+          ))}
+        </ul>
+        <CartLineQuantityAdjust line={line} />
       </div>
     </li>
   );
@@ -223,46 +150,38 @@ function ItemRemoveButton({lineIds}: {lineIds: string[]}) {
   );
 }
 
-function CartLineQuantityAdjust({
-  line,
-}: {
-  line: CartApiQueryFragment['lines']['nodes'][0];
-}) {
+function CartLineQuantityAdjust({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
   const nextQuantity = Number((quantity + 1).toFixed(0));
 
   return (
-    <>
-      <label htmlFor={`quantity-${lineId}`} className="sr-only">
-        Quantity, {quantity}
-      </label>
-      <div>
-        <UpdateCartButton lines={[{id: lineId, quantity: prevQuantity}]}>
-          <button
-            aria-label="Decrease quantity"
-            disabled={quantity <= 1}
-            name="decrease-quantity"
-            value={prevQuantity}
-          >
-            <span>&#8722;</span>
-          </button>
-        </UpdateCartButton>
-
-        <p>{quantity}</p>
-
-        <UpdateCartButton lines={[{id: lineId, quantity: nextQuantity}]}>
-          <button
-            aria-label="Increase quantity"
-            name="increase-quantity"
-            value={nextQuantity}
-          >
-            <span>&#43;</span>
-          </button>
-        </UpdateCartButton>
-      </div>
-    </>
+    <div style={{display: 'flex'}}>
+      <small>Quantity: {quantity} &nbsp;&nbsp;</small>
+      <UpdateCartButton lines={[{id: lineId, quantity: prevQuantity}]}>
+        <button
+          aria-label="Decrease quantity"
+          disabled={quantity <= 1}
+          name="decrease-quantity"
+          value={prevQuantity}
+        >
+          <span>&#8722; </span>
+        </button>
+      </UpdateCartButton>
+      &nbsp;
+      <UpdateCartButton lines={[{id: lineId, quantity: nextQuantity}]}>
+        <button
+          aria-label="Increase quantity"
+          name="increase-quantity"
+          value={nextQuantity}
+        >
+          <span>&#43;</span>
+        </button>
+      </UpdateCartButton>
+      &nbsp;
+      <ItemRemoveButton lineIds={[lineId]} />
+    </div>
   );
 }
 
@@ -304,7 +223,11 @@ function CartLinePrice({
     return null;
   }
 
-  return <Money withoutTrailingZeros {...passthroughProps} data={moneyV2} />;
+  return (
+    <div>
+      <Money withoutTrailingZeros {...passthroughProps} data={moneyV2} />
+    </div>
+  );
 }
 
 export function CartEmpty({
@@ -322,5 +245,61 @@ export function CartEmpty({
       </p>
       <button>Continue shopping</button>
     </div>
+  );
+}
+
+function CartDiscounts({
+  discountCodes,
+}: {
+  discountCodes: CartApiQueryFragment['discountCodes'];
+}) {
+  const codes: string[] =
+    discountCodes
+      ?.filter((discount) => discount.applicable)
+      ?.map(({code}) => code) || [];
+
+  return (
+    <>
+      {/* Have existing discount, display it with a remove option */}
+      <dl className={codes && codes.length !== 0 ? 'grid' : 'hidden'}>
+        <div>
+          <dt>Discount(s)</dt>
+          <div>
+            <UpdateDiscountForm>
+              <button>Remove</button>
+            </UpdateDiscountForm>
+            <dd>{codes?.join(', ')}</dd>
+          </div>
+        </div>
+      </dl>
+
+      {/* Show an input to apply a discount */}
+      <UpdateDiscountForm discountCodes={codes}>
+        <div>
+          <input type="text" name="discountCode" placeholder="Discount code" />
+          <button>Apply Discount</button>
+        </div>
+      </UpdateDiscountForm>
+    </>
+  );
+}
+
+function UpdateDiscountForm({
+  discountCodes,
+  children,
+}: {
+  discountCodes?: string[];
+  children: React.ReactNode;
+}) {
+  return (
+    <CartForm
+      route="/cart"
+      action={CartForm.ACTIONS.DiscountCodesUpdate}
+      inputs={{
+        discountCodes: discountCodes || [],
+      }}
+    >
+      {children}
+    </CartForm>
   );
 }

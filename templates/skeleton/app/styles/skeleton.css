@@ -96,9 +96,8 @@ aside .close {
 }
 
 aside h2 {
-  color: #666;
-  font-family: 'Trebuchet MS', Tahoma, Arial, sans-serif;
   margin-top: 0;
+  margin-bottom: 0.6rem;
 }
 
 aside .content {
