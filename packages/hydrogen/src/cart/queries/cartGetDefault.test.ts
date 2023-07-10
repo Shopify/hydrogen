@@ -23,7 +23,7 @@ describe('cartGetDefault', () => {
     const result = await cartGet();
 
     console.log(result);
-    expect(result).toStrictEqual({});
+    expect(result).toStrictEqual(null);
   });
 
   it('can override cartFragment', async () => {
