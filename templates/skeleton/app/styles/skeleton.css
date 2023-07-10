@@ -8,29 +8,29 @@
 * --------------------------------------------------
 */
 .overlay {
-  position: absolute;
-  top: 0;
+  background: rgba(0, 0, 0, 0.2);
   bottom: 0;
   left: 0;
+  opacity: 0;
+  pointer-events: none;
+  position: absolute;
   right: 0;
-  background: rgba(0, 0, 0, 0.2);
+  top: 0;
+  transition: opacity 400ms ease-in-out;
   transition: opacity 400ms;
   visibility: hidden;
-  opacity: 0;
-  transition: opacity 400ms ease-in-out;
   z-index: 10;
-  pointer-events: none;
 }
 
 .overlay .close-outside {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: calc(100% - var(--aside-width));
-  height: 100%;
   background: transparent;
   border: none;
   color: transparent;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  top: 0;
+  width: calc(100% - var(--aside-width));
 }
 
 .overlay .light {
@@ -38,17 +38,17 @@
 }
 
 .overlay .cancel {
+  cursor: default;
+  height: 100%;
   position: absolute;
   width: 100%;
-  height: 100%;
-  cursor: default;
 }
 
 .overlay {
   &:target {
-    visibility: visible;
-    pointer-events: auto;
     opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
   }
   /* reveal aside */
   &:target aside {
@@ -64,12 +64,12 @@
 aside {
   background: #fff;
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
-  position: fixed;
+  height: 100vh;
   max-width: var(--aside-width);
   min-width: var(--aside-width);
-  height: 100vh;
-  top: 0;
+  position: fixed;
   right: calc(-1 * var(--aside-width));
+  top: 0;
   transition: transform 200ms ease-in-out;
 }
 
@@ -79,26 +79,26 @@ aside .light {
 }
 
 aside .close {
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  top: 20px;
-  right: 20px;
-  opacity: 0.8;
-  transition: all 200ms;
+  color: #666;
   font-size: 24px;
   font-weight: bold;
+  height: 20px;
+  opacity: 0.8;
+  position: absolute;
+  right: 20px;
   text-decoration: none;
-  color: #666;
+  top: 20px;
+  transition: all 200ms;
+  width: 20px;
   &:hover {
     opacity: 1;
   }
 }
 
 aside h2 {
-  margin-top: 0;
   color: #666;
   font-family: 'Trebuchet MS', Tahoma, Arial, sans-serif;
+  margin-top: 0;
 }
 
 aside .content {
