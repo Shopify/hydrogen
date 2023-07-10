@@ -9,7 +9,7 @@ import {Aside} from '~/components/Aside';
 import {CartMain} from '~/components/Cart';
 
 type LayoutProps = {
-  cart: Promise<CartApiQueryFragment> | Promise<null>;
+  cart: Promise<CartApiQueryFragment | null>;
   children?: React.ReactNode;
   footer: Promise<FooterQuery>;
   header: HeaderQuery;

@@ -12,7 +12,6 @@ import {Layout} from '~/components/Layout';
 import resetStyles from './styles/reset.css';
 import skeletonStyles from './styles/skeleton.css';
 import favicon from '../public/favicon.svg';
-import type {CartApiQueryFragment} from 'storefrontapi.generated';
 
 export function links() {
   return [
@@ -80,11 +79,6 @@ export async function loader({context}: LoaderArgs) {
 export default function App() {
   const data = useLoaderData<typeof loader>();
 
-  // FIX: this is a temp workaround for the cart.get() issue where it returns {} instead of null
-  const cart = data?.cart
-    ? (data.cart as Promise<CartApiQueryFragment>)
-    : Promise.resolve(null);
-
   return (
     <html lang="en">
       <head>
@@ -94,12 +88,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout
-          cart={cart}
-          footer={data.footer}
-          header={data.header}
-          isLoggedIn={data.isLoggedIn}
-        >
+        <Layout {...data}>
           <Outlet />
         </Layout>
         <ScrollRestoration />
