@@ -66,6 +66,7 @@ export async function loader({context}: LoaderArgs) {
 
   return defer(
     {
+      // defer the cart query
       cart: cart.get(),
       footer,
       header,

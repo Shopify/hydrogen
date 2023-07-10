@@ -27,6 +27,14 @@ export function Layout({
       <Aside id="cart-aside">
         <h1>Cart</h1>
         <p>Cart contents go here.</p>
+        <Link
+          to="/cart"
+          onClick={() => {
+            window.location.href = '/cart';
+          }}
+        >
+          View cart
+        </Link>
       </Aside>
       <Aside id="search-aside">
         <input type="search" placeholder="Search" />
