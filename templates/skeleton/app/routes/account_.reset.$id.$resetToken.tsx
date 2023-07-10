@@ -38,15 +38,14 @@ export async function action({request, context, params}: ActionArgs) {
       },
     });
 
-    if (!customerReset?.customerUserErrors?.length) {
+    if (customerReset?.customerUserErrors?.length) {
       throw new Error(customerReset?.customerUserErrors[0].message);
     }
 
-    const {accessToken} = customerReset?.customerAccessToken ?? {};
-    if (!accessToken) {
+    if (!customerReset?.customerAccessToken) {
       throw new Error('Access token not found. Please try again.');
     }
-    session.set('customerAccessToken', accessToken);
+    session.set('customerAccessToken', customerReset.customerAccessToken);
 
     return redirect('/account', {
       headers: {
@@ -66,47 +65,52 @@ export default function Reset() {
   const action = useActionData<ActionResponse>();
 
   return (
-    <div className="account-reset">
+    <section className="account-reset">
       <h1>Reset Password.</h1>
       <p>Enter a new password for your account.</p>
       <Form method="POST">
         <fieldset>
           <label htmlFor="password">Password</label>
           <input
-            id="password"
-            name="password"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Password"
             aria-label="Password"
-            minLength={8}
-            required
+            autoComplete="current-password"
             // eslint-disable-next-line jsx-a11y/no-autofocus
             autoFocus
-          />
-          <input
-            id="passwordConfirm"
-            name="passwordConfirm"
-            type="password"
-            autoComplete="current-password"
-            placeholder="Re-enter password"
-            aria-label="Re-enter password"
+            id="password"
             minLength={8}
+            name="password"
+            placeholder="Password"
             required
+            type="password"
           />
-          {action?.error ? (
-            <p>
-              <mark>
-                <small>{action.error}</small>
-              </mark>
-            </p>
-          ) : (
-            <br />
-          )}
+          <label htmlFor="passwordConfirm">Re-enter password</label>
+          <input
+            aria-label="Re-enter password"
+            autoComplete="current-password"
+            id="passwordConfirm"
+            minLength={8}
+            name="passwordConfirm"
+            placeholder="Re-enter password"
+            required
+            type="password"
+          />
         </fieldset>
+        {action?.error ? (
+          <p>
+            <mark>
+              <small>{action.error}</small>
+            </mark>
+          </p>
+        ) : (
+          <br />
+        )}
         <button type="submit">Reset</button>
       </Form>
-    </div>
+      <br />
+      <p>
+        <a href="/account/login">Back to login</a>
+      </p>
+    </section>
   );
 }
 

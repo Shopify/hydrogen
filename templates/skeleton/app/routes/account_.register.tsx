@@ -5,7 +5,7 @@ import {
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
 import {Form, Link, useActionData} from '@remix-run/react';
-import {LOGIN_MUTATION} from './login';
+import {LOGIN_MUTATION} from './account_.login';
 import type {CustomerCreateMutation} from 'storefrontapi.generated';
 
 type ActionResponse = {
@@ -157,9 +157,10 @@ export default function Register() {
         ) : (
           <br />
         )}
-        {data?.newCustomer && <p>Registered successfully!</p>}
         <button type="submit">Register</button>
       </Form>
+      <br />
+      <br />
       <p>
         Already registered? &nbsp;<Link to="/account/login">Login</Link>
       </p>

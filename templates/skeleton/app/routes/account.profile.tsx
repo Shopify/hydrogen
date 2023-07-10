@@ -112,7 +112,7 @@ export default function AccountProfile() {
   const account = useOutletContext<{customer: CustomerFragment}>();
   const {state} = useNavigation();
   const action = useActionData<ActionResponse>();
-  const customer = action?.customer ?? account.customer;
+  const customer = action?.customer ?? account?.customer;
 
   return (
     <div className="account-profile">

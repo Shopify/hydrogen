@@ -113,9 +113,17 @@ export default function Login() {
         )}
         <button type="submit">Sign in</button>
       </Form>
-      <p>
-        Not yet registered? &nbsp;<Link to="/account/register">Register</Link>
-      </p>
+      <br />
+      <div>
+        <p>
+          Forgot your password? &nbsp;
+          <Link to="/account/recover">Forgot password</Link>
+        </p>
+        <p>
+          Not yet registered? &nbsp;
+          <Link to="/account/register">Create and account</Link>
+        </p>
+      </div>
     </section>
   );
 }

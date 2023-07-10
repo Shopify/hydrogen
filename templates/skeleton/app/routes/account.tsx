@@ -20,7 +20,13 @@ export async function loader({request, context}: LoaderArgs) {
 
   if (!isLoggedIn) {
     if (isPrivateRoute || isAccountHome) {
-      return redirect('/account/login');
+      session.unset('customerAccessToken');
+      return redirect('/account/login', {
+        headers: {
+          // eslint-disable-next-line @typescript-eslint/naming-convention
+          'Set-Cookie': await session.commit(),
+        },
+      });
     } else {
       // public subroute such as /account/login...
       return json({
@@ -31,7 +37,7 @@ export async function loader({request, context}: LoaderArgs) {
       });
     }
   } else {
-    // default to redirecting to the orders page
+    // loggedIn, default redirect to the orders page
     if (isAccountHome) {
       return redirect('/account/orders');
     }
@@ -78,7 +84,7 @@ export default function Acccount() {
     useLoaderData<typeof loader>();
 
   if (!isPrivateRoute && !isAccountHome) {
-    return <Outlet />;
+    return <Outlet context={{customer}} />;
   }
 
   return (
