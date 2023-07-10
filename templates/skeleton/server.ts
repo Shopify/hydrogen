@@ -14,6 +14,7 @@ import {
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
+import {CART_QUERY_FRAGMENT} from './app/root';
 
 /**
  * Export a fetch handler in module format.
@@ -56,6 +57,7 @@ export default {
         storefront,
         getCartId: cartGetIdDefault(request.headers),
         setCartId: cartSetIdDefault(),
+        cartQueryFragment: CART_QUERY_FRAGMENT,
       });
       /**
        * Create a Remix request handler and pass

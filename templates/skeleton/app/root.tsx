@@ -12,6 +12,7 @@ import {Layout} from '~/components/Layout';
 import resetStyles from './styles/reset.css';
 import skeletonStyles from './styles/skeleton.css';
 import favicon from '../public/favicon.svg';
+import type {CartApiQueryFragment} from 'storefrontapi.generated';
 
 export function links() {
   return [
@@ -79,6 +80,11 @@ export async function loader({context}: LoaderArgs) {
 export default function App() {
   const data = useLoaderData<typeof loader>();
 
+  // FIX: this is a temp workaround for the cart.get() issue where it returns {} instead of null
+  const cart = data?.cart
+    ? (data.cart as Promise<CartApiQueryFragment>)
+    : Promise.resolve(null);
+
   return (
     <html lang="en">
       <head>
@@ -88,7 +94,12 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout {...data}>
+        <Layout
+          cart={cart}
+          footer={data.footer}
+          header={data.header}
+          isLoggedIn={data.isLoggedIn}
+        >
           <Outlet />
         </Layout>
         <ScrollRestoration />
@@ -194,13 +205,56 @@ const FOOTER_QUERY = `#graphql
 ` as const;
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/queries/cart
-const CART_QUERY = `#graphql
-  query Cart($cartId: ID!) {
-    cart(id: $cartId) {
-      ...Cart
+// FIX:  This def is used by cartRequestHandler so that we can
+// generate a cart type we can use throughout the app
+export const CART_QUERY_FRAGMENT = `#graphql
+  fragment CartLine on CartLine {
+    id
+    quantity
+    attributes {
+      key
+      value
+    }
+    cost {
+      totalAmount {
+        ...Money
+      }
+      amountPerQuantity {
+        ...Money
+      }
+      compareAtAmountPerQuantity {
+        ...Money
+      }
+    }
+    merchandise {
+      ... on ProductVariant {
+        id
+        availableForSale
+        compareAtPrice {
+          ...Money
+        }
+        price {
+          ...Money
+        }
+        requiresShipping
+        title
+        image {
+          ...Image
+        }
+        product {
+          handle
+          title
+          id
+        }
+        selectedOptions {
+          name
+          value
+        }
+      }
     }
   }
-  fragment Cart on Cart {
+
+  fragment CartApiQuery on Cart {
     id
     checkoutUrl
     totalQuantity
@@ -216,51 +270,9 @@ const CART_QUERY = `#graphql
       email
       phone
     }
-    lines(first: 100) {
+    lines(first: $numCartLines) {
       nodes {
-        id
-        quantity
-        attributes {
-          key
-          value
-        }
-        cost {
-          totalAmount {
-            ...Money
-          }
-          amountPerQuantity {
-            ...Money
-          }
-          compareAtAmountPerQuantity {
-            ...Money
-          }
-        }
-        merchandise {
-          ... on ProductVariant {
-            id
-            availableForSale
-            compareAtPrice {
-              ...Money
-            }
-            price {
-              ...Money
-            }
-            requiresShipping
-            title
-            image {
-              ...Image
-            }
-            product {
-              handle
-              title
-              id
-            }
-            selectedOptions {
-              name
-              value
-            }
-          }
-        }
+        ...CartLine
       }
     }
     cost {
@@ -284,6 +296,7 @@ const CART_QUERY = `#graphql
     }
     discountCodes {
       code
+      applicable
     }
   }
 

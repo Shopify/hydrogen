@@ -1,8 +1,8 @@
 import {Await, useMatches, Link} from '@remix-run/react';
 import {Suspense} from 'react';
 import {CartForm, CartQueryData, flattenConnection} from '@shopify/hydrogen';
-import type {CartFragment} from 'storefrontapi.generated';
 import {type ActionArgs, json} from '@shopify/remix-oxygen';
+import type {CartApiQueryFragment} from 'storefrontapi.generated';
 
 export async function action({request, context}: ActionArgs) {
   const {session, cart} = context;
@@ -83,6 +83,9 @@ export async function action({request, context}: ActionArgs) {
 
 export default function Cart() {
   const [root] = useMatches();
+  const cartPromise = root.data?.cart as
+    | Promise<CartApiQueryFragment>
+    | Promise<null>;
 
   return (
     <section className="cart">
@@ -90,10 +93,10 @@ export default function Cart() {
       <Suspense fallback="loading">
         <Await
           errorElement={<div>An error occurred</div>}
-          resolve={root.data?.cart as Promise<CartFragment>}
+          resolve={cartPromise}
         >
           {(cart) => {
-            if (!cart?.lines?.nodes?.length) {
+            if (!cart || !cart.lines?.nodes?.length) {
               return <CartEmpty />;
             }
             return <CartLines lines={cart.lines} />;

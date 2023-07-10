@@ -1,14 +1,15 @@
 import {Await, Link} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {
-  CartQuery,
+  CartApiQueryFragment,
   FooterQuery,
   HeaderQuery,
 } from 'storefrontapi.generated';
 import {Aside} from '~/components/Aside';
+import {CartMain} from '~/components/Cart';
 
 type LayoutProps = {
-  cart: Promise<CartQuery> | Promise<object>;
+  cart: Promise<CartApiQueryFragment> | Promise<null>;
   children?: React.ReactNode;
   footer: Promise<FooterQuery>;
   header: HeaderQuery;
@@ -16,25 +17,16 @@ type LayoutProps = {
 };
 
 export function Layout({
-  children = null,
-  header,
-  footer,
   cart,
+  children = null,
+  footer,
+  header,
   isLoggedIn,
 }: LayoutProps) {
   return (
     <>
       <Aside id="cart-aside">
-        <h1>Cart</h1>
-        <p>Cart contents go here.</p>
-        <Link
-          to="/cart"
-          onClick={() => {
-            window.location.href = '/cart';
-          }}
-        >
-          View cart
-        </Link>
+        <CartDrawer cart={cart} />
       </Aside>
       <Aside id="search-aside">
         <input type="search" placeholder="Search" />
@@ -45,6 +37,30 @@ export function Layout({
       <Suspense>
         <Await resolve={footer}>
           {(footer) => <Footer menu={footer.menu} />}
+        </Await>
+      </Suspense>
+    </>
+  );
+}
+
+function CartDrawer({cart}: {cart: LayoutProps['cart']}) {
+  return (
+    <>
+      <Link
+        to="/cart"
+        onClick={() => {
+          window.location.href = '/cart';
+        }}
+      >
+        <h1>Cart</h1>
+      </Link>
+      <hr />
+      <Suspense fallback={<p>Loading cart ...</p>}>
+        <Await resolve={cart}>
+          {(cart) => {
+            if (!cart) return <p>Cart is empty.</p>;
+            return <CartMain cart={cart} layout="aside" />;
+          }}
         </Await>
       </Suspense>
     </>
@@ -125,7 +141,10 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
   return (
     <Suspense fallback={<CartBadge count={0} />}>
       <Await resolve={cart}>
-        {(result) => <CartBadge count={result?.cart?.totalQuantity || 0} />}
+        {(cart) => {
+          if (!cart) return <CartBadge count={0} />;
+          return <CartBadge count={cart.totalQuantity || 0} />;
+        }}
       </Await>
     </Suspense>
   );

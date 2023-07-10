@@ -1,45 +1,68 @@
-import {useEffect, useMemo, useRef} from 'react';
-import invariant from 'tiny-invariant';
+import {Suspense, useEffect, useMemo, useRef} from 'react';
 import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-import {Link, useFetcher, useLoaderData} from '@remix-run/react';
-import {Money, Image} from '@shopify/hydrogen';
+import {
+  Await,
+  FetcherWithComponents,
+  Link,
+  useFetcher,
+  useLoaderData,
+} from '@remix-run/react';
 import type {
-  StoreProductFragment,
+  ProductFragment,
   ProductMedia_MediaImage_Fragment,
-  StoreProductQuery,
+  ProductVariantsFragment,
+  ProductQuery,
+  ProductVariantsQuery,
+  ProductVariantFragment,
 } from 'storefrontapi.generated';
 
 // TODO: add SEO
+import {
+  AnalyticsPageType,
+  Image,
+  Money,
+  ShopPayButton,
+  VariantSelector__unstable as VariantSelector,
+  getSelectedProductOptions__unstable as getSelectedProductOptions,
+  getFirstAvailableVariant__unstable as getFirstAvailableVariant,
+  CartForm,
+} from '@shopify/hydrogen';
+import {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
+  const selectedOptions = getSelectedProductOptions(request);
 
-  // capture selected options query params
-  const url = new URL(request.url);
-  const searchParams = new URLSearchParams(url.search);
-  const selectedOptions =
-    Array.from(searchParams.entries()).map(([key, value]) => ({
-      name: decodeURIComponent(key),
-      value: decodeURIComponent(value),
-    })) || [];
+  if (!handle) {
+    throw new Error('Expected product handle to be defined');
+  }
 
-  invariant(handle, 'Expected productHandle to be defined');
-
-  const {product} = await storefront.query<StoreProductQuery>(PRODUCT_QUERY, {
-    variables: {
-      handle,
-      selectedOptions,
-    },
-    cache: storefront.CacheNone(),
+  // await the query for the critical product data
+  // TODO: why is codegen not infering the type?
+  const {product} = await storefront.query<ProductQuery>(PRODUCT_QUERY, {
+    variables: {handle, selectedOptions},
   });
+
+  // In order to show which variants are available in the UI, we need to query
+  // all of them. But there might be a *lot*, so instead separate the variants
+  // into it's own separate query that is deferred. So there's a brief moment
+  // where variant options might show as available when they're not, but after
+  // this deffered query resolves, the UI will update.
+  // TODO: why is codegen not infering the type?
+  const variants = context.storefront.query<ProductVariantsQuery>(
+    VARIANTS_QUERY,
+    {
+      variables: {handle},
+    },
+  );
 
   if (!product?.id) {
     throw new Response(null, {status: 404});
   }
 
   // if we couldn't retrieve a variant from the selected options,
-  // redirect to the first variant with the selected options
+  // redirect to the first variant with it's selected options
   if (!product.selectedVariant) {
     const firstVariant = product.variants.nodes[0];
     if (!firstVariant) {
@@ -51,11 +74,11 @@ export async function loader({params, request, context}: LoaderArgs) {
     throw redirect(`/products/${handle}?${firstVariantOptions.join('&')}`);
   }
 
-  return defer({product});
+  return defer({product, variants});
 }
 
 export default function Product() {
-  const {product} = useLoaderData<typeof loader>();
+  const {product, variants} = useLoaderData<typeof loader>();
   const selectedVariant = product.selectedVariant;
 
   return (
@@ -68,7 +91,11 @@ export default function Product() {
       }}
     >
       <ProductImages selectedVariant={selectedVariant} media={product.media} />
-      <ProductMain selectedVariant={selectedVariant} product={product} />
+      <ProductMain
+        selectedVariant={selectedVariant}
+        product={product}
+        variants={variants}
+      />
     </section>
   );
 }
@@ -76,7 +103,7 @@ export default function Product() {
 function ProductImages({
   selectedVariant,
   media,
-}: Pick<StoreProductFragment, 'media' | 'selectedVariant'>) {
+}: Pick<ProductFragment, 'media' | 'selectedVariant'>) {
   // We want to show the selected variant's image first, followed by the other
   const images = useMemo(() => {
     const selectedVariantImage = selectedVariant?.image
@@ -119,147 +146,14 @@ function ProductImages({
   );
 }
 
-type VariantSelectorProps = Pick<
-  StoreProductFragment,
-  'handle' | 'options' | 'selectedVariant'
-> & {
-  children: ({
-    value,
-    handle,
-    name,
-    selectedVariant,
-  }: {
-    value: string;
-    handle: string;
-    name: string;
-    selectedVariant: StoreProductFragment['selectedVariant'];
-  }) => JSX.Element;
-};
-
-function VariantSelector({
-  options,
-  selectedVariant,
-  handle,
-  children,
-}: VariantSelectorProps) {
-  return (
-    <div className="variant-selector">
-      {options.map((option) => {
-        return (
-          <div key={option.name + selectedVariant?.id}>
-            <h3>{option.name}</h3>
-            <div
-              style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '1.5rem',
-              }}
-            >
-              {option.values.map((value) =>
-                children({value, handle, name: option.name, selectedVariant}),
-              )}
-            </div>
-          </div>
-        );
-      })}
-    </div>
-  );
-}
-
-type VariantOptionProps = Pick<StoreProductFragment, 'selectedVariant'> & {
-  name: string;
-  value: string;
-  handle?: string;
-  children: ({
-    value,
-    isSelected,
-    variant,
-  }: {
-    value: string;
-    isSelected: boolean;
-    variant: StoreProductFragment['selectedVariant'];
-  }) => JSX.Element;
-};
-
-function VariantOption({
-  name,
-  value,
-  selectedVariant,
-  handle,
-  children,
-}: VariantOptionProps) {
-  const init = useRef(false);
-  const {load, data, state} = useFetcher();
-
-  const selectedOptions =
-    selectedVariant?.selectedOptions?.map(({name, value}) => {
-      return [name, value];
-    }) || [];
-
-  const isSelected = Boolean(
-    selectedVariant?.selectedOptions.find(
-      (current) => current.name === name && current.value === value,
-    ),
-  );
-
-  // combine the selected options with the current option value to
-  // determine the variant availability
-  const variantSearchParams = new URLSearchParams(selectedOptions);
-  variantSearchParams.set(name, value);
-
-  const variantQueryParams = `?${variantSearchParams.toString()}`;
-  const variantUrl = `/products/${handle}/variant/${variantQueryParams}`;
-
-  const requestedVariant = data?.requestedVariant;
-
-  useEffect(() => {
-    if (init.current || isSelected) return;
-    load(variantUrl);
-    init.current = true;
-  }, [isSelected, variantUrl, load]);
-
-  useEffect(() => {
-    if (state === 'loading') return;
-    init.current = false;
-  }, [state]);
-
-  return (
-    <Link key={variantQueryParams} to={variantQueryParams} prefetch="intent">
-      {children({value, isSelected, variant: requestedVariant})}
-    </Link>
-  );
-}
-
-function Option({
-  value,
-  isSelected,
-  isAvailableForSale,
-}: {
-  value: string;
-  isSelected: boolean;
-  isAvailableForSale: boolean;
-}) {
-  return isSelected ? (
-    isAvailableForSale ? (
-      <mark>{value}</mark>
-    ) : (
-      <mark>
-        <s>{value}</s>
-      </mark>
-    )
-  ) : isAvailableForSale ? (
-    <span>{value}</span>
-  ) : (
-    <s>{value}</s>
-  );
-}
-
 function ProductMain({
   selectedVariant,
   product,
+  variants,
 }: {
-  product: StoreProductFragment;
-  selectedVariant: StoreProductFragment['selectedVariant'];
+  product: ProductFragment;
+  selectedVariant: ProductFragment['selectedVariant'];
+  variants: Promise<ProductVariantsQuery>;
 }) {
   const {title, vendor, descriptionHtml} = product;
   return (
@@ -281,9 +175,29 @@ function ProductMain({
           <br />
         </strong>
       ) : null}
-
       <br />
-      <ProductForm product={product} selectedVariant={selectedVariant} />
+      <Suspense
+        fallback={
+          <ProductForm
+            product={product}
+            selectedVariant={selectedVariant}
+            variants={[]}
+          />
+        }
+      >
+        <Await
+          errorElement="There was a problem loading product variants"
+          resolve={variants}
+        >
+          {(data) => (
+            <ProductForm
+              product={product}
+              selectedVariant={selectedVariant}
+              variants={data.product?.variants.nodes || []}
+            />
+          )}
+        </Await>
+      </Suspense>
     </div>
   );
 }
@@ -291,88 +205,113 @@ function ProductMain({
 function ProductForm({
   product,
   selectedVariant,
+  variants,
 }: {
-  product: StoreProductFragment;
-  selectedVariant: StoreProductFragment['selectedVariant'];
+  product: ProductFragment;
+  selectedVariant: ProductFragment['selectedVariant'];
+  variants: Array<ProductVariantFragment>;
 }) {
   return (
-    <>
+    <div className="product-form">
       <VariantSelector
-        handle={product.handle}
+        defaultVariant={selectedVariant as ProductVariantFragment}
         options={product.options}
-        selectedVariant={selectedVariant}
+        variants={variants}
       >
-        {(props) => (
-          <VariantOption {...props} key={props.value + props.name}>
-            {({value, isSelected, variant}) => {
-              return (
-                <Option
-                  value={value}
-                  isSelected={isSelected}
-                  isAvailableForSale={
-                    isSelected
-                      ? selectedVariant?.availableForSale ?? true
-                      : variant?.availableForSale ?? true
-                  }
-                />
-              );
-            }}
-          </VariantOption>
-        )}
+        {({option}) => {
+          return (
+            <div key={option.name}>
+              <h5>{option.name}</h5>
+              <div
+                style={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gridGap: '.5rem',
+                }}
+              >
+                {option.values.map(({value, isAvailable, isActive, path}) => {
+                  return (
+                    <Link
+                      key={option.name + value}
+                      prefetch="intent"
+                      preventScrollReset
+                      replace
+                      to={path}
+                      style={{
+                        border: isActive
+                          ? '1px solid black'
+                          : '1px solid transparent',
+                        padding: '.25rem .5rem',
+                        opacity: isAvailable ? 1 : 0.3,
+                      }}
+                    >
+                      {value}
+                    </Link>
+                  );
+                })}
+              </div>
+              <br />
+            </div>
+          );
+        }}
       </VariantSelector>
-      <AddToCartButton selectedVariant={selectedVariant} />
-    </>
-  );
-}
-
-// TODO: use new cart API
-function AddToCartButton({
-  selectedVariant,
-}: Pick<StoreProductFragment, 'selectedVariant'>) {
-  return (
-    <>
       <br />
-      <button disabled={!selectedVariant?.availableForSale}>Add to cart</button>
-    </>
+      <AddToCartButton
+        disabled={!selectedVariant}
+        onClick={() => {
+          window.location.href = window.location.href + '#cart-aside';
+        }}
+        lines={
+          selectedVariant
+            ? [
+                {
+                  merchandiseId: selectedVariant.id,
+                  quantity: 1,
+                },
+              ]
+            : []
+        }
+      >
+        Add to cart
+      </AddToCartButton>
+    </div>
   );
 }
 
-const PRODUCT_VARIANT_FRAGMENT = `#graphql
-  fragment ProductVariant on ProductVariant {
-    id
-    availableForSale
-    quantityAvailable
-    selectedOptions {
-      name
-      value
-    }
-    image {
-      id
-      url
-      altText
-      width
-      height
-    }
-    price {
-      amount
-      currencyCode
-    }
-    compareAtPrice {
-      amount
-      currencyCode
-    }
-    sku
-    title
-    unitPrice {
-      amount
-      currencyCode
-    }
-    product {
-      title
-      handle
-    }
-  }
-` as const;
+function AddToCartButton({
+  analytics,
+  children,
+  disabled,
+  lines,
+  onClick,
+}: {
+  analytics?: unknown;
+  children: React.ReactNode;
+  disabled?: boolean;
+  lines: CartLineInput[];
+  onClick?: () => void;
+}) {
+  return (
+    <CartForm route="/cart" inputs={{lines}} action={CartForm.ACTIONS.LinesAdd}>
+      {(fetcher: FetcherWithComponents<any>) => (
+        <>
+          <input
+            name="analytics"
+            type="hidden"
+            value={JSON.stringify(analytics)}
+          />
+          <button
+            type="submit"
+            onClick={onClick}
+            disabled={disabled ?? fetcher.state !== 'idle'}
+          >
+            {children}
+          </button>
+        </>
+      )}
+    </CartForm>
+  );
+}
 
 const PRODUCT_MEDIA_FRAGMENT = `#graphql
   fragment ProductMedia on Media {
@@ -413,49 +352,111 @@ const PRODUCT_MEDIA_FRAGMENT = `#graphql
   }
 ` as const;
 
-const PRODUCT_FRAGMENT = `#graphql
-  fragment StoreProduct on Product {
-    descriptionHtml
-    handle
+const PRODUCT_VARIANT_FRAGMENT = `#graphql
+  fragment ProductVariant on ProductVariant {
     id
+    availableForSale
+    quantityAvailable
+    selectedOptions {
+      name
+      value
+    }
+    image {
+      id
+      url
+      altText
+      width
+      height
+    }
+    price {
+      amount
+      currencyCode
+    }
+    compareAtPrice {
+      amount
+      currencyCode
+    }
+    sku
+    title
+    unitPrice {
+      amount
+      currencyCode
+    }
+    product {
+      title
+      handle
+    }
+  }
+` as const;
+
+const PRODUCT_FRAGMENT = `#graphql
+  fragment Product on Product {
+    id
+    title
+    vendor
+    handle
+    descriptionHtml
+    description
     options {
       name
       values
     }
-    media(first: 4) {
+    selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
+      ...ProductVariant
+    }
+    media(first: 7) {
       nodes {
         ...ProductMedia
       }
     }
-    selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
-      ...ProductVariant
-    }
-    seo {
-      description
-      title
-    }
-    title
     variants(first: 1) {
       nodes {
         ...ProductVariant
       }
     }
-    vendor
+    seo {
+      description
+      title
+    }
   }
   ${PRODUCT_MEDIA_FRAGMENT}
   ${PRODUCT_VARIANT_FRAGMENT}
 ` as const;
 
 const PRODUCT_QUERY = `#graphql
-  query StoreProduct(
+  query Product(
     $country: CountryCode
     $language: LanguageCode
     $handle: String!
     $selectedOptions: [SelectedOptionInput!]!
   ) @inContext(country: $country, language: $language) {
     product(handle: $handle) {
-      ...StoreProduct
+      ...Product
     }
   }
   ${PRODUCT_FRAGMENT}
+` as const;
+
+const PRODUCT_VARIANTS_FRAGMENT = `#graphql
+  fragment ProductVariants on Product {
+    variants(first: 250) {
+      nodes {
+        ...ProductVariant
+      }
+    }
+  }
+  ${PRODUCT_VARIANT_FRAGMENT}
+` as const;
+
+const VARIANTS_QUERY = `#graphql
+  query ProductVariants(
+    $country: CountryCode
+    $language: LanguageCode
+    $handle: String!
+  ) @inContext(country: $country, language: $language) {
+    product(handle: $handle) {
+      ...ProductVariants
+    }
+  }
+  ${PRODUCT_VARIANTS_FRAGMENT}
 ` as const;
