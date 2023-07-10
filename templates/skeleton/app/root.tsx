@@ -30,13 +30,8 @@ export function links() {
 }
 
 export async function loader({context}: LoaderArgs) {
-  const {storefront, session} = context;
-
-  // TODO: implement new cart
-  const [customerAccessToken, cartId] = await Promise.all([
-    session.get('customerAccessToken'),
-    session.get('cartId'),
-  ]);
+  const {storefront, session, cart} = context;
+  const customerAccessToken = await session.get('customerAccessToken');
 
   // validate the customer access token is valid
   let isLoggedIn = false;
@@ -69,17 +64,9 @@ export async function loader({context}: LoaderArgs) {
     },
   });
 
-  // defer the cart query
-  const cart = cartId
-    ? storefront.query(CART_QUERY, {
-        variables: {cartId},
-        cache: storefront.CacheNone(),
-      })
-    : Promise.resolve({cart: null});
-
   return defer(
     {
-      cart,
+      cart: cart.get(),
       footer,
       header,
       isLoggedIn,

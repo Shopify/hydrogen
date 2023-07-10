@@ -8,7 +8,7 @@ import type {
 import {Aside} from '~/components/Aside';
 
 type LayoutProps = {
-  cart: Promise<CartQuery> | Promise<null>;
+  cart: Promise<CartQuery> | Promise<object>;
   children?: React.ReactNode;
   footer: Promise<FooterQuery>;
   header: HeaderQuery;
