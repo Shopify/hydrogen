@@ -20,6 +20,7 @@ module.exports = {
     '**/src/*.example.ts',
     '**/src/*.example.jsx',
     '**/src/*.example.js',
+    'codegen.ts'
   ],
   extends: [
     'plugin:node/recommended',
