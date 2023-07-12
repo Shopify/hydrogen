@@ -6,7 +6,6 @@ import {readFile, writeFile, mkdir, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {getTemplateAppFile} from '../../../lib/build.js';
 import {getRemixConfig} from '../../../lib/config.js';
-import {readdir} from 'fs-extra';
 
 const readProjectFile = (
   dirs: {appDirectory: string},
@@ -64,7 +63,7 @@ describe('generate/route', () => {
 
     it('figures out the locale if a home route already exists', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
-        const route = 'routes/pages/$pageHandle';
+        const route = 'routes/pages.$pageHandle';
 
         const directories = await createHydrogenFixture(tmpDir, {
           files: [
@@ -108,29 +107,34 @@ describe('generate/route', () => {
   });
 
   describe('generateProjectFile', () => {
-    it('generates a route file', async () => {
+    it('generates a route file for Remix v1', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         // Given
-        const route = 'routes/pages/$pageHandle';
+        const route = 'routes/pages.$pageHandle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [],
           templates: [[route + '.tsx', `const str = "hello world"`]],
         });
 
         // When
-        await generateProjectFile(route, directories);
+        await generateProjectFile(route, {
+          ...directories,
+          v2Flags: {
+            isV2RouteConvention: false,
+          },
+        });
 
         // Then
-        expect(await readProjectFile(directories, route, 'jsx')).toContain(
-          `const str = 'hello world'`,
-        );
+        expect(
+          await readProjectFile(directories, route.replace('.', '/'), 'jsx'),
+        ).toContain(`const str = 'hello world'`);
       });
     });
 
     it('generates a route file for Remix v2', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         // Given
-        const route = 'routes/custom/path/$handle/index';
+        const route = 'routes/custom.path.$handle._index';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [],
           templates: [[route + '.tsx', `const str = "hello world"`]],
@@ -143,13 +147,9 @@ describe('generate/route', () => {
         });
 
         // Then
-        expect(
-          await readProjectFile(
-            directories,
-            'routes/custom.path.$handle._index',
-            'jsx',
-          ),
-        ).toContain(`const str = 'hello world'`);
+        expect(await readProjectFile(directories, route, 'jsx')).toContain(
+          `const str = 'hello world'`,
+        );
       });
     });
 
@@ -160,8 +160,8 @@ describe('generate/route', () => {
         const directories = await createHydrogenFixture(tmpDir, {
           files: [],
           templates: [
-            ['routes/index.tsx', routeCode],
-            ['routes/pages/$pageHandle.tsx', routeCode],
+            ['routes/_index.tsx', routeCode],
+            ['routes/pages.$pageHandle.tsx', routeCode],
             ['routes/[robots.txt].tsx', routeCode],
             ['routes/[sitemap.xml].tsx', routeCode],
           ],
@@ -170,13 +170,13 @@ describe('generate/route', () => {
         const localePrefix = 'locale';
 
         // When
-        await generateProjectFile('routes/index', {
+        await generateProjectFile('routes/_index', {
           ...directories,
           v2Flags: {isV2RouteConvention: true},
           localePrefix,
           typescript: true,
         });
-        await generateProjectFile('routes/pages/$pageHandle', {
+        await generateProjectFile('routes/pages.$pageHandle', {
           ...directories,
           v2Flags: {isV2RouteConvention: false},
           localePrefix,
@@ -220,7 +220,7 @@ describe('generate/route', () => {
     it('produces a typescript file when typescript argument is true', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         // Given
-        const route = 'routes/pages/$pageHandle';
+        const route = 'routes/pages.$pageHandle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [],
           templates: [[route + '.tsx', 'const str = "hello typescript"']],
@@ -230,6 +230,7 @@ describe('generate/route', () => {
         await generateProjectFile(route, {
           ...directories,
           typescript: true,
+          v2Flags: {isV2RouteConvention: true},
         });
 
         // Then
@@ -246,14 +247,17 @@ describe('generate/route', () => {
           async () => true,
         );
 
-        const route = 'routes/page/$pageHandle';
+        const route = 'routes/page.$pageHandle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [[`app/${route}.jsx`, 'const str = "I exist"']],
           templates: [[route + '.tsx', 'const str = "hello world"']],
         });
 
         // When
-        await generateProjectFile(route, directories);
+        await generateProjectFile(route, {
+          ...directories,
+          v2Flags: {isV2RouteConvention: true},
+        });
 
         // Then
         expect(renderConfirmationPrompt).toHaveBeenCalledWith(
@@ -271,7 +275,7 @@ describe('generate/route', () => {
           async () => true,
         );
 
-        const route = 'routes/page/$pageHandle';
+        const route = 'routes/page.$pageHandle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [[`app/${route}.jsx`, 'const str = "I exist"']],
           templates: [[route + '.tsx', 'const str = "hello world"']],
@@ -292,14 +296,14 @@ describe('generate/route', () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         const templates: [string, string][] = [
           [
-            'routes/pages/$pageHandle.tsx',
+            'routes/pages.$pageHandle.tsx',
             `import Dep from 'some-node-dep';\n` + // <= Non-relative files are ignored
               `import AnotherRoute from './AnotherRoute';\n` + // <= Routes are ignored
               `import Form from '~/components/Form';\n` + // <= Transpiled
-              `import {\n\n\nButton} from '../../components/Button';\n` + // <= Transpiled
-              `import {stuff} from '../../utils';\n` + // <= Copied as is
-              `import {serverOnly} from '../../something.server';\n` + // <= Copied as is
-              `import styles from '../../styles/app.css';\n` + // <= Copied as is
+              `import {\n\n\nButton} from '../components/Button';\n` + // <= Transpiled
+              `import {stuff} from '../utils';\n` + // <= Copied as is
+              `import {serverOnly} from '../something.server';\n` + // <= Copied as is
+              `import styles from '../styles/app.css';\n` + // <= Copied as is
               'export {Dep, AnotherRoute, Form, Button, stuff, serverOnly, styles};\n',
           ],
           [
@@ -320,8 +324,9 @@ describe('generate/route', () => {
 
         vi.mocked(getRemixConfig).mockResolvedValue(directories as any);
 
-        await generateProjectFile('routes/pages/$pageHandle', {
+        await generateProjectFile('routes/pages.$pageHandle', {
           ...directories,
+          v2Flags: {isV2RouteConvention: true},
           force: true,
         });
 

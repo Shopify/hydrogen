@@ -27,13 +27,12 @@ import {
   getCodeFormatOptions,
 } from '../../../lib/format-code.js';
 import {
-  GENERATOR_APP_DIR,
   GENERATOR_ROUTE_DIR,
   getStarterDir,
   getTemplateAppFile,
 } from '../../../lib/build.js';
 import {
-  convertRouteToV2,
+  convertRouteToV1,
   convertTemplateToRemixVersion,
   getV2Flags,
   type RemixV2Flags,
@@ -42,15 +41,15 @@ import {getRemixConfig} from '../../../lib/config.js';
 import {findFileWithExtension} from '../../file.js';
 
 export const ROUTE_MAP: Record<string, string | string[]> = {
-  home: 'index',
-  page: 'pages/$pageHandle',
+  home: '_index',
+  page: 'pages.$pageHandle',
   cart: 'cart',
-  products: 'products/$productHandle',
-  collections: 'collections/$collectionHandle',
-  policies: ['policies/index', 'policies/$policyHandle'],
+  products: 'products.$productHandle',
+  collections: 'collections.$collectionHandle',
+  policies: ['policies._index', 'policies.$policyHandle'],
   robots: '[robots.txt]',
   sitemap: '[sitemap.xml]',
-  account: ['account/login', 'account/register'],
+  account: ['account.login', 'account.register'],
 };
 
 export const ALL_ROUTE_CHOICES = [...Object.keys(ROUTE_MAP), 'all'];
@@ -299,7 +298,7 @@ function getDestinationRoute(
     GENERATOR_ROUTE_DIR +
     '/' +
     filePrefix +
-    (v2Flags.isV2RouteConvention ? convertRouteToV2(routePath) : routePath)
+    (v2Flags.isV2RouteConvention ? routePath : convertRouteToV1(routePath))
   );
 }
 
