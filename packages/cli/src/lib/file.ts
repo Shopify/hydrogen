@@ -1,5 +1,5 @@
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {readFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {readFile, writeFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {readdir} from 'fs/promises';
 import {formatCode, type FormatOptions} from './format-code.js';
 
@@ -36,6 +36,13 @@ export async function findFileWithExtension(
         extension === 'mjs' || extension === 'cjs' ? 'js' : extension;
 
       return {filepath: resolvePath(directory, filename), extension, astType};
+    }
+  }
+
+  for (const extension of ['ts', 'js'] as const) {
+    const filepath = resolvePath(directory, `${fileBase}/index.${extension}`);
+    if (await fileExists(resolvePath(directory, filepath))) {
+      return {filepath, extension, astType: extension};
     }
   }
 

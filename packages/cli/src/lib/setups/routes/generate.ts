@@ -39,6 +39,7 @@ import {
   type RemixV2Flags,
 } from '../../../lib/remix-version-interop.js';
 import {getRemixConfig} from '../../../lib/config.js';
+import {findFileWithExtension} from '../../file.js';
 
 export const ROUTE_MAP: Record<string, string | string[]> = {
   home: 'index',
@@ -326,9 +327,18 @@ async function findRouteDependencies(
           relativePath(dirname(filePath), appDirectory) || '.',
         );
 
+        const resolvedMatchPath = resolvePath(dirname(filePath), match);
         const absoluteFilepath =
-          resolvePath(dirname(filePath), match) +
-          (basename(match).includes('.') ? '' : '.tsx');
+          // Keep file extensions when present. E.g. './app.css'
+          (!basename(match).includes('.') &&
+            // Resolve common extensions like `.tsx` or `/index.ts`
+            (
+              await findFileWithExtension(
+                dirname(resolvedMatchPath),
+                basename(resolvedMatchPath),
+              )
+            ).filepath) ||
+          resolvedMatchPath;
 
         if (!absoluteFilepath.includes(`/${GENERATOR_ROUTE_DIR}/`)) {
           fileDependencies.add(absoluteFilepath);

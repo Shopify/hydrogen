@@ -2,7 +2,7 @@ import {temporaryDirectoryTask} from 'tempy';
 import {describe, it, expect} from 'vitest';
 import {findFileWithExtension, replaceFileContent} from './file.js';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {readFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
 
 describe('File utils', () => {
   describe('replaceFileContent', () => {
@@ -41,6 +41,9 @@ describe('File utils', () => {
         await writeFile(resolvePath(tmpDir, 'second.tsx'), 'content');
         await writeFile(resolvePath(tmpDir, 'third.mjs'), 'content');
 
+        await mkdir(resolvePath(tmpDir, 'fourth'));
+        await writeFile(resolvePath(tmpDir, 'fourth', 'index.ts'), 'content');
+
         expect(findFileWithExtension(tmpDir, 'first')).resolves.toEqual({
           filepath: expect.stringMatching(/first\.js$/),
           extension: 'js',
@@ -57,6 +60,12 @@ describe('File utils', () => {
           filepath: expect.stringMatching(/third\.mjs$/),
           extension: 'mjs',
           astType: 'js',
+        });
+
+        expect(findFileWithExtension(tmpDir, 'fourth')).resolves.toEqual({
+          filepath: expect.stringMatching(/fourth\/index\.ts$/),
+          extension: 'ts',
+          astType: 'ts',
         });
       });
     });

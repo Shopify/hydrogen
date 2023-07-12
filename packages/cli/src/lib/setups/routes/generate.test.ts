@@ -6,6 +6,7 @@ import {readFile, writeFile, mkdir, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {getTemplateAppFile} from '../../../lib/build.js';
 import {getRemixConfig} from '../../../lib/config.js';
+import {readdir} from 'fs-extra';
 
 const readProjectFile = (
   dirs: {appDirectory: string},
@@ -296,7 +297,7 @@ describe('generate/route', () => {
               `import AnotherRoute from './AnotherRoute';\n` + // <= Routes are ignored
               `import Form from '~/components/Form';\n` + // <= Transpiled
               `import {\n\n\nButton} from '../../components/Button';\n` + // <= Transpiled
-              `import {stuff} from '../../utils/index';\n` + // <= Copied as is
+              `import {stuff} from '../../utils';\n` + // <= Copied as is
               `import styles from '../../styles/app.css';\n` + // <= Copied as is
               'export {Dep, AnotherRoute, Form, Button, stuff, styles};\n',
           ],
@@ -308,8 +309,8 @@ describe('generate/route', () => {
           ],
           ['components/Button.tsx', `export const Button = '';\n`],
           ['components/Text.tsx', `export const Text = '';\n`],
-          ['utils/index.tsx', `export {stuff} from './stuff';\n`],
-          ['utils/stuff.tsx', `export const stuff = '';\n`],
+          ['utils/index.ts', `export {stuff} from './stuff';\n`],
+          ['utils/stuff.ts', `export const stuff = '';\n`],
           ['styles/app.css', `.red{color:red;}`],
         ];
 
@@ -326,7 +327,7 @@ describe('generate/route', () => {
           templates.map(async ([file, content]) => {
             const actualFile = joinPath(
               directories.appDirectory,
-              file.replace('.tsx', '.jsx'),
+              file.replace('.ts', '.js'),
             );
 
             await expect(fileExists(actualFile)).resolves.toBeTruthy();
