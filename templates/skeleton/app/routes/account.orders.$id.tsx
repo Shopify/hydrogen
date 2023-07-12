@@ -57,12 +57,6 @@ export default function OrderRoute() {
       <h2>Order {order.name}</h2>
       <p>Placed on {new Date(order.processedAt!).toDateString()}</p>
       <br />
-      <p>
-        <a target="_blank" href={order.statusUrl} rel="noreferrer">
-          View Order Status <mark>→</mark>
-        </a>
-      </p>
-      <br />
       <div>
         <table>
           <thead>
@@ -163,6 +157,12 @@ export default function OrderRoute() {
           </div>
         </div>
       </div>
+      <br />
+      <p>
+        <a target="_blank" href={order.statusUrl} rel="noreferrer">
+          View Order Status <mark>→</mark>
+        </a>
+      </p>
     </div>
   );
 }
@@ -181,7 +181,7 @@ function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
           </Link>
           <div>
             <p>{lineItem.title}</p>
-            <p>{lineItem.variant!.title}</p>
+            <small>{lineItem.variant!.title}</small>
           </div>
         </div>
       </td>
