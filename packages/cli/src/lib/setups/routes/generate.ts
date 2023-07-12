@@ -195,13 +195,9 @@ export async function generateProjectFile(
     routeFrom + '.tsx',
     templatesRoot,
   );
-  const allFilesToGenerate = (
-    await findRouteDependencies(
-      routeTemplatePath,
-      getTemplateAppFile('', templatesRoot),
-    )
-  ).map((item) =>
-    relativePath(joinPath(templatesRoot, GENERATOR_APP_DIR), item),
+  const allFilesToGenerate = await findRouteDependencies(
+    routeTemplatePath,
+    getTemplateAppFile('', templatesRoot),
   );
 
   const routeDestinationPath = joinPath(
@@ -312,7 +308,7 @@ async function findRouteDependencies(
   appDirectory: string,
 ) {
   const filesToCheck = new Set([routeFilePath]);
-  const fileDependencies = new Set([routeFilePath]);
+  const fileDependencies = new Set([relativePath(appDirectory, routeFilePath)]);
 
   for (const filePath of filesToCheck) {
     const fileContent = await readFile(filePath, {encoding: 'utf8'});
@@ -341,7 +337,7 @@ async function findRouteDependencies(
           resolvedMatchPath;
 
         if (!absoluteFilepath.includes(`/${GENERATOR_ROUTE_DIR}/`)) {
-          fileDependencies.add(absoluteFilepath);
+          fileDependencies.add(relativePath(appDirectory, absoluteFilepath));
           if (/\.[jt]sx?$/.test(absoluteFilepath)) {
             // Check for dependencies in the imported file if it's a TS/JS file.
             filesToCheck.add(absoluteFilepath);
