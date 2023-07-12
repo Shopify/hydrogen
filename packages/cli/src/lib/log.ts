@@ -1,5 +1,8 @@
 /* eslint-disable no-console */
 
+import {renderWarning, renderFatalError} from '@shopify/cli-kit/node/ui';
+import {BugError} from '@shopify/cli-kit/node/error';
+
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};
 const methodsReplaced = new Set<ConsoleMethod>();
@@ -120,6 +123,63 @@ export function muteAuthLogs({
   return () => {
     process.stdout.write = originalWrite;
   };
+}
+
+const H2_PREFIX = '[h2:';
+export function enhanceH2Logs() {
+  injectLogReplacer('warn');
+  injectLogReplacer('error');
+
+  addMessageReplacers('h2-warn', [
+    ([first]) => {
+      const message = first?.message ?? first;
+      return typeof message === 'string' && message.startsWith(H2_PREFIX);
+    },
+    (args: any[]) => {
+      const isError = typeof args[0] === 'object' && !!args[0].stack;
+      const [, scope, message] =
+        (args[0]?.message ?? args[0]).match(/^\[h2:([^\]]+)\]\s+(.*)$/ims) ||
+        [];
+
+      if (!scope || !message) return args;
+
+      let reference: undefined | string[] = undefined;
+      const lines = message.split('\n');
+      const lastLine = lines.at(-1) ?? '';
+      const hasLinks = /https?:\/\//.test(lines.at(-1) ?? '');
+
+      if (hasLinks) {
+        lines.pop() ?? '';
+      }
+
+      const headline = `Issue found in Hydrogen's ${scope.trim()}`;
+
+      if (isError) {
+        const error = new BugError(
+          `${headline}:\n` + lines.join('\n'),
+          hasLinks ? lastLine : undefined,
+        );
+
+        error.stack = args[0].stack;
+        renderFatalError(error);
+
+        return;
+      }
+
+      if (hasLinks) {
+        reference = [];
+        for (const link of lastLine.matchAll(/https?:\/\/[^\s]+/g)) {
+          reference.push(link[0]);
+        }
+      }
+
+      renderWarning({
+        headline,
+        body: lines.join('\n'),
+        reference,
+      });
+    },
+  ]);
 }
 
 const warnings = new Set<string>();
