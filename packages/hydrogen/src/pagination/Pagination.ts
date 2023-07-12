@@ -1,4 +1,4 @@
-import {createElement, useEffect, useMemo, useState} from 'react';
+import {createElement, useMemo} from 'react';
 import type {Maybe, PageInfo} from '@shopify/hydrogen/storefront-api-types';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import {Link, LinkProps, useNavigation, useLocation} from '@remix-run/react';
@@ -242,10 +242,55 @@ export function usePagination<NodesType>(
 }
 
 /**
+ * Extracts pagination variables from the query params of a request.
  * @param request The request object passed to your Remix loader function.
  * @param options Options for how to configure the pagination variables. Includes the ability to change how many nodes are within each page.
  *
  * @returns Variables to be used with the `storefront.query` function
+ *
+ * @example
+ * ```js
+ * // app/routes/collections/$handle.ts
+ * import {getPaginationVariables} from '@shopify/hydrogen';
+ *
+ * export function loader({request, params}) {
+ *  const paginationVariables = getPaginationVariables(request); // returns { last: number; startCursor: string | null; } | { first: number; endCursor: string | null; }
+ *  const {product} = await storefront.query(PAGINATED_PRODUCTS, {
+ *    variables: {...paginationVariables, handle: params.handle}
+ *  });
+ *  return json({product});
+ * }
+ * const PAGINATED_PRODUCTS = `#graphql
+ *   query Collection(
+ *      $handle: String!
+ *      $country: CountryCode
+ *      $language: LanguageCode
+ *      $first: Int
+ *      $last: Int
+ *      $startCursor: String
+ *      $endCursor: String
+ *    ) \@inContext(country: $country, language: $language) {
+ *      collection(handle: $handle) {
+ *        id
+ *        products(
+ *          first: $first,
+ *          last: $last,
+ *          before: $startCursor,
+ *          after: $endCursor
+ *        ) {
+ *          nodes {
+ *            id
+ *          }
+ *          pageInfo {
+ *            hasPreviousPage
+ *            hasNextPage
+ *            hasNextPage
+ *            endCursor
+ *          }
+ *        }
+ *      }
+ *    }
+ * ```
  */
 export function getPaginationVariables(
   request: Request,
