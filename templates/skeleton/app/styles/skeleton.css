@@ -1,5 +1,6 @@
 :root {
   --aside-width: 400px;
+  --header-height: 58px;
 }
 
 /*
@@ -73,21 +74,23 @@ aside {
   transition: transform 200ms ease-in-out;
 }
 
-aside .light {
-  border-color: #aaa;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.25);
+aside header {
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
 }
 
-aside .close {
-  color: #666;
+aside header h3 {
+  margin: 0;
+}
+
+aside header .close {
   font-size: 24px;
   font-weight: bold;
-  height: 20px;
   opacity: 0.8;
-  position: absolute;
-  right: 20px;
   text-decoration: none;
-  top: 20px;
   transition: all 200ms;
   width: 20px;
   &:hover {
@@ -95,15 +98,17 @@ aside .close {
   }
 }
 
-aside h2 {
+aside header h2 {
   margin-top: 0;
   margin-bottom: 0.6rem;
 }
 
-aside .content {
-  max-height: 100vh;
+aside main {
+  max-height: calc(100vh - 300px);
   overflow: auto;
-  padding: 20px;
+  height: 100%;
+  padding: 0px 20px;
+  width: auto;
 }
 
 aside p {

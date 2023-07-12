@@ -1,9 +1,11 @@
 export function Aside({
-  id = 'aside',
   children,
+  heading,
+  id = 'aside',
 }: {
-  id?: string;
   children?: React.ReactNode;
+  heading?: string;
+  id?: string;
 }) {
   return (
     <div aria-modal className="overlay" id={id} role="dialog">
@@ -15,8 +17,12 @@ export function Aside({
         }}
       />
       <aside>
-        <AsideClose />
-        <div className="content">{children}</div>
+        <header>
+          <h3>{heading}</h3>
+          <AsideClose />
+        </header>
+        <hr />
+        <main>{children}</main>
       </aside>
     </div>
   );
@@ -30,3 +36,17 @@ function AsideClose() {
     </a>
   );
 }
+
+/*
+      <Link
+        to="/cart"
+        onClick={() => {
+          window.location.href = '/cart';
+        }}
+      >
+        <h2>Cart</h2>
+      </Link>
+      <hr />
+      <br />
+
+*/

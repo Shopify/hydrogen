@@ -62,8 +62,11 @@ function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
   return (
     <div>
       <a href={checkoutUrl} target="_self">
-        Continue to Checkout
+        <p>
+          Continue to Checkout <mark>&rarr;</mark>
+        </p>
       </a>
+      <br />
     </div>
   );
 }
@@ -78,10 +81,18 @@ function CartSummary({
   layout: CartMainProps['layout'];
 }) {
   return (
-    <div aria-labelledby="summary-heading">
-      <h2 id="summary-heading">Order summary</h2>
+    <div
+      aria-labelledby="cart-summary"
+      style={{
+        position: 'absolute',
+        bottom: 0,
+        width: 'calc(var(--aside-width) - 40px)',
+      }}
+    >
+      <hr />
+      <h4>Totals</h4>
       <dl>
-        <div className="flex items-center justify-between font-medium">
+        <div style={{display: 'flex'}}>
           <dt>Subtotal</dt>
           <dd>
             {cost?.subtotalAmount?.amount ? (
@@ -239,11 +250,22 @@ export function CartEmpty({
 }) {
   return (
     <div hidden={hidden}>
+      <br />
       <p>
         Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you
         started!
       </p>
-      <button>Continue shopping</button>
+      <br /> <Link to="/policies"></Link>
+      <Link
+        to="/collections"
+        onClick={() => {
+          if (layout === 'aside') {
+            window.location.href = '/collections';
+          }
+        }}
+      >
+        Continue shopping <mark>→</mark>
+      </Link>
     </div>
   );
 }
@@ -261,7 +283,7 @@ function CartDiscounts({
   return (
     <>
       {/* Have existing discount, display it with a remove option */}
-      <dl className={codes && codes.length !== 0 ? 'grid' : 'hidden'}>
+      <dl hidden={!codes.length}>
         <div>
           <dt>Discount(s)</dt>
           <div>
@@ -277,9 +299,11 @@ function CartDiscounts({
       <UpdateDiscountForm discountCodes={codes}>
         <div>
           <input type="text" name="discountCode" placeholder="Discount code" />
-          <button>Apply Discount</button>
+          &nbsp;
+          <button>Apply</button>
         </div>
       </UpdateDiscountForm>
+      <br />
     </>
   );
 }

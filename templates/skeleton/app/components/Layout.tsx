@@ -25,8 +25,8 @@ export function Layout({
 }: LayoutProps) {
   return (
     <>
-      <Aside id="cart-aside">
-        <CartDrawer cart={cart} />
+      <Aside id="cart-aside" heading="Cart">
+        <CartAside cart={cart} />
       </Aside>
       <Aside id="search-aside">
         <input type="search" placeholder="Search" />
@@ -43,18 +43,9 @@ export function Layout({
   );
 }
 
-function CartDrawer({cart}: {cart: LayoutProps['cart']}) {
+function CartAside({cart}: {cart: LayoutProps['cart']}) {
   return (
     <>
-      <Link
-        to="/cart"
-        onClick={() => {
-          window.location.href = '/cart';
-        }}
-      >
-        <h2>Cart</h2>
-      </Link>
-      <hr />
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await resolve={cart}>
           {(cart) => {
@@ -74,12 +65,12 @@ function Header({header, isLoggedIn, cart}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header>
-      <br />
       <div
         style={{
           display: 'flex',
           padding: '0 1rem',
           alignItems: 'center',
+          height: 'var(--header-height)',
         }}
       >
         <Link prefetch="intent" to="/">
@@ -119,7 +110,6 @@ function Header({header, isLoggedIn, cart}: HeaderProps) {
           <CartToggle cart={cart} />
         </nav>
       </div>
-      <br />
       <hr />
     </header>
   );

@@ -1,16 +1,14 @@
-import {Suspense, useEffect, useMemo, useRef} from 'react';
+import {Suspense, useMemo} from 'react';
 import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
   Await,
   FetcherWithComponents,
   Link,
-  useFetcher,
   useLoaderData,
 } from '@remix-run/react';
 import type {
   ProductFragment,
   ProductMedia_MediaImage_Fragment,
-  ProductVariantsFragment,
   ProductQuery,
   ProductVariantsQuery,
   ProductVariantFragment,
@@ -33,14 +31,14 @@ export async function loader({params, request, context}: LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
   const selectedOptions = getSelectedProductOptions(request);
+  console.log('selectedOptions', selectedOptions);
 
   if (!handle) {
     throw new Error('Expected product handle to be defined');
   }
 
   // await the query for the critical product data
-  // TODO: why is codegen not infering the type?
-  const {product} = await storefront.query<ProductQuery>(PRODUCT_QUERY, {
+  const {product} = await storefront.query(PRODUCT_QUERY, {
     variables: {handle, selectedOptions},
   });
 
@@ -49,29 +47,24 @@ export async function loader({params, request, context}: LoaderArgs) {
   // into it's own separate query that is deferred. So there's a brief moment
   // where variant options might show as available when they're not, but after
   // this deffered query resolves, the UI will update.
-  // TODO: why is codegen not infering the type?
-  const variants = context.storefront.query<ProductVariantsQuery>(
-    VARIANTS_QUERY,
-    {
-      variables: {handle},
-    },
-  );
+  const variants = context.storefront.query(VARIANTS_QUERY, {
+    variables: {handle},
+  });
 
-  if (!product?.id) {
+  if (!product?.id || !product.variants.nodes.length) {
     throw new Response(null, {status: 404});
   }
 
   // if we couldn't retrieve a variant from the selected options,
-  // redirect to the first variant with it's selected options
+  // redirect to the first variant's url with it's selected options applied
   if (!product.selectedVariant) {
+    const searchParams = new URLSearchParams(new URL(request.url).search);
     const firstVariant = product.variants.nodes[0];
-    if (!firstVariant) {
-      throw new Error('No variants found for product');
+    for (const option of firstVariant.selectedOptions) {
+      searchParams.set(option.name, option.value);
     }
-    const firstVariantOptions = firstVariant.selectedOptions.map(
-      (option) => `${option.name}=${option.value}`,
-    );
-    throw redirect(`/products/${handle}?${firstVariantOptions.join('&')}`);
+    console.log('searchParams', searchParams.toString());
+    throw redirect(`/products/${handle}?${searchParams.toString()}`);
   }
 
   return defer({product, variants});
@@ -155,7 +148,7 @@ function ProductMain({
   selectedVariant: ProductFragment['selectedVariant'];
   variants: Promise<ProductVariantsQuery>;
 }) {
-  const {title, vendor, descriptionHtml} = product;
+  const {title, descriptionHtml} = product;
   return (
     <div
       className="product-main"
@@ -166,15 +159,13 @@ function ProductMain({
       }}
     >
       <h1>{title}</h1>
-      <h2>{vendor}</h2>
-      <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
       {selectedVariant ? (
         <strong>
-          <br />
           <Money data={selectedVariant.price} />
-          <br />
         </strong>
       ) : null}
+      <br />
+      <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
       <br />
       <Suspense
         fallback={
@@ -257,7 +248,7 @@ function ProductForm({
       </VariantSelector>
       <br />
       <AddToCartButton
-        disabled={!selectedVariant}
+        disabled={!selectedVariant || !selectedVariant.availableForSale}
         onClick={() => {
           window.location.href = window.location.href + '#cart-aside';
         }}
@@ -272,7 +263,7 @@ function ProductForm({
             : []
         }
       >
-        Add to cart
+        {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
       </AddToCartButton>
     </div>
   );
