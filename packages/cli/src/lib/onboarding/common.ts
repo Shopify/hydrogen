@@ -684,11 +684,12 @@ async function projectExists(projectDir: string) {
 }
 
 function normalizeRoutePath(routePath: string) {
-  const isIndex = /(^|\/)index$/.test(routePath);
+  const isIndex = /(^|\.)_index$/.test(routePath);
   return isIndex
-    ? routePath.slice(0, -'index'.length).replace(/\/$/, '')
+    ? routePath.slice(0, -'_index'.length).replace(/\.$/, '')
     : routePath
-        .replace(/\$/g, ':')
-        .replace(/[\[\]]/g, '')
-        .replace(/:(\w+)Handle/i, ':handle');
+        .replace(/\.(?!\w+\])/g, '/') // Replace dots with slashes, except for dots in brackets
+        .replace(/\$/g, ':') // Replace dollar signs with colons
+        .replace(/[\[\]]/g, '') // Remove brackets
+        .replace(/:(\w+)Handle/i, ':handle'); // Replace arbitrary handle names with a standard `:handle`
 }
