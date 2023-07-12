@@ -8,7 +8,7 @@ import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 import {useState} from 'react';
 
 import {Link} from '~/components';
-import {getInputStyleClasses} from '~/lib/utils';
+import {assertApiErrors, getInputStyleClasses} from '~/lib/utils';
 
 export async function loader({context, params}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
@@ -38,14 +38,17 @@ export const action: ActionFunction = async ({request, context}) => {
   }
 
   try {
-    await context.storefront.mutate(CUSTOMER_RECOVER_MUTATION, {
+    const data = await context.storefront.mutate(CUSTOMER_RECOVER_MUTATION, {
       variables: {email},
     });
+
+    assertApiErrors(data.customerRecover);
 
     return json({resetRequested: true});
   } catch (error: any) {
     return badRequest({
-      formError: 'Something went wrong. Please try again later.',
+      formError:
+        error?.message ?? 'Something went wrong. Please try again later.',
     });
   }
 };
