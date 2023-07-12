@@ -296,8 +296,9 @@ describe('generate/route', () => {
               `import AnotherRoute from './AnotherRoute';\n` + // <= Routes are ignored
               `import Form from '~/components/Form';\n` + // <= Transpiled
               `import {\n\n\nButton} from '../../components/Button';\n` + // <= Transpiled
+              `import {stuff} from '../../utils/index';\n` + // <= Copied as is
               `import styles from '../../styles/app.css';\n` + // <= Copied as is
-              'export {Dep, AnotherRoute, Form, Button, styles};\n',
+              'export {Dep, AnotherRoute, Form, Button, stuff, styles};\n',
           ],
           [
             'components/Form.tsx',
@@ -307,6 +308,8 @@ describe('generate/route', () => {
           ],
           ['components/Button.tsx', `export const Button = '';\n`],
           ['components/Text.tsx', `export const Text = '';\n`],
+          ['utils/index.tsx', `export {stuff} from './stuff';\n`],
+          ['utils/stuff.tsx', `export const stuff = '';\n`],
           ['styles/app.css', `.red{color:red;}`],
         ];
 
