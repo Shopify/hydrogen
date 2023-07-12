@@ -57,6 +57,7 @@ import {
   renderCssPrompt,
 } from '../setups/css/index.js';
 import {
+  generateProjectFile,
   generateRoutes,
   renderRoutePrompt,
   ROUTE_MAP,
@@ -148,6 +149,16 @@ export async function handleRouteGeneration(
       }
     },
   };
+}
+
+export function generateProjectEntries(
+  options: Parameters<typeof generateProjectFile>[1],
+) {
+  return Promise.all(
+    ['root', 'entry.server', 'entry.client'].map((filename) =>
+      generateProjectFile(filename, options),
+    ),
+  );
 }
 
 /**
