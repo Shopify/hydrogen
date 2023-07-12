@@ -325,16 +325,12 @@ async function findRouteDependencies(
 
         const resolvedMatchPath = resolvePath(dirname(filePath), match);
         const absoluteFilepath =
-          // Keep file extensions when present. E.g. './app.css'
-          (!basename(match).includes('.') &&
-            // Resolve common extensions like `.tsx` or `/index.ts`
-            (
-              await findFileWithExtension(
-                dirname(resolvedMatchPath),
-                basename(resolvedMatchPath),
-              )
-            ).filepath) ||
-          resolvedMatchPath;
+          (
+            await findFileWithExtension(
+              dirname(resolvedMatchPath),
+              basename(resolvedMatchPath),
+            )
+          ).filepath || resolvedMatchPath;
 
         if (!absoluteFilepath.includes(`/${GENERATOR_ROUTE_DIR}/`)) {
           fileDependencies.add(relativePath(appDirectory, absoluteFilepath));
