@@ -9,7 +9,6 @@ import {
 import type {
   ProductFragment,
   ProductMedia_MediaImage_Fragment,
-  ProductQuery,
   ProductVariantsQuery,
   ProductVariantFragment,
 } from 'storefrontapi.generated';
@@ -31,7 +30,6 @@ export async function loader({params, request, context}: LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
   const selectedOptions = getSelectedProductOptions(request);
-  console.log('selectedOptions', selectedOptions);
 
   if (!handle) {
     throw new Error('Expected product handle to be defined');
@@ -55,24 +53,26 @@ export async function loader({params, request, context}: LoaderArgs) {
     throw new Response(null, {status: 404});
   }
 
-  // if we couldn't retrieve a variant from the selected options,
-  // redirect to the first variant's url with it's selected options applied
-  if (!product.selectedVariant) {
-    const searchParams = new URLSearchParams(new URL(request.url).search);
-    const firstVariant = product.variants.nodes[0];
-    for (const option of firstVariant.selectedOptions) {
-      searchParams.set(option.name, option.value);
-    }
-    console.log('searchParams', searchParams.toString());
-    throw redirect(`/products/${handle}?${searchParams.toString()}`);
-  }
+  // // if no selected variant was returned from the selected options,
+  // // we redirect to the first variant's url with it's selected options applied
+  // if (!product.selectedVariant) {
+  //   const searchParams = new URLSearchParams(new URL(request.url).search);
+  //   const firstVariant = product.variants.nodes[0];
+  //   for (const option of firstVariant.selectedOptions) {
+  //     searchParams.set(option.name, option.value);
+  //   }
+  //
+  //   // log the request referrer to see where the redirect is coming from
+  //   throw redirect(`/products/${handle}?${searchParams.toString()}`, {});
+  // }
 
   return defer({product, variants});
 }
 
 export default function Product() {
   const {product, variants} = useLoaderData<typeof loader>();
-  const selectedVariant = product.selectedVariant;
+  const {selectedVariant} = product;
+  console.log({selectedVariant});
 
   return (
     <section

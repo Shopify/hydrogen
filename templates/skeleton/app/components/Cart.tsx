@@ -3,12 +3,16 @@ import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 
-type CartMainProps = {
-  layout: 'page' | 'aside';
-  cart: CartApiQueryFragment | null;
+type CartLine = CartApiQueryFragment['lines']['nodes'][0];
+
+type LayoutStyles = {
+  [Property in CartMainProps['layout']]: React.CSSProperties;
 };
 
-type CartLine = CartApiQueryFragment['lines']['nodes'][0];
+type CartMainProps = {
+  cart: CartApiQueryFragment | null;
+  layout: 'page' | 'aside';
+};
 
 export function CartMain({layout, cart}: CartMainProps) {
   const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
@@ -21,12 +25,12 @@ export function CartMain({layout, cart}: CartMainProps) {
   );
 }
 
-export function CartDetails({layout, cart}: CartMainProps) {
+function CartDetails({layout, cart}: CartMainProps) {
   const cartHasItems = !!cart && cart.totalQuantity > 0;
 
   return (
     <div>
-      <CartLines lines={cart?.lines} layout={layout} />
+      <CartLines lines={cart?.lines} />
       {cartHasItems && (
         <CartSummary cost={cart.cost} layout={layout}>
           <CartDiscounts discountCodes={cart.discountCodes} />
@@ -38,13 +42,12 @@ export function CartDetails({layout, cart}: CartMainProps) {
 }
 
 function CartLines({
-  layout = 'aside',
   lines,
 }: {
-  layout: CartMainProps['layout'];
   lines: CartApiQueryFragment['lines'] | undefined;
 }) {
   if (!lines) return null;
+
   return (
     <div aria-labelledby="cart-contents">
       <ul>
@@ -52,58 +55,6 @@ function CartLines({
           <CartLineItem key={line.id} line={line as CartLine} />
         ))}
       </ul>
-    </div>
-  );
-}
-
-function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
-  if (!checkoutUrl) return null;
-
-  return (
-    <div>
-      <a href={checkoutUrl} target="_self">
-        <p>
-          Continue to Checkout <mark>&rarr;</mark>
-        </p>
-      </a>
-      <br />
-    </div>
-  );
-}
-
-function CartSummary({
-  cost,
-  layout,
-  children = null,
-}: {
-  children?: React.ReactNode;
-  cost: CartApiQueryFragment['cost'];
-  layout: CartMainProps['layout'];
-}) {
-  return (
-    <div
-      aria-labelledby="cart-summary"
-      style={{
-        position: 'absolute',
-        bottom: 0,
-        width: 'calc(var(--aside-width) - 40px)',
-      }}
-    >
-      <hr />
-      <h4>Totals</h4>
-      <dl>
-        <div style={{display: 'flex'}}>
-          <dt>Subtotal</dt>
-          <dd>
-            {cost?.subtotalAmount?.amount ? (
-              <Money data={cost?.subtotalAmount} />
-            ) : (
-              '-'
-            )}
-          </dd>
-        </div>
-      </dl>
-      {children}
     </div>
   );
 }
@@ -118,10 +69,9 @@ function CartLineItem({line}: {line: CartLine}) {
         {merchandise.image && (
           <Image
             alt={merchandise.title}
-            // FIX: replace className
-            className="object-cover object-center w-24 h-24 border rounded md:w-28 md:h-28"
             data={merchandise.image}
             height={110}
+            style={{height: 'auto'}}
             width={110}
           />
         )}
@@ -146,6 +96,62 @@ function CartLineItem({line}: {line: CartLine}) {
         <CartLineQuantityAdjust line={line} />
       </div>
     </li>
+  );
+}
+
+function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
+  if (!checkoutUrl) return null;
+
+  return (
+    <div>
+      <a href={checkoutUrl} target="_self">
+        <p>
+          Continue to Checkout <mark>&rarr;</mark>
+        </p>
+      </a>
+      <br />
+    </div>
+  );
+}
+
+export function CartSummary({
+  cost,
+  layout,
+  children = null,
+}: {
+  children?: React.ReactNode;
+  cost: CartApiQueryFragment['cost'];
+  layout: CartMainProps['layout'];
+}) {
+  const styles: LayoutStyles = {
+    page: {
+      position: 'relative',
+    },
+    aside: {
+      position: 'absolute',
+      bottom: 0,
+      width: 'calc(var(--aside-width) - 40px)',
+    },
+  };
+
+  return (
+    <div aria-labelledby="cart-summary" style={styles[layout]}>
+      <hr />
+      <h4>Totals</h4>
+      <dl>
+        <div style={{display: 'flex'}}>
+          <dt>Subtotal</dt>
+          <dd>
+            {cost?.subtotalAmount?.amount ? (
+              <Money data={cost?.subtotalAmount} />
+            ) : (
+              '-'
+            )}
+          </dd>
+        </div>
+      </dl>
+      {children}
+    </div>
   );
 }
 
@@ -286,12 +292,13 @@ function CartDiscounts({
       <dl hidden={!codes.length}>
         <div>
           <dt>Discount(s)</dt>
-          <div>
-            <UpdateDiscountForm>
+          <UpdateDiscountForm>
+            <div style={{display: 'flex', alignItems: 'center'}}>
+              <code>{codes?.join(', ')}</code>
+              &nbsp;
               <button>Remove</button>
-            </UpdateDiscountForm>
-            <dd>{codes?.join(', ')}</dd>
-          </div>
+            </div>
+          </UpdateDiscountForm>
         </div>
       </dl>
 
@@ -300,7 +307,7 @@ function CartDiscounts({
         <div>
           <input type="text" name="discountCode" placeholder="Discount code" />
           &nbsp;
-          <button>Apply</button>
+          <button type="submit">Apply</button>
         </div>
       </UpdateDiscountForm>
       <br />

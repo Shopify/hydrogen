@@ -4,7 +4,7 @@ export function Aside({
   id = 'aside',
 }: {
   children?: React.ReactNode;
-  heading?: string;
+  heading: string;
   id?: string;
 }) {
   return (

@@ -28,9 +28,8 @@ export function Layout({
       <Aside id="cart-aside" heading="Cart">
         <CartAside cart={cart} />
       </Aside>
-      <Aside id="search-aside">
-        <input type="search" placeholder="Search" />
-        <p>Search results go here.</p>
+      <Aside id="search-aside" heading="Search">
+        <SearchAside />
       </Aside>
       <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />
       <main>{children}</main>
@@ -43,18 +42,25 @@ export function Layout({
   );
 }
 
+function SearchAside() {
+  return (
+    <Aside id="search-aside" heading="Search">
+      <input type="search" placeholder="Search" />
+      <p>Search results go here.</p>
+    </Aside>
+  );
+}
+
 function CartAside({cart}: {cart: LayoutProps['cart']}) {
   return (
-    <>
-      <Suspense fallback={<p>Loading cart ...</p>}>
-        <Await resolve={cart}>
-          {(cart) => {
-            if (!cart) return <p>Cart is empty.</p>;
-            return <CartMain cart={cart} layout="aside" />;
-          }}
-        </Await>
-      </Suspense>
-    </>
+    <Suspense fallback={<p>Loading cart ...</p>}>
+      <Await resolve={cart}>
+        {(cart) => {
+          if (!cart) return <p>Cart is empty.</p>;
+          return <CartMain cart={cart} layout="aside" />;
+        }}
+      </Await>
+    </Suspense>
   );
 }
 

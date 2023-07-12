@@ -1,8 +1,9 @@
 import {Await, useMatches, Link} from '@remix-run/react';
 import {Suspense} from 'react';
-import {CartForm, CartQueryData, flattenConnection} from '@shopify/hydrogen';
+import {CartForm, CartQueryData} from '@shopify/hydrogen';
 import {type ActionArgs, json} from '@shopify/remix-oxygen';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
+import {CartMain} from '~/components/Cart';
 
 export async function action({request, context}: ActionArgs) {
   const {session, cart} = context;
@@ -69,6 +70,7 @@ export async function action({request, context}: ActionArgs) {
   }
 
   const {cart: cartResult, errors} = result;
+  console.log('cart errors', errors);
   return json(
     {
       cart: cartResult,
@@ -83,53 +85,21 @@ export async function action({request, context}: ActionArgs) {
 
 export default function Cart() {
   const [root] = useMatches();
-  const cartPromise = root.data?.cart as
-    | Promise<CartApiQueryFragment>
-    | Promise<null>;
+  const cartPromise = root.data?.cart as Promise<CartApiQueryFragment | null>;
 
   return (
     <section className="cart">
       <h1>Cart</h1>
-      <Suspense fallback="loading">
+      <Suspense fallback={<p>Loading cart ...</p>}>
         <Await
           errorElement={<div>An error occurred</div>}
           resolve={cartPromise}
         >
           {(cart) => {
-            if (!cart || !cart.lines?.nodes?.length) {
-              return <CartEmpty />;
-            }
-            return <CartLines lines={cart.lines} />;
+            return <CartMain layout="page" cart={cart ?? undefined} />;
           }}
         </Await>
       </Suspense>
     </section>
-  );
-}
-
-function CartEmpty() {
-  return (
-    <div>
-      <p>Looks like you haven&rsquo;t added anything to your cart.</p>
-      <div>
-        <br />
-        <Link prefetch="intent" to="/collections">
-          Browse our collections <symbol>→</symbol>
-        </Link>
-      </div>
-    </div>
-  );
-}
-
-function CartLines({lines}: Pick<CartFragment, 'lines'>) {
-  const cartLines = lines ? flattenConnection(lines) : [];
-  return (
-    <ul>
-      {cartLines.map((line) => (
-        <div key={line.id}>
-          <h2>{line.merchandise.title}</h2>
-        </div>
-      ))}
-    </ul>
   );
 }
