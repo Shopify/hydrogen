@@ -94,10 +94,10 @@ function CollectionItem({
       {collection.image && (
         <Image
           alt={collection.image.altText || collection.title}
-          aspectRatio={`${collection.image.width}/${collection.image.height}`}
+          aspectRatio="1/1"
           data={collection.image}
           loading={index < 3 ? 'eager' : undefined}
-          style={{width: '100%', height: 'auto'}}
+          style={{height: 'auto'}}
         />
       )}
       <h5>{collection.title}</h5>

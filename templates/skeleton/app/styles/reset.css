@@ -52,7 +52,7 @@ pre {
   white-space: pre-wrap;
 }
 
-header {
+body > header {
   background: #fff;
   position: sticky;
   top: 0;

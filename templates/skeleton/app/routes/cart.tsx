@@ -96,7 +96,7 @@ export default function Cart() {
           resolve={cartPromise}
         >
           {(cart) => {
-            return <CartMain layout="page" cart={cart ?? undefined} />;
+            return <CartMain layout="page" cart={cart} />;
           }}
         </Await>
       </Suspense>

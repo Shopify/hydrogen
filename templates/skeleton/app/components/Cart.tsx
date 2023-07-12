@@ -202,24 +202,6 @@ function CartLineQuantityAdjust({line}: {line: CartLine}) {
   );
 }
 
-function UpdateCartButton({
-  children,
-  lines,
-}: {
-  children: React.ReactNode;
-  lines: CartLineUpdateInput[];
-}) {
-  return (
-    <CartForm
-      route="/cart"
-      action={CartForm.ACTIONS.LinesUpdate}
-      inputs={{lines}}
-    >
-      {children}
-    </CartForm>
-  );
-}
-
 function CartLinePrice({
   line,
   priceType = 'regular',
@@ -329,6 +311,24 @@ function UpdateDiscountForm({
       inputs={{
         discountCodes: discountCodes || [],
       }}
+    >
+      {children}
+    </CartForm>
+  );
+}
+
+function UpdateCartButton({
+  children,
+  lines,
+}: {
+  children: React.ReactNode;
+  lines: CartLineUpdateInput[];
+}) {
+  return (
+    <CartForm
+      route="/cart"
+      action={CartForm.ACTIONS.LinesUpdate}
+      inputs={{lines}}
     >
       {children}
     </CartForm>

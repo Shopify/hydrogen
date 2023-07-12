@@ -42,15 +42,6 @@ export function Layout({
   );
 }
 
-function SearchAside() {
-  return (
-    <Aside id="search-aside" heading="Search">
-      <input type="search" placeholder="Search" />
-      <p>Search results go here.</p>
-    </Aside>
-  );
-}
-
 function CartAside({cart}: {cart: LayoutProps['cart']}) {
   return (
     <Suspense fallback={<p>Loading cart ...</p>}>
@@ -61,6 +52,17 @@ function CartAside({cart}: {cart: LayoutProps['cart']}) {
         }}
       </Await>
     </Suspense>
+  );
+}
+
+function SearchAside() {
+  return (
+    <div>
+      <input type="search" placeholder="Search" />
+      &nbsp;
+      <button>Search</button>
+      <p>Search results go here.</p>
+    </div>
   );
 }
 
@@ -98,6 +100,9 @@ function Header({header, isLoggedIn, cart}: HeaderProps) {
           </Link>
           <Link prefetch="intent" to="/policies">
             POLICIES
+          </Link>
+          <Link prefetch="intent" to="/pages/about">
+            ABOUT
           </Link>
         </nav>
         <nav

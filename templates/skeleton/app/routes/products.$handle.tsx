@@ -53,26 +53,34 @@ export async function loader({params, request, context}: LoaderArgs) {
     throw new Response(null, {status: 404});
   }
 
-  // // if no selected variant was returned from the selected options,
-  // // we redirect to the first variant's url with it's selected options applied
-  // if (!product.selectedVariant) {
-  //   const searchParams = new URLSearchParams(new URL(request.url).search);
-  //   const firstVariant = product.variants.nodes[0];
-  //   for (const option of firstVariant.selectedOptions) {
-  //     searchParams.set(option.name, option.value);
-  //   }
-  //
-  //   // log the request referrer to see where the redirect is coming from
-  //   throw redirect(`/products/${handle}?${searchParams.toString()}`, {});
-  // }
+  // if no selected variant was returned from the selected options,
+  // we redirect to the first variant's url with it's selected options applied
+  if (!product.selectedVariant) {
+    return redirectToFirstVariant({product, request});
+  }
 
   return defer({product, variants});
+}
+
+function redirectToFirstVariant({
+  product,
+  request,
+}: {
+  product: ProductFragment;
+  request: Request;
+}) {
+  const searchParams = new URLSearchParams(new URL(request.url).search);
+  const firstVariant = product.variants.nodes[0];
+  for (const option of firstVariant.selectedOptions) {
+    searchParams.set(option.name, option.value);
+  }
+
+  throw redirect(`/products/${product.handle}?${searchParams.toString()}`);
 }
 
 export default function Product() {
   const {product, variants} = useLoaderData<typeof loader>();
   const {selectedVariant} = product;
-  console.log({selectedVariant});
 
   return (
     <section
@@ -97,7 +105,7 @@ function ProductImages({
   selectedVariant,
   media,
 }: Pick<ProductFragment, 'media' | 'selectedVariant'>) {
-  // We want to show the selected variant's image first, followed by the other
+  // Prioritize the selectedVariant image followed by the other product images
   const images = useMemo(() => {
     const selectedVariantImage = selectedVariant?.image
       ? {

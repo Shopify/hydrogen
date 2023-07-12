@@ -81,31 +81,48 @@ function ProductsGrid({products}: {products: ProductItemFragment[]}) {
       }}
     >
       {products.map((product, index) => {
-        const variant = product.variants.nodes[0];
-        const variantParams = new URLSearchParams(
-          variant.selectedOptions.reduce((param, op) => {
-            return {...param, [op.name]: op.value};
-          }, {}),
-        ).toString();
-        const url = `/products/${product.handle}?${variantParams}`;
         return (
-          <Link key={product.id} to={url} prefetch="intent">
-            {/* TODO: @ben welp with sizes and url transform? */}
-            {product.featuredImage && (
-              <Image
-                alt={product.featuredImage.altText || product.title}
-                aspectRatio={`${product.featuredImage.width}/${product.featuredImage.height}`}
-                data={product.featuredImage}
-                loading={index < 8 ? 'eager' : undefined}
-                sizes="(min-width: 45em) 400px, 100vw"
-                style={{width: '100%', height: 'auto'}}
-              />
-            )}
-            <h5>{product.title}</h5>
-          </Link>
+          <ProductItem
+            key={product.id}
+            product={product}
+            loading={index < 8 ? 'eager' : undefined}
+          />
         );
       })}
     </div>
+  );
+}
+
+function ProductItem({
+  product,
+  loading,
+}: {
+  product: ProductItemFragment;
+  loading?: 'eager' | 'lazy';
+}) {
+  const variant = product.variants.nodes[0];
+  const variantParams = new URLSearchParams(
+    variant.selectedOptions.reduce((param, op) => {
+      return {...param, [op.name]: op.value};
+    }, {}),
+  ).toString();
+  // const url = `/products/${product.handle}?${variantParams}`;
+  const url = `/products/${product.handle}`;
+  return (
+    <Link key={product.id} to={url} prefetch="intent">
+      {/* TODO: @ben welp with sizes and url transform? */}
+      {product.featuredImage && (
+        <Image
+          alt={product.featuredImage.altText || product.title}
+          aspectRatio="1/1"
+          data={product.featuredImage}
+          loading={loading}
+          sizes="(min-width: 45em) 400px, 100vw"
+          style={{width: '100%', height: 'auto'}}
+        />
+      )}
+      <h5>{product.title}</h5>
+    </Link>
   );
 }
 
