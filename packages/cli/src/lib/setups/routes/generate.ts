@@ -316,7 +316,7 @@ async function findRouteDependencies(
   for (const filePath of filesToCheck) {
     const fileContent = await readFile(filePath, {encoding: 'utf8'});
     const importMatches = fileContent.matchAll(
-      /import\s+.*?\s+from\s+['"](.*?)['"]/gi,
+      /^import\s+.*?\s+from\s+['"](.*?)['"];?$/gims,
     );
 
     for (let [, match] of importMatches) {

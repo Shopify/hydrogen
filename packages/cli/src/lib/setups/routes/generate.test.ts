@@ -295,7 +295,7 @@ describe('generate/route', () => {
             `import Dep from 'some-node-dep';\n` + // <= Non-relative files are ignored
               `import AnotherRoute from './AnotherRoute';\n` + // <= Routes are ignored
               `import Form from '~/components/Form';\n` + // <= Transpiled
-              `import {Button} from '../../components/Button';\n` + // <= Transpiled
+              `import {\n\n\nButton} from '../../components/Button';\n` + // <= Transpiled
               `import styles from '../../styles/app.css';\n` + // <= Copied as is
               'export {Dep, AnotherRoute, Form, Button, styles};\n',
           ],
@@ -327,7 +327,9 @@ describe('generate/route', () => {
             );
 
             await expect(fileExists(actualFile)).resolves.toBeTruthy();
-            await expect(readFile(actualFile)).resolves.toEqual(content);
+            await expect(readFile(actualFile)).resolves.toEqual(
+              content.replace(/\{\n+/, '{'),
+            );
           }),
         );
       });
