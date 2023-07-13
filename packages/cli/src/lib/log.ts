@@ -3,6 +3,7 @@
 import {renderWarning, renderFatalError} from '@shopify/cli-kit/node/ui';
 import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
+import colors from '@shopify/cli-kit/node/colors';
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};
@@ -164,7 +165,10 @@ const H2_PREFIX = '[h2:';
  * Where the message can be multiline and the last line
  * can contain links to docs or other resources.
  */
-export function enhanceH2Logs(graphiqlUrl: string) {
+export function enhanceH2Logs(options: {
+  graphiqlUrl: string;
+  appDirectory: string;
+}) {
   injectLogReplacer('warn');
   injectLogReplacer('error');
 
@@ -190,33 +194,60 @@ export function enhanceH2Logs(graphiqlUrl: string) {
         lines.pop() ?? '';
       }
 
-      const headline = `Issue found in Hydrogen's \`${scope.trim()}\``;
+      const headline = `In Hydrogen's \`${scope.trim()}\`:\n\n`;
 
       if (isError) {
         const errorArg = args[0] as Error;
         let tryMessage = hasLinks ? lastLine : undefined;
-        if (errorArg.cause) {
-          const {query, variables} = errorArg.cause as Record<string, string>;
-          if (query) {
-            const link = `${graphiqlUrl}?query=${encodeURIComponent(query)}${
-              variables ? `&variables=${encodeURIComponent(variables)}` : ''
-            }`;
-            tryMessage =
-              (tryMessage ? `${tryMessage}\n\n` : '') +
-              outputContent`To debug the query, try ${outputToken.link(
-                'GraphiQL',
-                link,
-              )}.`.value;
-          }
+        const cause = errorArg?.cause as undefined | Record<string, string>;
+        let stack = errorArg.stack;
+
+        if (cause && cause.query) {
+          const link = `${options.graphiqlUrl}?query=${encodeURIComponent(
+            cause.query,
+          )}${
+            cause.variables
+              ? `&variables=${encodeURIComponent(cause.variables)}`
+              : ''
+          }`;
+
+          const [, queryType, queryName] =
+            cause.query.match(/(query|mutation)\s+(\w+)/) || [];
+
+          tryMessage =
+            (tryMessage ? `${tryMessage}\n\n` : '') +
+            outputContent`To debug the ${queryType || 'query'}${
+              queryName ? ` \`${colors.whiteBright(queryName)}\`` : ''
+            }, try it in ${outputToken.link(colors.bold('GraphiQL'), link)}.`
+              .value;
+
+          // Sanitize stack trace to only show app code
+          const stackLines = stack?.split('\n') ?? [];
+          const isAppLine = (line: string) =>
+            line.includes('(' + options.appDirectory);
+          const firstAppLineIndex = stackLines.findIndex(isAppLine);
+          const lastAppLineIndex =
+            stackLines.length -
+            [...stackLines]
+              .reverse() // findLastIndex requires Node 18
+              .findIndex(isAppLine);
+
+          stack =
+            [
+              stackLines[0], // Error message
+              ...stackLines.slice(firstAppLineIndex, lastAppLineIndex), // App code
+            ]
+              .join('\n')
+              .trim() || undefined;
         }
 
         const error = new BugError(
-          `${headline}:\n` + lines.join('\n'),
+          headline + colors.bold(lines.join('\n')),
           tryMessage,
         );
 
-        error.stack = errorArg.stack;
-        error.cause = errorArg.cause;
+        error.cause = cause;
+        error.stack = stack;
         renderFatalError(error);
 
         return;
@@ -230,8 +261,7 @@ export function enhanceH2Logs(graphiqlUrl: string) {
       }
 
       renderWarning({
-        headline,
-        body: lines.join('\n'),
+        body: headline + colors.bold(lines.join('\n')),
         reference,
       });
     },

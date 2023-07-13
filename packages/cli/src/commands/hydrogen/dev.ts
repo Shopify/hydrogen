@@ -152,7 +152,7 @@ async function runDev({
 
     const graphiqlUrl = `${miniOxygen.listeningAt}/graphiql`;
 
-    enhanceH2Logs(graphiqlUrl);
+    enhanceH2Logs({graphiqlUrl, ...remixConfig});
 
     miniOxygen.showBanner({
       appName: storefront ? colors.cyan(storefront?.title) : undefined,
