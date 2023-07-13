@@ -16,8 +16,6 @@ export default class SetupI18n extends Command {
   static description =
     'Setup internationalization strategies for your project.';
 
-  static hidden = true;
-
   static flags = {
     path: commonFlags.path,
   };
