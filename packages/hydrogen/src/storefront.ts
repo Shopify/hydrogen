@@ -237,10 +237,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     storefrontId,
     ...clientOptions
   } = options;
-  if (!cache) {
-    // TODO: should only warn in development
+  const H2_PREFIX = '[h2:createStorefrontClient] ';
+
+  if (process.env.NODE_ENV === 'development' && !cache) {
     warnOnce(
-      'Storefront API client created without a cache instance. This may slow down your sub-requests.',
+      H2_PREFIX +
+        'Storefront API client created without a cache instance. This may slow down your sub-requests.',
     );
   }
 
@@ -276,9 +278,10 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   }
 
   // Deprecation warning
-  if (!storefrontHeaders) {
+  if (process.env.NODE_ENV === 'development' && !storefrontHeaders) {
     warnOnce(
-      '"requestGroupId" and "buyerIp" will be deprecated in the next calendar release. Please use "getStorefrontHeaders"',
+      H2_PREFIX +
+        '`requestGroupId` and `buyerIp` will be deprecated in the next calendar release. Please use `getStorefrontHeaders`',
     );
   }
 
@@ -368,8 +371,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       query: <Storefront['query']>((query: string, payload) => {
         query = minifyQuery(query);
-        if (isMutationRE.test(query))
-          throw new Error('storefront.query cannot execute mutations');
+        if (isMutationRE.test(query)) {
+          throw new Error(
+            H2_PREFIX + '`storefront.query` cannot execute mutations',
+          );
+        }
 
         return fetchStorefrontApi({...payload, query});
       }),
@@ -388,8 +394,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
        */
       mutate: <Storefront['mutate']>((mutation: string, payload) => {
         mutation = minifyQuery(mutation);
-        if (isQueryRE.test(mutation))
-          throw new Error('storefront.mutate cannot execute queries');
+        if (isQueryRE.test(mutation)) {
+          throw new Error(
+            H2_PREFIX + '`storefront.mutate` cannot execute queries',
+          );
+        }
 
         return fetchStorefrontApi({...payload, mutation});
       }),
