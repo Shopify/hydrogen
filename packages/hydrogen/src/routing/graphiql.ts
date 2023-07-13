@@ -41,14 +41,12 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
     </style>
 
     <script
-      src="https://unpkg.com/react@17/umd/react.development.js"
-      integrity="sha512-Vf2xGDzpqUOEIKO+X2rgTLWPY+65++WPwCHkX2nFMu9IcstumPsf/uKKRd5prX3wOu8Q0GBylRpsDB26R6ExOg=="
-      crossorigin="anonymous"
+      crossorigin
+      src="https://unpkg.com/react@18/umd/react.development.js"
     ></script>
     <script
-      src="https://unpkg.com/react-dom@17/umd/react-dom.development.js"
-      integrity="sha512-Wr9OKCTtq1anK0hq5bY3X/AvDI5EflDSAh0mE9gma+4hl+kXdTJPKZ3TwLMBcrgUeoY0s3dq9JjhCQc7vddtFg=="
-      crossorigin="anonymous"
+      crossorigin
+      src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
     ></script>
     <link rel="stylesheet" href="https://unpkg.com/graphiql/graphiql.min.css" />
   </head>
@@ -64,20 +62,18 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
       const query = decodeURIComponent(url.searchParams.get('query') ?? '');
       const variables = decodeURIComponent(url.searchParams.get('variables') ?? '');
 
-      ReactDOM.render(
+      const root = ReactDOM.createRoot(document.getElementById('graphiql'));
+      root.render(
         React.createElement(GraphiQL, {
           fetcher: GraphiQL.createFetcher({
             url: '${url}',
-            headers: {
-              'X-Shopify-Storefront-Access-Token': '${accessToken}',
-            }
+            headers: {'X-Shopify-Storefront-Access-Token': '${accessToken}'}
           }),
           defaultEditorToolsVisibility: true,
           initialTabs: [{query: '{\\n  shop {\\n    name\\n  }\\n}'}],
           query,
           variables
         }),
-        document.getElementById('graphiql'),
       );
     </script>
   </body>
