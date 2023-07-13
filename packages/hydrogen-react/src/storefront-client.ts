@@ -83,7 +83,7 @@ export function createStorefrontClient(
         !isMockShop(storeDomain)
       ) {
         throw new Error(
-          H2_PREFIX +
+          H2_PREFIX_ERROR +
             'You did not pass in a `privateStorefrontToken` while using `getPrivateTokenHeaders()`',
         );
       }
@@ -119,7 +119,7 @@ export function createStorefrontClient(
         !isMockShop(storeDomain)
       ) {
         throw new Error(
-          H2_PREFIX +
+          H2_PREFIX_ERROR +
             'You did not pass in a `publicStorefrontToken` while using `getPublicTokenHeaders()`',
         );
       }
@@ -159,10 +159,11 @@ export function getPublicTokenHeadersRaw(
 }
 
 const warnings = new Set<string>();
-const H2_PREFIX = '[h2:createStorefrontClient] ';
+const H2_PREFIX_ERROR = '[h2:error:createStorefrontClient] ';
+const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
 const warnOnce = (string: string): void => {
   if (!warnings.has(string)) {
-    console.warn(H2_PREFIX + string);
+    console.warn(H2_PREFIX_WARN + string);
     warnings.add(string);
   }
 };

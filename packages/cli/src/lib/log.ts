@@ -1,6 +1,10 @@
 /* eslint-disable no-console */
 
-import {renderWarning, renderFatalError} from '@shopify/cli-kit/node/ui';
+import {
+  renderInfo,
+  renderWarning,
+  renderFatalError,
+} from '@shopify/cli-kit/node/ui';
 import {BugError} from '@shopify/cli-kit/node/error';
 import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
@@ -161,7 +165,7 @@ export function muteAuthLogs({
 const H2_PREFIX = '[h2:';
 /**
  * Modify logs from Hydrogen to use cli-kit banners
- * Format: `[h2:scope] message`
+ * Format: `[h2:type:scope] message`. Example: `[h2:error:storefront.query] Wrong query`
  * Where the message can be multiline and the last line
  * can contain links to docs or other resources.
  */
@@ -178,12 +182,12 @@ export function enhanceH2Logs(options: {
       return typeof message === 'string' && message.startsWith(H2_PREFIX);
     },
     (args: any[]) => {
-      const isError = typeof args[0] === 'object' && !!args[0].stack;
-      const [, scope, message] =
-        (args[0]?.message ?? args[0]).match(/^\[h2:([^\]]+)\]\s+(.*)$/ims) ||
-        [];
+      const [, type, scope, message] =
+        ((args[0]?.message ?? args[0]) as string).match(
+          /^\[h2:([^:]+):([^\]]+)\]\s+(.*)$/ims,
+        ) || [];
 
-      if (!scope || !message) return args;
+      if (!type || !scope || !message) return args;
 
       let reference: undefined | string[] = undefined;
       const lines = message.split('\n');
@@ -195,12 +199,12 @@ export function enhanceH2Logs(options: {
       }
 
       const headline = `In Hydrogen's \`${scope.trim()}\`:\n\n`;
+      const isErrorObject = typeof args[0] === 'object' && !!args[0].stack;
 
-      if (isError) {
-        const errorArg = args[0] as Error;
+      if (type === 'error' || isErrorObject) {
         let tryMessage = hasLinks ? lastLine : undefined;
-        const cause = errorArg?.cause as undefined | Record<string, string>;
-        let stack = errorArg.stack;
+        const cause = args[0]?.cause as undefined | Record<string, string>;
+        let stack = args[0]?.stack as undefined | string;
 
         if (cause && cause.query) {
           const link = `${options.graphiqlUrl}?query=${encodeURIComponent(
@@ -260,10 +264,14 @@ export function enhanceH2Logs(options: {
         }
       }
 
-      renderWarning({
+      const render = type === 'warn' ? renderWarning : renderInfo;
+
+      render({
         body: headline + colors.bold(lines.join('\n')),
         reference,
       });
+
+      return;
     },
   ]);
 }

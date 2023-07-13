@@ -237,11 +237,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     storefrontId,
     ...clientOptions
   } = options;
-  const H2_PREFIX = '[h2:createStorefrontClient] ';
+  const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
+  const H2_PREFIX_ERROR = '[h2:error:createStorefrontClient] ';
 
   if (process.env.NODE_ENV === 'development' && !cache) {
     warnOnce(
-      H2_PREFIX +
+      H2_PREFIX_WARN +
         'Storefront API client created without a cache instance. This may slow down your sub-requests.',
     );
   }
@@ -280,7 +281,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   // Deprecation warning
   if (process.env.NODE_ENV === 'development' && !storefrontHeaders) {
     warnOnce(
-      H2_PREFIX +
+      H2_PREFIX_WARN +
         '`requestGroupId` and `buyerIp` will be deprecated in the next calendar release. Please use `getStorefrontHeaders`',
     );
   }
@@ -387,7 +388,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         query = minifyQuery(query);
         if (isMutationRE.test(query)) {
           throw new Error(
-            H2_PREFIX + '`storefront.query` cannot execute mutations',
+            H2_PREFIX_ERROR + '`storefront.query` cannot execute mutations',
           );
         }
 
@@ -410,7 +411,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         mutation = minifyQuery(mutation);
         if (isQueryRE.test(mutation)) {
           throw new Error(
-            H2_PREFIX + '`storefront.mutate` cannot execute queries',
+            H2_PREFIX_ERROR + '`storefront.mutate` cannot execute queries',
           );
         }
 
@@ -476,7 +477,7 @@ function throwError<T>({
     `API response error: ${response.status}`;
 
   throw new ErrorConstructor(
-    `[h2:storefront.${type}] ` +
+    `[h2:error:storefront.${type}] ` +
       errorMessage +
       (reqId ? ` - Request ID: ${reqId}` : ''),
     {
