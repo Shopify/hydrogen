@@ -4,7 +4,7 @@ on:
   push:
     branches:
       # update to latest cal release to keep this action working
-      - 2023-04
+      - main
 
 jobs:
   next-release:
