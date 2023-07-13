@@ -48,13 +48,13 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
       crossorigin
       src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"
     ></script>
-    <link rel="stylesheet" href="https://unpkg.com/graphiql/graphiql.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/graphiql@3/graphiql.min.css" />
   </head>
 
   <body>
     <div id="graphiql">Loading...</div>
     <script
-      src="https://unpkg.com/graphiql/graphiql.min.js"
+      src="https://unpkg.com/graphiql@3/graphiql.min.js"
       type="application/javascript"
     ></script>
     <script>
@@ -70,7 +70,7 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
             headers: {'X-Shopify-Storefront-Access-Token': '${accessToken}'}
           }),
           defaultEditorToolsVisibility: true,
-          initialTabs: [{query: '{\\n  shop {\\n    name\\n  }\\n}'}],
+          defaultTabs: [{query: '{\\n  shop {\\n    name\\n  }\\n}'}],
           query,
           variables
         }),
