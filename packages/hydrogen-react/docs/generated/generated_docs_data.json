@@ -454,10 +454,17 @@
                 "filePath": "/CartLineProvider.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "line",
-                "value": "PartialObjectDeep<CartLine, { recurseIntoArrays: true; }>",
+                "value": "CartLinePartialDeep",
                 "description": "A cart line object."
               }
             ]
+          },
+          "CartLinePartialDeep": {
+            "filePath": "/CartLineProvider.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "CartLinePartialDeep",
+            "value": "PartialDeep<\n  CartLine | ComponentizableCartLine,\n  {recurseIntoArrays: true}\n>",
+            "description": ""
           }
         }
       }
@@ -7052,7 +7059,7 @@
             "filePath": "/CartLineProvider.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "CartLinePartialDeep",
-            "value": "PartialDeep<CartLine, {recurseIntoArrays: true}>",
+            "value": "PartialDeep<\n  CartLine | ComponentizableCartLine,\n  {recurseIntoArrays: true}\n>",
             "description": ""
           }
         }
