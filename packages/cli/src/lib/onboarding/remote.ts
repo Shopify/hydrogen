@@ -22,12 +22,13 @@ export async function setupRemoteTemplate(
   options: InitOptions,
   controller: AbortController,
 ) {
-  const isDemoStoreTemplate = options.template === 'demo-store';
+  const isOfficialTemplate =
+    options.template === 'demo-store' || options.template === 'hello-world';
 
-  if (!isDemoStoreTemplate) {
+  if (!isOfficialTemplate) {
     // TODO: support GitHub repos as templates
     throw new AbortError(
-      'Only `demo-store` is supported in --template flag for now.',
+      'Only `demo-store` and `hello-world` are supported in --template flag for now.',
       'Skip the --template flag to run the setup flow.',
     );
   }
@@ -110,7 +111,7 @@ export async function setupRemoteTemplate(
 
   await renderProjectReady(project, setupSummary);
 
-  if (isDemoStoreTemplate) {
+  if (isOfficialTemplate) {
     renderInfo({
       headline: `Your project will display inventory from the Hydrogen Demo Store.`,
       body: `To connect this project to your Shopify store’s inventory, update \`${project.name}/.env\` with your store ID and Storefront API key.`,

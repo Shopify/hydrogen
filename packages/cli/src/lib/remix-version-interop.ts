@@ -34,8 +34,8 @@ export async function getV2Flags(
 
 export type RemixV2Flags = Partial<Awaited<ReturnType<typeof getV2Flags>>>;
 
-export function convertRouteToV2(route: string) {
-  return route.replace(/(^|\/)index$/, '$1_index').replace(/(?<!^)\//g, '.');
+export function convertRouteToV1(route: string) {
+  return route.replace(/(^|\.)_index$/, '$1index').replace(/\.(?!\w+\])/g, '/');
 }
 
 export function convertTemplateToRemixVersion(

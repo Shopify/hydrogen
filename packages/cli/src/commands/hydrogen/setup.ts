@@ -14,6 +14,7 @@ import {
 } from '../../lib/setups/i18n/index.js';
 import {getRemixConfig} from '../../lib/config.js';
 import {
+  generateProjectEntries,
   handleCliShortcut,
   handleRouteGeneration,
   renderProjectReady,
@@ -54,7 +55,6 @@ type RunSetupOptions = {
 async function runSetup(options: RunSetupOptions) {
   const controller = new AbortController();
   const remixConfig = await getRemixConfig(options.directory);
-  const directory = remixConfig.rootDirectory;
   const location = basename(remixConfig.rootDirectory);
   const cliCommandPromise = getCliCommand();
 
@@ -89,9 +89,19 @@ async function runSetup(options: RunSetupOptions) {
   const needsRouteGeneration = Object.keys(routes).length > 0;
 
   if (needsRouteGeneration) {
-    backgroundWorkPromise = backgroundWorkPromise.then(() =>
-      setupRoutes(directory, remixConfig.tsconfigPath ? 'ts' : 'js', i18n),
-    );
+    const typescript = !!remixConfig.tsconfigPath;
+
+    backgroundWorkPromise = backgroundWorkPromise
+      .then(() =>
+        generateProjectEntries({
+          rootDirectory: remixConfig.rootDirectory,
+          appDirectory: remixConfig.appDirectory,
+          typescript,
+        }),
+      )
+      .then(() =>
+        setupRoutes(remixConfig.rootDirectory, typescript ? 'ts' : 'js', i18n),
+      );
   }
 
   let hasCreatedShortcut = false;
@@ -121,7 +131,7 @@ async function runSetup(options: RunSetupOptions) {
     {
       location,
       name: location,
-      directory,
+      directory: remixConfig.rootDirectory,
     },
     {
       hasCreatedShortcut,

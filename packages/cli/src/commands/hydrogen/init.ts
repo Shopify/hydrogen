@@ -41,7 +41,7 @@ export default class Init extends Command {
     }),
     template: Flags.string({
       description:
-        'Sets the template to use. Pass `demo-store` for a fully-featured store template.',
+        'Sets the template to use. Pass `demo-store` for a fully-featured store template or `hello-world` for a barebones project.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
     'install-deps': commonFlags.installDeps,

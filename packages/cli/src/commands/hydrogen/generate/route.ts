@@ -10,7 +10,7 @@ import {Flags, Args} from '@oclif/core';
 import type {} from '@oclif/core/lib/interfaces/parser.js';
 import {
   ALL_ROUTE_CHOICES,
-  generateMultipleRoutes,
+  generateRoutes,
 } from '../../../lib/setups/routes/generate.js';
 
 export default class GenerateRoute extends Command {
@@ -64,7 +64,7 @@ export async function runGenerate(options: {
   typescript?: boolean;
   force?: boolean;
 }) {
-  const {routes} = await generateMultipleRoutes(options);
+  const {routes} = await generateRoutes(options);
 
   const padEnd =
     3 +
