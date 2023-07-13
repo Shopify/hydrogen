@@ -3,8 +3,7 @@ import type {FooterQuery} from 'storefrontapi.generated';
 
 export function Footer({menu}: FooterQuery) {
   return (
-    <footer>
-      <hr />
+    <footer className="footer">
       <FooterMenu menu={menu} />
     </footer>
   );
@@ -15,20 +14,12 @@ function FooterMenu({menu}: Pick<FooterQuery, 'menu'>) {
   const publicStoreDomain = root?.data?.publicStoreDomain;
   if (!menu)
     return (
-      <mark style={{margin: '1rem', display: 'inline-block'}}>
+      <mark className="footer-menu-missing">
         Footer menu <code>skeleton-footer</code> not configured.
       </mark>
     );
   return (
-    <nav
-      role="navigation"
-      style={{
-        alignItems: 'center',
-        display: 'flex',
-        gridGap: '1rem',
-        padding: '1rem',
-      }}
-    >
+    <nav className="footer-menu" role="navigation">
       {menu.items.map((item) => {
         if (!item.url) return null;
         const url = item.url.includes(publicStoreDomain)
@@ -37,19 +28,19 @@ function FooterMenu({menu}: Pick<FooterQuery, 'menu'>) {
         const isExternal = !url.startsWith('/');
         return isExternal ? (
           <a
-            key={item.id}
+            className="footer-menu-item"
             href={url}
-            style={{textTransform: 'uppercase'}}
-            target="_blank"
+            key={item.id}
             rel="noopener noreferrer"
+            target="_blank"
           >
             {item.title}
           </a>
         ) : (
           <Link
+            className="footer-menu-item"
             key={item.id}
             prefetch="intent"
-            style={{textTransform: 'uppercase'}}
             to={url}
           >
             {item.title}

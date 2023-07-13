@@ -128,3 +128,75 @@ aside p {
   padding: 1rem;
   background: #000;
 }
+
+/*
+* --------------------------------------------------
+* Header
+* --------------------------------------------------
+*/
+.header {
+  align-items: center;
+  border-bottom: 1px solid #000;
+  display: flex;
+  height: var(--header-height);
+  padding: 0 1rem;
+}
+
+.header-menu-mobile-toggle {
+  @media (min-width: 768px) {
+    display: none;
+  }
+}
+
+.header-menu-mobile {
+  display: flex;
+  flex-direction: column;
+  grid-gap: 1rem;
+}
+
+.header-menu-desktop {
+  display: none;
+  @media (min-width: 768px) {
+    display: flex;
+    grid-gap: 1rem;
+    margin-left: 3rem;
+  }
+}
+
+.header-menu-item {
+  text-transform: uppercase;
+}
+
+.header-ctas {
+  align-items: center;
+  display: flex;
+  grid-gap: 1rem;
+  margin-left: auto;
+}
+
+/*
+* --------------------------------------------------
+* Footer
+* --------------------------------------------------
+*/
+.footer {
+  background: #fff;
+  margin-top: auto;
+  border-top: 1px solid #000;
+}
+
+.footer-menu-missing {
+  margin: 1rem;
+  display: inline-block;
+}
+
+.footer-menu {
+  align-items: center;
+  display: flex;
+  grid-gap: 1rem;
+  padding: 1rem;
+}
+
+.footer-menu-item {
+  text-transform: uppercase;
+}

@@ -4,61 +4,63 @@ import type {LayoutProps} from './Layout';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
+type Viewport = 'desktop' | 'mobile';
+
 export function Header({header, isLoggedIn, cart}: HeaderProps) {
   const {shop, menu} = header;
   return (
-    <header>
-      <div
-        style={{
-          display: 'flex',
-          padding: '0 1rem',
-          alignItems: 'center',
-          height: 'var(--header-height)',
-        }}
-      >
-        <Link prefetch="intent" to="/">
-          <em>{shop.name}</em>
-        </Link>{' '}
-        <HeaderMenu menu={menu} />
-        <nav
-          role="navigation"
-          style={{
-            display: 'flex',
-            gridGap: '1rem',
-            marginLeft: 'auto',
-            alignItems: 'center',
-          }}
-        >
-          <SearchToggle />
-          <Link prefetch="intent" to="/account">
-            {isLoggedIn ? 'ACCOUNT' : 'SIGN IN'}
-          </Link>
-          <CartToggle cart={cart} />
-        </nav>
-      </div>
-      <hr />
+    <header className="header">
+      <Link prefetch="intent" to="/">
+        <em>{shop.name}</em>
+      </Link>
+      <HeaderMenu menu={menu} viewport="desktop" />
+      <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
     </header>
   );
 }
 
-function HeaderMenu({menu}: Pick<HeaderProps['header'], 'menu'>) {
+function HeaderCtas({
+  isLoggedIn,
+  cart,
+}: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
+  return (
+    <nav className="header-ctas" role="navigation">
+      <HeaderMenuMobileToggle />
+      <SearchToggle />
+      <Link prefetch="intent" to="/account">
+        {isLoggedIn ? 'ACCOUNT' : 'SIGN IN'}
+      </Link>
+      <CartToggle cart={cart} />
+    </nav>
+  );
+}
+
+function HeaderMenuMobileToggle() {
+  return (
+    <a className="header-menu-mobile-toggle" href="#mobile-menu-aside">
+      MENU
+    </a>
+  );
+}
+
+export function HeaderMenu({
+  menu,
+  viewport,
+}: {
+  menu: HeaderProps['header']['menu'];
+  viewport: Viewport;
+}) {
   const [root] = useMatches();
   const publicStoreDomain = root?.data?.publicStoreDomain;
+  const className = `header-menu-${viewport}`;
   if (!menu)
     return (
-      <mark style={{marginLeft: '3rem'}}>
+      <mark className={className}>
         Header menu <code>skeleton-header</code> not configured.
       </mark>
     );
   return (
-    <nav
-      role="navigation"
-      style={{
-        display: 'flex',
-        gridGap: '1rem',
-        marginLeft: '3rem',
-      }}
-    >
+    <nav className={className} role="navigation">
       {menu.items.map((item) => {
         if (!item.url) return null;
         const url = item.url.includes(publicStoreDomain)
@@ -68,8 +70,14 @@ function HeaderMenu({menu}: Pick<HeaderProps['header'], 'menu'>) {
           <Link
             key={item.id}
             prefetch="intent"
-            style={{textTransform: 'uppercase'}}
+            className="header-menu-item"
             to={url}
+            onClick={(event) => {
+              if (viewport === 'mobile') {
+                event.preventDefault();
+                window.location.href = url;
+              }
+            }}
           >
             {item.title}
           </Link>
