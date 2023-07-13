@@ -35,13 +35,7 @@ export default function Journals() {
   return (
     <section className="blog">
       <h1>{BLOG_HANDLE}</h1>
-      <div
-        style={{
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(400px, 1fr))',
-          gap: '1rem',
-        }}
-      >
+      <div className="blog-grid">
         <Pagination connection={articles}>
           {({nodes, isLoading, PreviousLink, NextLink}) => {
             return (
@@ -98,7 +92,7 @@ function ArticleItem({
     <div className="blog-article" key={article.id}>
       <Link to={`/blog/${article.handle}`}>
         {article.image && (
-          <div className="card-image aspect-[3/2]">
+          <div className="blog-article-image">
             <Image
               alt={article.image.altText || article.title}
               aspectRatio="3/2"

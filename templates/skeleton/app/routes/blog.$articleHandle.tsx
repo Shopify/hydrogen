@@ -4,11 +4,6 @@ import {Image} from '@shopify/hydrogen';
 
 const BLOG_HANDLE = 'journal';
 
-// TODO: headers?
-// export const headers =
-
-// TODO: add SEO
-
 export async function loader({params, context}: LoaderArgs) {
   const {articleHandle} = params;
 
@@ -52,14 +47,7 @@ export default function Article() {
         </span>
       </h1>
 
-      {image && (
-        <Image
-          data={image}
-          sizes="90vw"
-          loading="eager"
-          style={{height: '100%', width: '100%'}}
-        />
-      )}
+      {image && <Image data={image} sizes="90vw" loading="eager" />}
       <div
         dangerouslySetInnerHTML={{__html: contentHtml}}
         className="article"

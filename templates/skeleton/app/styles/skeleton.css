@@ -319,3 +319,29 @@ aside p {
 .product-options-item {
   padding: 0.25rem 0.5rem;
 }
+
+/*
+* --------------------------------------------------
+* routes/blog._index.tsx
+* --------------------------------------------------
+*/
+.blog-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-gap: 1.5rem;
+}
+
+.blog-article-image {
+  display: block;
+  aspect-ratio: 3/2;
+}
+
+/*
+* --------------------------------------------------
+* routes/blog.$articlehandle.tsx
+* --------------------------------------------------
+*/
+.article img {
+  height: auto;
+  width: 100%;
+}
