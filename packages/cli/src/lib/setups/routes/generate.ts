@@ -143,6 +143,11 @@ type GenerateProjectFileOptions = {
   signal?: AbortSignal;
 };
 
+/**
+ * Find the '($locale)' prefix from the routes directory.
+ * In V1, we check for the existence of a directory named `($...)`.
+ * In V2, we check the home route for the presence of `($...)._index` in the filename.
+ */
 async function getLocalePrefix(
   appDirectory: string,
   {localePrefix, routeName}: GenerateRoutesOptions,
@@ -168,6 +173,10 @@ async function getLocalePrefix(
   }
 }
 
+/**
+ * Copies a template file to the destination directory, including
+ * all its dependencies (imported files).
+ */
 export async function generateProjectFile(
   routeFrom: string,
   {
@@ -283,6 +292,9 @@ export async function generateProjectFile(
   return result;
 }
 
+/**
+ * Find the destination path for a route file in the user project.
+ */
 function getDestinationRoute(
   routeFrom: string,
   localePrefix: string | undefined,
@@ -298,10 +310,15 @@ function getDestinationRoute(
     GENERATOR_ROUTE_DIR +
     '/' +
     filePrefix +
+    // The template file uses the v2 route convention, so we need to convert
+    // it to v1 if the user is not using v2.
     (v2Flags.isV2RouteConvention ? routePath : convertRouteToV1(routePath))
   );
 }
 
+/**
+ * Find all local files imported by a route file iteratively.
+ */
 async function findRouteDependencies(
   routeFilePath: string,
   appDirectory: string,
@@ -310,33 +327,38 @@ async function findRouteDependencies(
   const fileDependencies = new Set([relativePath(appDirectory, routeFilePath)]);
 
   for (const filePath of filesToCheck) {
-    const fileContent = await readFile(filePath, {encoding: 'utf8'});
-    const importMatches = fileContent.matchAll(
-      /^(import|export)\s+.*?\s+from\s+['"](.*?)['"];?$/gims,
-    );
+    // Find all imports and exports in the file
+    const importMatches = (
+      await readFile(filePath, {encoding: 'utf8'})
+    ).matchAll(/^(import|export)\s+.*?\s+from\s+['"](.*?)['"];?$/gims);
 
     for (let [, , match] of importMatches) {
-      if (match && /^(\.|~)/.test(match)) {
-        match = match.replace(
-          '~', // import from '~/components/...'
-          relativePath(dirname(filePath), appDirectory) || '.',
-        );
+      // Skip imports that are not relative (local)
+      if (!match || !/^(\.|~)/.test(match)) continue;
 
-        const resolvedMatchPath = resolvePath(dirname(filePath), match);
-        const absoluteFilepath =
-          (
-            await findFileWithExtension(
-              dirname(resolvedMatchPath),
-              basename(resolvedMatchPath),
-            )
-          ).filepath || resolvedMatchPath;
+      // Resolve leading '~' to the app directory
+      match = match.replace(
+        '~', // import from '~/components/...'
+        relativePath(dirname(filePath), appDirectory) || '.',
+      );
 
-        if (!absoluteFilepath.includes(`/${GENERATOR_ROUTE_DIR}/`)) {
-          fileDependencies.add(relativePath(appDirectory, absoluteFilepath));
-          if (/\.[jt]sx?$/.test(absoluteFilepath)) {
-            // Check for dependencies in the imported file if it's a TS/JS file.
-            filesToCheck.add(absoluteFilepath);
-          }
+      // Resolve extensionless imports to their JS/TS extension
+      const resolvedMatchPath = resolvePath(dirname(filePath), match);
+      const absoluteFilepath =
+        (
+          await findFileWithExtension(
+            dirname(resolvedMatchPath),
+            basename(resolvedMatchPath),
+          )
+        ).filepath || resolvedMatchPath;
+
+      // Skip imports from other routes because these files
+      // will be copied over directly by the generator
+      if (!absoluteFilepath.includes(`/${GENERATOR_ROUTE_DIR}/`)) {
+        fileDependencies.add(relativePath(appDirectory, absoluteFilepath));
+        if (/\.[jt]sx?$/.test(absoluteFilepath)) {
+          // Check for dependencies in the imported file if it's a TS/JS file
+          filesToCheck.add(absoluteFilepath);
         }
       }
     }
@@ -358,6 +380,7 @@ async function getJsTranspilerOptions(rootDirectory: string) {
 }
 
 export async function renderRoutePrompt(options?: {abortSignal: AbortSignal}) {
+  // TODO this should be a multi-select prompt
   const generateAll = await renderConfirmationPrompt({
     message:
       'Scaffold all standard route files? ' + Object.keys(ROUTE_MAP).join(', '),

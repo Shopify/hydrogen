@@ -87,9 +87,11 @@ export async function setupLocalStarterTemplate(
   let backgroundWorkPromise: Promise<any> = copyWithFilter(
     getStarterDir(),
     project.directory,
+    // Filter out the `app` directory, which will be generated later
     {filter: (filepath: string) => !/\/app\//i.test(filepath)},
   )
     .then(() =>
+      // Generate project entries and their file dependencies
       generateProjectEntries({
         rootDirectory: project.directory,
         appDirectory: joinPath(project.directory, 'app'),
