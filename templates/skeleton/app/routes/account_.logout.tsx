@@ -23,7 +23,6 @@ export async function action({request, context}: ActionArgs) {
 
   return redirect('/', {
     headers: {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       'Set-Cookie': await session.commit(),
     },
   });

@@ -10,7 +10,6 @@ import {
   type LoaderArgs,
   type V2_MetaFunction,
 } from '@shopify/remix-oxygen';
-
 import type {
   CustomerOrdersFragment,
   OrderItemFragment,

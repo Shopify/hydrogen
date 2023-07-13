@@ -27,6 +27,10 @@ h2 {
   margin-bottom: 1rem;
 }
 
+h4 {
+  margin-bottom: 0.25rem;
+}
+
 h5 {
   margin-bottom: 1rem;
   margin-top: 0.5rem;
@@ -117,4 +121,15 @@ ul {
 li {
   display: flex;
   margin-bottom: 0.5rem;
+}
+
+dl {
+  margin: 0.5rem 0;
+}
+
+code {
+  background: #ddd;
+  border-radius: 4px;
+  font-family: monospace;
+  padding: 0.25rem;
 }

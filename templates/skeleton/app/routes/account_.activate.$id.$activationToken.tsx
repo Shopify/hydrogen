@@ -1,4 +1,5 @@
-import {ActionArgs, json, LoaderArgs, redirect} from '@shopify/remix-oxygen';
+import type {ActionArgs, LoaderArgs} from '@shopify/remix-oxygen';
+import {json, redirect} from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 
 type ActionResponse = {
@@ -67,7 +68,6 @@ export async function action({request, context, params}: ActionArgs) {
 
     return redirect('/account', {
       headers: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         'Set-Cookie': await session.commit(),
       },
     });

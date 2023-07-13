@@ -49,7 +49,6 @@ export async function action({request, context, params}: ActionArgs) {
 
     return redirect('/account', {
       headers: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         'Set-Cookie': await session.commit(),
       },
     });

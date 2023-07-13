@@ -1,6 +1,6 @@
 import {flattenConnection} from '@shopify/hydrogen';
 import type {LoaderArgs} from '@shopify/remix-oxygen';
-import {SitemapQuery} from 'storefrontapi.generated';
+import type {SitemapQuery} from 'storefrontapi.generated';
 
 /**
  * the google limit is 50K, however, the storefront API
@@ -35,9 +35,8 @@ export async function loader({request, context: {storefront}}: LoaderArgs) {
 
   return new Response(sitemap, {
     headers: {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
       'Content-Type': 'application/xml',
-      // eslint-disable-next-line @typescript-eslint/naming-convention
+
       'Cache-Control': `max-age=${60 * 60 * 24}`,
     },
   });

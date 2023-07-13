@@ -8,10 +8,12 @@ import {
   ScrollRestoration,
   useLoaderData,
 } from '@remix-run/react';
-import {Layout} from '~/components/Layout';
+import type {CustomerAccessToken} from '@shopify/hydrogen-react/storefront-api-types';
+import type {HydrogenSession} from '../server';
+import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import skeletonStyles from './styles/skeleton.css';
-import favicon from '../public/favicon.svg';
+import {Layout} from '~/components/Layout';
 
 export function links() {
   return [
@@ -29,48 +31,44 @@ export function links() {
   ];
 }
 
+// TODO: add headers export
+
 export async function loader({context}: LoaderArgs) {
   const {storefront, session, cart} = context;
   const customerAccessToken = await session.get('customerAccessToken');
+  const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
   // validate the customer access token is valid
-  let isLoggedIn = false;
-  const headers = new Headers();
-  if (customerAccessToken?.accessToken && customerAccessToken?.expiresAt) {
-    const expiresAt = new Date(customerAccessToken.expiresAt);
-    const dateNow = new Date();
-    const customerAccessTokenExpired = expiresAt < dateNow;
-    isLoggedIn =
-      !customerAccessTokenExpired && Boolean(customerAccessToken.accessToken);
-    if (customerAccessTokenExpired) {
-      session.unset('customerAccessToken');
-      headers.append('Set-Cookie', await session.commit());
-    }
-  }
+  const {isLoggedIn, headers} = await validateCustomerAccessToken(
+    customerAccessToken,
+    session,
+  );
 
-  // await the header query
+  // await the header query (above the fold)
   const header = await storefront.query(HEADER_QUERY, {
+    // TODO: add cache once finished working with the menu
     cache: storefront.CacheLong(),
     variables: {
-      headerMenuHandle: 'main-menu',
+      headerMenuHandle: 'skeleton-header', // Adjust to your header menu handle
     },
   });
 
-  // defer the footer query
+  // defer the footer query (below the fold)
   const footer = storefront.query(FOOTER_QUERY, {
     cache: storefront.CacheLong(),
     variables: {
-      footerMenuHandle: 'footer',
+      footerMenuHandle: 'skeleton-footer', // Adjust to your footer menu handle
     },
   });
 
   return defer(
     {
-      // defer the cart query
+      // defer the cart query by not awaiting it
       cart: cart.get(),
       footer,
       header,
       isLoggedIn,
+      publicStoreDomain,
     },
     {headers},
   );
@@ -103,11 +101,11 @@ export function ErrorBoundary() {
 
   if (isRouteErrorResponse(error)) {
     return (
-      <div>
+      <section className="route-error">
         <h1>Oops</h1>
         <p>Status: {error.status}</p>
         <p>Message: {error.data.message}</p>
-      </div>
+      </section>
     );
   }
 
@@ -117,12 +115,47 @@ export function ErrorBoundary() {
   }
 
   return (
-    <div>
+    <section className="generic-error">
       <h1>Uh oh ...</h1>
       <p>Something went wrong.</p>
       <pre>{errorMessage}</pre>
-    </div>
+    </section>
   );
+}
+
+/**
+ * Validates the customer access token and returns a boolean and headers
+ * @see https://shopify.dev/docs/api/storefront/latest/objects/CustomerAccessToken
+ *
+ * @example
+ * ```ts
+ * //
+ * const {isLoggedIn, headers} = await validateCustomerAccessToken(
+ *  customerAccessToken,
+ *  session,
+ *  );
+ *  ```
+ *  */
+async function validateCustomerAccessToken(
+  customerAccessToken: CustomerAccessToken,
+  session: HydrogenSession,
+) {
+  let isLoggedIn = false;
+  const headers = new Headers();
+  if (!customerAccessToken?.accessToken || !customerAccessToken?.expiresAt) {
+    return {isLoggedIn, headers};
+  }
+  const expiresAt = new Date(customerAccessToken.expiresAt);
+  const dateNow = new Date();
+  const customerAccessTokenExpired = expiresAt < dateNow;
+  if (customerAccessTokenExpired) {
+    session.unset('customerAccessToken');
+    headers.append('Set-Cookie', await session.commit());
+  } else {
+    isLoggedIn = true;
+  }
+
+  return {isLoggedIn, headers};
 }
 
 const MENU_FRAGMENT = `#graphql

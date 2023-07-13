@@ -5,7 +5,6 @@ import {
   Pagination__unstable as Pagination,
   getPaginationVariables__unstable as getPaginationVariables,
 } from '@shopify/hydrogen';
-
 import type {ArticleItemFragment} from 'storefrontapi.generated';
 
 const BLOG_HANDLE = 'Journal';

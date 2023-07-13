@@ -125,11 +125,13 @@ export function CartSummary({
 }) {
   const styles: LayoutStyles = {
     page: {
+      background: 'white',
       position: 'relative',
     },
     aside: {
-      position: 'absolute',
+      background: 'white',
       bottom: 0,
+      position: 'absolute',
       width: 'calc(var(--aside-width) - 40px)',
     },
   };
@@ -243,7 +245,7 @@ export function CartEmpty({
         Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you
         started!
       </p>
-      <br /> <Link to="/policies"></Link>
+      <br />
       <Link
         to="/collections"
         onClick={() => {

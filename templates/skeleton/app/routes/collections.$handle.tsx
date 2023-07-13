@@ -5,9 +5,7 @@ import {
   getPaginationVariables__unstable as getPaginationVariables,
   Image,
 } from '@shopify/hydrogen';
-import {ProductItemFragment} from 'storefrontapi.generated';
-
-// TODO: add SEO
+import type {ProductItemFragment} from 'storefrontapi.generated';
 
 export async function loader({request, params, context}: LoaderArgs) {
   const {handle} = params;
@@ -54,6 +52,7 @@ export default function Collection() {
                 )}
               </PreviousLink>
               <ProductsGrid products={nodes} />
+              <br />
               <NextLink>
                 {isLoading ? (
                   'Loading...'

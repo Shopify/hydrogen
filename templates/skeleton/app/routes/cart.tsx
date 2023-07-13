@@ -1,6 +1,7 @@
-import {Await, useMatches, Link} from '@remix-run/react';
+import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
-import {CartForm, CartQueryData} from '@shopify/hydrogen';
+import type {CartQueryData} from '@shopify/hydrogen';
+import {CartForm} from '@shopify/hydrogen';
 import {type ActionArgs, json} from '@shopify/remix-oxygen';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {CartMain} from '~/components/Cart';
@@ -70,7 +71,7 @@ export async function action({request, context}: ActionArgs) {
   }
 
   const {cart: cartResult, errors} = result;
-  console.log('cart errors', errors);
+
   return json(
     {
       cart: cartResult,

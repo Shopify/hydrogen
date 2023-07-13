@@ -5,8 +5,9 @@ import {
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
 import {Form, Link, useActionData} from '@remix-run/react';
-import {LOGIN_MUTATION} from './account_.login';
 import type {CustomerCreateMutation} from 'storefrontapi.generated';
+
+import {LOGIN_MUTATION} from './account_.login';
 
 type ActionResponse = {
   error: string | null;
@@ -91,7 +92,6 @@ export const action: ActionFunction = async ({request, context}) => {
       {
         status: 302,
         headers: {
-          // eslint-disable-next-line @typescript-eslint/naming-convention
           'Set-Cookie': await session.commit(),
           Location: '/account',
         },

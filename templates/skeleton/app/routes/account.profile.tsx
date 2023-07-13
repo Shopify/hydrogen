@@ -1,12 +1,7 @@
 import type {CustomerFragment} from 'storefrontapi.generated';
 import type {CustomerUpdateInput} from '@shopify/hydrogen/storefront-api-types';
-import {
-  ActionArgs,
-  LoaderArgs,
-  json,
-  redirect,
-  type V2_MetaFunction,
-} from '@shopify/remix-oxygen';
+import type {ActionArgs, LoaderArgs} from '@shopify/remix-oxygen';
+import {json, redirect, type V2_MetaFunction} from '@shopify/remix-oxygen';
 import {
   Form,
   useActionData,
@@ -98,7 +93,6 @@ export async function action({request, context}: ActionArgs) {
       {error: null, customer: updated.customerUpdate?.customer},
       {
         headers: {
-          // eslint-disable-next-line @typescript-eslint/naming-convention
           'Set-Cookie': await session.commit(),
         },
       },

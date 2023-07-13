@@ -1,11 +1,7 @@
 import {Suspense, useMemo} from 'react';
 import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-import {
-  Await,
-  FetcherWithComponents,
-  Link,
-  useLoaderData,
-} from '@remix-run/react';
+import type {FetcherWithComponents} from '@remix-run/react';
+import {Await, Link, useLoaderData} from '@remix-run/react';
 import type {
   ProductFragment,
   ProductMedia_MediaImage_Fragment,
@@ -15,16 +11,13 @@ import type {
 
 // TODO: add SEO
 import {
-  AnalyticsPageType,
   Image,
   Money,
-  ShopPayButton,
   VariantSelector__unstable as VariantSelector,
   getSelectedProductOptions__unstable as getSelectedProductOptions,
-  getFirstAvailableVariant__unstable as getFirstAvailableVariant,
   CartForm,
 } from '@shopify/hydrogen';
-import {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
+import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {handle} = params;

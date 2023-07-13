@@ -1,6 +1,5 @@
 import {Form, NavLink, Outlet, useLoaderData} from '@remix-run/react';
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-
 import type {CustomerFragment} from 'storefrontapi.generated';
 
 export function shouldRevalidate() {
@@ -23,7 +22,6 @@ export async function loader({request, context}: LoaderArgs) {
       session.unset('customerAccessToken');
       return redirect('/account/login', {
         headers: {
-          // eslint-disable-next-line @typescript-eslint/naming-convention
           'Set-Cookie': await session.commit(),
         },
       });
@@ -61,7 +59,6 @@ export async function loader({request, context}: LoaderArgs) {
       {isLoggedIn, isPrivateRoute, isAccountHome, customer},
       {
         headers: {
-          // eslint-disable-next-line @typescript-eslint/naming-convention
           'Cache-Control': 'no-cache, no-store, must-revalidate',
         },
       },
@@ -72,7 +69,6 @@ export async function loader({request, context}: LoaderArgs) {
     session.unset('customerAccessToken');
     return redirect('/account/login', {
       headers: {
-        // eslint-disable-next-line @typescript-eslint/naming-convention
         'Set-Cookie': await session.commit(),
       },
     });

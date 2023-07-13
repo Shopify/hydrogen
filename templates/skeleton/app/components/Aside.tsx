@@ -4,7 +4,7 @@ export function Aside({
   id = 'aside',
 }: {
   children?: React.ReactNode;
-  heading: string;
+  heading: React.ReactNode;
   id?: string;
 }) {
   return (
@@ -19,7 +19,7 @@ export function Aside({
       <aside>
         <header>
           <h3>{heading}</h3>
-          <AsideClose />
+          <CloseAside />
         </header>
         <hr />
         <main>{children}</main>
@@ -28,7 +28,7 @@ export function Aside({
   );
 }
 
-function AsideClose() {
+function CloseAside() {
   return (
     /* eslint-disable-next-line jsx-a11y/anchor-is-valid */
     <a className="close" href="#" onChange={() => history.go(-1)}>
@@ -36,17 +36,3 @@ function AsideClose() {
     </a>
   );
 }
-
-/*
-      <Link
-        to="/cart"
-        onClick={() => {
-          window.location.href = '/cart';
-        }}
-      >
-        <h2>Cart</h2>
-      </Link>
-      <hr />
-      <br />
-
-*/
