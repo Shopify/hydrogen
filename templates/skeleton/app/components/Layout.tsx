@@ -27,15 +27,9 @@ export function Layout({
 }: LayoutProps) {
   return (
     <>
-      <Aside id="cart-aside" heading="Cart">
-        <CartAside cart={cart} />
-      </Aside>
-      <Aside id="search-aside" heading="Search">
-        <SearchAside />
-      </Aside>
-      <Aside id="mobile-menu-aside" heading="MENU">
-        <MobileMenuAside menu={header.menu} />
-      </Aside>
+      <CartAside cart={cart} />
+      <SearchAside />
+      <MobileMenuAside menu={header.menu} />
       <Header header={header} cart={cart} isLoggedIn={isLoggedIn} />
       <main>{children}</main>
       <Suspense>
@@ -49,28 +43,34 @@ export function Layout({
 
 function CartAside({cart}: {cart: LayoutProps['cart']}) {
   return (
-    <Suspense fallback={<p>Loading cart ...</p>}>
-      <Await resolve={cart}>
-        {(cart) => {
-          if (!cart) return <p>Cart is empty.</p>;
-          return <CartMain cart={cart} layout="aside" />;
-        }}
-      </Await>
-    </Suspense>
+    <Aside id="cart-aside" heading="Cart">
+      <Suspense fallback={<p>Loading cart ...</p>}>
+        <Await resolve={cart}>
+          {(cart) => {
+            if (!cart) return <p>Cart is empty.</p>;
+            return <CartMain cart={cart} layout="aside" />;
+          }}
+        </Await>
+      </Suspense>
+    </Aside>
   );
 }
 
 function SearchAside() {
   return (
-    <div>
+    <Aside id="search-aside" heading="Search">
       <input type="search" placeholder="Search" />
       &nbsp;
       <button>Search</button>
       <p>Search results go here.</p>
-    </div>
+    </Aside>
   );
 }
 
 function MobileMenuAside({menu}: {menu: HeaderQuery['menu']}) {
-  return <HeaderMenu menu={menu} viewport="mobile" />;
+  return (
+    <Aside id="mobile-menu-aside" heading="MENU">
+      <HeaderMenu menu={menu} viewport="mobile" />;
+    </Aside>
+  );
 }
