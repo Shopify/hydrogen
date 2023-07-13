@@ -17,12 +17,16 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
   const accessToken =
     storefront.getPublicTokenHeaders()['X-Shopify-Storefront-Access-Token'];
 
+  // GraphiQL icon from their GitHub repo
+  const favicon = `https://avatars.githubusercontent.com/u/12972006?s=48&v=4`;
+
   return new Response(
     `
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <title>GraphiQL</title>
+    <link rel="icon" type="image/x-icon" href="${favicon}">
     <style>
       body {
         height: 100%;
