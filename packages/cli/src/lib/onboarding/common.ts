@@ -95,7 +95,7 @@ export async function handleI18n(
     flagI18n ??
     (await renderI18nPrompt({
       abortSignal: controller.signal,
-      extraChoices: {none: 'No internationalization'},
+      extraChoices: {none: 'No, set up later'},
     }));
 
   const i18nStrategy = selection === 'none' ? undefined : selection;
@@ -532,7 +532,7 @@ export async function renderProjectReady(
   }
 
   if (!i18nError && i18n) {
-    bodyLines.push(['i18n', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
+    bodyLines.push(['Markets', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
   }
 
   let routeSummary = '';
@@ -587,7 +587,7 @@ export async function renderProjectReady(
                   {subdued: depsError.message},
                 ],
                 i18nError && [
-                  'Failed to scaffold i18n:',
+                  'Failed to scaffold Markets:',
                   {subdued: i18nError.message},
                 ],
                 routesError && [

@@ -56,7 +56,7 @@ export async function renderI18nPrompt<
   }) as [[I18nStrategy | T, string]];
 
   return renderSelectPrompt<I18nStrategy | T>({
-    message: 'Select an internationalization strategy',
+    message: 'Do you want to support multiple markets?',
     ...options,
     choices: i18nStrategies.map(([value, label]) => ({
       value,
