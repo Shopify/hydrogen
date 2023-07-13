@@ -5,6 +5,7 @@ import type {
   Cart,
   CartLine,
   BaseCartLineConnection,
+  ComponentizableCartLine,
 } from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import type {CartWithActions} from './cart-types.js';
@@ -76,7 +77,10 @@ export const CART_WITH_LINES_FLATTENED: PartialDeep<
   Cart,
   {recurseIntoArrays: true}
 > & {
-  lines: PartialDeep<CartLine[], {recurseIntoArrays: true}>;
+  lines: PartialDeep<
+    Array<CartLine | ComponentizableCartLine>,
+    {recurseIntoArrays: true}
+  >;
 } = {
   ...CART,
   lines: flattenConnection(CART_WITH_LINES.lines),
