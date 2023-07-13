@@ -5,7 +5,6 @@ import {
   GENERATOR_TEMPLATES_DIR,
   GENERATOR_SETUP_ASSETS_DIR,
   GENERATOR_STARTER_DIR,
-  GENERATOR_ROUTES_DIR,
 } from './src/lib/build';
 
 const commonConfig = {
@@ -51,12 +50,7 @@ export default defineConfig([
       // These files need to be packaged/distributed with the CLI
       // so that we can use them in the `generate` command.
       await fs.copy(
-        '../../templates/skeleton/app/routes',
-        `${outDir}/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_ROUTES_DIR}`,
-        {filter: filterArtifacts},
-      );
-      await fs.copy(
-        '../../templates/hello-world',
+        '../../templates/skeleton',
         `${outDir}/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
         {filter: filterArtifacts},
       );
