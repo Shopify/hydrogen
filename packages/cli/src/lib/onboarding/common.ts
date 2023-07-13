@@ -91,13 +91,17 @@ export type I18nChoice = I18nStrategy | 'none';
 
 export async function handleI18n(
   controller: AbortController,
+  cliCommand: string,
   flagI18n?: I18nChoice,
 ) {
   let selection =
     flagI18n ??
     (await renderI18nPrompt({
       abortSignal: controller.signal,
-      extraChoices: {none: 'No, set up later'},
+      extraChoices: {
+        none:
+          'Set up later ' + colors.dim(`(run \`${cliCommand} setup markets\`)`),
+      },
     }));
 
   const i18nStrategy = selection === 'none' ? undefined : selection;

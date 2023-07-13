@@ -49,14 +49,18 @@ export async function setupI18nStrategy(
 
 export async function renderI18nPrompt<
   T extends string = I18nStrategy,
->(options?: {abortSignal?: AbortSignal; extraChoices?: Record<T, string>}) {
+>(options?: {
+  abortSignal?: AbortSignal;
+  message?: string;
+  extraChoices?: Record<T, string>;
+}) {
   const i18nStrategies = Object.entries({
     ...I18N_STRATEGY_NAME_MAP,
     ...options?.extraChoices,
   }) as [[I18nStrategy | T, string]];
 
   return renderSelectPrompt<I18nStrategy | T>({
-    message: 'Do you want to support multiple markets?',
+    message: 'Choose a strategy to support multiple markets',
     ...options,
     choices: i18nStrategies.map(([value, label]) => ({
       value,

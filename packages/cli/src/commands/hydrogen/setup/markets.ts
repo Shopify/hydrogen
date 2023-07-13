@@ -1,11 +1,7 @@
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
-import {
-  renderSelectPrompt,
-  renderSuccess,
-  renderTasks,
-} from '@shopify/cli-kit/node/ui';
+import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {Args} from '@oclif/core';
 import {getRemixConfig} from '../../../lib/config.js';
 import {
@@ -69,7 +65,7 @@ export async function runSetupI18n({
   ]);
 
   renderSuccess({
-    headline: `Internationalization setup complete with strategy ${I18N_STRATEGY_NAME_MAP[
+    headline: `Makerts support setup complete with strategy ${I18N_STRATEGY_NAME_MAP[
       strategy
     ].toLocaleLowerCase()}.`,
     body: `You can now modify the supported locales in ${
