@@ -121,7 +121,7 @@ export async function setupLocalStarterTemplate(
         false,
         (content) =>
           content.replace(
-            /"name": "[^"]"/,
+            /"name": "[^"]+"/,
             `"name": "${hyphenate(storefrontInfo?.title ?? project.name)}"`,
           ),
       ),
