@@ -5,10 +5,6 @@ import type {CartApiQueryFragment} from 'storefrontapi.generated';
 
 type CartLine = CartApiQueryFragment['lines']['nodes'][0];
 
-type LayoutStyles = {
-  [Property in CartMainProps['layout']]: React.CSSProperties;
-};
-
 type CartMainProps = {
   cart: CartApiQueryFragment | null;
   layout: 'page' | 'aside';
@@ -30,7 +26,7 @@ function CartDetails({layout, cart}: CartMainProps) {
 
   return (
     <div className="cart-details">
-      <CartLines lines={cart?.lines} />
+      <CartLines lines={cart?.lines} layout={layout} />
       {cartHasItems && (
         <CartSummary cost={cart.cost} layout={layout}>
           <CartDiscounts discountCodes={cart.discountCodes} />
@@ -43,7 +39,9 @@ function CartDetails({layout, cart}: CartMainProps) {
 
 function CartLines({
   lines,
+  layout,
 }: {
+  layout: CartMainProps['layout'];
   lines: CartApiQueryFragment['lines'] | undefined;
 }) {
   if (!lines) return null;
@@ -52,14 +50,20 @@ function CartLines({
     <div aria-labelledby="cart-lines">
       <ul>
         {lines.nodes.map((line) => (
-          <CartLineItem key={line.id} line={line as CartLine} />
+          <CartLineItem key={line.id} line={line} layout={layout} />
         ))}
       </ul>
     </div>
   );
 }
 
-function CartLineItem({line}: {line: CartLine}) {
+function CartLineItem({
+  layout,
+  line,
+}: {
+  layout: CartMainProps['layout'];
+  line: CartLine;
+}) {
   const {id, quantity, merchandise} = line;
   if (typeof quantity === 'undefined' || !merchandise?.product) return null;
   const {product, title, image, selectedOptions} = merchandise;
@@ -73,12 +77,22 @@ function CartLineItem({line}: {line: CartLine}) {
 
   return (
     <li key={id}>
-      <Link className="cart-line" prefetch="intent" to={lineItemUrl}>
-        {merchandise.image && (
+      <Link
+        className="cart-line"
+        prefetch="intent"
+        to={lineItemUrl}
+        onClick={() => {
+          if (layout === 'aside') {
+            // close the drawer
+            window.location.href = lineItemUrl;
+          }
+        }}
+      >
+        {image && (
           <Image
-            alt={merchandise.title}
+            alt={title}
             aspectRatio="1/1"
-            data={merchandise.image}
+            data={image}
             height={100}
             loading="lazy"
             width={100}
@@ -99,7 +113,7 @@ function CartLineItem({line}: {line: CartLine}) {
               </li>
             ))}
           </ul>
-          <CartLineQuantityAdjust line={line} />
+          <CartLineQuantity line={line} />
         </div>
       </Link>
     </li>
@@ -137,17 +151,15 @@ export function CartSummary({
     <div aria-labelledby="cart-summary" className={className}>
       <hr />
       <h4>Totals</h4>
-      <dl>
-        <div style={{display: 'flex'}}>
-          <dt>Subtotal</dt>
-          <dd>
-            {cost?.subtotalAmount?.amount ? (
-              <Money data={cost?.subtotalAmount} />
-            ) : (
-              '-'
-            )}
-          </dd>
-        </div>
+      <dl className="cart-subtotal">
+        <dt>Subtotal</dt>
+        <dd>
+          {cost?.subtotalAmount?.amount ? (
+            <Money data={cost?.subtotalAmount} />
+          ) : (
+            '-'
+          )}
+        </dd>
       </dl>
       {children}
     </div>
@@ -166,14 +178,14 @@ function ItemRemoveButton({lineIds}: {lineIds: string[]}) {
   );
 }
 
-function CartLineQuantityAdjust({line}: {line: CartLine}) {
+function CartLineQuantity({line}: {line: CartLine}) {
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
   const nextQuantity = Number((quantity + 1).toFixed(0));
 
   return (
-    <div style={{display: 'flex'}}>
+    <div className="cart-line-quantiy">
       <small>Quantity: {quantity} &nbsp;&nbsp;</small>
       <UpdateCartButton lines={[{id: lineId, quantity: prevQuantity}]}>
         <button
@@ -268,13 +280,13 @@ function CartDiscounts({
       ?.map(({code}) => code) || [];
 
   return (
-    <>
+    <div>
       {/* Have existing discount, display it with a remove option */}
       <dl hidden={!codes.length}>
         <div>
           <dt>Discount(s)</dt>
           <UpdateDiscountForm>
-            <div style={{display: 'flex', alignItems: 'center'}}>
+            <div className="cart-discount">
               <code>{codes?.join(', ')}</code>
               &nbsp;
               <button>Remove</button>
@@ -292,7 +304,7 @@ function CartDiscounts({
         </div>
       </UpdateDiscountForm>
       <br />
-    </>
+    </div>
   );
 }
 

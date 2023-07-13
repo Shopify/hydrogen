@@ -229,6 +229,20 @@ aside p {
   width: calc(var(--aside-width) - 40px);
 }
 
+.cart-line-quantiy {
+  display: flex;
+}
+
+.cart-discount {
+  display: flex;
+  align-items: center;
+}
+
+.cart-subtotal {
+  display: flex;
+  align-items: center;
+}
+
 /*
 * --------------------------------------------------
 * routes/collections._index.tsx
