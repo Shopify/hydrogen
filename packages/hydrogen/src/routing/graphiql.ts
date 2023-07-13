@@ -58,9 +58,21 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
       type="application/javascript"
     ></script>
     <script>
-      const url = new URL(document.URL);
-      const query = decodeURIComponent(url.searchParams.get('query') ?? '');
-      const variables = decodeURIComponent(url.searchParams.get('variables') ?? '');
+      const windowUrl = new URL(document.URL);
+
+      let query = '{\\n  shop {\\n    name\\n  }\\n}';
+      if (windowUrl.searchParams.has('query')) {
+        query = decodeURIComponent(windowUrl.searchParams.get('query') ?? '');
+        // Prettify query
+        if (query) query = GraphiQL.GraphQL.print(GraphiQL.GraphQL.parse(query));
+      }
+
+      let variables;
+      if (windowUrl.searchParams.has('variables')) {
+        variables = decodeURIComponent(windowUrl.searchParams.get('variables') ?? '');
+        // Prettify variables
+        if (variables) variables = JSON.stringify(JSON.parse(variables), null, 2);
+      }
 
       const root = ReactDOM.createRoot(document.getElementById('graphiql'));
       root.render(
@@ -70,7 +82,6 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
             headers: {'X-Shopify-Storefront-Access-Token': '${accessToken}'}
           }),
           defaultEditorToolsVisibility: true,
-          defaultTabs: [{query: '{\\n  shop {\\n    name\\n  }\\n}'}],
           query,
           variables
         }),
