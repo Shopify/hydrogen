@@ -22,10 +22,35 @@ export function addMessageReplacers(
   }
 }
 
+const printedMessages = new Set<string | Object>();
+
+/**
+ * Certain messages like errors might be printed multiple times.
+ * This ensures they are only printed once per second.
+ */
+function debounceMessage(args: unknown[]) {
+  const key = args
+    .map((item) => {
+      const message = (item as Error)?.message ?? (item as string);
+      return typeof message === 'string' ? message : '';
+    })
+    .filter(Boolean)
+    .join('');
+
+  if (printedMessages.has(key)) return true;
+
+  printedMessages.add(key);
+  setTimeout(() => printedMessages.delete(key), 1000);
+
+  return false;
+}
+
 function injectLogReplacer(method: ConsoleMethod) {
   if (!methodsReplaced.has(method)) {
     methodsReplaced.add(method);
     console[method] = (...args: unknown[]) => {
+      if (debounceMessage(args)) return;
+
       const replacer = messageReplacers.find(([matcher]) => matcher(args))?.[1];
       if (!replacer) return originalConsole[method](...args);
 
@@ -35,6 +60,9 @@ function injectLogReplacer(method: ConsoleMethod) {
   }
 }
 
+/**
+ * Mute logs from Miniflare
+ */
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   injectLogReplacer('log');
 
@@ -63,6 +91,9 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
 }
 
 const originalWrite = process.stdout.write;
+/**
+ * Modify logs from cli-kit related to authentication
+ */
 export function muteAuthLogs({
   onPressKey,
   onKeyTimeout,
@@ -126,6 +157,12 @@ export function muteAuthLogs({
 }
 
 const H2_PREFIX = '[h2:';
+/**
+ * Modify logs from Hydrogen to use cli-kit banners
+ * Format: `[h2:scope] message`
+ * Where the message can be multiline and the last line
+ * can contain links to docs or other resources.
+ */
 export function enhanceH2Logs() {
   injectLogReplacer('warn');
   injectLogReplacer('error');
