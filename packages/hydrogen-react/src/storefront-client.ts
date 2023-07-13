@@ -159,7 +159,7 @@ export function getPublicTokenHeadersRaw(
 }
 
 const warnings = new Set<string>();
-const H2_PREFIX = '[h2:StorefrontClient] ';
+const H2_PREFIX = '[h2:createStorefrontClient] ';
 const warnOnce = (string: string): void => {
   if (!warnings.has(string)) {
     console.warn(H2_PREFIX + string);
