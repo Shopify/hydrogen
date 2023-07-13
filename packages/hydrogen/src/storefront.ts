@@ -331,6 +331,14 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       waitUntil,
     });
 
+    const errorOptions: StorefrontErrorOptions<T> = {
+      response,
+      type: mutation ? 'mutation' : 'query',
+      query,
+      queryVariables,
+      errors: undefined,
+    };
+
     if (!response.ok) {
       /**
        * The Storefront API might return a string error, or a JSON-formatted {error: string}.
@@ -343,12 +351,18 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         errors = [{message: body}];
       }
 
-      throwError(response, errors);
+      throwError({...errorOptions, errors});
     }
 
     const {data, errors} = body as StorefrontApiResponse<T>;
 
-    if (errors?.length) throwError(response, errors, StorefrontApiError);
+    if (errors?.length) {
+      throwError({
+        ...errorOptions,
+        errors,
+        ErrorConstructor: StorefrontApiError,
+      });
+    }
 
     return data as T;
   }
@@ -437,24 +451,43 @@ export function createStorefrontClient<TI18n extends I18nBase>(
   };
 }
 
-function throwError<T>(
-  response: Response,
-  errors: StorefrontApiResponse<T>['errors'],
+type StorefrontErrorOptions<T> = {
+  response: Response;
+  errors: StorefrontApiResponse<T>['errors'];
+  type: 'query' | 'mutation';
+  query: string;
+  queryVariables: Record<string, any>;
+  ErrorConstructor?: ErrorConstructor;
+};
+
+function throwError<T>({
+  response,
+  errors,
+  type,
+  query,
+  queryVariables,
   ErrorConstructor = Error,
-) {
+}: StorefrontErrorOptions<T>) {
   const reqId = response.headers.get('x-request-id');
-  const reqIdMessage = reqId ? ` - Request ID: ${reqId}` : '';
-
-  if (errors) {
-    const errorMessages =
-      typeof errors === 'string'
-        ? errors
-        : errors.map((error) => error.message).join('\n');
-
-    throw new ErrorConstructor(errorMessages + reqIdMessage);
-  }
+  const errorMessage =
+    (typeof errors === 'string'
+      ? errors
+      : errors?.map?.((error) => error.message).join('\n')) ||
+    `API response error: ${response.status}`;
 
   throw new ErrorConstructor(
-    `API response error: ${response.status}` + reqIdMessage,
+    `[h2:storefront.${type}] ` +
+      errorMessage +
+      (reqId ? ` - Request ID: ${reqId}` : ''),
+    {
+      cause: {
+        errors,
+        reqId,
+        ...(process.env.NODE_ENV === 'development' && {
+          query,
+          variables: JSON.stringify(queryVariables),
+        }),
+      },
+    },
   );
 }
