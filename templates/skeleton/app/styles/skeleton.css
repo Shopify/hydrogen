@@ -1,6 +1,7 @@
 :root {
   --aside-width: 400px;
   --header-height: 58px;
+  --cart-aside-summary-height: 244px;
 }
 
 /*
@@ -104,9 +105,9 @@ aside header h2 {
 }
 
 aside main {
-  max-height: calc(100vh - 300px);
-  overflow: auto;
   height: 100%;
+  max-height: calc(100vh - var(--cart-aside-summary-height));
+  overflow: auto;
   padding: 0px 20px;
   width: auto;
 }
@@ -123,7 +124,7 @@ aside p {
 * Routes
 * --------------------------------------------------
 */
-.home .logo {
+.home .hydrogen {
   display: block;
   padding: 1rem;
   background: #000;
@@ -199,4 +200,108 @@ aside p {
 
 .footer-menu-item {
   text-transform: uppercase;
+}
+
+/*
+* --------------------------------------------------
+* Cart
+* --------------------------------------------------
+*/
+.cart-line {
+  display: flex;
+  padding: 0.75rem 0;
+}
+
+.cart-line img {
+  height: auto;
+  display: block;
+}
+
+.cart-summary-page {
+  background: white;
+  position: relative;
+}
+
+.cart-summary-aside {
+  background: white;
+  bottom: 0;
+  position: absolute;
+  width: calc(var(--aside-width) - 40px);
+}
+
+/*
+* --------------------------------------------------
+* routes/collections._index.tsx
+* --------------------------------------------------
+*/
+.collections-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-gap: 1.5rem;
+}
+
+.collection-item img {
+  height: auto;
+}
+
+/*
+* --------------------------------------------------
+* routes/collections.$handle.tsx
+* --------------------------------------------------
+*/
+.collection-description {
+  margin-bottom: 1rem;
+  max-width: 95%;
+  @media (min-width: 768px) {
+    max-width: 600px;
+  }
+}
+.products-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-gap: 1.5rem;
+}
+
+.product-item img {
+  height: auto;
+  width: 100%;
+}
+
+/*
+* --------------------------------------------------
+* routes/products.$handle.tsx
+* --------------------------------------------------
+*/
+.product {
+  display: grid;
+  @media (min-width: 768px) {
+    grid-template-columns: 1fr 1fr;
+    grid-gap: 4rem;
+  }
+}
+
+.product-images {
+  display: grid;
+  grid-gap: 1rem;
+}
+
+.product-image img {
+  height: auto;
+  width: 100%;
+}
+
+.product-main {
+  position: sticky;
+  top: 6rem;
+  align-self: start;
+}
+
+.product-options-grid {
+  display: flex;
+  flex-wrap: wrap;
+  grid-gap: 0.5rem;
+}
+
+.product-options-item {
+  padding: 0.25rem 0.5rem;
 }

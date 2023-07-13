@@ -36,49 +36,40 @@ export default function Collection() {
   return (
     <section className="collection">
       <h1>{collection.title}</h1>
-      <p style={{maxWidth: '370px'}}>{collection.description}</p>
-      <br />
-      <div className="collection-grid">
-        <Pagination connection={collection.products}>
-          {({nodes, isLoading, PreviousLink, NextLink}) => (
-            <>
-              <PreviousLink>
-                {isLoading ? (
-                  'Loading...'
-                ) : (
-                  <span>
-                    <mark>↑</mark> Load previous
-                  </span>
-                )}
-              </PreviousLink>
-              <ProductsGrid products={nodes} />
-              <br />
-              <NextLink>
-                {isLoading ? (
-                  'Loading...'
-                ) : (
-                  <span>
-                    Load more <mark>↓</mark>
-                  </span>
-                )}
-              </NextLink>
-            </>
-          )}
-        </Pagination>
-      </div>
+      <p className="collection-description">{collection.description}</p>
+      <Pagination connection={collection.products}>
+        {({nodes, isLoading, PreviousLink, NextLink}) => (
+          <>
+            <PreviousLink>
+              {isLoading ? (
+                'Loading...'
+              ) : (
+                <span>
+                  <mark>↑</mark> Load previous
+                </span>
+              )}
+            </PreviousLink>
+            <ProductsGrid products={nodes} />
+            <br />
+            <NextLink>
+              {isLoading ? (
+                'Loading...'
+              ) : (
+                <span>
+                  Load more <mark>↓</mark>
+                </span>
+              )}
+            </NextLink>
+          </>
+        )}
+      </Pagination>
     </section>
   );
 }
 
 function ProductsGrid({products}: {products: ProductItemFragment[]}) {
   return (
-    <div
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-        gridGap: '1rem',
-      }}
-    >
+    <div className="products-grid">
       {products.map((product, index) => {
         return (
           <ProductItem
@@ -108,7 +99,7 @@ function ProductItem({
   // const url = `/products/${product.handle}?${variantParams}`;
   const url = `/products/${product.handle}`;
   return (
-    <Link key={product.id} to={url} prefetch="intent">
+    <Link key={product.id} to={url} prefetch="intent" className="product-item">
       {/* TODO: @ben welp with sizes and url transform? */}
       {product.featuredImage && (
         <Image
@@ -117,10 +108,9 @@ function ProductItem({
           data={product.featuredImage}
           loading={loading}
           sizes="(min-width: 45em) 400px, 100vw"
-          style={{width: '100%', height: 'auto'}}
         />
       )}
-      <h5>{product.title}</h5>
+      <h4>{product.title}</h4>
     </Link>
   );
 }

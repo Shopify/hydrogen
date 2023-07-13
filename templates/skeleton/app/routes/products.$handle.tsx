@@ -1,19 +1,18 @@
-import {Suspense, useMemo} from 'react';
+import {Suspense} from 'react';
 import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import type {FetcherWithComponents} from '@remix-run/react';
 import {Await, Link, useLoaderData} from '@remix-run/react';
 import type {
   ProductFragment,
-  ProductMedia_MediaImage_Fragment,
   ProductVariantsQuery,
   ProductVariantFragment,
 } from 'storefrontapi.generated';
 
-// TODO: add SEO
 import {
   Image,
   Money,
   VariantSelector__unstable as VariantSelector,
+  type VariantOption,
   getSelectedProductOptions__unstable as getSelectedProductOptions,
   CartForm,
 } from '@shopify/hydrogen';
@@ -22,7 +21,9 @@ import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
 export async function loader({params, request, context}: LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
-  const selectedOptions = getSelectedProductOptions(request);
+  const selectedOptions = getSelectedProductOptions(request).filter(
+    (option) => !option.name.startsWith('umd'),
+  );
 
   if (!handle) {
     throw new Error('Expected product handle to be defined');
@@ -74,17 +75,9 @@ function redirectToFirstVariant({
 export default function Product() {
   const {product, variants} = useLoaderData<typeof loader>();
   const {selectedVariant} = product;
-
   return (
-    <section
-      className="product"
-      style={{
-        display: 'grid',
-        gridGap: '4rem',
-        gridTemplateColumns: 'repeat(2, 1fr)',
-      }}
-    >
-      <ProductImages selectedVariant={selectedVariant} media={product.media} />
+    <section className="product">
+      <ProductImage image={selectedVariant?.image} />
       <ProductMain
         selectedVariant={selectedVariant}
         product={product}
@@ -94,48 +87,19 @@ export default function Product() {
   );
 }
 
-function ProductImages({
-  selectedVariant,
-  media,
-}: Pick<ProductFragment, 'media' | 'selectedVariant'>) {
-  // Prioritize the selectedVariant image followed by the other product images
-  const images = useMemo(() => {
-    const selectedVariantImage = selectedVariant?.image
-      ? {
-          alt: selectedVariant?.title,
-          image: selectedVariant?.image || null,
-          id: selectedVariant?.id,
-        }
-      : null;
-    const otherProductImages = media.nodes.filter(
-      (media) =>
-        media.__typename === 'MediaImage' &&
-        media?.image?.url !== selectedVariantImage?.image.url,
-    );
-    return [selectedVariantImage, ...otherProductImages].filter(Boolean);
-  }, [media, selectedVariant]) as Array<ProductMedia_MediaImage_Fragment>;
-
+function ProductImage({image}: {image: ProductVariantFragment['image']}) {
+  if (!image) {
+    return <div className="product-image" />;
+  }
   return (
-    <div
-      className="product-images"
-      style={{
-        display: 'grid',
-        gridGap: '1rem',
-      }}
-    >
-      {images.map((media) => {
-        if (!media?.image) return null;
-        return (
-          <Image
-            key={media.id}
-            alt={media.alt || selectedVariant?.title}
-            data={media.image}
-            sizes="(min-width: 45em) 50vw, 100vw"
-            aspectRatio={`${media.image.width} / ${media.image.height}`}
-            style={{width: '100%', height: '100%'}}
-          />
-        );
-      })}
+    <div className="product-image">
+      <Image
+        alt={image.altText || 'Product Image'}
+        aspectRatio="1/1"
+        data={image}
+        key={image.id}
+        sizes="(min-width: 45em) 50vw, 100vw"
+      />
     </div>
   );
 }
@@ -151,14 +115,7 @@ function ProductMain({
 }) {
   const {title, descriptionHtml} = product;
   return (
-    <div
-      className="product-main"
-      style={{
-        position: 'sticky',
-        top: '6rem',
-        alignSelf: 'start',
-      }}
-    >
+    <div className="product-main">
       <h1>{title}</h1>
       {selectedVariant ? (
         <strong>
@@ -210,42 +167,7 @@ function ProductForm({
         options={product.options}
         variants={variants}
       >
-        {({option}) => {
-          return (
-            <div key={option.name}>
-              <h5>{option.name}</h5>
-              <div
-                style={{
-                  display: 'flex',
-                  flexWrap: 'wrap',
-                  gridGap: '.5rem',
-                }}
-              >
-                {option.values.map(({value, isAvailable, isActive, path}) => {
-                  return (
-                    <Link
-                      key={option.name + value}
-                      prefetch="intent"
-                      preventScrollReset
-                      replace
-                      to={path}
-                      style={{
-                        border: isActive
-                          ? '1px solid black'
-                          : '1px solid transparent',
-                        padding: '.25rem .5rem',
-                        opacity: isAvailable ? 1 : 0.3,
-                      }}
-                    >
-                      {value}
-                    </Link>
-                  );
-                })}
-              </div>
-              <br />
-            </div>
-          );
-        }}
+        {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>
       <br />
       <AddToCartButton
@@ -266,6 +188,36 @@ function ProductForm({
       >
         {selectedVariant?.availableForSale ? 'Add to cart' : 'Sold out'}
       </AddToCartButton>
+    </div>
+  );
+}
+
+// TODO: fix when the type is ready
+function ProductOptions({option}: {option: any}) {
+  return (
+    <div className="product-options" key={option.name}>
+      <h5>{option.name}</h5>
+      <div className="product-options-grid">
+        {option.values.map(({value, isAvailable, isActive, path}) => {
+          return (
+            <Link
+              className="product-options-item"
+              key={option.name + value}
+              prefetch="intent"
+              preventScrollReset
+              replace
+              to={path}
+              style={{
+                border: isActive ? '1px solid black' : '1px solid transparent',
+                opacity: isAvailable ? 1 : 0.3,
+              }}
+            >
+              {value}
+            </Link>
+          );
+        })}
+      </div>
+      <br />
     </div>
   );
 }
@@ -305,45 +257,6 @@ function AddToCartButton({
   );
 }
 
-const PRODUCT_MEDIA_FRAGMENT = `#graphql
-  fragment ProductMedia on Media {
-    __typename
-    alt
-    mediaContentType
-    previewImage {
-      url
-    }
-    ... on MediaImage {
-      id
-      image {
-        id
-        url
-        width
-        height
-      }
-    }
-    ... on Video {
-      id
-      sources {
-        mimeType
-        url
-      }
-    }
-    ... on Model3d {
-      id
-      sources {
-        mimeType
-        url
-      }
-    }
-    ... on ExternalVideo {
-      id
-      embedUrl
-      host
-    }
-  }
-` as const;
-
 const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariant on ProductVariant {
     id
@@ -354,6 +267,7 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       value
     }
     image {
+      __typename
       id
       url
       altText
@@ -396,11 +310,6 @@ const PRODUCT_FRAGMENT = `#graphql
     selectedVariant: variantBySelectedOptions(selectedOptions: $selectedOptions) {
       ...ProductVariant
     }
-    media(first: 7) {
-      nodes {
-        ...ProductMedia
-      }
-    }
     variants(first: 1) {
       nodes {
         ...ProductVariant
@@ -411,7 +320,6 @@ const PRODUCT_FRAGMENT = `#graphql
       title
     }
   }
-  ${PRODUCT_MEDIA_FRAGMENT}
   ${PRODUCT_VARIANT_FRAGMENT}
 ` as const;
 

@@ -28,6 +28,7 @@ h2 {
 }
 
 h4 {
+  margin-top: 0.5rem;
   margin-bottom: 0.25rem;
 }
 
@@ -72,11 +73,6 @@ body {
 main {
   margin: 1rem auto;
   width: 100%;
-}
-
-footer {
-  background: #fff;
-  margin-top: auto;
 }
 
 nav a {

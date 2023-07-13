@@ -1,8 +1,8 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Link} from '@remix-run/react';
 
-export async function loader({context: {storefront}}: LoaderArgs) {
-  const data = await storefront.query(POLICIES_QUERY);
+export async function loader({context}: LoaderArgs) {
+  const data = await context.storefront.query(POLICIES_QUERY);
   const policies = Object.values(data.shop || {});
 
   // TODO: I need to sort out the 404 throwing response catching/page

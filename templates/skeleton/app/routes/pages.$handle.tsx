@@ -1,8 +1,6 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 
-// TODO: add SEO
-
 export async function loader({params, context}: LoaderArgs) {
   if (!params.handle) {
     throw new Error('Missing page handle');

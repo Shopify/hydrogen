@@ -7,9 +7,6 @@ import {
 } from '@shopify/hydrogen';
 import type {CollectionFragment} from 'storefrontapi.generated';
 
-// TODO: add SEO
-// TODO: add analytics
-
 export async function loader({context, request}: LoaderArgs) {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 4,
@@ -59,14 +56,7 @@ export default function Collections() {
 
 function CollectionsGrid({collections}: {collections: CollectionFragment[]}) {
   return (
-    <div
-      className="collections-grid"
-      style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-        gridGap: '2rem',
-      }}
-    >
+    <div className="collections-grid">
       {collections.map((collection, index) => (
         <CollectionItem
           key={collection.id}
@@ -87,6 +77,7 @@ function CollectionItem({
 }) {
   return (
     <Link
+      className="collection-item"
       key={collection.id}
       to={`/collections/${collection.handle}`}
       prefetch="intent"
@@ -97,7 +88,6 @@ function CollectionItem({
           aspectRatio="1/1"
           data={collection.image}
           loading={index < 3 ? 'eager' : undefined}
-          style={{height: 'auto'}}
         />
       )}
       <h5>{collection.title}</h5>

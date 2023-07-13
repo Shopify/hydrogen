@@ -18,10 +18,10 @@ export function CartMain({layout, cart}: CartMainProps) {
   const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
 
   return (
-    <>
+    <div className="cart-main">
       <CartEmpty hidden={linesCount} layout={layout} />
       <CartDetails cart={cart} layout={layout} />
-    </>
+    </div>
   );
 }
 
@@ -29,7 +29,7 @@ function CartDetails({layout, cart}: CartMainProps) {
   const cartHasItems = !!cart && cart.totalQuantity > 0;
 
   return (
-    <div>
+    <div className="cart-details">
       <CartLines lines={cart?.lines} />
       {cartHasItems && (
         <CartSummary cost={cart.cost} layout={layout}>
@@ -49,7 +49,7 @@ function CartLines({
   if (!lines) return null;
 
   return (
-    <div aria-labelledby="cart-contents">
+    <div aria-labelledby="cart-lines">
       <ul>
         {lines.nodes.map((line) => (
           <CartLineItem key={line.id} line={line as CartLine} />
@@ -62,39 +62,46 @@ function CartLines({
 function CartLineItem({line}: {line: CartLine}) {
   const {id, quantity, merchandise} = line;
   if (typeof quantity === 'undefined' || !merchandise?.product) return null;
+  const {product, title, image, selectedOptions} = merchandise;
+
+  const lineOptions = new URLSearchParams();
+  selectedOptions.forEach((option) => {
+    lineOptions.append(option.name, option.value);
+  });
+
+  const lineItemUrl = `/products/${product.handle}?${lineOptions.toString()}`;
 
   return (
-    <li key={id} style={{padding: '.75rem 0'}}>
-      <div>
+    <li key={id}>
+      <Link className="cart-line" prefetch="intent" to={lineItemUrl}>
         {merchandise.image && (
           <Image
             alt={merchandise.title}
+            aspectRatio="1/1"
             data={merchandise.image}
-            height={110}
-            style={{height: 'auto'}}
-            width={110}
+            height={100}
+            loading="lazy"
+            width={100}
           />
         )}
-      </div>
 
-      <div>
-        <Link to={`/products/${merchandise.product.handle}`}>
+        <div>
           <p>
-            <strong>{merchandise.product.title}</strong>
+            <strong>{product.title}</strong>
           </p>
-        </Link>
-        <CartLinePrice line={line} as="span" />
-        <ul>
-          {merchandise.selectedOptions.map((option) => (
-            <li key={option.name}>
-              <small>
-                {option.name}: {option.value}
-              </small>
-            </li>
-          ))}
-        </ul>
-        <CartLineQuantityAdjust line={line} />
-      </div>
+          <CartLinePrice line={line} as="span" />
+          <ul>
+            {selectedOptions.map((option) => (
+              <li key={option.name}>
+                <small>
+                  {option.name}: {option.value}
+                </small>
+              </li>
+            ))}
+          </ul>
+          <CartLineQuantityAdjust line={line} />
+        </div>
+      </Link>
     </li>
   );
 }
@@ -123,21 +130,11 @@ export function CartSummary({
   cost: CartApiQueryFragment['cost'];
   layout: CartMainProps['layout'];
 }) {
-  const styles: LayoutStyles = {
-    page: {
-      background: 'white',
-      position: 'relative',
-    },
-    aside: {
-      background: 'white',
-      bottom: 0,
-      position: 'absolute',
-      width: 'calc(var(--aside-width) - 40px)',
-    },
-  };
+  const className =
+    layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
 
   return (
-    <div aria-labelledby="cart-summary" style={styles[layout]}>
+    <div aria-labelledby="cart-summary" className={className}>
       <hr />
       <h4>Totals</h4>
       <dl>

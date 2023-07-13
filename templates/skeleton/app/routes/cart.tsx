@@ -58,19 +58,15 @@ export async function action({request, context}: ActionArgs) {
       throw new Error(`${action} cart action is not defined`);
   }
 
-  /**
-   * The Cart ID may change after each mutation. We need to update it each time in the session.
-   */
   const cartId = result.cart.id;
   const headers = cart.setCartId(result.cart.id);
+  const {cart: cartResult, errors} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
     status = 303;
     headers.set('Location', redirectTo);
   }
-
-  const {cart: cartResult, errors} = result;
 
   return json(
     {
@@ -86,16 +82,13 @@ export async function action({request, context}: ActionArgs) {
 
 export default function Cart() {
   const [root] = useMatches();
-  const cartPromise = root.data?.cart as Promise<CartApiQueryFragment | null>;
+  const cart = root.data?.cart as Promise<CartApiQueryFragment | null>;
 
   return (
     <section className="cart">
       <h1>Cart</h1>
       <Suspense fallback={<p>Loading cart ...</p>}>
-        <Await
-          errorElement={<div>An error occurred</div>}
-          resolve={cartPromise}
-        >
+        <Await errorElement={<div>An error occurred</div>} resolve={cart}>
           {(cart) => {
             return <CartMain layout="page" cart={cart} />;
           }}

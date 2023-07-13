@@ -1,6 +1,4 @@
-// TODO: add seo
-// TODO: read this markup from a markdown file
-
+// TODO: Decide what content to show on the homepage
 export default function Homepage() {
   return (
     <section className="home">
@@ -26,7 +24,7 @@ export default function Homepage() {
         <li>Focus on sematic HTML</li>
         <li>Focus on accessibility</li>
       </ul>
-      <h4>Ideas</h4>
+      <h4>What&apos;s next?</h4>
       <ul>
         <li>Show link to the docs</li>
         <li>Show link to our blog</li>
@@ -40,7 +38,7 @@ export default function Homepage() {
 function Logo() {
   return (
     <svg
-      className="logo"
+      className="hydrogen"
       xmlns="http://www.w3.org/2000/svg"
       width="32"
       height="32"
