@@ -87,7 +87,6 @@ async function runDev({
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
-  enhanceH2Logs();
 
   if (debug) (await import('node:inspector')).open();
 
@@ -151,17 +150,17 @@ async function runDev({
 
     isMiniOxygenStarted = true;
 
+    const graphiqlUrl = `${miniOxygen.listeningAt}/graphiql`;
+
+    enhanceH2Logs(graphiqlUrl);
+
     miniOxygen.showBanner({
       appName: storefront ? colors.cyan(storefront?.title) : undefined,
       headlinePrefix:
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
-      extraLines: [
-        colors.dim(
-          `\nView GraphiQL API browser: ${miniOxygen.listeningAt}/graphiql`,
-        ),
-      ],
+      extraLines: [colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`)],
     });
 
     const showUpgrade = await checkingHydrogenVersion;

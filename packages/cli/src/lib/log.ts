@@ -2,6 +2,7 @@
 
 import {renderWarning, renderFatalError} from '@shopify/cli-kit/node/ui';
 import {BugError} from '@shopify/cli-kit/node/error';
+import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 
 type ConsoleMethod = 'log' | 'warn' | 'error' | 'debug' | 'info';
 const originalConsole = {...console};
@@ -163,7 +164,7 @@ const H2_PREFIX = '[h2:';
  * Where the message can be multiline and the last line
  * can contain links to docs or other resources.
  */
-export function enhanceH2Logs() {
+export function enhanceH2Logs(graphiqlUrl: string) {
   injectLogReplacer('warn');
   injectLogReplacer('error');
 
@@ -189,15 +190,33 @@ export function enhanceH2Logs() {
         lines.pop() ?? '';
       }
 
-      const headline = `Issue found in Hydrogen's ${scope.trim()}`;
+      const headline = `Issue found in Hydrogen's \`${scope.trim()}\``;
 
       if (isError) {
+        const errorArg = args[0] as Error;
+        let tryMessage = hasLinks ? lastLine : undefined;
+        if (errorArg.cause) {
+          const {query, variables} = errorArg.cause as Record<string, string>;
+          if (query) {
+            const link = `${graphiqlUrl}?query=${encodeURIComponent(query)}${
+              variables ? `&variables=${encodeURIComponent(variables)}` : ''
+            }`;
+            tryMessage =
+              (tryMessage ? `${tryMessage}\n\n` : '') +
+              outputContent`To debug the query, try ${outputToken.link(
+                'GraphiQL',
+                link,
+              )}.`.value;
+          }
+        }
+
         const error = new BugError(
           `${headline}:\n` + lines.join('\n'),
-          hasLinks ? lastLine : undefined,
+          tryMessage,
         );
 
-        error.stack = args[0].stack;
+        error.stack = errorArg.stack;
+        error.cause = errorArg.cause;
         renderFatalError(error);
 
         return;
