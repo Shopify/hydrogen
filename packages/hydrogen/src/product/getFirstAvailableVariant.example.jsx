@@ -1,4 +1,4 @@
-import {getFirstAvailableVariant__unstable as getFirstAvailableVariant} from '@shopify/hydrogen';
+import {getFirstAvailableVariant} from '@shopify/hydrogen';
 import {json} from '@shopify/remix-oxygen';
 
 export async function loader({params, context}) {

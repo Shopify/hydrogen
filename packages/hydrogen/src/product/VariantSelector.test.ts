@@ -2,6 +2,7 @@ import {
   VariantSelector,
   getFirstAvailableVariant,
   getSelectedProductOptions,
+  useVariantUrl,
 } from './VariantSelector';
 import {createElement} from 'react';
 import {cleanup, render} from '@testing-library/react';
@@ -95,6 +96,7 @@ describe('<VariantSelector>', () => {
   it('passes value and path for each variant permutation', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
+        handle: 'snowboard',
         options: [
           {name: 'Color', values: ['Red', 'Blue']},
           {name: 'Size', values: ['S', 'M']},
@@ -103,8 +105,8 @@ describe('<VariantSelector>', () => {
           createElement(
             'div',
             null,
-            option.values.map(({value, path}) =>
-              createElement('a', {key: option.name + value, href: path}, value),
+            option.values.map(({value, to}) =>
+              createElement('a', {key: option.name + value, href: to}, value),
             ),
           ),
       }),
@@ -114,24 +116,24 @@ describe('<VariantSelector>', () => {
       <DocumentFragment>
         <div>
           <a
-            href="/?Color=Red"
+            href="/products/snowboard?Color=Red"
           >
             Red
           </a>
           <a
-            href="/?Color=Blue"
+            href="/products/snowboard?Color=Blue"
           >
             Blue
           </a>
         </div>
         <div>
           <a
-            href="/?Size=S"
+            href="/products/snowboard?Size=S"
           >
             S
           </a>
           <a
-            href="/?Size=M"
+            href="/products/snowboard?Size=M"
           >
             M
           </a>
@@ -143,6 +145,7 @@ describe('<VariantSelector>', () => {
   it('automatically appends options with only one value to the URL', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
+        handle: 'snowboard',
         options: [
           {name: 'Color', values: ['Red']},
           {name: 'Size', values: ['S', 'M']},
@@ -151,8 +154,8 @@ describe('<VariantSelector>', () => {
           createElement(
             'div',
             null,
-            option.values.map(({value, path}) =>
-              createElement('a', {key: option.name + value, href: path}, value),
+            option.values.map(({value, to}) =>
+              createElement('a', {key: option.name + value, href: to}, value),
             ),
           ),
       }),
@@ -162,12 +165,62 @@ describe('<VariantSelector>', () => {
       <DocumentFragment>
         <div>
           <a
-            href="/?Size=S&Color=Red"
+            href="/products/snowboard?Size=S&Color=Red"
           >
             S
           </a>
           <a
-            href="/?Size=M&Color=Red"
+            href="/products/snowboard?Size=M&Color=Red"
+          >
+            M
+          </a>
+        </div>
+      </DocumentFragment>
+    `);
+  });
+
+  it('prepends localization', () => {
+    vi.mocked(useLocation).mockReturnValueOnce(
+      fillLocation({search: '?Size=M', pathname: '/en-us/'}),
+    );
+
+    const {asFragment} = render(
+      createElement(VariantSelector, {
+        handle: 'snowboard',
+        options: [
+          {name: 'Color', values: ['Red']},
+          {name: 'Size', values: ['S', 'M']},
+        ],
+        children: ({option}) =>
+          createElement(
+            'div',
+            null,
+            option.values.map(({value, to, isActive}) =>
+              createElement(
+                'a',
+                {
+                  key: option.name + value,
+                  href: to,
+                  className: isActive ? 'active' : undefined,
+                },
+                value,
+              ),
+            ),
+          ),
+      }),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          <a
+            href="/en-us/products/snowboard?Size=S&Color=Red"
+          >
+            S
+          </a>
+          <a
+            class="active"
+            href="/en-us/products/snowboard?Size=M&Color=Red"
           >
             M
           </a>
@@ -183,6 +236,7 @@ describe('<VariantSelector>', () => {
 
     const {asFragment} = render(
       createElement(VariantSelector, {
+        handle: 'snowboard',
         options: [
           {name: 'Color', values: ['Red']},
           {name: 'Size', values: ['S', 'M']},
@@ -191,12 +245,12 @@ describe('<VariantSelector>', () => {
           createElement(
             'div',
             null,
-            option.values.map(({value, path, isActive}) =>
+            option.values.map(({value, to, isActive}) =>
               createElement(
                 'a',
                 {
                   key: option.name + value,
-                  href: path,
+                  href: to,
                   className: isActive ? 'active' : undefined,
                 },
                 value,
@@ -210,13 +264,13 @@ describe('<VariantSelector>', () => {
       <DocumentFragment>
         <div>
           <a
-            href="/?Size=S&Color=Red"
+            href="/products/snowboard?Size=S&Color=Red"
           >
             S
           </a>
           <a
             class="active"
-            href="/?Size=M&Color=Red"
+            href="/products/snowboard?Size=M&Color=Red"
           >
             M
           </a>
@@ -228,17 +282,18 @@ describe('<VariantSelector>', () => {
   it('all options default to available', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
+        handle: 'snowboard',
         options: [{name: 'Size', values: ['S', 'M']}],
         children: ({option}) =>
           createElement(
             'div',
             null,
-            option.values.map(({value, path, isAvailable}) =>
+            option.values.map(({value, to, isAvailable}) =>
               createElement(
                 'a',
                 {
                   key: option.name + value,
-                  href: path,
+                  href: to,
                   className: isAvailable ? 'available' : 'unavailable',
                 },
                 value,
@@ -253,13 +308,13 @@ describe('<VariantSelector>', () => {
         <div>
           <a
             class="available"
-            href="/?Size=S"
+            href="/products/snowboard?Size=S"
           >
             S
           </a>
           <a
             class="available"
-            href="/?Size=M"
+            href="/products/snowboard?Size=M"
           >
             M
           </a>
@@ -271,6 +326,7 @@ describe('<VariantSelector>', () => {
   it('shows products as unavailable', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
+        handle: 'snowboard',
         options: [{name: 'Size', values: ['S', 'M']}],
         variants: [
           {
@@ -286,12 +342,12 @@ describe('<VariantSelector>', () => {
           createElement(
             'div',
             null,
-            option.values.map(({value, path, isAvailable}) =>
+            option.values.map(({value, to, isAvailable}) =>
               createElement(
                 'a',
                 {
                   key: option.name + value,
-                  href: path,
+                  href: to,
                   className: isAvailable ? 'available' : 'unavailable',
                 },
                 value,
@@ -306,13 +362,13 @@ describe('<VariantSelector>', () => {
         <div>
           <a
             class="available"
-            href="/?Size=S"
+            href="/products/snowboard?Size=S"
           >
             S
           </a>
           <a
             class="unavailable"
-            href="/?Size=M"
+            href="/products/snowboard?Size=M"
           >
             M
           </a>
@@ -324,6 +380,7 @@ describe('<VariantSelector>', () => {
   it('takes a connection as variants', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
+        handle: 'snowboard',
         options: [{name: 'Size', values: ['S', 'M']}],
         variants: {
           nodes: [
@@ -341,12 +398,12 @@ describe('<VariantSelector>', () => {
           createElement(
             'div',
             null,
-            option.values.map(({value, path, isAvailable}) =>
+            option.values.map(({value, to, isAvailable}) =>
               createElement(
                 'a',
                 {
                   key: option.name + value,
-                  href: path,
+                  href: to,
                   className: isAvailable ? 'available' : 'unavailable',
                 },
                 value,
@@ -361,17 +418,68 @@ describe('<VariantSelector>', () => {
         <div>
           <a
             class="available"
-            href="/?Size=S"
+            href="/products/snowboard?Size=S"
           >
             S
           </a>
           <a
             class="unavailable"
-            href="/?Size=M"
+            href="/products/snowboard?Size=M"
           >
             M
           </a>
         </div>
+      </DocumentFragment>
+    `);
+  });
+});
+
+describe('getVariantUrl', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
+  afterAll(() => {
+    vi.resetAllMocks();
+  });
+
+  it('returns the URL for a product with no options', () => {
+    vi.mocked(useLocation).mockReturnValueOnce(fillLocation({}));
+
+    function Test() {
+      const {to, search} = useVariantUrl('snowboard', []);
+
+      return createElement('a', {href: to + search});
+    }
+
+    const {asFragment} = render(createElement(Test, {}));
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <a
+          href="/products/snowboard?"
+        />
+      </DocumentFragment>
+    `);
+  });
+
+  it('returns the URL for a product with no options', () => {
+    vi.mocked(useLocation).mockReturnValueOnce(fillLocation({}));
+
+    function Test() {
+      const {to, search} = useVariantUrl('snowboard', [
+        {name: 'Color', value: 'Red'},
+        {name: 'Size', value: 'S'},
+      ]);
+
+      return createElement('a', {href: to + search});
+    }
+
+    const {asFragment} = render(createElement(Test, {}));
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <a
+          href="/products/snowboard?Color=Red&Size=S?Color=Red&Size=S"
+        />
       </DocumentFragment>
     `);
   });
