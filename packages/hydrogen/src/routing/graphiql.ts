@@ -56,6 +56,10 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
       type="application/javascript"
     ></script>
     <script>
+      const url = new URL(document.URL);
+      const query = decodeURIComponent(url.searchParams.get('query') ?? '');
+      const variables = decodeURIComponent(url.searchParams.get('variables') ?? '');
+
       ReactDOM.render(
         React.createElement(GraphiQL, {
           fetcher: GraphiQL.createFetcher({
@@ -65,7 +69,9 @@ export const graphiqlLoader: GraphiQLLoader = async function graphiqlLoader({
             }
           }),
           defaultEditorToolsVisibility: true,
-          initialTabs: [{query: '{\\n  shop {\\n    name\\n  }\\n}'}]
+          initialTabs: [{query: '{\\n  shop {\\n    name\\n  }\\n}'}],
+          query,
+          variables
         }),
         document.getElementById('graphiql'),
       );
