@@ -4,7 +4,7 @@ export default function Homepage() {
     <section className="home">
       <Logo />
       <br />
-      <h1>SKELETON TEMPLATE</h1>
+      <h1>Skeleton Template</h1>
       <p>
         This template seeds the <code>shopify hydrogen generate</code> command
         of the hydrogen cli.

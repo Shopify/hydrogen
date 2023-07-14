@@ -48,6 +48,10 @@ aside header .close {
   }
 }
 
+aside main {
+  padding: 0 20px;
+}
+
 aside header h2 {
   margin-top: 0;
   margin-bottom: 0.6rem;
@@ -194,8 +198,7 @@ aside li {
   height: 100%;
   /* control the vertical scroll of cart lines */
   max-height: calc(100vh - var(--cart-aside-summary-height));
-  overflow: auto;
-  padding: 0px 20px;
+  overflow-y: auto;
   width: auto;
 }
 
@@ -248,6 +251,10 @@ aside li {
 * routes/__index
 * --------------------------------------------------
 */
+.home {
+  padding-top: 3rem;
+}
+
 .home .hydrogen {
   display: block;
   padding: 1rem;
