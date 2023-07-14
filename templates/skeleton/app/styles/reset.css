@@ -70,8 +70,11 @@ body {
   min-height: 100vh;
 }
 
-main {
+body > main {
   margin: 1rem;
+  @media (min-width: 768px) {
+    margin: 1.5rem;
+  }
 }
 
 nav a {
@@ -93,7 +96,7 @@ fieldset {
 }
 
 form {
-  max-width: 355px;
+  max-width: 100%;
   @media (min-width: 768px) {
     max-width: 400px;
   }

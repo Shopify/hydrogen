@@ -73,7 +73,7 @@ export default function Login() {
   const error = data?.error || null;
 
   return (
-    <section className="login">
+    <div className="login">
       <h1>Sign in</h1>
       <Form method="POST">
         <fieldset>
@@ -123,7 +123,7 @@ export default function Login() {
           <Link to="/account/register">Create and account</Link>
         </p>
       </div>
-    </section>
+    </div>
   );
 }
 

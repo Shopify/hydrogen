@@ -52,6 +52,10 @@ aside header h2 {
   margin-bottom: 0.6rem;
 }
 
+aside main {
+  margin: 1rem;
+}
+
 aside p {
   margin: 0 0 0.25rem;
   &:last-child {
@@ -212,7 +216,6 @@ aside li {
 }
 
 .cart-summary-page {
-  background: white;
   position: relative;
 }
 
@@ -238,7 +241,6 @@ aside li {
 .cart-subtotal {
   display: flex;
   align-items: center;
-  justify-content: space-between;
 }
 /*
 * --------------------------------------------------
@@ -257,7 +259,7 @@ aside li {
 }
 
 .predictive-search-result {
-  margin-bottom: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .predictive-search-result h5 {
@@ -275,6 +277,14 @@ aside li {
 
 .predictive-search-result-item a img {
   margin-right: 0.75rem;
+}
+
+.search-result {
+  margin-bottom: 1.5rem;
+}
+
+.search-results-item {
+  margin-bottom: 0.5rem;
 }
 
 /*

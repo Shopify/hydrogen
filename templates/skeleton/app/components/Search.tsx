@@ -101,12 +101,12 @@ export function SearchResults({
 
 function SearchResultsProductsGrid({products}: {products: ProductConnection}) {
   return (
-    <div>
+    <div className="search-result">
       <h3>Products</h3>
       <Pagination connection={products}>
         {({nodes, isLoading, NextLink, PreviousLink}) => {
           const itemsMarkup = nodes.map((product) => (
-            <div key={product.id}>
+            <div className="search-results-item" key={product.id}>
               <Link prefetch="intent" to={`/products/${product.handle}`}>
                 <span>{product.title}</span>
               </Link>
@@ -151,11 +151,11 @@ function SearchResultsProductsGrid({products}: {products: ProductConnection}) {
 
 function SearchResultPageGrid({pages}: {pages: PageConnection}) {
   return (
-    <div>
+    <div className="search-result">
       <h2>Pages</h2>
       <div>
         {pages?.nodes?.map((page: Page) => (
-          <div key={page.id}>
+          <div className="search-results-item" key={page.id}>
             <Link prefetch="intent" to={`/pages/${page.handle}`}>
               {page.title}
             </Link>
@@ -169,11 +169,11 @@ function SearchResultPageGrid({pages}: {pages: PageConnection}) {
 
 function SearchResultArticleGrid({articles}: {articles: ArticleConnection}) {
   return (
-    <div>
+    <div className="search-result">
       <h2>Articles</h2>
       <div>
         {articles?.nodes?.map((article: Article) => (
-          <div key={article.id}>
+          <div className="search-results-item" key={article.id}>
             <Link prefetch="intent" to={`/blog/${article.handle}`}>
               {article.title}
             </Link>
@@ -285,7 +285,8 @@ export function PredictiveSearchResults() {
       {searchTerm.current && (
         <Link onClick={goToSearchResult} to={`/search?q=${searchTerm.current}`}>
           <p>
-            Show all results for <q>{searchTerm.current}</q>
+            View all results for <q>{searchTerm.current}</q>
+            &nbsp;
             <mark>→</mark>
           </p>
         </Link>

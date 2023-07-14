@@ -94,7 +94,7 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
                     'Loading...'
                   ) : (
                     <span>
-                      load more <mark>↓</mark>
+                      Load more <mark>↓</mark>
                     </span>
                   )}
                 </NextLink>

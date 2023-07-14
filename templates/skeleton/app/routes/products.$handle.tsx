@@ -46,11 +46,11 @@ export async function loader({params, request, context}: LoaderArgs) {
   // into it's own separate query that is deferred. So there's a brief moment
   // where variant options might show as available when they're not, but after
   // this deffered query resolves, the UI will update.
-  const variants = context.storefront.query(VARIANTS_QUERY, {
+  const variants = storefront.query(VARIANTS_QUERY, {
     variables: {handle},
   });
 
-  if (!product?.id || !product.variants.nodes.length) {
+  if (!product?.id) {
     throw new Response(null, {status: 404});
   }
 

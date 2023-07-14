@@ -106,12 +106,12 @@ function AccountLayout({
     : 'Account Details';
 
   return (
-    <section className="account">
+    <div className="account">
       <h1>{heading}</h1>
       <br />
       <AcccountMenu />
       {children}
-    </section>
+    </div>
   );
 }
 
@@ -126,7 +126,7 @@ function AcccountMenu() {
     return {
       fontWeight: isActive ? 'bold' : '',
       background: isActive ? 'yellow' : '',
-      color: isPending ? 'red' : 'black',
+      color: isPending ? 'grey' : 'black',
     };
   }
   return (
