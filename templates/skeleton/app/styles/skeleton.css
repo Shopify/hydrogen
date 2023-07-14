@@ -1,14 +1,75 @@
 :root {
   --aside-width: 400px;
   --header-height: 58px;
-  --cart-aside-summary-height: 244px;
+  --cart-aside-summary-height: 300px;
 }
 
 /*
 * --------------------------------------------------
-* Overlay
+* components/Aside
 * --------------------------------------------------
 */
+aside {
+  background: #fff;
+  box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
+  height: 100vh;
+  max-width: var(--aside-width);
+  min-width: var(--aside-width);
+  position: fixed;
+  right: calc(-1 * var(--aside-width));
+  top: 0;
+  transition: transform 200ms ease-in-out;
+}
+
+aside header {
+  height: var(--header-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  border-bottom: 1px solid #000;
+}
+
+aside header h3 {
+  margin: 0;
+}
+
+aside header .close {
+  font-size: 24px;
+  font-weight: bold;
+  opacity: 0.8;
+  text-decoration: none;
+  transition: all 200ms;
+  width: 20px;
+  &:hover {
+    opacity: 1;
+  }
+}
+
+aside header h2 {
+  margin-top: 0;
+  margin-bottom: 0.6rem;
+}
+
+aside main {
+  height: 100%;
+  max-height: calc(100vh - var(--cart-aside-summary-height));
+  overflow: auto;
+  padding: 0px 20px;
+  width: auto;
+}
+
+aside p {
+  margin: 0 0 0.25rem;
+  &:last-child {
+    margin: 0;
+  }
+}
+
+aside li {
+  margin-bottom: 0.125rem;
+}
+
 .overlay {
   background: rgba(0, 0, 0, 0.2);
   bottom: 0;
@@ -60,79 +121,7 @@
 
 /*
 * --------------------------------------------------
-* Aside
-* --------------------------------------------------
-*/
-aside {
-  background: #fff;
-  box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
-  height: 100vh;
-  max-width: var(--aside-width);
-  min-width: var(--aside-width);
-  position: fixed;
-  right: calc(-1 * var(--aside-width));
-  top: 0;
-  transition: transform 200ms ease-in-out;
-}
-
-aside header {
-  height: var(--header-height);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 20px;
-}
-
-aside header h3 {
-  margin: 0;
-}
-
-aside header .close {
-  font-size: 24px;
-  font-weight: bold;
-  opacity: 0.8;
-  text-decoration: none;
-  transition: all 200ms;
-  width: 20px;
-  &:hover {
-    opacity: 1;
-  }
-}
-
-aside header h2 {
-  margin-top: 0;
-  margin-bottom: 0.6rem;
-}
-
-aside main {
-  height: 100%;
-  max-height: calc(100vh - var(--cart-aside-summary-height));
-  overflow: auto;
-  padding: 0px 20px;
-  width: auto;
-}
-
-aside p {
-  margin: 0 0 1em;
-  &:last-child {
-    margin: 0;
-  }
-}
-
-/*
-* --------------------------------------------------
-* Routes
-* --------------------------------------------------
-*/
-.home .hydrogen {
-  display: block;
-  padding: 1rem;
-  background: #000;
-}
-
-/*
-* --------------------------------------------------
-* Header
+* components/Header
 * --------------------------------------------------
 */
 .header {
@@ -177,7 +166,7 @@ aside p {
 
 /*
 * --------------------------------------------------
-* Footer
+* components/Footer
 * --------------------------------------------------
 */
 .footer {
@@ -204,7 +193,7 @@ aside p {
 
 /*
 * --------------------------------------------------
-* Cart
+* components/Cart
 * --------------------------------------------------
 */
 .cart-line {
@@ -224,7 +213,9 @@ aside p {
 
 .cart-summary-aside {
   background: white;
+  border-top: 1px solid #000;
   bottom: 0;
+  padding-top: 0.75rem;
   position: absolute;
   width: calc(var(--aside-width) - 40px);
 }
@@ -236,11 +227,24 @@ aside p {
 .cart-discount {
   display: flex;
   align-items: center;
+  margin-top: 0.25rem;
 }
 
 .cart-subtotal {
   display: flex;
   align-items: center;
+  justify-content: space-between;
+}
+
+/*
+* --------------------------------------------------
+* routes/__index
+* --------------------------------------------------
+*/
+.home .hydrogen {
+  display: block;
+  padding: 1rem;
+  background: #000;
 }
 
 /*

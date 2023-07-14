@@ -21,7 +21,6 @@ export function Aside({
           <h3>{heading}</h3>
           <CloseAside />
         </header>
-        <hr />
         <main>{children}</main>
       </aside>
     </div>

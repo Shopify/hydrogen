@@ -19,6 +19,58 @@ export function Header({header, isLoggedIn, cart}: HeaderProps) {
   );
 }
 
+export function HeaderMenu({
+  menu,
+  viewport,
+}: {
+  menu: HeaderProps['header']['menu'];
+  viewport: Viewport;
+}) {
+  const [root] = useMatches();
+  const publicStoreDomain = root?.data?.publicStoreDomain;
+  const className = `header-menu-${viewport}`;
+
+  function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {
+    if (viewport === 'mobile') {
+      event.preventDefault();
+      window.location.href = event.currentTarget.href;
+    }
+  }
+
+  if (!menu)
+    return (
+      <mark className={className}>
+        Header menu <code>skeleton-header</code> not configured.
+      </mark>
+    );
+  return (
+    <nav className={className} role="navigation">
+      {viewport === 'mobile' && (
+        <Link prefetch="intent" to="/" onClick={closeAside}>
+          HOME
+        </Link>
+      )}
+      {menu.items.map((item) => {
+        if (!item.url) return null;
+        const url = item.url.includes(publicStoreDomain)
+          ? new URL(item.url).pathname
+          : item.url;
+        return (
+          <Link
+            key={item.id}
+            prefetch="intent"
+            className="header-menu-item"
+            to={url}
+            onClick={closeAside}
+          >
+            {item.title}
+          </Link>
+        );
+      })}
+    </nav>
+  );
+}
+
 function HeaderCtas({
   isLoggedIn,
   cart,
@@ -40,50 +92,6 @@ function HeaderMenuMobileToggle() {
     <a className="header-menu-mobile-toggle" href="#mobile-menu-aside">
       MENU
     </a>
-  );
-}
-
-export function HeaderMenu({
-  menu,
-  viewport,
-}: {
-  menu: HeaderProps['header']['menu'];
-  viewport: Viewport;
-}) {
-  const [root] = useMatches();
-  const publicStoreDomain = root?.data?.publicStoreDomain;
-  const className = `header-menu-${viewport}`;
-  if (!menu)
-    return (
-      <mark className={className}>
-        Header menu <code>skeleton-header</code> not configured.
-      </mark>
-    );
-  return (
-    <nav className={className} role="navigation">
-      {menu.items.map((item) => {
-        if (!item.url) return null;
-        const url = item.url.includes(publicStoreDomain)
-          ? new URL(item.url).pathname
-          : item.url;
-        return (
-          <Link
-            key={item.id}
-            prefetch="intent"
-            className="header-menu-item"
-            to={url}
-            onClick={(event) => {
-              if (viewport === 'mobile') {
-                event.preventDefault();
-                window.location.href = url;
-              }
-            }}
-          >
-            {item.title}
-          </Link>
-        );
-      })}
-    </nav>
   );
 }
 

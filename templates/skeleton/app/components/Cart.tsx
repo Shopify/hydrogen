@@ -149,7 +149,6 @@ export function CartSummary({
 
   return (
     <div aria-labelledby="cart-summary" className={className}>
-      <hr />
       <h4>Totals</h4>
       <dl className="cart-subtotal">
         <dt>Subtotal</dt>
@@ -303,7 +302,6 @@ function CartDiscounts({
           <button type="submit">Apply</button>
         </div>
       </UpdateDiscountForm>
-      <br />
     </div>
   );
 }

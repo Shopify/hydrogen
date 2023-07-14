@@ -29,7 +29,7 @@ h2 {
 
 h4 {
   margin-top: 0.5rem;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.5rem;
 }
 
 h5 {
@@ -80,7 +80,10 @@ nav a {
 }
 
 section {
-  padding: 1rem 2rem;
+  padding: 1rem 1rem;
+  @media (min-width: 768px) {
+    padding: 1rem 2rem;
+  }
 }
 
 fieldset {
@@ -91,7 +94,10 @@ fieldset {
 }
 
 form {
-  max-width: 400px;
+  max-width: 355px;
+  @media (min-width: 768px) {
+    max-width: 400px;
+  }
 }
 
 input {

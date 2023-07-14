@@ -9,6 +9,7 @@ export default function Homepage() {
         This template seeds the <code>shopify hydrogen generate</code> command
         of the hydrogen cli.
       </p>
+      <br />
       <h4>Principles</h4>
       <p>
         The skeleton template is a bare bones template that is meant to be
@@ -24,6 +25,7 @@ export default function Homepage() {
         <li>Focus on sematic HTML</li>
         <li>Focus on accessibility</li>
       </ul>
+      <br />
       <h4>What&apos;s next?</h4>
       <ul>
         <li>Show link to the docs</li>
