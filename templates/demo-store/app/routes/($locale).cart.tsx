@@ -36,7 +36,7 @@ export async function action({request, context}: ActionArgs) {
 
       // User inputted discount code
       const discountCodes = (
-        formDiscountCode ? [formDiscountCode] : ['']
+        formDiscountCode ? [formDiscountCode] : []
       ) as string[];
 
       // Combine discount codes already applied on cart
