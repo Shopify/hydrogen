@@ -69,7 +69,7 @@ export async function runWithCache<T = unknown>(
   ]);
 
   const cachedItem = await getItemFromCache(cacheInstance, key);
-  // console.log('--- Cache', cachedItem ? 'HIT' : 'MISS');
+  console.log('--- Cache', cachedItem ? 'HIT' : 'MISS', cacheKey);
 
   if (cachedItem) {
     const [cachedResult, cacheInfo] = cachedItem;
