@@ -1,9 +1,11 @@
 :root {
   --aside-width: 400px;
-  --header-height: 58px;
-  --cart-aside-summary-height: 250px;
   --cart-aside-summary-height-with-discount: 300px;
+  --cart-aside-summary-height: 250px;
   --grid-item-width: 355px;
+  --header-height: 58px;
+  --color-dark: #000;
+  --color-light: #fff;
 }
 
 /*
@@ -12,7 +14,7 @@
 * --------------------------------------------------
 */
 aside {
-  background: #fff;
+  background: var(--color-light);
   box-shadow: 0 0 50px rgba(0, 0, 0, 0.3);
   height: 100vh;
   max-width: var(--aside-width);
@@ -24,12 +26,12 @@ aside {
 }
 
 aside header {
-  height: var(--header-height);
-  display: flex;
   align-items: center;
+  border-bottom: 1px solid var(--color-dark);
+  display: flex;
+  height: var(--header-height);
   justify-content: space-between;
   padding: 0 20px;
-  border-bottom: 1px solid #000;
 }
 
 aside header h3 {
@@ -48,8 +50,8 @@ aside header .close {
 }
 
 aside header h2 {
-  margin-top: 0;
   margin-bottom: 0.6rem;
+  margin-top: 0;
 }
 
 aside main {
@@ -123,7 +125,7 @@ aside li {
 */
 .header {
   align-items: center;
-  border-bottom: 1px solid #000;
+  border-bottom: 1px solid var(--color-dark);
   display: flex;
   height: var(--header-height);
   padding: 0 1rem;
@@ -167,14 +169,14 @@ aside li {
 * --------------------------------------------------
 */
 .footer {
-  background: #fff;
+  background: var(--color-light);
+  border-top: 1px solid var(--color-dark);
   margin-top: auto;
-  border-top: 1px solid #000;
 }
 
 .footer-menu-missing {
-  margin: 1rem;
   display: inline-block;
+  margin: 1rem;
 }
 
 .footer-menu {
@@ -195,7 +197,6 @@ aside li {
 */
 .cart-main {
   height: 100%;
-  /* control the vertical scroll of cart lines */
   max-height: calc(100vh - var(--cart-aside-summary-height));
   overflow-y: auto;
   width: auto;
@@ -221,7 +222,7 @@ aside li {
 
 .cart-summary-aside {
   background: white;
-  border-top: 1px solid #000;
+  border-top: 1px solid var(--color-dark);
   bottom: 0;
   padding-top: 0.75rem;
   position: absolute;
@@ -233,14 +234,14 @@ aside li {
 }
 
 .cart-discount {
-  display: flex;
   align-items: center;
+  display: flex;
   margin-top: 0.25rem;
 }
 
 .cart-subtotal {
-  display: flex;
   align-items: center;
+  display: flex;
 }
 /*
 * --------------------------------------------------
@@ -253,7 +254,7 @@ aside li {
 }
 
 .predictive-search-form {
-  background: #fff;
+  background: var(--color-light);
   position: sticky;
   top: 0;
 }
@@ -271,8 +272,8 @@ aside li {
 }
 
 .predictive-search-result-item a {
-  display: flex;
   align-items: center;
+  display: flex;
 }
 
 .predictive-search-result-item a img {
@@ -297,9 +298,9 @@ aside li {
 }
 
 .home .hydrogen {
+  background: var(--color-dark);
   display: block;
   padding: 1rem;
-  background: #000;
 }
 
 /*
@@ -332,8 +333,8 @@ aside li {
 }
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
   grid-gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
   margin-bottom: 2rem;
 }
 
@@ -366,9 +367,9 @@ aside li {
 }
 
 .product-main {
+  align-self: start;
   position: sticky;
   top: 6rem;
-  align-self: start;
 }
 
 .product-options-grid {
@@ -388,14 +389,14 @@ aside li {
 */
 .blog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
   grid-gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
   margin-bottom: 2rem;
 }
 
 .blog-article-image {
-  display: block;
   aspect-ratio: 3/2;
+  display: block;
 }
 
 /*
