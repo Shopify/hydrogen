@@ -43,6 +43,7 @@ export async function loader({params, request, context}: LoaderArgs) {
 
   const selectedOptions = getSelectedProductOptions(request);
 
+  const time = new Date().getTime();
   const {shop, product} = await context.storefront.query(PRODUCT_QUERY, {
     variables: {
       handle: productHandle,
@@ -51,6 +52,7 @@ export async function loader({params, request, context}: LoaderArgs) {
       language: context.storefront.i18n.language,
     },
   });
+  console.log('TIME: product', new Date().getTime() - time, 'ms');
 
   // In order to show which variants are available in the UI, we need to query
   // all of them. But there might be a *lot*, so instead separate the variants
