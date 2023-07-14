@@ -1,4 +1,4 @@
-import {getSelectedProductOptions__unstable as getSelectedProductOptions} from '@shopify/hydrogen';
+import {getSelectedProductOptions} from '@shopify/hydrogen';
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 
 export async function loader({request, params, context}: LoaderArgs) {
