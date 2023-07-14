@@ -225,11 +225,11 @@ export async function setupLocalStarterTemplate(
     });
   }
 
-  const cliCommand = await getCliCommand('', packageManager);
+  const pkgManagerCommand = await getCliCommand('', packageManager);
 
   const {createShortcut, showShortcutBanner} = await handleCliShortcut(
     controller,
-    cliCommand,
+    pkgManagerCommand,
     options.shortcut,
   );
 
@@ -240,6 +240,8 @@ export async function setupLocalStarterTemplate(
 
     showShortcutBanner();
   }
+
+  const cliCommand = createShortcut ? ALIAS_NAME : pkgManagerCommand;
 
   renderSuccess({
     headline: [
@@ -254,16 +256,14 @@ export async function setupLocalStarterTemplate(
       message: 'Do you want to scaffold routes and core functionality?',
       confirmationMessage: 'Yes, set up now',
       cancellationMessage:
-        'No, set up later ' +
-        colors.dim(
-          `(run \`${createShortcut ? ALIAS_NAME : cliCommand} setup\`)`,
-        ),
+        'No, set up later ' + colors.dim(`(run \`${cliCommand} setup\`)`),
       abortSignal: controller.signal,
     }));
 
   if (continueWithSetup) {
     const {i18nStrategy, setupI18n} = await handleI18n(
       controller,
+      cliCommand,
       options.i18n,
     );
 

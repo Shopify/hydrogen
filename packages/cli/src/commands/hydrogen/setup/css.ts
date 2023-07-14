@@ -23,8 +23,6 @@ import {
 export default class SetupCSS extends Command {
   static description = 'Setup CSS strategies for your project.';
 
-  static hidden = true;
-
   static flags = {
     path: commonFlags.path,
     force: commonFlags.force,
