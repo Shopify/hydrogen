@@ -85,7 +85,7 @@ export default function Cart() {
   const cart = root.data?.cart as Promise<CartApiQueryFragment | null>;
 
   return (
-    <section className="cart">
+    <div className="cart">
       <h1>Cart</h1>
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await errorElement={<div>An error occurred</div>} resolve={cart}>
@@ -94,6 +94,6 @@ export default function Cart() {
           }}
         </Await>
       </Suspense>
-    </section>
+    </div>
   );
 }

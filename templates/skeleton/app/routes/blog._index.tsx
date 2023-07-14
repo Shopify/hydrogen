@@ -33,7 +33,7 @@ export default function Journals() {
   const {articles} = blog;
 
   return (
-    <section className="blog">
+    <div className="blog">
       <h1>{BLOG_HANDLE}</h1>
       <div className="blog-grid">
         <Pagination connection={articles}>
@@ -72,7 +72,7 @@ export default function Journals() {
           }}
         </Pagination>
       </div>
-    </section>
+    </div>
   );
 }
 

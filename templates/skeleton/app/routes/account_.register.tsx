@@ -109,7 +109,7 @@ export default function Register() {
   const data = useActionData<ActionResponse>();
   const error = data?.error || null;
   return (
-    <section className="login">
+    <div className="login">
       <h1>Register</h1>
       <Form method="POST">
         <fieldset>
@@ -164,7 +164,7 @@ export default function Register() {
       <p>
         Already registered? &nbsp;<Link to="/account/login">Login</Link>
       </p>
-    </section>
+    </div>
   );
 }
 

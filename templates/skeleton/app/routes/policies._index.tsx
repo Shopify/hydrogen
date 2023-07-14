@@ -17,7 +17,7 @@ export default function Policies() {
   const {policies} = useLoaderData<typeof loader>();
 
   return (
-    <section className="policies">
+    <div className="policies">
       <h1>Policies</h1>
       <div className="policies">
         {policies.map((policy) => {
@@ -29,7 +29,7 @@ export default function Policies() {
           );
         })}
       </div>
-    </section>
+    </div>
   );
 }
 

@@ -1,7 +1,7 @@
 // TODO: Decide what content to show on the homepage
 export default function Homepage() {
   return (
-    <section className="home">
+    <div className="home">
       <Logo />
       <br />
       <h1>Skeleton Template</h1>
@@ -33,7 +33,7 @@ export default function Homepage() {
         <li>Show link to our github discussions</li>
         <li>Show link to our Editions videos</li>
       </ul>
-    </section>
+    </div>
   );
 }
 

@@ -39,7 +39,7 @@ export default function Article() {
   }).format(new Date(article.publishedAt));
 
   return (
-    <section className="article">
+    <div className="article">
       <h1>
         {title}
         <span>
@@ -52,7 +52,7 @@ export default function Article() {
         dangerouslySetInnerHTML={{__html: contentHtml}}
         className="article"
       />
-    </section>
+    </div>
   );
 }
 

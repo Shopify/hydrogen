@@ -41,7 +41,7 @@ export default function Policy() {
   const {policy} = useLoaderData<typeof loader>();
 
   return (
-    <section className="policy">
+    <div className="policy">
       <div>
         <Link to="/policies">
           <mark>←</mark> Back to Policies
@@ -50,7 +50,7 @@ export default function Policy() {
       <br />
       <h1>{policy.title}</h1>
       <div dangerouslySetInnerHTML={{__html: policy.body}} />
-    </section>
+    </div>
   );
 }
 

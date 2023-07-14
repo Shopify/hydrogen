@@ -23,7 +23,7 @@ export default function Collections() {
   const {collections} = useLoaderData<typeof loader>();
 
   return (
-    <section className="collections">
+    <div className="collections">
       <h1>Collections</h1>
       <Pagination connection={collections}>
         {({nodes, isLoading, PreviousLink, NextLink}) => (
@@ -50,7 +50,7 @@ export default function Collections() {
           </div>
         )}
       </Pagination>
-    </section>
+    </div>
   );
 }
 

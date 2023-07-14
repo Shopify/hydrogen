@@ -46,7 +46,7 @@ export default function Recover() {
   const action = useActionData<ActionResponse>();
 
   return (
-    <section className="account-recover">
+    <div className="account-recover">
       <div>
         {action?.resetRequested ? (
           <>
@@ -102,7 +102,7 @@ export default function Recover() {
           </>
         )}
       </div>
-    </section>
+    </div>
   );
 }
 

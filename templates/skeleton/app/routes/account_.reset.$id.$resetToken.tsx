@@ -64,7 +64,7 @@ export default function Reset() {
   const action = useActionData<ActionResponse>();
 
   return (
-    <section className="account-reset">
+    <div className="account-reset">
       <h1>Reset Password.</h1>
       <p>Enter a new password for your account.</p>
       <Form method="POST">
@@ -109,7 +109,7 @@ export default function Reset() {
       <p>
         <a href="/account/login">Back to login</a>
       </p>
-    </section>
+    </div>
   );
 }
 

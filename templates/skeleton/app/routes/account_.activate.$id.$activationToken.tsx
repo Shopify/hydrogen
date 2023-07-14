@@ -84,7 +84,7 @@ export default function Activate() {
   const error = action?.error ?? null;
 
   return (
-    <section className="account-activate">
+    <div className="account-activate">
       <h1>Activate Account.</h1>
       <p>Create your password to activate your account.</p>
       <Form method="POST">
@@ -130,7 +130,7 @@ export default function Activate() {
           Save
         </button>
       </Form>
-    </section>
+    </div>
   );
 }
 
