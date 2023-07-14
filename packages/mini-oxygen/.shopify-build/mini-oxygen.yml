@@ -10,7 +10,7 @@ steps:
       - node_modules
     timeout: 5m
     run:
-    - yarn
+    - yarn install --frozen-lockfile
     - yarn lint
 
   - label: Type Check
@@ -18,5 +18,13 @@ steps:
       - node_modules
     timeout: 5m
     run:
-    - yarn
+    - yarn install --frozen-lockfile
     - yarn type-check
+
+  - label: e2e Tests
+    cache:
+      - node_modules
+    timeout: 5m
+    run:
+    - yarn install --frozen-lockfile
+    - yarn test
