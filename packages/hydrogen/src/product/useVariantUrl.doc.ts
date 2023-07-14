@@ -1,8 +1,8 @@
 import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
 
 const data: ReferenceEntityTemplateSchema = {
-  name: 'getFirstAvailableVariant',
-  category: 'utilities',
+  name: 'useVariantUrl',
+  category: 'hooks',
   isVisualComponent: false,
   related: [
     {
@@ -16,7 +16,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/docs/api/hydrogen/2023-04/utilities/getselectedproductoptions',
     },
   ],
-  description: `The \`getFirstAvailableVariant\` returns the first variant that is available for purchase.`,
+  description: `The \`useVariantUrl\` hook helps you know the URL to navigate to a given product handle with selected options.`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',
@@ -24,12 +24,12 @@ const data: ReferenceEntityTemplateSchema = {
       tabs: [
         {
           title: 'JavaScript',
-          code: './getFirstAvailableVariant.example.jsx',
+          code: './useVariantUrl.example.jsx',
           language: 'jsx',
         },
         {
           title: 'TypeScript',
-          code: './getFirstAvailableVariant.example.tsx',
+          code: './useVariantUrl.example.tsx',
           language: 'tsx',
         },
       ],
@@ -39,7 +39,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Props',
-      type: 'GetFirstAvailableVariant',
+      type: 'UseVariantUrlGeneratedType',
       description: '',
     },
   ],

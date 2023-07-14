@@ -19,7 +19,8 @@
     "version:hydrogen": "node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "version:cli": "cd packages/cli && npm run generate:manifest",
     "changeset": "changeset",
-    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache"
+    "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache",
+    "check": "npm run build && npm run lint && npm run typecheck && npm run test"
   },
   "workspaces": [
     "templates/hello-world",

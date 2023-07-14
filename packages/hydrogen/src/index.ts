@@ -47,9 +47,15 @@ export type {
 } from './cart/queries/cart-types';
 
 export {
-  VariantSelector as VariantSelector__unstable,
-  getSelectedProductOptions as getSelectedProductOptions__unstable,
-  getFirstAvailableVariant as getFirstAvailableVariant__unstable,
+  VariantSelector,
+  getSelectedProductOptions,
+  getFirstAvailableVariant,
+  useVariantUrl,
+} from './product/VariantSelector';
+
+export type {
+  VariantOption,
+  VariantOptionValue,
 } from './product/VariantSelector';
 
 export {

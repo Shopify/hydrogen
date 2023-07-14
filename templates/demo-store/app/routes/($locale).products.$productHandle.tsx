@@ -7,9 +7,9 @@ import {
   AnalyticsPageType,
   Money,
   ShopPayButton,
-  VariantSelector__unstable as VariantSelector,
-  getSelectedProductOptions__unstable as getSelectedProductOptions,
-  getFirstAvailableVariant__unstable as getFirstAvailableVariant,
+  VariantSelector,
+  getSelectedProductOptions,
+  getFirstAvailableVariant,
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
@@ -212,6 +212,7 @@ export function ProductForm({
     <div className="grid gap-10">
       <div className="grid gap-4">
         <VariantSelector
+          handle={product.handle}
           options={product.options}
           variants={variants}
           defaultVariant={firstVariant}
@@ -251,14 +252,14 @@ export function ProductForm({
                             >
                               {option.values
                                 .filter((value) => value.isAvailable)
-                                .map(({value, path, isActive}) => (
+                                .map(({value, to, isActive}) => (
                                   <Listbox.Option
                                     key={`option-${option.name}-${value}`}
                                     value={value}
                                   >
                                     {({active}) => (
                                       <Link
-                                        to={path}
+                                        to={to}
                                         className={clsx(
                                           'text-primary w-full p-2 transition rounded flex justify-start items-center text-left cursor-pointer',
                                           active && 'bg-primary/10',
@@ -284,24 +285,22 @@ export function ProductForm({
                       </Listbox>
                     </div>
                   ) : (
-                    option.values.map(
-                      ({value, isAvailable, isActive, path}) => (
-                        <Link
-                          key={option.name + value}
-                          to={path}
-                          preventScrollReset
-                          prefetch="intent"
-                          replace
-                          className={clsx(
-                            'leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200',
-                            isActive ? 'border-primary/50' : 'border-primary/0',
-                            isAvailable ? 'opacity-100' : 'opacity-50',
-                          )}
-                        >
-                          {value}
-                        </Link>
-                      ),
-                    )
+                    option.values.map(({value, isAvailable, isActive, to}) => (
+                      <Link
+                        key={option.name + value}
+                        to={to}
+                        preventScrollReset
+                        prefetch="intent"
+                        replace
+                        className={clsx(
+                          'leading-none py-1 border-b-[1.5px] cursor-pointer transition-all duration-200',
+                          isActive ? 'border-primary/50' : 'border-primary/0',
+                          isAvailable ? 'opacity-100' : 'opacity-50',
+                        )}
+                      >
+                        {value}
+                      </Link>
+                    ))
                   )}
                 </div>
               </div>
