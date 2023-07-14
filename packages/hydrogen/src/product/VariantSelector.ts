@@ -1,4 +1,4 @@
-import {useLocation, useNavigate} from '@remix-run/react';
+import {useLocation} from '@remix-run/react';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import type {
   Product,
@@ -7,7 +7,7 @@ import type {
   ProductVariantConnection,
   SelectedOptionInput,
 } from '@shopify/hydrogen-react/storefront-api-types';
-import {Fragment, ReactNode, createElement, useEffect, useMemo} from 'react';
+import {ReactNode, useMemo, createElement, Fragment} from 'react';
 import type {PartialDeep} from 'type-fest';
 
 export type VariantOption = {
