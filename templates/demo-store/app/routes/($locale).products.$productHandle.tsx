@@ -186,7 +186,7 @@ export function ProductForm({
 }) {
   const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
   const firstVariant =
-    getFirstAvailableVariant(product.variants) ?? product.variants.nodes[0];
+    getFirstAvailableVariant(variants) ?? product.variants.nodes[0];
 
   const closeRef = useRef<HTMLButtonElement>(null);
 
