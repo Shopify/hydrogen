@@ -16,10 +16,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/docs/api/hydrogen/2023-04/utilities/getfirstavailablevariant',
     },
   ],
-  description: `> Caution:
-> This component is in an unstable pre-release state and may have breaking changes in a future release.
-
-The \`VariantSelector\` component helps you build a form for selecting available variants of a product. It is important for variant selection state to be maintained in the URL, so that the user can navigate to a product and return back to the same variant selection. It is also important that the variant selection state is shareable via URL. The \`VariantSelector\` component provides a render prop that renders for each product option.`,
+  description: `The \`VariantSelector\` component helps you build a form for selecting available variants of a product. It is important for variant selection state to be maintained in the URL, so that the user can navigate to a product and return back to the same variant selection. It is also important that the variant selection state is shareable via URL. The \`VariantSelector\` component provides a render prop that renders for each product option.`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',

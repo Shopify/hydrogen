@@ -1,15 +1,18 @@
 import {describe, it, expect} from 'vitest';
 import {
-  convertRouteToV2,
+  convertRouteToV1,
   convertTemplateToRemixVersion,
 } from './remix-version-interop.js';
 
 describe('remix-version-interop', () => {
   describe('v2_routeConvention', () => {
-    it('converts routes to v2', () => {
-      expect(convertRouteToV2('index')).toEqual('_index');
-      expect(convertRouteToV2('path/to/file')).toEqual('path.to.file');
-      expect(convertRouteToV2('path/to/index')).toEqual('path.to._index');
+    it('converts routes to v1', () => {
+      expect(convertRouteToV1('_index')).toEqual('index');
+      expect(convertRouteToV1('path.to.file')).toEqual('path/to/file');
+      expect(convertRouteToV1('path.to._index')).toEqual('path/to/index');
+      expect(convertRouteToV1('patht.to.[sitemap.xml]')).toEqual(
+        'patht/to/[sitemap.xml]',
+      );
     });
   });
 
