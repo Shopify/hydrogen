@@ -1,7 +1,9 @@
 :root {
   --aside-width: 400px;
   --header-height: 58px;
-  --cart-aside-summary-height: 300px;
+  --cart-aside-summary-height: 250px;
+  --cart-aside-summary-height-with-discount: 300px;
+  --grid-item-width: 355px;
 }
 
 /*
@@ -49,14 +51,6 @@ aside header .close {
 aside header h2 {
   margin-top: 0;
   margin-bottom: 0.6rem;
-}
-
-aside main {
-  height: 100%;
-  max-height: calc(100vh - var(--cart-aside-summary-height));
-  overflow: auto;
-  padding: 0px 20px;
-  width: auto;
 }
 
 aside p {
@@ -196,6 +190,19 @@ aside li {
 * components/Cart
 * --------------------------------------------------
 */
+.cart-main {
+  height: 100%;
+  /* control the vertical scroll of cart lines */
+  max-height: calc(100vh - var(--cart-aside-summary-height));
+  overflow: auto;
+  padding: 0px 20px;
+  width: auto;
+}
+
+.cart-main.with-discount {
+  max-height: calc(100vh - var(--cart-aside-summary-height-with-discount));
+}
+
 .cart-line {
   display: flex;
   padding: 0.75rem 0;
@@ -254,8 +261,9 @@ aside li {
 */
 .collections-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
   grid-gap: 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
+  margin-bottom: 2rem;
 }
 
 .collection-item img {
@@ -276,8 +284,9 @@ aside li {
 }
 .products-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
   grid-gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .product-item img {
@@ -331,8 +340,9 @@ aside li {
 */
 .blog-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(var(--grid-item-width), 1fr));
   grid-gap: 1.5rem;
+  margin-bottom: 2rem;
 }
 
 .blog-article-image {

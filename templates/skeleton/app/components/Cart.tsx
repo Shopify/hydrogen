@@ -12,9 +12,14 @@ type CartMainProps = {
 
 export function CartMain({layout, cart}: CartMainProps) {
   const linesCount = Boolean(cart?.lines?.nodes?.length || 0);
+  const withDiscount =
+    cart &&
+    Boolean(cart.discountCodes.filter((code) => code.applicable).length);
+  const className = `cart-main ${withDiscount ? 'with-discount' : ''}`;
+  console.log('discountCodes', cart?.discountCodes);
 
   return (
-    <div className="cart-main">
+    <div className={className}>
       <CartEmpty hidden={linesCount} layout={layout} />
       <CartDetails cart={cart} layout={layout} />
     </div>
@@ -68,6 +73,7 @@ function CartLineItem({
   if (typeof quantity === 'undefined' || !merchandise?.product) return null;
   const {product, title, image, selectedOptions} = merchandise;
 
+  // TODO: replace with useVariantUrl when the hook is available
   const lineOptions = new URLSearchParams();
   selectedOptions.forEach((option) => {
     lineOptions.append(option.name, option.value);
@@ -165,7 +171,7 @@ export function CartSummary({
   );
 }
 
-function ItemRemoveButton({lineIds}: {lineIds: string[]}) {
+function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
   return (
     <CartForm
       route="/cart"
@@ -186,7 +192,7 @@ function CartLineQuantity({line}: {line: CartLine}) {
   return (
     <div className="cart-line-quantiy">
       <small>Quantity: {quantity} &nbsp;&nbsp;</small>
-      <UpdateCartButton lines={[{id: lineId, quantity: prevQuantity}]}>
+      <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
         <button
           aria-label="Decrease quantity"
           disabled={quantity <= 1}
@@ -195,9 +201,9 @@ function CartLineQuantity({line}: {line: CartLine}) {
         >
           <span>&#8722; </span>
         </button>
-      </UpdateCartButton>
+      </CartLineUpdateButton>
       &nbsp;
-      <UpdateCartButton lines={[{id: lineId, quantity: nextQuantity}]}>
+      <CartLineUpdateButton lines={[{id: lineId, quantity: nextQuantity}]}>
         <button
           aria-label="Increase quantity"
           name="increase-quantity"
@@ -205,9 +211,9 @@ function CartLineQuantity({line}: {line: CartLine}) {
         >
           <span>&#43;</span>
         </button>
-      </UpdateCartButton>
+      </CartLineUpdateButton>
       &nbsp;
-      <ItemRemoveButton lineIds={[lineId]} />
+      <CartLineRemoveButton lineIds={[lineId]} />
     </div>
   );
 }
@@ -326,7 +332,7 @@ function UpdateDiscountForm({
   );
 }
 
-function UpdateCartButton({
+function CartLineUpdateButton({
   children,
   lines,
 }: {
