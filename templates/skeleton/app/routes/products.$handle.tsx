@@ -21,8 +21,15 @@ import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
 export async function loader({params, request, context}: LoaderArgs) {
   const {handle} = params;
   const {storefront} = context;
+
   const selectedOptions = getSelectedProductOptions(request).filter(
-    (option) => !option.name.startsWith('umd'),
+    (option) =>
+      // Filter out Shopify predictive search query params
+      !option.name.startsWith('_sid') &&
+      !option.name.startsWith('_pos') &&
+      !option.name.startsWith('_psq') &&
+      !option.name.startsWith('_ss') &&
+      !option.name.startsWith('_v'),
   );
 
   if (!handle) {

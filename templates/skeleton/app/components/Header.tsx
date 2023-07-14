@@ -78,10 +78,10 @@ function HeaderCtas({
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
-      <SearchToggle />
       <Link prefetch="intent" to="/account">
         {isLoggedIn ? 'ACCOUNT' : 'SIGN IN'}
       </Link>
+      <SearchToggle />
       <CartToggle cart={cart} />
     </nav>
   );

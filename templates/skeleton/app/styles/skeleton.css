@@ -37,7 +37,6 @@ aside header h3 {
 }
 
 aside header .close {
-  font-size: 24px;
   font-weight: bold;
   opacity: 0.8;
   text-decoration: none;
@@ -46,10 +45,6 @@ aside header .close {
   &:hover {
     opacity: 1;
   }
-}
-
-aside main {
-  padding: 0 20px;
 }
 
 aside header h2 {
@@ -212,7 +207,7 @@ aside li {
 }
 
 .cart-line img {
-  height: auto;
+  height: 100%;
   display: block;
 }
 
@@ -244,6 +239,42 @@ aside li {
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+/*
+* --------------------------------------------------
+* components/Search
+* --------------------------------------------------
+*/
+.predictive-search {
+  height: calc(100vh - var(--header-height) - 40px);
+  overflow-y: auto;
+}
+
+.predictive-search-form {
+  background: #fff;
+  position: sticky;
+  top: 0;
+}
+
+.predictive-search-result {
+  margin-bottom: 1.5rem;
+}
+
+.predictive-search-result h5 {
+  text-transform: uppercase;
+}
+
+.predictive-search-result-item {
+  margin-bottom: 0.5rem;
+}
+
+.predictive-search-result-item a {
+  display: flex;
+  align-items: center;
+}
+
+.predictive-search-result-item a img {
+  margin-right: 0.75rem;
 }
 
 /*
