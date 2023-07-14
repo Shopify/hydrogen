@@ -52,26 +52,16 @@ export async function loader({params, request, context}: LoaderArgs) {
     },
   });
 
-  // In order to show which variants are available in the UI, we need to query
-  // all of them. But there might be a *lot*, so instead separate the variants
-  // into it's own separate query that is deferred. So there's a brief moment
-  // where variant options might show as available when they're not, but after
-  // this deffered query resolves, the UI will update.
-  const variants = context.storefront.query(VARIANTS_QUERY, {
-    variables: {
-      handle: productHandle,
-      country: context.storefront.i18n.country,
-      language: context.storefront.i18n.language,
-    },
-  });
-
   if (!product?.id) {
     throw new Response('product', {status: 404});
   }
 
   const recommended = getRecommendedProducts(context.storefront, product.id);
-  const firstVariant = product.variants.nodes[0];
-  const selectedVariant = product.selectedVariant ?? firstVariant;
+
+  const selectedVariant =
+    product.selectedVariant! ??
+    getFirstAvailableVariant(product.variants) ??
+    product.variants.nodes[0];
 
   const productAnalytics: ShopifyAnalyticsProduct = {
     productGid: product.id,
@@ -79,7 +69,7 @@ export async function loader({params, request, context}: LoaderArgs) {
     name: product.title,
     variantName: selectedVariant.title,
     brand: product.vendor,
-    price: selectedVariant.price.amount,
+    price: selectedVariant?.price?.amount!,
   };
 
   const seo = seoPayload.product({
@@ -89,8 +79,8 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   return defer({
-    variants,
     product,
+    selectedVariant,
     shop,
     storeDomain: shop.primaryDomain.url,
     recommended,
@@ -98,14 +88,14 @@ export async function loader({params, request, context}: LoaderArgs) {
       pageType: AnalyticsPageType.product,
       resourceId: product.id,
       products: [productAnalytics],
-      totalValue: parseFloat(selectedVariant.price.amount),
+      totalValue: parseFloat(selectedVariant?.price?.amount!),
     },
     seo,
   });
 }
 
 export default function Product() {
-  const {product, shop, recommended, variants} = useLoaderData<typeof loader>();
+  const {product, shop, recommended} = useLoaderData<typeof loader>();
   const {media, title, vendor, descriptionHtml} = product;
   const {shippingPolicy, refundPolicy} = shop;
 
@@ -127,18 +117,7 @@ export default function Product() {
                   <Text className={'opacity-50 font-medium'}>{vendor}</Text>
                 )}
               </div>
-              <Suspense fallback={<ProductForm variants={[]} />}>
-                <Await
-                  errorElement="There was a problem loading related products"
-                  resolve={variants}
-                >
-                  {(resp) => (
-                    <ProductForm
-                      variants={resp.product?.variants.nodes || []}
-                    />
-                  )}
-                </Await>
-              </Suspense>
+              <ProductForm />
               <div className="grid gap-4 py-4">
                 {descriptionHtml && (
                   <ProductDetail
@@ -179,23 +158,12 @@ export default function Product() {
   );
 }
 
-export function ProductForm({
-  variants,
-}: {
-  variants: ProductVariantFragmentFragment[];
-}) {
-  const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
-  const firstVariant =
-    getFirstAvailableVariant(product.variants) ?? product.variants.nodes[0];
+export function ProductForm() {
+  const {product, analytics, storeDomain, selectedVariant} =
+    useLoaderData<typeof loader>();
 
   const closeRef = useRef<HTMLButtonElement>(null);
 
-  /**
-   * Likewise, we're defaulting to the first variant for purposes
-   * of add to cart if there is none returned from the loader.
-   * A developer can opt out of this, too.
-   */
-  const selectedVariant = product.selectedVariant ?? firstVariant;
   const isOutOfStock = !selectedVariant?.availableForSale;
 
   const isOnSale =
@@ -214,8 +182,8 @@ export function ProductForm({
         <VariantSelector
           handle={product.handle}
           options={product.options}
-          variants={variants}
-          defaultVariant={firstVariant}
+          variants={product.variants}
+          defaultVariant={selectedVariant}
         >
           {({option}) => {
             return (
@@ -474,7 +442,7 @@ const PRODUCT_QUERY = `#graphql
           ...Media
         }
       }
-      variants(first: 1) {
+      variants(first: 50) {
         nodes {
           ...ProductVariantFragment
         }
@@ -500,23 +468,6 @@ const PRODUCT_QUERY = `#graphql
     }
   }
   ${MEDIA_FRAGMENT}
-  ${PRODUCT_VARIANT_FRAGMENT}
-` as const;
-
-const VARIANTS_QUERY = `#graphql
-  query variants(
-    $country: CountryCode
-    $language: LanguageCode
-    $handle: String!
-  ) @inContext(country: $country, language: $language) {
-    product(handle: $handle) {
-      variants(first: 250) {
-        nodes {
-          ...ProductVariantFragment
-        }
-      }
-    }
-  }
   ${PRODUCT_VARIANT_FRAGMENT}
 ` as const;
 
