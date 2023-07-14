@@ -1,4 +1,4 @@
-import {CartForm, Image, Money} from '@shopify/hydrogen';
+import {CartForm, Image, Money, useVariantUrl} from '@shopify/hydrogen';
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
@@ -16,7 +16,6 @@ export function CartMain({layout, cart}: CartMainProps) {
     cart &&
     Boolean(cart.discountCodes.filter((code) => code.applicable).length);
   const className = `cart-main ${withDiscount ? 'with-discount' : ''}`;
-  console.log('discountCodes', cart?.discountCodes);
 
   return (
     <div className={className}>
@@ -69,17 +68,9 @@ function CartLineItem({
   layout: CartMainProps['layout'];
   line: CartLine;
 }) {
-  const {id, quantity, merchandise} = line;
-  if (typeof quantity === 'undefined' || !merchandise?.product) return null;
+  const {id, merchandise} = line;
   const {product, title, image, selectedOptions} = merchandise;
-
-  // TODO: replace with useVariantUrl when the hook is available
-  const lineOptions = new URLSearchParams();
-  selectedOptions.forEach((option) => {
-    lineOptions.append(option.name, option.value);
-  });
-
-  const lineItemUrl = `/products/${product.handle}?${lineOptions.toString()}`;
+  const lineItemUrl = useVariantUrl(product.handle, selectedOptions);
 
   return (
     <li key={id}>
@@ -90,7 +81,7 @@ function CartLineItem({
         onClick={() => {
           if (layout === 'aside') {
             // close the drawer
-            window.location.href = lineItemUrl;
+            window.location.href = lineItemUrl.to;
           }
         }}
       >

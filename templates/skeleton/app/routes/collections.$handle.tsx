@@ -4,6 +4,7 @@ import {
   Pagination__unstable as Pagination,
   getPaginationVariables__unstable as getPaginationVariables,
   Image,
+  useVariantUrl,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 
@@ -91,15 +92,14 @@ function ProductItem({
   loading?: 'eager' | 'lazy';
 }) {
   const variant = product.variants.nodes[0];
-  const variantParams = new URLSearchParams(
-    variant.selectedOptions.reduce((param, op) => {
-      return {...param, [op.name]: op.value};
-    }, {}),
-  ).toString();
-  // const url = `/products/${product.handle}?${variantParams}`;
-  const url = `/products/${product.handle}`;
+  const variantUrl = useVariantUrl(product.handle, variant.selectedOptions);
   return (
-    <Link key={product.id} to={url} prefetch="intent" className="product-item">
+    <Link
+      className="product-item"
+      key={product.id}
+      prefetch="intent"
+      to={variantUrl.to}
+    >
       {/* TODO: @ben welp with sizes and url transform? */}
       {product.featuredImage && (
         <Image

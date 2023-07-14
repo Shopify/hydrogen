@@ -11,9 +11,9 @@ import type {
 import {
   Image,
   Money,
-  VariantSelector__unstable as VariantSelector,
+  VariantSelector,
   type VariantOption,
-  getSelectedProductOptions__unstable as getSelectedProductOptions,
+  getSelectedProductOptions,
   CartForm,
 } from '@shopify/hydrogen';
 import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
@@ -164,6 +164,7 @@ function ProductForm({
     <div className="product-form">
       <VariantSelector
         defaultVariant={selectedVariant as ProductVariantFragment}
+        handle={product.handle}
         options={product.options}
         variants={variants}
       >
@@ -192,13 +193,12 @@ function ProductForm({
   );
 }
 
-// TODO: fix when the type is ready
-function ProductOptions({option}: {option: any}) {
+function ProductOptions({option}: {option: VariantOption}) {
   return (
     <div className="product-options" key={option.name}>
       <h5>{option.name}</h5>
       <div className="product-options-grid">
-        {option.values.map(({value, isAvailable, isActive, path}) => {
+        {option.values.map(({value, isAvailable, isActive, to}) => {
           return (
             <Link
               className="product-options-item"
@@ -206,7 +206,7 @@ function ProductOptions({option}: {option: any}) {
               prefetch="intent"
               preventScrollReset
               replace
-              to={path}
+              to={to}
               style={{
                 border: isActive ? '1px solid black' : '1px solid transparent',
                 opacity: isAvailable ? 1 : 0.3,
