@@ -1,5 +1,13 @@
 # @shopify/mini-oxygen
 
+## 2.0.0
+
+### Major Changes
+
+- Mini Oxygen can no longer be used in a standalone fashion
+- It is now built as ESM module
+- Support for the JSON based configuration file is dropped and as such the `oxygen-gen-config` command no longer exists
+
 ## 1.7.0
 
 ### Minor Changes

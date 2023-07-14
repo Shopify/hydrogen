@@ -10,8 +10,8 @@ import {VMScriptRunner} from '@miniflare/runner-vm';
 import {Log, LogLevel} from '@miniflare/shared';
 import {QueueBroker} from '@miniflare/queues';
 
-import {createServer, MiniOxygenServerOptions} from './server';
-import {StorageFactory} from './storage';
+import {createServer, MiniOxygenServerOptions} from './server.js';
+import {StorageFactory} from './storage.js';
 
 const PLUGINS = {
   CorePlugin,

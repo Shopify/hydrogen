@@ -1,10 +1,6 @@
 {
   "name": "@shopify/mini-oxygen",
   "author": "Shopify Inc.",
-  "bin": {
-    "oxygen-preview": "./dist/bootstrap.js",
-    "oxygen-gen-config": "./dist/gen-config.js"
-  },
   "publishConfig": {
     "access": "public",
     "@shopify:registry": "https://registry.npmjs.org"
@@ -12,7 +8,8 @@
   "engines": {
     "node": ">16.7.0"
   },
-  "version": "1.7.0",
+  "type": "module",
+  "version": "2.0.0",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -20,7 +17,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "tsc -p . --preserveWatchOutput -w",
-    "build": "tsc -p . && chmod +x dist/bootstrap.js dist/run.js dist/gen-config.js",
+    "build": "tsc -p .",
     "lint": "eslint --ext .js,.ts --max-warnings 0 src",
     "lint:format": "yarn run lint --fix",
     "type-check": "yarn tsc --noEmit",
@@ -44,10 +41,11 @@
     "connect": "^3.7.0",
     "eventsource": "^2.0.2",
     "fs-extra": "^11.1.0",
-    "get-port": "^5.1.1",
+    "get-port": "7.0.0",
     "inquirer": "^9.0.0",
     "mime": "^3.0.0",
     "semiver": "^1.1.0",
+    "source-map-support": "^0.5.21",
     "typescript": "^5.1.6"
   },
   "devDependencies": {
@@ -59,6 +57,7 @@
     "@types/fs-extra": "^11.0.0",
     "@types/inquirer": "^9.0.0",
     "@types/node": "^18.7.0",
+    "@types/source-map-support": "^0.5.6",
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.27.0",
     "@typescript-eslint/parser": "^5.27.0",

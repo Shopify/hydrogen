@@ -10,7 +10,7 @@ import connect from 'connect';
 import type {NextHandleFunction} from 'connect';
 import bodyParser from 'body-parser';
 
-import type {MiniOxygen} from './core';
+import type {MiniOxygen} from './core.js';
 
 export type {Request, Response} from '@miniflare/core';
 

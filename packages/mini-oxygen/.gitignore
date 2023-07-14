@@ -1,3 +1,4 @@
 hydrogen-app
 node_modules
 dist
+yarn-error.log*

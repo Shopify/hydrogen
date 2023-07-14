@@ -1,7 +1,7 @@
 import {it, vi, describe, beforeEach, expect, afterEach} from 'vitest';
 import EventSource from 'eventsource';
 
-import {preview, MiniOxygenPreviewOptions} from '../preview';
+import {startServer, MiniOxygenPreviewOptions} from '../startServer.js';
 
 import {
   createFixture,
@@ -19,7 +19,7 @@ vi.mock('get-port', () => {
   };
 });
 
-describe('preview()', () => {
+describe('start()', () => {
   let fixture: Fixture;
   const defaultOptions: MiniOxygenPreviewOptions = {
     log: vi.fn(),
@@ -36,7 +36,8 @@ describe('preview()', () => {
   const mockLogger = vi.fn();
 
   it('displays a message when the server is running', async () => {
-    const miniOxygen = await preview({
+    const mockLogger = vi.fn();
+    const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
       port: testPort,
@@ -50,7 +51,7 @@ describe('preview()', () => {
   });
 
   it('receives HTML from test worker', async () => {
-    const miniOxygen = await preview({
+    const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
       port: testPort,
@@ -70,7 +71,7 @@ describe('preview()', () => {
   });
 
   it('serves a static asset', async () => {
-    const miniOxygen = await preview({
+    const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
       port: testPort,
@@ -91,7 +92,7 @@ describe('preview()', () => {
   });
 
   it('includes the auto-reload script and sends reload event on worker change', async () => {
-    const miniOxygen = await preview({
+    const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
       port: testPort,
@@ -110,7 +111,7 @@ describe('preview()', () => {
       `http://localhost:${testPort}/__minioxygen_events`,
     );
     const eventsCaught: MessageEvent[] = [];
-    eventStream.addEventListener('message', (event) =>
+    eventStream.addEventListener('message', (event: MessageEvent) =>
       eventsCaught.push(event),
     );
     fixture.updateWorker();
@@ -135,7 +136,7 @@ describe('preview()', () => {
       mockLogger('Proxy request received');
     });
 
-    const miniOxygen = await preview({
+    const miniOxygen = await startServer({
       ...defaultOptions,
       port: testPort,
       workerFile: fixture.paths.workerFile,
@@ -154,7 +155,7 @@ describe('preview()', () => {
   });
 
   it('reloads environment variables', async () => {
-    const miniOxygen = await preview({
+    const miniOxygen = await startServer({
       ...defaultOptions,
       log: mockLogger,
       port: testPort,
