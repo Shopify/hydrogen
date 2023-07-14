@@ -49,25 +49,6 @@ export function VariantSelector({
     _variants instanceof Array ? _variants : flattenConnection(_variants);
 
   const {searchParams, path, alreadyOnProductPage} = useVariantPath(handle);
-  const navigate = useNavigate();
-
-  // The variant selector needs to know the selected options
-  // since therenot support yet out of the box, we need to
-  // manually redirect to the url of the selected variant
-  const selectedOptions: SelectedOptionInput[] = (
-    defaultVariant?.selectedOptions ?? []
-  ).map((option) => option as SelectedOptionInput);
-
-  const {to} = useVariantUrl(handle, selectedOptions);
-
-  useEffect(() => {
-    if (!to) return;
-
-    navigate(to, {
-      replace: true,
-      preventScrollReset: true,
-    });
-  }, [to, navigate]);
 
   // If an option only has one value, it doesn't need a UI to select it
   // But instead it always needs to be added to the product options so

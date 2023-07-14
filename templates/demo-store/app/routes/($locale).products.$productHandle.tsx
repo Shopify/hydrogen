@@ -1,13 +1,14 @@
-import {useRef, Suspense} from 'react';
+import {useEffect, useRef, Suspense} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Await} from '@remix-run/react';
+import {useNavigate, useLoaderData, Await} from '@remix-run/react';
 import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
 import {
   AnalyticsPageType,
   Money,
   ShopPayButton,
   VariantSelector,
+  useVariantUrl,
   getSelectedProductOptions,
   getFirstAvailableVariant,
 } from '@shopify/hydrogen';
@@ -189,6 +190,25 @@ export function ProductForm({
     getFirstAvailableVariant(variants) ?? product.variants.nodes[0];
 
   const closeRef = useRef<HTMLButtonElement>(null);
+
+  const navigate = useNavigate();
+
+  // The variant selector needs to know the selected options
+  // we need to manually redirect to the url of the selected variant
+  const selectedOptions: SelectedOptionInput[] = (
+    firstVariant?.selectedOptions ?? []
+  ).map((option) => option as SelectedOptionInput);
+
+  const {to} = useVariantUrl(product.handle, selectedOptions);
+
+  useEffect(() => {
+    if (!to) return;
+
+    navigate(to, {
+      replace: true,
+      preventScrollReset: true,
+    });
+  }, [to, navigate]);
 
   /**
    * Likewise, we're defaulting to the first variant for purposes
