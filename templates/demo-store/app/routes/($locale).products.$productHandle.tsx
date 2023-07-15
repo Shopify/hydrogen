@@ -14,6 +14,7 @@ import {
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
+import type {SelectedOptionInput} from '@shopify/hydrogen/storefront-api-types';
 
 import type {ProductVariantFragmentFragment} from 'storefrontapi.generated';
 import {
@@ -186,8 +187,11 @@ export function ProductForm({
   variants: ProductVariantFragmentFragment[];
 }) {
   const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
-  const firstVariant =
-    getFirstAvailableVariant(variants) ?? product.variants.nodes[0];
+  const productVariants = variants ? variants : product.variants.nodes;
+
+  const firstVariant = product.selectedVariant
+    ? product.selectedVariant
+    : getFirstAvailableVariant(productVariants);
 
   const closeRef = useRef<HTMLButtonElement>(null);
 
