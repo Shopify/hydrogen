@@ -5,6 +5,7 @@ import {useLoaderData, Await} from '@remix-run/react';
 import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
 import {
   AnalyticsPageType,
+  CacheCustom,
   Money,
   ShopPayButton,
   VariantSelector,
@@ -51,6 +52,10 @@ export async function loader({params, request, context}: LoaderArgs) {
       country: context.storefront.i18n.country,
       language: context.storefront.i18n.language,
     },
+    cache: CacheCustom({
+      maxAge: 2,
+      staleWhileRevalidate: 5,
+    }),
   });
   console.log('TIME: product', new Date().getTime() - time, 'ms');
 
