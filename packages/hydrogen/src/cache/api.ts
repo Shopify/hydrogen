@@ -123,6 +123,8 @@ async function setItem(
 
   logCacheApiStatus('PUT', request.url);
   await cache.put(request, response);
+  const cacheLength = (await cache.keys()).length;
+  console.log(`PUT - query Product( - cache count: ${cacheLength}`);
 }
 
 async function deleteItem(cache: Cache, request: Request) {
