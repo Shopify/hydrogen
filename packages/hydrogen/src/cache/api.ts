@@ -69,16 +69,17 @@ async function getItem(
   const cacheControl = getCacheControlSetting(userCacheOptions);
 
   // The padded cache-control to mimic stale-while-revalidate
-  const cloneRequest = request.clone();
-  cloneRequest.headers.set(
-    'cache-control',
-    generateDefaultCacheControlHeader(
-      getCacheControlSetting(cacheControl, {
-        maxAge:
-          (cacheControl.maxAge || 0) + (cacheControl.staleWhileRevalidate || 0),
-      }),
-    ),
-  );
+  const cloneRequest = new Request(request.url, {
+    headers: {
+      'cache-control': generateDefaultCacheControlHeader(
+        getCacheControlSetting(cacheControl, {
+          maxAge:
+            (cacheControl.maxAge || 0) +
+            (cacheControl.staleWhileRevalidate || 0),
+        }),
+      ),
+    },
+  });
 
   const response = await cache.match(cloneRequest);
   if (!response) {
@@ -144,15 +145,17 @@ async function setItem(
   const cacheControl = getCacheControlSetting(userCacheOptions);
 
   // The padded cache-control to mimic stale-while-revalidate
-  request.headers.set(
-    'cache-control',
-    generateDefaultCacheControlHeader(
-      getCacheControlSetting(cacheControl, {
-        maxAge:
-          (cacheControl.maxAge || 0) + (cacheControl.staleWhileRevalidate || 0),
-      }),
-    ),
-  );
+  const cloneRequest = new Request(request.url, {
+    headers: {
+      'cache-control': generateDefaultCacheControlHeader(
+        getCacheControlSetting(cacheControl, {
+          maxAge:
+            (cacheControl.maxAge || 0) +
+            (cacheControl.staleWhileRevalidate || 0),
+        }),
+      ),
+    },
+  });
   // The cache-control we want to set on response
   const cacheControlString = generateDefaultCacheControlHeader(
     getCacheControlSetting(cacheControl),
@@ -164,8 +167,8 @@ async function setItem(
   response.headers.set('real-cache-control', cacheControlString);
   response.headers.set('cache-put-date', new Date().toUTCString());
 
-  logCacheApiStatus('PUT', request, response);
-  await cache.put(request, response);
+  logCacheApiStatus('PUT', cloneRequest, response);
+  await cache.put(cloneRequest, response);
 }
 
 async function deleteItem(cache: Cache, request: Request) {

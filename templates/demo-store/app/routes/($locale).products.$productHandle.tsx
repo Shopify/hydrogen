@@ -53,6 +53,7 @@ export async function loader({params, request, context}: LoaderArgs) {
       language: context.storefront.i18n.language,
     },
     cache: CacheCustom({
+      mode: 'public',
       maxAge: 2,
       staleWhileRevalidate: 5,
     }),
