@@ -14,15 +14,18 @@ function logCacheApiStatus(
     // eslint-disable-next-line no-console
     if (status === 'MISS' && lastProductPutKey !== '') {
       console.log(`\n${status} - matched? ${url === lastProductPutKey}`);
-
-      console.log(request.headers);
     }
 
     if (status === 'PUT') {
       lastProductPutKey = url;
-
-      console.log(request.headers);
     }
+
+    let headersJson: Record<string, string> = {};
+    request.headers.forEach((value, key) => {
+      headersJson[key] = value;
+    });
+
+    console.log(`${status} request headers: `, headersJson);
   }
 }
 
