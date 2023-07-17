@@ -1,7 +1,6 @@
 import {useLocation} from '@remix-run/react';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import type {
-  Product,
   ProductOption,
   ProductVariant,
   ProductVariantConnection,
@@ -33,8 +32,6 @@ type VariantSelectorProps = {
   variants?:
     | PartialDeep<ProductVariantConnection>
     | Array<PartialDeep<ProductVariant>>;
-  /** Provide a default variant when no options are selected. You can use the utility `getFirstAvailableVariant` to get a default variant. */
-  defaultVariant?: PartialDeep<ProductVariant>;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
@@ -43,7 +40,6 @@ export function VariantSelector({
   options = [],
   variants: _variants = [],
   children,
-  defaultVariant,
 }: VariantSelectorProps) {
   const variants =
     _variants instanceof Array ? _variants : flattenConnection(_variants);
@@ -97,13 +93,6 @@ export function VariantSelector({
               const calculatedActiveValue = currentParam
                 ? // If a URL parameter exists for the current option, check if it equals the current value
                   currentParam === value!
-                : defaultVariant
-                ? // Else check if the default variant has the current option value
-                  defaultVariant.selectedOptions?.some(
-                    (selectedOption) =>
-                      selectedOption?.name === option.name &&
-                      selectedOption?.value === value,
-                  )
                 : false;
 
               if (calculatedActiveValue) {
@@ -119,7 +108,7 @@ export function VariantSelector({
                 isAvailable: variant ? variant.availableForSale! : true,
                 to: path + searchString,
                 search: searchString,
-                isActive: Boolean(calculatedActiveValue),
+                isActive: calculatedActiveValue,
               });
             }
 
@@ -161,16 +150,6 @@ type GetFirstAvailableVariant = (
     | Array<PartialDeep<ProductVariant>>,
 ) => PartialDeep<ProductVariant> | undefined;
 
-export const getFirstAvailableVariant: GetFirstAvailableVariant = (
-  variants:
-    | PartialDeep<ProductVariantConnection>
-    | Array<PartialDeep<ProductVariant>> = [],
-): PartialDeep<ProductVariant> | undefined => {
-  return (
-    variants instanceof Array ? variants : flattenConnection(variants)
-  ).find((variant) => variant?.availableForSale);
-};
-
 function useVariantPath(handle: string) {
   const {pathname, search} = useLocation();
 
@@ -193,30 +172,4 @@ function useVariantPath(handle: string) {
       path,
     };
   }, [pathname, search, handle]);
-}
-
-export function useVariantUrl(
-  /** The product handle for the generated URL */
-  handle: string,
-  /** A list of product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption) to include in the URL search params. */
-  selectedOptions: SelectedOptionInput[],
-) {
-  const {searchParams, alreadyOnProductPage, path} = useVariantPath(handle);
-
-  return useMemo(() => {
-    const clonedSearchParams = new URLSearchParams(
-      alreadyOnProductPage ? searchParams : undefined,
-    );
-
-    selectedOptions.forEach((option) => {
-      clonedSearchParams.set(option.name, option.value);
-    });
-
-    const searchString = clonedSearchParams.toString();
-
-    return {
-      to: `${path}${searchString ? '?' + searchString : ''}`,
-      search: `?${searchString}`,
-    };
-  }, [searchParams, alreadyOnProductPage, path, selectedOptions]);
 }
