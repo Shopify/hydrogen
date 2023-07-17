@@ -337,7 +337,7 @@ export async function handleLanguage(
   const language =
     flagLanguage ??
     (await renderSelectPrompt({
-      message: 'Choose a language',
+      message: 'Select a language',
       choices: [
         {label: 'JavaScript', value: 'js'},
         {label: 'TypeScript', value: 'ts'},
