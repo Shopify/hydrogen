@@ -21,7 +21,12 @@ import {
   getRemixConfig,
   type ServerMode,
 } from '../../lib/config.js';
-import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
+import {
+  deprecated,
+  commonFlags,
+  flagsToCamelObject,
+  overrideFlag,
+} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {warnOnce} from '../../lib/log.js';
@@ -42,13 +47,8 @@ export default class Build extends Command {
       description: 'Disable warning about missing standard routes.',
       env: 'SHOPIFY_HYDROGEN_FLAG_DISABLE_ROUTE_WARNING',
     }),
-    ['codegen-unstable']: Flags.boolean({
-      description:
-        'Generate types for the Storefront API queries found in your project.',
-      required: false,
-      default: false,
-    }),
-    ['codegen-config-path']: commonFlags.codegenConfigPath,
+    codegen: commonFlags.codegen,
+    'codegen-config-path': commonFlags.codegenConfigPath,
 
     base: deprecated('--base')(),
     entry: deprecated('--entry')(),
@@ -61,7 +61,7 @@ export default class Build extends Command {
 
     await runBuild({
       ...flagsToCamelObject(flags),
-      useCodegen: flags['codegen-unstable'],
+      useCodegen: flags.codegen,
       path: directory,
     });
   }
