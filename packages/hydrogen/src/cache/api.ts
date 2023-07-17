@@ -57,8 +57,22 @@ function generateDefaultCacheControlHeader(
 async function getItem(
   cache: Cache,
   request: Request,
+  userCacheOptions: CachingStrategy,
 ): Promise<Response | undefined> {
   if (!cache) return;
+
+  const cacheControl = getCacheControlSetting(userCacheOptions);
+
+  // The padded cache-control to mimic stale-while-revalidate
+  request.headers.set(
+    'cache-control',
+    generateDefaultCacheControlHeader(
+      getCacheControlSetting(cacheControl, {
+        maxAge:
+          (cacheControl.maxAge || 0) + (cacheControl.staleWhileRevalidate || 0),
+      }),
+    ),
+  );
 
   const response = await cache.match(request);
   if (!response) {
