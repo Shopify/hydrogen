@@ -34,7 +34,7 @@
   },
   "dependencies": {
     "@ast-grep/napi": "^0.5.3",
-    "@graphql-codegen/cli": "3.3.1",
+    "@graphql-codegen/cli": "4.0.1",
     "@oclif/core": "2.8.5",
     "@remix-run/dev": "1.17.1",
     "@shopify/cli-kit": "3.47.0",

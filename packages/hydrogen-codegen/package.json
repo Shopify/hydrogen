@@ -37,14 +37,14 @@
     "vendor"
   ],
   "devDependencies": {
-    "@graphql-codegen/cli": "3.3.1",
-    "@graphql-codegen/plugin-helpers": "^4.1.0",
-    "@graphql-tools/utils": "^9.0.0"
+    "@graphql-codegen/cli": "^4.0.1",
+    "@graphql-codegen/plugin-helpers": "^5.0.0",
+    "@graphql-tools/utils": "^10.0.3"
   },
   "dependencies": {
-    "@graphql-codegen/add": "^4.0.1",
-    "@graphql-codegen/typescript": "^3.0.1",
-    "@graphql-codegen/typescript-operations": "^3.0.1"
+    "@graphql-codegen/add": "^5.0.0",
+    "@graphql-codegen/typescript": "^4.0.1",
+    "@graphql-codegen/typescript-operations": "^4.0.1"
   },
   "peerDependencies": {
     "graphql": "^0.8.0 || ^0.9.0 || ^0.10.0 || ^0.11.0 || ^0.12.0 || ^0.13.0 || ^14.0.0 || ^15.0.0 || ^16.0.0"
