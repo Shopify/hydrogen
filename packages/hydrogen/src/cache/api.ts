@@ -1,7 +1,7 @@
 import type {CachingStrategy} from './strategies';
 import {CacheShort, generateCacheControlHeader} from './strategies';
 
-let lastProductPutKey = '';
+let lastProductRequest: Request;
 
 function logCacheApiStatus(
   status: string | null,
@@ -12,12 +12,17 @@ function logCacheApiStatus(
   if (/Product\(/.test(url)) {
     console.log(status, 'Product');
     // eslint-disable-next-line no-console
-    if (status === 'MISS' && lastProductPutKey !== '') {
-      console.log(`\n${status} - matched? ${url === lastProductPutKey}`);
+    if (status === 'MISS' && lastProductRequest) {
+      console.log(`\n${status} - matched? ${request === lastProductRequest}`);
+
+      if (request !== lastProductRequest) {
+        console.log('Last request:', lastProductRequest);
+        console.log('MISS request:', request);
+      }
     }
 
     if (status === 'PUT') {
-      lastProductPutKey = url;
+      lastProductRequest = request;
     }
 
     let headersJson: Record<string, string> = {};
@@ -64,7 +69,8 @@ async function getItem(
   const cacheControl = getCacheControlSetting(userCacheOptions);
 
   // The padded cache-control to mimic stale-while-revalidate
-  request.headers.set(
+  const cloneRequest = request.clone();
+  cloneRequest.headers.set(
     'cache-control',
     generateDefaultCacheControlHeader(
       getCacheControlSetting(cacheControl, {
@@ -74,13 +80,13 @@ async function getItem(
     ),
   );
 
-  const response = await cache.match(request);
+  const response = await cache.match(cloneRequest);
   if (!response) {
-    logCacheApiStatus('MISS', request);
+    logCacheApiStatus('MISS', cloneRequest);
     return;
   }
 
-  logCacheApiStatus('HIT', request, response);
+  logCacheApiStatus('HIT', cloneRequest, response);
 
   return response;
 }
