@@ -18,6 +18,11 @@ type Replacer = (args: Array<any>) => void | string[];
 const addedReplacers = new Set<string>();
 const messageReplacers: Array<[Matcher, Replacer]> = [];
 
+export function resetAllLogs() {
+  Object.assign(console, originalConsole);
+  methodsReplaced.clear();
+}
+
 export function addMessageReplacers(
   key: string,
   ...items: Array<[Matcher, Replacer]>
@@ -227,7 +232,7 @@ export function enhanceH2Logs(options: {
           // Sanitize stack trace to only show app code
           const stackLines = stack?.split('\n') ?? [];
           const isAppLine = (line: string) =>
-            line.includes('(' + options.appDirectory);
+            line.includes(options.appDirectory);
           const firstAppLineIndex = stackLines.findIndex(isAppLine);
           const lastAppLineIndex =
             stackLines.length -
