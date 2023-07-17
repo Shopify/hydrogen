@@ -9,7 +9,7 @@ function logCacheApiStatus(
   response?: Response,
 ) {
   const url = request.url;
-  if (/query\%20Product\(/.test(url)) {
+  if (/Product\(/.test(url)) {
     console.log(status, 'Product');
     // eslint-disable-next-line no-console
     if (status === 'MISS' && lastProductPutKey !== '') {
