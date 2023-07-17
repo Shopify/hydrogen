@@ -1,9 +1,29 @@
 import type {CachingStrategy} from './strategies';
 import {CacheShort, generateCacheControlHeader} from './strategies';
 
-function logCacheApiStatus(status: string | null, url: string) {
-  // // eslint-disable-next-line no-console
-  console.log('\n' + status, url);
+let lastProductPutKey = '';
+
+function logCacheApiStatus(
+  status: string | null,
+  request: Request,
+  response?: Response,
+) {
+  const url = request.url;
+  if (/query\%20Product\(/.test(url)) {
+    console.log(status, 'Product');
+    // eslint-disable-next-line no-console
+    if (status === 'MISS' && lastProductPutKey !== '') {
+      console.log(`\n${status} - matched? ${url === lastProductPutKey}`);
+
+      console.log(request.headers);
+    }
+
+    if (status === 'PUT') {
+      lastProductPutKey = url;
+
+      console.log(request.headers);
+    }
+  }
 }
 
 function getCacheControlSetting(
@@ -39,11 +59,11 @@ async function getItem(
 
   const response = await cache.match(request);
   if (!response) {
-    logCacheApiStatus('MISS', request.url);
+    logCacheApiStatus('MISS', request);
     return;
   }
 
-  logCacheApiStatus('HIT', request.url);
+  logCacheApiStatus('HIT', request, response);
 
   return response;
 }
@@ -121,16 +141,14 @@ async function setItem(
   response.headers.set('real-cache-control', cacheControlString);
   response.headers.set('cache-put-date', new Date().toUTCString());
 
-  logCacheApiStatus('PUT', request.url);
+  logCacheApiStatus('PUT', request, response);
   await cache.put(request, response);
-  const cacheLength = (await cache.keys()).length;
-  console.log(`PUT - query Product( - cache count: ${cacheLength}`);
 }
 
 async function deleteItem(cache: Cache, request: Request) {
   if (!cache) return;
 
-  logCacheApiStatus('DELETE', request.url);
+  logCacheApiStatus('DELETE', request);
   await cache.delete(request);
 }
 
@@ -160,7 +178,7 @@ function isStale(request: Request, response: Response) {
   const result = age > responseMaxAge;
 
   if (result) {
-    logCacheApiStatus('STALE', request.url);
+    logCacheApiStatus('STALE', request, response);
   }
 
   return result;
