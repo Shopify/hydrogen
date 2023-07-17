@@ -2,6 +2,7 @@ import {
   generate,
   loadCodegenConfig,
   type LoadCodegenConfigResult,
+  CodegenContext,
 } from '@graphql-codegen/cli';
 import {
   schema,
@@ -141,17 +142,21 @@ async function generateTypes({
 
   await addHooksToHydrogenOptions(codegenConfig, dirs);
 
-  await generate(
-    {
+  const codegenContext = new CodegenContext({
+    config: {
       ...codegenConfig,
-      cwd: dirs.rootDirectory,
       watch,
       // Note: do not use `silent` without `watch`, it will swallow errors and
       // won't hide all logs. `errorsOnly` flag doesn't work either.
       silent: !watch,
     },
-    true,
-  );
+    // https://github.com/dotansimha/graphql-code-generator/issues/9490
+    filepath: 'not-used-but-must-be-set',
+  });
+
+  codegenContext.cwd = dirs.rootDirectory;
+
+  await generate(codegenContext, true);
 
   return Object.keys(codegenConfig.generates);
 }
