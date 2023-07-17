@@ -162,7 +162,6 @@ export function muteAuthLogs({
   };
 }
 
-const H2_PREFIX = '[h2:';
 /**
  * Modify logs from Hydrogen to use cli-kit banners
  * Format: `[h2:type:scope] message`. Example: `[h2:error:storefront.query] Wrong query`
@@ -179,44 +178,44 @@ export function enhanceH2Logs(options: {
   addMessageReplacers('h2-warn', [
     ([first]) => {
       const message = first?.message ?? first;
-      return typeof message === 'string' && message.startsWith(H2_PREFIX);
+      return typeof message === 'string' && message.startsWith('[h2:');
     },
     (args: any[]) => {
+      const firstArg = args[0];
+      const errorObject =
+        typeof firstArg === 'object' && !!firstArg.stack
+          ? (firstArg as Error)
+          : undefined;
+
+      const stringArg = errorObject?.message ?? (firstArg as string);
+
       const [, type, scope, message] =
-        ((args[0]?.message ?? args[0]) as string).match(
-          /^\[h2:([^:]+):([^\]]+)\]\s+(.*)$/ims,
-        ) || [];
+        stringArg.match(/^\[h2:([^:]+):([^\]]+)\]\s+(.*)$/ims) || [];
 
       if (!type || !scope || !message) return args;
 
-      let reference: undefined | string[] = undefined;
+      const headline = `In Hydrogen's \`${scope.trim()}\`:\n\n`;
+
       const lines = message.split('\n');
       const lastLine = lines.at(-1) ?? '';
-      const hasLinks = /https?:\/\//.test(lines.at(-1) ?? '');
+      const hasLinks = /https?:\/\//.test(lastLine);
+      if (hasLinks) lines.pop();
 
-      if (hasLinks) {
-        lines.pop() ?? '';
-      }
-
-      const headline = `In Hydrogen's \`${scope.trim()}\`:\n\n`;
-      const isErrorObject = typeof args[0] === 'object' && !!args[0].stack;
-
-      if (type === 'error' || isErrorObject) {
+      if (type === 'error' || errorObject) {
         let tryMessage = hasLinks ? lastLine : undefined;
-        const cause = args[0]?.cause as undefined | Record<string, string>;
-        let stack = args[0]?.stack as undefined | string;
+        let stack = errorObject?.stack;
+        const cause = errorObject?.cause as
+          | {[key: string]: any; graphql?: {query: string; variables: string}}
+          | undefined;
 
-        if (cause && cause.query) {
+        if (!!cause?.graphql?.query) {
+          const {query, variables} = cause.graphql;
           const link = `${options.graphiqlUrl}?query=${encodeURIComponent(
-            cause.query,
-          )}${
-            cause.variables
-              ? `&variables=${encodeURIComponent(cause.variables)}`
-              : ''
-          }`;
+            query,
+          )}${variables ? `&variables=${encodeURIComponent(variables)}` : ''}`;
 
           const [, queryType, queryName] =
-            cause.query.match(/(query|mutation)\s+(\w+)/) || [];
+            query.match(/(query|mutation)\s+(\w+)/) || [];
 
           tryMessage =
             (tryMessage ? `${tryMessage}\n\n` : '') +
@@ -246,7 +245,8 @@ export function enhanceH2Logs(options: {
         }
 
         const error = new BugError(
-          headline + colors.bold(lines.join('\n')),
+          headline +
+            colors.bold(lines.join('\n').replace(' - Request', '\nRequest')),
           tryMessage,
         );
 
@@ -256,6 +256,8 @@ export function enhanceH2Logs(options: {
 
         return;
       }
+
+      let reference: undefined | string[] = undefined;
 
       if (hasLinks) {
         reference = [];

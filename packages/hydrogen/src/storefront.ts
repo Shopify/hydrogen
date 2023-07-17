@@ -469,7 +469,7 @@ function throwError<T>({
   queryVariables,
   ErrorConstructor = Error,
 }: StorefrontErrorOptions<T>) {
-  const reqId = response.headers.get('x-request-id');
+  const requestId = response.headers.get('x-request-id');
   const errorMessage =
     (typeof errors === 'string'
       ? errors
@@ -479,14 +479,16 @@ function throwError<T>({
   throw new ErrorConstructor(
     `[h2:error:storefront.${type}] ` +
       errorMessage +
-      (reqId ? ` - Request ID: ${reqId}` : ''),
+      (requestId ? ` - Request ID: ${requestId}` : ''),
     {
       cause: {
         errors,
-        reqId,
+        requestId,
         ...(process.env.NODE_ENV === 'development' && {
-          query,
-          variables: JSON.stringify(queryVariables),
+          graphql: {
+            query,
+            variables: JSON.stringify(queryVariables),
+          },
         }),
       },
     },
