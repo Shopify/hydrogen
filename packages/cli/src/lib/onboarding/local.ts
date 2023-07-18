@@ -225,11 +225,11 @@ export async function setupLocalStarterTemplate(
     });
   }
 
-  const cliCommand = await getCliCommand('', packageManager);
+  const pkgManagerCommand = await getCliCommand('', packageManager);
 
   const {createShortcut, showShortcutBanner} = await handleCliShortcut(
     controller,
-    cliCommand,
+    pkgManagerCommand,
     options.shortcut,
   );
 
@@ -240,6 +240,8 @@ export async function setupLocalStarterTemplate(
 
     showShortcutBanner();
   }
+
+  const cliCommand = createShortcut ? ALIAS_NAME : pkgManagerCommand;
 
   renderSuccess({
     headline: [
@@ -254,26 +256,23 @@ export async function setupLocalStarterTemplate(
       message: 'Do you want to scaffold routes and core functionality?',
       confirmationMessage: 'Yes, set up now',
       cancellationMessage:
-        'No, set up later ' +
-        colors.dim(
-          `(run \`${createShortcut ? ALIAS_NAME : cliCommand} setup\`)`,
-        ),
+        'No, set up later ' + colors.dim(`(run \`${cliCommand} setup\`)`),
       abortSignal: controller.signal,
     }));
 
   if (continueWithSetup) {
     const {i18nStrategy, setupI18n} = await handleI18n(
       controller,
+      cliCommand,
       options.i18n,
     );
 
-    const {routes, setupRoutes} = await handleRouteGeneration(
+    const {setupRoutes} = await handleRouteGeneration(
       controller,
       options.routes || true, // TODO: Remove default value when multi-select UI component is available
     );
 
     setupSummary.i18n = i18nStrategy;
-    setupSummary.routes = routes;
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
       // These tasks need to be performed in
       // sequence to ensure commits are clean.
@@ -285,7 +284,7 @@ export async function setupLocalStarterTemplate(
         .then(() =>
           commitAll(
             project.directory,
-            `Setup internationalization using ${i18nStrategy}`,
+            `Setup markets support using ${i18nStrategy}`,
           ),
         )
         .catch((error) => {
@@ -293,12 +292,16 @@ export async function setupLocalStarterTemplate(
         });
 
       await setupRoutes(project.directory, language, i18nStrategy)
-        .then(() =>
-          commitAll(
-            project.directory,
-            `Generate routes for core functionality`,
-          ),
-        )
+        .then((routes) => {
+          setupSummary.routes = routes;
+
+          if (routes) {
+            return commitAll(
+              project.directory,
+              `Generate routes for core functionality`,
+            );
+          }
+        })
         .catch((error) => {
           setupSummary.routesError = error as AbortError;
         });
