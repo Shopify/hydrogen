@@ -1,6 +1,7 @@
+import {copy as copyWithFilter} from 'fs-extra/esm';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
-import {copyFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {writeFile} from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
@@ -25,6 +26,7 @@ import {
   createInitialCommit,
   renderProjectReady,
   commitAll,
+  generateProjectEntries,
 } from './common.js';
 import {createStorefront} from '../graphql/admin/create-storefront.js';
 import {waitForJob} from '../graphql/admin/fetch-job.js';
@@ -82,10 +84,21 @@ export async function setupLocalStarterTemplate(
       })
       .catch(abort);
 
-  let backgroundWorkPromise: Promise<any> = copyFile(
+  let backgroundWorkPromise: Promise<any> = copyWithFilter(
     getStarterDir(),
     project.directory,
-  ).catch(abort);
+    // Filter out the `app` directory, which will be generated later
+    {filter: (filepath: string) => !/\/app\//i.test(filepath)},
+  )
+    .then(() =>
+      // Generate project entries and their file dependencies
+      generateProjectEntries({
+        rootDirectory: project.directory,
+        appDirectory: joinPath(project.directory, 'app'),
+        typescript: true, // Will be transpiled later
+      }),
+    )
+    .catch(abort);
 
   const tasks = [
     {
@@ -110,8 +123,8 @@ export async function setupLocalStarterTemplate(
         false,
         (content) =>
           content.replace(
-            '"hello-world"',
-            `"${hyphenate(storefrontInfo?.title ?? project.name)}"`,
+            /"name": "[^"]+"/,
+            `"name": "${hyphenate(storefrontInfo?.title ?? project.name)}"`,
           ),
       ),
     ];
@@ -168,14 +181,16 @@ export async function setupLocalStarterTemplate(
     options.styling,
   );
 
-  backgroundWorkPromise = backgroundWorkPromise
-    .then(() => setupCss().catch(abort))
-    .then(() =>
-      commitAll(
-        project.directory,
-        'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
-      ),
-    );
+  if (cssStrategy) {
+    backgroundWorkPromise = backgroundWorkPromise
+      .then(() => setupCss().catch(abort))
+      .then(() =>
+        commitAll(
+          project.directory,
+          'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
+        ),
+      );
+  }
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(
@@ -210,11 +225,11 @@ export async function setupLocalStarterTemplate(
     });
   }
 
-  const cliCommand = await getCliCommand('', packageManager);
+  const pkgManagerCommand = await getCliCommand('', packageManager);
 
   const {createShortcut, showShortcutBanner} = await handleCliShortcut(
     controller,
-    cliCommand,
+    pkgManagerCommand,
     options.shortcut,
   );
 
@@ -225,6 +240,8 @@ export async function setupLocalStarterTemplate(
 
     showShortcutBanner();
   }
+
+  const cliCommand = createShortcut ? ALIAS_NAME : pkgManagerCommand;
 
   renderSuccess({
     headline: [
@@ -239,16 +256,14 @@ export async function setupLocalStarterTemplate(
       message: 'Do you want to scaffold routes and core functionality?',
       confirmationMessage: 'Yes, set up now',
       cancellationMessage:
-        'No, set up later ' +
-        colors.dim(
-          `(run \`${createShortcut ? ALIAS_NAME : cliCommand} setup\`)`,
-        ),
+        'No, set up later ' + colors.dim(`(run \`${cliCommand} setup\`)`),
       abortSignal: controller.signal,
     }));
 
   if (continueWithSetup) {
     const {i18nStrategy, setupI18n} = await handleI18n(
       controller,
+      cliCommand,
       options.i18n,
     );
 

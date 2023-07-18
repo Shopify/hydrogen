@@ -1,5 +1,6 @@
 import {Await, useMatches} from '@remix-run/react';
 import invariant from 'tiny-invariant';
+import type {LoaderArgs} from '@shopify/remix-oxygen';
 import {json, type ActionArgs} from '@shopify/remix-oxygen';
 import {CartForm, type CartQueryData} from '@shopify/hydrogen';
 
@@ -35,7 +36,7 @@ export async function action({request, context}: ActionArgs) {
 
       // User inputted discount code
       const discountCodes = (
-        formDiscountCode ? [formDiscountCode] : ['']
+        formDiscountCode ? [formDiscountCode] : []
       ) as string[];
 
       // Combine discount codes already applied on cart
@@ -76,6 +77,11 @@ export async function action({request, context}: ActionArgs) {
     },
     {status, headers},
   );
+}
+
+export async function loader({context}: LoaderArgs) {
+  const {cart} = context;
+  return json(await cart.get());
 }
 
 export default function CartRoute() {

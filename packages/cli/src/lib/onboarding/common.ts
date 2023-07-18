@@ -31,6 +31,8 @@ import {
 import {
   outputDebug,
   formatPackageManagerCommand,
+  outputToken,
+  outputContent,
 } from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {type AdminSession, login, renderLoginSuccess} from '../auth.js';
@@ -57,7 +59,8 @@ import {
   renderCssPrompt,
 } from '../setups/css/index.js';
 import {
-  generateMultipleRoutes,
+  generateProjectFile,
+  generateRoutes,
   renderRoutePrompt,
   ROUTE_MAP,
 } from '../setups/routes/generate.js';
@@ -88,13 +91,17 @@ export type I18nChoice = I18nStrategy | 'none';
 
 export async function handleI18n(
   controller: AbortController,
+  cliCommand: string,
   flagI18n?: I18nChoice,
 ) {
   let selection =
     flagI18n ??
     (await renderI18nPrompt({
       abortSignal: controller.signal,
-      extraChoices: {none: 'No internationalization'},
+      extraChoices: {
+        none:
+          'Set up later ' + colors.dim(`(run \`${cliCommand} setup markets\`)`),
+      },
     }));
 
   const i18nStrategy = selection === 'none' ? undefined : selection;
@@ -137,7 +144,7 @@ export async function handleRouteGeneration(
       i18nStrategy?: I18nStrategy,
     ) => {
       if (routesToScaffold === 'all' || routesToScaffold.length > 0) {
-        await generateMultipleRoutes({
+        await generateRoutes({
           routeName: routesToScaffold,
           directory,
           force: true,
@@ -148,6 +155,16 @@ export async function handleRouteGeneration(
       }
     },
   };
+}
+
+export function generateProjectEntries(
+  options: Parameters<typeof generateProjectFile>[1],
+) {
+  return Promise.all(
+    ['root', 'entry.server', 'entry.client'].map((filename) =>
+      generateProjectFile(filename, options),
+    ),
+  );
 }
 
 /**
@@ -256,7 +273,7 @@ export async function handleProjectLocation({
     storefrontDirectory ??
     (await renderTextPrompt({
       message: 'Where would you like to create your storefront?',
-      defaultValue: './hydrogen-storefront',
+      defaultValue: 'hydrogen-storefront',
       abortSignal: controller.signal,
     }));
 
@@ -266,7 +283,7 @@ export async function handleProjectLocation({
     if (!force && storefrontDirectory) {
       location = await renderTextPrompt({
         message: `There's already a folder called \`${storefrontDirectory}\`. Where do you want to create the app?`,
-        defaultValue: './' + storefrontDirectory,
+        defaultValue: storefrontDirectory,
         abortSignal: controller.signal,
       });
 
@@ -320,7 +337,7 @@ export async function handleLanguage(
   const language =
     flagLanguage ??
     (await renderSelectPrompt({
-      message: 'Choose a language',
+      message: 'Select a language',
       choices: [
         {label: 'JavaScript', value: 'js'},
         {label: 'TypeScript', value: 'ts'},
@@ -348,24 +365,31 @@ export async function handleCssStrategy(
   controller: AbortController,
   flagStyling?: StylingChoice,
 ) {
-  const cssStrategy = flagStyling
+  const selection = flagStyling
     ? flagStyling
-    : await renderCssPrompt({abortSignal: controller.signal});
+    : await renderCssPrompt({
+        abortSignal: controller.signal,
+        extraChoices: {none: 'Skip and set up later'},
+      });
+
+  const cssStrategy = selection === 'none' ? undefined : selection;
 
   return {
     cssStrategy,
     async setupCss() {
-      const result = await setupCssStrategy(
-        cssStrategy,
-        {
-          rootDirectory: projectDir,
-          appDirectory: joinPath(projectDir, 'app'), // Default value in new projects
-        },
-        true,
-      );
+      if (cssStrategy) {
+        const result = await setupCssStrategy(
+          cssStrategy,
+          {
+            rootDirectory: projectDir,
+            appDirectory: joinPath(projectDir, 'app'), // Default value in new projects
+          },
+          true,
+        );
 
-      if (result) {
-        await result.workPromise;
+        if (result) {
+          await result.workPromise;
+        }
       }
     },
   };
@@ -392,7 +416,7 @@ export async function handleDependencies(
           {label: 'NPM', value: 'npm'},
           {label: 'PNPM', value: 'pnpm'},
           {label: 'Yarn v1', value: 'yarn'},
-          {label: 'Skip, install later', value: 'no'},
+          {label: 'Skip and install later', value: 'no'},
         ],
         defaultValue: 'npm',
         abortSignal: controller.signal,
@@ -514,7 +538,7 @@ export async function renderProjectReady(
   }
 
   if (!i18nError && i18n) {
-    bodyLines.push(['i18n', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
+    bodyLines.push(['Markets', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
   }
 
   let routeSummary = '';
@@ -569,7 +593,7 @@ export async function renderProjectReady(
                   {subdued: depsError.message},
                 ],
                 i18nError && [
-                  'Failed to scaffold i18n:',
+                  'Failed to scaffold Markets:',
                   {subdued: i18nError.message},
                 ],
                 routesError && [
@@ -623,15 +647,17 @@ export async function renderProjectReady(
                 [
                   'Run',
                   {
-                    command: [
-                      project.directory === process.cwd()
-                        ? undefined
-                        : `cd ${project.location.replace(/^\.\//, '')}`,
-                      depsInstalled ? undefined : `${packageManager} install`,
-                      formatPackageManagerCommand(packageManager, 'dev'),
-                    ]
-                      .filter(Boolean)
-                      .join(' && '),
+                    command: outputContent`${outputToken.genericShellCommand(
+                      [
+                        project.directory === process.cwd()
+                          ? undefined
+                          : `cd ${project.location.replace(/^\.\//, '')}`,
+                        depsInstalled ? undefined : `${packageManager} install`,
+                        formatPackageManagerCommand(packageManager, 'dev'),
+                      ]
+                        .filter(Boolean)
+                        .join(' && '),
+                    )}`.value,
                   },
                 ],
               ].filter((step): step is string[] => Boolean(step)),
@@ -677,11 +703,12 @@ async function projectExists(projectDir: string) {
 }
 
 function normalizeRoutePath(routePath: string) {
-  const isIndex = /(^|\/)index$/.test(routePath);
+  const isIndex = /(^|\.)_index$/.test(routePath);
   return isIndex
-    ? routePath.slice(0, -'index'.length).replace(/\/$/, '')
+    ? routePath.slice(0, -'_index'.length).replace(/\.$/, '')
     : routePath
-        .replace(/\$/g, ':')
-        .replace(/[\[\]]/g, '')
-        .replace(/:(\w+)Handle/i, ':handle');
+        .replace(/\.(?!\w+\])/g, '/') // Replace dots with slashes, except for dots in brackets
+        .replace(/\$/g, ':') // Replace dollar signs with colons
+        .replace(/[\[\]]/g, '') // Remove brackets
+        .replace(/:(\w+)Handle/i, ':handle'); // Replace arbitrary handle names with a standard `:handle`
 }

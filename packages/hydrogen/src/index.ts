@@ -47,6 +47,18 @@ export type {
 } from './cart/queries/cart-types';
 
 export {
+  VariantSelector,
+  getSelectedProductOptions,
+  getFirstAvailableVariant,
+  useVariantUrl,
+} from './product/VariantSelector';
+
+export type {
+  VariantOption,
+  VariantOptionValue,
+} from './product/VariantSelector';
+
+export {
   AnalyticsEventName,
   AnalyticsPageType,
   ExternalVideo,

@@ -146,7 +146,7 @@ export async function linkStorefront(
     ];
 
     const storefrontId = await renderSelectPrompt({
-      message: 'Choose a Hydrogen storefront to link',
+      message: 'Select a Hydrogen storefront to link',
       choices,
     });
 

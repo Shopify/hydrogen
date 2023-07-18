@@ -30,15 +30,15 @@ type CartGetProps = {
 
 export type CartGetFunction = (
   cartInput?: CartGetProps,
-) => Promise<Cart | undefined>;
+) => Promise<Cart | null>;
 
 export function cartGetDefault(options: CartQueryOptions): CartGetFunction {
   return async (cartInput?: CartGetProps) => {
     const cartId = options.getCartId();
 
-    if (!cartId) return;
+    if (!cartId) return null;
 
-    const {cart} = await options.storefront.query<{cart?: Cart}>(
+    const {cart} = await options.storefront.query<{cart: Cart}>(
       CART_QUERY(options.cartFragment),
       {
         variables: {
