@@ -540,9 +540,16 @@ export async function renderProjectReady(
     for (let [routeName, routePaths] of Object.entries(routes)) {
       routePaths = Array.isArray(routePaths) ? routePaths : [routePaths];
 
-      const urls = [
+      let urls = [
         ...new Set(routePaths.map((item) => '/' + normalizeRoutePath(item))),
       ].sort();
+
+      if (urls.length > 2) {
+        // Shorten the summary by grouping them by prefix when there are more than 2
+        // e.g. /account/.../... => /account/*
+        const prefixesSet = new Set(urls.map((url) => url.split('/')[1] ?? ''));
+        urls = [...prefixesSet].map((item) => '/' + item + '/*');
+      }
 
       routeSummary += `\n    • ${capitalize(routeName)} ${colors.dim(
         '(' + urls.join(' & ') + ')',
