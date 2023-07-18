@@ -144,12 +144,6 @@ export const getSelectedProductOptions: GetSelectedProductOptions = (
   return selectedOptions;
 };
 
-type GetFirstAvailableVariant = (
-  variants:
-    | PartialDeep<ProductVariantConnection>
-    | Array<PartialDeep<ProductVariant>>,
-) => PartialDeep<ProductVariant> | undefined;
-
 function useVariantPath(handle: string) {
   const {pathname, search} = useLocation();
 
