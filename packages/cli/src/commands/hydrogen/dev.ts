@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
@@ -14,11 +14,11 @@ import {muteDevLogs, warnOnce} from '../../lib/log.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {startMiniOxygen} from '../../lib/mini-oxygen.js';
+import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
-import {combinedEnvironmentVariables} from '../../lib/combined-environment-variables.js';
+import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -121,10 +121,8 @@ async function runDev({
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
   const {shop, storefront} = await getConfig(root);
-  const environmentVariables =
-    !!shop && !!storefront?.id
-      ? await combinedEnvironmentVariables({root, shop, envBranch})
-      : undefined;
+  const fetchRemote = !!shop && !!storefront?.id;
+  const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
@@ -135,20 +133,18 @@ async function runDev({
   let initialBuildDurationMs = 0;
   let initialBuildStartTimeMs = Date.now();
 
-  let isMiniOxygenStarted = false;
+  let miniOxygen: MiniOxygen;
   async function safeStartMiniOxygen() {
-    if (isMiniOxygenStarted) return;
+    if (miniOxygen) return;
 
-    const miniOxygen = await startMiniOxygen({
+    miniOxygen = await startMiniOxygen({
       root,
       port,
       watch: true,
       buildPathWorkerFile,
       buildPathClient,
-      environmentVariables,
+      env: await envPromise,
     });
-
-    isMiniOxygenStarted = true;
 
     miniOxygen.showBanner({
       appName: storefront ? colors.cyan(storefront?.title) : undefined,
@@ -174,6 +170,7 @@ async function runDev({
   }
 
   const fileWatchCache = createFileWatchCache();
+  let skipRebuildLogs = false;
 
   await watch(
     {
@@ -188,9 +185,9 @@ async function runDev({
     {
       reloadConfig,
       onBuildStart() {
-        if (!isInitialBuild) {
-          console.time(LOG_REBUILT);
+        if (!isInitialBuild && !skipRebuildLogs) {
           outputInfo(LOG_REBUILDING);
+          console.time(LOG_REBUILT);
         }
       },
       async onBuildFinish() {
@@ -198,12 +195,13 @@ async function runDev({
           await copyingFiles;
           initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
           isInitialBuild = false;
-        } else {
+        } else if (!skipRebuildLogs) {
+          skipRebuildLogs = false;
           console.timeEnd(LOG_REBUILT);
-          if (!isMiniOxygenStarted) console.log(''); // New line
+          if (!miniOxygen) console.log(''); // New line
         }
 
-        if (!isMiniOxygenStarted) {
+        if (!miniOxygen) {
           if (!(await serverBundleExists())) {
             return renderFatalError({
               name: 'BuildError',
@@ -234,6 +232,17 @@ async function runDev({
 
         const [relative, absolute] = getFilePaths(file);
         outputInfo(`\n📄 File changed: ${relative}`);
+
+        if (relative.endsWith('.env')) {
+          skipRebuildLogs = true;
+          await miniOxygen.reload({
+            env: await getAllEnvironmentVariables({
+              root,
+              fetchRemote,
+              envBranch,
+            }),
+          });
+        }
 
         if (absolute.startsWith(publicPath)) {
           await copyPublicFiles(
