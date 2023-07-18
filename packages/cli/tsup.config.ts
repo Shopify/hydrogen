@@ -1,11 +1,15 @@
+import path from 'node:path';
 import {defineConfig} from 'tsup';
 import fs from 'fs-extra';
-import path from 'path';
+import {execAsync} from './src/lib/process';
 import {
   GENERATOR_TEMPLATES_DIR,
   GENERATOR_SETUP_ASSETS_DIR,
   GENERATOR_STARTER_DIR,
 } from './src/lib/build';
+
+// Cleanup dist folder before building
+fs.removeSync('dist');
 
 const commonConfig = {
   format: 'esm',
@@ -15,6 +19,7 @@ const commonConfig = {
   treeshake: true,
   sourcemap: false,
   publicDir: 'templates',
+  clean: false, // Avoid deleting the assets folder
   // Weird bug:
   // When `dts: true`, Tsup will remove all the d.ts files copied to `dist`
   // during `onSuccess` callbacks, thus removing part of the starter templates.
@@ -35,13 +40,17 @@ export default defineConfig([
         path.join('src', i18nTemplatesPath),
         path.join(outDir, i18nTemplatesPath),
       );
+      console.log('\n', 'Copied i18n template files to build directory', '\n');
+
+      console.log('\n', 'Generating Oclif manifest...');
+      await execAsync('npx oclif manifest');
+      console.log('', 'Oclif manifest generated.\n');
     },
   },
   {
     ...commonConfig,
     entry: ['src/virtual-routes/**/*.tsx'],
     outDir: `${outDir}/virtual-routes`,
-    clean: false, // Avoid deleting the assets folder
     outExtension: () => ({js: '.jsx'}),
     async onSuccess() {
       const filterArtifacts = (filepath: string) =>
@@ -55,7 +64,11 @@ export default defineConfig([
         {filter: filterArtifacts},
       );
 
-      console.log('\n', 'Copied template files to build directory', '\n');
+      console.log(
+        '\n',
+        'Copied skeleton template files to build directory',
+        '\n',
+      );
 
       // For some reason, it seems that publicDir => outDir might be skipped on CI,
       // so ensure here that asset files are copied:
