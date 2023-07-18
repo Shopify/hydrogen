@@ -37,7 +37,7 @@
     "@graphql-codegen/cli": "3.3.1",
     "@oclif/core": "2.8.5",
     "@remix-run/dev": "1.17.1",
-    "@shopify/cli-kit": "3.47.0",
+    "@shopify/cli-kit": "3.47.5",
     "@shopify/hydrogen-codegen": "^0.0.2",
     "@shopify/mini-oxygen": "^1.6.0",
     "ansi-escapes": "^6.2.0",
