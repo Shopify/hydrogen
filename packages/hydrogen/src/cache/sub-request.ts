@@ -38,13 +38,12 @@ export function generateSubRequestCacheControlHeader(
 export async function getItemFromCache(
   cache: Cache,
   key: string,
-  userCacheOptions?: CachingStrategy,
 ): Promise<undefined | [any, Response]> {
   if (!cache) return;
   const url = getKeyUrl(key);
   const request = new Request(url);
 
-  const response = await CacheAPI.get(cache, request, userCacheOptions);
+  const response = await CacheAPI.get(cache, request);
 
   if (!response) {
     return;

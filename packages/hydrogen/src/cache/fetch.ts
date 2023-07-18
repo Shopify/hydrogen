@@ -68,7 +68,7 @@ export async function runWithCache<T = unknown>(
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ]);
 
-  const cachedItem = await getItemFromCache(cacheInstance, key, strategy);
+  const cachedItem = await getItemFromCache(cacheInstance, key);
   // console.log('--- Cache', cachedItem ? 'HIT' : 'MISS', key, cacheInstance);
 
   if (cachedItem) {
@@ -133,6 +133,7 @@ export async function fetchWithServerCache(
   {
     cacheInstance,
     cache: cacheOptions,
+    cacheKey = [url, requestInit],
     shouldCacheResponse = () => true,
     waitUntil,
     returnType = 'json',
@@ -141,19 +142,6 @@ export async function fetchWithServerCache(
   if (!cacheOptions && (!requestInit.method || requestInit.method === 'GET')) {
     cacheOptions = CacheShort();
   }
-
-  const cacheKeyHeaderInit: HeadersInit = {
-    ...requestInit.headers,
-    'Custom-Storefront-Request-Group-ID': '',
-  };
-
-  const cacheKeyRequestInit: RequestInit = {
-    method: requestInit.method,
-    headers: cacheKeyHeaderInit,
-    body: requestInit.body,
-  };
-
-  const cacheKey = [url, cacheKeyRequestInit];
 
   return runWithCache(
     cacheKey,
