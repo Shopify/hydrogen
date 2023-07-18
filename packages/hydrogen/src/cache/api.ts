@@ -6,20 +6,16 @@ function logCacheApiStatus(
   request: Request,
   response?: Response,
 ) {
-  const url = request.url;
-  if (/Product\(/.test(url)) {
-    // eslint-disable-next-line no-console
-    console.log(status, 'cacheKey', url);
-
-    if (response) {
-      let headersJson: Record<string, string> = {};
-      response.headers.forEach((value, key) => {
-        headersJson[key] = value;
-      });
-
-      console.log(`${status} response headers: `, headersJson);
-    }
-  }
+  // const url = request.url;
+  // eslint-disable-next-line no-console
+  // console.log(status, 'cacheKey', url);
+  // if (response) {
+  //   let headersJson: Record<string, string> = {};
+  //   response.headers.forEach((value, key) => {
+  //     headersJson[key] = value;
+  //   });
+  //   console.log(`${status} response headers: `, headersJson);
+  // }
 }
 
 function getCacheControlSetting(
@@ -50,7 +46,6 @@ function generateDefaultCacheControlHeader(
 async function getItem(
   cache: Cache,
   request: Request,
-  userCacheOptions?: CachingStrategy,
 ): Promise<Response | undefined> {
   if (!cache) return;
 
