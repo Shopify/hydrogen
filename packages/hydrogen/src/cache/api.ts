@@ -1,8 +1,6 @@
 import type {CachingStrategy} from './strategies';
 import {CacheShort, generateCacheControlHeader} from './strategies';
 
-let lastProductRequest: Request;
-
 function logCacheApiStatus(
   status: string | null,
   request: Request,
@@ -10,27 +8,37 @@ function logCacheApiStatus(
 ) {
   const url = request.url;
   if (/Product\(/.test(url)) {
-    console.log(status, 'Product');
     // eslint-disable-next-line no-console
-    if (status === 'MISS' && lastProductRequest) {
-      console.log(`\n${status} - matched? ${request === lastProductRequest}`);
+    console.log(status, 'cacheKey', url);
 
-      if (request !== lastProductRequest) {
-        console.log('Last request:', lastProductRequest);
-        console.log('MISS request:', request);
-      }
+    if (response) {
+      let headersJson: Record<string, string> = {};
+      response.headers.forEach((value, key) => {
+        headersJson[key] = value;
+      });
+
+      console.log(`${status} response headers: `, headersJson);
     }
+  }
+}
 
-    if (status === 'PUT') {
-      lastProductRequest = request;
-    }
+const productUrl = `https://shopify.dev/?https%3A%2F%2Fhydrogen-preview.myshopify.com%2Fapi%2F2023-04%2Fgraphql.json%7B%22query%22%3A%22query%20Product(%20%24country%3A%20CountryCode%20%24language%3A%20LanguageCode%20%24handle%3A%20String!%20%24selectedOptions%3A%20%5BSelectedOptionInput!%5D!%20)%20%40inContext(country%3A%20%24country%2C%20language%3A%20%24language)%20%7B%20product(handle%3A%20%24handle)%20%7B%20id%20title%20vendor%20handle%20descriptionHtml%20description%20options%20%7B%20name%20values%20%7D%20selectedVariant%3A%20variantBySelectedOptions(selectedOptions%3A%20%24selectedOptions)%20%7B%20...ProductVariantFragment%20%7D%20media(first%3A%207)%20%7B%20nodes%20%7B%20...Media%20%7D%20%7D%20variants(first%3A%201)%20%7B%20nodes%20%7B%20...ProductVariantFragment%20%7D%20%7D%20seo%20%7B%20description%20title%20%7D%20%7D%20shop%20%7B%20name%20primaryDomain%20%7B%20url%20%7D%20shippingPolicy%20%7B%20body%20handle%20%7D%20refundPolicy%20%7B%20body%20handle%20%7D%20%7D%20%7D%20fragment%20Media%20on%20Media%20%7B%20__typename%20mediaContentType%20alt%20previewImage%20%7B%20url%20%7D%20...%20on%20MediaImage%20%7B%20id%20image%20%7B%20id%20url%20width%20height%20%7D%20%7D%20...%20on%20Video%20%7B%20id%20sources%20%7B%20mimeType%20url%20%7D%20%7D%20...%20on%20Model3d%20%7B%20id%20sources%20%7B%20mimeType%20url%20%7D%20%7D%20...%20on%20ExternalVideo%20%7B%20id%20embedUrl%20host%20%7D%20%7D%20fragment%20ProductVariantFragment%20on%20ProductVariant%20%7B%20id%20availableForSale%20selectedOptions%20%7B%20name%20value%20%7D%20image%20%7B%20id%20url%20altText%20width%20height%20%7D%20price%20%7B%20amount%20currencyCode%20%7D%20compareAtPrice%20%7B%20amount%20currencyCode%20%7D%20sku%20title%20unitPrice%20%7B%20amount%20currencyCode%20%7D%20product%20%7B%20title%20handle%20%7D%20%7D%22%2C%22variables%22%3A%7B%22handle%22%3A%22the-full-stack%22%2C%22selectedOptions%22%3A%5B%5D%2C%22country%22%3A%22US%22%2C%22language%22%3A%22EN%22%7D%7D`;
+function logString(url: string, start: number, end: number) {
+  console.log(
+    'url match?',
+    url.substring(start, end) === productUrl.substring(start, end),
+  );
+  console.log(
+    `${url.substring(start, end)}\n${productUrl.substring(start, end)}`,
+  );
+}
 
-    let headersJson: Record<string, string> = {};
-    request.headers.forEach((value, key) => {
-      headersJson[key] = value;
-    });
-
-    console.log(`${status} request headers: `, headersJson);
+function changeCacheKey(url: string) {
+  // logString(url, 80, 120);
+  if (url === productUrl) {
+    return 'https://shopify.dev?query=Product(';
+  } else {
+    return url;
   }
 }
 
@@ -62,24 +70,14 @@ function generateDefaultCacheControlHeader(
 async function getItem(
   cache: Cache,
   request: Request,
-  userCacheOptions: CachingStrategy,
+  userCacheOptions?: CachingStrategy,
 ): Promise<Response | undefined> {
   if (!cache) return;
 
   const cacheControl = getCacheControlSetting(userCacheOptions);
 
   // The padded cache-control to mimic stale-while-revalidate
-  const cloneRequest = new Request(request.url, {
-    headers: {
-      'cache-control': generateDefaultCacheControlHeader(
-        getCacheControlSetting(cacheControl, {
-          maxAge:
-            (cacheControl.maxAge || 0) +
-            (cacheControl.staleWhileRevalidate || 0),
-        }),
-      ),
-    },
-  });
+  const cloneRequest = new Request(changeCacheKey(request.url));
 
   const response = await cache.match(cloneRequest);
   if (!response) {
@@ -145,15 +143,9 @@ async function setItem(
   const cacheControl = getCacheControlSetting(userCacheOptions);
 
   // The padded cache-control to mimic stale-while-revalidate
-  const cloneRequest = new Request(request.url, {
+  const cloneRequest = new Request(changeCacheKey(request.url), {
     headers: {
-      'cache-control': generateDefaultCacheControlHeader(
-        getCacheControlSetting(cacheControl, {
-          maxAge:
-            (cacheControl.maxAge || 0) +
-            (cacheControl.staleWhileRevalidate || 0),
-        }),
-      ),
+      'cache-control': 'max-age=5',
     },
   });
   // The cache-control we want to set on response
@@ -163,7 +155,7 @@ async function setItem(
 
   // CF will override cache-control, so we need to keep a non-modified real-cache-control
   // cache-control is still necessary for mini-oxygen
-  response.headers.set('cache-control', cacheControlString);
+  response.headers.set('cache-control', 'public, max-age=5');
   response.headers.set('real-cache-control', cacheControlString);
   response.headers.set('cache-put-date', new Date().toUTCString());
 
@@ -175,7 +167,7 @@ async function deleteItem(cache: Cache, request: Request) {
   if (!cache) return;
 
   logCacheApiStatus('DELETE', request);
-  await cache.delete(request);
+  await cache.delete(request.url);
 }
 
 /**
