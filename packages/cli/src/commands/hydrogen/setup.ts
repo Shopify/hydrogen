@@ -74,7 +74,7 @@ async function runSetup(options: RunSetupOptions) {
     ? (options.i18n as I18nStrategy)
     : await renderI18nPrompt({
         abortSignal: controller.signal,
-        extraChoices: {none: 'No internationalization'},
+        extraChoices: {none: 'Set up later'},
       });
 
   const i18n = i18nStrategy === 'none' ? undefined : i18nStrategy;

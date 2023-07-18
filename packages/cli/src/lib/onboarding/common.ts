@@ -31,6 +31,8 @@ import {
 import {
   outputDebug,
   formatPackageManagerCommand,
+  outputToken,
+  outputContent,
 } from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {type AdminSession, login, renderLoginSuccess} from '../auth.js';
@@ -89,13 +91,17 @@ export type I18nChoice = I18nStrategy | 'none';
 
 export async function handleI18n(
   controller: AbortController,
+  cliCommand: string,
   flagI18n?: I18nChoice,
 ) {
   let selection =
     flagI18n ??
     (await renderI18nPrompt({
       abortSignal: controller.signal,
-      extraChoices: {none: 'No internationalization'},
+      extraChoices: {
+        none:
+          'Set up later ' + colors.dim(`(run \`${cliCommand} setup markets\`)`),
+      },
     }));
 
   const i18nStrategy = selection === 'none' ? undefined : selection;
@@ -331,7 +337,7 @@ export async function handleLanguage(
   const language =
     flagLanguage ??
     (await renderSelectPrompt({
-      message: 'Choose a language',
+      message: 'Select a language',
       choices: [
         {label: 'JavaScript', value: 'js'},
         {label: 'TypeScript', value: 'ts'},
@@ -532,7 +538,7 @@ export async function renderProjectReady(
   }
 
   if (!i18nError && i18n) {
-    bodyLines.push(['i18n', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
+    bodyLines.push(['Markets', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
   }
 
   let routeSummary = '';
@@ -587,7 +593,7 @@ export async function renderProjectReady(
                   {subdued: depsError.message},
                 ],
                 i18nError && [
-                  'Failed to scaffold i18n:',
+                  'Failed to scaffold Markets:',
                   {subdued: i18nError.message},
                 ],
                 routesError && [
@@ -641,15 +647,17 @@ export async function renderProjectReady(
                 [
                   'Run',
                   {
-                    command: [
-                      project.directory === process.cwd()
-                        ? undefined
-                        : `cd ${project.location.replace(/^\.\//, '')}`,
-                      depsInstalled ? undefined : `${packageManager} install`,
-                      formatPackageManagerCommand(packageManager, 'dev'),
-                    ]
-                      .filter(Boolean)
-                      .join(' && '),
+                    command: outputContent`${outputToken.genericShellCommand(
+                      [
+                        project.directory === process.cwd()
+                          ? undefined
+                          : `cd ${project.location.replace(/^\.\//, '')}`,
+                        depsInstalled ? undefined : `${packageManager} install`,
+                        formatPackageManagerCommand(packageManager, 'dev'),
+                      ]
+                        .filter(Boolean)
+                        .join(' && '),
+                    )}`.value,
                   },
                 ],
               ].filter((step): step is string[] => Boolean(step)),
