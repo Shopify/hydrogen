@@ -40,17 +40,59 @@ import {
 import {getRemixConfig} from '../../../lib/config.js';
 import {findFileWithExtension} from '../../file.js';
 
-export const ROUTE_MAP: Record<string, string | string[]> = {
-  home: '_index',
-  page: 'pages.$pageHandle',
+const ROUTE_MAP = {
+  home: ['_index', '$'],
+  page: 'pages.*',
   cart: 'cart',
-  products: 'products.$productHandle',
-  collections: 'collections.$collectionHandle',
-  policies: ['policies._index', 'policies.$policyHandle'],
+  products: 'products.*',
+  collections: 'collections.*',
+  policies: 'policies.*',
   robots: '[robots.txt]',
   sitemap: '[sitemap.xml]',
-  account: ['account.login', 'account.register'],
+  account: ['account.*', 'account_.*'],
 };
+
+type RouteKey = keyof typeof ROUTE_MAP;
+
+let allRouteTemplateFiles: string[] = [];
+export async function getResolvedRoutes(
+  routeKeys = Object.keys(ROUTE_MAP) as RouteKey[],
+) {
+  if (allRouteTemplateFiles.length === 0) {
+    allRouteTemplateFiles = (
+      await readdir(getTemplateAppFile(GENERATOR_ROUTE_DIR))
+    ).map((item) => item.replace(/\.tsx?$/, ''));
+  }
+
+  const routeGroups: Record<string, string[]> = {};
+  const resolvedRouteFiles: string[] = [];
+
+  for (const key of routeKeys) {
+    routeGroups[key] = [];
+
+    const value = ROUTE_MAP[key];
+
+    if (!value) {
+      throw new AbortError(
+        `No route found for ${key}. Try one of ${ALL_ROUTE_CHOICES.join()}.`,
+      );
+    }
+
+    const routes = Array.isArray(value) ? value : [value];
+
+    for (const route of routes) {
+      const routePrefix = route.replace('*', '');
+
+      routeGroups[key]!.push(
+        ...allRouteTemplateFiles.filter((file) => file.startsWith(routePrefix)),
+      );
+    }
+
+    resolvedRouteFiles.push(...routeGroups[key]!);
+  }
+
+  return {routeGroups, resolvedRouteFiles};
+}
 
 export const ALL_ROUTE_CHOICES = [...Object.keys(ROUTE_MAP), 'all'];
 
@@ -70,30 +112,15 @@ type GenerateRoutesOptions = Omit<
 };
 
 export async function generateRoutes(options: GenerateRoutesOptions) {
-  const routePath =
+  const {routeGroups, resolvedRouteFiles} =
     options.routeName === 'all'
-      ? Object.values(ROUTE_MAP).flat()
-      : typeof options.routeName === 'string'
-      ? ROUTE_MAP[options.routeName as keyof typeof ROUTE_MAP]
-      : options.routeName
-          .flatMap(
-            (item: keyof typeof ROUTE_MAP) =>
-              ROUTE_MAP[item as keyof typeof ROUTE_MAP] as string | string[],
-          )
-          .filter(Boolean);
-
-  if (!routePath) {
-    throw new AbortError(
-      `No route found for ${
-        options.routeName
-      }. Try one of ${ALL_ROUTE_CHOICES.join()}.`,
-    );
-  }
+      ? await getResolvedRoutes()
+      : await getResolvedRoutes([options.routeName as RouteKey]);
 
   const {rootDirectory, appDirectory, future, tsconfigPath} =
     await getRemixConfig(options.directory);
 
-  const routesArray = (Array.isArray(routePath) ? routePath : [routePath]).map(
+  const routesArray = resolvedRouteFiles.flatMap(
     (item) => GENERATOR_ROUTE_DIR + '/' + item,
   );
 
@@ -127,6 +154,7 @@ export async function generateRoutes(options: GenerateRoutesOptions) {
 
   return {
     routes,
+    routeGroups,
     isTypescript: typescript,
     transpilerOptions,
     v2Flags,

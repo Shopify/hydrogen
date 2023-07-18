@@ -267,13 +267,12 @@ export async function setupLocalStarterTemplate(
       options.i18n,
     );
 
-    const {routes, setupRoutes} = await handleRouteGeneration(
+    const {setupRoutes} = await handleRouteGeneration(
       controller,
       options.routes || true, // TODO: Remove default value when multi-select UI component is available
     );
 
     setupSummary.i18n = i18nStrategy;
-    setupSummary.routes = routes;
     backgroundWorkPromise = backgroundWorkPromise.then(async () => {
       // These tasks need to be performed in
       // sequence to ensure commits are clean.
@@ -293,12 +292,14 @@ export async function setupLocalStarterTemplate(
         });
 
       await setupRoutes(project.directory, language, i18nStrategy)
-        .then(() =>
-          commitAll(
+        .then((routes) => {
+          setupSummary.routes = routes;
+
+          return commitAll(
             project.directory,
             `Generate routes for core functionality`,
-          ),
-        )
+          );
+        })
         .catch((error) => {
           setupSummary.routesError = error as AbortError;
         });
