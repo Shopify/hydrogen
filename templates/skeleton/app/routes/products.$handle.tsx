@@ -179,10 +179,10 @@ function ProductPrice({
           <p>Sale</p>
           <br />
           <div className="product-price-on-sale">
+            {selectedVariant ? <Money data={selectedVariant.price} /> : null}
             <s>
               <Money data={selectedVariant.compareAtPrice} />
             </s>
-            {selectedVariant ? <Money data={selectedVariant.price} /> : null}
           </div>
         </>
       ) : (
