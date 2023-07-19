@@ -1,6 +1,10 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
-import {generateProjectFile, generateRoutes, ROUTE_MAP} from './generate.js';
+import {
+  generateProjectFile,
+  generateRoutes,
+  getResolvedRoutes,
+} from './generate.js';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {readFile, writeFile, mkdir, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
@@ -23,19 +27,23 @@ describe('generate/route', () => {
 
   describe('generateRoutes', () => {
     it('generates all routes with correct configuration', async () => {
+      const {resolvedRouteFiles} = await getResolvedRoutes();
+
+      // Resolves globs
+      expect(
+        resolvedRouteFiles.find((item) => item.includes('account.login')),
+      ).toBeTruthy();
+
       await temporaryDirectoryTask(async (tmpDir) => {
         const directories = await createHydrogenFixture(tmpDir, {
           files: [
             ['jsconfig.json', JSON.stringify({compilerOptions: {test: 'js'}})],
             ['.prettierrc.json', JSON.stringify({singleQuote: false})],
           ],
-          templates: Object.values(ROUTE_MAP).flatMap((item) => {
-            const files = Array.isArray(item) ? item : [item];
-            return files.map(
-              (filepath) =>
-                ['routes/' + filepath + '.tsx', ''] as [string, string],
-            );
-          }),
+          templates: resolvedRouteFiles.map(
+            (filepath) =>
+              ['routes/' + filepath + '.tsx', ''] as [string, string],
+          ),
         });
 
         vi.mocked(getRemixConfig).mockResolvedValue(directories as any);
@@ -56,7 +64,7 @@ describe('generate/route', () => {
         );
 
         expect(result.routes).toHaveLength(
-          Object.values(ROUTE_MAP).flat().length,
+          Object.values(resolvedRouteFiles).length,
         );
       });
     });
