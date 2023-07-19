@@ -40,16 +40,20 @@ import {
 import {getRemixConfig} from '../../../lib/config.js';
 import {findFileWithExtension} from '../../file.js';
 
+const NO_LOCALE_PATTERNS = [/robots\.txt/];
+
 const ROUTE_MAP = {
   home: ['_index', '$'],
-  page: 'pages.*',
+  page: 'pages*',
   cart: 'cart',
-  products: 'products.*',
-  collections: 'collections.*',
-  policies: 'policies.*',
+  products: 'products*',
+  collections: 'collections*',
+  policies: 'policies*',
+  blogs: 'blogs*',
+  account: 'account*',
+  search: ['search', 'api.predictive-search'],
   robots: '[robots.txt]',
   sitemap: '[sitemap.xml]',
-  account: ['account.*', 'account_.*'],
 };
 
 type RouteKey = keyof typeof ROUTE_MAP;
@@ -330,7 +334,8 @@ function getDestinationRoute(
 ) {
   const routePath = routeFrom.replace(GENERATOR_ROUTE_DIR + '/', '');
   const filePrefix =
-    localePrefix && !/\.(txt|xml)/.test(routePath)
+    localePrefix &&
+    !NO_LOCALE_PATTERNS.some((pattern) => pattern.test(routePath))
       ? `($${localePrefix})` + (v2Flags.isV2RouteConvention ? '.' : '/')
       : '';
 

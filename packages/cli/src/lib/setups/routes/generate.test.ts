@@ -31,7 +31,7 @@ describe('generate/route', () => {
 
       // Resolves globs
       expect(
-        resolvedRouteFiles.find((item) => item.includes('account.login')),
+        resolvedRouteFiles.find((item) => /account_?\.login/.test(item)),
       ).toBeTruthy();
 
       await temporaryDirectoryTask(async (tmpDir) => {
@@ -71,7 +71,7 @@ describe('generate/route', () => {
 
     it('figures out the locale if a home route already exists', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
-        const route = 'routes/pages.$pageHandle';
+        const route = 'routes/pages.$handle';
 
         const directories = await createHydrogenFixture(tmpDir, {
           files: [
@@ -106,9 +106,7 @@ describe('generate/route', () => {
 
         expect(result.routes).toHaveLength(1);
         expect(result.routes[0]).toMatchObject({
-          destinationRoute: expect.stringContaining(
-            '($locale).pages.$pageHandle',
-          ),
+          destinationRoute: expect.stringContaining('($locale).pages.$handle'),
         });
       });
     });
@@ -118,7 +116,7 @@ describe('generate/route', () => {
     it('generates a route file for Remix v1', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         // Given
-        const route = 'routes/pages.$pageHandle';
+        const route = 'routes/pages.$handle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [],
           templates: [[route + '.tsx', `const str = "hello world"`]],
@@ -169,7 +167,7 @@ describe('generate/route', () => {
           files: [],
           templates: [
             ['routes/_index.tsx', routeCode],
-            ['routes/pages.$pageHandle.tsx', routeCode],
+            ['routes/pages.$handle.tsx', routeCode],
             ['routes/[robots.txt].tsx', routeCode],
             ['routes/[sitemap.xml].tsx', routeCode],
           ],
@@ -184,7 +182,7 @@ describe('generate/route', () => {
           localePrefix,
           typescript: true,
         });
-        await generateProjectFile('routes/pages.$pageHandle', {
+        await generateProjectFile('routes/pages.$handle', {
           ...directories,
           v2Flags: {isV2RouteConvention: false},
           localePrefix,
@@ -193,12 +191,14 @@ describe('generate/route', () => {
 
         await generateProjectFile('routes/[sitemap.xml]', {
           ...directories,
+          v2Flags: {isV2RouteConvention: true},
           localePrefix,
           typescript: true,
         });
 
         await generateProjectFile('routes/[robots.txt]', {
           ...directories,
+          v2Flags: {isV2RouteConvention: true},
           localePrefix,
           typescript: true,
         });
@@ -209,18 +209,18 @@ describe('generate/route', () => {
         await expect(
           readProjectFile(directories, `routes/($locale)._index`),
         ).resolves.toContain(routeCode);
+        await expect(
+          readProjectFile(directories, `routes/($locale).[sitemap.xml]`),
+        ).resolves.toContain(routeCode);
+
+        // No locale added for robots:
+        await expect(
+          readProjectFile(directories, `routes/[robots.txt]`),
+        ).resolves.toContain(routeCode);
 
         // v1 locale:
         await expect(
-          readProjectFile(directories, `routes/($locale)/pages/$pageHandle`),
-        ).resolves.toContain(routeCode);
-
-        // No locale added for assets:
-        await expect(
-          readProjectFile(directories, `routes/[sitemap.xml]`),
-        ).resolves.toContain(routeCode);
-        await expect(
-          readProjectFile(directories, `routes/[robots.txt]`),
+          readProjectFile(directories, `routes/($locale)/pages/$handle`),
         ).resolves.toContain(routeCode);
       });
     });
@@ -228,7 +228,7 @@ describe('generate/route', () => {
     it('produces a typescript file when typescript argument is true', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         // Given
-        const route = 'routes/pages.$pageHandle';
+        const route = 'routes/pages.$handle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [],
           templates: [[route + '.tsx', 'const str = "hello typescript"']],
@@ -255,7 +255,7 @@ describe('generate/route', () => {
           async () => true,
         );
 
-        const route = 'routes/page.$pageHandle';
+        const route = 'routes/page.$handle';
         const directories = await createHydrogenFixture(tmpDir, {
           files: [[`app/${route}.jsx`, 'const str = "I exist"']],
           templates: [[route + '.tsx', 'const str = "hello world"']],

@@ -574,7 +574,7 @@
       "args": {
         "routeName": {
           "name": "routeName",
-          "description": "The route to generate. One of home,page,cart,products,collections,policies,robots,sitemap,account,all.",
+          "description": "The route to generate. One of home,page,cart,products,collections,policies,blogs,account,search,robots,sitemap,all.",
           "required": true,
           "options": [
             "home",
@@ -583,9 +583,11 @@
             "products",
             "collections",
             "policies",
+            "blogs",
+            "account",
+            "search",
             "robots",
             "sitemap",
-            "account",
             "all"
           ]
         }
