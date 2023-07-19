@@ -95,7 +95,7 @@ const PRODUCT_SEARCH_ITEM_FRAGMENT = `#graphql
       nodes {
         id
         image {
-          url: transformedSrc(maxWidth: 800, crop: CENTER)
+          url: transformedSrc(maxWidth: 400, crop: CENTER)
           altText
           width
           height

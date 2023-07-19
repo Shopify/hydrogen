@@ -1,3 +1,4 @@
+import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {Link, useLoaderData} from '@remix-run/react';
 import {
@@ -7,16 +8,26 @@ import {
 } from '@shopify/hydrogen';
 import type {ArticleItemFragment} from 'storefrontapi.generated';
 
-const BLOG_HANDLE = 'Journal';
+export const meta: V2_MetaFunction = ({data}) => {
+  return [{title: `Hydrogen | ${data.blog.title} blog`}];
+};
 
-export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
+export const loader = async ({
+  request,
+  params,
+  context: {storefront},
+}: LoaderArgs) => {
   const paginationVariables = getPaginationVariables(request, {
     pageBy: 4,
   });
 
+  if (!params.blogHandle) {
+    throw new Response(`blog not found`, {status: 404});
+  }
+
   const {blog} = await storefront.query(BLOGS_QUERY, {
     variables: {
-      blogHandle: BLOG_HANDLE,
+      blogHandle: params.blogHandle,
       ...paginationVariables,
     },
   });
@@ -28,13 +39,13 @@ export const loader = async ({request, context: {storefront}}: LoaderArgs) => {
   return json({blog});
 };
 
-export default function Journals() {
+export default function Blog() {
   const {blog} = useLoaderData<typeof loader>();
   const {articles} = blog;
 
   return (
     <div className="blog">
-      <h1>{BLOG_HANDLE}</h1>
+      <h1>{blog.title}</h1>
       <div className="blog-grid">
         <Pagination connection={articles}>
           {({nodes, isLoading, PreviousLink, NextLink}) => {
@@ -78,7 +89,7 @@ function ArticleItem({
   }).format(new Date(article.publishedAt!));
   return (
     <div className="blog-article" key={article.id}>
-      <Link to={`/blog/${article.handle}`}>
+      <Link to={`/blogs/${article.blog.handle}/${article.handle}`}>
         {article.image && (
           <div className="blog-article-image">
             <Image
@@ -149,5 +160,8 @@ const BLOGS_QUERY = `#graphql
     }
     publishedAt
     title
+    blog {
+      handle
+    }
   }
 ` as const;

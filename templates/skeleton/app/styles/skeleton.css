@@ -216,6 +216,7 @@ aside li {
 .cart-line img {
   height: 100%;
   display: block;
+  margin-right: 0.75rem;
 }
 
 .cart-summary-page {

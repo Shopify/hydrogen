@@ -3,25 +3,21 @@ import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen';
 
-const BLOG_HANDLE = 'journal';
-
 export const meta: V2_MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data.article.title} article`}];
 };
 
 export async function loader({params, context}: LoaderArgs) {
-  const {articleHandle} = params;
+  const {blogHandle, articleHandle} = params;
 
-  // TODO: sort out 404 throwing
-  if (!articleHandle) {
+  console.log({blogHandle, articleHandle});
+
+  if (!articleHandle || !blogHandle) {
     throw new Response('Not found', {status: 404});
   }
 
   const {blog} = await context.storefront.query(ARTICLE_QUERY, {
-    variables: {
-      blogHandle: BLOG_HANDLE,
-      articleHandle,
-    },
+    variables: {blogHandle, articleHandle},
   });
 
   if (!blog?.articleByHandle) {
