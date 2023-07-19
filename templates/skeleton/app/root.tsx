@@ -60,7 +60,7 @@ export async function loader({context}: LoaderArgs) {
   const footerPromise = storefront.query(FOOTER_QUERY, {
     cache: storefront.CacheLong(),
     variables: {
-      footerMenuHandle: 'skeleton-footer-menu', // Adjust to your footer menu handle
+      footerMenuHandle: 'footer-menu', // Adjust to your footer menu handle
     },
   });
 
@@ -142,6 +142,7 @@ export function ErrorBoundary() {
 }
 
 export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+  // eslint-disable-next-line no-console
   console.error(error);
 
   return <div>There was an error.</div>;
@@ -149,6 +150,7 @@ export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
 
 export function CatchBoundary() {
   const caught = useCatch();
+  // eslint-disable-next-line no-console
   console.error(caught);
 
   return (

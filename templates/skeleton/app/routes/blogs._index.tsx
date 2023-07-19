@@ -38,11 +38,11 @@ export default function Blogs() {
                 <PreviousLink>
                   {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
                 </PreviousLink>
-                {nodes.map((blog, index) => {
+                {nodes.map((blog) => {
                   return (
                     <Link
                       className="blog"
-                      key={index}
+                      key={blog.handle}
                       prefetch="intent"
                       to={`/blogs/${blog.handle}`}
                     >

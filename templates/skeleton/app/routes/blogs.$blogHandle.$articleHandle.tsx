@@ -10,8 +10,6 @@ export const meta: V2_MetaFunction = ({data}) => {
 export async function loader({params, context}: LoaderArgs) {
   const {blogHandle, articleHandle} = params;
 
-  console.log({blogHandle, articleHandle});
-
   if (!articleHandle || !blogHandle) {
     throw new Response('Not found', {status: 404});
   }
