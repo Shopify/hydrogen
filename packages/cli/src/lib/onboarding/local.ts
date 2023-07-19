@@ -295,10 +295,12 @@ export async function setupLocalStarterTemplate(
         .then((routes) => {
           setupSummary.routes = routes;
 
-          return commitAll(
-            project.directory,
-            `Generate routes for core functionality`,
-          );
+          if (routes) {
+            return commitAll(
+              project.directory,
+              `Generate routes for core functionality`,
+            );
+          }
         })
         .catch((error) => {
           setupSummary.routesError = error as AbortError;

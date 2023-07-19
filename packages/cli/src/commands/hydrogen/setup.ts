@@ -85,8 +85,11 @@ async function runSetup(options: RunSetupOptions) {
     );
   }
 
-  const {routes, setupRoutes} = await handleRouteGeneration(controller);
-  const needsRouteGeneration = Object.keys(routes).length > 0;
+  const {needsRouteGeneration, setupRoutes} = await handleRouteGeneration(
+    controller,
+  );
+
+  let routes: Record<string, string[]> | undefined;
 
   if (needsRouteGeneration) {
     const typescript = !!remixConfig.tsconfigPath;
@@ -99,9 +102,13 @@ async function runSetup(options: RunSetupOptions) {
           typescript,
         }),
       )
-      .then(() =>
-        setupRoutes(remixConfig.rootDirectory, typescript ? 'ts' : 'js', i18n),
-      );
+      .then(async () => {
+        routes = await setupRoutes(
+          remixConfig.rootDirectory,
+          typescript ? 'ts' : 'js',
+          i18n,
+        );
+      });
   }
 
   let hasCreatedShortcut = false;

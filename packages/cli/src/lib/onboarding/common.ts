@@ -126,13 +126,17 @@ export async function handleRouteGeneration(
         abortSignal: controller.signal,
       });
 
+  const needsRouteGeneration =
+    routesToScaffold === 'all' || routesToScaffold.length > 0;
+
   return {
+    needsRouteGeneration,
     setupRoutes: async (
       directory: string,
       language: Language,
       i18nStrategy?: I18nStrategy,
     ) => {
-      if (routesToScaffold === 'all' || routesToScaffold.length > 0) {
+      if (needsRouteGeneration) {
         const result = await generateRoutes({
           routeName: routesToScaffold,
           directory,
