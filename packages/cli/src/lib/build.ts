@@ -33,10 +33,20 @@ export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
 }
 
 export function getStarterDir() {
+  if (process.env.NODE_ENV === 'test') {
+    return getSkeletonSourceDir();
+  }
+
   return fileURLToPath(
     new URL(
       `../${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
       import.meta.url,
     ),
+  );
+}
+
+export function getSkeletonSourceDir() {
+  return fileURLToPath(
+    new URL(`../../../../templates/skeleton`, import.meta.url),
   );
 }

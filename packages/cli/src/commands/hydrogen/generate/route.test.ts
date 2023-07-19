@@ -22,6 +22,7 @@ describe('runGenerate', () => {
       transpilerOptions: {} as any,
       formatOptions: {} as any,
       v2Flags: {} as any,
+      routeGroups: {},
       routes: [
         {sourceRoute: '', destinationRoute: '/cart', operation: 'created'},
         {sourceRoute: '', destinationRoute: '/about', operation: 'skipped'},

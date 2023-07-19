@@ -6,6 +6,7 @@ import {
   GENERATOR_TEMPLATES_DIR,
   GENERATOR_SETUP_ASSETS_DIR,
   GENERATOR_STARTER_DIR,
+  getSkeletonSourceDir,
 } from './src/lib/build';
 
 // Cleanup dist folder before building
@@ -59,7 +60,7 @@ export default defineConfig([
       // These files need to be packaged/distributed with the CLI
       // so that we can use them in the `generate` command.
       await fs.copy(
-        '../../templates/skeleton',
+        getSkeletonSourceDir(),
         `${outDir}/${GENERATOR_TEMPLATES_DIR}/${GENERATOR_STARTER_DIR}`,
         {filter: filterArtifacts},
       );

@@ -62,7 +62,6 @@ import {
   generateProjectFile,
   generateRoutes,
   renderRoutePrompt,
-  ROUTE_MAP,
 } from '../setups/routes/generate.js';
 
 export type InitOptions = {
@@ -127,24 +126,18 @@ export async function handleRouteGeneration(
         abortSignal: controller.signal,
       });
 
-  const routes =
-    routesToScaffold === 'all'
-      ? ROUTE_MAP
-      : routesToScaffold.reduce((acc, item) => {
-          const value = ROUTE_MAP[item];
-          if (value) acc[item] = value;
-          return acc;
-        }, {} as typeof ROUTE_MAP);
+  const needsRouteGeneration =
+    routesToScaffold === 'all' || routesToScaffold.length > 0;
 
   return {
-    routes,
+    needsRouteGeneration,
     setupRoutes: async (
       directory: string,
       language: Language,
       i18nStrategy?: I18nStrategy,
     ) => {
-      if (routesToScaffold === 'all' || routesToScaffold.length > 0) {
-        await generateRoutes({
+      if (needsRouteGeneration) {
+        const result = await generateRoutes({
           routeName: routesToScaffold,
           directory,
           force: true,
@@ -152,6 +145,8 @@ export async function handleRouteGeneration(
           localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
           signal: controller.signal,
         });
+
+        return result.routeGroups;
       }
     },
   };
@@ -549,10 +544,19 @@ export async function renderProjectReady(
     for (let [routeName, routePaths] of Object.entries(routes)) {
       routePaths = Array.isArray(routePaths) ? routePaths : [routePaths];
 
+      let urls = [
+        ...new Set(routePaths.map((item) => '/' + normalizeRoutePath(item))),
+      ].sort();
+
+      if (urls.length > 2) {
+        // Shorten the summary by grouping them by prefix when there are more than 2
+        // e.g. /account/.../... => /account/*
+        const prefixesSet = new Set(urls.map((url) => url.split('/')[1] ?? ''));
+        urls = [...prefixesSet].map((item) => '/' + item + '/*');
+      }
+
       routeSummary += `\n    • ${capitalize(routeName)} ${colors.dim(
-        '(' +
-          routePaths.map((item) => '/' + normalizeRoutePath(item)).join(' & ') +
-          ')',
+        '(' + urls.join(' & ') + ')',
       )}`;
     }
   }
@@ -703,12 +707,12 @@ async function projectExists(projectDir: string) {
 }
 
 function normalizeRoutePath(routePath: string) {
-  const isIndex = /(^|\.)_index$/.test(routePath);
-  return isIndex
-    ? routePath.slice(0, -'_index'.length).replace(/\.$/, '')
-    : routePath
-        .replace(/\.(?!\w+\])/g, '/') // Replace dots with slashes, except for dots in brackets
-        .replace(/\$/g, ':') // Replace dollar signs with colons
-        .replace(/[\[\]]/g, '') // Remove brackets
-        .replace(/:(\w+)Handle/i, ':handle'); // Replace arbitrary handle names with a standard `:handle`
+  return routePath
+    .replace(/(^|\.)_index$/, '') // Remove index segments
+    .replace(/((^|\.)[^\.]+)_\./g, '$1.') // Replace rootless segments
+    .replace(/\.(?!\w+\])/g, '/') // Replace dots with slashes, except for dots in brackets
+    .replace(/\$$/g, ':catchAll') // Replace catch-all
+    .replace(/\$/g, ':') // Replace dollar signs with colons
+    .replace(/[\[\]]/g, '') // Remove brackets
+    .replace(/:\w*Handle/i, ':handle'); // Replace arbitrary handle names with a standard `:handle`
 }
