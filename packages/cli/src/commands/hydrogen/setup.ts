@@ -28,7 +28,7 @@ export default class Setup extends Command {
     path: commonFlags.path,
     force: commonFlags.force,
     styling: commonFlags.styling,
-    i18n: commonFlags.i18n,
+    markets: commonFlags.markets,
     shortcut: commonFlags.shortcut,
     'install-deps': overrideFlag(commonFlags.installDeps, {default: true}),
   };

@@ -284,7 +284,7 @@ export async function setupLocalStarterTemplate(
         .then(() =>
           commitAll(
             project.directory,
-            `Setup internationalization using ${i18nStrategy}`,
+            `Setup markets support using ${i18nStrategy}`,
           ),
         )
         .catch((error) => {

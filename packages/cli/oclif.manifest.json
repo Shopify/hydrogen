@@ -269,10 +269,10 @@
           "description": "Sets the styling strategy to use. One of `tailwind`, `css-modules`, `vanilla-extract`, `postcss`.",
           "multiple": false
         },
-        "i18n": {
-          "name": "i18n",
+        "markets": {
+          "name": "markets",
           "type": "option",
-          "description": "Sets the internationalization strategy to use. One of `subfolders`, `domains`, `subdomains`, `none`.",
+          "description": "Sets the URL structure to support multiple markets. One of `subfolders`, `domains`, `subdomains`, `none`.",
           "multiple": false
         },
         "shortcut": {
@@ -436,10 +436,10 @@
           "description": "Sets the styling strategy to use. One of `tailwind`, `css-modules`, `vanilla-extract`, `postcss`.",
           "multiple": false
         },
-        "i18n": {
-          "name": "i18n",
+        "markets": {
+          "name": "markets",
           "type": "option",
-          "description": "Sets the internationalization strategy to use. One of `subfolders`, `domains`, `subdomains`, `none`.",
+          "description": "Sets the URL structure to support multiple markets. One of `subfolders`, `domains`, `subdomains`, `none`.",
           "multiple": false
         },
         "shortcut": {
@@ -672,7 +672,7 @@
     },
     "hydrogen:setup:markets": {
       "id": "hydrogen:setup:markets",
-      "description": "Setup internationalization strategies for your project.",
+      "description": "Setup support for multiple markets in your project.",
       "strict": true,
       "pluginName": "@shopify/cli-hydrogen",
       "pluginAlias": "@shopify/cli-hydrogen",
@@ -689,7 +689,7 @@
       "args": {
         "strategy": {
           "name": "strategy",
-          "description": "The internationalization strategy to setup. One of subfolders,domains,subdomains",
+          "description": "The URL structure strategy to setup multiple markets. One of subfolders,domains,subdomains",
           "options": [
             "subfolders",
             "domains",
