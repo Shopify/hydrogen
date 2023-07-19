@@ -1,4 +1,0 @@
-deploy:
-  override:
-    - yarn build
-    - npm publish --tag latest

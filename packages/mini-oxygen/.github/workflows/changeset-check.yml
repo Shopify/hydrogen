@@ -1,0 +1,38 @@
+name: Check for changeset
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'src'
+      - 'yarn.lock'
+      - 'package.json'
+      - 'tsconfig.json'
+      - '.eslintrc.json'
+
+concurrency:
+  group: check-for-changeset-${{ github.head_ref }}
+  cancel-in-progress: true
+
+jobs:
+  check-for-changeset:
+    runs-on: shopify-ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Check for changesets
+        run: |
+          yarn changeset status --since=origin/main || (echo "No changeset found in this PR." && exit 1)

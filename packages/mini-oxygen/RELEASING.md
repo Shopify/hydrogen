@@ -1,10 +1,7 @@
 ## How to release a new version of the package to npm
 
-- Checkout the `main` branch
-- Make sure that there are changesets for the changes made since the last version.
-- If there are some missing, create them with `npx changeset`.
-- Now run `npx changeset version`.
-- Commit the changes with the version `git commit -m "vX.X.X"`.
-- Tag the commit with the new version `git tag vX.X.X`.
-- Push the changes `git push --follow-tags` or you can push the tag separately `git push && git push origin vX.X.X`.
-- Go to [shipit](https://shipit.shopify.io/shopify/mini-oxygen/production) and click on `Deploy` for the latest commit.
+- Open a pull request with your changes.
+- If your changes should trigger a version update, create a changeset by running `yarn changeset` and following the prompts. If your changes should not trigger a version update (for example, changes to tests or documentation), you can create an empty changeset with `yarn changeset --empty`.
+- The Changesets GitHub Action will automatically create a "Release PR" when the pull request is merged.
+- Review the "Release PR". It will contain the version updates and changelog entries. If everything looks correct, merge the "Release PR".
+- The Changesets GitHub Action will automatically publish the new version to npm when the "Release PR" is merged.
