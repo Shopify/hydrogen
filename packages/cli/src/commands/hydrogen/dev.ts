@@ -10,7 +10,7 @@ import {
   getRemixConfig,
   type ServerMode,
 } from '../../lib/config.js';
-import {muteDevLogs, warnOnce} from '../../lib/log.js';
+import {enhanceH2Logs, muteDevLogs, warnOnce} from '../../lib/log.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
@@ -146,17 +146,16 @@ async function runDev({
       env: await envPromise,
     });
 
+    const graphiqlUrl = `${miniOxygen.listeningAt}/graphiql`;
+    enhanceH2Logs({graphiqlUrl, ...remixConfig});
+
     miniOxygen.showBanner({
       appName: storefront ? colors.cyan(storefront?.title) : undefined,
       headlinePrefix:
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
-      extraLines: [
-        colors.dim(
-          `\nView GraphiQL API browser: ${miniOxygen.listeningAt}/graphiql`,
-        ),
-      ],
+      extraLines: [colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`)],
     });
 
     const showUpgrade = await checkingHydrogenVersion;
