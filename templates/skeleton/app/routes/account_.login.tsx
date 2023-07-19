@@ -74,7 +74,7 @@ export default function Login() {
 
   return (
     <div className="login">
-      <h1>Sign in</h1>
+      <h1>Sign in.</h1>
       <Form method="POST">
         <fieldset>
           <label htmlFor="email">Email address</label>
@@ -118,7 +118,7 @@ export default function Login() {
           <Link to="/account/recover">Forgot password →</Link>
         </p>
         <p>
-          <Link to="/account/register">Create and account →</Link>
+          <Link to="/account/register">Register →</Link>
         </p>
       </div>
     </div>

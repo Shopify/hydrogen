@@ -110,7 +110,7 @@ export default function Register() {
   const error = data?.error || null;
   return (
     <div className="login">
-      <h1>Register</h1>
+      <h1>Register.</h1>
       <Form method="POST">
         <fieldset>
           <label htmlFor="email">Email address</label>
@@ -159,7 +159,6 @@ export default function Register() {
         )}
         <button type="submit">Register</button>
       </Form>
-      <br />
       <br />
       <p>
         <Link to="/account/login">Login →</Link>

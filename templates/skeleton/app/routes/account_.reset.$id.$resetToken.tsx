@@ -107,7 +107,7 @@ export default function Reset() {
       </Form>
       <br />
       <p>
-        <a href="/account/login">Back to login</a>
+        <a href="/account/login">Back to login →</a>
       </p>
     </div>
   );
