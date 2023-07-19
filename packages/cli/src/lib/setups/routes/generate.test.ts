@@ -69,7 +69,7 @@ describe('generate/route', () => {
       });
     });
 
-    it.only('figures out the locale if a home route already exists', async () => {
+    it('figures out the locale if a home route already exists', async () => {
       await temporaryDirectoryTask(async (tmpDir) => {
         const route = 'routes/pages.$handle';
 
@@ -191,12 +191,14 @@ describe('generate/route', () => {
 
         await generateProjectFile('routes/[sitemap.xml]', {
           ...directories,
+          v2Flags: {isV2RouteConvention: true},
           localePrefix,
           typescript: true,
         });
 
         await generateProjectFile('routes/[robots.txt]', {
           ...directories,
+          v2Flags: {isV2RouteConvention: true},
           localePrefix,
           typescript: true,
         });
@@ -207,18 +209,18 @@ describe('generate/route', () => {
         await expect(
           readProjectFile(directories, `routes/($locale)._index`),
         ).resolves.toContain(routeCode);
+        await expect(
+          readProjectFile(directories, `routes/($locale).[sitemap.xml]`),
+        ).resolves.toContain(routeCode);
+
+        // No locale added for robots:
+        await expect(
+          readProjectFile(directories, `routes/[robots.txt]`),
+        ).resolves.toContain(routeCode);
 
         // v1 locale:
         await expect(
           readProjectFile(directories, `routes/($locale)/pages/$handle`),
-        ).resolves.toContain(routeCode);
-
-        // No locale added for assets:
-        await expect(
-          readProjectFile(directories, `routes/[sitemap.xml]`),
-        ).resolves.toContain(routeCode);
-        await expect(
-          readProjectFile(directories, `routes/[robots.txt]`),
         ).resolves.toContain(routeCode);
       });
     });
