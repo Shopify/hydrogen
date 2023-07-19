@@ -138,7 +138,7 @@ async function deleteItem(cache: Cache, request: Request) {
   if (!cache) return;
 
   logCacheApiStatus('DELETE', request);
-  await cache.delete(request.url);
+  await cache.delete(request);
 }
 
 /**
