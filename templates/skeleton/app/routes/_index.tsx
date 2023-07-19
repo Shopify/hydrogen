@@ -87,13 +87,16 @@ function RecommendedProducts({
                     }}
                   />
                   <h4>{product.title}</h4>
-                  <Money data={product.priceRange.minVariantPrice} />
+                  <small>
+                    <Money data={product.priceRange.minVariantPrice} />
+                  </small>
                 </Link>
               ))}
             </div>
           )}
         </Await>
       </Suspense>
+      <br />
     </div>
   );
 }
