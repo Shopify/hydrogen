@@ -48,30 +48,30 @@ export async function loader({context}: LoaderArgs) {
     session,
   );
 
+  // defer the cart query by not awaiting it
+  const cartPromise = cart.get();
+
+  // defer the footer query (below the fold)
+  const footerPromise = storefront.query(FOOTER_QUERY, {
+    cache: storefront.CacheLong(),
+    variables: {
+      footerMenuHandle: 'footer', // Adjust to your footer menu handle
+    },
+  });
+
   // await the header query (above the fold)
-  const header = await storefront.query(HEADER_QUERY, {
+  const headerPromise = storefront.query(HEADER_QUERY, {
     cache: storefront.CacheLong(),
     variables: {
       headerMenuHandle: 'main-menu', // Adjust to your header menu handle
     },
   });
 
-  // defer the footer query (below the fold)
-  const footerPromise = storefront.query(FOOTER_QUERY, {
-    cache: storefront.CacheLong(),
-    variables: {
-      footerMenuHandle: 'footer-menu', // Adjust to your footer menu handle
-    },
-  });
-
-  // defer the cart query by not awaiting it
-  const cartPromise = cart.get();
-
   return defer(
     {
       cart: cartPromise,
       footer: footerPromise,
-      header,
+      header: await headerPromise,
       isLoggedIn,
       publicStoreDomain,
     },

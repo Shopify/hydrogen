@@ -1,5 +1,4 @@
 import {useMatches, Link} from '@remix-run/react';
-import type {Menu} from '@shopify/hydrogen/storefront-api-types';
 import type {FooterQuery} from 'storefrontapi.generated';
 
 export function Footer({menu}: FooterQuery) {

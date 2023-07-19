@@ -1,4 +1,3 @@
-import invariant from 'tiny-invariant';
 import type {
   MoneyV2,
   Image as ImageType,
@@ -107,8 +106,6 @@ async function fetchPredictiveSearchResults({
   const data = await context.storefront.query<{
     predictiveSearch: PredictiveSearchResult;
   }>(PREDICTIVE_SEARCH_QUERY, {
-    // FIX: remove unstable when switching to 2023-07
-    storefrontApiVersion: 'unstable',
     variables: {
       limit,
       limitScope: 'EACH',
@@ -117,7 +114,9 @@ async function fetchPredictiveSearchResults({
     },
   });
 
-  invariant(data, 'No data returned from Shopify API');
+  if (!data) {
+    throw new Error('No data returned from Shopify API');
+  }
 
   const searchResults = normalizePredictiveSearchResults(
     data.predictiveSearch,

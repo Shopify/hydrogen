@@ -44,8 +44,6 @@ export async function loader({request, context}: LoaderArgs) {
     pages: PageConnection;
     articles: ArticleConnection;
   }>(SEARCH_QUERY, {
-    // TODO: remove unstable when switching to 2023-07
-    storefrontApiVersion: 'unstable',
     variables: {
       query: searchTerm,
       ...variables,
