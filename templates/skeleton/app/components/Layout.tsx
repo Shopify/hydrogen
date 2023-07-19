@@ -63,6 +63,7 @@ function SearchAside() {
   return (
     <Aside id="search-aside" heading="SEARCH">
       <div className="predictive-search">
+        <br />
         <PredictiveSearchForm>
           {({fetchResults, inputRef}) => (
             <div>

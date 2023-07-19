@@ -1,8 +1,5 @@
-export default function NotFound() {
-  return (
-    <div className="not-found">
-      <h1>Page not found</h1>
-      <p>Sorry, but the page you were trying to view does not exist.</p>
-    </div>
-  );
+import type {LoaderArgs} from '@shopify/remix-oxygen';
+
+export async function loader({params}: LoaderArgs) {
+  throw new Error(`Page ${params} not found`);
 }

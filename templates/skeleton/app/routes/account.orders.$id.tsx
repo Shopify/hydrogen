@@ -49,6 +49,7 @@ export async function loader({params, context}: LoaderArgs) {
   });
 }
 
+// TODO: change to <address>
 export default function OrderRoute() {
   const {order, lineItems, discountValue, discountPercentage} =
     useLoaderData<typeof loader>();
@@ -130,24 +131,20 @@ export default function OrderRoute() {
         <div>
           <h3>Shipping Address</h3>
           {order?.shippingAddress ? (
-            <ul>
-              <li>
-                <p>
-                  {order.shippingAddress.firstName &&
-                    order.shippingAddress.firstName + ' '}
-                  {order.shippingAddress.lastName}
-                </p>
-              </li>
+            <address>
+              <p>
+                {order.shippingAddress.firstName &&
+                  order.shippingAddress.firstName + ' '}
+                {order.shippingAddress.lastName}
+              </p>
               {order?.shippingAddress?.formatted ? (
                 order.shippingAddress.formatted.map((line: string) => (
-                  <li key={line}>
-                    <p>{line}</p>
-                  </li>
+                  <p key={line}>{line}</p>
                 ))
               ) : (
                 <></>
               )}
-            </ul>
+            </address>
           ) : (
             <p>No shipping address defined</p>
           )}
@@ -160,7 +157,7 @@ export default function OrderRoute() {
       <br />
       <p>
         <a target="_blank" href={order.statusUrl} rel="noreferrer">
-          View Order Status <mark>→</mark>
+          View Order Status →
         </a>
       </p>
     </div>

@@ -96,7 +96,7 @@ export default function Recover() {
             <div>
               <br />
               <p>
-                Return to &nbsp;<Link to="/account/login">Login</Link>
+                <Link to="/account/login">Login →</Link>
               </p>
             </div>
           </>

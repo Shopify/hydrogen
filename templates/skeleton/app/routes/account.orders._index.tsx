@@ -29,7 +29,7 @@ export async function loader({request, context}: LoaderArgs) {
 
   try {
     const paginationVariables = getPaginationVariables(request, {
-      pageBy: 1, //TODO: adjust back to 10 when ready
+      pageBy: 20,
     });
 
     const {customer} = await storefront.query(CUSTOMER_ORDERS_QUERY, {
@@ -78,25 +78,13 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
             return (
               <>
                 <PreviousLink>
-                  {isLoading ? (
-                    'Loading...'
-                  ) : (
-                    <span>
-                      <mark>↑</mark> Load previous
-                    </span>
-                  )}
+                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
                 </PreviousLink>
                 {nodes.map((order) => {
                   return <OrderItem key={order.id} order={order} />;
                 })}
                 <NextLink>
-                  {isLoading ? (
-                    'Loading...'
-                  ) : (
-                    <span>
-                      Load more <mark>↓</mark>
-                    </span>
-                  )}
+                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
                 </NextLink>
               </>
             );
@@ -115,9 +103,7 @@ function EmptyOrders() {
       <p>You haven&apos;t placed any orders yet.</p>
       <br />
       <p>
-        <Link to="/collections">
-          Start Shopping <mark>→</mark>
-        </Link>
+        <Link to="/collections">Start Shopping →</Link>
       </p>
     </div>
   );
@@ -134,9 +120,7 @@ function OrderItem({order}: {order: OrderItemFragment}) {
         <p>{order.financialStatus}</p>
         <p>{order.fulfillmentStatus}</p>
         <Money data={order.currentTotalPrice} />
-        <Link to={`/account/orders/${btoa(order.id)}`}>
-          View Order <mark>→</mark>
-        </Link>
+        <Link to={`/account/orders/${btoa(order.id)}`}>View Order →</Link>
       </fieldset>
       <br />
     </>

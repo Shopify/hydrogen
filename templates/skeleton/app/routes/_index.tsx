@@ -1,61 +1,146 @@
-// TODO: Decide what content to show on the homepage
+import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {Await, useLoaderData, Link} from '@remix-run/react';
+import {Suspense} from 'react';
+import {Image, Money} from '@shopify/hydrogen';
+import type {
+  FeaturedCollectionFragment,
+  RecommendedProductsQuery,
+} from 'storefrontapi.generated';
+
+export async function loader({context}: LoaderArgs) {
+  const {storefront} = context;
+  const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY);
+  const featuredCollection = collections.nodes[0];
+  const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
+
+  return defer({featuredCollection, recommendedProducts});
+}
+
 export default function Homepage() {
+  const data = useLoaderData<typeof loader>();
   return (
     <div className="home">
-      <Logo />
-      <br />
-      <h1>Skeleton Template</h1>
-      <p>
-        This template seeds the <code>shopify hydrogen generate</code> command
-        of the hydrogen cli.
-      </p>
-      <br />
-      <h4>Principles</h4>
-      <p>
-        The skeleton template is a bare bones template that is meant to be
-        extended and customized to your needs.
-      </p>
-      <br />
-      <ul>
-        <li>
-          Basic CSS styling via the <code>styles/reset.css</code>
-          in <code>styles/skeleton.css</code>
-        </li>
-        <li>Focus on functional correctness and performance</li>
-        <li>Focus on sematic HTML</li>
-        <li>Focus on accessibility</li>
-      </ul>
-      <br />
-      <h4>What&apos;s next?</h4>
-      <ul>
-        <li>Show link to the docs</li>
-        <li>Show link to our blog</li>
-        <li>Show link to our github discussions</li>
-        <li>Show link to our Editions videos</li>
-      </ul>
+      <FeaturedCollection collection={data.featuredCollection} />
+      <RecommendedProducts products={data.recommendedProducts} />
     </div>
   );
 }
 
-function Logo() {
+function FeaturedCollection({
+  collection,
+}: {
+  collection: FeaturedCollectionFragment;
+}) {
+  const image = collection.image;
   return (
-    <svg
-      className="hydrogen"
-      xmlns="http://www.w3.org/2000/svg"
-      width="32"
-      height="32"
-      fill="none"
+    <Link
+      className="featured-collection"
+      to={`/collections/${collection.handle}`}
     >
-      <path
-        fillRule="evenodd"
-        fill="#fff"
-        d="M16.1 16.04 1 8.02 6.16 5.3l5.82 3.09 4.88-2.57-5.82-3.1L16.21 0l15.1 8.02-5.17 2.72-5.5-2.91-4.88 2.57 5.5 2.92-5.16 2.72Z"
-      />
-      <path
-        fill="#fff"
-        fillRule="evenodd"
-        d="M16.1 32 1 23.98l5.16-2.72 5.82 3.08 4.88-2.57-5.82-3.08 5.17-2.73 15.1 8.02-5.17 2.72-5.5-2.92-4.88 2.58 5.5 2.92L16.1 32Z"
-      />
-    </svg>
+      {image && (
+        <div>
+          <Image
+            data={image}
+            sizes="(min-width: 45em) 40vw, 100vw"
+            style={{
+              height: 'auto',
+              maxHeight: '600px',
+              objectFit: 'cover',
+            }}
+          />
+        </div>
+      )}
+      <h1>{collection.title}</h1>
+    </Link>
   );
 }
+
+function RecommendedProducts({
+  products,
+}: {
+  products: Promise<RecommendedProductsQuery>;
+}) {
+  return (
+    <div className="recommended-products">
+      <h2>Recommended Products</h2>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Await resolve={products}>
+          {({products}) => (
+            <div className="recommended-products-grid">
+              {products.nodes.map((product) => (
+                <Link
+                  key={product.id}
+                  className="recommended-product"
+                  to={`/products/${product.handle}`}
+                >
+                  <Image
+                    data={product.images.nodes[0]}
+                    aspectRatio="1/1"
+                    sizes="(min-width: 45em) 20vw, 50vw"
+                    style={{
+                      height: 'auto',
+                    }}
+                  />
+                  <h4>{product.title}</h4>
+                  <Money data={product.priceRange.minVariantPrice} />
+                </Link>
+              ))}
+            </div>
+          )}
+        </Await>
+      </Suspense>
+    </div>
+  );
+}
+
+const FEATURED_COLLECTION_QUERY = `#graphql
+  fragment FeaturedCollection on Collection {
+    id
+    title
+    image {
+      id
+      url: transformedSrc(maxHeight: 600, crop: CENTER, scale: 2)
+      altText
+      width
+      height
+    }
+    handle
+  }
+  query FeaturedCollection {
+    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
+      nodes {
+        ...FeaturedCollection
+      }
+    }
+  }
+` as const;
+
+const RECOMMENDED_PRODUCTS_QUERY = `#graphql
+  fragment RecommendedProduct on Product {
+    id
+    title
+    handle
+    priceRange {
+      minVariantPrice {
+        amount
+        currencyCode
+      }
+    }
+    images(first: 1) {
+      nodes {
+        id
+        url
+        altText
+        width
+        height
+      }
+    }
+  }
+  query RecommendedProducts {
+    products(first: 4, sortKey: UPDATED_AT, reverse: true) {
+      nodes {
+        ...RecommendedProduct
+      }
+    }
+  }
+` as const;

@@ -1,5 +1,8 @@
 import invariant from 'tiny-invariant';
-import type {Image as ImageType} from '@shopify/hydrogen-react/storefront-api-types';
+import type {
+  MoneyV2,
+  Image as ImageType,
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 
 import type {
@@ -20,6 +23,7 @@ export type NormalizedPredictiveSearchResultItem = {
   styledTitle?: string;
   title: string;
   url: string;
+  price?: MoneyV2;
 };
 
 export type NormalizedPredictiveSearchResults = Array<
@@ -202,6 +206,7 @@ export function normalizePredictiveSearchResults(
           image: product.variants?.nodes?.[0]?.image,
           title: product.title,
           url: `${localePrefix}/products/${product.handle}${trackingParams}`,
+          price: product.variants.nodes[0].price,
         };
       }),
     });
@@ -255,6 +260,7 @@ export function normalizePredictiveSearchResults(
           id: article.id,
           image: article.image,
           title: article.title,
+          // FIX: should have a utility that allows to generate localized urls with different formats
           url: `${localePrefix}/blog/${article.handle}${trackingParams}`,
         };
       }),

@@ -5,6 +5,7 @@ import {
   getPaginationVariables__unstable as getPaginationVariables,
   Image,
   useVariantUrl,
+  Money,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 
@@ -42,24 +43,12 @@ export default function Collection() {
         {({nodes, isLoading, PreviousLink, NextLink}) => (
           <>
             <PreviousLink>
-              {isLoading ? (
-                'Loading...'
-              ) : (
-                <span>
-                  <mark>↑</mark> Load previous
-                </span>
-              )}
+              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
             </PreviousLink>
             <ProductsGrid products={nodes} />
             <br />
             <NextLink>
-              {isLoading ? (
-                'Loading...'
-              ) : (
-                <span>
-                  Load more <mark>↓</mark>
-                </span>
-              )}
+              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
             </NextLink>
           </>
         )}
@@ -111,6 +100,7 @@ function ProductItem({
         />
       )}
       <h4>{product.title}</h4>
+      <Money data={product.priceRange.minVariantPrice} />
     </Link>
   );
 }

@@ -76,7 +76,9 @@ function redirectToFirstVariant({
     searchParams.set(option.name, option.value);
   }
 
-  throw redirect(`/products/${product.handle}?${searchParams.toString()}`);
+  throw redirect(`/products/${product.handle}?${searchParams.toString()}`, {
+    status: 302,
+  });
 }
 
 export default function Product() {
@@ -124,13 +126,7 @@ function ProductMain({
   return (
     <div className="product-main">
       <h1>{title}</h1>
-      {selectedVariant ? (
-        <strong>
-          <Money data={selectedVariant.price} />
-        </strong>
-      ) : null}
-      <br />
-      <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
+      <ProductPrice selectedVariant={selectedVariant} />
       <br />
       <Suspense
         fallback={
@@ -154,6 +150,39 @@ function ProductMain({
           )}
         </Await>
       </Suspense>
+      <br />
+      <br />
+      <p>
+        <strong>Description</strong>
+      </p>
+      <br />
+      <div dangerouslySetInnerHTML={{__html: descriptionHtml}} />
+      <br />
+    </div>
+  );
+}
+
+function ProductPrice({
+  selectedVariant,
+}: {
+  selectedVariant: ProductFragment['selectedVariant'];
+}) {
+  return (
+    <div className="product-price">
+      {selectedVariant?.compareAtPrice ? (
+        <>
+          <p>Sale</p>
+          <br />
+          <div className="product-price-on-sale">
+            <s>
+              <Money data={selectedVariant.compareAtPrice} />
+            </s>
+            {selectedVariant ? <Money data={selectedVariant.price} /> : null}
+          </div>
+        </>
+      ) : (
+        selectedVariant?.price && <Money data={selectedVariant?.price} />
+      )}
     </div>
   );
 }
@@ -266,13 +295,12 @@ function AddToCartButton({
 
 const PRODUCT_VARIANT_FRAGMENT = `#graphql
   fragment ProductVariant on ProductVariant {
-    id
     availableForSale
-    quantityAvailable
-    selectedOptions {
-      name
-      value
+    compareAtPrice {
+      amount
+      currencyCode
     }
+    id
     image {
       __typename
       id
@@ -285,19 +313,20 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       amount
       currencyCode
     }
-    compareAtPrice {
-      amount
-      currencyCode
+    product {
+      title
+      handle
+    }
+    quantityAvailable
+    selectedOptions {
+      name
+      value
     }
     sku
     title
     unitPrice {
       amount
       currencyCode
-    }
-    product {
-      title
-      handle
     }
   }
 ` as const;

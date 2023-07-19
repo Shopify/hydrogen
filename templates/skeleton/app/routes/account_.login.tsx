@@ -115,12 +115,10 @@ export default function Login() {
       <br />
       <div>
         <p>
-          Forgot your password? &nbsp;
-          <Link to="/account/recover">Forgot password</Link>
+          <Link to="/account/recover">Forgot password →</Link>
         </p>
         <p>
-          Not yet registered? &nbsp;
-          <Link to="/account/register">Create and account</Link>
+          <Link to="/account/register">Create and account →</Link>
         </p>
       </div>
     </div>

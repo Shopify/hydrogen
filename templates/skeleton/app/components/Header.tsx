@@ -11,7 +11,7 @@ export function Header({header, isLoggedIn, cart}: HeaderProps) {
   return (
     <header className="header">
       <Link prefetch="intent" to="/">
-        <em>{shop.name}</em>
+        <strong>{shop.name}</strong>
       </Link>
       <HeaderMenu menu={menu} viewport="desktop" />
       <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
@@ -37,24 +37,22 @@ export function HeaderMenu({
     }
   }
 
-  if (!menu)
-    return (
-      <mark className={className}>
-        Header menu <code>skeleton-header</code> not configured.
-      </mark>
-    );
   return (
     <nav className={className} role="navigation">
       {viewport === 'mobile' && (
         <Link prefetch="intent" to="/" onClick={closeAside}>
-          HOME
+          Home
         </Link>
       )}
-      {menu.items.map((item) => {
+      {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
         if (!item.url) return null;
-        const url = item.url.includes(publicStoreDomain)
-          ? new URL(item.url).pathname
-          : item.url;
+
+        // if the url is internal, we strip the domain
+        const url =
+          item.url.includes('myshopify.com') ||
+          item.url.includes(publicStoreDomain)
+            ? new URL(item.url).pathname
+            : item.url;
         return (
           <Link
             key={item.id}
@@ -79,7 +77,7 @@ function HeaderCtas({
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
       <Link prefetch="intent" to="/account">
-        {isLoggedIn ? 'ACCOUNT' : 'SIGN IN'}
+        {isLoggedIn ? 'Account' : 'Sign in'}
       </Link>
       <SearchToggle />
       <CartToggle cart={cart} />
@@ -90,21 +88,17 @@ function HeaderCtas({
 function HeaderMenuMobileToggle() {
   return (
     <a className="header-menu-mobile-toggle" href="#mobile-menu-aside">
-      MENU
+      <h3>☰</h3>
     </a>
   );
 }
 
 function SearchToggle() {
-  return <a href="#search-aside">SEARCH</a>;
+  return <a href="#search-aside">Search</a>;
 }
 
 function CartBadge({count}: {count: number}) {
-  return (
-    <a href="#cart-aside">
-      CART&nbsp;<mark>{count}</mark>
-    </a>
-  );
+  return <a href="#cart-aside">Cart {count}</a>;
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
@@ -119,3 +113,45 @@ function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
     </Suspense>
   );
 }
+
+const FALLBACK_HEADER_MENU = {
+  id: 'gid://shopify/Menu/199655587896',
+  items: [
+    {
+      id: 'gid://shopify/MenuItem/461609500728',
+      resourceId: null,
+      tags: [],
+      title: 'Collections',
+      type: 'HTTP',
+      url: '/collections',
+      items: [],
+    },
+    {
+      id: 'gid://shopify/MenuItem/461609533496',
+      resourceId: null,
+      tags: [],
+      title: 'Blog',
+      type: 'HTTP',
+      url: '/blog',
+      items: [],
+    },
+    {
+      id: 'gid://shopify/MenuItem/461609566264',
+      resourceId: null,
+      tags: [],
+      title: 'Policies',
+      type: 'HTTP',
+      url: '/policies',
+      items: [],
+    },
+    {
+      id: 'gid://shopify/MenuItem/461609599032',
+      resourceId: 'gid://shopify/Page/92591030328',
+      tags: [],
+      title: 'About',
+      type: 'PAGE',
+      url: '/pages/about',
+      items: [],
+    },
+  ],
+};

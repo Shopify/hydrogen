@@ -225,17 +225,14 @@ export default function Addresses() {
       {!addresses.nodes.length ? (
         <p>You have no addresses saved.</p>
       ) : (
-        <div
-          style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(375px, 1fr))',
-            gridGap: '1rem',
-          }}
-        >
+        <div>
           <div>
             <legend>Create address</legend>
             <NewAddressForm />
           </div>
+          <br />
+          <hr />
+          <br />
           <ExistingAddresses
             addresses={addresses}
             defaultAddress={defaultAddress}

@@ -1,4 +1,10 @@
-import {useRouteError, isRouteErrorResponse} from '@remix-run/react';
+import {
+  isRouteErrorResponse,
+  useCatch,
+  useMatches,
+  useRouteError,
+} from '@remix-run/react';
+import type {ErrorBoundaryComponent} from '@shopify/remix-oxygen';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
   Links,
@@ -31,8 +37,6 @@ export function links() {
   ];
 }
 
-// TODO: add headers export
-
 export async function loader({context}: LoaderArgs) {
   const {storefront, session, cart} = context;
   const customerAccessToken = await session.get('customerAccessToken');
@@ -46,26 +50,28 @@ export async function loader({context}: LoaderArgs) {
 
   // await the header query (above the fold)
   const header = await storefront.query(HEADER_QUERY, {
-    // TODO: add cache once finished working with the menu
     cache: storefront.CacheLong(),
     variables: {
-      headerMenuHandle: 'skeleton-header', // Adjust to your header menu handle
+      headerMenuHandle: 'main-menu', // Adjust to your header menu handle
     },
   });
 
   // defer the footer query (below the fold)
-  const footer = storefront.query(FOOTER_QUERY, {
-    cache: storefront.CacheLong(),
+  const footerPromise = storefront.query(FOOTER_QUERY, {
+    cache: storefront.CacheNone(),
+    // cache: storefront.CacheLong(),
     variables: {
-      footerMenuHandle: 'skeleton-footer', // Adjust to your footer menu handle
+      footerMenuHandle: 'skeleton-footer-menu', // Adjust to your footer menu handle
     },
   });
 
+  // defer the cart query by not awaiting it
+  const cartPromise = cart.get();
+
   return defer(
     {
-      // defer the cart query by not awaiting it
-      cart: cart.get(),
-      footer,
+      cart: cartPromise,
+      footer: footerPromise,
       header,
       isLoggedIn,
       publicStoreDomain,
@@ -98,28 +104,59 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
+  const [root] = useMatches();
+  let errorMessage = 'Unknown error';
+  let errorStatus = 500;
 
   if (isRouteErrorResponse(error)) {
-    return (
-      <section className="route-error">
-        <h1>Oops</h1>
-        <p>Status: {error.status}</p>
-        <p>Message: {error.data.message}</p>
-      </section>
-    );
-  }
-
-  let errorMessage = 'Unknown error';
-  if (error instanceof Error) {
+    errorMessage = error?.data?.message ?? error.data;
+    errorStatus = error.status;
+  } else if (error instanceof Error) {
     errorMessage = error.message;
   }
 
   return (
-    <section className="generic-error">
-      <h1>Uh oh ...</h1>
-      <p>Something went wrong.</p>
-      <pre>{errorMessage}</pre>
-    </section>
+    <html lang="en">
+      <head>
+        <meta charSet="utf-8" />
+        <meta name="viewport" content="width=device-width,initial-scale=1" />
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Layout {...root.data}>
+          <div className="route-error">
+            <h1>Oops</h1>
+            <h2>{errorStatus}</h2>
+            {errorMessage && (
+              <fieldset>
+                <pre>{errorMessage}</pre>
+              </fieldset>
+            )}
+          </div>
+        </Layout>
+        <ScrollRestoration />
+        <Scripts />
+      </body>
+    </html>
+  );
+}
+
+export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+  console.error(error);
+
+  return <div>There was an error.</div>;
+};
+
+export function CatchBoundary() {
+  const caught = useCatch();
+  console.error(caught);
+
+  return (
+    <div>
+      There was an error. Status: {caught.status}. Message:{' '}
+      {caught.data?.message}
+    </div>
   );
 }
 

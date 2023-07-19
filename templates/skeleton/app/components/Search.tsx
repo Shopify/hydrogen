@@ -14,7 +14,7 @@ import {Pagination__unstable as Pagination} from '@shopify/hydrogen';
 import type {Article, Page} from 'temp.search-types';
 import type {FetchSearchResultsReturn} from '~/routes/search';
 import React, {useRef, useEffect} from 'react';
-import {Image} from '@shopify/hydrogen-react';
+import {Image, Money} from '@shopify/hydrogen-react';
 import {useFetchers} from '@remix-run/react';
 import {
   noPredictiveSearchResults,
@@ -116,13 +116,7 @@ function SearchResultsProductsGrid({products}: {products: ProductConnection}) {
             <div>
               <div>
                 <PreviousLink>
-                  {isLoading ? (
-                    'Loading...'
-                  ) : (
-                    <span>
-                      <mark>↑</mark> Load previous
-                    </span>
-                  )}
+                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
                 </PreviousLink>
               </div>
               <div>
@@ -131,13 +125,7 @@ function SearchResultsProductsGrid({products}: {products: ProductConnection}) {
               </div>
               <div>
                 <NextLink>
-                  {isLoading ? (
-                    'Loading...'
-                  ) : (
-                    <span>
-                      Load more <mark>↓</mark>
-                    </span>
-                  )}
+                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
                 </NextLink>
               </div>
             </div>
@@ -286,8 +274,7 @@ export function PredictiveSearchResults() {
         <Link onClick={goToSearchResult} to={`/search?q=${searchTerm.current}`}>
           <p>
             View all results for <q>{searchTerm.current}</q>
-            &nbsp;
-            <mark>→</mark>
+            &nbsp; →
           </p>
         </Link>
       )}
@@ -363,15 +350,22 @@ function SearchResultItem({goToSearchResult, item}: SearchResultItemProps) {
             style={{height: '100%'}}
           />
         )}
-        {item.styledTitle ? (
-          <div
-            dangerouslySetInnerHTML={{
-              __html: item.styledTitle,
-            }}
-          />
-        ) : (
-          <span>{item.title}</span>
-        )}
+        <div>
+          {item.styledTitle ? (
+            <div
+              dangerouslySetInnerHTML={{
+                __html: item.styledTitle,
+              }}
+            />
+          ) : (
+            <span>{item.title}</span>
+          )}
+          {item?.price && (
+            <small>
+              <Money data={item.price} />
+            </small>
+          )}
+        </div>
       </Link>
     </li>
   );

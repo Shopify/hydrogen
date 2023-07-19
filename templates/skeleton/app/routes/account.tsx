@@ -125,7 +125,6 @@ function AcccountMenu() {
   }) {
     return {
       fontWeight: isActive ? 'bold' : '',
-      background: isActive ? 'yellow' : '',
       color: isPending ? 'grey' : 'black',
     };
   }

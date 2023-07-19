@@ -41,13 +41,7 @@ export default function Journals() {
             return (
               <>
                 <PreviousLink>
-                  {isLoading ? (
-                    'Loading...'
-                  ) : (
-                    <span>
-                      <mark>↑</mark> Load previous
-                    </span>
-                  )}
+                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
                 </PreviousLink>
                 {nodes.map((article, index) => {
                   return (
@@ -59,13 +53,7 @@ export default function Journals() {
                   );
                 })}
                 <NextLink>
-                  {isLoading ? (
-                    'Loading...'
-                  ) : (
-                    <span>
-                      Load more <mark>↓</mark>
-                    </span>
-                  )}
+                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
                 </NextLink>
               </>
             );

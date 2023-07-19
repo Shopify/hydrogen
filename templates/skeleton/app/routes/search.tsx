@@ -78,6 +78,7 @@ export default function SearchPage() {
   );
 }
 
+// TODO: add trackingParameters when migrated to 2023-07
 const PRODUCT_SEARCH_ITEM_FRAGMENT = `#graphql
   fragment ProductSearchItem on Product {
     id
