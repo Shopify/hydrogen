@@ -1,6 +1,12 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
-import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
+import {
+  cartGetIdDefault,
+  cartSetIdDefault,
+  createCartHandler,
+  createStorefrontClient,
+  storefrontRedirect,
+} from '@shopify/hydrogen';
 import {
   createRequestHandler,
   getStorefrontHeaders,
@@ -8,6 +14,7 @@ import {
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
+import {CART_QUERY_FRAGMENT} from './app/root';
 
 /**
  * Export a fetch handler in module format.
@@ -46,6 +53,12 @@ export default {
         storefrontHeaders: getStorefrontHeaders(request),
       });
 
+      const cart = createCartHandler({
+        storefront,
+        getCartId: cartGetIdDefault(request.headers),
+        setCartId: cartSetIdDefault(),
+        cartQueryFragment: CART_QUERY_FRAGMENT,
+      });
       /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
@@ -53,7 +66,7 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({session, storefront, env}),
+        getLoadContext: () => ({session, storefront, env, cart}),
       });
 
       const response = await handleRequest(request);
