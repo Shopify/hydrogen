@@ -1,4 +1,5 @@
 import {Suspense} from 'react';
+import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import type {FetcherWithComponents} from '@remix-run/react';
 import {Await, Link, useLoaderData} from '@remix-run/react';
@@ -17,6 +18,10 @@ import {
   CartForm,
 } from '@shopify/hydrogen';
 import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
+
+export const meta: V2_MetaFunction = ({data}) => {
+  return [{title: `Hydrogen | ${data.product.title}`}];
+};
 
 export async function loader({params, request, context}: LoaderArgs) {
   const {handle} = params;

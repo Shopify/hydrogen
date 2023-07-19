@@ -1,3 +1,4 @@
+import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Link} from '@remix-run/react';
 import {
@@ -8,6 +9,10 @@ import {
   Money,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
+
+export const meta: V2_MetaFunction = ({data}) => {
+  return [{title: `Hydrogen | ${data.collection.title} Collection`}];
+};
 
 export async function loader({request, params, context}: LoaderArgs) {
   const {handle} = params;

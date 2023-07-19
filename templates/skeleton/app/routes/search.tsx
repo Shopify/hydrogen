@@ -3,11 +3,16 @@ import type {
   ArticleConnection,
   PageConnection,
 } from '@shopify/hydrogen-react/storefront-api-types';
+import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {getPaginationVariables__unstable as getPaginationVariables} from '@shopify/hydrogen';
 
 import {SearchForm, SearchResults, NoSearchResults} from '~/components/Search';
+
+export const meta: V2_MetaFunction = () => {
+  return [{title: `Hydrogen | Search`}];
+};
 
 export type FetchSearchResultsReturn = {
   searchResults: {

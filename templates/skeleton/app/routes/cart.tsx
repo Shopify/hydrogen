@@ -2,9 +2,14 @@ import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {CartQueryData} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
+import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {type ActionArgs, json} from '@shopify/remix-oxygen';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {CartMain} from '~/components/Cart';
+
+export const meta: V2_MetaFunction = () => {
+  return [{title: `Hydrogen | Cart`}];
+};
 
 export async function action({request, context}: ActionArgs) {
   const {session, cart} = context;

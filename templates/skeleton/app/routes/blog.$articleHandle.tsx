@@ -1,8 +1,13 @@
+import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen';
 
 const BLOG_HANDLE = 'journal';
+
+export const meta: V2_MetaFunction = ({data}) => {
+  return [{title: `Hydrogen | ${data.article.title} article`}];
+};
 
 export async function loader({params, context}: LoaderArgs) {
   const {articleHandle} = params;
