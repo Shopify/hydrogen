@@ -62,8 +62,8 @@ export const commonFlags = {
     choices: SETUP_CSS_STRATEGIES,
     env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
   }),
-  i18n: Flags.string({
-    description: `Sets the internationalization strategy to use. One of ${I18N_CHOICES.map(
+  markets: Flags.string({
+    description: `Sets the URL structure to support multiple markets. One of ${I18N_CHOICES.map(
       (item) => `\`${item}\``,
     ).join(', ')}.`,
     choices: I18N_CHOICES,
