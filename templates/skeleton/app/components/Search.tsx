@@ -12,16 +12,34 @@ import {
 } from '@remix-run/react';
 import {Pagination__unstable as Pagination} from '@shopify/hydrogen';
 import type {Article, Page} from 'temp.search-types';
-import type {FetchSearchResultsReturn} from '~/routes/search';
 import React, {useRef, useEffect} from 'react';
 import {Image, Money} from '@shopify/hydrogen-react';
 import {useFetchers} from '@remix-run/react';
 import {
-  noPredictiveSearchResults,
   type NormalizedPredictiveSearch,
   type NormalizedPredictiveSearchResults,
   type NormalizedPredictiveSearchResultItem,
 } from '~/routes/api.predictive-search';
+
+export const NO_PREDICTIVE_SEARCH_RESULTS: NormalizedPredictiveSearchResults = [
+  {type: 'queries', items: []},
+  {type: 'products', items: []},
+  {type: 'collections', items: []},
+  {type: 'pages', items: []},
+  {type: 'articles', items: []},
+];
+
+type FetchSearchResultsReturn = {
+  searchResults: {
+    results: {
+      articles: ArticleConnection;
+      pages: PageConnection;
+      products: ProductConnection;
+    } | null;
+    totalResults: number;
+  };
+  searchTerm: string;
+};
 
 export function SearchForm({searchTerm}: {searchTerm: string}) {
   const inputRef = useRef<HTMLInputElement | null>(null);
@@ -387,7 +405,7 @@ function usePredictiveSearch(): UseSearchReturn {
   }
 
   const search = (searchFetcher?.data?.searchResults || {
-    results: noPredictiveSearchResults,
+    results: NO_PREDICTIVE_SEARCH_RESULTS,
     totalResults: 0,
   }) as NormalizedPredictiveSearch;
 

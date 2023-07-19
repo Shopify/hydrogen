@@ -126,7 +126,7 @@ export default function Login() {
 }
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customeraccesstokencreate
-export const LOGIN_MUTATION = `#graphql
+const LOGIN_MUTATION = `#graphql
   mutation login($input: CustomerAccessTokenCreateInput!) {
     customerAccessTokenCreate(input: $input) {
       customerUserErrors {

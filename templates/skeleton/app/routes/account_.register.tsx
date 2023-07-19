@@ -7,8 +7,6 @@ import {
 import {Form, Link, useActionData} from '@remix-run/react';
 import type {CustomerCreateMutation} from 'storefrontapi.generated';
 
-import {LOGIN_MUTATION} from './account_.login';
-
 type ActionResponse = {
   error: string | null;
   newCustomer:
@@ -68,7 +66,7 @@ export const action: ActionFunction = async ({request, context}) => {
 
     // get an access token for the new customer
     const {customerAccessTokenCreate} = await storefront.mutate(
-      LOGIN_MUTATION,
+      REGISTER_LOGIN_MUTATION,
       {
         variables: {
           input: {
@@ -178,6 +176,23 @@ const CUSTOMER_CREATE_MUTATION = `#graphql
         code
         field
         message
+      }
+    }
+  }
+` as const;
+
+// NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customeraccesstokencreate
+const REGISTER_LOGIN_MUTATION = `#graphql
+  mutation registerLogin($input: CustomerAccessTokenCreateInput!) {
+    customerAccessTokenCreate(input: $input) {
+      customerUserErrors {
+        code
+        field
+        message
+      }
+      customerAccessToken {
+        accessToken
+        expiresAt
       }
     }
   }

@@ -3,6 +3,7 @@ import type {
   Image as ImageType,
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {NO_PREDICTIVE_SEARCH_RESULTS} from '~/components/Search';
 
 import type {
   PredictiveSearchResult,
@@ -126,14 +127,6 @@ async function fetchPredictiveSearchResults({
   return {searchResults, searchTerm, searchTypes};
 }
 
-export const noPredictiveSearchResults: NormalizedPredictiveSearchResults = [
-  {type: 'queries', items: []},
-  {type: 'products', items: []},
-  {type: 'collections', items: []},
-  {type: 'pages', items: []},
-  {type: 'articles', items: []},
-];
-
 /**
  * Normalize results and apply tracking qurery parameters to each result url
  * @param predictiveSearch
@@ -146,7 +139,7 @@ export function normalizePredictiveSearchResults(
   let totalResults = 0;
   if (!predictiveSearch) {
     return {
-      results: noPredictiveSearchResults,
+      results: NO_PREDICTIVE_SEARCH_RESULTS,
       totalResults,
     };
   }

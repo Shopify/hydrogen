@@ -14,18 +14,6 @@ export const meta: V2_MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
 };
 
-export type FetchSearchResultsReturn = {
-  searchResults: {
-    results: {
-      articles: ArticleConnection;
-      pages: PageConnection;
-      products: ProductConnection;
-    } | null;
-    totalResults: number;
-  };
-  searchTerm: string;
-};
-
 export async function loader({request, context}: LoaderArgs) {
   const url = new URL(request.url);
   const searchParams = new URLSearchParams(url.search);
