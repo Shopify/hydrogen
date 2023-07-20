@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - 'src'
+      - 'src/**'
       - 'yarn.lock'
       - 'package.json'
       - 'tsconfig.json'
