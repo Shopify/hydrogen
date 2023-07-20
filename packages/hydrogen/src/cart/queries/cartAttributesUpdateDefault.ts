@@ -32,7 +32,7 @@ export const CART_ATTRIBUTES_UPDATE_MUTATION = (
 ) => `#graphql
   mutation cartAttributesUpdate(
     $cartId: ID!
-    $attributes: [CartAttributeInput!]!
+    $attributes: [AttributeInput!]!
   ) {
     cartAttributesUpdate(cartId: $cartId, attributes: $attributes) {
       cart {
