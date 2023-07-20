@@ -238,7 +238,6 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     ...clientOptions
   } = options;
   const H2_PREFIX_WARN = '[h2:warn:createStorefrontClient] ';
-  const H2_PREFIX_ERROR = '[h2:error:createStorefrontClient] ';
 
   if (process.env.NODE_ENV === 'development' && !cache) {
     warnOnce(
@@ -388,7 +387,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         query = minifyQuery(query);
         if (isMutationRE.test(query)) {
           throw new Error(
-            H2_PREFIX_ERROR + '`storefront.query` cannot execute mutations',
+            '[h2:error:storefront.query] Cannot execute mutations',
           );
         }
 
@@ -411,7 +410,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
         mutation = minifyQuery(mutation);
         if (isQueryRE.test(mutation)) {
           throw new Error(
-            H2_PREFIX_ERROR + '`storefront.mutate` cannot execute queries',
+            '[h2:error:storefront.mutate] Cannot execute queries',
           );
         }
 
