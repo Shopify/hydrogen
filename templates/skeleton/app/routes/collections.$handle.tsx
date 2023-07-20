@@ -5,10 +5,10 @@ import {
   Pagination__unstable as Pagination,
   getPaginationVariables__unstable as getPaginationVariables,
   Image,
-  useVariantUrl,
   Money,
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
+import {useVariantUrl} from '~/utils';
 
 export const meta: V2_MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data.collection.title} Collection`}];
