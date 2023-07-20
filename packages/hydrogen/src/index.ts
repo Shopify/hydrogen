@@ -49,8 +49,6 @@ export type {
 export {
   VariantSelector,
   getSelectedProductOptions,
-  getFirstAvailableVariant,
-  useVariantUrl,
 } from './product/VariantSelector';
 
 export type {
