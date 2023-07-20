@@ -1,8 +1,14 @@
 import {useContext, createContext, type ReactNode} from 'react';
-import type {CartLine} from './storefront-api-types.js';
+import {
+  ComponentizableCartLine,
+  type CartLine,
+} from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 
-type CartLinePartialDeep = PartialDeep<CartLine, {recurseIntoArrays: true}>;
+type CartLinePartialDeep = PartialDeep<
+  CartLine | ComponentizableCartLine,
+  {recurseIntoArrays: true}
+>;
 
 export const CartLineContext = createContext<CartLinePartialDeep | null>(null);
 

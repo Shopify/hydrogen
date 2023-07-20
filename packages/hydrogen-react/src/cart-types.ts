@@ -7,6 +7,7 @@ import {
   MutationCartNoteUpdateArgs,
   CartBuyerIdentityInput,
   MutationCartAttributesUpdateArgs,
+  ComponentizableCartLine,
 } from './storefront-api-types.js';
 import {StateMachine} from '@xstate/fsm';
 import type {PartialDeep} from 'type-fest';
@@ -17,7 +18,7 @@ export interface CartBase {
   /** The cart's ID if it has been created through the Storefront API. */
   id?: string;
   /** The cart lines. */
-  lines: CartLine[];
+  lines: Array<CartLine | ComponentizableCartLine>;
   /** The checkout URL for the cart, if the cart has been created in the Storefront API. */
   checkoutUrl?: string;
   /** The cart's note. */
