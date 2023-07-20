@@ -117,32 +117,70 @@ export type StoreRobotsQueryVariables = StorefrontAPI.Exact<{
 
 export type StoreRobotsQuery = {shop: Pick<StorefrontAPI.Shop, 'id'>};
 
-export type SitemapQueryVariables = StorefrontAPI.Exact<{
-  urlLimits?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+export type PagesSitemapQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
   language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
 }>;
 
-export type SitemapQuery = {
-  products: {
-    nodes: Array<
-      Pick<
-        StorefrontAPI.Product,
-        'updatedAt' | 'handle' | 'onlineStoreUrl' | 'title'
-      > & {
-        featuredImage?: StorefrontAPI.Maybe<
-          Pick<StorefrontAPI.Image, 'url' | 'altText'>
-        >;
-      }
-    >;
-  };
-  collections: {
-    nodes: Array<
-      Pick<StorefrontAPI.Collection, 'updatedAt' | 'handle' | 'onlineStoreUrl'>
-    >;
-  };
+export type PagesSitemapQuery = {
   pages: {
-    nodes: Array<
-      Pick<StorefrontAPI.Page, 'updatedAt' | 'handle' | 'onlineStoreUrl'>
+    nodes: Array<Pick<StorefrontAPI.Page, 'handle'>>;
+    pageInfo: Pick<
+      StorefrontAPI.PageInfo,
+      'startCursor' | 'hasNextPage' | 'endCursor'
+    >;
+  };
+};
+
+export type ProductsSitemapQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+}>;
+
+export type ProductsSitemapQuery = {
+  products: {
+    nodes: Array<Pick<StorefrontAPI.Product, 'handle'>>;
+    pageInfo: Pick<
+      StorefrontAPI.PageInfo,
+      'startCursor' | 'hasNextPage' | 'endCursor'
+    >;
+  };
+};
+
+export type CollectionsSitemapQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+}>;
+
+export type CollectionsSitemapQuery = {
+  collections: {
+    nodes: Array<Pick<StorefrontAPI.Collection, 'handle'>>;
+    pageInfo: Pick<
+      StorefrontAPI.PageInfo,
+      'startCursor' | 'hasNextPage' | 'endCursor'
+    >;
+  };
+};
+
+export type BlogsSitemapQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+}>;
+
+export type BlogsSitemapQuery = {
+  blogs: {
+    nodes: Array<Pick<StorefrontAPI.Blog, 'handle'>>;
+    pageInfo: Pick<
+      StorefrontAPI.PageInfo,
+      'startCursor' | 'hasNextPage' | 'endCursor'
     >;
   };
 };
@@ -1445,6 +1483,94 @@ export type ProductSearchItemFragment = Pick<
   };
 };
 
+export type PagesSitemapPageQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+}>;
+
+export type PagesSitemapPageQuery = {
+  pages: {
+    nodes: Array<
+      {__typename: 'Page'} & Pick<StorefrontAPI.Page, 'handle' | 'updatedAt'>
+    >;
+    pageInfo: Pick<
+      StorefrontAPI.PageInfo,
+      'startCursor' | 'hasNextPage' | 'endCursor'
+    >;
+  };
+};
+
+export type ProductSitemapPageQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+}>;
+
+export type ProductSitemapPageQuery = {
+  products: {
+    nodes: Array<
+      {__typename: 'Product'} & Pick<
+        StorefrontAPI.Product,
+        'handle' | 'updatedAt'
+      > & {
+          image?: StorefrontAPI.Maybe<
+            Pick<StorefrontAPI.Image, 'url' | 'altText'>
+          >;
+        }
+    >;
+    pageInfo: Pick<
+      StorefrontAPI.PageInfo,
+      'startCursor' | 'hasNextPage' | 'endCursor'
+    >;
+  };
+};
+
+export type CollectionSitemapPageQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+}>;
+
+export type CollectionSitemapPageQuery = {
+  collections: {
+    nodes: Array<
+      {__typename: 'Collection'} & Pick<
+        StorefrontAPI.Collection,
+        'handle' | 'updatedAt'
+      > & {
+          image?: StorefrontAPI.Maybe<
+            Pick<StorefrontAPI.Image, 'url' | 'altText'>
+          >;
+        }
+    >;
+    pageInfo: Pick<
+      StorefrontAPI.PageInfo,
+      'startCursor' | 'hasNextPage' | 'endCursor'
+    >;
+  };
+};
+
+export type BlogSitemapPageQueryVariables = StorefrontAPI.Exact<{
+  country?: StorefrontAPI.InputMaybe<StorefrontAPI.CountryCode>;
+  first?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['Int']>;
+  language?: StorefrontAPI.InputMaybe<StorefrontAPI.LanguageCode>;
+  startCursor?: StorefrontAPI.InputMaybe<StorefrontAPI.Scalars['String']>;
+}>;
+
+export type BlogSitemapPageQuery = {
+  blogs: {
+    nodes: Array<{__typename: 'Blog'} & Pick<StorefrontAPI.Blog, 'handle'>>;
+    pageInfo: Pick<
+      StorefrontAPI.PageInfo,
+      'startCursor' | 'hasNextPage' | 'endCursor'
+    >;
+  };
+};
+
 export type CartLineFragment = Pick<
   StorefrontAPI.CartLine,
   'id' | 'quantity'
@@ -1565,9 +1691,21 @@ interface GeneratedQueryTypes {
     return: StoreRobotsQuery;
     variables: StoreRobotsQueryVariables;
   };
-  '#graphql\n  query Sitemap($urlLimits: Int, $language: LanguageCode)\n  @inContext(language: $language) {\n    products(\n      first: $urlLimits\n      query: "published_status:\'online_store:visible\'"\n    ) {\n      nodes {\n        updatedAt\n        handle\n        onlineStoreUrl\n        title\n        featuredImage {\n          url\n          altText\n        }\n      }\n    }\n    collections(\n      first: $urlLimits\n      query: "published_status:\'online_store:visible\'"\n    ) {\n      nodes {\n        updatedAt\n        handle\n        onlineStoreUrl\n      }\n    }\n    pages(first: $urlLimits, query: "published_status:\'published\'") {\n      nodes {\n        updatedAt\n        handle\n        onlineStoreUrl\n      }\n    }\n  }\n': {
-    return: SitemapQuery;
-    variables: SitemapQueryVariables;
+  '#graphql\n  query PagesSitemap(\n    $country: CountryCode\n    $first: Int\n    $language: LanguageCode\n    $startCursor: String\n  )\n  @inContext(language: $language, country: $country) {\n    pages(\n      first: $first,\n      after: $startCursor,\n      query: "published_status:\'published\'") {\n      nodes {\n        handle\n      }\n      pageInfo {\n        startCursor\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n': {
+    return: PagesSitemapQuery;
+    variables: PagesSitemapQueryVariables;
+  };
+  '#graphql\n  query ProductsSitemap(\n    $country: CountryCode\n    $first: Int\n    $language: LanguageCode\n    $startCursor: String\n  )\n  @inContext(language: $language, country: $country) {\n    products(\n      first: $first,\n      after: $startCursor,\n      query: "published_status:\'online_store:visible\'"\n    ) {\n      nodes {\n        handle\n      }\n      pageInfo {\n        startCursor\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n': {
+    return: ProductsSitemapQuery;
+    variables: ProductsSitemapQueryVariables;
+  };
+  '#graphql\n  query CollectionsSitemap(\n    $country: CountryCode\n    $first: Int\n    $language: LanguageCode\n    $startCursor: String\n  )\n  @inContext(language: $language, country: $country) {\n    collections(\n      first: $first,\n      after: $startCursor,\n      query: "published_status:\'online_store:visible\'"\n    ) {\n      nodes {\n        handle\n      }\n      pageInfo {\n        startCursor\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n': {
+    return: CollectionsSitemapQuery;
+    variables: CollectionsSitemapQueryVariables;
+  };
+  '#graphql\n  query BlogsSitemap(\n    $country: CountryCode\n    $first: Int\n    $language: LanguageCode\n    $startCursor: String\n  )\n  @inContext(language: $language, country: $country) {\n    blogs(\n      first: $first,\n      after: $startCursor,\n      query: "published_status:\'online_store:visible\'"\n    ) {\n      nodes {\n        handle\n      }\n      pageInfo {\n        startCursor\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n': {
+    return: BlogsSitemapQuery;
+    variables: BlogsSitemapQueryVariables;
   };
   '#graphql\n  fragment FeaturedCollection on Collection {\n    id\n    title\n    image {\n      id\n      url: transformedSrc(maxHeight: 600, crop: CENTER, scale: 2)\n      altText\n      width\n      height\n    }\n    handle\n  }\n  query FeaturedCollection {\n    collections(first: 1, sortKey: UPDATED_AT, reverse: true) {\n      nodes {\n        ...FeaturedCollection\n      }\n    }\n  }\n': {
     return: FeaturedCollectionQuery;
@@ -1628,6 +1766,22 @@ interface GeneratedQueryTypes {
   '#graphql\n  query ProductVariants(\n    $country: CountryCode\n    $language: LanguageCode\n    $handle: String!\n  ) @inContext(country: $country, language: $language) {\n    product(handle: $handle) {\n      ...ProductVariants\n    }\n  }\n  #graphql\n  fragment ProductVariants on Product {\n    variants(first: 250) {\n      nodes {\n        ...ProductVariant\n      }\n    }\n  }\n  #graphql\n  fragment ProductVariant on ProductVariant {\n    availableForSale\n    compareAtPrice {\n      amount\n      currencyCode\n    }\n    id\n    image {\n      __typename\n      id\n      url: transformedSrc(maxWidth: 800, crop: CENTER, scale: 2)\n      altText\n      width\n      height\n    }\n    price {\n      amount\n      currencyCode\n    }\n    product {\n      title\n      handle\n    }\n    quantityAvailable\n    selectedOptions {\n      name\n      value\n    }\n    sku\n    title\n    unitPrice {\n      amount\n      currencyCode\n    }\n  }\n\n\n': {
     return: ProductVariantsQuery;
     variables: ProductVariantsQueryVariables;
+  };
+  '#graphql\n  query PagesSitemapPage(\n    $country: CountryCode\n    $first: Int\n    $language: LanguageCode\n    $startCursor: String\n  )\n  @inContext(language: $language, country: $country) {\n    pages(\n      first: $first,\n      after: $startCursor,\n      query: "published_status:\'published\'") {\n      nodes {\n        handle\n        __typename\n        updatedAt\n      }\n      pageInfo {\n        startCursor\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n': {
+    return: PagesSitemapPageQuery;
+    variables: PagesSitemapPageQueryVariables;
+  };
+  '#graphql\n  query ProductSitemapPage(\n    $country: CountryCode\n    $first: Int\n    $language: LanguageCode\n    $startCursor: String\n  )\n  @inContext(language: $language, country: $country) {\n    products(\n      first: $first,\n      after: $startCursor,\n      query: "published_status:\'online_store:visible\'"\n    ) {\n      nodes {\n        handle\n        __typename\n        updatedAt\n        image: featuredImage {\n          url\n          altText\n        }\n      }\n      pageInfo {\n        startCursor\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n': {
+    return: ProductSitemapPageQuery;
+    variables: ProductSitemapPageQueryVariables;
+  };
+  '#graphql\n  query CollectionSitemapPage(\n    $country: CountryCode\n    $first: Int\n    $language: LanguageCode\n    $startCursor: String\n  )\n  @inContext(language: $language, country: $country) {\n    collections(\n      first: $first,\n      after: $startCursor,\n      query: "published_status:\'online_store:visible\'"\n    ) {\n      nodes {\n        handle\n        __typename\n        updatedAt\n        image {\n          url\n          altText\n        }\n      }\n      pageInfo {\n        startCursor\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n': {
+    return: CollectionSitemapPageQuery;
+    variables: CollectionSitemapPageQueryVariables;
+  };
+  '#graphql\n  query BlogSitemapPage(\n    $country: CountryCode\n    $first: Int\n    $language: LanguageCode\n    $startCursor: String\n  )\n  @inContext(language: $language, country: $country) {\n    blogs(\n      first: $first,\n      after: $startCursor,\n      query: "published_status:\'online_store:visible\'"\n    ) {\n      nodes {\n        handle\n        __typename\n      }\n      pageInfo {\n        startCursor\n        hasNextPage\n        endCursor\n      }\n    }\n  }\n': {
+    return: BlogSitemapPageQuery;
+    variables: BlogSitemapPageQueryVariables;
   };
 }
 
