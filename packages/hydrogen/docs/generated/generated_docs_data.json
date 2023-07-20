@@ -8544,11 +8544,6 @@
         "name": "getSelectedProductOptions",
         "type": "utilities",
         "url": "/docs/api/hydrogen/2023-04/utilities/getselectedproductoptions"
-      },
-      {
-        "name": "getFirstAvailableVariant",
-        "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/getfirstavailablevariant"
       }
     ],
     "description": "The `VariantSelector` component helps you build a form for selecting available variants of a product. It is important for variant selection state to be maintained in the URL, so that the user can navigate to a product and return back to the same variant selection. It is also important that the variant selection state is shareable via URL. The `VariantSelector` component provides a render prop that renders for each product option.",
@@ -8581,7 +8576,7 @@
             "filePath": "/product/VariantSelector.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "VariantSelectorProps",
-            "value": "{\n  /** The product handle for all of the variants */\n  handle: string;\n  /** Product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */\n  options: Array<PartialDeep<ProductOption>> | undefined;\n  /** Product variants from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */\n  variants?:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>;\n  /** Provide a default variant when no options are selected. You can use the utility `getFirstAvailableVariant` to get a default variant. */\n  defaultVariant?: PartialDeep<ProductVariant>;\n  children: ({option}: {option: VariantOption}) => ReactNode;\n}",
+            "value": "{\n  /** The product handle for all of the variants */\n  handle: string;\n  /** Product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */\n  options: Array<PartialDeep<ProductOption>> | undefined;\n  /** Product variants from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */\n  variants?:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>;\n  children: ({option}: {option: VariantOption}) => ReactNode;\n}",
             "description": "",
             "members": [
               {
@@ -8604,14 +8599,6 @@
                 "name": "variants",
                 "value": "PartialObjectDeep<ProductVariantConnection, {}> | PartialObjectDeep<ProductVariant, {}>[]",
                 "description": "Product variants from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`.",
-                "isOptional": true
-              },
-              {
-                "filePath": "/product/VariantSelector.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "defaultVariant",
-                "value": "PartialDeep<ProductVariant>",
-                "description": "Provide a default variant when no options are selected. You can use the utility `getFirstAvailableVariant` to get a default variant.",
                 "isOptional": true
               },
               {
@@ -8703,59 +8690,6 @@
     ]
   },
   {
-    "name": "getFirstAvailableVariant",
-    "category": "utilities",
-    "isVisualComponent": false,
-    "related": [
-      {
-        "name": "VariantSelector",
-        "type": "components",
-        "url": "/docs/api/hydrogen/2023-04/components/variantselector"
-      },
-      {
-        "name": "getSelectedProductOptions",
-        "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/getselectedproductoptions"
-      }
-    ],
-    "description": "The `getFirstAvailableVariant` returns the first variant that is available for purchase.",
-    "type": "component",
-    "defaultExample": {
-      "description": "I am the default example",
-      "codeblock": {
-        "tabs": [
-          {
-            "title": "JavaScript",
-            "code": "import {getFirstAvailableVariant} from '@shopify/hydrogen';\nimport {json} from '@shopify/remix-oxygen';\n\nexport async function loader({params, context}) {\n  const {product} = await context.storefront.query(PRODUCT_QUERY, {\n    variables: {\n      handle: params.productHandle,\n    },\n  });\n\n  const firstAvailableVariant = getFirstAvailableVariant(product.variants);\n\n  return json({product, firstAvailableVariant});\n}\n\nconst PRODUCT_QUERY = `#graphql\n  query Product($handle: String!) {\n    product(handle: $handle) {\n      title\n      description\n      options {\n        name\n        values \n      }\n      variants(first: 250) {\n        nodes {\n          ...ProductVariantFragment\n        }\n      }\n    }\n  }\n`;\n",
-            "language": "jsx"
-          },
-          {
-            "title": "TypeScript",
-            "code": "import {getFirstAvailableVariant} from '@shopify/hydrogen';\nimport {json, type LoaderArgs} from '@shopify/remix-oxygen';\n\nexport async function loader({params, context}: LoaderArgs) {\n  const {product} = await context.storefront.query(PRODUCT_QUERY, {\n    variables: {\n      handle: params.productHandle,\n    },\n  });\n\n  const firstAvailableVariant = getFirstAvailableVariant(product.variants);\n\n  return json({product, firstAvailableVariant});\n}\n\nconst PRODUCT_QUERY = `#graphql\n  query Product($handle: String!) {\n    product(handle: $handle) {\n      title\n      description\n      options {\n        name\n        values \n      }\n      variants(first: 250) {\n        nodes {\n          ...ProductVariantFragment\n        }\n      }\n    }\n  }\n`;\n",
-            "language": "tsx"
-          }
-        ],
-        "title": "Example code"
-      }
-    },
-    "definitions": [
-      {
-        "title": "Props",
-        "description": "",
-        "type": "GetFirstAvailableVariant",
-        "typeDefinitions": {
-          "GetFirstAvailableVariant": {
-            "filePath": "/product/VariantSelector.ts",
-            "syntaxKind": "TypeAliasDeclaration",
-            "name": "GetFirstAvailableVariant",
-            "value": "(\n  variants:\n    | PartialDeep<ProductVariantConnection>\n    | Array<PartialDeep<ProductVariant>>,\n) => PartialDeep<ProductVariant> | undefined",
-            "description": ""
-          }
-        }
-      }
-    ]
-  },
-  {
     "name": "getSelectedProductOptions",
     "category": "utilities",
     "isVisualComponent": false,
@@ -8764,11 +8698,6 @@
         "name": "VariantSelector",
         "type": "components",
         "url": "/docs/api/hydrogen/2023-04/components/variantselector"
-      },
-      {
-        "name": "getFirstAvailableVariant",
-        "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/getfirstavailablevariant"
       }
     ],
     "description": "The `getSelectedProductOptions` returns the selected options from the Request search parameters. The selected options can then be easily passed to your GraphQL query with [`variantBySelectedOptions`](https://shopify.dev/docs/api/storefront/2023-04/objects/product#field-product-variantbyselectedoptions).",
@@ -8803,78 +8732,6 @@
             "name": "GetSelectedProductOptions",
             "value": "(request: Request) => SelectedOptionInput[]",
             "description": ""
-          }
-        }
-      }
-    ]
-  },
-  {
-    "name": "useVariantUrl",
-    "category": "hooks",
-    "isVisualComponent": false,
-    "related": [
-      {
-        "name": "VariantSelector",
-        "type": "components",
-        "url": "/docs/api/hydrogen/2023-04/components/variantselector"
-      },
-      {
-        "name": "getSelectedProductOptions",
-        "type": "utilities",
-        "url": "/docs/api/hydrogen/2023-04/utilities/getselectedproductoptions"
-      }
-    ],
-    "description": "The `useVariantUrl` hook helps you know the URL to navigate to a given product handle with selected options.",
-    "type": "component",
-    "defaultExample": {
-      "description": "I am the default example",
-      "codeblock": {
-        "tabs": [
-          {
-            "title": "JavaScript",
-            "code": "import {Link} from '@remix-run/react';\nimport {useVariantUrl} from '@shopify/hydrogen';\n\nfunction MyComponent() {\n  const {to, search} = useVariantUrl('snowboard', [\n    {name: 'Color', value: 'Red'},\n  ]);\n  return (\n    <>\n      {/* The `to` property already includes search params */}\n      <Link to={to}>Navigate to the snowboard</Link>\n\n      {/* Use the `search` property for custom product routes */}\n      <Link to={`/productos/snowboard${search}`}>\n        Navigate to the snowboard\n      </Link>\n    </>\n  );\n}\n",
-            "language": "jsx"
-          },
-          {
-            "title": "TypeScript",
-            "code": "import {Link} from '@remix-run/react';\nimport {useVariantUrl} from '@shopify/hydrogen';\n\nfunction MyComponent() {\n  const {to, search} = useVariantUrl('snowboard', [\n    {name: 'Color', value: 'Red'},\n  ]);\n  return (\n    <>\n      {/* The `to` property already includes search params */}\n      <Link to={to}>Navigate to the snowboard</Link>\n\n      {/* Use the `search` property for custom product routes */}\n      <Link to={`/productos/snowboard${search}`}>\n        Navigate to the snowboard\n      </Link>\n    </>\n  );\n}\n",
-            "language": "tsx"
-          }
-        ],
-        "title": "Example code"
-      }
-    },
-    "definitions": [
-      {
-        "title": "Props",
-        "description": "",
-        "type": "UseVariantUrlGeneratedType",
-        "typeDefinitions": {
-          "UseVariantUrlGeneratedType": {
-            "filePath": "/product/VariantSelector.ts",
-            "name": "UseVariantUrlGeneratedType",
-            "description": "",
-            "params": [
-              {
-                "name": "handle",
-                "description": "",
-                "value": "string",
-                "filePath": "/product/VariantSelector.ts"
-              },
-              {
-                "name": "selectedOptions",
-                "description": "",
-                "value": "SelectedOptionInput[]",
-                "filePath": "/product/VariantSelector.ts"
-              }
-            ],
-            "returns": {
-              "filePath": "/product/VariantSelector.ts",
-              "description": "",
-              "name": "",
-              "value": ""
-            },
-            "value": "export function useVariantUrl(\n  /** The product handle for the generated URL */\n  handle: string,\n  /** A list of product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption) to include in the URL search params. */\n  selectedOptions: SelectedOptionInput[],\n) {\n  const {searchParams, alreadyOnProductPage, path} = useVariantPath(handle);\n\n  return useMemo(() => {\n    const clonedSearchParams = new URLSearchParams(\n      alreadyOnProductPage ? searchParams : undefined,\n    );\n\n    selectedOptions.forEach((option) => {\n      clonedSearchParams.set(option.name, option.value);\n    });\n\n    const searchString = clonedSearchParams.toString();\n\n    return {\n      to: `${path}${searchString ? '?' + searchString : ''}`,\n      search: `?${searchString}`,\n    };\n  }, [searchParams, alreadyOnProductPage, path, selectedOptions]);\n}"
           }
         }
       }

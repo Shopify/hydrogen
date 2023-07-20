@@ -1,6 +1,6 @@
 import {useRef, Suspense} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Await} from '@remix-run/react';
 import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
 import {
@@ -9,12 +9,14 @@ import {
   ShopPayButton,
   VariantSelector,
   getSelectedProductOptions,
-  getFirstAvailableVariant,
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 
-import type {ProductVariantFragmentFragment} from 'storefrontapi.generated';
+import type {
+  ProductQuery,
+  ProductVariantFragmentFragment,
+} from 'storefrontapi.generated';
 import {
   Heading,
   IconCaret,
@@ -56,7 +58,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   // all of them. But there might be a *lot*, so instead separate the variants
   // into it's own separate query that is deferred. So there's a brief moment
   // where variant options might show as available when they're not, but after
-  // this deffered query resolves, the UI will update.
+  // this deferred query resolves, the UI will update.
   const variants = context.storefront.query(VARIANTS_QUERY, {
     variables: {
       handle: productHandle,
@@ -67,6 +69,10 @@ export async function loader({params, request, context}: LoaderArgs) {
 
   if (!product?.id) {
     throw new Response('product', {status: 404});
+  }
+
+  if (!product.selectedVariant) {
+    return redirectToFirstVariant({product, request});
   }
 
   const recommended = getRecommendedProducts(context.storefront, product.id);
@@ -102,6 +108,25 @@ export async function loader({params, request, context}: LoaderArgs) {
     },
     seo,
   });
+}
+
+function redirectToFirstVariant({
+  product,
+  request,
+}: {
+  product: ProductQuery['product'];
+  request: Request;
+}) {
+  const searchParams = new URLSearchParams(new URL(request.url).search);
+  const firstVariant = product!.variants.nodes[0];
+  for (const option of firstVariant.selectedOptions) {
+    searchParams.set(option.name, option.value);
+  }
+
+  throw redirect(
+    `/products/${product!.handle}?${searchParams.toString()}`,
+    302,
+  );
 }
 
 export default function Product() {
@@ -185,8 +210,6 @@ export function ProductForm({
   variants: ProductVariantFragmentFragment[];
 }) {
   const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
-  const firstVariant =
-    getFirstAvailableVariant(product.variants) ?? product.variants.nodes[0];
 
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -195,7 +218,7 @@ export function ProductForm({
    * of add to cart if there is none returned from the loader.
    * A developer can opt out of this, too.
    */
-  const selectedVariant = product.selectedVariant ?? firstVariant;
+  const selectedVariant = product.selectedVariant!;
   const isOutOfStock = !selectedVariant?.availableForSale;
 
   const isOnSale =
@@ -215,7 +238,6 @@ export function ProductForm({
           handle={product.handle}
           options={product.options}
           variants={variants}
-          defaultVariant={firstVariant}
         >
           {({option}) => {
             return (

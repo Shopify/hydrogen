@@ -18,6 +18,7 @@ import {
   CartForm,
 } from '@shopify/hydrogen';
 import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
+import {getVariantUrl} from '~/utils';
 
 export const meta: V2_MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data.product.title}`}];
@@ -75,15 +76,20 @@ function redirectToFirstVariant({
   product: ProductFragment;
   request: Request;
 }) {
-  const searchParams = new URLSearchParams(new URL(request.url).search);
+  const url = new URL(request.url);
   const firstVariant = product.variants.nodes[0];
-  for (const option of firstVariant.selectedOptions) {
-    searchParams.set(option.name, option.value);
-  }
 
-  throw redirect(`/products/${product.handle}?${searchParams.toString()}`, {
-    status: 302,
-  });
+  throw redirect(
+    getVariantUrl(
+      url.pathname,
+      product.handle,
+      firstVariant.selectedOptions,
+      new URLSearchParams(url.search),
+    ),
+    {
+      status: 302,
+    },
+  );
 }
 
 export default function Product() {
@@ -204,7 +210,6 @@ function ProductForm({
   return (
     <div className="product-form">
       <VariantSelector
-        defaultVariant={selectedVariant as ProductVariantFragment}
         handle={product.handle}
         options={product.options}
         variants={variants}

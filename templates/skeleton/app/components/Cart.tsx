@@ -1,7 +1,8 @@
-import {CartForm, Image, Money, useVariantUrl} from '@shopify/hydrogen';
+import {CartForm, Image, Money} from '@shopify/hydrogen';
 import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
+import {useVariantUrl} from '~/utils';
 
 type CartLine = CartApiQueryFragment['lines']['nodes'][0];
 
@@ -92,7 +93,7 @@ function CartLineItem({
           onClick={() => {
             if (layout === 'aside') {
               // close the drawer
-              window.location.href = lineItemUrl.to;
+              window.location.href = lineItemUrl;
             }
           }}
         >
