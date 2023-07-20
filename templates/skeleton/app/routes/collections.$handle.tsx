@@ -92,7 +92,7 @@ function ProductItem({
       className="product-item"
       key={product.id}
       prefetch="intent"
-      to={variantUrl.to}
+      to={variantUrl}
     >
       {/* TODO: @ben welp with sizes and url transform? */}
       {product.featuredImage && (
