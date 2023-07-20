@@ -49,12 +49,12 @@
           "tabs": [
             {
               "title": "client.js",
-              "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  // load environment variables according to your framework and runtime\n  storeDomain: process.env.PUBLIC_STORE_DOMAIN,\n  storefrontApiVersion: process.env.PUBLIC_STOREFRONT_API_VERSION,\n  publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,\n});\n",
+              "code": "import {createStorefrontClient} from '@shopify/hydrogen-react';\n\nexport const client = createStorefrontClient({\n  // load environment variables according to your framework and runtime\n  storeDomain: process.env.PUBLIC_STORE_DOMAIN,\n  publicStorefrontToken: process.env.PUBLIC_STOREFRONT_API_TOKEN,\n});\n",
               "language": "javascript"
             },
             {
               "title": ".env",
-              "code": "# Replace with your own store domain and Storefront API token\n\nPUBLIC_STOREFRONT_API_TOKEN=\"public_token\"\nPRIVATE_STOREFRONT_API_TOKEN=\"private_token\"\nPUBLIC_STOREFRONT_API_VERSION=\"2023-04\"\nPUBLIC_STORE_DOMAIN=\"store_id.myshopify.com\"\n"
+              "code": "# Replace with your own store domain and Storefront API token\n\nPUBLIC_STOREFRONT_API_TOKEN=\"public_token\"\nPRIVATE_STOREFRONT_API_TOKEN=\"private_token\"\nPUBLIC_STORE_DOMAIN=\"store_id.myshopify.com\"\n"
             },
             {
               "title": "server-side-query.js",
@@ -68,7 +68,7 @@
         "type": "Generic",
         "anchorLink": "versioning",
         "title": "Versioning",
-        "sectionContent": "Hydrogen React is tied to specific versions of the [Storefront API](/docs/api/storefront), which is versioned quarterly. For example, if you're using Storefront API version `2023-04`, then Hydrogen versions `2023.4.x` are fully compatible.\n\n> Caution:\n>If a Storefront API version includes breaking changes, then the corresponding Hydrogen React version will include the same breaking changes.",
+        "sectionContent": "Hydrogen React is tied to specific versions of the [Storefront API](/docs/api/storefront), which is versioned quarterly. For example, if you're using Storefront API version `2023-07`, then Hydrogen versions `2023.4.x` are fully compatible.\n\n> Caution:\n>If a Storefront API version includes breaking changes, then the corresponding Hydrogen React version will include the same breaking changes.",
         "sectionCard": [
           {
             "subtitle": "Learn more",
