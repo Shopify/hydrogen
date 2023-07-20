@@ -39,9 +39,13 @@ export const links: LinksFunction = () => [
   },
 ];
 
-export async function loader({context}: {context: AppLoadContext}) {
-  const layout = await context.storefront.query<{shop: Shop}>(LAYOUT_QUERY);
-  return {layout};
+export async function loader({
+  context: {storefront},
+}: {
+  context: AppLoadContext;
+}) {
+  const layout = await storefront.query<{shop: Shop}>(LAYOUT_QUERY);
+  return {layout, isMockShop: storefront.getApiUrl().includes('mock.shop')};
 }
 
 export const HYDROGEN_SHOP_ID = 'gid://shopify/Shop/55145660472';
@@ -51,17 +55,21 @@ export function ErrorBoundary() {
 }
 
 export default function Index() {
-  const data = useLoaderData<typeof loader>();
+  const {
+    isMockShop,
+    layout: {shop},
+  } = useLoaderData<typeof loader>();
 
-  const {name: shopName, id: shopId} = data.layout.shop;
+  let {name: shopName, id: shopId} = shop;
 
-  const configDone = shopId !== HYDROGEN_SHOP_ID;
+  const configDone = shopId !== HYDROGEN_SHOP_ID && !isMockShop;
+  if (isMockShop || !shopName) shopName = 'Hydrogen';
 
   return (
     <>
       <Layout shopName={shopName}>
         {configDone ? <HydrogenLogoBaseColor /> : <HydrogenLogoBaseBW />}
-        <h1>Hello, {shopName || 'Hydrogen'}</h1>
+        <h1>Hello, {shopName}</h1>
         <p>Welcome to your new custom storefront</p>
         {configDone ? null : (
           <section className="Banner">
@@ -72,10 +80,11 @@ export default function Index() {
             <p>
               You&rsquo;re seeing this because you have not yet configured your
               storefront token. <br />
-              <br /> To get started, edit {` `}
-              <code>.env</code>. Then, create your first route with the file
-              {` `}
-              <code>/app/routes/_index.jsx</code>. Learn more about
+              <br /> To link your store,{` `}
+              run <code>h2 link</code>. Then, run{' '}
+              <code>h2 generate route home</code> to create your first route.
+              <br />
+              Learn more about
               {` `}
               <a
                 target="_blank"
