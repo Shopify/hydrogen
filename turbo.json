@@ -64,6 +64,11 @@
       "dependsOn": [
         "@shopify/hydrogen#build"
       ]
+    },
+    "customer-api#build": {
+      "dependsOn": [
+        "@shopify/hydrogen#build"
+      ]
     }
   }
 }
