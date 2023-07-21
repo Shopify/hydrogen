@@ -9,21 +9,45 @@ import {Pagination} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
 import {Image, Money} from '@shopify/hydrogen-react';
 import {useFetchers} from '@remix-run/react';
-import {
-  type NormalizedPredictiveSearch,
-  type NormalizedPredictiveSearchResults,
-  type NormalizedPredictiveSearchResultItem,
-} from '~/routes/api.predictive-search';
 
-import type {SearchQuery} from 'storefrontapi.generated';
+import type {
+  PredictiveProductFragment,
+  PredictiveCollectionFragment,
+  PredictiveArticleFragment,
+  SearchQuery,
+} from 'storefrontapi.generated';
 
-export const NO_PREDICTIVE_SEARCH_RESULTS: NormalizedPredictiveSearchResults = [
-  {type: 'queries', items: []},
-  {type: 'products', items: []},
-  {type: 'collections', items: []},
-  {type: 'pages', items: []},
-  {type: 'articles', items: []},
-];
+type PredicticeSearchResultItemImage =
+  | PredictiveCollectionFragment['image']
+  | PredictiveArticleFragment['image']
+  | PredictiveProductFragment['variants']['nodes'][0]['image'];
+
+type PredictiveSearchResultItemPrice =
+  | PredictiveProductFragment['variants']['nodes'][0]['price'];
+
+export type NormalizedPredictiveSearchResultItem = {
+  __typename: string | undefined;
+  handle: string;
+  id: string;
+  image?: PredicticeSearchResultItemImage;
+  price?: PredictiveSearchResultItemPrice;
+  styledTitle?: string;
+  title: string;
+  url: string;
+};
+
+export type NormalizedPredictiveSearchResults = Array<
+  | {type: 'queries'; items: Array<NormalizedPredictiveSearchResultItem>}
+  | {type: 'products'; items: Array<NormalizedPredictiveSearchResultItem>}
+  | {type: 'collections'; items: Array<NormalizedPredictiveSearchResultItem>}
+  | {type: 'pages'; items: Array<NormalizedPredictiveSearchResultItem>}
+  | {type: 'articles'; items: Array<NormalizedPredictiveSearchResultItem>}
+>;
+
+export type NormalizedPredictiveSearch = {
+  results: NormalizedPredictiveSearchResults;
+  totalResults: number;
+};
 
 type FetchSearchResultsReturn = {
   searchResults: {
@@ -32,6 +56,14 @@ type FetchSearchResultsReturn = {
   };
   searchTerm: string;
 };
+
+export const NO_PREDICTIVE_SEARCH_RESULTS: NormalizedPredictiveSearchResults = [
+  {type: 'queries', items: []},
+  {type: 'products', items: []},
+  {type: 'collections', items: []},
+  {type: 'pages', items: []},
+  {type: 'articles', items: []},
+];
 
 export function SearchForm({searchTerm}: {searchTerm: string}) {
   const inputRef = useRef<HTMLInputElement | null>(null);
