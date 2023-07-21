@@ -5,7 +5,6 @@ import {useLoaderData, Await} from '@remix-run/react';
 import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
 import {
   AnalyticsPageType,
-  CacheCustom,
   Money,
   ShopPayButton,
   VariantSelector,
@@ -53,12 +52,6 @@ export async function loader({params, request, context}: LoaderArgs) {
       country: context.storefront.i18n.country,
       language: context.storefront.i18n.language,
     },
-    cache: CacheCustom({
-      mode: 'public',
-      maxAge: 30,
-      sMaxAge: 60,
-      staleWhileRevalidate: 0,
-    }),
   });
 
   // In order to show which variants are available in the UI, we need to query
