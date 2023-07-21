@@ -7,8 +7,8 @@ import type {
 import {
   flattenConnection,
   AnalyticsPageType,
-  Pagination__unstable as Pagination,
-  getPaginationVariables__unstable as getPaginationVariables,
+  Pagination,
+  getPaginationVariables,
 } from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
