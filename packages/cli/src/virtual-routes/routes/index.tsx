@@ -71,12 +71,26 @@ export default function Index() {
         {configDone ? <HydrogenLogoBaseColor /> : <HydrogenLogoBaseBW />}
         <h1>Hello, {shopName}</h1>
         <p>Welcome to your new custom storefront</p>
-        {configDone ? null : (
-          <section className="Banner">
-            <div>
-              <IconBanner />
-              <h2>Configure storefront token</h2>
-            </div>
+
+        <section className="Banner">
+          <div>
+            <IconBanner />
+            <h2>
+              {configDone
+                ? 'Create your first route'
+                : 'Configure storefront token'}
+            </h2>
+          </div>
+          {configDone ? (
+            <p>
+              You&rsquo;re seeing this because you don&rsquo;t have a home route
+              in your project yet. <br />
+              Run <code>h2 generate route home</code> to create your home route.
+              Learn more about
+              {` `}
+              <CreateRoutesLink />
+            </p>
+          ) : (
             <p>
               You&rsquo;re seeing this because you have not yet configured your
               storefront token. <br />
@@ -95,20 +109,25 @@ export default function Index() {
               </a>
               {` `}
               and{` `}
-              <a
-                target="_blank"
-                rel="norefferer noopener"
-                href="https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development#step-4-create-a-route"
-              >
-                creating routes
-              </a>
-              .
+              <CreateRoutesLink />.
             </p>
-          </section>
-        )}
+          )}
+        </section>
         <ResourcesLinks />
       </Layout>
     </>
+  );
+}
+
+function CreateRoutesLink() {
+  return (
+    <a
+      target="_blank"
+      rel="norefferer noopener"
+      href="https://shopify.dev/docs/custom-storefronts/hydrogen/building/begin-development#step-4-create-a-route"
+    >
+      creating routes
+    </a>
   );
 }
 
