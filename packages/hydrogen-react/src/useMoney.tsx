@@ -103,10 +103,9 @@ export type UseMoneyValue = {
  */
 export function useMoney(money: MoneyV2): UseMoneyValue {
   const {countryIsoCode, languageIsoCode} = useShop();
-  const locale =
-    languageIsoCode.length === 2
-      ? `${languageIsoCode}-${countryIsoCode}`
-      : languageIsoCode.replace('_', '-');
+  const locale = languageIsoCode.includes('_')
+    ? languageIsoCode.replace('_', '-')
+    : `${languageIsoCode}-${countryIsoCode}`;
 
   if (!locale) {
     throw new Error(
