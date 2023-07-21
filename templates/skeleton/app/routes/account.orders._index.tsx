@@ -1,9 +1,5 @@
 import {Link, useLoaderData} from '@remix-run/react';
-import {
-  Money,
-  Pagination__unstable as Pagination,
-  getPaginationVariables__unstable as getPaginationVariables,
-} from '@shopify/hydrogen';
+import {Money, Pagination, getPaginationVariables} from '@shopify/hydrogen';
 import {
   json,
   redirect,

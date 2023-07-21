@@ -2,8 +2,8 @@ import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Link} from '@remix-run/react';
 import {
-  Pagination__unstable as Pagination,
-  getPaginationVariables__unstable as getPaginationVariables,
+  Pagination,
+  getPaginationVariables,
   Image,
   Money,
 } from '@shopify/hydrogen';

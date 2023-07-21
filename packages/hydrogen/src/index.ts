@@ -14,10 +14,7 @@ export {graphiqlLoader} from './routing/graphiql';
 export {Seo} from './seo/seo';
 export {type SeoConfig} from './seo/generate-seo-tags';
 export type {SeoHandleFunction} from './seo/seo';
-export {
-  Pagination as Pagination__unstable,
-  getPaginationVariables as getPaginationVariables__unstable,
-} from './pagination/Pagination';
+export {Pagination, getPaginationVariables} from './pagination/Pagination';
 
 export {CartForm, type CartActionInput} from './cart/CartForm';
 export {cartCreateDefault} from './cart/queries/cartCreateDefault';
