@@ -157,7 +157,14 @@ export function generateProjectEntries(
 ) {
   return Promise.all(
     ['root', 'entry.server', 'entry.client'].map((filename) =>
-      generateProjectFile(filename, options),
+      generateProjectFile(filename, {
+        v2Flags: {
+          isV2ErrorBoundary: true,
+          isV2Meta: true,
+          isV2RouteConvention: true,
+        },
+        ...options,
+      }),
     ),
   );
 }
