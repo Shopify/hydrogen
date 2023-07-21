@@ -175,7 +175,7 @@ export function muteAuthLogs({
  */
 export function enhanceH2Logs(options: {
   graphiqlUrl: string;
-  appDirectory: string;
+  rootDirectory: string;
 }) {
   injectLogReplacer('warn');
   injectLogReplacer('error');
@@ -232,7 +232,9 @@ export function enhanceH2Logs(options: {
 
         // Sanitize stack trace to only show app code
         const stackLines = stack?.split('\n') ?? [];
-        const isAppLine = (line: string) => line.includes(options.appDirectory);
+        const isAppLine = (line: string) =>
+          line.includes(options.rootDirectory) &&
+          !line.includes('node_modules');
         const firstAppLineIndex = stackLines.findIndex(isAppLine);
         const lastAppLineIndex =
           stackLines.length -
@@ -240,6 +242,7 @@ export function enhanceH2Logs(options: {
             .reverse() // findLastIndex requires Node 18
             .findIndex(isAppLine);
 
+        if (firstAppLineIndex > 0 && lastAppLineIndex > firstAppLineIndex) {
           stack =
             [
               stackLines[0], // Error message
