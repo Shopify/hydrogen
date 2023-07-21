@@ -6471,6 +6471,48 @@
     ]
   },
   {
+    "name": "useLoadScript",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [],
+    "description": "The `useLoadScript` hook loads an external script tag in the browser. It allows React components to lazy-load third-party dependencies.",
+    "type": "hook",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import React, {useEffect} from 'react';\nimport {useLoadScript} from '@shopify/hydrogen-react';\n\nexport default function Homepage() {\n  const scriptStatus = useLoadScript('https://some-cdn.com/some-script.js');\n\n  useEffect(() => {\n    if (scriptStatus === 'done') {\n      // do something\n    }\n  }, [scriptStatus]);\n\n  return <div>{scriptStatus === 'done' && <p>Script loaded!</p>}</div>;\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import React, {useEffect} from 'react';\nimport {useLoadScript} from '@shopify/hydrogen-react';\n\nexport default function Homepage() {\n  const scriptStatus = useLoadScript('https://some-cdn.com/some-script.js');\n\n  useEffect(() => {\n    if (scriptStatus === 'done') {\n      // do something\n    }\n  }, [scriptStatus]);\n\n  return <div>{scriptStatus === 'done' && <p>Script loaded!</p>}</div>;\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "LoadScriptParams",
+        "typeDefinitions": {
+          "LoadScriptParams": {
+            "filePath": "/load-script.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "LoadScriptParams",
+            "value": "Parameters<typeof loadScript>",
+            "description": ""
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "parseGid",
     "category": "utilities",
     "isVisualComponent": false,
