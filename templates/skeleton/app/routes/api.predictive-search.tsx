@@ -1,65 +1,37 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import type {
+  NormalizedPredictiveSearch,
+  NormalizedPredictiveSearchResults,
+} from '~/components/Search';
 import {NO_PREDICTIVE_SEARCH_RESULTS} from '~/components/Search';
 
 import type {
-  PredictiveSearchQuery,
+  PredictiveArticleFragment,
+  PredictiveCollectionFragment,
   PredictivePageFragment,
   PredictiveProductFragment,
-  PredictiveCollectionFragment,
-  PredictiveArticleFragment,
   PredictiveQueryFragment,
+  PredictiveSearchQuery,
 } from 'storefrontapi.generated';
 
 type PredictiveSearchResultItem =
-  | PredictiveProductFragment
+  | PredictiveArticleFragment
   | PredictiveCollectionFragment
   | PredictivePageFragment
-  | PredictiveArticleFragment;
-
-type PredicticeSearchResultItemImage =
-  | PredictiveCollectionFragment['image']
-  | PredictiveArticleFragment['image']
-  | PredictiveProductFragment['variants']['nodes'][0]['image'];
-
-type PredictiveSearchResultItemPrice =
-  | PredictiveProductFragment['variants']['nodes'][0]['price'];
-
-export type NormalizedPredictiveSearchResultItem = {
-  __typename: string | undefined;
-  handle: string;
-  id: string;
-  image?: PredicticeSearchResultItemImage;
-  price?: PredictiveSearchResultItemPrice;
-  styledTitle?: string;
-  title: string;
-  url: string;
-};
-
-export type NormalizedPredictiveSearchResults = Array<
-  | {type: 'queries'; items: Array<NormalizedPredictiveSearchResultItem>}
-  | {type: 'products'; items: Array<NormalizedPredictiveSearchResultItem>}
-  | {type: 'collections'; items: Array<NormalizedPredictiveSearchResultItem>}
-  | {type: 'pages'; items: Array<NormalizedPredictiveSearchResultItem>}
-  | {type: 'articles'; items: Array<NormalizedPredictiveSearchResultItem>}
->;
-
-export type NormalizedPredictiveSearch = {
-  results: NormalizedPredictiveSearchResults;
-  totalResults: number;
-};
+  | PredictiveProductFragment;
 
 type PredictiveSearchTypes =
-  | 'PRODUCT'
+  | 'ARTICLE'
   | 'COLLECTION'
   | 'PAGE'
-  | 'ARTICLE'
+  | 'PRODUCT'
   | 'QUERY';
 
 const DEFAULT_SEARCH_TYPES: PredictiveSearchTypes[] = [
-  'PRODUCT',
+  'ARTICLE',
   'COLLECTION',
   'PAGE',
-  'ARTICLE',
+  'PRODUCT',
   'QUERY',
 ];
 
