@@ -91,7 +91,7 @@ export function createStorefrontClient(
       ) {
         throw new Error(
           H2_PREFIX_ERROR +
-            'You did not pass in a `privateStorefrontToken` while using `getPrivateTokenHeaders()`',
+            'You did not pass in a `privateStorefrontToken` while using `createStorefrontClient()` or `getPrivateTokenHeaders()`',
         );
       }
 
@@ -127,7 +127,7 @@ export function createStorefrontClient(
       ) {
         throw new Error(
           H2_PREFIX_ERROR +
-            'You did not pass in a `publicStorefrontToken` while using `getPublicTokenHeaders()`',
+            'You did not pass in a `publicStorefrontToken` while using `createStorefrontClient()` or `getPublicTokenHeaders()`',
         );
       }
 
