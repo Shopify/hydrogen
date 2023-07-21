@@ -158,15 +158,15 @@ async function runDev({
       extraLines: [colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`)],
     });
 
+    if (useCodegen) {
+      spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
+    }
+
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
   }
 
   const remixConfig = await reloadConfig();
-
-  if (useCodegen) {
-    spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
-  }
 
   const fileWatchCache = createFileWatchCache();
   let skipRebuildLogs = false;

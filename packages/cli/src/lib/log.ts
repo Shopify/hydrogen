@@ -39,7 +39,7 @@ const printedMessages = new Set<string | Object>();
  * Certain messages like errors might be printed multiple times.
  * This ensures they are only printed once per second.
  */
-function debounceMessage(args: unknown[]) {
+function debounceMessage(args: unknown[], debounceFor?: true | number) {
   const key = args
     .map((item) => {
       const message = (item as Error)?.message ?? (item as string);
@@ -51,16 +51,21 @@ function debounceMessage(args: unknown[]) {
   if (printedMessages.has(key)) return true;
 
   printedMessages.add(key);
-  setTimeout(() => printedMessages.delete(key), 1000);
+  if (debounceFor !== true) {
+    setTimeout(() => printedMessages.delete(key), debounceFor ?? 1000);
+  }
 
   return false;
 }
 
-function injectLogReplacer(method: ConsoleMethod) {
+function injectLogReplacer(
+  method: ConsoleMethod,
+  debouncer?: (args: unknown[]) => true | number | undefined,
+) {
   if (!methodsReplaced.has(method)) {
     methodsReplaced.add(method);
     console[method] = (...args: unknown[]) => {
-      if (debounceMessage(args)) return;
+      if (debounceMessage(args, debouncer?.(args))) return;
 
       const replacer = messageReplacers.find(([matcher]) => matcher(args))?.[1];
       if (!replacer) return originalConsole[method](...args);
@@ -177,8 +182,13 @@ export function enhanceH2Logs(options: {
   graphiqlUrl: string;
   rootDirectory: string;
 }) {
-  injectLogReplacer('warn');
   injectLogReplacer('error');
+  injectLogReplacer('warn', ([first]) =>
+    // Show createStorefrontClient warnings only once.
+    (first as any)?.includes?.('[h2:warn:createStorefrontClient]')
+      ? true
+      : undefined,
+  );
 
   addMessageReplacers('h2-warn', [
     ([first]) => {
