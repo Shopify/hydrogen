@@ -1,8 +1,3 @@
-import type {
-  ProductConnection,
-  ArticleConnection,
-  PageConnection,
-} from '@shopify/hydrogen-react/storefront-api-types';
 import {
   useParams,
   useFetcher,
@@ -11,7 +6,6 @@ import {
   type FormProps,
 } from '@remix-run/react';
 import {Pagination__unstable as Pagination} from '@shopify/hydrogen';
-import type {Article, Page} from 'temp.search-types';
 import React, {useRef, useEffect} from 'react';
 import {Image, Money} from '@shopify/hydrogen-react';
 import {useFetchers} from '@remix-run/react';
@@ -20,6 +14,8 @@ import {
   type NormalizedPredictiveSearchResults,
   type NormalizedPredictiveSearchResultItem,
 } from '~/routes/api.predictive-search';
+
+import type {SearchQuery} from 'storefrontapi.generated';
 
 export const NO_PREDICTIVE_SEARCH_RESULTS: NormalizedPredictiveSearchResults = [
   {type: 'queries', items: []},
@@ -31,11 +27,7 @@ export const NO_PREDICTIVE_SEARCH_RESULTS: NormalizedPredictiveSearchResults = [
 
 type FetchSearchResultsReturn = {
   searchResults: {
-    results: {
-      articles: ArticleConnection;
-      pages: PageConnection;
-      products: ProductConnection;
-    } | null;
+    results: SearchQuery | null;
     totalResults: number;
   };
   searchTerm: string;
@@ -82,42 +74,48 @@ export function SearchForm({searchTerm}: {searchTerm: string}) {
 export function SearchResults({
   results,
 }: Pick<FetchSearchResultsReturn['searchResults'], 'results'>) {
+  if (!results) {
+    return null;
+  }
+  const keys = Object.keys(results) as Array<keyof typeof results>;
   return (
     <div>
       {results &&
-        Object.keys(results).map((type) => {
-          const resourceResults = results[type as keyof typeof results];
-          switch (type) {
-            case 'pages':
-              return resourceResults.nodes.length ? (
-                <SearchResultPageGrid
-                  key="pages"
-                  pages={resourceResults as PageConnection}
-                />
-              ) : null;
-            case 'products':
-              return resourceResults.nodes.length ? (
-                <SearchResultsProductsGrid
-                  key="products"
-                  products={resourceResults as ProductConnection}
-                />
-              ) : null;
-            case 'articles':
-              return resourceResults.nodes.length ? (
-                <SearchResultArticleGrid
-                  key="articles"
-                  articles={resourceResults as ArticleConnection}
-                />
-              ) : null;
-            default:
-              return null;
+        keys.map((type) => {
+          const resourceResults = results[type];
+
+          if (results[type].nodes[0].__typename === 'Page') {
+            const pageResults = resourceResults as SearchQuery['pages'];
+            return resourceResults.nodes.length ? (
+              <SearchResultPageGrid key="pages" pages={pageResults} />
+            ) : null;
+          }
+
+          if (results[type].nodes[0].__typename === 'Product') {
+            const productResults = resourceResults as SearchQuery['products'];
+            return resourceResults.nodes.length ? (
+              <SearchResultsProductsGrid
+                key="products"
+                products={productResults}
+              />
+            ) : null;
+          }
+
+          if (results[type].nodes[0].__typename === 'Article') {
+            const articleResults = resourceResults as SearchQuery['articles'];
+            return resourceResults.nodes.length ? (
+              <SearchResultArticleGrid
+                key="articles"
+                articles={articleResults}
+              />
+            ) : null;
           }
         })}
     </div>
   );
 }
 
-function SearchResultsProductsGrid({products}: {products: ProductConnection}) {
+function SearchResultsProductsGrid({products}: Pick<SearchQuery, 'products'>) {
   return (
     <div className="search-result">
       <h3>Products</h3>
@@ -155,12 +153,12 @@ function SearchResultsProductsGrid({products}: {products: ProductConnection}) {
   );
 }
 
-function SearchResultPageGrid({pages}: {pages: PageConnection}) {
+function SearchResultPageGrid({pages}: Pick<SearchQuery, 'pages'>) {
   return (
     <div className="search-result">
       <h2>Pages</h2>
       <div>
-        {pages?.nodes?.map((page: Page) => (
+        {pages?.nodes?.map((page) => (
           <div className="search-results-item" key={page.id}>
             <Link prefetch="intent" to={`/pages/${page.handle}`}>
               {page.title}
@@ -173,12 +171,12 @@ function SearchResultPageGrid({pages}: {pages: PageConnection}) {
   );
 }
 
-function SearchResultArticleGrid({articles}: {articles: ArticleConnection}) {
+function SearchResultArticleGrid({articles}: Pick<SearchQuery, 'articles'>) {
   return (
     <div className="search-result">
       <h2>Articles</h2>
       <div>
-        {articles?.nodes?.map((article: Article) => (
+        {articles?.nodes?.map((article) => (
           <div className="search-results-item" key={article.id}>
             <Link prefetch="intent" to={`/blog/${article.handle}`}>
               {article.title}

@@ -94,7 +94,6 @@ function ProductItem({
       prefetch="intent"
       to={variantUrl}
     >
-      {/* TODO: @ben welp with sizes and url transform? */}
       {product.featuredImage && (
         <Image
           alt={product.featuredImage.altText || product.title}
@@ -120,6 +119,7 @@ const MONEY_FRAGMENT = `#graphql
 ` as const;
 
 const PRODUCT_ITEM_FRAGMENT = `#graphql
+  ${MONEY_FRAGMENT}
   fragment ProductItem on Product {
     id
     handle
@@ -127,8 +127,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     featuredImage {
       id
       altText
-      ## url: transformedSrc(maxWidth: 800, maxHeight: 800, crop: CENTER)
-      url
+      url(transform: {maxWidth: 800, maxHeight: 800, crop: CENTER})
       width
       height
     }
@@ -149,11 +148,11 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
       }
     }
   }
-  ${MONEY_FRAGMENT}
 ` as const;
 
 // NOTE: https://shopify.dev/docs/api/storefront/2022-04/objects/collection
 const COLLECTION_QUERY = `#graphql
+  ${PRODUCT_ITEM_FRAGMENT}
   query Collection(
     $handle: String!
     $country: CountryCode
@@ -186,5 +185,4 @@ const COLLECTION_QUERY = `#graphql
       }
     }
   }
-  ${PRODUCT_ITEM_FRAGMENT}
 ` as const;
