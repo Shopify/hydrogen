@@ -1,29 +1,38 @@
-import type {
-  MoneyV2,
-  Image as ImageType,
-} from '@shopify/hydrogen-react/storefront-api-types';
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {NO_PREDICTIVE_SEARCH_RESULTS} from '~/components/Search';
 
 import type {
-  PredictiveSearchResult,
-  SearchResultItem,
-  SearchQuerySuggestion,
-  Article,
-  Collection,
-  Page,
-  Product,
-} from 'temp.search-types';
+  PredictiveSearchQuery,
+  PredictivePageFragment,
+  PredictiveProductFragment,
+  PredictiveCollectionFragment,
+  PredictiveArticleFragment,
+  PredictiveQueryFragment,
+} from 'storefrontapi.generated';
+
+type PredictiveSearchResultItem =
+  | PredictiveProductFragment
+  | PredictiveCollectionFragment
+  | PredictivePageFragment
+  | PredictiveArticleFragment;
+
+type PredicticeSearchResultItemImage =
+  | PredictiveCollectionFragment['image']
+  | PredictiveArticleFragment['image']
+  | PredictiveProductFragment['variants']['nodes'][0]['image'];
+
+type PredictiveSearchResultItemPrice =
+  | PredictiveProductFragment['variants']['nodes'][0]['price'];
 
 export type NormalizedPredictiveSearchResultItem = {
   __typename: string | undefined;
   handle: string;
   id: string;
-  image?: ImageType | null;
+  image?: PredicticeSearchResultItemImage;
+  price?: PredictiveSearchResultItemPrice;
   styledTitle?: string;
   title: string;
   url: string;
-  price?: MoneyV2;
 };
 
 export type NormalizedPredictiveSearchResults = Array<
@@ -104,9 +113,7 @@ async function fetchPredictiveSearchResults({
     };
   }
 
-  const data = await context.storefront.query<{
-    predictiveSearch: PredictiveSearchResult;
-  }>(PREDICTIVE_SEARCH_QUERY, {
+  const data = await context.storefront.query(PREDICTIVE_SEARCH_QUERY, {
     variables: {
       limit,
       limitScope: 'EACH',
@@ -133,7 +140,7 @@ async function fetchPredictiveSearchResults({
  * @param locale
  */
 export function normalizePredictiveSearchResults(
-  predictiveSearch: PredictiveSearchResult,
+  predictiveSearch: PredictiveSearchQuery['predictiveSearch'],
   locale: LoaderArgs['params']['locale'],
 ): NormalizedPredictiveSearch {
   let totalResults = 0;
@@ -145,7 +152,7 @@ export function normalizePredictiveSearchResults(
   }
 
   function applyTrackingParams(
-    resource: SearchResultItem | SearchQuerySuggestion,
+    resource: PredictiveSearchResultItem | PredictiveQueryFragment,
     params?: string,
   ) {
     if (params) {
@@ -165,7 +172,7 @@ export function normalizePredictiveSearchResults(
   if (predictiveSearch.queries.length) {
     results.push({
       type: 'queries',
-      items: predictiveSearch.queries.map((query: SearchQuerySuggestion) => {
+      items: predictiveSearch.queries.map((query: PredictiveQueryFragment) => {
         const trackingParams = applyTrackingParams(
           query,
           `q=${encodeURIComponent(query.text)}`,
@@ -188,44 +195,48 @@ export function normalizePredictiveSearchResults(
   if (predictiveSearch.products.length) {
     results.push({
       type: 'products',
-      items: predictiveSearch.products.map((product: Product) => {
-        totalResults++;
-        const trackingParams = applyTrackingParams(product);
-        return {
-          __typename: product.__typename,
-          handle: product.handle,
-          id: product.id,
-          image: product.variants?.nodes?.[0]?.image,
-          title: product.title,
-          url: `${localePrefix}/products/${product.handle}${trackingParams}`,
-          price: product.variants.nodes[0].price,
-        };
-      }),
+      items: predictiveSearch.products.map(
+        (product: PredictiveProductFragment) => {
+          totalResults++;
+          const trackingParams = applyTrackingParams(product);
+          return {
+            __typename: product.__typename,
+            handle: product.handle,
+            id: product.id,
+            image: product.variants?.nodes?.[0]?.image,
+            title: product.title,
+            url: `${localePrefix}/products/${product.handle}${trackingParams}`,
+            price: product.variants.nodes[0].price,
+          };
+        },
+      ),
     });
   }
 
   if (predictiveSearch.collections.length) {
     results.push({
       type: 'collections',
-      items: predictiveSearch.collections.map((collection: Collection) => {
-        totalResults++;
-        const trackingParams = applyTrackingParams(collection);
-        return {
-          __typename: collection.__typename,
-          handle: collection.handle,
-          id: collection.id,
-          image: collection.image,
-          title: collection.title,
-          url: `${localePrefix}/collections/${collection.handle}${trackingParams}`,
-        };
-      }),
+      items: predictiveSearch.collections.map(
+        (collection: PredictiveCollectionFragment) => {
+          totalResults++;
+          const trackingParams = applyTrackingParams(collection);
+          return {
+            __typename: collection.__typename,
+            handle: collection.handle,
+            id: collection.id,
+            image: collection.image,
+            title: collection.title,
+            url: `${localePrefix}/collections/${collection.handle}${trackingParams}`,
+          };
+        },
+      ),
     });
   }
 
   if (predictiveSearch.pages.length) {
     results.push({
       type: 'pages',
-      items: predictiveSearch.pages.map((page: Page) => {
+      items: predictiveSearch.pages.map((page: PredictivePageFragment) => {
         totalResults++;
         const trackingParams = applyTrackingParams(page);
         return {
@@ -243,27 +254,93 @@ export function normalizePredictiveSearchResults(
   if (predictiveSearch.articles.length) {
     results.push({
       type: 'articles',
-      items: predictiveSearch.articles.map((article: Article) => {
-        totalResults++;
-        const trackingParams = applyTrackingParams(article);
-        return {
-          __typename: article.__typename,
-          handle: article.handle,
-          id: article.id,
-          image: article.image,
-          title: article.title,
-          // FIX: should have a utility that allows to generate localized urls with different formats
-          url: `${localePrefix}/blog/${article.handle}${trackingParams}`,
-        };
-      }),
+      items: predictiveSearch.articles.map(
+        (article: PredictiveArticleFragment) => {
+          totalResults++;
+          const trackingParams = applyTrackingParams(article);
+          return {
+            __typename: article.__typename,
+            handle: article.handle,
+            id: article.id,
+            image: article.image,
+            title: article.title,
+            url: `${localePrefix}/blog/${article.handle}${trackingParams}`,
+          };
+        },
+      ),
     });
   }
 
   return {results, totalResults};
 }
 
-// FIX: add #graphql tag to query when we switch to the new api version
-const PREDICTIVE_SEARCH_QUERY = `
+const PREDICTIVE_SEARCH_QUERY = `#graphql
+  fragment PredictiveArticle on Article {
+    __typename
+    id
+    title
+    handle
+    image {
+      url
+      altText
+      width
+      height
+    }
+    trackingParameters
+  }
+
+  fragment PredictiveCollection on Collection {
+    __typename
+    id
+    title
+    handle
+    image {
+      url
+      altText
+      width
+      height
+    }
+    trackingParameters
+  }
+
+  fragment PredictivePage on Page {
+    __typename
+    id
+    title
+    handle
+    trackingParameters
+  }
+
+  fragment PredictiveProduct on Product {
+    __typename
+    id
+    title
+    handle
+    trackingParameters
+    variants(first: 1) {
+      nodes {
+        id
+        image {
+          url
+          altText
+          width
+          height
+        }
+        price {
+          amount
+          currencyCode
+        }
+      }
+    }
+  }
+
+  fragment PredictiveQuery on SearchQuerySuggestion {
+    __typename
+    text
+    styledText
+    trackingParameters
+  }
+
   query predictiveSearch(
     $country: CountryCode
     $language: LanguageCode
@@ -279,65 +356,19 @@ const PREDICTIVE_SEARCH_QUERY = `
       types: $types,
     ) {
       articles {
-        __typename
-        id
-        title
-        handle
-        image {
-          url
-          altText
-          width
-          height
-        }
-        trackingParameters
+        ...PredictiveArticle
       }
       collections {
-        __typename
-        id
-        title
-        handle
-        image {
-          url
-          altText
-          width
-          height
-        }
-        trackingParameters
+        ...PredictiveCollection
       }
       pages {
-        __typename
-        id
-        title
-        handle
-        trackingParameters
+        ...PredictivePage
       }
       products {
-        __typename
-        id
-        title
-        handle
-        trackingParameters
-        variants(first: 1) {
-          nodes {
-            id
-            image {
-              url
-              altText
-              width
-              height
-            }
-            price {
-              amount
-              currencyCode
-            }
-          }
-        }
+        ...PredictiveProduct
       }
       queries {
-        __typename
-        text
-        styledText
-        trackingParameters
+        ...PredictiveQuery
       }
     }
   }

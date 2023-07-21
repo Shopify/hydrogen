@@ -49,7 +49,6 @@ export async function loader({params, context}: LoaderArgs) {
   });
 }
 
-// TODO: change to <address>
 export default function OrderRoute() {
   const {order, lineItems, discountValue, discountPercentage} =
     useLoaderData<typeof loader>();
