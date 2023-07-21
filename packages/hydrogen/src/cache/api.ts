@@ -6,16 +6,19 @@ function logCacheApiStatus(
   request: Request,
   response?: Response,
 ) {
-  // const url = request.url;
+  const url = request.url;
+  if (!/Product\(/.test(url)) return;
   // eslint-disable-next-line no-console
-  // console.log(status, 'cacheKey', url);
-  // if (response) {
-  //   let headersJson: Record<string, string> = {};
-  //   response.headers.forEach((value, key) => {
-  //     headersJson[key] = value;
-  //   });
-  //   console.log(`${status} response headers: `, headersJson);
-  // }
+  console.log(status, 'cacheKey', url.substring(0, 50));
+
+  if (response) {
+    let headersJson: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      headersJson[key] = value;
+    });
+    // eslint-disable-next-line no-console
+    console.log(`${status} response headers: `, headersJson);
+  }
 }
 
 function getCacheControlSetting(
@@ -165,6 +168,7 @@ function isStale(request: Request, response: Response) {
   const age = ageInMs / 1000;
 
   const result = age > responseMaxAge;
+  response.headers.set('age', age.toString());
 
   if (result) {
     logCacheApiStatus('STALE', request, response);
