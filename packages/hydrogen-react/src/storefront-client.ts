@@ -33,6 +33,13 @@ export function createStorefrontClient(
     contentType,
   } = props;
 
+  if (!storeDomain) {
+    throw new Error(
+      H2_PREFIX_ERROR +
+        `\`storeDomain\` is required when creating a new Storefront client.\nReceived "${storeDomain}".`,
+    );
+  }
+
   if (storefrontApiVersion !== SFAPI_VERSION) {
     warnOnce(
       `The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting.` +
@@ -84,7 +91,7 @@ export function createStorefrontClient(
       ) {
         throw new Error(
           H2_PREFIX_ERROR +
-            'You did not pass in a `privateStorefrontToken` while using `getPrivateTokenHeaders()`',
+            'You did not pass in a `privateStorefrontToken` while using `createStorefrontClient()` or `getPrivateTokenHeaders()`',
         );
       }
 
@@ -120,7 +127,7 @@ export function createStorefrontClient(
       ) {
         throw new Error(
           H2_PREFIX_ERROR +
-            'You did not pass in a `publicStorefrontToken` while using `getPublicTokenHeaders()`',
+            'You did not pass in a `publicStorefrontToken` while using `createStorefrontClient()` or `getPublicTokenHeaders()`',
         );
       }
 
