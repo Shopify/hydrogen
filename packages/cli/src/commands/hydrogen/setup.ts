@@ -95,7 +95,7 @@ async function runSetup(options: RunSetupOptions) {
       .then(() =>
         Promise.all([
           // When starting from hello-world, the server entry point won't
-          // include all the cart logic form skeleton, so we need to copy it.
+          // include all the cart logic from skeleton, so we need to copy it.
           generateProjectFile('../server.ts', {...remixConfig, typescript}),
           ...(typescript
             ? [
