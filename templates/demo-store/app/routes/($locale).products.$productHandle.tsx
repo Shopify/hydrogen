@@ -57,7 +57,7 @@ export async function loader({params, request, context}: LoaderArgs) {
       mode: 'public',
       maxAge: 30,
       sMaxAge: 60,
-      staleWhileRevalidate: 30,
+      staleWhileRevalidate: 0,
     }),
   });
 
