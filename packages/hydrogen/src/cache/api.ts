@@ -16,6 +16,11 @@ function logCacheApiStatus(
     response.headers.forEach((value, key) => {
       headersJson[key] = value;
     });
+    const responseDate = response.headers.get('cache-put-date');
+    if (responseDate) {
+      const [age] = calculateAge(response, responseDate);
+      headersJson['age'] = age.toString();
+    }
     // eslint-disable-next-line no-console
     console.log(`${status} response headers: `, headersJson);
   }
@@ -144,11 +149,7 @@ async function deleteItem(cache: Cache, request: Request) {
   await cache.delete(request);
 }
 
-/**
- * Manually check the response to see if it's stale.
- */
-function isStale(request: Request, response: Response) {
-  const responseDate = response.headers.get('cache-put-date');
+function calculateAge(response: Response, responseDate: string) {
   const cacheControl = response.headers.get('real-cache-control');
   let responseMaxAge = 0;
 
@@ -159,16 +160,23 @@ function isStale(request: Request, response: Response) {
     }
   }
 
+  const ageInMs =
+    new Date().valueOf() - new Date(responseDate as string).valueOf();
+  return [ageInMs / 1000, responseMaxAge];
+}
+
+/**
+ * Manually check the response to see if it's stale.
+ */
+function isStale(request: Request, response: Response) {
+  const responseDate = response.headers.get('cache-put-date');
+
   if (!responseDate) {
     return false;
   }
 
-  const ageInMs =
-    new Date().valueOf() - new Date(responseDate as string).valueOf();
-  const age = ageInMs / 1000;
-
+  const [age, responseMaxAge] = calculateAge(response, responseDate);
   const result = age > responseMaxAge;
-  response.headers.set('age', age.toString());
 
   if (result) {
     logCacheApiStatus('STALE', request, response);
