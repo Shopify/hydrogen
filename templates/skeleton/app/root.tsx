@@ -4,8 +4,11 @@ import {
   useMatches,
   useRouteError,
 } from '@remix-run/react';
-import type {ErrorBoundaryComponent} from '@shopify/remix-oxygen';
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  defer,
+  type LoaderArgs,
+  type ErrorBoundaryComponent,
+} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
