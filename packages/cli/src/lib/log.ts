@@ -228,17 +228,17 @@ export function enhanceH2Logs(options: {
               queryName ? ` \`${colors.whiteBright(queryName)}\`` : ''
             }, try it in ${outputToken.link(colors.bold('GraphiQL'), link)}.`
               .value;
+        }
 
-          // Sanitize stack trace to only show app code
-          const stackLines = stack?.split('\n') ?? [];
-          const isAppLine = (line: string) =>
-            line.includes(options.appDirectory);
-          const firstAppLineIndex = stackLines.findIndex(isAppLine);
-          const lastAppLineIndex =
-            stackLines.length -
-            [...stackLines]
-              .reverse() // findLastIndex requires Node 18
-              .findIndex(isAppLine);
+        // Sanitize stack trace to only show app code
+        const stackLines = stack?.split('\n') ?? [];
+        const isAppLine = (line: string) => line.includes(options.appDirectory);
+        const firstAppLineIndex = stackLines.findIndex(isAppLine);
+        const lastAppLineIndex =
+          stackLines.length -
+          [...stackLines]
+            .reverse() // findLastIndex requires Node 18
+            .findIndex(isAppLine);
 
           stack =
             [
