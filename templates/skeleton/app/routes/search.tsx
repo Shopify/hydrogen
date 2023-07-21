@@ -1,8 +1,3 @@
-import type {
-  ProductConnection,
-  ArticleConnection,
-  PageConnection,
-} from '@shopify/hydrogen-react/storefront-api-types';
 import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
@@ -27,11 +22,7 @@ export async function loader({request, context}: LoaderArgs) {
     };
   }
 
-  const data = await context.storefront.query<{
-    products: ProductConnection;
-    pages: PageConnection;
-    articles: ArticleConnection;
-  }>(SEARCH_QUERY, {
+  const data = await context.storefront.query(SEARCH_QUERY, {
     variables: {
       query: searchTerm,
       ...variables,
@@ -69,19 +60,21 @@ export default function SearchPage() {
   );
 }
 
-// TODO: add trackingParameters when migrated to 2023-07
-const PRODUCT_SEARCH_ITEM_FRAGMENT = `#graphql
-  fragment ProductSearchItem on Product {
-    id
-    title
-    publishedAt
+const SEARCH_QUERY = `#graphql
+
+  fragment SearchProduct on Product {
+    __typename
     handle
+    id
+    publishedAt
+    title
+    trackingParameters
     vendor
     variants(first: 1) {
       nodes {
         id
         image {
-          url: transformedSrc(maxWidth: 400, crop: CENTER)
+          url(transform: {maxWidth: 400, crop: CENTER})
           altText
           width
           height
@@ -105,10 +98,23 @@ const PRODUCT_SEARCH_ITEM_FRAGMENT = `#graphql
       }
     }
   }
-` as const;
 
-// FIX: add #graphql tag when 2023-07 API is released
-const SEARCH_QUERY = `
+  fragment SearchPage on Page {
+     __typename
+     handle
+    id
+    title
+    trackingParameters
+  }
+
+  fragment SearchArticle on Article {
+    __typename
+    handle
+    id
+    title
+    trackingParameters
+  }
+
   query search(
     $query: String!,
     $country: CountryCode
@@ -130,14 +136,14 @@ const SEARCH_QUERY = `
     ) {
       nodes {
         ...on Product {
-          ...ProductSearchItem
+          ...SearchProduct
         }
       }
       pageInfo {
         hasNextPage
+        hasPreviousPage
         startCursor
         endCursor
-        hasPreviousPage
       }
     }
     pages: search(
@@ -147,10 +153,7 @@ const SEARCH_QUERY = `
     ) {
       nodes {
         ...on Page {
-          handle
-          id
-          title
-          trackingParameters
+          ...SearchPage
         }
       }
     }
@@ -161,13 +164,9 @@ const SEARCH_QUERY = `
     ) {
       nodes {
         ...on Article {
-          handle
-          id
-          title
-          trackingParameters
+          ...SearchArticle
         }
       }
     }
   }
-  ${PRODUCT_SEARCH_ITEM_FRAGMENT}
 ` as const;

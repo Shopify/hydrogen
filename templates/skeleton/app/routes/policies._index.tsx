@@ -5,7 +5,6 @@ export async function loader({context}: LoaderArgs) {
   const data = await context.storefront.query(POLICIES_QUERY);
   const policies = Object.values(data.shop || {});
 
-  // TODO: I need to sort out the 404 throwing response catching/page
   if (!policies.length) {
     throw new Response('No policies found', {status: 404});
   }

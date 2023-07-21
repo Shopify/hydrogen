@@ -107,7 +107,7 @@ const FEATURED_COLLECTION_QUERY = `#graphql
     title
     image {
       id
-      url: transformedSrc(maxHeight: 600, crop: CENTER, scale: 2)
+      url(transform: {maxHeight: 600, crop: CENTER, scale: 2})
       altText
       width
       height
