@@ -231,8 +231,11 @@ export async function generateProjectFile(
     v2Flags?: RemixV2Flags;
   },
 ): Promise<GenerateRoutesResult> {
+  const extension = (routeFrom.match(/(\.[jt]sx?)$/) ?? [])[1] ?? '.tsx';
+  routeFrom = routeFrom.replace(extension, '');
+
   const routeTemplatePath = getTemplateAppFile(
-    routeFrom + '.tsx',
+    routeFrom + extension,
     templatesRoot,
   );
   const allFilesToGenerate = await findRouteDependencies(
@@ -243,7 +246,7 @@ export async function generateProjectFile(
   const routeDestinationPath = joinPath(
     appDirectory,
     getDestinationRoute(routeFrom, localePrefix, v2Flags) +
-      `.${typescript ? 'tsx' : 'jsx'}`,
+      (typescript ? extension : extension.replace('.ts', '.js')),
   );
 
   const result: GenerateRoutesResult = {

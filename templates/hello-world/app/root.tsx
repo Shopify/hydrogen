@@ -8,12 +8,12 @@ import {
   useLoaderData,
 } from '@remix-run/react';
 import type {Shop} from '@shopify/hydrogen/storefront-api-types';
-import styles from './styles/app.css';
+import appStyles from './styles/app.css';
 import favicon from '../public/favicon.svg';
 
 export const links: LinksFunction = () => {
   return [
-    {rel: 'stylesheet', href: styles},
+    {rel: 'stylesheet', href: appStyles},
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
