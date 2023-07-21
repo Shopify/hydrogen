@@ -10,7 +10,8 @@ import {
 } from './src/lib/build';
 
 // Cleanup dist folder before building
-fs.removeSync('dist');
+fs.removeSync('dist/generator-templates');
+fs.removeSync('dist/virtual-routes');
 
 const commonConfig = {
   format: 'esm',
