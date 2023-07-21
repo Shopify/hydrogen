@@ -71,6 +71,7 @@ export {
   ShopifySalesChannel,
   ShopPayButton,
   storefrontApiCustomScalars,
+  useLoadScript,
   useMoney,
   useShopifyCookies,
   Video,

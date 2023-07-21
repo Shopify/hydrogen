@@ -10,6 +10,7 @@ const docsToCopy = [
   'ShopPayButton',
   'Video',
   'useMoney',
+  'useLoadScript',
   'useShopifyCookies',
   'flattenConnection',
   'getClientBrowserParameters',
