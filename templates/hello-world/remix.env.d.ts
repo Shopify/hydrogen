@@ -2,6 +2,9 @@
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
+// Enhance TypeScript's built-in typings.
+import '@total-typescript/ts-reset';
+
 import type {Storefront} from '@shopify/hydrogen';
 import type {HydrogenSession} from './server';
 

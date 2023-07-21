@@ -4,8 +4,11 @@ import {
   useMatches,
   useRouteError,
 } from '@remix-run/react';
-import type {ErrorBoundaryComponent} from '@shopify/remix-oxygen';
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  defer,
+  type LoaderArgs,
+  type ErrorBoundaryComponent,
+} from '@shopify/remix-oxygen';
 import {
   Links,
   Meta,
@@ -18,13 +21,13 @@ import type {CustomerAccessToken} from '@shopify/hydrogen-react/storefront-api-t
 import type {HydrogenSession} from '../server';
 import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
-import skeletonStyles from './styles/skeleton.css';
+import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 
 export function links() {
   return [
     {rel: 'stylesheet', href: resetStyles},
-    {rel: 'stylesheet', href: skeletonStyles},
+    {rel: 'stylesheet', href: appStyles},
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',

@@ -30,21 +30,20 @@ export async function adminRequest<T>(
 ): Promise<T> {
   const api = 'Admin';
   const url = `https://${session.storeFqdn}/admin/api/unstable/graphql.json`;
-  const response: Promise<T> = graphqlRequest({
-    query,
-    api,
-    url,
-    token: session.token,
-    variables,
-  });
 
   try {
-    return await response;
+    return await graphqlRequest({
+      query,
+      api,
+      url,
+      token: session.token,
+      variables,
+    });
   } catch (error: any) {
     const errors: GraphqlError[] = error.errors;
 
     if (
-      errors.some((error) => error.message.includes('app is not installed'))
+      errors?.some?.((error) => error.message.includes('app is not installed'))
     ) {
       throw new AbortError(
         "Hydrogen sales channel isn't installed",
