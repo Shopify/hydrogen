@@ -116,14 +116,14 @@ export function SearchResults({
         keys.map((type) => {
           const resourceResults = results[type];
 
-          if (results[type].nodes[0].__typename === 'Page') {
+          if (resourceResults.nodes[0]?.__typename === 'Page') {
             const pageResults = resourceResults as SearchQuery['pages'];
             return resourceResults.nodes.length ? (
               <SearchResultPageGrid key="pages" pages={pageResults} />
             ) : null;
           }
 
-          if (results[type].nodes[0].__typename === 'Product') {
+          if (resourceResults.nodes[0]?.__typename === 'Product') {
             const productResults = resourceResults as SearchQuery['products'];
             return resourceResults.nodes.length ? (
               <SearchResultsProductsGrid
@@ -133,7 +133,7 @@ export function SearchResults({
             ) : null;
           }
 
-          if (results[type].nodes[0].__typename === 'Article') {
+          if (resourceResults.nodes[0]?.__typename === 'Article') {
             const articleResults = resourceResults as SearchQuery['articles'];
             return resourceResults.nodes.length ? (
               <SearchResultArticleGrid
