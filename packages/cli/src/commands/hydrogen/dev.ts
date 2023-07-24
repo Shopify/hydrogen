@@ -9,7 +9,7 @@ import {
   getProjectPaths,
   getRemixConfig,
   type ServerMode,
-} from '../../lib/config.js';
+} from '../../lib/remix-config.js';
 import {enhanceH2Logs, muteDevLogs, warnOnce} from '../../lib/log.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';

@@ -20,7 +20,7 @@ import {
   getProjectPaths,
   getRemixConfig,
   type ServerMode,
-} from '../../lib/config.js';
+} from '../../lib/remix-config.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';

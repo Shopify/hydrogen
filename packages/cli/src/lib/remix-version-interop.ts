@@ -1,5 +1,5 @@
 import {createRequire} from 'module';
-import {getRemixConfig, type RemixConfig} from './config.js';
+import {getRemixConfig, type RemixConfig} from './remix-config.js';
 
 export function isRemixV2() {
   try {
