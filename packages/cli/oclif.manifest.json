@@ -287,6 +287,12 @@
           "description": "Generate routes for all pages.",
           "hidden": true,
           "allowNo": false
+        },
+        "git": {
+          "name": "git",
+          "type": "boolean",
+          "description": "Init Git and create initial commits.",
+          "allowNo": true
         }
       },
       "args": {}
