@@ -1,6 +1,6 @@
 import {vi, describe, expect, it} from 'vitest';
 
-import {render, screen} from '@testing-library/react';
+import {render, screen, act} from '@testing-library/react';
 import {useCart} from './CartProvider.js';
 import {
   CART_LINE,
@@ -39,7 +39,7 @@ describe('CartLineQuantityAdjustButton', () => {
       (CART_LINE?.quantity ?? 0).toString(),
     );
 
-    await user.click(screen.getByRole('button'));
+    await act(() => user.click(screen.getByRole('button')));
 
     expect(linesUpdateMock).toHaveBeenCalledWith([
       {
@@ -83,7 +83,7 @@ describe('CartLineQuantityAdjustButton', () => {
       (tempCartLine?.quantity ?? 0).toString(),
     );
 
-    await user.click(screen.getByRole('button'));
+    await act(() => user.click(screen.getByRole('button')));
 
     expect(linesUpdateMock).toHaveBeenCalledWith([
       {
@@ -127,7 +127,7 @@ describe('CartLineQuantityAdjustButton', () => {
       (tempCartLine?.quantity ?? 0).toString(),
     );
 
-    await user.click(screen.getByRole('button'));
+    await act(() => user.click(screen.getByRole('button')));
 
     expect(linesRemoveMock).toHaveBeenCalledWith([CART_LINE.id]);
   });
@@ -155,7 +155,7 @@ describe('CartLineQuantityAdjustButton', () => {
       (CART_LINE?.quantity ?? 0).toString(),
     );
 
-    await user.click(screen.getByRole('button'));
+    await act(() => user.click(screen.getByRole('button')));
 
     expect(linesRemoveMock).toHaveBeenCalledWith([CART_LINE.id]);
   });

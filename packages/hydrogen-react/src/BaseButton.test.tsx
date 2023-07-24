@@ -1,5 +1,5 @@
 import {vi, describe, it, expect} from 'vitest';
-import {render, screen} from '@testing-library/react';
+import {render, screen, act} from '@testing-library/react';
 import {BaseButton} from './BaseButton.js';
 import userEvent from '@testing-library/user-event';
 
@@ -23,7 +23,7 @@ describe('<BaseButton/>', () => {
 
       render(<BaseButton onClick={mockOnClick}>Base Button</BaseButton>);
 
-      await user.click(screen.getByRole('button'));
+      await act(() => user.click(screen.getByRole('button')));
 
       expect(mockOnClick).toHaveBeenCalled();
     });
@@ -38,7 +38,7 @@ describe('<BaseButton/>', () => {
         </BaseButton>,
       );
 
-      await user.click(screen.getByRole('button'));
+      await act(() => user.click(screen.getByRole('button')));
 
       expect(mockDefaultOnClick).toHaveBeenCalled();
     });
@@ -59,7 +59,7 @@ describe('<BaseButton/>', () => {
           </BaseButton>,
         );
 
-        await user.click(screen.getByRole('button'));
+        await act(() => user.click(screen.getByRole('button')));
 
         expect(mockOnClick).toHaveBeenCalled();
         expect(mockDefaultOnClick).not.toHaveBeenCalled();
@@ -78,7 +78,7 @@ describe('<BaseButton/>', () => {
           </BaseButton>,
         );
 
-        await user.click(screen.getByRole('button'));
+        await act(() => user.click(screen.getByRole('button')));
 
         expect(mockOnClick).toHaveBeenCalled();
         expect(mockDefaultOnClick).not.toHaveBeenCalled();

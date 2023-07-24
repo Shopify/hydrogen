@@ -1,6 +1,6 @@
 import {vi, describe, it, expect} from 'vitest';
 import {useCart} from './CartProvider.js';
-import {render, screen} from '@testing-library/react';
+import {render, screen, act} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import {BuyNowButton} from './BuyNowButton.js';
 import {getCartWithActionsMock} from './CartProvider.test.helpers.js';
@@ -62,7 +62,7 @@ describe('<BuyNowButton/>', () => {
         </BuyNowButton>,
       );
 
-      await user.click(screen.getByRole('button'));
+      await act(() => user.click(screen.getByRole('button')));
 
       expect(mockCartCreate).toHaveBeenCalledTimes(1);
       expect(mockCartCreate).toHaveBeenCalledWith({
@@ -88,7 +88,7 @@ describe('<BuyNowButton/>', () => {
 
       expect(button).not.toBeDisabled();
 
-      await user.click(button);
+      await act(() => user.click(button));
 
       expect(button).toBeDisabled();
     });
