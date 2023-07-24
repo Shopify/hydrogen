@@ -1,11 +1,12 @@
+import {createRequire} from 'node:module';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+import {readdir} from 'node:fs/promises';
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {fileURLToPath} from 'url';
-import path from 'path';
-import fs from 'fs/promises';
 
 export type {RemixConfig, ServerMode};
 
@@ -48,7 +49,7 @@ export async function getRemixConfig(
     config.watchPaths ??= [];
 
     config.watchPaths.push(
-      ...(await fs.readdir(packagesPath)).map((pkg) =>
+      ...(await readdir(packagesPath)).map((pkg) =>
         pkg === 'hydrogen-react'
           ? path.resolve(packagesPath, pkg, 'dist', 'browser-dev', 'index.mjs')
           : path.resolve(packagesPath, pkg, 'dist', 'development', 'index.js'),
@@ -64,6 +65,12 @@ export async function getRemixConfig(
 }
 
 export function assertOxygenChecks(config: RemixConfig) {
+  try {
+    createRequire(import.meta.url).resolve('@shopify/remix-oxygen');
+  } catch {
+    return;
+  }
+
   if (!config.serverEntryPoint) {
     throw new AbortError(
       'Could not find a server entry point.',
@@ -156,7 +163,6 @@ async function assertEntryFileExists(root: string, fileRelative: string) {
 
   if (!exists) {
     if (!path.extname(fileAbsolute)) {
-      const {readdir} = await import('fs/promises');
       const files = await readdir(path.dirname(fileAbsolute));
       const exists = files.some((file) => {
         const {name, ext} = path.parse(file);
