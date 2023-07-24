@@ -120,7 +120,11 @@ async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
-  const {shop, storefront} = await getConfig(root);
+  const [remixConfig, {shop, storefront}] = await Promise.all([
+    reloadConfig(),
+    getConfig(root),
+  ]);
+
   const fetchRemote = !!shop && !!storefront?.id;
   const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});
 
@@ -165,8 +169,6 @@ async function runDev({
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
   }
-
-  const remixConfig = await reloadConfig();
 
   const fileWatchCache = createFileWatchCache();
   let skipRebuildLogs = false;

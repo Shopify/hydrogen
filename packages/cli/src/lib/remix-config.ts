@@ -1,6 +1,6 @@
 import type {ServerMode} from '@remix-run/dev/dist/config/serverModes.js';
 import type {RemixConfig} from '@remix-run/dev/dist/config.js';
-import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {fileURLToPath} from 'url';
@@ -44,91 +44,7 @@ export async function getRemixConfig(
   };
 
   if (!skipOxygenChecks) {
-    if (!config.serverEntryPoint) {
-      throwConfigError(
-        'Could not find a server entry point.',
-        'Please add a server option to your remix.config.js pointing to an Oxygen worker entry file.',
-      );
-    } else {
-      assertEntryFileExists(config.rootDirectory, config.serverEntryPoint);
-    }
-
-    if (config.serverPlatform !== 'neutral') {
-      throwConfigError(
-        'The serverPlatform in remix.config.js must be "neutral".',
-      );
-    }
-
-    if (config.serverModuleFormat !== 'esm') {
-      throwConfigError(
-        'The serverModuleFormat in remix.config.js must be "esm".',
-      );
-    }
-
-    if (config.serverDependenciesToBundle !== 'all') {
-      throwConfigError(
-        'The serverDependenciesToBundle in remix.config.js must be "all".',
-      );
-    }
-
-    if (!config.serverConditions?.includes('worker')) {
-      throwConfigError(
-        'The serverConditions in remix.config.js must include "worker".',
-      );
-    }
-
-    if (
-      process.env.NODE_ENV === 'development' &&
-      !config.serverConditions?.includes('development')
-    ) {
-      outputWarn(
-        'Add `process.env.NODE_ENV` value to serverConditions in remix.config.js to enable debugging features in development.',
-      );
-    }
-
-    if (
-      !config.serverMainFields ||
-      !oxygenServerMainFields.every(
-        (v, i) => config.serverMainFields?.[i] === v,
-      )
-    ) {
-      throwConfigError(
-        `The serverMainFields in remix.config.js must be ${JSON.stringify(
-          oxygenServerMainFields,
-        )}.`,
-      );
-    }
-
-    const cdnUrl = process.env.HYDROGEN_ASSET_BASE_URL;
-    if (cdnUrl && !config.publicPath.startsWith(cdnUrl)) {
-      throwConfigError(
-        'The publicPath in remix.config.js must be prepended with the value of `process.env.HYDROGEN_ASSET_BASE_URL`.',
-      );
-    }
-
-    const expectedServerBuildPath = path.join(
-      BUILD_DIR,
-      WORKER_SUBDIR,
-      'index.js',
-    );
-    if (
-      config.serverBuildPath !== path.resolve(root, expectedServerBuildPath)
-    ) {
-      throwConfigError(
-        `The serverBuildPath in remix.config.js must be "${expectedServerBuildPath}".`,
-      );
-    }
-
-    const expectedAssetsBuildDirectory = path.join(BUILD_DIR, CLIENT_SUBDIR);
-    if (
-      !config.assetsBuildDirectory.startsWith(
-        path.resolve(root, expectedAssetsBuildDirectory),
-      )
-    ) {
-      throwConfigError(
-        `The assetsBuildDirectory in remix.config.js must be in "${expectedAssetsBuildDirectory}".`,
-      );
-    }
+    assertOxygenChecks(config, root);
   }
 
   if (process.env.LOCAL_DEV) {
@@ -152,21 +68,91 @@ export async function getRemixConfig(
   return config;
 }
 
-function throwConfigError(message: string, tryMessage: string | null = null) {
-  renderFatalError({
-    name: 'ConfigError',
-    type: 0,
-    message,
-    tryMessage,
-  });
+function assertOxygenChecks(config: RemixConfig, root: string) {
+  if (!config.serverEntryPoint) {
+    throw new AbortError(
+      'Could not find a server entry point.',
+      'Please add a server option to your remix.config.js pointing to an Oxygen worker entry file.',
+    );
+  } else {
+    assertEntryFileExists(config.rootDirectory, config.serverEntryPoint);
+  }
 
-  process.exit(1);
+  if (config.serverPlatform !== 'neutral') {
+    throw new AbortError(
+      'The serverPlatform in remix.config.js must be "neutral".',
+    );
+  }
+
+  if (config.serverModuleFormat !== 'esm') {
+    throw new AbortError(
+      'The serverModuleFormat in remix.config.js must be "esm".',
+    );
+  }
+
+  if (config.serverDependenciesToBundle !== 'all') {
+    throw new AbortError(
+      'The serverDependenciesToBundle in remix.config.js must be "all".',
+    );
+  }
+
+  if (!config.serverConditions?.includes('worker')) {
+    throw new AbortError(
+      'The serverConditions in remix.config.js must include "worker".',
+    );
+  }
+
+  if (
+    process.env.NODE_ENV === 'development' &&
+    !config.serverConditions?.includes('development')
+  ) {
+    outputWarn(
+      'Add `process.env.NODE_ENV` value to serverConditions in remix.config.js to enable debugging features in development.',
+    );
+  }
+
+  if (
+    !config.serverMainFields ||
+    !oxygenServerMainFields.every((v, i) => config.serverMainFields?.[i] === v)
+  ) {
+    throw new AbortError(
+      `The serverMainFields in remix.config.js must be ${JSON.stringify(
+        oxygenServerMainFields,
+      )}.`,
+    );
+  }
+
+  const cdnUrl = process.env.HYDROGEN_ASSET_BASE_URL;
+  if (cdnUrl && !config.publicPath.startsWith(cdnUrl)) {
+    throw new AbortError(
+      'The publicPath in remix.config.js must be prepended with the value of `process.env.HYDROGEN_ASSET_BASE_URL`.',
+    );
+  }
+
+  const expectedServerBuildPath = path.join(
+    BUILD_DIR,
+    WORKER_SUBDIR,
+    'index.js',
+  );
+  if (config.serverBuildPath !== path.resolve(root, expectedServerBuildPath)) {
+    throw new AbortError(
+      `The serverBuildPath in remix.config.js must be "${expectedServerBuildPath}".`,
+    );
+  }
+
+  const expectedAssetsBuildDirectory = path.join(BUILD_DIR, CLIENT_SUBDIR);
+  if (
+    !config.assetsBuildDirectory.startsWith(
+      path.resolve(root, expectedAssetsBuildDirectory),
+    )
+  ) {
+    throw new AbortError(
+      `The assetsBuildDirectory in remix.config.js must be in "${expectedAssetsBuildDirectory}".`,
+    );
+  }
 }
 
-export async function assertEntryFileExists(
-  root: string,
-  fileRelative: string,
-) {
+async function assertEntryFileExists(root: string, fileRelative: string) {
   const fileAbsolute = path.resolve(root, fileRelative);
   const exists = await fileExists(fileAbsolute);
 
@@ -182,7 +168,7 @@ export async function assertEntryFileExists(
       if (exists) return;
     }
 
-    throwConfigError(
+    throw new AbortError(
       `Entry file "${fileRelative}" not found.`,
       'Please ensure the file exists and that the path is correctly added to the `server` property in remix.config.js.',
     );
