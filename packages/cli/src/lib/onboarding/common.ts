@@ -63,6 +63,7 @@ import {
   generateRoutes,
   renderRoutePrompt,
 } from '../setups/routes/generate.js';
+import {execAsync} from '../process.js';
 
 export type InitOptions = {
   path?: string;
