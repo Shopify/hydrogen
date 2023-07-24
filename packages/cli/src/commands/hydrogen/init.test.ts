@@ -448,7 +448,7 @@ describe('init', () => {
             git: true,
             language: 'ts',
             styling: 'tailwind',
-            i18n: 'domains',
+            i18n: 'subfolders',
             routes: true,
             installDeps: true,
           });
