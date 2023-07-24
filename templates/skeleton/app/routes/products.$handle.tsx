@@ -60,12 +60,22 @@ export async function loader({params, request, context}: LoaderArgs) {
     throw new Response(null, {status: 404});
   }
 
-  // if no selected variant was returned from the selected options,
-  // we redirect to the first variant's url with it's selected options applied
-  if (!product.selectedVariant) {
-    return redirectToFirstVariant({product, request});
-  }
+  const firstVariant = product.variants.nodes[0];
+  const firstVariantIsDefault = Boolean(
+    firstVariant.selectedOptions.find(
+      (option) => option.name === 'Title' && option.value === 'Default Title',
+    ),
+  );
 
+  if (firstVariantIsDefault) {
+    product.selectedVariant = firstVariant;
+  } else {
+    // if no selected variant was returned from the selected options,
+    // we redirect to the first variant's url with it's selected options applied
+    if (!product.selectedVariant) {
+      return redirectToFirstVariant({product, request});
+    }
+  }
   return defer({product, variants});
 }
 
@@ -80,12 +90,12 @@ function redirectToFirstVariant({
   const firstVariant = product.variants.nodes[0];
 
   throw redirect(
-    getVariantUrl(
-      url.pathname,
-      product.handle,
-      firstVariant.selectedOptions,
-      new URLSearchParams(url.search),
-    ),
+    getVariantUrl({
+      pathname: url.pathname,
+      handle: product.handle,
+      selectedOptions: firstVariant.selectedOptions,
+      searchParams: new URLSearchParams(url.search),
+    }),
     {
       status: 302,
     },
