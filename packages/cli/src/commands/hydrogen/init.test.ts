@@ -2,6 +2,7 @@ import {fileURLToPath} from 'node:url';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
 import {temporaryDirectoryTask} from 'tempy';
 import {runInit} from './init.js';
+import {exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {isDirectory, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {basename, joinPath} from '@shopify/cli-kit/node/path';
@@ -462,12 +463,11 @@ describe('init', () => {
           );
 
           // This will throw if TSC fails
-          const {stdout, stderr} = await execAsync(`npm run typecheck`, {
-            cwd: tmpDir,
-          });
-
-          expect(stdout).toMatch('tsc --noEmit\n');
-          expect(stderr).toBeFalsy();
+          await expect(
+            exec('npm', ['run', 'typecheck'], {
+              cwd: tmpDir,
+            }),
+          ).resolves.not.toThrow();
         });
       });
     });
