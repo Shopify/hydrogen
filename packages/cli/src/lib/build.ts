@@ -1,4 +1,5 @@
 import {fileURLToPath} from 'node:url';
+import path from 'path';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 export const GENERATOR_STARTER_DIR = 'starter';
@@ -24,12 +25,11 @@ export function getAssetDir(feature: AssetDir) {
 }
 
 export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
-  return fileURLToPath(
-    new URL(
-      `${root}/${GENERATOR_APP_DIR}${filepath ? `/${filepath}` : ''}`,
-      import.meta.url,
-    ),
+  const url = new URL(
+    `${root}/${GENERATOR_APP_DIR}${filepath ? `/${filepath}` : ''}`,
+    import.meta.url,
   );
+  return url.protocol === 'file:' ? fileURLToPath(url) : url.toString();
 }
 
 export function getStarterDir() {
