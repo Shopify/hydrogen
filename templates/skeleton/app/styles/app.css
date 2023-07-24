@@ -148,6 +148,7 @@ aside li {
 
 .header-menu-desktop {
   display: none;
+  grid-gap: 1rem;
   @media (min-width: 768px) {
     display: flex;
     grid-gap: 1rem;
@@ -397,7 +398,7 @@ aside li {
 .product-options-grid {
   display: flex;
   flex-wrap: wrap;
-  grid-gap: 0.5rem;
+  grid-gap: 0.75rem;
 }
 
 .product-options-item {
