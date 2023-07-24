@@ -37,11 +37,7 @@ export async function getRemixConfig(
   mode = process.env.NODE_ENV as ServerMode,
 ) {
   const {readConfig} = await import('@remix-run/dev/dist/config.js');
-  const config = (await readConfig(root, mode)) as RemixConfig & {
-    serverConditions?: string[];
-    serverMainFields?: string[];
-    serverDependenciesToBundle?: string;
-  };
+  const config = await readConfig(root, mode);
 
   if (process.env.LOCAL_DEV) {
     // Watch local packages when developing in Hydrogen repo
