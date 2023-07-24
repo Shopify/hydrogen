@@ -63,6 +63,7 @@ import {
   generateRoutes,
   renderRoutePrompt,
 } from '../setups/routes/generate.js';
+import {execAsync} from '../process.js';
 
 export type InitOptions = {
   path?: string;
@@ -76,6 +77,7 @@ export type InitOptions = {
   routes?: boolean;
   shortcut?: boolean;
   installDeps?: boolean;
+  git?: boolean;
 };
 
 export const LANGUAGES = {
@@ -472,6 +474,13 @@ export async function createInitialCommit(directory: string) {
   try {
     await initializeGitRepository(directory);
     await writeFile(joinPath(directory, '.gitignore'), gitIgnoreContent);
+
+    if (process.env.NODE_ENV === 'test' && process.env.CI) {
+      // CI environments don't have a git user configured
+      await execAsync(`git config --global user.name "hydrogen"`);
+      await execAsync(`git config --global user.email "hydrogen@shopify.com"`);
+    }
+
     return commitAll(directory, 'Scaffold Storefront');
   } catch (error: any) {
     // Ignore errors
@@ -697,6 +706,10 @@ export function createAbortHandler(
         error?.tryMessage ?? error?.stack,
       ),
     );
+
+    if (process.env.NODE_ENV === 'test') {
+      console.error(error);
+    }
 
     process.exit(1);
   };

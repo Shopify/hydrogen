@@ -58,6 +58,12 @@ export default class Init extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
       hidden: true,
     }),
+    git: Flags.boolean({
+      description: 'Init Git and create initial commits.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_GIT',
+      default: true,
+      allowNo: true,
+    }),
   };
 
   async run(): Promise<void> {
@@ -90,6 +96,8 @@ export async function runInit(
   options: InitOptions = parseProcessFlags(process.argv, FLAG_MAP),
 ) {
   supressNodeExperimentalWarnings();
+
+  options.git ??= true;
 
   const showUpgrade = await checkHydrogenVersion(
     // Resolving the CLI package from a local directory might fail because
