@@ -155,9 +155,9 @@ describe('init', () => {
         expect(output).toMatch(/Language:\s*TypeScript/);
         expect(output).toMatch('Help');
         expect(output).toMatch('Next steps');
-        console.log({output});
         expect(output).toMatch(
-          /Run `cd .*?&&.*?npm install.*?&&.*?npm run dev`/ims,
+          // Output contains banner characters. USe [^\w]*? to match them.
+          /Run `cd .*? &&[^\w]*?npm[^\w]*?install[^\w]*?&&[^\w]*?npm[^\w]*?run[^\w]*?dev`/ims,
         );
       });
     });
