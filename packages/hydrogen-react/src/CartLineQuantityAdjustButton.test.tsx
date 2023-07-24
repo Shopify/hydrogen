@@ -1,7 +1,7 @@
 import {vi, describe, expect, it} from 'vitest';
 
 import {render, screen} from '@testing-library/react';
-import {useCart, CartProvider} from './CartProvider.js';
+import {useCart} from './CartProvider.js';
 import {
   CART_LINE,
   CART_WITH_LINES_FLATTENED,
@@ -33,9 +33,6 @@ describe('CartLineQuantityAdjustButton', () => {
           Increase
         </CartLineQuantityAdjustButton>
       </Cart>,
-      {
-        wrapper: CartProvider,
-      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
@@ -80,9 +77,6 @@ describe('CartLineQuantityAdjustButton', () => {
           Increase
         </CartLineQuantityAdjustButton>
       </Cart>,
-      {
-        wrapper: CartProvider,
-      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
@@ -127,9 +121,6 @@ describe('CartLineQuantityAdjustButton', () => {
           Increase
         </CartLineQuantityAdjustButton>
       </Cart>,
-      {
-        wrapper: CartProvider,
-      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
@@ -158,9 +149,6 @@ describe('CartLineQuantityAdjustButton', () => {
           Increase
         </CartLineQuantityAdjustButton>
       </Cart>,
-      {
-        wrapper: CartProvider,
-      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
