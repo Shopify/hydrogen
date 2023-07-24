@@ -33,7 +33,6 @@ export function getProjectPaths(appPath?: string, entry?: string) {
 
 export async function getRemixConfig(
   root: string,
-  skipOxygenChecks = false,
   mode = process.env.NODE_ENV as ServerMode,
 ) {
   const {readConfig} = await import('@remix-run/dev/dist/config.js');
@@ -42,10 +41,6 @@ export async function getRemixConfig(
     serverMainFields?: string[];
     serverDependenciesToBundle?: string;
   };
-
-  if (!skipOxygenChecks) {
-    assertOxygenChecks(config, root);
-  }
 
   if (process.env.LOCAL_DEV) {
     // Watch local packages when developing in Hydrogen repo
@@ -68,7 +63,7 @@ export async function getRemixConfig(
   return config;
 }
 
-function assertOxygenChecks(config: RemixConfig, root: string) {
+export function assertOxygenChecks(config: RemixConfig) {
   if (!config.serverEntryPoint) {
     throw new AbortError(
       'Could not find a server entry point.',
@@ -134,7 +129,10 @@ function assertOxygenChecks(config: RemixConfig, root: string) {
     WORKER_SUBDIR,
     'index.js',
   );
-  if (config.serverBuildPath !== path.resolve(root, expectedServerBuildPath)) {
+  if (
+    config.serverBuildPath !==
+    path.resolve(config.rootDirectory, expectedServerBuildPath)
+  ) {
     throw new AbortError(
       `The serverBuildPath in remix.config.js must be "${expectedServerBuildPath}".`,
     );
@@ -143,7 +141,7 @@ function assertOxygenChecks(config: RemixConfig, root: string) {
   const expectedAssetsBuildDirectory = path.join(BUILD_DIR, CLIENT_SUBDIR);
   if (
     !config.assetsBuildDirectory.startsWith(
-      path.resolve(root, expectedAssetsBuildDirectory),
+      path.resolve(config.rootDirectory, expectedAssetsBuildDirectory),
     )
   ) {
     throw new AbortError(

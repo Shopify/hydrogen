@@ -6,6 +6,7 @@ import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
+  assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
   type ServerMode,
@@ -98,6 +99,7 @@ async function runDev({
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
     const config = await getRemixConfig(root);
+
     return disableVirtualRoutes
       ? config
       : addVirtualRoutes(config).catch((error) => {
@@ -124,6 +126,8 @@ async function runDev({
     reloadConfig(),
     getConfig(root),
   ]);
+
+  assertOxygenChecks(remixConfig);
 
   const fetchRemote = !!shop && !!storefront?.id;
   const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});

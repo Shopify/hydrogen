@@ -36,6 +36,6 @@ export default class GenerateRoute extends Command {
 }
 
 async function runCheckRoutes({directory}: {directory: string}) {
-  const remixConfig = await getRemixConfig(directory, true);
+  const remixConfig = await getRemixConfig(directory);
   logMissingRoutes(findMissingRoutes(remixConfig));
 }
