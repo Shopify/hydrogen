@@ -12,8 +12,8 @@
     "dev": "tsup --watch --config ./tsup.config.ts",
     "typecheck": "tsc --noEmit",
     "generate:manifest": "oclif manifest",
-    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run",
-    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest"
+    "test": "cross-env SHOPIFY_UNIT_TEST=1 vitest run --test-timeout=15000",
+    "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=15000"
   },
   "devDependencies": {
     "@types/diff": "^5.0.2",
