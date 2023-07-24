@@ -473,6 +473,14 @@ export async function createInitialCommit(directory: string) {
   try {
     await initializeGitRepository(directory);
     await writeFile(joinPath(directory, '.gitignore'), gitIgnoreContent);
+    console.log({env: process.env.NODE_ENV, ci: process.env.CI});
+
+    if (process.env.NODE_ENV === 'test' && process.env.CI) {
+      // CI environments don't have a git user configured
+      await execAsync(`git config --global user.name "hydrogen"`);
+      await execAsync(`git config --global user.email "hydrogen@shopify.com"`);
+    }
+
     return commitAll(directory, 'Scaffold Storefront');
   } catch (error: any) {
     console.log(error);
@@ -486,12 +494,7 @@ export async function createInitialCommit(directory: string) {
 export async function commitAll(directory: string, message: string) {
   try {
     await addAllToGitFromDirectory(directory);
-    await createGitCommit(message, {
-      directory,
-      author:
-        // CI environments don't have a git user configured
-        process.env.NODE_ENV === 'test' ? 'John Doe <john@doe.org>' : undefined,
-    });
+    await createGitCommit(message, {directory});
   } catch (error: any) {
     console.log(error);
     // Ignore errors
