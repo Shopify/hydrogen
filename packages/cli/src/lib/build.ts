@@ -25,10 +25,11 @@ export function getAssetDir(feature: AssetDir) {
 }
 
 export function getTemplateAppFile(filepath: string, root = getStarterDir()) {
-  const newPath = new URL(path.join(root, GENERATOR_APP_DIR, filepath ?? ''));
-  return newPath.protocol === 'file:'
-    ? fileURLToPath(newPath)
-    : newPath.toString();
+  const url = new URL(
+    `${root}/${GENERATOR_APP_DIR}${filepath ? `/${filepath}` : ''}`,
+    import.meta.url,
+  );
+  return url.protocol === 'file:' ? fileURLToPath(url) : url.toString();
 }
 
 export function getStarterDir() {
