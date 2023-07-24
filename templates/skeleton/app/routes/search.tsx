@@ -74,7 +74,7 @@ const SEARCH_QUERY = `#graphql
       nodes {
         id
         image {
-          url(transform: {maxWidth: 400, crop: CENTER})
+          url
           altText
           width
           height

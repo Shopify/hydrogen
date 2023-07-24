@@ -127,7 +127,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     featuredImage {
       id
       altText
-      url(transform: {maxWidth: 800, maxHeight: 800, crop: CENTER})
+      url
       width
       height
     }
