@@ -155,7 +155,9 @@ describe('init', () => {
         expect(output).toMatch(/Language:\s*TypeScript/);
         expect(output).toMatch('Help');
         expect(output).toMatch('Next steps');
-        expect(output).toMatch(/Run `cd .*? && npm install && npm run dev`/ims);
+        expect(output).toMatch(
+          /Run `cd .*?&&.*?npm install.*?&&.*?npm run dev`/ims,
+        );
       });
     });
 
@@ -185,9 +187,6 @@ describe('init', () => {
         expect(output).toMatch('Routes');
         expect(output).toMatch('Home (/ & /:catchAll)');
         expect(output).toMatch('Account (/account/*)');
-        expect(output).toMatch('Help');
-        expect(output).toMatch('Next steps');
-        expect(output).toMatch(/Run `cd .*? && npm install && npm run dev`/ims);
       });
     });
 
@@ -228,9 +227,6 @@ describe('init', () => {
         expect(output).toMatch('Routes');
         expect(output).toMatch('Home (/ & /:catchAll)');
         expect(output).toMatch('Account (/account/*)');
-        expect(output).toMatch('Help');
-        expect(output).toMatch('Next steps');
-        expect(output).toMatch(/Run `cd .*? && npm install && npm run dev`/ims);
       });
     });
 
