@@ -486,7 +486,12 @@ export async function createInitialCommit(directory: string) {
 export async function commitAll(directory: string, message: string) {
   try {
     await addAllToGitFromDirectory(directory);
-    await createGitCommit(message, {directory});
+    await createGitCommit(message, {
+      directory,
+      author:
+        // CI environments don't have a git user configured
+        process.env.NODE_ENV === 'test' ? 'John Doe <john@doe.org>' : undefined,
+    });
   } catch (error: any) {
     console.log(error);
     // Ignore errors
