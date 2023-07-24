@@ -1,6 +1,6 @@
 import {vi, describe, it, expect} from 'vitest';
 import {CartProvider} from './CartProvider.js';
-import {render, screen, waitFor} from '@testing-library/react';
+import {render, screen, waitFor, act} from '@testing-library/react';
 import {ProductProvider} from './ProductProvider.js';
 import {AddToCartButton} from './AddToCartButton.js';
 import {getProduct, getVariant} from './ProductProvider.test.helpers.js';
@@ -83,7 +83,7 @@ describe('<AddToCartButton/>', () => {
         </MockWrapper>,
       );
 
-      await user.click(screen.getByRole('button'));
+      await act(() => user.click(screen.getByRole('button')));
 
       expect(mockLinesAdd).toHaveBeenCalledTimes(1);
       expect(mockLinesAdd).toHaveBeenCalledWith([
@@ -107,7 +107,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        await user.click(screen.getByRole('button'));
+        await act(() => user.click(screen.getByRole('button')));
 
         expect(mockLinesAdd).toHaveBeenCalledTimes(1);
         expect(mockLinesAdd).toHaveBeenCalledWith([
@@ -138,7 +138,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        await user.click(screen.getByRole('button'));
+        await act(() => user.click(screen.getByRole('button')));
 
         expect(mockLinesAdd).toHaveBeenCalledTimes(1);
         expect(mockLinesAdd).toHaveBeenCalledWith([
@@ -173,7 +173,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        await user.click(screen.getByRole('button'));
+        await act(() => user.click(screen.getByRole('button')));
 
         await waitFor(() => {
           expect(screen.getByRole('button')).toBeDisabled();
@@ -194,7 +194,7 @@ describe('<AddToCartButton/>', () => {
           </MockWrapper>,
         );
 
-        await user.click(screen.getByRole('button'));
+        await act(() => user.click(screen.getByRole('button')));
 
         await waitFor(() => {
           expect(screen.getByRole('alert')).toHaveTextContent(

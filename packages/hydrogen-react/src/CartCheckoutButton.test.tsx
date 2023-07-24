@@ -1,5 +1,5 @@
 import {vi, afterEach, describe, it, expect} from 'vitest';
-import {render, screen} from '@testing-library/react';
+import {render, screen, act} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 import {CartCheckoutButton} from './CartCheckoutButton.js';
@@ -30,7 +30,7 @@ describe('<CartCheckoutButton/>', () => {
       },
     });
 
-    await user.click(screen.getByRole('button'));
+    await act(() => user.click(screen.getByRole('button')));
 
     expect(window.location.href).toBe(checkoutUrl);
   });

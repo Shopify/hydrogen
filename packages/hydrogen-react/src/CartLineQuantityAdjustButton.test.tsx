@@ -1,7 +1,7 @@
 import {vi, describe, expect, it} from 'vitest';
 
-import {render, screen} from '@testing-library/react';
-import {useCart, CartProvider} from './CartProvider.js';
+import {render, screen, act} from '@testing-library/react';
+import {useCart} from './CartProvider.js';
 import {
   CART_LINE,
   CART_WITH_LINES_FLATTENED,
@@ -33,16 +33,13 @@ describe('CartLineQuantityAdjustButton', () => {
           Increase
         </CartLineQuantityAdjustButton>
       </Cart>,
-      {
-        wrapper: CartProvider,
-      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
       (CART_LINE?.quantity ?? 0).toString(),
     );
 
-    await user.click(screen.getByRole('button'));
+    await act(() => user.click(screen.getByRole('button')));
 
     expect(linesUpdateMock).toHaveBeenCalledWith([
       {
@@ -80,16 +77,13 @@ describe('CartLineQuantityAdjustButton', () => {
           Increase
         </CartLineQuantityAdjustButton>
       </Cart>,
-      {
-        wrapper: CartProvider,
-      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
       (tempCartLine?.quantity ?? 0).toString(),
     );
 
-    await user.click(screen.getByRole('button'));
+    await act(() => user.click(screen.getByRole('button')));
 
     expect(linesUpdateMock).toHaveBeenCalledWith([
       {
@@ -127,16 +121,13 @@ describe('CartLineQuantityAdjustButton', () => {
           Increase
         </CartLineQuantityAdjustButton>
       </Cart>,
-      {
-        wrapper: CartProvider,
-      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
       (tempCartLine?.quantity ?? 0).toString(),
     );
 
-    await user.click(screen.getByRole('button'));
+    await act(() => user.click(screen.getByRole('button')));
 
     expect(linesRemoveMock).toHaveBeenCalledWith([CART_LINE.id]);
   });
@@ -158,16 +149,13 @@ describe('CartLineQuantityAdjustButton', () => {
           Increase
         </CartLineQuantityAdjustButton>
       </Cart>,
-      {
-        wrapper: CartProvider,
-      },
     );
 
     expect(screen.getByTestId(QUANTITY_TEST_ID)).toHaveTextContent(
       (CART_LINE?.quantity ?? 0).toString(),
     );
 
-    await user.click(screen.getByRole('button'));
+    await act(() => user.click(screen.getByRole('button')));
 
     expect(linesRemoveMock).toHaveBeenCalledWith([CART_LINE.id]);
   });
