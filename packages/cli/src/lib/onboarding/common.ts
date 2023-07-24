@@ -76,6 +76,7 @@ export type InitOptions = {
   routes?: boolean;
   shortcut?: boolean;
   installDeps?: boolean;
+  git?: boolean;
 };
 
 export const LANGUAGES = {
@@ -697,6 +698,10 @@ export function createAbortHandler(
         error?.tryMessage ?? error?.stack,
       ),
     );
+
+    if (process.env.NODE_ENV === 'test') {
+      console.error(error);
+    }
 
     process.exit(1);
   };
