@@ -1,4 +1,3 @@
-import {removeFile} from '@shopify/cli-kit/node/fs';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {canWriteFiles, copyAssets, mergePackageJson} from './assets.js';
@@ -46,25 +45,13 @@ export async function setupTailwind(
           tailwind: true,
           postcss: true,
         }),
-        replaceRootLinks(
-          appDirectory,
-          formatConfig,
-          {
-            name: 'tailwindCss',
-            path: tailwindCssPath,
-            isDefault: true,
-          },
-          (content) =>
-            content
-              .replace(/^import\s*?resetStyles from ['"][^'"]+?['"];\n/ims, '')
-              .replace(
-                /^\s*?\{\s*?rel:\s*?['"]stylesheet['"],\s*?href:\s*?resetStyles\s*?\},\n/ims,
-                '',
-              ),
-        ),
+        replaceRootLinks(appDirectory, formatConfig, {
+          name: 'tailwindCss',
+          path: tailwindCssPath,
+          isDefault: true,
+        }),
       ]),
     ),
-    removeFile(joinPath(appDirectory, 'styles', 'reset.css')).catch(() => {}),
   ]);
 
   return {
