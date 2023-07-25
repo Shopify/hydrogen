@@ -325,7 +325,8 @@ describe('generate/route', () => {
           ['utils/index.ts', `export {stuff} from './stuff';\n`],
           ['utils/stuff.ts', `export const stuff = '';\n`],
           ['something.server.ts', `export const serverOnly = '';\n`],
-          ['styles/app.css', `.red{color:red;}`],
+          ['styles/app.css', `@import "./reset.css";\n.red{color:red;}\n`],
+          ['styles/reset.css', `body{color:black;}\n`],
         ];
 
         const directories = await createHydrogenFixture(tmpDir, {templates});
@@ -345,8 +346,11 @@ describe('generate/route', () => {
               file.replace('.ts', '.js'),
             );
 
-            await expect(fileExists(actualFile)).resolves.toBeTruthy();
-            await expect(readFile(actualFile)).resolves.toEqual(
+            await expect(
+              fileExists(actualFile),
+              actualFile,
+            ).resolves.toBeTruthy();
+            await expect(readFile(actualFile), actualFile).resolves.toEqual(
               content.replace(/\{\n+/, '{'),
             );
           }),
