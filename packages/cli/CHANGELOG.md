@@ -1,6 +1,6 @@
 # @shopify/cli-hydrogen
 
-## 6.0.0
+## 5.1.0
 
 ### Major Changes
 
