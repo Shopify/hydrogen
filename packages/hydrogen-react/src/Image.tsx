@@ -10,9 +10,13 @@ import type {Image as ImageType} from './storefront-api-types.js';
  * default srcSet generation behaviour
  */
 type SrcSetOptions = {
+  /** The number of sizes to generate */
   intervals: number;
+  /** The smallest image size */
   startingWidth: number;
+  /** The increment by which to increase for each size, in pixels */
   incrementSize: number;
+  /** The size used for placeholder fallback images */
   placeholderWidth: number;
 };
 
