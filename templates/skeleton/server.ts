@@ -151,6 +151,10 @@ export class HydrogenSession {
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/queries/cart
 const CART_QUERY_FRAGMENT = `#graphql
+  fragment Money on MoneyV2 {
+    currencyCode
+    amount
+  }
   fragment CartLine on CartLine {
     id
     quantity
@@ -182,7 +186,12 @@ const CART_QUERY_FRAGMENT = `#graphql
         requiresShipping
         title
         image {
-          ...Image
+          id
+          url
+          altText
+          width
+          height
+
         }
         product {
           handle
@@ -196,7 +205,6 @@ const CART_QUERY_FRAGMENT = `#graphql
       }
     }
   }
-
   fragment CartApiQuery on Cart {
     id
     checkoutUrl
@@ -241,18 +249,5 @@ const CART_QUERY_FRAGMENT = `#graphql
       code
       applicable
     }
-  }
-
-  fragment Money on MoneyV2 {
-    currencyCode
-    amount
-  }
-
-  fragment Image on Image {
-    id
-    url
-    altText
-    width
-    height
   }
 ` as const;

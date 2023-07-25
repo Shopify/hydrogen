@@ -58,10 +58,11 @@ export default function Article() {
 // NOTE: https://shopify.dev/docs/api/storefront/latest/objects/blog#field-blog-articlebyhandle
 const ARTICLE_QUERY = `#graphql
   query Article(
-    $language: LanguageCode
-    $blogHandle: String!
     $articleHandle: String!
-  ) @inContext(language: $language) {
+    $blogHandle: String!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(language: $language, country: $country) {
     blog(handle: $blogHandle) {
       articleByHandle(handle: $articleHandle) {
         title

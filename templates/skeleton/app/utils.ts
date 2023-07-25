@@ -9,21 +9,26 @@ export function useVariantUrl(
   const {pathname} = useLocation();
 
   return useMemo(() => {
-    return getVariantUrl(
-      pathname,
+    return getVariantUrl({
       handle,
+      pathname,
+      searchParams: new URLSearchParams(),
       selectedOptions,
-      new URLSearchParams(),
-    );
+    });
   }, [handle, selectedOptions, pathname]);
 }
 
-export function getVariantUrl(
-  pathname: string,
-  handle: string,
-  selectedOptions: SelectedOption[],
-  searchParams: URLSearchParams,
-) {
+export function getVariantUrl({
+  handle,
+  pathname,
+  searchParams,
+  selectedOptions,
+}: {
+  handle: string;
+  pathname: string;
+  searchParams: URLSearchParams;
+  selectedOptions: SelectedOption[];
+}) {
   const match = /(\/[a-zA-Z]{2}-[a-zA-Z]{2}\/)/g.exec(pathname);
   const isLocalePathname = match && match.length > 0;
 

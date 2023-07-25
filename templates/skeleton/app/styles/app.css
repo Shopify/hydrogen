@@ -8,6 +8,10 @@
   --color-light: #fff;
 }
 
+img {
+  border-radius: 4px;
+}
+
 /*
 * --------------------------------------------------
 * components/Aside
@@ -135,7 +139,7 @@ aside li {
 }
 
 .header-menu-mobile-toggle {
-  @media (min-width: 768px) {
+  @media (min-width: 48em) {
     display: none;
   }
 }
@@ -148,7 +152,8 @@ aside li {
 
 .header-menu-desktop {
   display: none;
-  @media (min-width: 768px) {
+  grid-gap: 1rem;
+  @media (min-width: 45em) {
     display: flex;
     grid-gap: 1rem;
     margin-left: 3rem;
@@ -281,6 +286,7 @@ aside li {
 
 .predictive-search-result-item a img {
   margin-right: 0.75rem;
+  height: 100%;
 }
 
 .search-result {
@@ -302,13 +308,30 @@ aside li {
   position: relative;
 }
 
+.featured-collection-image {
+  aspect-ratio: 1 / 1;
+  @media (min-width: 45em) {
+    aspect-ratio: 16 / 9;
+  }
+}
+
+.featured-collection img {
+  height: auto;
+  max-height: 100%;
+  object-fit: cover;
+}
+
 .recommended-products-grid {
   display: grid;
   grid-gap: 1.5rem;
   grid-template-columns: repeat(2, 1fr);
-  @media (min-width: 768px) {
+  @media (min-width: 45em) {
     grid-template-columns: repeat(4, 1fr);
   }
+}
+
+.recommended-product img {
+  height: auto;
 }
 
 /*
@@ -335,7 +358,7 @@ aside li {
 .collection-description {
   margin-bottom: 1rem;
   max-width: 95%;
-  @media (min-width: 768px) {
+  @media (min-width: 45em) {
     max-width: 600px;
   }
 }
@@ -359,7 +382,7 @@ aside li {
 */
 .product {
   display: grid;
-  @media (min-width: 768px) {
+  @media (min-width: 45em) {
     grid-template-columns: 1fr 1fr;
     grid-gap: 4rem;
   }
@@ -397,7 +420,7 @@ aside li {
 .product-options-grid {
   display: flex;
   flex-wrap: wrap;
-  grid-gap: 0.5rem;
+  grid-gap: 0.75rem;
 }
 
 .product-options-item {
@@ -421,6 +444,10 @@ aside li {
   display: block;
 }
 
+.blog-article-image img {
+  height: 100%;
+}
+
 /*
 * --------------------------------------------------
 * routes/blog.$articlehandle.tsx
@@ -429,4 +456,18 @@ aside li {
 .article img {
   height: auto;
   width: 100%;
+}
+
+/*
+* --------------------------------------------------
+* routes/account
+* --------------------------------------------------
+*/
+.account-profile-marketing {
+  display: flex;
+  align-items: center;
+}
+
+.account-logout {
+  display: inline-block;
 }

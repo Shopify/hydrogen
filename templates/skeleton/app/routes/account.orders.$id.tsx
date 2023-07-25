@@ -231,7 +231,7 @@ const CUSTOMER_ORDER_QUERY = `#graphql
     image {
       altText
       height
-      url(transform: {crop: CENTER, maxHeight: 96, maxWidth: 96, scale: 2})
+      url
       id
       width
     }
@@ -295,7 +295,6 @@ const CUSTOMER_ORDER_QUERY = `#graphql
       }
     }
   }
-
   query Order(
     $country: CountryCode
     $language: LanguageCode
