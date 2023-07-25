@@ -153,7 +153,7 @@ aside li {
 .header-menu-desktop {
   display: none;
   grid-gap: 1rem;
-  @media (min-width: 30em) {
+  @media (min-width: 45em) {
     display: flex;
     grid-gap: 1rem;
     margin-left: 3rem;
@@ -306,6 +306,13 @@ aside li {
   display: block;
   margin-bottom: 2rem;
   position: relative;
+}
+
+.featured-collection-image {
+  aspect-ratio: 1 / 1;
+  @media (min-width: 45em) {
+    aspect-ratio: 16 / 9;
+  }
 }
 
 .featured-collection img {
