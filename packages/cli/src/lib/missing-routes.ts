@@ -5,7 +5,7 @@ import type {RemixConfig} from './config.js';
 const REQUIRED_ROUTES = [
   '',
   'cart',
-  'products',
+  // 'products',
   'products/:productHandle',
 
   'collections',
@@ -26,7 +26,7 @@ const REQUIRED_ROUTES = [
   //   'variants/:variantId',
   'search',
   //   'gift_cards/:storeId/:cardId',
-  'discount/:discountCode',
+  // 'discount/:discountCode', => Handled in storefrontRedirect
 
   'account',
   'account/login',
