@@ -8,6 +8,10 @@
   --color-light: #fff;
 }
 
+img {
+  border-radius: 4px;
+}
+
 /*
 * --------------------------------------------------
 * components/Aside
