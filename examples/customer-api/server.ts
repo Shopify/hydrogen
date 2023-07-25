@@ -75,6 +75,8 @@ export default {
         return storefrontRedirect({request, response, storefront});
       }
 
+      response.headers.set('Set-Cookie', await session.commit());
+
       return response;
     } catch (error) {
       // eslint-disable-next-line no-console

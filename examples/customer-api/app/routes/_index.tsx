@@ -2,7 +2,7 @@ import {Form, useLoaderData, useRouteError} from '@remix-run/react';
 import {type LoaderArgs, json} from '@shopify/remix-oxygen';
 
 export async function loader({request, context}: LoaderArgs) {
-  if (context.customer.isLoggedIn()) {
+  if (await context.customer.isLoggedIn()) {
     const user = await context.customer.query(`
       {
         personalAccount {
@@ -12,9 +12,9 @@ export async function loader({request, context}: LoaderArgs) {
       }
       `);
 
-    return {
+    return json({
       user,
-    };
+    });
   }
   return json({user: null});
 }

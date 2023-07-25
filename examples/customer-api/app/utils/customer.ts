@@ -1,10 +1,13 @@
 import {LoaderArgs, redirect} from '@shopify/remix-oxygen';
 import {HydrogenSession} from 'server';
 
+const userAgent =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36';
+
 export type CustomerClient = {
   logout: () => Promise<Response>;
   authorize: (redirectPath?: string) => Promise<Response>;
-  isLoggedIn: () => boolean;
+  isLoggedIn: () => Promise<boolean>;
   login: () => Promise<Response>;
   query: (
     query: string,
@@ -55,26 +58,59 @@ export function createCustomerClient({
       });
     },
     logout: async () => {
-      session.unset('customer_access_token');
+      const idToken = session.get('id_token');
+
+      session.unset('code-verifier');
       session.unset('customer_authorization_code_token');
-      session.unset('expires_in');
+      session.unset('expires_at');
       session.unset('id_token');
       session.unset('refresh_token');
-      return redirect(`${customerAccountUrl}/auth/logout`, {
-        status: 302,
+      session.unset('customer_access_token');
 
-        headers: {
-          'Set-Cookie': await session.commit(),
+      return redirect(
+        `${customerAccountUrl}/auth/logout?id_token_hint=${idToken}`,
+        {
+          status: 302,
+
+          headers: {
+            'Set-Cookie': await session.commit(),
+          },
         },
-      });
+      );
     },
-    isLoggedIn: () => {
-      return Boolean(session.get('customer_access_token'));
+    isLoggedIn: async () => {
+      if (!session.get('customer_access_token')) return false;
+
+      if (session.get('expires_at') < new Date().getTime()) {
+        try {
+          await refreshToken(
+            request,
+            session,
+            customerAccountId,
+            customerAccountUrl,
+            origin,
+          );
+
+          return true;
+        } catch (error) {
+          if (error && (error as Response).status !== 401) {
+            throw error;
+          }
+        }
+      } else {
+        return true;
+      }
+
+      session.unset('code-verifier');
+      session.unset('customer_authorization_code_token');
+      session.unset('expires_at');
+      session.unset('id_token');
+      session.unset('refresh_token');
+      session.unset('customer_access_token');
+
+      return false;
     },
     query: async (query: string, variables?: any) => {
-      const userAgent =
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36';
-
       return await fetch(
         `${customerAccountUrl}/account/customer/api/${customerApiVersion}/graphql`,
         {
@@ -122,9 +158,6 @@ export function createCustomerClient({
       const codeVerifier = session.get('code-verifier');
       body.append('code_verifier', codeVerifier);
 
-      const userAgent =
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36';
-
       const headers = {
         'content-type': 'application/x-www-form-urlencoded',
         'User-Agent': userAgent,
@@ -157,7 +190,10 @@ export function createCustomerClient({
         await response.json<AccessTokenResponse>();
 
       session.set('customer_authorization_code_token', access_token);
-      session.set('expires_in', expires_in);
+      session.set(
+        'expires_at',
+        new Date(new Date().getTime() + (expires_in - 120) * 1000).getTime(),
+      );
       session.set('id_token', id_token);
       session.set('refresh_token', refresh_token);
 
@@ -202,9 +238,6 @@ async function exchangeAccessToken(
   );
   body.append('scopes', 'https://api.customers.com/auth/customer.graphql');
 
-  const userAgent =
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/96.0.4664.93 Safari/537.36';
-
   const headers = {
     'content-type': 'application/x-www-form-urlencoded',
     'User-Agent': userAgent,
@@ -230,13 +263,77 @@ async function exchangeAccessToken(
   }
   return data.access_token;
 }
+async function refreshToken(
+  request: Request,
+  session: HydrogenSession,
+  customerAccountId: string,
+  customerAccountUrl: string,
+  origin: string,
+) {
+  const newBody = new URLSearchParams();
 
-export async function generateCodeVerifier() {
+  newBody.append('grant_type', 'refresh_token');
+  newBody.append('refresh_token', session.get('refresh_token'));
+  newBody.append('client_id', customerAccountId);
+
+  const headers = {
+    'content-type': 'application/x-www-form-urlencoded',
+    'User-Agent': userAgent,
+    Origin: origin,
+  };
+
+  const response = await fetch(`${customerAccountUrl}/auth/oauth/token`, {
+    method: 'POST',
+    headers,
+    body: newBody,
+  });
+
+  interface AccessTokenResponse {
+    access_token: string;
+    expires_in: number;
+    id_token: string;
+    refresh_token: string;
+  }
+
+  if (!response.ok) {
+    const text = await response.text();
+    throw new Response(text, {
+      status: response.status,
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+      },
+    });
+  }
+
+  const {access_token, expires_in, id_token, refresh_token} =
+    await response.json<AccessTokenResponse>();
+
+  session.set('customer_authorization_code_token', access_token);
+  // Store the date in future the token expires, separated by two minutes
+  session.set(
+    'expires_at',
+    new Date(new Date().getTime() + (expires_in - 120) * 1000).getTime(),
+  );
+  session.set('id_token', id_token);
+  session.set('refresh_token', refresh_token);
+
+  const customerAccessToken = await exchangeAccessToken(
+    request,
+    session,
+    customerAccountId,
+    customerAccountUrl,
+    origin,
+  );
+
+  session.set('customer_access_token', customerAccessToken);
+}
+
+async function generateCodeVerifier() {
   const rando = generateRandomCode();
   return base64UrlEncode(rando);
 }
 
-export async function generateCodeChallenge(codeVerifier: string) {
+async function generateCodeChallenge(codeVerifier: string) {
   const digestOp = await crypto.subtle.digest(
     {name: 'SHA-256'},
     new TextEncoder().encode(codeVerifier),
