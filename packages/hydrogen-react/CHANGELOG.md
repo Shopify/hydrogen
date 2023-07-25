@@ -2,6 +2,12 @@
 
 ## 2023.7.0
 
+## What’s new
+
+⭐️ Check out our [blog post](https://hydrogen.shopify.dev/updates) with all the latest updates on Hydrogen, and what’s coming on the roadmap.
+
+This major release includes support for the [2023-07 version](https://shopify.dev/docs/api/release-notes/2023-07#graphql-storefront-api-changes) of the Storefront API. This version doesn't include any breaking changes, but adds support for predictive search and local pickup options.
+
 ### Patch Changes
 
 - Export useLoadScript ([#1080](https://github.com/Shopify/hydrogen/pull/1080)) by [@wizardlyhel](https://github.com/wizardlyhel)
