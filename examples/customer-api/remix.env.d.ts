@@ -4,7 +4,7 @@
 
 import type {Storefront} from '@shopify/hydrogen';
 import type {HydrogenSession} from './server';
-import type {CustomerClient} from '~/utils/customer';
+import type {CustomerClient} from '~/utils/customer.server';
 
 declare global {
   /**

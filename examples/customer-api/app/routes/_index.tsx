@@ -1,7 +1,7 @@
 import {Form, useLoaderData, useRouteError} from '@remix-run/react';
 import {type LoaderArgs, json} from '@shopify/remix-oxygen';
 
-export async function loader({request, context}: LoaderArgs) {
+export async function loader({context}: LoaderArgs) {
   if (await context.customer.isLoggedIn()) {
     const user = await context.customer.query(`
       {
@@ -62,20 +62,4 @@ export default function () {
       ) : null}
     </div>
   );
-}
-
-async function queryCustomerAccounts(query: string) {
-  const {data} = await fetch('https://graphql.myshopify.com/api/graphql', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Shopify-Storefront-Access-Token':
-        context.env.PUBLIC_STOREFRONT_ACCESS_TOKEN,
-    },
-    body: JSON.stringify({
-      query,
-    }),
-  }).then((response) => response.json());
-
-  return data;
 }

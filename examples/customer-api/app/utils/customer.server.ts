@@ -1,4 +1,4 @@
-import {LoaderArgs, redirect} from '@shopify/remix-oxygen';
+import {redirect} from '@shopify/remix-oxygen';
 import {HydrogenSession} from 'server';
 
 const userAgent =

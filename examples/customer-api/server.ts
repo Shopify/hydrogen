@@ -8,7 +8,7 @@ import {
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
-import {createCustomerClient} from '~/utils/customer';
+import {createCustomerClient} from '~/utils/customer.server';
 
 /**
  * Export a fetch handler in module format.
@@ -47,6 +47,9 @@ export default {
         storefrontHeaders: getStorefrontHeaders(request),
       });
 
+      /**
+       * Create a customer client for the new customer API.
+       */
       const customer = createCustomerClient({
         request,
         session,
