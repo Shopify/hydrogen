@@ -1,5 +1,5 @@
 ---
-'@shopify/hydrogen': patch
+'@shopify/hydrogen': major
 ---
 
 `createWithCache` is now stable. All imports need to be updated:
