@@ -95,7 +95,7 @@ export async function setupRemoteTemplate(
 
   if (shouldInstallDeps) {
     tasks.push({
-      title: 'Installing dependencies',
+      title: 'Installing dependencies. This could take a few minutes',
       task: async () => {
         try {
           await installDeps();

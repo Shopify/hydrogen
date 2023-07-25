@@ -228,7 +228,7 @@ export async function setupLocalStarterTemplate(
     });
 
     tasks.push({
-      title: 'Installing dependencies',
+      title: 'Installing dependencies. This could take a few minutes',
       task: async () => {
         await installingDepsPromise;
       },
