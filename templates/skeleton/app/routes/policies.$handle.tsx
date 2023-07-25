@@ -69,7 +69,7 @@ const POLICY_CONTENT_QUERY = `#graphql
     url
   }
   query Policy(
-    $country: CountryCode!
+    $country: CountryCode
     $language: LanguageCode
     $privacyPolicy: Boolean!
     $refundPolicy: Boolean!
