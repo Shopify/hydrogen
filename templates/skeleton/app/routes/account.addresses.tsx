@@ -473,7 +473,9 @@ const UPDATE_ADDRESS_MUTATION = `#graphql
     $address: MailingAddressInput!
     $customerAccessToken: String!
     $id: ID!
-  ) {
+    $country: CountryCode
+    $language: LanguageCode
+ ) @inContext(country: $country, language: $language) {
     customerAddressUpdate(
       address: $address
       customerAccessToken: $customerAccessToken
@@ -493,7 +495,12 @@ const UPDATE_ADDRESS_MUTATION = `#graphql
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customerAddressDelete
 const DELETE_ADDRESS_MUTATION = `#graphql
-  mutation customerAddressDelete($customerAccessToken: String!, $id: ID!) {
+  mutation customerAddressDelete(
+    $customerAccessToken: String!,
+    $id: ID!,
+    $country: CountryCode,
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     customerAddressDelete(customerAccessToken: $customerAccessToken, id: $id) {
       customerUserErrors {
         code
@@ -510,7 +517,9 @@ const UPDATE_DEFAULT_ADDRESS_MUTATION = `#graphql
   mutation customerDefaultAddressUpdate(
     $addressId: ID!
     $customerAccessToken: String!
-  ) {
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     customerDefaultAddressUpdate(
       addressId: $addressId
       customerAccessToken: $customerAccessToken
@@ -534,7 +543,9 @@ const CREATE_ADDRESS_MUTATION = `#graphql
   mutation customerAddressCreate(
     $address: MailingAddressInput!
     $customerAccessToken: String!
-  ) {
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     customerAddressCreate(
       address: $address
       customerAccessToken: $customerAccessToken

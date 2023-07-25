@@ -179,19 +179,18 @@ export const CUSTOMER_FRAGMENT = `#graphql
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/queries/customer
 const CUSTOMER_ORDERS_QUERY = `#graphql
+  ${CUSTOMER_FRAGMENT}
   query CustomerOrders(
-    $customerAccessToken: String!
     $country: CountryCode
-    $language: LanguageCode
+    $customerAccessToken: String!
+    $endCursor: String
     $first: Int
+    $language: LanguageCode
     $last: Int
     $startCursor: String
-    $endCursor: String
   ) @inContext(country: $country, language: $language) {
     customer(customerAccessToken: $customerAccessToken) {
       ...CustomerOrders
     }
   }
-
-  ${CUSTOMER_FRAGMENT}
 ` as const;

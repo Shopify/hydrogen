@@ -115,7 +115,12 @@ export default function Reset() {
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customerreset
 const CUSTOMER_RESET_MUTATION = `#graphql
-  mutation customerReset($id: ID!, $input: CustomerResetInput!) {
+  mutation customerReset(
+    $id: ID!,
+    $input: CustomerResetInput!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     customerReset(id: $id, input: $input) {
       customerAccessToken {
         accessToken

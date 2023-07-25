@@ -5,9 +5,8 @@ import {
   Form,
   type FormProps,
 } from '@remix-run/react';
-import {Pagination} from '@shopify/hydrogen';
+import {Image, Money, Pagination} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
-import {Image, Money} from '@shopify/hydrogen-react';
 import {useFetchers} from '@remix-run/react';
 
 import type {
@@ -142,6 +141,8 @@ export function SearchResults({
               />
             ) : null;
           }
+
+          return null;
         })}
     </div>
   );
@@ -395,7 +396,6 @@ function SearchResultItem({goToSearchResult, item}: SearchResultItemProps) {
             src={item.image.url}
             width={50}
             height={50}
-            style={{height: '100%'}}
           />
         )}
         <div>

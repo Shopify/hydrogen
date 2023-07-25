@@ -62,12 +62,13 @@ export default function Blogs() {
 // NOTE: https://shopify.dev/docs/api/storefront/latest/objects/blog
 const BLOGS_QUERY = `#graphql
   query Blogs(
-    $language: LanguageCode
+    $country: CountryCode
+    $endCursor: String
     $first: Int
+    $language: LanguageCode
     $last: Int
     $startCursor: String
-    $endCursor: String
-  ) @inContext(language: $language) {
+  ) @inContext(country: $country, language: $language) {
     blogs(
       first: $first,
       last: $last,

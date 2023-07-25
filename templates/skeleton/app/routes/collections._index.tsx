@@ -79,7 +79,7 @@ function CollectionItem({
   );
 }
 
-const COLLECTION_FRAGMENT = `#graphql
+const COLLECTIONS_QUERY = `#graphql
   fragment Collection on Collection {
     id
     title
@@ -92,16 +92,13 @@ const COLLECTION_FRAGMENT = `#graphql
       height
     }
   }
-` as const;
-
-const COLLECTIONS_QUERY = `#graphql
   query StoreCollections(
     $country: CountryCode
-    $language: LanguageCode
+    $endCursor: String
     $first: Int
+    $language: LanguageCode
     $last: Int
     $startCursor: String
-    $endCursor: String
   ) @inContext(country: $country, language: $language) {
     collections(
       first: $first,
@@ -120,5 +117,4 @@ const COLLECTIONS_QUERY = `#graphql
       }
     }
   }
-  ${COLLECTION_FRAGMENT}
 ` as const;

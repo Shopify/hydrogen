@@ -108,7 +108,11 @@ export default function Recover() {
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customerrecover
 const CUSTOMER_RECOVER_MUTATION = `#graphql
-  mutation customerRecover($email: String!) {
+  mutation customerRecover(
+    $email: String!,
+    $country: CountryCode,
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     customerRecover(email: $email) {
       customerUserErrors {
         code

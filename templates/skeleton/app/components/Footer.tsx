@@ -1,4 +1,4 @@
-import {useMatches, Link} from '@remix-run/react';
+import {useMatches, NavLink} from '@remix-run/react';
 import type {FooterQuery} from 'storefrontapi.generated';
 
 export function Footer({menu}: FooterQuery) {
@@ -28,9 +28,15 @@ function FooterMenu({menu}: Pick<FooterQuery, 'menu'>) {
             {item.title}
           </a>
         ) : (
-          <Link key={item.id} prefetch="intent" to={url}>
+          <NavLink
+            end
+            key={item.id}
+            prefetch="intent"
+            style={activeLinkStyle}
+            to={url}
+          >
             {item.title}
-          </Link>
+          </NavLink>
         );
       })}
     </nav>
@@ -78,3 +84,16 @@ const FALLBACK_FOOTER_MENU = {
     },
   ],
 };
+
+function activeLinkStyle({
+  isActive,
+  isPending,
+}: {
+  isActive: boolean;
+  isPending: boolean;
+}) {
+  return {
+    fontWeight: isActive ? 'bold' : '',
+    color: isPending ? 'grey' : 'white',
+  };
+}
