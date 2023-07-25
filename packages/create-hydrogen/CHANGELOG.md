@@ -2,14 +2,20 @@
 
 ## 4.2.0
 
-### Major Changes
+### What’s new
 
-- The onboarding process when creating new Hydrogen apps has been reworked. Now you can: ([#913](https://github.com/Shopify/hydrogen/pull/913)) by [@frandiox](https://github.com/frandiox)
+⭐️ Check out our [blog post](https://hydrogen.shopify.dev/updates) with all the latest updates on Hydrogen, and what’s coming on the roadmap.
 
-  - Create a new Shopify storefront and connect it to the local project, or use [Mock.shop](https://mock.shop).
-  - Scaffold CSS strategies: Tailwind, CSS Modules, Vanilla Extract, PostCSS.
-  - Scaffold i18n strategies: subfolders, domains, subdomains.
-  - Automatically generate core routes.
+Shopify CLI now gives you [more options](https://shopify.dev/docs/custom-storefronts/hydrogen/getting-started/quickstart) when creating a new Hydrogen app on the command line:
+
+- Create a new Shopify storefront and connect it to the local project, or use [Mock.shop](https://mock.shop).
+- Pick your styling method: Tailwind, CSS Modules, Vanilla Extract, PostCSS.
+- URL strategies to support language and currency options with Shopify Markets.
+- Automatically scaffold standard Shopify routes.
+
+### Minor Changes
+
+- The onboarding process when creating new Hydrogen apps has been updated. ([#913](https://github.com/Shopify/hydrogen/pull/913)) by [@frandiox](https://github.com/frandiox)
 
 ### Patch Changes
 
