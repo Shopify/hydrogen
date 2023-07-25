@@ -1,5 +1,19 @@
 # @shopify/hydrogen-react
 
+## 2023.4.6
+
+### Patch Changes
+
+- Export useLoadScript ([#1080](https://github.com/Shopify/hydrogen/pull/1080)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix long language code breaking useMoney hook - Contributed by @QuentinGibson ([#1132](https://github.com/Shopify/hydrogen/pull/1132)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Throw error when `storeDomain` is not passed to `createStorefrontClient`. ([#1128](https://github.com/Shopify/hydrogen/pull/1128)) by [@frandiox](https://github.com/frandiox)
+
+- Improve warning and error format for known Hydrogen messages in development. ([#1093](https://github.com/Shopify/hydrogen/pull/1093)) by [@frandiox](https://github.com/frandiox)
+
+- Add discountCode.applicable in default Cart fragment ([#1040](https://github.com/Shopify/hydrogen/pull/1040)) by [@pnodet](https://github.com/pnodet)
+
 ## 2023.4.5
 
 ### Patch Changes
