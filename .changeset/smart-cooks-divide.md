@@ -1,5 +1,5 @@
 ---
-'demo-store': patch
+'demo-store': major
 ---
 
 Add `.env` file to Remix watcher to allow reloading environment variables on file save. In `remix.config.js`:

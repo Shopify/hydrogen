@@ -1,6 +1,6 @@
 ---
-'@shopify/cli-hydrogen': minor
-'@shopify/create-hydrogen': minor
+'@shopify/cli-hydrogen': major
+'@shopify/create-hydrogen': major
 ---
 
 The onboarding process when creating new Hydrogen apps has been reworked. Now you can:
