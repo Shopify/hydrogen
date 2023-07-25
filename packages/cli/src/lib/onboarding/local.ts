@@ -2,7 +2,7 @@ import {copy as copyWithFilter} from 'fs-extra/esm';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {writeFile} from '@shopify/cli-kit/node/fs';
-import {joinPath} from '@shopify/cli-kit/node/path';
+import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
 import {
