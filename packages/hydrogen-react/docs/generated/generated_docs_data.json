@@ -1472,7 +1472,7 @@
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "SrcSetOptions",
-            "value": "{\n  intervals: number;\n  startingWidth: number;\n  incrementSize: number;\n  placeholderWidth: number;\n}",
+            "value": "{\n  /** The number of sizes to generate */\n  intervals: number;\n  /** The smallest image size */\n  startingWidth: number;\n  /** The increment by which to increase for each size, in pixels */\n  incrementSize: number;\n  /** The size used for placeholder fallback images */\n  placeholderWidth: number;\n}",
             "description": "",
             "members": [
               {
@@ -1480,28 +1480,28 @@
                 "syntaxKind": "PropertySignature",
                 "name": "intervals",
                 "value": "number",
-                "description": ""
+                "description": "The number of sizes to generate"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "startingWidth",
                 "value": "number",
-                "description": ""
+                "description": "The smallest image size"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "incrementSize",
                 "value": "number",
-                "description": ""
+                "description": "The increment by which to increase for each size, in pixels"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "placeholderWidth",
                 "value": "number",
-                "description": ""
+                "description": "The size used for placeholder fallback images"
               }
             ]
           },
@@ -3892,7 +3892,7 @@
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "SrcSetOptions",
-            "value": "{\n  intervals: number;\n  startingWidth: number;\n  incrementSize: number;\n  placeholderWidth: number;\n}",
+            "value": "{\n  /** The number of sizes to generate */\n  intervals: number;\n  /** The smallest image size */\n  startingWidth: number;\n  /** The increment by which to increase for each size, in pixels */\n  incrementSize: number;\n  /** The size used for placeholder fallback images */\n  placeholderWidth: number;\n}",
             "description": "",
             "members": [
               {
@@ -3900,28 +3900,28 @@
                 "syntaxKind": "PropertySignature",
                 "name": "intervals",
                 "value": "number",
-                "description": ""
+                "description": "The number of sizes to generate"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "startingWidth",
                 "value": "number",
-                "description": ""
+                "description": "The smallest image size"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "incrementSize",
                 "value": "number",
-                "description": ""
+                "description": "The increment by which to increase for each size, in pixels"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "placeholderWidth",
                 "value": "number",
-                "description": ""
+                "description": "The size used for placeholder fallback images"
               }
             ]
           },
