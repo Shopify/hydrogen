@@ -252,12 +252,19 @@ describe('init', () => {
             readFile(`${tmpDir}/app/styles/tailwind.css`),
           ).resolves.toMatch(/@tailwind base;/);
 
+          // Remox reset.css
+          await expect(
+            readFile(`${tmpDir}/app/styles/reset.css`),
+          ).rejects.toThrow('ENOENT');
+
           // Injects styles in Root
           const rootFile = await readFile(`${tmpDir}/app/root.tsx`);
           await expect(rootFile).toMatch(/import tailwindCss from/);
           await expect(rootFile).toMatch(
             /export function links\(\) \{.*?return \[.*\{rel: 'stylesheet', href: tailwindCss\}/ims,
           );
+          await expect(rootFile).not.toMatch(/resetStyles/);
+          await expect(rootFile).not.toMatch(/reset\.css/);
 
           const output = outputMock.info();
           expect(output).toMatch('success');
