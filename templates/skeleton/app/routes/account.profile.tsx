@@ -158,7 +158,7 @@ export default function AccountProfile() {
             aria-label="Email address"
             defaultValue={customer.email ?? ''}
           />
-          <div style={{display: 'flex', alignItems: 'center'}}>
+          <div className="account-profile-marketing">
             <input
               id="acceptsMarketing"
               name="acceptsMarketing"

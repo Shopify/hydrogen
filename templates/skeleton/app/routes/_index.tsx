@@ -44,15 +44,7 @@ function FeaturedCollection({
     >
       {image && (
         <div>
-          <Image
-            data={image}
-            sizes="(min-width: 45em) 40vw, 100vw"
-            style={{
-              height: 'auto',
-              maxHeight: '600px',
-              objectFit: 'cover',
-            }}
-          />
+          <Image data={image} sizes="(min-width: 45em) 40vw, 100vw" />
         </div>
       )}
       <h1>{collection.title}</h1>
@@ -82,9 +74,6 @@ function RecommendedProducts({
                     data={product.images.nodes[0]}
                     aspectRatio="1/1"
                     sizes="(min-width: 45em) 20vw, 50vw"
-                    style={{
-                      height: 'auto',
-                    }}
                   />
                   <h4>{product.title}</h4>
                   <small>

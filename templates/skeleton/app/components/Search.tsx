@@ -394,7 +394,6 @@ function SearchResultItem({goToSearchResult, item}: SearchResultItemProps) {
             src={item.image.url}
             width={50}
             height={50}
-            style={{height: '100%'}}
           />
         )}
         <div>
