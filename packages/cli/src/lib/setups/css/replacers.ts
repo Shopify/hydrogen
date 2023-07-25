@@ -119,6 +119,7 @@ export async function replaceRootLinks(
     isConditional?: boolean;
     isAbsolute?: boolean;
   },
+  hook?: (content: string) => string,
 ) {
   const {filepath, astType} = await findFileWithExtension(appDirectory, 'root');
 
@@ -185,12 +186,14 @@ export async function replaceRootLinks(
       ? `...(${importer.name} ? [{ rel: 'stylesheet', href: ${importer.name} }] : [])`
       : `{rel: 'stylesheet', href: ${importer.name}}`;
 
-    return content
+    content = content
       .replace(lastImportContent, lastImportContent + '\n' + importStatement)
       .replace(
         linksExportReturnContent,
         linksExportReturnContent.replace('[', `[${newLinkReturnItem},`),
       );
+
+    return hook ? hook(content) : content;
   });
 }
 
