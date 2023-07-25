@@ -84,12 +84,16 @@ export async function setupLocalStarterTemplate(
       })
       .catch(abort);
 
+  const templateDir = getStarterDir();
   let backgroundWorkPromise: Promise<any> = copyWithFilter(
-    getStarterDir(),
+    templateDir,
     project.directory,
     // Filter out the `app` directory, which will be generated later
     {
-      filter: (filepath: string) => !/\/(app|node_modules)\//i.test(filepath),
+      filter: (filepath: string) =>
+        !/^(app|dist|node_modules)\//i.test(
+          relativePath(templateDir, filepath),
+        ),
     },
   )
     .then(() =>
