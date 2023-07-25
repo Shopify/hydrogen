@@ -15,7 +15,7 @@ type CreateWithCacheOptions = {
  * By default, it uses the `CacheShort` strategy.
  *
  */
-export function createWithCache_unstable<T = unknown>(
+export function createWithCache<T = unknown>(
   options: CreateWithCacheOptions,
 ): CreateWithCacheReturn<T> {
   const {cache, waitUntil} = options;
@@ -43,4 +43,4 @@ type CreateWithCacheReturn<T> = (
   actionFn: () => T | Promise<T>,
 ) => Promise<T>;
 
-export type WithCache = ReturnType<typeof createWithCache_unstable>;
+export type WithCache = ReturnType<typeof createWithCache>;
