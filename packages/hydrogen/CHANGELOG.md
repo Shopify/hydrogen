@@ -2,6 +2,8 @@
 
 ## 2023.4.7
 
+Check out our [blog post](https://hydrogen.shopify.dev/updates) for more details about the latest version of Hydrogen, and what’s next on the roadmap.
+
 ### Patch Changes
 
 - Missed a cache fix ([#1121](https://github.com/Shopify/hydrogen/pull/1121)) by [@wizardlyhel](https://github.com/wizardlyhel)
