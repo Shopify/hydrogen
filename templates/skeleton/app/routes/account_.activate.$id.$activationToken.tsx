@@ -136,7 +136,12 @@ export default function Activate() {
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customeractivate
 const CUSTOMER_ACTIVATE_MUTATION = `#graphql
-  mutation customerActivate($id: ID!, $input: CustomerActivateInput!) {
+  mutation customerActivate(
+    $id: ID!,
+    $input: CustomerActivateInput!,
+    $country: CountryCode,
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     customerActivate(id: $id, input: $input) {
       customerAccessToken {
         accessToken

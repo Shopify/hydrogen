@@ -295,7 +295,6 @@ const CUSTOMER_ORDER_QUERY = `#graphql
       }
     }
   }
-
   query Order(
     $country: CountryCode
     $language: LanguageCode

@@ -260,7 +260,12 @@ function getPassword(form: FormData): string | undefined {
 
 const CUSTOMER_UPDATE_MUTATION = `#graphql
   # https://shopify.dev/docs/api/storefront/latest/mutations/customerUpdate
-  mutation customerUpdate($customerAccessToken: String!, $customer: CustomerUpdateInput!) {
+  mutation customerUpdate(
+    $customerAccessToken: String!,
+    $customer: CustomerUpdateInput!
+    $country: CountryCode
+    $language: LanguageCode
+  ) @inContext(language: $language, country: $country) {
     customerUpdate(customerAccessToken: $customerAccessToken, customer: $customer) {
       customer {
         acceptsMarketing

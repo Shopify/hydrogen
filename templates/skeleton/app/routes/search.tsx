@@ -61,7 +61,6 @@ export default function SearchPage() {
 }
 
 const SEARCH_QUERY = `#graphql
-
   fragment SearchProduct on Product {
     __typename
     handle
@@ -98,7 +97,6 @@ const SEARCH_QUERY = `#graphql
       }
     }
   }
-
   fragment SearchPage on Page {
      __typename
      handle
@@ -106,7 +104,6 @@ const SEARCH_QUERY = `#graphql
     title
     trackingParameters
   }
-
   fragment SearchArticle on Article {
     __typename
     handle
@@ -114,15 +111,14 @@ const SEARCH_QUERY = `#graphql
     title
     trackingParameters
   }
-
   query search(
-    $query: String!,
     $country: CountryCode
-    $language: LanguageCode
-    $first: Int
-    $last: Int
-    $startCursor: String
     $endCursor: String
+    $first: Int
+    $language: LanguageCode
+    $last: Int
+    $query: String!,
+    $startCursor: String
   ) @inContext(country: $country, language: $language) {
     products: search(
       query: $query,

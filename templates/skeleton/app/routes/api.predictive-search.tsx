@@ -260,7 +260,6 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
     }
     trackingParameters
   }
-
   fragment PredictiveCollection on Collection {
     __typename
     id
@@ -274,7 +273,6 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
     }
     trackingParameters
   }
-
   fragment PredictivePage on Page {
     __typename
     id
@@ -282,7 +280,6 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
     handle
     trackingParameters
   }
-
   fragment PredictiveProduct on Product {
     __typename
     id
@@ -305,14 +302,12 @@ const PREDICTIVE_SEARCH_QUERY = `#graphql
       }
     }
   }
-
   fragment PredictiveQuery on SearchQuerySuggestion {
     __typename
     text
     styledText
     trackingParameters
   }
-
   query predictiveSearch(
     $country: CountryCode
     $language: LanguageCode

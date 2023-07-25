@@ -172,7 +172,6 @@ export const CUSTOMER_FRAGMENT = `#graphql
     numberOfOrders
     phone
   }
-
   fragment Address on MailingAddress {
     id
     formatted
