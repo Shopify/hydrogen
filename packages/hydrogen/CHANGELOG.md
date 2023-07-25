@@ -13,13 +13,22 @@ The latest version of Hydrogen comes with new and updated components and utiliti
 - A new [`<VariantSelector/>` component](https://shopify.dev/docs/custom-storefronts/hydrogen/cart/variant-selector) that makes it faster to build progressively enhanced product forms.
 - Improved support for predictive search and local pickup options through Storefront API version [2023-07](https://shopify.dev/docs/api/release-notes/2023-07#graphql-storefront-api-changes).
 
-### Major Changes
+### Breaking Changes
 
 - `createWithCache` is now stable. All imports need to be updated: ([#1151](https://github.com/Shopify/hydrogen/pull/1151)) by [@blittle](https://github.com/blittle)
 
   ```diff
   - import {createWithCache_unstable} from '@shopify/hydrogen';
   + import {createWithCache} from '@shopify/hydrogen';
+  ```
+
+- `Pagination` and `getPaginationVariables` are now stable. ([#1129](https://github.com/Shopify/hydrogen/pull/1129)) by [@blittle](https://github.com/blittle)
+
+  All imports to each should be updated:
+
+  ```diff
+  - import {Pagiatinon__unstable, getPaginationVariables__unstable} from '@shopify/hydrogen';
+  + import {Pagiatinon, getPaginationVariables} from '@shopify/hydrogen';
   ```
 
 ### Patch Changes
@@ -47,16 +56,7 @@ The latest version of Hydrogen comes with new and updated components and utiliti
 
 - Fix cache key by url encode the sub request keys ([#1105](https://github.com/Shopify/hydrogen/pull/1105)) by [@wizardlyhel](https://github.com/wizardlyhel)
 
-- Add a `<VariantSelector>` component to make building product forms easier. Also added `getFirstAvailableVariant` and `getSelectedProductOptions` helper functions. See the [proposal](https://gist.github.com/blittle/d9205d4ac72528005dc6f3104c328ecd) for examples. ([#1027](https://github.com/Shopify/hydrogen/pull/1027)) by [@blittle](https://github.com/blittle)
-
-- `Pagination` and `getPaginationVariables` are now stable. ([#1129](https://github.com/Shopify/hydrogen/pull/1129)) by [@blittle](https://github.com/blittle)
-
-  All imports to each should be updated:
-
-  ```diff
-  - import {Pagiatinon__unstable, getPaginationVariables__unstable} from '@shopify/hydrogen';
-  + import {Pagiatinon, getPaginationVariables} from '@shopify/hydrogen';
-  ```
+Add a `<VariantSelector>` component to make building product forms easier. Also added the `getSelectedProductOptions` helper function. See the [guide on using the VariantSelector](https://shopify.dev/docs/custom-storefronts/hydrogen/cart/variant-selector). ([#1027](https://github.com/Shopify/hydrogen/pull/1027)) by [@blittle](https://github.com/blittle)
 
 - Updated dependencies [[`c39411e0`](https://github.com/Shopify/hydrogen/commit/c39411e0454750697d580a1ef4858800c494980f), [`0d2e5ffb`](https://github.com/Shopify/hydrogen/commit/0d2e5ffb68096f1dc48ade8793e6ef53088af6da), [`4bee03df`](https://github.com/Shopify/hydrogen/commit/4bee03df3cc8203510f6b05522c1268aa5e5f2f4), [`11ab64a8`](https://github.com/Shopify/hydrogen/commit/11ab64a88966dd7b90522f15836abfff6f5d595f), [`7a7456a5`](https://github.com/Shopify/hydrogen/commit/7a7456a5ab073559aef37f043e8aa47570639b96)]:
   - @shopify/hydrogen-react@2023.4.6
