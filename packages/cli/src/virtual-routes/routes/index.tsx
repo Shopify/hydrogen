@@ -95,7 +95,7 @@ export default function Index() {
               You&rsquo;re seeing this because you have not yet configured your
               storefront token. <br />
               <br /> To link your store,{` `}
-              run <code>h2 link</code>. Then, run{' '}
+              run <code>h2 link && h2 env pull</code>. Then, run{' '}
               <code>h2 generate route home</code> to create your first route.
               <br />
               Learn more about
