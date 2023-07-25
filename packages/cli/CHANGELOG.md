@@ -1,5 +1,41 @@
 # @shopify/cli-hydrogen
 
+## 5.1.0
+
+### What’s new
+
+⭐️ Check out our [blog post](https://hydrogen.shopify.dev/updates) with all the latest updates on Hydrogen, and what’s coming on the roadmap.
+
+Shopify CLI now gives you [more options](https://shopify.dev/docs/custom-storefronts/hydrogen/getting-started/quickstart) when creating a new Hydrogen app on the command line:
+
+- Create a new Shopify storefront and connect it to the local project, or use [Mock.shop](https://mock.shop).
+- Pick your styling method: Tailwind, CSS Modules, Vanilla Extract, PostCSS.
+- URL strategies to support language and currency options with Shopify Markets.
+- Automatically scaffold standard Shopify routes.
+
+### Minor Changes
+
+- The onboarding process when creating new Hydrogen apps has been reworked. ([#913](https://github.com/Shopify/hydrogen/pull/913)) by [@frandiox](https://github.com/frandiox)
+
+- Add `login` and `logout` commands. Rework how other commands interact with auth. ([#1022](https://github.com/Shopify/hydrogen/pull/1022)) by [@frandiox](https://github.com/frandiox)
+
+- Reload environment variables in the development server when `.env` file is updated. Show injected variables when project is not linked to any storefront. ([#997](https://github.com/Shopify/hydrogen/pull/997)) by [@frandiox](https://github.com/frandiox)
+
+- Support creating new storefronts from the `link` command. ([#1022](https://github.com/Shopify/hydrogen/pull/1022)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Stop checking `/products` and `/discount` routes in `h2 check routes` command. ([#1141](https://github.com/Shopify/hydrogen/pull/1141)) by [@frandiox](https://github.com/frandiox)
+
+- Show proper error message when Hydrogen App isn't installed on Shop ([#1075](https://github.com/Shopify/hydrogen/pull/1075)) by [@aswamy](https://github.com/aswamy)
+
+- Improve warning and error format for known Hydrogen messages in development. ([#1093](https://github.com/Shopify/hydrogen/pull/1093)) by [@frandiox](https://github.com/frandiox)
+
+- Add `--codegen-unstable` flag to `build` command. ([#1049](https://github.com/Shopify/hydrogen/pull/1049)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`c39411e0`](https://github.com/Shopify/hydrogen/commit/c39411e0454750697d580a1ef4858800c494980f), [`0d2e5ffb`](https://github.com/Shopify/hydrogen/commit/0d2e5ffb68096f1dc48ade8793e6ef53088af6da), [`4bee03df`](https://github.com/Shopify/hydrogen/commit/4bee03df3cc8203510f6b05522c1268aa5e5f2f4), [`11ab64a8`](https://github.com/Shopify/hydrogen/commit/11ab64a88966dd7b90522f15836abfff6f5d595f), [`7a7456a5`](https://github.com/Shopify/hydrogen/commit/7a7456a5ab073559aef37f043e8aa47570639b96)]:
+  - @shopify/hydrogen-react@2023.4.6
+
 ## 5.0.2
 
 ### Patch Changes

@@ -1,5 +1,27 @@
 # @shopify/create-hydrogen
 
+## 4.2.0
+
+### What’s new
+
+⭐️ Check out our [blog post](https://hydrogen.shopify.dev/updates) with all the latest updates on Hydrogen, and what’s coming on the roadmap.
+
+Shopify CLI now gives you [more options](https://shopify.dev/docs/custom-storefronts/hydrogen/getting-started/quickstart) when creating a new Hydrogen app on the command line:
+
+- Create a new Shopify storefront and connect it to the local project, or use [Mock.shop](https://mock.shop).
+- Pick your styling method: Tailwind, CSS Modules, Vanilla Extract, PostCSS.
+- URL strategies to support language and currency options with Shopify Markets.
+- Automatically scaffold standard Shopify routes.
+
+### Minor Changes
+
+- The onboarding process when creating new Hydrogen apps has been updated. ([#913](https://github.com/Shopify/hydrogen/pull/913)) by [@frandiox](https://github.com/frandiox)
+
+### Patch Changes
+
+- Updated dependencies [[`2a036d72`](https://github.com/Shopify/hydrogen/commit/2a036d72c79ef3e40aecfb1832635898208c6d54), [`667ea4fb`](https://github.com/Shopify/hydrogen/commit/667ea4fbf30e632529984c8262010d35e5df38b0), [`ed9782bc`](https://github.com/Shopify/hydrogen/commit/ed9782bc43921d02a2fdbc951c1df1d200812f2d), [`11ab64a8`](https://github.com/Shopify/hydrogen/commit/11ab64a88966dd7b90522f15836abfff6f5d595f), [`00f3e592`](https://github.com/Shopify/hydrogen/commit/00f3e59283d3a413a6acd89722bb71580f73aff5), [`5530d987`](https://github.com/Shopify/hydrogen/commit/5530d98756503878fbf5ac013e2103259ffc0443), [`63d17266`](https://github.com/Shopify/hydrogen/commit/63d172665cf97fae62629f8019d9b2dad29c7d40), [`5530d987`](https://github.com/Shopify/hydrogen/commit/5530d98756503878fbf5ac013e2103259ffc0443)]:
+  - @shopify/cli-hydrogen@6.0.0
+
 ## 4.1.3
 
 ### Patch Changes
