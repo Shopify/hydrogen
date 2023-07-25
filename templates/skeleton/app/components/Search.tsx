@@ -141,6 +141,8 @@ export function SearchResults({
               />
             ) : null;
           }
+
+          return null;
         })}
     </div>
   );
