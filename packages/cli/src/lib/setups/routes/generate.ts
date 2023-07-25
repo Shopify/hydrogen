@@ -366,11 +366,7 @@ async function findRouteDependencies(
     // Find all imports and exports in the file
     const importMatches = (
       await readFile(filePath, {encoding: 'utf8'})
-    ).matchAll(
-      filePath.endsWith('.css')
-        ? /^@(import)\s+['"](.*?)['"];?$/gims
-        : /^(import|export)\s+.*?\s+from\s+['"](.*?)['"];?$/gims,
-    );
+    ).matchAll(/^(import|export)\s+.*?\s+from\s+['"](.*?)['"];?$/gims);
 
     for (let [, , match] of importMatches) {
       // Skip imports that are not relative (local)
@@ -396,8 +392,8 @@ async function findRouteDependencies(
       // will be copied over directly by the generator
       if (!absoluteFilepath.includes(`/${GENERATOR_ROUTE_DIR}/`)) {
         fileDependencies.add(relativePath(appDirectory, absoluteFilepath));
-        if (/\.([jt]sx?|css)$/.test(absoluteFilepath)) {
-          // Check for dependencies in the imported file if it's a TS/JS/CSS file
+        if (/\.[jt]sx?$/.test(absoluteFilepath)) {
+          // Check for dependencies in the imported file if it's a TS/JS file
           filesToCheck.add(absoluteFilepath);
         }
       }
