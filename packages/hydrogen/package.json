@@ -5,7 +5,7 @@
     "@shopify:registry": "https://registry.npmjs.org"
   },
   "type": "module",
-  "version": "2023.4.6",
+  "version": "2023.4.7",
   "license": "MIT",
   "main": "dist/index.cjs",
   "module": "dist/production/index.js",
@@ -54,7 +54,7 @@
     "dist"
   ],
   "dependencies": {
-    "@shopify/hydrogen-react": "2023.4.5",
+    "@shopify/hydrogen-react": "2023.4.6",
     "react": "^18.2.0"
   },
   "peerDependencies": {
