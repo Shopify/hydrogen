@@ -27,7 +27,13 @@ const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 vi.mock('../../lib/check-version.js');
 
 vi.mock('../../lib/template-downloader.js', async () => ({
-  getLatestTemplates: () => Promise.resolve({}),
+  getLatestTemplates: () =>
+    Promise.resolve({
+      version: '',
+      templatesDir: fileURLToPath(
+        new URL('../../../../../templates', import.meta.url),
+      ),
+    }),
 }));
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
@@ -122,6 +128,106 @@ describe('init', () => {
       expect(showUpgradeMock).toHaveBeenCalledWith(
         expect.stringContaining('npm create @shopify/hydrogen@latest'),
       );
+    });
+  });
+
+  describe('remote templates', () => {
+    it('throws for unknown templates', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        await expect(
+          runInit({
+            path: tmpDir,
+            git: false,
+            language: 'ts',
+            template: 'https://github.com/some/repo',
+          }),
+        ).rejects.toThrow('supported');
+      });
+    });
+
+    it('creates basic projects', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        await runInit({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          template: 'hello-world',
+        });
+
+        const helloWorldFiles = await glob('**/*', {
+          cwd: getSkeletonSourceDir().replace('skeleton', 'hello-world'),
+          ignore: ['**/node_modules/**', '**/dist/**'],
+        });
+        const projectFiles = await glob('**/*', {cwd: tmpDir});
+        const nonAppFiles = helloWorldFiles.filter(
+          (item) => !item.startsWith('app/'),
+        );
+
+        expect(projectFiles).toEqual(expect.arrayContaining(nonAppFiles));
+
+        expect(projectFiles).toContain('app/root.tsx');
+        expect(projectFiles).toContain('app/entry.client.tsx');
+        expect(projectFiles).toContain('app/entry.server.tsx');
+        expect(projectFiles).not.toContain('app/components/Layout.tsx');
+
+        // Skip routes:
+        expect(projectFiles).not.toContain('app/routes/_index.tsx');
+
+        await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
+          `"name": "hello-world"`,
+        );
+
+        const output = outputMock.info();
+        expect(output).toMatch('success');
+        expect(output).not.toMatch('warning');
+        expect(output).not.toMatch('Routes');
+        expect(output).toMatch(/Language:\s*TypeScript/);
+        expect(output).toMatch('Help');
+        expect(output).toMatch('Next steps');
+        expect(output).toMatch(
+          // Output contains banner characters. USe [^\w]*? to match them.
+          /Run `cd .*? &&[^\w]*?npm[^\w]*?install[^\w]*?&&[^\w]*?npm[^\w]*?run[^\w]*?dev`/ims,
+        );
+      });
+    });
+
+    it('transpiles projects to JS', async () => {
+      await temporaryDirectoryTask(async (tmpDir) => {
+        await runInit({
+          path: tmpDir,
+          git: false,
+          language: 'js',
+          template: 'hello-world',
+        });
+
+        const helloWorldFiles = await glob('**/*', {
+          cwd: getSkeletonSourceDir().replace('skeleton', 'hello-world'),
+          ignore: ['**/node_modules/**', '**/dist/**'],
+        });
+        const projectFiles = await glob('**/*', {cwd: tmpDir});
+
+        expect(projectFiles).toEqual(
+          expect.arrayContaining(
+            helloWorldFiles
+              .filter((item) => !item.endsWith('.d.ts'))
+              .map((item) =>
+                item
+                  .replace(/\.ts(x)?$/, '.js$1')
+                  .replace(/tsconfig\.json$/, 'jsconfig.json'),
+              ),
+          ),
+        );
+
+        // No types:
+        await expect(readFile(`${tmpDir}/server.js`)).resolves.toMatch(
+          /export default {\n\s+async fetch\(\s*request,\s*env,\s*executionContext,?\s*\)/,
+        );
+
+        const output = outputMock.info();
+        expect(output).toMatch('success');
+        expect(output).not.toMatch('warning');
+        expect(output).toMatch(/Language:\s*JavaScript/);
+      });
     });
   });
 
