@@ -64,6 +64,7 @@ import {
   renderRoutePrompt,
 } from '../setups/routes/generate.js';
 import {execAsync} from '../process.js';
+import {denoBuild, isDenoSupported} from './utils.js';
 
 export type InitOptions = {
   path?: string;
@@ -83,6 +84,7 @@ export type InitOptions = {
 export const LANGUAGES = {
   js: 'JavaScript',
   ts: 'TypeScript',
+  'ts-esm': 'Deno (esm)',
 } as const;
 type Language = keyof typeof LANGUAGES;
 
@@ -338,6 +340,7 @@ export async function handleLanguage(
   controller: AbortController,
   flagLanguage?: Language,
 ) {
+  const defaultValue = isDenoSupported() ? 'ts-esm' : 'js';
   const language =
     flagLanguage ??
     (await renderSelectPrompt({
@@ -345,8 +348,9 @@ export async function handleLanguage(
       choices: [
         {label: 'JavaScript', value: 'js'},
         {label: 'TypeScript', value: 'ts'},
+        {label: 'Deno (esm)', value: 'ts-esm'},
       ],
-      defaultValue: 'js',
+      defaultValue,
       abortSignal: controller.signal,
     }));
 
@@ -355,6 +359,9 @@ export async function handleLanguage(
     async transpileProject() {
       if (language === 'js') {
         await transpileProject(projectDir);
+      }
+      if (language === 'ts-esm') {
+        await denoBuild(projectDir);
       }
     },
   };

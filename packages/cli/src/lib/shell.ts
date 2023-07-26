@@ -120,7 +120,7 @@ async function hasCliAlias() {
     if (isWindows() && !isGitBash()) {
       await execAsync(`Get-Alias -Name ${ALIAS_NAME}`);
     } else {
-      const shell = os.userInfo().shell?.split('/').pop() ?? 'bash';
+      const shell = defaultUnixShell();
       if (!isKnownUnixShell(shell)) return false;
 
       return await hasAliasDefinition(ALIAS_NAME, shell);
@@ -130,6 +130,20 @@ async function hasCliAlias() {
   } catch {
     return false;
   }
+}
+
+function defaultUnixShell() {
+  let detectedShell: UnixShell;
+  try {
+    detectedShell = os.userInfo().shell?.split('/').pop() ?? 'bash';
+  } catch {
+    try {
+      detectedShell = process.env.SHELL?.split('/').pop() ?? 'bash';
+    } catch {
+      detectedShell = 'bash';
+    }
+  }
+  return detectedShell;
 }
 
 export async function createPlatformShortcut() {
