@@ -4,7 +4,13 @@ import {temporaryDirectoryTask} from 'tempy';
 import {runInit} from './init.js';
 import {exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
-import {isDirectory, readFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {
+  fileExists,
+  isDirectory,
+  readFile,
+  removeFile,
+  writeFile,
+} from '@shopify/cli-kit/node/fs';
 import {basename, joinPath} from '@shopify/cli-kit/node/path';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {handleProjectLocation} from '../../lib/onboarding/common.js';
@@ -13,6 +19,7 @@ import {getSkeletonSourceDir} from '../../lib/build.js';
 import {execAsync} from '../../lib/process.js';
 import {symlink, rmdir} from 'fs-extra';
 import {runCheckRoutes} from './check.js';
+import {runCodegen} from './codegen-unstable.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
@@ -482,6 +489,37 @@ describe('init', () => {
 
           const output = outputMock.info();
           expect(output).toMatch('success');
+        });
+      });
+
+      it('supports codegen', async () => {
+        await temporaryDirectoryTask(async (tmpDir) => {
+          await runInit({
+            path: tmpDir,
+            git: true,
+            language: 'ts',
+            routes: true,
+            installDeps: true,
+          });
+
+          // Clear previous success messages
+          outputMock.clear();
+
+          const codegenFile = `${tmpDir}/storefrontapi.generated.d.ts`;
+          const codegenFromTemplate = await readFile(codegenFile);
+          expect(codegenFromTemplate).toBeTruthy();
+
+          await removeFile(codegenFile);
+          expect(fileExists(codegenFile)).resolves.toBeFalsy();
+
+          await expect(runCodegen({directory: tmpDir})).resolves.not.toThrow();
+
+          const output = outputMock.info();
+          expect(output).toMatch('success');
+
+          await expect(readFile(codegenFile)).resolves.toEqual(
+            codegenFromTemplate,
+          );
         });
       });
     });
