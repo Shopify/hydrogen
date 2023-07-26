@@ -12,6 +12,7 @@ import glob from 'fast-glob';
 import {getSkeletonSourceDir} from '../../lib/build.js';
 import {execAsync} from '../../lib/process.js';
 import {symlink, rmdir} from 'fs-extra';
+import {runCheckRoutes} from './check.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
@@ -460,6 +461,27 @@ describe('init', () => {
           await expect(
             exec('npm', ['run', 'typecheck'], {cwd: tmpDir}),
           ).resolves.not.toThrow();
+        });
+      });
+
+      it('contains all standard routes', async () => {
+        await temporaryDirectoryTask(async (tmpDir) => {
+          await runInit({
+            path: tmpDir,
+            git: true,
+            language: 'ts',
+            i18n: 'subfolders',
+            routes: true,
+            installDeps: true,
+          });
+
+          // Clear previous success messages
+          outputMock.clear();
+
+          await runCheckRoutes({directory: tmpDir});
+
+          const output = outputMock.info();
+          expect(output).toMatch('success');
         });
       });
     });
