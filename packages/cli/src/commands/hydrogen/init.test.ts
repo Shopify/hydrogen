@@ -20,6 +20,7 @@ import {execAsync} from '../../lib/process.js';
 import {symlink, rmdir} from 'fs-extra';
 import {runCheckRoutes} from './check.js';
 import {runCodegen} from './codegen-unstable.js';
+import {runBuild} from './build.js';
 
 const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
@@ -101,6 +102,7 @@ describe('init', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     outputMock.clear();
   });
 
@@ -520,6 +522,42 @@ describe('init', () => {
           await expect(readFile(codegenFile)).resolves.toEqual(
             codegenFromTemplate,
           );
+        });
+      });
+
+      it('builds the generated project', async () => {
+        await temporaryDirectoryTask(async (tmpDir) => {
+          await runInit({
+            path: tmpDir,
+            git: true,
+            language: 'ts',
+            styling: 'postcss',
+            i18n: 'subfolders',
+            routes: true,
+            installDeps: true,
+          });
+
+          // Clear previous success messages
+          outputMock.clear();
+          vi.stubEnv('NODE_ENV', 'production');
+
+          await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
+
+          const expectedBundlePath = 'dist/worker/index.js';
+
+          const output = outputMock.output();
+          expect(output).toMatch(expectedBundlePath);
+          expect(
+            fileExists(joinPath(tmpDir, expectedBundlePath)),
+          ).resolves.toBeTruthy();
+
+          const mb = Number(
+            output.match(/index\.js\s+([\d.]+)\s+MB/)?.[1] || '',
+          );
+
+          // Bundle size within 1 MB
+          expect(mb).toBeGreaterThan(0);
+          expect(mb).toBeLessThan(1);
         });
       });
     });

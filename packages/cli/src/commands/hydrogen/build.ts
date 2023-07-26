@@ -62,19 +62,19 @@ export default class Build extends Command {
     await runBuild({
       ...flagsToCamelObject(flags),
       useCodegen: flags['codegen-unstable'],
-      path: directory,
+      directory,
     });
   }
 }
 
 export async function runBuild({
-  path: appPath,
+  directory,
   useCodegen = false,
   codegenConfigPath,
   sourcemap = false,
   disableRouteWarning = false,
 }: {
-  path?: string;
+  directory?: string;
   useCodegen?: boolean;
   codegenConfigPath?: string;
   sourcemap?: boolean;
@@ -85,7 +85,7 @@ export async function runBuild({
   }
 
   const {root, buildPath, buildPathClient, buildPathWorkerFile, publicPath} =
-    getProjectPaths(appPath);
+    getProjectPaths(directory);
 
   await checkLockfileStatus(root);
 
@@ -173,7 +173,9 @@ export async function runBuild({
   // The Remix compiler hangs due to a bug in ESBuild:
   // https://github.com/evanw/esbuild/issues/2727
   // The actual build has already finished so we can kill the process.
-  process.exit(0);
+  if (!process.env.SHOPIFY_UNIT_TEST) {
+    process.exit(0);
+  }
 }
 
 export async function copyPublicFiles(
