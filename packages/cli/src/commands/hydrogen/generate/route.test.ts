@@ -1,6 +1,6 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
-import {runGenerate} from './route.js';
+import {runGenerateRoute} from './route.js';
 import {generateRoutes} from '../../../lib/setups/routes/generate.js';
 
 describe('runGenerate', () => {
@@ -40,7 +40,7 @@ describe('runGenerate', () => {
       typescript: true,
     };
 
-    await runGenerate(options);
+    await runGenerateRoute(options);
 
     expect(generateRoutes).toHaveBeenCalledWith(options);
 

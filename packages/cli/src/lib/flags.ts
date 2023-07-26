@@ -74,6 +74,15 @@ export const commonFlags = {
     env: 'SHOPIFY_HYDROGEN_FLAG_SHORTCUT',
     allowNo: true,
   }),
+  adapter: Flags.string({
+    description:
+      'Remix adapter used in the route. The default is `@shopify/remix-oxygen`.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_ADAPTER',
+  }),
+  typescript: Flags.boolean({
+    description: 'Generate TypeScript files',
+    env: 'SHOPIFY_HYDROGEN_FLAG_TYPESCRIPT',
+  }),
 };
 
 export function flagsToCamelObject<T extends Record<string, any>>(obj: T) {
