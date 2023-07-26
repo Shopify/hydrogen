@@ -5,6 +5,7 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
 import {getLatestTemplates} from '../template-downloader.js';
 import {
+  commitAll,
   createAbortHandler,
   createInitialCommit,
   handleDependencies,
@@ -62,7 +63,9 @@ export async function setupRemoteTemplate(
 
   backgroundWorkPromise = backgroundWorkPromise
     .then(() => transpileProject().catch(abort))
-    .then(() => createInitialCommit(project.directory));
+    .then(() =>
+      options.git ? createInitialCommit(project.directory) : undefined,
+    );
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(
@@ -108,6 +111,10 @@ export async function setupRemoteTemplate(
   }
 
   await renderTasks(tasks);
+
+  if (options.git) {
+    await commitAll(project.directory, 'Lockfile');
+  }
 
   await renderProjectReady(project, setupSummary);
 
