@@ -113,7 +113,11 @@ export async function setupRemoteTemplate(
 
   if (isOfficialTemplate) {
     renderInfo({
-      headline: `Your project will display inventory from the Hydrogen Demo Store.`,
+      headline: `Your project will display inventory from ${
+        options.template === 'demo-store'
+          ? 'the Hydrogen Demo Store'
+          : 'Mock.shop'
+      }.`,
       body: `To connect this project to your Shopify store’s inventory, update \`${project.name}/.env\` with your store ID and Storefront API key.`,
     });
   }
