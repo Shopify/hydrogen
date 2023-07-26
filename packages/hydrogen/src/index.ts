@@ -30,7 +30,7 @@ export {cartAttributesUpdateDefault} from './cart/queries/cartAttributesUpdateDe
 export {cartMetafieldsSetDefault} from './cart/queries/cartMetafieldsSetDefault';
 export {cartMetafieldDeleteDefault} from './cart/queries/cartMetafieldDeleteDefault';
 export {cartGetIdDefault} from './cart/cartGetIdDefault';
-export {cartSetIdDefault} from './cart/cartSetIdDefault';
+export {cartSetIdDefault, type CookieOptions} from './cart/cartSetIdDefault';
 export {
   type HydrogenCartCustom,
   type HydrogenCart,
