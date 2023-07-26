@@ -1,6 +1,5 @@
 import {fileURLToPath} from 'node:url';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {temporaryDirectoryTask} from 'tempy';
 import {runInit} from './init.js';
 import {exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
@@ -10,6 +9,7 @@ import {
   readFile,
   removeFile,
   writeFile,
+  inTemporaryDirectory,
 } from '@shopify/cli-kit/node/fs';
 import {basename, joinPath} from '@shopify/cli-kit/node/path';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
@@ -113,7 +113,7 @@ describe('init', () => {
   });
 
   it('checks Hydrogen version', async () => {
-    await temporaryDirectoryTask(async (tmpDir) => {
+    await inTemporaryDirectory(async (tmpDir) => {
       const showUpgradeMock = vi.fn((param?: string) => ({
         currentVersion: '1.0.0',
         newVersion: '1.0.1',
@@ -133,7 +133,7 @@ describe('init', () => {
 
   describe('remote templates', () => {
     it('throws for unknown templates', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         await expect(
           runInit({
             path: tmpDir,
@@ -146,7 +146,7 @@ describe('init', () => {
     });
 
     it('creates basic projects', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         await runInit({
           path: tmpDir,
           git: false,
@@ -192,7 +192,7 @@ describe('init', () => {
     });
 
     it('transpiles projects to JS', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         await runInit({
           path: tmpDir,
           git: false,
@@ -233,7 +233,7 @@ describe('init', () => {
 
   describe('local templates', () => {
     it('creates basic projects', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         await runInit({
           path: tmpDir,
           git: false,
@@ -291,7 +291,7 @@ describe('init', () => {
     });
 
     it('creates projects with route files', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         await runInit({path: tmpDir, git: false, routes: true, language: 'ts'});
 
         const skeletonFiles = await glob('**/*', {
@@ -320,7 +320,7 @@ describe('init', () => {
     });
 
     it('transpiles projects to JS', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         await runInit({path: tmpDir, git: false, routes: true, language: 'js'});
 
         const skeletonFiles = await glob('**/*', {
@@ -361,7 +361,7 @@ describe('init', () => {
 
     describe('styling libraries', () => {
       it('scaffolds Tailwind CSS', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -394,7 +394,7 @@ describe('init', () => {
       });
 
       it('scaffolds CSS Modules', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -422,7 +422,7 @@ describe('init', () => {
       });
 
       it('scaffolds Vanilla Extract', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -452,7 +452,7 @@ describe('init', () => {
 
     describe('i18n strategies', () => {
       it('scaffolds i18n with domains strategy', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -477,7 +477,7 @@ describe('init', () => {
       });
 
       it('scaffolds i18n with subdomains strategy', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -502,7 +502,7 @@ describe('init', () => {
       });
 
       it('scaffolds i18n with subfolders strategy', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -530,7 +530,7 @@ describe('init', () => {
 
     describe('git', () => {
       it('initializes a git repository and creates initial commits', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: true,
@@ -561,7 +561,7 @@ describe('init', () => {
 
     describe('project validity', () => {
       it('typechecks the project', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: true,
@@ -580,7 +580,7 @@ describe('init', () => {
       });
 
       it('contains all standard routes', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: true,
@@ -601,7 +601,7 @@ describe('init', () => {
       });
 
       it('supports codegen', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: true,
@@ -632,7 +632,7 @@ describe('init', () => {
       });
 
       it('builds the generated project', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: true,
