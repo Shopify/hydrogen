@@ -13,32 +13,13 @@ import {getSkeletonSourceDir} from '../../lib/build.js';
 import {execAsync} from '../../lib/process.js';
 import {symlink, rmdir} from 'fs-extra';
 
-vi.mock('../../lib/template-downloader.js', async () => ({
-  getLatestTemplates: () => Promise.resolve({}),
-}));
-vi.mock(
-  '@shopify/cli-kit/node/node-package-manager',
-  async (importOriginal) => {
-    const original = await importOriginal<
-      typeof import('@shopify/cli-kit/node/node-package-manager')
-    >();
-
-    return {
-      ...original,
-      installNodeModules: vi.fn(),
-      getPackageManager: () => Promise.resolve('npm'),
-      packageManagerUsedForCreating: () => Promise.resolve('npm'),
-    };
-  },
-);
+const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
 vi.mock('../../lib/check-version.js');
 
-const {renderTasksHook} = vi.hoisted(() => {
-  return {
-    renderTasksHook: vi.fn(),
-  };
-});
+vi.mock('../../lib/template-downloader.js', async () => ({
+  getLatestTemplates: () => Promise.resolve({}),
+}));
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
@@ -57,6 +38,36 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     }),
   };
 });
+
+vi.mock(
+  '@shopify/cli-kit/node/node-package-manager',
+  async (importOriginal) => {
+    const original = await importOriginal<
+      typeof import('@shopify/cli-kit/node/node-package-manager')
+    >();
+
+    return {
+      ...original,
+      getPackageManager: () => Promise.resolve('npm'),
+      packageManagerUsedForCreating: () => Promise.resolve('npm'),
+      installNodeModules: vi.fn(async ({directory}: {directory: string}) => {
+        // Create lockfile at a later moment to simulate a slow install
+        renderTasksHook.mockImplementationOnce(async () => {
+          await writeFile(`${directory}/package-lock.json`, '{}');
+        });
+
+        // "Install" dependencies by linking to monorepo's node_modules
+        await rmdir(joinPath(directory, 'node_modules')).catch(() => {});
+        await symlink(
+          fileURLToPath(
+            new URL('../../../../../node_modules', import.meta.url),
+          ),
+          joinPath(directory, 'node_modules'),
+        );
+      }),
+    };
+  },
+);
 
 vi.mock('../../lib/onboarding/common.js', async (importOriginal) => {
   type ModType = typeof import('../../lib/onboarding/common.js');
@@ -404,10 +415,6 @@ describe('init', () => {
     describe('git', () => {
       it('initializes a git repository and creates initial commits', async () => {
         await temporaryDirectoryTask(async (tmpDir) => {
-          renderTasksHook.mockImplementationOnce(async () => {
-            await writeFile(`${tmpDir}/package-lock.json`, '{}');
-          });
-
           await runInit({
             path: tmpDir,
             git: true,
@@ -439,10 +446,6 @@ describe('init', () => {
     describe('project validity', () => {
       it('typechecks the project', async () => {
         await temporaryDirectoryTask(async (tmpDir) => {
-          renderTasksHook.mockImplementationOnce(async () => {
-            await writeFile(`${tmpDir}/package-lock.json`, '{}');
-          });
-
           await runInit({
             path: tmpDir,
             git: true,
@@ -453,20 +456,9 @@ describe('init', () => {
             installDeps: true,
           });
 
-          // "Install" dependencies by linking to monorepo's node_modules
-          await rmdir(joinPath(tmpDir, 'node_modules')).catch(() => {});
-          await symlink(
-            fileURLToPath(
-              new URL('../../../../../node_modules', import.meta.url),
-            ),
-            joinPath(tmpDir, 'node_modules'),
-          );
-
           // This will throw if TSC fails
           await expect(
-            exec('npm', ['run', 'typecheck'], {
-              cwd: tmpDir,
-            }),
+            exec('npm', ['run', 'typecheck'], {cwd: tmpDir}),
           ).resolves.not.toThrow();
         });
       });
