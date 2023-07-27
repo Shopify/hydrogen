@@ -20,6 +20,13 @@ import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
+import {
+  createMetaobjectDefinition,
+  getMetaobjectDefinitions,
+  updateMetaobjectDefinition,
+} from '../../lib/graphql/admin/metaobject-definitions.js';
+import type {MetaobjectDefinition} from '../../lib/graphql/admin/types-admin-api.js';
+import {SectionSchema} from '../../lib/graphql/admin/types.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -121,8 +128,12 @@ async function runDev({
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
   const {shop, storefront} = await getConfig(root);
-  const fetchRemote = !!shop && !!storefront?.id;
-  const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});
+  const isLoggedIn = !!shop && !!storefront?.id;
+  const envPromise = getAllEnvironmentVariables({
+    root,
+    fetchRemote: isLoggedIn,
+    envBranch,
+  });
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
@@ -171,6 +182,9 @@ async function runDev({
   const fileWatchCache = createFileWatchCache();
   let skipRebuildLogs = false;
 
+  const metaobjectDefinitions = await getMDForSections();
+  // console.log({metaobjectDefinitions});
+
   // Compute initial schemas before build
   await Promise.all(
     (
@@ -180,6 +194,7 @@ async function runDev({
     ).map((relativeFilepath) =>
       handleSchemaChange(
         path.resolve(remixConfig.appDirectory, relativeFilepath),
+        metaobjectDefinitions,
       ),
     ),
   );
@@ -238,7 +253,7 @@ async function runDev({
             absolute.replace(publicPath, buildPathClient),
           );
         } else if (/\.schema\.[jt]s$/.test(file)) {
-          await handleSchemaChange(file);
+          await handleSchemaChange(file, metaobjectDefinitions);
         }
       },
       async onFileChanged(file: string) {
@@ -252,12 +267,12 @@ async function runDev({
           await miniOxygen.reload({
             env: await getAllEnvironmentVariables({
               root,
-              fetchRemote,
+              fetchRemote: isLoggedIn,
               envBranch,
             }),
           });
         } else if (/\.schema\.[jt]s$/.test(file)) {
-          await handleSchemaChange(file);
+          await handleSchemaChange(file, metaobjectDefinitions);
         }
 
         if (absolute.startsWith(publicPath)) {
@@ -281,7 +296,15 @@ async function runDev({
   );
 }
 
-async function handleSchemaChange(file: string) {
+const HACK_SESSION = {
+  storeFqdn: 'hydrogen-preview.myshopify.com',
+  token: process.env.HACK_ACCESS_TOKEN as string,
+};
+
+async function handleSchemaChange(
+  file: string,
+  metaobjectDefinitions: Record<string, any>,
+) {
   const {defineSection} = await import('@shopify/hydrogen');
   const originalFileContent = await readFile(file);
   const fileContentWithoutImports = originalFileContent
@@ -293,6 +316,27 @@ async function handleSchemaChange(file: string) {
   const mod = await import(
     'data:text/javascript;base64,' + btoa(fileContentWithoutImports)
   );
+
+  // console.log('new', mod.default);
+  // console.log('old', metaobjectDefinitions[mod.default.type]);
+
+  if (hasMDChanged(mod.default, metaobjectDefinitions[mod.default.type])) {
+    if (metaobjectDefinitions[mod.default.type]) {
+      // Update MD
+      // console.log('UPDATING');
+      metaobjectDefinitions[mod.default.type] =
+        await updateMetaobjectDefinition(
+          HACK_SESSION,
+          mod.default,
+          metaobjectDefinitions[mod.default.type],
+        );
+    } else {
+      // Create MD
+      // console.log('CREATING');
+      metaobjectDefinitions[mod.default.type] =
+        await createMetaobjectDefinition(HACK_SESSION, mod.default);
+    }
+  }
 
   const result = defineSection(mod.default);
   const queryName =
@@ -310,4 +354,44 @@ async function handleSchemaChange(file: string) {
       content + `\nexport const ${queryName} = \`${result.query}\`;\n`,
     );
   }
+}
+
+async function getMDForSections() {
+  return (await getMetaobjectDefinitions(HACK_SESSION))
+    .filter((metaobject) => metaobject.type.startsWith('section_'))
+    .reduce((acc, item) => {
+      acc[item.type.replace('section_', '')] = item;
+      return acc;
+    }, {} as Record<string, any>);
+}
+
+function hasMDChanged(newMD: SectionSchema, existingMD: MetaobjectDefinition) {
+  if (newMD && !existingMD) return true;
+
+  if (
+    (['name', 'displayNameKey', 'description'] as const).some(
+      (key) =>
+        (newMD[key] || '') !==
+        (existingMD[key] || '').replace('Section | ', ''),
+    ) ||
+    newMD.fields.length !== existingMD.fieldDefinitions.length
+  ) {
+    return true;
+  }
+
+  for (const existingField of existingMD.fieldDefinitions) {
+    const newField = newMD.fields.find(
+      (newField: any) => newField.key === existingField.key,
+    );
+    if (
+      !newField ||
+      (['name', 'description', 'required'] as const).some(
+        (key) => newField[key] != existingField[key],
+      )
+    ) {
+      return true;
+    }
+  }
+
+  return false;
 }
