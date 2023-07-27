@@ -13,10 +13,6 @@ import {
   REFERENCE_FRAGMENT,
   PAGE_FRAGMENT,
   METAOBJECT_FRAGMENT,
-  MIXED_REFERENCE_FRAGMENT,
-  BLOCKS_REFERENCES_FRAGMENT,
-  FIELD_REFERENCE_FRAGMENT,
-  FIELD_REFERENCES_FRAGMENT,
 } from './graphql/fragments.js';
 
 /**
@@ -116,6 +112,7 @@ function createSectionQuery({
 type QueryElements = {
   fragments: Map<string, string>;
   fields: Array<string>;
+  blocks: string;
 };
 
 function getQueryElements({
@@ -240,16 +237,18 @@ function toQueryElements(acc: QueryElements, field: SectionField) {
       acc.fragments.set('PAGE_FRAGMENT', PAGE_FRAGMENT);
       acc.fields.push(fieldFragment('references { ...PageFragment }'));
       return acc;
-    case 'product_reference':
-      acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
-      acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
-      acc.fields.push(fieldFragment('reference { ...ProductFragment }'));
-      return acc;
-    case 'list.product_reference':
-      acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
-      acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
-      acc.fields.push(fieldFragment('references { ...ProductFragment }'));
-      return acc;
+    // TODO: REPEATED
+    // case 'product_reference':
+    //   acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
+    //   acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
+    //   acc.fields.push(fieldFragment('reference { ...ProductFragment }'));
+    //   return acc;
+    // TODO: REPEATED
+    // case 'list.product_reference':
+    //   acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
+    //   acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
+    //   acc.fields.push(fieldFragment('references { ...ProductFragment }'));
+    //   return acc;
     case 'mixed_reference':
       acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
       acc.fragments.set('COLLECTION_FRAGMENT', COLLECTION_FRAGMENT);
