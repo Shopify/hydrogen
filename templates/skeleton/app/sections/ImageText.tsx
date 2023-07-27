@@ -9,7 +9,13 @@ export function ImageText(section: SectionImageTextQuery['section']) {
     <section className="section_image_text">
       <h1>{heading.value}</h1>
       {image.reference?.image ? (
-        <Image sizes="100vw" data={image.reference.image} />
+        <Image
+          sizes="100vw"
+          data={image.reference.image}
+          style={{
+            height: '100%',
+          }}
+        />
       ) : null}
     </section>
   );
