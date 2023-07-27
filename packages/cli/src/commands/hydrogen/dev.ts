@@ -1,8 +1,8 @@
 import path from 'path';
 import fs from 'fs/promises';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
-import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
-import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import {fileExists, glob, readFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
@@ -171,6 +171,19 @@ async function runDev({
   const fileWatchCache = createFileWatchCache();
   let skipRebuildLogs = false;
 
+  // Compute initial schemas before build
+  await Promise.all(
+    (
+      await glob('**/*.schema.{js,ts}', {
+        cwd: remixConfig.appDirectory,
+      })
+    ).map((relativeFilepath) =>
+      handleSchemaChange(
+        path.resolve(remixConfig.appDirectory, relativeFilepath),
+      ),
+    ),
+  );
+
   await watch(
     {
       config: remixConfig,
@@ -219,15 +232,13 @@ async function runDev({
         const [relative, absolute] = getFilePaths(file);
         outputInfo(`\n📄 File created: ${relative}`);
 
-        if (file.endsWith('.schema.ts')) {
-          await handleSchemaChange(file, true);
-        }
-
         if (absolute.startsWith(publicPath)) {
           await copyPublicFiles(
             absolute,
             absolute.replace(publicPath, buildPathClient),
           );
+        } else if (/\.schema\.[jt]s$/.test(file)) {
+          await handleSchemaChange(file);
         }
       },
       async onFileChanged(file: string) {
@@ -235,10 +246,6 @@ async function runDev({
 
         const [relative, absolute] = getFilePaths(file);
         outputInfo(`\n📄 File changed: ${relative}`);
-
-        if (file.endsWith('.schema.ts')) {
-          await handleSchemaChange(file);
-        }
 
         if (relative.endsWith('.env')) {
           skipRebuildLogs = true;
@@ -249,6 +256,8 @@ async function runDev({
               envBranch,
             }),
           });
+        } else if (/\.schema\.[jt]s$/.test(file)) {
+          await handleSchemaChange(file);
         }
 
         if (absolute.startsWith(publicPath)) {
@@ -272,7 +281,7 @@ async function runDev({
   );
 }
 
-async function handleSchemaChange(file: string, isNew = false) {
+async function handleSchemaChange(file: string) {
   const {defineSection} = await import('@shopify/hydrogen');
   const originalFileContent = await readFile(file);
   const fileContentWithoutImports = originalFileContent
@@ -286,7 +295,6 @@ async function handleSchemaChange(file: string, isNew = false) {
   );
 
   const result = defineSection(mod.default);
-  console.log('asdf', result);
   const queryName =
     mod.default.name.replace(/\s/g, '_').toUpperCase() + '_QUERY';
 
