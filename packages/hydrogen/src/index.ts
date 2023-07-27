@@ -94,3 +94,5 @@ export type {
   StorefrontApiResponseOkPartial,
   StorefrontApiResponsePartial,
 } from '@shopify/hydrogen-react';
+
+export {defineSection} from './sections/defineSection';
