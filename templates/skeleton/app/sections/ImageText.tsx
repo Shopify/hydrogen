@@ -1,20 +1,10 @@
 import {Image} from '@shopify/hydrogen';
-import type {MediaImage} from '@shopify/hydrogen/storefront-api-types';
+import type {SectionImageTextQuery} from 'storefrontapi.generated';
 
-// TODO: these types should be auto code-generated from the CLI based
-// on the passed schema and the generated query.
-type SectionImageText = {
-  name: 'Image Text';
-  type: 'section_image_text';
-  heading: {
-    value: string;
-  };
-  image: {
-    reference?: MediaImage;
-  };
-};
+export function ImageText(section: SectionImageTextQuery['section']) {
+  const {heading, image} = section ?? {};
+  if (!heading || !image) return null;
 
-export function ImageText({heading, image}: SectionImageText) {
   return (
     <section className="section_image_text">
       <h1>{heading.value}</h1>
