@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
-import {fileExists} from '@shopify/cli-kit/node/fs';
+import {fileExists, readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
@@ -219,6 +219,10 @@ async function runDev({
         const [relative, absolute] = getFilePaths(file);
         outputInfo(`\n📄 File created: ${relative}`);
 
+        if (file.endsWith('.schema.ts')) {
+          await handleSchemaChange(file, true);
+        }
+
         if (absolute.startsWith(publicPath)) {
           await copyPublicFiles(
             absolute,
@@ -231,6 +235,10 @@ async function runDev({
 
         const [relative, absolute] = getFilePaths(file);
         outputInfo(`\n📄 File changed: ${relative}`);
+
+        if (file.endsWith('.schema.ts')) {
+          await handleSchemaChange(file);
+        }
 
         if (relative.endsWith('.env')) {
           skipRebuildLogs = true;
@@ -262,4 +270,36 @@ async function runDev({
       },
     },
   );
+}
+
+async function handleSchemaChange(file: string, isNew = false) {
+  const {defineSection} = await import('@shopify/hydrogen');
+  const originalFileContent = await readFile(file);
+  const fileContentWithoutImports = originalFileContent
+    .replace(/import\s+[^\s]+\s+from\s+['"][^'"]+['"];?/gims, '')
+    .replace('defineSection', '')
+    .trim();
+
+  // TODO: URI import in Node doesn't seem to support `import` statements
+  const mod = await import(
+    'data:text/javascript;base64,' + btoa(fileContentWithoutImports)
+  );
+
+  const result = defineSection(mod.default);
+  console.log('asdf', result);
+  const queryName =
+    mod.default.name.replace(/\s/g, '_').toUpperCase() + '_QUERY';
+
+  if (result.query !== mod[queryName]) {
+    let content = originalFileContent;
+    if (mod[queryName]) {
+      // drop the old query
+      content = (content.split(`export const ${queryName}`)[0] ?? '').trim();
+    }
+
+    await writeFile(
+      file,
+      content + `\nexport const ${queryName} = \`${result.query}\`;\n`,
+    );
+  }
 }

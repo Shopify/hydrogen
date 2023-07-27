@@ -1,4 +1,4 @@
-import {defineSection, Image} from '@shopify/hydrogen';
+import {Image} from '@shopify/hydrogen';
 import type {MediaImage} from '@shopify/hydrogen/storefront-api-types';
 
 // TODO: these types should be auto code-generated from the CLI based
@@ -24,32 +24,6 @@ export function ImageText({heading, image}: SectionImageText) {
     </section>
   );
 }
-
-ImageText.section = defineSection({
-  name: 'Image Text',
-  type: 'image_text',
-  fields: [
-    {
-      name: 'Text',
-      key: 'heading',
-      type: 'single_line_text_field',
-      default: 'Image Text Heading',
-      required: true,
-    },
-    {
-      name: 'Image',
-      key: 'image',
-      type: 'file_reference',
-      required: true,
-      default: {
-        altText: null,
-        url: 'https://placehold.co/1920x1080.jpg',
-        width: 1920,
-        height: 1080,
-      },
-    },
-  ],
-});
 
 /*
  * The generated query for this section looks like:
