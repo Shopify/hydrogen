@@ -687,6 +687,52 @@
       },
       "args": {}
     },
+    "hydrogen:generate:section": {
+      "id": "hydrogen:generate:section",
+      "description": "Generates a commerce component.",
+      "strict": true,
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "adapter": {
+          "name": "adapter",
+          "type": "option",
+          "description": "Remix adapter used in the route. The default is `@shopify/remix-oxygen`.",
+          "multiple": false
+        },
+        "typescript": {
+          "name": "typescript",
+          "type": "boolean",
+          "description": "Generate TypeScript files",
+          "allowNo": false
+        },
+        "force": {
+          "name": "force",
+          "type": "boolean",
+          "char": "f",
+          "description": "Overwrite the destination directory and files if they already exist.",
+          "allowNo": false
+        },
+        "path": {
+          "name": "path",
+          "type": "option",
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "multiple": false
+        }
+      },
+      "args": {
+        "componentName": {
+          "name": "componentName",
+          "description": "The section to generate. One of ImageText.",
+          "required": true,
+          "options": [
+            "ImageText"
+          ]
+        }
+      }
+    },
     "hydrogen:setup:css": {
       "id": "hydrogen:setup:css",
       "description": "Setup CSS strategies for your project.",
