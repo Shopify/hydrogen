@@ -1616,6 +1616,22 @@ export type SectionImageTextQuery = {
   >;
 };
 
+export type ImageTextFragment = Pick<
+  StorefrontAPI.Metaobject,
+  'id' | 'handle' | 'type'
+> & {
+  heading?: StorefrontAPI.Maybe<Pick<StorefrontAPI.MetaobjectField, 'value'>>;
+  image?: StorefrontAPI.Maybe<{
+    reference?: StorefrontAPI.Maybe<
+      {__typename: 'MediaImage'} & {
+        image?: StorefrontAPI.Maybe<
+          Pick<StorefrontAPI.Image, 'altText' | 'url' | 'width' | 'height'>
+        >;
+      }
+    >;
+  }>;
+};
+
 export type MediaImageFragmentFragment = {__typename: 'MediaImage'} & {
   image?: StorefrontAPI.Maybe<
     Pick<StorefrontAPI.Image, 'altText' | 'url' | 'width' | 'height'>
@@ -1801,7 +1817,7 @@ interface GeneratedQueryTypes {
     return: SearchQuery;
     variables: SearchQueryVariables;
   };
-  '#graphql\n    query SectionImageText($handle: String!) {\n      section: metaobject(\n        handle: {\n          handle: $handle,\n          # We preprend section_ to the metaobjectDefintion.type\n          # and block_ to block metaobjectDefinition.type during creation\n          type: "section_image_text"\n        }\n      ) {\n        id\n        handle\n        type\n        heading: field(key: "heading") { value }\nimage: field(key: "image") { reference { ...MediaImageFragment } }\n        \n      }\n    }\n    #graphql\n  fragment MediaImageFragment on MediaImage {\n    __typename\n    image {\n      altText\n      url\n      width\n      height\n    }\n  }\n\n  ': {
+  '#graphql\n  query SectionImageText($handle: String!) {\n    section: metaobject(handle: { handle: $handle, type: "section_image_text" }) {\n      ...ImageText\n    }\n  }\n  fragment ImageText on Metaobject {\n    id\n    handle\n    type\n    heading: field(key: "heading") { value }\nimage: field(key: "image") { reference { ...MediaImageFragment } }\n    \n  }\n  #graphql\n  fragment MediaImageFragment on MediaImage {\n    __typename\n    image {\n      altText\n      url\n      width\n      height\n    }\n  }\n\n': {
     return: SectionImageTextQuery;
     variables: SectionImageTextQueryVariables;
   };

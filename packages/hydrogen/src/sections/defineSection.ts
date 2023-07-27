@@ -70,12 +70,13 @@ function createSectionQuery({
   // remove space characters from schema name
   const name = _name.replace(/\s/g, '');
 
+  // TODO: query blocks
   const ___blocks = `
     field(key: "blocks") {
-      value
       ...BlocksReferencesFragment
     }
   `;
+
   // TODO: blocks
   // get the fields and fragments query parts for the schema and blocks
   const {fields, fragments, blocks} = getQueryElements({
@@ -87,25 +88,20 @@ function createSectionQuery({
   const fragmentsString = fragmentsArray.join('\n');
 
   const query = `#graphql
-    query Section${name}($handle: String!) {
-      section: metaobject(
-        handle: {
-          handle: $handle,
-          # We preprend section_ to the metaobjectDefintion.type
-          # and block_ to block metaobjectDefinition.type during creation
-          type: "section_${_type}"
-        }
-      ) {
-        id
-        handle
-        type
-        ${fields.join('\n')}
-        ${blocks}
-      }
+  query Section${name}($handle: String!) {
+    section: metaobject(handle: { handle: $handle, type: "section_${_type}" }) {
+      ...${name}
     }
-    ${fragmentsString}
-  ` as SectionMeta['query'];
-
+  }
+  fragment ${name} on Metaobject {
+    id
+    handle
+    type
+    ${fields.join('\n')}
+    ${blocks}
+  }
+  ${fragmentsString}
+` as SectionMeta['query'];
   return query;
 }
 
