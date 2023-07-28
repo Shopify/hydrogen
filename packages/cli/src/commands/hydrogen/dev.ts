@@ -27,6 +27,7 @@ import {
 } from '../../lib/graphql/admin/metaobject-definitions.js';
 import type {MetaobjectDefinition} from '../../lib/graphql/admin/types-admin-api.js';
 import {SectionSchema} from '../../lib/graphql/admin/types.js';
+import {upsertMetaobject} from '../../lib/graphql/admin/metaobjects.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -323,7 +324,6 @@ async function handleSchemaChange(
   if (hasMDChanged(mod.default, metaobjectDefinitions[mod.default.type])) {
     if (metaobjectDefinitions[mod.default.type]) {
       // Update MD
-      // console.log('UPDATING');
       metaobjectDefinitions[mod.default.type] =
         await updateMetaobjectDefinition(
           HACK_SESSION,
@@ -332,10 +332,13 @@ async function handleSchemaChange(
         );
     } else {
       // Create MD
-      // console.log('CREATING');
       metaobjectDefinitions[mod.default.type] =
         await createMetaobjectDefinition(HACK_SESSION, mod.default);
     }
+
+    await upsertMetaobject(HACK_SESSION, mod.default);
+  } else {
+    console.log('NO CHANGE FOR', mod.default.type);
   }
 
   const result = defineSection(mod.default);
@@ -366,6 +369,7 @@ async function getMDForSections() {
 }
 
 function hasMDChanged(newMD: SectionSchema, existingMD: MetaobjectDefinition) {
+  console.log({newMD, existingMD});
   if (newMD && !existingMD) return true;
 
   if (

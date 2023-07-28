@@ -6,8 +6,9 @@ import {
   MetaobjectAdminAccess,
   MetaobjectStorefrontAccess,
   MetaobjectFieldDefinitionOperationInput,
-  Scalars,
   MetaobjectDefinition,
+  MetaobjectDefinitionCreatePayload,
+  MetaobjectDefinitionUpdatePayload,
 } from './types-admin-api.js';
 import {SectionSchema} from './types.js';
 
@@ -75,30 +76,6 @@ const UpdateMetaobjectDefinitionMutation = `#graphql
   ${MetaobjectDefinitionFragment}
 `;
 
-// export interface MetaobjectDefinition {
-//   id: string;
-//   displayNameKey: string;
-//   name: string;
-//   description: string;
-//   type: string;
-//   visibleToStorefrontApi: boolean;
-//   fieldDefinitions: Array<{
-//     name: string;
-//     description: string;
-//     key: string;
-//     required: boolean;
-//     type: {
-//       category: string;
-//       name: string;
-//     };
-//   }>;
-// }
-
-interface UserError {
-  field: string;
-  message: string;
-}
-
 export async function getMetaobjectDefinitions(adminSession: AdminSession) {
   const {metaobjectDefinitions} = await adminRequest<{
     metaobjectDefinitions: {nodes: Array<MetaobjectDefinition>};
@@ -111,16 +88,16 @@ export async function createMetaobjectDefinition(
   adminSession: AdminSession,
   newSection: SectionSchema,
 ) {
+  const definition = sectionToMetaobject(newSection);
+  console.log('CREATING DEFINITION', definition.type);
+
   const {
     metaobjectDefinitionCreate: {metaobjectDefinition, userErrors},
   } = await adminRequest<{
-    metaobjectDefinitionCreate: {
-      metaobjectDefinition: MetaobjectDefinition;
-      userErrors: Array<UserError>;
-    };
+    metaobjectDefinitionCreate: MetaobjectDefinitionCreatePayload;
   }>(CreateMetaobjectDefinitionMutation, adminSession, {
     definition: {
-      ...sectionToMetaobject(newSection),
+      ...definition,
       fieldDefinitions: newSection.fields.map(sectionFieldToDefinition),
     } satisfies MetaobjectDefinitionCreateInput,
   });
@@ -128,7 +105,9 @@ export async function createMetaobjectDefinition(
   if (userErrors.length) {
     const errorMessages = userErrors.map(({message}) => message).join(', ');
     console.log(userErrors);
-    throw new AbortError('Could not create storefront. ' + errorMessages);
+    throw new AbortError(
+      'Could not create metaobject definition. ' + errorMessages,
+    );
   }
 
   return metaobjectDefinition;
@@ -139,21 +118,12 @@ export async function updateMetaobjectDefinition(
   newSection: SectionSchema,
   existingSection: MetaobjectDefinition,
 ) {
-  const {type, ...definition} = sectionToMetaobject(newSection);
-  if (type !== existingSection.type) {
-    throw new Error(
-      `Error when updating a section type from "${existingSection.type}" to "${type}".` +
-        `Changing types is not supported. Please remove the section and create a new one.`,
-    );
-  }
+  console.log('UPDATING DEFINITION', existingSection.type);
 
   const {
     metaobjectDefinitionUpdate: {metaobjectDefinition, userErrors},
   } = await adminRequest<{
-    metaobjectDefinitionUpdate: {
-      metaobjectDefinition: MetaobjectDefinition;
-      userErrors: Array<UserError>;
-    };
+    metaobjectDefinitionUpdate: MetaobjectDefinitionUpdatePayload;
   }>(UpdateMetaobjectDefinitionMutation, adminSession, {
     id: existingSection.id,
     definition: {
@@ -167,7 +137,9 @@ export async function updateMetaobjectDefinition(
 
   if (userErrors.length) {
     const errorMessages = userErrors.map(({message}) => message).join(', ');
-    throw new AbortError('Could not create storefront. ' + errorMessages);
+    throw new AbortError(
+      'Could not update metaobject definition. ' + errorMessages,
+    );
   }
 
   return metaobjectDefinition;

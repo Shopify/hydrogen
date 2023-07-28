@@ -17,15 +17,17 @@ export default defineSection({
     {
       name: 'Image',
       key: 'image',
-      type: 'file_reference',
+      // type: 'file_reference',
+      type: 'url',
       description: 'The image to display in the section',
       required: true,
-      default: {
-        altText: null,
-        url: 'https://placehold.co/1920x1080.jpg',
-        width: 1920,
-        height: 1000,
-      },
+      // default: {
+      //   altText: null,
+      //   url: 'https://placehold.co/1920x1080.jpg',
+      //   width: 1920,
+      //   height: 1000,
+      // },
+      default: 'https://placehold.co/1920x1080.jpg',
     },
   ],
 });
@@ -41,18 +43,8 @@ export const IMAGE_TEXT_QUERY = `#graphql
     handle
     type
     heading: field(key: "heading") { value type }
-image: field(key: "image") { type reference { ...MediaImageFragment } }
+image: field(key: "image") { value type }
     
   }
-  #graphql
-  fragment MediaImageFragment on MediaImage {
-    __typename
-    image {
-      altText
-      url
-      width
-      height
-    }
-  }
-
+  
 `;

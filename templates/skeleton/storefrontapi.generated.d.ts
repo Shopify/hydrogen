@@ -1604,18 +1604,7 @@ export type SectionImageTextQuery = {
         Pick<StorefrontAPI.MetaobjectField, 'value' | 'type'>
       >;
       image?: StorefrontAPI.Maybe<
-        Pick<StorefrontAPI.MetaobjectField, 'type'> & {
-          reference?: StorefrontAPI.Maybe<
-            {__typename: 'MediaImage'} & {
-              image?: StorefrontAPI.Maybe<
-                Pick<
-                  StorefrontAPI.Image,
-                  'altText' | 'url' | 'width' | 'height'
-                >
-              >;
-            }
-          >;
-        }
+        Pick<StorefrontAPI.MetaobjectField, 'value' | 'type'>
       >;
     }
   >;
@@ -1629,21 +1618,7 @@ export type ImageTextFragment = Pick<
     Pick<StorefrontAPI.MetaobjectField, 'value' | 'type'>
   >;
   image?: StorefrontAPI.Maybe<
-    Pick<StorefrontAPI.MetaobjectField, 'type'> & {
-      reference?: StorefrontAPI.Maybe<
-        {__typename: 'MediaImage'} & {
-          image?: StorefrontAPI.Maybe<
-            Pick<StorefrontAPI.Image, 'altText' | 'url' | 'width' | 'height'>
-          >;
-        }
-      >;
-    }
-  >;
-};
-
-export type MediaImageFragmentFragment = {__typename: 'MediaImage'} & {
-  image?: StorefrontAPI.Maybe<
-    Pick<StorefrontAPI.Image, 'altText' | 'url' | 'width' | 'height'>
+    Pick<StorefrontAPI.MetaobjectField, 'value' | 'type'>
   >;
 };
 
@@ -3251,6 +3226,12 @@ export type PageFragmentFragment = {__typename: 'Page'} & Pick<
     seo?: StorefrontAPI.Maybe<Pick<StorefrontAPI.Seo, 'title' | 'description'>>;
   };
 
+export type MediaImageFragmentFragment = {__typename: 'MediaImage'} & {
+  image?: StorefrontAPI.Maybe<
+    Pick<StorefrontAPI.Image, 'altText' | 'url' | 'width' | 'height'>
+  >;
+};
+
 export type GenericFileFragmentFragment = {__typename: 'GenericFile'} & Pick<
   StorefrontAPI.GenericFile,
   'alt' | 'url' | 'mimeType'
@@ -3528,7 +3509,7 @@ interface GeneratedQueryTypes {
     return: SearchQuery;
     variables: SearchQueryVariables;
   };
-  '#graphql\n  query SectionImageText($handle: String!) {\n    section: metaobject(handle: { handle: $handle, type: "section_image_text" }) {\n      ...ImageText\n    }\n  }\n  fragment ImageText on Metaobject {\n    id\n    handle\n    type\n    heading: field(key: "heading") { value type }\nimage: field(key: "image") { type reference { ...MediaImageFragment } }\n    \n  }\n  #graphql\n  fragment MediaImageFragment on MediaImage {\n    __typename\n    image {\n      altText\n      url\n      width\n      height\n    }\n  }\n\n': {
+  '#graphql\n  query SectionImageText($handle: String!) {\n    section: metaobject(handle: { handle: $handle, type: "section_image_text" }) {\n      ...ImageText\n    }\n  }\n  fragment ImageText on Metaobject {\n    id\n    handle\n    type\n    heading: field(key: "heading") { value type }\nimage: field(key: "image") { value type }\n    \n  }\n  \n': {
     return: SectionImageTextQuery;
     variables: SectionImageTextQueryVariables;
   };

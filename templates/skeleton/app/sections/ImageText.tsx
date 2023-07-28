@@ -4,10 +4,10 @@ import type {ImageTextFragment} from 'storefrontapi.generated';
 export function ImageText({heading, image}: ImageTextFragment) {
   return (
     <section className="section_image_text">
-      {image?.reference?.image && (
+      {image?.value && (
         <Image
           sizes="100vw"
-          data={image.reference.image}
+          data={{url: image.value}}
           style={{
             height: 600,
             objectFit: 'cover',
