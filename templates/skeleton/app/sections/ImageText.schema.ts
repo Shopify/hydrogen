@@ -17,27 +17,15 @@ export default defineSection({
     {
       name: 'Image',
       key: 'image',
-      // type: 'file_reference',
       type: 'url',
       description: 'The image to display in the section',
       required: true,
-      // default: {
-      //   altText: null,
-      //   url: 'https://placehold.co/1920x1080.jpg',
-      //   width: 1920,
-      //   height: 1000,
-      // },
       default: 'https://placehold.co/1920x1080.jpg',
     },
   ],
 });
 
-export const IMAGE_TEXT_QUERY = `#graphql
-  query SectionImageText($handle: String!) {
-    section: metaobject(handle: { handle: $handle, type: "section_image_text" }) {
-      ...ImageText
-    }
-  }
+export const IMAGE_TEXT_FRAGMENTS = `#graphql
   fragment ImageText on Metaobject {
     id
     handle
@@ -47,4 +35,13 @@ image: field(key: "image") { value type }
     
   }
   
-`;
+` as const;
+
+export const IMAGE_TEXT_QUERY = `#graphql
+  query SectionImageText($handle: String!) {
+    section: metaobject(handle: { handle: $handle, type: "section_image_text" }) {
+      ...ImageText
+    }
+  }
+  ${IMAGE_TEXT_FRAGMENTS}
+` as const;

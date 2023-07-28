@@ -1,10 +1,12 @@
 import {readFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {formatCode} from '../format-code.js';
 import {
   createMetaobjectDefinition,
   getMetaobjectDefinitions,
   updateMetaobjectDefinition,
 } from '../graphql/admin/metaobject-definitions.js';
 import {upsertMetaobject} from '../graphql/admin/metaobjects.js';
+import {transpileFile} from '../transpile-ts.js';
 import {generateQueryFromSectionSchema} from './section-query.js';
 import {generateSectionsComponent} from './sections.js';
 import type {MetaobjectDefinition, SectionSchema} from './types.js';
@@ -31,10 +33,12 @@ export async function handleSchemaChange(
 
   console.log('');
   const originalFileContent = await readFile(file);
-  const fileContentWithoutImports = originalFileContent
-    .replace(/import\s+[^\s]+\s+from\s+['"][^'"]+['"];?/gims, '')
-    .replace('defineSection', '')
-    .trim();
+  const fileContentWithoutImports = transpileFile(
+    originalFileContent
+      .replace(/import\s+[^\s]+\s+from\s+['"][^'"]+['"];?/gims, '')
+      .replace('defineSection', '')
+      .trim(),
+  );
 
   // TODO: URI import in Node doesn't seem to support `import` statements
   const mod = await import(
@@ -64,28 +68,40 @@ export async function handleSchemaChange(
     }
 
     await upsertMetaobject(HACK_SESSION, sectionSchema);
-
-    await generateSectionsComponent(metaobjectDefinitions, appDirectory);
   } else {
     console.log('NO CHANGE FOR', sectionSchema.type);
   }
 
-  const generatedQuery = generateQueryFromSectionSchema(sectionSchema);
-  const queryName =
-    sectionSchema.name!.replace(/\s/g, '_').toUpperCase() + '_QUERY';
-  const schemaQuery = mod[queryName] as string | undefined;
+  await generateSectionsComponent(metaobjectDefinitions, appDirectory);
 
-  if (generatedQuery !== schemaQuery) {
+  const generated = generateQueryFromSectionSchema(sectionSchema);
+  const queryPrefix = sectionSchema.name!.replace(/\s/g, '_').toUpperCase();
+  const queryName = queryPrefix + '_QUERY';
+  const fragmentsName = queryPrefix + '_FRAGMENTS';
+  const schemaQuery = mod[queryName] as string | undefined;
+  const schemaFragments = mod[fragmentsName] as string | undefined;
+
+  if (
+    generated.query !== schemaQuery ||
+    generated.fragments !== schemaFragments
+  ) {
     let content = originalFileContent;
     if (schemaQuery) {
       // drop the old query
       content = (content.split(`export const ${queryName}`)[0] ?? '').trim();
     }
+    if (schemaFragments) {
+      // drop the old query
+      content = (
+        content.split(`export const ${fragmentsName}`)[0] ?? ''
+      ).trim();
+    }
 
-    await writeFile(
-      file,
-      content + `\nexport const ${queryName} = \`${generatedQuery}\`;\n`,
-    );
+    content +=
+      `\n\nexport const ${fragmentsName} = \`${generated.fragments}\` as const;\n` +
+      `\nexport const ${queryName} = \`${generated.query}\${${fragmentsName}}\n\` as const;\n`;
+
+    await writeFile(file, await formatCode(content, undefined, file));
   }
 }
 

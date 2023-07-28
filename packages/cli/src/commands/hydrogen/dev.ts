@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
-import {fileExists, glob} from '@shopify/cli-kit/node/fs';
+import {fileExists} from '@shopify/cli-kit/node/fs';
 import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
@@ -24,6 +24,7 @@ import {
   getMDForSections,
   handleSchemaChange,
 } from '../../lib/metaobjects/index.js';
+import {findAllSections} from '../../lib/metaobjects/sections.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -185,12 +186,10 @@ async function runDev({
   // Compute initial schemas before build
   await Promise.all(
     (
-      await glob('**/*.schema.{js,ts}', {
-        cwd: remixConfig.appDirectory,
-      })
-    ).map((relativeFilepath) =>
+      await findAllSections(remixConfig.appDirectory)
+    ).map((absolutePath) =>
       handleSchemaChange(
-        path.resolve(remixConfig.appDirectory, relativeFilepath),
+        absolutePath,
         metaobjectDefinitions,
         remixConfig.appDirectory,
       ),

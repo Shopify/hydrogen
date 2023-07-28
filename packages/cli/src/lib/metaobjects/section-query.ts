@@ -19,9 +19,7 @@ import {
  * Validates a section schema and generates a storefront `query` able
  * to fetch a metaobject entry for the given section schema via `metaobjectByHandle`
  */
-export function generateQueryFromSectionSchema(
-  schema: SectionSchema,
-): SectionQuery {
+export function generateQueryFromSectionSchema(schema: SectionSchema) {
   const validSchema = validateSectionSchema(schema);
   if (validSchema instanceof Error) {
     throw validSchema;
@@ -68,7 +66,7 @@ function createSectionQuery({
   type: _type,
   fields: _fields,
   blocks: _blocks,
-}: ValidSectionSchema): SectionQuery {
+}: ValidSectionSchema) {
   // remove space characters from schema name
   const name = _name.replace(/\s/g, '');
 
@@ -89,12 +87,15 @@ function createSectionQuery({
   const fragmentsArray = Array.from(fragments.values());
   const fragmentsString = fragmentsArray.join('\n');
 
-  const query = `#graphql
+  const queryResult = `#graphql
   query Section${name}($handle: String!) {
     section: metaobject(handle: { handle: $handle, type: "section_${_type}" }) {
       ...${name}
     }
   }
+  ` as SectionQuery;
+
+  const fragmentsResult = `#graphql
   fragment ${name} on Metaobject {
     id
     handle
@@ -104,7 +105,8 @@ function createSectionQuery({
   }
   ${fragmentsString}
 ` as SectionQuery;
-  return query;
+
+  return {query: queryResult, fragments: fragmentsResult};
 }
 
 type QueryElements = {
