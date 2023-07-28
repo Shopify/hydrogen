@@ -137,7 +137,7 @@ describe('deploy', () => {
         onUploadFilesStart: expect.any(Function),
         onUploadFilesComplete: expect.any(Function),
         onHealthCheckError: expect.any(Function),
-        // onUploadFilesError: expect.any(Function),
+        onUploadFilesError: expect.any(Function),
       },
       logger: deploymentLogger,
     });
