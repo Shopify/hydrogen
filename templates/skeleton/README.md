@@ -104,8 +104,9 @@ import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {Sections, type RouteSections} from '../sections/Sections';
 import {IMAGE_TEXT_QUERY} from '../sections/ImageText.schema';
+import {HERO_QUERY} from '../sections/Hero.schema';
 
-export async function loader({params, context}: LoaderArgs) {
+export async function loader({context}: LoaderArgs) {
   const {section: imageText} = await context.storefront.query(
     IMAGE_TEXT_QUERY,
     {
@@ -114,7 +115,12 @@ export async function loader({params, context}: LoaderArgs) {
       },
     },
   );
-  const sections = [imageText] as RouteSections;
+  const {section: hero} = await context.storefront.query(HERO_QUERY, {
+    variables: {
+      handle: 'h2_default_section_hero',
+    },
+  });
+  const sections = [imageText, hero] as RouteSections;
   return json({sections});
 }
 
