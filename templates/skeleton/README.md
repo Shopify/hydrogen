@@ -38,3 +38,27 @@ npm run build
 ```bash
 npm run dev
 ```
+
+## Hackdays Demo
+
+At `app/routes/_index.tsx`
+
+```ts
+// Step 1. Add imports
+import {Sections, type RouteSections} from '../sections/Sections';
+import {IMAGE_TEXT_QUERY} from '../sections/ImageText.schema';
+import {useLoaderData} from '@remix-run/react';
+
+// Step 2. Fetch your new metaobject section
+const {section: imageText} = await context.storefront.query(IMAGE_TEXT_QUERY, {
+  variables: {
+    handle: 'section-image-text-example',
+  },
+});
+const sections = [imageText] as RouteSections;
+return json({sections});
+
+// Step 3. Render your new metaobject section
+const {sections} = useLoaderData<typeof loader>();
+<Sections sections={sections} />;
+```

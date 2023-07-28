@@ -308,13 +308,6 @@ aside li {
   position: relative;
 }
 
-.featured-collection-image {
-  aspect-ratio: 1 / 1;
-  @media (min-width: 45em) {
-    aspect-ratio: 16 / 9;
-  }
-}
-
 .featured-collection img {
   height: auto;
   max-height: 100%;
