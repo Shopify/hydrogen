@@ -318,36 +318,40 @@ async function handleSchemaChange(
     'data:text/javascript;base64,' + btoa(fileContentWithoutImports)
   );
 
+  const sectionSchema = mod.default as SectionSchema;
+
   // console.log('new', mod.default);
   // console.log('old', metaobjectDefinitions[mod.default.type]);
 
-  if (hasMDChanged(mod.default, metaobjectDefinitions[mod.default.type])) {
-    if (metaobjectDefinitions[mod.default.type]) {
+  if (hasMDChanged(sectionSchema, metaobjectDefinitions[sectionSchema.type])) {
+    if (metaobjectDefinitions[sectionSchema.type]) {
       // Update MD
-      metaobjectDefinitions[mod.default.type] =
+      metaobjectDefinitions[sectionSchema.type] =
         await updateMetaobjectDefinition(
           HACK_SESSION,
-          mod.default,
-          metaobjectDefinitions[mod.default.type],
+          sectionSchema,
+          metaobjectDefinitions[sectionSchema.type],
         );
     } else {
       // Create MD
-      metaobjectDefinitions[mod.default.type] =
-        await createMetaobjectDefinition(HACK_SESSION, mod.default);
+      metaobjectDefinitions[sectionSchema.type] =
+        await createMetaobjectDefinition(HACK_SESSION, sectionSchema);
     }
 
-    await upsertMetaobject(HACK_SESSION, mod.default);
+    await upsertMetaobject(HACK_SESSION, sectionSchema);
   } else {
-    console.log('NO CHANGE FOR', mod.default.type);
+    console.log('NO CHANGE FOR', sectionSchema.type);
   }
 
-  const result = defineSection(mod.default);
+  // @ts-expect-error same type coming from different type sources
+  const result = defineSection(sectionSchema);
   const queryName =
-    mod.default.name.replace(/\s/g, '_').toUpperCase() + '_QUERY';
+    sectionSchema.name!.replace(/\s/g, '_').toUpperCase() + '_QUERY';
+  const schemaQuery = mod[queryName] as string | undefined;
 
-  if (result.query !== mod[queryName]) {
+  if (result.query !== schemaQuery) {
     let content = originalFileContent;
-    if (mod[queryName]) {
+    if (schemaQuery) {
       // drop the old query
       content = (content.split(`export const ${queryName}`)[0] ?? '').trim();
     }
