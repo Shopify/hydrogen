@@ -66,12 +66,11 @@ export async function handleSchemaChange(
       metaobjectDefinitions[sectionSchema.type] =
         await createMetaobjectDefinition(HACK_SESSION, sectionSchema);
     }
-
-    await upsertMetaobject(HACK_SESSION, sectionSchema);
   } else {
     console.log('NO CHANGE FOR', sectionSchema.type);
   }
 
+  await upsertMetaobject(HACK_SESSION, sectionSchema);
   await generateSectionsComponent(metaobjectDefinitions, appDirectory);
 
   const generated = generateQueryFromSectionSchema(sectionSchema);
