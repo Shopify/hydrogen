@@ -306,6 +306,7 @@ async function handleSchemaChange(
   file: string,
   metaobjectDefinitions: Record<string, any>,
 ) {
+  console.log('');
   const {defineSection} = await import('@shopify/hydrogen');
   const originalFileContent = await readFile(file);
   const fileContentWithoutImports = originalFileContent
@@ -373,7 +374,6 @@ async function getMDForSections() {
 }
 
 function hasMDChanged(newMD: SectionSchema, existingMD: MetaobjectDefinition) {
-  console.log({newMD, existingMD});
   if (newMD && !existingMD) return true;
 
   if (
