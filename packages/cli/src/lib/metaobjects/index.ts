@@ -14,6 +14,8 @@ const HACK_SESSION = {
   token: process.env.HACK_ACCESS_TOKEN as string,
 };
 
+const recentlyUpdatedSchemas = new Set<string>();
+
 export async function handleSchemaChange(
   file: string,
   metaobjectDefinitions: Record<
@@ -22,6 +24,11 @@ export async function handleSchemaChange(
   >,
   appDirectory: string,
 ) {
+  // DEBOUNCE
+  if (recentlyUpdatedSchemas.has(file)) return;
+  recentlyUpdatedSchemas.add(file);
+  setTimeout(() => recentlyUpdatedSchemas.delete(file), 1000);
+
   console.log('');
   const originalFileContent = await readFile(file);
   const fileContentWithoutImports = originalFileContent
