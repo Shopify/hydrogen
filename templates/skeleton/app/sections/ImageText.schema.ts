@@ -29,29 +29,3 @@ export default defineSection({
     },
   ],
 });
-export const IMAGE_TEXT_QUERY = `#graphql
-  query SectionImageText($handle: String!) {
-    section: metaobject(handle: { handle: $handle, type: "section_image_text" }) {
-      ...ImageText
-    }
-  }
-  fragment ImageText on Metaobject {
-    id
-    handle
-    type
-    heading: field(key: "heading") { value type }
-image: field(key: "image") { type reference { ...MediaImageFragment } }
-    
-  }
-  #graphql
-  fragment MediaImageFragment on MediaImage {
-    __typename
-    image {
-      altText
-      url
-      width
-      height
-    }
-  }
-
-`;

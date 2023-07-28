@@ -2,7 +2,7 @@ import type {KitchenSinkFragment} from 'storefrontapi.generated';
 import {Image, parseMetafield} from '@shopify/hydrogen';
 import {Link} from '@remix-run/react';
 import type {ParsedMetafields} from '@shopify/hydrogen';
-import type {Metafield, MoneyV2} from '@shopify/hydrogen/storefront-api-types';
+import type {Metafield} from '@shopify/hydrogen/storefront-api-types';
 
 export function KitchenSink({
   date: _date,

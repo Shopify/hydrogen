@@ -723,13 +723,10 @@
         }
       },
       "args": {
-        "componentName": {
-          "name": "componentName",
-          "description": "The section to generate. One of ImageText.",
-          "required": true,
-          "options": [
-            "ImageText"
-          ]
+        "sectionName": {
+          "name": "sectionName",
+          "description": "The section to generate}.",
+          "required": true
         }
       }
     },
