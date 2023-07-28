@@ -16,6 +16,7 @@ export const PAGE_FRAGMENT = `#graphql
     }
   }
 `;
+
 export const VARIANT_FRAGMENT = `#graphql
   fragment VariantFragment on ProductVariant {
     __typename
@@ -64,8 +65,7 @@ export const PRODUCT_FRAGMENT = `#graphql
       }
     }
   }
-  ${VARIANT_FRAGMENT}
-` as const;
+`;
 
 export const COLLECTION_FRAGMENT = `#graphql
   fragment CollectionFragment on Collection {
@@ -94,6 +94,7 @@ export const MEDIA_IMAGE_FRAGMENT = `#graphql
     }
   }
 `;
+
 export const METAOBJECT_FRAGMENT = `#graphql
   fragment MetaobjectFragment on Metaobject {
     __typename
@@ -141,14 +142,7 @@ export const REFERENCE_FRAGMENT = `#graphql
         ...MetaobjectFragment
       }
   }
-  ${METAOBJECT_FRAGMENT}
-  ${VARIANT_FRAGMENT}
-  ${PAGE_FRAGMENT}
-  ${PRODUCT_FRAGMENT}
-  ${COLLECTION_FRAGMENT}
-  ${GENERIC_FILE_FRAGMENT}
-  ${MEDIA_IMAGE_FRAGMENT}
-` as const;
+`;
 
 export const FIELD_REFERENCE_FRAGMENT = `#graphql
   fragment FieldReferenceFragment on MetaobjectField {
@@ -156,7 +150,6 @@ export const FIELD_REFERENCE_FRAGMENT = `#graphql
       ...ReferenceFragment
     }
   }
-  ${REFERENCE_FRAGMENT}
 `;
 
 export const FIELD_REFERENCES_FRAGMENT = `#graphql
@@ -167,8 +160,7 @@ export const FIELD_REFERENCES_FRAGMENT = `#graphql
       }
     }
   }
-  ${REFERENCE_FRAGMENT}
-` as const;
+`;
 
 export const BLOCKS_REFERENCES_FRAGMENT = /* gql */ `#graphql
   fragment BlocksReferencesFragment on MetaobjectField {
@@ -178,5 +170,4 @@ export const BLOCKS_REFERENCES_FRAGMENT = /* gql */ `#graphql
       }
     }
   }
-  ${REFERENCE_FRAGMENT}
-` as const;
+`;

@@ -39,8 +39,8 @@ export const IMAGE_TEXT_QUERY = `#graphql
     id
     handle
     type
-    heading: field(key: "heading") { value }
-image: field(key: "image") { reference { ...MediaImageFragment } }
+    heading: field(key: "heading") { value type }
+image: field(key: "image") { type reference { ...MediaImageFragment } }
     
   }
   #graphql

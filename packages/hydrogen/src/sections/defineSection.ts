@@ -5,14 +5,14 @@ import type {
   ValidSectionSchema,
 } from './types.js';
 import {
-  PRODUCT_FRAGMENT,
-  VARIANT_FRAGMENT,
   COLLECTION_FRAGMENT,
   MEDIA_IMAGE_FRAGMENT,
-  GENERIC_FILE_FRAGMENT,
-  REFERENCE_FRAGMENT,
-  PAGE_FRAGMENT,
   METAOBJECT_FRAGMENT,
+  PAGE_FRAGMENT,
+  GENERIC_FILE_FRAGMENT,
+  PRODUCT_FRAGMENT,
+  REFERENCE_FRAGMENT,
+  VARIANT_FRAGMENT,
 } from './graphql/fragments.js';
 
 /**
@@ -133,118 +133,124 @@ function toQueryElements(acc: QueryElements, field: SectionField) {
     return `${field.key}: field(key: "${field.key}") { ${fragment} }`;
   }
 
+  const maxReferences = 8;
+
   switch (field.type) {
     case 'date':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
     case 'list.date':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
     case 'date_time':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
     case 'list.date_time':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
     case 'dimension':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
     case 'list.dimension':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
     case 'volume':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
     case 'list.volume':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
     case 'weight':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
     case 'list.weight':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
     case 'number_integer':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
     case 'list.number_integer':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
     case 'number_decimal':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
     case 'list.number_decimal':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
     case 'single_line_text_field':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
     case 'list.single_line_text_field':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
     case 'multi_line_text_field':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
-    case 'list.multi_line_text_field':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
     case 'rich_text_field':
-      acc.fields.push(fieldFragment('value'));
+    case 'boolean':
+    case 'color':
+    case 'list.color':
+    case 'rating':
+    case 'list.rating':
+    case 'url':
+    case 'list.url':
+    case 'money':
+    case 'json':
+      acc.fields.push(fieldFragment('value type'));
       return acc;
 
     // reference and list.reference fields
     case 'collection_reference':
       acc.fragments.set('COLLECTION_FRAGMENT', COLLECTION_FRAGMENT);
-      acc.fields.push(fieldFragment('reference { ...CollectionFragment }'));
+      acc.fields.push(
+        fieldFragment('type reference { ...CollectionFragment }'),
+      );
       return acc;
     case 'list.collection_reference':
       acc.fragments.set('COLLECTION_FRAGMENT', COLLECTION_FRAGMENT);
-      acc.fields.push(fieldFragment('references { ...CollectionFragment }'));
+      acc.fields.push(
+        fieldFragment(
+          `type references(first: ${maxReferences}) { nodes { ...CollectionFragment } }`,
+        ),
+      );
       return acc;
+
     case 'file_reference':
       acc.fragments.set('MEDIA_IMAGE_FRAGMENT', MEDIA_IMAGE_FRAGMENT);
-      acc.fields.push(fieldFragment('reference { ...MediaImageFragment }'));
+      acc.fields.push(
+        fieldFragment('type reference { ...MediaImageFragment }'),
+      );
       return acc;
     case 'list.file_reference':
-      acc.fragments.set('GENERIC_FILE_FRAGMENT', GENERIC_FILE_FRAGMENT);
-      acc.fields.push(fieldFragment('references { ...MediaImageFragment }'));
+      acc.fragments.set('MEDIA_IMAGE_FRAGMENT', MEDIA_IMAGE_FRAGMENT);
+      acc.fields.push(
+        fieldFragment(
+          `type references(first: ${maxReferences}) { nodes { ...MediaImageFragment } }`,
+        ),
+      );
       return acc;
-    case 'product_reference':
-      acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
-      acc.fields.push(fieldFragment('reference { ...ProductFragment }'));
-      return acc;
-    case 'list.product_reference':
-      acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
-      acc.fields.push(fieldFragment('references { ...ProductFragment }'));
-      return acc;
+
     case 'list.metaobject_reference':
       acc.fragments.set('METAOBJECT_FRAGMENT', METAOBJECT_FRAGMENT);
-      acc.fields.push(fieldFragment('references { ...MetaobjectFragment }'));
+      acc.fields.push(
+        fieldFragment(
+          `type references(first: ${maxReferences}) { nodes { ...MetaobjectFragment } }`,
+        ),
+      );
       return acc;
     case 'metaobject_reference':
       acc.fragments.set('METAOBJECT_FRAGMENT', METAOBJECT_FRAGMENT);
-      acc.fields.push(fieldFragment('reference { ...MetaobjectFragment }'));
+      acc.fields.push(
+        fieldFragment('type reference { ...MetaobjectFragment }'),
+      );
       return acc;
+
     case 'page_reference':
       acc.fragments.set('PAGE_FRAGMENT', PAGE_FRAGMENT);
-      acc.fields.push(fieldFragment('reference { ...PageFragment }'));
+      acc.fields.push(fieldFragment('type reference { ...PageFragment }'));
       return acc;
     case 'list.page_reference':
       acc.fragments.set('PAGE_FRAGMENT', PAGE_FRAGMENT);
-      acc.fields.push(fieldFragment('references { ...PageFragment }'));
+      acc.fields.push(
+        fieldFragment(
+          `type references(first: ${maxReferences}) { nodes { ...PageFragment } }`,
+        ),
+      );
       return acc;
-    // TODO: REPEATED
-    // case 'product_reference':
-    //   acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
-    //   acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
-    //   acc.fields.push(fieldFragment('reference { ...ProductFragment }'));
-    //   return acc;
-    // TODO: REPEATED
-    // case 'list.product_reference':
-    //   acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
-    //   acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
-    //   acc.fields.push(fieldFragment('references { ...ProductFragment }'));
-    //   return acc;
+
+    case 'variant_reference':
+      acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
+      acc.fields.push(fieldFragment('type reference { ...VariantFragment }'));
+      return acc;
+    case 'list.variant_reference':
+      acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
+      acc.fields.push(
+        fieldFragment(
+          `type references(first: ${maxReferences}) { nodes { ...VariantFragment } }`,
+        ),
+      );
+      return acc;
+
+    case 'product_reference':
+      acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
+      acc.fields.push(fieldFragment('type reference { ...ProductFragment }'));
+      return acc;
+    case 'list.product_reference':
+      acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
+      acc.fields.push(
+        fieldFragment(
+          `type references(first: ${maxReferences}) { nodes { ...ProductFragment } }`,
+        ),
+      );
+      return acc;
+
     case 'mixed_reference':
       acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
       acc.fragments.set('COLLECTION_FRAGMENT', COLLECTION_FRAGMENT);
@@ -253,55 +259,24 @@ function toQueryElements(acc: QueryElements, field: SectionField) {
       acc.fragments.set('METAOBJECT_FRAGMENT', METAOBJECT_FRAGMENT);
       acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
       acc.fragments.set('REFERENCE_FRAGMENT', REFERENCE_FRAGMENT);
-      acc.fields.push(fieldFragment('reference { ...ReferenceFragment }'));
+      acc.fields.push(fieldFragment('type reference { ...ReferenceFragment }'));
     case 'list.mixed_reference':
       acc.fragments.set('PRODUCT_FRAGMENT', PRODUCT_FRAGMENT);
       acc.fragments.set('COLLECTION_FRAGMENT', COLLECTION_FRAGMENT);
       acc.fragments.set('PAGE_FRAGMENT', PAGE_FRAGMENT);
-      acc.fragments.set('GENERIC_FILE_FRAGMENT', GENERIC_FILE_FRAGMENT);
       acc.fragments.set('METAOBJECT_FRAGMENT', METAOBJECT_FRAGMENT);
+      acc.fragments.set('GENERIC_FILE_FRAGMENT', GENERIC_FILE_FRAGMENT);
       acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
       acc.fragments.set('REFERENCE_FRAGMENT', REFERENCE_FRAGMENT);
-      acc.fields.push(fieldFragment('references { ...ReferenceFragment }'));
-      return acc;
-    case 'variant_reference':
-      acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
-      acc.fields.push(fieldFragment('reference { ...VariantFragment }'));
-      return acc;
-    case 'list.variant_reference':
-      acc.fragments.set('VARIANT_FRAGMENT', VARIANT_FRAGMENT);
-      acc.fields.push(fieldFragment('references { ...VariantFragment }'));
-      return acc;
-    case 'boolean':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
-    case 'color':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
-    case 'list.color':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
-    case 'rating':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
-    case 'list.rating':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
-    case 'url':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
-    case 'list.url':
-      acc.fields.push(fieldFragment('values'));
-      return acc;
-    case 'money':
-      acc.fields.push(fieldFragment('value'));
-      return acc;
-    case 'json':
-      acc.fields.push(fieldFragment('value'));
+      acc.fields.push(
+        fieldFragment(
+          `type references(first: ${maxReferences}) { nodes { ...ReferenceFragment } }`,
+        ),
+      );
       return acc;
 
     default:
-      acc.fields.push(fieldFragment('value'));
+      acc.fields.push(fieldFragment('type value'));
       return acc;
   }
 }

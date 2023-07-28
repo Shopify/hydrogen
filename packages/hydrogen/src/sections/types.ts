@@ -64,12 +64,12 @@ type FieldNumberInteger = BaseField & {
   type: 'number_integer';
 };
 
-type FieldNumberIntegerList = BaseField & {
-  type: 'list.number_integer';
-};
-
 type FieldNumberDecimal = BaseField & {
   type: 'number_decimal';
+};
+
+type FieldNumberIntegerList = BaseField & {
+  type: 'list.number_integer';
 };
 
 type FieldNumberDecimalList = BaseField & {
@@ -80,16 +80,12 @@ type FieldSingleLineTextField = BaseField & {
   type: 'single_line_text_field';
 };
 
-type FieldMultiLineTextField = BaseField & {
-  type: 'multi_line_text_field';
-};
-
 type FieldSingleLineTextFieldList = BaseField & {
   type: 'list.single_line_text_field';
 };
 
-type FieldMultiLineTextFieldList = BaseField & {
-  type: 'list.multi_line_text_field';
+type FieldMultiLineTextField = BaseField & {
+  type: 'multi_line_text_field';
 };
 
 type FieldRichTextField = BaseField & {
@@ -100,56 +96,56 @@ type FieldCollectionReference = BaseField & {
   type: 'collection_reference';
 };
 
-type FieldFileReference = BaseField & {
-  type: 'file_reference';
-};
-
 type FieldCollectionReferenceList = BaseField & {
   type: 'list.collection_reference';
+};
+
+type FieldFileReference = BaseField & {
+  type: 'file_reference';
 };
 
 type FieldFileReferenceList = BaseField & {
   type: 'list.file_reference';
 };
 
-type FieldMetaobjectReferenceList = BaseField & {
-  type: 'list.metaobject_reference';
-};
-
-type FieldMixedReferenceList = BaseField & {
-  type: 'list.mixed_reference';
-};
-
-type FieldPageReferenceList = BaseField & {
-  type: 'list.page_reference';
-};
-
-type FieldProductReferenceList = BaseField & {
-  type: 'list.product_reference';
-};
-
-type FieldVariantReferenceList = BaseField & {
-  type: 'list.variant_reference';
-};
-
 type FieldMetaobjectReference = BaseField & {
   type: 'metaobject_reference';
+};
+
+type FieldMetaobjectReferenceList = BaseField & {
+  type: 'list.metaobject_reference';
 };
 
 type FieldMixedReference = BaseField & {
   type: 'mixed_reference';
 };
 
+type FieldMixedReferenceList = BaseField & {
+  type: 'list.mixed_reference';
+};
+
 type FieldPageReference = BaseField & {
   type: 'page_reference';
+};
+
+type FieldPageReferenceList = BaseField & {
+  type: 'list.page_reference';
 };
 
 type FieldProductReference = BaseField & {
   type: 'product_reference';
 };
 
+type FieldProductReferenceList = BaseField & {
+  type: 'list.product_reference';
+};
+
 type FieldVariantReference = BaseField & {
   type: 'variant_reference';
+};
+
+type FieldVariantReferenceList = BaseField & {
+  type: 'list.variant_reference';
 };
 
 type FieldBoolean = BaseField & {
@@ -211,7 +207,6 @@ export type SectionField =
   | FieldSingleLineTextField
   | FieldSingleLineTextFieldList
   | FieldMultiLineTextField
-  | FieldMultiLineTextFieldList
   | FieldRichTextField
   // REFERENCE
   | FieldCollectionReference
