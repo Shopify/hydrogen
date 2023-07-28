@@ -5,11 +5,6 @@ export default defineSection({
   type: 'kitchen_sink',
   fields: [
     {
-      name: 'Name',
-      key: 'name',
-      type: 'single_line_text_field',
-    },
-    {
       name: 'Date Time',
       key: 'date_time',
       type: 'date_time',
@@ -79,11 +74,11 @@ export default defineSection({
       key: 'lists_integer',
       type: 'list.number_integer',
     },
-    {
-      name: 'Single Line Text Field',
-      key: 'single_line_text',
-      type: 'single_line_text_field',
-    },
+    // {
+    //   name: 'Single Line Text Field',
+    //   key: 'single_line_text',
+    //   type: 'single_line_text_field',
+    // },
     {
       name: 'Multi Line Text Field',
       key: 'multi_line_text',
@@ -307,8 +302,7 @@ export const KITCHEN_SINK_QUERY = `#graphql
     id
     handle
     type
-    name: field(key: "name") { value type }
-date_time: field(key: "date_time") { value type }
+    date_time: field(key: "date_time") { value type }
 list_date_time: field(key: "list_date_time") { value type }
 date: field(key: "date") { value type }
 list_date: field(key: "list_date") { value type }
@@ -322,7 +316,6 @@ decimal: field(key: "decimal") { value type }
 lists_decimal: field(key: "lists_decimal") { value type }
 integer: field(key: "integer") { value type }
 lists_integer: field(key: "lists_integer") { value type }
-single_line_text: field(key: "single_line_text") { value type }
 multi_line_text: field(key: "multi_line_text") { value type }
 list_single_line_text: field(key: "list_single_line_text") { value type }
 rich_text: field(key: "rich_text") { value type }
