@@ -385,12 +385,14 @@ function hasMDChanged(newMD: SectionSchema, existingMD: MetaobjectDefinition) {
 
   for (const existingField of existingMD.fieldDefinitions) {
     const newField = newMD.fields.find(
-      (newField: any) => newField.key === existingField.key,
+      (newField) => newField.key === existingField.key,
     );
+
     if (
       !newField ||
-      (['name', 'description', 'required'] as const).some(
-        (key) => newField[key] != existingField[key],
+      !!newField.required !== !!existingField.required ||
+      (['name', 'description'] as const).some(
+        (key) => (newField[key] ?? '') !== (existingField[key] ?? ''),
       )
     ) {
       return true;
