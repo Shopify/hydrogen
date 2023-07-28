@@ -5,12 +5,13 @@ import {writeFile} from '@shopify/cli-kit/node/fs';
 import {formatCode} from '../format-code.js';
 import {glob} from '@shopify/cli-kit/node/fs';
 
-export async function findAllSections(appDirectory: string) {
-  return (
-    await glob('**/*.schema.{js,ts}', {
-      cwd: appDirectory,
-    })
-  ).map((relativeFilepath) => joinPath(appDirectory, relativeFilepath));
+export async function findSectionSchemaPaths(appDirectory: string) {
+  const relativeSectionPaths = await glob('**/*.schema.{js,ts}', {
+    cwd: appDirectory,
+  });
+  return relativeSectionPaths.map((relativeFilepath) =>
+    joinPath(appDirectory, relativeFilepath),
+  );
 }
 
 export async function generateSectionsComponent(
@@ -22,7 +23,7 @@ export async function generateSectionsComponent(
 ) {
   console.log('GENERATING Sections.tsx');
 
-  const allSectionNames = (await findAllSections(appDirectory)).map(
+  const allSectionNames = (await findSectionSchemaPaths(appDirectory)).map(
     (filepath) => basename(filepath, '.schema.ts'),
   );
 
@@ -113,7 +114,7 @@ export function Sections({sections}: {sections: Array<SectionTypes>}) {
   return (
     <>
       {sections.map((section) => {
-        switch (section.type) {
+        switch (section?.type) {
           #SwitchCases#
           default:
             return null;

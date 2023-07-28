@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderFatalError} from '@shopify/cli-kit/node/ui';
+import {renderFatalError, renderSuccess} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
@@ -24,7 +24,7 @@ import {
   getMDForSections,
   handleSchemaChange,
 } from '../../lib/metaobjects/index.js';
-import {findAllSections} from '../../lib/metaobjects/sections.js';
+import {findSectionSchemaPaths} from '../../lib/metaobjects/sections.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -181,20 +181,27 @@ async function runDev({
   let skipRebuildLogs = false;
 
   const metaobjectDefinitions = await getMDForSections();
-  // console.log({metaobjectDefinitions});
+  const schemaPaths = await findSectionSchemaPaths(remixConfig.appDirectory);
+
+  if (schemaPaths.length) {
+    renderSuccess({
+      headline: 'Found section schema paths:',
+      body: {
+        list: {
+          items: schemaPaths,
+        },
+      },
+    });
+  }
 
   // Compute initial schemas before build
-  await Promise.all(
-    (
-      await findAllSections(remixConfig.appDirectory)
-    ).map((absolutePath) =>
-      handleSchemaChange(
-        absolutePath,
-        metaobjectDefinitions,
-        remixConfig.appDirectory,
-      ),
-    ),
-  );
+  for (const schemaPath of schemaPaths) {
+    handleSchemaChange(
+      schemaPath,
+      metaobjectDefinitions,
+      remixConfig.appDirectory,
+    );
+  }
 
   await watch(
     {

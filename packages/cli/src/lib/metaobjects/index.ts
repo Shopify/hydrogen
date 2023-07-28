@@ -1,5 +1,6 @@
 import {readFile, writeFile} from '@shopify/cli-kit/node/fs';
 import {formatCode} from '../format-code.js';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {
   createMetaobjectDefinition,
   getMetaobjectDefinitions,
@@ -19,7 +20,7 @@ const HACK_SESSION = {
 const recentlyUpdatedSchemas = new Set<string>();
 
 export async function handleSchemaChange(
-  file: string,
+  schemaPath: string,
   metaobjectDefinitions: Record<
     string,
     MetaobjectDefinition | undefined | null
@@ -27,12 +28,11 @@ export async function handleSchemaChange(
   appDirectory: string,
 ) {
   // DEBOUNCE
-  if (recentlyUpdatedSchemas.has(file)) return;
-  recentlyUpdatedSchemas.add(file);
-  setTimeout(() => recentlyUpdatedSchemas.delete(file), 1000);
+  if (recentlyUpdatedSchemas.has(schemaPath)) return;
+  recentlyUpdatedSchemas.add(schemaPath);
+  setTimeout(() => recentlyUpdatedSchemas.delete(schemaPath), 1000);
 
-  console.log('');
-  const originalFileContent = await readFile(file);
+  const originalFileContent = await readFile(schemaPath);
   const fileContentWithoutImports = transpileFile(
     originalFileContent
       .replace(/import\s+[^\s]+\s+from\s+['"][^'"]+['"];?/gims, '')
@@ -45,40 +45,61 @@ export async function handleSchemaChange(
     'data:text/javascript;base64,' + btoa(fileContentWithoutImports)
   );
 
-  const sectionSchema = mod.default as SectionSchema;
+  const localSchema = mod.default as SectionSchema;
+  const remoteDefinition = metaobjectDefinitions?.[localSchema.type];
 
-  // console.log('new', mod.default);
-  // console.log('old', metaobjectDefinitions[mod.default.type]);
-
-  const existingMD = metaobjectDefinitions[sectionSchema.type];
-
-  if (existingMD && hasMDChanged(sectionSchema, existingMD)) {
-    if (metaobjectDefinitions[sectionSchema.type]) {
-      // Update MD
-      metaobjectDefinitions[sectionSchema.type] =
-        await updateMetaobjectDefinition(
-          HACK_SESSION,
-          sectionSchema,
-          existingMD,
-        )!;
-    } else {
-      // Create MD
-      metaobjectDefinitions[sectionSchema.type] =
-        await createMetaobjectDefinition(HACK_SESSION, sectionSchema);
-    }
+  // Create, update or skip metaobject definition
+  if (!remoteDefinition) {
+    const newDefinition = await createMetaobjectDefinition(
+      HACK_SESSION,
+      localSchema,
+    );
+    metaobjectDefinitions[localSchema.type] = newDefinition;
+    renderSuccess({
+      headline: `Created section definition ${localSchema.type}`,
+    });
   } else {
-    console.log('NO CHANGE FOR', sectionSchema.type);
+    const schemaHasChanged = hasMDChanged(localSchema, remoteDefinition);
+    if (schemaHasChanged) {
+      const updatedDefinition = await updateMetaobjectDefinition(
+        HACK_SESSION,
+        localSchema,
+        remoteDefinition,
+      )!;
+      metaobjectDefinitions[localSchema.type] = updatedDefinition;
+      renderSuccess({
+        headline: `Updated section definition ${localSchema.type}`,
+      });
+    }
   }
 
-  await upsertMetaobject(HACK_SESSION, sectionSchema);
+  await upsertMetaobject(HACK_SESSION, localSchema);
   await generateSectionsComponent(metaobjectDefinitions, appDirectory);
+  await generateSchemaQueryAndFragments({
+    schemaPath,
+    originalFileContent,
+    localSchema,
+    mod,
+  });
+}
 
-  const generated = generateQueryFromSectionSchema(sectionSchema);
-  const queryPrefix = sectionSchema.name!.replace(/\s/g, '_').toUpperCase();
+async function generateSchemaQueryAndFragments({
+  schemaPath,
+  originalFileContent,
+  localSchema,
+  mod,
+}: {
+  schemaPath: string;
+  originalFileContent: string;
+  localSchema: SectionSchema;
+  mod: Record<string, unknown>;
+}) {
+  const generated = generateQueryFromSectionSchema(localSchema);
+  const queryPrefix = localSchema.name!.replace(/\s/g, '_').toUpperCase();
   const queryName = queryPrefix + '_QUERY';
-  const fragmentsName = queryPrefix + '_FRAGMENTS';
+  const fragmentName = queryPrefix + '_FRAGMENT';
   const schemaQuery = mod[queryName] as string | undefined;
-  const schemaFragments = mod[fragmentsName] as string | undefined;
+  const schemaFragments = mod[fragmentName] as string | undefined;
 
   if (
     generated.query !== schemaQuery ||
@@ -91,16 +112,15 @@ export async function handleSchemaChange(
     }
     if (schemaFragments) {
       // drop the old query
-      content = (
-        content.split(`export const ${fragmentsName}`)[0] ?? ''
-      ).trim();
+      content = (content.split(`export const ${fragmentName}`)[0] ?? '').trim();
     }
 
     content +=
-      `\n\nexport const ${fragmentsName} = \`${generated.fragments}\` as const;\n` +
-      `\nexport const ${queryName} = \`${generated.query}\${${fragmentsName}}\n\` as const;\n`;
+      `\n\nexport const ${fragmentName} = \`${generated.fragments}\` as const;\n` +
+      `\nexport const ${queryName} = \`${generated.query}\${${fragmentName}}\n\` as const;\n`;
 
-    await writeFile(file, await formatCode(content, undefined, file));
+    const formatted = formatCode(content, undefined, schemaPath);
+    await writeFile(schemaPath, formatted);
   }
 }
 
