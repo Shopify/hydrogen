@@ -41,18 +41,47 @@ npm run dev
 
 ## Hackdays Demo
 
-At `app/routes/_index.tsx`
+Scafold a new hydrogen store
+
+```bash
+h2 init
+```
+
+Find a new section in the UI registry
+
+```
+https://hydrogen-ui-e3f48eed66654f1e6bd3.o2.myshopify.dev
+```
+
+Copy the command to generate a new section
+
+```
+h2 generate section ImageText
+```
+
+Add a new section via the CLI. In the terminal paste your command:
+
+```bash
+HYDROGEN_UI_URL=https://hydrogen-ui-e3f48eed66654f1e6bd3.o2.myshopify.dev h2 generate section imagetext --path app
+```
+
+Start developing
+
+```bash
+HACK_ACCESS_TOKEN={insert-admin-api-token} h2 dev --codegen-unstable
+```
+
+Query for new section in `app/routes/hackdays.tsx`
 
 ```ts
 // Step 1. Add imports
 import {Sections, type RouteSections} from '../sections/Sections';
 import {IMAGE_TEXT_QUERY} from '../sections/ImageText.schema';
-import {useLoaderData} from '@remix-run/react';
 
 // Step 2. Fetch your new metaobject section
 const {section: imageText} = await context.storefront.query(IMAGE_TEXT_QUERY, {
   variables: {
-    handle: 'section-image-text-example',
+    handle: 'h2_default_section_image_text',
   },
 });
 const sections = [imageText] as RouteSections;
@@ -60,5 +89,10 @@ return json({sections});
 
 // Step 3. Render your new metaobject section
 const {sections} = useLoaderData<typeof loader>();
-<Sections sections={sections} />;
+
+return (
+  <>
+    <Sections sections={sections} />
+  </>
+);
 ```
