@@ -6,6 +6,7 @@ import {
 } from '../graphql/admin/metaobject-definitions.js';
 import {upsertMetaobject} from '../graphql/admin/metaobjects.js';
 import {generateQueryFromSectionSchema} from './section-query.js';
+import {generateSectionsComponent} from './sections.js';
 import type {MetaobjectDefinition, SectionSchema} from './types.js';
 
 const HACK_SESSION = {
@@ -15,7 +16,10 @@ const HACK_SESSION = {
 
 export async function handleSchemaChange(
   file: string,
-  metaobjectDefinitions: Record<string, any>,
+  metaobjectDefinitions: Record<
+    string,
+    MetaobjectDefinition | undefined | null
+  >,
 ) {
   console.log('');
   const originalFileContent = await readFile(file);
@@ -34,15 +38,17 @@ export async function handleSchemaChange(
   // console.log('new', mod.default);
   // console.log('old', metaobjectDefinitions[mod.default.type]);
 
-  if (hasMDChanged(sectionSchema, metaobjectDefinitions[sectionSchema.type])) {
+  const existingMD = metaobjectDefinitions[sectionSchema.type];
+
+  if (existingMD && hasMDChanged(sectionSchema, existingMD)) {
     if (metaobjectDefinitions[sectionSchema.type]) {
       // Update MD
       metaobjectDefinitions[sectionSchema.type] =
         await updateMetaobjectDefinition(
           HACK_SESSION,
           sectionSchema,
-          metaobjectDefinitions[sectionSchema.type],
-        );
+          existingMD,
+        )!;
     } else {
       // Create MD
       metaobjectDefinitions[sectionSchema.type] =
@@ -79,11 +85,11 @@ export async function getMDForSections() {
     .reduce((acc, item) => {
       acc[item.type.replace('section_', '')] = item;
       return acc;
-    }, {} as Record<string, any>);
+    }, {} as Record<string, MetaobjectDefinition | undefined | null>);
 }
 
-function hasMDChanged(newMD: SectionSchema, existingMD: MetaobjectDefinition) {
-  if (newMD && !existingMD) return true;
+function hasMDChanged(newMD: SectionSchema, existingMD?: MetaobjectDefinition) {
+  if (!newMD || !existingMD) return true;
 
   if (
     (['name', 'displayNameKey', 'description'] as const).some(
