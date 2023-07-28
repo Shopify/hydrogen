@@ -20,6 +20,7 @@ export async function handleSchemaChange(
     string,
     MetaobjectDefinition | undefined | null
   >,
+  appDirectory: string,
 ) {
   console.log('');
   const originalFileContent = await readFile(file);
@@ -56,6 +57,8 @@ export async function handleSchemaChange(
     }
 
     await upsertMetaobject(HACK_SESSION, sectionSchema);
+
+    await generateSectionsComponent(metaobjectDefinitions, appDirectory);
   } else {
     console.log('NO CHANGE FOR', sectionSchema.type);
   }

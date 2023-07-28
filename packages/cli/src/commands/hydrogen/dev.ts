@@ -192,6 +192,7 @@ async function runDev({
       handleSchemaChange(
         path.resolve(remixConfig.appDirectory, relativeFilepath),
         metaobjectDefinitions,
+        remixConfig.appDirectory,
       ),
     ),
   );
@@ -250,7 +251,11 @@ async function runDev({
             absolute.replace(publicPath, buildPathClient),
           );
         } else if (/\.schema\.[jt]s$/.test(file)) {
-          await handleSchemaChange(file, metaobjectDefinitions);
+          await handleSchemaChange(
+            file,
+            metaobjectDefinitions,
+            remixConfig.appDirectory,
+          );
         }
       },
       async onFileChanged(file: string) {
@@ -269,7 +274,11 @@ async function runDev({
             }),
           });
         } else if (/\.schema\.[jt]s$/.test(file)) {
-          await handleSchemaChange(file, metaobjectDefinitions);
+          await handleSchemaChange(
+            file,
+            metaobjectDefinitions,
+            remixConfig.appDirectory,
+          );
         }
 
         if (absolute.startsWith(publicPath)) {
