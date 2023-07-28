@@ -3,19 +3,6 @@ import type {
   MetaobjectFieldDefinitionCreateInput,
 } from './types-admin-api';
 
-/* A dynamically generated storefront query to fetch a section metaobject entry via `metaobjectByHandle` */
-export type SectionMeta = {
-  query: `#graphql ${string}`;
-};
-
-/* A section schema that includes all the required fields to create a metaobject definition */
-export type ValidSectionSchema = {
-  name: string;
-  type: string;
-  fields: SectionSchema['fields'];
-  blocks: SectionSchema['blocks'];
-};
-
 type BaseField = MetaobjectFieldDefinitionCreateInput & {
   default?: any;
 };
@@ -184,7 +171,7 @@ type FieldJson = BaseField & {
   type: 'json';
 };
 
-export type SectionField =
+type SectionField =
   // DATE
   | FieldDate
   | FieldDateList
@@ -239,7 +226,7 @@ export type SectionField =
   // JSON
   | FieldJson;
 
-export type FieldTypes = SectionField['type'];
+type FieldTypes = SectionField['type'];
 
 /*
  * A type that defines a section MetaobjectDefinitionCreateInput omiting

@@ -3,10 +3,26 @@ import type {
   MetaobjectFieldDefinitionCreateInput,
 } from './types-admin-api.js';
 
+export {
+  MetaobjectStatus,
+  MetaobjectAdminAccess,
+  MetaobjectStorefrontAccess,
+} from './types-admin-api.js';
+
+export type {
+  MetaobjectUpsertInput,
+  MetaobjectUpsertPayload,
+  MetaobjectDefinitionCreateInput,
+  MetaobjectFieldDefinitionCreateInput,
+  MetaobjectDefinitionUpdateInput,
+  MetaobjectFieldDefinitionOperationInput,
+  MetaobjectDefinition,
+  MetaobjectDefinitionCreatePayload,
+  MetaobjectDefinitionUpdatePayload,
+} from './types-admin-api.js';
+
 /* A dynamically generated storefront query to fetch a section metaobject entry via `metaobjectByHandle` */
-export type SectionMeta = {
-  query: `#graphql ${string}`;
-};
+export type SectionQuery = `#graphql ${string}`;
 
 /* A section schema that includes all the required fields to create a metaobject definition */
 export type ValidSectionSchema = {

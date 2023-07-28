@@ -1,7 +1,7 @@
 import type {
   SectionField,
   SectionSchema,
-  SectionMeta,
+  SectionQuery,
   ValidSectionSchema,
 } from './types.js';
 import {
@@ -13,19 +13,21 @@ import {
   PRODUCT_FRAGMENT,
   REFERENCE_FRAGMENT,
   VARIANT_FRAGMENT,
-} from './graphql/fragments.js';
+} from '../graphql/storefront/metaobjects-fragments.js';
 
 /**
  * Validates a section schema and generates a storefront `query` able
  * to fetch a metaobject entry for the given section schema via `metaobjectByHandle`
  */
-export function defineSection(schema: SectionSchema): SectionMeta {
+export function generateQueryFromSectionSchema(
+  schema: SectionSchema,
+): SectionQuery {
   const validSchema = validateSectionSchema(schema);
   if (validSchema instanceof Error) {
     throw validSchema;
   }
-  const query = createSectionQuery(validSchema);
-  return {query};
+
+  return createSectionQuery(validSchema);
 }
 
 /**
@@ -66,7 +68,7 @@ function createSectionQuery({
   type: _type,
   fields: _fields,
   blocks: _blocks,
-}: ValidSectionSchema): SectionMeta['query'] {
+}: ValidSectionSchema): SectionQuery {
   // remove space characters from schema name
   const name = _name.replace(/\s/g, '');
 
@@ -101,7 +103,7 @@ function createSectionQuery({
     ${blocks}
   }
   ${fragmentsString}
-` as SectionMeta['query'];
+` as SectionQuery;
   return query;
 }
 

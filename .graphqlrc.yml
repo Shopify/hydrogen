@@ -6,11 +6,11 @@ projects:
     documents:
      - 'templates/**/app/**/*.{graphql,js,ts,jsx,tsx}'
      - 'examples/**/app/**/*.{graphql,js,ts,jsx,tsx}'
+     - 'packages/cli/src/**/graphql/storefront/**/*.ts'
   admin:
     schema: 'packages/cli/admin.schema.json'
     documents:
      - 'packages/cli/src/**/graphql/admin/**/*.ts'
-     - 'packages/cli/src/sections/graphql/**/*.ts'
   business-platform:
     schema: 'packages/cli/business-platform.schema.json'
     documents: 'packages/cli/src/**/graphql/business-platform/**/*.ts'

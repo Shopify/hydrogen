@@ -1,11 +1,11 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {adminRequest, type AdminSession} from './client.js';
 import {
+  SectionSchema,
   MetaobjectUpsertInput,
   MetaobjectUpsertPayload,
   MetaobjectStatus,
-} from './types-admin-api.js';
-import type {SectionSchema} from './types.js';
+} from '../../metaobjects/types.js';
 
 const MetaobjectFragment = `#graphql
   fragment MetaobjectFragment on Metaobject {
