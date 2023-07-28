@@ -96,3 +96,35 @@ return (
   </>
 );
 ```
+
+## Premade `/hackdays/` route
+
+```ts
+import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {useLoaderData} from '@remix-run/react';
+import {Sections, type RouteSections} from '../sections/Sections';
+import {IMAGE_TEXT_QUERY} from '../sections/ImageText.schema';
+
+export async function loader({params, context}: LoaderArgs) {
+  const {section: imageText} = await context.storefront.query(
+    IMAGE_TEXT_QUERY,
+    {
+      variables: {
+        handle: 'h2_default_section_image_text',
+      },
+    },
+  );
+  const sections = [imageText] as RouteSections;
+  return json({sections});
+}
+
+export default function Page() {
+  const {sections} = useLoaderData<typeof loader>();
+
+  return (
+    <>
+      <Sections sections={sections} />
+    </>
+  );
+}
+```
