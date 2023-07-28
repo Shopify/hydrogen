@@ -1664,35 +1664,6 @@ export type SearchQuery = {
   };
 };
 
-export type ImageTextFragment = Pick<
-  StorefrontAPI.Metaobject,
-  'id' | 'handle' | 'type'
-> & {
-  heading?: StorefrontAPI.Maybe<
-    Pick<StorefrontAPI.MetaobjectField, 'value' | 'type'>
-  >;
-  image?: StorefrontAPI.Maybe<
-    Pick<StorefrontAPI.MetaobjectField, 'value' | 'type'>
-  >;
-};
-
-export type SectionImageTextQueryVariables = StorefrontAPI.Exact<{
-  handle: StorefrontAPI.Scalars['String'];
-}>;
-
-export type SectionImageTextQuery = {
-  section?: StorefrontAPI.Maybe<
-    Pick<StorefrontAPI.Metaobject, 'id' | 'handle' | 'type'> & {
-      heading?: StorefrontAPI.Maybe<
-        Pick<StorefrontAPI.MetaobjectField, 'value' | 'type'>
-      >;
-      image?: StorefrontAPI.Maybe<
-        Pick<StorefrontAPI.MetaobjectField, 'value' | 'type'>
-      >;
-    }
-  >;
-};
-
 export type MoneyFragment = Pick<
   StorefrontAPI.MoneyV2,
   'currencyCode' | 'amount'
@@ -1879,10 +1850,6 @@ interface GeneratedQueryTypes {
   '#graphql\n  fragment SearchProduct on Product {\n    __typename\n    handle\n    id\n    publishedAt\n    title\n    trackingParameters\n    vendor\n    variants(first: 1) {\n      nodes {\n        id\n        image {\n          url\n          altText\n          width\n          height\n        }\n        price {\n          amount\n          currencyCode\n        }\n        compareAtPrice {\n          amount\n          currencyCode\n        }\n        selectedOptions {\n          name\n          value\n        }\n        product {\n          handle\n          title\n        }\n      }\n    }\n  }\n  fragment SearchPage on Page {\n     __typename\n     handle\n    id\n    title\n    trackingParameters\n  }\n  fragment SearchArticle on Article {\n    __typename\n    handle\n    id\n    title\n    trackingParameters\n  }\n  query search(\n    $country: CountryCode\n    $endCursor: String\n    $first: Int\n    $language: LanguageCode\n    $last: Int\n    $query: String!\n    $startCursor: String\n  ) @inContext(country: $country, language: $language) {\n    products: search(\n      query: $query,\n      unavailableProducts: HIDE,\n      types: [PRODUCT],\n      first: $first,\n      sortKey: RELEVANCE,\n      last: $last,\n      before: $startCursor,\n      after: $endCursor\n    ) {\n      nodes {\n        ...on Product {\n          ...SearchProduct\n        }\n      }\n      pageInfo {\n        hasNextPage\n        hasPreviousPage\n        startCursor\n        endCursor\n      }\n    }\n    pages: search(\n      query: $query,\n      types: [PAGE],\n      first: 10\n    ) {\n      nodes {\n        ...on Page {\n          ...SearchPage\n        }\n      }\n    }\n    articles: search(\n      query: $query,\n      types: [ARTICLE],\n      first: 10\n    ) {\n      nodes {\n        ...on Article {\n          ...SearchArticle\n        }\n      }\n    }\n  }\n': {
     return: SearchQuery;
     variables: SearchQueryVariables;
-  };
-  '#graphql\n  query SectionImageText($handle: String!) {\n    section: metaobject(handle: { handle: $handle, type: "section_image_text" }) {\n      ...ImageText\n    }\n  }\n  #graphql\n  fragment ImageText on Metaobject {\n    id\n    handle\n    type\n    heading: field(key: "heading") { value type }\nimage: field(key: "image") { value type }\n    \n  }\n  \n\n': {
-    return: SectionImageTextQuery;
-    variables: SectionImageTextQueryVariables;
   };
 }
 
