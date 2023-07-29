@@ -726,7 +726,7 @@
         "sectionName": {
           "name": "sectionName",
           "description": "The section to generate}.",
-          "required": true
+          "required": false
         }
       }
     },

@@ -2,7 +2,7 @@ import Command from '@shopify/cli-kit/node/base-command';
 import fs from 'fs/promises';
 import {joinPath, resolvePath} from '@shopify/cli-kit/node/path';
 import {capitalize} from '@shopify/cli-kit/common/string';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {renderSuccess, renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../../lib/flags.js';
 import {Args} from '@oclif/core';
 
@@ -22,6 +22,14 @@ type SectionComponent = BaseFile & {
   components?: Array<Component>;
 };
 
+type SectionItem = {
+  name: string;
+  handle: string;
+  description: string;
+};
+
+type AvailableSections = Array<SectionItem>;
+
 export default class GenerateSection extends Command {
   static description = 'Generates a commerce component.';
   static flags = {
@@ -37,18 +45,32 @@ export default class GenerateSection extends Command {
     sectionName: Args.string({
       name: 'sectionName',
       description: `The section to generate}.`,
-      required: true,
+      required: false,
       env: 'SHOPIFY_HYDROGEN_ARG_SECTION',
     }),
   };
 
   async run(): Promise<void> {
-    const {
+    let {
       flags,
       args: {sectionName},
     } = await this.parse(GenerateSection);
 
     const directory = flags.path ? resolvePath(flags.path) : process.cwd();
+
+    // If no section name is provided, prompt the user to select one
+    if (!sectionName) {
+      const availableSections = await fetchAvailableSections();
+
+      sectionName = await renderSelectPrompt({
+        message: 'Select a section to generate:',
+        choices: availableSections.map(({name}) => ({
+          value: name,
+          label: name,
+        })),
+        defaultValue: 'Hero',
+      });
+    }
 
     await runGenerateComponent({
       ...flags,
@@ -174,6 +196,11 @@ function getRegistryUrl({
   if (!process.env.HYDROGEN_UI_URL) {
     throw new Error('HYDROGEN_REGISTRY_URL not found');
   }
+
+  if (!name) {
+    return `${process.env.HYDROGEN_UI_URL}/${type}.json`;
+  }
+
   return `${process.env.HYDROGEN_UI_URL}/${type}/${name}.json`;
 }
 
@@ -235,4 +262,25 @@ async function downloadComponent(name: string): Promise<Component | never> {
   }
 
   return data as Component;
+}
+
+/**
+ * Fetches all available sections from the registry /sections.json endpoint
+ * @returns The available sections
+ * @example
+ * ```ts
+ * const availableSections = await fetchAvailableSections();
+ * -> returns [{name: 'ImageText',  description: '...', handle: 'image-text'}, ...]
+ *  ```
+ **/
+async function fetchAvailableSections(): Promise<AvailableSections> {
+  const sectionsUrl = getRegistryUrl({type: 'sections', name: ''});
+  const response = await fetch(sectionsUrl);
+  const data = await response.json();
+
+  if (!data || !Array.isArray(data)) {
+    throw new Error(`No sections found at ${sectionsUrl}`);
+  }
+
+  return data as AvailableSections;
 }
