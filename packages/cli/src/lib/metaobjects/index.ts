@@ -36,7 +36,7 @@ export async function handleSchemaChange(
   const fileContentWithoutImports = transpileFile(
     originalFileContent
       .replace(/import\s+[^\s]+\s+from\s+['"][^'"]+['"];?/gims, '')
-      .replace('defineSection', '')
+      .replace('defineSchema', '')
       .trim(),
   );
 

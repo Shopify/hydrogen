@@ -56,7 +56,15 @@ export default class GenerateSection extends Command {
       args: {sectionName},
     } = await this.parse(GenerateSection);
 
-    const directory = flags.path ? resolvePath(flags.path) : process.cwd();
+    let directory = flags.path ? resolvePath(flags.path) : process.cwd();
+
+    if (await isHydrogenRoot(directory)) {
+      directory = joinPath(directory, 'app');
+    } else {
+      throw new Error(
+        'h2 generate section must be run from the root of Hydrogen project containing an `app` folder',
+      );
+    }
 
     // If no section name is provided, prompt the user to select one
     if (!sectionName) {
@@ -95,6 +103,19 @@ export async function runGenerateComponent({
 }: GenerateComponentOptions) {
   const section = await downloadSection(sectionName);
   await writeSectionFiles({section, directory});
+}
+
+/**
+ * Checks if the current directory is the root of a Hydrogen project
+ */
+async function isHydrogenRoot(directory: string): Promise<boolean> {
+  const remixEnvDts = joinPath(directory, 'remix.env.d.ts');
+  try {
+    await fs.access(remixEnvDts, fs.constants.F_OK);
+    return true;
+  } catch (error) {
+    return false;
+  }
 }
 
 /**

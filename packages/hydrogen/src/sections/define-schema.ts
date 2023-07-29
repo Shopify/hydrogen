@@ -1,10 +1,9 @@
 import type {SectionSchema} from './types.js';
 
 /**
- * Validates a section schema and generates a storefront `query` able
- * to fetch a metaobject entry for the given section schema via `metaobjectByHandle`
+ * Validates a section schema and provides type safety for fields definitions
  */
-export function defineSection(schema: SectionSchema): void {
+export function defineSchema(schema: SectionSchema): void {
   if (!schema) {
     throw new Error('No section schema provided');
   }
