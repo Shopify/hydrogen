@@ -65,7 +65,11 @@ export default class GenerateComponent extends Command {
         message: 'Select a component to generate:',
         choices: availableComponents.map(({name}) => ({
           value: name,
-          label: name,
+          label: `${name} - \n${getRegistryUrl({
+            name,
+            type: 'components',
+            preview: true,
+          })}\n`,
         })),
         defaultValue: 'Hero',
       });

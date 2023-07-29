@@ -69,9 +69,13 @@ export default class GenerateSection extends Command {
 
       sectionName = await renderSelectPrompt({
         message: 'Select a section to generate:',
-        choices: availableSections.map(({name}) => ({
+        choices: availableSections.map(({name, description}) => ({
           value: name,
-          label: name,
+          label: `${name} - ${description}\n${getRegistryUrl({
+            name,
+            type: 'sections',
+            preview: true,
+          })}\n`,
         })),
         defaultValue: 'Hero',
       });
@@ -207,9 +211,12 @@ async function writeSectionFiles({
 export function getRegistryUrl({
   type,
   name,
+  preview,
 }: {
   type: 'sections' | 'components';
   name: string;
+  /** wether to return the component or section preview url rather than the json */
+  preview?: boolean;
 }) {
   if (!process.env.HYDROGEN_UI_URL) {
     throw new Error('HYDROGEN_REGISTRY_URL not found');
@@ -217,6 +224,10 @@ export function getRegistryUrl({
 
   if (!name) {
     return `${process.env.HYDROGEN_UI_URL}/${type}.json`;
+  }
+
+  if (preview) {
+    return `${process.env.HYDROGEN_UI_URL}/${type}/${name}`;
   }
 
   return `${process.env.HYDROGEN_UI_URL}/${type}/${name}.json`;
