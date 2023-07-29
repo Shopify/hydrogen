@@ -580,16 +580,8 @@
       "args": {
         "componentName": {
           "name": "componentName",
-          "description": "The component to generate. One of Aside,Cart,Footer,Header,Layout,Search.",
-          "required": true,
-          "options": [
-            "Aside",
-            "Cart",
-            "Footer",
-            "Header",
-            "Layout",
-            "Search"
-          ]
+          "description": "The component to generate.",
+          "required": false
         }
       }
     },

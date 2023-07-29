@@ -5,15 +5,12 @@ import {capitalize} from '@shopify/cli-kit/common/string';
 import {renderSuccess, renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 import {commonFlags} from '../../../lib/flags.js';
 import {Args} from '@oclif/core';
+import type {Component} from './component.js';
 
-type BaseFile = {
+export type BaseFile = {
   name: string;
   source: string;
   description: string;
-};
-
-type Component = BaseFile & {
-  type: 'component';
 };
 
 type SectionComponent = BaseFile & {
@@ -108,7 +105,7 @@ export async function runGenerateComponent({
 /**
  * Checks if the current directory is the root of a Hydrogen project
  */
-async function isHydrogenRoot(directory: string): Promise<boolean> {
+export async function isHydrogenRoot(directory: string): Promise<boolean> {
   const remixEnvDts = joinPath(directory, 'remix.env.d.ts');
   try {
     await fs.access(remixEnvDts, fs.constants.F_OK);
@@ -207,7 +204,7 @@ async function writeSectionFiles({
  * -> returns 'https://hydrogen-ui-e3f48eed66654f1e6bd3.o2.myshopify.dev/sections/Hero.json'
  * ```
  */
-function getRegistryUrl({
+export function getRegistryUrl({
   type,
   name,
 }: {
@@ -256,33 +253,6 @@ async function downloadSection(
   }
 
   return data as SectionComponent;
-}
-
-/**
- * Fetches a component from the registry
- * @param name - The name of the component to retrieve
- * @returns The component
- * @example
- * ```ts
- * const component = await fetchComponent('ProductCard');
- * -> returns {name: 'ProductCard', type: 'component', source: '...', description: '...'}
- * ```
- */
-async function downloadComponent(name: string): Promise<Component | never> {
-  const componentsUrl = getRegistryUrl({type: 'components', name});
-  const response = await fetch(componentsUrl);
-
-  if (!response.ok) {
-    throw new Error('Failed to fetch component');
-  }
-
-  const data = await response.json();
-
-  if (typeof data !== 'object' || !data) {
-    throw new Error('Invalid component');
-  }
-
-  return data as Component;
 }
 
 /**
