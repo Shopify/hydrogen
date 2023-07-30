@@ -1,6 +1,6 @@
 import {MetaobjectDefinition} from './types-admin-api.js';
 import {basename, joinPath} from '@shopify/cli-kit/node/path';
-import {renderInfo} from '@shopify/cli-kit/node/ui';
+import {renderInfo, renderWarning} from '@shopify/cli-kit/node/ui';
 import {writeFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {formatCode} from '../format-code.js';
 import {glob} from '@shopify/cli-kit/node/fs';
@@ -81,6 +81,9 @@ export async function generateSectionsComponent(
     switchCases.length === 0
   ) {
     console.warn('No schemas found');
+    renderWarning({
+      headline: `No schemas found`,
+    });
     return;
   }
 
