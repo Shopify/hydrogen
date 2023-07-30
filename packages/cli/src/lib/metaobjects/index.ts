@@ -45,40 +45,43 @@ export async function handleSchemaChange(
     'data:text/javascript;base64,' + btoa(fileContentWithoutImports)
   );
 
-  const localSchema = mod.default as SectionSchema;
-  const remoteDefinition = metaobjectDefinitions?.[localSchema.type];
+  const sectionSchema = mod.default as SectionSchema;
+  const remoteDefinition = metaobjectDefinitions?.[sectionSchema.type];
 
   // Create, update or skip metaobject definition
   if (!remoteDefinition) {
     const newDefinition = await createMetaobjectDefinition(
       HACK_SESSION,
-      localSchema,
+      sectionSchema,
     );
-    metaobjectDefinitions[localSchema.type] = newDefinition;
+    metaobjectDefinitions[sectionSchema.type] = newDefinition;
     renderSuccess({
-      headline: `Created section definition ${localSchema.type}`,
+      headline: `Created section definition ${sectionSchema.type}`,
     });
   } else {
-    const schemaHasChanged = hasMDChanged(localSchema, remoteDefinition);
+    const schemaHasChanged = hasDefinitionChanged(
+      sectionSchema,
+      remoteDefinition,
+    );
     if (schemaHasChanged) {
       const updatedDefinition = await updateMetaobjectDefinition(
         HACK_SESSION,
-        localSchema,
+        sectionSchema,
         remoteDefinition,
       )!;
-      metaobjectDefinitions[localSchema.type] = updatedDefinition;
+      metaobjectDefinitions[sectionSchema.type] = updatedDefinition;
       renderSuccess({
-        headline: `Updated section definition ${localSchema.type}`,
+        headline: `Updated section definition ${sectionSchema.type}`,
       });
     }
   }
 
-  await upsertMetaobject(HACK_SESSION, localSchema);
+  await upsertMetaobject(HACK_SESSION, sectionSchema);
   await generateSectionsComponent(metaobjectDefinitions, appDirectory);
   await generateSchemaQueryAndFragments({
     schemaPath,
     originalFileContent,
-    localSchema,
+    sectionSchema,
     mod,
   });
 }
@@ -86,16 +89,16 @@ export async function handleSchemaChange(
 async function generateSchemaQueryAndFragments({
   schemaPath,
   originalFileContent,
-  localSchema,
+  sectionSchema,
   mod,
 }: {
   schemaPath: string;
   originalFileContent: string;
-  localSchema: SectionSchema;
+  sectionSchema: SectionSchema;
   mod: Record<string, unknown>;
 }) {
-  const generated = generateQueryFromSectionSchema(localSchema);
-  const queryPrefix = localSchema.name!.replace(/\s/g, '_').toUpperCase();
+  const generated = generateQueryFromSectionSchema(sectionSchema);
+  const queryPrefix = sectionSchema.name!.replace(/\s/g, '_').toUpperCase();
   const queryName = queryPrefix + '_QUERY';
   const fragmentName = queryPrefix + '_FRAGMENT';
   const schemaQuery = mod[queryName] as string | undefined;
@@ -124,7 +127,7 @@ async function generateSchemaQueryAndFragments({
   }
 }
 
-export async function getMDForSections() {
+export async function getDefinitionsForSections() {
   return (await getMetaobjectDefinitions(HACK_SESSION))
     .filter((metaobject) => metaobject.type.startsWith('section_'))
     .reduce((acc, item) => {
@@ -133,7 +136,10 @@ export async function getMDForSections() {
     }, {} as Record<string, MetaobjectDefinition | undefined | null>);
 }
 
-function hasMDChanged(newMD: SectionSchema, existingMD?: MetaobjectDefinition) {
+function hasDefinitionChanged(
+  newMD: SectionSchema,
+  existingMD?: MetaobjectDefinition,
+) {
   if (!newMD || !existingMD) return true;
 
   if (

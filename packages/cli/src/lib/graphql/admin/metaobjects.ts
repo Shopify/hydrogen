@@ -1,4 +1,5 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {adminRequest, type AdminSession} from './client.js';
 import {
   SectionSchema,
@@ -13,7 +14,7 @@ const MetaobjectFragment = `#graphql
     type
     fields {
       key
-      type 
+      type
       value
     }
   }
@@ -57,7 +58,6 @@ export async function upsertMetaobject(
 
   const type = 'section_' + section.type;
   const handle = 'h2_default_' + type;
-  console.log('UPSERTING VALUE', handle, 'for', type);
 
   const {
     metaobjectUpsert: {metaobject, userErrors},
@@ -83,6 +83,10 @@ export async function upsertMetaobject(
     const errorMessages = userErrors.map(({message}) => message).join(', ');
     throw new AbortError('Could not create metaobject entry. ' + errorMessages);
   }
+
+  renderInfo({
+    headline: `Upserted ${type} default metaobject entry ${handle}`,
+  });
 
   return metaobject;
 }

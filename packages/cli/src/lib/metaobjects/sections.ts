@@ -1,7 +1,7 @@
 import {MetaobjectDefinition} from './types-admin-api.js';
 import {basename, joinPath} from '@shopify/cli-kit/node/path';
-import {writeFile} from '@shopify/cli-kit/node/fs';
-// import {camelize} from '@shopify/cli-kit/common/string';
+import {renderInfo} from '@shopify/cli-kit/node/ui';
+import {writeFile, fileExists} from '@shopify/cli-kit/node/fs';
 import {formatCode} from '../format-code.js';
 import {glob} from '@shopify/cli-kit/node/fs';
 
@@ -21,13 +21,12 @@ export async function generateSectionsComponent(
   >,
   appDirectory: string,
 ) {
-  console.log('GENERATING Sections.tsx');
-
   const allSectionNames = (await findSectionSchemaPaths(appDirectory)).map(
     (filepath) => basename(filepath, '.schema.ts'),
   );
 
   const sectionsPath = joinPath(appDirectory, 'sections', 'Sections.tsx');
+
   const componentImports: string[] = [];
   const typeImports: string[] = [];
   const sectionTypes: string[] = [];
@@ -95,6 +94,20 @@ export async function generateSectionsComponent(
   // .replace('#FragmentEmbeddings#', fragmentEmbeddings.join('\n'));
 
   await writeFile(sectionsPath, formatCode(content, undefined, sectionsPath));
+
+  // check if SectionsTsx exists
+  const SectionsTsxExists = await fileExists(sectionsPath);
+
+  console.log('\n');
+  if (SectionsTsxExists) {
+    renderInfo({
+      headline: `Updated Sections.tsx`,
+    });
+  } else {
+    renderInfo({
+      headline: `Generated Sections.tsx`,
+    });
+  }
 }
 
 const template = `

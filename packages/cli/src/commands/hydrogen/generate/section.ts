@@ -139,6 +139,8 @@ async function writeSectionFiles({
 }) {
   const sectionsFolder = joinPath(directory, 'sections');
   const componentsFolder = joinPath(directory, 'components');
+  console.log('directory', directory);
+  console.log('sectionsFolder', sectionsFolder);
 
   // Create sections folder if it doesn't exist
   try {

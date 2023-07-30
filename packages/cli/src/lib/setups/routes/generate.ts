@@ -43,17 +43,18 @@ import {findFileWithExtension} from '../../file.js';
 const NO_LOCALE_PATTERNS = [/robots\.txt/];
 
 const ROUTE_MAP = {
+  account: 'account*',
+  blogs: 'blogs*',
+  cart: 'cart',
+  collections: 'collections*',
   home: ['_index', '$'],
   page: 'pages*',
-  cart: 'cart',
-  products: 'products*',
-  collections: 'collections*',
   policies: 'policies*',
-  blogs: 'blogs*',
-  account: 'account*',
-  search: ['search', 'api.predictive-search'],
+  products: 'products*',
   robots: '[robots.txt]',
+  search: ['search', 'api.predictive-search'],
   sitemap: '[sitemap.xml]',
+  hackdays: 'hackdays',
 };
 
 type RouteKey = keyof typeof ROUTE_MAP;

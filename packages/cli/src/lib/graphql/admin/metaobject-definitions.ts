@@ -89,7 +89,6 @@ export async function createMetaobjectDefinition(
   newSection: SectionSchema,
 ) {
   const definition = sectionToMetaobject(newSection);
-  console.log('CREATING DEFINITION', definition.type);
 
   const {
     metaobjectDefinitionCreate: {metaobjectDefinition, userErrors},
@@ -118,8 +117,6 @@ export async function updateMetaobjectDefinition(
   newSection: SectionSchema,
   existingSection: MetaobjectDefinition,
 ) {
-  console.log('UPDATING DEFINITION', existingSection.type);
-
   const {
     metaobjectDefinitionUpdate: {metaobjectDefinition, userErrors},
   } = await adminRequest<{

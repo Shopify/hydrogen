@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderFatalError, renderSuccess} from '@shopify/cli-kit/node/ui';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
@@ -21,7 +21,7 @@ import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {
-  getMDForSections,
+  getDefinitionsForSections,
   handleSchemaChange,
 } from '../../lib/metaobjects/index.js';
 import {findSectionSchemaPaths} from '../../lib/metaobjects/sections.js';
@@ -175,24 +175,14 @@ async function runDev({
     if (showUpgrade) showUpgrade();
   }
 
+  console.log('\n');
   const remixConfig = await reloadConfig();
 
   const fileWatchCache = createFileWatchCache();
   let skipRebuildLogs = false;
 
-  const metaobjectDefinitions = await getMDForSections();
+  const metaobjectDefinitions = await getDefinitionsForSections();
   const schemaPaths = await findSectionSchemaPaths(remixConfig.appDirectory);
-
-  if (schemaPaths.length) {
-    renderSuccess({
-      headline: 'Found section schema paths:',
-      body: {
-        list: {
-          items: schemaPaths,
-        },
-      },
-    });
-  }
 
   // Compute initial schemas before build
   for (const schemaPath of schemaPaths) {

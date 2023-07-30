@@ -60,6 +60,8 @@ export async function getAllEnvironmentVariables({
           ]),
       ]),
     );
+
+    outputInfo(' ');
   }
 
   return {

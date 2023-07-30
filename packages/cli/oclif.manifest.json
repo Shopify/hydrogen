@@ -623,20 +623,21 @@
       "args": {
         "routeName": {
           "name": "routeName",
-          "description": "The route to generate. One of home,page,cart,products,collections,policies,blogs,account,search,robots,sitemap,all.",
+          "description": "The route to generate. One of account,blogs,cart,collections,home,page,policies,products,robots,search,sitemap,hackdays,all.",
           "required": true,
           "options": [
+            "account",
+            "blogs",
+            "cart",
+            "collections",
             "home",
             "page",
-            "cart",
-            "products",
-            "collections",
             "policies",
-            "blogs",
-            "account",
-            "search",
+            "products",
             "robots",
+            "search",
             "sitemap",
+            "hackdays",
             "all"
           ]
         }
