@@ -143,7 +143,8 @@ export async function createPlatformShortcut() {
 
 const BASH_ZSH_COMMAND = `
 # Shopify Hydrogen alias to local projects
-alias ${ALIAS_NAME}='$(npm prefix -s)/node_modules/.bin/shopify hydrogen'`;
+alias ${ALIAS_NAME}='$(npm prefix -s)/node_modules/.bin/shopify hydrogen'
+`;
 
 const FISH_FUNCTION = `
 function ${ALIAS_NAME} --wraps='shopify hydrogen' --description 'Shortcut for the Hydrogen CLI'
@@ -156,7 +157,8 @@ async function createShortcutsForUnix() {
   const shells: UnixShell[] = [];
 
   if (await shellWriteAlias('zsh', ALIAS_NAME, BASH_ZSH_COMMAND)) {
-    shells.push('zsh');
+    // using a custom zshrc alias which out injects HYDROGEN_UI_URL and HACK_ACCESS_TOKEN
+    // shells.push('zsh');
   }
 
   if (await shellWriteAlias('bash', ALIAS_NAME, BASH_ZSH_COMMAND)) {
