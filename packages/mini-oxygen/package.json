@@ -21,6 +21,7 @@
     "lint": "eslint --ext .js,.ts --max-warnings 0 src",
     "lint:format": "yarn run lint --fix",
     "type-check": "yarn tsc --noEmit",
+    "prepack": "yarn install && yarn build",
     "test": "NODE_OPTIONS=--experimental-vm-modules vitest ."
   },
   "files": [
