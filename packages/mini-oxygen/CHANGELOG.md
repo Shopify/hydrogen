@@ -1,5 +1,13 @@
 # @shopify/mini-oxygen
 
+## 2.0.1
+
+### Patch Changes
+
+- 4ab2a98: Update eslint-config-prettier from 8.8.0 to 8.9.0
+- d9cb363: Update inquirer from 9.2.8 to 9.2.9
+- d86b580: Update eslint from 8.45.0 to 8.46.0
+
 ## 2.0.0
 
 ### Major Changes
