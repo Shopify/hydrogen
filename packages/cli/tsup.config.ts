@@ -45,7 +45,7 @@ export default defineConfig([
       console.log('\n', 'Copied i18n template files to build directory', '\n');
 
       console.log('\n', 'Generating Oclif manifest...');
-      await execAsync('npx oclif manifest');
+      await execAsync('node ./scripts/generate-manifest.mjs');
       console.log('', 'Oclif manifest generated.\n');
     },
   },
