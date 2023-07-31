@@ -1,4 +1,4 @@
-import {Await, Link, useMatches} from '@remix-run/react';
+import {Await, NavLink, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {LayoutProps} from './Layout';
 
@@ -10,9 +10,9 @@ export function Header({header, isLoggedIn, cart}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header className="header">
-      <Link prefetch="intent" to="/">
+      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
         <strong>{shop.name}</strong>
-      </Link>
+      </NavLink>
       <HeaderMenu menu={menu} viewport="desktop" />
       <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
     </header>
@@ -40,9 +40,15 @@ export function HeaderMenu({
   return (
     <nav className={className} role="navigation">
       {viewport === 'mobile' && (
-        <Link prefetch="intent" to="/" onClick={closeAside}>
+        <NavLink
+          end
+          onClick={closeAside}
+          prefetch="intent"
+          style={activeLinkStyle}
+          to="/"
+        >
           Home
-        </Link>
+        </NavLink>
       )}
       {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
         if (!item.url) return null;
@@ -54,15 +60,17 @@ export function HeaderMenu({
             ? new URL(item.url).pathname
             : item.url;
         return (
-          <Link
-            key={item.id}
-            prefetch="intent"
+          <NavLink
             className="header-menu-item"
-            to={url}
+            end
+            key={item.id}
             onClick={closeAside}
+            prefetch="intent"
+            style={activeLinkStyle}
+            to={url}
           >
             {item.title}
-          </Link>
+          </NavLink>
         );
       })}
     </nav>
@@ -76,9 +84,9 @@ function HeaderCtas({
   return (
     <nav className="header-ctas" role="navigation">
       <HeaderMenuMobileToggle />
-      <Link prefetch="intent" to="/account">
+      <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
         {isLoggedIn ? 'Account' : 'Sign in'}
-      </Link>
+      </NavLink>
       <SearchToggle />
       <CartToggle cart={cart} />
     </nav>
@@ -155,3 +163,16 @@ const FALLBACK_HEADER_MENU = {
     },
   ],
 };
+
+function activeLinkStyle({
+  isActive,
+  isPending,
+}: {
+  isActive: boolean;
+  isPending: boolean;
+}) {
+  return {
+    fontWeight: isActive ? 'bold' : '',
+    color: isPending ? 'grey' : 'black',
+  };
+}

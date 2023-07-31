@@ -149,11 +149,7 @@ function AcccountMenu() {
 
 function Logout() {
   return (
-    <Form
-      method="POST"
-      action="/account/logout"
-      style={{display: 'inline-block'}}
-    >
+    <Form className="account-logout" method="POST" action="/account/logout">
       &nbsp;<button type="submit">Sign out</button>
     </Form>
   );
@@ -176,7 +172,6 @@ export const CUSTOMER_FRAGMENT = `#graphql
     numberOfOrders
     phone
   }
-
   fragment Address on MailingAddress {
     id
     formatted

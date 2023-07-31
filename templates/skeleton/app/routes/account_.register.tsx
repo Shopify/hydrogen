@@ -167,7 +167,11 @@ export default function Register() {
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customerCreate
 const CUSTOMER_CREATE_MUTATION = `#graphql
-  mutation customerCreate($input: CustomerCreateInput!) {
+  mutation customerCreate(
+    $input: CustomerCreateInput!,
+    $country: CountryCode,
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     customerCreate(input: $input) {
       customer {
         id
@@ -183,7 +187,11 @@ const CUSTOMER_CREATE_MUTATION = `#graphql
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/mutations/customeraccesstokencreate
 const REGISTER_LOGIN_MUTATION = `#graphql
-  mutation registerLogin($input: CustomerAccessTokenCreateInput!) {
+  mutation registerLogin(
+    $input: CustomerAccessTokenCreateInput!,
+    $country: CountryCode,
+    $language: LanguageCode
+  ) @inContext(country: $country, language: $language) {
     customerAccessTokenCreate(input: $input) {
       customerUserErrors {
         code

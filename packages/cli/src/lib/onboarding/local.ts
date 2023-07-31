@@ -2,7 +2,7 @@ import {copy as copyWithFilter} from 'fs-extra/esm';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
 import {writeFile} from '@shopify/cli-kit/node/fs';
-import {joinPath} from '@shopify/cli-kit/node/path';
+import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {hyphenate} from '@shopify/cli-kit/common/string';
 import colors from '@shopify/cli-kit/node/colors';
 import {
@@ -84,11 +84,17 @@ export async function setupLocalStarterTemplate(
       })
       .catch(abort);
 
+  const templateDir = getStarterDir();
   let backgroundWorkPromise: Promise<any> = copyWithFilter(
-    getStarterDir(),
+    templateDir,
     project.directory,
     // Filter out the `app` directory, which will be generated later
-    {filter: (filepath: string) => !/\/app\//i.test(filepath)},
+    {
+      filter: (filepath: string) =>
+        !/^(app|dist|node_modules)\//i.test(
+          relativePath(templateDir, filepath),
+        ),
+    },
   )
     .then(() =>
       // Generate project entries and their file dependencies
@@ -173,7 +179,9 @@ export async function setupLocalStarterTemplate(
   backgroundWorkPromise = backgroundWorkPromise
     .then(() => transpileProject().catch(abort))
     // Directory files are all setup, commit them to git
-    .then(() => createInitialCommit(project.directory));
+    .then(() =>
+      options.git ? createInitialCommit(project.directory) : undefined,
+    );
 
   const {setupCss, cssStrategy} = await handleCssStrategy(
     project.directory,
@@ -185,10 +193,12 @@ export async function setupLocalStarterTemplate(
     backgroundWorkPromise = backgroundWorkPromise
       .then(() => setupCss().catch(abort))
       .then(() =>
-        commitAll(
-          project.directory,
-          'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
-        ),
+        options.git
+          ? commitAll(
+              project.directory,
+              'Setup ' + CSS_STRATEGY_NAME_MAP[cssStrategy],
+            )
+          : undefined,
       );
   }
 
@@ -218,7 +228,7 @@ export async function setupLocalStarterTemplate(
     });
 
     tasks.push({
-      title: 'Installing dependencies',
+      title: 'Installing dependencies. This could take a few minutes',
       task: async () => {
         await installingDepsPromise;
       },
@@ -282,10 +292,12 @@ export async function setupLocalStarterTemplate(
         serverEntryPoint: language === 'ts' ? 'server.ts' : 'server.js',
       })
         .then(() =>
-          commitAll(
-            project.directory,
-            `Setup markets support using ${i18nStrategy}`,
-          ),
+          options.git
+            ? commitAll(
+                project.directory,
+                `Setup markets support using ${i18nStrategy}`,
+              )
+            : undefined,
         )
         .catch((error) => {
           setupSummary.i18nError = error as AbortError;
@@ -295,7 +307,7 @@ export async function setupLocalStarterTemplate(
         .then((routes) => {
           setupSummary.routes = routes;
 
-          if (routes) {
+          if (options.git && routes) {
             return commitAll(
               project.directory,
               `Generate routes for core functionality`,
@@ -310,7 +322,14 @@ export async function setupLocalStarterTemplate(
 
   await renderTasks(tasks);
 
-  await commitAll(project.directory, 'Lockfile');
+  if (options.git) {
+    await commitAll(project.directory, 'Lockfile');
+  }
 
   await renderProjectReady(project, setupSummary);
+
+  return {
+    ...project,
+    ...setupSummary,
+  };
 }

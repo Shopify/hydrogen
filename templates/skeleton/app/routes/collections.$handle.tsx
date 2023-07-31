@@ -111,15 +111,11 @@ function ProductItem({
   );
 }
 
-const MONEY_FRAGMENT = `#graphql
+const PRODUCT_ITEM_FRAGMENT = `#graphql
   fragment MoneyProductItem on MoneyV2 {
     amount
     currencyCode
   }
-` as const;
-
-const PRODUCT_ITEM_FRAGMENT = `#graphql
-  ${MONEY_FRAGMENT}
   fragment ProductItem on Product {
     id
     handle
@@ -127,7 +123,7 @@ const PRODUCT_ITEM_FRAGMENT = `#graphql
     featuredImage {
       id
       altText
-      url(transform: {maxWidth: 800, maxHeight: 800, crop: CENTER})
+      url
       width
       height
     }

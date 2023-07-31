@@ -7,7 +7,7 @@ import {
   VARIANTS_WITH_SELLING_PLANS,
   SELLING_PLAN_GROUPS_CONNECTION,
 } from './ProductProvider.test.helpers.js';
-import {render, screen, renderHook} from '@testing-library/react';
+import {render, screen, renderHook, act} from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 
 describe('<ProductProvider />', () => {
@@ -93,7 +93,7 @@ describe('<ProductProvider />', () => {
       </ProductProvider>,
     );
 
-    await user.click(screen.getByRole('button', {name: 'White'}));
+    await act(() => user.click(screen.getByRole('button', {name: 'White'})));
 
     expect(
       screen.getByText(JSON.stringify({Color: 'White', Size: 'Small'})),
@@ -175,9 +175,11 @@ describe('<ProductProvider />', () => {
       screen.getByText(JSON.stringify(VARIANTS.nodes?.[0])),
     ).toBeInTheDocument();
 
-    await user.selectOptions(screen.getByTestId('variant'), [
-      VARIANTS.nodes?.[1]?.id ?? '2',
-    ]);
+    await act(() =>
+      user.selectOptions(screen.getByTestId('variant'), [
+        VARIANTS.nodes?.[1]?.id ?? '2',
+      ]),
+    );
 
     expect(
       screen.getByText(JSON.stringify(VARIANTS.nodes?.[1])),
@@ -209,7 +211,7 @@ describe('<ProductProvider />', () => {
       screen.getByText(JSON.stringify(VARIANTS.nodes?.[0])),
     ).toBeInTheDocument();
 
-    await user.click(screen.getByRole('button'));
+    await act(() => user.click(screen.getByRole('button')));
 
     expect(screen.getByText('null')).toBeInTheDocument();
   });
@@ -262,7 +264,7 @@ describe('<ProductProvider />', () => {
       screen.queryByRole('button', {name: 'White (out of stock)'}),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', {name: 'Large'}));
+    await act(() => user.click(screen.getByRole('button', {name: 'Large'})));
 
     expect(
       screen.queryByRole('button', {name: 'White (out of stock)'}),
@@ -340,7 +342,9 @@ describe('<ProductProvider />', () => {
       screen.queryByTestId('selectedSellingPlanAllocation'),
     ).not.toBeInTheDocument();
 
-    await user.click(screen.getByRole('button', {name: 'Deliver every week'}));
+    await act(() =>
+      user.click(screen.getByRole('button', {name: 'Deliver every week'})),
+    );
 
     const selectedSellingPlanElement = screen.getByTestId(
       'selectedSellingPlan',

@@ -1472,7 +1472,7 @@
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "SrcSetOptions",
-            "value": "{\n  intervals: number;\n  startingWidth: number;\n  incrementSize: number;\n  placeholderWidth: number;\n}",
+            "value": "{\n  /** The number of sizes to generate */\n  intervals: number;\n  /** The smallest image size */\n  startingWidth: number;\n  /** The increment by which to increase for each size, in pixels */\n  incrementSize: number;\n  /** The size used for placeholder fallback images */\n  placeholderWidth: number;\n}",
             "description": "",
             "members": [
               {
@@ -1480,28 +1480,28 @@
                 "syntaxKind": "PropertySignature",
                 "name": "intervals",
                 "value": "number",
-                "description": ""
+                "description": "The number of sizes to generate"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "startingWidth",
                 "value": "number",
-                "description": ""
+                "description": "The smallest image size"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "incrementSize",
                 "value": "number",
-                "description": ""
+                "description": "The increment by which to increase for each size, in pixels"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "placeholderWidth",
                 "value": "number",
-                "description": ""
+                "description": "The size used for placeholder fallback images"
               }
             ]
           },
@@ -3892,7 +3892,7 @@
             "filePath": "/Image.tsx",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "SrcSetOptions",
-            "value": "{\n  intervals: number;\n  startingWidth: number;\n  incrementSize: number;\n  placeholderWidth: number;\n}",
+            "value": "{\n  /** The number of sizes to generate */\n  intervals: number;\n  /** The smallest image size */\n  startingWidth: number;\n  /** The increment by which to increase for each size, in pixels */\n  incrementSize: number;\n  /** The size used for placeholder fallback images */\n  placeholderWidth: number;\n}",
             "description": "",
             "members": [
               {
@@ -3900,28 +3900,28 @@
                 "syntaxKind": "PropertySignature",
                 "name": "intervals",
                 "value": "number",
-                "description": ""
+                "description": "The number of sizes to generate"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "startingWidth",
                 "value": "number",
-                "description": ""
+                "description": "The smallest image size"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "incrementSize",
                 "value": "number",
-                "description": ""
+                "description": "The increment by which to increase for each size, in pixels"
               },
               {
                 "filePath": "/Image.tsx",
                 "syntaxKind": "PropertySignature",
                 "name": "placeholderWidth",
                 "value": "number",
-                "description": ""
+                "description": "The size used for placeholder fallback images"
               }
             ]
           },
@@ -6720,7 +6720,7 @@
               "name": "StorefrontClientReturn",
               "value": "StorefrontClientReturn"
             },
-            "value": "export function createStorefrontClient(\n  props: StorefrontClientProps,\n): StorefrontClientReturn {\n  const {\n    storeDomain,\n    privateStorefrontToken,\n    publicStorefrontToken,\n    storefrontApiVersion = SFAPI_VERSION,\n    contentType,\n  } = props;\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `StorefrontClient: The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting. You may run into unexpected errors if these versions don't match. Received verion: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`,\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {\n    warnOnce(\n      `StorefrontClient: Using a private storefront token is recommended for server environments. Refer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      `StorefrontClient: You are attempting to use a private token in an environment where it can be easily accessed by anyone. This is a security risk; please use the public token and the 'publicStorefrontToken' prop`,\n    );\n  }\n\n  const isMockShop = (domain: string): boolean => domain.includes('mock.shop');\n  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (\n    overrideProps,\n  ) => {\n    const domain = overrideProps?.storeDomain ?? storeDomain;\n    return domain.includes('://') ? domain : `https://${domain}`;\n  };\n\n  return {\n    getShopifyDomain,\n    getStorefrontApiUrl(overrideProps): string {\n      const domain = getShopifyDomain(overrideProps);\n      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');\n\n      if (isMockShop(domain)) return apiUrl;\n\n      return `${apiUrl}/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !privateStorefrontToken &&\n        !overrideProps?.privateStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'privateStorefrontToken' while using 'getPrivateTokenHeaders()'`,\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          `StorefrontClient: it is recommended to pass in the 'buyerIp' property which improves analytics and data in the admin.`,\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !publicStorefrontToken &&\n        !overrideProps?.publicStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          `StorefrontClient: You did not pass in a 'publicStorefrontToken' while using 'getPublicTokenHeaders()'`,\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',\n      );\n    },\n  };\n}"
+            "value": "export function createStorefrontClient(\n  props: StorefrontClientProps,\n): StorefrontClientReturn {\n  const {\n    storeDomain,\n    privateStorefrontToken,\n    publicStorefrontToken,\n    storefrontApiVersion = SFAPI_VERSION,\n    contentType,\n  } = props;\n\n  if (!storeDomain) {\n    throw new Error(\n      H2_PREFIX_ERROR +\n        `\\`storeDomain\\` is required when creating a new Storefront client.\\nReceived \"${storeDomain}\".`,\n    );\n  }\n\n  if (storefrontApiVersion !== SFAPI_VERSION) {\n    warnOnce(\n      `The Storefront API version that you're using is different than the version this build of Hydrogen React is targeting.` +\n        `\\nYou may run into unexpected errors if these versions don't match. Received verion: \"${storefrontApiVersion}\"; expected version \"${SFAPI_VERSION}\"`,\n    );\n  }\n\n  // only warn if not in a browser environment\n  if (__HYDROGEN_DEV__ && !privateStorefrontToken && !globalThis.document) {\n    warnOnce(\n      `Using a private storefront token is recommended for server environments.` +\n        `\\nRefer to the authentication https://shopify.dev/api/storefront#authentication documentation for more details.`,\n    );\n  }\n\n  // only warn if in a browser environment and you're using the privateStorefrontToken\n  if (__HYDROGEN_DEV__ && privateStorefrontToken && globalThis.document) {\n    warnOnce(\n      'You are attempting to use a private token in an environment where it can be easily accessed by anyone.' +\n        '\\nThis is a security risk; please use the public token and the `publicStorefrontToken` prop',\n    );\n  }\n\n  const isMockShop = (domain: string): boolean => domain.includes('mock.shop');\n  const getShopifyDomain: StorefrontClientReturn['getShopifyDomain'] = (\n    overrideProps,\n  ) => {\n    const domain = overrideProps?.storeDomain ?? storeDomain;\n    return domain.includes('://') ? domain : `https://${domain}`;\n  };\n\n  return {\n    getShopifyDomain,\n    getStorefrontApiUrl(overrideProps): string {\n      const domain = getShopifyDomain(overrideProps);\n      const apiUrl = domain + (domain.endsWith('/') ? 'api' : '/api');\n\n      if (isMockShop(domain)) return apiUrl;\n\n      return `${apiUrl}/${\n        overrideProps?.storefrontApiVersion ?? storefrontApiVersion\n      }/graphql.json`;\n    },\n    getPrivateTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !privateStorefrontToken &&\n        !overrideProps?.privateStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `privateStorefrontToken` while using `createStorefrontClient()` or `getPrivateTokenHeaders()`',\n        );\n      }\n\n      if (__HYDROGEN_DEV__ && !overrideProps?.buyerIp) {\n        warnOnce(\n          'It is recommended to pass in the `buyerIp` property which improves analytics and data in the admin.',\n        );\n      }\n\n      const finalContentType = overrideProps?.contentType ?? contentType;\n\n      return {\n        // default to json\n        'content-type':\n          finalContentType === 'graphql'\n            ? 'application/graphql'\n            : 'application/json',\n        'X-SDK-Variant': 'hydrogen-react',\n        'X-SDK-Variant-Source': 'react',\n        'X-SDK-Version': storefrontApiVersion,\n        'Shopify-Storefront-Private-Token':\n          overrideProps?.privateStorefrontToken ?? privateStorefrontToken ?? '',\n        ...(overrideProps?.buyerIp\n          ? {'Shopify-Storefront-Buyer-IP': overrideProps.buyerIp}\n          : {}),\n      };\n    },\n    getPublicTokenHeaders(overrideProps): Record<string, string> {\n      if (\n        !publicStorefrontToken &&\n        !overrideProps?.publicStorefrontToken &&\n        !isMockShop(storeDomain)\n      ) {\n        throw new Error(\n          H2_PREFIX_ERROR +\n            'You did not pass in a `publicStorefrontToken` while using `createStorefrontClient()` or `getPublicTokenHeaders()`',\n        );\n      }\n\n      const finalContentType =\n        overrideProps?.contentType ?? contentType ?? 'json';\n\n      return getPublicTokenHeadersRaw(\n        finalContentType,\n        storefrontApiVersion,\n        overrideProps?.publicStorefrontToken ?? publicStorefrontToken ?? '',\n      );\n    },\n  };\n}"
           },
           "StorefrontClientProps": {
             "filePath": "/storefront-client.ts",
@@ -7162,7 +7162,7 @@
               "name": "UseMoneyValue",
               "value": "UseMoneyValue"
             },
-            "value": "export function useMoney(money: MoneyV2): UseMoneyValue {\n  const {countryIsoCode, languageIsoCode} = useShop();\n  const locale = `${languageIsoCode}-${countryIsoCode}`;\n\n  if (!locale) {\n    throw new Error(\n      `useMoney(): Unable to get 'locale' from 'useShop()', which means that 'locale' was not passed to '<ShopifyProvider/>'. 'locale' is required for 'useMoney()' to work`,\n    );\n  }\n\n  const amount = parseFloat(money.amount);\n\n  const options = useMemo(\n    () => ({\n      style: 'currency',\n      currency: money.currencyCode,\n    }),\n    [money.currencyCode],\n  );\n\n  const defaultFormatter = useLazyFormatter(locale, options);\n\n  const nameFormatter = useLazyFormatter(locale, {\n    ...options,\n    currencyDisplay: 'name',\n  });\n\n  const narrowSymbolFormatter = useLazyFormatter(locale, {\n    ...options,\n    currencyDisplay: 'narrowSymbol',\n  });\n\n  const withoutTrailingZerosFormatter = useLazyFormatter(locale, {\n    ...options,\n    minimumFractionDigits: 0,\n    maximumFractionDigits: 0,\n  });\n\n  const withoutCurrencyFormatter = useLazyFormatter(locale);\n\n  const withoutTrailingZerosOrCurrencyFormatter = useLazyFormatter(locale, {\n    minimumFractionDigits: 0,\n    maximumFractionDigits: 0,\n  });\n\n  const isPartCurrency = (part: Intl.NumberFormatPart): boolean =>\n    part.type === 'currency';\n\n  // By wrapping these properties in functions, we only\n  // create formatters if they are going to be used.\n  const lazyFormatters = useMemo(\n    () => ({\n      original: () => money,\n      currencyCode: () => money.currencyCode,\n\n      localizedString: () => defaultFormatter().format(amount),\n\n      parts: () => defaultFormatter().formatToParts(amount),\n\n      withoutTrailingZeros: () =>\n        amount % 1 === 0\n          ? withoutTrailingZerosFormatter().format(amount)\n          : defaultFormatter().format(amount),\n\n      withoutTrailingZerosAndCurrency: () =>\n        amount % 1 === 0\n          ? withoutTrailingZerosOrCurrencyFormatter().format(amount)\n          : withoutCurrencyFormatter().format(amount),\n\n      currencyName: () =>\n        nameFormatter().formatToParts(amount).find(isPartCurrency)?.value ??\n        money.currencyCode, // e.g. \"US dollars\"\n\n      currencySymbol: () =>\n        defaultFormatter().formatToParts(amount).find(isPartCurrency)?.value ??\n        money.currencyCode, // e.g. \"USD\"\n\n      currencyNarrowSymbol: () =>\n        narrowSymbolFormatter().formatToParts(amount).find(isPartCurrency)\n          ?.value ?? '', // e.g. \"$\"\n\n      amount: () =>\n        defaultFormatter()\n          .formatToParts(amount)\n          .filter((part) =>\n            ['decimal', 'fraction', 'group', 'integer', 'literal'].includes(\n              part.type,\n            ),\n          )\n          .map((part) => part.value)\n          .join(''),\n    }),\n    [\n      money,\n      amount,\n      nameFormatter,\n      defaultFormatter,\n      narrowSymbolFormatter,\n      withoutCurrencyFormatter,\n      withoutTrailingZerosFormatter,\n      withoutTrailingZerosOrCurrencyFormatter,\n    ],\n  );\n\n  // Call functions automatically when the properties are accessed\n  // to keep these functions as an implementation detail.\n  return useMemo(\n    () =>\n      new Proxy(lazyFormatters as unknown as UseMoneyValue, {\n        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call\n        get: (target, key) => Reflect.get(target, key)?.call(null),\n      }),\n    [lazyFormatters],\n  );\n}"
+            "value": "export function useMoney(money: MoneyV2): UseMoneyValue {\n  const {countryIsoCode, languageIsoCode} = useShop();\n  const locale = languageIsoCode.includes('_')\n    ? languageIsoCode.replace('_', '-')\n    : `${languageIsoCode}-${countryIsoCode}`;\n\n  if (!locale) {\n    throw new Error(\n      `useMoney(): Unable to get 'locale' from 'useShop()', which means that 'locale' was not passed to '<ShopifyProvider/>'. 'locale' is required for 'useMoney()' to work`,\n    );\n  }\n\n  const amount = parseFloat(money.amount);\n\n  const options = useMemo(\n    () => ({\n      style: 'currency',\n      currency: money.currencyCode,\n    }),\n    [money.currencyCode],\n  );\n\n  const defaultFormatter = useLazyFormatter(locale, options);\n\n  const nameFormatter = useLazyFormatter(locale, {\n    ...options,\n    currencyDisplay: 'name',\n  });\n\n  const narrowSymbolFormatter = useLazyFormatter(locale, {\n    ...options,\n    currencyDisplay: 'narrowSymbol',\n  });\n\n  const withoutTrailingZerosFormatter = useLazyFormatter(locale, {\n    ...options,\n    minimumFractionDigits: 0,\n    maximumFractionDigits: 0,\n  });\n\n  const withoutCurrencyFormatter = useLazyFormatter(locale);\n\n  const withoutTrailingZerosOrCurrencyFormatter = useLazyFormatter(locale, {\n    minimumFractionDigits: 0,\n    maximumFractionDigits: 0,\n  });\n\n  const isPartCurrency = (part: Intl.NumberFormatPart): boolean =>\n    part.type === 'currency';\n\n  // By wrapping these properties in functions, we only\n  // create formatters if they are going to be used.\n  const lazyFormatters = useMemo(\n    () => ({\n      original: () => money,\n      currencyCode: () => money.currencyCode,\n\n      localizedString: () => defaultFormatter().format(amount),\n\n      parts: () => defaultFormatter().formatToParts(amount),\n\n      withoutTrailingZeros: () =>\n        amount % 1 === 0\n          ? withoutTrailingZerosFormatter().format(amount)\n          : defaultFormatter().format(amount),\n\n      withoutTrailingZerosAndCurrency: () =>\n        amount % 1 === 0\n          ? withoutTrailingZerosOrCurrencyFormatter().format(amount)\n          : withoutCurrencyFormatter().format(amount),\n\n      currencyName: () =>\n        nameFormatter().formatToParts(amount).find(isPartCurrency)?.value ??\n        money.currencyCode, // e.g. \"US dollars\"\n\n      currencySymbol: () =>\n        defaultFormatter().formatToParts(amount).find(isPartCurrency)?.value ??\n        money.currencyCode, // e.g. \"USD\"\n\n      currencyNarrowSymbol: () =>\n        narrowSymbolFormatter().formatToParts(amount).find(isPartCurrency)\n          ?.value ?? '', // e.g. \"$\"\n\n      amount: () =>\n        defaultFormatter()\n          .formatToParts(amount)\n          .filter((part) =>\n            ['decimal', 'fraction', 'group', 'integer', 'literal'].includes(\n              part.type,\n            ),\n          )\n          .map((part) => part.value)\n          .join(''),\n    }),\n    [\n      money,\n      amount,\n      nameFormatter,\n      defaultFormatter,\n      narrowSymbolFormatter,\n      withoutCurrencyFormatter,\n      withoutTrailingZerosFormatter,\n      withoutTrailingZerosOrCurrencyFormatter,\n    ],\n  );\n\n  // Call functions automatically when the properties are accessed\n  // to keep these functions as an implementation detail.\n  return useMemo(\n    () =>\n      new Proxy(lazyFormatters as unknown as UseMoneyValue, {\n        // eslint-disable-next-line @typescript-eslint/no-unsafe-return, @typescript-eslint/no-unsafe-member-access, @typescript-eslint/no-unsafe-call\n        get: (target, key) => Reflect.get(target, key)?.call(null),\n      }),\n    [lazyFormatters],\n  );\n}"
           },
           "UseMoneyValue": {
             "filePath": "/useMoney.tsx",

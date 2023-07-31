@@ -1,5 +1,5 @@
 {
-  "version": "5.0.2",
+  "version": "5.1.0",
   "commands": {
     "hydrogen:build": {
       "id": "hydrogen:build",
@@ -287,6 +287,12 @@
           "description": "Generate routes for all pages.",
           "hidden": true,
           "allowNo": false
+        },
+        "git": {
+          "name": "git",
+          "type": "boolean",
+          "description": "Init Git and create initial commits.",
+          "allowNo": true
         }
       },
       "args": {}

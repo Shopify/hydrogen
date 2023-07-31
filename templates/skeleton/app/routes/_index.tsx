@@ -43,16 +43,8 @@ function FeaturedCollection({
       to={`/collections/${collection.handle}`}
     >
       {image && (
-        <div>
-          <Image
-            data={image}
-            sizes="(min-width: 45em) 40vw, 100vw"
-            style={{
-              height: 'auto',
-              maxHeight: '600px',
-              objectFit: 'cover',
-            }}
-          />
+        <div className="featured-collection-image">
+          <Image data={image} sizes="100vw" />
         </div>
       )}
       <h1>{collection.title}</h1>
@@ -82,9 +74,6 @@ function RecommendedProducts({
                     data={product.images.nodes[0]}
                     aspectRatio="1/1"
                     sizes="(min-width: 45em) 20vw, 50vw"
-                    style={{
-                      height: 'auto',
-                    }}
                   />
                   <h4>{product.title}</h4>
                   <small>
@@ -107,14 +96,15 @@ const FEATURED_COLLECTION_QUERY = `#graphql
     title
     image {
       id
-      url(transform: {maxHeight: 600, crop: CENTER, scale: 2})
+      url
       altText
       width
       height
     }
     handle
   }
-  query FeaturedCollection {
+  query FeaturedCollection($country: CountryCode, $language: LanguageCode)
+    @inContext(country: $country, language: $language) {
     collections(first: 1, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...FeaturedCollection
@@ -144,7 +134,8 @@ const RECOMMENDED_PRODUCTS_QUERY = `#graphql
       }
     }
   }
-  query RecommendedProducts {
+  query RecommendedProducts ($country: CountryCode, $language: LanguageCode)
+    @inContext(country: $country, language: $language) {
     products(first: 4, sortKey: UPDATED_AT, reverse: true) {
       nodes {
         ...RecommendedProduct

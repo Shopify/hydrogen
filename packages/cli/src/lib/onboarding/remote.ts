@@ -95,7 +95,7 @@ export async function setupRemoteTemplate(
 
   if (shouldInstallDeps) {
     tasks.push({
-      title: 'Installing dependencies',
+      title: 'Installing dependencies. This could take a few minutes',
       task: async () => {
         try {
           await installDeps();
@@ -117,4 +117,9 @@ export async function setupRemoteTemplate(
       body: `To connect this project to your Shopify store’s inventory, update \`${project.name}/.env\` with your store ID and Storefront API key.`,
     });
   }
+
+  return {
+    ...project,
+    ...setupSummary,
+  };
 }

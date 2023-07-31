@@ -33,7 +33,13 @@ export default function Policies() {
 }
 
 const POLICIES_QUERY = `#graphql
-  query Policies {
+  fragment PolicyItem on ShopPolicy {
+    id
+    title
+    handle
+  }
+  query Policies ($country: CountryCode, $language: LanguageCode)
+    @inContext(country: $country, language: $language) {
     shop {
       privacyPolicy {
         ...PolicyItem
@@ -53,10 +59,5 @@ const POLICIES_QUERY = `#graphql
         handle
       }
     }
-  }
-  fragment PolicyItem on ShopPolicy {
-    id
-    title
-    handle
   }
 ` as const;

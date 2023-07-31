@@ -242,9 +242,10 @@ const HEADER_QUERY = `#graphql
     }
   }
   query Header(
-    $language: LanguageCode
+    $country: CountryCode
     $headerMenuHandle: String!
-  ) @inContext(language: $language) {
+    $language: LanguageCode
+  ) @inContext(language: $language, country: $country) {
     shop {
       ...Shop
     }
@@ -257,9 +258,10 @@ const HEADER_QUERY = `#graphql
 
 const FOOTER_QUERY = `#graphql
   query Footer(
-    $language: LanguageCode
+    $country: CountryCode
     $footerMenuHandle: String!
-  ) @inContext(language: $language) {
+    $language: LanguageCode
+  ) @inContext(language: $language, country: $country) {
     menu(handle: $footerMenuHandle) {
       ...Menu
     }
