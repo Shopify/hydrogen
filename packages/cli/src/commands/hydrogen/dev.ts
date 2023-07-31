@@ -6,10 +6,11 @@ import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
+  assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
   type ServerMode,
-} from '../../lib/config.js';
+} from '../../lib/remix-config.js';
 import {enhanceH2Logs, muteDevLogs, warnOnce} from '../../lib/log.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
@@ -98,6 +99,7 @@ async function runDev({
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
     const config = await getRemixConfig(root);
+
     return disableVirtualRoutes
       ? config
       : addVirtualRoutes(config).catch((error) => {
@@ -120,7 +122,13 @@ async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
-  const {shop, storefront} = await getConfig(root);
+  const [remixConfig, {shop, storefront}] = await Promise.all([
+    reloadConfig(),
+    getConfig(root),
+  ]);
+
+  assertOxygenChecks(remixConfig);
+
   const fetchRemote = !!shop && !!storefront?.id;
   const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});
 
@@ -165,8 +173,6 @@ async function runDev({
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
   }
-
-  const remixConfig = await reloadConfig();
 
   const fileWatchCache = createFileWatchCache();
   let skipRebuildLogs = false;
