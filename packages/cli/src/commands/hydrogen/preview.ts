@@ -1,6 +1,6 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {muteDevLogs} from '../../lib/log.js';
-import {getProjectPaths} from '../../lib/config.js';
+import {getProjectPaths} from '../../lib/remix-config.js';
 import {commonFlags} from '../../lib/flags.js';
 import {startMiniOxygen} from '../../lib/mini-oxygen.js';
 

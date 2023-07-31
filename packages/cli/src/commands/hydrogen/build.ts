@@ -17,10 +17,11 @@ import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import colors from '@shopify/cli-kit/node/colors';
 import {
+  assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
   type ServerMode,
-} from '../../lib/config.js';
+} from '../../lib/remix-config.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
@@ -101,6 +102,8 @@ export async function runBuild({
       import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
       rmdir(buildPath, {force: true}),
     ]);
+
+  assertOxygenChecks(remixConfig);
 
   await Promise.all([
     copyPublicFiles(publicPath, buildPathClient),

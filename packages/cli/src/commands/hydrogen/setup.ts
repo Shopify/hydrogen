@@ -13,7 +13,7 @@ import {
   renderI18nPrompt,
   setupI18nStrategy,
 } from '../../lib/setups/i18n/index.js';
-import {getRemixConfig} from '../../lib/config.js';
+import {getRemixConfig} from '../../lib/remix-config.js';
 import {
   generateProjectEntries,
   handleCliShortcut,
