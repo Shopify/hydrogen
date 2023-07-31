@@ -27,7 +27,7 @@
     "vitest": "^0.33.0"
   },
   "peerDependencies": {
-    "@remix-run/react": "^1.17.1",
+    "@remix-run/react": "^1.19.1",
     "@shopify/hydrogen-react": "^2023.7.0",
     "@shopify/remix-oxygen": "^1.1.1"
   },
@@ -35,7 +35,7 @@
     "@ast-grep/napi": "^0.5.3",
     "@graphql-codegen/cli": "3.3.1",
     "@oclif/core": "2.8.11",
-    "@remix-run/dev": "1.17.1",
+    "@remix-run/dev": "1.19.1",
     "@shopify/cli-kit": "3.48.0",
     "@shopify/hydrogen-codegen": "^0.0.2",
     "@shopify/mini-oxygen": "^1.7.0",
