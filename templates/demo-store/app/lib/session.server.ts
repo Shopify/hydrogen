@@ -13,7 +13,10 @@ export class HydrogenSession {
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,
-  ) {}
+  ) {
+    this.session = session;
+    this.sessionStorage = sessionStorage;
+  }
 
   static async init(request: Request, secrets: string[]) {
     const storage = createCookieSessionStorage({

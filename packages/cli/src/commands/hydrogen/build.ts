@@ -25,7 +25,7 @@ import {
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
-import {warnOnce} from '../../lib/log.js';
+import {createRemixLogger, muteRemixLogs} from '../../lib/log.js';
 import {codegen} from '../../lib/codegen.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
@@ -88,7 +88,7 @@ export async function runBuild({
   const {root, buildPath, buildPathClient, buildPathWorkerFile, publicPath} =
     getProjectPaths(appPath);
 
-  await checkLockfileStatus(root);
+  await Promise.all([checkLockfileStatus(root), muteRemixLogs()]);
 
   console.time(LOG_WORKER_BUILT);
 
@@ -111,9 +111,9 @@ export async function runBuild({
       config: remixConfig,
       options: {
         mode: process.env.NODE_ENV as ServerMode,
-        onWarning: warnOnce,
         sourcemap,
       },
+      logger: createRemixLogger(),
       fileWatchCache: createFileWatchCache(),
     }).catch((thrown) => {
       logThrown(thrown);

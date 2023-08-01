@@ -303,3 +303,40 @@ export const warnOnce = (string: string) => {
     warnings.add(string);
   }
 };
+
+export function createRemixLogger() {
+  const noop = () => {};
+  const buildMessageBody = (message: string, details?: string[]) =>
+    `In Remix:\n\n` +
+    colors.bold(message) +
+    (details ? '\n\n' + details.join('\n') : '');
+
+  return {
+    dev: noop,
+    info: noop,
+    debug: noop,
+    warn: (message: string, options?: {details?: string[]; key?: string}) => {
+      renderWarning({body: buildMessageBody(message, options?.details)});
+    },
+    error: (message: string, options?: {details?: string[]}) => {
+      // As of Remix 1.19.1, only Chokidar calls the error logger.
+      renderFatalError({
+        name: 'error',
+        type: 0,
+        message: buildMessageBody(message, options?.details),
+        tryMessage: '',
+      });
+    },
+  };
+}
+
+export async function muteRemixLogs() {
+  // Remix 1.19.1 warns about `serverNodeBuiltinsPolyfill` being deprecated
+  // using a global logger that cannot be modified. Mute it here.
+  try {
+    const {logger} = await import('@remix-run/dev/dist/tux/logger.js');
+    logger.warn = logger.debug = logger.info = () => {};
+  } catch {
+    // --
+  }
+}

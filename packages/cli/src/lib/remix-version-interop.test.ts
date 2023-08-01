@@ -67,7 +67,7 @@ describe('remix-version-interop', () => {
       return <div>stuff</div>;
     }
 
-    export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+    export const ErrorBoundaryV1 = ({error}: {error: Error}) => {
       console.error(error);
     
       return <div>There was an error.</div>;

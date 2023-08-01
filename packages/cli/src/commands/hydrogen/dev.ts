@@ -11,7 +11,12 @@ import {
   getRemixConfig,
   type ServerMode,
 } from '../../lib/remix-config.js';
-import {enhanceH2Logs, muteDevLogs, warnOnce} from '../../lib/log.js';
+import {
+  createRemixLogger,
+  enhanceH2Logs,
+  muteDevLogs,
+  muteRemixLogs,
+} from '../../lib/log.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
@@ -88,6 +93,7 @@ async function runDev({
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
+  await muteRemixLogs();
 
   if (debug) (await import('node:inspector')).open();
 
@@ -182,10 +188,10 @@ async function runDev({
       config: remixConfig,
       options: {
         mode: process.env.NODE_ENV as ServerMode,
-        onWarning: warnOnce,
         sourcemap,
       },
       fileWatchCache,
+      logger: createRemixLogger(),
     },
     {
       reloadConfig,

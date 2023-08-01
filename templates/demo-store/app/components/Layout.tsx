@@ -23,8 +23,11 @@ import {
   CartLoading,
   Link,
 } from '~/components';
-import type {ChildEnhancedMenuItem} from '~/lib/utils';
-import {type EnhancedMenu, useIsHomePath} from '~/lib/utils';
+import {
+  type EnhancedMenu,
+  type ChildEnhancedMenuItem,
+  useIsHomePath,
+} from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
 
