@@ -1,5 +1,32 @@
 # demo-store
 
+## 2.0.1
+
+### Patch Changes
+
+- Update to Remix v1.19.1. ([#1172](https://github.com/Shopify/hydrogen/pull/1172)) by [@frandiox](https://github.com/frandiox)
+
+  See changes for [1.18](https://github.com/remix-run/remix/releases/tag/remix%401.18.0) and [1.19](https://github.com/remix-run/remix/releases/tag/remix%401.19.0).
+
+- It's recommended to update `@shopify/cli`: ([#1172](https://github.com/Shopify/hydrogen/pull/1172)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  -"@shopify/cli": "3.47.5"
+  +"@shopify/cli": "3.48.0"
+  ```
+
+  Also, for projects using Remix v1 Error Boundary convention, remove the deprecated `ErrorBoundaryComponent` type (or update to the v2 convention):
+
+  ```diff
+  -export const ErrorBoundary: ErrorBoundaryComponent = ({error}) => {
+  +export const ErrorBoundary = ({error}: {error: Error}) => {
+  ```
+
+- Updated dependencies [[`b7a8ecf6`](https://github.com/Shopify/hydrogen/commit/b7a8ecf6a687e72de7745a78c61c1a78a9a52629), [`ef809228`](https://github.com/Shopify/hydrogen/commit/ef809228da8d6d4f1b3301221e1e03d24cac63fa), [`1015f170`](https://github.com/Shopify/hydrogen/commit/1015f17028beb2ab00e381a61e9f4132e74b17ad), [`076bab7d`](https://github.com/Shopify/hydrogen/commit/076bab7d31ffcd918c4a3b0dd7be03e00d2dd913)]:
+  - @shopify/remix-oxygen@1.1.2
+  - @shopify/hydrogen@2023.7.1
+  - @shopify/cli-hydrogen@5.1.1
+
 ## 2.0.0
 
 ### Major Changes
