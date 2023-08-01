@@ -106,6 +106,6 @@ function AddToCartAnalytics({
         });
       }
     }
-  }, [fetcherData, cartData, formData]);
+  }, [fetcherData, cartData, formData, pageAnalytics]);
   return children;
 }
