@@ -2,7 +2,7 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 
-export async function checkRemixVersions() {
+export function checkRemixVersions() {
   const require = createRequire(import.meta.url);
   const hydrogenPkgJson = require(fileURLToPath(
     new URL('../../package.json', import.meta.url),
@@ -45,22 +45,16 @@ export async function checkRemixVersions() {
   });
 }
 
-type PackageVersion = {
-  name: string;
-  error: null | Error;
-  version: null | string;
-};
-
 function getRemixPackageVersion(require: NodeRequire, name: string) {
   const pkgName = '@remix-run/' + name;
-  const result: PackageVersion = {name: pkgName, error: null, version: null};
+  const result = {name: pkgName, version: ''};
 
   try {
     const pkgJsonPath = require.resolve(`${pkgName}/package.json`);
     const pkgJson = require(pkgJsonPath);
-    result.version = pkgJson.version;
-  } catch (error) {
-    result.error = error as Error;
+    result.version = pkgJson.version as string;
+  } catch {
+    // Ignore errors
   }
 
   return result;

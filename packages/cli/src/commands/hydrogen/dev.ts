@@ -177,7 +177,7 @@ async function runDev({
       spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
     }
 
-    await Promise.resolve().then(checkRemixVersions);
+    checkRemixVersions();
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
   }
