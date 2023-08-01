@@ -26,6 +26,7 @@ import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
+import {checkRemixVersions} from '../../lib/remix-version-check.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -176,6 +177,7 @@ async function runDev({
       spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
     }
 
+    await Promise.resolve().then(checkRemixVersions);
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
   }
