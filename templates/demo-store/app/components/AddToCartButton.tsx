@@ -71,14 +71,14 @@ function AddToCartAnalytics({
 }: {
   fetcher: FetcherWithComponents<any>;
   children: React.ReactNode;
-}): React.ReactNode {
+}): JSX.Element {
   const fetcherData = fetcher.data;
   const formData = fetcher.formData;
-  const cartData: Record<string, unknown> = {};
   const pageAnalytics = usePageAnalytics({hasUserConsent: true});
 
   useEffect(() => {
     if (formData) {
+      const cartData: Record<string, unknown> = {};
       const cartInputs = CartForm.getFormInput(formData);
 
       try {
@@ -106,6 +106,6 @@ function AddToCartAnalytics({
         });
       }
     }
-  }, [fetcherData, cartData, formData, pageAnalytics]);
-  return children;
+  }, [fetcherData, formData, pageAnalytics]);
+  return <>{children}</>;
 }
