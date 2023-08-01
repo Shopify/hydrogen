@@ -9,7 +9,7 @@ import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
 import {readFile, writeFile, mkdir, fileExists} from '@shopify/cli-kit/node/fs';
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {getTemplateAppFile} from '../../../lib/build.js';
-import {getRemixConfig} from '../../../lib/config.js';
+import {getRemixConfig} from '../../remix-config.js';
 
 const readProjectFile = (
   dirs: {appDirectory: string},
@@ -22,7 +22,7 @@ describe('generate/route', () => {
     vi.resetAllMocks();
     vi.mock('@shopify/cli-kit/node/output');
     vi.mock('@shopify/cli-kit/node/ui');
-    vi.mock('../../config.js', async () => ({getRemixConfig: vi.fn()}));
+    vi.mock('../../remix-config.js', async () => ({getRemixConfig: vi.fn()}));
   });
 
   describe('generateRoutes', () => {

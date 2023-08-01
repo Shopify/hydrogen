@@ -37,7 +37,7 @@ import {
   getV2Flags,
   type RemixV2Flags,
 } from '../../../lib/remix-version-interop.js';
-import {getRemixConfig} from '../../../lib/config.js';
+import {getRemixConfig} from '../../remix-config.js';
 import {findFileWithExtension} from '../../file.js';
 
 const NO_LOCALE_PATTERNS = [/robots\.txt/];

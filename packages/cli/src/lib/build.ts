@@ -1,5 +1,4 @@
 import {fileURLToPath} from 'node:url';
-import path from 'path';
 
 export const GENERATOR_TEMPLATES_DIR = 'generator-templates';
 export const GENERATOR_STARTER_DIR = 'starter';
