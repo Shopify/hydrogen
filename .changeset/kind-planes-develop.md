@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': patch
 ---
 
-Cart aside area covers everything on larger pages
+Fix the starter template cart aside to cover everything on larger pages
