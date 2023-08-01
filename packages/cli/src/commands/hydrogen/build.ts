@@ -152,7 +152,7 @@ export async function runBuild({
     }
 
     if (sourcemap) {
-      if (assetPath) {
+      if (process.env.HYDROGEN_ASSET_BASE_URL) {
         // Oxygen build
         const filepaths = await glob(joinPath(buildPathClient, '**/*.js.map'));
         for (const filepath of filepaths) {

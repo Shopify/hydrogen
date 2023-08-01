@@ -20,16 +20,10 @@ interface Arguments {
    * flag.
    */
   flagShop?: string;
-  /**
-   * Does not prompt the user to fix any errors that are encountered (e.g. no
-   * linked storefront)
-   */
-  silent?: boolean;
 }
 
 export async function getOxygenDeploymentToken({
   root,
-  silent,
 }: Arguments): Promise<string | undefined> {
   const [{session, config}, cliCommand] = await Promise.all([
     login(root),
@@ -38,23 +32,19 @@ export async function getOxygenDeploymentToken({
   let configStorefront = (await getConfig(root)).storefront;
 
   if (!configStorefront?.id) {
-    if (!silent) {
-      renderMissingLink({session, cliCommand});
+    renderMissingLink({session, cliCommand});
 
-      const runLink = await renderConfirmationPrompt({
-        message: outputContent`Run ${outputToken.genericShellCommand(
-          `npx shopify hydrogen link`,
-        )}?`.value,
-      });
+    const runLink = await renderConfirmationPrompt({
+      message: ['Run', {command: `${cliCommand} link`}],
+    });
 
-      if (!runLink) {
-        return;
-      }
-
-      config.storefront = await linkStorefront(root, session, config, {
-        cliCommand,
-      });
+    if (!runLink) {
+      return;
     }
+
+    config.storefront = await linkStorefront(root, session, config, {
+      cliCommand,
+    });
   }
 
   configStorefront = (await getConfig(root)).storefront;
@@ -66,21 +56,17 @@ export async function getOxygenDeploymentToken({
   const {storefront} = await getOxygenToken(session, configStorefront.id);
 
   if (!storefront) {
-    if (!silent) {
-      renderMissingStorefront({
-        session,
-        storefront: configStorefront,
-        cliCommand,
-      });
-    }
+    renderMissingStorefront({
+      session,
+      storefront: configStorefront,
+      cliCommand,
+    });
 
     return;
   }
 
   if (!storefront.oxygenDeploymentToken) {
-    if (!silent) {
-      outputWarn(`Could not retrieve a deployment token.`);
-    }
+    outputWarn(`Could not retrieve a deployment token.`);
     return;
   }
 

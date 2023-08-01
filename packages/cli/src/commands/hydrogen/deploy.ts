@@ -19,7 +19,7 @@ import {
   DeploymentConfig,
   DeploymentHooks,
   parseToken,
-} from '@shopify/oxygen-cli/dist/deploy/index.js';
+} from '@shopify/oxygen-cli/deploy';
 
 import {commonFlags} from '../../lib/flags.js';
 import {getOxygenDeploymentToken} from '../../lib/get-oxygen-token.js';
@@ -39,7 +39,7 @@ export default class Deploy extends Command {
     path: commonFlags.path,
     shop: commonFlags.shop,
     publicDeployment: Flags.boolean({
-      env: 'OXYGEN_PUBLIC_DEPLOYMENT',
+      env: 'SHOPIFY_HYDROGEN_FLAG_PUBLIC_DEPLOYMENT',
       description: 'Marks a preview deployment as publicly accessible.',
       required: false,
       default: false,
@@ -48,19 +48,19 @@ export default class Deploy extends Command {
       description:
         'URL that links to the deployment. Will be saved and displayed in the Shopify admin',
       required: false,
-      env: 'OXYGEN_METADATA_URL',
+      env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_URL',
     }),
     metadataUser: Flags.string({
       description:
         'User that initiated the deployment. Will be saved and displayed in the Shopify admin',
       required: false,
-      env: 'OXYGEN_METADATA_USER',
+      env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_USER',
     }),
     metadataVersion: Flags.string({
       description:
         'A version identifier for the deployment. Will be saved and displayed in the Shopify admin',
       required: false,
-      env: 'OXYGEN_METADATA_VERSION',
+      env: 'SHOPIFY_HYDROGEN_FLAG_METADATA_VERSION',
     }),
   };
 
@@ -69,14 +69,24 @@ export default class Deploy extends Command {
   async run() {
     const {flags} = await this.parse(Deploy);
     const actualPath = flags.path ? resolvePath(flags.path) : process.cwd();
-    oxygenDeploy({
+    await oxygenDeploy({
       path: actualPath,
       shop: flags.shop,
       publicDeployment: flags.publicDeployment,
       metadataUrl: flags.metadataUrl,
       metadataUser: flags.metadataUser,
       metadataVersion: flags.metadataVersion,
-    });
+    })
+      .catch((error) => {
+        renderFatalError(error);
+        process.exit(1);
+      })
+      .finally(() => {
+        // The Remix compiler hangs due to a bug in ESBuild:
+        // https://github.com/evanw/esbuild/issues/2727
+        // The actual build has already finished so we can kill the process
+        process.exit(0);
+      });
   }
 }
 
@@ -89,126 +99,120 @@ interface OxygenDeploymentOptions {
   metadataVersion?: string;
 }
 
-export async function oxygenDeploy(options: OxygenDeploymentOptions) {
-  try {
-    const {
-      path,
-      shop,
-      publicDeployment,
-      metadataUrl,
-      metadataUser,
-      metadataVersion,
-    } = options;
-    const token = await getOxygenDeploymentToken({
-      root: path,
-      flagShop: shop,
-    });
-    if (!token) {
-      return;
-    }
+export async function oxygenDeploy(
+  options: OxygenDeploymentOptions,
+): Promise<void> {
+  const {
+    path,
+    shop,
+    publicDeployment,
+    metadataUrl,
+    metadataUser,
+    metadataVersion,
+  } = options;
+  const token = await getOxygenDeploymentToken({
+    root: path,
+    flagShop: shop,
+  });
+  if (!token) {
+    throw new AbortError('Could not obtain Oxygen deployment token');
+  }
 
-    const config: DeploymentConfig = {
-      assetsDir: 'dist/client',
-      deploymentUrl: 'https://oxygen.shopifyapps.com',
-      deploymentToken: parseToken(token as string),
-      healthCheckMaxDuration: 180,
-      metadata: {
-        url: metadataUrl,
-        user: metadataUser,
-        version: metadataVersion,
-      },
-      publicDeployment: publicDeployment,
-      skipHealthCheck: false,
-      rootPath: path,
-      skipBuild: false,
-      workerOnly: false,
-      workerDir: 'dist/worker',
-    };
+  const config: DeploymentConfig = {
+    assetsDir: 'dist/client',
+    deploymentUrl: 'https://oxygen.shopifyapps.com',
+    deploymentToken: parseToken(token as string),
+    healthCheckMaxDuration: 10,
+    metadata: {
+      url: metadataUrl,
+      user: metadataUser,
+      version: metadataVersion,
+    },
+    publicDeployment: publicDeployment,
+    skipHealthCheck: false,
+    rootPath: path,
+    skipBuild: false,
+    workerOnly: false,
+    workerDir: 'dist/worker',
+  };
 
-    let resolveUpload: () => void;
-    const uploadPromise = new Promise<void>((resolve) => {
-      resolveUpload = resolve;
-    });
+  let resolveUpload: () => void;
+  const uploadPromise = new Promise<void>((resolve) => {
+    resolveUpload = resolve;
+  });
 
-    let resolveHealthCheck: () => void;
-    const healthCheckPromise = new Promise<void>((resolve) => {
-      resolveHealthCheck = resolve;
-    });
+  let resolveHealthCheck: () => void;
+  const healthCheckPromise = new Promise<void>((resolve) => {
+    resolveHealthCheck = resolve;
+  });
 
-    const hooks: DeploymentHooks = {
-      buildFunction: async (assetPath: string | undefined): Promise<void> => {
-        try {
-          await runBuild({
-            path,
-            assetPath,
-            sourcemap: false,
-            useCodegen: false,
-          });
-        } catch (error) {
-          throw error;
-        }
-      },
-      onHealthCheckComplete: () => resolveHealthCheck(),
-      onUploadFilesStart: () => uploadStart(),
-      onUploadFilesComplete: () => resolveUpload(),
-      onHealthCheckError: (error: Error) => {
-        throw new AbortError(
+  let rejectDeploy: (reason?: any) => void;
+  const deployPromise = new Promise<void>((_, reject) => {
+    rejectDeploy = reject;
+  });
+
+  const hooks: DeploymentHooks = {
+    buildFunction: async (assetPath: string | undefined): Promise<void> => {
+      outputInfo(
+        outputContent`${colors.whiteBright('Building project...')}`.value,
+      );
+      await runBuild({
+        path,
+        assetPath,
+        sourcemap: false,
+        useCodegen: false,
+      });
+    },
+    onHealthCheckComplete: () => resolveHealthCheck(),
+    onUploadFilesStart: () => uploadStart(),
+    onUploadFilesComplete: () => resolveUpload(),
+    onHealthCheckError: (error: Error) => {
+      rejectDeploy(
+        new AbortError(
           error.message,
-          'Please verify the deployment status in the Shopify Admin and retry deploying again if necessary.',
-        );
-      },
-      onUploadFilesError: (error: Error) => {
-        throw new AbortError(
+          'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
+        ),
+      );
+    },
+    onUploadFilesError: (error: Error) => {
+      rejectDeploy(
+        new AbortError(
           error.message,
           'Check your connection and try again. If the problem persists, try again later or contact support.',
-        );
-      },
-    };
+        ),
+      );
+    },
+  };
 
-    const uploadStart = async () => {
-      await renderTasks([
-        {
-          title: 'Uploading files',
-          task: async () => await uploadPromise,
-        },
-        {
-          title: 'Performing health check',
-          task: async () => await healthCheckPromise,
-        },
-      ]);
-    };
-
+  const uploadStart = async () => {
     outputInfo(
-      outputContent`${colors.whiteBright('Deploying to Oxygen..')}`.value,
+      outputContent`${colors.whiteBright('Deploying to Oxygen..\n')}`.value,
     );
-
-    await createDeploy({config, hooks, logger: deploymentLogger}).then(
-      (url: string | undefined) => {
-        const deploymentType = config.publicDeployment ? 'public' : 'private';
-        renderSuccess({
-          body: ['Successfully deployed to Oxygen'],
-          nextSteps: [
-            [
-              `Open ${url!} in your browser to view your ${deploymentType} deployment`,
-            ],
-          ],
-        });
+    await renderTasks([
+      {
+        title: 'Uploading files',
+        task: async () => await uploadPromise,
       },
-    );
-  } catch (error) {
-    if (error instanceof AbortError) {
-      renderFatalError(error);
-    } else {
-      const message =
-        error instanceof Error
-          ? error.message
-          : 'Unknown error ocurred. Please try again or contact support if the error persists.';
-      renderFatalError(new AbortError(message));
-    }
-  } finally {
-    // The Remix compiler hangs due to a bug in ESBuild:
-    // https://github.com/evanw/esbuild/issues/2727
-    // The actual build has already finished so we can kill the process
-    process.exit(0);
-  }
+      {
+        title: 'Performing health check',
+        task: async () => await healthCheckPromise,
+      },
+    ]);
+  };
+
+  createDeploy({config, hooks, logger: deploymentLogger}).then(
+    (url: string | undefined) => {
+      const deploymentType = config.publicDeployment ? 'public' : 'private';
+      renderSuccess({
+        body: ['Successfully deployed to Oxygen'],
+        nextSteps: [
+          [
+            `Open ${url!} in your browser to view your ${deploymentType} deployment`,
+          ],
+        ],
+      });
+    },
+  );
+
+  return deployPromise;
 }
