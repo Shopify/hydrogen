@@ -99,14 +99,14 @@ function EditSection({editUrl}: {editUrl: string}) {
       href={editUrl}
       target="_blank"
       style={{
-        position: 'absolute',
-        top: '1rem',
-        right: '1rem',
-        padding: '0.75rem',
-        color: 'white',
         backgroundColor: 'black',
-        zIndex: 1,
+        color: 'white',
         fontSize: '1rem',
+        padding: '0.75rem',
+        position: 'absolute',
+        right: '1rem',
+        top: '1rem',
+        zIndex: 1,
       }}
     >
       Edit

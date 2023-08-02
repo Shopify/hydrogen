@@ -123,10 +123,10 @@ import type {
 #TypeImports#
 } from 'storefrontapi.generated';
 
-export type SectionTypes = #SectionTypes#;
+export type SectionTypes = #SectionTypes# | null;
 export type RouteSections = Array<SectionTypes>;
 
-export function Sections({sections}: {sections: Array<SectionTypes>}) {
+export function Sections({sections}: {sections: RouteSections}) {
   return (
     <>
       {sections.map((section) => {

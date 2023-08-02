@@ -156,14 +156,14 @@ end
 async function createShortcutsForUnix() {
   const shells: UnixShell[] = [];
 
-  if (await shellWriteAlias('zsh', ALIAS_NAME, BASH_ZSH_COMMAND)) {
-    // using a custom zshrc alias which out injects HYDROGEN_UI_URL and HACK_ACCESS_TOKEN
-    // shells.push('zsh');
-  }
+  // using a custom zshrc alias which out injects HYDROGEN_UI_URL and HACK_ACCESS_TOKEN
+  // if (await shellWriteAlias('zsh', ALIAS_NAME, BASH_ZSH_COMMAND)) {
+  // shells.push('zsh');
+  // }
 
-  if (await shellWriteAlias('bash', ALIAS_NAME, BASH_ZSH_COMMAND)) {
-    shells.push('bash');
-  }
+  // if (await shellWriteAlias('bash', ALIAS_NAME, BASH_ZSH_COMMAND)) {
+  //   shells.push('bash');
+  // }
 
   if (await shellWriteAlias('fish', ALIAS_NAME, FISH_FUNCTION)) {
     shells.push('fish');
