@@ -67,10 +67,18 @@ function injectLogReplacer(
     console[method] = (...args: unknown[]) => {
       if (debounceMessage(args, debouncer?.(args))) return;
 
-      const replacer = messageReplacers.find(([matcher]) => matcher(args))?.[1];
-      if (!replacer) return originalConsole[method](...args);
+      const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
+        if (matcher(args)) acc.push(replacer);
+        return acc;
+      }, [] as Replacer[]);
 
-      const result = replacer(args);
+      if (replacers.length === 0) return originalConsole[method](...args);
+
+      const result = replacers.reduce(
+        (resultArgs, replacer) => resultArgs && replacer(resultArgs),
+        args as void | string[],
+      );
+
       if (result) return originalConsole[method](...result);
     };
   }
@@ -123,12 +131,18 @@ export function muteAuthLogs({
     process.stdout.write = ((item, cb: any) => {
       if (typeof item !== 'string') return write(item, cb);
 
-      const replacer = messageReplacers.find(([matcher]) =>
-        matcher([item]),
-      )?.[1];
-      if (!replacer) return write(item, cb);
+      const replacers = messageReplacers.reduce((acc, [matcher, replacer]) => {
+        if (matcher([item])) acc.push(replacer);
+        return acc;
+      }, [] as Replacer[]);
 
-      const result = replacer([item]);
+      if (replacers.length === 0) return write(item, cb);
+
+      const result = replacers.reduce(
+        (resultArgs, replacer) => resultArgs && replacer(resultArgs),
+        [item] as void | string[],
+      );
+
       if (result) return write(result[0] as string, cb);
     }) as typeof write;
   }
