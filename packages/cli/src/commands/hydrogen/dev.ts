@@ -227,6 +227,8 @@ async function runDev({
           }
 
           await safeStartMiniOxygen();
+        } else {
+          await miniOxygen.reload();
         }
       },
       async onFileCreated(file: string) {

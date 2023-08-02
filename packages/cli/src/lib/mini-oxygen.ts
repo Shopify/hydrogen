@@ -1,12 +1,20 @@
+import {readdir, readFile} from 'node:fs/promises';
 import {
   outputInfo,
   outputToken,
   outputContent,
 } from '@shopify/cli-kit/node/output';
-import {resolvePath} from '@shopify/cli-kit/node/path';
-import {fileExists} from '@shopify/cli-kit/node/fs';
+import {resolvePath, extname} from '@shopify/cli-kit/node/path';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import mime from 'mime';
+import {
+  Miniflare,
+  type MiniflareOptions,
+  Request,
+  Response,
+  fetch,
+} from 'miniflare';
 
 type MiniOxygenOptions = {
   root: string;
@@ -27,51 +35,64 @@ export async function startMiniOxygen({
   buildPathClient,
   env,
 }: MiniOxygenOptions) {
-  const {default: miniOxygenImport} = await import('@shopify/mini-oxygen');
-  const miniOxygenPreview =
-    miniOxygenImport.default ??
-    (miniOxygenImport as unknown as typeof miniOxygenImport.default);
+  const buildMiniOxygenOptions = async () =>
+    ({
+      cf: false,
+      verbose: true,
+      port: port,
+      liveReload: watch,
+      workers: [
+        {
+          name: 'mini-oxygen',
+          modules: true,
+          bindings: {
+            initialAssets: await readdir(buildPathClient),
+          },
+          serviceBindings: {
+            hydrogen: 'hydrogen',
+            assets: createAssetHandler(buildPathClient),
+            logRequest,
+          },
+          script: `export default { fetch: ${miniOxygenHandler.toString()} }`,
+        },
+        {
+          name: 'hydrogen',
+          modules: [
+            {
+              type: 'ESModule',
+              path: resolvePath(root, buildPathWorkerFile),
+              contents: await readFile(resolvePath(root, buildPathWorkerFile)),
+            },
+          ],
+          bindings: {...env},
+          compatibilityFlags: ['streams_enable_constructors'],
+          compatibilityDate: '2022-10-31',
+        },
+      ],
+    } satisfies MiniflareOptions);
 
-  const dotenvPath = resolvePath(root, '.env');
+  let miniOxygenOptions = await buildMiniOxygenOptions();
+  const miniOxygen = new Miniflare(miniOxygenOptions);
 
-  const miniOxygen = await miniOxygenPreview({
-    workerFile: buildPathWorkerFile,
-    assetsDir: buildPathClient,
-    publicPath: '',
-    port,
-    watch,
-    autoReload: watch,
-    modules: true,
-    env: {
-      ...env,
-      ...process.env,
-    },
-    envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
-    log: () => {},
-    buildWatchPaths: watch
-      ? [resolvePath(root, buildPathWorkerFile)]
-      : undefined,
-    onResponse: (request, response) =>
-      // 'Request' and 'Response' types in MiniOxygen comes from
-      // Miniflare and are slightly different from standard types.
-      logResponse(
-        request as unknown as Request,
-        response as unknown as Response,
-      ),
-  });
-
-  const listeningAt = `http://localhost:${miniOxygen.port}`;
+  const listeningAt = `http://localhost:${port}`;
 
   return {
+    port,
     listeningAt,
-    port: miniOxygen.port,
-    reload(nextOptions?: Partial<Pick<MiniOxygenOptions, 'env'>>) {
-      return miniOxygen.reload({
-        env: {
-          ...(nextOptions?.env ?? env),
-          ...process.env,
-        },
-      });
+    async reload(nextOptions?: Partial<Pick<MiniOxygenOptions, 'env'>>) {
+      miniOxygenOptions = await buildMiniOxygenOptions();
+
+      if (nextOptions) {
+        const hydrogen = miniOxygenOptions.workers.find(
+          (worker) => worker.name === 'hydrogen',
+        );
+
+        if (hydrogen) {
+          hydrogen.bindings = {...(nextOptions?.env ?? env)};
+        }
+      }
+
+      return miniOxygen.setOptions(miniOxygenOptions);
     },
     showBanner(options?: {
       mode?: string;
@@ -94,21 +115,85 @@ export async function startMiniOxygen({
   };
 }
 
-export function logResponse(request: Request, response: Response) {
-  try {
-    const url = new URL(request.url);
-    if (['/graphiql'].includes(url.pathname)) return;
+type Service = {fetch: typeof fetch};
+async function miniOxygenHandler(
+  request: Request,
+  env: {
+    hydrogen: Service;
+    assets: Service;
+    logRequest: Service;
+    initialAssets: string[];
+  },
+) {
+  const pathname = new URL(request.url).pathname;
+  const isInInitialAssets = env.initialAssets.some(
+    (asset) =>
+      pathname === '/' + asset || pathname.startsWith('/' + asset + '/'),
+  );
 
-    const isProxy = !!response.url && response.url !== request.url;
-    const isDataRequest = !isProxy && url.searchParams.has('_data');
+  const extension = pathname.split('.').at(-1);
+  const hasAssetExtension =
+    extension &&
+    /^\.(js|css|jpe?g|png|gif|webp|svg|mp4|webm|txt|pdf|ico)$/i.test(extension);
+
+  if (isInInitialAssets || hasAssetExtension) {
+    const response = await env.assets.fetch(request);
+    if (response.status !== 404) return response;
+  }
+
+  const startTimeMs = Date.now();
+  const response = await env.hydrogen.fetch(request);
+
+  const requestToLog = new Request(request);
+  requestToLog.headers.set('h2-response-status', String(response.status));
+  requestToLog.headers.set('h2-duration-ms', String(Date.now() - startTimeMs));
+  await env.logRequest.fetch(requestToLog);
+
+  return response;
+}
+
+function createAssetHandler(buildPathClient: string) {
+  return async (request: Request): Promise<Response> => {
+    const relativeAssetPath = new URL(request.url).pathname.replace('/', '');
+    if (relativeAssetPath) {
+      try {
+        const absoluteAssetPath = resolvePath(
+          buildPathClient,
+          relativeAssetPath,
+        );
+        const fileContent = await readFile(absoluteAssetPath);
+        return new Response(fileContent, {
+          headers: {
+            'content-type':
+              mime.getType(extname(relativeAssetPath)) || 'text/plain',
+          },
+        });
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
+          throw error;
+        }
+      }
+    }
+
+    return new Response('Not Found', {status: 404});
+  };
+}
+
+async function logRequest(request: Request): Promise<Response> {
+  const dummyResponse = new Response('ok');
+  let responseStatus = 200;
+
+  try {
+    responseStatus = Number(request.headers.get('h2-response-status') || 200);
+    const durationMs = Number(request.headers.get('h2-duration-ms') || 0);
+
+    const url = new URL(request.url);
+    if (['/graphiql'].includes(url.pathname)) return dummyResponse;
+
+    const isDataRequest = url.searchParams.has('_data');
     let route = request.url.replace(url.origin, '');
     let info = '';
     let type = 'render';
-
-    if (isProxy) {
-      type = 'proxy';
-      info = `[${response.url}]`;
-    }
 
     if (isDataRequest) {
       type = request.method === 'GET' ? 'loader' : 'action';
@@ -118,26 +203,28 @@ export function logResponse(request: Request, response: Response) {
     }
 
     const colorizeStatus =
-      response.status < 300
+      responseStatus < 300
         ? outputToken.green
-        : response.status < 400
+        : responseStatus < 400
         ? outputToken.cyan
         : outputToken.errorText;
 
     outputInfo(
       outputContent`${request.method.padStart(6)}  ${colorizeStatus(
-        String(response.status),
-      )}  ${outputToken.italic(type.padEnd(7, ' '))} ${route}${
-        info ? ' ' + colors.dim(info) : ''
-      } ${
+        String(responseStatus),
+      )}  ${outputToken.italic(type.padEnd(7, ' '))} ${route} ${
+        durationMs > 0 ? colors.dim(` ${durationMs}ms`) : ''
+      }${info ? '  ' + colors.dim(info) : ''}${
         request.headers.get('purpose') === 'prefetch'
-          ? outputToken.italic('(prefetch)')
+          ? outputToken.italic(colors.dim('  prefetch'))
           : ''
       }`,
     );
   } catch {
-    if (request && response) {
-      outputInfo(`${request.method} ${response.status} ${request.url}`);
+    if (request && responseStatus) {
+      outputInfo(`${request.method} ${responseStatus} ${request.url}`);
     }
   }
+
+  return dummyResponse;
 }
