@@ -5,18 +5,9 @@ import {useMemo} from 'react';
 import {DEFAULT_LOCALE} from '~/lib/utils';
 
 export function usePageAnalytics({hasUserConsent}: {hasUserConsent: boolean}) {
-  const analyticsFromMatches = useAnalyticsFromMatches();
-
-  return {
-    ...analyticsFromMatches,
-    hasUserConsent,
-  };
-}
-
-function useAnalyticsFromMatches(): ShopifyPageViewPayload {
   const matches = useMatches();
 
-  return useMemo(() => {
+  const analyticsFromMatches = useMemo(() => {
     const data: Record<string, unknown> = {};
 
     matches.forEach((event) => {
@@ -32,6 +23,11 @@ function useAnalyticsFromMatches(): ShopifyPageViewPayload {
       }
     });
 
-    return data as unknown as ShopifyPageViewPayload;
+    return data;
   }, [matches]);
+
+  return {
+    ...analyticsFromMatches,
+    hasUserConsent,
+  } as unknown as ShopifyPageViewPayload;
 }

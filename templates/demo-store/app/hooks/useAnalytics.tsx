@@ -8,12 +8,11 @@ import {
 } from '@shopify/hydrogen';
 import {useEffect, useRef} from 'react';
 
-import type {I18nLocale} from '../lib/type';
-
 import {usePageAnalytics} from './usePageAnalytics';
 
-export function useAnalytics(hasUserConsent: boolean, locale: I18nLocale) {
+export function useAnalytics(hasUserConsent: boolean) {
   useShopifyCookies({hasUserConsent});
+
   const location = useLocation();
   const lastLocationKey = useRef<string>('');
   const pageAnalytics = usePageAnalytics({hasUserConsent});
