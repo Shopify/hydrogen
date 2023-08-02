@@ -11,6 +11,7 @@ import mime from 'mime';
 import {
   Miniflare,
   type MiniflareOptions,
+  Log,
   Request,
   Response,
   fetch,
@@ -35,11 +36,17 @@ export async function startMiniOxygen({
   buildPathClient,
   env,
 }: MiniOxygenOptions) {
+  const log = new Log(2);
+  // @ts-ignore
+  log.log = () => {};
+  log.warn = () => {};
+
   const buildMiniOxygenOptions = async () =>
     ({
       cf: false,
       verbose: true,
       port: port,
+      log,
       liveReload: watch,
       workers: [
         {

@@ -90,28 +90,32 @@ function injectLogReplacer(
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   injectLogReplacer('log');
 
-  let isFirstWorkerReload = true;
-  addMessageReplacers('dev', [
-    ([first]) => typeof first === 'string' && first.includes('[mf:'),
-    (args: string[]) => {
-      const first = args[0] as string;
+  addMessageReplacers(
+    'dev',
+    [
+      ([first]) => typeof first === 'string' && first.includes('workerd/io/'),
+      (args: string[]) => {
+        if (args[0]?.includes('exception =')) return;
 
-      if (workerReload !== false && first.includes('Worker reloaded')) {
-        if (isFirstWorkerReload) {
-          isFirstWorkerReload = false;
-          // return args as string[];
-          return;
+        if (args[0]) {
+          args[0] = args[0]
+            .replace(/^.*?message\(\)\s+=\s+\["(.*?)"\].*$/gi, '$1')
+            .replace(/\\n/g, '\n');
         }
 
-        return [first.replace('[mf:inf] ', '🔄 ') + '\n', ...args.slice(1)];
-      }
-
-      if (!first.includes('[mf:err]')) {
-        // Hide logs except errors
-        return;
-      }
-    },
-  ]);
+        return args;
+      },
+    ],
+    [
+      ([first]) => typeof first === 'string' && first.includes('workerd/util/'),
+      () => {},
+    ],
+    [
+      ([first]) =>
+        typeof first === 'string' && first.includes('workerd/server/'),
+      () => {},
+    ],
+  );
 }
 
 const originalWrite = process.stdout.write;
@@ -207,7 +211,7 @@ export function enhanceH2Logs(options: {
   addMessageReplacers('h2-warn', [
     ([first]) => {
       const message = first?.message ?? first;
-      return typeof message === 'string' && message.startsWith('[h2:');
+      return typeof message === 'string' && message.includes('[h2:');
     },
     (args: any[]) => {
       const firstArg = args[0];
