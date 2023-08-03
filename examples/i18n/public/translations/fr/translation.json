@@ -2,29 +2,72 @@
   "layout": {
     "header": {
       "ctas": {
-        "login": "Se connecter",
+        "login": "Connexion",
         "account": "Compte",
-        "search": "Recherche",
+        "search": "Rechercher",
         "cart": "Panier"
       }
+    },
+    "cart": {
+      "checkout": "Continuer le paiement",
+      "continueShopping": "Continuer les achats",
+      "empty": "Il semble que vous n'ayez encore rien ajouté. Commençons!",
+      "loading": "Chargement de la recherche...",
+      "remove": "Supprimer",
+      "subtotal": "Sous-total",
+      "title": "Panier",
+      "total": "Total",
+      "quantity": "Quantité",
+      "discounts": {
+        "title": "Réduction(s)",
+        "remove": "Supprimer",
+        "form": {
+          "label": "Code de réduction",
+          "placeholder": "Entrez un code de réduction",
+          "submit": "Appliquer"
+        }
+      }
+    },
+    "search": {
+      "noResults": "Aucun résultat trouvé pour \"{{query}}\"",
+      "results": {
+        "articles": "Articles",
+        "collections": "Collections",
+        "products": "Produits",
+        "pages": "Pages",
+        "suggestions": "Suggestions"
+      },
+      "loading": "Chargement de la recherche...",
+      "title": "Recherche",
+      "viewAll": "Voir tous les résultats pour \"{{query}}\"",
+      "form": {
+        "placeholder": "Entrez un terme de recherche",
+        "label": "Recherche",
+        "submit": "Rechercher"
+      }
+    },
+    "pagination": {
+      "next": "Charger plus ↓",
+      "previous": "↑ Charger précédent",
+      "loading": "Chargement..."
     }
   },
   "home": {
     "welcome": {
       "title": "Bonjour le monde",
       "subtitle": "Hydrogen rencontre i18n",
-      "description": "Accélérez la création de votre vitrine avec Hydrogen, notre ensemble d'outils headless basé sur React, construit sur Remix. Déployez gratuitement sur Oxygen, notre solution d'hébergement mondiale."
+      "description": "Accélérez la création de votre vitrine avec Hydrogen, notre boîte à outils sans tête basée sur React et Remix. Déployez-la gratuitement sur Oxygen, notre solution d'hébergement mondiale."
     }
   },
   "notFound": {
-    "title": "Page introuvable",
-    "subtitle": "Désolé, nous n'avons pas pu trouver la page que vous recherchiez.",
+    "title": "Page non trouvée",
+    "subtitle": "Désolé, nous n'avons pas pu trouver la page que vous recherchez.",
     "description": "Veuillez vérifier l'URL dans la barre d'adresse et réessayer.",
     "cta": "Aller à la page d'accueil"
   },
   "account": {
     "home": {
-      "greeting": "Bienvenue sur votre compte.",
+      "greeting": "Bienvenue dans votre compte.",
       "personalGreeting": "Bienvenue, {{firstName}}",
       "menu": {
         "orders": "Commandes",
@@ -34,7 +77,7 @@
       }
     },
     "login": {
-      "title": "Se connecter.",
+      "title": "Se connecter",
       "form": {
         "email": {
           "label": "Adresse e-mail",
@@ -50,7 +93,7 @@
       "register": "S'inscrire"
     },
     "register": {
-      "title": "S'inscrire.",
+      "title": "S'inscrire",
       "description": "Créez votre compte",
       "form": {
         "email": {
@@ -62,15 +105,15 @@
           "placeholder": "Entrez votre mot de passe"
         },
         "confirmPassword": {
-          "label": "Retapez le mot de passe",
-          "placeholder": "Retapez votre mot de passe"
+          "label": "Confirmer le mot de passe",
+          "placeholder": "Confirmez votre mot de passe"
         },
         "submit": "S'inscrire"
       },
       "login": "Se connecter"
     },
     "recover": {
-      "title": "Mot de passe oublié.",
+      "title": "Mot de passe oublié",
       "description": "Entrez l'adresse e-mail associée à votre compte pour recevoir un lien de réinitialisation de votre mot de passe",
       "form": {
         "email": {

@@ -1,5 +1,9 @@
 import {json} from '@shopify/remix-oxygen';
-import {CacheLong, generateCacheControlHeader} from '@shopify/hydrogen';
+import {
+  CacheLong,
+  CacheNone,
+  generateCacheControlHeader,
+} from '@shopify/hydrogen';
 import {localizations} from '~/locales.server';
 
 export async function loader() {
@@ -7,7 +11,7 @@ export async function loader() {
     {localizations},
     {
       headers: {
-        'cache-control': generateCacheControlHeader(CacheLong()),
+        'cache-control': generateCacheControlHeader(CacheNone()),
       },
     },
   );

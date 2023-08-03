@@ -9,6 +9,7 @@ import type {
   PredictiveArticleFragment,
   SearchQuery,
 } from 'storefrontapi.generated';
+import {useTranslation} from 'react-i18next';
 
 type PredicticeSearchResultItemImage =
   | PredictiveCollectionFragment['image']
@@ -143,9 +144,10 @@ export function SearchResults({
 }
 
 function SearchResultsProductsGrid({products}: Pick<SearchQuery, 'products'>) {
+  const {t} = useTranslation();
   return (
     <div className="search-result">
-      <h3>Products</h3>
+      <h2>{t('layout.search.results.products')}</h2>
       <Pagination connection={products}>
         {({nodes, isLoading, NextLink, PreviousLink}) => {
           const itemsMarkup = nodes.map((product) => (
@@ -162,7 +164,11 @@ function SearchResultsProductsGrid({products}: Pick<SearchQuery, 'products'>) {
             <div>
               <div>
                 <PreviousLink>
-                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
+                  {isLoading ? (
+                    <span>{t('layout.pagination.loading')}</span>
+                  ) : (
+                    <span>{t('layout.pagination.previous')}</span>
+                  )}
                 </PreviousLink>
               </div>
               <div>
@@ -171,7 +177,11 @@ function SearchResultsProductsGrid({products}: Pick<SearchQuery, 'products'>) {
               </div>
               <div>
                 <NextLink>
-                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
+                  {isLoading ? (
+                    <span>{t('layout.pagination.loading')}</span>
+                  ) : (
+                    <span>{t('layout.pagination.next')}</span>
+                  )}
                 </NextLink>
               </div>
             </div>
@@ -184,9 +194,10 @@ function SearchResultsProductsGrid({products}: Pick<SearchQuery, 'products'>) {
 }
 
 function SearchResultPageGrid({pages}: Pick<SearchQuery, 'pages'>) {
+  const {t} = useTranslation();
   return (
     <div className="search-result">
-      <h2>Pages</h2>
+      <h2>{t('layout.search.results.pages')}</h2>
       <div>
         {pages?.nodes?.map((page) => (
           <div className="search-results-item" key={page.id}>
@@ -202,9 +213,10 @@ function SearchResultPageGrid({pages}: Pick<SearchQuery, 'pages'>) {
 }
 
 function SearchResultArticleGrid({articles}: Pick<SearchQuery, 'articles'>) {
+  const {t} = useTranslation();
   return (
     <div className="search-result">
-      <h2>Articles</h2>
+      <h2>{t('layout.search.results.articles')}</h2>
       <div>
         {articles?.nodes?.map((article) => (
           <div className="search-results-item" key={article.id}>
@@ -219,8 +231,9 @@ function SearchResultArticleGrid({articles}: Pick<SearchQuery, 'articles'>) {
   );
 }
 
-export function NoSearchResults() {
-  return <p>No results, try a different search.</p>;
+export function NoSearchResults({searchTerm}: {searchTerm: string}) {
+  const {t} = useTranslation();
+  return <p>{t('layout.search.noResults', {query: searchTerm})}</p>;
 }
 
 type ChildrenRenderProps = {
@@ -288,6 +301,7 @@ export function PredictiveSearchForm({
 }
 
 export function PredictiveSearchResults() {
+  const {t} = useTranslation();
   const {results, totalResults, searchInputRef, searchTerm} =
     usePredictiveSearch();
 
@@ -322,7 +336,7 @@ export function PredictiveSearchResults() {
           to={`/search?q=${searchTerm.current}`}
         >
           <p>
-            View all results for <q>{searchTerm.current}</q>
+            {t('layout.search.viewAll', {query: searchTerm.current})}
             &nbsp; →
           </p>
         </LocalizedLink>
@@ -336,14 +350,11 @@ function NoPredictiveSearchResults({
 }: {
   searchTerm: React.MutableRefObject<string>;
 }) {
+  const {t} = useTranslation();
   if (!searchTerm.current) {
     return null;
   }
-  return (
-    <p>
-      No results found for <q>{searchTerm.current}</q>
-    </p>
-  );
+  return <p>{t('layout.search.noResults', {query: searchTerm.current})}</p>;
 }
 
 type SearchResultTypeProps = {
@@ -359,6 +370,7 @@ function PredictiveSearchResult({
   searchTerm,
   type,
 }: SearchResultTypeProps) {
+  const {t} = useTranslation();
   const isSuggestions = type === 'queries';
   const categoryUrl = `/search?q=${
     searchTerm.current
@@ -371,7 +383,11 @@ function PredictiveSearchResult({
         to={categoryUrl}
         onClick={goToSearchResult}
       >
-        <h5>{isSuggestions ? 'Suggestions' : type}</h5>
+        <h5>
+          {isSuggestions
+            ? t('layout.search.results.suggestions')
+            : t(`layout.search.results.${type}`)}
+        </h5>
       </LocalizedLink>
       <ul>
         {items.map((item: NormalizedPredictiveSearchResultItem) => (

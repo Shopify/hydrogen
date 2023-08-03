@@ -70,6 +70,7 @@ export default function Orders() {
 }
 
 function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
+  const {t} = useTranslation();
   return (
     <div className="acccount-orders">
       {orders?.nodes.length ? (
@@ -78,13 +79,21 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
             return (
               <>
                 <PreviousLink>
-                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
+                  {isLoading ? (
+                    <span>{t('layout.pagination.loading')}</span>
+                  ) : (
+                    <span>{t('layout.pagination.previous')}</span>
+                  )}
                 </PreviousLink>
                 {nodes.map((order) => {
                   return <OrderItem key={order.id} order={order} />;
                 })}
                 <NextLink>
-                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
+                  {isLoading ? (
+                    <span>{t('layout.pagination.loading')}</span>
+                  ) : (
+                    <span>{t('layout.pagination.next')}</span>
+                  )}
                 </NextLink>
               </>
             );

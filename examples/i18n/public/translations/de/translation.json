@@ -7,13 +7,56 @@
         "search": "Suche",
         "cart": "Warenkorb"
       }
+    },
+    "cart": {
+      "checkout": "Weiter zur Kasse",
+      "continueShopping": "Weiter einkaufen",
+      "empty": "Es sieht so aus, als hätten Sie noch nichts hinzugefügt. Lassen Sie uns beginnen!",
+      "loading": "Suche wird geladen...",
+      "remove": "Entfernen",
+      "subtotal": "Zwischensumme",
+      "title": "Warenkorb",
+      "total": "Gesamt",
+      "quantity": "Menge",
+      "discounts": {
+        "title": "Rabatt(e)",
+        "remove": "Entfernen",
+        "form": {
+          "label": "Rabattcode",
+          "placeholder": "Geben Sie einen Rabattcode ein",
+          "submit": "Anwenden"
+        }
+      }
+    },
+    "search": {
+      "noResults": "Keine Ergebnisse für \"{{query}}\" gefunden",
+      "results": {
+        "articles": "Artikel",
+        "collections": "Sammlungen",
+        "products": "Produkte",
+        "pages": "Seiten",
+        "suggestions": "Vorschläge"
+      },
+      "loading": "Suche wird geladen...",
+      "title": "Suche",
+      "viewAll": "Alle Ergebnisse für \"{{query}}\" anzeigen",
+      "form": {
+        "placeholder": "Geben Sie einen Suchbegriff ein",
+        "label": "Suche",
+        "submit": "Suchen"
+      }
+    },
+    "pagination": {
+      "next": "Mehr laden ↓",
+      "previous": "↑ Vorheriges laden",
+      "loading": "Ladevorgang..."
     }
   },
   "home": {
     "welcome": {
       "title": "Hallo Welt",
-      "subtitle": "Hydrogen meets i18n",
-      "description": "Beschleunigen Sie den Aufbau Ihres Shops mit Hydrogen, unserer auf React basierenden Headless-Toolkit, das auf Remix aufbaut. Stellen Sie es kostenlos auf Oxygen bereit, unserer globalen Hosting-Lösung."
+      "subtitle": "Hydrogen trifft i18n",
+      "description": "Beschleunigen Sie den Aufbau Ihres Online-Shops mit Hydrogen, unserem auf Remix basierenden, reaktionsfähigen Headless-Toolkit. Bereitstellung kostenlos auf Oxygen, unserer globalen Hosting-Lösung."
     }
   },
   "notFound": {
@@ -34,10 +77,10 @@
       }
     },
     "login": {
-      "title": "Anmelden.",
+      "title": "Anmelden",
       "form": {
         "email": {
-          "label": "E-Mail",
+          "label": "E-Mail-Adresse",
           "placeholder": "Geben Sie Ihre E-Mail-Adresse ein"
         },
         "password": {
@@ -50,7 +93,7 @@
       "register": "Registrieren"
     },
     "register": {
-      "title": "Registrieren.",
+      "title": "Registrieren",
       "description": "Erstellen Sie Ihr Konto",
       "form": {
         "email": {
@@ -62,7 +105,7 @@
           "placeholder": "Geben Sie Ihr Passwort ein"
         },
         "confirmPassword": {
-          "label": "Passwort erneut eingeben",
+          "label": "Passwort bestätigen",
           "placeholder": "Geben Sie Ihr Passwort erneut ein"
         },
         "submit": "Registrieren"
@@ -70,7 +113,7 @@
       "login": "Anmelden"
     },
     "recover": {
-      "title": "Passwort vergessen.",
+      "title": "Passwort vergessen",
       "description": "Geben Sie die mit Ihrem Konto verknüpfte E-Mail-Adresse ein, um einen Link zum Zurücksetzen Ihres Passworts zu erhalten",
       "form": {
         "email": {

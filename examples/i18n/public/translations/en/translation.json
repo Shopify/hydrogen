@@ -7,6 +7,49 @@
         "search": "Search",
         "cart": "Cart"
       }
+    },
+    "cart": {
+      "checkout": "Continue to checkout",
+      "continueShopping": "Continue shopping",
+      "empty": "Looks like you haven’t added anything yet, let’s get you started!",
+      "loading": "Loading search...",
+      "remove": "Remove",
+      "subtotal": "Subtotal",
+      "title": "Cart",
+      "total": "Total",
+      "quantity": "Quantity",
+      "discounts": {
+        "title": "Discount(s)",
+        "remove": "Remove",
+        "form": {
+          "label": "Discount code",
+          "placeholder": "Enter a discount code",
+          "submit": "Apply"
+        }
+      }
+    },
+    "search": {
+      "noResults": "No results found for \"{{query}}\"",
+      "results": {
+        "articles": "Articles",
+        "collections": "Collections",
+        "products": "Products",
+        "pages": "Pages",
+        "suggestions": "Suggestions"
+      },
+      "loading": "Loading search...",
+      "title": "Search",
+      "viewAll": "View all results for \"{{query}}\"",
+      "form": {
+        "placeholder": "Enter a search term",
+        "label": "Search",
+        "submit": "Search"
+      }
+    },
+    "pagination": {
+      "next": "Load more ↓",
+      "previous": "↑ Load previous",
+      "loading": "Loading..."
     }
   },
   "home": {

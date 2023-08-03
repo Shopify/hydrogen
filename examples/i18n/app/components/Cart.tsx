@@ -3,6 +3,7 @@ import type {CartLineUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {Link} from '@remix-run/react';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/utils';
+import {useTranslation} from 'react-i18next';
 
 type CartLine = CartApiQueryFragment['lines']['nodes'][0];
 
@@ -118,12 +119,13 @@ function CartLineItem({
 }
 
 function CartCheckoutActions({checkoutUrl}: {checkoutUrl: string}) {
+  const {t} = useTranslation();
   if (!checkoutUrl) return null;
 
   return (
     <div>
       <a href={checkoutUrl} target="_self">
-        <p>Continue to Checkout &rarr;</p>
+        <p>{t('layout.cart.checkout')} &rarr;</p>
       </a>
       <br />
     </div>
@@ -139,14 +141,15 @@ export function CartSummary({
   cost: CartApiQueryFragment['cost'];
   layout: CartMainProps['layout'];
 }) {
+  const {t} = useTranslation();
   const className =
     layout === 'page' ? 'cart-summary-page' : 'cart-summary-aside';
 
   return (
     <div aria-labelledby="cart-summary" className={className}>
-      <h4>Totals</h4>
+      <h4>{t('layout.cart.total')}</h4>
       <dl className="cart-subtotal">
-        <dt>Subtotal</dt>
+        <dt>{t('layout.cart.subtotal')}</dt>
         <dd>
           {cost?.subtotalAmount?.amount ? (
             <Money data={cost?.subtotalAmount} />
@@ -161,18 +164,20 @@ export function CartSummary({
 }
 
 function CartLineRemoveButton({lineIds}: {lineIds: string[]}) {
+  const {t} = useTranslation();
   return (
     <CartForm
       route="/cart"
       action={CartForm.ACTIONS.LinesRemove}
       inputs={{lineIds}}
     >
-      <button type="submit">Remove</button>
+      <button type="submit">{t('layout.cart.remove')}</button>
     </CartForm>
   );
 }
 
 function CartLineQuantity({line}: {line: CartLine}) {
+  const {t} = useTranslation();
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity} = line;
   const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
@@ -180,7 +185,9 @@ function CartLineQuantity({line}: {line: CartLine}) {
 
   return (
     <div className="cart-line-quantiy">
-      <small>Quantity: {quantity} &nbsp;&nbsp;</small>
+      <small>
+        {t('layout.cart.quantity')}: {quantity} &nbsp;&nbsp;
+      </small>
       <CartLineUpdateButton lines={[{id: lineId, quantity: prevQuantity}]}>
         <button
           aria-label="Decrease quantity"
@@ -241,13 +248,11 @@ export function CartEmpty({
   hidden: boolean;
   layout?: CartMainProps['layout'];
 }) {
+  const {t} = useTranslation();
   return (
     <div hidden={hidden}>
       <br />
-      <p>
-        Looks like you haven&rsquo;t added anything yet, let&rsquo;s get you
-        started!
-      </p>
+      <p>{t('layout.cart.empty')}</p>
       <br />
       <Link
         to="/collections"
@@ -257,7 +262,7 @@ export function CartEmpty({
           }
         }}
       >
-        Continue shopping →
+        {t('layout.cart.continueShopping')} →
       </Link>
     </div>
   );
@@ -268,6 +273,7 @@ function CartDiscounts({
 }: {
   discountCodes: CartApiQueryFragment['discountCodes'];
 }) {
+  const {t} = useTranslation();
   const codes: string[] =
     discountCodes
       ?.filter((discount) => discount.applicable)
@@ -278,12 +284,12 @@ function CartDiscounts({
       {/* Have existing discount, display it with a remove option */}
       <dl hidden={!codes.length}>
         <div>
-          <dt>Discount(s)</dt>
+          <dt>{t('layout.cart.discounts.title')}</dt>
           <UpdateDiscountForm>
             <div className="cart-discount">
               <code>{codes?.join(', ')}</code>
               &nbsp;
-              <button>Remove</button>
+              <button>{t('layout.cart.discounts.remove')}</button>
             </div>
           </UpdateDiscountForm>
         </div>
@@ -292,9 +298,16 @@ function CartDiscounts({
       {/* Show an input to apply a discount */}
       <UpdateDiscountForm discountCodes={codes}>
         <div>
-          <input type="text" name="discountCode" placeholder="Discount code" />
+          <input
+            type="text"
+            name="discountCode"
+            aria-label={t('layout.cart.discounts.form.label')}
+            placeholder={t('layout.cart.discounts.form.placeholder')}
+          />
           &nbsp;
-          <button type="submit">Apply</button>
+          <button type="submit">
+            {t('layout.cart.discounts.form.submit')}
+          </button>
         </div>
       </UpdateDiscountForm>
     </div>

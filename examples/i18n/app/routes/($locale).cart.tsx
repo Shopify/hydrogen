@@ -8,6 +8,7 @@ import {
 } from '@shopify/remix-oxygen';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {CartMain} from '~/components/Cart';
+import {useTranslation} from 'react-i18next';
 
 export const meta: V2_MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
@@ -89,12 +90,13 @@ export async function action({request, context}: ActionArgs) {
 }
 
 export default function Cart() {
+  const {t} = useTranslation();
   const [root] = useMatches();
   const cart = root.data?.cart as Promise<CartApiQueryFragment | null>;
 
   return (
     <div className="cart">
-      <h1>Cart</h1>
+      <h1>{t('layout.cart.title')}</h1>
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await errorElement={<div>An error occurred</div>} resolve={cart}>
           {(cart) => {

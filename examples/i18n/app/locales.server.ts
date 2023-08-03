@@ -45,6 +45,11 @@ export const localizations: Localizations = {
   },
 };
 
+type I18nStorefrontClient = {
+  country: CountryCode;
+  language: LanguageCode;
+};
+
 /**
  * A server-sive utility to extract the locale and i18n metadada from a request.
  * @param request
@@ -62,10 +67,7 @@ export function getLocaleFromRequest(request: Request): {
   /* the i18n object for the current locale */
   i18n: I18nLocale;
   /* the i18n object for the current locale, but formatted for the Storefront API */
-  storefrontApiI18n: {
-    country: CountryCode;
-    language: LanguageCode;
-  };
+  i18nStorefrontClient: I18nStorefrontClient;
   /* whether the request url includes a locale prefix */
   isLocalizedRequest: boolean;
   /* the request url without the locale prefix */
@@ -84,9 +86,8 @@ export function getLocaleFromRequest(request: Request): {
 
   return {
     i18n,
-    storefrontApiI18n: {
+    i18nStorefrontClient: {
       country: i18n.country,
-      // The Storefront API expects the language code to be uppercase
       language: i18n.language.toUpperCase() as LanguageCode,
     },
     isLocalizedRequest: url.pathname.startsWith(i18nPrefix),

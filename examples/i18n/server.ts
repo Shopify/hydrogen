@@ -39,11 +39,12 @@ export default {
         HydrogenSession.init(request, [env.SESSION_SECRET]),
       ]);
 
+      // Get the locale and i18n metadata from the request
       const {
         i18n,
+        i18nStorefrontClient,
         isLocalizedRequest,
         pathnameWithoutLocale,
-        storefrontApiI18n,
       } = getLocaleFromRequest(request);
 
       // if the url is localized, but the locale is the default, redirect to the url without the locale
@@ -56,8 +57,9 @@ export default {
         });
       }
 
-      // Load the translation for the current locale. we only bundle the default translation
-      // on the initial build, and then load the other translations on demand.
+      // if the requested localized url is not the default locale
+      // we fetch the translation for the locale
+      // NOTE: this helps us avoid bundling all translations in the app
       if (!i18n.translation) {
         i18n.translation = await fetchLocaleTranslation(request, i18n);
       }
@@ -67,7 +69,7 @@ export default {
        */
       const {storefront} = createStorefrontClient({
         cache,
-        i18n: storefrontApiI18n,
+        i18n: i18nStorefrontClient,
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
         publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         storeDomain: env.PUBLIC_STORE_DOMAIN,
@@ -132,6 +134,7 @@ export default {
  * swap out the cookie-based implementation with something else!
  */
 export class HydrogenSession {
+  // eslint-disable-next-line no-useless-constructor
   constructor(
     private sessionStorage: SessionStorage,
     private session: Session,

@@ -6,6 +6,7 @@ import {
 import {useLoaderData} from '@remix-run/react';
 import {getPaginationVariables} from '@shopify/hydrogen';
 import {SearchForm, SearchResults, NoSearchResults} from '~/components/Search';
+import {useTranslation} from 'react-i18next';
 
 export const meta: V2_MetaFunction = () => {
   return [{title: `Hydrogen | Search`}];
@@ -48,13 +49,14 @@ export async function loader({request, context}: LoaderArgs) {
 }
 
 export default function SearchPage() {
+  const {t} = useTranslation();
   const {searchTerm, searchResults} = useLoaderData<typeof loader>();
   return (
     <div className="search">
-      <h1>Search</h1>
+      <h1>{t('layout.search.title')}</h1>
       <SearchForm searchTerm={searchTerm} />
       {!searchTerm || !searchResults.totalResults ? (
-        <NoSearchResults />
+        <NoSearchResults searchTerm={searchTerm} />
       ) : (
         <SearchResults results={searchResults.results} />
       )}
