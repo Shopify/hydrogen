@@ -28,4 +28,4 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           metadata: ${{ toJSON(steps.metadata.outputs) }}
-          changeset: '{"package": "@shopify/mini-oxygen"}'
+          changeset: '{"package": "@shopify/mini-oxygen", "shipitTimeout": 5}'
