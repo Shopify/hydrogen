@@ -94,7 +94,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <TranslationProvider i18n={data.i18n}>
+        <TranslationProvider i18n={data.i18n as I18nLocale}>
           <Layout {...data} key={`${data.i18n.country}-${data.i18n.language}`}>
             <Outlet />
           </Layout>
@@ -106,7 +106,7 @@ export default function App() {
   );
 }
 
-export const ErrorBoundary: ErrorBoundaryComponent = (data) => {
+export const ErrorBoundary: ErrorBoundaryComponent = () => {
   return <div>There was an error</div>;
 };
 

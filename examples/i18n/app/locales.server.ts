@@ -123,6 +123,11 @@ export async function fetchLocaleTranslation(
     const translation = await response.json();
     return translation as i18nTranslation;
   } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error(
+      `Failed to fetch translation for ${i18n.language}. Falling back to default locale.\nError:`,
+      error,
+    );
     return en;
   }
 }
