@@ -7,7 +7,7 @@ import {DEFAULT_LOCALE} from '~/lib/utils';
 export function usePageAnalytics({hasUserConsent}: {hasUserConsent: boolean}) {
   const matches = useMatches();
 
-  const analyticsFromMatches = useMemo(() => {
+  return useMemo(() => {
     const data: Record<string, unknown> = {};
 
     matches.forEach((event) => {
@@ -23,11 +23,9 @@ export function usePageAnalytics({hasUserConsent}: {hasUserConsent: boolean}) {
       }
     });
 
-    return data;
+    return {
+      ...data,
+      hasUserConsent,
+    } as unknown as ShopifyPageViewPayload;
   }, [matches]);
-
-  return {
-    ...analyticsFromMatches,
-    hasUserConsent,
-  } as unknown as ShopifyPageViewPayload;
 }
