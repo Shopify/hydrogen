@@ -1,0 +1,85 @@
+{
+  "layout": {
+    "header": {
+      "ctas": {
+        "login": "Se connecter",
+        "account": "Compte",
+        "search": "Recherche",
+        "cart": "Panier"
+      }
+    }
+  },
+  "home": {
+    "welcome": {
+      "title": "Bonjour le monde",
+      "subtitle": "Hydrogen rencontre i18n",
+      "description": "Accélérez la création de votre vitrine avec Hydrogen, notre ensemble d'outils headless basé sur React, construit sur Remix. Déployez gratuitement sur Oxygen, notre solution d'hébergement mondiale."
+    }
+  },
+  "notFound": {
+    "title": "Page introuvable",
+    "subtitle": "Désolé, nous n'avons pas pu trouver la page que vous recherchiez.",
+    "description": "Veuillez vérifier l'URL dans la barre d'adresse et réessayer.",
+    "cta": "Aller à la page d'accueil"
+  },
+  "account": {
+    "home": {
+      "greeting": "Bienvenue sur votre compte.",
+      "personalGreeting": "Bienvenue, {{firstName}}",
+      "menu": {
+        "orders": "Commandes",
+        "profile": "Profil",
+        "addresses": "Adresses",
+        "logout": "Déconnexion"
+      }
+    },
+    "login": {
+      "title": "Se connecter.",
+      "form": {
+        "email": {
+          "label": "Adresse e-mail",
+          "placeholder": "Entrez votre adresse e-mail"
+        },
+        "password": {
+          "label": "Mot de passe",
+          "placeholder": "Entrez votre mot de passe"
+        },
+        "submit": "Se connecter"
+      },
+      "forgot": "Mot de passe oublié ?",
+      "register": "S'inscrire"
+    },
+    "register": {
+      "title": "S'inscrire.",
+      "description": "Créez votre compte",
+      "form": {
+        "email": {
+          "label": "Adresse e-mail",
+          "placeholder": "Entrez votre adresse e-mail"
+        },
+        "password": {
+          "label": "Mot de passe",
+          "placeholder": "Entrez votre mot de passe"
+        },
+        "confirmPassword": {
+          "label": "Retapez le mot de passe",
+          "placeholder": "Retapez votre mot de passe"
+        },
+        "submit": "S'inscrire"
+      },
+      "login": "Se connecter"
+    },
+    "recover": {
+      "title": "Mot de passe oublié.",
+      "description": "Entrez l'adresse e-mail associée à votre compte pour recevoir un lien de réinitialisation de votre mot de passe",
+      "form": {
+        "email": {
+          "label": "Adresse e-mail",
+          "placeholder": "Entrez votre adresse e-mail"
+        },
+        "submit": "Réinitialiser le mot de passe"
+      },
+      "login": "Se connecter"
+    }
+  }
+}

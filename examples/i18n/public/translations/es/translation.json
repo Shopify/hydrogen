@@ -1,0 +1,85 @@
+{
+  "layout": {
+    "header": {
+      "ctas": {
+        "login": "Iniciar sesión",
+        "account": "Cuenta",
+        "search": "Buscar",
+        "cart": "Carrito"
+      }
+    }
+  },
+  "home": {
+    "welcome": {
+      "title": "Hola mundo",
+      "subtitle": "Hydrogen con i18n",
+      "description": "Acelera la creación de tu tienda virtual con Hydrogen, nuestra herramienta basada en React, construida sobre Remix. Implementa de forma gratuita en Oxygen, nuestra solución de alojamiento global."
+    }
+  },
+  "notFound": {
+    "title": "Página no encontrada",
+    "subtitle": "Lo sentimos, no pudimos encontrar la página que buscabas.",
+    "description": "Por favor, verifica la URL en la barra de direcciones e intenta nuevamente.",
+    "cta": "Ir a la página de inicio"
+  },
+  "account": {
+    "home": {
+      "greeting": "Bienvenido a tu cuenta.",
+      "personalGreeting": "Bienvenido, {{firstName}}",
+      "menu": {
+        "orders": "Pedidos",
+        "profile": "Perfil",
+        "addresses": "Direcciones",
+        "logout": "Cerrar sesión"
+      }
+    },
+    "login": {
+      "title": "Iniciar sesión.",
+      "form": {
+        "email": {
+          "label": "Correo electrónico",
+          "placeholder": "Ingresa tu correo electrónico"
+        },
+        "password": {
+          "label": "Contraseña",
+          "placeholder": "Ingresa tu contraseña"
+        },
+        "submit": "Iniciar sesión"
+      },
+      "forgot": "¿Olvidaste tu contraseña?",
+      "register": "Registrarse"
+    },
+    "register": {
+      "title": "Registro.",
+      "description": "Crea tu cuenta",
+      "form": {
+        "email": {
+          "label": "Dirección de correo electrónico",
+          "placeholder": "Ingresa tu dirección de correo electrónico"
+        },
+        "password": {
+          "label": "Contraseña",
+          "placeholder": "Ingresa tu contraseña"
+        },
+        "confirmPassword": {
+          "label": "Reingresa la contraseña",
+          "placeholder": "Reingresa tu contraseña"
+        },
+        "submit": "Registrarse"
+      },
+      "login": "Iniciar sesión"
+    },
+    "recover": {
+      "title": "Contraseña olvidada.",
+      "description": "Ingresa la dirección de correo electrónico asociada a tu cuenta para recibir un enlace para restablecer tu contraseña",
+      "form": {
+        "email": {
+          "label": "Dirección de correo electrónico",
+          "placeholder": "Ingresa tu dirección de correo electrónico"
+        },
+        "submit": "Restablecer contraseña"
+      },
+      "login": "Iniciar sesión"
+    }
+  }
+}

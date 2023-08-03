@@ -1,0 +1,85 @@
+{
+  "layout": {
+    "header": {
+      "ctas": {
+        "login": "Anmelden",
+        "account": "Konto",
+        "search": "Suche",
+        "cart": "Warenkorb"
+      }
+    }
+  },
+  "home": {
+    "welcome": {
+      "title": "Hallo Welt",
+      "subtitle": "Hydrogen meets i18n",
+      "description": "Beschleunigen Sie den Aufbau Ihres Shops mit Hydrogen, unserer auf React basierenden Headless-Toolkit, das auf Remix aufbaut. Stellen Sie es kostenlos auf Oxygen bereit, unserer globalen Hosting-Lösung."
+    }
+  },
+  "notFound": {
+    "title": "Seite nicht gefunden",
+    "subtitle": "Entschuldigung, wir konnten die von Ihnen gesuchte Seite nicht finden.",
+    "description": "Bitte überprüfen Sie die URL in der Adressleiste und versuchen Sie es erneut.",
+    "cta": "Zur Startseite gehen"
+  },
+  "account": {
+    "home": {
+      "greeting": "Willkommen in Ihrem Konto.",
+      "personalGreeting": "Willkommen, {{firstName}}",
+      "menu": {
+        "orders": "Bestellungen",
+        "profile": "Profil",
+        "addresses": "Adressen",
+        "logout": "Abmelden"
+      }
+    },
+    "login": {
+      "title": "Anmelden.",
+      "form": {
+        "email": {
+          "label": "E-Mail",
+          "placeholder": "Geben Sie Ihre E-Mail-Adresse ein"
+        },
+        "password": {
+          "label": "Passwort",
+          "placeholder": "Geben Sie Ihr Passwort ein"
+        },
+        "submit": "Anmelden"
+      },
+      "forgot": "Passwort vergessen?",
+      "register": "Registrieren"
+    },
+    "register": {
+      "title": "Registrieren.",
+      "description": "Erstellen Sie Ihr Konto",
+      "form": {
+        "email": {
+          "label": "E-Mail-Adresse",
+          "placeholder": "Geben Sie Ihre E-Mail-Adresse ein"
+        },
+        "password": {
+          "label": "Passwort",
+          "placeholder": "Geben Sie Ihr Passwort ein"
+        },
+        "confirmPassword": {
+          "label": "Passwort erneut eingeben",
+          "placeholder": "Geben Sie Ihr Passwort erneut ein"
+        },
+        "submit": "Registrieren"
+      },
+      "login": "Anmelden"
+    },
+    "recover": {
+      "title": "Passwort vergessen.",
+      "description": "Geben Sie die mit Ihrem Konto verknüpfte E-Mail-Adresse ein, um einen Link zum Zurücksetzen Ihres Passworts zu erhalten",
+      "form": {
+        "email": {
+          "label": "E-Mail-Adresse",
+          "placeholder": "Geben Sie Ihre E-Mail-Adresse ein"
+        },
+        "submit": "Passwort zurücksetzen"
+      },
+      "login": "Anmelden"
+    }
+  }
+}
