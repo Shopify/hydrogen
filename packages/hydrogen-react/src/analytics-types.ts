@@ -177,7 +177,7 @@ export type ShopifyCookies = {
   [SHOPIFY_S]: string;
 };
 
-export type ShopifyGid = {
+export type ShopifyGid = Pick<URL, 'search' | 'searchParams' | 'hash'> & {
   id: string;
   resource: string | null;
 };

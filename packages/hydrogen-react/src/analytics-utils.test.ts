@@ -4,50 +4,101 @@ import {parseGid, addDataIf, schemaWrapper} from './analytics-utils.js';
 describe('analytic-utils', () => {
   describe('parseGid', () => {
     it('returns the id and resource type from a gid', () => {
-      const {id, resource} = parseGid('gid://shopify/Order/123');
-      expect(id).toBe('123');
-      expect(resource).toBe('Order');
+      const {searchParams, ...gid} = parseGid('gid://shopify/Order/123');
+      expect(gid).toMatchInlineSnapshot(`
+        {
+          "hash": "",
+          "id": "123",
+          "resource": "Order",
+          "search": "",
+        }
+      `);
+      expect(searchParams.toString()).toBe('');
     });
 
     it('returns empty string if the gid is not a string', () => {
       //@ts-expect-error - testing invalid input
-      const {id, resource} = parseGid(123);
-      expect(id).toBe('');
-      expect(resource).toBe(null);
+      const {searchParams, ...gid} = parseGid(123);
+      expect(gid).toMatchInlineSnapshot(`
+        {
+          "hash": "",
+          "id": "",
+          "resource": null,
+          "search": "",
+        }
+      `);
+      expect(searchParams.toString()).toBe('');
     });
 
     it('returns empty string if the gid is not a valid gid', () => {
-      const {id, resource} = parseGid('gid://shopify/Order');
-      expect(id).toBe('');
-      expect(resource).toBe(null);
+      const {searchParams, ...gid} = parseGid('gid://shopify/Order');
+      expect(gid).toMatchInlineSnapshot(`
+        {
+          "hash": "",
+          "id": "Order",
+          "resource": "",
+          "search": "",
+        }
+      `);
+      expect(searchParams.toString()).toBe('');
     });
 
     it('returns the id and resource type from a gid with a query string', () => {
-      const {id, resource} = parseGid('gid://shopify/Order/123?namespace=123');
-      expect(id).toBe('123?namespace=123');
-      expect(resource).toBe('Order');
+      const {searchParams, ...gid} = parseGid(
+        'gid://shopify/Order/123?namespace=123',
+      );
+      expect(gid).toMatchInlineSnapshot(`
+        {
+          "hash": "",
+          "id": "123",
+          "resource": "Order",
+          "search": "?namespace=123",
+        }
+      `);
+      expect(searchParams.toString()).toBe('namespace=123');
     });
 
     it('returns the id and resource type from a gid with a query string and a fragment', () => {
-      const {id, resource} = parseGid(
+      const {searchParams, ...gid} = parseGid(
         'gid://shopify/Order/123?namespace=123#fragment',
       );
-      expect(id).toBe('123?namespace=123#fragment');
-      expect(resource).toBe('Order');
+      expect(gid).toMatchInlineSnapshot(`
+        {
+          "hash": "#fragment",
+          "id": "123",
+          "resource": "Order",
+          "search": "?namespace=123",
+        }
+      `);
+      expect(searchParams.toString()).toBe('namespace=123');
     });
 
     it('returns empty string if the resource is missing', () => {
-      const {id, resource} = parseGid('gid://shopify//123');
-      expect(id).toBe('');
-      expect(resource).toBe(null);
+      const {searchParams, ...gid} = parseGid('gid://shopify//123');
+      expect(gid).toMatchInlineSnapshot(`
+        {
+          "hash": "",
+          "id": "123",
+          "resource": "",
+          "search": "",
+        }
+      `);
+      expect(searchParams.toString()).toBe('');
     });
 
     it('returns the c1 cart token', () => {
-      const {id, resource} = parseGid(
+      const {searchParams, ...gid} = parseGid(
         'gid://shopify/Cart/c1-3d2419bf79df5e91d37b449cc6cd0ba1?test=123',
       );
-      expect(id).toBe('c1-3d2419bf79df5e91d37b449cc6cd0ba1?test=123');
-      expect(resource).toBe('Cart');
+      expect(gid).toMatchInlineSnapshot(`
+        {
+          "hash": "",
+          "id": "c1-3d2419bf79df5e91d37b449cc6cd0ba1",
+          "resource": "Cart",
+          "search": "?test=123",
+        }
+      `);
+      expect(searchParams.toString()).toBe('test=123');
     });
   });
 
