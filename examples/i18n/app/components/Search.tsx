@@ -3,7 +3,6 @@ import {Image, Money, Pagination} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
 import {useFetchers} from '@remix-run/react';
 import {LocalizedLink} from '~/components/LocalizedLink';
-
 import type {
   PredictiveProductFragment,
   PredictiveCollectionFragment,
