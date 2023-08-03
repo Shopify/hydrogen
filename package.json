@@ -27,6 +27,8 @@
     "templates/demo-store",
     "templates/skeleton",
     "examples/express",
+    "examples/i18n",
+    "examples/customer-api",
     "packages/remix-oxygen",
     "packages/hydrogen",
     "packages/create-hydrogen",
