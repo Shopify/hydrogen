@@ -52,6 +52,7 @@ export async function startMiniOxygen({
         {
           name: 'mini-oxygen',
           modules: true,
+          script: `export default { fetch: ${miniOxygenHandler.toString()} }`,
           bindings: {
             initialAssets: await readdir(buildPathClient),
             oxygenHeadersMap: Object.values(OXYGEN_HEADERS_MAP).reduce(
@@ -67,7 +68,6 @@ export async function startMiniOxygen({
             assets: createAssetHandler(buildPathClient),
             logRequest,
           },
-          script: `export default { fetch: ${miniOxygenHandler.toString()} }`,
         },
         {
           name: 'hydrogen',
@@ -147,34 +147,40 @@ async function miniOxygenHandler(
     assets: Service;
     logRequest: Service;
     initialAssets: string[];
-    oxygenHeadersMap: Array<{name: string; defaultValue: string}>;
+    oxygenHeadersMap: Record<string, string>;
   },
 ) {
-  const pathname = new URL(request.url).pathname;
-  const isInInitialAssets = env.initialAssets.some(
-    (asset) =>
-      pathname === '/' + asset || pathname.startsWith('/' + asset + '/'),
-  );
+  if (request.method === 'GET') {
+    const pathname = new URL(request.url).pathname;
+    const isInInitialAssets = env.initialAssets.some(
+      (asset) =>
+        pathname === '/' + asset || pathname.startsWith('/' + asset + '/'),
+    );
 
-  const extension = pathname.split('.').at(-1);
-  const hasAssetExtension =
-    extension &&
-    /^\.(js|css|jpe?g|png|gif|webp|svg|mp4|webm|txt|pdf|ico)$/i.test(extension);
+    const extension = pathname.split('.').at(-1);
+    const hasAssetExtension =
+      extension &&
+      /^\.(js|css|jpe?g|png|gif|webp|svg|mp4|webm|txt|pdf|ico)$/i.test(
+        extension,
+      );
 
-  if (isInInitialAssets || hasAssetExtension) {
-    const response = await env.assets.fetch(request);
-    if (response.status !== 404) return response;
+    if (isInInitialAssets || hasAssetExtension) {
+      const response = await env.assets.fetch(request.clone());
+      if (response.status !== 404) return response;
+    }
   }
+
+  // Clone before using body (in POST requests)
+  const requestToLog = new Request(request.clone());
 
   const startTimeMs = Date.now();
   const response = await env.hydrogen.fetch(request, {
     headers: {
       ...env.oxygenHeadersMap,
-      ...request.headers,
+      ...Object.fromEntries(request.headers.entries()),
     },
   });
 
-  const requestToLog = new Request(request);
   requestToLog.headers.set('h2-response-status', String(response.status));
   requestToLog.headers.set('h2-duration-ms', String(Date.now() - startTimeMs));
   await env.logRequest.fetch(requestToLog);
