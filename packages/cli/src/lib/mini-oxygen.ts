@@ -1,10 +1,10 @@
-import {readdir, readFile} from 'node:fs/promises';
 import {
   outputInfo,
   outputToken,
   outputContent,
 } from '@shopify/cli-kit/node/output';
 import {resolvePath, extname} from '@shopify/cli-kit/node/path';
+import {glob, readFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import mime from 'mime';
@@ -54,7 +54,7 @@ export async function startMiniOxygen({
           modules: true,
           script: `export default { fetch: ${miniOxygenHandler.toString()} }`,
           bindings: {
-            initialAssets: await readdir(buildPathClient),
+            initialAssets: await glob('**/*', {cwd: buildPathClient}),
             oxygenHeadersMap: Object.values(OXYGEN_HEADERS_MAP).reduce(
               (acc, item) => {
                 acc[item.name] = item.defaultValue;
@@ -152,19 +152,7 @@ async function miniOxygenHandler(
 ) {
   if (request.method === 'GET') {
     const pathname = new URL(request.url).pathname;
-    const isInInitialAssets = env.initialAssets.some(
-      (asset) =>
-        pathname === '/' + asset || pathname.startsWith('/' + asset + '/'),
-    );
-
-    const extension = pathname.split('.').at(-1);
-    const hasAssetExtension =
-      extension &&
-      /^\.(js|css|jpe?g|png|gif|webp|svg|mp4|webm|txt|pdf|ico)$/i.test(
-        extension,
-      );
-
-    if (isInInitialAssets || hasAssetExtension) {
+    if (env.initialAssets.some((asset) => pathname === '/' + asset)) {
       const response = await env.assets.fetch(request.clone());
       if (response.status !== 404) return response;
     }
