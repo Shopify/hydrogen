@@ -88,34 +88,13 @@ function injectLogReplacer(
  * Mute logs from Miniflare
  */
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
-  injectLogReplacer('log');
+  injectLogReplacer('error');
 
-  addMessageReplacers(
-    'dev',
-    [
-      ([first]) => typeof first === 'string' && first.includes('workerd/io/'),
-      (args: string[]) => {
-        // if (args[0]?.includes('exception =')) return;
-
-        // if (args[0]) {
-        //   args[0] = args[0]
-        //     .replace(/^.*?message\(\)\s+=\s+\["(.*?)"\].*$/gi, '$1')
-        //     .replace(/\\n/g, '\n');
-        // }
-
-        return args;
-      },
-    ],
-    // [
-    //   ([first]) => typeof first === 'string' && first.includes('workerd/util/'),
-    //   () => {},
-    // ],
-    // [
-    //   ([first]) =>
-    //     typeof first === 'string' && first.includes('workerd/server/'),
-    //   () => {},
-    // ],
-  );
+  addMessageReplacers('dev', [
+    // Workerd logs
+    ([first]) => typeof first === 'string' && first.startsWith('\x1B[31m'),
+    () => {},
+  ]);
 }
 
 const originalWrite = process.stdout.write;
@@ -223,7 +202,7 @@ export function enhanceH2Logs(options: {
       const stringArg = errorObject?.message ?? (firstArg as string);
 
       const [, type, scope, message] =
-        stringArg.match(/^\[h2:([^:]+):([^\]]+)\]\s+(.*)$/ims) || [];
+        stringArg.match(/\[h2:([^:]+):([^\]]+)\]\s+(.*)$/ims) || [];
 
       if (!type || !scope || !message) return args;
 
@@ -237,11 +216,18 @@ export function enhanceH2Logs(options: {
       if (type === 'error' || errorObject) {
         let tryMessage = hasLinks ? lastLine : undefined;
         let stack = errorObject?.stack;
-        const cause = errorObject?.cause as
+        let cause = errorObject?.cause as
           | {[key: string]: any; graphql?: {query: string; variables: string}}
+          | string
           | undefined;
 
-        if (!!cause?.graphql?.query) {
+        if (typeof cause === 'string') {
+          try {
+            cause = JSON.parse(cause);
+          } catch {}
+        }
+
+        if (typeof cause !== 'string' && !!cause?.graphql?.query) {
           const {query, variables} = cause.graphql;
           const link = `${options.graphiqlUrl}?query=${encodeURIComponent(
             query,

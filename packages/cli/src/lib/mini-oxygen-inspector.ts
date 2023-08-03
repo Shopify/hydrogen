@@ -1,8 +1,14 @@
-import {readFile} from 'fs/promises';
+/**
+ * Huge part of this code comes from Wrangler:
+ * https://github.com/cloudflare/workers-sdk/blob/main/packages/wrangler/src/inspect.ts
+ */
+
+import {dirname} from 'node:path';
+import {readFile} from 'node:fs/promises';
 import {SourceMapConsumer} from 'source-map';
-import WebSocket from 'ws';
+import {parse as parseStackTrace} from 'stack-trace';
+import WebSocket, {type MessageEvent} from 'ws';
 import {Protocol} from 'devtools-protocol';
-import type {MessageEvent} from 'ws';
 
 // https://chromedevtools.github.io/devtools-protocol/#endpoints
 interface InspectorWebSocketTarget {
@@ -43,15 +49,24 @@ interface InspectorProps {
   sourceMapPath?: string | undefined;
 }
 
-export function connectToInspector(props: InspectorProps) {
+interface ErrorProperties {
+  message?: string;
+  cause?: unknown;
+  stack?: string;
+}
+
+export function connectToInspector({
+  inspectorUrl,
+  sourceMapPath,
+}: InspectorProps) {
   /**
    * A simple decrementing id to attach to messages sent to DevTools.
    * Use negative ids to void collisions with DevTools messages.
    */
   const messageCounterRef = {value: -1};
   const getMessageId = () => messageCounterRef.value--;
-
-  const ws = new WebSocket(props.inspectorUrl);
+  const pendingMessages = new Map<number, (result: unknown) => void>();
+  const ws = new WebSocket(inspectorUrl);
 
   /**
    * A handle to the interval we run to keep the websocket alive
@@ -67,111 +82,233 @@ export function connectToInspector(props: InspectorProps) {
   /**
    * Send a message to the remote websocket
    */
-  const send = (event: Record<string, unknown>) => {
+  const send = <Request = unknown, Response = unknown>(
+    method: string,
+    params?: Request,
+  ) => {
     if (!isClosed()) {
-      ws.send(JSON.stringify(event));
+      const id = getMessageId();
+
+      let promiseResolve: ((result: Response) => void) | undefined = undefined;
+      const promise = new Promise<Response>(
+        (resolve) => (promiseResolve = resolve),
+      );
+
+      pendingMessages.set(id, promiseResolve as any);
+      ws.send(JSON.stringify({id, method, params}));
+      return promise;
     }
+
+    return Promise.resolve(undefined);
   };
 
-  const closeWs = () => {
-    if (!isClosed()) {
-      try {
-        ws.close();
-      } catch (err) {
-        // Closing before the websocket is ready will throw an error.
+  const cleanupMessageQueue = (data: {id: number; result: unknown}) => {
+    try {
+      if (data?.id < 0) {
+        // We only use negative IDs for internal messages
+        const resolve = pendingMessages.get(data.id);
+        if (resolve !== undefined) {
+          pendingMessages.delete(data.id);
+          resolve(data.result);
+        }
+
+        return true;
+      }
+    } catch (error) {
+      console.error(error);
+    }
+
+    return false;
+  };
+
+  function getPropertyValue(
+    name: string,
+    response?: Protocol.Runtime.GetPropertiesResponse,
+  ) {
+    return response?.result.find((prop) => prop.name === name)?.value;
+  }
+
+  const reconstructError = async (
+    initialProperties: ErrorProperties,
+    ro?: Protocol.Runtime.RemoteObject,
+  ) => {
+    let errorProperties = {...initialProperties};
+
+    // The two requests here are based on intercepted messages sent by
+    // the DevTools frontend to view the stack.
+    const objectId = ro?.objectId;
+
+    if (objectId) {
+      // Get all properties
+      const [sourceMapConsumer, getPropertiesResponse] = await Promise.all([
+        getSourceMapConsumer(),
+        send<
+          Protocol.Runtime.GetPropertiesRequest,
+          Protocol.Runtime.GetPropertiesResponse
+        >('Runtime.getProperties', {
+          objectId,
+          ownProperties: false,
+          accessorPropertiesOnly: false,
+          generatePreview: false,
+          nonIndexedPropertiesOnly: false,
+        }),
+      ]);
+
+      const message = getPropertyValue('message', getPropertiesResponse);
+      if (message?.value) {
+        errorProperties.message = message.value;
+      }
+
+      const stack = getPropertyValue('stack', getPropertiesResponse);
+      if (stack?.value) {
+        errorProperties.stack = sourceMapConsumer
+          ? formatStack(sourceMapConsumer, stack.value)
+          : stack.value;
+      }
+
+      // If this error has a `cause` property, display it
+      const cause = getPropertyValue('cause', getPropertiesResponse);
+      if (cause) {
+        errorProperties.cause = cause.description ?? cause.value;
+
+        if (
+          cause.subtype === 'error' &&
+          sourceMapConsumer &&
+          cause.description !== undefined
+        ) {
+          errorProperties.stack = formatStack(
+            sourceMapConsumer,
+            cause.description,
+          );
+        }
+      }
+
+      // `DOMException`s are special, the actually useful stack trace
+      // is hidden behind the `stack` getter, and not included in the
+      // preview: https://github.com/cloudflare/workerd/blob/1b5057f2bfcfedf146f6f79ff04e99903d55412b/src/workerd/jsg/dom-exception.h#L92
+      const isDomException = ro?.className === 'DOMException';
+
+      if (isDomException) {
+        // If this is a `DOMException`, get a reference to `stack`
+        const stackDescriptor = getPropertiesResponse?.result.find(
+          (prop) => prop.name === 'stack',
+        );
+        const getObjectId = stackDescriptor?.get?.objectId;
+        if (getObjectId !== undefined) {
+          // Invoke the `stack` getter
+          const callFunctionResponse = await send<
+            Protocol.Runtime.CallFunctionOnRequest,
+            Protocol.Runtime.CallFunctionOnResponse
+          >('Runtime.callFunctionOn', {
+            objectId,
+            functionDeclaration:
+              'function invokeGetter(getter) { return Reflect.apply(getter, this, []); }',
+            arguments: [{objectId: getObjectId}],
+            silent: true,
+          });
+
+          if (callFunctionResponse !== undefined) {
+            // Log the source-mapped `stack` if we have a consumer
+            const stack: unknown = callFunctionResponse.result.value;
+            if (typeof stack === 'string' && sourceMapConsumer !== undefined) {
+              errorProperties.stack = formatStack(sourceMapConsumer, stack);
+            } else {
+              try {
+                errorProperties.stack = JSON.stringify(stack);
+              } catch {}
+            }
+          }
+        }
       }
     }
+
+    const error = new Error(errorProperties.message, {
+      cause: errorProperties.cause,
+    });
+
+    error.stack = errorProperties.stack;
+
+    return error;
+  };
+
+  // Parse the source-map lazily when required, then store it, so we can we
+  // reuse the consumer for different errors without having to parse the map
+  // each time. Consumers must be destroyed when no longer needed, so create
+  // an abort controller aborted to signal destruction.
+  const sourceMapAbortController = new AbortController();
+  let sourceMapConsumerPromise: Promise<SourceMapConsumer | undefined>;
+  const getSourceMapConsumer = () => {
+    return (sourceMapConsumerPromise ??= (async () => {
+      // If we don't have a source map, or we've aborted, skip source mapping
+      if (!sourceMapPath || sourceMapAbortController.signal.aborted) {
+        return;
+      }
+
+      try {
+        // Load and parse the source map
+        const mapContent = await readFile(sourceMapPath, 'utf-8');
+        if (sourceMapAbortController.signal.aborted) return;
+        const map = JSON.parse(mapContent);
+        map.sourceRoot = dirname(sourceMapPath);
+
+        // `new SourceMapConsumer(...)` returns a `Promise<SourceMapConsumer>`
+        const sourceMapConsumer = await new SourceMapConsumer(map);
+        if (sourceMapAbortController.signal.aborted) {
+          sourceMapConsumer.destroy();
+          return;
+        }
+
+        sourceMapAbortController.signal.addEventListener('abort', () => {
+          sourceMapConsumerPromise = Promise.resolve(undefined);
+          sourceMapConsumer.destroy();
+        });
+        return sourceMapConsumer;
+      } catch {}
+    })());
   };
 
   ws.addEventListener('message', async (event: MessageEvent) => {
     if (typeof event.data === 'string') {
       const evt = JSON.parse(event.data);
-      console.log('MESSAGE!', evt);
-      if (evt.result) {
-        console.log(evt?.result?.result);
-      }
+      cleanupMessageQueue(evt);
+
       if (evt.method === 'Runtime.exceptionThrown') {
         const params = evt.params as Protocol.Runtime.ExceptionThrownEvent;
 
-        // Parse stack trace with source map.
-        if (props.sourceMapPath) {
-          // Parse in the sourcemap
-          const mapContent = JSON.parse(
-            await readFile(props.sourceMapPath, 'utf-8'),
-          );
+        const errorProperties: ErrorProperties = {};
 
+        const sourceMapConsumer = await getSourceMapConsumer();
+        if (sourceMapConsumer !== undefined) {
           // Create the lines for the exception details log
-          const exceptionLines = [
-            params.exceptionDetails.exception?.description?.split('\n')[0],
-          ];
-
-          await SourceMapConsumer.with(mapContent, null, async (consumer) => {
-            // Pass each of the callframes into the consumer, and format the error
-            const stack = params.exceptionDetails.stackTrace?.callFrames;
-
-            stack?.forEach(({functionName, lineNumber, columnNumber}, i) => {
-              try {
-                if (lineNumber) {
-                  // The line and column numbers in the stackTrace are zero indexed,
-                  // whereas the sourcemap consumer indexes from one.
-                  const pos = consumer.originalPositionFor({
-                    line: lineNumber + 1,
-                    column: columnNumber + 1,
-                  });
-
-                  // Print out line which caused error:
-                  if (i === 0 && pos.source && pos.line) {
-                    const fileSource = consumer.sourceContentFor(pos.source);
-                    const fileSourceLine =
-                      fileSource?.split('\n')[pos.line - 1] || '';
-                    exceptionLines.push(fileSourceLine.trim());
-
-                    // If we have a column, we can mark the position underneath
-                    if (pos.column) {
-                      exceptionLines.push(
-                        `${' '.repeat(
-                          pos.column - fileSourceLine.search(/\S/),
-                        )}^`,
-                      );
-                    }
-                  }
-
-                  // From the way esbuild implements the "names" field:
-                  // > To save space, the original name is only recorded when it's different from the final name.
-                  // however, source-map consumer does not handle this
-                  if (pos && pos.line != null) {
-                    const convertedFnName = pos.name || functionName || '';
-                    exceptionLines.push(
-                      `    at ${convertedFnName} (${pos.source}:${pos.line}:${pos.column})`,
-                    );
-                  }
-                }
-              } catch {
-                // Line failed to parse through the sourcemap consumer
-                // We should handle this better
-              }
-            });
-          });
-
-          // Log the parsed stacktrace
-          console.error(
-            params.exceptionDetails.text,
-            exceptionLines.join('\n'),
+          const message =
+            params.exceptionDetails.exception?.description?.split('\n')[0];
+          const stack = params.exceptionDetails.stackTrace?.callFrames;
+          const formatted = formatStructuredError(
+            sourceMapConsumer,
+            message,
+            stack,
           );
+
+          errorProperties.message = params.exceptionDetails.text;
+          errorProperties.stack = formatted;
         } else {
-          // We log the stacktrace to the terminal
-          console.error(
-            params.exceptionDetails.text,
-            params.exceptionDetails.exception?.description ?? '',
-          );
+          errorProperties.message =
+            params.exceptionDetails.text +
+            ' ' +
+            (params.exceptionDetails.exception?.description ?? '');
         }
-      }
-      if (evt.method === 'Runtime.consoleAPICalled') {
-        logConsoleMessage(
-          evt.params as Protocol.Runtime.ConsoleAPICalledEvent,
-          send,
-          getMessageId,
+
+        console.error(
+          await reconstructError(
+            errorProperties,
+            params.exceptionDetails.exception,
+          ),
         );
+      }
+
+      if (evt.method === 'Runtime.consoleAPICalled') {
+        const params = evt.params as Protocol.Runtime.ConsoleAPICalledEvent;
+        logConsoleMessage(params, reconstructError);
       }
     } else {
       // We should never get here, but who know is 2022...
@@ -180,18 +317,11 @@ export function connectToInspector(props: InspectorProps) {
   });
 
   ws.once('open', () => {
-    send({method: 'Runtime.enable', id: getMessageId()});
+    send('Runtime.enable');
     // TODO: Why does this need a timeout?
-    setTimeout(() => {
-      send({method: 'Network.enable', id: getMessageId()});
-    }, 2000);
+    // setTimeout(() => send('Network.enable'), 2000);
 
-    keepAliveInterval = setInterval(() => {
-      send({
-        method: 'Runtime.getIsolateId',
-        id: getMessageId(),
-      });
-    }, 10_000);
+    keepAliveInterval = setInterval(() => send('Runtime.getIsolateId'), 10_000);
   });
 
   ws.on('unexpected-response', () => {
@@ -204,16 +334,13 @@ export function connectToInspector(props: InspectorProps) {
   });
 
   ws.once('close', () => {
-    console.log('ws close');
     clearInterval(keepAliveInterval);
+    sourceMapAbortController.abort();
   });
 
   return () => {
-    // clean up! Let's first stop the heartbeat interval
     clearInterval(keepAliveInterval);
-    // Then we'll send a message to the devtools instance to
-    // tell it to clear the console.
-    // Finally, we'll close the websocket
+
     if (!isClosed()) {
       try {
         ws.close();
@@ -221,6 +348,8 @@ export function connectToInspector(props: InspectorProps) {
         // Closing before the websocket is ready will throw an error.
       }
     }
+
+    sourceMapAbortController.abort();
   };
 }
 
@@ -258,13 +387,14 @@ export const mapConsoleAPIMessageTypeToConsoleMethod: {
   endGroup: 'groupEnd',
 };
 
-function logConsoleMessage(
+async function logConsoleMessage(
   evt: Protocol.Runtime.ConsoleAPICalledEvent,
-  send: (message: {id: number; [key: string]: any}) => void,
-  getMessageId: () => number,
-): void {
-  const args: string[] = [];
-  console.log('logConsoleMessage' + Math.random(), evt);
+  reconstructError: (
+    initialProperties: ErrorProperties,
+    ro: Protocol.Runtime.RemoteObject,
+  ) => Promise<Error>,
+) {
+  const args: Array<string | Error> = [];
   for (const ro of evt.args) {
     switch (ro.type) {
       case 'string':
@@ -286,7 +416,7 @@ function logConsoleMessage(
               : ro.description ?? '<no-description>',
           );
         } else {
-          args.push(ro.preview.description ?? '<no-description>');
+          if (ro.preview.description) args.push(ro.preview.description);
 
           switch (ro.preview.subtype) {
             case 'array':
@@ -361,21 +491,33 @@ function logConsoleMessage(
             case 'wasmvalue':
               break;
             case 'error':
+              const errorProperties = {
+                message:
+                  ro.preview.description
+                    ?.split('\n')
+                    .filter((line) => !/^\s+at\s/.test(line))
+                    .join('\n') ??
+                  ro.preview.properties.find(({name}) => name === 'message')
+                    ?.value ??
+                  '',
+                stack:
+                  ro.preview.description ??
+                  ro.description ??
+                  ro.preview.properties.find(({name}) => name === 'stack')
+                    ?.value,
+                cause: ro.preview.properties.find(({name}) => name === 'cause')
+                  ?.value as unknown,
+              };
+
+              // Even though we have gathered all the properties, they are likely
+              // truncated so we need to fetch their full version.
+              const error = await reconstructError(errorProperties, ro);
+
+              // Replace its description in args
+              args.splice(-1, 1, error);
+
+              break;
             default:
-              console.log('sending...', ro.objectId);
-
-              setTimeout(() => {
-                send({
-                  method: 'Runtime.getProperties',
-                  id: getMessageId(),
-                  params: {
-                    objectId: ro.objectId!,
-                    ownProperties: true,
-                  },
-                });
-              }, 1000);
-
-              console.log('error!', ro.preview.properties);
               args.push(
                 '{\n' +
                   ro.preview.properties
@@ -406,7 +548,7 @@ function logConsoleMessage(
         console.table(args);
         break;
       default:
-        // eslint-disable-next-line prefer-spread
+        // @ts-expect-error
         console[method].apply(console, args);
         break;
     }
@@ -414,4 +556,89 @@ function logConsoleMessage(
     console.warn(`Unsupported console method: ${method}`);
     console.warn('console event:', evt);
   }
+}
+
+/**
+ * Converts a structured-error to a friendly, source-mapped error string.
+ * @param sourceMapConsumer source-map to use for mapping locations
+ * @param message first line of stack trace (e.g. `Error: message`)
+ * @param frames structured stack entries for error location
+ */
+function formatStructuredError(
+  sourceMapConsumer: SourceMapConsumer,
+  message?: string,
+  frames?: Protocol.Runtime.CallFrame[],
+): string {
+  const lines: string[] = [];
+  if (message !== undefined) lines.push(message);
+  // Pass each of the callframes into the consumer, and format the error
+  frames?.forEach(({functionName, lineNumber, columnNumber}, i) => {
+    try {
+      if (lineNumber) {
+        // `Protocol.Runtime.CallFrame` uses 0-indexed line and column
+        // numbers, whereas `source-map` expects 1-indexing for lines and
+        // 0-indexing for columns;
+        const pos = sourceMapConsumer.originalPositionFor({
+          line: lineNumber + 1,
+          column: columnNumber,
+        });
+
+        // Print out line which caused error:
+        if (i === 0 && pos.source && pos.line) {
+          const fileSource = sourceMapConsumer.sourceContentFor(pos.source);
+          const fileSourceLine = fileSource?.split('\n')[pos.line - 1] || '';
+          lines.push(fileSourceLine.trim());
+
+          // If we have a column, we can mark the position underneath
+          if (pos.column) {
+            lines.push(
+              `${' '.repeat(pos.column - fileSourceLine.search(/\S/))}^`,
+            );
+          }
+        }
+
+        // From the way esbuild implements the "names" field:
+        // > To save space, the original name is only recorded when it's different from the final name.
+        // however, source-map consumer does not handle this
+        if (pos && pos.line !== null && pos.column !== null) {
+          const convertedFnName = pos.name || functionName || '';
+          let convertedLocation = `${pos.source}:${pos.line}:${pos.column + 1}`;
+
+          if (convertedFnName === '') {
+            lines.push(`    at ${convertedLocation}`);
+          } else {
+            lines.push(`    at ${convertedFnName} (${convertedLocation})`);
+          }
+        }
+      }
+    } catch {
+      // Line failed to parse through the sourcemap consumer
+      // We should handle this better
+    }
+  });
+
+  return lines.join('\n');
+}
+
+/**
+ * Converts an unstructured-stack to a friendly, source-mapped error string.
+ * @param sourceMapConsumer source-map to use for mapping locations
+ * @param stack string stack trace from `Error#stack`
+ */
+function formatStack(sourceMapConsumer: SourceMapConsumer, stack: string) {
+  const message = stack.split('\n')[0];
+  // `stack-trace` requires an object with a `stack` property:
+  // https://github.com/felixge/node-stack-trace/blob/ba06dcdb50d465cd440d84a563836e293b360427/index.js#L21-L23
+  const callSites = parseStackTrace({stack} as Error);
+  const frames = callSites.map<Protocol.Runtime.CallFrame>((site) => ({
+    functionName: site.getFunctionName() ?? '',
+    // `Protocol.Runtime.CallFrame`s line numbers are 0-indexed, hence `- 1`
+    lineNumber: (site.getLineNumber() ?? 1) - 1,
+    columnNumber: site.getColumnNumber() ?? 1,
+    // Unused by `formattedError`
+    scriptId: '',
+    url: '',
+  }));
+
+  return formatStructuredError(sourceMapConsumer, message, frames);
 }
