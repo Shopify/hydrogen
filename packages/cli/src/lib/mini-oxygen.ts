@@ -18,6 +18,7 @@ import {
 } from 'miniflare';
 import {connectToInspector, findInspectorUrl} from './mini-oxygen-inspector.js';
 import {DEFAULT_PORT} from './flags.js';
+import {findPort} from './find-port.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -38,7 +39,7 @@ export async function startMiniOxygen({
   buildPathClient,
   env,
 }: MiniOxygenOptions) {
-  const inspectorPort = 8787;
+  const inspectorPort = await findPort(8787);
 
   const buildMiniOxygenOptions = async () =>
     ({
