@@ -50,19 +50,23 @@ export function parseGid(gid: string | undefined): ShopifyGid {
     return defaultReturn;
   }
 
-  const {search, searchParams, pathname, hash} = new URL(gid);
-  const pathnameParts = pathname.split('/');
-  const lastPathnamePart = pathnameParts[pathnameParts.length - 1];
-  const resourcePart = pathnameParts[pathnameParts.length - 2];
+  try {
+    const {search, searchParams, pathname, hash} = new URL(gid);
+    const pathnameParts = pathname.split('/');
+    const lastPathnamePart = pathnameParts[pathnameParts.length - 1];
+    const resourcePart = pathnameParts[pathnameParts.length - 2];
 
-  if (!lastPathnamePart) {
+    if (!lastPathnamePart || !resourcePart) {
+      return defaultReturn;
+    }
+
+    const id = lastPathnamePart ?? null;
+    const resource = resourcePart ?? null;
+
+    return {id, resource, search, searchParams, hash};
+  } catch {
     return defaultReturn;
   }
-
-  const id = lastPathnamePart ?? null;
-  const resource = resourcePart ?? null;
-
-  return {id, resource, search, searchParams, hash};
 }
 
 /**

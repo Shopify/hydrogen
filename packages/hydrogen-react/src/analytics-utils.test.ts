@@ -5,41 +5,35 @@ describe('analytic-utils', () => {
   describe('parseGid', () => {
     it('returns the id and resource type from a gid', () => {
       const {searchParams, ...gid} = parseGid('gid://shopify/Order/123');
-      expect(gid).toMatchInlineSnapshot(`
-        {
-          "hash": "",
-          "id": "123",
-          "resource": "Order",
-          "search": "",
-        }
-      `);
+      expect(gid).toStrictEqual({
+        hash: '',
+        id: '123',
+        resource: 'Order',
+        search: '',
+      });
       expect(searchParams.toString()).toBe('');
     });
 
     it('returns empty string if the gid is not a string', () => {
       //@ts-expect-error - testing invalid input
       const {searchParams, ...gid} = parseGid(123);
-      expect(gid).toMatchInlineSnapshot(`
-        {
-          "hash": "",
-          "id": "",
-          "resource": null,
-          "search": "",
-        }
-      `);
+      expect(gid).toStrictEqual({
+        hash: '',
+        id: '',
+        resource: null,
+        search: '',
+      });
       expect(searchParams.toString()).toBe('');
     });
 
     it('returns empty string if the gid is not a valid gid', () => {
       const {searchParams, ...gid} = parseGid('gid://shopify/Order');
-      expect(gid).toMatchInlineSnapshot(`
-        {
-          "hash": "",
-          "id": "Order",
-          "resource": "",
-          "search": "",
-        }
-      `);
+      expect(gid).toStrictEqual({
+        hash: '',
+        id: '',
+        resource: null,
+        search: '',
+      });
       expect(searchParams.toString()).toBe('');
     });
 
@@ -47,14 +41,12 @@ describe('analytic-utils', () => {
       const {searchParams, ...gid} = parseGid(
         'gid://shopify/Order/123?namespace=123',
       );
-      expect(gid).toMatchInlineSnapshot(`
-        {
-          "hash": "",
-          "id": "123",
-          "resource": "Order",
-          "search": "?namespace=123",
-        }
-      `);
+      expect(gid).toStrictEqual({
+        hash: '',
+        id: '123',
+        resource: 'Order',
+        search: '?namespace=123',
+      });
       expect(searchParams.toString()).toBe('namespace=123');
     });
 
@@ -62,27 +54,23 @@ describe('analytic-utils', () => {
       const {searchParams, ...gid} = parseGid(
         'gid://shopify/Order/123?namespace=123#fragment',
       );
-      expect(gid).toMatchInlineSnapshot(`
-        {
-          "hash": "#fragment",
-          "id": "123",
-          "resource": "Order",
-          "search": "?namespace=123",
-        }
-      `);
+      expect(gid).toStrictEqual({
+        hash: '#fragment',
+        id: '123',
+        resource: 'Order',
+        search: '?namespace=123',
+      });
       expect(searchParams.toString()).toBe('namespace=123');
     });
 
     it('returns empty string if the resource is missing', () => {
       const {searchParams, ...gid} = parseGid('gid://shopify//123');
-      expect(gid).toMatchInlineSnapshot(`
-        {
-          "hash": "",
-          "id": "123",
-          "resource": "",
-          "search": "",
-        }
-      `);
+      expect(gid).toStrictEqual({
+        hash: '',
+        id: '',
+        resource: null,
+        search: '',
+      });
       expect(searchParams.toString()).toBe('');
     });
 
@@ -90,15 +78,24 @@ describe('analytic-utils', () => {
       const {searchParams, ...gid} = parseGid(
         'gid://shopify/Cart/c1-3d2419bf79df5e91d37b449cc6cd0ba1?test=123',
       );
-      expect(gid).toMatchInlineSnapshot(`
-        {
-          "hash": "",
-          "id": "c1-3d2419bf79df5e91d37b449cc6cd0ba1",
-          "resource": "Cart",
-          "search": "?test=123",
-        }
-      `);
+      expect(gid).toStrictEqual({
+        hash: '',
+        id: 'c1-3d2419bf79df5e91d37b449cc6cd0ba1',
+        resource: 'Cart',
+        search: '?test=123',
+      });
       expect(searchParams.toString()).toBe('test=123');
+    });
+
+    it('should default to empty string', () => {
+      const {searchParams, ...gid} = parseGid('');
+      expect(gid).toStrictEqual({
+        hash: '',
+        id: '',
+        resource: null,
+        search: '',
+      });
+      expect(searchParams.toString()).toBe('');
     });
   });
 
