@@ -92,7 +92,8 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
 
   addMessageReplacers('dev', [
     // Workerd logs
-    ([first]) => typeof first === 'string' && first.startsWith('\x1B[31m'),
+    ([first]) =>
+      typeof first === 'string' && /^\x1B\[31m(workerd\/|stack:)/.test(first),
     () => {},
   ]);
 }
