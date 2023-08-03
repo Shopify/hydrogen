@@ -1,23 +1,21 @@
 import type {Localizations, I18nLocale} from '../../@types/i18next';
 import {CartForm} from '@shopify/hydrogen';
-import {localizePath} from '~/utils';
-import {useEffect, useRef, useMemo} from 'react';
+import {localizePath, delocalizePath} from '~/utils';
+import {useEffect, useState, useMemo} from 'react';
 import {useLocale} from '~/hooks/useLocale';
-import {useFetcher, useMatches} from '@remix-run/react';
+import {useFetcher} from '@remix-run/react';
 
 export function LocaleSwitcher() {
-  const [root] = useMatches();
-  const isLoggedIn = root.data.isLoggedIn;
   const fetcher = useFetcher();
   const i18n = useLocale();
-  const selectedI18n = useRef<I18nLocale | null>(null);
+  const [selectedI18n, setSelectedI18n] = useState<I18nLocale>(i18n);
   const allLocalizations = (fetcher?.data?.localizations ??
     null) as Localizations | null;
-
+  const cartCountryCode = fetcher.data?.cart?.buyerIdentity?.countryCode;
   const localizations = useMemo(() => {
     if (!allLocalizations) return [i18n];
     return [i18n, ...Object.values(allLocalizations)];
-  }, [allLocalizations]);
+  }, [allLocalizations, i18n]);
 
   /**
    * Fetch all the localizations from the internal localizations API.
@@ -32,7 +30,7 @@ export function LocaleSwitcher() {
    * Update the cart's buyer identity with the new country code.
    */
   function updateCartBuyerIdentity() {
-    if (!selectedI18n.current?.country) return;
+    if (!selectedI18n?.country) return;
 
     const form = new FormData();
     form.append(
@@ -41,7 +39,7 @@ export function LocaleSwitcher() {
         action: CartForm.ACTIONS.BuyerIdentityUpdate,
         inputs: {
           buyerIdentity: {
-            countryCode: selectedI18n.current.country,
+            countryCode: selectedI18n.country,
           },
           redirectTo: location.pathname,
         },
@@ -51,7 +49,7 @@ export function LocaleSwitcher() {
     // update the country code in the cart's buyer identity
     fetcher.submit(form, {
       method: 'POST',
-      action: localizePath('/cart', selectedI18n.current),
+      action: localizePath('/cart', selectedI18n),
     });
   }
 
@@ -61,50 +59,40 @@ export function LocaleSwitcher() {
   function switchLocale(event: React.ChangeEvent<HTMLSelectElement>) {
     const selected = JSON.parse(event.target.value) as I18nLocale;
     if (!selected?.country || !selected?.language) return;
-    selectedI18n.current = selected;
-
+    setSelectedI18n(selected);
     updateCartBuyerIdentity();
-  }
-
-  /**
-   * Navigate to the new locale.
-   */
-  function navigateToLocale() {
-    if (!selectedI18n.current?.country || !selectedI18n.current?.language)
-      return;
-
-    const selectedCountry = selectedI18n.current?.country;
-    const selectedLanguage = selectedI18n.current?.language;
-
-    const isDefaultLocale =
-      selectedCountry === i18n.country && selectedLanguage === i18n.language;
-
-    if (isDefaultLocale) {
-      // don't add the default locale to the url
-      window.location.href = window.location.pathname;
-      return;
-    }
-
-    // Not default local, remove the locale from the pathname
-    const pathnameWithoutLocale =
-      window.location.pathname.replace(/^\/[a-zA-Z]{2}-[a-zA-Z]{2}/, '') || '';
-
-    // navigate to the new locale
-    window.location.href = `/${selectedLanguage}-${selectedCountry}${pathnameWithoutLocale}`;
   }
 
   // After the cart's buyer identity has been updated, navigate to the new locale.
   useEffect(() => {
-    const updatedBuyerIdentity =
-      fetcher.data?.cart?.buyerIdentity?.countryCode ===
-      selectedI18n.current?.country;
+    /**
+     * Navigate to the new locale.
+     */
+    function navigateToLocale() {
+      const isDefaultLocale =
+        selectedI18n.country === i18n.country &&
+        selectedI18n.language === i18n.language;
 
+      if (isDefaultLocale) {
+        // don't add the default locale to the url
+        window.location.href = window.location.pathname;
+        return;
+      }
+
+      // clear current localization prefix (if any)
+      const pathname = delocalizePath(window.location.pathname);
+
+      // navigate to the new locale
+      window.location.href = localizePath(pathname, selectedI18n);
+    }
+
+    const updatedBuyerIdentity = cartCountryCode === selectedI18n.country;
     const finishedUpdating = fetcher.type === 'done';
 
     if (updatedBuyerIdentity && finishedUpdating) {
       navigateToLocale();
     }
-  }, [fetcher.type, fetcher.data?.cart?.buyerIdentity?.countryCode]);
+  }, [fetcher.type, i18n, selectedI18n, cartCountryCode]);
 
   return (
     <div style={{marginLeft: '1rem', display: 'flex', gap: '.5rem'}}>
