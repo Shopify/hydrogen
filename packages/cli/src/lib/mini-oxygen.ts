@@ -16,6 +16,7 @@ import {
   Response,
   fetch,
 } from 'miniflare';
+import {connectToInspector, findInspectorUrl} from './mini-oxygen-inspector.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -36,18 +37,16 @@ export async function startMiniOxygen({
   buildPathClient,
   env,
 }: MiniOxygenOptions) {
-  const log = new Log(2);
-  // @ts-ignore
-  log.log = () => {};
-  log.warn = () => {};
+  const inspectorPort = 8787;
 
   const buildMiniOxygenOptions = async () =>
     ({
       cf: false,
       verbose: true,
       port: port,
-      log,
+      log: new Log(5),
       liveReload: watch,
+      inspectorPort,
       workers: [
         {
           name: 'mini-oxygen',
@@ -87,8 +86,12 @@ export async function startMiniOxygen({
 
   let miniOxygenOptions = await buildMiniOxygenOptions();
   const miniOxygen = new Miniflare(miniOxygenOptions);
+  const listeningAt = await miniOxygen.ready;
 
-  const listeningAt = `http://localhost:${port}`;
+  let inspectorUrl = await findInspectorUrl(inspectorPort);
+  let cleanupInspector = inspectorUrl
+    ? connectToInspector({inspectorUrl})
+    : undefined;
 
   return {
     port,
@@ -106,7 +109,10 @@ export async function startMiniOxygen({
         }
       }
 
-      return miniOxygen.setOptions(miniOxygenOptions);
+      cleanupInspector?.();
+      await miniOxygen.setOptions(miniOxygenOptions);
+      inspectorUrl ??= await findInspectorUrl(inspectorPort);
+      if (inspectorUrl) cleanupInspector = connectToInspector({inspectorUrl});
     },
     showBanner(options?: {
       mode?: string;

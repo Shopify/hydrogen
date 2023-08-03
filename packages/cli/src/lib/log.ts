@@ -95,26 +95,26 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
     [
       ([first]) => typeof first === 'string' && first.includes('workerd/io/'),
       (args: string[]) => {
-        if (args[0]?.includes('exception =')) return;
+        // if (args[0]?.includes('exception =')) return;
 
-        if (args[0]) {
-          args[0] = args[0]
-            .replace(/^.*?message\(\)\s+=\s+\["(.*?)"\].*$/gi, '$1')
-            .replace(/\\n/g, '\n');
-        }
+        // if (args[0]) {
+        //   args[0] = args[0]
+        //     .replace(/^.*?message\(\)\s+=\s+\["(.*?)"\].*$/gi, '$1')
+        //     .replace(/\\n/g, '\n');
+        // }
 
         return args;
       },
     ],
-    [
-      ([first]) => typeof first === 'string' && first.includes('workerd/util/'),
-      () => {},
-    ],
-    [
-      ([first]) =>
-        typeof first === 'string' && first.includes('workerd/server/'),
-      () => {},
-    ],
+    // [
+    //   ([first]) => typeof first === 'string' && first.includes('workerd/util/'),
+    //   () => {},
+    // ],
+    // [
+    //   ([first]) =>
+    //     typeof first === 'string' && first.includes('workerd/server/'),
+    //   () => {},
+    // ],
   );
 }
 
