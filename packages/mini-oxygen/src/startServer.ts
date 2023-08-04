@@ -161,7 +161,6 @@ export function createMiniOxygen(
               new Promise((resolve) => {
                 sockets.forEach((socket) => socket.destroy());
                 sockets.clear();
-                app.closeAllConnections();
                 app.close(() => resolve(undefined));
               }),
           });
