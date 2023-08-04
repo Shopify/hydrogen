@@ -6,11 +6,17 @@ import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
+  assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
   type ServerMode,
-} from '../../lib/config.js';
-import {enhanceH2Logs, muteDevLogs, warnOnce} from '../../lib/log.js';
+} from '../../lib/remix-config.js';
+import {
+  createRemixLogger,
+  enhanceH2Logs,
+  muteDevLogs,
+  muteRemixLogs,
+} from '../../lib/log.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
@@ -20,6 +26,7 @@ import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
+import {checkRemixVersions} from '../../lib/remix-version-check.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -87,6 +94,7 @@ async function runDev({
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
+  await muteRemixLogs();
 
   if (debug) (await import('node:inspector')).open();
 
@@ -98,6 +106,7 @@ async function runDev({
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
     const config = await getRemixConfig(root);
+
     return disableVirtualRoutes
       ? config
       : addVirtualRoutes(config).catch((error) => {
@@ -120,7 +129,13 @@ async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
-  const {shop, storefront} = await getConfig(root);
+  const [remixConfig, {shop, storefront}] = await Promise.all([
+    reloadConfig(),
+    getConfig(root),
+  ]);
+
+  assertOxygenChecks(remixConfig);
+
   const fetchRemote = !!shop && !!storefront?.id;
   const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});
 
@@ -162,11 +177,10 @@ async function runDev({
       spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
     }
 
+    checkRemixVersions();
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
   }
-
-  const remixConfig = await reloadConfig();
 
   const fileWatchCache = createFileWatchCache();
   let skipRebuildLogs = false;
@@ -176,10 +190,10 @@ async function runDev({
       config: remixConfig,
       options: {
         mode: process.env.NODE_ENV as ServerMode,
-        onWarning: warnOnce,
         sourcemap,
       },
       fileWatchCache,
+      logger: createRemixLogger(),
     },
     {
       reloadConfig,

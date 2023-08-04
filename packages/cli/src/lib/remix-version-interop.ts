@@ -1,5 +1,5 @@
 import {createRequire} from 'module';
-import {getRemixConfig, type RemixConfig} from './config.js';
+import {getRemixConfig, type RemixConfig} from './remix-config.js';
 
 export function isRemixV2() {
   try {
@@ -19,8 +19,7 @@ export async function getV2Flags(
 ) {
   const isV2 = isRemixV2();
   const futureFlags = {
-    ...(!isV2 &&
-      (remixConfigFuture ?? (await getRemixConfig(root, true)).future)),
+    ...(!isV2 && (remixConfigFuture ?? (await getRemixConfig(root)).future)),
   };
 
   return {

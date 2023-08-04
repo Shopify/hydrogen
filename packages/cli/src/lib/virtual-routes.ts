@@ -1,7 +1,7 @@
 import path from 'path';
 import {fileURLToPath} from 'url';
 import recursiveReaddir from 'recursive-readdir';
-import type {RemixConfig} from './config.js';
+import type {RemixConfig} from './remix-config.js';
 
 export const VIRTUAL_ROUTES_DIR = 'virtual-routes/routes';
 export const VIRTUAL_ROOT = 'virtual-routes/virtual-root';

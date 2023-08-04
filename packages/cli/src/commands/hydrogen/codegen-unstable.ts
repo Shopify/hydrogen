@@ -2,7 +2,7 @@ import path from 'path';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {Flags} from '@oclif/core';
-import {getProjectPaths, getRemixConfig} from '../../lib/config.js';
+import {getProjectPaths, getRemixConfig} from '../../lib/remix-config.js';
 import {commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {codegen} from '../../lib/codegen.js';
 

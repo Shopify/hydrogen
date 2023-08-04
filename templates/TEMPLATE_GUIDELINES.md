@@ -316,14 +316,13 @@ In the same route file, include the following imports and exports:
 
 ```tsx
 import {useCatch, isRouteErrorResponse, useRouteError} from '@remix-run/react';
-import {type ErrorBoundaryComponent} from '@shopify/remix-oxygen';
 
 export function CatchBoundary() {
   const caught = useCatch();
   return <div>{caught.message}</div>;
 }
 
-export const ErrorBoundaryV1: ErrorBoundaryComponent = ({error}) => {
+export const ErrorBoundaryV1 = ({error}: {error: Error}) => {
   return <div>There was an error: {error.message}</div>;
 };
 
