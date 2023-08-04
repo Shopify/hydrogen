@@ -128,10 +128,10 @@ export function connectToInspector({
     return response?.result.find((prop) => prop.name === name)?.value;
   }
 
-  const reconstructError = async (
+  async function reconstructError(
     initialProperties: ErrorProperties,
     ro?: Protocol.Runtime.RemoteObject,
-  ) => {
+  ) {
     let errorProperties = {...initialProperties};
 
     // The two requests here are based on intercepted messages sent by
@@ -229,7 +229,7 @@ export function connectToInspector({
     error.stack = errorProperties.stack;
 
     return error;
-  };
+  }
 
   // Parse the source-map lazily when required, then store it, so we can we
   // reuse the consumer for different errors without having to parse the map
