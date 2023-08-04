@@ -13,72 +13,59 @@ class WorkerNotFoundError extends Error {
     'A worker file is required for this command. Try building your project to ensure a workerFile is present.';
 }
 
-export type MiniOxygenPreviewOptions = MiniOxygenServerOptions &
-  Partial<{
-    log(message: string): unknown;
-    port: number;
-    workerFile: string;
-    watch: boolean;
-    modules: boolean;
-    buildCommand: string;
-    buildWatchPaths: string[];
-    sourceMap: boolean;
-    envPath: string;
-    env: {[key: string]: unknown};
-  }>;
+export type MiniOxygenOptions = Partial<{
+  log(message: string): unknown;
+  workerFile: string;
+  rootPath: string;
+  watch: boolean;
+  modules: boolean;
+  buildCommand: string;
+  buildWatchPaths: string[];
+  sourceMap: boolean;
+  envPath: string;
+  env: {[key: string]: unknown};
+}>;
+
+export type MiniOxygenCreateServerOptions = MiniOxygenServerOptions & {
+  port?: number;
+};
+
+export type MiniOxygenPreviewOptions = MiniOxygenOptions &
+  MiniOxygenCreateServerOptions;
 
 interface MiniOxygenPublicInstance {
-  port: number;
-  close: () => Promise<void>;
+  ready: () => Promise<void>;
+  dispose: () => Promise<void>;
   reload: (
     options?: Partial<Pick<MiniOxygenPreviewOptions, 'env'>>,
   ) => Promise<void>;
+  createServer: (opts: MiniOxygenCreateServerOptions) => Promise<{
+    port: number;
+    close: () => Promise<void>;
+  }>;
 }
 
-export async function startServer(
-  opts: MiniOxygenPreviewOptions,
-): Promise<MiniOxygenPublicInstance> {
+export function createMiniOxygen(
+  opts: MiniOxygenOptions,
+): MiniOxygenPublicInstance {
   const {
     // eslint-disable-next-line no-console
     log = (message: string) => console.log(message),
-    port = 3000,
     workerFile,
-    assetsDir,
-    publicPath,
+    rootPath,
     watch = false,
     buildWatchPaths,
     buildCommand,
-    autoReload = false,
     modules = true,
     sourceMap = true,
-    proxyServer,
     envPath,
     env = {},
-    oxygenHeaders,
-    onRequest,
-    onResponseError,
-    onResponse = (req, res) => {
-      log(
-        `${req.method}  ${res.status}  ${req.url.replace(
-          new URL(req.url).origin,
-          '',
-        )}`,
-      );
-    },
   } = opts;
 
-  const root = process.cwd();
+  const root = rootPath ?? process.cwd();
 
   if (!workerFile || !fs.existsSync(workerFile)) {
     throw new WorkerNotFoundError();
-  }
-
-  if (
-    publicPath !== undefined &&
-    publicPath.length > 0 &&
-    !publicPath.endsWith('/')
-  ) {
-    log(`\nWARNING: publicPath must end with a trailing slash`);
   }
 
   const mf = new MiniOxygen(
@@ -97,52 +84,100 @@ export async function startServer(
     env,
   );
 
-  const app = mf.createServer({
-    assetsDir: assetsDir ? path.resolve(root, assetsDir) : undefined,
-    publicPath,
-    autoReload,
-    proxyServer,
-    oxygenHeaders,
-    onRequest,
-    onResponse,
-    onResponseError,
-  });
-
-  const actualPort = await getPort({port});
-  if (actualPort !== port) {
-    log(
-      `\nWARNING: Port ${port} is not available. Using ${actualPort} instead.`,
-    );
-  }
-
-  const sockets = new Set<Socket>();
-  app.on('connection', (socket) => {
-    sockets.add(socket);
-    socket.once('close', () => sockets.delete(socket));
-  });
-
-  // eslint-disable-next-line promise/param-names
-  return new Promise((res) => {
-    app.listen(actualPort, () => {
-      log(
-        `\nStarted miniOxygen server. Listening at http://localhost:${actualPort}\n`,
-      );
-
-      res({
-        port: actualPort,
-        reload(options) {
-          return mf.setOptions({bindings: options?.env});
+  return {
+    async ready() {
+      // Miniflare awaits internally for the #init promise to resolve,
+      // which means that it has loaded the initial worker code.
+      await mf.getPlugins();
+    },
+    async reload(options) {
+      await mf.setOptions({bindings: options?.env});
+    },
+    async dispose() {
+      await mf.dispose();
+    },
+    async createServer(serverOptions) {
+      const {
+        assetsDir,
+        publicPath,
+        port = 3000,
+        autoReload = false,
+        proxyServer,
+        oxygenHeaders,
+        onRequest,
+        onResponseError,
+        onResponse = (req, res) => {
+          log(
+            `${req.method}  ${res.status}  ${req.url.replace(
+              new URL(req.url).origin,
+              '',
+            )}`,
+          );
         },
-        close() {
-          return new Promise((resolve, reject) => {
-            sockets.forEach((socket) => socket.destroy());
-            sockets.clear();
-            app.close(() => {
-              mf.dispose().then(resolve).catch(reject);
-            });
-          });
-        },
+      } = serverOptions;
+
+      if (
+        publicPath !== undefined &&
+        publicPath.length > 0 &&
+        !publicPath.endsWith('/')
+      ) {
+        log(`\nWARNING: publicPath must end with a trailing slash`);
+      }
+
+      const app = mf.createServer({
+        assetsDir: assetsDir ? path.resolve(root, assetsDir) : undefined,
+        publicPath,
+        autoReload,
+        proxyServer,
+        oxygenHeaders,
+        onRequest,
+        onResponse,
+        onResponseError,
       });
-    });
-  });
+
+      const actualPort = await getPort({port});
+      if (actualPort !== port) {
+        log(
+          `\nWARNING: Port ${port} is not available. Using ${actualPort} instead.`,
+        );
+      }
+
+      const sockets = new Set<Socket>();
+      app.on('connection', (socket) => {
+        sockets.add(socket);
+        socket.once('close', () => sockets.delete(socket));
+      });
+
+      // eslint-disable-next-line promise/param-names
+      return new Promise((res) => {
+        app.listen(actualPort, () => {
+          log(
+            `\nStarted miniOxygen server. Listening at http://localhost:${actualPort}\n`,
+          );
+
+          res({
+            port: actualPort,
+            close: () =>
+              new Promise((resolve) => {
+                sockets.forEach((socket) => socket.destroy());
+                sockets.clear();
+                app.closeAllConnections();
+                app.close(() => resolve(undefined));
+              }),
+          });
+        });
+      });
+    },
+  };
+}
+
+export async function startServer(opts: MiniOxygenPreviewOptions) {
+  const {createServer, dispose, reload} = createMiniOxygen(opts);
+  const {port, close} = await createServer(opts);
+
+  return {
+    port,
+    reload,
+    close: () => close().then(dispose),
+  };
 }
