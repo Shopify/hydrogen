@@ -44,6 +44,10 @@ jobs:
           # set output so it can be used in other jobs
           echo "NEXT_VERSION=${NEXT_VERSION}" >> $GITHUB_OUTPUT
 
+      - name: 🏗 Build
+        if: steps.version.outputs.NEXT_VERSION
+        run: npm run build
+
       - name: ⤴️ Update version
         if: steps.version.outputs.NEXT_VERSION
         run: |
@@ -56,10 +60,6 @@ jobs:
           npm run version:post
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: 🏗 Build
-        if: steps.version.outputs.NEXT_VERSION
-        run: npm run build
 
       - name: 🔐 Setup npm auth
         if: steps.version.outputs.NEXT_VERSION
