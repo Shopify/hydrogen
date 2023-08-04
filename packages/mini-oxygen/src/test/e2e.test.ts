@@ -173,4 +173,25 @@ describe('start()', () => {
 
     await miniOxygen.close();
   });
+
+  it('reloads script', async () => {
+    const miniOxygen = await startServer({
+      ...defaultOptions,
+      log: mockLogger,
+      port: testPort,
+      script: 'export default { fetch: () => new Response("foo") }',
+    });
+
+    let response = (await sendRequest(testPort, '/')) as {data: string};
+    expect(response.data).toEqual('foo');
+
+    await miniOxygen.reload({
+      script: 'export default { fetch: () => new Response("bar") }',
+    });
+
+    response = (await sendRequest(testPort, '/')) as {data: string};
+    expect(response.data).toEqual('bar');
+
+    await miniOxygen.close();
+  });
 });
