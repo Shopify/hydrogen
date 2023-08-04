@@ -242,7 +242,7 @@ async function runDev({
         if (succeeded) {
           if (!miniOxygen) {
             await safeStartMiniOxygen();
-          } else {
+          } else if (liveReload) {
             await miniOxygen.reload({worker: true});
           }
 

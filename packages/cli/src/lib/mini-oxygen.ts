@@ -7,7 +7,10 @@ import {resolvePath} from '@shopify/cli-kit/node/path';
 import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
-import {startServer} from '@shopify/mini-oxygen';
+import {
+  startServer,
+  type MiniOxygenOptions as InternalMiniOxygenOptions,
+} from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from './flags.js';
 
 type MiniOxygenOptions = {
@@ -34,7 +37,6 @@ export async function startMiniOxygen({
   const dotenvPath = resolvePath(root, '.env');
 
   const miniOxygen = await startServer({
-    // @ts-expect-error
     script: await readFile(buildPathWorkerFile),
     assetsDir: buildPathClient,
     publicPath: '',
@@ -67,7 +69,7 @@ export async function startMiniOxygen({
         worker?: boolean;
       } = {},
     ) {
-      const nextOptions: Partial<MiniOxygenOptions> = {};
+      const nextOptions: Partial<InternalMiniOxygenOptions> = {};
 
       if (options.env) {
         nextOptions.env = {
@@ -77,7 +79,6 @@ export async function startMiniOxygen({
       }
 
       if (options.worker) {
-        // @ts-expect-error
         nextOptions.script = await readFile(buildPathWorkerFile);
       }
 
