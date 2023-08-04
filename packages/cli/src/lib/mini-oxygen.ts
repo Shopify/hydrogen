@@ -4,7 +4,7 @@ import {
   outputContent,
 } from '@shopify/cli-kit/node/output';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {fileExists} from '@shopify/cli-kit/node/fs';
+import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {startServer} from '@shopify/mini-oxygen';
@@ -34,7 +34,8 @@ export async function startMiniOxygen({
   const dotenvPath = resolvePath(root, '.env');
 
   const miniOxygen = await startServer({
-    workerFile: buildPathWorkerFile,
+    // @ts-expect-error
+    script: await readFile(buildPathWorkerFile),
     assetsDir: buildPathClient,
     publicPath: '',
     port,
@@ -61,13 +62,26 @@ export async function startMiniOxygen({
   return {
     listeningAt,
     port: miniOxygen.port,
-    reload(nextOptions?: Partial<Pick<MiniOxygenOptions, 'env'>>) {
-      return miniOxygen.reload({
-        env: {
-          ...(nextOptions?.env ?? env),
-          ...process.env,
-        },
-      });
+    async reload(
+      options: Partial<Pick<MiniOxygenOptions, 'env'>> & {
+        worker?: boolean;
+      } = {},
+    ) {
+      const nextOptions: Partial<MiniOxygenOptions> = {};
+
+      if (options.env) {
+        nextOptions.env = {
+          ...options.env,
+          ...(process.env as Record<string, string>),
+        };
+      }
+
+      if (options.worker) {
+        // @ts-expect-error
+        nextOptions.script = await readFile(buildPathWorkerFile);
+      }
+
+      return miniOxygen.reload(nextOptions);
     },
     showBanner(options?: {
       mode?: string;
