@@ -155,8 +155,9 @@ async function runDev({
   let initialBuildDurationMs = 0;
   let initialBuildStartTimeMs = Date.now();
 
-  const port = await findPort(portFlag);
-  const liveReload = await setupLiveReload(remixConfig, port);
+  const liveReload = remixConfig.future.v2_dev
+    ? await setupLiveReload(remixConfig.devServerPort)
+    : undefined;
 
   let miniOxygen: MiniOxygen;
   async function safeStartMiniOxygen() {
@@ -165,8 +166,7 @@ async function runDev({
     miniOxygen = await startMiniOxygen({
       root,
       port: await findPort(portFlag),
-      watch: true,
-      autoReload: !liveReload,
+      watch: !liveReload,
       buildPathWorkerFile,
       buildPathClient,
       env: await envPromise,
@@ -208,13 +208,16 @@ async function runDev({
     },
     {
       reloadConfig,
-      onBuildStart() {
+      onBuildStart(ctx) {
         if (!isInitialBuild && !skipRebuildLogs) {
           outputInfo(LOG_REBUILDING);
           console.time(LOG_REBUILT);
         }
+
+        liveReload?.onBuildStart(ctx);
       },
-      async onBuildFinish(context) {
+      onBuildManifest: liveReload?.onBuildManifest,
+      async onBuildFinish(context, duration, succeeded) {
         if (isInitialBuild) {
           await copyingFiles;
           initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
@@ -225,22 +228,25 @@ async function runDev({
           if (!miniOxygen) console.log(''); // New line
         }
 
-        if (!miniOxygen) {
-          if (!(await serverBundleExists())) {
-            return renderFatalError({
-              name: 'BuildError',
-              type: 0,
-              message:
-                'MiniOxygen cannot start because the server bundle has not been generated.',
-              tryMessage:
-                'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
-            });
+        if (!miniOxygen && !(await serverBundleExists())) {
+          return renderFatalError({
+            name: 'BuildError',
+            type: 0,
+            message:
+              'MiniOxygen cannot start because the server bundle has not been generated.',
+            tryMessage:
+              'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
+          });
+        }
+
+        if (succeeded) {
+          if (!miniOxygen) {
+            await safeStartMiniOxygen();
+          } else {
+            await miniOxygen.reload();
           }
 
-          await safeStartMiniOxygen();
-          liveReload?.onInitialBuild(context);
-        } else {
-          liveReload?.hotUpdate(context);
+          liveReload?.onAppReady(context);
         }
       },
       async onFileCreated(file: string) {

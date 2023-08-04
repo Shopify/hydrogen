@@ -1,106 +1,88 @@
-// Support Remix 0.14 HMR and HDR.
-// Most of this file is copied from Remix 0.14's `@remix-run/dev` package.
-// https://github.com/remix-run/remix/blob/%40remix-run/dev%401.14.0/packages/remix-dev/devServer2.ts
+// Support Remix 0.19 HMR and HDR.
 // Requirements:
-// - Enable `future.unstable_dev` in `remix.config.js`
+// - Enable `future.v2_dev` in `remix.config.js`
 // - Add <LiveReload /> to the root of your app
+// Note:
+// - This is not a public API in Remix and may change at any time.
 
-import type {AssetsManifest, ResolvedRemixConfig} from '@remix-run/dev';
-import type {updates as HMRUpdates} from '@remix-run/dev/dist/hmr.js';
-import type {serve as LiveReloadServe} from '@remix-run/dev/dist/liveReload.js';
-import type {CompileResult} from '@remix-run/dev/dist/compiler/index.js';
+import http from 'node:http';
+import type {AssetsManifest} from '@remix-run/dev';
+import type {Result as RemixBuildResult} from '@remix-run/dev/dist/result.js';
+import type {Context as RemixContext} from '@remix-run/dev/dist/compiler/context.js';
 
-type LiveReload = {
-  hmrUpdates: typeof HMRUpdates;
-  socket: ReturnType<typeof LiveReloadServe>;
-  onInitialBuild: (build?: CompileResult) => void;
-  hotUpdate: (build?: CompileResult) => void;
-  previousBuild?: CompileResult;
+type LiveReloadState = {
+  manifest?: AssetsManifest;
+  prevManifest?: AssetsManifest;
+  loaderChanges?: Promise<RemixBuildResult<Record<string, string>>>;
+  prevLoaderHashes?: Record<string, string>;
 };
 
-export async function setupLiveReload(
-  config: ResolvedRemixConfig,
-  appPort: number,
-) {
-  let liveReload: LiveReload | undefined;
+export async function setupLiveReload(devServerPort: number) {
+  try {
+    const [{updates: hmrUpdates}, {serve}, {detectLoaderChanges}, {ok, err}] =
+      await Promise.all([
+        import('@remix-run/dev/dist/devServer_unstable/hmr.js'),
+        import('@remix-run/dev/dist/devServer_unstable/socket.js'),
+        import('@remix-run/dev/dist/devServer_unstable/hdr.js'),
+        import('@remix-run/dev/dist/result.js'),
+      ]);
 
-  if (config.future?.unstable_dev) {
-    try {
-      const {updates} = await import('@remix-run/dev/dist/hmr.js');
-      const {serve} = await import('@remix-run/dev/dist/liveReload.js');
-      liveReload = {
-        hmrUpdates: updates,
-        socket: await serve({port: config.devServerPort}),
-        onInitialBuild: (build?: CompileResult) => {
-          liveReload!.previousBuild = build;
-        },
-        hotUpdate: (build?: CompileResult) =>
-          hotUpdate(config, liveReload!, appPort, build),
-      };
-    } catch (error) {
-      console.warn(
-        'Could not start HMR server. Please make sure you are using the latest version of Remix.' +
-          ' Defaulting to regular live reload.',
-        (error as Error).stack,
-      );
-    }
-  }
+    const state: LiveReloadState = {};
 
-  return liveReload;
-}
+    const server = http
+      .createServer(function (req, res) {
+        res.writeHead(200);
+        res.end();
+      })
+      .listen(devServerPort);
 
-async function hotUpdate(
-  config: ResolvedRemixConfig,
-  liveReload: LiveReload,
-  appPort: number,
-  build?: CompileResult,
-) {
-  if (build) {
-    const {assetsManifest} = build;
+    const socket = serve(server);
 
-    await waitForAppServer(
-      assetsManifest.version,
-      config.future.unstable_dev,
-      appPort,
-    );
+    return {
+      onBuildStart: (ctx: RemixContext) => {
+        state.loaderChanges = detectLoaderChanges(ctx).then(ok, err);
+      },
+      onBuildManifest: (manifest: AssetsManifest) => {
+        state.manifest = manifest;
+      },
+      onAppReady: async (ctx: RemixContext) => {
+        const nextState: LiveReloadState = {prevManifest: state.manifest};
 
-    if (assetsManifest.hmr && liveReload.previousBuild) {
-      liveReload.socket.hmr(
-        assetsManifest,
-        liveReload.hmrUpdates(config, build, liveReload.previousBuild),
-      );
-    } else {
-      liveReload.socket.reload();
-    }
-  }
+        try {
+          const loaderChanges = await state.loaderChanges!;
+          if (loaderChanges.ok) {
+            nextState.prevLoaderHashes = loaderChanges.value;
+          }
 
-  liveReload.previousBuild = build;
-}
-
-// Copied from Remix:
-async function waitForAppServer(
-  buildHash: string,
-  unstableDev: ResolvedRemixConfig['future']['unstable_dev'],
-  appPort: number,
-) {
-  const dev = typeof unstableDev === 'boolean' ? {} : unstableDev;
-  const url = `http://localhost:${dev.appServerPort ?? appPort}${
-    dev.remixRequestHandlerPath ?? ''
-  }/__REMIX_ASSETS_MANIFEST`;
-
-  while (true) {
-    try {
-      let res = await fetch(url);
-      let assetsManifest = (await res.json()) as AssetsManifest;
-      if (assetsManifest?.version === buildHash) break;
-    } catch {
-      //
-    }
-
-    await new Promise((resolve) =>
-      setTimeout(resolve, dev.rebuildPollIntervalMs ?? 50),
+          if (loaderChanges.ok && state.manifest && state.prevManifest) {
+            socket.hmr(
+              state.manifest,
+              hmrUpdates(
+                ctx.config,
+                state.manifest,
+                state.prevManifest,
+                loaderChanges.value,
+                state.prevLoaderHashes,
+              ),
+            );
+          } else if (state.prevManifest) {
+            // Full reload
+            socket.reload();
+          }
+        } finally {
+          Object.assign(state, nextState);
+        }
+      },
+      close: () => {
+        socket.close();
+        server.close();
+      },
+    };
+  } catch (error) {
+    console.warn(
+      'Could not start HMR server. Please make sure your Remix packages are in sync with Hydrogen.' +
+        ' Defaulting to regular live reload.',
+      (error as Error).stack,
     );
   }
-
-  await new Promise((resolve) => setTimeout(resolve, -1));
 }
