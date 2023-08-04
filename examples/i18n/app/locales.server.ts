@@ -110,10 +110,15 @@ export async function fetchLocaleTranslation(
   i18n: I18nLocale,
 ) {
   try {
+    const isDev = process.env.NODE_ENV === 'development';
     const url = new URL(request.url);
-    const translationUrl = `${url.origin}/translations/${i18n.language}/translation.json`;
-    const response = await fetch(translationUrl);
-
+    const prodUrl = `${process.env.HYDROGEN_ASSET_BASE_URL}/assets/translations/${i18n.language}/translation.json`;
+    const devUrl = `${url.origin}/translations/${i18n.language}/translation.json`;
+    console.log(
+      `fetching ${i18n.language} translation from`,
+      isDev ? devUrl : prodUrl,
+    );
+    const response = await fetch(isDev ? devUrl : prodUrl);
     if (!response.ok) {
       // eslint-disable-next-line no-console
       console.error(`Failed to fetch translation for ${i18n.language}`);
