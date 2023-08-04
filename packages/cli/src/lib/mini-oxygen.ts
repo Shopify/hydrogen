@@ -7,6 +7,7 @@ import {resolvePath} from '@shopify/cli-kit/node/path';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {startServer} from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from './flags.js';
 
 type MiniOxygenOptions = {
@@ -30,14 +31,9 @@ export async function startMiniOxygen({
   buildPathClient,
   env,
 }: MiniOxygenOptions) {
-  const {default: miniOxygenImport} = await import('@shopify/mini-oxygen');
-  const miniOxygenPreview =
-    miniOxygenImport.default ??
-    (miniOxygenImport as unknown as typeof miniOxygenImport.default);
-
   const dotenvPath = resolvePath(root, '.env');
 
-  const miniOxygen = await miniOxygenPreview({
+  const miniOxygen = await startServer({
     workerFile: buildPathWorkerFile,
     assetsDir: buildPathClient,
     publicPath: '',
