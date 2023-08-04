@@ -107,7 +107,7 @@ export async function startMiniOxygen({
 export function logResponse(request: Request, response: Response) {
   try {
     const url = new URL(request.url);
-    if (['/graphiql', '/__REMIX_ASSETS_MANIFEST'].includes(url.pathname)) {
+    if (['/graphiql'].includes(url.pathname)) {
       return;
     }
 
