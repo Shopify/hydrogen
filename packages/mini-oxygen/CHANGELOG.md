@@ -1,5 +1,17 @@
 # @shopify/mini-oxygen
 
+## 2.0.2
+
+### Patch Changes
+
+- e174b07: Update vitest from 0.33.0 to 0.34.1
+- ba984f0: Update eslint-config-prettier from 8.9.0 to 8.10.0
+- 9e3e87b: Update prettier from 3.0.0 to 3.0.1
+- 151daa6: Add a new `script` option as an alternative to `workerFile`. This option is used to pass the worker code directly instead of a file path. The `reload` methods also supports `script` to manually reload the worker code.
+  Expose `MiniOxygenOptions` type.
+- c23dcbe: Expose the internal `createMiniOxygen` function to create a MiniOxygen instance without starting a server.
+  The function `startServer` has not changed.
+
 ## 2.0.1
 
 ### Patch Changes
