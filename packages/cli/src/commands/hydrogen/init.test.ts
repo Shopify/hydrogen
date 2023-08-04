@@ -1,10 +1,16 @@
 import {fileURLToPath} from 'node:url';
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {temporaryDirectoryTask} from 'tempy';
 import {runInit} from './init.js';
 import {exec} from '@shopify/cli-kit/node/system';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
-import {isDirectory, readFile, writeFile} from '@shopify/cli-kit/node/fs';
+import {
+  fileExists,
+  isDirectory,
+  readFile,
+  removeFile,
+  writeFile,
+  inTemporaryDirectory,
+} from '@shopify/cli-kit/node/fs';
 import {basename, joinPath} from '@shopify/cli-kit/node/path';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {handleProjectLocation} from '../../lib/onboarding/common.js';
@@ -12,33 +18,23 @@ import glob from 'fast-glob';
 import {getSkeletonSourceDir} from '../../lib/build.js';
 import {execAsync} from '../../lib/process.js';
 import {symlink, rmdir} from 'fs-extra';
+import {runCheckRoutes} from './check.js';
+import {runCodegen} from './codegen-unstable.js';
+import {runBuild} from './build.js';
 
-vi.mock('../../lib/template-downloader.js', async () => ({
-  getLatestTemplates: () => Promise.resolve({}),
-}));
-vi.mock(
-  '@shopify/cli-kit/node/node-package-manager',
-  async (importOriginal) => {
-    const original = await importOriginal<
-      typeof import('@shopify/cli-kit/node/node-package-manager')
-    >();
-
-    return {
-      ...original,
-      installNodeModules: vi.fn(),
-      getPackageManager: () => Promise.resolve('npm'),
-      packageManagerUsedForCreating: () => Promise.resolve('npm'),
-    };
-  },
-);
+const {renderTasksHook} = vi.hoisted(() => ({renderTasksHook: vi.fn()}));
 
 vi.mock('../../lib/check-version.js');
 
-const {renderTasksHook} = vi.hoisted(() => {
-  return {
-    renderTasksHook: vi.fn(),
-  };
-});
+vi.mock('../../lib/template-downloader.js', async () => ({
+  getLatestTemplates: () =>
+    Promise.resolve({
+      version: '',
+      templatesDir: fileURLToPath(
+        new URL('../../../../../templates', import.meta.url),
+      ),
+    }),
+}));
 
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   const original = await vi.importActual<
@@ -57,6 +53,36 @@ vi.mock('@shopify/cli-kit/node/ui', async () => {
     }),
   };
 });
+
+vi.mock(
+  '@shopify/cli-kit/node/node-package-manager',
+  async (importOriginal) => {
+    const original = await importOriginal<
+      typeof import('@shopify/cli-kit/node/node-package-manager')
+    >();
+
+    return {
+      ...original,
+      getPackageManager: () => Promise.resolve('npm'),
+      packageManagerUsedForCreating: () => Promise.resolve('npm'),
+      installNodeModules: vi.fn(async ({directory}: {directory: string}) => {
+        // Create lockfile at a later moment to simulate a slow install
+        renderTasksHook.mockImplementationOnce(async () => {
+          await writeFile(`${directory}/package-lock.json`, '{}');
+        });
+
+        // "Install" dependencies by linking to monorepo's node_modules
+        await rmdir(joinPath(directory, 'node_modules')).catch(() => {});
+        await symlink(
+          fileURLToPath(
+            new URL('../../../../../node_modules', import.meta.url),
+          ),
+          joinPath(directory, 'node_modules'),
+        );
+      }),
+    };
+  },
+);
 
 vi.mock('../../lib/onboarding/common.js', async (importOriginal) => {
   type ModType = typeof import('../../lib/onboarding/common.js');
@@ -82,11 +108,12 @@ describe('init', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllEnvs();
     outputMock.clear();
   });
 
   it('checks Hydrogen version', async () => {
-    await temporaryDirectoryTask(async (tmpDir) => {
+    await inTemporaryDirectory(async (tmpDir) => {
       const showUpgradeMock = vi.fn((param?: string) => ({
         currentVersion: '1.0.0',
         newVersion: '1.0.1',
@@ -104,9 +131,109 @@ describe('init', () => {
     });
   });
 
+  describe('remote templates', () => {
+    it('throws for unknown templates', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await expect(
+          runInit({
+            path: tmpDir,
+            git: false,
+            language: 'ts',
+            template: 'https://github.com/some/repo',
+          }),
+        ).rejects.toThrow('supported');
+      });
+    });
+
+    it('creates basic projects', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await runInit({
+          path: tmpDir,
+          git: false,
+          language: 'ts',
+          template: 'hello-world',
+        });
+
+        const helloWorldFiles = await glob('**/*', {
+          cwd: getSkeletonSourceDir().replace('skeleton', 'hello-world'),
+          ignore: ['**/node_modules/**', '**/dist/**'],
+        });
+        const projectFiles = await glob('**/*', {cwd: tmpDir});
+        const nonAppFiles = helloWorldFiles.filter(
+          (item) => !item.startsWith('app/'),
+        );
+
+        expect(projectFiles).toEqual(expect.arrayContaining(nonAppFiles));
+
+        expect(projectFiles).toContain('app/root.tsx');
+        expect(projectFiles).toContain('app/entry.client.tsx');
+        expect(projectFiles).toContain('app/entry.server.tsx');
+        expect(projectFiles).not.toContain('app/components/Layout.tsx');
+
+        // Skip routes:
+        expect(projectFiles).not.toContain('app/routes/_index.tsx');
+
+        await expect(readFile(`${tmpDir}/package.json`)).resolves.toMatch(
+          `"name": "hello-world"`,
+        );
+
+        const output = outputMock.info();
+        expect(output).toMatch('success');
+        expect(output).not.toMatch('warning');
+        expect(output).not.toMatch('Routes');
+        expect(output).toMatch(/Language:\s*TypeScript/);
+        expect(output).toMatch('Help');
+        expect(output).toMatch('Next steps');
+        expect(output).toMatch(
+          // Output contains banner characters. USe [^\w]*? to match them.
+          /Run `cd .*? &&[^\w]*?npm[^\w]*?install[^\w]*?&&[^\w]*?npm[^\w]*?run[^\w]*?dev`/ims,
+        );
+      });
+    });
+
+    it('transpiles projects to JS', async () => {
+      await inTemporaryDirectory(async (tmpDir) => {
+        await runInit({
+          path: tmpDir,
+          git: false,
+          language: 'js',
+          template: 'hello-world',
+        });
+
+        const helloWorldFiles = await glob('**/*', {
+          cwd: getSkeletonSourceDir().replace('skeleton', 'hello-world'),
+          ignore: ['**/node_modules/**', '**/dist/**'],
+        });
+        const projectFiles = await glob('**/*', {cwd: tmpDir});
+
+        expect(projectFiles).toEqual(
+          expect.arrayContaining(
+            helloWorldFiles
+              .filter((item) => !item.endsWith('.d.ts'))
+              .map((item) =>
+                item
+                  .replace(/\.ts(x)?$/, '.js$1')
+                  .replace(/tsconfig\.json$/, 'jsconfig.json'),
+              ),
+          ),
+        );
+
+        // No types:
+        await expect(readFile(`${tmpDir}/server.js`)).resolves.toMatch(
+          /export default {\n\s+async fetch\(\s*request,\s*env,\s*executionContext,?\s*\)/,
+        );
+
+        const output = outputMock.info();
+        expect(output).toMatch('success');
+        expect(output).not.toMatch('warning');
+        expect(output).toMatch(/Language:\s*JavaScript/);
+      });
+    });
+  });
+
   describe('local templates', () => {
     it('creates basic projects', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         await runInit({
           path: tmpDir,
           git: false,
@@ -164,7 +291,7 @@ describe('init', () => {
     });
 
     it('creates projects with route files', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         await runInit({path: tmpDir, git: false, routes: true, language: 'ts'});
 
         const skeletonFiles = await glob('**/*', {
@@ -193,7 +320,7 @@ describe('init', () => {
     });
 
     it('transpiles projects to JS', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         await runInit({path: tmpDir, git: false, routes: true, language: 'js'});
 
         const skeletonFiles = await glob('**/*', {
@@ -234,7 +361,7 @@ describe('init', () => {
 
     describe('styling libraries', () => {
       it('scaffolds Tailwind CSS', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -267,7 +394,7 @@ describe('init', () => {
       });
 
       it('scaffolds CSS Modules', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -295,7 +422,7 @@ describe('init', () => {
       });
 
       it('scaffolds Vanilla Extract', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -325,7 +452,7 @@ describe('init', () => {
 
     describe('i18n strategies', () => {
       it('scaffolds i18n with domains strategy', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -350,7 +477,7 @@ describe('init', () => {
       });
 
       it('scaffolds i18n with subdomains strategy', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -375,7 +502,7 @@ describe('init', () => {
       });
 
       it('scaffolds i18n with subfolders strategy', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: false,
@@ -403,11 +530,7 @@ describe('init', () => {
 
     describe('git', () => {
       it('initializes a git repository and creates initial commits', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
-          renderTasksHook.mockImplementationOnce(async () => {
-            await writeFile(`${tmpDir}/package-lock.json`, '{}');
-          });
-
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: true,
@@ -438,11 +561,7 @@ describe('init', () => {
 
     describe('project validity', () => {
       it('typechecks the project', async () => {
-        await temporaryDirectoryTask(async (tmpDir) => {
-          renderTasksHook.mockImplementationOnce(async () => {
-            await writeFile(`${tmpDir}/package-lock.json`, '{}');
-          });
-
+        await inTemporaryDirectory(async (tmpDir) => {
           await runInit({
             path: tmpDir,
             git: true,
@@ -453,21 +572,98 @@ describe('init', () => {
             installDeps: true,
           });
 
-          // "Install" dependencies by linking to monorepo's node_modules
-          await rmdir(joinPath(tmpDir, 'node_modules')).catch(() => {});
-          await symlink(
-            fileURLToPath(
-              new URL('../../../../../node_modules', import.meta.url),
-            ),
-            joinPath(tmpDir, 'node_modules'),
-          );
-
           // This will throw if TSC fails
           await expect(
-            exec('npm', ['run', 'typecheck'], {
-              cwd: tmpDir,
-            }),
+            exec('npm', ['run', 'typecheck'], {cwd: tmpDir}),
           ).resolves.not.toThrow();
+        });
+      });
+
+      it('contains all standard routes', async () => {
+        await inTemporaryDirectory(async (tmpDir) => {
+          await runInit({
+            path: tmpDir,
+            git: true,
+            language: 'ts',
+            i18n: 'subfolders',
+            routes: true,
+            installDeps: true,
+          });
+
+          // Clear previous success messages
+          outputMock.clear();
+
+          await runCheckRoutes({directory: tmpDir});
+
+          const output = outputMock.info();
+          expect(output).toMatch('success');
+        });
+      });
+
+      it('supports codegen', async () => {
+        await inTemporaryDirectory(async (tmpDir) => {
+          await runInit({
+            path: tmpDir,
+            git: true,
+            language: 'ts',
+            routes: true,
+            installDeps: true,
+          });
+
+          // Clear previous success messages
+          outputMock.clear();
+
+          const codegenFile = `${tmpDir}/storefrontapi.generated.d.ts`;
+          const codegenFromTemplate = await readFile(codegenFile);
+          expect(codegenFromTemplate).toBeTruthy();
+
+          await removeFile(codegenFile);
+          expect(fileExists(codegenFile)).resolves.toBeFalsy();
+
+          await expect(runCodegen({directory: tmpDir})).resolves.not.toThrow();
+
+          const output = outputMock.info();
+          expect(output).toMatch('success');
+
+          await expect(readFile(codegenFile)).resolves.toEqual(
+            codegenFromTemplate,
+          );
+        });
+      });
+
+      it('builds the generated project', async () => {
+        await inTemporaryDirectory(async (tmpDir) => {
+          await runInit({
+            path: tmpDir,
+            git: true,
+            language: 'ts',
+            styling: 'postcss',
+            i18n: 'subfolders',
+            routes: true,
+            installDeps: true,
+          });
+
+          // Clear previous success messages
+          outputMock.clear();
+          vi.stubEnv('NODE_ENV', 'production');
+
+          await expect(runBuild({directory: tmpDir})).resolves.not.toThrow();
+
+          const expectedBundlePath = 'dist/worker/index.js';
+
+          const output = outputMock.output();
+          expect(output).toMatch(expectedBundlePath);
+          expect(
+            fileExists(joinPath(tmpDir, expectedBundlePath)),
+          ).resolves.toBeTruthy();
+
+          const mb = Number(
+            output.match(/index\.js\s+([\d.]+)\s+MB/)?.[1] || '',
+          );
+
+          // Bundle size within 1 MB
+          expect(mb).toBeGreaterThan(0);
+          expect(mb).toBeLessThan(1);
         });
       });
     });

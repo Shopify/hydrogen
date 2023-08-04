@@ -51,11 +51,11 @@ type RunSetupOptions = {
   directory: string;
   installDeps: boolean;
   styling?: string;
-  i18n?: string;
+  markets?: string;
   shortcut?: boolean;
 };
 
-async function runSetup(options: RunSetupOptions) {
+export async function runSetup(options: RunSetupOptions) {
   const controller = new AbortController();
   const remixConfig = await getRemixConfig(options.directory);
   const location = basename(remixConfig.rootDirectory);
@@ -73,8 +73,8 @@ async function runSetup(options: RunSetupOptions) {
     },
   ];
 
-  const i18nStrategy = options.i18n
-    ? (options.i18n as I18nStrategy)
+  const i18nStrategy = options.markets
+    ? (options.markets as I18nStrategy)
     : await renderI18nPrompt({
         abortSignal: controller.signal,
         extraChoices: {none: 'Set up later'},

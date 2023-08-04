@@ -35,23 +35,23 @@ export default class Codegen extends Command {
 
     await runCodegen({
       ...flagsToCamelObject(flags),
-      path: directory,
+      directory,
     });
   }
 }
 
 export async function runCodegen({
-  path: appPath,
+  directory,
   codegenConfigPath,
   forceSfapiVersion,
   watch,
 }: {
-  path?: string;
+  directory?: string;
   codegenConfigPath?: string;
   forceSfapiVersion?: string;
   watch?: boolean;
 }) {
-  const {root} = getProjectPaths(appPath);
+  const {root} = getProjectPaths(directory);
   const remixConfig = await getRemixConfig(root);
 
   console.log(''); // New line
