@@ -33,6 +33,7 @@ import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
 import {findPort} from '../../lib/find-port.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
+import {checkRemixVersions} from '../../lib/remix-version-check.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -187,6 +188,7 @@ async function runDev({
       spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
     }
 
+    checkRemixVersions();
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
   }
