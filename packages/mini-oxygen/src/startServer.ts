@@ -10,12 +10,13 @@ import type {MiniOxygenServerOptions} from './mini-oxygen/server.js';
 class WorkerNotFoundError extends Error {
   name = 'WorkerNotFoundError';
   message =
-    'A worker file is required for this command. Try building your project to ensure a workerFile is present.';
+    'A worker script or file is required for this command. Try building your project to ensure a workerFile is present, or pass its content in the `script` option.';
 }
 
 export type MiniOxygenOptions = Partial<{
   log(message: string): unknown;
-  workerFile: string;
+  workerFile?: string;
+  script?: string;
   rootPath: string;
   watch: boolean;
   modules: boolean;
@@ -37,7 +38,7 @@ interface MiniOxygenPublicInstance {
   ready: () => Promise<void>;
   dispose: () => Promise<void>;
   reload: (
-    options?: Partial<Pick<MiniOxygenPreviewOptions, 'env'>>,
+    options?: Partial<Pick<MiniOxygenPreviewOptions, 'env' | 'script'>>,
   ) => Promise<void>;
   createServer: (opts: MiniOxygenCreateServerOptions) => Promise<{
     port: number;
@@ -52,6 +53,7 @@ export function createMiniOxygen(
     // eslint-disable-next-line no-console
     log = (message: string) => console.log(message),
     workerFile,
+    script,
     rootPath,
     watch = false,
     buildWatchPaths,
@@ -64,15 +66,20 @@ export function createMiniOxygen(
 
   const root = rootPath ?? process.cwd();
 
-  if (!workerFile || !fs.existsSync(workerFile)) {
+  if (!script && (!workerFile || !fs.existsSync(workerFile))) {
     throw new WorkerNotFoundError();
+  }
+
+  if (script && workerFile) {
+    throw new Error('Only one of `script` or `workerFile` can be provided.');
   }
 
   const mf = new MiniOxygen(
     {
       buildCommand,
       envPath,
-      scriptPath: path.resolve(root, workerFile),
+      script,
+      scriptPath: workerFile ? path.resolve(root, workerFile) : undefined,
       watch,
       modules,
       sourceMap,
@@ -90,8 +97,8 @@ export function createMiniOxygen(
       // which means that it has loaded the initial worker code.
       await mf.getPlugins();
     },
-    async reload(options) {
-      await mf.setOptions({bindings: options?.env});
+    async reload({env, ...nextOptions} = {}) {
+      await mf.setOptions({...nextOptions, ...(env && {bindings: env})});
     },
     async dispose() {
       await mf.dispose();
