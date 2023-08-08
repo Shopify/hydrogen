@@ -160,7 +160,7 @@ export async function oxygenDeploy(
         outputContent`${colors.whiteBright('Building project...')}`.value,
       );
       await runBuild({
-        path,
+        directory: path,
         assetPath,
         sourcemap: false,
         useCodegen: false,

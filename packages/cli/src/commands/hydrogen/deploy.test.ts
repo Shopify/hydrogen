@@ -9,12 +9,7 @@ import {
 
 import {deploymentLogger, oxygenDeploy} from './deploy.js';
 import {getOxygenDeploymentToken} from '../../lib/get-oxygen-token.js';
-import {
-  createDeploy,
-  parseToken,
-} from '@shopify/oxygen-cli/dist/deploy/index.js';
-import {DeploymentToken} from '@shopify/oxygen-cli/dist/deploy/types.js';
-import {o} from 'vitest/dist/types-198fd1d9.js';
+import {createDeploy, parseToken} from '@shopify/oxygen-cli/deploy';
 
 vi.mock('../../../src/lib/get-oxygen-token');
 vi.mock('@shopify/oxygen-cli/dist/deploy/index.js');
@@ -64,7 +59,7 @@ describe('deploy', () => {
     metadataVersion: '1.0.0',
   };
 
-  const mockToken: DeploymentToken = {
+  const mockToken = {
     accessToken: 'some-token',
     allowedResource: 'some-resource',
     appId: '1',
