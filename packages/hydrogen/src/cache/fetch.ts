@@ -157,7 +157,7 @@ export async function fetchWithServerCache(
         } catch {
           // Getting a response without a valid body
           throw new Error(
-            `Storefront API error code: ${
+            `Storefront API response code: ${
               response.status
             } (Request Id: ${response.headers.get('x-request-id')})`,
           );
