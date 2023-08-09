@@ -1,5 +1,18 @@
 # demo-store
 
+## 2.0.2
+
+### Patch Changes
+
+- Update @shopify/oxygen-workers-types dependencies ([#1208](https://github.com/Shopify/hydrogen/pull/1208)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Fix demo-store analytics ([#1177](https://github.com/Shopify/hydrogen/pull/1177)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`b29c85d0`](https://github.com/Shopify/hydrogen/commit/b29c85d053e8beb51216fa2cce47e1d21258ad79), [`21eb9dac`](https://github.com/Shopify/hydrogen/commit/21eb9dac935722fd8d0d385b00c3bbcfb4693baa)]:
+  - @shopify/hydrogen@2023.7.2
+  - @shopify/cli-hydrogen@5.1.2
+  - @shopify/remix-oxygen@1.1.3
+
 ## 2.0.1
 
 ### Patch Changes
