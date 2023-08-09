@@ -110,6 +110,7 @@ export async function oxygenDeploy(
     metadataUser,
     metadataVersion,
   } = options;
+
   const token = await getOxygenDeploymentToken({
     root: path,
     flagShop: shop,
@@ -121,11 +122,8 @@ export async function oxygenDeploy(
   const config: DeploymentConfig = {
     assetsDir: 'dist/client',
     deploymentUrl: 'https://oxygen.shopifyapps.com',
-    //deploymentToken: parseToken(token as string),
-    deploymentToken: parseToken(
-      'eyJjbGllbnQiOiJnaWQ6Ly9veHlnZW4taHViL0NsaWVudC8yIiwiYWxsb3dlZF9yZXNvdXJjZSI6ImdpZDovL294eWdlbi1odWIvTmFtZXNwYWNlLzEiLCJuYW1lc3BhY2VfaWQiOiJnaWQ6Ly9veHlnZW4taHViL05hbWVzcGFjZS8xIiwibmFtZXNwYWNlIjoiZnJlc2gtbmFtZXNwYWNlIiwiYXBwX2lkIjoiZ2lkOi8vb3h5Z2VuLWh1Yi9BcHAvMSIsImFjY2Vzc190b2tlbiI6ImF0a25fYWRjZTRhNDBmNmVkNDk4YmJiMjdjOWQ5MWY4MDViNGE5Y2IzMzM1Y2FmZmI2NzdiOTBmNDc0YzAzNTEzYjVkNSIsImV4cGlyZXNfYXQiOiIyMDIzLTA4LTA1VDE0OjM3OjA2LjI0MVoifQ==',
-    ),
-    healthCheckMaxDuration: 10,
+    deploymentToken: parseToken(token as string),
+    healthCheckMaxDuration: 180,
     metadata: {
       url: metadataUrl,
       user: metadataUser,
@@ -149,8 +147,11 @@ export async function oxygenDeploy(
     resolveHealthCheck = resolve;
   });
 
-  let rejectDeploy: (reason?: any) => void;
-  const deployPromise = new Promise<void>((_, reject) => {
+  let deployError: AbortError | null = null;
+  let resolveDeploy: () => void;
+  let rejectDeploy: (reason?: AbortError) => void;
+  const deployPromise = new Promise<void>((resolve, reject) => {
+    resolveDeploy = resolve;
     rejectDeploy = reject;
   });
 
@@ -170,19 +171,15 @@ export async function oxygenDeploy(
     onUploadFilesStart: () => uploadStart(),
     onUploadFilesComplete: () => resolveUpload(),
     onHealthCheckError: (error: Error) => {
-      rejectDeploy(
-        new AbortError(
-          error.message,
-          'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
-        ),
+      deployError = new AbortError(
+        error.message,
+        'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
       );
     },
     onUploadFilesError: (error: Error) => {
-      rejectDeploy(
-        new AbortError(
-          error.message,
-          'Check your connection and try again. If the problem persists, try again later or contact support.',
-        ),
+      deployError = new AbortError(
+        error.message,
+        'Check your connection and try again. If the problem persists, try again later or contact support.',
       );
     },
   };
@@ -203,7 +200,7 @@ export async function oxygenDeploy(
     ]);
   };
 
-  createDeploy({config, hooks, logger: deploymentLogger})
+  await createDeploy({config, hooks, logger: deploymentLogger})
     .then((url: string | undefined) => {
       const deploymentType = config.publicDeployment ? 'public' : 'private';
       renderSuccess({
@@ -214,9 +211,10 @@ export async function oxygenDeploy(
           ],
         ],
       });
+      resolveDeploy();
     })
     .catch((error) => {
-      renderFatalError(error);
+      rejectDeploy(deployError || error);
     });
 
   return deployPromise;

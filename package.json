@@ -75,6 +75,7 @@
     ]
   },
   "dependencies": {
+    "@shopify/oxygen-cli": "^1.11.4",
     "fast-array-diff": "^1.0.1"
   }
 }

@@ -1,6 +1,7 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {type AdminSession, login} from '../../lib/auth.js';
 import {getStorefronts} from '../../lib/graphql/admin/link-storefront.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   renderSelectPrompt,
   renderFatalError,
@@ -11,14 +12,20 @@ import {deploymentLogger, oxygenDeploy} from './deploy.js';
 import {getOxygenDeploymentToken} from '../../lib/get-oxygen-token.js';
 import {createDeploy, parseToken} from '@shopify/oxygen-cli/deploy';
 
-vi.mock('../../../src/lib/get-oxygen-token');
-vi.mock('@shopify/oxygen-cli/dist/deploy/index.js');
+vi.mock('../../lib/get-oxygen-token.js');
+vi.mock('@shopify/oxygen-cli/deploy');
 vi.mock('../../lib/auth.js');
 vi.mock('../../lib/shopify-config.js');
 vi.mock('../../lib/graphql/admin/link-storefront.js');
 vi.mock('../../lib/graphql/admin/create-storefront.js');
 vi.mock('../../lib/graphql/admin/fetch-job.js');
 vi.mock('../../lib/shell.js', () => ({getCliCommand: () => 'h2'}));
+vi.mock('@shopify/cli-kit/node/output', async () => {
+  return {
+    outputContent: () => ({value: ''}),
+    outputInfo: () => {},
+  };
+});
 vi.mock('@shopify/cli-kit/node/ui', async () => {
   return {
     renderFatalError: vi.fn(),
@@ -101,6 +108,7 @@ describe('deploy', () => {
       root: './',
       flagShop: 'snowdevil.myshopify.com',
     });
+    expect(getOxygenDeploymentToken).toHaveBeenCalledTimes(1);
   });
 
   it('calls createDeploy with the correct parameters', async () => {
@@ -137,7 +145,6 @@ describe('deploy', () => {
       logger: deploymentLogger,
     });
     expect(vi.mocked(renderSuccess)).toHaveBeenCalled;
-    expect(process.exit).toHaveBeenCalledWith(0);
   });
 
   it('handles error during uploadFiles', async () => {
@@ -155,14 +162,19 @@ describe('deploy', () => {
       }) as Promise<string | undefined>;
     });
 
-    await oxygenDeploy(deployParams);
-    expect(mockRenderFatalError).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'Wonky internet!',
-        tryMessage:
+    try {
+      await oxygenDeploy(deployParams);
+      expect(true).toBe(false);
+    } catch (err) {
+      if (err instanceof AbortError) {
+        expect(err.message).toBe(error.message);
+        expect(err.tryMessage).toBe(
           'Check your connection and try again. If the problem persists, try again later or contact support.',
-      }),
-    );
+        );
+      } else {
+        expect(true).toBe(false);
+      }
+    }
   });
 
   it('handles error during health check', async () => {
@@ -181,13 +193,18 @@ describe('deploy', () => {
       }) as Promise<string | undefined>;
     });
 
-    await oxygenDeploy(deployParams);
-    expect(mockRenderFatalError).toHaveBeenCalledWith(
-      expect.objectContaining({
-        message: 'Cloudflare is down!',
-        tryMessage:
-          'Please verify the deployment status in the Shopify Admin and retry deploying again if necessary.',
-      }),
-    );
+    try {
+      await oxygenDeploy(deployParams);
+      expect(true).toBe(false);
+    } catch (err) {
+      if (err instanceof AbortError) {
+        expect(err.message).toBe(error.message);
+        expect(err.tryMessage).toBe(
+          'Please verify the deployment status in the Shopify Admin and retry deploying if necessary.',
+        );
+      } else {
+        expect(true).toBe(false);
+      }
+    }
   });
 });
