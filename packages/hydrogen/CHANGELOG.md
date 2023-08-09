@@ -1,5 +1,14 @@
 # @shopify/hydrogen
 
+## 2023.7.2
+
+### Patch Changes
+
+- Surface storefront api response errors ([#1205](https://github.com/Shopify/hydrogen/pull/1205)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`d80c4ada`](https://github.com/Shopify/hydrogen/commit/d80c4ada051dd5530c12720cb7d8e8c6dda19c98)]:
+  - @shopify/hydrogen-react@2023.7.1
+
 ## 2023.7.1
 
 ### Patch Changes

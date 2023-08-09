@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2023.7.1
+
+### Patch Changes
+
+- Fix demo-store analytics ([#1177](https://github.com/Shopify/hydrogen/pull/1177)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2023.7.0
 
 ## What’s new

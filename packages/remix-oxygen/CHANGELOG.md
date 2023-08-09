@@ -1,5 +1,11 @@
 # @shopify/remix-oxygen
 
+## 1.1.3
+
+### Patch Changes
+
+- Update @shopify/oxygen-workers-types dependencies ([#1208](https://github.com/Shopify/hydrogen/pull/1208)) by [@juanpprieto](https://github.com/juanpprieto)
+
 ## 1.1.2
 
 ### Patch Changes

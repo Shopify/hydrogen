@@ -1,5 +1,16 @@
 # @shopify/create-hydrogen
 
+## 4.2.1
+
+### Patch Changes
+
+- Update @shopify/oxygen-workers-types dependencies ([#1208](https://github.com/Shopify/hydrogen/pull/1208)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Update create-hydrogen cli dependency ([#1208](https://github.com/Shopify/hydrogen/pull/1208)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`21eb9dac`](https://github.com/Shopify/hydrogen/commit/21eb9dac935722fd8d0d385b00c3bbcfb4693baa)]:
+  - @shopify/cli-hydrogen@5.1.2
+
 ## 4.2.0
 
 ### What’s new
