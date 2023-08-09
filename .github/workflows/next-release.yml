@@ -56,6 +56,7 @@ jobs:
           git checkout -B next/${{ steps.version.outputs.NEXT_VERSION }}
           # using changeset snapshot releases, this sets the version to 0.0.0-{tag}-DATETIMESTAMP where tag=next-SHORT_SHA
           # as an example this results in a next release as following 0.0.0-next-1686a75-20230313113149 with a next tag
+          npm run version:next
           npm run changeset -- version --snapshot ${{steps.version.outputs.NEXT_VERSION}}
           npm run version:post
         env:
