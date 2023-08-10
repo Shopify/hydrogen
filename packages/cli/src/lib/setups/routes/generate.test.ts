@@ -1,15 +1,20 @@
 import {describe, it, expect, vi, beforeEach} from 'vitest';
-import {temporaryDirectoryTask} from 'tempy';
 import {
   generateProjectFile,
   generateRoutes,
   getResolvedRoutes,
 } from './generate.js';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {readFile, writeFile, mkdir, fileExists} from '@shopify/cli-kit/node/fs';
+import {
+  readFile,
+  writeFile,
+  mkdir,
+  fileExists,
+  inTemporaryDirectory,
+} from '@shopify/cli-kit/node/fs';
 import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {getTemplateAppFile} from '../../../lib/build.js';
-import {getRemixConfig} from '../../../lib/config.js';
+import {getRemixConfig} from '../../remix-config.js';
 
 const readProjectFile = (
   dirs: {appDirectory: string},
@@ -22,7 +27,7 @@ describe('generate/route', () => {
     vi.resetAllMocks();
     vi.mock('@shopify/cli-kit/node/output');
     vi.mock('@shopify/cli-kit/node/ui');
-    vi.mock('../../config.js', async () => ({getRemixConfig: vi.fn()}));
+    vi.mock('../../remix-config.js', async () => ({getRemixConfig: vi.fn()}));
   });
 
   describe('generateRoutes', () => {
@@ -34,7 +39,7 @@ describe('generate/route', () => {
         resolvedRouteFiles.find((item) => /account_?\.login/.test(item)),
       ).toBeTruthy();
 
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         const directories = await createHydrogenFixture(tmpDir, {
           files: [
             ['jsconfig.json', JSON.stringify({compilerOptions: {test: 'js'}})],
@@ -70,7 +75,7 @@ describe('generate/route', () => {
     });
 
     it('figures out the locale if a home route already exists', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         const route = 'routes/pages.$handle';
 
         const directories = await createHydrogenFixture(tmpDir, {
@@ -114,7 +119,7 @@ describe('generate/route', () => {
 
   describe('generateProjectFile', () => {
     it('generates a route file for Remix v1', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         // Given
         const route = 'routes/pages.$handle';
         const directories = await createHydrogenFixture(tmpDir, {
@@ -138,7 +143,7 @@ describe('generate/route', () => {
     });
 
     it('generates a route file for Remix v2', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         // Given
         const route = 'routes/custom.path.$handle._index';
         const directories = await createHydrogenFixture(tmpDir, {
@@ -160,7 +165,7 @@ describe('generate/route', () => {
     });
 
     it('generates route files with locale prefix', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         const routeCode = `const str = 'hello world'`;
         // Given
         const directories = await createHydrogenFixture(tmpDir, {
@@ -226,7 +231,7 @@ describe('generate/route', () => {
     });
 
     it('produces a typescript file when typescript argument is true', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         // Given
         const route = 'routes/pages.$handle';
         const directories = await createHydrogenFixture(tmpDir, {
@@ -249,7 +254,7 @@ describe('generate/route', () => {
     });
 
     it('prompts the user if there the file already exists', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         // Given
         vi.mocked(renderConfirmationPrompt).mockImplementationOnce(
           async () => true,
@@ -277,7 +282,7 @@ describe('generate/route', () => {
     });
 
     it('does not prompt the user if the force property is true', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         // Given
         vi.mocked(renderConfirmationPrompt).mockImplementationOnce(
           async () => true,
@@ -301,7 +306,7 @@ describe('generate/route', () => {
     });
 
     it('generates all the route dependencies', async () => {
-      await temporaryDirectoryTask(async (tmpDir) => {
+      await inTemporaryDirectory(async (tmpDir) => {
         const templates: [string, string][] = [
           [
             'routes/pages.$pageHandle.tsx',

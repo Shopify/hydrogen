@@ -17,14 +17,15 @@ import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
 import colors from '@shopify/cli-kit/node/colors';
 import {
+  assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
   type ServerMode,
-} from '../../lib/config.js';
+} from '../../lib/remix-config.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
 import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
-import {warnOnce} from '../../lib/log.js';
+import {createRemixLogger, muteRemixLogs} from '../../lib/log.js';
 import {codegen} from '../../lib/codegen.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
@@ -62,19 +63,19 @@ export default class Build extends Command {
     await runBuild({
       ...flagsToCamelObject(flags),
       useCodegen: flags['codegen-unstable'],
-      path: directory,
+      directory,
     });
   }
 }
 
 export async function runBuild({
-  path: appPath,
+  directory,
   useCodegen = false,
   codegenConfigPath,
   sourcemap = false,
   disableRouteWarning = false,
 }: {
-  path?: string;
+  directory?: string;
   useCodegen?: boolean;
   codegenConfigPath?: string;
   sourcemap?: boolean;
@@ -85,9 +86,9 @@ export async function runBuild({
   }
 
   const {root, buildPath, buildPathClient, buildPathWorkerFile, publicPath} =
-    getProjectPaths(appPath);
+    getProjectPaths(directory);
 
-  await checkLockfileStatus(root);
+  await Promise.all([checkLockfileStatus(root), muteRemixLogs()]);
 
   console.time(LOG_WORKER_BUILT);
 
@@ -102,15 +103,17 @@ export async function runBuild({
       rmdir(buildPath, {force: true}),
     ]);
 
+  assertOxygenChecks(remixConfig);
+
   await Promise.all([
     copyPublicFiles(publicPath, buildPathClient),
     build({
       config: remixConfig,
       options: {
         mode: process.env.NODE_ENV as ServerMode,
-        onWarning: warnOnce,
         sourcemap,
       },
+      logger: createRemixLogger(),
       fileWatchCache: createFileWatchCache(),
     }).catch((thrown) => {
       logThrown(thrown);
@@ -173,7 +176,9 @@ export async function runBuild({
   // The Remix compiler hangs due to a bug in ESBuild:
   // https://github.com/evanw/esbuild/issues/2727
   // The actual build has already finished so we can kill the process.
-  process.exit(0);
+  if (!process.env.SHOPIFY_UNIT_TEST) {
+    process.exit(0);
+  }
 }
 
 export async function copyPublicFiles(

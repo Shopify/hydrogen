@@ -3,7 +3,7 @@ import {commonFlags, flagsToCamelObject} from '../../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {renderSuccess, renderTasks} from '@shopify/cli-kit/node/ui';
 import {Args} from '@oclif/core';
-import {getRemixConfig} from '../../../lib/config.js';
+import {getRemixConfig} from '../../../lib/remix-config.js';
 import {
   setupI18nStrategy,
   SETUP_I18N_STRATEGIES,

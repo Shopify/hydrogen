@@ -1,5 +1,5 @@
 import {renderSuccess, renderWarning} from '@shopify/cli-kit/node/ui';
-import type {RemixConfig} from './config.js';
+import type {RemixConfig} from './remix-config.js';
 
 // Sorted by importance for better warnings.
 const REQUIRED_ROUTES = [
