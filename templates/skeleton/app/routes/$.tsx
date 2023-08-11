@@ -5,3 +5,7 @@ export async function loader({request}: LoaderArgs) {
     status: 404,
   });
 }
+
+export default function CatchAllPage() {
+  return null;
+}
