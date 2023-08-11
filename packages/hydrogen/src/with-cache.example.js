@@ -1,13 +1,13 @@
 // In your app's `server.ts` file:
 import * as remixBuild from '@remix-run/dev/server-build';
-import {createWithCache_unstable, CacheLong} from '@shopify/hydrogen';
+import {createWithCache, CacheLong} from '@shopify/hydrogen';
 // Use another `createRequestHandler` if deploying off oxygen
 import {createRequestHandler} from '@shopify/remix-oxygen';
 
 export default {
   async fetch(request, env, executionContext) {
     const cache = await caches.open('my-cms');
-    const withCache = createWithCache_unstable({
+    const withCache = createWithCache({
       cache,
       waitUntil: executionContext.waitUntil,
     });
