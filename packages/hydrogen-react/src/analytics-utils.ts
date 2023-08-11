@@ -41,6 +41,7 @@ export function parseGid(gid: string | undefined): ShopifyGid {
   const defaultReturn: ShopifyGid = {
     id: '',
     resource: null,
+    resourceId: null,
     search: '',
     searchParams: new URLSearchParams(),
     hash: '',
@@ -60,10 +61,11 @@ export function parseGid(gid: string | undefined): ShopifyGid {
       return defaultReturn;
     }
 
-    const id = lastPathnamePart ?? null;
+    const id = `${lastPathnamePart}${search}${hash}` || '';
+    const resourceId = lastPathnamePart || null;
     const resource = resourcePart ?? null;
 
-    return {id, resource, search, searchParams, hash};
+    return {id, resource, resourceId, search, searchParams, hash};
   } catch {
     return defaultReturn;
   }

@@ -6,10 +6,11 @@ describe('analytic-utils', () => {
     it('returns the id and resource type from a gid', () => {
       const {searchParams, ...gid} = parseGid('gid://shopify/Order/123');
       expect(gid).toStrictEqual({
-        hash: '',
         id: '123',
         resource: 'Order',
+        resourceId: '123',
         search: '',
+        hash: '',
       });
       expect(searchParams.toString()).toBe('');
     });
@@ -18,10 +19,11 @@ describe('analytic-utils', () => {
       //@ts-expect-error - testing invalid input
       const {searchParams, ...gid} = parseGid(123);
       expect(gid).toStrictEqual({
-        hash: '',
         id: '',
         resource: null,
+        resourceId: null,
         search: '',
+        hash: '',
       });
       expect(searchParams.toString()).toBe('');
     });
@@ -29,10 +31,11 @@ describe('analytic-utils', () => {
     it('returns empty string if the gid is not a valid gid', () => {
       const {searchParams, ...gid} = parseGid('gid://shopify/Order');
       expect(gid).toStrictEqual({
-        hash: '',
         id: '',
         resource: null,
+        resourceId: null,
         search: '',
+        hash: '',
       });
       expect(searchParams.toString()).toBe('');
     });
@@ -42,10 +45,11 @@ describe('analytic-utils', () => {
         'gid://shopify/Order/123?namespace=123',
       );
       expect(gid).toStrictEqual({
-        hash: '',
-        id: '123',
+        id: '123?namespace=123',
         resource: 'Order',
+        resourceId: '123',
         search: '?namespace=123',
+        hash: '',
       });
       expect(searchParams.toString()).toBe('namespace=123');
     });
@@ -55,10 +59,11 @@ describe('analytic-utils', () => {
         'gid://shopify/Order/123?namespace=123#fragment',
       );
       expect(gid).toStrictEqual({
-        hash: '#fragment',
-        id: '123',
+        id: '123?namespace=123#fragment',
         resource: 'Order',
+        resourceId: '123',
         search: '?namespace=123',
+        hash: '#fragment',
       });
       expect(searchParams.toString()).toBe('namespace=123');
     });
@@ -66,10 +71,11 @@ describe('analytic-utils', () => {
     it('returns empty string if the resource is missing', () => {
       const {searchParams, ...gid} = parseGid('gid://shopify//123');
       expect(gid).toStrictEqual({
-        hash: '',
         id: '',
         resource: null,
+        resourceId: null,
         search: '',
+        hash: '',
       });
       expect(searchParams.toString()).toBe('');
     });
@@ -79,10 +85,11 @@ describe('analytic-utils', () => {
         'gid://shopify/Cart/c1-3d2419bf79df5e91d37b449cc6cd0ba1?test=123',
       );
       expect(gid).toStrictEqual({
-        hash: '',
-        id: 'c1-3d2419bf79df5e91d37b449cc6cd0ba1',
+        id: 'c1-3d2419bf79df5e91d37b449cc6cd0ba1?test=123',
         resource: 'Cart',
+        resourceId: 'c1-3d2419bf79df5e91d37b449cc6cd0ba1',
         search: '?test=123',
+        hash: '',
       });
       expect(searchParams.toString()).toBe('test=123');
     });
@@ -90,10 +97,11 @@ describe('analytic-utils', () => {
     it('should default to empty string', () => {
       const {searchParams, ...gid} = parseGid('');
       expect(gid).toStrictEqual({
-        hash: '',
         id: '',
         resource: null,
+        resourceId: null,
         search: '',
+        hash: '',
       });
       expect(searchParams.toString()).toBe('');
     });

@@ -180,4 +180,5 @@ export type ShopifyCookies = {
 export type ShopifyGid = Pick<URL, 'search' | 'searchParams' | 'hash'> & {
   id: string;
   resource: string | null;
+  resourceId: string | null;
 };
