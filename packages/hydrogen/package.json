@@ -55,7 +55,8 @@
   ],
   "dependencies": {
     "@shopify/hydrogen-react": "2023.7.1",
-    "react": "^18.2.0"
+    "react": "^18.2.0",
+    "@apollo/client": "^3.8.0"
   },
   "peerDependencies": {
     "@remix-run/react": "1.19.1",

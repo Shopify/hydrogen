@@ -146,17 +146,16 @@ export function ErrorBoundary({error}: {error: Error}) {
 
 const LAYOUT_QUERY = `#graphql
   query layout(
-    $language: LanguageCode
     $headerMenuHandle: String!
     $footerMenuHandle: String!
-  ) @inContext(language: $language) {
+  ) {
     shop {
       ...Shop
     }
-    headerMenu: menu(handle: $headerMenuHandle) {
+    headerMenu (handle: $headerMenuHandle) {
       ...Menu
     }
-    footerMenu: menu(handle: $footerMenuHandle) {
+    footerMenu (handle: $footerMenuHandle) {
       ...Menu
     }
   }

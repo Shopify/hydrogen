@@ -101,7 +101,7 @@ export default function Homepage() {
               return (
                 <ProductSwimlane
                   products={products}
-                  title="Featured Products"
+                  title="Giày nữ"
                   count={4}
                 />
               );
@@ -206,8 +206,7 @@ const COLLECTION_HERO_QUERY = `#graphql
 
 // @see: https://shopify.dev/api/storefront/2023-07/queries/products
 export const HOMEPAGE_FEATURED_PRODUCTS_QUERY = `#graphql
-  query homepageFeaturedProducts($country: CountryCode, $language: LanguageCode)
-  @inContext(country: $country, language: $language) {
+  query homepageFeaturedProducts {
     products(first: 8) {
       nodes {
         ...ProductCard

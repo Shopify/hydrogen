@@ -28,6 +28,7 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
+import {query} from './service/ApolloServer';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -219,6 +220,36 @@ function minifyQuery(string: string) {
 
 const defaultI18n: I18nBase = {language: 'EN', country: 'US'};
 
+// TODO: convert shopify request API to graphql
+const convertToGraphql = async (stringQuery: string, variables: any) => {
+  try {
+    const {data} = await query(stringQuery, variables);
+    return data;
+  } catch (e) {
+    console.log('Query error' + JSON.stringify(e));
+  }
+  return {
+    shop: {
+      id: '',
+      brand: {
+        logo: {
+          image: {
+            url: '',
+          },
+        },
+      },
+    },
+    headerMenu: {
+      id: '',
+      items: [],
+    },
+    footerMenu: {
+      id: '',
+      items: [],
+    },
+  };
+};
+
 /**
  *  This function extends `createStorefrontClient` from [Hydrogen React](/docs/api/hydrogen-react/2023-07/utilities/createstorefrontclient). The additional arguments enable internationalization (i18n), caching, and other features particular to Remix and Oxygen.
  *
@@ -302,69 +333,80 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     query = query ?? mutation;
 
-    const queryVariables = {...variables};
+    const isLayoutQuery = query.includes('query layout');
+    const isSearchQuery = query.includes('query PaginatedProductsSearch');
+    const isHomepageFeaturedProducts = query.includes(
+      'query homepageFeaturedProducts',
+    );
 
-    if (i18n) {
-      if (!variables?.country && /\$country/.test(query)) {
-        queryVariables.country = i18n.country;
+    if (isLayoutQuery || isSearchQuery || isHomepageFeaturedProducts) {
+      const myGraphql = convertToGraphql(query, variables);
+      return myGraphql as T;
+    } else {
+      const queryVariables = {...variables};
+
+      if (i18n) {
+        if (!variables?.country && /\$country/.test(query)) {
+          queryVariables.country = i18n.country;
+        }
+
+        if (!variables?.language && /\$language/.test(query)) {
+          queryVariables.language = i18n.language;
+        }
       }
 
-      if (!variables?.language && /\$language/.test(query)) {
-        queryVariables.language = i18n.language;
-      }
-    }
+      const url = getStorefrontApiUrl({storefrontApiVersion});
+      const requestInit: RequestInit = {
+        method: 'POST',
+        headers: {...defaultHeaders, ...userHeaders},
+        body: JSON.stringify({
+          query,
+          variables: queryVariables,
+        }),
+      };
 
-    const url = getStorefrontApiUrl({storefrontApiVersion});
-    const requestInit: RequestInit = {
-      method: 'POST',
-      headers: {...defaultHeaders, ...userHeaders},
-      body: JSON.stringify({
-        query,
-        variables: queryVariables,
-      }),
-    };
-
-    const [body, response] = await fetchWithServerCache(url, requestInit, {
-      cacheInstance: mutation ? undefined : cache,
-      cache: cacheOptions || CacheShort(),
-      shouldCacheResponse: checkGraphQLErrors,
-      waitUntil,
-    });
-
-    const errorOptions: StorefrontErrorOptions<T> = {
-      response,
-      type: mutation ? 'mutation' : 'query',
-      query,
-      queryVariables,
-      errors: undefined,
-    };
-
-    if (!response.ok) {
-      /**
-       * The Storefront API might return a string error, or a JSON-formatted {error: string}.
-       * We try both and conform them to a single {errors} format.
-       */
-      let errors;
-      try {
-        errors = parseJSON(body);
-      } catch (_e) {
-        errors = [{message: body}];
-      }
-
-      throwError({...errorOptions, errors});
-    }
-
-    const {data, errors} = body as StorefrontApiResponse<T>;
-
-    if (errors?.length) {
-      throwError({
-        ...errorOptions,
-        errors,
-        ErrorConstructor: StorefrontApiError,
+      const [body, response] = await fetchWithServerCache(url, requestInit, {
+        cacheInstance: mutation ? undefined : cache,
+        cache: cacheOptions || CacheShort(),
+        shouldCacheResponse: checkGraphQLErrors,
+        waitUntil,
       });
-    }
 
-    return data as T;
+      const errorOptions: StorefrontErrorOptions<T> = {
+        response,
+        type: mutation ? 'mutation' : 'query',
+        query,
+        queryVariables,
+        errors: undefined,
+      };
+
+      if (!response.ok) {
+        /**
+         * The Storefront API might return a string error, or a JSON-formatted {error: string}.
+         * We try both and conform them to a single {errors} format.
+         */
+        let errors;
+        try {
+          errors = parseJSON(body);
+        } catch (_e) {
+          errors = [{message: body}];
+        }
+
+        throwError({...errorOptions, errors});
+      }
+
+      const {data, errors} = body as StorefrontApiResponse<T>;
+
+      if (errors?.length) {
+        throwError({
+          ...errorOptions,
+          errors,
+          ErrorConstructor: StorefrontApiError,
+        });
+      }
+
+      return data as T;
+    }
   }
 
   return {
