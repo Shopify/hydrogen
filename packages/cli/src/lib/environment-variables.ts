@@ -34,7 +34,8 @@ export async function getAllEnvironmentVariables({
       fetchRemote
         ? getRemoteVariables(root, envBranch).catch((error: AbortError) => {
             renderWarning({
-              headline: 'Failed to load environment variables from Shopify.',
+              headline:
+                'Failed to load environment variables from Shopify. The development server will still start, but the following error occurred:',
               body: [error.message, error.tryMessage, error.nextSteps]
                 .filter(Boolean)
                 .join('\n\n'),
@@ -87,18 +88,8 @@ async function getRemoteVariables(root: string, envBranch?: string) {
   const {session, config} = await login(root);
 
   const envVariables =
-    (
-      await getStorefrontEnvVariables(
-        session,
-        config.storefront!.id,
-        envBranch,
-      ).catch((error) => {
-        renderWarning({
-          headline: `Failed to load environment variables. The development server will still start, but the following error occurred:`,
-          body: error?.stack ?? error?.message ?? error,
-        });
-      })
-    )?.environmentVariables || [];
+    (await getStorefrontEnvVariables(session, config.storefront!.id, envBranch))
+      ?.environmentVariables || [];
 
   const remoteVariables: EnvMap = {};
   const remoteSecrets: EnvMap = {};
