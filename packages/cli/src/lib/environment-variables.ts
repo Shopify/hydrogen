@@ -3,6 +3,7 @@ import {resolvePath} from '@shopify/cli-kit/node/path';
 import {linesToColumns} from '@shopify/cli-kit/common/string';
 import {outputInfo} from '@shopify/cli-kit/node/output';
 import {readAndParseDotEnv} from '@shopify/cli-kit/node/dot-env';
+import {type AbortError} from '@shopify/cli-kit/node/error';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {getStorefrontEnvVariables} from './graphql/admin/pull-variables.js';
@@ -15,6 +16,10 @@ interface Arguments {
 }
 
 type EnvMap = Record<string, string>;
+const createEmptyRemoteVars = () => ({
+  remoteVariables: {} as EnvMap,
+  remoteSecrets: {} as EnvMap,
+});
 
 export async function getAllEnvironmentVariables({
   root,
@@ -27,8 +32,17 @@ export async function getAllEnvironmentVariables({
     await Promise.all([
       // Get remote vars
       fetchRemote
-        ? getRemoteVariables(root, envBranch)
-        : {remoteVariables: {} as EnvMap, remoteSecrets: {} as EnvMap},
+        ? getRemoteVariables(root, envBranch).catch((error: AbortError) => {
+            renderWarning({
+              headline: 'Failed to load environment variables from Shopify.',
+              body: [error.message, error.tryMessage, error.nextSteps]
+                .filter(Boolean)
+                .join('\n\n'),
+            });
+
+            return createEmptyRemoteVars();
+          })
+        : createEmptyRemoteVars(),
       // Get local vars
       fileExists(dotEnvPath).then((exists) =>
         exists ? readAndParseDotEnv(dotEnvPath) : {variables: {} as EnvMap},
