@@ -27,5 +27,5 @@ export function usePageAnalytics({hasUserConsent}: {hasUserConsent: boolean}) {
       ...data,
       hasUserConsent,
     } as unknown as ShopifyPageViewPayload;
-  }, [matches]);
+  }, [matches, hasUserConsent]);
 }
