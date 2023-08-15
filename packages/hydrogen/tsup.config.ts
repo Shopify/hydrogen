@@ -25,6 +25,23 @@ export default [
     dts: true,
     outDir: path.join(outDir, 'production'),
     minify: true,
-    onSuccess: () => fs.writeFile(cjsEntryFile, cjsEntryContent, 'utf-8'),
+    onSuccess: async () => {
+      await fs.writeFile(cjsEntryFile, cjsEntryContent, 'utf-8');
+
+      const hydrogenReact = path.resolve('..', 'hydrogen-react');
+      const schemaFile = 'storefront.schema.json';
+      const typeFile = 'storefront-api-types.d.ts';
+
+      await fs.copyFile(
+        path.resolve(hydrogenReact, schemaFile),
+        path.resolve(outDir, schemaFile),
+      );
+      await fs.copyFile(
+        path.resolve(hydrogenReact, 'src', typeFile),
+        path.resolve(outDir, typeFile),
+      );
+
+      console.log('\n', 'SFAPI types copied from hydrogen-react', '\n');
+    },
   }),
 ];
