@@ -12,6 +12,7 @@ import {
   rmdir,
   glob,
   removeFile,
+  fileExists,
 } from '@shopify/cli-kit/node/fs';
 import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
@@ -185,5 +186,9 @@ export async function copyPublicFiles(
   publicPath: string,
   buildPathClient: string,
 ) {
+  if (!(await fileExists(publicPath))) {
+    return;
+  }
+
   return copyFile(publicPath, buildPathClient);
 }
