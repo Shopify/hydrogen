@@ -12,7 +12,7 @@ import {
 // Cleanup dist folder before building
 fs.removeSync('./dist');
 
-const commonConfig = {
+const commonConfig = defineConfig({
   format: 'esm',
   minify: false,
   bundle: false,
@@ -25,7 +25,7 @@ const commonConfig = {
   // When `dts: true`, Tsup will remove all the d.ts files copied to `dist`
   // during `onSuccess` callbacks, thus removing part of the starter templates.
   dts: false,
-};
+});
 
 const outDir = 'dist';
 
