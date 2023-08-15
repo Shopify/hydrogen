@@ -1,5 +1,15 @@
 # @shopify/cli-hydrogen
 
+## 5.1.2
+
+### Patch Changes
+
+- Update @shopify/oxygen-workers-types dependencies ([#1208](https://github.com/Shopify/hydrogen/pull/1208)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`21eb9dac`](https://github.com/Shopify/hydrogen/commit/21eb9dac935722fd8d0d385b00c3bbcfb4693baa), [`d80c4ada`](https://github.com/Shopify/hydrogen/commit/d80c4ada051dd5530c12720cb7d8e8c6dda19c98)]:
+  - @shopify/remix-oxygen@1.1.3
+  - @shopify/hydrogen-react@2023.7.1
+
 ## 5.1.1
 
 ### Patch Changes

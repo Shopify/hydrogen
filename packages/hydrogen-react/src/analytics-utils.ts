@@ -38,23 +38,37 @@ export function schemaWrapper(
  * ```
  **/
 export function parseGid(gid: string | undefined): ShopifyGid {
-  const defaultReturn = {id: '', resource: null};
+  const defaultReturn: ShopifyGid = {
+    id: '',
+    resource: null,
+    resourceId: null,
+    search: '',
+    searchParams: new URLSearchParams(),
+    hash: '',
+  };
 
   if (typeof gid !== 'string') {
     return defaultReturn;
   }
 
-  // TODO: add support for parsing query parameters on complex gids
-  // Reference: https://shopify.dev/api/usage/gids
-  const matches = gid.match(/^gid:\/\/shopify\/(\w+)\/([^/]+)/);
+  try {
+    const {search, searchParams, pathname, hash} = new URL(gid);
+    const pathnameParts = pathname.split('/');
+    const lastPathnamePart = pathnameParts[pathnameParts.length - 1];
+    const resourcePart = pathnameParts[pathnameParts.length - 2];
 
-  if (!matches || matches.length === 1) {
+    if (!lastPathnamePart || !resourcePart) {
+      return defaultReturn;
+    }
+
+    const id = `${lastPathnamePart}${search}${hash}` || '';
+    const resourceId = lastPathnamePart || null;
+    const resource = resourcePart ?? null;
+
+    return {id, resource, resourceId, search, searchParams, hash};
+  } catch {
     return defaultReturn;
   }
-  const id = matches[2] ?? null;
-  const resource = matches[1] ?? null;
-
-  return {id, resource};
 }
 
 /**

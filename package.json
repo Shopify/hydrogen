@@ -18,6 +18,7 @@
     "version:post": "npm run version:hydrogen && npm run version:cli",
     "version:hydrogen": "node -p \"'export const LIB_VERSION = \\'' + require('./packages/hydrogen/package.json').version + '\\';'\" > packages/hydrogen/src/version.ts",
     "version:cli": "cd packages/cli && npm run generate:manifest",
+    "version:next": "node scripts/changeset-version-next.mjs",
     "changeset": "changeset",
     "clean-all": "rimraf node_modules/.bin && rimraf node_modules/.cache && rimraf packages/*/dist && rimraf templates/*/.cache",
     "check": "npm run build && npm run lint && npm run typecheck && npm run test"
