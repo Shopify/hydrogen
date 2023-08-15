@@ -152,7 +152,16 @@ export async function fetchWithServerCache(
       try {
         data = await response[returnType]();
       } catch {
-        data = await response.text();
+        try {
+          data = await response.text();
+        } catch {
+          // Getting a response without a valid body
+          throw new Error(
+            `Storefront API response code: ${
+              response.status
+            } (Request Id: ${response.headers.get('x-request-id')})`,
+          );
+        }
       }
 
       return toSerializableResponse(data, response);
