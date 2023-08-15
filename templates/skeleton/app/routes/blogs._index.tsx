@@ -1,6 +1,5 @@
-import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
-import {Link, useLoaderData} from '@remix-run/react';
+import {Link, useLoaderData, type V2_MetaFunction} from '@remix-run/react';
 import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
 
 export const meta: V2_MetaFunction = () => {
