@@ -1,1 +1,5 @@
-* @Shopify/oxygen-platform-devs 
+*                                  @Shopify/oxygen-platform-devs 
+
+# oxygen-platform-atc (to manage bot notifications; overrides * ownership above)
+package.json                       @Shopify/oxygen-platform-atc
+yarn.lock                          @Shopify/oxygen-platform-atc
