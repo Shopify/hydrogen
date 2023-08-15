@@ -36,8 +36,6 @@
     "@miniflare/shared": "^2.14.0",
     "@miniflare/storage-memory": "^2.14.0",
     "@miniflare/web-sockets": "2.14.0",
-    "@types/connect": "^3.4.35",
-    "@types/mime": "^3.0.1",
     "body-parser": "1.20.2",
     "connect": "^3.7.0",
     "eventsource": "^2.0.2",
@@ -46,17 +44,18 @@
     "inquirer": "^9.0.0",
     "mime": "^3.0.0",
     "semiver": "^1.1.0",
-    "source-map-support": "^0.5.21",
-    "typescript": "^5.1.6"
+    "source-map-support": "^0.5.21"
   },
   "devDependencies": {
     "@changesets/cli": "^2.24.3",
     "@shopify/eslint-plugin": "^42.0.1",
     "@shopify/prettier-config": "^1.1.2",
     "@types/body-parser": "1.19.2",
+    "@types/connect": "^3.4.35",
     "@types/eventsource": "^1.1.10",
     "@types/fs-extra": "^11.0.0",
     "@types/inquirer": "^9.0.0",
+    "@types/mime": "^3.0.1",
     "@types/node": "^18.7.0",
     "@types/source-map-support": "^0.5.6",
     "@types/ws": "^8.5.3",
@@ -66,6 +65,7 @@
     "eslint-config-prettier": "^8.5.0",
     "eslint-plugin-prettier": "^5.0.0-alpha.2",
     "prettier": "^3.0.0",
+    "typescript": "^5.1.6",
     "vitest": "^0.34.1"
   }
 }
