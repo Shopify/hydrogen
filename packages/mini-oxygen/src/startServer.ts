@@ -84,6 +84,8 @@ export function createMiniOxygen(
       modules,
       sourceMap,
       buildWatchPaths,
+      // This prevents the process from exiting when an unhandled rejection occurs.
+      logUnhandledRejections: true,
       // this should stay in sync with oxygen-dms
       compatibilityFlags: ['streams_enable_constructors'],
       compatibilityDate: '2022-10-31',
