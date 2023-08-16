@@ -9,8 +9,12 @@ import {
   getSkeletonSourceDir,
 } from './src/lib/build';
 
-// Cleanup dist folder before building
-fs.removeSync('./dist');
+if (!process.env.LOCAL_DEV) {
+  // Cleanup dist folder before buid/dev.
+  // Do not remove this when running on Turbo to prevent
+  // inconsistencies with other dev commands.
+  fs.removeSync('./dist');
+}
 
 const commonConfig = defineConfig({
   format: 'esm',
