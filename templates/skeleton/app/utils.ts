@@ -1,6 +1,6 @@
 import {useLocation} from '@remix-run/react';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
-import {useMemo} from 'react';
+import {createContext, useContext, useMemo} from 'react';
 
 export function useVariantUrl(
   handle: string,
@@ -44,3 +44,7 @@ export function getVariantUrl({
 
   return path + (searchString ? '?' + searchParams.toString() : '');
 }
+
+export const NonceContext = createContext<string | undefined>(undefined);
+export const NonceProvider = NonceContext.Provider;
+export const useNonce = () => useContext(NonceContext);

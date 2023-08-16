@@ -19,6 +19,7 @@ import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
+import {useNonce} from './utils';
 
 // This is important to avoid re-fetching root queries on sub-navigations
 export const shouldRevalidate: ShouldRevalidateFunction = ({
@@ -98,6 +99,7 @@ export async function loader({context}: LoaderArgs) {
 }
 
 export default function App() {
+  const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
 
   return (
@@ -112,9 +114,9 @@ export default function App() {
         <Layout {...data}>
           <Outlet />
         </Layout>
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
+        <LiveReload nonce={nonce} />
       </body>
     </html>
   );

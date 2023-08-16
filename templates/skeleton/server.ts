@@ -15,6 +15,12 @@ import {
   type Session,
 } from '@shopify/remix-oxygen';
 
+function toHexString(byteArray: Uint8Array) {
+  return Array.from(byteArray, function (byte) {
+    return ('0' + (byte & 0xff).toString(16)).slice(-2);
+  }).join('');
+}
+
 /**
  * Export a fetch handler in module format.
  */
@@ -37,6 +43,9 @@ export default {
         caches.open('hydrogen'),
         HydrogenSession.init(request, [env.SESSION_SECRET]),
       ]);
+
+      const nonce = toHexString(crypto.getRandomValues(new Uint8Array(16)));
+      (request as any).nonce = nonce;
 
       /**
        * Create Hydrogen's Storefront client.
@@ -74,6 +83,11 @@ export default {
       });
 
       const response = await handleRequest(request);
+
+      response.headers.set(
+        'Content-Security-Policy',
+        `base-uri 'self'; default-src 'self' 'nonce-${nonce}' https://cdn.shopify.com; frame-ancestors 'none'; style-src 'self' 'unsafe-inline' https://cdn.shopify.com;`,
+      );
 
       if (response.status === 404) {
         /**
