@@ -1,8 +1,7 @@
-import {Await, useMatches} from '@remix-run/react';
+import {Await, useMatches, type V2_MetaFunction} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {CartQueryData} from '@shopify/hydrogen';
 import {CartForm} from '@shopify/hydrogen';
-import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {type ActionArgs, json} from '@shopify/remix-oxygen';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {CartMain} from '~/components/Cart';

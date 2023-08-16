@@ -1,12 +1,17 @@
 import type {CustomerFragment} from 'storefrontapi.generated';
 import type {CustomerUpdateInput} from '@shopify/hydrogen/storefront-api-types';
-import type {ActionArgs, LoaderArgs} from '@shopify/remix-oxygen';
-import {json, redirect, type V2_MetaFunction} from '@shopify/remix-oxygen';
+import {
+  json,
+  redirect,
+  type ActionArgs,
+  type LoaderArgs,
+} from '@shopify/remix-oxygen';
 import {
   Form,
   useActionData,
   useNavigation,
   useOutletContext,
+  type V2_MetaFunction,
 } from '@remix-run/react';
 
 export type ActionResponse = {

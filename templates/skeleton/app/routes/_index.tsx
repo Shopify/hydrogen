@@ -1,6 +1,10 @@
-import type {V2_MetaFunction} from '@shopify/remix-oxygen';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {Await, useLoaderData, Link} from '@remix-run/react';
+import {
+  Await,
+  useLoaderData,
+  Link,
+  type V2_MetaFunction,
+} from '@remix-run/react';
 import {Suspense} from 'react';
 import {Image, Money} from '@shopify/hydrogen';
 import type {
@@ -14,9 +18,11 @@ export const meta: V2_MetaFunction = () => {
 
 export async function loader({context}: LoaderArgs) {
   const {storefront} = context;
+
+  const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
+
   const {collections} = await storefront.query(FEATURED_COLLECTION_QUERY);
   const featuredCollection = collections.nodes[0];
-  const recommendedProducts = storefront.query(RECOMMENDED_PRODUCTS_QUERY);
 
   return defer({featuredCollection, recommendedProducts});
 }

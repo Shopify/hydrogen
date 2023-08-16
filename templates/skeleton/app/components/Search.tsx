@@ -1,13 +1,13 @@
 import {
-  useParams,
-  useFetcher,
   Link,
   Form,
+  useParams,
+  useFetcher,
+  useFetchers,
   type FormProps,
 } from '@remix-run/react';
 import {Image, Money, Pagination} from '@shopify/hydrogen';
 import React, {useRef, useEffect} from 'react';
-import {useFetchers} from '@remix-run/react';
 
 import type {
   PredictiveProductFragment,

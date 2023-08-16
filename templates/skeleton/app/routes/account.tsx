@@ -109,13 +109,13 @@ function AccountLayout({
     <div className="account">
       <h1>{heading}</h1>
       <br />
-      <AcccountMenu />
+      <AccountMenu />
       {children}
     </div>
   );
 }
 
-function AcccountMenu() {
+function AccountMenu() {
   function isActiveStyle({
     isActive,
     isPending,
@@ -124,10 +124,11 @@ function AcccountMenu() {
     isPending: boolean;
   }) {
     return {
-      fontWeight: isActive ? 'bold' : '',
+      fontWeight: isActive ? 'bold' : undefined,
       color: isPending ? 'grey' : 'black',
     };
   }
+
   return (
     <nav role="navigation">
       <NavLink to="/account/orders" style={isActiveStyle}>
