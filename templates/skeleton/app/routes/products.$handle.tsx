@@ -341,7 +341,6 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       title
       handle
     }
-    quantityAvailable
     selectedOptions {
       name
       value
