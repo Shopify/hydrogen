@@ -12,7 +12,8 @@
         "@shopify/cli-hydrogen#build",
         "@shopify/remix-oxygen#build"
       ],
-      "cache": false
+      "cache": false,
+      "persistent": true
     },
     "lint": {
       "outputs": []
