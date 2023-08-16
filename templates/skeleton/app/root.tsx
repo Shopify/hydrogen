@@ -10,6 +10,7 @@ import {
   useLoaderData,
   ScrollRestoration,
   isRouteErrorResponse,
+  type ShouldRevalidateFunction,
 } from '@remix-run/react';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import type {HydrogenSession} from '../server';
@@ -17,6 +18,25 @@ import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
+
+// This is important to avoid re-fetching root queries on sub-navigations
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  formMethod,
+  currentUrl,
+  nextUrl,
+}) => {
+  // revalidate when a mutation is performed e.g add to cart, login...
+  if (formMethod && formMethod !== 'GET') {
+    return true;
+  }
+
+  // revalidate when manually revalidating via useRevalidator
+  if (currentUrl.toString() === nextUrl.toString()) {
+    return true;
+  }
+
+  return false;
+};
 
 export function links() {
   return [
