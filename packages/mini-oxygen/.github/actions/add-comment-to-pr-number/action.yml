@@ -1,0 +1,15 @@
+name: 'Add comment to PR number'
+description: 'Adds a comment to a specific PR with number'
+inputs:
+  github-token:
+    description: 'The GitHub token'
+    required: true
+  pr-number:
+    description: 'The PR number'
+    required: true
+  comment:
+    description: 'The comment to post'
+    required: true
+runs:
+  using: 'node16'
+  main: 'index.js'
