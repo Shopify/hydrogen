@@ -7,11 +7,7 @@
       "outputs": ["dist/**", "build/**"]
     },
     "dev": {
-      "dependsOn": [
-        "@shopify/hydrogen#build",
-        "@shopify/cli-hydrogen#build",
-        "@shopify/remix-oxygen#build"
-      ],
+      "dependsOn": ["^dev"],
       "cache": false,
       "persistent": true
     },

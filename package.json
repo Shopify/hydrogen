@@ -5,7 +5,7 @@
     "build": "turbo build --parallel",
     "build:pkg": "npm run build -- --filter=./packages/*",
     "ci:checks": "turbo run lint test format:check typecheck",
-    "dev": "npm run dev:pkg -- --filter=./templates/demo-store",
+    "dev": "npm run dev:pkg",
     "dev:pkg": "cross-env LOCAL_DEV=true turbo dev --parallel --filter=./packages/*",
     "preview": "turbo build --filter=./packages/* && npm run preview -w demo-store",
     "lint": "eslint --no-error-on-unmatched-pattern --ext .js,.ts,.jsx,.tsx ./packages & npm run lint -w demo-store",
