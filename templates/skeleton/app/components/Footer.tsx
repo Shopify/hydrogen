@@ -93,7 +93,7 @@ function activeLinkStyle({
   isPending: boolean;
 }) {
   return {
-    fontWeight: isActive ? 'bold' : '',
+    fontWeight: isActive ? 'bold' : undefined,
     color: isPending ? 'grey' : 'white',
   };
 }
