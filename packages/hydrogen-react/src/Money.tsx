@@ -21,10 +21,12 @@ export interface MoneyPropsBase<ComponentGeneric extends React.ElementType> {
 // This article helps understand the typing here https://www.benmvp.com/blog/polymorphic-react-components-typescript/ Ben is the best :)
 export type MoneyProps<ComponentGeneric extends React.ElementType> =
   MoneyPropsBase<ComponentGeneric> &
-    Omit<
-      React.ComponentPropsWithoutRef<ComponentGeneric>,
-      keyof MoneyPropsBase<ComponentGeneric>
-    >;
+    (ComponentGeneric extends keyof React.JSX.IntrinsicElements
+      ? Omit<
+          React.ComponentPropsWithoutRef<ComponentGeneric>,
+          keyof MoneyPropsBase<ComponentGeneric>
+        >
+      : React.ComponentPropsWithoutRef<ComponentGeneric>);
 
 /**
  * The `Money` component renders a string of the Storefront API's
