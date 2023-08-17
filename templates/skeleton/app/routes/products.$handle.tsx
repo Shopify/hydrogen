@@ -21,7 +21,10 @@ import {
   getSelectedProductOptions,
   CartForm,
 } from '@shopify/hydrogen';
-import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
+import type {
+  CartLineInput,
+  SelectedOption,
+} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/utils';
 
 export const meta: V2_MetaFunction = ({data}) => {
@@ -67,7 +70,8 @@ export async function loader({params, request, context}: LoaderArgs) {
   const firstVariant = product.variants.nodes[0];
   const firstVariantIsDefault = Boolean(
     firstVariant.selectedOptions.find(
-      (option) => option.name === 'Title' && option.value === 'Default Title',
+      (option: SelectedOption) =>
+        option.name === 'Title' && option.value === 'Default Title',
     ),
   );
 
@@ -341,7 +345,6 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       title
       handle
     }
-    quantityAvailable
     selectedOptions {
       name
       value
