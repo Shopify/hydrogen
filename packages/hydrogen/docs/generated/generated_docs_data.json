@@ -15028,30 +15028,14 @@
               "name": "ShopifyGid",
               "value": "ShopifyGid"
             },
-            "value": "export function parseGid(gid: string | undefined): ShopifyGid {\n  const defaultReturn = {id: '', resource: null};\n\n  if (typeof gid !== 'string') {\n    return defaultReturn;\n  }\n\n  // TODO: add support for parsing query parameters on complex gids\n  // Reference: https://shopify.dev/api/usage/gids\n  const matches = gid.match(/^gid:\\/\\/shopify\\/(\\w+)\\/([^/]+)/);\n\n  if (!matches || matches.length === 1) {\n    return defaultReturn;\n  }\n  const id = matches[2] ?? null;\n  const resource = matches[1] ?? null;\n\n  return {id, resource};\n}"
+            "value": "export function parseGid(gid: string | undefined): ShopifyGid {\n  const defaultReturn: ShopifyGid = {\n    id: '',\n    resource: null,\n    resourceId: null,\n    search: '',\n    searchParams: new URLSearchParams(),\n    hash: '',\n  };\n\n  if (typeof gid !== 'string') {\n    return defaultReturn;\n  }\n\n  try {\n    const {search, searchParams, pathname, hash} = new URL(gid);\n    const pathnameParts = pathname.split('/');\n    const lastPathnamePart = pathnameParts[pathnameParts.length - 1];\n    const resourcePart = pathnameParts[pathnameParts.length - 2];\n\n    if (!lastPathnamePart || !resourcePart) {\n      return defaultReturn;\n    }\n\n    const id = `${lastPathnamePart}${search}${hash}` || '';\n    const resourceId = lastPathnamePart || null;\n    const resource = resourcePart ?? null;\n\n    return {id, resource, resourceId, search, searchParams, hash};\n  } catch {\n    return defaultReturn;\n  }\n}"
           },
           "ShopifyGid": {
             "filePath": "/analytics-types.ts",
             "syntaxKind": "TypeAliasDeclaration",
             "name": "ShopifyGid",
-            "value": "{\n  id: string;\n  resource: string | null;\n}",
-            "description": "",
-            "members": [
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "id",
-                "value": "string",
-                "description": ""
-              },
-              {
-                "filePath": "/analytics-types.ts",
-                "syntaxKind": "PropertySignature",
-                "name": "resource",
-                "value": "string",
-                "description": ""
-              }
-            ]
+            "value": "Pick<URL, 'search' | 'searchParams' | 'hash'> & {\n  id: string;\n  resource: string | null;\n  resourceId: string | null;\n}",
+            "description": ""
           }
         }
       }
