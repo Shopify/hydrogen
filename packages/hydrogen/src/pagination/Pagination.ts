@@ -1,5 +1,8 @@
 import {createElement, useEffect, useMemo, useState} from 'react';
-import type {Maybe, PageInfo} from '@shopify/hydrogen/storefront-api-types';
+import type {
+  Maybe,
+  PageInfo,
+} from '@shopify/hydrogen-react/storefront-api-types';
 import {flattenConnection} from '@shopify/hydrogen-react';
 import {Link, LinkProps, useNavigation, useLocation} from '@remix-run/react';
 

@@ -12,7 +12,7 @@ Run the following commands to get started working on Hydrogen.
 | ----------------------------------------------- | --------------------------------------------- |
 | `git clone git@github.com:Shopify/hydrogen.git` | Clones the repo to your local computer        |
 | `npm install`                                   | Installs the dependencies with `npm`          |
-| `npm run dev`                                   | Runs the `dev` command in all workspaces      |
+| `npm run dev`                                   | Runs the `dev` command in all packages        |
 | `npm run build`                                 | `build`s packages for production distribution |
 
 ## Context
@@ -22,11 +22,12 @@ Hydrogen is a monorepo built with [Turborepo](https://turbo.build/) and consists
 - `packages/hydrogen`: Opinionated [Remix](https://remix.run) components, hooks, and utilities provided by Hydrogen
 - `packages/hydrogen-react`: Platform-agnostic components, hooks, and utilities. This package is used by Hydrogen and published on its own for use by other React-based frameworks.
 - `packages/create-hydrogen`: Package scripts to create new Hydrogen apps from the command line.
+- `packages/hydrogen-codegen`: GraphQL <> TypeScript code generator for Storefront API queries.
 - `packages/remix-oxygen`: A [Remix](https://remix.run) runtime adapter for [Oxygen](https://shopify.dev/custom-storefronts/oxygen), Shopify’s serverless hosting platform.
-- `packages/cli`: A plugin for the [Shopify CLI](https://github.com/Shopify/cli) to provide specific commands for working on Hydrogen storefronts
+- `packages/cli`: A plugin for the [Shopify CLI](https://github.com/Shopify/cli) to provide specific commands for working on Hydrogen storefronts.
 - `templates`: Full working implementations of Hydrogen storefronts. Used for scaffolding new starter Hydrogen apps, testing, and feature development.
 
-Running `npm run dev` at the root of the monorepo is the most common way to develop in Hydrogen. With this task running, each package will be rebuilt when files change and you can preview the results in the `templates/demo-store` template at (http://localhost:3000)[http://localhost:3000].
+Running `npm run dev` at the root of the monorepo is the most common way to develop in Hydrogen. With this task running, each package will be rebuilt when files change. In a different terminal, change directory to any project inside `templates` and serve with `npm run dev`. The preview URL will be printed in the terminal.
 
 The `Readme.md` files in the directories of individual packages and templates contain more specific information for developing in that workspace.
 
