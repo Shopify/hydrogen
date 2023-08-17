@@ -1,3 +1,4 @@
+import {useNonce} from '@shopify/hydrogen';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
   Links,
@@ -19,7 +20,6 @@ import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
-import {useNonce} from './utils';
 
 // This is important to avoid re-fetching root queries on sub-navigations
 export const shouldRevalidate: ShouldRevalidateFunction = ({
