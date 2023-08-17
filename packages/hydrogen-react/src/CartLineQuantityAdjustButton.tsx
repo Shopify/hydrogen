@@ -66,7 +66,9 @@ export function CartLineQuantityAdjustButton<
       {...passthroughProps}
       onClick={onClick}
       defaultOnClick={handleAdjust}
-      disabled={typeof disabledAttr ? disabledAttr : status !== 'idle'}
+      disabled={
+        typeof disabledAttr !== 'undefined' ? disabledAttr : status !== 'idle'
+      }
     >
       {children}
     </BaseButton>
