@@ -1,5 +1,19 @@
 # @shopify/mini-oxygen
 
+## 2.1.0
+
+### Minor Changes
+
+- c8fa291: move typescript to devDependencies
+
+### Patch Changes
+
+- 21481d0: Update inquirer from 9.2.9 to 9.2.10
+- 9eba0a6: Update eslint from 8.46.0 to 8.47.0
+- 9da7e5c: Update prettier from 3.0.1 to 3.0.2
+- 86c1273: Update vitest from 0.34.1 to 0.34.2
+- 8ac4d8f: Avoid server crash on unhandled promises.
+
 ## 2.0.2
 
 ### Patch Changes
