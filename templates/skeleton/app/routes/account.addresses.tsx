@@ -5,13 +5,13 @@ import {
   redirect,
   type ActionArgs,
   type LoaderArgs,
-  type V2_MetaFunction,
 } from '@shopify/remix-oxygen';
 import {
   Form,
   useActionData,
   useNavigation,
   useOutletContext,
+  type V2_MetaFunction,
 } from '@remix-run/react';
 
 export type ActionResponse = {
