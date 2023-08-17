@@ -1,5 +1,9 @@
-import type {ActionArgs, LoaderArgs} from '@shopify/remix-oxygen';
-import {json, redirect} from '@shopify/remix-oxygen';
+import {
+  json,
+  redirect,
+  type ActionArgs,
+  type LoaderArgs,
+} from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
 
 type ActionResponse = {
