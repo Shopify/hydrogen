@@ -56,7 +56,7 @@ export interface MiniOxygenServerOptions extends MiniOxygenServerHooks {
 }
 
 const SSEUrl = '/__minioxygen_events';
-const autoReloadScript = `<script defer type="application/javascript">
+const autoReloadScriptTemplate = `<script defer type="application/javascript">
 (function () {
   // MiniOxygen Auto Reload
   var source = new EventSource('${SSEUrl}');
@@ -64,7 +64,6 @@ const autoReloadScript = `<script defer type="application/javascript">
   source.onmessage = function(e) { if (e.data === 'connected') {console.log('Listening for events...');} else if (e.data === 'reload') {location.reload();} };
 })();
 </script>`;
-const autoReloadScriptLength = Buffer.byteLength(autoReloadScript);
 
 function createAssetMiddleware({
   assetsDir,
@@ -210,14 +209,27 @@ function createRequestMiddleware(
         headers[key] = val;
       }
 
+      let autoReloadScript = autoReloadScriptTemplate;
+
       const shouldAutoreload =
         autoReload && response.headers.get('content-type') === 'text/html';
 
       if (shouldAutoreload) {
+        const csp = response.headers.get('content-security-policy');
+        if (csp) {
+          const nonce = /'nonce-([^']+)'/.exec(csp)?.[1];
+          if (nonce) {
+            autoReloadScript = autoReloadScript.replace(
+              '<script',
+              `$& nonce="${nonce}"`,
+            );
+          }
+        }
+
         const contentLength = response.headers.get('content-length');
         if (contentLength) {
           headers['content-length'] =
-            parseInt(contentLength, 10) + autoReloadScriptLength;
+            parseInt(contentLength, 10) + Buffer.byteLength(autoReloadScript);
         }
       }
 
