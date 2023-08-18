@@ -1,6 +1,6 @@
 ---
 '@shopify/cli-hydrogen': minor
-'@shopify/demo-store': minor
+'demo-store': minor
 ---
 
 Support Remix Hot Module Replacement (HMR) and Hot Data Revalidation (HDR).
