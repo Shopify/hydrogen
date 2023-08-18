@@ -2,7 +2,7 @@ import path from 'path';
 import fs from 'fs/promises';
 import {outputDebug, outputInfo} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
-import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
@@ -17,7 +17,12 @@ import {
   muteDevLogs,
   muteRemixLogs,
 } from '../../lib/log.js';
-import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
+import {
+  deprecated,
+  commonFlags,
+  flagsToCamelObject,
+  DEFAULT_PORT,
+} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
 import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen.js';
@@ -26,6 +31,8 @@ import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
+import {findPort} from '../../lib/find-port.js';
+import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
@@ -73,7 +80,7 @@ export default class Dev extends Command {
 }
 
 async function runDev({
-  port,
+  port: portFlag = DEFAULT_PORT,
   path: appPath,
   useCodegen = false,
   codegenConfigPath,
@@ -148,14 +155,18 @@ async function runDev({
   let initialBuildDurationMs = 0;
   let initialBuildStartTimeMs = Date.now();
 
+  const liveReload = remixConfig.future.v2_dev
+    ? await setupLiveReload(remixConfig.devServerPort)
+    : undefined;
+
   let miniOxygen: MiniOxygen;
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
     miniOxygen = await startMiniOxygen({
       root,
-      port,
-      watch: true,
+      port: await findPort(portFlag),
+      watch: !liveReload,
       buildPathWorkerFile,
       buildPathClient,
       env: await envPromise,
@@ -197,13 +208,16 @@ async function runDev({
     },
     {
       reloadConfig,
-      onBuildStart() {
+      onBuildStart(ctx) {
         if (!isInitialBuild && !skipRebuildLogs) {
           outputInfo(LOG_REBUILDING);
           console.time(LOG_REBUILT);
         }
+
+        liveReload?.onBuildStart(ctx);
       },
-      async onBuildFinish() {
+      onBuildManifest: liveReload?.onBuildManifest,
+      async onBuildFinish(context, duration, succeeded) {
         if (isInitialBuild) {
           await copyingFiles;
           initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
@@ -214,19 +228,25 @@ async function runDev({
           if (!miniOxygen) console.log(''); // New line
         }
 
-        if (!miniOxygen) {
-          if (!(await serverBundleExists())) {
-            return renderFatalError({
-              name: 'BuildError',
-              type: 0,
-              message:
-                'MiniOxygen cannot start because the server bundle has not been generated.',
-              tryMessage:
-                'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
-            });
+        if (!miniOxygen && !(await serverBundleExists())) {
+          return renderFatalError({
+            name: 'BuildError',
+            type: 0,
+            message:
+              'MiniOxygen cannot start because the server bundle has not been generated.',
+            tryMessage:
+              'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
+          });
+        }
+
+        if (succeeded) {
+          if (!miniOxygen) {
+            await safeStartMiniOxygen();
+          } else if (liveReload) {
+            await miniOxygen.reload({worker: true});
           }
 
-          await safeStartMiniOxygen();
+          liveReload?.onAppReady(context);
         }
       },
       async onFileCreated(file: string) {
