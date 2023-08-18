@@ -127,6 +127,31 @@ describe('start()', () => {
     await miniOxygen.close();
   });
 
+  it('adds the nonce found in response headers to the auto-reload scripts', async () => {
+    const nonce = 'd1406e0c6f5f820878cf3f3af597365b';
+    const miniOxygen = await startServer({
+      ...defaultOptions,
+      log: mockLogger,
+      port: testPort,
+      autoReload: true,
+      script:
+        `export default { fetch: () =>` +
+        `new Response("<div>foo</div>", {headers: {` +
+        `"content-type": "text/html",` +
+        `"content-security-policy": "base-uri 'self'; default-src 'self' 'nonce-${nonce}' https://cdn.shopify.com; frame-ancestors none; style-src 'self' 'unsafe-inline' https://cdn.shopify.com"` +
+        `}}) }`,
+    });
+
+    let receivedData;
+    await sendRequest(testPort, '/').then((response: any) => {
+      receivedData = response.data;
+    });
+
+    expect(receivedData).toContain(`<script nonce="${nonce}" `);
+
+    await miniOxygen.close();
+  });
+
   it('proxies requests to a proxy server', async () => {
     const mockLogger = vi.fn();
     const proxyPort = 1338;
