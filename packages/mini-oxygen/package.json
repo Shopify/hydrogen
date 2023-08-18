@@ -48,7 +48,7 @@
   },
   "devDependencies": {
     "@changesets/cli": "^2.24.3",
-    "@shopify/eslint-plugin": "^42.0.1",
+    "@shopify/eslint-plugin": "^43.0.0",
     "@shopify/prettier-config": "^1.1.2",
     "@types/body-parser": "1.19.2",
     "@types/connect": "^3.4.35",
