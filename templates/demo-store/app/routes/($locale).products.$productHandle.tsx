@@ -1,4 +1,4 @@
-import {useRef, Suspense} from 'react';
+import {useRef, Suspense, useEffect} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
 import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Await} from '@remix-run/react';
@@ -30,6 +30,7 @@ import {
   Link,
   AddToCartButton,
   Button,
+  Playground,
 } from '~/components';
 import {getExcerpt} from '~/lib/utils';
 import {seoPayload} from '~/lib/seo.server';
@@ -110,6 +111,7 @@ export async function loader({params, request, context}: LoaderArgs) {
       totalValue: parseFloat(selectedVariant.price.amount),
     },
     seo,
+    portableWalletsFqdn: context.env.SPIN_PORTABLE_WALLETS_SERVICE_FQDN,
   });
 }
 
@@ -212,7 +214,8 @@ export function ProductForm({
 }: {
   variants: ProductVariantFragmentFragment[];
 }) {
-  const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
+  const {product, analytics, storeDomain, portableWalletsFqdn} =
+    useLoaderData<typeof loader>();
 
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -381,6 +384,7 @@ export function ProductForm({
                 storeDomain={storeDomain}
               />
             )}
+            <Playground portableWalletsFqdn={portableWalletsFqdn} />
           </div>
         )}
       </div>
