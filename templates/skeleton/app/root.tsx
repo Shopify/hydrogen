@@ -125,6 +125,7 @@ export default function App() {
 export function ErrorBoundary() {
   const error = useRouteError();
   const [root] = useMatches();
+  const nonce = useNonce();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
 
@@ -155,9 +156,9 @@ export function ErrorBoundary() {
             )}
           </div>
         </Layout>
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
+        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
