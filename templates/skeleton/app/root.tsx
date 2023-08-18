@@ -5,6 +5,7 @@ import {
   Outlet,
   Scripts,
   useCatch,
+  LiveReload,
   useMatches,
   useRouteError,
   useLoaderData,
@@ -93,6 +94,7 @@ export default function App() {
         </Layout>
         <ScrollRestoration />
         <Scripts />
+        <LiveReload />
       </body>
     </html>
   );
@@ -133,6 +135,7 @@ export function ErrorBoundary() {
         </Layout>
         <ScrollRestoration />
         <Scripts />
+        <LiveReload />
       </body>
     </html>
   );
