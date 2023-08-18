@@ -2,7 +2,11 @@ import type {EntryContext} from '@shopify/remix-oxygen';
 import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
-import {generateNonce, CSPProvider, createCSPHeader} from '@shopify/hydrogen';
+import {
+  generateNonce,
+  HydrogenServerProvider,
+  createCSPHeader,
+} from '@shopify/hydrogen';
 
 export default async function handleRequest(
   request: Request,
@@ -12,9 +16,9 @@ export default async function handleRequest(
 ) {
   const nonce = generateNonce();
   const body = await renderToReadableStream(
-    <CSPProvider value={nonce}>
+    <HydrogenServerProvider nonce={nonce}>
       <RemixServer context={remixContext} url={request.url} />
-    </CSPProvider>,
+    </HydrogenServerProvider>,
     {
       nonce,
       signal: request.signal,
