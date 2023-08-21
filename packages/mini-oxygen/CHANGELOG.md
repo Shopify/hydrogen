@@ -1,5 +1,13 @@
 # @shopify/mini-oxygen
 
+## 2.1.1
+
+### Patch Changes
+
+- 189af3d: Update eslint-config-prettier from 8.10.0 to 9.0.0
+- 9683ef6: Update @shopify/eslint-plugin from 42.1.0 to 43.0.0
+- 907b6f2: Add the nonce found in response headers to the auto-reload script.
+
 ## 2.1.0
 
 ### Minor Changes
