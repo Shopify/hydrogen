@@ -45,8 +45,10 @@
     "fs-extra": "^11.1.0",
     "get-port": "^7.0.0",
     "gunzip-maybe": "^1.4.2",
+    "javascript-time-ago": "^2.5.9",
     "prettier": "^2.8.4",
     "recursive-readdir": "^2.2.3",
+    "semver": "^7.5.4",
     "tar-fs": "^2.1.1",
     "typescript": "^4.9.5"
   },

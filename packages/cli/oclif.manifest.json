@@ -492,6 +492,24 @@
       },
       "args": {}
     },
+    "hydrogen:upgrade": {
+      "id": "hydrogen:upgrade",
+      "description": "Upgrade Remix and Hydrogen.",
+      "strict": true,
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "aliases": [],
+      "flags": {
+        "path": {
+          "name": "path",
+          "type": "option",
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "multiple": false
+        }
+      },
+      "args": {}
+    },
     "hydrogen:env:list": {
       "id": "hydrogen:env:list",
       "description": "List the environments on your linked Hydrogen storefront.",
