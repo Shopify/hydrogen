@@ -7,6 +7,7 @@ import type {RemixConfig} from '@remix-run/dev/dist/config.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
+import {muteRemixLogs} from './log.js';
 
 export type {RemixConfig, ServerMode};
 
@@ -36,6 +37,7 @@ export async function getRemixConfig(
   root: string,
   mode = process.env.NODE_ENV as ServerMode,
 ) {
+  await muteRemixLogs();
   const {readConfig} = await import('@remix-run/dev/dist/config.js');
   const config = await readConfig(root, mode);
 
