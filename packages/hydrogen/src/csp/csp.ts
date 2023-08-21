@@ -7,12 +7,14 @@ export const useNonce = () => {
 };
 
 export function createCSPHeader(
-  nonce: string,
+  nonce?: string,
   directives: Record<string, string[] | string | boolean> = {},
 ) {
   const defaultDirectives: Record<string, string[] | string | boolean> = {
     baseUri: ["'self'"],
-    defaultSrc: ["'self'", `'nonce-${nonce}'`, 'https://cdn.shopify.com'],
+    defaultSrc: nonce
+      ? ["'self'", `'nonce-${nonce}'`, 'https://cdn.shopify.com']
+      : ["'unsafe-inline'", 'https://cdn.shopify.com'],
     frameAncestors: ['none'],
     styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'],
   };
