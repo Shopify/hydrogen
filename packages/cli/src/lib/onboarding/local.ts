@@ -49,7 +49,8 @@ export async function setupLocalStarterTemplate(
         message: 'Connect to Shopify',
         choices: [
           {
-            label: 'Use sample data from Mock.shop (no login required)',
+            label:
+              'Use sample data from mock.shop (set up shop connection later)',
             value: 'mock',
           },
           {label: 'Link your Shopify account', value: 'link'},
