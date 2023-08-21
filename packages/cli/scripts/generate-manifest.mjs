@@ -4,13 +4,14 @@
  * https://github.com/oclif/oclif/blob/main/src/commands/manifest.ts#L76
  */
 
-import path from 'path';
-import {Plugin} from '@oclif/core';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
 import {writeFile, access} from 'node:fs/promises';
+import {Plugin} from '@oclif/core';
 
 console.log('\n', 'Generating Oclif manifest...');
 
-const cwd = new URL('..', import.meta.url).pathname;
+const cwd = fileURLToPath(new URL('..', import.meta.url));
 
 if (
   !(await access(path.join(cwd, 'dist', 'commands', 'hydrogen'))
