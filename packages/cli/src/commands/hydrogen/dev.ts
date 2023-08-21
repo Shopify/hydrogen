@@ -11,12 +11,7 @@ import {
   getRemixConfig,
   type ServerMode,
 } from '../../lib/remix-config.js';
-import {
-  createRemixLogger,
-  enhanceH2Logs,
-  muteDevLogs,
-  muteRemixLogs,
-} from '../../lib/log.js';
+import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
 import {
   deprecated,
   commonFlags,
@@ -101,7 +96,6 @@ async function runDev({
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'development';
 
   muteDevLogs();
-  await muteRemixLogs();
 
   if (debug) (await import('node:inspector')).open();
 
