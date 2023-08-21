@@ -494,7 +494,7 @@
     },
     "hydrogen:upgrade": {
       "id": "hydrogen:upgrade",
-      "description": "Upgrade Remix and Hydrogen.",
+      "description": "Upgrade Remix and Hydrogen npm dependencies.",
       "strict": true,
       "pluginName": "@shopify/cli-hydrogen",
       "pluginAlias": "@shopify/cli-hydrogen",

@@ -21,10 +21,6 @@ export type RenderCommandProps = {
 
 type Dependencies = Record<string, string>;
 
-type DependencyMap = {
-  [key: string]: string;
-};
-
 type Choice<T> = {
   label: string;
   value: T;
@@ -55,7 +51,7 @@ type Cmd = {
 };
 
 export default class Upgrade extends Command {
-  static description = 'Upgrade Remix and Hydrogen.';
+  static description = 'Upgrade Remix and Hydrogen npm dependencies.';
 
   static flags = {
     path: commonFlags.path,
@@ -212,7 +208,7 @@ async function getRequiredHydrogenCli({
     return {
       version: currentHydrogenCliVersion,
       name: '@shopify/cli-hydrogen',
-      type: 'devDependency',
+      type: getDependencyType('@shopify/cli-hydrogen'),
     };
   }
 
@@ -275,7 +271,7 @@ async function getRequiredHydrogenCli({
   return {
     version: requiredCliVersion,
     name: '@shopify/cli-hydrogen',
-    type: 'devDependency',
+    type: getDependencyType('@shopify/cli-hydrogen'),
   };
 }
 
@@ -299,7 +295,7 @@ async function getRequiredRemixOxygen({
   return {
     version: pinnedOxygenVersion,
     name: '@shopify/remix-oxygen',
-    type: 'devDependency',
+    type: getDependencyType('@shopify/remix-oxygen'),
   };
 }
 
@@ -909,9 +905,9 @@ function _promptDependencyUpdate(timeAgo: TimeAgo) {
 function getDependencyType(packageName: SupportedPackage) {
   switch (packageName) {
     case '@shopify/hydrogen':
+    case '@shopify/remix-oxygen':
       return 'dependency';
 
-    case '@shopify/remix-oxygen':
     case '@shopify/oxygen-workers-types':
     case '@shopify/cli-hydrogen':
     case '@shopify/cli':
