@@ -65,7 +65,8 @@ export default class Upgrade extends Command {
 }
 
 /**
- * Upgrade hydrogen, cli-hydrogen, remix-oxygen, oxygen-workers-types, prettier-config, and @shopify/cli
+ * Upgrade hydrogen, cli-hydrogen, remix-oxygen, oxygen-workers-types, prettier-config,
+ * @shopify/cli, remix-run/react and remix-run/dev npm dependencies.
  * @param appPath - Path to the Hydrogen app
  * @returns void
  */
@@ -99,29 +100,9 @@ async function upgrade({appPath}: RenderCommandProps) {
   await displayUpgradeSummary({packageJsonPath, packagesToUpdate});
 }
 
-async function initTimeAgo() {
-  let locale = Intl.DateTimeFormat().resolvedOptions().locale;
-  if (!locale) {
-    locale = 'en';
-  } else {
-    locale = locale.split('-')[0] || 'en';
-  }
-
-  let {default: userLocale} = await import(
-    `javascript-time-ago/locale/${locale}`
-  );
-
-  if (!userLocale) {
-    const {default: en} = await import('javascript-time-ago/locale/en');
-    userLocale = en;
-  }
-
-  TimeAgo.addDefaultLocale(userLocale);
-  const timeAgo = new TimeAgo(locale);
-
-  return timeAgo;
-}
-
+/**
+ * Display the current package versions found in the package.json
+ */
 function displayCurrentVersions({
   dependencies,
   devDependencies,
@@ -275,6 +256,10 @@ async function getRequiredHydrogenCli({
   };
 }
 
+/**
+ * Given a Hydrogen-cli version we want to upgrade to, it returns the minimum
+ * @shopify/remix-oxygen version that supports the Hydrogen-cli version
+ */
 async function getRequiredRemixOxygen({
   selectedHydrogenCli,
 }: {
@@ -1013,4 +998,30 @@ async function upgradePackages({cmd, appPath}: {cmd: Cmd; appPath: string}) {
   ];
 
   await renderTasks(tasks);
+}
+
+/**
+ * Initialize the timeAgo library with the user's locale
+ */
+async function initTimeAgo() {
+  let locale = Intl.DateTimeFormat().resolvedOptions().locale;
+  if (!locale) {
+    locale = 'en';
+  } else {
+    locale = locale.split('-')[0] || 'en';
+  }
+
+  let {default: userLocale} = await import(
+    `javascript-time-ago/locale/${locale}`
+  );
+
+  if (!userLocale) {
+    const {default: en} = await import('javascript-time-ago/locale/en');
+    userLocale = en;
+  }
+
+  TimeAgo.addDefaultLocale(userLocale);
+  const timeAgo = new TimeAgo(locale);
+
+  return timeAgo;
 }
