@@ -49,7 +49,8 @@ export async function setupLocalStarterTemplate(
         message: 'Connect to Shopify',
         choices: [
           {
-            label: 'Use sample data from Mock.shop (no login required)',
+            label:
+              'Use sample data from mock.shop (You can connect a Shopify account later)',
             value: 'mock',
           },
           {label: 'Link your Shopify account', value: 'link'},
@@ -136,7 +137,9 @@ export async function setupLocalStarterTemplate(
     ];
 
     const envLeadingComment =
-      '# The variables added in this file are only available locally in MiniOxygen\n';
+      '# The variables added in this file are only available locally in MiniOxygen.\n' +
+      '# Run `h2 link` to also inject environment variables from your storefront,\n' +
+      '# or `h2 env pull` to populate this file.';
 
     if (storefrontInfo && createStorefrontPromise) {
       promises.push(
