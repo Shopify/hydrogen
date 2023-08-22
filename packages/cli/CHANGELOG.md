@@ -1,5 +1,96 @@
 # @shopify/cli-hydrogen
 
+## 5.2.0
+
+### Minor Changes
+
+- Support Remix Hot Module Replacement (HMR) and Hot Data Revalidation (HDR). ([#1187](https://github.com/Shopify/hydrogen/pull/1187)) by [@frandiox](https://github.com/frandiox)
+
+  Start using it with the following changes to your project:
+
+  1. Upgrade to the latest Hydrogen version and Remix 1.19.1.
+
+  2. Enable the v2 dev server in `remix.config.js`:
+
+  ```diff
+  // ...
+  future: {
+  + v2_dev: true,
+    v2_meta: true,
+    v2_headers: true,
+    // ...
+  }
+  ```
+
+  3. Add Remix' `<LiveReload />` component if you don't have it to your `root.jsx` or `root.tsx` file:
+
+  ```diff
+  import {
+    Outlet,
+    Scripts,
+  + LiveReload,
+    ScrollRestoration,
+  } from '@remix-run/react';
+
+  // ...
+
+  export default function App() {
+    // ...
+
+    return (
+      <html>
+        <head>
+         {/* ...  */}
+        </head>
+        <body>
+          <Outlet />
+          <ScrollRestoration />
+          <Scripts />
+  +       <LiveReload />
+        </body>
+      </html>
+    );
+  }
+
+  export function ErrorBoundary() {
+    // ...
+
+    return (
+      <html>
+        <head>
+          {/* ... */}
+        </head>
+        <body>
+          Error!
+          <Scripts />
+  +       <LiveReload />
+        </body>
+      </html>
+    );
+  }
+  ```
+
+### Patch Changes
+
+- Avoid development server crash on unhandled promise rejection. ([#1244](https://github.com/Shopify/hydrogen/pull/1244)) by [@frandiox](https://github.com/frandiox)
+
+- Fix build command when `public` directory is missing. ([#1224](https://github.com/Shopify/hydrogen/pull/1224)) by [@frandiox](https://github.com/frandiox)
+
+- Use nonce from CSP header in MiniOxygen's auto-reload script. ([#1251](https://github.com/Shopify/hydrogen/pull/1251)) by [@frandiox](https://github.com/frandiox)
+
+- Add default exported route to enable the error to be caught in the root.tsx ErrorBoundary ([#1215](https://github.com/Shopify/hydrogen/pull/1215)) by [@josh-sanger](https://github.com/josh-sanger)
+
+- Improve error handling when failing to get remote environment variables. ([#1225](https://github.com/Shopify/hydrogen/pull/1225)) by [@frandiox](https://github.com/frandiox)
+
+- Fix GraphQL Codegen throwing error related to Git on Windows. ([#1253](https://github.com/Shopify/hydrogen/pull/1253)) by [@frandiox](https://github.com/frandiox)
+
+- Add shouldRevalidate export to limit root loaders revalidation on mutations only ([#1237](https://github.com/Shopify/hydrogen/pull/1237)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Removed quantityAvailable field from skeleton PDP graphql query so that it works with default Storefront API permissions. ([#1236](https://github.com/Shopify/hydrogen/pull/1236)) by [@abecciu](https://github.com/abecciu)
+
+- Updated dependencies [[`e9e1736a`](https://github.com/Shopify/hydrogen/commit/e9e1736ace6bd981e8109e38402eb405f7c865c1), [`1a0e858d`](https://github.com/Shopify/hydrogen/commit/1a0e858d94ea7d14f3f37ca32d288b33436038b0)]:
+  - @shopify/hydrogen-react@2023.7.2
+
 ## 5.1.2
 
 ### Patch Changes
