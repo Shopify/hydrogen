@@ -1,5 +1,85 @@
 # demo-store
 
+## 2.1.0
+
+### Minor Changes
+
+- Support Remix Hot Module Replacement (HMR) and Hot Data Revalidation (HDR). ([#1187](https://github.com/Shopify/hydrogen/pull/1187)) by [@frandiox](https://github.com/frandiox)
+
+  Start using it with the following changes to your project:
+
+  1. Upgrade to the latest Hydrogen version and Remix 1.19.1.
+
+  2. Enable the v2 dev server in `remix.config.js`:
+
+  ```diff
+  // ...
+  future: {
+  + v2_dev: true,
+    v2_meta: true,
+    v2_headers: true,
+    // ...
+  }
+  ```
+
+  3. Add Remix' `<LiveReload />` component if you don't have it to your `root.jsx` or `root.tsx` file:
+
+  ```diff
+  import {
+    Outlet,
+    Scripts,
+  + LiveReload,
+    ScrollRestoration,
+  } from '@remix-run/react';
+
+  // ...
+
+  export default function App() {
+    // ...
+
+    return (
+      <html>
+        <head>
+         {/* ...  */}
+        </head>
+        <body>
+          <Outlet />
+          <ScrollRestoration />
+          <Scripts />
+  +       <LiveReload />
+        </body>
+      </html>
+    );
+  }
+
+  export function ErrorBoundary() {
+    // ...
+
+    return (
+      <html>
+        <head>
+          {/* ... */}
+        </head>
+        <body>
+          Error!
+          <Scripts />
+  +       <LiveReload />
+        </body>
+      </html>
+    );
+  }
+  ```
+
+### Patch Changes
+
+- Performance optimization on product page ([#1256](https://github.com/Shopify/hydrogen/pull/1256)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add shouldRevalidate export to limit root loaders revalidation on mutations only ([#1237](https://github.com/Shopify/hydrogen/pull/1237)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`a06b5093`](https://github.com/Shopify/hydrogen/commit/a06b509339bb749a27f5dcf3555c7c2d6ebde3af), [`d053978d`](https://github.com/Shopify/hydrogen/commit/d053978dc49a12651a5c7c15efd543884b9f03db), [`9fcfc500`](https://github.com/Shopify/hydrogen/commit/9fcfc5000d4df6745ad4c0a05a4cb6d039feed71), [`ec21cfd6`](https://github.com/Shopify/hydrogen/commit/ec21cfd64d82d3d2d2ee2ee54cf93d372bc5d927), [`867866d1`](https://github.com/Shopify/hydrogen/commit/867866d18cba0324c240c15422c890ccb4fc1546), [`bdac4c22`](https://github.com/Shopify/hydrogen/commit/bdac4c2253c45772da0b6b475703c3d97e599cbb), [`d896c76b`](https://github.com/Shopify/hydrogen/commit/d896c76be1608f6023dab40625a8cb663e00cb2a), [`46d5f8ff`](https://github.com/Shopify/hydrogen/commit/46d5f8ff279dd7e18fa817eeb04206e08122fced), [`632a7a38`](https://github.com/Shopify/hydrogen/commit/632a7a385f13a987990f554b907dfb6f421f1351), [`e536ae04`](https://github.com/Shopify/hydrogen/commit/e536ae04641c41b56580f69dab454c20f2931cbf)]:
+  - @shopify/cli-hydrogen@5.2.0
+  - @shopify/hydrogen@2023.7.3
+
 ## 2.0.2
 
 ### Patch Changes
