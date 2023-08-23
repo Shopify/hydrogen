@@ -299,7 +299,7 @@ export async function generateProjectFile(
 
     // If the project is not using TS, we need to compile the template to JS.
     if (!typescript) {
-      templateContent = transpileFile(templateContent, transpilerOptions);
+      templateContent = await transpileFile(templateContent, transpilerOptions);
     }
 
     // If the command was run with an adapter flag, we replace the default
@@ -314,7 +314,7 @@ export async function generateProjectFile(
     // We format the template content with Prettier.
     // TODO use @shopify/cli-kit's format function once it supports TypeScript
     // templateContent = await file.format(templateContent, destinationPath);
-    templateContent = formatCode(
+    templateContent = await formatCode(
       templateContent,
       formatOptions,
       destinationPath,
