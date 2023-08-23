@@ -11,7 +11,7 @@ import {
 } from '@shopify/hydrogen-codegen';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
 import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
-import {joinPath} from '@shopify/cli-kit/node/path';
+import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {spawn} from 'node:child_process';
 import {fileURLToPath} from 'node:url';
@@ -161,6 +161,7 @@ function generateDefaultConfig(
   forceSfapiVersion?: string,
 ): LoadCodegenConfigResult {
   const tsDefaultGlob = '*!(*.d).{ts,tsx}'; // No d.ts files
+  const appDirRelative = relativePath(rootDirectory, appDirectory);
 
   return {
     filepath: 'virtual:codegen',
@@ -172,8 +173,8 @@ function generateDefaultConfig(
           preset,
           schema,
           documents: [
-            joinPath(rootDirectory, tsDefaultGlob), // E.g. ./server.ts
-            joinPath(appDirectory, '**', tsDefaultGlob), // E.g. app/routes/_index.tsx
+            tsDefaultGlob, // E.g. ./server.ts
+            joinPath(appDirRelative, '**', tsDefaultGlob), // E.g. app/routes/_index.tsx
           ],
 
           ...(!!forceSfapiVersion && {

@@ -1,4 +1,3 @@
-import {vi} from 'vitest';
 import {flattenConnection} from './flatten-connection.js';
 import {getPrice} from './Money.test.helpers.js';
 import type {
@@ -127,16 +126,16 @@ export function getCartWithActionsMock(
   mockOptions?: PartialDeep<CartWithActions>,
 ): CartWithActions {
   return {
-    buyerIdentityUpdate: vi.fn(),
-    cartAttributesUpdate: vi.fn(),
-    cartCreate: vi.fn(),
+    buyerIdentityUpdate: () => undefined,
+    cartAttributesUpdate: () => undefined,
+    cartCreate: () => undefined,
     cartFragment: '',
     checkoutUrl: '',
-    discountCodesUpdate: vi.fn(),
-    linesAdd: vi.fn(),
-    linesRemove: vi.fn(),
-    linesUpdate: vi.fn(),
-    noteUpdate: vi.fn(),
+    discountCodesUpdate: () => undefined,
+    linesAdd: () => undefined,
+    linesRemove: () => undefined,
+    linesUpdate: () => undefined,
+    noteUpdate: () => undefined,
     status: 'idle' as const,
     totalQuantity: 0,
     ...mockOptions,
