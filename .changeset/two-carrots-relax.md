@@ -4,4 +4,4 @@
 '@shopify/hydrogen': patch
 ---
 
-Add a default content security policy
+Add functionality for creating a Content Security Policy
