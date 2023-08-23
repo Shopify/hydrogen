@@ -8,6 +8,7 @@ import type {
   CartLine,
   CartLineUpdateInput,
 } from '@shopify/hydrogen/storefront-api-types';
+import {useFetchers} from '@remix-run/react';
 
 import {
   Button,
@@ -229,6 +230,50 @@ function CartSummary({
   );
 }
 
+function useOptimisticDataFromActions(identifier: string | undefined | null) {
+  const fetchers = useFetchers();
+
+  if (!identifier) return;
+  const data: Record<string, unknown> = {};
+
+  for (const fetcher of fetchers) {
+    const formData = fetcher.submission?.formData;
+    if (formData && formData.get('optimistic-identifier') === identifier) {
+      try {
+        if (formData.has('optimistic-data')) {
+          const dataInForm: unknown = JSON.parse(
+            String(formData.get('optimistic-data')),
+          );
+          Object.assign(data, dataInForm);
+        }
+      } catch {
+        // do nothing
+      }
+    }
+  }
+  return Object.keys(data).length ? data : undefined;
+}
+
+function OptimisticInput({
+  id,
+  data,
+}: {
+  id: string | undefined;
+  data: Record<string, unknown>;
+}) {
+  if (!id) return null;
+  return (
+    <>
+      <input type="hidden" name="optimistic-identifier" value={id} />
+      <input
+        type="hidden"
+        name="optimistic-data"
+        value={JSON.stringify(data)}
+      />
+    </>
+  );
+}
+
 function CartLineItem({line}: {line: CartLine}) {
   if (!line?.id) return null;
 
@@ -306,15 +351,24 @@ function ItemRemoveButton({lineIds}: {lineIds: CartLine['id'][]}) {
 }
 
 function CartLineQuantityAdjust({line}: {line: CartLine}) {
+  // Create a unique optimistic id
+  const optimisticId = line?.id ? `cart-line-${line?.id}` : undefined;
+
+  // Get optimistic data from useFetchers
+  const optimisticData = useOptimisticDataFromActions(optimisticId);
+  const optimisticQuantity = optimisticData
+    ? (optimisticData.quantity as number)
+    : line?.quantity;
+
   if (!line || typeof line?.quantity === 'undefined') return null;
   const {id: lineId, quantity} = line;
-  const prevQuantity = Number(Math.max(0, quantity - 1).toFixed(0));
-  const nextQuantity = Number((quantity + 1).toFixed(0));
+  const prevQuantity = Number(Math.max(0, optimisticQuantity - 1).toFixed(0));
+  const nextQuantity = Number((optimisticQuantity + 1).toFixed(0));
 
   return (
     <>
       <label htmlFor={`quantity-${lineId}`} className="sr-only">
-        Quantity, {quantity}
+        Quantity, {optimisticQuantity}
       </label>
       <div className="flex items-center border rounded">
         <UpdateCartButton lines={[{id: lineId, quantity: prevQuantity}]}>
@@ -323,14 +377,15 @@ function CartLineQuantityAdjust({line}: {line: CartLine}) {
             aria-label="Decrease quantity"
             className="w-10 h-10 transition text-primary/50 hover:text-primary disabled:text-primary/10"
             value={prevQuantity}
-            disabled={quantity <= 1}
+            disabled={optimisticQuantity <= 1}
           >
             <span>&#8722;</span>
           </button>
+          <OptimisticInput id={optimisticId} data={{quantity: prevQuantity}} />
         </UpdateCartButton>
 
         <div className="px-2 text-center" data-test="item-quantity">
-          {quantity}
+          {optimisticQuantity}
         </div>
 
         <UpdateCartButton lines={[{id: lineId, quantity: nextQuantity}]}>
@@ -342,6 +397,7 @@ function CartLineQuantityAdjust({line}: {line: CartLine}) {
           >
             <span>&#43;</span>
           </button>
+          <OptimisticInput id={optimisticId} data={{quantity: nextQuantity}} />
         </UpdateCartButton>
       </div>
     </>
