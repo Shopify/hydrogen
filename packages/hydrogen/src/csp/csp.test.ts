@@ -1,33 +1,52 @@
-import {createCSPHeader, useNonce} from './csp';
+import {createContentSecurityPolicy, useNonce} from './csp';
 import {createElement} from 'react';
-import {describe, it, expect, afterEach} from 'vitest';
-import {HydrogenServerProvider} from '../HydrogenServerProvider';
+import {describe, it, expect, afterEach, vi} from 'vitest';
 import {cleanup, render} from '@testing-library/react';
 
-describe('createCSPHeader', () => {
-  it('should create a default CSP header', () => {
-    expect(createCSPHeader()).toBe(
-      `base-uri 'self'; default-src 'unsafe-inline' https://cdn.shopify.com; frame-ancestors none; style-src 'self' 'unsafe-inline' https://cdn.shopify.com`,
-    );
-  });
+vi.mock('./nonce.js', () => {
+  return {
+    generateNonce() {
+      return 'somenonce';
+    },
+  };
+});
 
-  it('should add a nonce', () => {
-    expect(createCSPHeader('somenonce')).toBe(
+afterEach(() => {
+  vi.resetAllMocks();
+});
+
+describe('createContentSecurityPolicy', () => {
+  it('creates default policy', () => {
+    expect(createContentSecurityPolicy().header).toBe(
       `base-uri 'self'; default-src 'self' 'nonce-somenonce' https://cdn.shopify.com; frame-ancestors none; style-src 'self' 'unsafe-inline' https://cdn.shopify.com`,
     );
   });
 
-  it('should add a nonce', () => {
+  it('adds custom directives', () => {
     expect(
-      createCSPHeader('somenonce', {
+      createContentSecurityPolicy({
         styleSrc: [
           "'self'",
           'https://cdn.shopify.com',
           'https://some-custom-css.cdn',
         ],
-      }),
+      }).header,
     ).toBe(
       `base-uri 'self'; default-src 'self' 'nonce-somenonce' https://cdn.shopify.com; frame-ancestors none; style-src 'self' https://cdn.shopify.com https://some-custom-css.cdn`,
+    );
+  });
+
+  it('adds nonce to custom directives', () => {
+    expect(
+      createContentSecurityPolicy({
+        scriptSrc: [
+          "'self'",
+          'https://cdn.shopify.com',
+          'https://some-custom-css.cdn',
+        ],
+      }).header,
+    ).toBe(
+      `base-uri 'self'; default-src 'self' 'nonce-somenonce' https://cdn.shopify.com; frame-ancestors none; style-src 'self' 'unsafe-inline' https://cdn.shopify.com; script-src 'self' https://cdn.shopify.com https://some-custom-css.cdn 'nonce-somenonce'`,
     );
   });
 });
@@ -38,9 +57,9 @@ describe('useNonce', () => {
   });
 
   it("get's the nonce", () => {
+    const {NonceProvider} = createContentSecurityPolicy();
     const {asFragment} = render(
-      createElement(HydrogenServerProvider, {
-        nonce: 'somenonce',
+      createElement(NonceProvider, {
         children: createElement(SomeComponent),
       }),
     );

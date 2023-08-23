@@ -1,0 +1,37 @@
+import {ReferenceEntityTemplateSchema} from '@shopify/generate-docs';
+
+const data: ReferenceEntityTemplateSchema = {
+  name: 'useNonce',
+  category: 'hooks',
+  isVisualComponent: false,
+  related: [],
+  description: `The \`useNonce\` hook returns the content security policy nonce. Use the hook to manually add a nonce to third party scripts. The \`Script\` component automatically does this for you. Note, the nonce should never be available in the client, and should always return undefined in the browser. If it is returning undefined on the server, make sure that you have a \`HydrogenProvider\` component with a nonce passed to it.`,
+  type: 'hook',
+  defaultExample: {
+    description: 'I am the default example',
+    codeblock: {
+      tabs: [
+        {
+          title: 'JavaScript',
+          code: './useNonce.example.jsx',
+          language: 'jsx',
+        },
+        {
+          title: 'TypeScript',
+          code: './useNonce.example.tsx',
+          language: 'tsx',
+        },
+      ],
+      title: 'Example code',
+    },
+  },
+  definitions: [
+    {
+      title: 'Props',
+      type: 'UseNonceGeneratedType',
+      description: '',
+    },
+  ],
+};
+
+export default data;

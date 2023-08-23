@@ -53,8 +53,7 @@ export type {
   VariantOptionValue,
 } from './product/VariantSelector';
 
-export {createCSPHeader, generateNonce, useNonce} from './csp/csp';
-export {HydrogenServerProvider} from './HydrogenServerProvider';
+export {createContentSecurityPolicy, useNonce} from './csp/csp';
 export {Script} from './csp/Script';
 
 export {

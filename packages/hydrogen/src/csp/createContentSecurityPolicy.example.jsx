@@ -1,21 +1,23 @@
-import type {EntryContext} from '@shopify/remix-oxygen';
 import {RemixServer} from '@remix-run/react';
 import isbot from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
-import {createContentSecurityPolicy} from '@shopify/hydrogen';
+import {
+  generateNonce,
+  HydrogenServerProvider,
+  createCSPHeader,
+} from '@shopify/hydrogen';
 
 export default async function handleRequest(
-  request: Request,
-  responseStatusCode: number,
-  responseHeaders: Headers,
-  remixContext: EntryContext,
+  request,
+  responseStatusCode,
+  responseHeaders,
+  remixContext,
 ) {
-  const {nonce, header, NonceProvider} = createContentSecurityPolicy();
-
+  const nonce = generateNonce();
   const body = await renderToReadableStream(
-    <NonceProvider>
+    <HydrogenServerProvider nonce={nonce}>
       <RemixServer context={remixContext} url={request.url} />
-    </NonceProvider>,
+    </HydrogenServerProvider>,
     {
       nonce,
       signal: request.signal,
@@ -32,7 +34,17 @@ export default async function handleRequest(
   }
 
   responseHeaders.set('Content-Type', 'text/html');
-  responseHeaders.set('Content-Security-Policy', header);
+  responseHeaders.set(
+    'Content-Security-Policy',
+    createCSPHeader(nonce, {
+      // pass a custom directive to load content from a third party domain
+      styleSrc: [
+        "'self'",
+        'https://cdn.shopify.com',
+        'https://some-custom-css.cdn',
+      ],
+    }),
+  );
 
   return new Response(body, {
     headers: responseHeaders,

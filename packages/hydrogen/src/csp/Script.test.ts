@@ -1,8 +1,8 @@
 import {createElement} from 'react';
 import {Script} from './Script';
-import {HydrogenServerProvider} from '../HydrogenServerProvider';
-import {describe, it, expect, afterEach, vi, afterAll} from 'vitest';
+import {describe, it, expect, afterEach} from 'vitest';
 import {cleanup, render} from '@testing-library/react';
+import {NonceProvider} from './csp';
 
 describe('<Script />', () => {
   afterEach(() => {
@@ -11,8 +11,8 @@ describe('<Script />', () => {
 
   it('should add a nonce to the script', () => {
     const {asFragment} = render(
-      createElement(HydrogenServerProvider, {
-        nonce: 'somenonce',
+      createElement(NonceProvider, {
+        value: 'somenonce',
         children: createElement(Script, {src: 'https://some-src.js'}),
       }),
     );
