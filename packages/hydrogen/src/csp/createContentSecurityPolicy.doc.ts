@@ -4,7 +4,18 @@ const data: ReferenceEntityTemplateSchema = {
   name: 'createContentSecurityPolicy',
   category: 'utilities',
   isVisualComponent: false,
-  related: [],
+  related: [
+    {
+      name: 'useNonce',
+      type: 'hooks',
+      url: '/docs/api/hydrogen/2023-07/hooks/usenonce',
+    },
+    {
+      name: 'Script',
+      type: 'components',
+      url: '/docs/api/hydrogen/2023-07/components/script',
+    },
+  ],
   description: `Create a content security policy to secure your application. The default content security policy includes exclusions for cdn.shopify.com and a script nonce.`,
   type: 'utility',
   defaultExample: {

@@ -6,7 +6,7 @@ import {
   Scripts,
   ScrollRestoration,
 } from '@remix-run/react';
-import {useNonce, Script} from '@shopify/hydrogen';
+import {useNonce} from '@shopify/hydrogen';
 
 export default function App() {
   const nonce = useNonce();
@@ -21,9 +21,6 @@ export default function App() {
       </head>
       <body>
         <Outlet />
-        {/* Note you don't need to pass a nonce to the script component 
-        because it's automatically added */}
-        <Script src="https://some-custom-script.js" />
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
         <LiveReload nonce={nonce} />

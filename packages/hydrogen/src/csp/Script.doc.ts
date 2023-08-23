@@ -4,7 +4,18 @@ const data: ReferenceEntityTemplateSchema = {
   name: 'Script',
   category: 'components',
   isVisualComponent: false,
-  related: [],
+  related: [
+    {
+      name: 'createContentSecurityPolicy',
+      type: 'utilities',
+      url: '/docs/api/hydrogen/2023-07/utilities/createcontentsecuritypolicy',
+    },
+    {
+      name: 'useNonce',
+      type: 'hooks',
+      url: '/docs/api/hydrogen/2023-07/hooks/usenonce',
+    },
+  ],
   description: `Use the \`Script\` component to add third-party scripts to your app. It automatically adds a nonce attribute from your Content Security Policy.`,
   type: 'component',
   defaultExample: {

@@ -8321,7 +8321,18 @@
     "name": "Script",
     "category": "components",
     "isVisualComponent": false,
-    "related": [],
+    "related": [
+      {
+        "name": "createContentSecurityPolicy",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/2023-07/utilities/createcontentsecuritypolicy"
+      },
+      {
+        "name": "useNonce",
+        "type": "hooks",
+        "url": "/docs/api/hydrogen/2023-07/hooks/usenonce"
+      }
+    ],
     "description": "Use the `Script` component to add third-party scripts to your app. It automatically adds a nonce attribute from your Content Security Policy.",
     "type": "component",
     "defaultExample": {
@@ -8330,12 +8341,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce, Script} from '@shopify/hydrogen';\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        <Script src=\"https://some-custom-script.js\" />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
+            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce, Script} from '@shopify/hydrogen';\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        {/* Note you don't need to pass a nonce to the script component \n        because it's automatically added */}\n        <Script src=\"https://some-custom-script.js\" />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce, Script} from '@shopify/hydrogen';\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        <Script src=\"https://some-custom-script.js\" />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
+            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce, Script} from '@shopify/hydrogen';\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        {/* Note you don't need to pass a nonce to the script component \n        because it's automatically added */}\n        <Script src=\"https://some-custom-script.js\" />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
             "language": "tsx"
           }
         ],
@@ -8363,7 +8374,18 @@
     "name": "createContentSecurityPolicy",
     "category": "utilities",
     "isVisualComponent": false,
-    "related": [],
+    "related": [
+      {
+        "name": "useNonce",
+        "type": "hooks",
+        "url": "/docs/api/hydrogen/2023-07/hooks/usenonce"
+      },
+      {
+        "name": "Script",
+        "type": "components",
+        "url": "/docs/api/hydrogen/2023-07/components/script"
+      }
+    ],
     "description": "Create a content security policy to secure your application. The default content security policy includes exclusions for cdn.shopify.com and a script nonce.",
     "type": "utility",
     "defaultExample": {
@@ -8372,12 +8394,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {RemixServer} from '@remix-run/react';\nimport isbot from 'isbot';\nimport {renderToReadableStream} from 'react-dom/server';\nimport {\n  generateNonce,\n  HydrogenServerProvider,\n  createCSPHeader,\n} from '@shopify/hydrogen';\n\nexport default async function handleRequest(\n  request,\n  responseStatusCode,\n  responseHeaders,\n  remixContext,\n) {\n  const nonce = generateNonce();\n  const body = await renderToReadableStream(\n    <HydrogenServerProvider nonce={nonce}>\n      <RemixServer context={remixContext} url={request.url} />\n    </HydrogenServerProvider>,\n    {\n      nonce,\n      signal: request.signal,\n      onError(error) {\n        // eslint-disable-next-line no-console\n        console.error(error);\n        responseStatusCode = 500;\n      },\n    },\n  );\n\n  if (isbot(request.headers.get('user-agent'))) {\n    await body.allReady;\n  }\n\n  responseHeaders.set('Content-Type', 'text/html');\n  responseHeaders.set(\n    'Content-Security-Policy',\n    createCSPHeader(nonce, {\n      // pass a custom directive to load content from a third party domain\n      styleSrc: [\n        \"'self'\",\n        'https://cdn.shopify.com',\n        'https://some-custom-css.cdn',\n      ],\n    }),\n  );\n\n  return new Response(body, {\n    headers: responseHeaders,\n    status: responseStatusCode,\n  });\n}\n",
+            "code": "import {RemixServer} from '@remix-run/react';\nimport isbot from 'isbot';\nimport {renderToReadableStream} from 'react-dom/server';\nimport {createContentSecurityPolicy} from '@shopify/hydrogen';\n\nexport default async function handleRequest(\n  request,\n  responseStatusCode,\n  responseHeaders,\n  remixContext,\n) {\n  const {nonce, header, NonceProvider} = createContentSecurityPolicy({\n    // pass a custom directive to load content from a third party domain\n    styleSrc: [\n      \"'self'\",\n      'https://cdn.shopify.com',\n      'https://some-custom-css.cdn',\n    ],\n  });\n  const body = await renderToReadableStream(\n    <NonceProvider>\n      <RemixServer context={remixContext} url={request.url} />\n    </NonceProvider>,\n    {\n      nonce,\n      signal: request.signal,\n      onError(error) {\n        // eslint-disable-next-line no-console\n        console.error(error);\n        responseStatusCode = 500;\n      },\n    },\n  );\n\n  if (isbot(request.headers.get('user-agent'))) {\n    await body.allReady;\n  }\n\n  responseHeaders.set('Content-Type', 'text/html');\n  responseHeaders.set('Content-Security-Policy', header);\n\n  return new Response(body, {\n    headers: responseHeaders,\n    status: responseStatusCode,\n  });\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import type {EntryContext} from '@shopify/remix-oxygen';\nimport {RemixServer} from '@remix-run/react';\nimport isbot from 'isbot';\nimport {renderToReadableStream} from 'react-dom/server';\nimport {\n  generateNonce,\n  HydrogenServerProvider,\n  createCSPHeader,\n} from '@shopify/hydrogen';\n\nexport default async function handleRequest(\n  request: Request,\n  responseStatusCode: number,\n  responseHeaders: Headers,\n  remixContext: EntryContext,\n) {\n  const nonce = generateNonce();\n  const body = await renderToReadableStream(\n    <HydrogenServerProvider nonce={nonce}>\n      <RemixServer context={remixContext} url={request.url} />\n    </HydrogenServerProvider>,\n    {\n      nonce,\n      signal: request.signal,\n      onError(error) {\n        // eslint-disable-next-line no-console\n        console.error(error);\n        responseStatusCode = 500;\n      },\n    },\n  );\n\n  if (isbot(request.headers.get('user-agent'))) {\n    await body.allReady;\n  }\n\n  responseHeaders.set('Content-Type', 'text/html');\n  responseHeaders.set(\n    'Content-Security-Policy',\n    createCSPHeader(nonce, {\n      // pass a custom directive to load content from a third party domain\n      styleSrc: [\n        \"'self'\",\n        'https://cdn.shopify.com',\n        'https://some-custom-css.cdn',\n      ],\n    }),\n  );\n\n  return new Response(body, {\n    headers: responseHeaders,\n    status: responseStatusCode,\n  });\n}\n",
+            "code": "import type {EntryContext} from '@shopify/remix-oxygen';\nimport {RemixServer} from '@remix-run/react';\nimport isbot from 'isbot';\nimport {renderToReadableStream} from 'react-dom/server';\nimport {createContentSecurityPolicy} from '@shopify/hydrogen';\n\nexport default async function handleRequest(\n  request: Request,\n  responseStatusCode: number,\n  responseHeaders: Headers,\n  remixContext: EntryContext,\n) {\n  const {nonce, header, NonceProvider} = createContentSecurityPolicy({\n    // pass a custom directive to load content from a third party domain\n    styleSrc: [\n      \"'self'\",\n      'https://cdn.shopify.com',\n      'https://some-custom-css.cdn',\n    ],\n  });\n  const body = await renderToReadableStream(\n    <NonceProvider>\n      <RemixServer context={remixContext} url={request.url} />\n    </NonceProvider>,\n    {\n      nonce,\n      signal: request.signal,\n      onError(error) {\n        // eslint-disable-next-line no-console\n        console.error(error);\n        responseStatusCode = 500;\n      },\n    },\n  );\n\n  if (isbot(request.headers.get('user-agent'))) {\n    await body.allReady;\n  }\n\n  responseHeaders.set('Content-Type', 'text/html');\n  responseHeaders.set('Content-Security-Policy', header);\n\n  return new Response(body, {\n    headers: responseHeaders,\n    status: responseStatusCode,\n  });\n}\n",
             "language": "tsx"
           }
         ],
@@ -8450,7 +8472,18 @@
     "name": "useNonce",
     "category": "hooks",
     "isVisualComponent": false,
-    "related": [],
+    "related": [
+      {
+        "name": "createContentSecurityPolicy",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/2023-07/utilities/createcontentsecuritypolicy"
+      },
+      {
+        "name": "Script",
+        "type": "components",
+        "url": "/docs/api/hydrogen/2023-07/components/script"
+      }
+    ],
     "description": "The `useNonce` hook returns the content security policy nonce. Use the hook to manually add a nonce to third party scripts. The `Script` component automatically does this for you. Note, the nonce should never be available in the client, and should always return undefined in the browser. If it is returning undefined on the server, make sure that you have a `HydrogenProvider` component with a nonce passed to it.",
     "type": "hook",
     "defaultExample": {
@@ -8459,12 +8492,12 @@
         "tabs": [
           {
             "title": "JavaScript",
-            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce, Script} from '@shopify/hydrogen';\n\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        {/* Note you don't need to pass a nonce to the script component \n        because it's automatically added */}\n        <Script src=\"https://some-custom-script.js\" />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
+            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce} from '@shopify/hydrogen';\n\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
             "language": "jsx"
           },
           {
             "title": "TypeScript",
-            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce, Script} from '@shopify/hydrogen';\n\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        {/* Note you don't need to pass a nonce to the script component \n        because it's automatically added */}\n        <Script src=\"https://some-custom-script.js\" />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
+            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce} from '@shopify/hydrogen';\n\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
             "language": "tsx"
           }
         ],
