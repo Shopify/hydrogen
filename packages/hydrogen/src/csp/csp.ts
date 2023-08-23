@@ -53,6 +53,7 @@ function createCSPHeader(
     styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'],
   };
 
+  // Support HMR in local development
   if (process.env.NODE_ENV === 'development') {
     defaultDirectives.connectSrc = ['*'];
   }
