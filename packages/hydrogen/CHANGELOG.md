@@ -1,5 +1,12 @@
 # @shopify/hydrogen
 
+## 2023.7.4
+
+### Patch Changes
+
+- Updated dependencies [[`06516ee9`](https://github.com/Shopify/hydrogen/commit/06516ee91f20153902c2b8ef79c0f6690ba385bb)]:
+  - @shopify/hydrogen-react@2023.7.3
+
 ## 2023.7.3
 
 ### Patch Changes
