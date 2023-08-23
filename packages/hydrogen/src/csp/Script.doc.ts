@@ -16,7 +16,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/docs/api/hydrogen/2023-07/hooks/usenonce',
     },
   ],
-  description: `Use the \`Script\` component to add third-party scripts to your app. It automatically adds a nonce attribute from your Content Security Policy.`,
+  description: `Use the \`Script\` component to add third-party scripts to your app. It automatically adds a nonce attribute from your [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy).`,
   type: 'component',
   defaultExample: {
     description: 'I am the default example',

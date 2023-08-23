@@ -16,7 +16,7 @@ const data: ReferenceEntityTemplateSchema = {
       url: '/docs/api/hydrogen/2023-07/components/script',
     },
   ],
-  description: `Create a content security policy to secure your application. The default content security policy includes exclusions for cdn.shopify.com and a script nonce.`,
+  description: `Create a [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) to secure your application. The default content security policy includes exclusions for cdn.shopify.com and a script nonce.`,
   type: 'utility',
   defaultExample: {
     description: 'I am the default example',
