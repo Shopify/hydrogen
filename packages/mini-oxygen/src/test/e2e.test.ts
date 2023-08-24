@@ -16,6 +16,7 @@ const testPort = 1337;
 vi.mock('get-port', () => {
   return {
     default: () => testPort,
+    portNumbers: () => [testPort],
   };
 });
 
