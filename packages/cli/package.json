@@ -38,7 +38,7 @@
     "@remix-run/dev": "1.19.1",
     "@shopify/cli-kit": "3.48.0",
     "@shopify/hydrogen-codegen": "^0.0.2",
-    "@shopify/mini-oxygen": "^2.1.1",
+    "@shopify/mini-oxygen": "^2.1.2",
     "ansi-escapes": "^6.2.0",
     "diff": "^5.1.0",
     "fast-glob": "^3.2.12",
