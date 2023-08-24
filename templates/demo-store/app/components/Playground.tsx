@@ -12,7 +12,7 @@ export function Playground({
 }
 
 function usePortableWalletsPlayground(fqdn: string) {
-  const prototypeSpinPath = '/src/components/hydrogen-prototype/prototype.ts';
+  const prototypeSpinPath = '/src/components/hydrogen-playground/playground.ts';
 
   useEffect(
     function setupScripts() {
