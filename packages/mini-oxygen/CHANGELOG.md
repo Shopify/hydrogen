@@ -1,5 +1,12 @@
 # @shopify/mini-oxygen
 
+## 2.1.2
+
+### Patch Changes
+
+- 600fa5f: Update @types/source-map-support from 0.5.6 to 0.5.7
+- 1a2e508: When the port provided is not available, use the next available port instead of a random one.
+
 ## 2.1.1
 
 ### Patch Changes
