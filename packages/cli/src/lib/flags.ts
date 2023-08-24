@@ -4,7 +4,7 @@ import {renderInfo} from '@shopify/cli-kit/node/ui';
 import {normalizeStoreFqdn} from '@shopify/cli-kit/node/context/fqdn';
 import colors from '@shopify/cli-kit/node/colors';
 import type {CamelCasedProperties} from 'type-fest';
-import {SETUP_CSS_STRATEGIES} from './setups/css/index.js';
+import {STYLING_CHOICES} from './setups/css/index.js';
 import {I18N_CHOICES} from './setups/i18n/index.js';
 
 export const DEFAULT_PORT = 3000;
@@ -58,10 +58,10 @@ export const commonFlags = {
     dependsOn: ['codegen-unstable'],
   }),
   styling: Flags.string({
-    description: `Sets the styling strategy to use. One of ${SETUP_CSS_STRATEGIES.map(
+    description: `Sets the styling strategy to use. One of ${STYLING_CHOICES.map(
       (item) => `\`${item}\``,
     ).join(', ')}.`,
-    choices: SETUP_CSS_STRATEGIES,
+    choices: STYLING_CHOICES,
     env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
   }),
   markets: Flags.string({
