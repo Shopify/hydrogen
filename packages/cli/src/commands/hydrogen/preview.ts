@@ -3,7 +3,6 @@ import {muteDevLogs} from '../../lib/log.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
 import {commonFlags, DEFAULT_PORT} from '../../lib/flags.js';
 import {startMiniOxygen} from '../../lib/mini-oxygen.js';
-import {findPort} from '../../lib/find-port.js';
 
 export default class Preview extends Command {
   static description =
@@ -36,7 +35,7 @@ export async function runPreview({
 
   const miniOxygen = await startMiniOxygen({
     root,
-    port: await findPort(port),
+    port,
     buildPathClient,
     buildPathWorkerFile,
   });
