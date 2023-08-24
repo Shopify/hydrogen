@@ -32,6 +32,8 @@ type VariantSelectorProps = {
   variants?:
     | PartialDeep<ProductVariantConnection>
     | Array<PartialDeep<ProductVariant>>;
+  /** By default all products are under /products. Use this prop to provide a custom path. */
+  productPath?: string;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
@@ -39,12 +41,16 @@ export function VariantSelector({
   handle,
   options = [],
   variants: _variants = [],
+  productPath = 'products',
   children,
 }: VariantSelectorProps) {
   const variants =
     _variants instanceof Array ? _variants : flattenConnection(_variants);
 
-  const {searchParams, path, alreadyOnProductPage} = useVariantPath(handle);
+  const {searchParams, path, alreadyOnProductPage} = useVariantPath(
+    handle,
+    productPath,
+  );
 
   // If an option only has one value, it doesn't need a UI to select it
   // But instead it always needs to be added to the product options so
@@ -144,7 +150,7 @@ export const getSelectedProductOptions: GetSelectedProductOptions = (
   return selectedOptions;
 };
 
-function useVariantPath(handle: string) {
+function useVariantPath(handle: string, productPath: string) {
   const {pathname, search} = useLocation();
 
   return useMemo(() => {
@@ -152,8 +158,8 @@ function useVariantPath(handle: string) {
     const isLocalePathname = match && match.length > 0;
 
     const path = isLocalePathname
-      ? `${match![0]}products/${handle}`
-      : `/products/${handle}`;
+      ? `${match![0]}${productPath}/${handle}`
+      : `/${productPath}/${handle}`;
 
     const searchParams = new URLSearchParams(search);
 
