@@ -2,6 +2,14 @@ import {useLocation} from '@remix-run/react';
 import type {SelectedOption} from '@shopify/hydrogen/storefront-api-types';
 import {useMemo} from 'react';
 
+import {createSubfolderLocaleParser} from '~/i18n';
+
+// Configure the i18n locale format. e.g this will match /fr-CA/ or /en-CA
+export const subfolderLocaleParser = createSubfolderLocaleParser({
+  parser: ({COUNTRY, language, delimiter}) =>
+    `/${language}${delimiter['-']}${COUNTRY}`,
+});
+
 export function useVariantUrl(
   handle: string,
   selectedOptions: SelectedOption[],
