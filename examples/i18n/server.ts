@@ -14,10 +14,22 @@ import {
   type SessionStorage,
   type Session,
 } from '@shopify/remix-oxygen';
-import type {
-  LanguageCode,
-  CountryCode,
-} from '@shopify/hydrogen/storefront-api-types';
+
+import {subfolderLocaleParser} from '~/utils';
+import {getI18n} from '~/i18n/server';
+
+import defaultCountry from './public/locales/country/US.json';
+import defaultLanguage from './public/locales/language/en.json';
+
+const DEFAULT_I18N = {
+  isDefault: true,
+  country: defaultCountry,
+  language: defaultLanguage,
+  prefix: subfolderLocaleParser({
+    country: defaultCountry.code,
+    language: defaultLanguage.code,
+  }),
+};
 
 /**
  * Export a fetch handler in module format.
@@ -42,13 +54,23 @@ export default {
         HydrogenSession.init(request, [env.SESSION_SECRET]),
       ]);
 
+      // get the locale from the request
+      const {i18n, i18nSfApi} = await getI18n<typeof DEFAULT_I18N>({
+        cache,
+        defaultI18n: DEFAULT_I18N,
+        prefixParser: subfolderLocaleParser,
+        request,
+        strategy: 'subfolder',
+        waitUntil,
+      });
+
       /**
        * Create Hydrogen's Storefront client.
        */
       const {storefront} = createStorefrontClient({
         cache,
         waitUntil,
-        i18n: getLocaleFromRequest(request),
+        i18n: i18nSfApi,
         publicStorefrontToken: env.PUBLIC_STOREFRONT_API_TOKEN,
         privateStorefrontToken: env.PRIVATE_STOREFRONT_API_TOKEN,
         storeDomain: env.PUBLIC_STORE_DOMAIN,
@@ -65,6 +87,7 @@ export default {
         getCartId: cartGetIdDefault(request.headers),
         setCartId: cartSetIdDefault(),
         cartQueryFragment: CART_QUERY_FRAGMENT,
+        cartMutateFragment: CART_MUTATION_FRAGMENT,
       });
 
       /**
@@ -74,7 +97,7 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({session, storefront, env, cart}),
+        getLoadContext: () => ({session, i18n, storefront, env, cart}),
       });
 
       const response = await handleRequest(request);
@@ -152,6 +175,16 @@ export class HydrogenSession {
     return this.sessionStorage.commitSession(this.session);
   }
 }
+
+const CART_MUTATION_FRAGMENT = `#graphql
+  fragment CartApiMutation on Cart {
+    id
+    totalQuantity
+    buyerIdentity {
+      countryCode
+    }
+  }
+`;
 
 // NOTE: https://shopify.dev/docs/api/storefront/latest/queries/cart
 const CART_QUERY_FRAGMENT = `#graphql
@@ -255,28 +288,3 @@ const CART_QUERY_FRAGMENT = `#graphql
     }
   }
 ` as const;
-
-export type I18nLocale = {
-  language: LanguageCode;
-  country: CountryCode;
-  pathPrefix: string;
-};
-
-function getLocaleFromRequest(request: Request): I18nLocale {
-  const url = new URL(request.url);
-  const firstPathPart = url.pathname.split('/')[1]?.toUpperCase() ?? '';
-
-  let pathPrefix = '';
-  let language: LanguageCode = 'EN';
-  let country: CountryCode = 'US';
-
-  if (/^[A-Z]{2}-[A-Z]{2}$/i.test(firstPathPart)) {
-    pathPrefix = '/' + firstPathPart;
-    [language, country] = firstPathPart.split('-') as [
-      LanguageCode,
-      CountryCode,
-    ];
-  }
-
-  return {language, country, pathPrefix};
-}
