@@ -194,16 +194,16 @@ async function getLocalePrefix(
     () => [],
   );
 
-  const homeRouteWithLocaleRE = isV2RouteConvention
-    ? /^\(\$(\w+)\)\._index.[jt]sx?$/
+  const coreRouteWithLocaleRE = isV2RouteConvention
+    ? /^\(\$(\w+)\)\.(_index|\$|cart).[jt]sx?$/
     : /^\(\$(\w+)\)$/;
 
-  const homeRouteWithLocale = existingFiles.find((file) =>
-    homeRouteWithLocaleRE.test(file),
+  const coreRouteWithLocale = existingFiles.find((file) =>
+    coreRouteWithLocaleRE.test(file),
   );
 
-  if (homeRouteWithLocale) {
-    return homeRouteWithLocale.match(homeRouteWithLocaleRE)?.[1];
+  if (coreRouteWithLocale) {
+    return coreRouteWithLocale.match(coreRouteWithLocaleRE)?.[1];
   }
 }
 
