@@ -6,7 +6,7 @@
 import '@total-typescript/ts-reset';
 
 import type {Storefront, HydrogenCart} from '@shopify/hydrogen';
-import type {I18nLocale, HydrogenSession} from './server';
+import type {HydrogenSession, I18n} from 'server';
 
 declare global {
   /**
@@ -33,7 +33,8 @@ declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
     env: Env;
     cart: HydrogenCart;
-    storefront: Storefront<I18nLocale>;
+    storefront: Storefront<I18n>;
+    i18n: I18n;
     session: HydrogenSession;
   }
 }
