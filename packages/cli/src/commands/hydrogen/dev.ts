@@ -26,7 +26,6 @@ import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
 import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
-import {findPort} from '../../lib/find-port.js';
 import {setupLiveReload} from '../../lib/live-reload.js';
 import {checkRemixVersions} from '../../lib/remix-version-check.js';
 
@@ -159,7 +158,7 @@ async function runDev({
 
     miniOxygen = await startMiniOxygen({
       root,
-      port: await findPort(portFlag),
+      port: portFlag,
       watch: !liveReload,
       buildPathWorkerFile,
       buildPathClient,
