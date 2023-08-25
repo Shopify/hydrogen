@@ -12,7 +12,7 @@ If you have `typescript` as a dev dependency in your app, it is recommended to c
   "devDependencies": {
     ...
 -   "typescript": "^4.9.5",
-+   "typescript": "^5.1.6",
++   "typescript": "^5.2.2",
   },
 ```
 
