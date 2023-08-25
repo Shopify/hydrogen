@@ -156,6 +156,9 @@ function useVariantPath(handle: string, productPath: string) {
   return useMemo(() => {
     const match = /(\/[a-zA-Z]{2}-[a-zA-Z]{2}\/)/g.exec(pathname);
     const isLocalePathname = match && match.length > 0;
+    productPath = productPath.startsWith('/')
+      ? productPath.substring(1)
+      : productPath;
 
     const path = isLocalePathname
       ? `${match![0]}${productPath}/${handle}`
@@ -171,5 +174,5 @@ function useVariantPath(handle: string, productPath: string) {
       alreadyOnProductPage: path === pathname,
       path,
     };
-  }, [pathname, search, handle]);
+  }, [pathname, search, handle, productPath]);
 }

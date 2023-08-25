@@ -147,6 +147,56 @@ describe('<VariantSelector>', () => {
     `);
   });
 
+  it('uses a custom product path with leading slash', () => {
+    const {asFragment} = render(
+      createElement(VariantSelector, {
+        handle: 'snowboard',
+        productPath: '/shop',
+        options: [
+          {name: 'Color', values: ['Red', 'Blue']},
+          {name: 'Size', values: ['S', 'M']},
+        ],
+        children: ({option}) =>
+          createElement(
+            'div',
+            null,
+            option.values.map(({value, to}) =>
+              createElement('a', {key: option.name + value, href: to}, value),
+            ),
+          ),
+      }),
+    );
+
+    expect(asFragment()).toMatchInlineSnapshot(`
+      <DocumentFragment>
+        <div>
+          <a
+            href="/shop/snowboard?Color=Red"
+          >
+            Red
+          </a>
+          <a
+            href="/shop/snowboard?Color=Blue"
+          >
+            Blue
+          </a>
+        </div>
+        <div>
+          <a
+            href="/shop/snowboard?Size=S"
+          >
+            S
+          </a>
+          <a
+            href="/shop/snowboard?Size=M"
+          >
+            M
+          </a>
+        </div>
+      </DocumentFragment>
+    `);
+  });
+
   it('automatically appends options with only one value to the URL', () => {
     const {asFragment} = render(
       createElement(VariantSelector, {
