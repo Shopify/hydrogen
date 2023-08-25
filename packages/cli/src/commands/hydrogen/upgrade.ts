@@ -14,13 +14,13 @@ import {getProjectPaths} from '../../lib/remix-config.js';
 //   promptForUpgrade,
 //   displayUpgradePlan,
 // } from './upgrade/index.js';
-import {getProjectDependencies} from './upgrade/getProjectDependencies.js';
 import {displayCurrentVersions} from './upgrade/displayCurrentVersions.js';
-import {displayUpgradeSummary} from './upgrade/displayUpgradeSummary.js';
-import {getUpgradeCommand} from './upgrade/getUpgradeCommand.js';
-import {upgradePackages} from './upgrade/upgradePackages.js';
 import {displayUpgradePlan} from './upgrade/displayUpgradePlan.js';
+import {displayUpgradeSummary} from './upgrade/displayUpgradeSummary.js';
+import {getProjectDependencies} from './upgrade/getProjectDependencies.js';
+import {getUpgradeCommand} from './upgrade/getUpgradeCommand.js';
 import {promptForUpgrade} from './upgrade/promptForUpgrade.js';
+import {upgradePackages} from './upgrade/upgradePackages.js';
 import type {RenderCommandProps} from './upgrade/types.js';
 
 export default class Upgrade extends Command {
