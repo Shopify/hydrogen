@@ -1,18 +1,27 @@
-import {Await, NavLink, useMatches} from '@remix-run/react';
-import {Suspense} from 'react';
+import {Await} from '@remix-run/react';
+import {Suspense, lazy} from 'react';
 import type {LayoutProps} from './Layout';
+import {LocaleSelector} from './LocaleSelector';
+import {LocalizedLink, useTranslation} from '~/i18n';
+import {useMatches} from '@remix-run/react';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
 type Viewport = 'desktop' | 'mobile';
 
+const Localizations = lazy(() =>
+  import('~/components/AsyncLocalizations').then((mod) => ({
+    default: mod.AsyncLocalizations,
+  })),
+);
+
 export function Header({header, isLoggedIn, cart}: HeaderProps) {
   const {shop, menu} = header;
   return (
     <header className="header">
-      <NavLink prefetch="intent" to="/" style={activeLinkStyle} end>
+      <LocalizedLink prefetch="intent" to="/">
         <strong>{shop.name}</strong>
-      </NavLink>
+      </LocalizedLink>
       <HeaderMenu menu={menu} viewport="desktop" />
       <HeaderCtas isLoggedIn={isLoggedIn} cart={cart} />
     </header>
@@ -26,9 +35,13 @@ export function HeaderMenu({
   menu: HeaderProps['header']['menu'];
   viewport: Viewport;
 }) {
-  const [root] = useMatches();
-  const publicStoreDomain = root?.data?.publicStoreDomain;
   const className = `header-menu-${viewport}`;
+  const [root] = useMatches();
+  const publicStoreDomain = root.data.publicStoreDomain;
+
+  if (!publicStoreDomain) {
+    throw new Error('HeaderMenu missing PUBLIC_STORE_DOMAIN');
+  }
 
   function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {
     if (viewport === 'mobile') {
@@ -40,15 +53,9 @@ export function HeaderMenu({
   return (
     <nav className={className} role="navigation">
       {viewport === 'mobile' && (
-        <NavLink
-          end
-          onClick={closeAside}
-          prefetch="intent"
-          style={activeLinkStyle}
-          to="/"
-        >
+        <LocalizedLink prefetch="intent" to="/" onClick={closeAside}>
           Home
-        </NavLink>
+        </LocalizedLink>
       )}
       {(menu || FALLBACK_HEADER_MENU).items.map((item) => {
         if (!item.url) return null;
@@ -60,17 +67,15 @@ export function HeaderMenu({
             ? new URL(item.url).pathname
             : item.url;
         return (
-          <NavLink
-            className="header-menu-item"
-            end
+          <LocalizedLink
             key={item.id}
-            onClick={closeAside}
             prefetch="intent"
-            style={activeLinkStyle}
+            className="header-menu-item"
             to={url}
+            onClick={closeAside}
           >
             {item.title}
-          </NavLink>
+          </LocalizedLink>
         );
       })}
     </nav>
@@ -81,12 +86,24 @@ function HeaderCtas({
   isLoggedIn,
   cart,
 }: Pick<HeaderProps, 'isLoggedIn' | 'cart'>) {
+  const {t} = useTranslation();
+  const loginLabel = isLoggedIn
+    ? t('layout.header.ctas.account')
+    : t('layout.header.ctas.login');
+
   return (
     <nav className="header-ctas" role="navigation">
+      <Suspense fallback={<LocaleSelector localizations={null} />}>
+        <Localizations>
+          {({localizations}) => (
+            <LocaleSelector localizations={localizations} />
+          )}
+        </Localizations>
+      </Suspense>
       <HeaderMenuMobileToggle />
-      <NavLink prefetch="intent" to="/account" style={activeLinkStyle}>
-        {isLoggedIn ? 'Account' : 'Sign in'}
-      </NavLink>
+      <LocalizedLink prefetch="intent" to="/account">
+        {loginLabel}
+      </LocalizedLink>
       <SearchToggle />
       <CartToggle cart={cart} />
     </nav>
@@ -102,11 +119,17 @@ function HeaderMenuMobileToggle() {
 }
 
 function SearchToggle() {
-  return <a href="#search-aside">Search</a>;
+  const {t} = useTranslation();
+  return <a href="#search-aside">{t('layout.header.ctas.search')}</a>;
 }
 
 function CartBadge({count}: {count: number}) {
-  return <a href="#cart-aside">Cart {count}</a>;
+  const {t} = useTranslation();
+  return (
+    <a href="#cart-aside">
+      {t('layout.header.ctas.cart')} {count}
+    </a>
+  );
 }
 
 function CartToggle({cart}: Pick<HeaderProps, 'cart'>) {
@@ -163,16 +186,3 @@ const FALLBACK_HEADER_MENU = {
     },
   ],
 };
-
-function activeLinkStyle({
-  isActive,
-  isPending,
-}: {
-  isActive: boolean;
-  isPending: boolean;
-}) {
-  return {
-    fontWeight: isActive ? 'bold' : undefined,
-    color: isPending ? 'grey' : 'black',
-  };
-}

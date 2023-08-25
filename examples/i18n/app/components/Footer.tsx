@@ -1,5 +1,6 @@
-import {useMatches, NavLink} from '@remix-run/react';
 import type {FooterQuery} from 'storefrontapi.generated';
+import {useMatches} from '@remix-run/react';
+import {LocalizedLink} from '~/i18n';
 
 export function Footer({menu}: FooterQuery) {
   return (
@@ -11,7 +12,10 @@ export function Footer({menu}: FooterQuery) {
 
 function FooterMenu({menu}: Pick<FooterQuery, 'menu'>) {
   const [root] = useMatches();
-  const publicStoreDomain = root?.data?.publicStoreDomain;
+  const publicStoreDomain = root.data.publicStoreDomain;
+  if (!publicStoreDomain) {
+    throw new Error('FooterMenu missing PUBLIC_STORE_DOMAIN');
+  }
   return (
     <nav className="footer-menu" role="navigation">
       {(menu || FALLBACK_FOOTER_MENU).items.map((item) => {
@@ -28,15 +32,9 @@ function FooterMenu({menu}: Pick<FooterQuery, 'menu'>) {
             {item.title}
           </a>
         ) : (
-          <NavLink
-            end
-            key={item.id}
-            prefetch="intent"
-            style={activeLinkStyle}
-            to={url}
-          >
+          <LocalizedLink key={item.id} prefetch="intent" to={url}>
             {item.title}
-          </NavLink>
+          </LocalizedLink>
         );
       })}
     </nav>
@@ -84,16 +82,3 @@ const FALLBACK_FOOTER_MENU = {
     },
   ],
 };
-
-function activeLinkStyle({
-  isActive,
-  isPending,
-}: {
-  isActive: boolean;
-  isPending: boolean;
-}) {
-  return {
-    fontWeight: isActive ? 'bold' : undefined,
-    color: isPending ? 'grey' : 'white',
-  };
-}

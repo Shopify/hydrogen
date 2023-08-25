@@ -13,6 +13,7 @@ import {
   PredictiveSearchForm,
   PredictiveSearchResults,
 } from '~/components/Search';
+import {useTranslation} from '~/i18n';
 
 export type LayoutProps = {
   cart: Promise<CartApiQueryFragment | null>;
@@ -46,9 +47,10 @@ export function Layout({
 }
 
 function CartAside({cart}: {cart: LayoutProps['cart']}) {
+  const {t} = useTranslation();
   return (
-    <Aside id="cart-aside" heading="CART">
-      <Suspense fallback={<p>Loading cart ...</p>}>
+    <Aside id="cart-aside" heading={t('layout.cart.title')}>
+      <Suspense fallback={<p>{t('layout.cart.loading')}</p>}>
         <Await resolve={cart}>
           {(cart) => {
             return <CartMain cart={cart} layout="aside" />;
@@ -60,8 +62,9 @@ function CartAside({cart}: {cart: LayoutProps['cart']}) {
 }
 
 function SearchAside() {
+  const {t} = useTranslation();
   return (
-    <Aside id="search-aside" heading="SEARCH">
+    <Aside id="search-aside" heading={t('layout.search.title')}>
       <div className="predictive-search">
         <br />
         <PredictiveSearchForm>
@@ -71,12 +74,13 @@ function SearchAside() {
                 name="q"
                 onChange={fetchResults}
                 onFocus={fetchResults}
-                placeholder="Search"
+                placeholder={t('layout.search.form.placeholder')}
                 ref={inputRef}
                 type="search"
+                aria-label={t('layout.search.form.label')}
               />
               &nbsp;
-              <button type="submit">Search</button>
+              <button type="submit">{t('layout.search.form.submit')}</button>
             </div>
           )}
         </PredictiveSearchForm>
