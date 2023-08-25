@@ -89,6 +89,7 @@ export async function loader({context}: LoaderArgs) {
       cart: cartPromise,
       footer: footerPromise,
       header: await headerPromise,
+      i18n: context.i18n,
       isLoggedIn,
       publicStoreDomain,
     },
@@ -100,7 +101,7 @@ export default function App() {
   const data = useLoaderData<typeof loader>();
 
   return (
-    <html lang="en">
+    <html lang={data.i18n.language}>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width,initial-scale=1" />
@@ -108,7 +109,7 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Layout {...data}>
+        <Layout {...data} key={data.i18n.prefix.value}>
           <Outlet />
         </Layout>
         <ScrollRestoration />
