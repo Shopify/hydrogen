@@ -32,7 +32,7 @@ describe('remix-version-check', () => {
     const expectedVersion = '42.0.0-test';
     vi.mocked(requireMock).mockReturnValueOnce({
       // Hydrogen expected version
-      dependencies: {'@remix-run/dev': expectedVersion},
+      peerDependencies: {'@remix-run/dev': expectedVersion},
     });
 
     const outputMock = mockAndCaptureOutput();

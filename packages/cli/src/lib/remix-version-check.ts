@@ -8,7 +8,7 @@ export function checkRemixVersions() {
     new URL('../../package.json', import.meta.url),
   ));
 
-  const requiredVersionInHydrogen = hydrogenPkgJson.dependencies[
+  const requiredVersionInHydrogen = hydrogenPkgJson.peerDependencies[
     '@remix-run/dev'
   ] as string;
 
