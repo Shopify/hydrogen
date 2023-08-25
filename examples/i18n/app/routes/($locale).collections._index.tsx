@@ -1,7 +1,8 @@
-import {useLoaderData, Link} from '@remix-run/react';
+import {useLoaderData} from '@remix-run/react';
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
 import {Pagination, getPaginationVariables, Image} from '@shopify/hydrogen';
 import type {CollectionFragment} from 'storefrontapi.generated';
+import {useTranslation, LocalizedLink} from '~/i18n';
 
 export async function loader({context, request}: LoaderArgs) {
   const paginationVariables = getPaginationVariables(request, {
@@ -16,6 +17,7 @@ export async function loader({context, request}: LoaderArgs) {
 }
 
 export default function Collections() {
+  const {t} = useTranslation();
   const {collections} = useLoaderData<typeof loader>();
 
   return (
@@ -25,11 +27,19 @@ export default function Collections() {
         {({nodes, isLoading, PreviousLink, NextLink}) => (
           <div>
             <PreviousLink>
-              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
+              {isLoading ? (
+                <span>{t('layout.pagination.loading')}</span>
+              ) : (
+                <span>{t('layout.pagination.previous')}</span>
+              )}
             </PreviousLink>
             <CollectionsGrid collections={nodes} />
             <NextLink>
-              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
+              {isLoading ? (
+                <span>{t('layout.pagination.loading')}</span>
+              ) : (
+                <span>{t('layout.pagination.next')}</span>
+              )}
             </NextLink>
           </div>
         )}
@@ -60,7 +70,7 @@ function CollectionItem({
   index: number;
 }) {
   return (
-    <Link
+    <LocalizedLink
       className="collection-item"
       key={collection.id}
       to={`/collections/${collection.handle}`}
@@ -75,7 +85,7 @@ function CollectionItem({
         />
       )}
       <h5>{collection.title}</h5>
-    </Link>
+    </LocalizedLink>
   );
 }
 

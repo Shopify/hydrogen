@@ -1,7 +1,10 @@
-import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, type V2_MetaFunction} from '@remix-run/react';
+import {
+  defer,
+  type LoaderArgs,
+  type V2_MetaFunction,
+} from '@shopify/remix-oxygen';
+import {useLoaderData} from '@remix-run/react';
 import {getPaginationVariables} from '@shopify/hydrogen';
-
 import {SearchForm, SearchResults, NoSearchResults} from '~/components/Search';
 
 export const meta: V2_MetaFunction = () => {
@@ -45,13 +48,14 @@ export async function loader({request, context}: LoaderArgs) {
 }
 
 export default function SearchPage() {
+  const {t} = useI18n();
   const {searchTerm, searchResults} = useLoaderData<typeof loader>();
   return (
     <div className="search">
-      <h1>Search</h1>
+      <h1>{t('layout.search.title')}</h1>
       <SearchForm searchTerm={searchTerm} />
       {!searchTerm || !searchResults.totalResults ? (
-        <NoSearchResults />
+        <NoSearchResults searchTerm={searchTerm} />
       ) : (
         <SearchResults results={searchResults.results} />
       )}

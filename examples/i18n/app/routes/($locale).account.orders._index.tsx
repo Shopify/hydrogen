@@ -1,10 +1,16 @@
-import {Link, useLoaderData, type V2_MetaFunction} from '@remix-run/react';
+import {useLoaderData} from '@remix-run/react';
 import {Money, Pagination, getPaginationVariables} from '@shopify/hydrogen';
-import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  redirect,
+  type LoaderArgs,
+  type V2_MetaFunction,
+} from '@shopify/remix-oxygen';
 import type {
   CustomerOrdersFragment,
   OrderItemFragment,
 } from 'storefrontapi.generated';
+import {useTranslation, localizePath, LocalizedLink} from '~/i18n';
 
 export const meta: V2_MetaFunction = () => {
   return [{title: 'Orders'}];
@@ -15,7 +21,7 @@ export async function loader({request, context}: LoaderArgs) {
 
   const customerAccessToken = await session.get('customerAccessToken');
   if (!customerAccessToken?.accessToken) {
-    return redirect('/account/login');
+    return redirect(localizePath('/account/login', context.i18n));
   }
 
   try {
@@ -49,10 +55,11 @@ export async function loader({request, context}: LoaderArgs) {
 export default function Orders() {
   const {customer} = useLoaderData<{customer: CustomerOrdersFragment}>();
   const {orders, numberOfOrders} = customer;
+  const {t} = useTranslation();
   return (
     <div className="orders">
       <h2>
-        Orders <small>({numberOfOrders})</small>
+        {t('account.home.menu.orders')} <small>({numberOfOrders})</small>
       </h2>
       <br />
       {orders.nodes.length ? <OrdersTable orders={orders} /> : <EmptyOrders />}
@@ -61,6 +68,7 @@ export default function Orders() {
 }
 
 function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
+  const {t} = useTranslation();
   return (
     <div className="acccount-orders">
       {orders?.nodes.length ? (
@@ -69,13 +77,21 @@ function OrdersTable({orders}: Pick<CustomerOrdersFragment, 'orders'>) {
             return (
               <>
                 <PreviousLink>
-                  {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
+                  {isLoading ? (
+                    <span>{t('layout.pagination.loading')}</span>
+                  ) : (
+                    <span>{t('layout.pagination.previous')}</span>
+                  )}
                 </PreviousLink>
                 {nodes.map((order) => {
                   return <OrderItem key={order.id} order={order} />;
                 })}
                 <NextLink>
-                  {isLoading ? 'Loading...' : <span>Load more ↓</span>}
+                  {isLoading ? (
+                    <span>{t('layout.pagination.loading')}</span>
+                  ) : (
+                    <span>{t('layout.pagination.next')}</span>
+                  )}
                 </NextLink>
               </>
             );
@@ -94,7 +110,7 @@ function EmptyOrders() {
       <p>You haven&apos;t placed any orders yet.</p>
       <br />
       <p>
-        <Link to="/collections">Start Shopping →</Link>
+        <LocalizedLink to="/collections">Start Shopping →</LocalizedLink>
       </p>
     </div>
   );
@@ -104,14 +120,16 @@ function OrderItem({order}: {order: OrderItemFragment}) {
   return (
     <>
       <fieldset>
-        <Link to={`/account/orders/${order.id}`}>
+        <LocalizedLink to={`/account/orders/${order.id}`}>
           <strong>#{order.orderNumber}</strong>
-        </Link>
+        </LocalizedLink>
         <p>{new Date(order.processedAt).toDateString()}</p>
         <p>{order.financialStatus}</p>
         <p>{order.fulfillmentStatus}</p>
         <Money data={order.currentTotalPrice} />
-        <Link to={`/account/orders/${btoa(order.id)}`}>View Order →</Link>
+        <LocalizedLink to={`/account/orders/${btoa(order.id)}`}>
+          View Order →
+        </LocalizedLink>
       </fieldset>
       <br />
     </>

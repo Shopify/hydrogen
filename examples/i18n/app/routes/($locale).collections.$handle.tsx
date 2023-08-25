@@ -1,5 +1,10 @@
-import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link, type V2_MetaFunction} from '@remix-run/react';
+import {
+  json,
+  redirect,
+  type LoaderArgs,
+  type V2_MetaFunction,
+} from '@shopify/remix-oxygen';
+import {useLoaderData, Link} from '@remix-run/react';
 import {
   Pagination,
   getPaginationVariables,
@@ -8,6 +13,7 @@ import {
 } from '@shopify/hydrogen';
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/utils';
+import {useTranslation} from '~/i18n';
 
 export const meta: V2_MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data.collection.title} Collection`}];
@@ -37,6 +43,7 @@ export async function loader({request, params, context}: LoaderArgs) {
 }
 
 export default function Collection() {
+  const {t} = useTranslation();
   const {collection} = useLoaderData<typeof loader>();
 
   return (
@@ -47,12 +54,20 @@ export default function Collection() {
         {({nodes, isLoading, PreviousLink, NextLink}) => (
           <>
             <PreviousLink>
-              {isLoading ? 'Loading...' : <span>↑ Load previous</span>}
+              {isLoading ? (
+                <span>{t('layout.pagination.loading')}</span>
+              ) : (
+                <span>{t('layout.pagination.previous')}</span>
+              )}
             </PreviousLink>
             <ProductsGrid products={nodes} />
             <br />
             <NextLink>
-              {isLoading ? 'Loading...' : <span>Load more ↓</span>}
+              {isLoading ? (
+                <span>{t('layout.pagination.loading')}</span>
+              ) : (
+                <span>{t('layout.pagination.next')}</span>
+              )}
             </NextLink>
           </>
         )}

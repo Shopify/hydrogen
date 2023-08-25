@@ -5,14 +5,15 @@ import {
   redirect,
   type ActionArgs,
   type LoaderArgs,
+  type V2_MetaFunction,
 } from '@shopify/remix-oxygen';
 import {
   Form,
   useActionData,
   useNavigation,
   useOutletContext,
-  type V2_MetaFunction,
 } from '@remix-run/react';
+import {useTranslation, localizePath} from '~/i18n';
 
 export type ActionResponse = {
   addressId?: string | null;
@@ -31,7 +32,7 @@ export async function loader({context}: LoaderArgs) {
   const {session} = context;
   const customerAccessToken = await session.get('customerAccessToken');
   if (!customerAccessToken) {
-    return redirect('/account/login');
+    return redirect(localizePath('/account/login', context.i18n));
   }
   return json({});
 }
@@ -217,10 +218,11 @@ export async function action({request, context}: ActionArgs) {
 export default function Addresses() {
   const {customer} = useOutletContext<{customer: CustomerFragment}>();
   const {defaultAddress, addresses} = customer;
+  const {t} = useTranslation();
 
   return (
     <div className="account-addresses">
-      <h2>Addresses</h2>
+      <h2>{t('account.home.menu.addresses')}</h2>
       <br />
       {!addresses.nodes.length ? (
         <p>You have no addresses saved.</p>

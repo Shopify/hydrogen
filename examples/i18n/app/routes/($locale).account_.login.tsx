@@ -3,13 +3,10 @@ import {
   redirect,
   type ActionArgs,
   type LoaderArgs,
-} from '@shopify/remix-oxygen';
-import {
-  Form,
-  Link,
-  useActionData,
   type V2_MetaFunction,
-} from '@remix-run/react';
+} from '@shopify/remix-oxygen';
+import {Form, useActionData} from '@remix-run/react';
+import {useTranslation, LocalizedLink, localizePath} from '~/i18n';
 
 type ActionResponse = {
   error: string | null;
@@ -21,7 +18,7 @@ export const meta: V2_MetaFunction = () => {
 
 export async function loader({context}: LoaderArgs) {
   if (await context.session.get('customerAccessToken')) {
-    return redirect('/account');
+    return redirect(localizePath('/account', context.i18n));
   }
   return json({});
 }
@@ -59,7 +56,7 @@ export async function action({request, context}: ActionArgs) {
     const {customerAccessToken} = customerAccessTokenCreate;
     session.set('customerAccessToken', customerAccessToken);
 
-    return redirect('/account', {
+    return redirect(localizePath('/account', context.i18n), {
       headers: {
         'Set-Cookie': await session.commit(),
       },
@@ -75,31 +72,34 @@ export async function action({request, context}: ActionArgs) {
 export default function Login() {
   const data = useActionData<ActionResponse>();
   const error = data?.error || null;
+  const {t} = useTranslation();
 
   return (
     <div className="login">
-      <h1>Sign in.</h1>
+      <h1>{t('account.login.title')}</h1>
       <Form method="POST">
         <fieldset>
-          <label htmlFor="email">Email address</label>
+          <label htmlFor="email">{t('account.login.form.email.label')}</label>
           <input
             id="email"
             name="email"
             type="email"
             autoComplete="email"
             required
-            placeholder="Email address"
-            aria-label="Email address"
+            placeholder={t('account.login.form.email.placeholder')}
+            aria-label={t('account.login.form.email.label')}
             autoFocus
           />
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">
+            {t('account.login.form.password.label')}
+          </label>
           <input
             id="password"
             name="password"
             type="password"
             autoComplete="current-password"
-            placeholder="Password"
-            aria-label="Password"
+            placeholder={t('account.login.form.password.placeholder')}
+            aria-label={t('account.login.form.password.label')}
             minLength={8}
             required
           />
@@ -113,15 +113,19 @@ export default function Login() {
         ) : (
           <br />
         )}
-        <button type="submit">Sign in</button>
+        <button type="submit">{t('account.login.form.submit')}</button>
       </Form>
       <br />
       <div>
         <p>
-          <Link to="/account/recover">Forgot password →</Link>
+          <LocalizedLink to="/account/recover">
+            {t('account.login.forgot')} →
+          </LocalizedLink>
         </p>
         <p>
-          <Link to="/account/register">Register →</Link>
+          <LocalizedLink to="/account/register">
+            {t('account.login.register')} →
+          </LocalizedLink>
         </p>
       </div>
     </div>

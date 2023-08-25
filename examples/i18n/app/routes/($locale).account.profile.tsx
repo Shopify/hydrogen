@@ -1,18 +1,19 @@
-import type {CustomerFragment} from 'storefrontapi.generated';
-import type {CustomerUpdateInput} from '@shopify/hydrogen/storefront-api-types';
 import {
-  json,
-  redirect,
   type ActionArgs,
   type LoaderArgs,
+  type V2_MetaFunction,
+  json,
+  redirect,
 } from '@shopify/remix-oxygen';
 import {
   Form,
   useActionData,
   useNavigation,
   useOutletContext,
-  type V2_MetaFunction,
 } from '@remix-run/react';
+import type {CustomerFragment} from 'storefrontapi.generated';
+import type {CustomerUpdateInput} from '@shopify/hydrogen/storefront-api-types';
+import {useTranslation, localizePath} from '~/i18n';
 
 export type ActionResponse = {
   error: string | null;
@@ -26,7 +27,7 @@ export const meta: V2_MetaFunction = () => {
 export async function loader({context}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
   if (!customerAccessToken) {
-    return redirect('/account/login');
+    return redirect(localizePath('/account/login', context.i18n));
   }
   return json({});
 }
@@ -112,10 +113,11 @@ export default function AccountProfile() {
   const {state} = useNavigation();
   const action = useActionData<ActionResponse>();
   const customer = action?.customer ?? account?.customer;
+  const {t} = useTranslation();
 
   return (
     <div className="account-profile">
-      <h2>My profile</h2>
+      <h2>{t('account.home.menu.profile')}</h2>
       <br />
       <Form method="PUT">
         <legend>Personal information</legend>

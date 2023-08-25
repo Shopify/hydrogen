@@ -1,8 +1,10 @@
-import {redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import type {LoaderArgs} from '@shopify/remix-oxygen';
+import {redirect} from '@shopify/remix-oxygen';
+import {localizePath} from '~/i18n';
 
 export async function loader({context}: LoaderArgs) {
   if (await context.session.get('customerAccessToken')) {
-    return redirect('/account');
+    return redirect(localizePath('/account', context.i18n));
   }
-  return redirect('/account/login');
+  return redirect(localizePath('/account/login', context.i18n));
 }

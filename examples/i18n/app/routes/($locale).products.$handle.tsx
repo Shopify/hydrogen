@@ -1,18 +1,20 @@
 import {Suspense} from 'react';
-import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
-  Await,
-  Link,
-  useLoaderData,
+  defer,
+  redirect,
+  type LoaderArgs,
   type V2_MetaFunction,
+} from '@shopify/remix-oxygen';
+import {
   type FetcherWithComponents,
+  Await,
+  useLoaderData,
 } from '@remix-run/react';
 import type {
   ProductFragment,
   ProductVariantsQuery,
   ProductVariantFragment,
 } from 'storefrontapi.generated';
-
 import {
   Image,
   Money,
@@ -21,11 +23,9 @@ import {
   getSelectedProductOptions,
   CartForm,
 } from '@shopify/hydrogen';
-import type {
-  CartLineInput,
-  SelectedOption,
-} from '@shopify/hydrogen/storefront-api-types';
+import type {CartLineInput} from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/utils';
+import {LocalizedLink} from '~/i18n';
 
 export const meta: V2_MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data.product.title}`}];
@@ -54,6 +54,15 @@ export async function loader({params, request, context}: LoaderArgs) {
     variables: {handle, selectedOptions},
   });
 
+  // In order to show which variants are available in the UI, we need to query
+  // all of them. But there might be a *lot*, so instead separate the variants
+  // into it's own separate query that is deferred. So there's a brief moment
+  // where variant options might show as available when they're not, but after
+  // this deffered query resolves, the UI will update.
+  const variants = storefront.query(VARIANTS_QUERY, {
+    variables: {handle},
+  });
+
   if (!product?.id) {
     throw new Response(null, {status: 404});
   }
@@ -61,8 +70,7 @@ export async function loader({params, request, context}: LoaderArgs) {
   const firstVariant = product.variants.nodes[0];
   const firstVariantIsDefault = Boolean(
     firstVariant.selectedOptions.find(
-      (option: SelectedOption) =>
-        option.name === 'Title' && option.value === 'Default Title',
+      (option) => option.name === 'Title' && option.value === 'Default Title',
     ),
   );
 
@@ -75,16 +83,6 @@ export async function loader({params, request, context}: LoaderArgs) {
       return redirectToFirstVariant({product, request});
     }
   }
-
-  // In order to show which variants are available in the UI, we need to query
-  // all of them. But there might be a *lot*, so instead separate the variants
-  // into it's own separate query that is deferred. So there's a brief moment
-  // where variant options might show as available when they're not, but after
-  // this deffered query resolves, the UI will update.
-  const variants = storefront.query(VARIANTS_QUERY, {
-    variables: {handle},
-  });
-
   return defer({product, variants});
 }
 
@@ -99,12 +97,12 @@ function redirectToFirstVariant({
   const firstVariant = product.variants.nodes[0];
 
   throw redirect(
-    getVariantUrl({
-      pathname: url.pathname,
-      handle: product.handle,
-      selectedOptions: firstVariant.selectedOptions,
-      searchParams: new URLSearchParams(url.search),
-    }),
+    getVariantUrl(
+      url.pathname,
+      product.handle,
+      firstVariant.selectedOptions,
+      new URLSearchParams(url.search),
+    ),
     {
       status: 302,
     },
@@ -265,7 +263,7 @@ function ProductOptions({option}: {option: VariantOption}) {
       <div className="product-options-grid">
         {option.values.map(({value, isAvailable, isActive, to}) => {
           return (
-            <Link
+            <LocalizedLink
               className="product-options-item"
               key={option.name + value}
               prefetch="intent"
@@ -278,7 +276,7 @@ function ProductOptions({option}: {option: VariantOption}) {
               }}
             >
               {value}
-            </Link>
+            </LocalizedLink>
           );
         })}
       </div>
@@ -346,6 +344,7 @@ const PRODUCT_VARIANT_FRAGMENT = `#graphql
       title
       handle
     }
+    quantityAvailable
     selectedOptions {
       name
       value

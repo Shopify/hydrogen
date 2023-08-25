@@ -1,10 +1,14 @@
-import {Await, useMatches, type V2_MetaFunction} from '@remix-run/react';
+import {Await, useMatches} from '@remix-run/react';
 import {Suspense} from 'react';
-import type {CartQueryData} from '@shopify/hydrogen';
-import {CartForm} from '@shopify/hydrogen';
-import {type ActionArgs, json} from '@shopify/remix-oxygen';
+import {type CartQueryData, CartForm} from '@shopify/hydrogen';
+import {
+  type ActionArgs,
+  type V2_MetaFunction,
+  json,
+} from '@shopify/remix-oxygen';
 import type {CartApiQueryFragment} from 'storefrontapi.generated';
 import {CartMain} from '~/components/Cart';
+import {useTranslation} from '~/i18n';
 
 export const meta: V2_MetaFunction = () => {
   return [{title: `Hydrogen | Cart`}];
@@ -52,19 +56,30 @@ export async function action({request, context}: ActionArgs) {
       break;
     }
     case CartForm.ACTIONS.BuyerIdentityUpdate: {
-      result = await cart.updateBuyerIdentity({
-        ...inputs.buyerIdentity,
-        customerAccessToken,
-      });
+      const accessToken = customerAccessToken?.accessToken ?? null;
+      const input = inputs.buyerIdentity;
+
+      if (accessToken) {
+        input.customerAccessToken = accessToken;
+      }
+
+      result = await cart.updateBuyerIdentity(input);
       break;
     }
     default:
       throw new Error(`${action} cart action is not defined`);
   }
 
+  const {cart: cartResult, errors} = result;
+
+  if (errors && errors?.length > 0) {
+    return json({
+      cart: cartResult,
+      errors,
+    });
+  }
   const cartId = result.cart.id;
   const headers = cart.setCartId(result.cart.id);
-  const {cart: cartResult, errors} = result;
 
   const redirectTo = formData.get('redirectTo') ?? null;
   if (typeof redirectTo === 'string') {
@@ -85,12 +100,13 @@ export async function action({request, context}: ActionArgs) {
 }
 
 export default function Cart() {
+  const {t} = useTranslation();
   const [root] = useMatches();
   const cart = root.data?.cart as Promise<CartApiQueryFragment | null>;
 
   return (
     <div className="cart">
-      <h1>Cart</h1>
+      <h1>{t('layout.cart.title')}</h1>
       <Suspense fallback={<p>Loading cart ...</p>}>
         <Await errorElement={<div>An error occurred</div>} resolve={cart}>
           {(cart) => {

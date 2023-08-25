@@ -1,12 +1,17 @@
-import {json, redirect, type ActionArgs} from '@shopify/remix-oxygen';
-import {type V2_MetaFunction} from '@remix-run/react';
+import type {
+  LoaderArgs,
+  ActionArgs,
+  V2_MetaFunction,
+} from '@shopify/remix-oxygen';
+import {json, redirect} from '@shopify/remix-oxygen';
+import {localizePath} from '~/i18n';
 
 export const meta: V2_MetaFunction = () => {
   return [{title: 'Logout'}];
 };
 
-export async function loader() {
-  return redirect('/account/login');
+export async function loader({context}: LoaderArgs) {
+  return redirect(localizePath('/account/login', context.i18n));
 }
 
 export async function action({request, context}: ActionArgs) {
@@ -17,7 +22,7 @@ export async function action({request, context}: ActionArgs) {
     return json({error: 'Method not allowed'}, {status: 405});
   }
 
-  return redirect('/', {
+  return redirect(localizePath('/', context.i18n), {
     headers: {
       'Set-Cookie': await session.commit(),
     },

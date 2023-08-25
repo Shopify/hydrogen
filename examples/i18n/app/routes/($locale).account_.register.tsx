@@ -4,8 +4,9 @@ import {
   type ActionFunction,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {Form, Link, useActionData} from '@remix-run/react';
+import {Form, useActionData} from '@remix-run/react';
 import type {CustomerCreateMutation} from 'storefrontapi.generated';
+import {useTranslation, localizePath, LocalizedLink} from '~/i18n';
 
 type ActionResponse = {
   error: string | null;
@@ -17,7 +18,7 @@ type ActionResponse = {
 export async function loader({context}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
   if (customerAccessToken) {
-    return redirect('/account');
+    return redirect(localizePath('/account', context.i18n));
   }
 
   return json({});
@@ -106,41 +107,49 @@ export const action: ActionFunction = async ({request, context}) => {
 export default function Register() {
   const data = useActionData<ActionResponse>();
   const error = data?.error || null;
+  const {t} = useTranslation();
+
   return (
     <div className="login">
-      <h1>Register.</h1>
+      <h1>{t('account.register.title')}</h1>
       <Form method="POST">
         <fieldset>
-          <label htmlFor="email">Email address</label>
+          <label htmlFor="email">
+            {t('account.register.form.email.label')}
+          </label>
           <input
             id="email"
             name="email"
             type="email"
             autoComplete="email"
             required
-            placeholder="Email address"
-            aria-label="Email address"
+            placeholder={t('account.register.form.email.placeholder')}
+            aria-label={t('account.register.form.email.label')}
             autoFocus
           />
-          <label htmlFor="password">Password</label>
+          <label htmlFor="password">
+            {t('account.register.form.password.label')}
+          </label>
           <input
             id="password"
             name="password"
             type="password"
             autoComplete="current-password"
-            placeholder="Password"
-            aria-label="Password"
+            placeholder={t('account.register.form.password.placeholder')}
+            aria-label={t('account.register.form.password.label')}
             minLength={8}
             required
           />
-          <label htmlFor="passwordConfirm">Re-enter password</label>
+          <label htmlFor="passwordConfirm">
+            {t('account.register.form.confirmPassword.label')}
+          </label>
           <input
             id="passwordConfirm"
             name="passwordConfirm"
             type="password"
             autoComplete="current-password"
-            placeholder="Re-enter password"
-            aria-label="Re-enter password"
+            placeholder={t('account.register.form.confirmPassword.placeholder')}
+            aria-label={t('account.register.form.confirmPassword.label')}
             minLength={8}
             required
           />
@@ -154,11 +163,13 @@ export default function Register() {
         ) : (
           <br />
         )}
-        <button type="submit">Register</button>
+        <button type="submit">{t('account.register.form.submit')} →</button>
       </Form>
       <br />
       <p>
-        <Link to="/account/login">Login →</Link>
+        <LocalizedLink to="/account/login">
+          {t('account.register.login')}
+        </LocalizedLink>
       </p>
     </div>
   );

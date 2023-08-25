@@ -1,5 +1,6 @@
 import {type ActionArgs, json, redirect} from '@shopify/remix-oxygen';
 import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
+import {localizePath} from '~/i18n';
 
 type ActionResponse = {
   error: string | null;
@@ -47,7 +48,7 @@ export async function action({request, context, params}: ActionArgs) {
     }
     session.set('customerAccessToken', customerReset.customerAccessToken);
 
-    return redirect('/account', {
+    return redirect(localizePath('/account', context.i18n), {
       headers: {
         'Set-Cookie': await session.commit(),
       },

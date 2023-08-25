@@ -1,7 +1,8 @@
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-import {Link, useLoaderData, type V2_MetaFunction} from '@remix-run/react';
+import {useLoaderData, type V2_MetaFunction} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
 import type {OrderLineItemFullFragment} from 'storefrontapi.generated';
+import {localizePath, LocalizedLink} from '~/i18n';
 
 export const meta: V2_MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Order ${data?.order?.name}`}];
@@ -11,14 +12,14 @@ export async function loader({params, context}: LoaderArgs) {
   const {session, storefront} = context;
 
   if (!params.id) {
-    return redirect('/account/orders');
+    return redirect(localizePath('/account/orders', context.i18n));
   }
 
   const orderId = atob(params.id);
   const customerAccessToken = await session.get('customerAccessToken');
 
   if (!customerAccessToken) {
-    return redirect('/account/login');
+    return redirect(localizePath('/account/login', context.i18n));
   }
 
   const {order} = await storefront.query(CUSTOMER_ORDER_QUERY, {
@@ -167,13 +168,13 @@ function OrderLineRow({lineItem}: {lineItem: OrderLineItemFullFragment}) {
     <tr key={lineItem.variant!.id}>
       <td>
         <div>
-          <Link to={`/products/${lineItem.variant!.product!.handle}`}>
+          <LocalizedLink to={`/products/${lineItem.variant!.product!.handle}`}>
             {lineItem?.variant?.image && (
               <div>
                 <Image data={lineItem.variant.image} width={96} height={96} />
               </div>
             )}
-          </Link>
+          </LocalizedLink>
           <div>
             <p>{lineItem.title}</p>
             <small>{lineItem.variant!.title}</small>

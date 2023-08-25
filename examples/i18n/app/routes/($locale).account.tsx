@@ -1,6 +1,7 @@
 import {Form, NavLink, Outlet, useLoaderData} from '@remix-run/react';
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import type {CustomerFragment} from 'storefrontapi.generated';
+import {useTranslation, localizePath, useLocalizedPath} from '~/i18n';
 
 export function shouldRevalidate() {
   return true;
@@ -8,19 +9,14 @@ export function shouldRevalidate() {
 
 export async function loader({request, context}: LoaderArgs) {
   const {session, storefront} = context;
-  const {pathname} = new URL(request.url);
   const customerAccessToken = await session.get('customerAccessToken');
   const isLoggedIn = Boolean(customerAccessToken?.accessToken);
-  const isAccountHome = pathname === '/account' || pathname === '/account/';
-  const isPrivateRoute =
-    /^\/account\/(orders|orders\/.*|profile|addresses|addresses\/.*)$/.test(
-      pathname,
-    );
+  const {isPrivateRoute, isAccountHome} = parseAccountRequest(request);
 
   if (!isLoggedIn) {
     if (isPrivateRoute || isAccountHome) {
       session.unset('customerAccessToken');
-      return redirect('/account/login', {
+      return redirect(localizePath('/account/login', context.i18n), {
         headers: {
           'Set-Cookie': await session.commit(),
         },
@@ -37,7 +33,7 @@ export async function loader({request, context}: LoaderArgs) {
   } else {
     // loggedIn, default redirect to the orders page
     if (isAccountHome) {
-      return redirect('/account/orders');
+      return redirect(localizePath('/account/orders', context.i18n));
     }
   }
 
@@ -66,7 +62,7 @@ export async function loader({request, context}: LoaderArgs) {
   } catch (error) {
     console.error('There was a problem loading account', error);
     session.unset('customerAccessToken');
-    return redirect('/account/login', {
+    return redirect(localizePath('/account/login', context.i18n), {
       headers: {
         'Set-Cookie': await session.commit(),
       },
@@ -98,23 +94,23 @@ function AccountLayout({
   customer: CustomerFragment;
   children: React.ReactNode;
 }) {
-  const heading = customer
-    ? customer.firstName
-      ? `Welcome, ${customer.firstName}`
-      : `Welcome to your account.`
-    : 'Account Details';
+  const {t} = useTranslation();
+  const heading = customer.firstName
+    ? t('account.home.personalGreeting', {firstName: customer.firstName})
+    : t('account.home.greeting');
 
   return (
     <div className="account">
       <h1>{heading}</h1>
       <br />
-      <AccountMenu />
+      <AcccountMenu />
       {children}
     </div>
   );
 }
 
-function AccountMenu() {
+function AcccountMenu() {
+  const {t} = useTranslation();
   function isActiveStyle({
     isActive,
     isPending,
@@ -123,23 +119,22 @@ function AccountMenu() {
     isPending: boolean;
   }) {
     return {
-      fontWeight: isActive ? 'bold' : undefined,
+      fontWeight: isActive ? 'bold' : '',
       color: isPending ? 'grey' : 'black',
     };
   }
-
   return (
     <nav role="navigation">
       <NavLink to="/account/orders" style={isActiveStyle}>
-        Orders &nbsp;
+        {t('account.home.menu.orders')} &nbsp;
       </NavLink>
       &nbsp;|&nbsp;
       <NavLink to="/account/profile" style={isActiveStyle}>
-        &nbsp; Profile &nbsp;
+        &nbsp; {t('account.home.menu.profile')} &nbsp;
       </NavLink>
       &nbsp;|&nbsp;
       <NavLink to="/account/addresses" style={isActiveStyle}>
-        &nbsp; Addresses &nbsp;
+        &nbsp; {t('account.home.menu.addresses')} &nbsp;
       </NavLink>
       &nbsp;|&nbsp;
       <Logout />
@@ -148,11 +143,34 @@ function AccountMenu() {
 }
 
 function Logout() {
+  const {t} = useTranslation();
+  const localizedLogoutPath = useLocalizedPath('/account/logout');
   return (
-    <Form className="account-logout" method="POST" action="/account/logout">
-      &nbsp;<button type="submit">Sign out</button>
+    <Form className="account-logout" method="POST" action={localizedLogoutPath}>
+      &nbsp;<button type="submit">{t('account.home.menu.logout')}</button>
     </Form>
   );
+}
+
+/**
+ * Parse the request to determine if it is a request for a private route or account home
+ * This utility relies on a prefixed locale in the path, e.g. /es-ES/account/orders
+ * @param request
+ * @returns @type {isPrivateRoute: boolean, isAccountHome: boolean}
+ * @example
+ * ```ts
+ * const {isPrivateRoute, isAccountHome} = parseAccountRequest(request);
+ * ```
+ */
+function parseAccountRequest(request: Request) {
+  const url = new URL(request.url);
+  return {
+    isAccountHome: /^\/(\w{2}-\w{2}\/)?account\/?$/.test(url.pathname),
+    isPrivateRoute:
+      /^\/(\w{2}-\w{2}\/)?account\/(orders|orders\/.*|profile|addresses|addresses\/.*)?$/.test(
+        url.pathname,
+      ),
+  };
 }
 
 export const CUSTOMER_FRAGMENT = `#graphql

@@ -1,5 +1,6 @@
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-import {Form, Link, useActionData} from '@remix-run/react';
+import {Form, useActionData} from '@remix-run/react';
+import {useTranslation, localizePath, LocalizedLink} from '~/i18n';
 
 type ActionResponse = {
   error?: string;
@@ -9,7 +10,7 @@ type ActionResponse = {
 export async function loader({context}: LoaderArgs) {
   const customerAccessToken = await context.session.get('customerAccessToken');
   if (customerAccessToken) {
-    return redirect('/account');
+    return redirect(localizePath('/account', context.i18n));
   }
 
   return json({});
@@ -44,6 +45,7 @@ export async function action({request, context}: LoaderArgs) {
 
 export default function Recover() {
   const action = useActionData<ActionResponse>();
+  const {t} = useTranslation();
 
   return (
     <div className="account-recover">
@@ -57,26 +59,25 @@ export default function Recover() {
               minutes.
             </p>
             <br />
-            <Link to="/account/login">Return to Login</Link>
+            <LocalizedLink to="/account/login">Return to Login</LocalizedLink>
           </>
         ) : (
           <>
-            <h1>Forgot Password.</h1>
-            <p>
-              Enter the email address associated with your account to receive a
-              link to reset your password.
-            </p>
+            <h1>{t('account.recover.title')}</h1>
+            <p>{t('account.recover.description')}</p>
             <br />
             <Form method="POST">
               <fieldset>
-                <label htmlFor="email">Email</label>
+                <label htmlFor="email">
+                  {t('account.recover.form.email.label')}
+                </label>
                 <input
-                  aria-label="Email address"
+                  aria-label={t('account.recover.form.email.label')}
                   autoComplete="email"
                   autoFocus
                   id="email"
                   name="email"
-                  placeholder="Email address"
+                  placeholder={t('account.recover.form.email.placeholder')}
                   required
                   type="email"
                 />
@@ -90,12 +91,14 @@ export default function Recover() {
               ) : (
                 <br />
               )}
-              <button type="submit">Request Reset Link</button>
+              <button type="submit">{t('account.recover.form.submit')}</button>
             </Form>
             <div>
               <br />
               <p>
-                <Link to="/account/login">Login →</Link>
+                <LocalizedLink to="/account/login">
+                  {t('account.recover.login')} →
+                </LocalizedLink>
               </p>
             </div>
           </>
