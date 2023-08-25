@@ -10,19 +10,18 @@ import {
   flagsToCamelObject,
 } from '../../lib/flags.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
-import {SETUP_CSS_STRATEGIES} from './../../lib/setups/css/index.js';
-import {I18N_CHOICES} from '../../lib/setups/i18n/index.js';
+import {
+  STYLING_CHOICES,
+  type StylingChoice,
+} from './../../lib/setups/css/index.js';
+import {I18N_CHOICES, type I18nChoice} from '../../lib/setups/i18n/index.js';
 import {supressNodeExperimentalWarnings} from '../../lib/process.js';
 import {
   setupRemoteTemplate,
   setupLocalStarterTemplate,
   type InitOptions,
 } from '../../lib/onboarding/index.js';
-import {
-  LANGUAGES,
-  type I18nChoice,
-  type StylingChoice,
-} from '../../lib/onboarding/common.js';
+import {LANGUAGES} from '../../lib/onboarding/common.js';
 
 const FLAG_MAP = {f: 'force'} as Record<string, string>;
 
@@ -79,12 +78,12 @@ export default class Init extends Command {
 
     if (
       flags.styling &&
-      !SETUP_CSS_STRATEGIES.includes(flags.styling as StylingChoice)
+      !STYLING_CHOICES.includes(flags.styling as StylingChoice)
     ) {
       throw new AbortError(
         `Invalid styling strategy: ${
           flags.styling
-        }. Must be one of ${SETUP_CSS_STRATEGIES.join(', ')}`,
+        }. Must be one of ${STYLING_CHOICES.join(', ')}`,
       );
     }
 

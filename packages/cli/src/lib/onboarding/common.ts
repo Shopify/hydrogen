@@ -42,6 +42,7 @@ import {
   setupI18nStrategy,
   I18nSetupConfig,
   renderI18nPrompt,
+  I18nChoice,
 } from '../setups/i18n/index.js';
 import {titleize} from '../string.js';
 import {
@@ -53,10 +54,10 @@ import {
 import {transpileProject} from '../transpile-ts.js';
 import {
   CSS_STRATEGY_NAME_MAP,
-  SETUP_CSS_STRATEGIES,
   setupCssStrategy,
-  type CssStrategy,
   renderCssPrompt,
+  type CssStrategy,
+  type StylingChoice,
 } from '../setups/css/index.js';
 import {
   generateProjectFile,
@@ -85,10 +86,6 @@ export const LANGUAGES = {
   ts: 'TypeScript',
 } as const;
 type Language = keyof typeof LANGUAGES;
-
-export type StylingChoice = (typeof SETUP_CSS_STRATEGIES)[number];
-
-export type I18nChoice = I18nStrategy | 'none';
 
 export async function handleI18n(
   controller: AbortController,

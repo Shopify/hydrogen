@@ -29,7 +29,8 @@ export async function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
   // will remove them when compiling.
   const withArtificialNewLines = escapeNewLines(code);
 
-  const ts = await import('typescript');
+  const tsImport = await import('typescript');
+  const ts = tsImport.default ?? tsImport;
 
   // We compile the template to JavaScript.
   const compiled = ts.transpileModule(withArtificialNewLines, {
