@@ -88,7 +88,7 @@ describe('generate/route', () => {
 
         vi.mocked(getRemixConfig).mockResolvedValue({
           ...directories,
-          tsconfigPath: 'somewhere',
+          tsconfigPath: 'somewhere/tsconfig.json',
           future: {
             v2_routeConvention: true,
           },
