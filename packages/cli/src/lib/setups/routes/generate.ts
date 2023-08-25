@@ -135,7 +135,9 @@ export async function generateRoutes(options: GenerateRoutesOptions) {
     options,
     v2Flags.isV2RouteConvention,
   );
-  const typescript = options.typescript ?? !!tsconfigPath;
+  const typescript = !!(
+    options.typescript ?? tsconfigPath?.endsWith('tsconfig.json')
+  );
   const transpilerOptions = typescript
     ? undefined
     : await getJsTranspilerOptions(rootDirectory);
