@@ -136,14 +136,25 @@ export async function handleRouteGeneration(
       i18nStrategy?: I18nStrategy,
     ) => {
       if (needsRouteGeneration) {
-        const result = await generateRoutes({
-          routeName: routesToScaffold,
-          directory,
-          force: true,
-          typescript: language === 'ts',
-          localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
-          signal: controller.signal,
-        });
+        const result = await generateRoutes(
+          {
+            routeName: routesToScaffold,
+            directory,
+            force: true,
+            typescript: language === 'ts',
+            localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
+            signal: controller.signal,
+          },
+          {
+            rootDirectory: directory,
+            appDirectory: joinPath(directory, 'app'),
+            future: {
+              v2_errorBoundary: true,
+              v2_meta: true,
+              v2_routeConvention: true,
+            },
+          },
+        );
 
         return result.routeGroups;
       }
