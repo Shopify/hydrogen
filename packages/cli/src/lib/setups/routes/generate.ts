@@ -17,10 +17,7 @@ import {
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {
-  transpileFile,
-  type TranspilerOptions,
-} from '../../../lib/transpile-ts.js';
+import {transpileFile} from '../../../lib/transpile-ts.js';
 import {
   type FormatOptions,
   formatCode,
@@ -138,9 +135,6 @@ export async function generateRoutes(options: GenerateRoutesOptions) {
   const typescript = !!(
     options.typescript ?? tsconfigPath?.endsWith('tsconfig.json')
   );
-  const transpilerOptions = typescript
-    ? undefined
-    : await getJsTranspilerOptions(rootDirectory);
 
   const routes: GenerateRoutesResult[] = [];
   for (const route of routesArray) {
@@ -152,7 +146,6 @@ export async function generateRoutes(options: GenerateRoutesOptions) {
         rootDirectory,
         appDirectory,
         formatOptions,
-        transpilerOptions,
         v2Flags,
       }),
     );
@@ -162,7 +155,6 @@ export async function generateRoutes(options: GenerateRoutesOptions) {
     routes,
     routeGroups,
     isTypescript: typescript,
-    transpilerOptions,
     v2Flags,
     formatOptions,
   };
@@ -220,7 +212,6 @@ export async function generateProjectFile(
     force,
     adapter,
     templatesRoot = getStarterDir(),
-    transpilerOptions,
     formatOptions,
     localePrefix,
     v2Flags = {},
@@ -228,7 +219,6 @@ export async function generateProjectFile(
   }: GenerateProjectFileOptions & {
     rootDirectory: string;
     appDirectory: string;
-    transpilerOptions?: TranspilerOptions;
     formatOptions?: FormatOptions;
     v2Flags?: RemixV2Flags;
   },
@@ -294,14 +284,18 @@ export async function generateProjectFile(
       continue;
     }
 
+    const templateAppFilePath = getTemplateAppFile(filePath, templatesRoot);
     let templateContent = convertTemplateToRemixVersion(
-      await readFile(getTemplateAppFile(filePath, templatesRoot)),
+      await readFile(templateAppFilePath),
       v2Flags,
     );
 
     // If the project is not using TS, we need to compile the template to JS.
     if (!typescript) {
-      templateContent = await transpileFile(templateContent, transpilerOptions);
+      templateContent = await transpileFile(
+        templateContent,
+        templateAppFilePath,
+      );
     }
 
     // If the command was run with an adapter flag, we replace the default
@@ -403,18 +397,6 @@ async function findRouteDependencies(
   }
 
   return [...fileDependencies];
-}
-
-async function getJsTranspilerOptions(rootDirectory: string) {
-  const jsConfigPath = joinPath(rootDirectory, 'jsconfig.json');
-  if (!(await fileExists(jsConfigPath))) return;
-
-  return JSON.parse(
-    (await readFile(jsConfigPath, {encoding: 'utf8'})).replace(
-      /^\s*\/\/.*$/gm,
-      '',
-    ),
-  )?.compilerOptions as undefined | TranspilerOptions;
 }
 
 export async function renderRoutePrompt(options?: {abortSignal: AbortSignal}) {

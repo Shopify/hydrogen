@@ -62,7 +62,6 @@ describe('generate/route', () => {
         expect(result).toMatchObject(
           expect.objectContaining({
             isTypescript: false,
-            transpilerOptions: {test: 'js'},
             formatOptions: {singleQuote: false},
             routes: expect.any(Array),
           }),
@@ -103,7 +102,6 @@ describe('generate/route', () => {
         expect(result).toMatchObject(
           expect.objectContaining({
             isTypescript: true,
-            transpilerOptions: undefined,
             routes: expect.any(Array),
             formatOptions: expect.any(Object),
           }),
