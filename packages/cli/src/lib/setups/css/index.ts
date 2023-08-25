@@ -1,13 +1,16 @@
 import {renderSelectPrompt} from '@shopify/cli-kit/node/ui';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import type {CssSetupConfig} from './common.js';
-import type {CssStrategy} from './assets.js';
+import {type CssStrategy, SETUP_CSS_STRATEGIES} from './assets.js';
 import {setupTailwind} from './tailwind.js';
 import {setupPostCss} from './postcss.js';
 import {setupCssModules} from './css-modules.js';
 import {setupVanillaExtract} from './vanilla-extract.js';
 
-export {type CssStrategy, SETUP_CSS_STRATEGIES} from './assets.js';
+export {type CssStrategy, SETUP_CSS_STRATEGIES};
+
+export const STYLING_CHOICES = [...SETUP_CSS_STRATEGIES, 'none'] as const;
+export type StylingChoice = (typeof STYLING_CHOICES)[number];
 
 export const CSS_STRATEGY_NAME_MAP: Record<CssStrategy, string> = {
   tailwind: 'Tailwind',
