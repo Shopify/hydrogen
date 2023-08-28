@@ -1,15 +1,15 @@
-import {resolvePath, extname} from '@shopify/cli-kit/node/path';
-import {glob, readFile} from '@shopify/cli-kit/node/fs';
-import {renderSuccess} from '@shopify/cli-kit/node/ui';
-import mime from 'mime';
 import {
   Miniflare,
-  type MiniflareOptions,
   Request,
   Response,
   fetch,
   NoOpLog,
+  type MiniflareOptions,
 } from 'miniflare';
+import {resolvePath} from '@shopify/cli-kit/node/path';
+import {glob, readFile} from '@shopify/cli-kit/node/fs';
+import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {lookupMimeType} from '@shopify/cli-kit/node/mimes';
 import {connectToInspector, findInspectorUrl} from './workerd-inspector.js';
 import {DEFAULT_PORT} from '../flags.js';
 import {findPort} from '../find-port.js';
@@ -178,8 +178,7 @@ function createAssetHandler(buildPathClient: string) {
         const fileContent = await readFile(absoluteAssetPath);
         return new Response(fileContent, {
           headers: {
-            'content-type':
-              mime.getType(extname(relativeAssetPath)) || 'text/plain',
+            'content-type': lookupMimeType(relativeAssetPath) || 'text/plain',
           },
         });
       } catch (error) {
