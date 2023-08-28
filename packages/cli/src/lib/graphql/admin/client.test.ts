@@ -71,4 +71,28 @@ describe('adminRequest', () => {
       );
     });
   });
+
+  describe("when the user doesn't have access to hydrogenStorefrontCreate", () => {
+    it('throws an AbortError', async () => {
+      const fakeGraphqlError = {
+        errors: [
+          {
+            message: 'Access denied for hydrogenStorefrontCreate field',
+          },
+        ],
+      };
+
+      vi.mocked(graphqlRequest).mockRejectedValue(fakeGraphqlError);
+
+      const response = adminRequest<TestSchema>('', {
+        token: '',
+        storeFqdn: '',
+      });
+
+      await expect(response).rejects.toThrowError(AbortError);
+      await expect(response).rejects.toMatch(
+        /Couldn\'t connect storefront to Shopify/,
+      );
+    });
+  });
 });
