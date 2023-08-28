@@ -27,8 +27,8 @@ describe('adminRequest', () => {
     expect(response).toContain(fakeResponse);
   });
 
-  describe('error response', () => {
-    it('sends a query to the Admin API and returns an unknown error response', async () => {
+  describe('when there is an unknown error response', () => {
+    it('passes along the error message', async () => {
       const fakeGraphqlError = {
         errors: [
           {
@@ -46,8 +46,10 @@ describe('adminRequest', () => {
 
       await expect(response).rejects.toContain(fakeGraphqlError);
     });
+  });
 
-    it("sends a query to the Admin API and returns an error where app isn't installed", async () => {
+  describe("when the app isn't installed", () => {
+    it('throws an AbortError', async () => {
       const fakeGraphqlError = {
         errors: [
           {
@@ -64,6 +66,9 @@ describe('adminRequest', () => {
       });
 
       await expect(response).rejects.toThrowError(AbortError);
+      await expect(response).rejects.toMatch(
+        /Hydrogen sales channel isn\'t installed/,
+      );
     });
   });
 });
