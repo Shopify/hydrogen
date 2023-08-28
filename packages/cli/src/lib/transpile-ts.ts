@@ -22,6 +22,7 @@ export async function transpileFile(code: string, filename: string) {
     presets: ['@babel/preset-typescript'],
     babelrc: false,
     configFile: false,
+    retainLines: true,
     filename,
   });
 
