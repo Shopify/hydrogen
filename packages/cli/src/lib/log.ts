@@ -88,9 +88,33 @@ function injectLogReplacer(
  * Mute logs from Miniflare
  */
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
+  injectLogReplacer('log');
   injectLogReplacer('error');
 
-  addMessageReplacers('dev', [
+  let isFirstWorkerReload = true;
+  addMessageReplacers('dev-node', [
+    ([first]) => typeof first === 'string' && first.includes('[mf:'),
+    (args: string[]) => {
+      const first = args[0] as string;
+
+      if (workerReload !== false && first.includes('Worker reloaded')) {
+        if (isFirstWorkerReload) {
+          isFirstWorkerReload = false;
+          // return args as string[];
+          return;
+        }
+
+        return [first.replace('[mf:inf] ', '🔄 ') + '\n', ...args.slice(1)];
+      }
+
+      if (!first.includes('[mf:err]')) {
+        // Hide logs except errors
+        return;
+      }
+    },
+  ]);
+
+  addMessageReplacers('dev-workerd', [
     // Workerd logs
     ([first]) =>
       typeof first === 'string' && /^\x1B\[31m(workerd\/|stack:)/.test(first),
