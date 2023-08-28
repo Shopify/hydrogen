@@ -25,6 +25,13 @@ export async function startWorkerdServer({
   env,
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
   const inspectorPort = await findPort(8787);
+  const oxygenHeadersMap = Object.values(OXYGEN_HEADERS_MAP).reduce(
+    (acc, item) => {
+      acc[item.name] = item.defaultValue;
+      return acc;
+    },
+    {} as Record<string, string>,
+  );
 
   const buildMiniOxygenOptions = async () =>
     ({
@@ -42,13 +49,7 @@ export async function startWorkerdServer({
           script: `export default { fetch: ${miniOxygenHandler.toString()} }`,
           bindings: {
             initialAssets: await glob('**/*', {cwd: buildPathClient}),
-            oxygenHeadersMap: Object.values(OXYGEN_HEADERS_MAP).reduce(
-              (acc, item) => {
-                acc[item.name] = item.defaultValue;
-                return acc;
-              },
-              {} as Record<string, string>,
-            ),
+            oxygenHeadersMap,
           },
           serviceBindings: {
             hydrogen: 'hydrogen',

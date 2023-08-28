@@ -20,6 +20,11 @@ export async function startNodeServer({
 }: MiniOxygenOptions): Promise<MiniOxygenInstance> {
   const dotenvPath = resolvePath(root, '.env');
   const requestMap = new WeakMap<Request, {startTime: number}>();
+  const oxygenHeaders = Object.fromEntries(
+    Object.entries(OXYGEN_HEADERS_MAP).map(([key, value]) => {
+      return [key, value.defaultValue];
+    }),
+  );
 
   const miniOxygen = await startServer({
     script: await readFile(buildPathWorkerFile),
@@ -35,11 +40,7 @@ export async function startNodeServer({
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
-    oxygenHeaders: Object.fromEntries(
-      Object.entries(OXYGEN_HEADERS_MAP).map(([key, value]) => {
-        return [key, value.defaultValue];
-      }),
-    ),
+    oxygenHeaders,
     onRequest(request) {
       requestMap.set(request, {startTime: Date.now()});
     },
