@@ -8,7 +8,7 @@ import {
 } from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
-import {logRequestLine} from './common.js';
+import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 
 export async function startNodeServer({
   root,
@@ -35,6 +35,11 @@ export async function startNodeServer({
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
+    oxygenHeaders: Object.fromEntries(
+      Object.entries(OXYGEN_HEADERS_MAP).map(([key, value]) => {
+        return [key, value.defaultValue];
+      }),
+    ),
     onRequest(request) {
       requestMap.set(request, {startTime: Date.now()});
     },
