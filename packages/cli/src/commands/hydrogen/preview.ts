@@ -2,7 +2,7 @@ import Command from '@shopify/cli-kit/node/base-command';
 import {muteDevLogs} from '../../lib/log.js';
 import {getProjectPaths} from '../../lib/remix-config.js';
 import {commonFlags, DEFAULT_PORT} from '../../lib/flags.js';
-import {startMiniOxygen} from '../../lib/mini-oxygen.js';
+import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
 
 export default class Preview extends Command {
   static description =

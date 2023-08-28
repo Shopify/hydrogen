@@ -20,7 +20,7 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen.js';
+import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -236,7 +236,7 @@ async function runDev({
           if (!miniOxygen) {
             await safeStartMiniOxygen();
           } else if (liveReload) {
-            await miniOxygen.reload({worker: true});
+            await miniOxygen.reload();
           }
 
           liveReload?.onAppReady(context);

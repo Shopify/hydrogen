@@ -10,18 +10,11 @@ import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {
   startServer,
   type MiniOxygenOptions as InternalMiniOxygenOptions,
+  type Request,
+  type Response,
 } from '@shopify/mini-oxygen';
-import {DEFAULT_PORT} from './flags.js';
-
-type MiniOxygenOptions = {
-  root: string;
-  port?: number;
-  watch?: boolean;
-  autoReload?: boolean;
-  buildPathClient: string;
-  buildPathWorkerFile: string;
-  env?: {[key: string]: string};
-};
+import {DEFAULT_PORT} from '../flags.js';
+import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 
 export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygen>>;
 
@@ -29,11 +22,10 @@ export async function startMiniOxygen({
   root,
   port = DEFAULT_PORT,
   watch = false,
-  autoReload = watch,
   buildPathWorkerFile,
   buildPathClient,
   env,
-}: MiniOxygenOptions) {
+}: MiniOxygenOptions): Promise<MiniOxygenInstance> {
   const dotenvPath = resolvePath(root, '.env');
 
   const miniOxygen = await startServer({
@@ -42,7 +34,7 @@ export async function startMiniOxygen({
     publicPath: '',
     port,
     watch,
-    autoReload,
+    autoReload: watch,
     modules: true,
     env: {
       ...env,
@@ -50,13 +42,11 @@ export async function startMiniOxygen({
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
-    onResponse: (request, response) =>
+    onResponse(request, response) {
       // 'Request' and 'Response' types in MiniOxygen comes from
       // Miniflare and are slightly different from standard types.
-      logResponse(
-        request as unknown as Request,
-        response as unknown as Response,
-      ),
+      return logResponse(request, response);
+    },
   });
 
   const listeningAt = `http://localhost:${miniOxygen.port}`;
@@ -64,32 +54,21 @@ export async function startMiniOxygen({
   return {
     listeningAt,
     port: miniOxygen.port,
-    async reload(
-      options: Partial<Pick<MiniOxygenOptions, 'env'>> & {
-        worker?: boolean;
-      } = {},
-    ) {
+    async reload(options) {
       const nextOptions: Partial<InternalMiniOxygenOptions> = {};
 
-      if (options.env) {
+      if (options?.env) {
         nextOptions.env = {
           ...options.env,
           ...(process.env as Record<string, string>),
         };
       }
 
-      if (options.worker) {
-        nextOptions.script = await readFile(buildPathWorkerFile);
-      }
+      nextOptions.script = await readFile(buildPathWorkerFile);
 
-      return miniOxygen.reload(nextOptions);
+      await miniOxygen.reload(nextOptions);
     },
-    showBanner(options?: {
-      mode?: string;
-      headlinePrefix?: string;
-      extraLines?: string[];
-      appName?: string;
-    }) {
+    showBanner(options) {
       console.log('');
       renderSuccess({
         headline: `${options?.headlinePrefix ?? ''}MiniOxygen ${
@@ -101,6 +80,9 @@ export async function startMiniOxygen({
         ],
       });
       console.log('');
+    },
+    async close() {
+      await miniOxygen.close();
     },
   };
 }
