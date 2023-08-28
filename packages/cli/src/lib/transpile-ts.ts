@@ -1,7 +1,7 @@
 import path from 'path';
 import fs from 'fs/promises';
-import ts, {type CompilerOptions} from 'typescript';
 import glob from 'fast-glob';
+import type {CompilerOptions} from 'typescript';
 import {outputDebug} from '@shopify/cli-kit/node/output';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
 
@@ -24,10 +24,13 @@ const DEFAULT_TS_CONFIG: TranspilerOptions = {
   skipLibCheck: true,
 };
 
-export function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
+export async function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
   // We need to escape new lines in the template because TypeScript
   // will remove them when compiling.
   const withArtificialNewLines = escapeNewLines(code);
+
+  const tsImport = await import('typescript');
+  const ts = tsImport.default ?? tsImport;
 
   // We compile the template to JavaScript.
   const compiled = ts.transpileModule(withArtificialNewLines, {
@@ -110,7 +113,7 @@ export async function transpileProject(projectDir: string) {
     }
 
     const tsx = await fs.readFile(entry, 'utf8');
-    const mjs = formatCode(transpileFile(tsx), formatConfig);
+    const mjs = await formatCode(await transpileFile(tsx), formatConfig);
 
     await fs.rm(entry);
     await fs.writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs, 'utf8');

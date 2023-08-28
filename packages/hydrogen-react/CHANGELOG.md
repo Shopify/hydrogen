@@ -1,5 +1,13 @@
 # @shopify/hydrogen-react
 
+## 2023.7.2
+
+### Patch Changes
+
+- This change updates the implementation of the parseGid function so that it uses the builtin `URL` class to parse the gid. This enables the parts of the string, such as the search params, to be parsed as well ([#1185](https://github.com/Shopify/hydrogen/pull/1185)) by [@tatemz](https://github.com/tatemz)
+
+- Image component docs typo - Contributed by @MilosMosovsky ([#1243](https://github.com/Shopify/hydrogen/pull/1243)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2023.7.1
 
 ### Patch Changes

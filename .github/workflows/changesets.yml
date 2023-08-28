@@ -3,7 +3,7 @@ name: Changesets
 on:
   push:
     branches:
-      - '[0-9]+-[0-9]+'
+      - main
 
 concurrency:
   group: changeset-${{ github.head_ref }}
@@ -17,12 +17,14 @@ jobs:
     outputs:
       published: ${{ steps.changesets.outputs.published }}
       latest: ${{ env.latest }}
+      latestBranch: ${{ env.latestBranch }}
     steps:
       - name: Flags
         id: flags
         run: |
-          # IMPORTANT: Update this variable whenever we move to a new major version:
-          echo "latest=${{ github.ref_name == '2023-07' }}" >> $GITHUB_ENV
+          # IMPORTANT: Update this latestBranch whenever we move to a new major version:
+          echo "latestBranch=2023-07" >> $GITHUB_ENV
+          echo "latest=${{ github.ref_name == 'main' }}" >> $GITHUB_ENV
 
       - name: Checkout the code
         uses: actions/checkout@v3
@@ -54,24 +56,11 @@ jobs:
           version: npm run version
           publish: npm run changeset publish
           # we use the commit message in next release workflow file. This avoid a next release when an actual release is happening
-          commit: '[ci] release ${{ github.ref_name }}'
-          title: '[ci] release ${{ github.ref_name }}'
+          commit: '[ci] release ${{ env.latestBranch }}'
+          title: '[ci] release ${{ env.latestBranch }}'
         env:
           GITHUB_TOKEN: ${{ secrets.SHOPIFY_GH_ACCESS_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      # - name: Create Release Pull Request or Publish (for legacy patch release)
-      #   if: env.latest != 'true'
-      #   id: changesets_legacy
-      #   uses: changesets/action@v1
-      #   with:
-      #     version: npm run version
-      #     publish: npm run changeset publish --tag legacy
-      #     commit: '[ci] release ${{ github.ref_name }}'
-      #     title: '[ci] release ${{ github.ref_name }}'
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      #     NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   compile:
     needs: changelog
@@ -106,6 +95,37 @@ jobs:
           git show-ref
           git commit -m "Update templates for dist"
           git push origin HEAD:dist --force
+
+  update_lock_and_sync_latest:
+    needs: changelog
+    # Only update package-lock.json if a release was published, and we're on the "latest" release branch
+    if: needs.changelog.outputs.published == 'true' && needs.changelog.outputs.latest == 'true'
+    runs-on: ubuntu-latest
+    name: Update package-lock.json
+    steps:
+      - name: Checkout the code
+        uses: actions/checkout@v3
+
+      - name: Update package-lock.json
+        run: npm install --package-lock-only --ignore-engines
+
+      - name: Push commit to main branch
+        run: |
+          git add .
+          git status
+          git config user.email "hydrogen@shopify.com"
+          git config user.name "Hydrogen Bot"
+          git show-ref
+          git commit -m "Update package-lock.json"
+          git push origin HEAD:main
+
+      - name: Sync latest to version branch
+        run: |
+          git config user.email "hydrogen@shopify.com"
+          git config user.name "Hydrogen Bot"
+          git show-ref
+          git commit -m "[ci] release ${{ needs.changelog.outputs.latestBranch }}"
+          git push origin HEAD:${{ needs.changelog.outputs.latestBranch }}
 
   # discord_announcement:
   #   needs: changelog

@@ -4,7 +4,7 @@
   "exclude": ["dist", "__tests__", "node_modules", ".turbo"],
   "compilerOptions": {
     "moduleResolution": "NodeNext",
-    "jsx": "preserve",
+    "jsx": "react-jsx",
     "rootDir": "src",
     "noUncheckedIndexedAccess": true,
     "types": ["@shopify/oxygen-workers-types", "node", "@remix-run/dev"],
