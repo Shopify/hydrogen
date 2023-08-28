@@ -1,1 +1,2 @@
-export {startMiniOxygen, type MiniOxygen} from './node.js';
+export {startMiniOxygen} from './node.js';
+export type {MiniOxygenInstance as MiniOxygen} from './types.js';
