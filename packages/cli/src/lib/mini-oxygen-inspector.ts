@@ -222,11 +222,11 @@ export function connectToInspector({
       }
     }
 
-    const error = new Error(errorProperties.message, {
-      cause: errorProperties.cause,
-    });
-
+    const error = new Error(errorProperties.message);
     error.stack = errorProperties.stack;
+    if (errorProperties.cause) {
+      error.cause = errorProperties.cause;
+    }
 
     return error;
   }
@@ -308,7 +308,7 @@ export function connectToInspector({
 
       if (evt.method === 'Runtime.consoleAPICalled') {
         const params = evt.params as Protocol.Runtime.ConsoleAPICalledEvent;
-        logConsoleMessage(params, reconstructError);
+        await logConsoleMessage(params, reconstructError);
       }
     } else {
       // We should never get here, but who know is 2022...
