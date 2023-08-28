@@ -1,12 +1,9 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {describe, it, expect, vi, afterEach} from 'vitest';
+import {describe, it, expect, vi} from 'vitest';
 
 import {adminRequest} from './client.js';
 
-import {
-  graphqlRequest,
-  type GraphQLVariables,
-} from '@shopify/cli-kit/node/api/graphql';
+import {graphqlRequest} from '@shopify/cli-kit/node/api/graphql';
 
 vi.mock('@shopify/cli-kit/node/api/graphql');
 
