@@ -154,6 +154,12 @@
           "multiple": false,
           "default": 3000
         },
+        "native-unstable": {
+          "name": "native-unstable",
+          "type": "boolean",
+          "description": "Run the app in a native environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
+          "allowNo": false
+        },
         "codegen-unstable": {
           "name": "codegen-unstable",
           "type": "boolean",
@@ -410,6 +416,12 @@
           "description": "Port to run the server on.",
           "multiple": false,
           "default": 3000
+        },
+        "native-unstable": {
+          "name": "native-unstable",
+          "type": "boolean",
+          "description": "Run the app in a native environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
+          "allowNo": false
         }
       },
       "args": {}

@@ -20,6 +20,11 @@ export const commonFlags = {
     env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
     default: DEFAULT_PORT,
   }),
+  native: Flags.boolean({
+    description:
+      'Run the app in a native environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.',
+    env: 'SHOPIFY_HYDROGEN_FLAG_UNSTABLE_NATIVE',
+  }),
   force: Flags.boolean({
     description:
       'Overwrite the destination directory and files if they already exist.',

@@ -16,7 +16,7 @@ import {findPort} from '../find-port.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {OXYGEN_HEADERS_MAP, logRequestLine} from './common.js';
 
-export async function startMiniOxygen({
+export async function startWorkerdServer({
   root,
   port = DEFAULT_PORT,
   watch = false,
@@ -108,7 +108,9 @@ export async function startMiniOxygen({
     showBanner(options) {
       console.log('');
       renderSuccess({
-        headline: `${options?.headlinePrefix ?? ''}MiniOxygen ${
+        headline: `${
+          options?.headlinePrefix ?? ''
+        }MiniOxygen (native-unstable) ${
           options?.mode ?? 'development'
         } server running.`,
         body: [

@@ -10,7 +10,7 @@ import {DEFAULT_PORT} from '../flags.js';
 import type {MiniOxygenInstance, MiniOxygenOptions} from './types.js';
 import {logRequestLine} from './common.js';
 
-export async function startMiniOxygen({
+export async function startNodeServer({
   root,
   port = DEFAULT_PORT,
   watch = false,
