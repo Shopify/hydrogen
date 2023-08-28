@@ -16,9 +16,9 @@ import {
   fetch,
   NoOpLog,
 } from 'miniflare';
-import {connectToInspector, findInspectorUrl} from './mini-oxygen-inspector.js';
-import {DEFAULT_PORT} from './flags.js';
-import {findPort} from './find-port.js';
+import {connectToInspector, findInspectorUrl} from './workerd-inspector.js';
+import {DEFAULT_PORT} from '../flags.js';
+import {findPort} from '../find-port.js';
 
 type MiniOxygenOptions = {
   root: string;
