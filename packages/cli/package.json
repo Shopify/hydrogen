@@ -47,7 +47,7 @@
     "fs-extra": "^11.1.0",
     "gunzip-maybe": "^1.4.2",
     "mime": "^3.0.0",
-    "miniflare": "3.20230724.0",
+    "miniflare": "3.20230821.0",
     "prettier": "^2.8.4",
     "recursive-readdir": "^2.2.3",
     "source-map": "^0.7.4",
