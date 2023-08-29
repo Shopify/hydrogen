@@ -1,12 +1,9 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {describe, it, expect, vi, afterEach} from 'vitest';
+import {describe, it, expect, vi} from 'vitest';
 
 import {adminRequest} from './client.js';
 
-import {
-  graphqlRequest,
-  type GraphQLVariables,
-} from '@shopify/cli-kit/node/api/graphql';
+import {graphqlRequest} from '@shopify/cli-kit/node/api/graphql';
 
 vi.mock('@shopify/cli-kit/node/api/graphql');
 
@@ -30,8 +27,8 @@ describe('adminRequest', () => {
     expect(response).toContain(fakeResponse);
   });
 
-  describe('error response', () => {
-    it('sends a query to the Admin API and returns an unknown error response', async () => {
+  describe('when there is an unknown error response', () => {
+    it('passes along the error message', async () => {
       const fakeGraphqlError = {
         errors: [
           {
@@ -49,8 +46,10 @@ describe('adminRequest', () => {
 
       await expect(response).rejects.toContain(fakeGraphqlError);
     });
+  });
 
-    it("sends a query to the Admin API and returns an error where app isn't installed", async () => {
+  describe("when the app isn't installed", () => {
+    it('throws an AbortError', async () => {
       const fakeGraphqlError = {
         errors: [
           {
@@ -67,6 +66,33 @@ describe('adminRequest', () => {
       });
 
       await expect(response).rejects.toThrowError(AbortError);
+      await expect(response).rejects.toMatch(
+        /Hydrogen sales channel isn\'t installed/,
+      );
+    });
+  });
+
+  describe("when the user doesn't have access to hydrogenStorefrontCreate", () => {
+    it('throws an AbortError', async () => {
+      const fakeGraphqlError = {
+        errors: [
+          {
+            message: 'Access denied for hydrogenStorefrontCreate field',
+          },
+        ],
+      };
+
+      vi.mocked(graphqlRequest).mockRejectedValue(fakeGraphqlError);
+
+      const response = adminRequest<TestSchema>('', {
+        token: '',
+        storeFqdn: '',
+      });
+
+      await expect(response).rejects.toThrowError(AbortError);
+      await expect(response).rejects.toMatch(
+        /Couldn\'t connect storefront to Shopify/,
+      );
     });
   });
 });

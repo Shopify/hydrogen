@@ -51,6 +51,27 @@ export async function adminRequest<T>(
       );
     }
 
+    if (
+      errors?.some?.((error) =>
+        error.message.includes(
+          'Access denied for hydrogenStorefrontCreate field',
+        ),
+      )
+    ) {
+      throw new AbortError("Couldn't connect storefront to Shopify", [
+        'Common reasons for this error include:',
+        {
+          list: {
+            items: [
+              "The Hydrogen sales channel isn't installed on the store.",
+              "You don't have the required account permission to manage apps or channels.",
+              "You're trying to connect to an ineligible store type (Trial, Development store)",
+            ],
+          },
+        },
+      ]);
+    }
+
     throw error;
   }
 }
