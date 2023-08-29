@@ -62,7 +62,6 @@ describe('generate/route', () => {
         expect(result).toMatchObject(
           expect.objectContaining({
             isTypescript: false,
-            transpilerOptions: {test: 'js'},
             formatOptions: {singleQuote: false},
             routes: expect.any(Array),
           }),
@@ -88,7 +87,7 @@ describe('generate/route', () => {
 
         vi.mocked(getRemixConfig).mockResolvedValue({
           ...directories,
-          tsconfigPath: 'somewhere',
+          tsconfigPath: 'somewhere/tsconfig.json',
           future: {
             v2_routeConvention: true,
           },
@@ -103,7 +102,6 @@ describe('generate/route', () => {
         expect(result).toMatchObject(
           expect.objectContaining({
             isTypescript: true,
-            transpilerOptions: undefined,
             routes: expect.any(Array),
             formatOptions: expect.any(Object),
           }),

@@ -25,12 +25,12 @@ const DEFAULT_TS_CONFIG: TranspilerOptions = {
 };
 
 export async function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
+  const tsImport = await import('typescript');
+  const ts = tsImport.default ?? tsImport;
+
   // We need to escape new lines in the template because TypeScript
   // will remove them when compiling.
   const withArtificialNewLines = escapeNewLines(code);
-
-  const tsImport = await import('typescript');
-  const ts = tsImport.default ?? tsImport;
 
   // We compile the template to JavaScript.
   const compiled = ts.transpileModule(withArtificialNewLines, {
