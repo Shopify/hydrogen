@@ -52,6 +52,7 @@ export async function loader({params, request, context}: LoaderArgs) {
       country: context.storefront.i18n.country,
       language: context.storefront.i18n.language,
     },
+    queryName: 'Product',
   });
 
   if (!product?.id) {
@@ -73,6 +74,7 @@ export async function loader({params, request, context}: LoaderArgs) {
       country: context.storefront.i18n.country,
       language: context.storefront.i18n.language,
     },
+    queryName: 'Product Variant',
   });
 
   const recommended = getRecommendedProducts(context.storefront, product.id);

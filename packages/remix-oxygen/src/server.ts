@@ -44,8 +44,16 @@ type StorefrontHeaders = {
 export function getStorefrontHeaders(request: Request): StorefrontHeaders {
   const headers = request.headers;
   return {
-    requestGroupId: headers.get('request-id'),
+    requestGroupId: headers.get('request-id') || generateUUID(),
     buyerIp: headers.get('oxygen-buyer-ip'),
     cookie: headers.get('cookie'),
   };
+}
+
+export function generateUUID() {
+  if (typeof crypto !== 'undefined' && !!crypto.randomUUID) {
+    return crypto.randomUUID();
+  } else {
+    return `weak-${Math.random().toString(16).substring(2)}`;
+  }
 }

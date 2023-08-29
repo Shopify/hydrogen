@@ -100,6 +100,13 @@ export async function runWithCache<T = unknown>(
       waitUntil?.(revalidatingPromise);
     }
 
+    if (cachedResult && cachedResult[1].headers) {
+      cachedResult[1].headers.push([
+        'hydrogen-cache-status',
+        cacheInfo.headers.get('hydrogen-cache-status') ?? 'MISS',
+      ]);
+    }
+
     return cachedResult;
   }
 

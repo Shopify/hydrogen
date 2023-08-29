@@ -28,6 +28,7 @@ import {
 } from '@shopify/hydrogen-react/storefront-api-types';
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
+import {LogSubRequestProps, logSubRequest} from './utils/request-logging';
 
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
@@ -91,13 +92,18 @@ type StorefrontQuerySecondParam<
   RawGqlString extends keyof StorefrontQueries | string = string,
 > = (RawGqlString extends keyof StorefrontQueries
   ? StorefrontCommonOptions<StorefrontQueries[RawGqlString]['variables']>
-  : StorefrontCommonOptions<GenericVariables>) & {cache?: CachingStrategy};
+  : StorefrontCommonOptions<GenericVariables>) & {
+  cache?: CachingStrategy;
+  queryName?: string;
+};
 
 type StorefrontMutateSecondParam<
   RawGqlString extends keyof StorefrontMutations | string = string,
 > = RawGqlString extends keyof StorefrontMutations
   ? StorefrontCommonOptions<StorefrontMutations[RawGqlString]['variables']>
-  : StorefrontCommonOptions<GenericVariables>;
+  : StorefrontCommonOptions<GenericVariables> & {
+      queryName?: string;
+    };
 
 /**
  * Interface to interact with the Storefront API.
@@ -292,7 +298,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     cache: cacheOptions,
     headers = [],
     storefrontApiVersion,
+    queryName,
   }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
+    const startTime = new Date().getTime();
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
@@ -338,6 +346,15 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       queryVariables,
       errors: undefined,
     };
+
+    process.env.NODE_ENV === 'development' &&
+      logSubRequest({
+        query,
+        requestHeaders: {...defaultHeaders, ...userHeaders},
+        response,
+        startTime,
+        displayName: queryName,
+      });
 
     if (!response.ok) {
       /**
