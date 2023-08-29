@@ -2,13 +2,29 @@ import {useEffect} from 'react';
 
 export function Playground({
   portableWalletsFqdn,
+  country,
+  variantIds,
 }: {
   portableWalletsFqdn: string;
+  country: string;
+  variantIds: string[];
 }) {
   usePortableWalletsPlayground(portableWalletsFqdn);
 
   // This is defined in `portable-wallets`
-  return <prototype-wc></prototype-wc>;
+  return [
+    <wallet-button
+      id="buy-it-now"
+      store-domain="https://shop1.shopify.portable-wallets-azek.geoff-caven.us.spin.dev"
+      buyer-country={country}
+      variants={JSON.stringify(variantIds)}
+      key="buy-it-now"
+    ></wallet-button>,
+    // <wallet-button
+    //   id="paypal"
+    //   store-domain="https://shop1.shopify.portable-wallets-azek.geoff-caven.us.spin.dev"
+    // ></wallet-button>
+  ];
 }
 
 function usePortableWalletsPlayground(fqdn: string) {

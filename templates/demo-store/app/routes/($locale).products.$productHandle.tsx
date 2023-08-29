@@ -105,12 +105,13 @@ export async function loader({params, request, context}: LoaderArgs) {
     storeDomain: shop.primaryDomain.url,
     recommended,
     analytics: {
-      pageType: AnalyticsPageType.product,
       resourceId: product.id,
       products: [productAnalytics],
       totalValue: parseFloat(selectedVariant.price.amount),
+      pageType: AnalyticsPageType.product,
     },
     seo,
+    country: context.storefront.i18n.country,
     portableWalletsFqdn: context.env.SPIN_PORTABLE_WALLETS_SERVICE_FQDN,
   });
 }
@@ -135,7 +136,8 @@ function redirectToFirstVariant({
 }
 
 export default function Product() {
-  const {product, shop, recommended, variants} = useLoaderData<typeof loader>();
+  const {product, shop, recommended, variants, country} =
+    useLoaderData<typeof loader>();
   const {media, title, vendor, descriptionHtml} = product;
   const {shippingPolicy, refundPolicy} = shop;
 
@@ -165,6 +167,7 @@ export default function Product() {
                   {(resp) => (
                     <ProductForm
                       variants={resp.product?.variants.nodes || []}
+                      country={country}
                     />
                   )}
                 </Await>
@@ -211,8 +214,10 @@ export default function Product() {
 
 export function ProductForm({
   variants,
+  country,
 }: {
   variants: ProductVariantFragmentFragment[];
+  country: string;
 }) {
   const {product, analytics, storeDomain, portableWalletsFqdn} =
     useLoaderData<typeof loader>();
@@ -384,7 +389,11 @@ export function ProductForm({
                 storeDomain={storeDomain}
               />
             )}
-            <Playground portableWalletsFqdn={portableWalletsFqdn} />
+            <Playground
+              portableWalletsFqdn={portableWalletsFqdn}
+              variantIds={[selectedVariant?.id!]}
+              country={country}
+            />
           </div>
         )}
       </div>
