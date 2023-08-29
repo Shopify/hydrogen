@@ -1,0 +1,32 @@
+name: Assign Version Packages PR
+
+on:
+  pull_request_target:
+    types:
+      - opened
+
+jobs:
+  assign:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v2
+
+      - name: Assign PR to team
+        uses: actions/github-script@v5
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            const pr = await github.rest.pulls.get({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: context.issue.number
+            });
+            if (pr.data.title === 'Version Packages') {
+              await github.rest.issues.setAssignees({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                assignees: ['@Shopify/oxygen-platform-atc']
+              });
+            }

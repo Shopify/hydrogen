@@ -3,5 +3,3 @@
 # oxygen-platform-atc (to manage bot notifications; overrides * ownership above)
 package.json                       @Shopify/oxygen-platform-atc
 yarn.lock                          @Shopify/oxygen-platform-atc
-CHANGELOG.md                       @Shopify/oxygen-platform-atc
-.changeset/*                       @Shopify/oxygen-platform-atc
