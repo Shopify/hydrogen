@@ -55,6 +55,14 @@ export async function loader({params, request, context}: LoaderArgs) {
     },
   });
 
+  if (!product?.id) {
+    throw new Response('product', {status: 404});
+  }
+
+  if (!product.selectedVariant) {
+    return redirectToFirstVariant({product, request});
+  }
+
   // In order to show which variants are available in the UI, we need to query
   // all of them. But there might be a *lot*, so instead separate the variants
   // into it's own separate query that is deferred. So there's a brief moment
@@ -68,15 +76,10 @@ export async function loader({params, request, context}: LoaderArgs) {
     },
   });
 
-  if (!product?.id) {
-    throw new Response('product', {status: 404});
-  }
-
-  if (!product.selectedVariant) {
-    return redirectToFirstVariant({product, request});
-  }
-
   const recommended = getRecommendedProducts(context.storefront, product.id);
+
+  // TODO: firstVariant is never used because we will always have a selectedVariant due to redirect
+  // Investigate if we can avoid the redirect for product pages with no search params for first variant
   const firstVariant = product.variants.nodes[0];
   const selectedVariant = product.selectedVariant ?? firstVariant;
 

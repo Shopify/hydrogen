@@ -331,9 +331,9 @@ describe('analytics', () => {
       };
       // @ts-ignore
       global.PerformanceNavigation = {
-        TYPE_NAVIGATE: 1,
-        TYPE_RELOAD: 2,
-        TYPE_BACK_FORWARD: 3,
+        TYPE_NAVIGATE: 0,
+        TYPE_RELOAD: 1,
+        TYPE_BACK_FORWARD: 2,
       };
       // @ts-ignore
       performance = {
