@@ -19,7 +19,6 @@ describe('runGenerate', () => {
   it('calls route generation and renders the result', async () => {
     vi.mocked(generateRoutes).mockResolvedValue({
       isTypescript: true,
-      transpilerOptions: {} as any,
       formatOptions: {} as any,
       v2Flags: {} as any,
       routeGroups: {},

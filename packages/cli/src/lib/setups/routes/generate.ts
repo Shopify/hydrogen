@@ -17,10 +17,7 @@ import {
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {
-  transpileFile,
-  type TranspilerOptions,
-} from '../../../lib/transpile-ts.js';
+import {transpileFile} from '../../../lib/transpile-ts.js';
 import {
   type FormatOptions,
   formatCode,
@@ -144,10 +141,9 @@ export async function generateRoutes(
     options,
     v2Flags.isV2RouteConvention,
   );
-  const typescript = options.typescript ?? !!tsconfigPath;
-  const transpilerOptions = typescript
-    ? undefined
-    : await getJsTranspilerOptions(rootDirectory);
+  const typescript = !!(
+    options.typescript ?? tsconfigPath?.endsWith('tsconfig.json')
+  );
 
   const routes: GenerateRoutesResult[] = [];
   for (const route of routesArray) {
@@ -159,7 +155,6 @@ export async function generateRoutes(
         rootDirectory,
         appDirectory,
         formatOptions,
-        transpilerOptions,
         v2Flags,
       }),
     );
@@ -169,7 +164,6 @@ export async function generateRoutes(
     routes,
     routeGroups,
     isTypescript: typescript,
-    transpilerOptions,
     v2Flags,
     formatOptions,
   };
@@ -201,16 +195,16 @@ async function getLocalePrefix(
     () => [],
   );
 
-  const homeRouteWithLocaleRE = isV2RouteConvention
-    ? /^\(\$(\w+)\)\._index.[jt]sx?$/
+  const coreRouteWithLocaleRE = isV2RouteConvention
+    ? /^\(\$(\w+)\)\.(_index|\$|cart).[jt]sx?$/
     : /^\(\$(\w+)\)$/;
 
-  const homeRouteWithLocale = existingFiles.find((file) =>
-    homeRouteWithLocaleRE.test(file),
+  const coreRouteWithLocale = existingFiles.find((file) =>
+    coreRouteWithLocaleRE.test(file),
   );
 
-  if (homeRouteWithLocale) {
-    return homeRouteWithLocale.match(homeRouteWithLocaleRE)?.[1];
+  if (coreRouteWithLocale) {
+    return coreRouteWithLocale.match(coreRouteWithLocaleRE)?.[1];
   }
 }
 
@@ -227,7 +221,6 @@ export async function generateProjectFile(
     force,
     adapter,
     templatesRoot = getStarterDir(),
-    transpilerOptions,
     formatOptions,
     localePrefix,
     v2Flags = {},
@@ -235,7 +228,6 @@ export async function generateProjectFile(
   }: GenerateProjectFileOptions & {
     rootDirectory: string;
     appDirectory: string;
-    transpilerOptions?: TranspilerOptions;
     formatOptions?: FormatOptions;
     v2Flags?: RemixV2Flags;
   },
@@ -292,23 +284,22 @@ export async function generateProjectFile(
       await mkdir(dirname(destinationPath));
     }
 
+    const templateAppFilePath = getTemplateAppFile(filePath, templatesRoot);
+
     if (!/\.[jt]sx?$/.test(filePath)) {
       // Nothing to transform for non-JS files.
-      await copyFile(
-        getTemplateAppFile(filePath, templatesRoot),
-        destinationPath,
-      );
+      await copyFile(templateAppFilePath, destinationPath);
       continue;
     }
 
     let templateContent = convertTemplateToRemixVersion(
-      await readFile(getTemplateAppFile(filePath, templatesRoot)),
+      await readFile(templateAppFilePath),
       v2Flags,
     );
 
     // If the project is not using TS, we need to compile the template to JS.
     if (!typescript) {
-      templateContent = await transpileFile(templateContent, transpilerOptions);
+      templateContent = await transpileFile(templateContent);
     }
 
     // If the command was run with an adapter flag, we replace the default
@@ -410,18 +401,6 @@ async function findRouteDependencies(
   }
 
   return [...fileDependencies];
-}
-
-async function getJsTranspilerOptions(rootDirectory: string) {
-  const jsConfigPath = joinPath(rootDirectory, 'jsconfig.json');
-  if (!(await fileExists(jsConfigPath))) return;
-
-  return JSON.parse(
-    (await readFile(jsConfigPath, {encoding: 'utf8'})).replace(
-      /^\s*\/\/.*$/gm,
-      '',
-    ),
-  )?.compilerOptions as undefined | TranspilerOptions;
 }
 
 export async function renderRoutePrompt(options?: {abortSignal: AbortSignal}) {
