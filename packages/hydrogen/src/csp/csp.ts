@@ -48,7 +48,13 @@ function createCSPHeader(
   const nonceString = `'nonce-${nonce}'`;
   const defaultDirectives: Record<string, string[] | string | boolean> = {
     baseUri: ["'self'"],
-    defaultSrc: ["'self'", nonceString, 'https://cdn.shopify.com'],
+    defaultSrc: [
+      "'self'",
+      nonceString,
+      'https://cdn.shopify.com',
+      // Used for the Customer Account API
+      'https://shopify.com',
+    ],
     frameAncestors: ['none'],
     styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'],
     connectSrc: ['self', 'https://monorail-edge.shopifysvc.com'],
