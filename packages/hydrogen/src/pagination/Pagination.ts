@@ -1,4 +1,4 @@
-import {createElement, useEffect, useMemo, useRef, useState} from 'react';
+import {createElement, useEffect, useMemo, useState} from 'react';
 import type {
   Maybe,
   PageInfo,
