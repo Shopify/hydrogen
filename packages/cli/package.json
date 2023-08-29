@@ -16,7 +16,6 @@
     "test:watch": "cross-env SHOPIFY_UNIT_TEST=1 vitest --test-timeout=15000"
   },
   "devDependencies": {
-    "@types/babel__core": "^7.20.1",
     "@types/diff": "^5.0.2",
     "@types/fs-extra": "^11.0.1",
     "@types/gunzip-maybe": "^1.4.0",
@@ -34,8 +33,6 @@
   },
   "dependencies": {
     "@ast-grep/napi": "0.11.0",
-    "@babel/core": "^7.22.11",
-    "@babel/preset-typescript": "^7.22.11",
     "@graphql-codegen/cli": "3.3.1",
     "@oclif/core": "2.8.11",
     "@remix-run/dev": "1.19.1",
@@ -50,7 +47,8 @@
     "gunzip-maybe": "^1.4.2",
     "prettier": "^2.8.4",
     "recursive-readdir": "^2.2.3",
-    "tar-fs": "^2.1.1"
+    "tar-fs": "^2.1.1",
+    "typescript": "^5.1.6"
   },
   "bin": "dist/create-app.js",
   "exports": {

@@ -275,16 +275,14 @@ export async function generateProjectFile(
       await mkdir(dirname(destinationPath));
     }
 
+    const templateAppFilePath = getTemplateAppFile(filePath, templatesRoot);
+
     if (!/\.[jt]sx?$/.test(filePath)) {
       // Nothing to transform for non-JS files.
-      await copyFile(
-        getTemplateAppFile(filePath, templatesRoot),
-        destinationPath,
-      );
+      await copyFile(templateAppFilePath, destinationPath);
       continue;
     }
 
-    const templateAppFilePath = getTemplateAppFile(filePath, templatesRoot);
     let templateContent = convertTemplateToRemixVersion(
       await readFile(templateAppFilePath),
       v2Flags,
@@ -292,10 +290,7 @@ export async function generateProjectFile(
 
     // If the project is not using TS, we need to compile the template to JS.
     if (!typescript) {
-      templateContent = await transpileFile(
-        templateContent,
-        templateAppFilePath,
-      );
+      templateContent = await transpileFile(templateContent);
     }
 
     // If the command was run with an adapter flag, we replace the default

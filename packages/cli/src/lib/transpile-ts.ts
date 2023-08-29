@@ -3,7 +3,6 @@ import fs from 'fs/promises';
 import glob from 'fast-glob';
 import type {CompilerOptions} from 'typescript';
 import {outputDebug} from '@shopify/cli-kit/node/output';
-import {AbortError} from '@shopify/cli-kit/node/error';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
 
 const escapeNewLines = (code: string) =>
@@ -11,27 +10,41 @@ const escapeNewLines = (code: string) =>
 const restoreNewLines = (code: string) =>
   code.replace(/\/\* :newline: \*\//g, '\n');
 
-export async function transpileFile(code: string, filename: string) {
-  const {transformAsync} = await import('@babel/core');
+export type TranspilerOptions = Omit<CompilerOptions, 'target'>;
+
+const DEFAULT_TS_CONFIG: TranspilerOptions = {
+  lib: ['DOM', 'DOM.Iterable', 'ES2022'],
+  isolatedModules: true,
+  esModuleInterop: true,
+  resolveJsonModule: true,
+  target: 'ES2022',
+  strict: true,
+  allowJs: true,
+  forceConsistentCasingInFileNames: true,
+  skipLibCheck: true,
+};
+
+export async function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
+  const tsImport = await import('typescript');
+  const ts = tsImport.default ?? tsImport;
 
   // We need to escape new lines in the template because TypeScript
   // will remove them when compiling.
   const withArtificialNewLines = escapeNewLines(code);
 
-  const compiled = await transformAsync(withArtificialNewLines, {
-    presets: ['@babel/preset-typescript'],
-    babelrc: false,
-    configFile: false,
-    retainLines: true,
-    filename,
+  // We compile the template to JavaScript.
+  const compiled = ts.transpileModule(withArtificialNewLines, {
+    reportDiagnostics: false,
+    compilerOptions: {
+      ...config,
+      // '1' tells TypeScript to preserve the JSX syntax.
+      jsx: 1,
+      removeComments: false,
+    },
   });
 
-  if (typeof compiled?.code !== 'string') {
-    throw new AbortError(`Could not transpile file ${filename}`);
-  }
-
   // Here we restore the new lines that were removed by TypeScript.
-  return restoreNewLines(compiled.code);
+  return restoreNewLines(compiled.outputText);
 }
 
 const DEFAULT_JS_CONFIG: Omit<CompilerOptions, 'jsx'> = {
@@ -100,7 +113,7 @@ export async function transpileProject(projectDir: string) {
     }
 
     const tsx = await fs.readFile(entry, 'utf8');
-    const mjs = await formatCode(await transpileFile(tsx, entry), formatConfig);
+    const mjs = await formatCode(await transpileFile(tsx), formatConfig);
 
     await fs.rm(entry);
     await fs.writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs, 'utf8');
