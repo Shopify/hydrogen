@@ -1,6 +1,7 @@
-import type {Request, Response} from '@shopify/mini-oxygen';
+import {ReadableStream} from 'node:stream/web';
+import {Request, Response} from '@shopify/mini-oxygen';
 
-export type RequestLog = {
+export type RequestEvent = {
   event: string;
   data: string;
 };
@@ -20,7 +21,7 @@ export type ServerEvent = {
   endTime: number;
 };
 
-const requests: RequestLog[] = [];
+const requestEvents: RequestEvent[] = [];
 
 export function logRequestEvent({
   request,
@@ -29,9 +30,9 @@ export function logRequestEvent({
   request: Request;
   startTime: number;
 }) {
-  if (requests.length > 100) requests.pop();
+  if (requestEvents.length > 100) requestEvents.pop();
 
-  requests.push({
+  requestEvents.push({
     event: 'Request',
     data: JSON.stringify({
       id: request.headers.get('request-id')!,
@@ -51,7 +52,7 @@ export function logSubRequestEvent({
   response,
   startTime,
 }: LogSubRequestProps) {
-  if (requests.length > 100) requests.pop();
+  if (requestEvents.length > 100) requestEvents.pop();
 
   let queryName = requestUrl.includes('/graphql')
     ? requestBody?.match(/(query|mutation)\s+(\w+)/)?.[0]
@@ -64,7 +65,7 @@ export function logSubRequestEvent({
     requestHeaders.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
   }${cacheStatus ? `${cacheStatus} ` : 'MISS '}${queryName}`;
 
-  requests.push({
+  requestEvents.push({
     event: 'Sub request',
     data: JSON.stringify({
       id: requestHeaders.get('Custom-Storefront-Request-Group-ID'),
@@ -75,6 +76,42 @@ export function logSubRequestEvent({
   });
 }
 
-export function getLoggedRequest() {
-  return requests.pop();
+export function streamRequestEvents(request: Request) {
+  const stream = new ReadableStream({
+    start(controller) {
+      const encoder = new TextEncoder();
+
+      const timer = setInterval(() => {
+        const storedRequest = requestEvents.pop();
+
+        if (storedRequest) {
+          const {event = 'message', data} = storedRequest;
+          controller.enqueue(encoder.encode(`event: ${event}\n`));
+          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+        }
+      }, 100);
+
+      let closed = false;
+
+      function close() {
+        if (closed) return;
+        clearInterval(timer);
+        closed = true;
+        request.signal.removeEventListener('abort', close);
+        controller.close();
+      }
+
+      request.signal.addEventListener('abort', close);
+
+      if (request.signal.aborted) return close();
+    },
+  });
+
+  return new Response(stream, {
+    headers: {
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache',
+      Connection: 'keep-alive',
+    },
+  });
 }

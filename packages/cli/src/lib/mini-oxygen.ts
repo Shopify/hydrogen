@@ -15,12 +15,11 @@ import {
   fetch,
   type MiniOxygenOptions as InternalMiniOxygenOptions,
 } from '@shopify/mini-oxygen';
-import {eventStream} from 'remix-utils';
 import {DEFAULT_PORT} from './flags.js';
 import {
   logRequestEvent,
   logSubRequestEvent,
-  getLoggedRequest,
+  streamRequestEvents,
 } from './request-events.js';
 
 type MiniOxygenOptions = {
@@ -63,20 +62,7 @@ export async function startMiniOxygen({
     onRequest: (request) => {
       const url = new URL(request.url);
       if (url.pathname === '/debug-network-server') {
-        const response = eventStream(request.signal, function setup(send) {
-          const timer = setInterval(() => {
-            const storedRequest = getLoggedRequest();
-            if (storedRequest) {
-              send(storedRequest);
-            }
-          }, 100);
-
-          return function clear() {
-            clearInterval(timer);
-          };
-        });
-
-        return response as unknown as Response;
+        return streamRequestEvents(request);
       }
 
       request.headers.set('request-id', randomUUID());
