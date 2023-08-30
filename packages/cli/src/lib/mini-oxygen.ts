@@ -1,3 +1,4 @@
+import {randomUUID} from 'node:crypto';
 import {
   outputInfo,
   outputToken,
@@ -14,8 +15,13 @@ import {
   fetch,
   type MiniOxygenOptions as InternalMiniOxygenOptions,
 } from '@shopify/mini-oxygen';
+import {eventStream} from 'remix-utils';
 import {DEFAULT_PORT} from './flags.js';
-import {logRequestEvent, logSubRequestEvent} from './request-events.js';
+import {
+  logRequestEvent,
+  logSubRequestEvent,
+  getLoggedRequest,
+} from './request-events.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -55,6 +61,24 @@ export async function startMiniOxygen({
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
     onRequest: (request) => {
+      const url = new URL(request.url);
+      if (url.pathname === '/debug-network-server') {
+        const response = eventStream(request.signal, function setup(send) {
+          const timer = setInterval(() => {
+            const storedRequest = getLoggedRequest();
+            if (storedRequest) {
+              send(storedRequest);
+            }
+          }, 100);
+
+          return function clear() {
+            clearInterval(timer);
+          };
+        });
+
+        return response as unknown as Response;
+      }
+
       request.headers.set('request-id', randomUUID());
       request.headers.set('x-start-time', String(new Date().getTime()));
     },
@@ -134,7 +158,7 @@ export async function startMiniOxygen({
 export function logResponse(request: Request, response: Response) {
   try {
     const url = new URL(request.url);
-    if (['/graphiql'].includes(url.pathname)) {
+    if (['/graphiql', '/debug-network'].includes(url.pathname)) {
       return;
     }
 
