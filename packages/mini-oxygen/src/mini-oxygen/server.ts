@@ -15,7 +15,10 @@ import type {MiniOxygen} from './core.js';
 export {Request, Response, fetch} from '@miniflare/core';
 
 export interface MiniOxygenServerHooks {
-  onRequest?: (request: Request) => void | Response | Promise<void | Response>;
+  onRequest?: (
+    request: Request,
+    defaultDispatcher: (request?: Request) => Promise<Response>,
+  ) => void | Response | Promise<void | Response>;
   onResponse?: (request: Request, response: Response) => void | Promise<void>;
   onResponseError?: (request: Request, error: unknown) => void;
 }
@@ -194,10 +197,14 @@ function createRequestMiddleware(
     let status = 500;
     const headers: http.OutgoingHttpHeaders = {};
 
+    const defaultDispatcher = (dispatchRequest = request) =>
+      mf.dispatchFetch(dispatchRequest);
+
     try {
-      let response = await onRequest?.(request);
+      let response = await onRequest?.(request, defaultDispatcher);
+
       if (!response) {
-        response = await mf.dispatchFetch(request);
+        response = await defaultDispatcher();
         if (onResponse) await onResponse(request, response as Response);
       }
 
