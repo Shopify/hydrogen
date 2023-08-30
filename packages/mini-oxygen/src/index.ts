@@ -1,4 +1,4 @@
-export type {Request, Response} from './mini-oxygen/server';
+export {Request, Response, fetch} from './mini-oxygen/server.js';
 export {
   startServer,
   createMiniOxygen,
