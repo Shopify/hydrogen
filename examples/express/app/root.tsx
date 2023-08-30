@@ -12,6 +12,7 @@ import type {Cart, Shop} from '@shopify/hydrogen/storefront-api-types';
 import {Layout} from '~/components/Layout';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
+import {useNonce} from '@shopify/hydrogen';
 
 export const links: LinksFunction = () => {
   return [
@@ -64,6 +65,7 @@ export async function loader({context}: LoaderArgs) {
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
+  const nonce = useNonce();
 
   const {name, description} = data.layout.shop;
 
@@ -79,9 +81,9 @@ export default function App() {
         <Layout description={description} title={name}>
           <Outlet />
         </Layout>
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
+        <LiveReload nonce={nonce} />
       </body>
     </html>
   );

@@ -11,6 +11,7 @@ import {
 import type {Shop} from '@shopify/hydrogen/storefront-api-types';
 import styles from './styles/app.css';
 import favicon from '../public/favicon.svg';
+import {useNonce} from '@shopify/hydrogen';
 
 export const links: LinksFunction = () => {
   return [
@@ -34,6 +35,7 @@ export async function loader({context}: LoaderArgs) {
 
 export default function App() {
   const data = useLoaderData<typeof loader>();
+  const nonce = useNonce();
 
   const {name} = data.layout.shop;
 
@@ -51,9 +53,9 @@ export default function App() {
           This is an example of Hydrogen using the Customer API
         </p>
         <Outlet />
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
+        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
