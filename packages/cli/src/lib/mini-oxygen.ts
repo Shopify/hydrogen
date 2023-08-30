@@ -1,4 +1,5 @@
 import {randomUUID} from 'node:crypto';
+import {AsyncLocalStorage} from 'node:async_hooks';
 import {
   outputInfo,
   outputToken,
@@ -45,6 +46,8 @@ export async function startMiniOxygen({
 }: MiniOxygenOptions) {
   const dotenvPath = resolvePath(root, '.env');
 
+  const asyncLocalStorage = new AsyncLocalStorage();
+
   const miniOxygen = await startServer({
     script: await readFile(buildPathWorkerFile),
     assetsDir: buildPathClient,
@@ -69,7 +72,9 @@ export async function startMiniOxygen({
       const requestId = randomUUID();
       request.headers.set('request-id', requestId);
 
-      const response = await defaultDispatcher(request);
+      const response = await asyncLocalStorage.run(requestId, () =>
+        defaultDispatcher(request),
+      );
 
       logRequestEvent({request, startTime});
       logResponse(request, response);
@@ -85,6 +90,7 @@ export async function startMiniOxygen({
       logSubRequestEvent({
         response,
         startTime,
+        requestGroupId: asyncLocalStorage.getStore() as string,
         requestUrl: eventRequest.url,
         requestHeaders: eventRequest.headers,
         requestBody:

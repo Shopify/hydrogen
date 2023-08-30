@@ -10,6 +10,7 @@ export type LogSubRequestProps = {
   requestBody?: string;
   requestHeaders: Request['headers'];
   requestUrl: Request['url'];
+  requestGroupId: string;
   response: Response;
   startTime: number;
 };
@@ -49,6 +50,7 @@ export function logSubRequestEvent({
   requestBody,
   requestHeaders,
   requestUrl,
+  requestGroupId,
   response,
   startTime,
 }: LogSubRequestProps) {
@@ -68,7 +70,7 @@ export function logSubRequestEvent({
   requestEvents.push({
     event: 'Sub request',
     data: JSON.stringify({
-      id: requestHeaders.get('Custom-Storefront-Request-Group-ID'),
+      id: requestGroupId,
       url,
       startTime,
       endTime: new Date().getTime(),
