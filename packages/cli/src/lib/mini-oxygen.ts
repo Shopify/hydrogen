@@ -9,10 +9,13 @@ import colors from '@shopify/cli-kit/node/colors';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {
   startServer,
+  Request,
+  Response,
+  fetch,
   type MiniOxygenOptions as InternalMiniOxygenOptions,
 } from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from './flags.js';
-import {logRequestEvent} from './request-events.js';
+import {logRequestEvent, logSubRequestEvent} from './request-events.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -62,6 +65,23 @@ export async function startMiniOxygen({
       });
 
       logResponse(request, response);
+    },
+    globalFetch: async (requestInfo, requestInit) => {
+      const startTime = new Date().getTime();
+
+      const response = await fetch(requestInfo, requestInit);
+
+      const eventRequest = new Request(requestInfo, requestInit);
+      logSubRequestEvent({
+        response,
+        startTime,
+        requestUrl: eventRequest.url,
+        requestHeaders: eventRequest.headers,
+        requestBody:
+          typeof requestInit?.body === 'string' ? requestInit.body : '',
+      });
+
+      return response;
     },
   });
 
