@@ -1,14 +1,16 @@
+import type {Request, Response} from '@shopify/mini-oxygen';
+
 export type RequestLog = {
   event: string;
   data: string;
 };
 
 export type LogSubRequestProps = {
-  query: string;
-  requestHeaders: Record<string, string>;
+  requestBody?: string;
+  requestHeaders: Request['headers'];
+  requestUrl: Request['url'];
   response: Response;
   startTime: number;
-  displayName?: string;
 };
 
 export type ServerEvent = {
@@ -18,29 +20,21 @@ export type ServerEvent = {
   endTime: number;
 };
 
-type StorefrontHeaders = {
-  requestGroupId: string | null;
-  buyerIp: string | null;
-  cookie: string | null;
-};
-
 const requests: RequestLog[] = [];
 
-export function logRequest({
+export function logRequestEvent({
   request,
-  storefrontHeaders,
   startTime,
 }: {
   request: Request;
   startTime: number;
-  storefrontHeaders: StorefrontHeaders;
 }) {
   if (requests.length > 100) requests.pop();
 
   requests.push({
     event: 'Request',
     data: JSON.stringify({
-      id: storefrontHeaders.requestGroupId,
+      id: request.headers.get('request-id')!,
       url: `${
         request.headers.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
       }${request.url}`,
@@ -50,27 +44,30 @@ export function logRequest({
   });
 }
 
-export function logSubRequest({
-  query,
+export function logSubRequestEvent({
+  requestBody,
   requestHeaders,
+  requestUrl,
   response,
   startTime,
-  displayName,
 }: LogSubRequestProps) {
   if (requests.length > 100) requests.pop();
 
-  const queryName = query.match(/query \w*/);
+  let queryName = requestUrl.includes('/graphql')
+    ? requestBody?.match(/(query|mutation)\s+(\w+)/)?.[0]
+    : undefined;
+
+  queryName = queryName?.replace(/\s+/, ' ') || requestUrl;
+
   const cacheStatus = response.headers.get('hydrogen-cache-status');
   const url = `${
-    requestHeaders['purpose'] === 'prefetch' ? '(prefetch) ' : ''
-  }${cacheStatus ? `${cacheStatus} ` : 'MISS '}${
-    displayName || (queryName ? queryName[0] : 'query')
-  }`;
+    requestHeaders.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
+  }${cacheStatus ? `${cacheStatus} ` : 'MISS '}${queryName}`;
 
   requests.push({
     event: 'Sub request',
     data: JSON.stringify({
-      id: requestHeaders['Custom-Storefront-Request-Group-ID'],
+      id: requestHeaders.get('Custom-Storefront-Request-Group-ID'),
       url,
       startTime,
       endTime: new Date().getTime(),
