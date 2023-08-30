@@ -12,10 +12,10 @@ import bodyParser from 'body-parser';
 
 import type {MiniOxygen} from './core.js';
 
-export type {Request, Response} from '@miniflare/core';
+export {Request, Response, fetch} from '@miniflare/core';
 
 export interface MiniOxygenServerHooks {
-  onRequest?: (request: Request) => void | Promise<void>;
+  onRequest?: (request: Request) => void | Response | Promise<void | Response>;
   onResponse?: (request: Request, response: Response) => void | Promise<void>;
   onResponseError?: (request: Request, error: unknown) => void;
 }
@@ -161,10 +161,6 @@ function createRequestMiddleware(
       return sendProxyRequest(req, res, proxyServer!);
     }
 
-    let response: Response;
-    let status = 500;
-    const headers: http.OutgoingHttpHeaders = {};
-
     const reqHeaders: {[key: string]: string} = {};
 
     // eslint-disable-next-line guard-for-in
@@ -195,10 +191,16 @@ function createRequestMiddleware(
           : null,
     });
 
+    let status = 500;
+    const headers: http.OutgoingHttpHeaders = {};
+
     try {
-      if (onRequest) await onRequest(request);
-      response = await mf.dispatchFetch(request);
-      if (onResponse) await onResponse(request, response as Response);
+      let response = await onRequest?.(request);
+      if (!response) {
+        response = await mf.dispatchFetch(request);
+        if (onResponse) await onResponse(request, response as Response);
+      }
+
       status = response.status;
 
       for (const key of response.headers.keys()) {
