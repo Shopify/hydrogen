@@ -14,12 +14,23 @@ export function Playground({
   // This is defined in `portable-wallets`
   return [
     <wallet-button
-      id="buy-it-now"
-      store-domain="https://shop1.shopify.portable-wallets-azek.geoff-caven.us.spin.dev"
+      wallet-id="paypal"
+      store-domain={
+        'https://shop1.shopify.portable-wallets-69z1.william-shanks.us.spin.dev'
+      }
+      buyer-country={country}
+      variants={JSON.stringify(variantIds)}
+      key="paypal"
+    />,
+    <wallet-button
+      wallet-id="buy_it_now"
+      store-domain={
+        'https://shop1.shopify.portable-wallets-69z1.william-shanks.us.spin.dev'
+      }
       buyer-country={country}
       variants={JSON.stringify(variantIds)}
       key="buy-it-now"
-    ></wallet-button>,
+    />,
     // <wallet-button
     //   id="paypal"
     //   store-domain="https://shop1.shopify.portable-wallets-azek.geoff-caven.us.spin.dev"
