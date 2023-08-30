@@ -12,6 +12,7 @@ import {
   type MiniOxygenOptions as InternalMiniOxygenOptions,
 } from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from './flags.js';
+import {logRequestEvent} from './request-events.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -50,13 +51,18 @@ export async function startMiniOxygen({
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
-    onResponse: (request, response) =>
-      // 'Request' and 'Response' types in MiniOxygen comes from
-      // Miniflare and are slightly different from standard types.
-      logResponse(
-        request as unknown as Request,
-        response as unknown as Response,
-      ),
+    onRequest: (request) => {
+      request.headers.set('request-id', randomUUID());
+      request.headers.set('x-start-time', String(new Date().getTime()));
+    },
+    onResponse: (request, response) => {
+      logRequestEvent({
+        request,
+        startTime: Number(request.headers.get('x-start-time')!),
+      });
+
+      logResponse(request, response);
+    },
   });
 
   const listeningAt = `http://localhost:${miniOxygen.port}`;
