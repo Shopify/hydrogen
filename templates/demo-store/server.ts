@@ -24,7 +24,6 @@ export default {
     env: Env,
     executionContext: ExecutionContext,
   ): Promise<Response> {
-    const startTime = new Date().getTime();
     try {
       /**
        * Open a cache instance in the worker and a custom session instance.
