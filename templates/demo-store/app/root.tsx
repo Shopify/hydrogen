@@ -17,7 +17,7 @@ import {
   useRouteError,
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
-import {ShopifySalesChannel, Seo} from '@shopify/hydrogen';
+import {ShopifySalesChannel, Seo, useNonce} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
 
 import {Layout} from '~/components';
@@ -88,6 +88,7 @@ export async function loader({request, context}: LoaderArgs) {
 }
 
 export default function App() {
+  const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
   const locale = data.selectedLocale ?? DEFAULT_LOCALE;
   const hasUserConsent = true;
@@ -110,15 +111,16 @@ export default function App() {
         >
           <Outlet />
         </Layout>
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
+        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
 }
 
 export function ErrorBoundary({error}: {error: Error}) {
+  const nonce = useNonce();
   const [root] = useMatches();
   const locale = root?.data?.selectedLocale ?? DEFAULT_LOCALE;
   const routeError = useRouteError();
@@ -160,8 +162,9 @@ export function ErrorBoundary({error}: {error: Error}) {
             <GenericError error={error instanceof Error ? error : undefined} />
           )}
         </Layout>
-        <Scripts />
-        <LiveReload />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
+        <LiveReload nonce={nonce} />
       </body>
     </html>
   );

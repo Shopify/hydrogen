@@ -8318,6 +8318,216 @@
     ]
   },
   {
+    "name": "Script",
+    "category": "components",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "createContentSecurityPolicy",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/2023-07/utilities/createcontentsecuritypolicy"
+      },
+      {
+        "name": "useNonce",
+        "type": "hooks",
+        "url": "/docs/api/hydrogen/2023-07/hooks/usenonce"
+      }
+    ],
+    "description": "Use the `Script` component to add third-party scripts to your app. It automatically adds a nonce attribute from your [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy).",
+    "type": "component",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce, Script} from '@shopify/hydrogen';\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        {/* Note you don't need to pass a nonce to the script component \n        because it's automatically added */}\n        <Script src=\"https://some-custom-script.js\" />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce, Script} from '@shopify/hydrogen';\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        {/* Note you don't need to pass a nonce to the script component \n        because it's automatically added */}\n        <Script src=\"https://some-custom-script.js\" />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "ScriptProps",
+        "typeDefinitions": {
+          "ScriptProps": {
+            "filePath": "/csp/Script.tsx",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ScriptProps",
+            "value": "JSX.IntrinsicElements['script']",
+            "description": ""
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "createContentSecurityPolicy",
+    "category": "utilities",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "useNonce",
+        "type": "hooks",
+        "url": "/docs/api/hydrogen/2023-07/hooks/usenonce"
+      },
+      {
+        "name": "Script",
+        "type": "components",
+        "url": "/docs/api/hydrogen/2023-07/components/script"
+      }
+    ],
+    "description": "Create a [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) to secure your application. The default content security policy includes exclusions for cdn.shopify.com and a script nonce.",
+    "type": "utility",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {RemixServer} from '@remix-run/react';\nimport isbot from 'isbot';\nimport {renderToReadableStream} from 'react-dom/server';\nimport {createContentSecurityPolicy} from '@shopify/hydrogen';\n\nexport default async function handleRequest(\n  request,\n  responseStatusCode,\n  responseHeaders,\n  remixContext,\n) {\n  const {nonce, header, NonceProvider} = createContentSecurityPolicy({\n    // pass a custom directive to load content from a third party domain\n    styleSrc: [\n      \"'self'\",\n      'https://cdn.shopify.com',\n      'https://some-custom-css.cdn',\n    ],\n  });\n  const body = await renderToReadableStream(\n    <NonceProvider>\n      <RemixServer context={remixContext} url={request.url} />\n    </NonceProvider>,\n    {\n      nonce,\n      signal: request.signal,\n      onError(error) {\n        // eslint-disable-next-line no-console\n        console.error(error);\n        responseStatusCode = 500;\n      },\n    },\n  );\n\n  if (isbot(request.headers.get('user-agent'))) {\n    await body.allReady;\n  }\n\n  responseHeaders.set('Content-Type', 'text/html');\n  responseHeaders.set('Content-Security-Policy', header);\n\n  return new Response(body, {\n    headers: responseHeaders,\n    status: responseStatusCode,\n  });\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import type {EntryContext} from '@shopify/remix-oxygen';\nimport {RemixServer} from '@remix-run/react';\nimport isbot from 'isbot';\nimport {renderToReadableStream} from 'react-dom/server';\nimport {createContentSecurityPolicy} from '@shopify/hydrogen';\n\nexport default async function handleRequest(\n  request: Request,\n  responseStatusCode: number,\n  responseHeaders: Headers,\n  remixContext: EntryContext,\n) {\n  const {nonce, header, NonceProvider} = createContentSecurityPolicy({\n    // pass a custom directive to load content from a third party domain\n    styleSrc: [\n      \"'self'\",\n      'https://cdn.shopify.com',\n      'https://some-custom-css.cdn',\n    ],\n  });\n  const body = await renderToReadableStream(\n    <NonceProvider>\n      <RemixServer context={remixContext} url={request.url} />\n    </NonceProvider>,\n    {\n      nonce,\n      signal: request.signal,\n      onError(error) {\n        // eslint-disable-next-line no-console\n        console.error(error);\n        responseStatusCode = 500;\n      },\n    },\n  );\n\n  if (isbot(request.headers.get('user-agent'))) {\n    await body.allReady;\n  }\n\n  responseHeaders.set('Content-Type', 'text/html');\n  responseHeaders.set('Content-Security-Policy', header);\n\n  return new Response(body, {\n    headers: responseHeaders,\n    status: responseStatusCode,\n  });\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "CreateContentSecurityPolicyGeneratedType",
+        "typeDefinitions": {
+          "CreateContentSecurityPolicyGeneratedType": {
+            "filePath": "/csp/csp.ts",
+            "name": "CreateContentSecurityPolicyGeneratedType",
+            "description": "",
+            "params": [
+              {
+                "name": "directives",
+                "description": "Pass custom [content security policy directives](https://content-security-policy.com/). This is important if you load content in your app from third-party domains.",
+                "value": "Record<string, string | boolean | string[]>",
+                "isOptional": true,
+                "defaultValue": "{}",
+                "filePath": "/csp/csp.ts"
+              }
+            ],
+            "returns": {
+              "filePath": "/csp/csp.ts",
+              "description": "",
+              "name": "ContentSecurityPolicy",
+              "value": "ContentSecurityPolicy"
+            },
+            "value": "export function createContentSecurityPolicy(\n  directives: Record<string, string[] | string | boolean> = {},\n): ContentSecurityPolicy {\n  const nonce = generateNonce();\n  const header = createCSPHeader(nonce, directives);\n\n  const Provider = ({children}: {children: ReactNode}) => {\n    return createElement(NonceProvider, {value: nonce}, children);\n  };\n\n  return {\n    nonce,\n    header,\n    NonceProvider: Provider,\n  };\n}"
+          },
+          "ContentSecurityPolicy": {
+            "filePath": "/csp/csp.ts",
+            "syntaxKind": "TypeAliasDeclaration",
+            "name": "ContentSecurityPolicy",
+            "value": "{\n  /** A randomly generated nonce string that should be passed to any custom `script` element */\n  nonce: string;\n  /** The content security policy header */\n  header: string;\n  NonceProvider: ComponentType<{children: ReactNode}>;\n}",
+            "description": "",
+            "members": [
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "nonce",
+                "value": "string",
+                "description": "A randomly generated nonce string that should be passed to any custom `script` element"
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "header",
+                "value": "string",
+                "description": "The content security policy header"
+              },
+              {
+                "filePath": "/csp/csp.ts",
+                "syntaxKind": "PropertySignature",
+                "name": "NonceProvider",
+                "value": "ComponentType<{children: ReactNode}>",
+                "description": ""
+              }
+            ]
+          }
+        }
+      }
+    ]
+  },
+  {
+    "name": "useNonce",
+    "category": "hooks",
+    "isVisualComponent": false,
+    "related": [
+      {
+        "name": "createContentSecurityPolicy",
+        "type": "utilities",
+        "url": "/docs/api/hydrogen/2023-07/utilities/createcontentsecuritypolicy"
+      },
+      {
+        "name": "Script",
+        "type": "components",
+        "url": "/docs/api/hydrogen/2023-07/components/script"
+      }
+    ],
+    "description": "The `useNonce` hook returns the [content security policy](/docs/custom-storefronts/hydrogen/content-security-policy) nonce. Use the hook to manually add a nonce to third party scripts. The `Script` component automatically does this for you. Note, the nonce should never be available in the client, and should always return undefined in the browser.",
+    "type": "hook",
+    "defaultExample": {
+      "description": "I am the default example",
+      "codeblock": {
+        "tabs": [
+          {
+            "title": "JavaScript",
+            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce} from '@shopify/hydrogen';\n\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
+            "language": "jsx"
+          },
+          {
+            "title": "TypeScript",
+            "code": "import {\n  Links,\n  LiveReload,\n  Meta,\n  Outlet,\n  Scripts,\n  ScrollRestoration,\n} from '@remix-run/react';\nimport {useNonce} from '@shopify/hydrogen';\n\nexport default function App() {\n  const nonce = useNonce();\n\n  return (\n    <html lang=\"en\">\n      <head>\n        <meta charSet=\"utf-8\" />\n        <meta name=\"viewport\" content=\"width=device-width,initial-scale=1\" />\n        <Meta />\n        <Links />\n      </head>\n      <body>\n        <Outlet />\n        <ScrollRestoration nonce={nonce} />\n        <Scripts nonce={nonce} />\n        <LiveReload nonce={nonce} />\n      </body>\n    </html>\n  );\n}\n",
+            "language": "tsx"
+          }
+        ],
+        "title": "Example code"
+      }
+    },
+    "definitions": [
+      {
+        "title": "Props",
+        "description": "",
+        "type": "UseNonceGeneratedType",
+        "typeDefinitions": {
+          "UseNonceGeneratedType": {
+            "filePath": "/csp/csp.ts",
+            "name": "UseNonceGeneratedType",
+            "description": "",
+            "params": [],
+            "returns": {
+              "filePath": "/csp/csp.ts",
+              "description": "",
+              "name": "",
+              "value": ""
+            },
+            "value": "useNonce = () => useContext(NonceContext)"
+          }
+        }
+      }
+    ]
+  },
+  {
     "name": "Pagination",
     "category": "components",
     "isVisualComponent": false,
