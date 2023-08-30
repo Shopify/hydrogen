@@ -59,24 +59,24 @@ export async function startMiniOxygen({
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
-    onRequest: (request) => {
+    async onRequest(request, defaultDispatcher) {
       const url = new URL(request.url);
       if (url.pathname === '/debug-network-server') {
         return streamRequestEvents(request);
       }
 
-      request.headers.set('request-id', randomUUID());
-      request.headers.set('x-start-time', String(new Date().getTime()));
-    },
-    onResponse: (request, response) => {
-      logRequestEvent({
-        request,
-        startTime: Number(request.headers.get('x-start-time')!),
-      });
+      const startTime = new Date().getTime();
+      const requestId = randomUUID();
+      request.headers.set('request-id', requestId);
 
+      const response = await defaultDispatcher(request);
+
+      logRequestEvent({request, startTime});
       logResponse(request, response);
+
+      return response;
     },
-    globalFetch: async (requestInfo, requestInit) => {
+    async globalFetch(requestInfo, requestInit) {
       const startTime = new Date().getTime();
 
       const response = await fetch(requestInfo, requestInit);
