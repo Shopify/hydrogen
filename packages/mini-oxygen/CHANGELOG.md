@@ -1,5 +1,15 @@
 # @shopify/mini-oxygen
 
+## 2.1.3
+
+### Patch Changes
+
+- defd46c: Update @miniflare/\* from 2.14.0 to 2.14.1
+- 6e55835: Update vitest from 0.34.2 to 0.34.3
+- caf5b81: Update typescript from 5.1.6 to 5.2.2
+- bf27739: Update @miniflare/cache from 2.14.0 to 2.14.1
+- e8b1e07: Update eslint from 8.47.0 to 8.48.0
+
 ## 2.1.2
 
 ### Patch Changes
