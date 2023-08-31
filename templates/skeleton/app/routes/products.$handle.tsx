@@ -112,6 +112,7 @@ function redirectToFirstVariant({
 }
 
 export default function Product() {
+  // @ts-ignore TODO error in JsonifyObject
   const {product, variants} = useLoaderData<typeof loader>();
   const {selectedVariant} = product;
   return (

@@ -45,7 +45,9 @@ export async function loader({request, context}: LoaderArgs) {
 }
 
 export default function SearchPage() {
+  // @ts-ignore What's wrong with the type here?
   const {searchTerm, searchResults} = useLoaderData<typeof loader>();
+
   return (
     <div className="search">
       <h1>Search</h1>

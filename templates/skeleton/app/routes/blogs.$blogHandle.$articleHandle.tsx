@@ -28,6 +28,7 @@ export async function loader({params, context}: LoaderArgs) {
 
 export default function Article() {
   const {article} = useLoaderData<typeof loader>();
+  // @ts-ignore TODO error in JsonifyObject
   const {title, image, contentHtml, author} = article;
 
   const publishedDate = new Intl.DateTimeFormat('en-US', {
