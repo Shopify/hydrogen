@@ -103,7 +103,6 @@ describe('<Pagination>', () => {
       return function () {
         render(
           createElement(Pagination, {
-            // @ts-expect-error
             connection: {
               nodes: [1, 2, 3],
               pageInfo,
