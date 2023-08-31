@@ -4,13 +4,13 @@ import {
   type ActionArgs,
   type LoaderArgs,
 } from '@shopify/remix-oxygen';
-import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
+import {Form, useActionData, type MetaFunction} from '@remix-run/react';
 
 type ActionResponse = {
   error: string | null;
 };
 
-export const meta: V2_MetaFunction = () => {
+export const meta: MetaFunction = () => {
   return [{title: 'Activate Account'}];
 };
 

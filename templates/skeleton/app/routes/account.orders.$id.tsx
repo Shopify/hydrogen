@@ -1,9 +1,9 @@
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-import {Link, useLoaderData, type V2_MetaFunction} from '@remix-run/react';
+import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Money, Image, flattenConnection} from '@shopify/hydrogen';
 import type {OrderLineItemFullFragment} from 'storefrontapi.generated';
 
-export const meta: V2_MetaFunction<typeof loader> = ({data}) => {
+export const meta: MetaFunction<typeof loader> = ({data}) => {
   return [{title: `Order ${data?.order?.name}`}];
 };
 

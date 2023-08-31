@@ -1,5 +1,5 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
-import {Link, useLoaderData, type V2_MetaFunction} from '@remix-run/react';
+import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
 import {type Shop} from '@shopify/hydrogen/storefront-api-types';
 
 type SelectedPolicies = keyof Pick<
@@ -7,7 +7,7 @@ type SelectedPolicies = keyof Pick<
   'privacyPolicy' | 'shippingPolicy' | 'termsOfService' | 'refundPolicy'
 >;
 
-export const meta: V2_MetaFunction = ({data}) => {
+export const meta: MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data.policy.title}`}];
 };
 

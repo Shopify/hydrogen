@@ -1,9 +1,9 @@
 import {json, type LoaderArgs} from '@shopify/remix-oxygen';
-import {Link, useLoaderData, type V2_MetaFunction} from '@remix-run/react';
+import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Image, Pagination, getPaginationVariables} from '@shopify/hydrogen';
 import type {ArticleItemFragment} from 'storefrontapi.generated';
 
-export const meta: V2_MetaFunction = ({data}) => {
+export const meta: MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data.blog.title} blog`}];
 };
 

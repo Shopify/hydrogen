@@ -1,4 +1,4 @@
-import {Link, useLoaderData, type V2_MetaFunction} from '@remix-run/react';
+import {Link, useLoaderData, type MetaFunction} from '@remix-run/react';
 import {Money, Pagination, getPaginationVariables} from '@shopify/hydrogen';
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import type {
@@ -6,7 +6,7 @@ import type {
   OrderItemFragment,
 } from 'storefrontapi.generated';
 
-export const meta: V2_MetaFunction = () => {
+export const meta: MetaFunction = () => {
   return [{title: 'Orders'}];
 };
 

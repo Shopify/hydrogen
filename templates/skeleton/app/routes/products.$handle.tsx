@@ -4,7 +4,7 @@ import {
   Await,
   Link,
   useLoaderData,
-  type V2_MetaFunction,
+  type MetaFunction,
   type FetcherWithComponents,
 } from '@remix-run/react';
 import type {
@@ -27,7 +27,7 @@ import type {
 } from '@shopify/hydrogen/storefront-api-types';
 import {getVariantUrl} from '~/utils';
 
-export const meta: V2_MetaFunction = ({data}) => {
+export const meta: MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data.product.title}`}];
 };
 

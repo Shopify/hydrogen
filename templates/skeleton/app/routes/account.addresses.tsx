@@ -11,7 +11,7 @@ import {
   useActionData,
   useNavigation,
   useOutletContext,
-  type V2_MetaFunction,
+  type MetaFunction,
 } from '@remix-run/react';
 
 export type ActionResponse = {
@@ -23,7 +23,7 @@ export type ActionResponse = {
   updatedAddress?: AddressFragment;
 };
 
-export const meta: V2_MetaFunction = () => {
+export const meta: MetaFunction = () => {
   return [{title: 'Addresses'}];
 };
 

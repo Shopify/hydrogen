@@ -1,5 +1,5 @@
 import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
-import {useLoaderData, Link, type V2_MetaFunction} from '@remix-run/react';
+import {useLoaderData, Link, type MetaFunction} from '@remix-run/react';
 import {
   Pagination,
   getPaginationVariables,
@@ -9,7 +9,7 @@ import {
 import type {ProductItemFragment} from 'storefrontapi.generated';
 import {useVariantUrl} from '~/utils';
 
-export const meta: V2_MetaFunction = ({data}) => {
+export const meta: MetaFunction = ({data}) => {
   return [{title: `Hydrogen | ${data.collection.title} Collection`}];
 };
 
