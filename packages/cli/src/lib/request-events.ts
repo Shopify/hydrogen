@@ -1,25 +1,18 @@
 import {ReadableStream} from 'node:stream/web';
 import {Request, Response} from '@shopify/mini-oxygen';
 
-export type RequestEvent = {
+type RequestEvent = {
   event: string;
   data: string;
 };
 
-export type LogSubRequestProps = {
+type LogSubRequestProps = {
   requestBody?: string;
   requestHeaders: Request['headers'];
   requestUrl: Request['url'];
   requestGroupId: string;
   response: Response;
   startTime: number;
-};
-
-export type ServerEvent = {
-  id: string;
-  url: string;
-  startTime: number;
-  endTime: number;
 };
 
 const requestEvents: RequestEvent[] = [];
