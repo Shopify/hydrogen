@@ -1,5 +1,24 @@
 # @shopify/hydrogen
 
+## 2023.7.4
+
+### Patch Changes
+
+- Fix hydration errors and stale data within the Pagination component ([#1283](https://github.com/Shopify/hydrogen/pull/1283)) by [@blittle](https://github.com/blittle)
+
+- Add custom product paths to the `VariantSelector` component: ([#1271](https://github.com/Shopify/hydrogen/pull/1271)) by [@blittle](https://github.com/blittle)
+
+  ```tsx
+  <VariantSelector handle="snowboard" productPath="shop" options={options}>
+    {/* ... */}
+  </VariantSelector>
+  ```
+
+- Add functionality for creating a Content Security Policy. See the [guide on Content Security Policies](https://shopify.dev/docs/custom-storefronts/hydrogen/content-security-policy) for more details. ([#1235](https://github.com/Shopify/hydrogen/pull/1235)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`06516ee9`](https://github.com/Shopify/hydrogen/commit/06516ee91f20153902c2b8ef79c0f6690ba385bb), [`423acee2`](https://github.com/Shopify/hydrogen/commit/423acee243c62e49a865ff2cd82735991aca1d8f)]:
+  - @shopify/hydrogen-react@2023.7.3
+
 ## 2023.7.3
 
 ### Patch Changes
