@@ -4,12 +4,6 @@ import {SHOPIFY_Y, SHOPIFY_S} from './cart-constants.js';
 
 const tokenHash = 'xxxx-4xxx-xxxx-xxxxxxxxxxxx';
 
-// Example good cookie
-// fc0a4fb1-A706-49FD-89B9-EEB3C87891A8
-// 8-4-4-4-12 = 32 chars
-// Example bad cookies
-// b73cdfc-2032-4B68-8F29-C88B183DD930
-// 7-4-4-4-12 = 31
 export function buildUUID(): string {
   let hash = '';
 
