@@ -1,4 +1,4 @@
-import {Suspense} from 'react';
+import {Suspense, useEffect} from 'react';
 import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
   Await,
@@ -59,6 +59,15 @@ export async function loader({params, request, context}: LoaderArgs) {
   }
 
   const firstVariant = product.variants.nodes[0];
+  let searchParams = new URLSearchParams();
+  if (!product.selectedVariant) {
+    searchParams = new URLSearchParams(new URL(request.url).search);
+
+    for (const option of firstVariant.selectedOptions) {
+      searchParams.set(option.name, option.value);
+    }
+  }
+
   const firstVariantIsDefault = Boolean(
     firstVariant.selectedOptions.find(
       (option: SelectedOption) =>
@@ -66,14 +75,8 @@ export async function loader({params, request, context}: LoaderArgs) {
     ),
   );
 
-  if (firstVariantIsDefault) {
+  if (firstVariantIsDefault || !product.selectedVariant) {
     product.selectedVariant = firstVariant;
-  } else {
-    // if no selected variant was returned from the selected options,
-    // we redirect to the first variant's url with it's selected options applied
-    if (!product.selectedVariant) {
-      return redirectToFirstVariant({product, request});
-    }
   }
 
   // In order to show which variants are available in the UI, we need to query
@@ -85,35 +88,23 @@ export async function loader({params, request, context}: LoaderArgs) {
     variables: {handle},
   });
 
-  return defer({product, variants});
-}
-
-function redirectToFirstVariant({
-  product,
-  request,
-}: {
-  product: ProductFragment;
-  request: Request;
-}) {
-  const url = new URL(request.url);
-  const firstVariant = product.variants.nodes[0];
-
-  throw redirect(
-    getVariantUrl({
-      pathname: url.pathname,
-      handle: product.handle,
-      selectedOptions: firstVariant.selectedOptions,
-      searchParams: new URLSearchParams(url.search),
-    }),
-    {
-      status: 302,
-    },
-  );
+  return defer({product, variants, searchParams: searchParams.toString()});
 }
 
 export default function Product() {
-  const {product, variants} = useLoaderData<typeof loader>();
+  const {product, variants, searchParams} = useLoaderData<typeof loader>();
   const {selectedVariant} = product;
+
+  // Replace history url with the first variant's search param
+  useEffect(() => {
+    searchParams !== '' &&
+      window.history.replaceState(
+        {},
+        '',
+        `${window.location.pathname}?${searchParams}`,
+      );
+  }, [searchParams]);
+
   return (
     <div className="product">
       <ProductImage image={selectedVariant?.image} />
@@ -226,12 +217,15 @@ function ProductForm({
   selectedVariant: ProductFragment['selectedVariant'];
   variants: Array<ProductVariantFragment>;
 }) {
+  const {searchParams} = useLoaderData<typeof loader>();
+
   return (
     <div className="product-form">
       <VariantSelector
         handle={product.handle}
         options={product.options}
         variants={variants}
+        searchParams={searchParams}
       >
         {({option}) => <ProductOptions key={option.name} option={option} />}
       </VariantSelector>

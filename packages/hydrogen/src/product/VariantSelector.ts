@@ -34,6 +34,8 @@ type VariantSelectorProps = {
     | Array<PartialDeep<ProductVariant>>;
   /** By default all products are under /products. Use this prop to provide a custom path. */
   productPath?: string;
+  /** By default, searchParams is obtains from useLocation. Pass in a search params string to override. */
+  searchParams?: string;
   children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
@@ -42,6 +44,7 @@ export function VariantSelector({
   options = [],
   variants: _variants = [],
   productPath = 'products',
+  searchParams: _searchParams,
   children,
 }: VariantSelectorProps) {
   const variants =
@@ -50,6 +53,7 @@ export function VariantSelector({
   const {searchParams, path, alreadyOnProductPage} = useVariantPath(
     handle,
     productPath,
+    _searchParams,
   );
 
   // If an option only has one value, it doesn't need a UI to select it
@@ -150,7 +154,11 @@ export const getSelectedProductOptions: GetSelectedProductOptions = (
   return selectedOptions;
 };
 
-function useVariantPath(handle: string, productPath: string) {
+function useVariantPath(
+  handle: string,
+  productPath: string,
+  overrideSearchParams?: string,
+) {
   const {pathname, search} = useLocation();
 
   return useMemo(() => {
@@ -164,7 +172,7 @@ function useVariantPath(handle: string, productPath: string) {
       ? `${match![0]}${productPath}/${handle}`
       : `/${productPath}/${handle}`;
 
-    const searchParams = new URLSearchParams(search);
+    const searchParams = new URLSearchParams(overrideSearchParams || search);
 
     return {
       searchParams,
@@ -174,5 +182,5 @@ function useVariantPath(handle: string, productPath: string) {
       alreadyOnProductPage: path === pathname,
       path,
     };
-  }, [pathname, search, handle, productPath]);
+  }, [pathname, search, handle, productPath, overrideSearchParams]);
 }

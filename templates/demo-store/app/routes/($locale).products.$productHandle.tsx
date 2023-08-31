@@ -1,6 +1,6 @@
-import {useRef, Suspense} from 'react';
+import {useRef, Suspense, useEffect} from 'react';
 import {Disclosure, Listbox} from '@headlessui/react';
-import {defer, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {useLoaderData, Await} from '@remix-run/react';
 import type {ShopifyAnalyticsProduct} from '@shopify/hydrogen';
 import {
@@ -13,10 +13,7 @@ import {
 import invariant from 'tiny-invariant';
 import clsx from 'clsx';
 
-import type {
-  ProductQuery,
-  ProductVariantFragmentFragment,
-} from 'storefrontapi.generated';
+import type {ProductVariantFragmentFragment} from 'storefrontapi.generated';
 import {
   Heading,
   IconCaret,
@@ -58,8 +55,14 @@ export async function loader({params, request, context}: LoaderArgs) {
     throw new Response('product', {status: 404});
   }
 
+  const firstVariant = product!.variants.nodes[0];
+  let searchParams = new URLSearchParams();
   if (!product.selectedVariant) {
-    return redirectToFirstVariant({product, request});
+    searchParams = new URLSearchParams(new URL(request.url).search);
+
+    for (const option of firstVariant.selectedOptions) {
+      searchParams.set(option.name, option.value);
+    }
   }
 
   // In order to show which variants are available in the UI, we need to query
@@ -76,10 +79,6 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   const recommended = getRecommendedProducts(context.storefront, product.id);
-
-  // TODO: firstVariant is never used because we will always have a selectedVariant due to redirect
-  // Investigate if we can avoid the redirect for product pages with no search params for first variant
-  const firstVariant = product.variants.nodes[0];
   const selectedVariant = product.selectedVariant ?? firstVariant;
 
   const productAnalytics: ShopifyAnalyticsProduct = {
@@ -98,8 +97,12 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 
   return defer({
+    searchParams: searchParams.toString(),
     variants,
-    product,
+    product: {
+      ...product,
+      selectedVariant,
+    },
     shop,
     storeDomain: shop.primaryDomain.url,
     recommended,
@@ -113,29 +116,21 @@ export async function loader({params, request, context}: LoaderArgs) {
   });
 }
 
-function redirectToFirstVariant({
-  product,
-  request,
-}: {
-  product: ProductQuery['product'];
-  request: Request;
-}) {
-  const searchParams = new URLSearchParams(new URL(request.url).search);
-  const firstVariant = product!.variants.nodes[0];
-  for (const option of firstVariant.selectedOptions) {
-    searchParams.set(option.name, option.value);
-  }
-
-  throw redirect(
-    `/products/${product!.handle}?${searchParams.toString()}`,
-    302,
-  );
-}
-
 export default function Product() {
-  const {product, shop, recommended, variants} = useLoaderData<typeof loader>();
+  const {searchParams, product, shop, recommended, variants} =
+    useLoaderData<typeof loader>();
   const {media, title, vendor, descriptionHtml} = product;
   const {shippingPolicy, refundPolicy} = shop;
+
+  // Replace history url with the first variant's search param
+  useEffect(() => {
+    searchParams !== '' &&
+      window.history.replaceState(
+        {},
+        '',
+        `${window.location.pathname}?${searchParams}`,
+      );
+  }, [searchParams]);
 
   return (
     <>
@@ -212,7 +207,8 @@ export function ProductForm({
 }: {
   variants: ProductVariantFragmentFragment[];
 }) {
-  const {product, analytics, storeDomain} = useLoaderData<typeof loader>();
+  const {product, analytics, storeDomain, searchParams} =
+    useLoaderData<typeof loader>();
 
   const closeRef = useRef<HTMLButtonElement>(null);
 
@@ -241,6 +237,7 @@ export function ProductForm({
           handle={product.handle}
           options={product.options}
           variants={variants}
+          searchParams={searchParams}
         >
           {({option}) => {
             return (
