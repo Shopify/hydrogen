@@ -119,6 +119,10 @@ export default function DebugNetwork() {
           </p>
         </div>
         <FlameChart key={timestamp} serverEvents={serverEvents.current} />
+        <p style={{color: '#777', fontSize: '0.8rem', paddingLeft: '5px'}}>
+          Note: You may need to turn on '<b>Disable Cache</b>' for your
+          navigating window.
+        </p>
       </div>
     </>
   );
@@ -138,12 +142,7 @@ function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
           backgroundColor: '#FAFAFA',
         }}
       >
-        <p
-          style={{
-            fontWeight: 'bold',
-            color: '#777',
-          }}
-        >
+        <p style={{fontWeight: 'bold', color: '#777'}}>
           Navigate your{' '}
           <Link to="/" target="_blank">
             app
