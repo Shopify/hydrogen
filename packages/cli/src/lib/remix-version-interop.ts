@@ -23,11 +23,9 @@ export async function getV2Flags(
   };
 
   return {
-    isV2Meta: isV2 || !!futureFlags.v2_meta,
-    isV2ErrorBoundary: isV2 || !!futureFlags.v2_errorBoundary,
-    isV2RouteConvention: isV2
-      ? !isV1RouteConventionInstalled()
-      : !!futureFlags.v2_routeConvention,
+    isV2Meta: isV2,
+    isV2ErrorBoundary: isV2,
+    isV2RouteConvention: isV2 && !isV1RouteConventionInstalled(),
   };
 }
 

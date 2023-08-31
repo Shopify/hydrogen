@@ -118,9 +118,9 @@ export async function runSetup(options: RunSetupOptions) {
             appDirectory: remixConfig.appDirectory,
             typescript,
             v2Flags: {
-              isV2RouteConvention: remixConfig.future?.v2_routeConvention,
-              isV2ErrorBoundary: remixConfig.future?.v2_errorBoundary,
-              isV2Meta: remixConfig.future?.v2_meta,
+              isV2RouteConvention: true,
+              isV2ErrorBoundary: true,
+              isV2Meta: true,
             },
           }),
         ]),
