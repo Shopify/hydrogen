@@ -5,7 +5,6 @@ import {
   Meta,
   Outlet,
   Scripts,
-  useCatch,
   LiveReload,
   useMatches,
   useRouteError,
@@ -161,26 +160,6 @@ export function ErrorBoundary() {
         <LiveReload nonce={nonce} />
       </body>
     </html>
-  );
-}
-
-export const ErrorBoundaryV1 = ({error}: {error: Error}) => {
-  // eslint-disable-next-line no-console
-  console.error(error);
-
-  return <div>There was an error.</div>;
-};
-
-export function CatchBoundary() {
-  const caught = useCatch();
-  // eslint-disable-next-line no-console
-  console.error(caught);
-
-  return (
-    <div>
-      There was an error. Status: {caught.status}. Message:{' '}
-      {caught.data?.message}
-    </div>
   );
 }
 
