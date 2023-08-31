@@ -1,5 +1,25 @@
 # @shopify/hydrogen-react
 
+## 2023.7.3
+
+### Patch Changes
+
+- Hydrogen is now compatible with TypeScript v5. ([#1240](https://github.com/Shopify/hydrogen/pull/1240)) by [@frandiox](https://github.com/frandiox)
+
+  If you have `typescript` as a dev dependency in your app, it is recommended to change its version as follows:
+
+  ```diff
+    "devDependencies": {
+      ...
+  -   "typescript": "^4.9.5",
+  +   "typescript": "^5.2.2",
+    },
+  ```
+
+  After installing the new version of TypeScript, you may need to update the version used in your IDE. For example, in VSCode, you can do this by clicking on the `{ }` icon in the bottom-right toolbar next to the language mode (generally, `{ } TypeScript JSX` when editing a `.tsx` file).
+
+- Fix passing `ref` to the `<Image>` component. ([#1268](https://github.com/Shopify/hydrogen/pull/1268)) by [@frandiox](https://github.com/frandiox)
+
 ## 2023.7.2
 
 ### Patch Changes
