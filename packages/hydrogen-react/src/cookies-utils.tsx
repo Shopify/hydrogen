@@ -55,7 +55,7 @@ export function hexTime(): string {
     .toLowerCase();
 
   // Ensure the output is exactly 8 characters
-  return output.padStart(8, '0').slice(0, 8);
+  return output.padStart(8, '0');
 }
 
 export function getShopifyCookies(cookies: string): ShopifyCookies {
