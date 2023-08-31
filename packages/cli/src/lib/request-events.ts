@@ -56,9 +56,7 @@ export function logSubRequestEvent({
 }: LogSubRequestProps) {
   if (requestEvents.length > 100) requestEvents.pop();
 
-  let queryName = requestUrl.includes('/graphql')
-    ? requestBody?.match(/(query|mutation)\s+(\w+)/)?.[0]
-    : undefined;
+  let queryName = requestBody?.match(/(query|mutation)\s+(\w+)/)?.[0];
 
   queryName = queryName?.replace(/\s+/, ' ') || requestUrl;
 

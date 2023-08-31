@@ -94,7 +94,7 @@ export async function startMiniOxygen({
         requestUrl: eventRequest.url,
         requestHeaders: eventRequest.headers,
         requestBody:
-          typeof requestInit?.body === 'string' ? requestInit.body : '',
+          typeof requestInit?.body === 'string' ? requestInit.body : undefined,
       });
 
       return response;
