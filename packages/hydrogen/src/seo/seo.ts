@@ -36,6 +36,8 @@ interface SeoProps {
   debug?: boolean;
 }
 
+type SeoWrapper = undefined | {seo: any};
+
 export function Seo({debug}: SeoProps) {
   const matches = useMatches();
   const location = useLocation();
@@ -47,8 +49,8 @@ export function Seo({debug}: SeoProps) {
         .flatMap((match) => {
           const {handle, ...routeMatch} = match;
           const routeData = {...routeMatch, ...location};
-          const handleSeo = handle?.seo;
-          const loaderSeo = routeMatch?.data?.seo;
+          const handleSeo = (handle as SeoWrapper)?.seo;
+          const loaderSeo = (routeMatch?.data as SeoWrapper)?.seo;
 
           if (!handleSeo && !loaderSeo) {
             return [];
@@ -56,7 +58,7 @@ export function Seo({debug}: SeoProps) {
 
           // if seo is defined in the handle, invoke it with the route data
           if (handleSeo) {
-            return recursivelyInvokeOrReturn(handle.seo, routeData);
+            return recursivelyInvokeOrReturn(handleSeo, routeData);
           } else {
             return [loaderSeo];
           }
