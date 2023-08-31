@@ -1,7 +1,7 @@
 import {it, vi, describe, beforeEach, expect, afterEach} from 'vitest';
 import EventSource from 'eventsource';
 
-import {startServer, MiniOxygenPreviewOptions} from '../startServer.js';
+import {startServer, Response, type MiniOxygenOptions} from '../index.js';
 
 import {
   createFixture,
@@ -22,7 +22,7 @@ vi.mock('get-port', () => {
 
 describe('start()', () => {
   let fixture: Fixture;
-  const defaultOptions: MiniOxygenPreviewOptions = {
+  const defaultOptions: MiniOxygenOptions = {
     log: vi.fn(),
   };
 
@@ -217,6 +217,63 @@ describe('start()', () => {
 
     response = (await sendRequest(testPort, '/')) as {data: string};
     expect(response.data).toEqual('bar');
+
+    await miniOxygen.close();
+  });
+
+  it('stubs global fetch', async () => {
+    const miniOxygen = await startServer({
+      ...defaultOptions,
+      log: mockLogger,
+      port: testPort,
+      script: 'export default { fetch: () => fetch("foo") }',
+      globalFetch: (url) => {
+        return Promise.resolve(new Response(`${url}bar`));
+      },
+    });
+
+    const response = (await sendRequest(testPort, '/')) as {data: string};
+    expect(response.data).toEqual('foobar');
+
+    await miniOxygen.close();
+  });
+
+  it('can intercept and respond to requests in onRequest', async () => {
+    const miniOxygen = await startServer({
+      ...defaultOptions,
+      log: mockLogger,
+      port: testPort,
+      script: 'export default { fetch: () => new Response("foo") }',
+      onRequest: (request) => {
+        if (new URL(request.url).pathname === '/test') {
+          return new Response('bar');
+        }
+      },
+    });
+
+    let response = (await sendRequest(testPort, '/')) as {data: string};
+    expect(response.data).toEqual('foo');
+
+    response = (await sendRequest(testPort, '/test')) as {data: string};
+    expect(response.data).toEqual('bar');
+
+    await miniOxygen.close();
+  });
+
+  it('can call dispatchFetch from onRequest', async () => {
+    const miniOxygen = await startServer({
+      ...defaultOptions,
+      log: mockLogger,
+      port: testPort,
+      script: 'export default { fetch: () => new Response("foo") }',
+      onRequest: async (request, dispatchFetch) => {
+        const response = await dispatchFetch();
+        return new Response(`${await response.text()}bar`);
+      },
+    });
+
+    const response = (await sendRequest(testPort, '/')) as {data: string};
+    expect(response.data).toEqual('foobar');
 
     await miniOxygen.close();
   });
