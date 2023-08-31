@@ -48,9 +48,10 @@ aside header .close {
   text-decoration: none;
   transition: all 200ms;
   width: 20px;
-  &:hover {
-    opacity: 1;
-  }
+}
+
+aside header .close:hover {
+  opacity: 1;
 }
 
 aside header h2 {
@@ -64,9 +65,10 @@ aside main {
 
 aside p {
   margin: 0 0 0.25rem;
-  &:last-child {
-    margin: 0;
-  }
+}
+
+aside p:last-child {
+  margin: 0;
 }
 
 aside li {
@@ -110,16 +112,14 @@ aside li {
   width: 100%;
 }
 
-.overlay {
-  &:target {
-    opacity: 1;
-    pointer-events: auto;
-    visibility: visible;
-  }
-  /* reveal aside */
-  &:target aside {
-    transform: translateX(calc(var(--aside-width) * -1));
-  }
+.overlay:target {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+}
+/* reveal aside */
+.overlay:target aside {
+  transform: translateX(calc(var(--aside-width) * -1));
 }
 
 /*
