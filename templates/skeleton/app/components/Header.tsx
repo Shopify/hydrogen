@@ -1,6 +1,7 @@
-import {Await, NavLink, useMatches} from '@remix-run/react';
+import {Await, NavLink} from '@remix-run/react';
 import {Suspense} from 'react';
 import type {LayoutProps} from './Layout';
+import {useRootLoaderData} from '~/root';
 
 type HeaderProps = Pick<LayoutProps, 'header' | 'cart' | 'isLoggedIn'>;
 
@@ -26,8 +27,7 @@ export function HeaderMenu({
   menu: HeaderProps['header']['menu'];
   viewport: Viewport;
 }) {
-  const [root] = useMatches();
-  const publicStoreDomain = root?.data?.publicStoreDomain;
+  const {publicStoreDomain} = useRootLoaderData();
   const className = `header-menu-${viewport}`;
 
   function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {

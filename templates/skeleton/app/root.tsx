@@ -20,6 +20,12 @@ import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 
+type RootLoaderData = Awaited<ReturnType<typeof loader>>['data'];
+export const useRootLoaderData = () => {
+  const [root] = useMatches();
+  return root?.data as RootLoaderData;
+};
+
 // This is important to avoid re-fetching root queries on sub-navigations
 export const shouldRevalidate: ShouldRevalidateFunction = ({
   formMethod,
@@ -123,7 +129,7 @@ export default function App() {
 
 export function ErrorBoundary() {
   const error = useRouteError();
-  const [root] = useMatches();
+  const rootData = useRootLoaderData();
   const nonce = useNonce();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
@@ -144,7 +150,7 @@ export function ErrorBoundary() {
         <Links />
       </head>
       <body>
-        <Layout {...root.data}>
+        <Layout {...rootData}>
           <div className="route-error">
             <h1>Oops</h1>
             <h2>{errorStatus}</h2>
