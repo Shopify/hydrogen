@@ -44,7 +44,6 @@ export const FlameChartWrapper = (props: FlameChartProps) => {
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
   const flameChart = useRef<null | FlameChart>(null);
 
-  // @ts-ignore
   useResizeObserver({
     ref: boxRef,
     onResize: ({width = 0, height = 0}) =>

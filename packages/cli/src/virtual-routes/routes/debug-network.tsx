@@ -2,6 +2,7 @@ import {useEffect, useRef, useState} from 'react';
 import type {Waterfall, WaterfallItems} from 'flame-chart-js';
 
 import {FlameChartWrapper} from '../components/FlameChartWrapper.jsx';
+import {Link} from '@remix-run/react';
 
 type ServerEvent = {
   id: string;
@@ -123,8 +124,33 @@ export default function DebugNetwork() {
   );
 }
 
+const PANEL_HEIGHT = 300;
+
 function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
-  if (serverEvents.mainRequests.length === 0) return null;
+  if (serverEvents.mainRequests.length === 0)
+    return (
+      <div
+        style={{
+          height: `${PANEL_HEIGHT}px`,
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          backgroundColor: '#FAFAFA',
+        }}
+      >
+        <p
+          style={{
+            fontWeight: 'bold',
+            color: '#777',
+          }}
+        >
+          Navigate your{' '}
+          <Link to="/" target="_blank">
+            app
+          </Link>
+        </p>
+      </div>
+    );
 
   const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
   let items: WaterfallItems = [];
@@ -193,12 +219,12 @@ function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
   };
   return (
     <FlameChartWrapper
-      height={300}
+      height={PANEL_HEIGHT}
       waterfall={data}
       settings={{
         styles: {
           waterfallPlugin: {
-            defaultHeight: 300,
+            defaultHeight: PANEL_HEIGHT,
           },
         },
       }}
