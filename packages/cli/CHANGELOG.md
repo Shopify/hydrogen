@@ -1,5 +1,36 @@
 # @shopify/cli-hydrogen
 
+## 5.2.1
+
+### Patch Changes
+
+- Fix the default page shown when the project has no routes. ([#1266](https://github.com/Shopify/hydrogen/pull/1266)) by [@frandiox](https://github.com/frandiox)
+
+- Hydrogen is now compatible with TypeScript v5. ([#1240](https://github.com/Shopify/hydrogen/pull/1240)) by [@frandiox](https://github.com/frandiox)
+
+  If you have `typescript` as a dev dependency in your app, it is recommended to change its version as follows:
+
+  ```diff
+    "devDependencies": {
+      ...
+  -   "typescript": "^4.9.5",
+  +   "typescript": "^5.2.2",
+    },
+  ```
+
+  After installing the new version of TypeScript, you may need to update the version used in your IDE. For example, in VSCode, you can do this by clicking on the `{ }` icon in the bottom-right toolbar next to the language mode (generally, `{ } TypeScript JSX` when editing a `.tsx` file).
+
+- Fix development server port in some situations where it was set to a random number instead of the default 3000 or the `--port` flag value. ([#1267](https://github.com/Shopify/hydrogen/pull/1267)) by [@frandiox](https://github.com/frandiox)
+
+- Fix transpiling TS to JS when scaffolding routes. ([#1273](https://github.com/Shopify/hydrogen/pull/1273)) by [@frandiox](https://github.com/frandiox)
+
+- Catch more errors during init while connecting to Shopify ([#1281](https://github.com/Shopify/hydrogen/pull/1281)) by [@graygilmore](https://github.com/graygilmore)
+
+- Add functionality for creating a Content Security Policy. See the [guide on Content Security Policies](https://shopify.dev/docs/custom-storefronts/hydrogen/content-security-policy) for more details. ([#1235](https://github.com/Shopify/hydrogen/pull/1235)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`06516ee9`](https://github.com/Shopify/hydrogen/commit/06516ee91f20153902c2b8ef79c0f6690ba385bb), [`423acee2`](https://github.com/Shopify/hydrogen/commit/423acee243c62e49a865ff2cd82735991aca1d8f)]:
+  - @shopify/hydrogen-react@2023.7.3
+
 ## 5.2.0
 
 ### Minor Changes
