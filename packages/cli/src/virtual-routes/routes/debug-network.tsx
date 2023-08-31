@@ -1,8 +1,14 @@
-import {type ServerEvent} from '@shopify/hydrogen';
 import {useEffect, useRef, useState} from 'react';
 import type {Waterfall, WaterfallItems} from 'flame-chart-js';
 
 import {FlameChartWrapper} from '../components/FlameChartWrapper.jsx';
+
+type ServerEvent = {
+  id: string;
+  url: string;
+  startTime: number;
+  endTime: number;
+};
 
 type ServerEvents = {
   smallestStartTime: number;

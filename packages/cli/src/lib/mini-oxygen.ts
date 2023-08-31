@@ -1,3 +1,5 @@
+import {randomUUID} from 'node:crypto';
+import {AsyncLocalStorage} from 'node:async_hooks';
 import {
   outputInfo,
   outputToken,
@@ -9,9 +11,17 @@ import colors from '@shopify/cli-kit/node/colors';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {
   startServer,
+  Request,
+  Response,
+  fetch,
   type MiniOxygenOptions as InternalMiniOxygenOptions,
 } from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from './flags.js';
+import {
+  logRequestEvent,
+  logSubRequestEvent,
+  streamRequestEvents,
+} from './request-events.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -36,6 +46,8 @@ export async function startMiniOxygen({
 }: MiniOxygenOptions) {
   const dotenvPath = resolvePath(root, '.env');
 
+  const asyncLocalStorage = new AsyncLocalStorage();
+
   const miniOxygen = await startServer({
     script: await readFile(buildPathWorkerFile),
     assetsDir: buildPathClient,
@@ -50,13 +62,43 @@ export async function startMiniOxygen({
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
-    onResponse: (request, response) =>
-      // 'Request' and 'Response' types in MiniOxygen comes from
-      // Miniflare and are slightly different from standard types.
-      logResponse(
-        request as unknown as Request,
-        response as unknown as Response,
-      ),
+    async onRequest(request, defaultDispatcher) {
+      const url = new URL(request.url);
+      if (url.pathname === '/debug-network-server') {
+        return streamRequestEvents(request);
+      }
+
+      const startTime = new Date().getTime();
+      const requestId = randomUUID();
+      request.headers.set('request-id', requestId);
+
+      const response = await asyncLocalStorage.run(requestId, () =>
+        defaultDispatcher(request),
+      );
+
+      logRequestEvent({request, startTime});
+      logResponse(request, response);
+
+      return response;
+    },
+    async globalFetch(requestInfo, requestInit) {
+      const startTime = new Date().getTime();
+
+      const response = await fetch(requestInfo, requestInit);
+
+      const eventRequest = new Request(requestInfo, requestInit);
+      logSubRequestEvent({
+        response,
+        startTime,
+        requestGroupId: asyncLocalStorage.getStore() as string,
+        requestUrl: eventRequest.url,
+        requestHeaders: eventRequest.headers,
+        requestBody:
+          typeof requestInit?.body === 'string' ? requestInit.body : undefined,
+      });
+
+      return response;
+    },
   });
 
   const listeningAt = `http://localhost:${miniOxygen.port}`;
@@ -108,7 +150,7 @@ export async function startMiniOxygen({
 export function logResponse(request: Request, response: Response) {
   try {
     const url = new URL(request.url);
-    if (['/graphiql'].includes(url.pathname)) {
+    if (['/graphiql', '/debug-network'].includes(url.pathname)) {
       return;
     }
 

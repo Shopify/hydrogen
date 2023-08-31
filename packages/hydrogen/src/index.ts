@@ -54,14 +54,6 @@ export type {
 } from './product/VariantSelector';
 
 export {
-  type RequestLog,
-  type ServerEvent,
-  getLoggedRequest,
-  logRequest,
-  logSubRequest,
-} from './utils/request-logging';
-
-export {
   AnalyticsEventName,
   AnalyticsPageType,
   ExternalVideo,
