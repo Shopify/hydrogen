@@ -3,6 +3,7 @@ import path from 'path';
 import http from 'http';
 import type {IncomingMessage} from 'http';
 import fs from 'fs';
+import {randomUUID} from 'node:crypto';
 
 import mime from 'mime';
 import {Request, Response} from '@miniflare/core';
@@ -174,6 +175,10 @@ function createRequestMiddleware(
       } else if (val !== undefined) {
         reqHeaders[key] = val;
       }
+    }
+
+    if (!reqHeaders['request-id']) {
+      reqHeaders['request-id'] = randomUUID();
     }
 
     for (const [key, {name, defaultValue}] of Object.entries(
