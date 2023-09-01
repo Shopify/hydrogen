@@ -51,7 +51,7 @@ const swrLock = new Set<string>();
 
 export async function runWithCache<T = unknown>(
   cacheKey: CacheKey,
-  actionFn: () => T | Promise<T>,
+  actionFn: (cacheAction?: string) => T | Promise<T>,
   {
     strategy = CacheShort(),
     cacheInstance,
@@ -80,7 +80,7 @@ export async function runWithCache<T = unknown>(
       // Important: Run revalidation asynchronously.
       const revalidatingPromise = Promise.resolve().then(async () => {
         try {
-          const result = await actionFn();
+          const result = await actionFn('PUT');
 
           if (shouldCacheResult(result)) {
             await setItemInCache(cacheInstance, key, result, strategy);
@@ -103,14 +103,14 @@ export async function runWithCache<T = unknown>(
     if (cachedResult && cachedResult[1].headers) {
       cachedResult[1].headers.push([
         'hydrogen-cache-status',
-        cacheInfo.headers.get('hydrogen-cache-status') ?? 'MISS',
+        cacheInfo.headers.get('hydrogen-cache-status') ?? '',
       ]);
     }
 
     return cachedResult;
   }
 
-  const result = await actionFn();
+  const result = await actionFn('MISS');
 
   /**
    * Important: Do this async
@@ -152,8 +152,18 @@ export async function fetchWithServerCache(
 
   return runWithCache(
     cacheKey,
-    async () => {
-      const response = await fetch(url, requestInit);
+    async (cacheAction?: string) => {
+      let newHeaders = new Headers(requestInit.headers);
+      if (cacheAction) {
+        newHeaders = new Headers({
+          ...requestInit.headers,
+          'hydrogen-cache-status': cacheAction,
+        });
+      }
+      const response = await fetch(url, {
+        ...requestInit,
+        headers: newHeaders,
+      });
       let data;
 
       try {

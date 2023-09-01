@@ -6,7 +6,7 @@ type RequestEvent = {
   data: string;
 };
 
-type LogSubRequestProps = {
+export type LogSubRequestProps = {
   requestBody?: string;
   requestHeaders: Request['headers'];
   requestUrl: Request['url'];
@@ -47,26 +47,40 @@ export function logSubRequestEvent({
   response,
   startTime,
 }: LogSubRequestProps) {
-  if (requestEvents.length > 100) requestEvents.pop();
+  try {
+    if (requestEvents.length > 100) requestEvents.pop();
 
-  let queryName = requestBody?.match(/(query|mutation)\s+(\w+)/)?.[0];
+    let queryName = requestBody?.match(/(query|mutation)\s+(\w+)/)?.[0];
 
-  queryName = queryName?.replace(/\s+/, ' ') || requestUrl;
+    queryName = queryName?.replace(/\s+/, ' ') || requestUrl;
 
-  const cacheStatus = response.headers.get('hydrogen-cache-status');
-  const url = `${
-    requestHeaders.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
-  }${cacheStatus ? `${cacheStatus} ` : 'MISS '}${queryName}`;
+    let cacheStatus = response.headers.get('hydrogen-cache-status');
+    if (!cacheStatus) {
+      cacheStatus = requestHeaders.get('hydrogen-cache-status');
+    }
 
-  requestEvents.push({
-    event: 'Sub request',
-    data: JSON.stringify({
-      id: requestGroupId,
-      url,
-      startTime,
-      endTime: new Date().getTime(),
-    }),
-  });
+    let url = requestUrl;
+    if (requestHeaders.get) {
+      url = `${
+        requestHeaders.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
+      }${queryName}`;
+    } else {
+      url = queryName;
+    }
+
+    requestEvents.push({
+      event: 'Sub request',
+      data: JSON.stringify({
+        id: requestGroupId,
+        url,
+        cacheStatus: cacheStatus || '',
+        startTime,
+        endTime: new Date().getTime(),
+      }),
+    });
+  } catch (e) {
+    console.log(e);
+  }
 }
 
 export function streamRequestEvents(request: Request) {
@@ -82,7 +96,7 @@ export function streamRequestEvents(request: Request) {
           controller.enqueue(encoder.encode(`event: ${event}\n`));
           controller.enqueue(encoder.encode(`data: ${data}\n\n`));
         }
-      }, 100);
+      }, 50);
 
       let closed = false;
 

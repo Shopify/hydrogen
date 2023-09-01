@@ -18,6 +18,7 @@ import {
 } from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from './flags.js';
 import {
+  LogSubRequestProps,
   logRequestEvent,
   logSubRequestEvent,
   streamRequestEvents,
@@ -98,6 +99,23 @@ export async function startMiniOxygen({
       });
 
       return response;
+    },
+    async globalLog(args: unknown) {
+      const cachedRequest = args as LogSubRequestProps;
+      const cacheStatus = cachedRequest.response.headers.get(
+        'hydrogen-cache-status',
+      );
+
+      if (cacheStatus === 'HIT' || cacheStatus === 'STALE') {
+        logSubRequestEvent({
+          response: cachedRequest.response,
+          startTime: cachedRequest.startTime,
+          requestGroupId: asyncLocalStorage.getStore() as string,
+          requestUrl: cachedRequest.requestUrl,
+          requestHeaders: cachedRequest.requestHeaders,
+          requestBody: cachedRequest.requestUrl,
+        });
+      }
     },
   });
 

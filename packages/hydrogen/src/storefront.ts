@@ -29,6 +29,10 @@ import {
 import {warnOnce} from './utils/warning';
 import {LIB_VERSION} from './version';
 
+declare global {
+  var logOxygen: (args: unknown) => void;
+}
+
 type StorefrontApiResponse<T> = StorefrontApiResponseOk<T>;
 
 export type I18nBase = {
@@ -293,6 +297,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     headers = [],
     storefrontApiVersion,
   }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
+    const startTime = new Date().getTime();
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
@@ -338,6 +343,13 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       queryVariables,
       errors: undefined,
     };
+
+    logOxygen({
+      requestUrl: query,
+      requestHeaders: {...defaultHeaders, ...userHeaders},
+      response,
+      startTime,
+    });
 
     if (!response.ok) {
       /**
