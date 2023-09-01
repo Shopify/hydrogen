@@ -153,6 +153,31 @@ describe('start()', () => {
     await miniOxygen.close();
   });
 
+  it('adds Oxygen request headers', async () => {
+    const miniOxygen = await startServer({
+      ...defaultOptions,
+      log: mockLogger,
+      port: testPort,
+      script:
+        'export default { fetch: (req) =>' +
+        ' new Response(JSON.stringify(Object.fromEntries(req.headers.entries())))' +
+        '}',
+    });
+
+    let receivedData = '';
+    await sendRequest(testPort, '/').then((response: any) => {
+      receivedData = response.data;
+    });
+
+    expect(receivedData.at(0)).toEqual(`{`);
+
+    const headers = JSON.parse(receivedData);
+    expect(headers['request-id']).toMatch(/^[a-z0-9-]{36}$/);
+    expect(headers['oxygen-buyer-ip']).toEqual('127.0.0.1');
+
+    await miniOxygen.close();
+  });
+
   it('proxies requests to a proxy server', async () => {
     const mockLogger = vi.fn();
     const proxyPort = 1338;
