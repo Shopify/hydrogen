@@ -71,7 +71,9 @@ export function createMiniOxygen(
   }
 
   if (script && workerFile) {
-    throw new Error('Only one of `script` or `workerFile` can be provided.');
+    log(
+      'Both `script` and `workerFile` options were provided. Using `script` to load the worker code.',
+    );
   }
 
   const mf = new MiniOxygen(
