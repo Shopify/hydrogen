@@ -39,32 +39,27 @@ export function logRequestEvent({
   });
 }
 
-export function logSubRequestEvent({
-  requestBody,
-  requestHeaders,
-  requestUrl,
-  requestGroupId,
-  response,
-  startTime,
-}: LogSubRequestProps) {
+export function logSubRequestEvent(request: Request) {
   if (requestEvents.length > 100) requestEvents.pop();
 
-  let queryName = requestBody?.match(/(query|mutation)\s+(\w+)/)?.[0];
+  let queryName = decodeURIComponent(request.url).match(
+    /(query|mutation)\s+(\w+)/,
+  )?.[0];
 
-  queryName = queryName?.replace(/\s+/, ' ') || requestUrl;
+  queryName = queryName?.replace(/\s+/, ' ') || request.url;
 
-  const cacheStatus = response.headers.get('hydrogen-cache-status');
+  const cacheStatus = request.headers.get('hydrogen-cache-status');
   const url = `${
-    requestHeaders.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
+    request.headers.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
   }${cacheStatus ? `${cacheStatus} ` : 'MISS '}${queryName}`;
 
   requestEvents.push({
     event: 'Sub request',
     data: JSON.stringify({
-      id: requestGroupId,
+      id: request.headers.get('request-id')!,
       url,
-      startTime,
-      endTime: new Date().getTime(),
+      startTime: request.headers.get('hydrogen-start-time'),
+      endTime: request.headers.get('hydrogen-end-time') || Date.now(),
     }),
   });
 }

@@ -4,6 +4,8 @@ import {
   type ServerBuild,
 } from '@remix-run/server-runtime';
 
+const H2_LOGGER_KEY = 'H2_LOG_SUBREQUEST_EVENT';
+
 export function createRequestHandler<Context = unknown>({
   build,
   mode,
@@ -18,10 +20,18 @@ export function createRequestHandler<Context = unknown>({
   const handleRequest = createRemixRequestHandler(build, mode);
 
   return async (request: Request) => {
-    const response = await handleRequest(
-      request,
-      (await getLoadContext?.(request)) as AppLoadContext,
-    );
+    const context = (await getLoadContext?.(request)) as AppLoadContext;
+
+    // Store logger in globalThis so it can be accessed from the worker.
+    const env: Record<string, any> = context.env ?? {};
+    if (process.env.NODE_ENV === 'development' && env[H2_LOGGER_KEY]) {
+      console.log('Setting global logger', env[H2_LOGGER_KEY]);
+      // The global property must be different from the binding name,
+      // otherwise Miniflare throws an error when accessing it.
+      (globalThis as any)['__' + H2_LOGGER_KEY] = env[H2_LOGGER_KEY];
+    }
+
+    const response = await handleRequest(request, context);
 
     if (poweredByHeader) {
       response.headers.append('powered-by', 'Shopify, Hydrogen');

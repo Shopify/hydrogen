@@ -13,7 +13,6 @@ import {
   startServer,
   Request,
   Response,
-  fetch,
   type MiniOxygenOptions as InternalMiniOxygenOptions,
 } from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from './flags.js';
@@ -59,6 +58,18 @@ export async function startMiniOxygen({
     env: {
       ...env,
       ...process.env,
+      H2_LOG_SUBREQUEST_EVENT: (request: Request) => {
+        return Promise.resolve(
+          logSubRequestEvent(
+            new Request(request.url, {
+              headers: {
+                ...Object.fromEntries(request.headers.entries()),
+                ...(asyncLocalStorage.getStore() as Record<string, string>),
+              },
+            }),
+          ),
+        );
+      },
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
@@ -72,30 +83,14 @@ export async function startMiniOxygen({
       const requestId = randomUUID();
       request.headers.set('request-id', requestId);
 
-      const response = await asyncLocalStorage.run(requestId, () =>
-        defaultDispatcher(request),
+      // Provide headers to sub-requests
+      const response = await asyncLocalStorage.run(
+        {'request-id': requestId, purpose: request.headers.get('purpose')},
+        () => defaultDispatcher(request),
       );
 
       logRequestEvent({request, startTime});
       logResponse(request, response);
-
-      return response;
-    },
-    async globalFetch(requestInfo, requestInit) {
-      const startTime = new Date().getTime();
-
-      const response = await fetch(requestInfo, requestInit);
-
-      const eventRequest = new Request(requestInfo, requestInit);
-      logSubRequestEvent({
-        response,
-        startTime,
-        requestGroupId: asyncLocalStorage.getStore() as string,
-        requestUrl: eventRequest.url,
-        requestHeaders: eventRequest.headers,
-        requestBody:
-          typeof requestInit?.body === 'string' ? requestInit.body : undefined,
-      });
 
       return response;
     },

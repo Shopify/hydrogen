@@ -64,14 +64,7 @@ async function getItem(
 
   logCacheApiStatus('HIT', request, response);
 
-  const clonedResponse = response.clone();
-  if (isStale(request, response)) {
-    clonedResponse.headers.set('hydrogen-cache-status', 'STALE');
-  } else {
-    clonedResponse.headers.set('hydrogen-cache-status', 'HIT');
-  }
-
-  return clonedResponse;
+  return response;
 }
 
 /**

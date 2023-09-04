@@ -1,6 +1,11 @@
 import {hashKey} from '../utils/hash.js';
 import {CacheShort, CachingStrategy, NO_STORE} from './strategies';
-import {getItemFromCache, setItemInCache, isStale} from './sub-request';
+import {
+  getItemFromCache,
+  setItemInCache,
+  isStale,
+  getKeyUrl,
+} from './sub-request';
 
 /**
  * The cache key is used to uniquely identify a value in the cache.
@@ -42,6 +47,10 @@ function fromSerializableResponse([body, init]: [any, ResponseInit]) {
 // https://spec.graphql.org/June2018/#sec-Response-Format
 export const checkGraphQLErrors = (body: any) => !body?.errors;
 
+declare global {
+  var __H2_LOG_SUBREQUEST_EVENT: (args: unknown) => Promise<any>;
+}
+
 // Lock to prevent revalidating the same sub-request
 // in the same isolate. Note that different isolates
 // in the same colo could duplicate the revalidation
@@ -68,13 +77,32 @@ export async function runWithCache<T = unknown>(
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ]);
 
+  const startTime = Date.now();
   const cachedItem = await getItemFromCache(cacheInstance, key);
   // console.log('--- Cache', cachedItem ? 'HIT' : 'MISS');
 
+  const logSubRequestEvent =
+    process.env.NODE_ENV === 'development'
+      ? (cacheStatus: 'MISS' | 'HIT' | 'STALE') => {
+          const promise = globalThis.__H2_LOG_SUBREQUEST_EVENT?.(
+            new Request(getKeyUrl(key), {
+              headers: {
+                'hydrogen-start-time': startTime.toString(),
+                'hydrogen-end-time': Date.now().toString(),
+                'hydrogen-cache-status': cacheStatus,
+              },
+            }),
+          );
+
+          promise && waitUntil?.(promise);
+        }
+      : undefined;
+
   if (cachedItem) {
     const [cachedResult, cacheInfo] = cachedItem;
+    const cacheStatus = isStale(key, cacheInfo) ? 'STALE' : 'HIT';
 
-    if (!swrLock.has(key) && isStale(key, cacheInfo)) {
+    if (!swrLock.has(key) && cacheStatus === 'STALE') {
       swrLock.add(key);
 
       // Important: Run revalidation asynchronously.
@@ -100,17 +128,14 @@ export async function runWithCache<T = unknown>(
       waitUntil?.(revalidatingPromise);
     }
 
-    if (cachedResult && cachedResult[1].headers) {
-      cachedResult[1].headers.push([
-        'hydrogen-cache-status',
-        cacheInfo.headers.get('hydrogen-cache-status') ?? 'MISS',
-      ]);
-    }
+    logSubRequestEvent?.(cacheStatus);
 
     return cachedResult;
   }
 
   const result = await actionFn();
+
+  logSubRequestEvent?.('MISS');
 
   /**
    * Important: Do this async
