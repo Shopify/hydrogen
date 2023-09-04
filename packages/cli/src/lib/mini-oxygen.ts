@@ -16,6 +16,7 @@ import {
   fetch,
   type MiniOxygenOptions as InternalMiniOxygenOptions,
 } from '@shopify/mini-oxygen';
+import {isStale, hashKey, getKeyUrl} from '@shopify/hydrogen/debug';
 import {DEFAULT_PORT} from './flags.js';
 import {
   logRequestEvent,
@@ -45,8 +46,8 @@ export async function startMiniOxygen({
   env,
 }: MiniOxygenOptions) {
   const dotenvPath = resolvePath(root, '.env');
-
   const asyncLocalStorage = new AsyncLocalStorage();
+  const staleQueue = new Map<string, number>();
 
   const miniOxygen = await startServer({
     script: await readFile(buildPathWorkerFile),
@@ -87,17 +88,49 @@ export async function startMiniOxygen({
       const response = await fetch(requestInfo, requestInit);
 
       const eventRequest = new Request(requestInfo, requestInit);
+      const requestBody =
+        typeof requestInit?.body === 'string' ? requestInit.body : undefined;
+
+      const cacheKey = getKeyUrl(hashKey([eventRequest.url, requestInit]));
+      const isRequestForStale = staleQueue.has(cacheKey);
+
       logSubRequestEvent({
-        response,
-        startTime,
+        startTime: isRequestForStale ? staleQueue.get(cacheKey)! : startTime,
+        cacheStatus: isRequestForStale ? 'STALE' : 'MISS',
         requestGroupId: asyncLocalStorage.getStore() as string,
         requestUrl: eventRequest.url,
         requestHeaders: eventRequest.headers,
-        requestBody:
-          typeof requestInit?.body === 'string' ? requestInit.body : undefined,
+        requestBody,
       });
 
+      if (isRequestForStale) staleQueue.delete(cacheKey);
+
       return response;
+    },
+    cacheHook(cache) {
+      const startTime = new Date().getTime();
+      const originalMatch = cache.match.bind(cache);
+      cache.match = async (request: Request, options: CacheQueryOptions) => {
+        const response = await originalMatch(request, options);
+
+        if (response) {
+          // @ts-expect-error Different global Request/Response types
+          if (isStale(request, response)) {
+            staleQueue.set(request.url, startTime);
+            setTimeout(() => staleQueue.delete(request.url), 5000);
+          } else {
+            logSubRequestEvent({
+              startTime,
+              cacheStatus: 'HIT',
+              requestGroupId: asyncLocalStorage.getStore() as string,
+              requestUrl: request.url,
+              requestHeaders: request.headers,
+            });
+          }
+        }
+
+        return response;
+      };
     },
   });
 

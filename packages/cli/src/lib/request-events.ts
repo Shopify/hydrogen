@@ -11,8 +11,8 @@ type LogSubRequestProps = {
   requestHeaders: Request['headers'];
   requestUrl: Request['url'];
   requestGroupId: string;
-  response: Response;
   startTime: number;
+  cacheStatus?: 'HIT' | 'STALE' | 'MISS' | null;
 };
 
 const requestEvents: RequestEvent[] = [];
@@ -39,21 +39,23 @@ export function logRequestEvent({
   });
 }
 
+const findQueryName = (string?: string) =>
+  string?.match(/(query|mutation)\s+(\w+)/)?.[0];
+
 export function logSubRequestEvent({
   requestBody,
   requestHeaders,
   requestUrl,
   requestGroupId,
-  response,
   startTime,
+  cacheStatus,
 }: LogSubRequestProps) {
   if (requestEvents.length > 100) requestEvents.pop();
 
-  let queryName = requestBody?.match(/(query|mutation)\s+(\w+)/)?.[0];
+  const queryName = (
+    findQueryName(requestBody || decodeURIComponent(requestUrl)) || requestUrl
+  )?.replace(/\s+/, ' ');
 
-  queryName = queryName?.replace(/\s+/, ' ') || requestUrl;
-
-  const cacheStatus = response.headers.get('hydrogen-cache-status');
   const url = `${
     requestHeaders.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
   }${cacheStatus ? `${cacheStatus} ` : 'MISS '}${queryName}`;
