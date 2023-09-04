@@ -174,7 +174,7 @@ function calculateAge(response: Response, responseDate: string) {
 /**
  * Manually check the response to see if it's stale.
  */
-function isStale(request: Request, response: Response) {
+export function isStale(request: Request, response: Response) {
   const responseDate = response.headers.get('cache-put-date');
 
   if (!responseDate) {

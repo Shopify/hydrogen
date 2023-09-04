@@ -38,6 +38,13 @@
         "default": "./dist/production/index.js"
       }
     },
+    "./debug": {
+      "types": "./dist/production/debug.d.ts",
+      "default": {
+        "development": "./dist/development/debug.js",
+        "default": "./dist/production/debug.js"
+      }
+    },
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
     "./package.json": "./package.json"

@@ -7,7 +7,7 @@ const cjsEntryContent = `module.exports = process.env.NODE_ENV === 'development'
 const cjsEntryFile = path.resolve(process.cwd(), outDir, 'index.cjs');
 
 const commonConfig = defineConfig({
-  entry: ['src/index.ts'],
+  entry: ['src/index.ts', 'src/debug.ts'],
   format: ['esm', 'cjs'],
   treeshake: true,
   sourcemap: true,
