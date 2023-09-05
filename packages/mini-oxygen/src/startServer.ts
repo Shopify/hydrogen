@@ -72,7 +72,8 @@ export function createMiniOxygen(
 
   if (script && workerFile) {
     log(
-      'Both `script` and `workerFile` options were provided. Using `script` to load the worker code.',
+      'Both `script` and `workerFile` options were provided. ' +
+        'Using `script` to load the worker code and `workerFile` to find a sourcemap file in disk.',
     );
   }
 
