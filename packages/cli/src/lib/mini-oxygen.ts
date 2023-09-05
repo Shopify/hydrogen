@@ -64,10 +64,11 @@ export async function startMiniOxygen({
             new Request(request.url, {
               headers: {
                 ...Object.fromEntries(request.headers.entries()),
+                // Merge some headers from the parent request
                 ...(asyncLocalStorage.getStore() as Record<string, string>),
               },
             }),
-          ),
+          ).catch(() => {}),
       },
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
@@ -78,17 +79,26 @@ export async function startMiniOxygen({
         return streamRequestEvents(request);
       }
 
-      const startTime = new Date().getTime();
+      const startTime = Date.now();
       const requestId = randomUUID();
       request.headers.set('request-id', requestId);
 
-      // Provide headers to sub-requests
+      // Provide headers to sub-requests and dispatch the request.
       const response = await asyncLocalStorage.run(
         {'request-id': requestId, purpose: request.headers.get('purpose')},
         () => defaultDispatcher(request),
       );
 
-      logRequestEvent({request, startTime});
+      logRequestEvent(
+        new Request(request.url, {
+          headers: {
+            ...Object.fromEntries(request.headers.entries()),
+            'hydrogen-start-time': String(startTime),
+            'hydrogen-end-time': String(Date.now()),
+          },
+        }),
+      ).catch(() => {});
+
       logResponse(request, response);
 
       return response;

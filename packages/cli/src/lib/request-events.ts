@@ -6,56 +6,53 @@ type RequestEvent = {
   data: string;
 };
 
+function getRequestInfo(request: Request) {
+  return {
+    id: request.headers.get('request-id')!,
+    startTime: request.headers.get('hydrogen-start-time')!,
+    endTime: request.headers.get('hydrogen-end-time') || String(Date.now()),
+    purpose: request.headers.get('purpose') === 'prefetch' ? '(prefetch)' : '',
+    cacheStatus: request.headers.get('hydrogen-cache-status') || 'MISS',
+  };
+}
+
 const requestEvents: RequestEvent[] = [];
 
-export function logRequestEvent({
-  request,
-  startTime,
-}: {
-  request: Request;
-  startTime: number;
-}) {
+export async function logRequestEvent(request: Request): Promise<Response> {
   if (requestEvents.length > 100) requestEvents.pop();
+
+  const {purpose, cacheStatus, ...event} = getRequestInfo(request);
 
   requestEvents.push({
     event: 'Request',
     data: JSON.stringify({
-      id: request.headers.get('request-id')!,
-      url: `${
-        request.headers.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
-      }${request.url}`,
-      startTime,
-      endTime: new Date().getTime(),
+      ...event,
+      url: `${purpose} ${request.url}`.trim(),
     }),
   });
+
+  return new Response('ok');
 }
 
-export function logSubRequestEvent(request: Request) {
+export async function logSubRequestEvent(request: Request): Promise<Response> {
   if (requestEvents.length > 100) requestEvents.pop();
 
-  let queryName = decodeURIComponent(request.url).match(
-    /(query|mutation)\s+(\w+)/,
-  )?.[0];
+  const {purpose, cacheStatus, ...event} = getRequestInfo(request);
 
-  queryName = queryName?.replace(/\s+/, ' ') || request.url;
-
-  const cacheStatus = request.headers.get('hydrogen-cache-status');
-  const url = `${
-    request.headers.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
-  }${cacheStatus ? `${cacheStatus} ` : 'MISS '}${queryName}`;
+  const queryName =
+    decodeURIComponent(request.url)
+      .match(/(query|mutation)\s+(\w+)/)?.[0]
+      ?.replace(/\s+/, ' ') || request.url;
 
   requestEvents.push({
     event: 'Sub request',
     data: JSON.stringify({
-      id: request.headers.get('request-id')!,
-      url,
-      startTime: request.headers.get('hydrogen-start-time'),
-      endTime: request.headers.get('hydrogen-end-time') || Date.now(),
+      ...event,
+      url: `${purpose} ${cacheStatus} ${queryName}`.trim(),
     }),
   });
 
-  // Dummy response for service bindings
-  return Promise.resolve(new Response('ok'));
+  return new Response('ok');
 }
 
 export function streamRequestEvents(request: Request) {
