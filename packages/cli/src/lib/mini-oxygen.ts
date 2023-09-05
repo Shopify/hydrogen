@@ -58,8 +58,8 @@ export async function startMiniOxygen({
     env: {
       ...env,
       ...process.env,
-      H2_LOG_SUBREQUEST_EVENT: (request: Request) => {
-        return Promise.resolve(
+      H2_LOG_SUBREQUEST_EVENT: {
+        fetch: (request: Request) =>
           logSubRequestEvent(
             new Request(request.url, {
               headers: {
@@ -68,7 +68,6 @@ export async function startMiniOxygen({
               },
             }),
           ),
-        );
       },
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,

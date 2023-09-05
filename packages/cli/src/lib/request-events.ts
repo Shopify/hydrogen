@@ -6,15 +6,6 @@ type RequestEvent = {
   data: string;
 };
 
-type LogSubRequestProps = {
-  requestBody?: string;
-  requestHeaders: Request['headers'];
-  requestUrl: Request['url'];
-  requestGroupId: string;
-  response: Response;
-  startTime: number;
-};
-
 const requestEvents: RequestEvent[] = [];
 
 export function logRequestEvent({
@@ -62,6 +53,9 @@ export function logSubRequestEvent(request: Request) {
       endTime: request.headers.get('hydrogen-end-time') || Date.now(),
     }),
   });
+
+  // Dummy response for service bindings
+  return Promise.resolve(new Response('ok'));
 }
 
 export function streamRequestEvents(request: Request) {

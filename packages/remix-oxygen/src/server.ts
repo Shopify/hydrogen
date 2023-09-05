@@ -22,13 +22,19 @@ export function createRequestHandler<Context = unknown>({
   return async (request: Request) => {
     const context = (await getLoadContext?.(request)) as AppLoadContext;
 
-    // Store logger in globalThis so it can be accessed from the worker.
-    const env: Record<string, any> = context.env ?? {};
-    if (process.env.NODE_ENV === 'development' && env[H2_LOGGER_KEY]) {
-      console.log('Setting global logger', env[H2_LOGGER_KEY]);
-      // The global property must be different from the binding name,
-      // otherwise Miniflare throws an error when accessing it.
-      (globalThis as any)['__' + H2_LOGGER_KEY] = env[H2_LOGGER_KEY];
+    if (process.env.NODE_ENV === 'development') {
+      const eventLoggerService: {fetch: Function} = (
+        context?.env as Record<string, any>
+      )?.[H2_LOGGER_KEY];
+
+      if (typeof eventLoggerService?.fetch === 'function') {
+        // Store logger in globalThis so it can be accessed from the worker.
+        // The global property must be different from the binding name,
+        // otherwise Miniflare throws an error when accessing it.
+        (globalThis as any)['__' + H2_LOGGER_KEY] = (req: Request) => {
+          return eventLoggerService.fetch(req);
+        };
+      }
     }
 
     const response = await handleRequest(request, context);
