@@ -1,5 +1,11 @@
 # @shopify/mini-oxygen
 
+## 2.2.2
+
+### Patch Changes
+
+- 8863d40: Update @types/connect from 3.4.35 to 3.4.36
+
 ## 2.2.1
 
 ### Patch Changes
