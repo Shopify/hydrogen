@@ -1,4 +1,5 @@
 import {Flags} from '@oclif/core';
+import terminalLink from 'terminal-link';
 import Command from '@shopify/cli-kit/node/base-command';
 import {
   outputInfo,
@@ -29,6 +30,7 @@ import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {createRemixLogger, muteRemixLogs} from '../../lib/log.js';
 import {codegen} from '../../lib/codegen.js';
+import {buildBundleAnalysis} from '../../lib/build/analyzer.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -134,11 +136,16 @@ export async function runBuild({
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
     const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
+    const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
 
     outputInfo(
       outputContent`   ${colors.dim(
         relativePath(root, buildPathWorkerFile),
-      )}  ${outputToken.yellow(sizeMB.toFixed(2))} MB\n`,
+      )}  ${terminalLink(sizeMB.toFixed(2) + ' MB', bundleAnalysisPath, {
+        fallback(text) {
+          return colors.yellow(text) + ' MB';
+        },
+      })}\n`,
     );
 
     if (sizeMB >= 1) {
