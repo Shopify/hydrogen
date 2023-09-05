@@ -6,6 +6,8 @@ type RequestEvent = {
   data: string;
 };
 
+export const DEV_ROUTES = new Set(['/graphiql', '/debug-network']);
+
 function getRequestInfo(request: Request) {
   return {
     id: request.headers.get('request-id')!,
@@ -19,6 +21,10 @@ function getRequestInfo(request: Request) {
 const requestEvents: RequestEvent[] = [];
 
 export async function logRequestEvent(request: Request): Promise<Response> {
+  if (DEV_ROUTES.has(new URL(request.url).pathname)) {
+    return new Response('ok');
+  }
+
   if (requestEvents.length > 100) requestEvents.pop();
 
   const {purpose, cacheStatus, ...event} = getRequestInfo(request);

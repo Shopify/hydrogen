@@ -17,6 +17,7 @@ import {
 } from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from './flags.js';
 import {
+  DEV_ROUTES,
   logRequestEvent,
   logSubRequestEvent,
   streamRequestEvents,
@@ -154,9 +155,7 @@ export async function startMiniOxygen({
 export function logResponse(request: Request, response: Response) {
   try {
     const url = new URL(request.url);
-    if (['/graphiql', '/debug-network'].includes(url.pathname)) {
-      return;
-    }
+    if (DEV_ROUTES.has(url.pathname)) return;
 
     const isProxy = !!response.url && response.url !== request.url;
     const isDataRequest = !isProxy && url.searchParams.has('_data');
