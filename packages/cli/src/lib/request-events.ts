@@ -14,7 +14,7 @@ function getRequestInfo(request: Request) {
     startTime: request.headers.get('hydrogen-start-time')!,
     endTime: request.headers.get('hydrogen-end-time') || String(Date.now()),
     purpose: request.headers.get('purpose') === 'prefetch' ? '(prefetch)' : '',
-    cacheStatus: request.headers.get('hydrogen-cache-status') || 'MISS',
+    cacheStatus: request.headers.get('hydrogen-cache-status'),
   };
 }
 
@@ -43,7 +43,7 @@ export async function logRequestEvent(request: Request): Promise<Response> {
 export async function logSubRequestEvent(request: Request): Promise<Response> {
   if (requestEvents.length > 100) requestEvents.pop();
 
-  const {purpose, cacheStatus, ...event} = getRequestInfo(request);
+  const {purpose, ...event} = getRequestInfo(request);
 
   const queryName =
     decodeURIComponent(request.url)
@@ -54,7 +54,7 @@ export async function logSubRequestEvent(request: Request): Promise<Response> {
     event: 'Sub request',
     data: JSON.stringify({
       ...event,
-      url: `${purpose} ${cacheStatus} ${queryName}`.trim(),
+      url: `${purpose} ${queryName}`.trim(),
     }),
   });
 

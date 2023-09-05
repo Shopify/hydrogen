@@ -9,12 +9,14 @@ type ServerEvent = {
   url: string;
   startTime: number;
   endTime: number;
+  cacheStatus: string;
 };
 
 type ServerEvents = {
   smallestStartTime: number;
   mainRequests: ServerEvent[];
   subRequests: Record<string, ServerEvent[]>;
+  showPutRequests: boolean;
 };
 
 export default function DebugNetwork() {
@@ -23,6 +25,7 @@ export default function DebugNetwork() {
     smallestStartTime: 0,
     mainRequests: [],
     subRequests: {},
+    showPutRequests: false,
   });
 
   // For triggering a react render
@@ -89,6 +92,7 @@ export default function DebugNetwork() {
         style={{
           width: '100vw',
           backgroundColor: '#F5F5F5',
+          fontSize: '0.8rem',
         }}
       >
         <div
@@ -97,22 +101,39 @@ export default function DebugNetwork() {
             justifyContent: 'space-between',
           }}
         >
-          <button
-            onClick={() => {
-              serverEvents.current = {
-                smallestStartTime: 0,
-                mainRequests: [],
-                subRequests: {},
-              };
-              setTimestamp(new Date().getTime());
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
             }}
           >
-            Clear
-          </button>
+            <button
+              onClick={() => {
+                serverEvents.current = {
+                  smallestStartTime: 0,
+                  mainRequests: [],
+                  subRequests: {},
+                  showPutRequests: serverEvents.current.showPutRequests,
+                };
+                setTimestamp(new Date().getTime());
+              }}
+            >
+              Clear
+            </button>
+            <input
+              id="showPutRequests"
+              type="checkbox"
+              checked={serverEvents.current.showPutRequests}
+              onChange={(event) => {
+                serverEvents.current.showPutRequests = event.target.checked;
+                setTimestamp(new Date().getTime());
+              }}
+            />
+            <label htmlFor="showPutRequests">Show PUT requests</label>
+          </div>
           <p
             style={{
               paddingRight: '5px',
-              fontSize: '0.8rem',
             }}
           >
             Unstable
@@ -162,16 +183,28 @@ function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
     const subRequests = serverEvents.subRequests[mainRequest.id] || [];
     subRequests.forEach((subRequest: ServerEvent) => {
       const subRequestEnd = calcDuration(subRequest.endTime);
+
+      if (subRequest.cacheStatus !== 'PUT') {
+        mainResponseEnd = Math.max(mainResponseEnd, subRequestEnd);
+      }
+
       mainResponseEnd = Math.max(mainResponseEnd, subRequestEnd);
 
-      subRequestItems.push({
-        name: subRequest.url,
+      const subRequestItem = {
+        name: `${subRequest.cacheStatus} ${subRequest.url}`.trim(),
         intervals: 'request',
         timing: {
           requestStart: calcDuration(subRequest.startTime),
           requestEnd: subRequestEnd,
         },
-      });
+      };
+
+      if (serverEvents.showPutRequests) {
+        subRequestItems.push(subRequestItem);
+      } else {
+        subRequest.cacheStatus !== 'PUT' &&
+          subRequestItems.push(subRequestItem);
+      }
     });
 
     items.push({
