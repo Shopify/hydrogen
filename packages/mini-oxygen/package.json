@@ -9,7 +9,7 @@
     "node": ">16.7.0"
   },
   "type": "module",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "description": "Development assistant for custom Shopify Oxygen hosted storefronts",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

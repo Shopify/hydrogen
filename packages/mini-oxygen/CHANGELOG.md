@@ -1,5 +1,12 @@
 # @shopify/mini-oxygen
 
+## 2.2.1
+
+### Patch Changes
+
+- fc405c0: Fix error stack traces when using `script` option. The sourcemap for the script is loaded using the path passed in `workerFile`.
+- df9af93: Add `request-id` header to requests like in Oxygen production.
+
 ## 2.2.0
 
 ### Minor Changes
