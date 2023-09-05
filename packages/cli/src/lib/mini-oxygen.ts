@@ -47,6 +47,20 @@ export async function startMiniOxygen({
   const dotenvPath = resolvePath(root, '.env');
 
   const asyncLocalStorage = new AsyncLocalStorage();
+  const serviceBindings = {
+    H2_LOG_SUBREQUEST_EVENT: {
+      fetch: (request: Request) =>
+        logSubRequestEvent(
+          new Request(request.url, {
+            headers: {
+              ...Object.fromEntries(request.headers.entries()),
+              // Merge some headers from the parent request
+              ...(asyncLocalStorage.getStore() as Record<string, string>),
+            },
+          }),
+        ).catch(() => {}),
+    },
+  };
 
   const miniOxygen = await startServer({
     script: await readFile(buildPathWorkerFile),
@@ -59,18 +73,7 @@ export async function startMiniOxygen({
     env: {
       ...env,
       ...process.env,
-      H2_LOG_SUBREQUEST_EVENT: {
-        fetch: (request: Request) =>
-          logSubRequestEvent(
-            new Request(request.url, {
-              headers: {
-                ...Object.fromEntries(request.headers.entries()),
-                // Merge some headers from the parent request
-                ...(asyncLocalStorage.getStore() as Record<string, string>),
-              },
-            }),
-          ).catch(() => {}),
-      },
+      ...serviceBindings,
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
@@ -122,6 +125,7 @@ export async function startMiniOxygen({
         nextOptions.env = {
           ...options.env,
           ...(process.env as Record<string, string>),
+          ...serviceBindings,
         };
       }
 
