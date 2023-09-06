@@ -19,7 +19,6 @@ import {DEFAULT_PORT} from './flags.js';
 import {
   DEV_ROUTES,
   logRequestEvent,
-  logSubRequestEvent,
   streamRequestEvents,
 } from './request-events.js';
 
@@ -48,9 +47,9 @@ export async function startMiniOxygen({
 
   const asyncLocalStorage = new AsyncLocalStorage();
   const serviceBindings = {
-    H2_LOG_SUBREQUEST_EVENT: {
+    H2_LOG_REQUEST_EVENT: {
       fetch: (request: Request) =>
-        logSubRequestEvent(
+        logRequestEvent(
           new Request(request.url, {
             headers: {
               ...Object.fromEntries(request.headers.entries()),
@@ -83,7 +82,6 @@ export async function startMiniOxygen({
         return streamRequestEvents(request);
       }
 
-      const startTime = Date.now();
       const requestId = randomUUID();
       request.headers.set('request-id', requestId);
 
@@ -92,16 +90,6 @@ export async function startMiniOxygen({
         {'request-id': requestId, purpose: request.headers.get('purpose')},
         () => defaultDispatcher(request),
       );
-
-      logRequestEvent(
-        new Request(request.url, {
-          headers: {
-            ...Object.fromEntries(request.headers.entries()),
-            'hydrogen-start-time': String(startTime),
-            'hydrogen-end-time': String(Date.now()),
-          },
-        }),
-      ).catch(() => {});
 
       logResponse(request, response);
 

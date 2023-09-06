@@ -47,10 +47,6 @@ function fromSerializableResponse([body, init]: [any, ResponseInit]) {
 // https://spec.graphql.org/June2018/#sec-Response-Format
 export const checkGraphQLErrors = (body: any) => !body?.errors;
 
-declare global {
-  var __H2_LOG_SUBREQUEST_EVENT: (args: unknown) => Promise<any>;
-}
-
 // Lock to prevent revalidating the same sub-request
 // in the same isolate. Note that different isolates
 // in the same colo could duplicate the revalidation
@@ -80,9 +76,10 @@ export async function runWithCache<T = unknown>(
           cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT',
           overrideStartTime?: number,
         ) => {
-          const promise = globalThis.__H2_LOG_SUBREQUEST_EVENT?.(
+          const promise = globalThis.__H2_LOG_REQUEST_EVENT?.(
             new Request(getKeyUrl(key), {
               headers: {
+                'hydrogen-event-type': 'subrequest',
                 'hydrogen-start-time':
                   overrideStartTime?.toString() || startTime.toString(),
                 'hydrogen-end-time': Date.now().toString(),

@@ -8,9 +8,15 @@ type RequestEvent = {
 
 export const DEV_ROUTES = new Set(['/graphiql', '/debug-network']);
 
+const EVENT_MAP: Record<string, string> = {
+  request: 'Request',
+  subrequest: 'Sub request',
+};
+
 function getRequestInfo(request: Request) {
   return {
     id: request.headers.get('request-id')!,
+    event: request.headers.get('hydrogen-event-type') || 'unknown',
     startTime: request.headers.get('hydrogen-start-time')!,
     endTime: request.headers.get('hydrogen-end-time') || String(Date.now()),
     purpose: request.headers.get('purpose') === 'prefetch' ? '(prefetch)' : '',
@@ -27,34 +33,22 @@ export async function logRequestEvent(request: Request): Promise<Response> {
 
   if (requestEvents.length > 100) requestEvents.pop();
 
-  const {purpose, cacheStatus, ...event} = getRequestInfo(request);
+  const {event, purpose, ...data} = getRequestInfo(request);
+
+  let description = request.url;
+
+  if (event === 'subrequest') {
+    description =
+      decodeURIComponent(request.url)
+        .match(/(query|mutation)\s+(\w+)/)?.[0]
+        ?.replace(/\s+/, ' ') || request.url;
+  }
 
   requestEvents.push({
-    event: 'Request',
+    event: EVENT_MAP[event] || event,
     data: JSON.stringify({
-      ...event,
-      url: `${purpose} ${request.url}`.trim(),
-    }),
-  });
-
-  return new Response('ok');
-}
-
-export async function logSubRequestEvent(request: Request): Promise<Response> {
-  if (requestEvents.length > 100) requestEvents.pop();
-
-  const {purpose, ...event} = getRequestInfo(request);
-
-  const queryName =
-    decodeURIComponent(request.url)
-      .match(/(query|mutation)\s+(\w+)/)?.[0]
-      ?.replace(/\s+/, ' ') || request.url;
-
-  requestEvents.push({
-    event: 'Sub request',
-    data: JSON.stringify({
-      ...event,
-      url: `${purpose} ${queryName}`.trim(),
+      ...data,
+      url: `${purpose} ${description}`.trim(),
     }),
   });
 
