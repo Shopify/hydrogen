@@ -1,5 +1,14 @@
 # @shopify/cli-hydrogen
 
+## 5.2.2
+
+### Patch Changes
+
+- Fix error stack traces in development mode. ([#1297](https://github.com/Shopify/hydrogen/pull/1297)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`345f06a2`](https://github.com/Shopify/hydrogen/commit/345f06a27886eceaf1ea6b75971c1130b059e2db)]:
+  - @shopify/hydrogen-react@2023.7.4
+
 ## 5.2.1
 
 ### Patch Changes
