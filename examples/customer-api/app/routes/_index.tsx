@@ -44,8 +44,7 @@ export default function () {
         <>
           <div style={{marginBottom: 24}}>
             <b>
-              Welcome {user.customer.firstName}{' '}
-              {user.customer.lastName}
+              Welcome {user.customer.firstName} {user.customer.lastName}
             </b>
           </div>
           <div>

@@ -9,6 +9,7 @@ import http from 'node:http';
 import type {AssetsManifest} from '@remix-run/dev';
 import type {Result as RemixBuildResult} from '@remix-run/dev/dist/result.js';
 import type {Context as RemixContext} from '@remix-run/dev/dist/compiler/context.js';
+import {handleRemixImportFail} from './remix-config.js';
 
 type LiveReloadState = {
   manifest?: AssetsManifest;
@@ -25,7 +26,7 @@ export async function setupLiveReload(devServerPort: number) {
         import('@remix-run/dev/dist/devServer_unstable/socket.js'),
         import('@remix-run/dev/dist/devServer_unstable/hdr.js'),
         import('@remix-run/dev/dist/result.js'),
-      ]);
+      ]).catch(handleRemixImportFail);
 
     const state: LiveReloadState = {};
 
