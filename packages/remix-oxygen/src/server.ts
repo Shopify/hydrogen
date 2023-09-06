@@ -3,9 +3,10 @@ import {
   type AppLoadContext,
   type ServerBuild,
 } from '@remix-run/server-runtime';
+import {createEventLogger, type H2OEvent} from './event-logger';
 
 declare global {
-  var __H2_LOG_REQUEST_EVENT: undefined | ((req: Request) => Promise<any>);
+  var __H2O_LOG_EVENT: undefined | ((event: H2OEvent) => void);
 }
 
 export function createRequestHandler<Context = unknown>({
@@ -22,23 +23,15 @@ export function createRequestHandler<Context = unknown>({
   const handleRequest = createRemixRequestHandler(build, mode);
 
   return async (request: Request) => {
-    const context = (await getLoadContext?.(request)) as AppLoadContext & {
-      env?: Record<string, any>;
-      waitUntil?: (promise: Promise<any>) => void;
-    };
+    const context = getLoadContext
+      ? ((await getLoadContext(request)) as AppLoadContext)
+      : undefined;
 
-    if (process.env.NODE_ENV === 'development') {
-      const eventLoggerService: undefined | {fetch: Function} =
-        context?.env?.H2_LOG_REQUEST_EVENT;
-
-      if (typeof eventLoggerService?.fetch === 'function') {
-        // Store logger in globalThis so it can be accessed from the worker.
-        // The global property must be different from the binding name,
-        // otherwise Miniflare throws an error when accessing it.
-        globalThis.__H2_LOG_REQUEST_EVENT = (req: Request) => {
-          return eventLoggerService.fetch(req);
-        };
-      }
+    if (process.env.NODE_ENV === 'development' && context) {
+      // Store logger in globalThis so it can be accessed from the worker.
+      // The global property must be different from the binding name,
+      // otherwise Miniflare throws an error when accessing it.
+      globalThis.__H2O_LOG_EVENT = createEventLogger(context);
     }
 
     const startTime = Date.now();
@@ -46,18 +39,13 @@ export function createRequestHandler<Context = unknown>({
     const response = await handleRequest(request, context);
 
     if (process.env.NODE_ENV === 'development') {
-      const promise = globalThis.__H2_LOG_REQUEST_EVENT?.(
-        new Request(request.url, {
-          headers: {
-            ...Object.fromEntries(request.headers.entries()),
-            'hydrogen-event-type': 'request',
-            'hydrogen-start-time': String(startTime),
-            'hydrogen-end-time': String(Date.now()),
-          },
-        }),
-      );
-
-      promise && context?.waitUntil?.(promise);
+      globalThis.__H2O_LOG_EVENT?.({
+        eventType: 'request',
+        url: request.url,
+        requestId: request.headers.get('request-id'),
+        purpose: request.headers.get('purpose'),
+        startTime,
+      });
     }
 
     if (poweredByHeader) {

@@ -47,7 +47,7 @@ export async function startMiniOxygen({
 
   const asyncLocalStorage = new AsyncLocalStorage();
   const serviceBindings = {
-    H2_LOG_REQUEST_EVENT: {
+    H2O_LOG_EVENT: {
       fetch: (request: Request) =>
         logRequestEvent(
           new Request(request.url, {
@@ -57,7 +57,7 @@ export async function startMiniOxygen({
               ...(asyncLocalStorage.getStore() as Record<string, string>),
             },
           }),
-        ).catch(() => {}),
+        ),
     },
   };
 

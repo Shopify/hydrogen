@@ -76,19 +76,13 @@ export async function runWithCache<T = unknown>(
           cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT',
           overrideStartTime?: number,
         ) => {
-          const promise = globalThis.__H2_LOG_REQUEST_EVENT?.(
-            new Request(getKeyUrl(key), {
-              headers: {
-                'hydrogen-event-type': 'subrequest',
-                'hydrogen-start-time':
-                  overrideStartTime?.toString() || startTime.toString(),
-                'hydrogen-end-time': Date.now().toString(),
-                'hydrogen-cache-status': cacheStatus || '',
-              },
-            }),
-          );
-
-          promise && waitUntil?.(promise);
+          globalThis.__H2O_LOG_EVENT?.({
+            eventType: 'subrequest',
+            url: getKeyUrl(key),
+            startTime: overrideStartTime || startTime,
+            cacheStatus,
+            waitUntil,
+          });
         }
       : undefined;
 
