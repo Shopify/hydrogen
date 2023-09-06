@@ -5,7 +5,7 @@ export async function loader({context}: LoaderArgs) {
   if (await context.customer.isLoggedIn()) {
     const user = await context.customer.query(`
       {
-        personalAccount {
+        customer {
           firstName
           lastName
         }
@@ -44,8 +44,7 @@ export default function () {
         <>
           <div style={{marginBottom: 24}}>
             <b>
-              Welcome {user.personalAccount.firstName}{' '}
-              {user.personalAccount.lastName}
+              Welcome {user.customer.firstName} {user.customer.lastName}
             </b>
           </div>
           <div>
