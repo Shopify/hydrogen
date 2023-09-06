@@ -30,7 +30,10 @@ import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {createRemixLogger, muteRemixLogs} from '../../lib/log.js';
 import {codegen} from '../../lib/codegen.js';
-import {buildBundleAnalysis} from '../../lib/build/analyzer.js';
+import {
+  buildBundleAnalysis,
+  getBundleAnalysisSummary,
+} from '../../lib/build/analyzer.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 
@@ -145,8 +148,10 @@ export async function runBuild({
         fallback(text) {
           return colors.yellow(text) + ' MB';
         },
-      })}\n`,
+      })}`,
     );
+
+    outputInfo((await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n');
 
     if (sizeMB >= 1) {
       outputWarn(

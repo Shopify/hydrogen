@@ -1,6 +1,7 @@
-import {joinPath} from '@shopify/cli-kit/node/path';
+import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {fileURLToPath} from 'node:url';
 import {writeFile, readFile} from '@shopify/cli-kit/node/fs';
+import colors from '@shopify/cli-kit/node/colors';
 
 export async function buildBundleAnalysis(buildPath: string) {
   await Promise.all([
@@ -47,4 +48,25 @@ async function writeBundleAnalyzerFile(
     joinPath(buildPath, 'worker', outputFile),
     templateWithMetafile,
   );
+}
+
+export async function getBundleAnalysisSummary(bundlePath: string) {
+  const esbuild = await import('esbuild').catch(() => {});
+
+  if (esbuild) {
+    const metafilePath = joinPath(dirname(bundlePath), 'metafile.server.json');
+
+    return (
+      '    │\n ' +
+      (
+        await esbuild.analyzeMetafile(await readFile(metafilePath), {
+          color: true,
+        })
+      )
+        .replace(/dist\/worker\/_assets\/.*$/ms, '\n')
+        .replace(/^\n*[^\n]+\n/, '')
+        .replace(/\n/g, '\n ')
+        .replace(/(\.\.\/)+node_modules\//g, (match) => colors.dim(match))
+    );
+  }
 }
