@@ -8,6 +8,7 @@ import {AbortError} from '@shopify/cli-kit/node/error';
 import {outputWarn} from '@shopify/cli-kit/node/output';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {muteRemixLogs} from './log.js';
+import {getRequiredRemixVersion} from './remix-version-check.js';
 
 export type {RemixConfig, ServerMode};
 
@@ -33,12 +34,23 @@ export function getProjectPaths(appPath?: string, entry?: string) {
   };
 }
 
+export function handleRemixImportFail(): never {
+  const remixVersion = getRequiredRemixVersion();
+  throw new AbortError(
+    'Could not load Remix packages.',
+    `Please make sure you have \`@remix-run/dev@${remixVersion}\` installed` +
+      ` and all the other Remix packages have the same version.`,
+  );
+}
+
 export async function getRemixConfig(
   root: string,
   mode = process.env.NODE_ENV as ServerMode,
 ) {
   await muteRemixLogs();
-  const {readConfig} = await import('@remix-run/dev/dist/config.js');
+  const {readConfig} = await import('@remix-run/dev/dist/config.js').catch(
+    handleRemixImportFail,
+  );
   const config = await readConfig(root, mode);
 
   if (process.env.LOCAL_DEV) {

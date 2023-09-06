@@ -1,5 +1,11 @@
 # @shopify/hydrogen-react
 
+## 2023.7.4
+
+### Patch Changes
+
+- Fix incorrect creation of cookie token that only happens on specific dates ([#1294](https://github.com/Shopify/hydrogen/pull/1294)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
 ## 2023.7.3
 
 ### Patch Changes
