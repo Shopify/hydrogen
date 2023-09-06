@@ -1,5 +1,4 @@
 import {Flags} from '@oclif/core';
-import terminalLink from 'terminal-link';
 import Command from '@shopify/cli-kit/node/base-command';
 import {
   outputInfo,
@@ -144,11 +143,10 @@ export async function runBuild({
     outputInfo(
       outputContent`   ${colors.dim(
         relativePath(root, buildPathWorkerFile),
-      )}  ${terminalLink(sizeMB.toFixed(2) + ' MB', bundleAnalysisPath, {
-        fallback(text) {
-          return colors.yellow(text) + ' MB';
-        },
-      })}`,
+      )}  ${outputToken.link(
+        colors.yellow(sizeMB.toFixed(2) + ' MB'),
+        bundleAnalysisPath,
+      )}`,
     );
 
     outputInfo((await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n');
