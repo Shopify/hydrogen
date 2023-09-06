@@ -22,6 +22,12 @@
           "description": "Generate sourcemaps for the build.",
           "allowNo": false
         },
+        "bundle-analysis": {
+          "name": "bundle-analysis",
+          "type": "boolean",
+          "description": "Show an analysis of the worker bundle size.",
+          "allowNo": false
+        },
         "disable-route-warning": {
           "name": "disable-route-warning",
           "type": "boolean",

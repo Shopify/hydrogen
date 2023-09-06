@@ -2,6 +2,7 @@ import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {fileURLToPath} from 'node:url';
 import {writeFile, readFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
+import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 
 export async function buildBundleAnalysis(buildPath: string) {
   await Promise.all([
@@ -50,7 +51,10 @@ async function writeBundleAnalyzerFile(
   );
 }
 
-export async function getBundleAnalysisSummary(bundlePath: string) {
+export async function getBundleAnalysisSummary(
+  bundlePath: string,
+  bundleAnalysisPath: string,
+) {
   const esbuild = await import('esbuild').catch(() => {});
 
   if (esbuild) {
@@ -67,6 +71,9 @@ export async function getBundleAnalysisSummary(bundlePath: string) {
         .replace(/^\n*[^\n]+\n/, '')
         .replace(/\n/g, '\n ')
         .replace(/(\.\.\/)+node_modules\//g, (match) => colors.dim(match))
-    );
+    )
+      .split('\n')
+      .slice(0, 10)
+      .join('\n');
   }
 }
