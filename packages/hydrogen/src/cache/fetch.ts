@@ -1,3 +1,5 @@
+/// <reference types="@shopify/remix-oxygen" />
+
 import {hashKey} from '../utils/hash.js';
 import {CacheShort, CachingStrategy, NO_STORE} from './strategies';
 import {
