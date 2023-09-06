@@ -45,8 +45,8 @@ export default class Build extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       default: false,
     }),
-    ['bundle-analysis']: Flags.boolean({
-      description: 'Show an analysis of the worker bundle size.',
+    ['hide-bundle-stats']: Flags.boolean({
+      description: 'Hide the bundle size analysis.',
       default: false,
     }),
     'disable-route-warning': Flags.boolean({
@@ -155,13 +155,10 @@ export async function runBuild({
       )}\n`,
     );
 
-    if (bundleAnalysis) {
+    if (!hideBundleStats) {
       outputInfo(
         outputContent`${
-          (await getBundleAnalysisSummary(
-            buildPathWorkerFile,
-            bundleAnalysisPath,
-          )) || '\n'
+          (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
         }\n    │\n    └─── ${outputToken.link(
           'Complete analysis: ' + bundleAnalysisPath,
           bundleAnalysisPath,

@@ -2,7 +2,6 @@ import {joinPath, dirname} from '@shopify/cli-kit/node/path';
 import {fileURLToPath} from 'node:url';
 import {writeFile, readFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
-import {outputContent, outputToken} from '@shopify/cli-kit/node/output';
 
 export async function buildBundleAnalysis(buildPath: string) {
   await Promise.all([
@@ -28,6 +27,7 @@ async function writeBundleAnalyzerFile(
   metafileName: string,
   outputFile: string,
 ) {
+  debugger;
   const metafile = await readFile(joinPath(buildPath, 'worker', metafileName), {
     encoding: 'utf8',
   });
@@ -51,10 +51,7 @@ async function writeBundleAnalyzerFile(
   );
 }
 
-export async function getBundleAnalysisSummary(
-  bundlePath: string,
-  bundleAnalysisPath: string,
-) {
+export async function getBundleAnalysisSummary(bundlePath: string) {
   const esbuild = await import('esbuild').catch(() => {});
 
   if (esbuild) {
@@ -70,10 +67,17 @@ export async function getBundleAnalysisSummary(
         .replace(/dist\/worker\/_assets\/.*$/ms, '\n')
         .replace(/^\n*[^\n]+\n/, '')
         .replace(/\n/g, '\n ')
+        .split('\n')
+        .filter((line) => {
+          const match = line.match(
+            /(.*)\/node_modules\/(react-dom|@remix-run|@shopify\/hydrogen|react-router|react-router-dom)\/(.*)/g,
+          );
+
+          return !match;
+        })
+        .slice(0, 20)
+        .join('\n')
         .replace(/(\.\.\/)+node_modules\//g, (match) => colors.dim(match))
-    )
-      .split('\n')
-      .slice(0, 10)
-      .join('\n');
+    );
   }
 }
