@@ -1,15 +1,21 @@
 export type H2OEvent = {
   url: string;
   eventType: 'request' | 'subrequest';
-  requestId?: string | null;
-  purpose?: string | null;
   startTime: number;
   endTime?: number;
   cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT';
   waitUntil?: ExecutionContext['waitUntil'];
 };
 
-export function createEventLogger(appLoadContext: Record<string, unknown>) {
+export type H2ORequestInfo = {
+  requestId?: string | null;
+  purpose?: string | null;
+};
+
+export function createEventLogger(
+  appLoadContext: Record<string, unknown>,
+  requestInfo: H2ORequestInfo,
+) {
   const context = (appLoadContext || {}) as {
     env?: Record<string, any>;
     waitUntil?: (promise: Promise<any>) => void;
@@ -24,8 +30,6 @@ export function createEventLogger(appLoadContext: Record<string, unknown>) {
   return ({
     url,
     eventType,
-    requestId,
-    purpose,
     startTime,
     endTime,
     cacheStatus,
@@ -35,8 +39,8 @@ export function createEventLogger(appLoadContext: Record<string, unknown>) {
       .fetch(
         new Request(url, {
           headers: {
-            purpose: purpose || '',
-            'request-id': requestId || '',
+            purpose: requestInfo.purpose || '',
+            'request-id': requestInfo.requestId || '',
             'hydrogen-event-type': eventType,
             'hydrogen-start-time': String(startTime),
             'hydrogen-end-time': String(endTime || Date.now()),

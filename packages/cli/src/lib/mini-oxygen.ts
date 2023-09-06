@@ -1,5 +1,4 @@
 import {randomUUID} from 'node:crypto';
-import {AsyncLocalStorage} from 'node:async_hooks';
 import {
   outputInfo,
   outputToken,
@@ -45,7 +44,6 @@ export async function startMiniOxygen({
 }: MiniOxygenOptions) {
   const dotenvPath = resolvePath(root, '.env');
 
-  const asyncLocalStorage = new AsyncLocalStorage();
   const serviceBindings = {
     H2O_LOG_EVENT: {
       fetch: (request: Request) =>
@@ -53,8 +51,6 @@ export async function startMiniOxygen({
           new Request(request.url, {
             headers: {
               ...Object.fromEntries(request.headers.entries()),
-              // Merge some headers from the parent request
-              ...(asyncLocalStorage.getStore() as Record<string, string>),
             },
           }),
         ),
@@ -82,14 +78,13 @@ export async function startMiniOxygen({
         return streamRequestEvents(request);
       }
 
-      const requestId = randomUUID();
-      request.headers.set('request-id', requestId);
+      let requestId = request.headers.get('request-id');
+      if (!requestId) {
+        requestId = randomUUID();
+        request.headers.set('request-id', requestId);
+      }
 
-      // Provide headers to sub-requests and dispatch the request.
-      const response = await asyncLocalStorage.run(
-        {'request-id': requestId, purpose: request.headers.get('purpose')},
-        () => defaultDispatcher(request),
-      );
+      const response = await defaultDispatcher(request);
 
       logResponse(request, response);
 

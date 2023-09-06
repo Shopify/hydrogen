@@ -31,7 +31,10 @@ export function createRequestHandler<Context = unknown>({
       // Store logger in globalThis so it can be accessed from the worker.
       // The global property must be different from the binding name,
       // otherwise Miniflare throws an error when accessing it.
-      globalThis.__H2O_LOG_EVENT = createEventLogger(context);
+      globalThis.__H2O_LOG_EVENT = createEventLogger(context, {
+        requestId: request.headers.get('request-id'),
+        purpose: request.headers.get('purpose'),
+      });
     }
 
     const startTime = Date.now();
@@ -42,8 +45,6 @@ export function createRequestHandler<Context = unknown>({
       globalThis.__H2O_LOG_EVENT?.({
         eventType: 'request',
         url: request.url,
-        requestId: request.headers.get('request-id'),
-        purpose: request.headers.get('purpose'),
         startTime,
       });
     }
