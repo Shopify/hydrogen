@@ -1,5 +1,56 @@
 # @shopify/hydrogen
 
+## 2023.7.5
+
+### Patch Changes
+
+- Fix the Pagination component to reset internal state when the URL changes (not including Pagination params). ([#1291](https://github.com/Shopify/hydrogen/pull/1291)) by [@blittle](https://github.com/blittle)
+
+  We also now validate the connection prop to include a `pageInfo` object with the following properties:
+
+  1. `hasNextPage`
+  1. `hasPreviousPage`
+  1. `endCursor`
+  1. `startCursor`
+
+  Previously our templates had a bug where `startCursor` was not included. Upgrading means the app will error
+  until you update your query to include it:
+
+  ```diff
+   query CollectionDetails {
+     collection(handle: $handle) {
+       ...
+       pageInfo {
+         hasPreviousPage
+         hasNextPage
+         hasNextPage
+         endCursor
+  +      startCursor
+       }
+     }
+   }
+
+  ```
+
+## 2023.7.4
+
+### Patch Changes
+
+- Fix hydration errors and stale data within the Pagination component ([#1283](https://github.com/Shopify/hydrogen/pull/1283)) by [@blittle](https://github.com/blittle)
+
+- Add custom product paths to the `VariantSelector` component: ([#1271](https://github.com/Shopify/hydrogen/pull/1271)) by [@blittle](https://github.com/blittle)
+
+  ```tsx
+  <VariantSelector handle="snowboard" productPath="shop" options={options}>
+    {/* ... */}
+  </VariantSelector>
+  ```
+
+- Add functionality for creating a Content Security Policy. See the [guide on Content Security Policies](https://shopify.dev/docs/custom-storefronts/hydrogen/content-security-policy) for more details. ([#1235](https://github.com/Shopify/hydrogen/pull/1235)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`06516ee9`](https://github.com/Shopify/hydrogen/commit/06516ee91f20153902c2b8ef79c0f6690ba385bb), [`423acee2`](https://github.com/Shopify/hydrogen/commit/423acee243c62e49a865ff2cd82735991aca1d8f)]:
+  - @shopify/hydrogen-react@2023.7.3
+
 ## 2023.7.3
 
 ### Patch Changes

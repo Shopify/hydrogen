@@ -53,6 +53,9 @@ export type {
   VariantOptionValue,
 } from './product/VariantSelector';
 
+export {createContentSecurityPolicy, useNonce} from './csp/csp';
+export {Script} from './csp/Script';
+
 export {
   AnalyticsEventName,
   AnalyticsPageType,

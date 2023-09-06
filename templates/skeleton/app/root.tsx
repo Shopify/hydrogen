@@ -1,3 +1,4 @@
+import {useNonce} from '@shopify/hydrogen';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
   Links,
@@ -98,6 +99,7 @@ export async function loader({context}: LoaderArgs) {
 }
 
 export default function App() {
+  const nonce = useNonce();
   const data = useLoaderData<typeof loader>();
 
   return (
@@ -112,9 +114,9 @@ export default function App() {
         <Layout {...data}>
           <Outlet />
         </Layout>
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
+        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
@@ -123,6 +125,7 @@ export default function App() {
 export function ErrorBoundary() {
   const error = useRouteError();
   const [root] = useMatches();
+  const nonce = useNonce();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
 
@@ -153,9 +156,9 @@ export function ErrorBoundary() {
             )}
           </div>
         </Layout>
-        <ScrollRestoration />
-        <Scripts />
-        <LiveReload />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
+        <LiveReload nonce={nonce} />
       </body>
     </html>
   );
