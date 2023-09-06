@@ -9,6 +9,7 @@ import {
   assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
+  handleRemixImportFail,
   type ServerMode,
 } from '../../lib/remix-config.js';
 import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
@@ -142,7 +143,7 @@ async function runDev({
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
     import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
-  ]);
+  ]).catch(handleRemixImportFail);
 
   let isInitialBuild = true;
   let initialBuildDurationMs = 0;

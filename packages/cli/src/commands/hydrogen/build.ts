@@ -21,6 +21,7 @@ import {
   assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
+  handleRemixImportFail,
   type ServerMode,
 } from '../../lib/remix-config.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
@@ -95,12 +96,14 @@ export async function runBuild({
 
   outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
-  const [remixConfig, {build}, {logThrown}, {createFileWatchCache}] =
+  const [remixConfig, [{build}, {logThrown}, {createFileWatchCache}]] =
     await Promise.all([
       getRemixConfig(root),
-      import('@remix-run/dev/dist/compiler/build.js'),
-      import('@remix-run/dev/dist/compiler/utils/log.js'),
-      import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+      Promise.all([
+        import('@remix-run/dev/dist/compiler/build.js'),
+        import('@remix-run/dev/dist/compiler/utils/log.js'),
+        import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+      ]).catch(handleRemixImportFail),
       rmdir(buildPath, {force: true}),
     ]);
 

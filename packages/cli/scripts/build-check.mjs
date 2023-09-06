@@ -1,6 +1,6 @@
 // Script to check that all virtual routes are built or copied.
 
-import glob from 'fast-glob';
+import {glob} from '@shopify/cli-kit/node/fs';
 
 const virtualRoutesGlob = '/virtual-routes/**/*';
 const cwd = new URL('..', import.meta.url).pathname;

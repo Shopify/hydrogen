@@ -2,15 +2,19 @@ import {createRequire} from 'node:module';
 import {fileURLToPath} from 'node:url';
 import {renderWarning} from '@shopify/cli-kit/node/ui';
 
-export function checkRemixVersions() {
-  const require = createRequire(import.meta.url);
+export function getRequiredRemixVersion(
+  require = createRequire(import.meta.url),
+) {
   const hydrogenPkgJson = require(fileURLToPath(
     new URL('../../package.json', import.meta.url),
   ));
 
-  const requiredVersionInHydrogen = hydrogenPkgJson.dependencies[
-    '@remix-run/dev'
-  ] as string;
+  return hydrogenPkgJson.peerDependencies['@remix-run/dev'] as string;
+}
+
+export function checkRemixVersions() {
+  const require = createRequire(import.meta.url);
+  const requiredVersionInHydrogen = getRequiredRemixVersion(require);
 
   const pkgs = [
     'dev',
