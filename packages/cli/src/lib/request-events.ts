@@ -6,67 +6,53 @@ type RequestEvent = {
   data: string;
 };
 
-type LogSubRequestProps = {
-  requestBody?: string;
-  requestHeaders: Request['headers'];
-  requestUrl: Request['url'];
-  requestGroupId: string;
-  response: Response;
-  startTime: number;
+export const DEV_ROUTES = new Set(['/graphiql', '/debug-network']);
+
+const EVENT_MAP: Record<string, string> = {
+  request: 'Request',
+  subrequest: 'Sub request',
 };
+
+function getRequestInfo(request: Request) {
+  return {
+    id: request.headers.get('request-id')!,
+    event: request.headers.get('hydrogen-event-type') || 'unknown',
+    startTime: request.headers.get('hydrogen-start-time')!,
+    endTime: request.headers.get('hydrogen-end-time') || String(Date.now()),
+    purpose: request.headers.get('purpose') === 'prefetch' ? '(prefetch)' : '',
+    cacheStatus: request.headers.get('hydrogen-cache-status'),
+  };
+}
 
 const requestEvents: RequestEvent[] = [];
 
-export function logRequestEvent({
-  request,
-  startTime,
-}: {
-  request: Request;
-  startTime: number;
-}) {
+export async function logRequestEvent(request: Request): Promise<Response> {
+  if (DEV_ROUTES.has(new URL(request.url).pathname)) {
+    return new Response('ok');
+  }
+
   if (requestEvents.length > 100) requestEvents.pop();
 
-  requestEvents.push({
-    event: 'Request',
-    data: JSON.stringify({
-      id: request.headers.get('request-id')!,
-      url: `${
-        request.headers.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
-      }${request.url}`,
-      startTime,
-      endTime: new Date().getTime(),
-    }),
-  });
-}
+  const {event, purpose, ...data} = getRequestInfo(request);
 
-export function logSubRequestEvent({
-  requestBody,
-  requestHeaders,
-  requestUrl,
-  requestGroupId,
-  response,
-  startTime,
-}: LogSubRequestProps) {
-  if (requestEvents.length > 100) requestEvents.pop();
+  let description = request.url;
 
-  let queryName = requestBody?.match(/(query|mutation)\s+(\w+)/)?.[0];
-
-  queryName = queryName?.replace(/\s+/, ' ') || requestUrl;
-
-  const cacheStatus = response.headers.get('hydrogen-cache-status');
-  const url = `${
-    requestHeaders.get('purpose') === 'prefetch' ? '(prefetch) ' : ''
-  }${cacheStatus ? `${cacheStatus} ` : 'MISS '}${queryName}`;
+  if (event === 'subrequest') {
+    description =
+      decodeURIComponent(request.url)
+        .match(/(query|mutation)\s+(\w+)/)?.[0]
+        ?.replace(/\s+/, ' ') || request.url;
+  }
 
   requestEvents.push({
-    event: 'Sub request',
+    event: EVENT_MAP[event] || event,
     data: JSON.stringify({
-      id: requestGroupId,
-      url,
-      startTime,
-      endTime: new Date().getTime(),
+      ...data,
+      url: `${purpose} ${description}`.trim(),
     }),
   });
+
+  return new Response('ok');
 }
 
 export function streamRequestEvents(request: Request) {
