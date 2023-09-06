@@ -64,9 +64,6 @@ export async function getBundleAnalysisSummary(bundlePath: string) {
           color: true,
         })
       )
-        .replace(/dist\/worker\/_assets\/.*$/ms, '\n')
-        .replace(/^\n*[^\n]+\n/, '')
-        .replace(/\n/g, '\n ')
         .split('\n')
         .filter((line) => {
           const match = line.match(
@@ -75,8 +72,11 @@ export async function getBundleAnalysisSummary(bundlePath: string) {
 
           return !match;
         })
-        .slice(0, 20)
+        .slice(0, 10)
         .join('\n')
+        .replace(/dist\/worker\/_assets\/.*$/ms, '\n')
+        .replace(/^\n*[^\n]+\n/, '')
+        .replace(/\n/g, '\n ')
         .replace(/(\.\.\/)+node_modules\//g, (match) => colors.dim(match))
     );
   }

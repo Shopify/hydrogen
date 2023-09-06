@@ -4,6 +4,8 @@ import isbot from 'isbot';
 import {renderToReadableStream} from 'react-dom/server';
 import {createContentSecurityPolicy} from '@shopify/hydrogen';
 
+import {a} from './something.server';
+
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
@@ -26,7 +28,7 @@ export default async function handleRequest(
     },
   );
 
-  if (isbot(request.headers.get('user-agent'))) {
+  if (isbot(request.headers.get('user-agent')) && a.includes('x')) {
     await body.allReady;
   }
 
