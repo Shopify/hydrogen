@@ -147,12 +147,11 @@ export async function runWithCache<T = unknown>(
    * Important: Do this async
    */
   if (shouldCacheResult(result)) {
-    const setItemInCachePromise = setItemInCache(
-      cacheInstance,
-      key,
-      result,
-      strategy,
-    );
+    const setItemInCachePromise = Promise.resolve().then(async () => {
+      const putStartTime = Date.now();
+      await setItemInCache(cacheInstance, key, result, strategy);
+      logSubRequestEvent?.('PUT', putStartTime);
+    });
 
     waitUntil?.(setItemInCachePromise);
   }

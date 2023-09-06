@@ -140,9 +140,10 @@ export default function DebugNetwork() {
           </p>
         </div>
         <FlameChart key={timestamp} serverEvents={serverEvents.current} />
-        <p style={{color: '#777', fontSize: '0.8rem', paddingLeft: '5px'}}>
+        <p style={{color: '#777', fontSize: '0.7rem', paddingLeft: '5px'}}>
           Note: You may need to turn on '<b>Disable Cache</b>' for your
-          navigating window.
+          navigating window. If you are not seeing any requests, try re-running
+          '<b>npm run dev</b>' in your terminal while leaving this window open.
         </p>
       </div>
     </>
@@ -172,6 +173,9 @@ function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
       </div>
     );
 
+  let totalRequests = 0;
+  let totalSubRequests = 0;
+
   const calcDuration = (time: number) => time - serverEvents.smallestStartTime;
   let items: WaterfallItems = [];
 
@@ -188,8 +192,6 @@ function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
         mainResponseEnd = Math.max(mainResponseEnd, subRequestEnd);
       }
 
-      mainResponseEnd = Math.max(mainResponseEnd, subRequestEnd);
-
       const subRequestItem = {
         name: `${subRequest.cacheStatus} ${subRequest.url}`.trim(),
         intervals: 'request',
@@ -205,7 +207,11 @@ function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
         subRequest.cacheStatus !== 'PUT' &&
           subRequestItems.push(subRequestItem);
       }
+
+      totalSubRequests++;
     });
+
+    totalRequests++;
 
     items.push({
       name: mainRequest.url,
@@ -250,16 +256,37 @@ function FlameChart({serverEvents}: {serverEvents: ServerEvents}) {
     },
   };
   return (
-    <FlameChartWrapper
-      height={PANEL_HEIGHT}
-      waterfall={data}
-      settings={{
-        styles: {
-          waterfallPlugin: {
-            defaultHeight: PANEL_HEIGHT,
+    <>
+      <FlameChartWrapper
+        height={PANEL_HEIGHT}
+        waterfall={data}
+        settings={{
+          styles: {
+            waterfallPlugin: {
+              defaultHeight: PANEL_HEIGHT,
+            },
           },
-        },
-      }}
-    />
+        }}
+      />
+      <div
+        style={{
+          display: 'flex',
+          padding: '5px',
+          borderTop: '1px solid #CCC',
+          borderBottom: '1px solid #CCC',
+        }}
+      >
+        {totalRequests} requests
+        <span
+          style={{
+            paddingLeft: '2px',
+            paddingRight: '2px',
+          }}
+        >
+          |
+        </span>
+        {totalSubRequests} sub requests
+      </div>
+    </>
   );
 }
