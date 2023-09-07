@@ -11,7 +11,11 @@ import type {
   Timeseries,
   FlameChart,
 } from 'flame-chart-js';
-import useResizeObserver from 'use-resize-observer';
+
+// Type is broken in use-resize-observer
+import _useResizeObserver from 'use-resize-observer';
+const useResizeObserver =
+  _useResizeObserver as unknown as typeof import('use-resize-observer').default;
 
 declare global {
   // Downloaded via CDN
@@ -49,7 +53,6 @@ export const FlameChartWrapper = (props: FlameChartProps) => {
   const canvasRef = useRef<null | HTMLCanvasElement>(null);
   const flameChart = useRef<null | FlameChart>(null);
 
-  // @ts-ignore
   useResizeObserver({
     ref: boxRef,
     onResize: ({width = 0, height = 0}) =>
