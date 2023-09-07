@@ -1,0 +1,592 @@
+{
+  "url": "https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged",
+  "releases": [
+    {
+      "date": "2023-08-31 10:36:12 -0400",
+      "hash": "0fa2287310368ad421b95b580c6fa0cdd17b83f",
+      "release": "https://github.com/Shopify/hydrogen/pull/1359",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1359/commits/0fa2287310368ad421b95b580c6fa0cdd17b83f7",
+      "dependencies": {
+        "@remix-run/react": "1.19.1",
+        "@shopify/cli-hydrogen": "^5.3.1",
+        "@shopify/hydrogen": "^2023.7.8",
+        "@shopify/remix-oxygen": "^1.1.4"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.19.1"
+      },
+      "whatsNew": ["backwards compatible bundle analysis"],
+      "breakingChanges": []
+    },
+    {
+      "date": "2023-09-21 01:24:39 +0000",
+      "hash": "c977f21860e86d6735493596ea7ec84f73fd1de0",
+      "release": "https://github.com/Shopify/hydrogen/pull/1335",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1335/commits/c977f21860e86d6735493596ea7ec84f73fd1de0",
+      "dependencies": {
+        "@remix-run/react": "1.19.1",
+        "@shopify/cli-hydrogen": "^5.3.0",
+        "@shopify/hydrogen": "^2023.7.8",
+        "@shopify/remix-oxygen": "^1.1.4"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.19.1"
+      },
+      "whatsNew": [
+        "worker-unstable",
+        "deploy command",
+        "skeleton magic cart and discount routes",
+        "bundle analysis tool",
+        "Raise the subrequest limit to 100 for development",
+        "default to sourcemaps generation"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "2023-09-07 20:32:18 +00",
+      "hash": "cfc6de7f9af9ed992577c10afaea4d422f276401",
+      "release": "https://github.com/Shopify/hydrogen/pull/1307",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1307/commits/cfc6de7f9af9ed992577c10afaea4d422f276401",
+      "dependencies": {
+        "@remix-run/react": "1.19.1",
+        "@shopify/cli-hydrogen": "^5.2.3",
+        "@shopify/hydrogen": "^2023.7.7",
+        "@shopify/remix-oxygen": "^1.1.4"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.19.1"
+      },
+      "whatsNew": [
+        "speed up project initialization time",
+        "unstable server-side network request debug virtual route"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "8f7b03e5bc06e89288b572f5399b7da723a8383a",
+      "release": "https://github.com/Shopify/hydrogen/pull/1295",
+      "commit": "",
+      "dependencies": {
+        "@remix-run/react": "1.19.1",
+        "@shopify/cli-hydrogen": "^5.2.2",
+        "@shopify/hydrogen": "^2023.7.6",
+        "@shopify/remix-oxygen": "^1.1.3"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.19.1"
+      },
+      "whatsNew": [
+        "fix error stack traces in development mode",
+        "fix incorrect creation of cookie token"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "9bf4e4afcf86e961252135a7d45b5f19f9958d36",
+      "release": "https://github.com/Shopify/hydrogen/pull/1293",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1293/commits/9bf4e4afcf86e961252135a7d45b5f19f9958d36",
+      "dependencies": {
+        "@remix-run/react": "1.19.1",
+        "@shopify/cli-hydrogen": "^5.2.1",
+        "@shopify/hydrogen": "^2023.7.5",
+        "@shopify/remix-oxygen": "^1.1.3"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.19.1"
+      },
+      "whatsNew": ["fix the Pagination component"],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "5d8550ee14ef3a72129b1a4d6aacb27629044071",
+      "release": "https://github.com/Shopify/hydrogen/pull/1263",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1263/commits/5d8550ee14ef3a72129b1a4d6aacb27629044071",
+      "dependencies": {
+        "@remix-run/react": "1.19.1",
+        "@shopify/cli-hydrogen": "^5.2.1",
+        "@shopify/hydrogen": "^2023.7.4",
+        "@shopify/remix-oxygen": "^1.1.3"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.19.1"
+      },
+      "whatsNew": [
+        "typeScript v5 compatibility",
+        "fix development server port",
+        "content Security Policy",
+        "add custom product paths to VariantSelector"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "695b145f95c50b1c9fece587a300c038995110ee",
+      "release": "https://github.com/Shopify/hydrogen/pull/1212",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1212/commits/695b145f95c50b1c9fece587a300c038995110ee",
+      "dependencies": {
+        "@remix-run/react": "1.19.1",
+        "@shopify/cli-hydrogen": "^5.2.0",
+        "@shopify/hydrogen": "^2023.7.3",
+        "@shopify/remix-oxygen": "^1.1.3"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.19.1"
+      },
+      "whatsNew": [
+        "Support Remix Hot Module Replacement (HMR) and Hot Data Revalidation (HDR)",
+        "Improve error handling",
+        "Fix GraphQL Codegen on Windows",
+        "Add shouldRevalidate to root loader to improve performance",
+        "Export the type CookieOptions from cartSetIdDefault"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "ede660217b469205c2022099e1c92081f17cb19d",
+      "release": "https://github.com/Shopify/hydrogen/pull/1188",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1188/commits/ede660217b469205c2022099e1c92081f17cb19d",
+      "dependencies": {
+        "@remix-run/react": "1.19.1",
+        "@shopify/cli-hydrogen": "^5.1.2",
+        "@shopify/hydrogen": "^2023.7.2",
+        "@shopify/remix-oxygen": "^1.1.3"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.19.1"
+      },
+      "whatsNew": [
+        "Update @shopify/oxygen-workers-types",
+        "Surface storefront api response errors",
+        "Fix demo-store analytics"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "20f4ef21e42c33e975641b263a5edc76c38491fe",
+      "release": "https://github.com/Shopify/hydrogen/pull/1170",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1170/commits/20f4ef21e42c33e975641b263a5edc76c38491fe",
+      "dependencies": {
+        "@remix-run/react": "1.19.1",
+        "@shopify/cli-hydrogen": "^5.1.1",
+        "@shopify/hydrogen": "^2023.7.1",
+        "@shopify/remix-oxygen": "^1.1.2"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.19.1"
+      },
+      "whatsNew": [
+        "Update to Remix v1.19.1",
+        "Fix the starter template cart aside to cover everything on larger pages",
+        "Warn in development when Remix packages are out of sync"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "ce199d5c47e4a27c779bd711ee619739019d74e7",
+      "release": "https://github.com/Shopify/hydrogen/pull/1152",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1152/commits/ce199d5c47e4a27c779bd711ee619739019d74e7",
+      "dependencies": {
+        "@remix-run/react": "1.17.1",
+        "@shopify/cli-hydrogen": "^6.0.0",
+        "@shopify/hydrogen": "^2024.0.0",
+        "@shopify/remix-oxygen": "^1.1.1"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.17.1"
+      },
+      "whatsNew": [
+        "Reworked CLI scaffolding flow",
+        "Add login and logout commands",
+        "Auto-reload environment variables in the development server",
+        "Support creating new storefronts from the link command",
+        "Show proper error message when Hydrogen App isn't installed on Shop",
+        "Improve warning and error format for known Hydrogen messages in development",
+        "Add --codegen-unstable flag to build command",
+        "createWithCache is now stable",
+        "Function and component for cart management createCartHandler and CartForm",
+        "Export useLoadScript",
+        "Add an example using the new Customer Account API",
+        "Add a <VariantSelector> component to make building product forms easier. Also added getFirstAvailableVariant and getSelectedProductOptions helper functions",
+        "Pagination and getPaginationVariables are now stable"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "c6445ac572bba7006f0c90b99287701662fbffe7",
+      "release": "https://github.com/Shopify/hydrogen/pull/1020",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1020/commits/c6445ac572bba7006f0c90b99287701662fbffe7",
+      "dependencies": {
+        "@remix-run/react": "1.17.1",
+        "@shopify/cli-hydrogen": "^5.0.2",
+        "@shopify/hydrogen": "^2023.4.6",
+        "@shopify/remix-oxygen": "^1.1.1"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.17.1"
+      },
+      "whatsNew": [
+        "Fix --sourcemap flag for build command",
+        "Fix dev --codegen-unstable flag"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "ab7501fb37c154fa4214542f6f0b37f987639de2",
+      "release": "https://github.com/Shopify/hydrogen/pull/1008",
+      "commit": "https://github.com/Shopify/hydrogen/pull/1008/commits/ab7501fb37c154fa4214542f6f0b37f987639de2",
+      "dependencies": {
+        "@remix-run/react": "1.17.1",
+        "@shopify/cli-hydrogen": "^5.0.1",
+        "@shopify/hydrogen": "^2023.4.5",
+        "@shopify/remix-oxygen": "^1.1.1"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.17.1"
+      },
+      "whatsNew": ["Update Remix to the latest version 1.17.1"],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "f5f897ce72aac7bc205e917392a2f3c9f8a697a7",
+      "release": "https://github.com/Shopify/hydrogen/pull/947",
+      "commit": "https://github.com/Shopify/hydrogen/pull/947/commits/f5f897ce72aac7bc205e917392a2f3c9f8a697a7",
+      "dependencies": {
+        "@remix-run/react": "1.15.0",
+        "@shopify/cli-hydrogen": "^5.0.0",
+        "@shopify/hydrogen": "^2023.4.4",
+        "@shopify/remix-oxygen": "^1.1.0"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.15.0"
+      },
+      "whatsNew": [
+        "Updates default powered-by header to Shopify, Hydrogen",
+        "Allow disabling sourcemaps with shopify hydrogen build --no-sourcemap",
+        "Make storefrontApiVersion parameter optional",
+        "Fix <ModelViewer> to properly set className",
+        "Add a /admin route that redirects to the Shopify admin"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "b6a3d970d9ac0c604d5ec776e2924596eced61c4",
+      "release": "https://github.com/Shopify/hydrogen/pull/927",
+      "commit": "https://github.com/Shopify/hydrogen/pull/927/commits/b6a3d970d9ac0c604d5ec776e2924596eced61c4",
+      "dependencies": {
+        "@remix-run/react": "1.15.0",
+        "@shopify/cli": "3.45.0",
+        "@shopify/cli-hydrogen": "^4.2.1",
+        "@shopify/hydrogen": "^2023.4.3",
+        "@shopify/remix-oxygen": "^1.0.7"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.15.0"
+      },
+      "whatsNew": ["Fix release"],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "76b484139e8816e68cf3fb32329403fcee61cccf",
+      "release": "https://github.com/Shopify/hydrogen/pull/897",
+      "commit": "https://github.com/Shopify/hydrogen/pull/897/commits/76b484139e8816e68cf3fb32329403fcee61cccf",
+      "dependencies": {
+        "@remix-run/react": "1.15.0",
+        "@shopify/cli-hydrogen": "^4.2.0",
+        "@shopify/hydrogen": "^2023.4.2",
+        "@shopify/remix-oxygen": "^1.0.6"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.15.0"
+      },
+      "whatsNew": [
+        "Add UNSTABLE support for GraphQL Codegen",
+        "Add command to list environments from a linked Hydrogen storefront",
+        "Auto-inject environment variables from a linked storefront",
+        "Add a <Pagination__unstable> component and getPaginationVariables__unstable helper to make rendering large lists from the Storefront API easy",
+        "Fix issue where the <BuyNowButton/> would incorrectly redirect to checkout",
+        "Fix the load more results button on the /search route",
+        "Adds pagination support on /search results"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "dcfbb24c321b01ff80b11f1d0802457e17394c35",
+      "release": "https://github.com/Shopify/hydrogen/pull/817",
+      "commit": "https://github.com/Shopify/hydrogen/pull/817/commits/dcfbb24c321b01ff80b11f1d0802457e17394c35",
+      "dependencies": {
+        "@remix-run/react": "1.15.0",
+        "@shopify/cli-hydrogen": "^4.1.2",
+        "@shopify/hydrogen": "^2023.4.1",
+        "@shopify/remix-oxygen": "^1.0.6"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.15.0"
+      },
+      "whatsNew": [
+        "Add command to pull environment variables from a Hydrogen storefront",
+        "New --debug flag for the dev command that attaches a Node inspector to the development server",
+        "Add new commands for merchants to be able to list and link Hydrogen storefronts",
+        "Adds parseGid()",
+        "Add a default Powered-By: Shopify-Hydrogen header"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "d5f3e779e3ac7b22b78771dfb50f412c93a2d133",
+      "release": "https://github.com/Shopify/hydrogen/pull/727",
+      "commit": "https://github.com/Shopify/hydrogen/pull/727/commits/d5f3e779e3ac7b22b78771dfb50f412c93a2d133",
+      "dependencies": {
+        "@remix-run/react": "1.15.0",
+        "@shopify/cli-hydrogen": "^4.1.0",
+        "@shopify/hydrogen": "^2023.1.7",
+        "@shopify/remix-oxygen": "^1.0.5"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.15.0"
+      },
+      "whatsNew": [
+        "Updated CLI prompts",
+        "Added a new shortcut command that creates a global h2 alias for the Hydrogen CLI",
+        "Added support for the Remix future flags v2_meta, v2_errorBoundary and v2_routeConvention to the generate command",
+        "Update virtual route to use Remix V2 route name conventions",
+        "Update internal Remix dependencies to 1.15.0",
+        "Improve type safety in SEO data generators"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "d5a7eeb659628254ee7ec4b35459cd9b3d52008f",
+      "release": "https://github.com/Shopify/hydrogen/pull/574",
+      "commit": "https://github.com/Shopify/hydrogen/pull/574/commits/d5a7eeb659628254ee7ec4b35459cd9b3d52008f",
+      "dependencies": {
+        "@remix-run/react": "1.14.0",
+        "@shopify/cli-hydrogen": "^4.0.9",
+        "@shopify/hydrogen": "^2023.1.6",
+        "@shopify/remix-oxygen": "^1.0.4"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.14.0"
+      },
+      "whatsNew": [
+        "Update Remix to 1.14.0",
+        "Add Cache-Control defaults to all the demo store routes",
+        "Stop hydrating with requestIdleCallback",
+        "Add new loader API for setting seo tags within route module",
+        "ShopPayButton component now can receive a storeDomain",
+        "Added robots option to SEO config that allows users granular control over the robots meta tag.",
+        "Fix active cart session event in Live View"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "b38f68558f088533846f1cd27de2eb9a97e7e9e7",
+      "release": "https://github.com/Shopify/hydrogen/pull/565",
+      "commit": "https://github.com/Shopify/hydrogen/pull/565/commits/b38f68558f088533846f1cd27de2eb9a97e7e9e7",
+      "dependencies": {
+        "@remix-run/react": "1.12.0",
+        "@shopify/cli-hydrogen": "^4.0.8",
+        "@shopify/hydrogen": "^2023.1.5",
+        "@shopify/remix-oxygen": "^1.0.3"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.12.0"
+      },
+      "whatsNew": [
+        "Improve rate limit error messages when creating new projects",
+        "Show better errors when initial build fails, and recover when fixing it."
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "f2adc542e9ed00c113942597334f0e679a1176c8",
+      "release": "https://github.com/Shopify/hydrogen/pull/563",
+      "commit": "https://github.com/Shopify/hydrogen/pull/563/commits/f2adc542e9ed00c113942597334f0e679a1176c8",
+      "dependencies": {
+        "@remix-run/react": "1.12.0",
+        "@shopify/cli-hydrogen": "^4.0.7",
+        "@shopify/hydrogen": "^2023.1.5",
+        "@shopify/remix-oxygen": "^1.0.3"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.12.0"
+      },
+      "whatsNew": ["Fix the latest tag"],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "41c7592eefded147a5b6f9c61f7f92e6e01e79eb",
+      "release": "https://github.com/Shopify/hydrogen/pull/556",
+      "commit": "https://github.com/Shopify/hydrogen/pull/556/commits/41c7592eefded147a5b6f9c61f7f92e6e01e79eb",
+      "dependencies": {
+        "@remix-run/react": "1.12.0",
+        "@shopify/cli-hydrogen": "^4.0.7",
+        "@shopify/hydrogen": "^2023.1.4",
+        "@shopify/remix-oxygen": "^1.0.3"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.12.0"
+      },
+      "whatsNew": [
+        "Use woff2 format instead of ttf in onboarding routes to reduce download size of font files.",
+        "Show available upgrades for CLI when creating new projects"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "bf1014339ad0e48e621ecf60ebde7cf81894eda6",
+      "release": "https://github.com/Shopify/hydrogen/pull/522",
+      "commit": "https://github.com/Shopify/hydrogen/pull/522/commits/bf1014339ad0e48e621ecf60ebde7cf81894eda6",
+      "dependencies": {
+        "@remix-run/react": "1.12.0",
+        "@shopify/cli-hydrogen": "^4.0.6",
+        "@shopify/hydrogen": "^2023.1.4",
+        "@shopify/remix-oxygen": "^1.0.3"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.12.0"
+      },
+      "whatsNew": [
+        "Fix CLI flags for init command, and add --install-deps",
+        "Fix template imports to only reference @shopify/hydrogen, not @shopify/hydrogen-reactj",
+        "Improve onboarding style and links"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "9e25ee653f6d76057bc9876eebbc5a58e711a25b",
+      "release": "https://github.com/Shopify/hydrogen/pull/504",
+      "commit": "https://github.com/Shopify/hydrogen/pull/504/commits/9e25ee653f6d76057bc9876eebbc5a58e711a25b",
+      "dependencies": {
+        "@remix-run/react": "1.12.0",
+        "@shopify/cli-hydrogen": "^4.0.5",
+        "@shopify/hydrogen": "^2023.1.3",
+        "@shopify/remix-oxygen": "^1.0.2"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.12.0"
+      },
+      "whatsNew": ["Fix missing assets in virtual routes."],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "5a178b6175e20ec1f92ad60e90f2c7293a0e065e",
+      "release": "https://github.com/Shopify/hydrogen/pull/481",
+      "commit": "https://github.com/Shopify/hydrogen/pull/481/commits/5a178b6175e20ec1f92ad60e90f2c7293a0e065e",
+      "dependencies": {
+        "@remix-run/react": "1.12.0",
+        "@shopify/cli-hydrogen": "^4.0.4",
+        "@shopify/hydrogen": "^2023.1.3",
+        "@shopify/remix-oxygen": "^1.0.2"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.12.0"
+      },
+      "whatsNew": [
+        "Fix pathnames in Windows when creating projects and generating routes",
+        "Send Hydrogen version in Storefront API requests",
+        "Fix default Storefront type in LoaderArgs"
+      ],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "86b9cd9d6f80b804907c6c394970c43fe077a7e0",
+      "release": "https://github.com/Shopify/hydrogen/pull/479",
+      "commit": "https://github.com/Shopify/hydrogen/pull/479/commits/86b9cd9d6f80b804907c6c394970c43fe077a7e0",
+      "dependencies": {
+        "@remix-run/react": "1.12.0",
+        "@shopify/cli-hydrogen": "^4.0.3",
+        "@shopify/hydrogen": "^2023.1.2",
+        "@shopify/remix-oxygen": "^1.0.2"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.12.0"
+      },
+      "whatsNew": ["Fix initialization a new Hydrogen project on Windows"],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "73e3ff46bad87d48e60609faeaa0e3c0b5a3c23b",
+      "release": "https://github.com/Shopify/hydrogen/pull/464",
+      "commit": "https://github.com/Shopify/hydrogen/pull/464/commits/73e3ff46bad87d48e60609faeaa0e3c0b5a3c23b",
+      "dependencies": {
+        "@remix-run/react": "1.12.0",
+        "@shopify/cli-hydrogen": "^4.0.2",
+        "@shopify/hydrogen": "^2023.1.2",
+        "@shopify/remix-oxygen": "^1.0.2"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.12.0"
+      },
+      "whatsNew": ["Add license files and readmes for all packages "],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "7dff568d84a0754fa8cc9f763b5deed259eb6841",
+      "release": "https://github.com/Shopify/hydrogen/pull/462",
+      "commit": "https://github.com/Shopify/hydrogen/pull/462/commits/7dff568d84a0754fa8cc9f763b5deed259eb6841",
+      "dependencies": {
+        "@remix-run/react": "1.12.0",
+        "@shopify/cli-hydrogen": "^4.0.1",
+        "@shopify/hydrogen": "^2023.1.1",
+        "@shopify/remix-oxygen": "^1.0.1"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.12.0"
+      },
+      "whatsNew": ["Update all dependencies"],
+      "breakingChanges": []
+    },
+    {
+      "date": "",
+      "hash": "a2130c7e0b9821d3830964177720a7574761d5ea",
+      "release": "https://github.com/Shopify/hydrogen/pull/445",
+      "commit": "https://github.com/Shopify/hydrogen/pull/445/commits/a2130c7e0b9821d3830964177720a7574761d5ea",
+      "dependencies": {
+        "@remix-run/react": "1.12.0",
+        "@shopify/cli-hydrogen": "^4.0.0",
+        "@shopify/hydrogen": "^2023.1.0",
+        "@shopify/remix-oxygen": "^1.0.0"
+      },
+      "devDependecies": {
+        "@remix-run/dev": "1.12.0"
+      },
+      "whatsNew": [
+        "Change environment variable names to use what Oxygen will populate",
+        "Upgrade to the latest Remix experimental defer release, 1.11.0",
+        "Create onboarding virtual route",
+        "Introduce create-app CLI package",
+        "Improve the onboarding experience for the CLI",
+        "Refactor cart",
+        "Use the new version of GraphiQL instead of GraphQL Playground",
+        "Add Hydrogen utils function and update demo store to send shopify analytics",
+        "Rename the notFoundMaybeRedirect utility to storefrontRedirect",
+        "Use new versioning schema",
+        "Initial release of @shopify/remix-oxygen"
+      ],
+      "breakingChanges": []
+    }
+  ]
+}
