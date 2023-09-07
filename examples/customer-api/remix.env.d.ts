@@ -35,5 +35,6 @@ declare module '@shopify/remix-oxygen' {
     storefront: Storefront;
     env: Env;
     customer: CustomerClient;
+    waitUntil: ExecutionContext['waitUntil'];
   }
 }

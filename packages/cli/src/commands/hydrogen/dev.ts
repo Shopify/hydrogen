@@ -167,6 +167,7 @@ async function runDev({
     });
 
     const graphiqlUrl = `${miniOxygen.listeningAt}/graphiql`;
+    const debugNetworkUrl = `${miniOxygen.listeningAt}/debug-network`;
     enhanceH2Logs({graphiqlUrl, ...remixConfig});
 
     miniOxygen.showBanner({
@@ -175,7 +176,10 @@ async function runDev({
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
-      extraLines: [colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`)],
+      extraLines: [
+        colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`),
+        colors.dim(`\nView server-side network requests: ${debugNetworkUrl}`),
+      ],
     });
 
     if (useCodegen) {

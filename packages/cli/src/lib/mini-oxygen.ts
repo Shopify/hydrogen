@@ -1,3 +1,5 @@
+import {randomUUID} from 'node:crypto';
+import {AsyncLocalStorage} from 'node:async_hooks';
 import {
   outputInfo,
   outputToken,
@@ -9,9 +11,17 @@ import colors from '@shopify/cli-kit/node/colors';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {
   startServer,
+  Request,
+  Response,
   type MiniOxygenOptions as InternalMiniOxygenOptions,
 } from '@shopify/mini-oxygen';
 import {DEFAULT_PORT} from './flags.js';
+import {
+  DEV_ROUTES,
+  clearHistory,
+  logRequestEvent,
+  streamRequestEvents,
+} from './request-events.js';
 
 type MiniOxygenOptions = {
   root: string;
@@ -36,6 +46,22 @@ export async function startMiniOxygen({
 }: MiniOxygenOptions) {
   const dotenvPath = resolvePath(root, '.env');
 
+  const asyncLocalStorage = new AsyncLocalStorage();
+  const serviceBindings = {
+    H2O_LOG_EVENT: {
+      fetch: (request: Request) =>
+        logRequestEvent(
+          new Request(request.url, {
+            headers: {
+              ...Object.fromEntries(request.headers.entries()),
+              // Merge some headers from the parent request
+              ...(asyncLocalStorage.getStore() as Record<string, string>),
+            },
+          }),
+        ),
+    },
+  };
+
   const miniOxygen = await startServer({
     script: await readFile(buildPathWorkerFile),
     workerFile: buildPathWorkerFile,
@@ -48,16 +74,34 @@ export async function startMiniOxygen({
     env: {
       ...env,
       ...process.env,
+      ...serviceBindings,
     },
     envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
-    onResponse: (request, response) =>
-      // 'Request' and 'Response' types in MiniOxygen comes from
-      // Miniflare and are slightly different from standard types.
-      logResponse(
-        request as unknown as Request,
-        response as unknown as Response,
-      ),
+    async onRequest(request, defaultDispatcher) {
+      const url = new URL(request.url);
+      if (url.pathname === '/debug-network-server') {
+        return request.method === 'DELETE'
+          ? clearHistory()
+          : streamRequestEvents(request);
+      }
+
+      let requestId = request.headers.get('request-id');
+      if (!requestId) {
+        requestId = randomUUID();
+        request.headers.set('request-id', requestId);
+      }
+
+      // Provide headers to sub-requests and dispatch the request.
+      const response = await asyncLocalStorage.run(
+        {'request-id': requestId, purpose: request.headers.get('purpose')},
+        () => defaultDispatcher(request),
+      );
+
+      logResponse(request, response);
+
+      return response;
+    },
   });
 
   const listeningAt = `http://localhost:${miniOxygen.port}`;
@@ -76,6 +120,7 @@ export async function startMiniOxygen({
         nextOptions.env = {
           ...options.env,
           ...(process.env as Record<string, string>),
+          ...serviceBindings,
         };
       }
 
@@ -109,9 +154,7 @@ export async function startMiniOxygen({
 export function logResponse(request: Request, response: Response) {
   try {
     const url = new URL(request.url);
-    if (['/graphiql'].includes(url.pathname)) {
-      return;
-    }
+    if (DEV_ROUTES.has(url.pathname)) return;
 
     const isProxy = !!response.url && response.url !== request.url;
     const isDataRequest = !isProxy && url.searchParams.has('_data');
