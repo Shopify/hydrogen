@@ -139,7 +139,9 @@ export default function DebugNetwork() {
                 setTimestamp(new Date().getTime());
               }}
             />
-            <label htmlFor="showPutRequests">Show PUT requests</label>
+            <label htmlFor="showPutRequests">
+              Show cache update requests (PUT)
+            </label>
           </div>
           <p
             style={{
