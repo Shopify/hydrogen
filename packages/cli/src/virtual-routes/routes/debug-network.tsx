@@ -3,6 +3,7 @@ import type {Waterfall, WaterfallItems} from 'flame-chart-js';
 
 import {FlameChartWrapper} from '../components/FlameChartWrapper.jsx';
 import {Link} from '@remix-run/react';
+import {Script} from '@shopify/hydrogen';
 
 type ServerEvent = {
   id: string;
@@ -88,6 +89,10 @@ export default function DebugNetwork() {
 
   return (
     <>
+      <Script
+        src="https://unpkg.com/flame-chart-js@2.3.1/dist/index.min.js"
+        suppressHydrationWarning
+      />
       <div
         style={{
           width: '100vw',

@@ -9,9 +9,14 @@ import type {
   UIPlugin,
   FlatTreeNode,
   Timeseries,
+  FlameChart,
 } from 'flame-chart-js';
-import {FlameChart} from 'flame-chart-js';
 import useResizeObserver from 'use-resize-observer';
+
+declare global {
+  // Downloaded via CDN
+  var flameChartJs: typeof import('flame-chart-js');
+}
 
 export type NodeTypes =
   | {node: FlatTreeNode | null; type: 'flame-chart-node'}
@@ -69,7 +74,7 @@ export const FlameChartWrapper = (props: FlameChartProps) => {
       canvasRef.current.width = width;
       canvasRef.current.height = height - 3;
 
-      flameChart.current = new FlameChart({
+      flameChart.current = new flameChartJs.FlameChart({
         canvas: canvasRef.current,
         data,
         marks,
