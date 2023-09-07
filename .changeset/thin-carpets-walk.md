@@ -7,7 +7,7 @@
 
 (Unstable) server-side network request debug virtual route
 
-1. Update your `server.ts` so that it also passes in the `waitUntil`
+1. Update your `server.ts` so that it also passes in the `waitUntil` and `env`.
 
    ```diff
      const handleRequest = createRequestHandler({
@@ -22,7 +22,7 @@
    ```diff
      declare module '@shopify/remix-oxygen' {
        export interface AppLoadContext {
-         env: Env;
+   +     env: Env;
          cart: HydrogenCart;
          storefront: Storefront;
          session: HydrogenSession;
