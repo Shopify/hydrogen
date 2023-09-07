@@ -17,6 +17,7 @@ import {
 import {DEFAULT_PORT} from './flags.js';
 import {
   DEV_ROUTES,
+  clearHistory,
   logRequestEvent,
   streamRequestEvents,
 } from './request-events.js';
@@ -76,7 +77,9 @@ export async function startMiniOxygen({
     async onRequest(request, defaultDispatcher) {
       const url = new URL(request.url);
       if (url.pathname === '/debug-network-server') {
-        return streamRequestEvents(request);
+        return request.method === 'DELETE'
+          ? clearHistory()
+          : streamRequestEvents(request);
       }
 
       let requestId = request.headers.get('request-id');

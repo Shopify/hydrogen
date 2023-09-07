@@ -114,12 +114,17 @@ export default function DebugNetwork() {
           >
             <button
               onClick={() => {
+                fetch('/debug-network-server', {method: 'DELETE'}).catch(
+                  (error) => console.error('Could not clear history:', error),
+                );
+
                 serverEvents.current = {
                   smallestStartTime: 0,
                   mainRequests: [],
                   subRequests: {},
                   showPutRequests: serverEvents.current.showPutRequests,
                 };
+
                 setTimestamp(new Date().getTime());
               }}
             >

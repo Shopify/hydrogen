@@ -1,3 +1,4 @@
+import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
 import {Request, Response} from '@shopify/mini-oxygen';
 
@@ -16,7 +17,7 @@ const EVENT_MAP: Record<string, string> = {
 function getRequestInfo(request: Request) {
   return {
     id: request.headers.get('request-id')!,
-    event: request.headers.get('hydrogen-event-type') || 'unknown',
+    eventType: request.headers.get('hydrogen-event-type') || 'unknown',
     startTime: request.headers.get('hydrogen-start-time')!,
     endTime: request.headers.get('hydrogen-end-time') || String(Date.now()),
     purpose: request.headers.get('purpose') === 'prefetch' ? '(prefetch)' : '',
@@ -24,33 +25,42 @@ function getRequestInfo(request: Request) {
   };
 }
 
-const requestEvents: RequestEvent[] = [];
+const eventEmitter = new EventEmitter();
+const eventHistory: RequestEvent[] = [];
+
+export async function clearHistory(): Promise<Response> {
+  eventHistory.length = 0;
+  return new Response('ok');
+}
 
 export async function logRequestEvent(request: Request): Promise<Response> {
   if (DEV_ROUTES.has(new URL(request.url).pathname)) {
     return new Response('ok');
   }
 
-  if (requestEvents.length > 100) requestEvents.pop();
-
-  const {event, purpose, ...data} = getRequestInfo(request);
+  const {eventType, purpose, ...data} = getRequestInfo(request);
 
   let description = request.url;
 
-  if (event === 'subrequest') {
+  if (eventType === 'subrequest') {
     description =
       decodeURIComponent(request.url)
         .match(/(query|mutation)\s+(\w+)/)?.[0]
         ?.replace(/\s+/, ' ') || request.url;
   }
 
-  requestEvents.push({
-    event: EVENT_MAP[event] || event,
+  const event = {
+    event: EVENT_MAP[eventType] || eventType,
     data: JSON.stringify({
       ...data,
       url: `${purpose} ${description}`.trim(),
     }),
-  });
+  };
+
+  if (eventHistory.length > 100) eventHistory.shift();
+  eventHistory.push(event);
+
+  eventEmitter.emit('request', event);
 
   return new Response('ok');
 }
@@ -60,23 +70,21 @@ export function streamRequestEvents(request: Request) {
     start(controller) {
       const encoder = new TextEncoder();
 
-      const timer = setInterval(() => {
-        const storedRequest = requestEvents.pop();
+      const enqueueEvent = ({event = 'message', data}: RequestEvent) => {
+        controller.enqueue(encoder.encode(`event: ${event}\n`));
+        controller.enqueue(encoder.encode(`data: ${data}\n\n`));
+      };
 
-        if (storedRequest) {
-          const {event = 'message', data} = storedRequest;
-          controller.enqueue(encoder.encode(`event: ${event}\n`));
-          controller.enqueue(encoder.encode(`data: ${data}\n\n`));
-        }
-      }, 100);
+      eventHistory.forEach(enqueueEvent);
+      eventEmitter.addListener('request', enqueueEvent);
 
       let closed = false;
 
       function close() {
         if (closed) return;
-        clearInterval(timer);
         closed = true;
         request.signal.removeEventListener('abort', close);
+        eventEmitter.removeListener('request', enqueueEvent);
         controller.close();
       }
 
@@ -89,7 +97,7 @@ export function streamRequestEvents(request: Request) {
   return new Response(stream, {
     headers: {
       'Content-Type': 'text/event-stream',
-      'Cache-Control': 'no-cache',
+      'Cache-Control': 'no-store',
       Connection: 'keep-alive',
     },
   });
