@@ -14,6 +14,7 @@ import {
 import styles from './assets/styles.css';
 import favicon from './assets/favicon.svg';
 import {Layout} from './components/Layout.jsx';
+import {useNonce} from '@shopify/hydrogen';
 
 export const links: LinksFunction = () => {
   return [
@@ -23,6 +24,7 @@ export const links: LinksFunction = () => {
 };
 
 export default function App() {
+  const nonce = useNonce();
   return (
     <html lang="en">
       <head>
@@ -40,14 +42,15 @@ export default function App() {
         <Layout>
           <Outlet />
         </Layout>
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );
 }
 
 export function ErrorBoundary() {
+  const nonce = useNonce();
   const error = useRouteError();
   let errorMessage = 'Unknown error';
   let errorStatus = 500;
@@ -84,8 +87,8 @@ export function ErrorBoundary() {
             )}
           </div>
         </Layout>
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );

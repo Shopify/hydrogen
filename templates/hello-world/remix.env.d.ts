@@ -31,8 +31,9 @@ declare global {
  */
 declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
-    session: HydrogenSession;
-    storefront: Storefront;
     env: Env;
+    storefront: Storefront;
+    session: HydrogenSession;
+    waitUntil: ExecutionContext['waitUntil'];
   }
 }
