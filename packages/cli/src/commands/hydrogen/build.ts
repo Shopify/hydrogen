@@ -166,9 +166,20 @@ export async function runBuild({
       );
     }
 
-    if (sizeMB >= 1) {
+    if (sizeMB >= 10) {
       outputWarn(
-        `🚨 Worker bundle exceeds 1 MB! This can delay your worker response.${
+        outputContent`${outputToken.errorText(
+          '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
+        )}${
+          remixConfig.serverMinify
+            ? ''
+            : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
+        }\n`,
+      );
+      process.exit(1);
+    } else if (sizeMB >= 5) {
+      outputWarn(
+        `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
           remixConfig.serverMinify
             ? ''
             : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
