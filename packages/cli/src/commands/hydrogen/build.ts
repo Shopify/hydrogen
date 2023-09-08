@@ -33,8 +33,10 @@ import {
   buildBundleAnalysis,
   getBundleAnalysisSummary,
 } from '../../lib/build/analyzer.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
+const MAX_WORKER_BUNDLE_SIZE = 10;
 
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
@@ -156,7 +158,7 @@ export async function runBuild({
       )}\n`,
     );
 
-    if (bundleStats) {
+    if (bundleStats && sizeMB < MAX_WORKER_BUNDLE_SIZE) {
       outputInfo(
         outputContent`${
           (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
@@ -167,17 +169,14 @@ export async function runBuild({
       );
     }
 
-    if (sizeMB >= 10) {
-      outputWarn(
-        outputContent`${outputToken.errorText(
-          '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
-        )}${
-          remixConfig.serverMinify
-            ? ''
-            : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
-        }\n`,
+    if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
+      throw new AbortError(
+        '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
+        outputContent`See the bundle analysis for a breakdown of what is contributing to the bundle size:\n${outputToken.link(
+          bundleAnalysisPath,
+          bundleAnalysisPath,
+        )}`,
       );
-      process.exit(1);
     } else if (sizeMB >= 5) {
       outputWarn(
         `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
