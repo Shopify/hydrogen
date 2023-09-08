@@ -35,7 +35,7 @@ async function writeBundleAnalyzerFile(
 
   const analysisTemplate = await readFile(
     fileURLToPath(
-      new URL(`../../lib/build/bundle-analyzer.html`, import.meta.url),
+      new URL(`../../lib/bundle/bundle-analyzer.html`, import.meta.url),
     ),
   );
 

@@ -44,7 +44,7 @@ export default defineConfig([
       console.log('\n', 'Copied i18n template files to build directory', '\n');
 
       // Copy Bundle Analyzer
-      const bundleAnalyzer = 'lib/build/bundle-analyzer.html';
+      const bundleAnalyzer = 'lib/bundle/bundle-analyzer.html';
       await fs.copy(
         path.join('src', bundleAnalyzer),
         path.join(outDir, bundleAnalyzer),

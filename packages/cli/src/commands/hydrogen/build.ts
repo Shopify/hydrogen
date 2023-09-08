@@ -32,7 +32,7 @@ import {codegen} from '../../lib/codegen.js';
 import {
   buildBundleAnalysis,
   getBundleAnalysisSummary,
-} from '../../lib/build/analyzer.js';
+} from '../../lib/bundle/analyzer.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
