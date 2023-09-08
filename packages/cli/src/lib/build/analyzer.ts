@@ -71,10 +71,9 @@ export async function getBundleAnalysisSummary(bundlePath: string) {
 
           return !match;
         })
-        .slice(0, 10)
+        .slice(2, 12)
         .join('\n')
         .replace(/dist\/worker\/_assets\/.*$/ms, '\n')
-        .replace(/^\n*[^\n]+\n/, '')
         .replace(/\n/g, '\n ')
         .replace(/(\.\.\/)+node_modules\//g, (match) => colors.dim(match))
     );
