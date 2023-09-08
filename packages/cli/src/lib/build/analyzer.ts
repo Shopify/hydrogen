@@ -27,7 +27,6 @@ async function writeBundleAnalyzerFile(
   metafileName: string,
   outputFile: string,
 ) {
-  debugger;
   const metafile = await readFile(joinPath(buildPath, 'worker', metafileName), {
     encoding: 'utf8',
   });
