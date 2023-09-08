@@ -324,12 +324,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       }),
     };
 
-    const [body, response] = await fetchWithServerCache(url, requestInit, {
+    const promise = fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheShort(),
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
     });
+
+    promise.catch(() => {});
+
+    const [body, response] = await promise;
 
     const errorOptions: StorefrontErrorOptions<T> = {
       response,
