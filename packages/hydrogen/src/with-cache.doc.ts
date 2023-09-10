@@ -28,7 +28,7 @@ const data: ReferenceEntityTemplateSchema = {
   definitions: [
     {
       title: 'Arguments',
-      type: 'CreateWithCache_unstableGeneratedType',
+      type: 'CreateWithCacheGeneratedType',
       description: '',
     },
   ],

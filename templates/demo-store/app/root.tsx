@@ -10,10 +10,12 @@ import {
   Meta,
   Outlet,
   Scripts,
+  LiveReload,
   ScrollRestoration,
   useLoaderData,
   useMatches,
   useRouteError,
+  type ShouldRevalidateFunction,
 } from '@remix-run/react';
 import {ShopifySalesChannel, Seo} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
@@ -28,6 +30,25 @@ import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
 import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
 import {useAnalytics} from './hooks/useAnalytics';
+
+// This is important to avoid re-fetching root queries on sub-navigations
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  formMethod,
+  currentUrl,
+  nextUrl,
+}) => {
+  // revalidate when a mutation is performed e.g add to cart, login...
+  if (formMethod && formMethod !== 'GET') {
+    return true;
+  }
+
+  // revalidate when manually revalidating via useRevalidator
+  if (currentUrl.toString() === nextUrl.toString()) {
+    return true;
+  }
+
+  return false;
+};
 
 export const links: LinksFunction = () => {
   return [
@@ -71,7 +92,7 @@ export default function App() {
   const locale = data.selectedLocale ?? DEFAULT_LOCALE;
   const hasUserConsent = true;
 
-  useAnalytics(hasUserConsent, locale);
+  useAnalytics(hasUserConsent);
 
   return (
     <html lang={locale.language}>
@@ -91,6 +112,7 @@ export default function App() {
         </Layout>
         <ScrollRestoration />
         <Scripts />
+        <LiveReload />
       </body>
     </html>
   );
@@ -139,6 +161,7 @@ export function ErrorBoundary({error}: {error: Error}) {
           )}
         </Layout>
         <Scripts />
+        <LiveReload />
       </body>
     </html>
   );

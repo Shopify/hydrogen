@@ -6,7 +6,7 @@ import {storefrontApiCustomScalars} from './src/codegen.helpers';
 const config: CodegenConfig = {
   overwrite: true,
   schema: {
-    'https://hydrogen-preview.myshopify.com/api/2023-04/graphql.json': {
+    'https://hydrogen-preview.myshopify.com/api/2023-07/graphql.json': {
       headers: {
         'X-Shopify-Storefront-Access-Token': '3b580e70970c4528da70c98e097c2fa0',
         'content-type': 'application/json',
@@ -22,7 +22,7 @@ const config: CodegenConfig = {
             content: `
               /**
                * THIS FILE IS AUTO-GENERATED, DO NOT EDIT
-               * Based on Storefront API 2023-04
+               * Based on Storefront API 2023-07
                * If changes need to happen to the types defined in this file, then generally the Storefront API needs to update. After it's updated, you can run \`npm run graphql-types\`.
                * Except custom Scalars, which are defined in the \`codegen.ts\` file
                */

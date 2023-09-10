@@ -41,7 +41,7 @@ export default class Init extends Command {
     }),
     template: Flags.string({
       description:
-        'Sets the template to use. Pass `demo-store` for a fully-featured store template.',
+        'Sets the template to use. Pass `demo-store` for a fully-featured store template or `hello-world` for a barebones project.',
       env: 'SHOPIFY_HYDROGEN_FLAG_TEMPLATE',
     }),
     'install-deps': commonFlags.installDeps,
@@ -51,22 +51,28 @@ export default class Init extends Command {
       env: 'SHOPIFY_HYDROGEN_FLAG_MOCK_DATA',
     }),
     styling: commonFlags.styling,
-    i18n: commonFlags.i18n,
+    markets: commonFlags.markets,
     shortcut: commonFlags.shortcut,
     routes: Flags.boolean({
       description: 'Generate routes for all pages.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
       hidden: true,
     }),
+    git: Flags.boolean({
+      description: 'Init Git and create initial commits.',
+      env: 'SHOPIFY_HYDROGEN_FLAG_GIT',
+      default: true,
+      allowNo: true,
+    }),
   };
 
   async run(): Promise<void> {
     const {flags} = await this.parse(Init);
 
-    if (flags.i18n && !I18N_CHOICES.includes(flags.i18n as I18nChoice)) {
+    if (flags.markets && !I18N_CHOICES.includes(flags.markets as I18nChoice)) {
       throw new AbortError(
-        `Invalid i18n strategy: ${
-          flags.i18n
+        `Invalid URL structure strategy: ${
+          flags.markets
         }. Must be one of ${I18N_CHOICES.join(', ')}`,
       );
     }
@@ -90,6 +96,8 @@ export async function runInit(
   options: InitOptions = parseProcessFlags(process.argv, FLAG_MAP),
 ) {
   supressNodeExperimentalWarnings();
+
+  options.git ??= true;
 
   const showUpgrade = await checkHydrogenVersion(
     // Resolving the CLI package from a local directory might fail because

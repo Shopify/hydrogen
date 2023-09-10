@@ -2,7 +2,10 @@
 /// <reference types="@shopify/remix-oxygen" />
 /// <reference types="@shopify/oxygen-workers-types" />
 
-import type {Storefront} from '@shopify/hydrogen';
+// Enhance TypeScript's built-in typings.
+import '@total-typescript/ts-reset';
+
+import type {Storefront, HydrogenCart} from '@shopify/hydrogen';
 import type {HydrogenSession} from './server';
 
 declare global {
@@ -28,8 +31,9 @@ declare global {
  */
 declare module '@shopify/remix-oxygen' {
   export interface AppLoadContext {
-    session: HydrogenSession;
-    storefront: Storefront;
     env: Env;
+    cart: HydrogenCart;
+    storefront: Storefront;
+    session: HydrogenSession;
   }
 }

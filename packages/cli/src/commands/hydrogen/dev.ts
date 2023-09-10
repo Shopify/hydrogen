@@ -6,20 +6,29 @@ import {renderFatalError} from '@shopify/cli-kit/node/ui';
 import colors from '@shopify/cli-kit/node/colors';
 import {copyPublicFiles} from './build.js';
 import {
+  assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
   type ServerMode,
-} from '../../lib/config.js';
-import {muteDevLogs, warnOnce} from '../../lib/log.js';
-import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
+} from '../../lib/remix-config.js';
+import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
+import {
+  deprecated,
+  commonFlags,
+  flagsToCamelObject,
+  DEFAULT_PORT,
+} from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {startMiniOxygen} from '../../lib/mini-oxygen.js';
+import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
-import {combinedEnvironmentVariables} from '../../lib/combined-environment-variables.js';
+import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
 import {getConfig} from '../../lib/shopify-config.js';
+import {findPort} from '../../lib/find-port.js';
+import {setupLiveReload} from '../../lib/live-reload.js';
+import {checkRemixVersions} from '../../lib/remix-version-check.js';
 
 const LOG_REBUILDING = '🧱 Rebuilding...';
 const LOG_REBUILT = '🚀 Rebuilt';
@@ -66,7 +75,7 @@ export default class Dev extends Command {
 }
 
 async function runDev({
-  port,
+  port: portFlag = DEFAULT_PORT,
   path: appPath,
   useCodegen = false,
   codegenConfigPath,
@@ -98,6 +107,7 @@ async function runDev({
   const copyingFiles = copyPublicFiles(publicPath, buildPathClient);
   const reloadConfig = async () => {
     const config = await getRemixConfig(root);
+
     return disableVirtualRoutes
       ? config
       : addVirtualRoutes(config).catch((error) => {
@@ -120,11 +130,15 @@ async function runDev({
 
   const serverBundleExists = () => fileExists(buildPathWorkerFile);
 
-  const {shop, storefront} = await getConfig(root);
-  const environmentVariables =
-    !!shop && !!storefront?.id
-      ? await combinedEnvironmentVariables({root, shop, envBranch})
-      : undefined;
+  const [remixConfig, {shop, storefront}] = await Promise.all([
+    reloadConfig(),
+    getConfig(root),
+  ]);
+
+  assertOxygenChecks(remixConfig);
+
+  const fetchRemote = !!shop && !!storefront?.id;
+  const envPromise = getAllEnvironmentVariables({root, fetchRemote, envBranch});
 
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
@@ -135,20 +149,25 @@ async function runDev({
   let initialBuildDurationMs = 0;
   let initialBuildStartTimeMs = Date.now();
 
-  let isMiniOxygenStarted = false;
-  async function safeStartMiniOxygen() {
-    if (isMiniOxygenStarted) return;
+  const liveReload = remixConfig.future.v2_dev
+    ? await setupLiveReload(remixConfig.devServerPort)
+    : undefined;
 
-    const miniOxygen = await startMiniOxygen({
+  let miniOxygen: MiniOxygen;
+  async function safeStartMiniOxygen() {
+    if (miniOxygen) return;
+
+    miniOxygen = await startMiniOxygen({
       root,
-      port,
-      watch: true,
+      port: await findPort(portFlag),
+      watch: !liveReload,
       buildPathWorkerFile,
       buildPathClient,
-      environmentVariables,
+      env: await envPromise,
     });
 
-    isMiniOxygenStarted = true;
+    const graphiqlUrl = `${miniOxygen.listeningAt}/graphiql`;
+    enhanceH2Logs({graphiqlUrl, ...remixConfig});
 
     miniOxygen.showBanner({
       appName: storefront ? colors.cyan(storefront?.title) : undefined,
@@ -156,66 +175,72 @@ async function runDev({
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
-      extraLines: [
-        colors.dim(
-          `\nView GraphiQL API browser: ${miniOxygen.listeningAt}/graphiql`,
-        ),
-      ],
+      extraLines: [colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`)],
     });
 
+    if (useCodegen) {
+      spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
+    }
+
+    checkRemixVersions();
     const showUpgrade = await checkingHydrogenVersion;
     if (showUpgrade) showUpgrade();
   }
 
-  const remixConfig = await reloadConfig();
-
-  if (useCodegen) {
-    spawnCodegenProcess({...remixConfig, configFilePath: codegenConfigPath});
-  }
-
   const fileWatchCache = createFileWatchCache();
+  let skipRebuildLogs = false;
 
   await watch(
     {
       config: remixConfig,
       options: {
         mode: process.env.NODE_ENV as ServerMode,
-        onWarning: warnOnce,
         sourcemap,
       },
       fileWatchCache,
+      logger: createRemixLogger(),
     },
     {
       reloadConfig,
-      onBuildStart() {
-        if (!isInitialBuild) {
-          console.time(LOG_REBUILT);
+      onBuildStart(ctx) {
+        if (!isInitialBuild && !skipRebuildLogs) {
           outputInfo(LOG_REBUILDING);
+          console.time(LOG_REBUILT);
         }
+
+        liveReload?.onBuildStart(ctx);
       },
-      async onBuildFinish() {
+      onBuildManifest: liveReload?.onBuildManifest,
+      async onBuildFinish(context, duration, succeeded) {
         if (isInitialBuild) {
           await copyingFiles;
           initialBuildDurationMs = Date.now() - initialBuildStartTimeMs;
           isInitialBuild = false;
-        } else {
+        } else if (!skipRebuildLogs) {
+          skipRebuildLogs = false;
           console.timeEnd(LOG_REBUILT);
-          if (!isMiniOxygenStarted) console.log(''); // New line
+          if (!miniOxygen) console.log(''); // New line
         }
 
-        if (!isMiniOxygenStarted) {
-          if (!(await serverBundleExists())) {
-            return renderFatalError({
-              name: 'BuildError',
-              type: 0,
-              message:
-                'MiniOxygen cannot start because the server bundle has not been generated.',
-              tryMessage:
-                'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
-            });
+        if (!miniOxygen && !(await serverBundleExists())) {
+          return renderFatalError({
+            name: 'BuildError',
+            type: 0,
+            message:
+              'MiniOxygen cannot start because the server bundle has not been generated.',
+            tryMessage:
+              'This is likely due to an error in your app and Remix is unable to compile. Try fixing the app and MiniOxygen will start.',
+          });
+        }
+
+        if (succeeded) {
+          if (!miniOxygen) {
+            await safeStartMiniOxygen();
+          } else if (liveReload) {
+            await miniOxygen.reload({worker: true});
           }
 
-          await safeStartMiniOxygen();
+          liveReload?.onAppReady(context);
         }
       },
       async onFileCreated(file: string) {
@@ -234,6 +259,17 @@ async function runDev({
 
         const [relative, absolute] = getFilePaths(file);
         outputInfo(`\n📄 File changed: ${relative}`);
+
+        if (relative.endsWith('.env')) {
+          skipRebuildLogs = true;
+          await miniOxygen.reload({
+            env: await getAllEnvironmentVariables({
+              root,
+              fetchRemote,
+              envBranch,
+            }),
+          });
+        }
 
         if (absolute.startsWith(publicPath)) {
           await copyPublicFiles(

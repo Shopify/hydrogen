@@ -4,54 +4,52 @@ import {
   outputContent,
 } from '@shopify/cli-kit/node/output';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {fileExists} from '@shopify/cli-kit/node/fs';
+import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
 import colors from '@shopify/cli-kit/node/colors';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
+import {
+  startServer,
+  type MiniOxygenOptions as InternalMiniOxygenOptions,
+} from '@shopify/mini-oxygen';
+import {DEFAULT_PORT} from './flags.js';
 
 type MiniOxygenOptions = {
   root: string;
   port?: number;
   watch?: boolean;
+  autoReload?: boolean;
   buildPathClient: string;
   buildPathWorkerFile: string;
-  environmentVariables?: {[key: string]: string};
+  env?: {[key: string]: string};
 };
+
+export type MiniOxygen = Awaited<ReturnType<typeof startMiniOxygen>>;
 
 export async function startMiniOxygen({
   root,
-  port = 3000,
+  port = DEFAULT_PORT,
   watch = false,
+  autoReload = watch,
   buildPathWorkerFile,
   buildPathClient,
-  environmentVariables = {},
+  env,
 }: MiniOxygenOptions) {
-  const {default: miniOxygen} = await import('@shopify/mini-oxygen');
-  const miniOxygenPreview =
-    miniOxygen.default ?? (miniOxygen as unknown as typeof miniOxygen.default);
-
   const dotenvPath = resolvePath(root, '.env');
 
-  const {port: actualPort} = await miniOxygenPreview({
-    workerFile: buildPathWorkerFile,
+  const miniOxygen = await startServer({
+    script: await readFile(buildPathWorkerFile),
     assetsDir: buildPathClient,
     publicPath: '',
     port,
     watch,
-    autoReload: watch,
+    autoReload,
     modules: true,
     env: {
-      ...environmentVariables,
+      ...env,
       ...process.env,
     },
-    envPath:
-      !Object.keys(environmentVariables).length &&
-      (await fileExists(dotenvPath))
-        ? dotenvPath
-        : undefined,
+    envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
-    buildWatchPaths: watch
-      ? [resolvePath(root, buildPathWorkerFile)]
-      : undefined,
     onResponse: (request, response) =>
       // 'Request' and 'Response' types in MiniOxygen comes from
       // Miniflare and are slightly different from standard types.
@@ -61,11 +59,31 @@ export async function startMiniOxygen({
       ),
   });
 
-  const listeningAt = `http://localhost:${actualPort}`;
+  const listeningAt = `http://localhost:${miniOxygen.port}`;
 
   return {
     listeningAt,
-    port: actualPort,
+    port: miniOxygen.port,
+    async reload(
+      options: Partial<Pick<MiniOxygenOptions, 'env'>> & {
+        worker?: boolean;
+      } = {},
+    ) {
+      const nextOptions: Partial<InternalMiniOxygenOptions> = {};
+
+      if (options.env) {
+        nextOptions.env = {
+          ...options.env,
+          ...(process.env as Record<string, string>),
+        };
+      }
+
+      if (options.worker) {
+        nextOptions.script = await readFile(buildPathWorkerFile);
+      }
+
+      return miniOxygen.reload(nextOptions);
+    },
     showBanner(options?: {
       mode?: string;
       headlinePrefix?: string;
@@ -90,7 +108,9 @@ export async function startMiniOxygen({
 export function logResponse(request: Request, response: Response) {
   try {
     const url = new URL(request.url);
-    if (['/graphiql'].includes(url.pathname)) return;
+    if (['/graphiql'].includes(url.pathname)) {
+      return;
+    }
 
     const isProxy = !!response.url && response.url !== request.url;
     const isDataRequest = !isProxy && url.searchParams.has('_data');

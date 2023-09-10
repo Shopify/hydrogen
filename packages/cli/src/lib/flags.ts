@@ -7,6 +7,8 @@ import type {CamelCasedProperties} from 'type-fest';
 import {SETUP_CSS_STRATEGIES} from './setups/css/index.js';
 import {I18N_CHOICES} from './setups/i18n/index.js';
 
+export const DEFAULT_PORT = 3000;
+
 export const commonFlags = {
   path: Flags.string({
     description:
@@ -16,7 +18,7 @@ export const commonFlags = {
   port: Flags.integer({
     description: 'Port to run the server on.',
     env: 'SHOPIFY_HYDROGEN_FLAG_PORT',
-    default: 3000,
+    default: DEFAULT_PORT,
   }),
   force: Flags.boolean({
     description:
@@ -62,8 +64,8 @@ export const commonFlags = {
     choices: SETUP_CSS_STRATEGIES,
     env: 'SHOPIFY_HYDROGEN_FLAG_STYLING',
   }),
-  i18n: Flags.string({
-    description: `Sets the internationalization strategy to use. One of ${I18N_CHOICES.map(
+  markets: Flags.string({
+    description: `Sets the URL structure to support multiple markets. One of ${I18N_CHOICES.map(
       (item) => `\`${item}\``,
     ).join(', ')}.`,
     choices: I18N_CHOICES,

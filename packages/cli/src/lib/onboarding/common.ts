@@ -31,6 +31,8 @@ import {
 import {
   outputDebug,
   formatPackageManagerCommand,
+  outputToken,
+  outputContent,
 } from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
 import {type AdminSession, login, renderLoginSuccess} from '../auth.js';
@@ -57,10 +59,11 @@ import {
   renderCssPrompt,
 } from '../setups/css/index.js';
 import {
-  generateMultipleRoutes,
+  generateProjectFile,
+  generateRoutes,
   renderRoutePrompt,
-  ROUTE_MAP,
 } from '../setups/routes/generate.js';
+import {execAsync} from '../process.js';
 
 export type InitOptions = {
   path?: string;
@@ -74,6 +77,7 @@ export type InitOptions = {
   routes?: boolean;
   shortcut?: boolean;
   installDeps?: boolean;
+  git?: boolean;
 };
 
 export const LANGUAGES = {
@@ -88,13 +92,17 @@ export type I18nChoice = I18nStrategy | 'none';
 
 export async function handleI18n(
   controller: AbortController,
+  cliCommand: string,
   flagI18n?: I18nChoice,
 ) {
   let selection =
     flagI18n ??
     (await renderI18nPrompt({
       abortSignal: controller.signal,
-      extraChoices: {none: 'No internationalization'},
+      extraChoices: {
+        none:
+          'Set up later ' + colors.dim(`(run \`${cliCommand} setup markets\`)`),
+      },
     }));
 
   const i18nStrategy = selection === 'none' ? undefined : selection;
@@ -120,24 +128,18 @@ export async function handleRouteGeneration(
         abortSignal: controller.signal,
       });
 
-  const routes =
-    routesToScaffold === 'all'
-      ? ROUTE_MAP
-      : routesToScaffold.reduce((acc, item) => {
-          const value = ROUTE_MAP[item];
-          if (value) acc[item] = value;
-          return acc;
-        }, {} as typeof ROUTE_MAP);
+  const needsRouteGeneration =
+    routesToScaffold === 'all' || routesToScaffold.length > 0;
 
   return {
-    routes,
+    needsRouteGeneration,
     setupRoutes: async (
       directory: string,
       language: Language,
       i18nStrategy?: I18nStrategy,
     ) => {
-      if (routesToScaffold === 'all' || routesToScaffold.length > 0) {
-        await generateMultipleRoutes({
+      if (needsRouteGeneration) {
+        const result = await generateRoutes({
           routeName: routesToScaffold,
           directory,
           force: true,
@@ -145,9 +147,28 @@ export async function handleRouteGeneration(
           localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
           signal: controller.signal,
         });
+
+        return result.routeGroups;
       }
     },
   };
+}
+
+export function generateProjectEntries(
+  options: Parameters<typeof generateProjectFile>[1],
+) {
+  return Promise.all(
+    ['root', 'entry.server', 'entry.client'].map((filename) =>
+      generateProjectFile(filename, {
+        v2Flags: {
+          isV2ErrorBoundary: true,
+          isV2Meta: true,
+          isV2RouteConvention: true,
+        },
+        ...options,
+      }),
+    ),
+  );
 }
 
 /**
@@ -320,7 +341,7 @@ export async function handleLanguage(
   const language =
     flagLanguage ??
     (await renderSelectPrompt({
-      message: 'Choose a language',
+      message: 'Select a language',
       choices: [
         {label: 'JavaScript', value: 'js'},
         {label: 'TypeScript', value: 'ts'},
@@ -453,6 +474,13 @@ export async function createInitialCommit(directory: string) {
   try {
     await initializeGitRepository(directory);
     await writeFile(joinPath(directory, '.gitignore'), gitIgnoreContent);
+
+    if (process.env.NODE_ENV === 'test' && process.env.CI) {
+      // CI environments don't have a git user configured
+      await execAsync(`git config --global user.name "hydrogen"`);
+      await execAsync(`git config --global user.email "hydrogen@shopify.com"`);
+    }
+
     return commitAll(directory, 'Scaffold Storefront');
   } catch (error: any) {
     // Ignore errors
@@ -521,7 +549,7 @@ export async function renderProjectReady(
   }
 
   if (!i18nError && i18n) {
-    bodyLines.push(['i18n', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
+    bodyLines.push(['Markets', I18N_STRATEGY_NAME_MAP[i18n].split(' (')[0]!]);
   }
 
   let routeSummary = '';
@@ -532,10 +560,19 @@ export async function renderProjectReady(
     for (let [routeName, routePaths] of Object.entries(routes)) {
       routePaths = Array.isArray(routePaths) ? routePaths : [routePaths];
 
+      let urls = [
+        ...new Set(routePaths.map((item) => '/' + normalizeRoutePath(item))),
+      ].sort();
+
+      if (urls.length > 2) {
+        // Shorten the summary by grouping them by prefix when there are more than 2
+        // e.g. /account/.../... => /account/*
+        const prefixesSet = new Set(urls.map((url) => url.split('/')[1] ?? ''));
+        urls = [...prefixesSet].map((item) => '/' + item + '/*');
+      }
+
       routeSummary += `\n    • ${capitalize(routeName)} ${colors.dim(
-        '(' +
-          routePaths.map((item) => '/' + normalizeRoutePath(item)).join(' & ') +
-          ')',
+        '(' + urls.join(' & ') + ')',
       )}`;
     }
   }
@@ -576,7 +613,7 @@ export async function renderProjectReady(
                   {subdued: depsError.message},
                 ],
                 i18nError && [
-                  'Failed to scaffold i18n:',
+                  'Failed to scaffold Markets:',
                   {subdued: i18nError.message},
                 ],
                 routesError && [
@@ -630,15 +667,17 @@ export async function renderProjectReady(
                 [
                   'Run',
                   {
-                    command: [
-                      project.directory === process.cwd()
-                        ? undefined
-                        : `cd ${project.location.replace(/^\.\//, '')}`,
-                      depsInstalled ? undefined : `${packageManager} install`,
-                      formatPackageManagerCommand(packageManager, 'dev'),
-                    ]
-                      .filter(Boolean)
-                      .join(' && '),
+                    command: outputContent`${outputToken.genericShellCommand(
+                      [
+                        project.directory === process.cwd()
+                          ? undefined
+                          : `cd ${project.location.replace(/^\.\//, '')}`,
+                        depsInstalled ? undefined : `${packageManager} install`,
+                        formatPackageManagerCommand(packageManager, 'dev'),
+                      ]
+                        .filter(Boolean)
+                        .join(' && '),
+                    )}`.value,
                   },
                 ],
               ].filter((step): step is string[] => Boolean(step)),
@@ -668,6 +707,10 @@ export function createAbortHandler(
       ),
     );
 
+    if (process.env.NODE_ENV === 'test') {
+      console.error(error);
+    }
+
     process.exit(1);
   };
 }
@@ -684,11 +727,12 @@ async function projectExists(projectDir: string) {
 }
 
 function normalizeRoutePath(routePath: string) {
-  const isIndex = /(^|\/)index$/.test(routePath);
-  return isIndex
-    ? routePath.slice(0, -'index'.length).replace(/\/$/, '')
-    : routePath
-        .replace(/\$/g, ':')
-        .replace(/[\[\]]/g, '')
-        .replace(/:(\w+)Handle/i, ':handle');
+  return routePath
+    .replace(/(^|\.)_index$/, '') // Remove index segments
+    .replace(/((^|\.)[^\.]+)_\./g, '$1.') // Replace rootless segments
+    .replace(/\.(?!\w+\])/g, '/') // Replace dots with slashes, except for dots in brackets
+    .replace(/\$$/g, ':catchAll') // Replace catch-all
+    .replace(/\$/g, ':') // Replace dollar signs with colons
+    .replace(/[\[\]]/g, '') // Remove brackets
+    .replace(/:\w*Handle/i, ':handle'); // Replace arbitrary handle names with a standard `:handle`
 }

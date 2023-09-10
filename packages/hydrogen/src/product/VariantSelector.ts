@@ -9,54 +9,42 @@ import type {
 import {ReactNode, useMemo, createElement, Fragment} from 'react';
 import type {PartialDeep} from 'type-fest';
 
-type AvailableOption = {
+export type VariantOption = {
   name: string;
   value?: string;
-  values: Array<Value>;
+  values: Array<VariantOptionValue>;
 };
 
-type Value = {
+export type VariantOptionValue = {
   value: string;
   isAvailable: boolean;
-  path: string;
+  to: string;
+  search: string;
   isActive: boolean;
 };
 
 type VariantSelectorProps = {
-  /** Product options from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */
+  /** The product handle for all of the variants */
+  handle: string;
+  /** Product options from the [Storefront API](/docs/api/storefront/2023-07/objects/ProductOption). Make sure both `name` and `values` are apart of your query. */
   options: Array<PartialDeep<ProductOption>> | undefined;
-  /** Product variants from the [Storefront API](/docs/api/storefront/2023-04/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
+  /** Product variants from the [Storefront API](/docs/api/storefront/2023-07/objects/ProductVariant). You only need to pass this prop if you want to show product availability. If a product option combination is not found within `variants`, it is assumed to be available. Make sure to include `availableForSale` and `selectedOptions.name` and `selectedOptions.value`. */
   variants?:
     | PartialDeep<ProductVariantConnection>
     | Array<PartialDeep<ProductVariant>>;
-  /** Provide a default variant when no options are selected. You can use the utility `getFirstAvailableVariant` to get a default variant. */
-  defaultVariant?: PartialDeep<ProductVariant>;
-  children: ({option}: {option: AvailableOption}) => ReactNode;
+  children: ({option}: {option: VariantOption}) => ReactNode;
 };
 
 export function VariantSelector({
+  handle,
   options = [],
   variants: _variants = [],
   children,
-  defaultVariant,
 }: VariantSelectorProps) {
   const variants =
     _variants instanceof Array ? _variants : flattenConnection(_variants);
-  const {pathname, search} = useLocation();
 
-  const {searchParams, path} = useMemo(() => {
-    const isLocalePathname = /\/[a-zA-Z]{2}-[a-zA-Z]{2}\//g.test(pathname);
-    const path = isLocalePathname
-      ? `/${pathname.split('/').slice(2).join('/')}`
-      : pathname;
-
-    const searchParams = new URLSearchParams(search);
-
-    return {
-      searchParams: searchParams,
-      path,
-    };
-  }, [pathname, search]);
+  const {searchParams, path, alreadyOnProductPage} = useVariantPath(handle);
 
   // If an option only has one value, it doesn't need a UI to select it
   // But instead it always needs to be added to the product options so
@@ -75,12 +63,14 @@ export function VariantSelector({
           .filter((option) => option?.values?.length! > 1)
           .map((option) => {
             let activeValue;
-            let availableValues: Value[] = [];
+            let availableValues: VariantOptionValue[] = [];
 
             for (let value of option.values!) {
               // The clone the search params for each value, so we can calculate
               // a new URL for each option value pair
-              const clonedSearchParams = new URLSearchParams(searchParams);
+              const clonedSearchParams = new URLSearchParams(
+                alreadyOnProductPage ? searchParams : undefined,
+              );
               clonedSearchParams.set(option.name!, value!);
 
               // Because we hide options with only one value, they aren't selectable,
@@ -103,13 +93,6 @@ export function VariantSelector({
               const calculatedActiveValue = currentParam
                 ? // If a URL parameter exists for the current option, check if it equals the current value
                   currentParam === value!
-                : defaultVariant
-                ? // Else check if the default variant has the current option value
-                  defaultVariant.selectedOptions?.some(
-                    (selectedOption) =>
-                      selectedOption?.name === option.name &&
-                      selectedOption?.value === value,
-                  )
                 : false;
 
               if (calculatedActiveValue) {
@@ -118,11 +101,14 @@ export function VariantSelector({
                 activeValue = value;
               }
 
+              const searchString = '?' + clonedSearchParams.toString();
+
               availableValues.push({
                 value: value!,
                 isAvailable: variant ? variant.availableForSale! : true,
-                path: path + '?' + clonedSearchParams.toString(),
-                isActive: Boolean(calculatedActiveValue),
+                to: path + searchString,
+                search: searchString,
+                isActive: calculatedActiveValue,
               });
             }
 
@@ -158,18 +144,26 @@ export const getSelectedProductOptions: GetSelectedProductOptions = (
   return selectedOptions;
 };
 
-type GetFirstAvailableVariant = (
-  variants:
-    | PartialDeep<ProductVariantConnection>
-    | Array<PartialDeep<ProductVariant>>,
-) => PartialDeep<ProductVariant> | undefined;
+function useVariantPath(handle: string) {
+  const {pathname, search} = useLocation();
 
-export const getFirstAvailableVariant: GetFirstAvailableVariant = (
-  variants:
-    | PartialDeep<ProductVariantConnection>
-    | Array<PartialDeep<ProductVariant>> = [],
-): PartialDeep<ProductVariant> | undefined => {
-  return (
-    variants instanceof Array ? variants : flattenConnection(variants)
-  ).find((variant) => variant?.availableForSale);
-};
+  return useMemo(() => {
+    const match = /(\/[a-zA-Z]{2}-[a-zA-Z]{2}\/)/g.exec(pathname);
+    const isLocalePathname = match && match.length > 0;
+
+    const path = isLocalePathname
+      ? `${match![0]}products/${handle}`
+      : `/products/${handle}`;
+
+    const searchParams = new URLSearchParams(search);
+
+    return {
+      searchParams,
+      // If the current pathname matches the product page, we need to make sure
+      // that we append to the current search params. Otherwise all the search
+      // params can be generated new.
+      alreadyOnProductPage: path === pathname,
+      path,
+    };
+  }, [pathname, search, handle]);
+}

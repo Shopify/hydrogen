@@ -1,10 +1,10 @@
-import {vi} from 'vitest';
 import {flattenConnection} from './flatten-connection.js';
 import {getPrice} from './Money.test.helpers.js';
 import type {
   Cart,
   CartLine,
   BaseCartLineConnection,
+  ComponentizableCartLine,
 } from './storefront-api-types.js';
 import type {PartialDeep} from 'type-fest';
 import type {CartWithActions} from './cart-types.js';
@@ -76,7 +76,10 @@ export const CART_WITH_LINES_FLATTENED: PartialDeep<
   Cart,
   {recurseIntoArrays: true}
 > & {
-  lines: PartialDeep<CartLine[], {recurseIntoArrays: true}>;
+  lines: PartialDeep<
+    Array<CartLine | ComponentizableCartLine>,
+    {recurseIntoArrays: true}
+  >;
 } = {
   ...CART,
   lines: flattenConnection(CART_WITH_LINES.lines),
@@ -123,16 +126,16 @@ export function getCartWithActionsMock(
   mockOptions?: PartialDeep<CartWithActions>,
 ): CartWithActions {
   return {
-    buyerIdentityUpdate: vi.fn(),
-    cartAttributesUpdate: vi.fn(),
-    cartCreate: vi.fn(),
+    buyerIdentityUpdate: () => undefined,
+    cartAttributesUpdate: () => undefined,
+    cartCreate: () => undefined,
     cartFragment: '',
     checkoutUrl: '',
-    discountCodesUpdate: vi.fn(),
-    linesAdd: vi.fn(),
-    linesRemove: vi.fn(),
-    linesUpdate: vi.fn(),
-    noteUpdate: vi.fn(),
+    discountCodesUpdate: () => undefined,
+    linesAdd: () => undefined,
+    linesRemove: () => undefined,
+    linesUpdate: () => undefined,
+    noteUpdate: () => undefined,
     status: 'idle' as const,
     totalQuantity: 0,
     ...mockOptions,

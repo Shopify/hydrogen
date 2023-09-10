@@ -4,16 +4,37 @@ import {
   Meta,
   Outlet,
   Scripts,
+  LiveReload,
   ScrollRestoration,
   useLoaderData,
+  type ShouldRevalidateFunction,
 } from '@remix-run/react';
 import type {Shop} from '@shopify/hydrogen/storefront-api-types';
-import styles from './styles/app.css';
+import appStyles from './styles/app.css';
 import favicon from '../public/favicon.svg';
+
+// This is important to avoid re-fetching root queries on sub-navigations
+export const shouldRevalidate: ShouldRevalidateFunction = ({
+  formMethod,
+  currentUrl,
+  nextUrl,
+}) => {
+  // revalidate when a mutation is performed e.g add to cart, login...
+  if (formMethod && formMethod !== 'GET') {
+    return true;
+  }
+
+  // revalidate when manually revalidating via useRevalidator
+  if (currentUrl.toString() === nextUrl.toString()) {
+    return true;
+  }
+
+  return false;
+};
 
 export const links: LinksFunction = () => {
   return [
-    {rel: 'stylesheet', href: styles},
+    {rel: 'stylesheet', href: appStyles},
     {
       rel: 'preconnect',
       href: 'https://cdn.shopify.com',
@@ -50,6 +71,7 @@ export default function App() {
         <Outlet />
         <ScrollRestoration />
         <Scripts />
+        <LiveReload />
       </body>
     </html>
   );

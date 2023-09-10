@@ -5,6 +5,7 @@ import {joinPath} from '@shopify/cli-kit/node/path';
 import {renderInfo, renderTasks} from '@shopify/cli-kit/node/ui';
 import {getLatestTemplates} from '../template-downloader.js';
 import {
+  commitAll,
   createAbortHandler,
   createInitialCommit,
   handleDependencies,
@@ -22,12 +23,13 @@ export async function setupRemoteTemplate(
   options: InitOptions,
   controller: AbortController,
 ) {
-  const isDemoStoreTemplate = options.template === 'demo-store';
+  const isOfficialTemplate =
+    options.template === 'demo-store' || options.template === 'hello-world';
 
-  if (!isDemoStoreTemplate) {
+  if (!isOfficialTemplate) {
     // TODO: support GitHub repos as templates
     throw new AbortError(
-      'Only `demo-store` is supported in --template flag for now.',
+      'Only `demo-store` and `hello-world` are supported in --template flag for now.',
       'Skip the --template flag to run the setup flow.',
     );
   }
@@ -61,7 +63,9 @@ export async function setupRemoteTemplate(
 
   backgroundWorkPromise = backgroundWorkPromise
     .then(() => transpileProject().catch(abort))
-    .then(() => createInitialCommit(project.directory));
+    .then(() =>
+      options.git ? createInitialCommit(project.directory) : undefined,
+    );
 
   const {packageManager, shouldInstallDeps, installDeps} =
     await handleDependencies(
@@ -94,7 +98,7 @@ export async function setupRemoteTemplate(
 
   if (shouldInstallDeps) {
     tasks.push({
-      title: 'Installing dependencies',
+      title: 'Installing dependencies. This could take a few minutes',
       task: async () => {
         try {
           await installDeps();
@@ -108,12 +112,25 @@ export async function setupRemoteTemplate(
 
   await renderTasks(tasks);
 
+  if (options.git) {
+    await commitAll(project.directory, 'Lockfile');
+  }
+
   await renderProjectReady(project, setupSummary);
 
-  if (isDemoStoreTemplate) {
+  if (isOfficialTemplate) {
     renderInfo({
-      headline: `Your project will display inventory from the Hydrogen Demo Store.`,
+      headline: `Your project will display inventory from ${
+        options.template === 'demo-store'
+          ? 'the Hydrogen Demo Store'
+          : 'Mock.shop'
+      }.`,
       body: `To connect this project to your Shopify store’s inventory, update \`${project.name}/.env\` with your store ID and Storefront API key.`,
     });
   }
+
+  return {
+    ...project,
+    ...setupSummary,
+  };
 }

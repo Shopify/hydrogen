@@ -24,5 +24,5 @@ export const BASE_PRODUCT_PAYLOAD: ShopifyAnalyticsProduct = {
   productGid: 'gid://shopify/Product/1',
   name: faker.datatype.string(),
   brand: faker.datatype.string(),
-  price: faker.datatype.number().toString(),
+  price: faker.datatype.float().toString(),
 };

@@ -1,7 +1,6 @@
 import {resolvePath, dirname} from '@shopify/cli-kit/node/path';
 import {readFile, mkdir, fileExists, writeFile} from '@shopify/cli-kit/node/fs';
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {outputInfo} from '@shopify/cli-kit/node/output';
 
 export const SHOPIFY_DIR = '.shopify';
 export const SHOPIFY_DIR_PROJECT = 'project.json';
@@ -146,7 +145,6 @@ export async function ensureShopifyGitIgnore(root: string): Promise<boolean> {
 
     gitIgnoreContents += `${SHOPIFY_DIR}\r\n`;
 
-    outputInfo('Adding .shopify to .gitignore...\n');
     await writeFile(gitIgnoreFilePath, gitIgnoreContents);
 
     return true;

@@ -1,5 +1,161 @@
 # demo-store
 
+## 2.1.0
+
+### Minor Changes
+
+- Support Remix Hot Module Replacement (HMR) and Hot Data Revalidation (HDR). ([#1187](https://github.com/Shopify/hydrogen/pull/1187)) by [@frandiox](https://github.com/frandiox)
+
+  Start using it with the following changes to your project:
+
+  1. Upgrade to the latest Hydrogen version and Remix 1.19.1.
+
+  2. Enable the v2 dev server in `remix.config.js`:
+
+  ```diff
+  // ...
+  future: {
+  + v2_dev: true,
+    v2_meta: true,
+    v2_headers: true,
+    // ...
+  }
+  ```
+
+  3. Add Remix' `<LiveReload />` component if you don't have it to your `root.jsx` or `root.tsx` file:
+
+  ```diff
+  import {
+    Outlet,
+    Scripts,
+  + LiveReload,
+    ScrollRestoration,
+  } from '@remix-run/react';
+
+  // ...
+
+  export default function App() {
+    // ...
+
+    return (
+      <html>
+        <head>
+         {/* ...  */}
+        </head>
+        <body>
+          <Outlet />
+          <ScrollRestoration />
+          <Scripts />
+  +       <LiveReload />
+        </body>
+      </html>
+    );
+  }
+
+  export function ErrorBoundary() {
+    // ...
+
+    return (
+      <html>
+        <head>
+          {/* ... */}
+        </head>
+        <body>
+          Error!
+          <Scripts />
+  +       <LiveReload />
+        </body>
+      </html>
+    );
+  }
+  ```
+
+### Patch Changes
+
+- Performance optimization on product page ([#1256](https://github.com/Shopify/hydrogen/pull/1256)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add shouldRevalidate export to limit root loaders revalidation on mutations only ([#1237](https://github.com/Shopify/hydrogen/pull/1237)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`a06b5093`](https://github.com/Shopify/hydrogen/commit/a06b509339bb749a27f5dcf3555c7c2d6ebde3af), [`d053978d`](https://github.com/Shopify/hydrogen/commit/d053978dc49a12651a5c7c15efd543884b9f03db), [`9fcfc500`](https://github.com/Shopify/hydrogen/commit/9fcfc5000d4df6745ad4c0a05a4cb6d039feed71), [`ec21cfd6`](https://github.com/Shopify/hydrogen/commit/ec21cfd64d82d3d2d2ee2ee54cf93d372bc5d927), [`867866d1`](https://github.com/Shopify/hydrogen/commit/867866d18cba0324c240c15422c890ccb4fc1546), [`bdac4c22`](https://github.com/Shopify/hydrogen/commit/bdac4c2253c45772da0b6b475703c3d97e599cbb), [`d896c76b`](https://github.com/Shopify/hydrogen/commit/d896c76be1608f6023dab40625a8cb663e00cb2a), [`46d5f8ff`](https://github.com/Shopify/hydrogen/commit/46d5f8ff279dd7e18fa817eeb04206e08122fced), [`632a7a38`](https://github.com/Shopify/hydrogen/commit/632a7a385f13a987990f554b907dfb6f421f1351), [`e536ae04`](https://github.com/Shopify/hydrogen/commit/e536ae04641c41b56580f69dab454c20f2931cbf)]:
+  - @shopify/cli-hydrogen@5.2.0
+  - @shopify/hydrogen@2023.7.3
+
+## 2.0.2
+
+### Patch Changes
+
+- Update @shopify/oxygen-workers-types dependencies ([#1208](https://github.com/Shopify/hydrogen/pull/1208)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Fix demo-store analytics ([#1177](https://github.com/Shopify/hydrogen/pull/1177)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Updated dependencies [[`b29c85d0`](https://github.com/Shopify/hydrogen/commit/b29c85d053e8beb51216fa2cce47e1d21258ad79), [`21eb9dac`](https://github.com/Shopify/hydrogen/commit/21eb9dac935722fd8d0d385b00c3bbcfb4693baa)]:
+  - @shopify/hydrogen@2023.7.2
+  - @shopify/cli-hydrogen@5.1.2
+  - @shopify/remix-oxygen@1.1.3
+
+## 2.0.1
+
+### Patch Changes
+
+- Update to Remix v1.19.1. ([#1172](https://github.com/Shopify/hydrogen/pull/1172)) by [@frandiox](https://github.com/frandiox)
+
+  See changes for [1.18](https://github.com/remix-run/remix/releases/tag/remix%401.18.0) and [1.19](https://github.com/remix-run/remix/releases/tag/remix%401.19.0).
+
+- It's recommended to update `@shopify/cli`: ([#1172](https://github.com/Shopify/hydrogen/pull/1172)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  -"@shopify/cli": "3.47.5"
+  +"@shopify/cli": "3.48.0"
+  ```
+
+  Also, for projects using Remix v1 Error Boundary convention, remove the deprecated `ErrorBoundaryComponent` type (or update to the v2 convention):
+
+  ```diff
+  -export const ErrorBoundary: ErrorBoundaryComponent = ({error}) => {
+  +export const ErrorBoundary = ({error}: {error: Error}) => {
+  ```
+
+- Updated dependencies [[`b7a8ecf6`](https://github.com/Shopify/hydrogen/commit/b7a8ecf6a687e72de7745a78c61c1a78a9a52629), [`ef809228`](https://github.com/Shopify/hydrogen/commit/ef809228da8d6d4f1b3301221e1e03d24cac63fa), [`1015f170`](https://github.com/Shopify/hydrogen/commit/1015f17028beb2ab00e381a61e9f4132e74b17ad), [`076bab7d`](https://github.com/Shopify/hydrogen/commit/076bab7d31ffcd918c4a3b0dd7be03e00d2dd913)]:
+  - @shopify/remix-oxygen@1.1.2
+  - @shopify/hydrogen@2023.7.1
+  - @shopify/cli-hydrogen@5.1.1
+
+## 2.0.0
+
+### Major Changes
+
+- Add `.env` file to Remix watcher to allow reloading environment variables on file save. In `remix.config.js`: ([#997](https://github.com/Shopify/hydrogen/pull/997)) by [@frandiox](https://github.com/frandiox)
+
+  ```diff
+  -watchPaths: ['./public'],
+  +watchPaths: ['./public', './.env'],
+  ```
+
+### Patch Changes
+
+- Function and component for cart management: ([#786](https://github.com/Shopify/hydrogen/pull/786)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  - `createCartHandler` - Creates an object instance that simplifies cart operations such as add/update/remove from cart.
+  - `CartForm` - A form component that helps you sets up form inputs for cart handler.
+
+  **Documentation:**
+
+  - Updated [how-to guides](https://shopify.dev/docs/custom-storefronts/hydrogen/cart)
+  - [`createCartHandler`](https://shopify.dev/docs/api/hydrogen/2023-04/utilities/createcarthandler)
+  - [`CartForm`](https://shopify.dev/docs/api/hydrogen/2023-04/components/cartform)
+
+- Fix demostore to check for `shop.primaryDomain` host for navigation menu items. ([#1036](https://github.com/Shopify/hydrogen/pull/1036)) by [@rista404](https://github.com/rista404)
+
+- Fix empty discount code ([#1104](https://github.com/Shopify/hydrogen/pull/1104)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Add a `<VariantSelector>` component to make building product forms easier. Also added `getFirstAvailableVariant` and `getSelectedProductOptions` helper functions. See the [proposal](https://gist.github.com/blittle/d9205d4ac72528005dc6f3104c328ecd) for examples. ([#1027](https://github.com/Shopify/hydrogen/pull/1027)) by [@blittle](https://github.com/blittle)
+
+- Add @total-typescript/ts-reset to demo-store and skeleton templates ([#1042](https://github.com/Shopify/hydrogen/pull/1042)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updated dependencies [[`4c0858f2`](https://github.com/Shopify/hydrogen/commit/4c0858f2bca39a631a868902aef64e537d6dedfd), [`c39411e0`](https://github.com/Shopify/hydrogen/commit/c39411e0454750697d580a1ef4858800c494980f), [`dc56d296`](https://github.com/Shopify/hydrogen/commit/dc56d296c5abf572c19046756ad5b27f8b98a7b3), [`2a036d72`](https://github.com/Shopify/hydrogen/commit/2a036d72c79ef3e40aecfb1832635898208c6d54), [`667ea4fb`](https://github.com/Shopify/hydrogen/commit/667ea4fbf30e632529984c8262010d35e5df38b0), [`ed9782bc`](https://github.com/Shopify/hydrogen/commit/ed9782bc43921d02a2fdbc951c1df1d200812f2d), [`4bee03df`](https://github.com/Shopify/hydrogen/commit/4bee03df3cc8203510f6b05522c1268aa5e5f2f4), [`11ab64a8`](https://github.com/Shopify/hydrogen/commit/11ab64a88966dd7b90522f15836abfff6f5d595f), [`9482bc59`](https://github.com/Shopify/hydrogen/commit/9482bc59c2ec8ebd1669a8773f7a5ca7c5359abc), [`31409877`](https://github.com/Shopify/hydrogen/commit/31409877106182f5505acb07c5d822bc1f0756bc), [`00f3e592`](https://github.com/Shopify/hydrogen/commit/00f3e59283d3a413a6acd89722bb71580f73aff5), [`4db61421`](https://github.com/Shopify/hydrogen/commit/4db61421a7d55c7409465210996869bfcf765f7a), [`5530d987`](https://github.com/Shopify/hydrogen/commit/5530d98756503878fbf5ac013e2103259ffc0443), [`63d17266`](https://github.com/Shopify/hydrogen/commit/63d172665cf97fae62629f8019d9b2dad29c7d40), [`5530d987`](https://github.com/Shopify/hydrogen/commit/5530d98756503878fbf5ac013e2103259ffc0443), [`1befd365`](https://github.com/Shopify/hydrogen/commit/1befd3650dd57cdff584dcd18423cc9b930d91b9), [`945fdc57`](https://github.com/Shopify/hydrogen/commit/945fdc57f08bdee363f4e801380696ade323edaa)]:
+  - @shopify/hydrogen@2024.0.0
+  - @shopify/cli-hydrogen@6.0.0
+
 ## 1.0.4
 
 ### Patch Changes

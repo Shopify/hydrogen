@@ -1,5 +1,39 @@
 # @shopify/hydrogen-react
 
+## 2023.7.2
+
+### Patch Changes
+
+- This change updates the implementation of the parseGid function so that it uses the builtin `URL` class to parse the gid. This enables the parts of the string, such as the search params, to be parsed as well ([#1185](https://github.com/Shopify/hydrogen/pull/1185)) by [@tatemz](https://github.com/tatemz)
+
+- Image component docs typo - Contributed by @MilosMosovsky ([#1243](https://github.com/Shopify/hydrogen/pull/1243)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 2023.7.1
+
+### Patch Changes
+
+- Fix demo-store analytics ([#1177](https://github.com/Shopify/hydrogen/pull/1177)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+## 2023.7.0
+
+## What’s new
+
+⭐️ Check out our [blog post](https://hydrogen.shopify.dev/updates) with all the latest updates on Hydrogen, and what’s coming on the roadmap.
+
+This major release includes support for the [2023-07 version](https://shopify.dev/docs/api/release-notes/2023-07#graphql-storefront-api-changes) of the Storefront API. This version doesn't include any breaking changes, but adds support for predictive search and local pickup options.
+
+### Patch Changes
+
+- Export useLoadScript ([#1080](https://github.com/Shopify/hydrogen/pull/1080)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Fix long language code breaking useMoney hook - Contributed by @QuentinGibson ([#1132](https://github.com/Shopify/hydrogen/pull/1132)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+- Throw error when `storeDomain` is not passed to `createStorefrontClient`. ([#1128](https://github.com/Shopify/hydrogen/pull/1128)) by [@frandiox](https://github.com/frandiox)
+
+- Improve warning and error format for known Hydrogen messages in development. ([#1093](https://github.com/Shopify/hydrogen/pull/1093)) by [@frandiox](https://github.com/frandiox)
+
+- Add discountCode.applicable in default Cart fragment ([#1040](https://github.com/Shopify/hydrogen/pull/1040)) by [@pnodet](https://github.com/pnodet)
+
 ## 2023.4.5
 
 ### Patch Changes

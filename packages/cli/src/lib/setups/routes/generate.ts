@@ -1,6 +1,19 @@
 import {readdir} from 'fs/promises';
-import {fileExists, readFile, writeFile, mkdir} from '@shopify/cli-kit/node/fs';
-import {joinPath, dirname, relativizePath} from '@shopify/cli-kit/node/path';
+import {
+  fileExists,
+  readFile,
+  writeFile,
+  copyFile,
+  mkdir,
+} from '@shopify/cli-kit/node/fs';
+import {
+  joinPath,
+  dirname,
+  relativizePath,
+  relativePath,
+  resolvePath,
+  basename,
+} from '@shopify/cli-kit/node/path';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
@@ -13,83 +26,124 @@ import {
   formatCode,
   getCodeFormatOptions,
 } from '../../../lib/format-code.js';
-import {getRouteFile} from '../../../lib/build.js';
 import {
-  convertRouteToV2,
+  GENERATOR_ROUTE_DIR,
+  getStarterDir,
+  getTemplateAppFile,
+} from '../../../lib/build.js';
+import {
+  convertRouteToV1,
   convertTemplateToRemixVersion,
   getV2Flags,
   type RemixV2Flags,
 } from '../../../lib/remix-version-interop.js';
-import {getRemixConfig} from '../../../lib/config.js';
+import {getRemixConfig} from '../../remix-config.js';
+import {findFileWithExtension} from '../../file.js';
 
-export const ROUTE_MAP: Record<string, string | string[]> = {
-  home: 'index',
-  page: 'pages/$pageHandle',
+const NO_LOCALE_PATTERNS = [/robots\.txt/];
+
+const ROUTE_MAP = {
+  home: ['_index', '$'],
+  page: 'pages*',
   cart: 'cart',
-  products: 'products/$productHandle',
-  collections: 'collections/$collectionHandle',
-  policies: ['policies/index', 'policies/$policyHandle'],
+  products: 'products*',
+  collections: 'collections*',
+  policies: 'policies*',
+  blogs: 'blogs*',
+  account: 'account*',
+  search: ['search', 'api.predictive-search'],
   robots: '[robots.txt]',
   sitemap: '[sitemap.xml]',
-  account: ['account/login', 'account/register'],
 };
+
+type RouteKey = keyof typeof ROUTE_MAP;
+
+let allRouteTemplateFiles: string[] = [];
+export async function getResolvedRoutes(
+  routeKeys = Object.keys(ROUTE_MAP) as RouteKey[],
+) {
+  if (allRouteTemplateFiles.length === 0) {
+    allRouteTemplateFiles = (
+      await readdir(getTemplateAppFile(GENERATOR_ROUTE_DIR))
+    ).map((item) => item.replace(/\.tsx?$/, ''));
+  }
+
+  const routeGroups: Record<string, string[]> = {};
+  const resolvedRouteFiles: string[] = [];
+
+  for (const key of routeKeys) {
+    routeGroups[key] = [];
+
+    const value = ROUTE_MAP[key];
+
+    if (!value) {
+      throw new AbortError(
+        `No route found for ${key}. Try one of ${ALL_ROUTE_CHOICES.join()}.`,
+      );
+    }
+
+    const routes = Array.isArray(value) ? value : [value];
+
+    for (const route of routes) {
+      const routePrefix = route.replace('*', '');
+
+      routeGroups[key]!.push(
+        ...allRouteTemplateFiles.filter((file) => file.startsWith(routePrefix)),
+      );
+    }
+
+    resolvedRouteFiles.push(...routeGroups[key]!);
+  }
+
+  return {routeGroups, resolvedRouteFiles};
+}
 
 export const ALL_ROUTE_CHOICES = [...Object.keys(ROUTE_MAP), 'all'];
 
-type GenerateMultipleRoutesResult = {
+type GenerateRoutesResult = {
   sourceRoute: string;
   destinationRoute: string;
   operation: 'created' | 'skipped' | 'replaced';
 };
 
-type GenerateMultipleRoutesOptions = Omit<
-  GenerateRouteOptions,
+type GenerateRoutesOptions = Omit<
+  GenerateProjectFileOptions,
   'localePrefix'
 > & {
   routeName: string | string[];
   directory: string;
-  localePrefix?: GenerateRouteOptions['localePrefix'] | false;
+  localePrefix?: GenerateProjectFileOptions['localePrefix'] | false;
 };
 
-export async function generateMultipleRoutes(
-  options: GenerateMultipleRoutesOptions,
-) {
-  const routePath =
+export async function generateRoutes(options: GenerateRoutesOptions) {
+  const {routeGroups, resolvedRouteFiles} =
     options.routeName === 'all'
-      ? Object.values(ROUTE_MAP).flat()
-      : typeof options.routeName === 'string'
-      ? ROUTE_MAP[options.routeName as keyof typeof ROUTE_MAP]
-      : options.routeName
-          .flatMap(
-            (item: keyof typeof ROUTE_MAP) =>
-              ROUTE_MAP[item as keyof typeof ROUTE_MAP] as string | string[],
-          )
-          .filter(Boolean);
-
-  if (!routePath) {
-    throw new AbortError(
-      `No route found for ${
-        options.routeName
-      }. Try one of ${ALL_ROUTE_CHOICES.join()}.`,
-    );
-  }
+      ? await getResolvedRoutes()
+      : await getResolvedRoutes([options.routeName as RouteKey]);
 
   const {rootDirectory, appDirectory, future, tsconfigPath} =
     await getRemixConfig(options.directory);
 
-  const routesArray = Array.isArray(routePath) ? routePath : [routePath];
+  const routesArray = resolvedRouteFiles.flatMap(
+    (item) => GENERATOR_ROUTE_DIR + '/' + item,
+  );
+
   const v2Flags = await getV2Flags(rootDirectory, future);
   const formatOptions = await getCodeFormatOptions(rootDirectory);
-  const localePrefix = await getLocalePrefix(appDirectory, options);
+  const localePrefix = await getLocalePrefix(
+    appDirectory,
+    options,
+    v2Flags.isV2RouteConvention,
+  );
   const typescript = options.typescript ?? !!tsconfigPath;
   const transpilerOptions = typescript
     ? undefined
     : await getJsTranspilerOptions(rootDirectory);
 
-  const routes: GenerateMultipleRoutesResult[] = [];
+  const routes: GenerateRoutesResult[] = [];
   for (const route of routesArray) {
     routes.push(
-      await generateRoute(route, {
+      await generateProjectFile(route, {
         ...options,
         typescript,
         localePrefix,
@@ -104,6 +158,7 @@ export async function generateMultipleRoutes(
 
   return {
     routes,
+    routeGroups,
     isTypescript: typescript,
     transpilerOptions,
     v2Flags,
@@ -111,7 +166,7 @@ export async function generateMultipleRoutes(
   };
 }
 
-type GenerateRouteOptions = {
+type GenerateProjectFileOptions = {
   typescript?: boolean;
   force?: boolean;
   adapter?: string;
@@ -120,9 +175,15 @@ type GenerateRouteOptions = {
   signal?: AbortSignal;
 };
 
+/**
+ * Find the '($locale)' prefix from the routes directory.
+ * In V1, we check for the existence of a directory named `($...)`.
+ * In V2, we check the home route for the presence of `($...)._index` in the filename.
+ */
 async function getLocalePrefix(
   appDirectory: string,
-  {localePrefix, routeName}: GenerateMultipleRoutesOptions,
+  {localePrefix, routeName}: GenerateRoutesOptions,
+  isV2RouteConvention = true,
 ) {
   if (localePrefix) return localePrefix;
   if (localePrefix !== undefined || routeName === 'all') return;
@@ -131,7 +192,10 @@ async function getLocalePrefix(
     () => [],
   );
 
-  const homeRouteWithLocaleRE = /^\(\$(\w+)\)\._index.[jt]sx?$/;
+  const homeRouteWithLocaleRE = isV2RouteConvention
+    ? /^\(\$(\w+)\)\._index.[jt]sx?$/
+    : /^\(\$(\w+)\)$/;
+
   const homeRouteWithLocale = existingFiles.find((file) =>
     homeRouteWithLocaleRE.test(file),
   );
@@ -141,7 +205,11 @@ async function getLocalePrefix(
   }
 }
 
-export async function generateRoute(
+/**
+ * Copies a template file to the destination directory, including
+ * all its dependencies (imported files).
+ */
+export async function generateProjectFile(
   routeFrom: string,
   {
     rootDirectory,
@@ -149,41 +217,45 @@ export async function generateRoute(
     typescript,
     force,
     adapter,
-    templatesRoot,
+    templatesRoot = getStarterDir(),
     transpilerOptions,
     formatOptions,
     localePrefix,
     v2Flags = {},
     signal,
-  }: GenerateRouteOptions & {
+  }: GenerateProjectFileOptions & {
     rootDirectory: string;
     appDirectory: string;
     transpilerOptions?: TranspilerOptions;
     formatOptions?: FormatOptions;
     v2Flags?: RemixV2Flags;
   },
-): Promise<GenerateMultipleRoutesResult> {
-  const filePrefix =
-    localePrefix && !/\.(txt|xml)/.test(routeFrom)
-      ? `($${localePrefix})` + (v2Flags.isV2RouteConvention ? '.' : '/')
-      : '';
+): Promise<GenerateRoutesResult> {
+  const extension = (routeFrom.match(/(\.[jt]sx?)$/) ?? [])[1] ?? '.tsx';
+  routeFrom = routeFrom.replace(extension, '');
 
-  const templatePath = getRouteFile(routeFrom, templatesRoot);
-  const destinationPath = joinPath(
-    appDirectory,
-    'routes',
-    filePrefix +
-      (v2Flags.isV2RouteConvention ? convertRouteToV2(routeFrom) : routeFrom) +
-      `.${typescript ? 'tsx' : 'jsx'}`,
+  const routeTemplatePath = getTemplateAppFile(
+    routeFrom + extension,
+    templatesRoot,
+  );
+  const allFilesToGenerate = await findRouteDependencies(
+    routeTemplatePath,
+    getTemplateAppFile('', templatesRoot),
   );
 
-  const result: GenerateMultipleRoutesResult = {
+  const routeDestinationPath = joinPath(
+    appDirectory,
+    getDestinationRoute(routeFrom, localePrefix, v2Flags) +
+      (typescript ? extension : extension.replace('.ts', '.js')),
+  );
+
+  const result: GenerateRoutesResult = {
     operation: 'created',
     sourceRoute: routeFrom,
-    destinationRoute: relativizePath(destinationPath, rootDirectory),
+    destinationRoute: relativizePath(routeDestinationPath, rootDirectory),
   };
 
-  if (!force && (await fileExists(destinationPath))) {
+  if (!force && (await fileExists(routeDestinationPath))) {
     const shouldOverwrite = await renderConfirmationPrompt({
       message: `The file ${result.destinationRoute} already exists. Do you want to replace it?`,
       defaultValue: false,
@@ -197,39 +269,138 @@ export async function generateRoute(
     result.operation = 'replaced';
   }
 
-  let templateContent = convertTemplateToRemixVersion(
-    await readFile(templatePath),
-    v2Flags,
-  );
+  for (const filePath of allFilesToGenerate) {
+    const isRoute = filePath.startsWith(GENERATOR_ROUTE_DIR + '/');
+    const destinationPath = isRoute
+      ? routeDestinationPath
+      : joinPath(
+          appDirectory,
+          filePath.replace(/\.ts(x?)$/, `.${typescript ? 'ts$1' : 'js$1'}`),
+        );
 
-  // If the project is not using TS, we need to compile the template to JS.
-  if (!typescript) {
-    templateContent = transpileFile(templateContent, transpilerOptions);
-  }
+    // Create the directory if it doesn't exist.
+    if (!(await fileExists(dirname(destinationPath)))) {
+      await mkdir(dirname(destinationPath));
+    }
 
-  // If the command was run with an adapter flag, we replace the default
-  // import with the adapter that was passed.
-  if (adapter) {
-    templateContent = templateContent.replace(
-      /@shopify\/remix-oxygen/g,
-      adapter,
+    if (!/\.[jt]sx?$/.test(filePath)) {
+      // Nothing to transform for non-JS files.
+      await copyFile(
+        getTemplateAppFile(filePath, templatesRoot),
+        destinationPath,
+      );
+      continue;
+    }
+
+    let templateContent = convertTemplateToRemixVersion(
+      await readFile(getTemplateAppFile(filePath, templatesRoot)),
+      v2Flags,
     );
+
+    // If the project is not using TS, we need to compile the template to JS.
+    if (!typescript) {
+      templateContent = await transpileFile(templateContent, transpilerOptions);
+    }
+
+    // If the command was run with an adapter flag, we replace the default
+    // import with the adapter that was passed.
+    if (adapter) {
+      templateContent = templateContent.replace(
+        /@shopify\/remix-oxygen/g,
+        adapter,
+      );
+    }
+
+    // We format the template content with Prettier.
+    // TODO use @shopify/cli-kit's format function once it supports TypeScript
+    // templateContent = await file.format(templateContent, destinationPath);
+    templateContent = await formatCode(
+      templateContent,
+      formatOptions,
+      destinationPath,
+    );
+
+    // Write the final file to the user's project.
+    await writeFile(destinationPath, templateContent);
   }
-
-  // We format the template content with Prettier.
-  // TODO use @shopify/cli-kit's format function once it supports TypeScript
-  // templateContent = await file.format(templateContent, destinationPath);
-  templateContent = formatCode(templateContent, formatOptions, destinationPath);
-
-  // Create the directory if it doesn't exist.
-  if (!(await fileExists(dirname(destinationPath)))) {
-    await mkdir(dirname(destinationPath));
-  }
-
-  // Write the final file to the user's project.
-  await writeFile(destinationPath, templateContent);
 
   return result;
+}
+
+/**
+ * Find the destination path for a route file in the user project.
+ */
+function getDestinationRoute(
+  routeFrom: string,
+  localePrefix: string | undefined,
+  v2Flags: RemixV2Flags,
+) {
+  const routePath = routeFrom.replace(GENERATOR_ROUTE_DIR + '/', '');
+  const filePrefix =
+    localePrefix &&
+    !NO_LOCALE_PATTERNS.some((pattern) => pattern.test(routePath))
+      ? `($${localePrefix})` + (v2Flags.isV2RouteConvention ? '.' : '/')
+      : '';
+
+  return (
+    GENERATOR_ROUTE_DIR +
+    '/' +
+    filePrefix +
+    // The template file uses the v2 route convention, so we need to convert
+    // it to v1 if the user is not using v2.
+    (v2Flags.isV2RouteConvention ? routePath : convertRouteToV1(routePath))
+  );
+}
+
+/**
+ * Find all local files imported by a route file iteratively.
+ */
+async function findRouteDependencies(
+  routeFilePath: string,
+  appDirectory: string,
+) {
+  const filesToCheck = new Set([routeFilePath]);
+  const fileDependencies = new Set([relativePath(appDirectory, routeFilePath)]);
+
+  for (const filePath of filesToCheck) {
+    // Find all imports and exports in the file
+    const importMatches = (
+      await readFile(filePath, {encoding: 'utf8'})
+    ).matchAll(/^(import|export)\s+.*?\s+from\s+['"](.*?)['"];?$/gims);
+
+    for (let [, , match] of importMatches) {
+      // Skip imports that are not relative (local)
+      if (!match || !/^(\.|~)/.test(match)) continue;
+
+      // Resolve leading '~' to the app directory
+      match = match.replace(
+        '~', // import from '~/components/...'
+        relativePath(dirname(filePath), appDirectory) || '.',
+      );
+
+      // Resolve extensionless imports to their JS/TS extension
+      const resolvedMatchPath = resolvePath(dirname(filePath), match);
+      const absoluteFilepath =
+        (
+          await findFileWithExtension(
+            dirname(resolvedMatchPath),
+            basename(resolvedMatchPath),
+          )
+        ).filepath || resolvedMatchPath;
+
+      // Skip imports from other routes because these files
+      // will be copied over directly by the generator
+      if (!absoluteFilepath.includes(`/${GENERATOR_ROUTE_DIR}/`)) {
+        fileDependencies.add(relativePath(appDirectory, absoluteFilepath));
+        if (/\.[jt]sx?$/.test(absoluteFilepath)) {
+          // Check for dependencies in the imported file if it's a TS/JS file
+          filesToCheck.add(absoluteFilepath);
+        }
+      }
+    }
+  }
+
+  return [...fileDependencies];
 }
 
 async function getJsTranspilerOptions(rootDirectory: string) {
@@ -245,6 +416,7 @@ async function getJsTranspilerOptions(rootDirectory: string) {
 }
 
 export async function renderRoutePrompt(options?: {abortSignal: AbortSignal}) {
+  // TODO this should be a multi-select prompt
   const generateAll = await renderConfirmationPrompt({
     message:
       'Scaffold all standard route files? ' + Object.keys(ROUTE_MAP).join(', '),

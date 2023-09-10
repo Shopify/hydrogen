@@ -1,7 +1,7 @@
 import {describe, it, expect, vi, beforeEach, afterEach} from 'vitest';
 import {mockAndCaptureOutput} from '@shopify/cli-kit/node/testing/output';
 import {runGenerate} from './route.js';
-import {generateMultipleRoutes} from '../../../lib/setups/routes/generate.js';
+import {generateRoutes} from '../../../lib/setups/routes/generate.js';
 
 describe('runGenerate', () => {
   const outputMock = mockAndCaptureOutput();
@@ -17,11 +17,12 @@ describe('runGenerate', () => {
   });
 
   it('calls route generation and renders the result', async () => {
-    vi.mocked(generateMultipleRoutes).mockResolvedValue({
+    vi.mocked(generateRoutes).mockResolvedValue({
       isTypescript: true,
       transpilerOptions: {} as any,
       formatOptions: {} as any,
       v2Flags: {} as any,
+      routeGroups: {},
       routes: [
         {sourceRoute: '', destinationRoute: '/cart', operation: 'created'},
         {sourceRoute: '', destinationRoute: '/about', operation: 'skipped'},
@@ -41,7 +42,7 @@ describe('runGenerate', () => {
 
     await runGenerate(options);
 
-    expect(generateMultipleRoutes).toHaveBeenCalledWith(options);
+    expect(generateRoutes).toHaveBeenCalledWith(options);
 
     expect(outputMock.info()).toMatch(/2 of 3 routes/i);
   });

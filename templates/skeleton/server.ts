@@ -1,6 +1,12 @@
 // Virtual entry point for the app
 import * as remixBuild from '@remix-run/dev/server-build';
-import {createStorefrontClient, storefrontRedirect} from '@shopify/hydrogen';
+import {
+  cartGetIdDefault,
+  cartSetIdDefault,
+  createCartHandler,
+  createStorefrontClient,
+  storefrontRedirect,
+} from '@shopify/hydrogen';
 import {
   createRequestHandler,
   getStorefrontHeaders,
@@ -46,6 +52,17 @@ export default {
         storefrontHeaders: getStorefrontHeaders(request),
       });
 
+      /*
+       * Create a cart handler that will be used to
+       * create and update the cart in the session.
+       */
+      const cart = createCartHandler({
+        storefront,
+        getCartId: cartGetIdDefault(request.headers),
+        setCartId: cartSetIdDefault(),
+        cartQueryFragment: CART_QUERY_FRAGMENT,
+      });
+
       /**
        * Create a Remix request handler and pass
        * Hydrogen's Storefront client to the loader context.
@@ -53,7 +70,7 @@ export default {
       const handleRequest = createRequestHandler({
         build: remixBuild,
         mode: process.env.NODE_ENV,
-        getLoadContext: () => ({session, storefront, env}),
+        getLoadContext: () => ({session, storefront, env, cart}),
       });
 
       const response = await handleRequest(request);
@@ -131,3 +148,106 @@ export class HydrogenSession {
     return this.sessionStorage.commitSession(this.session);
   }
 }
+
+// NOTE: https://shopify.dev/docs/api/storefront/latest/queries/cart
+const CART_QUERY_FRAGMENT = `#graphql
+  fragment Money on MoneyV2 {
+    currencyCode
+    amount
+  }
+  fragment CartLine on CartLine {
+    id
+    quantity
+    attributes {
+      key
+      value
+    }
+    cost {
+      totalAmount {
+        ...Money
+      }
+      amountPerQuantity {
+        ...Money
+      }
+      compareAtAmountPerQuantity {
+        ...Money
+      }
+    }
+    merchandise {
+      ... on ProductVariant {
+        id
+        availableForSale
+        compareAtPrice {
+          ...Money
+        }
+        price {
+          ...Money
+        }
+        requiresShipping
+        title
+        image {
+          id
+          url
+          altText
+          width
+          height
+
+        }
+        product {
+          handle
+          title
+          id
+        }
+        selectedOptions {
+          name
+          value
+        }
+      }
+    }
+  }
+  fragment CartApiQuery on Cart {
+    id
+    checkoutUrl
+    totalQuantity
+    buyerIdentity {
+      countryCode
+      customer {
+        id
+        email
+        firstName
+        lastName
+        displayName
+      }
+      email
+      phone
+    }
+    lines(first: $numCartLines) {
+      nodes {
+        ...CartLine
+      }
+    }
+    cost {
+      subtotalAmount {
+        ...Money
+      }
+      totalAmount {
+        ...Money
+      }
+      totalDutyAmount {
+        ...Money
+      }
+      totalTaxAmount {
+        ...Money
+      }
+    }
+    note
+    attributes {
+      key
+      value
+    }
+    discountCodes {
+      code
+      applicable
+    }
+  }
+` as const;
