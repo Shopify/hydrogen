@@ -56,6 +56,7 @@ export default class Init extends Command {
       description: 'Generate routes for all pages.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
       hidden: true,
+      allowNo: true,
     }),
     git: Flags.boolean({
       description: 'Init Git and create initial commits.',
