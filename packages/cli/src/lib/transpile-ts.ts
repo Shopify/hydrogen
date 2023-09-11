@@ -11,7 +11,7 @@ const restoreNewLines = (code: string) =>
 
 export type TranspilerOptions = Omit<CompilerOptions, 'target'>;
 
-const DEFAULT_TS_CONFIG: TranspilerOptions = {
+export const DEFAULT_TS_CONFIG: TranspilerOptions = {
   lib: ['DOM', 'DOM.Iterable', 'ES2022'],
   isolatedModules: true,
   esModuleInterop: true,
