@@ -119,11 +119,14 @@ export async function handleRouteGeneration(
   flagRoutes?: boolean,
 ) {
   // TODO: Need a multi-select UI component
-  const routesToScaffold = flagRoutes
-    ? 'all'
-    : await renderRoutePrompt({
-        abortSignal: controller.signal,
-      });
+  const routesToScaffold =
+    flagRoutes === true
+      ? 'all'
+      : flagRoutes === false
+      ? []
+      : await renderRoutePrompt({
+          abortSignal: controller.signal,
+        });
 
   const needsRouteGeneration =
     routesToScaffold === 'all' || routesToScaffold.length > 0;
