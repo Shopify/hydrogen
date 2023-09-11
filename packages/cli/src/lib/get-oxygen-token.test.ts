@@ -63,7 +63,18 @@ describe('getOxygenDeploymentToken', () => {
 
   describe('when there is no linked storefront', () => {
     beforeEach(() => {
-      vi.mocked(getConfig).mockResolvedValue({storefront: undefined});
+      vi.mocked(login).mockResolvedValue({
+        session: {
+          token: '123',
+          storeFqdn: 'www.snowdevil.com',
+        },
+        config: {
+          shop: 'snowdevil.myshopify.com',
+          shopName: 'Snowdevil',
+          email: 'merchant@shop.com',
+          storefront: undefined,
+        },
+      });
     });
 
     it('calls renderMissingLink and prompts the user to create a link', async () => {

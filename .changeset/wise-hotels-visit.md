@@ -2,4 +2,4 @@
 '@shopify/cli-hydrogen': minor
 ---
 
-Add deploy command
+Add deploy command (disabled by default)

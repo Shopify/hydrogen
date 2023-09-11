@@ -1,7 +1,7 @@
 import {readdir} from 'node:fs/promises';
 import {
   installNodeModules,
-  packageManagerUsedForCreating,
+  packageManagerFromUserAgent,
   type PackageManager,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {
@@ -417,7 +417,7 @@ export async function handleDependencies(
   controller: AbortController,
   shouldInstallDeps?: boolean,
 ) {
-  const detectedPackageManager = await packageManagerUsedForCreating();
+  const detectedPackageManager = packageManagerFromUserAgent();
   let actualPackageManager: PackageManager = 'npm';
 
   if (shouldInstallDeps !== false) {

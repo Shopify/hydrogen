@@ -69,7 +69,6 @@ export async function login(root?: string, shop?: string | true) {
     });
 
     const userAccount = await getUserAccount(token);
-
     await hideLoginInfo();
 
     const preselected =

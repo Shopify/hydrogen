@@ -125,9 +125,9 @@ export async function oxygenDeploy(
     deploymentToken: parseToken(token as string),
     healthCheckMaxDuration: 180,
     metadata: {
-      url: metadataUrl,
-      user: metadataUser,
-      version: metadataVersion,
+      ...(metadataUrl ? {url: metadataUrl} : {}),
+      ...(metadataUser ? {user: metadataUser} : {}),
+      ...(metadataVersion ? {version: metadataVersion} : {}),
     },
     publicDeployment: publicDeployment,
     skipHealthCheck: false,

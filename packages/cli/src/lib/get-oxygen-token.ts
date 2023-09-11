@@ -1,15 +1,9 @@
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {
-  outputContent,
-  outputInfo,
-  outputToken,
-  outputWarn,
-} from '@shopify/cli-kit/node/output';
+import {outputWarn} from '@shopify/cli-kit/node/output';
 
 import {linkStorefront} from '../commands/hydrogen/link.js';
 import {login} from './auth.js';
 import {getCliCommand} from './shell.js';
-import {getConfig} from './shopify-config.js';
 import {renderMissingLink, renderMissingStorefront} from './render-errors.js';
 import {getOxygenToken} from './graphql/admin/oxygen-token.js';
 
@@ -29,9 +23,9 @@ export async function getOxygenDeploymentToken({
     login(root),
     getCliCommand(),
   ]);
-  let configStorefront = (await getConfig(root)).storefront;
-
-  if (!configStorefront?.id) {
+  console.log(config);
+  if (!config.storefront?.id) {
+    console.log('no storefront id');
     renderMissingLink({session, cliCommand});
 
     const runLink = await renderConfirmationPrompt({
@@ -47,18 +41,16 @@ export async function getOxygenDeploymentToken({
     });
   }
 
-  configStorefront = (await getConfig(root)).storefront;
-
-  if (!configStorefront) {
+  if (!config.storefront) {
     return;
   }
 
-  const {storefront} = await getOxygenToken(session, configStorefront.id);
+  const {storefront} = await getOxygenToken(session, config.storefront.id);
 
   if (!storefront) {
     renderMissingStorefront({
       session,
-      storefront: configStorefront,
+      storefront: config.storefront,
       cliCommand,
     });
 
