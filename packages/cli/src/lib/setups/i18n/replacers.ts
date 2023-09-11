@@ -1,5 +1,5 @@
 import {AbortError} from '@shopify/cli-kit/node/error';
-import {joinPath, relativePath} from '@shopify/cli-kit/node/path';
+import {joinPath} from '@shopify/cli-kit/node/path';
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import type {FormatOptions} from '../../format-code.js';
@@ -150,37 +150,11 @@ export async function replaceServerI18n(
         content.slice(end.index - 1);
     }
 
-    const importTypes = localeExtractImplementation.match(
-      /import\s+type\s+[^;]+?;/,
-    )?.[0];
-
-    if (importTypes) {
-      localeExtractImplementation = localeExtractImplementation.replace(
-        importTypes,
-        '',
-      );
-
-      const lastImportNode = root
-        .findAll({rule: {kind: 'import_statement'}})
-        .pop();
-
-      if (lastImportNode) {
-        const lastImportContent = lastImportNode.text();
-        content = content.replace(
-          lastImportContent,
-          lastImportContent +
-            '\n' +
-            importTypes.replace(
-              /'[^']+'/,
-              `'@shopify/hydrogen/storefront-api-types'`,
-            ),
-        );
-      }
-    }
-
     return (
       content +
       `\n\n${localeExtractImplementation
+        .replace(/import\s+type\s+[^;]+?;/, '')
+        .replace(/^export type .+?};\n/ms, '')
         .replace(/^export function/m, 'function')
         .replace(/^export {.*?;/m, '')}\n`
     );
@@ -191,7 +165,7 @@ export async function replaceServerI18n(
  * Adds I18nLocale import and pass it to Storefront<I18nLocale> type as generic in `remix.env.d.ts`
  */
 export async function replaceRemixEnv(
-  {rootDirectory, serverEntryPoint}: I18nSetupConfig,
+  {rootDirectory}: I18nSetupConfig,
   formatConfig: FormatOptions,
   localeExtractImplementation: string,
 ) {
@@ -201,8 +175,12 @@ export async function replaceRemixEnv(
     return; // Skip silently
   }
 
-  const i18nTypeName =
-    localeExtractImplementation.match(/export type (\w+)/)?.[1];
+  // E.g. `type I18nLocale = {...};`
+  const i18nType = localeExtractImplementation.match(
+    /^(export )?(type \w+ =\s+\{.*?\};)\n/ms,
+  )?.[2];
+  // E.g. `I18nLocale`
+  const i18nTypeName = i18nType?.match(/^type (\w+)/)?.[1];
 
   if (!i18nTypeName) {
     // JavaScript project
@@ -210,22 +188,15 @@ export async function replaceRemixEnv(
     // TODO: support d.ts files in JS
   }
 
-  const {filepath: entryFilepath} = await findEntryFile({
-    rootDirectory,
-    serverEntryPoint,
-  });
-
-  const relativePathToEntry = relativePath(
-    rootDirectory,
-    entryFilepath,
-  ).replace(/.[tj]sx?$/, '');
-
   await replaceFileContent(remixEnvPath, formatConfig, async (content) => {
     if (content.includes(`Storefront<`)) return; // Already set up
 
     const astGrep = await importLangAstGrep('ts');
     const root = astGrep.parse(content).root();
 
+    // -- Replace content in reversed order (bottom => top) to avoid changing string indexes
+
+    // 1. Change `Storefront` to `Storefront<I18nLocale>`
     const storefrontTypeNode = root.find({
       rule: {
         kind: 'property_signature',
@@ -243,52 +214,71 @@ export async function replaceRemixEnv(
       },
     });
 
-    if (!storefrontTypeNode) {
-      return; // Skip silently
+    if (storefrontTypeNode) {
+      const storefrontTypeNodeRange = storefrontTypeNode.range();
+      content =
+        content.slice(0, storefrontTypeNodeRange.end.index) +
+        `<${i18nTypeName}>` +
+        content.slice(storefrontTypeNodeRange.end.index);
     }
 
-    // Replace this first to avoid changing indexes in code below
-    const {end} = storefrontTypeNode.range();
-    content =
-      content.slice(0, end.index) +
-      `<${i18nTypeName}>` +
-      content.slice(end.index);
-
-    const serverImportNode = root
-      .findAll({
-        rule: {
-          kind: 'import_statement',
-          has: {
-            kind: 'string_fragment',
-            stopBy: 'end',
-            regex: `^(\\./)?${relativePathToEntry.replaceAll(
-              '.',
-              '\\.',
-            )}(\\.[jt]sx?)?$`,
-          },
+    // 2. Build the global I18nLocale type
+    const ambientDeclarationContentNode = root.find({
+      rule: {
+        kind: 'statement_block',
+        inside: {
+          kind: 'ambient_declaration',
         },
-      })
-      .pop();
+      },
+    });
 
-    if (serverImportNode) {
-      content = content.replace(
-        serverImportNode.text(),
-        serverImportNode.text().replace('{', `{${i18nTypeName},`),
-      );
+    const i18nTypeDeclaration = `
+    /**
+     * The I18nLocale used for Storefront API query context.
+     */
+    ${i18nType}`;
+
+    if (ambientDeclarationContentNode) {
+      const {end} = ambientDeclarationContentNode.range();
+      content =
+        content.slice(0, end.index - 1) +
+        `\n\n${i18nTypeDeclaration}\n` +
+        content.slice(end.index - 1);
     } else {
-      const lastImportNode =
+      content = content + `\n\ndeclare global {\n${i18nTypeDeclaration}\n}`;
+    }
+
+    // 3. Import the required types
+    const importImplTypes = localeExtractImplementation.match(
+      /import\s+type\s+[^;]+?;/,
+    )?.[0];
+
+    if (importImplTypes) {
+      const importPlace =
+        root
+          .findAll({
+            rule: {
+              kind: 'import_statement',
+              has: {
+                kind: 'string_fragment',
+                stopBy: 'end',
+                regex: `^@shopify\/hydrogen$`,
+              },
+            },
+          })
+          .pop() ??
         root.findAll({rule: {kind: 'import_statement'}}).pop() ??
         root.findAll({rule: {kind: 'comment', regex: '^/// <reference'}}).pop();
 
-      const {end} = lastImportNode?.range() ?? {end: {index: 0}};
-
-      const typeImport = `\nimport type {${i18nTypeName}} from './${serverEntryPoint!.replace(
-        /\.[jt]s$/,
-        '',
-      )}';`;
+      const importPlaceRange = importPlace?.range() ?? {end: {index: 0}};
 
       content =
-        content.slice(0, end.index) + typeImport + content.slice(end.index);
+        content.slice(0, importPlaceRange.end.index) +
+        importImplTypes.replace(
+          /'[^']+'/,
+          `'@shopify/hydrogen/storefront-api-types'`,
+        ) +
+        content.slice(importPlaceRange.end.index);
     }
 
     return content;
