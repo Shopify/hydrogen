@@ -9,7 +9,7 @@ function getLocaleFromRequest(request: Request): I18nLocale {
     FR: 'FR',
     DE: 'DE',
     JP: 'JA',
-  } as Record<CountryCode, LanguageCode>;
+  } as Record<I18nLocale['country'], I18nLocale['language']>;
 
   const url = new URL(request.url);
   const domain = url.hostname
