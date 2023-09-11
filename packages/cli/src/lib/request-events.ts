@@ -1,6 +1,7 @@
 import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
 import {Request, Response} from '@shopify/mini-oxygen';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
 
 type EventData = {
   id: string;
@@ -55,6 +56,18 @@ export async function logRequestEvent(request: Request): Promise<Response> {
       decodeURIComponent(request.url)
         .match(/(query|mutation)\s+(\w+)/)?.[0]
         ?.replace(/\s+/, ' ') || request.url;
+  } else {
+    if (pendingWaterfallChecks.has(data.id)) {
+      clearTimeout(pendingWaterfallChecks.get(data.id)!);
+    }
+
+    pendingWaterfallChecks.set(
+      data.id,
+      setTimeout(() => {
+        pendingWaterfallChecks.delete(data.id);
+        checkForWaterfalls(data.id);
+      }, 2000),
+    );
   }
 
   const event = {
@@ -108,5 +121,48 @@ export function streamRequestEvents(request: Request) {
       'Cache-Control': 'no-store',
       Connection: 'keep-alive',
     },
+  });
+}
+
+const pendingWaterfallChecks = new Map<string, NodeJS.Timeout>();
+
+function checkForWaterfalls(id: string) {
+  let parentRequest: EventData | undefined;
+  const subRequests: EventData[] = [];
+
+  for (const event of eventHistory) {
+    if (event.data.includes(`"${id}"`)) {
+      const data: EventData = JSON.parse(event.data);
+      if (event.event === EVENT_MAP['request']) parentRequest = data;
+      else if (data.cacheStatus === 'MISS') subRequests.push(data);
+    }
+  }
+
+  const waterfalls = subRequests.filter((subRequest) => {
+    return subRequests.some(
+      (item) => Number(item.endTime) < Number(subRequest.startTime),
+    );
+  });
+
+  if (!parentRequest || waterfalls.length === 0) return;
+
+  console.log('');
+  renderWarning({
+    headline: `Possible waterfall request detected.\nRequest ID ${id}`,
+    body: [
+      `During the rendering of`,
+      {command: parentRequest.url},
+      `, the following subrequests started after some others had already finished:\n`,
+      {list: {items: waterfalls.map((item) => item.url)}},
+      `\nIf this is intended, please ignore this warning. Otherwise, you may want to consider batching these requests together.`,
+      `\nSee the`,
+      {
+        link: {
+          label: 'Debug Network view',
+          url: 'http://localhost:3000/debug-network',
+        },
+      },
+      `for further debugging.`,
+    ],
   });
 }
