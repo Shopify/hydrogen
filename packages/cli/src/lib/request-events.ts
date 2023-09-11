@@ -2,6 +2,14 @@ import {EventEmitter} from 'node:events';
 import {ReadableStream} from 'node:stream/web';
 import {Request, Response} from '@shopify/mini-oxygen';
 
+type EventData = {
+  id: string;
+  startTime: string;
+  endTime: string;
+  url: string;
+  cacheStatus: string | null;
+};
+
 type RequestEvent = {
   event: string;
   data: string;
@@ -54,7 +62,7 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     data: JSON.stringify({
       ...data,
       url: `${purpose} ${description}`.trim(),
-    }),
+    } satisfies EventData),
   };
 
   if (eventHistory.length > 100) eventHistory.shift();
