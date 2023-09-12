@@ -72,18 +72,21 @@ const JS_CONFIG_KEYS = [
   ...Object.keys(DEFAULT_JS_CONFIG),
 ];
 
-export function convertConfigToJS(tsConfig: {
-  include?: string[];
-  compilerOptions?: CompilerOptions;
-}) {
+export function convertConfigToJS(
+  tsConfig: {
+    include?: string[];
+    compilerOptions?: CompilerOptions;
+  },
+  keepTypes = false,
+) {
   const jsConfig = {
     compilerOptions: {...DEFAULT_JS_CONFIG},
   } as typeof tsConfig;
 
   if (tsConfig.include) {
     jsConfig.include = tsConfig.include
-      .filter((s) => !s.endsWith('.d.ts'))
-      .map((s) => s.replace(/\.ts(x?)$/, '.js$1'));
+      .filter((s) => keepTypes || !s.endsWith('.d.ts'))
+      .map((s) => s.replace(/(?<!\.d)\.ts(x?)$/, '.js$1'));
   }
 
   if (tsConfig.compilerOptions) {
@@ -97,7 +100,7 @@ export function convertConfigToJS(tsConfig: {
   return jsConfig;
 }
 
-export async function transpileProject(projectDir: string) {
+export async function transpileProject(projectDir: string, keepTypes = false) {
   const entries = await glob('**/*.+(ts|tsx)', {
     absolute: true,
     cwd: projectDir,
@@ -107,7 +110,8 @@ export async function transpileProject(projectDir: string) {
 
   for (const entry of entries) {
     if (entry.endsWith('.d.ts')) {
-      await removeFile(entry);
+      if (!keepTypes) await removeFile(entry);
+
       continue;
     }
 
@@ -139,6 +143,7 @@ export async function transpileProject(projectDir: string) {
     const tsConfigWithComments = await readFile(tsConfigPath);
     const jsConfig = convertConfigToJS(
       JSON.parse(tsConfigWithComments.replace(/^\s*\/\/.*$/gm, '')),
+      keepTypes,
     );
 
     await removeFile(tsConfigPath);
@@ -159,21 +164,23 @@ export async function transpileProject(projectDir: string) {
     );
 
     delete pkgJson.scripts['typecheck'];
-    delete pkgJson.devDependencies['typescript'];
-    delete pkgJson.devDependencies['@shopify/oxygen-workers-types'];
+    if (!keepTypes) {
+      delete pkgJson.devDependencies['typescript'];
+      delete pkgJson.devDependencies['@shopify/oxygen-workers-types'];
 
-    for (const key of Object.keys(pkgJson.devDependencies)) {
-      if (key.startsWith('@types/')) {
-        delete pkgJson.devDependencies[key];
+      for (const key of Object.keys(pkgJson.devDependencies)) {
+        if (key.startsWith('@types/')) {
+          delete pkgJson.devDependencies[key];
+        }
       }
-    }
 
-    const codegenFlag = /\s*--codegen(-unstable)?/;
-    if (pkgJson.scripts?.dev) {
-      pkgJson.scripts.dev = pkgJson.scripts.dev.replace(codegenFlag, '');
-    }
-    if (pkgJson.scripts?.build) {
-      pkgJson.scripts.build = pkgJson.scripts.build.replace(codegenFlag, '');
+      const codegenFlag = /\s*--codegen(-unstable)?/;
+      if (pkgJson.scripts?.dev) {
+        pkgJson.scripts.dev = pkgJson.scripts.dev.replace(codegenFlag, '');
+      }
+      if (pkgJson.scripts?.build) {
+        pkgJson.scripts.build = pkgJson.scripts.build.replace(codegenFlag, '');
+      }
     }
 
     await writeFile(
