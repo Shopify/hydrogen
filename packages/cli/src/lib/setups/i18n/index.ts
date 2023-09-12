@@ -44,8 +44,12 @@ export async function setupI18nStrategy(
   const template = await readFile(templatePath);
   const formatConfig = await getCodeFormatOptions(options.rootDirectory);
 
+  const tsTypesImpl = isTs
+    ? template
+    : await readFile(templatePath.replace(/\.js$/, '.ts'));
+
   await replaceServerI18n(options, formatConfig, template);
-  await replaceRemixEnv(options, formatConfig, template);
+  await replaceRemixEnv(options, formatConfig, template, tsTypesImpl);
 }
 
 export async function renderI18nPrompt<

@@ -12,7 +12,7 @@ import {importLangAstGrep} from '../../ast.js';
 export async function replaceServerI18n(
   {rootDirectory, serverEntryPoint = 'server'}: I18nSetupConfig,
   formatConfig: FormatOptions,
-  localeExtractImplementation: string,
+  localeExtractImpl: string,
 ) {
   const {filepath, astType} = await findEntryFile({
     rootDirectory,
@@ -48,7 +48,7 @@ export async function replaceServerI18n(
     });
 
     const requestIdentifierName = requestIdentifier?.text() ?? 'request';
-    const i18nFunctionName = localeExtractImplementation.match(
+    const i18nFunctionName = localeExtractImpl.match(
       /^(export )?function (\w+)/m,
     )?.[2];
 
@@ -152,7 +152,7 @@ export async function replaceServerI18n(
 
     return (
       content +
-      `\n\n${localeExtractImplementation
+      `\n\n${localeExtractImpl
         .replace(/import\s+type\s+[^;]+?;/, '')
         .replace(/^export type .+?};\n/ms, '')
         .replace(/^export function/m, 'function')
@@ -167,7 +167,8 @@ export async function replaceServerI18n(
 export async function replaceRemixEnv(
   {rootDirectory}: I18nSetupConfig,
   formatConfig: FormatOptions,
-  localeExtractImplementation: string,
+  localeExtractImpl: string,
+  tsTypesImpl = localeExtractImpl,
 ) {
   const remixEnvPath = joinPath(rootDirectory, 'remix.env.d.ts');
 
@@ -176,7 +177,7 @@ export async function replaceRemixEnv(
   }
 
   // E.g. `type I18nLocale = {...};`
-  const i18nType = localeExtractImplementation.match(
+  const i18nType = tsTypesImpl.match(
     /^(export )?(type \w+ =\s+\{.*?\};)\n/ms,
   )?.[2];
   // E.g. `I18nLocale`
@@ -185,7 +186,6 @@ export async function replaceRemixEnv(
   if (!i18nTypeName) {
     // JavaScript project
     return; // Skip silently
-    // TODO: support d.ts files in JS
   }
 
   await replaceFileContent(remixEnvPath, formatConfig, async (content) => {
@@ -249,9 +249,7 @@ export async function replaceRemixEnv(
     }
 
     // 3. Import the required types
-    const importImplTypes = localeExtractImplementation.match(
-      /import\s+type\s+[^;]+?;/,
-    )?.[0];
+    const importImplTypes = tsTypesImpl.match(/import\s+type\s+[^;]+?;/)?.[0];
 
     if (importImplTypes) {
       const importPlace =
