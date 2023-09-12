@@ -14,7 +14,7 @@ const REQUIRED_ROUTES = [
   //   'collections/:collectionHandle/:constraint',
   //   'collections/:collectionHandle/products/:productHandle',
 
-  'sitemap.xml',
+  // 'sitemap.xml',
   'robots.txt',
 
   'pages/:pageHandle',

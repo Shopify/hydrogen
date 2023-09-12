@@ -3,7 +3,7 @@ import {type LoaderArgs} from '@shopify/remix-oxygen';
 export const loader = ({request}: LoaderArgs) => {
   const url = new URL(request.url);
 
-  return new Response(robotsTxtData({url: url.origin}), {
+  return new Response(robotsTxtData(), {
     status: 200,
     headers: {
       'content-type': 'text/plain',
@@ -13,9 +13,7 @@ export const loader = ({request}: LoaderArgs) => {
   });
 };
 
-function robotsTxtData({url}: {url: string}) {
-  const sitemapUrl = url ? `${url}/sitemap.xml` : undefined;
-
+function robotsTxtData() {
   return `
 User-agent: *
 Disallow: /admin
@@ -25,7 +23,6 @@ Disallow: /checkouts/
 Disallow: /checkout
 Disallow: /carts
 Disallow: /account
-${sitemapUrl ? `Sitemap: ${sitemapUrl}` : ''}
 
 # Google adsbot ignores robots.txt unless specifically named!
 User-agent: adsbot-google

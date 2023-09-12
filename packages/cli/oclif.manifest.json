@@ -580,7 +580,7 @@
       "args": {
         "routeName": {
           "name": "routeName",
-          "description": "The route to generate. One of home,page,cart,products,collections,policies,blogs,account,search,robots,sitemap,all.",
+          "description": "The route to generate. One of home,page,cart,products,collections,policies,blogs,account,search,robots,all.",
           "required": true,
           "options": [
             "home",
@@ -593,7 +593,6 @@
             "account",
             "search",
             "robots",
-            "sitemap",
             "all"
           ]
         }

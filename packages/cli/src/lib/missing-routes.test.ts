@@ -12,15 +12,6 @@ const createRoute = (path: string) => ({
 });
 
 describe('missing-routes', () => {
-  it('matches routes with dots', async () => {
-    const requiredRoutes = ['sitemap.xml'];
-
-    expect(findMissingRoutes({routes: {}}, requiredRoutes)).toHaveLength(1);
-    expect(
-      findMissingRoutes(createRoute('sitemap.xml'), requiredRoutes),
-    ).toHaveLength(0);
-  });
-
   it('matches routes with different parameter names', async () => {
     const requiredRoutes = ['collections/:collectionHandle'];
 

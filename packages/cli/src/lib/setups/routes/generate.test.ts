@@ -172,7 +172,6 @@ describe('generate/route', () => {
             ['routes/_index.tsx', routeCode],
             ['routes/pages.$handle.tsx', routeCode],
             ['routes/[robots.txt].tsx', routeCode],
-            ['routes/[sitemap.xml].tsx', routeCode],
           ],
         });
 
@@ -192,13 +191,6 @@ describe('generate/route', () => {
           typescript: true,
         });
 
-        await generateProjectFile('routes/[sitemap.xml]', {
-          ...directories,
-          v2Flags: {isV2RouteConvention: true},
-          localePrefix,
-          typescript: true,
-        });
-
         await generateProjectFile('routes/[robots.txt]', {
           ...directories,
           v2Flags: {isV2RouteConvention: true},
@@ -211,9 +203,6 @@ describe('generate/route', () => {
         // v2 locale:
         await expect(
           readProjectFile(directories, `routes/($locale)._index`),
-        ).resolves.toContain(routeCode);
-        await expect(
-          readProjectFile(directories, `routes/($locale).[sitemap.xml]`),
         ).resolves.toContain(routeCode);
 
         // No locale added for robots:

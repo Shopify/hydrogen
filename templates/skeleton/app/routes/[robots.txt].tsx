@@ -48,11 +48,9 @@ export function ErrorBoundary() {
 }
 
 function robotsTxtData({url, shopId}: {shopId?: string; url?: string}) {
-  const sitemapUrl = url ? `${url}/sitemap.xml` : undefined;
-
   return `
 User-agent: *
-${generalDisallowRules({sitemapUrl, shopId})}
+${generalDisallowRules({shopId})}
 
 # Google adsbot ignores robots.txt unless specifically named!
 User-agent: adsbot-google
@@ -71,11 +69,11 @@ Disallow: /
 
 User-agent: AhrefsBot
 Crawl-delay: 10
-${generalDisallowRules({sitemapUrl, shopId})}
+${generalDisallowRules({shopId})}
 
 User-agent: AhrefsSiteAudit
 Crawl-delay: 10
-${generalDisallowRules({sitemapUrl, shopId})}
+${generalDisallowRules({shopId})}
 
 User-agent: MJ12bot
 Crawl-Delay: 10
@@ -89,13 +87,7 @@ Crawl-delay: 1
  * This function generates disallow rules that generally follow what Shopify's
  * Online Store has as defaults for their robots.txt
  */
-function generalDisallowRules({
-  shopId,
-  sitemapUrl,
-}: {
-  shopId?: string;
-  sitemapUrl?: string;
-}) {
+function generalDisallowRules({shopId}: {shopId?: string}) {
   return `Disallow: /admin
 Disallow: /cart
 Disallow: /orders
@@ -131,8 +123,7 @@ Disallow: /search
 Allow: /search/
 Disallow: /search/?*
 Disallow: /apple-app-site-association
-Disallow: /.well-known/shopify/monorail
-${sitemapUrl ? `Sitemap: ${sitemapUrl}` : ''}`;
+Disallow: /.well-known/shopify/monorail`;
 }
 
 const ROBOTS_QUERY = `#graphql

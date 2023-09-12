@@ -10,9 +10,6 @@ describe('remix-version-interop', () => {
       expect(convertRouteToV1('_index')).toEqual('index');
       expect(convertRouteToV1('path.to.file')).toEqual('path/to/file');
       expect(convertRouteToV1('path.to._index')).toEqual('path/to/index');
-      expect(convertRouteToV1('patht.to.[sitemap.xml]')).toEqual(
-        'patht/to/[sitemap.xml]',
-      );
     });
   });
 
