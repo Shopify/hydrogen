@@ -324,16 +324,12 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       }),
     };
 
-    const promise = fetchWithServerCache(url, requestInit, {
+    const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheShort(),
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
     });
-
-    promise.catch(() => {});
-
-    const [body, response] = await promise;
 
     const errorOptions: StorefrontErrorOptions<T> = {
       response,
@@ -395,7 +391,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           );
         }
 
-        return fetchStorefrontApi({...payload, query});
+        const result = fetchStorefrontApi({...payload, query});
+        result.catch(() => {});
+        return result;
       }),
       /**
        * Sends a GraphQL mutation to the Storefront API.
@@ -418,7 +416,9 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           );
         }
 
-        return fetchStorefrontApi({...payload, mutation});
+        const result = fetchStorefrontApi({...payload, mutation});
+        result.catch(() => {});
+        return result;
       }),
       cache,
       CacheNone,
