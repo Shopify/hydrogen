@@ -100,7 +100,7 @@ export function convertConfigToJS(
   return jsConfig;
 }
 
-export async function transpileProject(projectDir: string, keepTypes = false) {
+export async function transpileProject(projectDir: string, keepTypes = true) {
   const entries = await glob('**/*.+(ts|tsx)', {
     absolute: true,
     cwd: projectDir,

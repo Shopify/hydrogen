@@ -84,7 +84,6 @@ export type InitOptions = {
 export const LANGUAGES = {
   js: 'JavaScript',
   ts: 'TypeScript',
-  'js-dts': 'JavaScript with better autocompletion',
 } as const;
 type Language = keyof typeof LANGUAGES;
 
@@ -355,12 +354,8 @@ export async function handleLanguage(
     (await renderSelectPrompt({
       message: 'Select a language',
       choices: [
-        {label: 'Only JavaScript', value: 'js'},
-        {label: 'Full TypeScript', value: 'ts'},
-        {
-          label: 'JavaScript with Codegen and better autocompletion',
-          value: 'js-dts',
-        },
+        {label: 'JavaScript', value: 'js'},
+        {label: 'TypeScript', value: 'ts'},
       ],
       defaultValue: 'js',
       abortSignal: controller.signal,
@@ -370,7 +365,7 @@ export async function handleLanguage(
     language,
     async transpileProject() {
       if (language !== 'ts') {
-        await transpileProject(projectDir, language === 'js-dts');
+        await transpileProject(projectDir);
       }
     },
   };
