@@ -29,8 +29,14 @@ import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {createRemixLogger, muteRemixLogs} from '../../lib/log.js';
 import {codegen} from '../../lib/codegen.js';
+import {
+  buildBundleAnalysis,
+  getBundleAnalysisSummary,
+} from '../../lib/bundle/analyzer.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
+const MAX_WORKER_BUNDLE_SIZE = 10;
 
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
@@ -40,6 +46,11 @@ export default class Build extends Command {
       description: 'Generate sourcemaps for the build.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
       default: false,
+    }),
+    ['bundle-stats']: Flags.boolean({
+      description: 'Show a bundle size summary after building.',
+      default: true,
+      allowNo: true,
     }),
     'disable-route-warning': Flags.boolean({
       description: 'Disable warning about missing standard routes.',
@@ -76,6 +87,7 @@ export async function runBuild({
   codegenConfigPath,
   sourcemap = false,
   disableRouteWarning = false,
+  bundleStats = true,
   assetPath,
 }: {
   directory?: string;
@@ -84,6 +96,7 @@ export async function runBuild({
   sourcemap?: boolean;
   disableRouteWarning?: boolean;
   assetPath?: string;
+  bundleStats?: boolean;
 }) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
@@ -134,16 +147,39 @@ export async function runBuild({
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
     const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
+    const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
 
     outputInfo(
       outputContent`   ${colors.dim(
         relativePath(root, buildPathWorkerFile),
-      )}  ${outputToken.yellow(sizeMB.toFixed(2))} MB\n`,
+      )}  ${outputToken.link(
+        colors.yellow(sizeMB.toFixed(2) + ' MB'),
+        bundleAnalysisPath,
+      )}\n`,
     );
 
-    if (sizeMB >= 1) {
+    if (bundleStats && sizeMB < MAX_WORKER_BUNDLE_SIZE) {
+      outputInfo(
+        outputContent`${
+          (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
+        }\n    │\n    └─── ${outputToken.link(
+          'Complete analysis: ' + bundleAnalysisPath,
+          bundleAnalysisPath,
+        )}\n\n`,
+      );
+    }
+
+    if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
+      throw new AbortError(
+        '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
+        outputContent`See the bundle analysis for a breakdown of what is contributing to the bundle size:\n${outputToken.link(
+          bundleAnalysisPath,
+          bundleAnalysisPath,
+        )}`,
+      );
+    } else if (sizeMB >= 5) {
       outputWarn(
-        `🚨 Worker bundle exceeds 1 MB! This can delay your worker response.${
+        `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
           remixConfig.serverMinify
             ? ''
             : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
