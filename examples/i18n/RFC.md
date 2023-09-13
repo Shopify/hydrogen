@@ -21,7 +21,7 @@ Although these three pieces provide the core requirement to implement a solid in
 experience, there is still the challenge of how to translate static content served
 directly from the headless storefront (Account routes, Cart, Search etc). It is
 also unfortunately very easy to get all these pieces working sub-optimally in terms
-of performance, because of the varios inter-dependencies across the different
+of performance, because of the various interdependencies across the different
 components of the architecture.
 
 This RFC aims to provide a recommended reference architecture to deliver performant-focused
