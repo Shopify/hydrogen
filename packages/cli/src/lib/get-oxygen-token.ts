@@ -23,9 +23,8 @@ export async function getOxygenDeploymentToken({
     login(root),
     getCliCommand(),
   ]);
-  console.log(config);
+
   if (!config.storefront?.id) {
-    console.log('no storefront id');
     renderMissingLink({session, cliCommand});
 
     const runLink = await renderConfirmationPrompt({

@@ -512,7 +512,7 @@ export async function commitAll(directory: string, message: string) {
 
 export type SetupSummary = {
   language?: Language;
-  packageManager: 'npm' | 'pnpm' | 'yarn';
+  packageManager: 'npm' | 'pnpm' | 'yarn' | 'unknown';
   cssStrategy?: CssStrategy;
   hasCreatedShortcut: boolean;
   depsInstalled: boolean;
