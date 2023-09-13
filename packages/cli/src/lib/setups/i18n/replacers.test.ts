@@ -9,23 +9,22 @@ import {
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {getSkeletonSourceDir} from '../../build.js';
 import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
-import ts from 'typescript';
-import {DEFAULT_TS_CONFIG} from '../../transpile-ts.js';
+import {ts, DEFAULT_COMPILER_OPTIONS} from '../../ts-morph.js';
 
 const remixDts = 'remix.env.d.ts';
 const serverTs = 'server.ts';
 
 const checkTypes = (content: string) => {
   const {diagnostics} = ts.transpileModule(content, {
-    ...DEFAULT_TS_CONFIG,
     reportDiagnostics: true,
+    compilerOptions: DEFAULT_COMPILER_OPTIONS,
   });
 
   if (diagnostics && diagnostics.length > 0) {
     throw new Error(
       ts.formatDiagnostics(
         diagnostics,
-        ts.createCompilerHost(DEFAULT_TS_CONFIG),
+        ts.createCompilerHost(DEFAULT_COMPILER_OPTIONS),
       ),
     );
   }

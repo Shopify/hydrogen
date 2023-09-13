@@ -4,46 +4,13 @@ import {outputDebug} from '@shopify/cli-kit/node/output';
 import {joinPath} from '@shopify/cli-kit/node/path';
 import {formatCode, getCodeFormatOptions} from './format-code.js';
 
-const escapeNewLines = (code: string) =>
-  code.replace(/\n\n/g, '\n/* :newline: */');
-const restoreNewLines = (code: string) =>
-  code.replace(/\/\* :newline: \*\//g, '\n');
-
-export type TranspilerOptions = Omit<CompilerOptions, 'target'>;
-
-export const DEFAULT_TS_CONFIG: TranspilerOptions = {
-  lib: ['DOM', 'DOM.Iterable', 'ES2022'],
-  isolatedModules: true,
-  esModuleInterop: true,
-  resolveJsonModule: true,
-  target: 'ES2022',
-  strict: true,
-  allowJs: true,
-  forceConsistentCasingInFileNames: true,
-  skipLibCheck: true,
-};
-
-export async function transpileFile(code: string, config = DEFAULT_TS_CONFIG) {
-  const tsImport = await import('typescript');
-  const ts = tsImport.default ?? tsImport;
-
-  // We need to escape new lines in the template because TypeScript
-  // will remove them when compiling.
-  const withArtificialNewLines = escapeNewLines(code);
-
-  // We compile the template to JavaScript.
-  const compiled = ts.transpileModule(withArtificialNewLines, {
-    reportDiagnostics: false,
-    compilerOptions: {
-      ...config,
-      // '1' tells TypeScript to preserve the JSX syntax.
-      jsx: 1,
-      removeComments: false,
-    },
-  });
-
-  // Here we restore the new lines that were removed by TypeScript.
-  return restoreNewLines(compiled.outputText);
+export async function transpileFile(
+  code: string,
+  filepath: string,
+  keepTypes = true,
+) {
+  const {transpileTs} = await import('./ts-morph.js');
+  return transpileTs(code, filepath, keepTypes);
 }
 
 const DEFAULT_JS_CONFIG: Omit<CompilerOptions, 'jsx'> = {
@@ -116,7 +83,10 @@ export async function transpileProject(projectDir: string, keepTypes = true) {
     }
 
     const tsx = await readFile(entry);
-    const mjs = await formatCode(await transpileFile(tsx), formatConfig);
+    const mjs = await formatCode(
+      await transpileFile(tsx, entry, keepTypes),
+      formatConfig,
+    );
 
     await removeFile(entry);
     await writeFile(entry.replace(/\.ts(x?)$/, '.js$1'), mjs);

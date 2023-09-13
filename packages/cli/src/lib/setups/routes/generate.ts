@@ -299,7 +299,10 @@ export async function generateProjectFile(
 
     // If the project is not using TS, we need to compile the template to JS.
     if (!typescript) {
-      templateContent = await transpileFile(templateContent);
+      templateContent = await transpileFile(
+        templateContent,
+        templateAppFilePath,
+      );
     }
 
     // If the command was run with an adapter flag, we replace the default
