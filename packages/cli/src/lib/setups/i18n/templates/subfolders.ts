@@ -6,6 +6,9 @@ export type I18nLocale = {
   pathPrefix: string;
 };
 
+/**
+ * @returns {I18nLocale}
+ */
 function getLocaleFromRequest(request: Request): I18nLocale {
   const url = new URL(request.url);
   const firstPathPart = url.pathname.split('/')[1]?.toUpperCase() ?? '';

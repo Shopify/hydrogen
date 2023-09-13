@@ -218,9 +218,9 @@ describe('init', () => {
           ),
         );
 
-        // No types:
+        // No types but JSDocs:
         await expect(readFile(`${tmpDir}/server.js`)).resolves.toMatch(
-          /export default {\n\s+async fetch\(\s*request,\s*env,\s*executionContext,?\s*\)/,
+          /export default {\n\s+\/\*\*.*?\*\/\n\s+async fetch\(\s*request,\s*env,\s*executionContext,?\s*\)/s,
         );
 
         const output = outputMock.info();
@@ -343,9 +343,9 @@ describe('init', () => {
 
         expect(projectFiles).toContain('app/routes/_index.jsx');
 
-        // No types:
+        // No types but JSDocs:
         await expect(readFile(`${tmpDir}/server.js`)).resolves.toMatch(
-          /export default {\n\s+async fetch\(\s*request,\s*env,\s*executionContext,?\s*\)/,
+          /export default {\n\s+\/\*\*.*?\*\/\n\s+async fetch\(\s*request,\s*env,\s*executionContext,?\s*\)/s,
         );
 
         const output = outputMock.info();

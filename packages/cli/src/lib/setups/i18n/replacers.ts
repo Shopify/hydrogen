@@ -5,6 +5,7 @@ import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import type {FormatOptions} from '../../format-code.js';
 import type {I18nSetupConfig} from './index.js';
 import {importLangAstGrep} from '../../ast.js';
+import {transpileFile} from '../../transpile-ts.js';
 
 /**
  * Adds the `getLocaleFromRequest` function to the server entrypoint and calls it.
@@ -13,6 +14,7 @@ export async function replaceServerI18n(
   {rootDirectory, serverEntryPoint = 'server'}: I18nSetupConfig,
   formatConfig: FormatOptions,
   localeExtractImpl: string,
+  isJs: boolean,
 ) {
   const {filepath, astType} = await findEntryFile({
     rootDirectory,
@@ -117,6 +119,46 @@ export async function replaceServerI18n(
       );
     }
 
+    const defaultExportObject = root.find({
+      rule: {
+        kind: 'export_statement',
+        regex: '^export default \\{',
+      },
+    });
+
+    if (!defaultExportObject) {
+      throw new AbortError(
+        'Could not find a default export in the server entry point',
+      );
+    }
+
+    let localeExtractFn =
+      localeExtractImpl.match(/^(\/\*\*.*?\*\/\n)?^function .+?^}/ms)?.[0] ||
+      '';
+    if (!localeExtractFn) {
+      throw new AbortError(
+        'Could not find the locale extract function. This is a bug in Hydrogen.',
+      );
+    }
+
+    if (isJs) {
+      localeExtractFn = await transpileFile(
+        localeExtractFn,
+        'locale-extract-server.ts',
+      );
+    } else {
+      // Remove JSDoc comments for TS
+      localeExtractFn = localeExtractFn.replace(/\/\*\*.*?\*\//gms, '');
+    }
+
+    const defaultExportEnd = defaultExportObject.range().end.index;
+
+    // Inject i18n function right after the default export
+    content =
+      content.slice(0, defaultExportEnd) +
+      `\n\n${localeExtractFn}\n` +
+      content.slice(defaultExportEnd);
+
     const i18nProperty = argumentObject.find({
       rule: {
         kind: 'property_identifier',
@@ -150,14 +192,7 @@ export async function replaceServerI18n(
         content.slice(end.index - 1);
     }
 
-    return (
-      content +
-      `\n\n${localeExtractImpl
-        .replace(/import\s+type\s+[^;]+?;/, '')
-        .replace(/^export type .+?};\n/ms, '')
-        .replace(/^export function/m, 'function')
-        .replace(/^export {.*?;/m, '')}\n`
-    );
+    return content;
   });
 }
 
@@ -168,7 +203,6 @@ export async function replaceRemixEnv(
   {rootDirectory}: I18nSetupConfig,
   formatConfig: FormatOptions,
   localeExtractImpl: string,
-  tsTypesImpl = localeExtractImpl,
 ) {
   const remixEnvPath = joinPath(rootDirectory, 'remix.env.d.ts');
 
@@ -177,7 +211,7 @@ export async function replaceRemixEnv(
   }
 
   // E.g. `type I18nLocale = {...};`
-  const i18nType = tsTypesImpl.match(
+  const i18nType = localeExtractImpl.match(
     /^(export )?(type \w+ =\s+\{.*?\};)\n/ms,
   )?.[2];
   // E.g. `I18nLocale`
@@ -249,7 +283,9 @@ export async function replaceRemixEnv(
     }
 
     // 3. Import the required types
-    const importImplTypes = tsTypesImpl.match(/import\s+type\s+[^;]+?;/)?.[0];
+    const importImplTypes = localeExtractImpl.match(
+      /import\s+type\s+[^;]+?;/,
+    )?.[0];
 
     if (importImplTypes) {
       const importPlace =

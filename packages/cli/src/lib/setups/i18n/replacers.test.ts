@@ -123,6 +123,7 @@ describe('i18n replacers', () => {
         await readFile(
           fileURLToPath(new URL('./templates/domains.ts', import.meta.url)),
         ),
+        false,
       );
 
       const newContent = await readFile(joinPath(tmpDir, serverTs));
@@ -239,7 +240,7 @@ describe('i18n replacers', () => {
             .pop()
             ?.toUpperCase() as keyof typeof supportedLocales;
 
-          return supportedLocales[domain]
+          return domain && supportedLocales[domain]
             ? { language: supportedLocales[domain], country: domain }
             : defaultLocale;
         }
