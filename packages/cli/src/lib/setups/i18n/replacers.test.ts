@@ -7,9 +7,10 @@ import {
   writeFile,
 } from '@shopify/cli-kit/node/fs';
 import {joinPath} from '@shopify/cli-kit/node/path';
+import {ts} from 'ts-morph';
 import {getSkeletonSourceDir} from '../../build.js';
 import {replaceRemixEnv, replaceServerI18n} from './replacers.js';
-import {ts, DEFAULT_COMPILER_OPTIONS} from '../../ts-morph.js';
+import {DEFAULT_COMPILER_OPTIONS} from '../../transpile/morph/index.js';
 
 const remixDts = 'remix.env.d.ts';
 const serverTs = 'server.ts';

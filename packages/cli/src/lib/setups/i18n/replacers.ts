@@ -5,7 +5,7 @@ import {findFileWithExtension, replaceFileContent} from '../../file.js';
 import type {FormatOptions} from '../../format-code.js';
 import type {I18nSetupConfig} from './index.js';
 import {importLangAstGrep} from '../../ast.js';
-import {transpileFile} from '../../transpile-ts.js';
+import {transpileFile} from '../../transpile/index.js';
 
 /**
  * Adds the `getLocaleFromRequest` function to the server entrypoint and calls it.

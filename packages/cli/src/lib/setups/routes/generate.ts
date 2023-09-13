@@ -17,7 +17,7 @@ import {
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortSignal} from '@shopify/cli-kit/node/abort';
 import {renderConfirmationPrompt} from '@shopify/cli-kit/node/ui';
-import {transpileFile} from '../../../lib/transpile-ts.js';
+import {transpileFile} from '../../transpile/index.js';
 import {
   type FormatOptions,
   formatCode,

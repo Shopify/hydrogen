@@ -51,7 +51,7 @@ import {
   getCliCommand,
   type CliCommand,
 } from '../shell.js';
-import {transpileProject} from '../transpile-ts.js';
+import {transpileProject} from '../transpile/index.js';
 import {
   CSS_STRATEGY_NAME_MAP,
   setupCssStrategy,

@@ -1,17 +1,9 @@
-import type {CompilerOptions} from 'typescript';
+import type {CompilerOptions} from 'ts-morph';
 import {glob, readFile, writeFile, removeFile} from '@shopify/cli-kit/node/fs';
 import {outputDebug} from '@shopify/cli-kit/node/output';
 import {joinPath} from '@shopify/cli-kit/node/path';
-import {formatCode, getCodeFormatOptions} from './format-code.js';
-
-export async function transpileFile(
-  code: string,
-  filepath: string,
-  keepTypes = true,
-) {
-  const {transpileTs} = await import('./ts-morph.js');
-  return transpileTs(code, filepath, keepTypes);
-}
+import {formatCode, getCodeFormatOptions} from '../format-code.js';
+import {transpileFile} from './file.js';
 
 const DEFAULT_JS_CONFIG: Omit<CompilerOptions, 'jsx'> = {
   allowJs: true,
@@ -39,7 +31,7 @@ const JS_CONFIG_KEYS = [
   ...Object.keys(DEFAULT_JS_CONFIG),
 ];
 
-export function convertConfigToJS(
+function convertConfigToJS(
   tsConfig: {
     include?: string[];
     compilerOptions?: CompilerOptions;
