@@ -22,6 +22,12 @@
           "description": "Generate sourcemaps for the build.",
           "allowNo": false
         },
+        "bundle-stats": {
+          "name": "bundle-stats",
+          "type": "boolean",
+          "description": "Show a bundle size summary after building.",
+          "allowNo": true
+        },
         "disable-route-warning": {
           "name": "disable-route-warning",
           "type": "boolean",
