@@ -35,7 +35,7 @@ function getCacheControlSetting(
       ...options,
     };
   } else {
-    return userCacheOptions || CacheShort();
+    return userCacheOptions || CacheDefault();
   }
 }
 

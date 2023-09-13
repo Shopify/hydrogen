@@ -16,6 +16,7 @@ import {
   CacheNone,
   CacheLong,
   CacheShort,
+  CacheDefault,
   CacheCustom,
   generateCacheControlHeader,
   type CachingStrategy,
@@ -326,7 +327,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
 
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
-      cache: cacheOptions || CacheShort(),
+      cache: cacheOptions || CacheDefault(),
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
     });
