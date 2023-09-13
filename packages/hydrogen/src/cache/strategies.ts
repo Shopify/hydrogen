@@ -112,7 +112,7 @@ export function CacheLong(overrideOptions?: CachingStrategy): AllCacheOptions {
 
 /**
  *
- * @public
+ * @private
  */
 export function CacheDefault(
   overrideOptions?: CachingStrategy,
