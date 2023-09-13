@@ -1,6 +1,6 @@
 import Command from '@shopify/cli-kit/node/base-command';
 import {fileURLToPath} from 'node:url';
-import {packageManagerUsedForCreating} from '@shopify/cli-kit/node/node-package-manager';
+import {packageManagerFromUserAgent} from '@shopify/cli-kit/node/node-package-manager';
 import {Flags} from '@oclif/core';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {AbortController} from '@shopify/cli-kit/node/abort';
@@ -107,7 +107,7 @@ export async function runInit(
   );
 
   if (showUpgrade) {
-    const packageManager = await packageManagerUsedForCreating();
+    const packageManager = packageManagerFromUserAgent();
     showUpgrade(
       packageManager === 'unknown'
         ? ''

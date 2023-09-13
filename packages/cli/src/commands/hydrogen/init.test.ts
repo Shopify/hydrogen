@@ -64,7 +64,7 @@ vi.mock(
     return {
       ...original,
       getPackageManager: () => Promise.resolve('npm'),
-      packageManagerUsedForCreating: () => Promise.resolve('npm'),
+      packageManagerFromUserAgent: () => 'npm',
       installNodeModules: vi.fn(async ({directory}: {directory: string}) => {
         // Create lockfile at a later moment to simulate a slow install
         renderTasksHook.mockImplementationOnce(async () => {
