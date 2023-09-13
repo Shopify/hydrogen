@@ -16,14 +16,18 @@ Human explanation
 
 #### Info
 
-- [RELEASE](https://github.com/Shopify/hydrogen/pull/1263)
+- [RELEASE](https://github.com/Shopify/hydrogen/pull/1307)
 - [COMMIT](https://github.com/Shopify/hydrogen/commit/b17f341d715d2834fb7ab854d84de56516840230)
+
+### Key Features
+
+- Network requests debugger (Unstable)
 
 #### Packages
 
-- @shopify/hydrogen@2023.7.6
-- @shopify/cli-hydrogen@5.2.2
-- @shopify/remix-oxygen@1.1.3
+- @shopify/hydrogen@2023.7.7
+- @shopify/cli-hydrogen@5.2.3
+- @shopify/remix-oxygen@1.1.4
 - @shopify/oxygen-workers-types@3.17.3
 - @remix-run/react@1.19.1
 - @remix-dev/dev@1.19.1
