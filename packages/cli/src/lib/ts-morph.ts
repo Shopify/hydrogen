@@ -370,6 +370,18 @@ function transpileTsWithJSDocs(
     );
   });
 
+  // Annotate default exported object properties like `fetch` in `server.js`
+  sourceFile
+    .getDefaultExportSymbol()
+    ?.getValueDeclaration()
+    ?.getChildren()
+    ?.find(Node.isObjectLiteralExpression)
+    ?.forEachChild((child) => {
+      if (Node.isFunctionLikeDeclaration(child)) {
+        generateFunctionDocumentation(child);
+      }
+    });
+
   let result = project
     .emitToMemory()
     ?.getFiles()
