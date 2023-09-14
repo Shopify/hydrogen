@@ -20,7 +20,7 @@
           "name": "sourcemap",
           "type": "boolean",
           "description": "Generate sourcemaps for the build.",
-          "allowNo": false
+          "allowNo": true
         },
         "bundle-stats": {
           "name": "bundle-stats",

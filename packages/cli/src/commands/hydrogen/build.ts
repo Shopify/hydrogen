@@ -45,7 +45,8 @@ export default class Build extends Command {
     sourcemap: Flags.boolean({
       description: 'Generate sourcemaps for the build.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
-      default: false,
+      allowNo: true,
+      default: true,
     }),
     ['bundle-stats']: Flags.boolean({
       description: 'Show a bundle size summary after building.',
@@ -185,20 +186,6 @@ export async function runBuild({
             : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
         }\n`,
       );
-    }
-
-    if (sourcemap) {
-      if (process.env.HYDROGEN_ASSET_BASE_URL) {
-        // Oxygen build
-        const filepaths = await glob(joinPath(buildPathClient, '**/*.js.map'));
-        for (const filepath of filepaths) {
-          await removeFile(filepath);
-        }
-      } else {
-        outputWarn(
-          '🚨 Sourcemaps are enabled in production! Use this only for testing.\n',
-        );
-      }
     }
   }
 
