@@ -380,12 +380,12 @@ export async function handleCssStrategy(
   controller: AbortController,
   flagStyling?: StylingChoice,
 ) {
-  const selection = flagStyling
-    ? flagStyling
-    : await renderCssPrompt({
-        abortSignal: controller.signal,
-        extraChoices: {none: 'Skip and set up later'},
-      });
+  const selection =
+    flagStyling ??
+    (await renderCssPrompt({
+      abortSignal: controller.signal,
+      extraChoices: {none: 'Skip and set up later'},
+    }));
 
   const cssStrategy = selection === 'none' ? undefined : selection;
 
