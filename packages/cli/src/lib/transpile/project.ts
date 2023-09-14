@@ -6,19 +6,18 @@ import {formatCode, getCodeFormatOptions} from '../format-code.js';
 import {transpileFile} from './file.js';
 
 const DEFAULT_JS_CONFIG: Omit<CompilerOptions, 'jsx'> = {
-  allowJs: true,
-  forceConsistentCasingInFileNames: true,
-  strict: true,
-  lib: ['DOM', 'DOM.Iterable', 'ES2022'],
-  esModuleInterop: true,
-  isolatedModules: true,
-  jsx: 'react-jsx',
-  noEmit: true,
-  resolveJsonModule: true,
+  checkJs: false,
+  target: 'ES2022',
+  module: 'ES2022',
+  moduleResolution: 'bundler',
+  baseUrl: '.',
+  paths: {
+    '~/*': ['app/*'],
+  },
 };
 
 // https://code.visualstudio.com/docs/languages/jsconfig#_jsconfig-options
-const JS_CONFIG_KEYS = [
+const JS_CONFIG_KEYS = new Set([
   'noLib',
   'target',
   'module',
@@ -29,7 +28,7 @@ const JS_CONFIG_KEYS = [
   'baseUrl',
   'paths',
   ...Object.keys(DEFAULT_JS_CONFIG),
-];
+]);
 
 function convertConfigToJS(
   tsConfig: {
