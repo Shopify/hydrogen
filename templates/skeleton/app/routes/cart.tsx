@@ -54,7 +54,7 @@ export async function action({request, context}: ActionArgs) {
     case CartForm.ACTIONS.BuyerIdentityUpdate: {
       result = await cart.updateBuyerIdentity({
         ...inputs.buyerIdentity,
-        customerAccessToken,
+        customerAccessToken: customerAccessToken?.accessToken,
       });
       break;
     }
