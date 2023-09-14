@@ -136,7 +136,7 @@ type GetSelectedProductOptions = (request: Request) => SelectedOptionInput[];
 export const getSelectedProductOptions: GetSelectedProductOptions = (
   request,
 ) => {
-  if (!(request instanceof Request))
+  if (typeof request?.url === 'undefined')
     throw new TypeError(`Expected a Request instance, got ${typeof request}`);
 
   const searchParams = new URL(request.url).searchParams;
