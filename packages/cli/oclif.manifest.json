@@ -345,7 +345,7 @@
           "type": "boolean",
           "description": "Generate routes for all pages.",
           "hidden": true,
-          "allowNo": false
+          "allowNo": true
         },
         "git": {
           "name": "git",
