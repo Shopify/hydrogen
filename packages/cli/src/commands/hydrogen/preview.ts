@@ -15,7 +15,7 @@ export default class Preview extends Command {
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
-    ['native-unstable']: commonFlags.native,
+    ['worker-unstable']: commonFlags.workerRuntime,
   };
 
   async run(): Promise<void> {
@@ -23,7 +23,7 @@ export default class Preview extends Command {
 
     await runPreview({
       ...flagsToCamelObject(flags),
-      useNative: flags['native-unstable'],
+      workerRuntime: flags['worker-unstable'],
     });
   }
 }
@@ -31,11 +31,11 @@ export default class Preview extends Command {
 export async function runPreview({
   port = DEFAULT_PORT,
   path: appPath,
-  useNative = false,
+  workerRuntime = false,
 }: {
   port?: number;
   path?: string;
-  useNative?: boolean;
+  workerRuntime?: boolean;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
@@ -50,7 +50,7 @@ export async function runPreview({
       buildPathClient,
       buildPathWorkerFile,
     },
-    useNative,
+    workerRuntime,
   );
 
   miniOxygen.showBanner({mode: 'preview'});

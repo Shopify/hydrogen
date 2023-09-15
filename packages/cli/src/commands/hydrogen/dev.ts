@@ -39,7 +39,7 @@ export default class Dev extends Command {
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
-    ['native-unstable']: commonFlags.native,
+    ['worker-unstable']: commonFlags.workerRuntime,
     ['codegen-unstable']: Flags.boolean({
       description:
         'Generate types for the Storefront API queries found in your project. It updates the types on file save.',
@@ -70,7 +70,7 @@ export default class Dev extends Command {
     await runDev({
       ...flagsToCamelObject(flags),
       useCodegen: flags['codegen-unstable'],
-      useNative: flags['native-unstable'],
+      workerRuntime: flags['worker-unstable'],
       path: directory,
     });
   }
@@ -80,7 +80,7 @@ async function runDev({
   port: portFlag = DEFAULT_PORT,
   path: appPath,
   useCodegen = false,
-  useNative = false,
+  workerRuntime = false,
   codegenConfigPath,
   disableVirtualRoutes,
   envBranch,
@@ -90,7 +90,7 @@ async function runDev({
   port?: number;
   path?: string;
   useCodegen?: boolean;
-  useNative?: boolean;
+  workerRuntime?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   envBranch?: string;
@@ -170,7 +170,7 @@ async function runDev({
         buildPathClient,
         env: await envPromise,
       },
-      useNative,
+      workerRuntime,
     );
 
     const graphiqlUrl = `${miniOxygen.listeningAt}/graphiql`;

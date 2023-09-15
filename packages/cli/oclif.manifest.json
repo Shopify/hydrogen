@@ -213,10 +213,10 @@
           "multiple": false,
           "default": 3000
         },
-        "native-unstable": {
-          "name": "native-unstable",
+        "worker-unstable": {
+          "name": "worker-unstable",
           "type": "boolean",
-          "description": "Run the app in a native environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
+          "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
           "allowNo": false
         },
         "codegen-unstable": {
@@ -476,10 +476,10 @@
           "multiple": false,
           "default": 3000
         },
-        "native-unstable": {
-          "name": "native-unstable",
+        "worker-unstable": {
+          "name": "worker-unstable",
           "type": "boolean",
-          "description": "Run the app in a native environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
+          "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
           "allowNo": false
         }
       },
