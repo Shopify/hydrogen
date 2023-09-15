@@ -141,6 +141,14 @@ async function miniOxygenHandler(
 ) {
   if (request.method === 'GET') {
     const pathname = new URL(request.url).pathname;
+
+    if (pathname.startsWith('/debug-network')) {
+      // TODO implement /debug-network-server here
+      return new Response(
+        'The Network Debugger is currently not supported in the Worker Runtime.',
+      );
+    }
+
     if (env.initialAssets.some((asset) => pathname === '/' + asset)) {
       const response = await env.assets.fetch(request.clone());
       if (response.status !== 404) return response;
