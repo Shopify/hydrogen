@@ -56,6 +56,7 @@ export default class Init extends Command {
       description: 'Generate routes for all pages.',
       env: 'SHOPIFY_HYDROGEN_FLAG_ROUTES',
       hidden: true,
+      allowNo: true,
     }),
     git: Flags.boolean({
       description: 'Init Git and create initial commits.',
@@ -66,12 +67,16 @@ export default class Init extends Command {
   };
 
   async run(): Promise<void> {
-    const {flags} = await this.parse(Init);
+    // Rename markets => i18n
+    const {
+      flags: {markets, ..._flags},
+    } = await this.parse(Init);
+    const flags = {..._flags, i18n: markets};
 
-    if (flags.markets && !I18N_CHOICES.includes(flags.markets as I18nChoice)) {
+    if (flags.i18n && !I18N_CHOICES.includes(flags.i18n as I18nChoice)) {
       throw new AbortError(
         `Invalid URL structure strategy: ${
-          flags.markets
+          flags.i18n
         }. Must be one of ${I18N_CHOICES.join(', ')}`,
       );
     }
