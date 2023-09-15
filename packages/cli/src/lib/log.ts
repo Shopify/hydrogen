@@ -90,6 +90,7 @@ function injectLogReplacer(
 export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
   injectLogReplacer('log');
   injectLogReplacer('error');
+  injectLogReplacer('warn');
 
   let isFirstWorkerReload = true;
   addMessageReplacers('dev-node', [
@@ -114,12 +115,32 @@ export function muteDevLogs({workerReload}: {workerReload?: boolean} = {}) {
     },
   ]);
 
-  addMessageReplacers('dev-workerd', [
-    // Workerd logs
-    ([first]) =>
-      typeof first === 'string' && /^\x1B\[31m(workerd\/|stack:)/.test(first),
-    () => {},
-  ]);
+  addMessageReplacers(
+    'dev-workerd',
+    [
+      // Workerd logs
+      ([first]) =>
+        typeof first === 'string' && /^\x1B\[31m(workerd\/|stack:)/.test(first),
+      () => {},
+    ],
+
+    // Non-actionable warnings/errors:
+    [
+      ([first]) =>
+        typeof first === 'string' && /^A promise rejection/i.test(first),
+      () => {},
+    ],
+    [
+      ([first]) => {
+        const message = first?.message ?? first;
+        return (
+          typeof message === 'string' &&
+          /^Network connection lost/i.test(message)
+        );
+      },
+      () => {},
+    ],
+  );
 }
 
 const originalWrite = process.stdout.write;
