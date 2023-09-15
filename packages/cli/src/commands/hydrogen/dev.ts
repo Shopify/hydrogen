@@ -9,6 +9,7 @@ import {
   assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
+  handleRemixImportFail,
   type ServerMode,
 } from '../../lib/remix-config.js';
 import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
@@ -146,7 +147,7 @@ async function runDev({
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
     import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
-  ]);
+  ]).catch(handleRemixImportFail);
 
   let isInitialBuild = true;
   let initialBuildDurationMs = 0;
@@ -173,6 +174,7 @@ async function runDev({
     );
 
     const graphiqlUrl = `${miniOxygen.listeningAt}/graphiql`;
+    const debugNetworkUrl = `${miniOxygen.listeningAt}/debug-network`;
     enhanceH2Logs({graphiqlUrl, ...remixConfig});
 
     miniOxygen.showBanner({
@@ -181,7 +183,10 @@ async function runDev({
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
-      extraLines: [colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`)],
+      extraLines: [
+        colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`),
+        colors.dim(`\nView server-side network requests: ${debugNetworkUrl}`),
+      ],
     });
 
     if (useCodegen) {

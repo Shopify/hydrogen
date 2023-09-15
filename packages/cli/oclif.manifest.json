@@ -1,5 +1,5 @@
 {
-  "version": "5.2.1",
+  "version": "5.2.3",
   "commands": {
     "hydrogen:build": {
       "id": "hydrogen:build",
@@ -20,7 +20,13 @@
           "name": "sourcemap",
           "type": "boolean",
           "description": "Generate sourcemaps for the build.",
-          "allowNo": false
+          "allowNo": true
+        },
+        "bundle-stats": {
+          "name": "bundle-stats",
+          "type": "boolean",
+          "description": "Show a bundle size summary after building.",
+          "allowNo": true
         },
         "disable-route-warning": {
           "name": "disable-route-warning",
@@ -128,6 +134,59 @@
           "description": "Watch the project for changes to update types on file save.",
           "required": false,
           "allowNo": false
+        }
+      },
+      "args": {}
+    },
+    "hydrogen:deploy": {
+      "id": "hydrogen:deploy",
+      "strict": true,
+      "pluginName": "@shopify/cli-hydrogen",
+      "pluginAlias": "@shopify/cli-hydrogen",
+      "pluginType": "core",
+      "hidden": true,
+      "aliases": [],
+      "flags": {
+        "path": {
+          "name": "path",
+          "type": "option",
+          "description": "The path to the directory of the Hydrogen storefront. The default is the current directory.",
+          "multiple": false
+        },
+        "shop": {
+          "name": "shop",
+          "type": "option",
+          "char": "s",
+          "description": "Shop URL. It can be the shop prefix (janes-apparel) or the full myshopify.com URL (janes-apparel.myshopify.com, https://janes-apparel.myshopify.com).",
+          "multiple": false
+        },
+        "publicDeployment": {
+          "name": "publicDeployment",
+          "type": "boolean",
+          "description": "Marks a preview deployment as publicly accessible.",
+          "required": false,
+          "allowNo": false
+        },
+        "metadataUrl": {
+          "name": "metadataUrl",
+          "type": "option",
+          "description": "URL that links to the deployment. Will be saved and displayed in the Shopify admin",
+          "required": false,
+          "multiple": false
+        },
+        "metadataUser": {
+          "name": "metadataUser",
+          "type": "option",
+          "description": "User that initiated the deployment. Will be saved and displayed in the Shopify admin",
+          "required": false,
+          "multiple": false
+        },
+        "metadataVersion": {
+          "name": "metadataVersion",
+          "type": "option",
+          "description": "A version identifier for the deployment. Will be saved and displayed in the Shopify admin",
+          "required": false,
+          "multiple": false
         }
       },
       "args": {}
@@ -292,7 +351,7 @@
           "type": "boolean",
           "description": "Generate routes for all pages.",
           "hidden": true,
-          "allowNo": false
+          "allowNo": true
         },
         "git": {
           "name": "git",

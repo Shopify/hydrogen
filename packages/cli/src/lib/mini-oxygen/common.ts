@@ -4,6 +4,7 @@ import {
   outputContent,
 } from '@shopify/cli-kit/node/output';
 import colors from '@shopify/cli-kit/node/colors';
+import {DEV_ROUTES} from '../request-events.js';
 
 export function logRequestLine(
   // Minimal overlap between Fetch, Miniflare@2 and Miniflare@3 request types.
@@ -17,7 +18,7 @@ export function logRequestLine(
 ): void {
   try {
     const url = new URL(request.url);
-    if (['/graphiql'].includes(url.pathname)) return;
+    if (DEV_ROUTES.has(url.pathname)) return;
 
     const isDataRequest = url.searchParams.has('_data');
     let route = request.url.replace(url.origin, '');

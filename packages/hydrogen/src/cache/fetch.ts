@@ -1,6 +1,13 @@
+/// <reference types="@shopify/remix-oxygen" />
+
 import {hashKey} from '../utils/hash.js';
 import {CacheShort, CachingStrategy, NO_STORE} from './strategies';
-import {getItemFromCache, setItemInCache, isStale} from './sub-request';
+import {
+  getItemFromCache,
+  setItemInCache,
+  isStale,
+  getKeyUrl,
+} from './sub-request';
 
 /**
  * The cache key is used to uniquely identify a value in the cache.
@@ -59,31 +66,56 @@ export async function runWithCache<T = unknown>(
     waitUntil,
   }: WithCacheOptions<T>,
 ): Promise<T> {
-  if (!cacheInstance || !strategy || strategy.mode === NO_STORE) {
-    return actionFn();
-  }
-
+  const startTime = Date.now();
   const key = hashKey([
     // '__HYDROGEN_CACHE_ID__', // TODO purgeQueryCacheOnBuild
     ...(typeof cacheKey === 'string' ? [cacheKey] : cacheKey),
   ]);
+
+  const logSubRequestEvent =
+    process.env.NODE_ENV === 'development'
+      ? (
+          cacheStatus?: 'MISS' | 'HIT' | 'STALE' | 'PUT',
+          overrideStartTime?: number,
+        ) => {
+          globalThis.__H2O_LOG_EVENT?.({
+            eventType: 'subrequest',
+            url: getKeyUrl(key),
+            startTime: overrideStartTime || startTime,
+            cacheStatus,
+            waitUntil,
+          });
+        }
+      : undefined;
+
+  if (!cacheInstance || !strategy || strategy.mode === NO_STORE) {
+    const result = await actionFn();
+    // Log non-cached requests
+    logSubRequestEvent?.();
+    return result;
+  }
 
   const cachedItem = await getItemFromCache(cacheInstance, key);
   // console.log('--- Cache', cachedItem ? 'HIT' : 'MISS');
 
   if (cachedItem) {
     const [cachedResult, cacheInfo] = cachedItem;
+    const cacheStatus = isStale(key, cacheInfo) ? 'STALE' : 'HIT';
 
-    if (!swrLock.has(key) && isStale(key, cacheInfo)) {
+    if (!swrLock.has(key) && cacheStatus === 'STALE') {
       swrLock.add(key);
 
       // Important: Run revalidation asynchronously.
       const revalidatingPromise = Promise.resolve().then(async () => {
+        const revalidateStartTime = Date.now();
         try {
           const result = await actionFn();
 
           if (shouldCacheResult(result)) {
             await setItemInCache(cacheInstance, key, result, strategy);
+
+            // Log PUT requests with the revalidate start time
+            logSubRequestEvent?.('PUT', revalidateStartTime);
           }
         } catch (error: any) {
           if (error.message) {
@@ -100,21 +132,26 @@ export async function runWithCache<T = unknown>(
       waitUntil?.(revalidatingPromise);
     }
 
+    // Log HIT/STALE requests
+    logSubRequestEvent?.(cacheStatus);
+
     return cachedResult;
   }
 
   const result = await actionFn();
 
+  // Log MISS requests
+  logSubRequestEvent?.('MISS');
+
   /**
    * Important: Do this async
    */
   if (shouldCacheResult(result)) {
-    const setItemInCachePromise = setItemInCache(
-      cacheInstance,
-      key,
-      result,
-      strategy,
-    );
+    const setItemInCachePromise = Promise.resolve().then(async () => {
+      const putStartTime = Date.now();
+      await setItemInCache(cacheInstance, key, result, strategy);
+      logSubRequestEvent?.('PUT', putStartTime);
+    });
 
     waitUntil?.(setItemInCachePromise);
   }

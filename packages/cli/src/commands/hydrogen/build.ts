@@ -21,6 +21,7 @@ import {
   assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
+  handleRemixImportFail,
   type ServerMode,
 } from '../../lib/remix-config.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
@@ -28,8 +29,14 @@ import {checkLockfileStatus} from '../../lib/check-lockfile.js';
 import {findMissingRoutes} from '../../lib/missing-routes.js';
 import {createRemixLogger, muteRemixLogs} from '../../lib/log.js';
 import {codegen} from '../../lib/codegen.js';
+import {
+  buildBundleAnalysis,
+  getBundleAnalysisSummary,
+} from '../../lib/bundle/analyzer.js';
+import {AbortError} from '@shopify/cli-kit/node/error';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
+const MAX_WORKER_BUNDLE_SIZE = 10;
 
 export default class Build extends Command {
   static description = 'Builds a Hydrogen storefront for production.';
@@ -38,7 +45,13 @@ export default class Build extends Command {
     sourcemap: Flags.boolean({
       description: 'Generate sourcemaps for the build.',
       env: 'SHOPIFY_HYDROGEN_FLAG_SOURCEMAP',
-      default: false,
+      allowNo: true,
+      default: true,
+    }),
+    ['bundle-stats']: Flags.boolean({
+      description: 'Show a bundle size summary after building.',
+      default: true,
+      allowNo: true,
     }),
     'disable-route-warning': Flags.boolean({
       description: 'Disable warning about missing standard routes.',
@@ -75,15 +88,22 @@ export async function runBuild({
   codegenConfigPath,
   sourcemap = false,
   disableRouteWarning = false,
+  bundleStats = true,
+  assetPath,
 }: {
   directory?: string;
   useCodegen?: boolean;
   codegenConfigPath?: string;
   sourcemap?: boolean;
   disableRouteWarning?: boolean;
+  assetPath?: string;
+  bundleStats?: boolean;
 }) {
   if (!process.env.NODE_ENV) {
     process.env.NODE_ENV = 'production';
+  }
+  if (assetPath) {
+    process.env.HYDROGEN_ASSET_BASE_URL = assetPath;
   }
 
   const {root, buildPath, buildPathClient, buildPathWorkerFile, publicPath} =
@@ -95,12 +115,14 @@ export async function runBuild({
 
   outputInfo(`\n🏗️  Building in ${process.env.NODE_ENV} mode...`);
 
-  const [remixConfig, {build}, {logThrown}, {createFileWatchCache}] =
+  const [remixConfig, [{build}, {logThrown}, {createFileWatchCache}]] =
     await Promise.all([
       getRemixConfig(root),
-      import('@remix-run/dev/dist/compiler/build.js'),
-      import('@remix-run/dev/dist/compiler/utils/log.js'),
-      import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+      Promise.all([
+        import('@remix-run/dev/dist/compiler/build.js'),
+        import('@remix-run/dev/dist/compiler/utils/log.js'),
+        import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
+      ]).catch(handleRemixImportFail),
       rmdir(buildPath, {force: true}),
     ]);
 
@@ -126,35 +148,44 @@ export async function runBuild({
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
     const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
+    const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
 
     outputInfo(
       outputContent`   ${colors.dim(
         relativePath(root, buildPathWorkerFile),
-      )}  ${outputToken.yellow(sizeMB.toFixed(2))} MB\n`,
+      )}  ${outputToken.link(
+        colors.yellow(sizeMB.toFixed(2) + ' MB'),
+        bundleAnalysisPath,
+      )}\n`,
     );
 
-    if (sizeMB >= 1) {
+    if (bundleStats && sizeMB < MAX_WORKER_BUNDLE_SIZE) {
+      outputInfo(
+        outputContent`${
+          (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
+        }\n    │\n    └─── ${outputToken.link(
+          'Complete analysis: ' + bundleAnalysisPath,
+          bundleAnalysisPath,
+        )}\n\n`,
+      );
+    }
+
+    if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
+      throw new AbortError(
+        '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
+        outputContent`See the bundle analysis for a breakdown of what is contributing to the bundle size:\n${outputToken.link(
+          bundleAnalysisPath,
+          bundleAnalysisPath,
+        )}`,
+      );
+    } else if (sizeMB >= 5) {
       outputWarn(
-        `🚨 Worker bundle exceeds 1 MB! This can delay your worker response.${
+        `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
           remixConfig.serverMinify
             ? ''
             : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
         }\n`,
       );
-    }
-
-    if (sourcemap) {
-      if (process.env.HYDROGEN_ASSET_BASE_URL) {
-        // Oxygen build
-        const filepaths = await glob(joinPath(buildPathClient, '**/*.js.map'));
-        for (const filepath of filepaths) {
-          await removeFile(filepath);
-        }
-      } else {
-        outputWarn(
-          '🚨 Sourcemaps are enabled in production! Use this only for testing.\n',
-        );
-      }
     }
   }
 
@@ -177,7 +208,7 @@ export async function runBuild({
   // The Remix compiler hangs due to a bug in ESBuild:
   // https://github.com/evanw/esbuild/issues/2727
   // The actual build has already finished so we can kill the process.
-  if (!process.env.SHOPIFY_UNIT_TEST) {
+  if (!process.env.SHOPIFY_UNIT_TEST && !assetPath) {
     process.exit(0);
   }
 }
