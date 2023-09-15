@@ -328,7 +328,7 @@ export function getPaginationVariables(
   request: Request,
   options: {pageBy: number} = {pageBy: 20},
 ) {
-  if (!(request instanceof Request)) {
+  if (typeof request?.url === 'undefined') {
     throw new Error(
       'getPaginationVariables must be called with the Request object passed to your loader function',
     );

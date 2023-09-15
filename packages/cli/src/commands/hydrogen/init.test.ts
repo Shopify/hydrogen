@@ -64,7 +64,7 @@ vi.mock(
     return {
       ...original,
       getPackageManager: () => Promise.resolve('npm'),
-      packageManagerUsedForCreating: () => Promise.resolve('npm'),
+      packageManagerFromUserAgent: () => 'npm',
       installNodeModules: vi.fn(async ({directory}: {directory: string}) => {
         // Create lockfile at a later moment to simulate a slow install
         renderTasksHook.mockImplementationOnce(async () => {
@@ -664,6 +664,28 @@ describe('init', () => {
           // Bundle size within 1 MB
           expect(mb).toBeGreaterThan(0);
           expect(mb).toBeLessThan(1);
+
+          // Bundle analysis
+          expect(output).toMatch('Complete analysis: file://');
+
+          const clientAnalysisPath = 'dist/worker/client-bundle-analyzer.html';
+          const workerAnalysisPath = 'dist/worker/worker-bundle-analyzer.html';
+
+          expect(
+            fileExists(joinPath(tmpDir, clientAnalysisPath)),
+          ).resolves.toBeTruthy();
+
+          expect(
+            fileExists(joinPath(tmpDir, workerAnalysisPath)),
+          ).resolves.toBeTruthy();
+
+          expect(await readFile(joinPath(tmpDir, clientAnalysisPath))).toMatch(
+            /globalThis\.METAFILE = '.+';/g,
+          );
+
+          expect(await readFile(joinPath(tmpDir, workerAnalysisPath))).toMatch(
+            /globalThis\.METAFILE = '.+';/g,
+          );
         });
       });
     });

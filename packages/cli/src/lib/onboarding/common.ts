@@ -1,7 +1,7 @@
 import {readdir} from 'node:fs/promises';
 import {
   installNodeModules,
-  packageManagerUsedForCreating,
+  packageManagerFromUserAgent,
   type PackageManager,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {
@@ -380,12 +380,12 @@ export async function handleCssStrategy(
   controller: AbortController,
   flagStyling?: StylingChoice,
 ) {
-  const selection = flagStyling
-    ? flagStyling
-    : await renderCssPrompt({
-        abortSignal: controller.signal,
-        extraChoices: {none: 'Skip and set up later'},
-      });
+  const selection =
+    flagStyling ??
+    (await renderCssPrompt({
+      abortSignal: controller.signal,
+      extraChoices: {none: 'Skip and set up later'},
+    }));
 
   const cssStrategy = selection === 'none' ? undefined : selection;
 
@@ -420,7 +420,7 @@ export async function handleDependencies(
   controller: AbortController,
   shouldInstallDeps?: boolean,
 ) {
-  const detectedPackageManager = await packageManagerUsedForCreating();
+  const detectedPackageManager = packageManagerFromUserAgent();
   let actualPackageManager: PackageManager = 'npm';
 
   if (shouldInstallDeps !== false) {
@@ -515,7 +515,7 @@ export async function commitAll(directory: string, message: string) {
 
 export type SetupSummary = {
   language?: Language;
-  packageManager: 'npm' | 'pnpm' | 'yarn';
+  packageManager: 'npm' | 'pnpm' | 'yarn' | 'unknown';
   cssStrategy?: CssStrategy;
   hasCreatedShortcut: boolean;
   depsInstalled: boolean;
