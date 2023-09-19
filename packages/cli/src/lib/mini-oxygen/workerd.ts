@@ -155,13 +155,17 @@ async function miniOxygenHandler(
     }
 
     if (env.initialAssets.some((asset) => pathname === '/' + asset)) {
-      const response = await env.assets.fetch(request.clone());
+      const response = await env.assets.fetch(
+        new Request(request.url, {
+          signal: request.signal,
+          headers: request.headers,
+        }),
+      );
+
       if (response.status !== 404) return response;
     }
   }
 
-  // Clone before using body (in POST requests)
-  const loggerRequest = new Request(request.clone());
   const requestInit = {
     headers: {
       ...env.oxygenHeadersMap,
@@ -173,9 +177,20 @@ async function miniOxygenHandler(
   const response = await env.hydrogen.fetch(request, requestInit);
   const durationMs = Date.now() - startTimeMs;
 
-  loggerRequest.headers.set('h2-duration-ms', String(durationMs));
-  loggerRequest.headers.set('h2-response-status', String(response.status));
-  context.waitUntil(env.logRequest.fetch(loggerRequest));
+  // Log the request summary to the terminal
+  context.waitUntil(
+    env.logRequest.fetch(
+      new Request(request.url, {
+        method: request.method,
+        signal: request.signal,
+        headers: {
+          ...Object.fromEntries(request.headers.entries()),
+          'h2-duration-ms': String(durationMs),
+          'h2-response-status': String(response.status),
+        },
+      }),
+    ),
+  );
 
   return response;
 }
