@@ -1,7 +1,7 @@
 import {randomUUID} from 'node:crypto';
 import {AsyncLocalStorage} from 'node:async_hooks';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {fileExists, readFile} from '@shopify/cli-kit/node/fs';
+import {readFile} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {
   startServer,
@@ -62,7 +62,6 @@ export async function startNodeServer({
       ...process.env,
       ...serviceBindings,
     },
-    envPath: !env && (await fileExists(dotenvPath)) ? dotenvPath : undefined,
     log: () => {},
     oxygenHeaders,
     async onRequest(request, defaultDispatcher) {

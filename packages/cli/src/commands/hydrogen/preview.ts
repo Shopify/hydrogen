@@ -7,6 +7,8 @@ import {
   DEFAULT_PORT,
 } from '../../lib/flags.js';
 import {startMiniOxygen} from '../../lib/mini-oxygen/index.js';
+import {getAllEnvironmentVariables} from '../../lib/environment-variables.js';
+import {getConfig} from '../../lib/shopify-config.js';
 
 export default class Preview extends Command {
   static description =
@@ -16,6 +18,7 @@ export default class Preview extends Command {
     path: commonFlags.path,
     port: commonFlags.port,
     ['worker-unstable']: commonFlags.workerRuntime,
+    ['env-branch']: commonFlags.envBranch,
   };
 
   async run(): Promise<void> {
@@ -32,16 +35,21 @@ export async function runPreview({
   port = DEFAULT_PORT,
   path: appPath,
   workerRuntime = false,
+  envBranch,
 }: {
   port?: number;
   path?: string;
   workerRuntime?: boolean;
+  envBranch?: string;
 }) {
   if (!process.env.NODE_ENV) process.env.NODE_ENV = 'production';
 
   muteDevLogs({workerReload: false});
 
   const {root, buildPathWorkerFile, buildPathClient} = getProjectPaths(appPath);
+  const {shop, storefront} = await getConfig(root);
+  const fetchRemote = !!shop && !!storefront?.id;
+  const env = await getAllEnvironmentVariables({root, fetchRemote, envBranch});
 
   const miniOxygen = await startMiniOxygen(
     {
@@ -49,6 +57,7 @@ export async function runPreview({
       port,
       buildPathClient,
       buildPathWorkerFile,
+      env,
     },
     workerRuntime,
   );

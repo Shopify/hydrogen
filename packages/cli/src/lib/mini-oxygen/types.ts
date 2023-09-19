@@ -5,7 +5,7 @@ export type MiniOxygenOptions = {
   autoReload?: boolean;
   buildPathClient: string;
   buildPathWorkerFile: string;
-  env?: {[key: string]: string};
+  env: {[key: string]: string};
 };
 
 export type MiniOxygenInstance = {
