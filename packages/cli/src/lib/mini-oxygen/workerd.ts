@@ -7,7 +7,12 @@ import {
   type MiniflareOptions,
 } from 'miniflare';
 import {resolvePath} from '@shopify/cli-kit/node/path';
-import {glob, readFile} from '@shopify/cli-kit/node/fs';
+import {
+  glob,
+  readFile,
+  fileSize,
+  createFileReadStream,
+} from '@shopify/cli-kit/node/fs';
 import {renderSuccess} from '@shopify/cli-kit/node/ui';
 import {lookupMimeType} from '@shopify/cli-kit/node/mimes';
 import {connectToInspector, findInspectorUrl} from './workerd-inspector.js';
@@ -184,10 +189,11 @@ function createAssetHandler(buildPathClient: string) {
           buildPathClient,
           relativeAssetPath,
         );
-        const fileContent = await readFile(absoluteAssetPath);
-        return new Response(fileContent, {
+
+        return new Response(createFileReadStream(absoluteAssetPath), {
           headers: {
-            'content-type': lookupMimeType(relativeAssetPath) || 'text/plain',
+            'Content-Type': lookupMimeType(relativeAssetPath) || 'text/plain',
+            'Content-Length': String(await fileSize(absoluteAssetPath)),
           },
         });
       } catch (error) {
