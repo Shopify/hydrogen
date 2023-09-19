@@ -85,7 +85,7 @@ export default function Index() {
             <p>
               You&rsquo;re seeing this because you don&rsquo;t have a home route
               in your project yet. <br />
-              Run <code>h2 generate route home</code> to create your home route.
+              Run <code>h2 setup</code> to scaffold standard Shopify routes.
               Learn more about
               {` `}
               <CreateRoutesLink />
@@ -96,7 +96,7 @@ export default function Index() {
               storefront token. <br />
               <br /> To link your store,{` `}
               run <code>h2 link && h2 env pull</code>. Then, run{' '}
-              <code>h2 generate route home</code> to create your first route.
+              <code>h2 setup</code> to scaffold standard Shopify routes.
               <br />
               Learn more about
               {` `}
