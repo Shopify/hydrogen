@@ -6,6 +6,7 @@
 import '@total-typescript/ts-reset';
 
 import type {Storefront, HydrogenCart} from '@shopify/hydrogen';
+import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
 import type {HydrogenSession} from './server';
 
 declare global {
@@ -26,15 +27,22 @@ declare global {
   }
 }
 
-/**
- * Declare local additions to `AppLoadContext` to include the session utilities we injected in `server.ts`.
- */
 declare module '@shopify/remix-oxygen' {
+  /**
+   * Declare local additions to the Remix loader context.
+   */
   export interface AppLoadContext {
     env: Env;
     cart: HydrogenCart;
     storefront: Storefront;
     session: HydrogenSession;
     waitUntil: ExecutionContext['waitUntil'];
+  }
+
+  /**
+   * Declare the data we expect to access via `context.session`.
+   */
+  export interface SessionData {
+    customerAccessToken: CustomerAccessToken;
   }
 }
