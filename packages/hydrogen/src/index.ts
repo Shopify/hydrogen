@@ -55,6 +55,7 @@ export type {
 
 export {createContentSecurityPolicy, useNonce} from './csp/csp';
 export {Script} from './csp/Script';
+export {useEnv} from './env/useEnv';
 
 export {
   AnalyticsEventName,

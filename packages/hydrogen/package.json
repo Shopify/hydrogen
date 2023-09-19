@@ -38,6 +38,7 @@
         "default": "./dist/production/index.js"
       }
     },
+    "./server": "./dist/production/server.js",
     "./storefront-api-types": "./dist/storefront-api-types.d.ts",
     "./storefront.schema.json": "./dist/storefront.schema.json",
     "./package.json": "./package.json"
