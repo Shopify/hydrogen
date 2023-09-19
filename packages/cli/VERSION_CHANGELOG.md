@@ -1,3 +1,6 @@
+https://github.com/Shopify/hydrogen/pulls?q=is%3Apr+is%3Aclosed+%5Bci%5D+release+in%3Atitle+is%3Amerged
+https://docs.google.com/document/d/1hOSm93L-ewVnyNloa0fRJj6dzRBHj_28xz0p34pN6Vw/edit#heading=h.dp60fvbjltzb
+
 # Hydrogen Version Changelog
 
 Human explanation
@@ -12,16 +15,16 @@ Human explanation
 
 > h2 update
 
-### b17f341
+### b17f341 2023-08-31
 
 #### Info
 
 - [RELEASE](https://github.com/Shopify/hydrogen/pull/1307)
 - [COMMIT](https://github.com/Shopify/hydrogen/commit/b17f341d715d2834fb7ab854d84de56516840230)
 
-### Key Features
+### Notable
 
-- Network requests debugger (Unstable)
+Network requests debugger (Unstable)
 
 #### Packages
 
@@ -32,12 +35,32 @@ Human explanation
 - @remix-run/react@1.19.1
 - @remix-dev/dev@1.19.1
 
-### 6cd870d
+### 8f7b03e | 2023-08-26
+
+#### Info
+
+- [RELEASE](https://github.com/Shopify/hydrogen/pull/1295)
+- [COMMIT](https://github.com/Shopify/hydrogen/commit/8f7b03e5bc06e89288b572f5399b7da723a8383a)
+
+### Notable
+
+Fix cookie token
+
+#### Packages
+
+- @shopify/hydrogen@2023.7.6
+- @shopify/cli-hydrogen@5.2.2
+- @shopify/remix-oxygen@1.1.3
+- @shopify/oxygen-workers-types@3.17.3
+- @remix-run/react@1.19.1
+- @remix-dev/dev@1.19.1
+
+### 9bf4e4a
 
 #### Info
 
 - [RELEASE](https://github.com/Shopify/hydrogen/pull/1293)
-- [COMMIT](https://github.com/Shopify/hydrogen/commit/6cd870de07ebade71dd21874e41229a72a4116c2)
+- [COMMIT](https://github.com/Shopify/hydrogen/commit/9bf4e4afcf86e961252135a7d45b5f19f9958d36)
 
 #### Packages
 
