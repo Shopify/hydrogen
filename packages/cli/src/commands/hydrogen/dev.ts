@@ -185,8 +185,12 @@ async function runDev({
           : '',
       extraLines: [
         colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`),
-        colors.dim(`\nView server-side network requests: ${debugNetworkUrl}`),
-      ],
+        workerRuntime
+          ? ''
+          : colors.dim(
+              `\nView server-side network requests: ${debugNetworkUrl}`,
+            ),
+      ].filter(Boolean),
     });
 
     if (useCodegen) {
