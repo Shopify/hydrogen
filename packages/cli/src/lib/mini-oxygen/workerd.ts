@@ -154,7 +154,7 @@ async function miniOxygenHandler(
       );
     }
 
-    if (env.initialAssets.some((asset) => pathname === '/' + asset)) {
+    if (new Set(env.initialAssets).has(pathname.slice(1))) {
       const response = await env.assets.fetch(
         new Request(request.url, {
           signal: request.signal,
