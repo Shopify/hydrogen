@@ -1,4 +1,5 @@
-import {Await, NavLink, useMatches} from '@remix-run/react';
+import {Await, NavLink} from '@remix-run/react';
+import {useEnv} from '@shopify/hydrogen';
 import {Suspense} from 'react';
 import type {LayoutProps} from './Layout';
 
@@ -26,9 +27,12 @@ export function HeaderMenu({
   menu: HeaderProps['header']['menu'];
   viewport: Viewport;
 }) {
-  const [root] = useMatches();
-  const publicStoreDomain = root?.data?.publicStoreDomain;
+  const env = useEnv();
   const className = `header-menu-${viewport}`;
+
+  if (!env?.PUBLIC_STORE_DOMAIN) {
+    return null;
+  }
 
   function closeAside(event: React.MouseEvent<HTMLAnchorElement>) {
     if (viewport === 'mobile') {
@@ -56,7 +60,7 @@ export function HeaderMenu({
         // if the url is internal, we strip the domain
         const url =
           item.url.includes('myshopify.com') ||
-          item.url.includes(publicStoreDomain)
+          item.url.includes(env.PUBLIC_STORE_DOMAIN)
             ? new URL(item.url).pathname
             : item.url;
         return (

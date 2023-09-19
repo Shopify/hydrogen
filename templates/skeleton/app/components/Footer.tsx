@@ -1,4 +1,5 @@
-import {useMatches, NavLink} from '@remix-run/react';
+import {NavLink} from '@remix-run/react';
+import {useEnv} from '@shopify/hydrogen';
 import type {FooterQuery} from 'storefrontapi.generated';
 
 export function Footer({menu}: FooterQuery) {
@@ -10,8 +11,10 @@ export function Footer({menu}: FooterQuery) {
 }
 
 function FooterMenu({menu}: Pick<FooterQuery, 'menu'>) {
-  const [root] = useMatches();
-  const publicStoreDomain = root?.data?.publicStoreDomain;
+  const env = useEnv();
+  if (!env?.PUBLIC_STORE_DOMAIN) {
+    return null;
+  }
   return (
     <nav className="footer-menu" role="navigation">
       {(menu || FALLBACK_FOOTER_MENU).items.map((item) => {
@@ -19,7 +22,7 @@ function FooterMenu({menu}: Pick<FooterQuery, 'menu'>) {
         // if the url is internal, we strip the domain
         const url =
           item.url.includes('myshopify.com') ||
-          item.url.includes(publicStoreDomain)
+          item.url.includes(env.PUBLIC_STORE_DOMAIN)
             ? new URL(item.url).pathname
             : item.url;
         const isExternal = !url.startsWith('/');

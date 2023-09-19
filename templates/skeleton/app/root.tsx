@@ -1,4 +1,5 @@
 import {useNonce} from '@shopify/hydrogen';
+import {getPublicEnv} from '@shopify/hydrogen/server';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
   Links,
@@ -58,8 +59,8 @@ export function links() {
 
 export async function loader({context}: LoaderArgs) {
   const {storefront, session, cart} = context;
+  const publicEnv = getPublicEnv(context.env);
   const customerAccessToken = await session.get('customerAccessToken');
-  const publicStoreDomain = context.env.PUBLIC_STORE_DOMAIN;
 
   // validate the customer access token is valid
   const {isLoggedIn, headers} = await validateCustomerAccessToken(
@@ -92,7 +93,7 @@ export async function loader({context}: LoaderArgs) {
       footer: footerPromise,
       header: await headerPromise,
       isLoggedIn,
-      publicStoreDomain,
+      publicEnv,
     },
     {headers},
   );
