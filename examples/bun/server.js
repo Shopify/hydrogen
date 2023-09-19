@@ -17,7 +17,6 @@ export default {
   async fetch(request) {
     let {pathname} = new URL(request.url);
 
-    debugger;
     let file = Bun.file(resolve(__dirname, './public', `./${pathname}`));
 
     if (await file.exists()) return new Response(file);
