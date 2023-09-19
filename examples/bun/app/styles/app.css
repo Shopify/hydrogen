@@ -34,5 +34,19 @@ p {
 
 .Layout {
   padding: 2rem;
-  max-width: 25rem;
+}
+
+.bun-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+}
+
+.hydrogen {
+  width: 30vw;
+}
+
+.bun {
+  width: 20vw;
 }

@@ -1,15 +1,12 @@
-import {useRouteError, isRouteErrorResponse, Link} from '@remix-run/react';
+import {useRouteError, isRouteErrorResponse} from '@remix-run/react';
 
 export default function Index() {
   return (
-    <>
-      <p>
-        Edit this route in <em>app/routes/index.tsx</em>.
-      </p>
-      <p>
-        <Link to="/collections/freestyle">Freestyle Collection</Link>
-      </p>
-    </>
+    <div className="bun-wrapper">
+      <h1>Welcome to</h1>
+      <img className="hydrogen" src="/hydrogen.webp" alt="Hydrogen logo" />
+      <img className="bun" src="/bun.svg" alt="Bun logo" />
+    </div>
   );
 }
 
