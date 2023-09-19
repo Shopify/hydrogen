@@ -34,8 +34,7 @@
     "react-use": "^17.4.0",
     "schema-dts": "^1.1.0",
     "tiny-invariant": "^1.2.0",
-    "typographic-base": "^1.0.4",
-    "worktop": "^0.7.3"
+    "typographic-base": "^1.0.4"
   },
   "devDependencies": {
     "@remix-run/dev": "1.19.1",
