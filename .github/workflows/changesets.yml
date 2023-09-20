@@ -129,7 +129,7 @@ jobs:
           git config user.name "Hydrogen Bot"
           git show-ref
           git commit -m "[ci] release ${{ needs.changelog.outputs.latestBranch }}"
-          git push origin HEAD:${{ needs.changelog.outputs.latestBranch }}
+          git push origin HEAD:${{ needs.changelog.outputs.latestBranch }} --force
 
   discord_announcement:
     needs: changelog
