@@ -7,7 +7,10 @@ const EXPERIMENTAL_VM_MODULES_FLAG = '--experimental-vm-modules';
 const hook: Hook<'init'> = async function (options) {
   if (
     options.id &&
-    ['hydrogen:dev', 'hydrogen:preview'].includes(options.id) &&
+    // All the commands that rely on MiniOxygen:
+    ['hydrogen:dev', 'hydrogen:preview', 'hydrogen:debug:cpu'].includes(
+      options.id,
+    ) &&
     !process.execArgv.includes(EXPERIMENTAL_VM_MODULES_FLAG) &&
     !(process.env.NODE_OPTIONS ?? '').includes(EXPERIMENTAL_VM_MODULES_FLAG)
   ) {
