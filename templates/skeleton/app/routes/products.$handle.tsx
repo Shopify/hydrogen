@@ -42,7 +42,8 @@ export async function loader({params, request, context}: LoaderArgs) {
       !option.name.startsWith('_pos') &&
       !option.name.startsWith('_psq') &&
       !option.name.startsWith('_ss') &&
-      !option.name.startsWith('_v'),
+      !option.name.startsWith('_v') &&
+      !option.name.startsWith('fbclid'),
   );
 
   if (!handle) {
