@@ -16,7 +16,7 @@ while ensuring that only client-safe variables are shared to the browser.
 
 `getPublicEnv.server`
 
-This simple server utility receives all the env variables in `context.env`
+This simple utility receives all the env variables in `context.env`
 and returns only the variables prefixed with `PUBLIC_`. This utility should be
 called and it's value returned by the root.tsx loader to ensure it is later
 accessible by the `useEnv` utility.

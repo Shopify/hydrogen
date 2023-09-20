@@ -1,5 +1,4 @@
-import {useNonce} from '@shopify/hydrogen';
-import {getPublicEnv} from '@shopify/hydrogen/server';
+import {useNonce, getPublicEnv} from '@shopify/hydrogen';
 import {defer, type LoaderArgs} from '@shopify/remix-oxygen';
 import {
   Links,
