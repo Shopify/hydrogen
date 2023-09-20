@@ -43,7 +43,7 @@ const NO_LOCALE_PATTERNS = [/robots\.txt/];
 const ROUTE_MAP = {
   home: ['_index', '$'],
   page: 'pages*',
-  cart: 'cart',
+  cart: ['cart', 'cart.$lines', 'discount.$code'],
   products: 'products*',
   collections: 'collections*',
   policies: 'policies*',
