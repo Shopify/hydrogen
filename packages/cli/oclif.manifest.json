@@ -20,7 +20,13 @@
           "name": "sourcemap",
           "type": "boolean",
           "description": "Generate sourcemaps for the build.",
-          "allowNo": false
+          "allowNo": true
+        },
+        "bundle-stats": {
+          "name": "bundle-stats",
+          "type": "boolean",
+          "description": "Show a bundle size summary after building.",
+          "allowNo": true
         },
         "disable-route-warning": {
           "name": "disable-route-warning",
@@ -207,6 +213,12 @@
           "multiple": false,
           "default": 3000
         },
+        "worker-unstable": {
+          "name": "worker-unstable",
+          "type": "boolean",
+          "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
+          "allowNo": false
+        },
         "codegen-unstable": {
           "name": "codegen-unstable",
           "type": "boolean",
@@ -339,7 +351,7 @@
           "type": "boolean",
           "description": "Generate routes for all pages.",
           "hidden": true,
-          "allowNo": false
+          "allowNo": true
         },
         "git": {
           "name": "git",
@@ -463,6 +475,19 @@
           "description": "Port to run the server on.",
           "multiple": false,
           "default": 3000
+        },
+        "worker-unstable": {
+          "name": "worker-unstable",
+          "type": "boolean",
+          "description": "Run the app in a worker environment closer to Oxygen production instead of a Node.js sandbox. This flag is unstable and may change without notice.",
+          "allowNo": false
+        },
+        "env-branch": {
+          "name": "env-branch",
+          "type": "option",
+          "char": "e",
+          "description": "Specify an environment's branch name when using remote environment variables.",
+          "multiple": false
         }
       },
       "args": {}

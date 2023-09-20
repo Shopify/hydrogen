@@ -119,11 +119,14 @@ export async function handleRouteGeneration(
   flagRoutes?: boolean,
 ) {
   // TODO: Need a multi-select UI component
-  const routesToScaffold = flagRoutes
-    ? 'all'
-    : await renderRoutePrompt({
-        abortSignal: controller.signal,
-      });
+  const routesToScaffold =
+    flagRoutes === true
+      ? 'all'
+      : flagRoutes === false
+      ? []
+      : await renderRoutePrompt({
+          abortSignal: controller.signal,
+        });
 
   const needsRouteGeneration =
     routesToScaffold === 'all' || routesToScaffold.length > 0;
@@ -377,12 +380,12 @@ export async function handleCssStrategy(
   controller: AbortController,
   flagStyling?: StylingChoice,
 ) {
-  const selection = flagStyling
-    ? flagStyling
-    : await renderCssPrompt({
-        abortSignal: controller.signal,
-        extraChoices: {none: 'Skip and set up later'},
-      });
+  const selection =
+    flagStyling ??
+    (await renderCssPrompt({
+      abortSignal: controller.signal,
+      extraChoices: {none: 'Skip and set up later'},
+    }));
 
   const cssStrategy = selection === 'none' ? undefined : selection;
 
