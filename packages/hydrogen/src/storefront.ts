@@ -488,7 +488,7 @@ function throwError<T>({
       errorMessage +
       (requestId ? ` - Request ID: ${requestId}` : ''),
     {
-      cause: {
+      cause: JSON.stringify({
         errors,
         requestId,
         ...(process.env.NODE_ENV === 'development' && {
@@ -497,7 +497,7 @@ function throwError<T>({
             variables: JSON.stringify(queryVariables),
           },
         }),
-      },
+      }),
     },
   );
 }
