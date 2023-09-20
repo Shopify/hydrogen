@@ -78,6 +78,10 @@ jobs:
       - name: Build the dist code
         run: npm run build
 
+      - name: Compile skeleton
+        run: |
+          node scripts/compile-template-for-dist.mjs skeleton
+
       - name: Compile hello-world
         run: |
           node scripts/compile-template-for-dist.mjs hello-world
