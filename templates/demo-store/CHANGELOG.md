@@ -1,5 +1,27 @@
 # demo-store
 
+## 2.1.1
+
+### Patch Changes
+
+- Hydrogen is now compatible with TypeScript v5. ([#1240](https://github.com/Shopify/hydrogen/pull/1240)) by [@frandiox](https://github.com/frandiox)
+
+  If you have `typescript` as a dev dependency in your app, it is recommended to change its version as follows:
+
+  ```diff
+    "devDependencies": {
+      ...
+  -   "typescript": "^4.9.5",
+  +   "typescript": "^5.2.2",
+    },
+  ```
+
+  After installing the new version of TypeScript, you may need to update the version used in your IDE. For example, in VSCode, you can do this by clicking on the `{ }` icon in the bottom-right toolbar next to the language mode (generally, `{ } TypeScript JSX` when editing a `.tsx` file).
+
+- Updated dependencies [[`3491fd5c`](https://github.com/Shopify/hydrogen/commit/3491fd5cef5586dbf7dc44243124649bfad4df5a), [`06516ee9`](https://github.com/Shopify/hydrogen/commit/06516ee91f20153902c2b8ef79c0f6690ba385bb), [`d67ce6aa`](https://github.com/Shopify/hydrogen/commit/d67ce6aaaa93791fee4b82e722bd2fad8dcefec0), [`1b7e0016`](https://github.com/Shopify/hydrogen/commit/1b7e001647262630dfb66b85f596dd2d86dc12dd), [`ee6e2920`](https://github.com/Shopify/hydrogen/commit/ee6e2920389b6cc103642b43a17af2311d347e13), [`17892a72`](https://github.com/Shopify/hydrogen/commit/17892a72888bc976acc9f6764878253dab795629), [`1a7762bc`](https://github.com/Shopify/hydrogen/commit/1a7762bc4c99ff35ee6392ab7627a0ef13f97e6f), [`1f8acd7b`](https://github.com/Shopify/hydrogen/commit/1f8acd7b6ab0aa78e2a882e59cf69887109504be)]:
+  - @shopify/cli-hydrogen@5.2.1
+  - @shopify/hydrogen@2023.7.4
+
 ## 2.1.0
 
 ### Minor Changes

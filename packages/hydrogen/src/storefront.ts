@@ -391,7 +391,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           );
         }
 
-        return fetchStorefrontApi({...payload, query});
+        const result = fetchStorefrontApi({...payload, query});
+        // this is a no-op, but we need to catch the promise to avoid unhandled rejections
+        // we cannot return the catch no-op, or it would swallow the error
+        result.catch(() => {});
+        return result;
       }),
       /**
        * Sends a GraphQL mutation to the Storefront API.
@@ -414,7 +418,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           );
         }
 
-        return fetchStorefrontApi({...payload, mutation});
+        const result = fetchStorefrontApi({...payload, mutation});
+        // this is a no-op, but we need to catch the promise to avoid unhandled rejections
+        // we cannot return the catch no-op, or it would swallow the error
+        result.catch(() => {});
+        return result;
       }),
       cache,
       CacheNone,
@@ -480,7 +488,7 @@ function throwError<T>({
       errorMessage +
       (requestId ? ` - Request ID: ${requestId}` : ''),
     {
-      cause: {
+      cause: JSON.stringify({
         errors,
         requestId,
         ...(process.env.NODE_ENV === 'development' && {
@@ -489,7 +497,7 @@ function throwError<T>({
             variables: JSON.stringify(queryVariables),
           },
         }),
-      },
+      }),
     },
   );
 }

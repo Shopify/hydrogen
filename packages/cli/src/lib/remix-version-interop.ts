@@ -13,9 +13,14 @@ export function isRemixV2() {
   }
 }
 
+export type RequiredRemixFutureFlags = Pick<
+  RemixConfig['future'],
+  'v2_routeConvention' | 'v2_errorBoundary' | 'v2_meta'
+>;
+
 export async function getV2Flags(
   root: string,
-  remixConfigFuture?: RemixConfig['future'],
+  remixConfigFuture?: RequiredRemixFutureFlags,
 ) {
   const isV2 = isRemixV2();
   const futureFlags = {

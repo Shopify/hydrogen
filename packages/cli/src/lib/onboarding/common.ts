@@ -1,7 +1,7 @@
 import {readdir} from 'node:fs/promises';
 import {
   installNodeModules,
-  packageManagerUsedForCreating,
+  packageManagerFromUserAgent,
   type PackageManager,
 } from '@shopify/cli-kit/node/node-package-manager';
 import {
@@ -119,11 +119,14 @@ export async function handleRouteGeneration(
   flagRoutes?: boolean,
 ) {
   // TODO: Need a multi-select UI component
-  const routesToScaffold = flagRoutes
-    ? 'all'
-    : await renderRoutePrompt({
-        abortSignal: controller.signal,
-      });
+  const routesToScaffold =
+    flagRoutes === true
+      ? 'all'
+      : flagRoutes === false
+      ? []
+      : await renderRoutePrompt({
+          abortSignal: controller.signal,
+        });
 
   const needsRouteGeneration =
     routesToScaffold === 'all' || routesToScaffold.length > 0;
@@ -136,14 +139,25 @@ export async function handleRouteGeneration(
       i18nStrategy?: I18nStrategy,
     ) => {
       if (needsRouteGeneration) {
-        const result = await generateRoutes({
-          routeName: routesToScaffold,
-          directory,
-          force: true,
-          typescript: language === 'ts',
-          localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
-          signal: controller.signal,
-        });
+        const result = await generateRoutes(
+          {
+            routeName: routesToScaffold,
+            directory,
+            force: true,
+            typescript: language === 'ts',
+            localePrefix: i18nStrategy === 'subfolders' ? 'locale' : false,
+            signal: controller.signal,
+          },
+          {
+            rootDirectory: directory,
+            appDirectory: joinPath(directory, 'app'),
+            future: {
+              v2_errorBoundary: true,
+              v2_meta: true,
+              v2_routeConvention: true,
+            },
+          },
+        );
 
         return result.routeGroups;
       }
@@ -366,12 +380,12 @@ export async function handleCssStrategy(
   controller: AbortController,
   flagStyling?: StylingChoice,
 ) {
-  const selection = flagStyling
-    ? flagStyling
-    : await renderCssPrompt({
-        abortSignal: controller.signal,
-        extraChoices: {none: 'Skip and set up later'},
-      });
+  const selection =
+    flagStyling ??
+    (await renderCssPrompt({
+      abortSignal: controller.signal,
+      extraChoices: {none: 'Skip and set up later'},
+    }));
 
   const cssStrategy = selection === 'none' ? undefined : selection;
 
@@ -406,7 +420,7 @@ export async function handleDependencies(
   controller: AbortController,
   shouldInstallDeps?: boolean,
 ) {
-  const detectedPackageManager = await packageManagerUsedForCreating();
+  const detectedPackageManager = packageManagerFromUserAgent();
   let actualPackageManager: PackageManager = 'npm';
 
   if (shouldInstallDeps !== false) {
@@ -501,7 +515,7 @@ export async function commitAll(directory: string, message: string) {
 
 export type SetupSummary = {
   language?: Language;
-  packageManager: 'npm' | 'pnpm' | 'yarn';
+  packageManager: 'npm' | 'pnpm' | 'yarn' | 'unknown';
   cssStrategy?: CssStrategy;
   hasCreatedShortcut: boolean;
   depsInstalled: boolean;

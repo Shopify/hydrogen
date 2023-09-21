@@ -1,7 +1,6 @@
 ---
 '@shopify/cli-hydrogen': patch
 '@shopify/create-hydrogen': patch
-'demo-store': patch
 ---
 
-Ignore .DS_Store
+Fix `--routes` and `--markets` flag when creating new projects.

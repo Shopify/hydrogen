@@ -33,8 +33,9 @@ import {
   convertTemplateToRemixVersion,
   getV2Flags,
   type RemixV2Flags,
+  type RequiredRemixFutureFlags,
 } from '../../../lib/remix-version-interop.js';
-import {getRemixConfig} from '../../remix-config.js';
+import {type RemixConfig, getRemixConfig} from '../../remix-config.js';
 import {findFileWithExtension} from '../../file.js';
 
 const NO_LOCALE_PATTERNS = [/robots\.txt/];
@@ -42,7 +43,7 @@ const NO_LOCALE_PATTERNS = [/robots\.txt/];
 const ROUTE_MAP = {
   home: ['_index', '$'],
   page: 'pages*',
-  cart: 'cart',
+  cart: ['cart', 'cart.$lines', 'discount.$code'],
   products: 'products*',
   collections: 'collections*',
   policies: 'policies*',
@@ -112,14 +113,22 @@ type GenerateRoutesOptions = Omit<
   localePrefix?: GenerateProjectFileOptions['localePrefix'] | false;
 };
 
-export async function generateRoutes(options: GenerateRoutesOptions) {
+type RemixConfigParam = Pick<RemixConfig, 'rootDirectory' | 'appDirectory'> &
+  Pick<Partial<RemixConfig>, 'tsconfigPath'> & {
+    future: RequiredRemixFutureFlags;
+  };
+
+export async function generateRoutes(
+  options: GenerateRoutesOptions,
+  remixConfig?: RemixConfigParam,
+) {
   const {routeGroups, resolvedRouteFiles} =
     options.routeName === 'all'
       ? await getResolvedRoutes()
       : await getResolvedRoutes([options.routeName as RouteKey]);
 
   const {rootDirectory, appDirectory, future, tsconfigPath} =
-    await getRemixConfig(options.directory);
+    remixConfig || (await getRemixConfig(options.directory));
 
   const routesArray = resolvedRouteFiles.flatMap(
     (item) => GENERATOR_ROUTE_DIR + '/' + item,

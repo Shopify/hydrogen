@@ -1,5 +1,99 @@
 # @shopify/hydrogen
 
+## 2023.7.7
+
+### Patch Changes
+
+- Supress the hydration warning in the new `<Script>` component when `nonce` values differ between the server and client, which is expected. ([#1312](https://github.com/Shopify/hydrogen/pull/1312)) by [@frandiox](https://github.com/frandiox)
+
+- (Unstable) server-side network request debug virtual route ([#1284](https://github.com/Shopify/hydrogen/pull/1284)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  1. Update your `server.ts` so that it also passes in the `waitUntil` and `env`.
+
+     ```diff
+       const handleRequest = createRequestHandler({
+         build: remixBuild,
+         mode: process.env.NODE_ENV,
+     +    getLoadContext: () => ({session, storefront, env, waitUntil}),
+       });
+     ```
+
+     If you are using typescript, make sure to update `remix.env.d.ts`
+
+     ```diff
+       declare module '@shopify/remix-oxygen' {
+         export interface AppLoadContext {
+     +     env: Env;
+           cart: HydrogenCart;
+           storefront: Storefront;
+           session: HydrogenSession;
+     +      waitUntil: ExecutionContext['waitUntil'];
+         }
+       }
+     ```
+
+  2. Run `npm run dev` and you should see terminal log information about a new virtual route that you can view server-side network requests at http://localhost:3000/debug-network
+
+  3. Open http://localhost:3000/debug-network in a tab and your app another tab. When you navigate around your app, you should see server network requests being logged in the debug-network tab
+
+## 2023.7.6
+
+### Patch Changes
+
+- Updated dependencies [[`345f06a2`](https://github.com/Shopify/hydrogen/commit/345f06a27886eceaf1ea6b75971c1130b059e2db)]:
+  - @shopify/hydrogen-react@2023.7.4
+
+## 2023.7.5
+
+### Patch Changes
+
+- Fix the Pagination component to reset internal state when the URL changes (not including Pagination params). ([#1291](https://github.com/Shopify/hydrogen/pull/1291)) by [@blittle](https://github.com/blittle)
+
+  We also now validate the connection prop to include a `pageInfo` object with the following properties:
+
+  1. `hasNextPage`
+  1. `hasPreviousPage`
+  1. `endCursor`
+  1. `startCursor`
+
+  Previously our templates had a bug where `startCursor` was not included. Upgrading means the app will error
+  until you update your query to include it:
+
+  ```diff
+   query CollectionDetails {
+     collection(handle: $handle) {
+       ...
+       pageInfo {
+         hasPreviousPage
+         hasNextPage
+         hasNextPage
+         endCursor
+  +      startCursor
+       }
+     }
+   }
+
+  ```
+
+## 2023.7.4
+
+### Patch Changes
+
+- Fix hydration errors and stale data within the Pagination component ([#1283](https://github.com/Shopify/hydrogen/pull/1283)) by [@blittle](https://github.com/blittle)
+
+- Add custom product paths to the `VariantSelector` component: ([#1271](https://github.com/Shopify/hydrogen/pull/1271)) by [@blittle](https://github.com/blittle)
+
+  ```tsx
+  <VariantSelector handle="snowboard" productPath="shop" options={options}>
+    {/* ... */}
+  </VariantSelector>
+  ```
+
+- Add functionality for creating a Content Security Policy. See the [guide on Content Security Policies](https://shopify.dev/docs/custom-storefronts/hydrogen/content-security-policy) for more details. ([#1235](https://github.com/Shopify/hydrogen/pull/1235)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`06516ee9`](https://github.com/Shopify/hydrogen/commit/06516ee91f20153902c2b8ef79c0f6690ba385bb), [`423acee2`](https://github.com/Shopify/hydrogen/commit/423acee243c62e49a865ff2cd82735991aca1d8f)]:
+  - @shopify/hydrogen-react@2023.7.3
+
 ## 2023.7.3
 
 ### Patch Changes

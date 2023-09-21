@@ -57,7 +57,7 @@ function createCSPHeader(
     ],
     frameAncestors: ['none'],
     styleSrc: ["'self'", "'unsafe-inline'", 'https://cdn.shopify.com'],
-    connectSrc: ['self', 'https://monorail-edge.shopifysvc.com'],
+    connectSrc: ["'self'", 'https://monorail-edge.shopifysvc.com'],
   };
 
   // Support HMR in local development

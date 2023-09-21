@@ -1,5 +1,51 @@
 # @shopify/create-hydrogen
 
+## 4.2.4
+
+### Patch Changes
+
+- (Unstable) server-side network request debug virtual route ([#1284](https://github.com/Shopify/hydrogen/pull/1284)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  1. Update your `server.ts` so that it also passes in the `waitUntil` and `env`.
+
+     ```diff
+       const handleRequest = createRequestHandler({
+         build: remixBuild,
+         mode: process.env.NODE_ENV,
+     +    getLoadContext: () => ({session, storefront, env, waitUntil}),
+       });
+     ```
+
+     If you are using typescript, make sure to update `remix.env.d.ts`
+
+     ```diff
+       declare module '@shopify/remix-oxygen' {
+         export interface AppLoadContext {
+     +     env: Env;
+           cart: HydrogenCart;
+           storefront: Storefront;
+           session: HydrogenSession;
+     +      waitUntil: ExecutionContext['waitUntil'];
+         }
+       }
+     ```
+
+  2. Run `npm run dev` and you should see terminal log information about a new virtual route that you can view server-side network requests at http://localhost:3000/debug-network
+
+  3. Open http://localhost:3000/debug-network in a tab and your app another tab. When you navigate around your app, you should see server network requests being logged in the debug-network tab
+
+- Updated dependencies [[`291115da`](https://github.com/Shopify/hydrogen/commit/291115da68625c5f992b7bc6e10480d4ec54c246), [`71a07374`](https://github.com/Shopify/hydrogen/commit/71a0737438d51bae79330d3251f47355e814a453)]:
+  - @shopify/cli-hydrogen@5.2.3
+
+## 4.2.3
+
+### Patch Changes
+
+- Add functionality for creating a Content Security Policy. See the [guide on Content Security Policies](https://shopify.dev/docs/custom-storefronts/hydrogen/content-security-policy) for more details. ([#1235](https://github.com/Shopify/hydrogen/pull/1235)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`3491fd5c`](https://github.com/Shopify/hydrogen/commit/3491fd5cef5586dbf7dc44243124649bfad4df5a), [`06516ee9`](https://github.com/Shopify/hydrogen/commit/06516ee91f20153902c2b8ef79c0f6690ba385bb), [`d67ce6aa`](https://github.com/Shopify/hydrogen/commit/d67ce6aaaa93791fee4b82e722bd2fad8dcefec0), [`ee6e2920`](https://github.com/Shopify/hydrogen/commit/ee6e2920389b6cc103642b43a17af2311d347e13), [`1a7762bc`](https://github.com/Shopify/hydrogen/commit/1a7762bc4c99ff35ee6392ab7627a0ef13f97e6f), [`1f8acd7b`](https://github.com/Shopify/hydrogen/commit/1f8acd7b6ab0aa78e2a882e59cf69887109504be)]:
+  - @shopify/cli-hydrogen@5.2.1
+
 ## 4.2.2
 
 ### Patch Changes

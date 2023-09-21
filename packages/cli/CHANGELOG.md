@@ -1,5 +1,84 @@
 # @shopify/cli-hydrogen
 
+## 5.2.3
+
+### Patch Changes
+
+- Delay installing certain dependencies to speed up project initialization time. ([#1272](https://github.com/Shopify/hydrogen/pull/1272)) by [@frandiox](https://github.com/frandiox)
+
+- (Unstable) server-side network request debug virtual route ([#1284](https://github.com/Shopify/hydrogen/pull/1284)) by [@wizardlyhel](https://github.com/wizardlyhel)
+
+  1. Update your `server.ts` so that it also passes in the `waitUntil` and `env`.
+
+     ```diff
+       const handleRequest = createRequestHandler({
+         build: remixBuild,
+         mode: process.env.NODE_ENV,
+     +    getLoadContext: () => ({session, storefront, env, waitUntil}),
+       });
+     ```
+
+     If you are using typescript, make sure to update `remix.env.d.ts`
+
+     ```diff
+       declare module '@shopify/remix-oxygen' {
+         export interface AppLoadContext {
+     +     env: Env;
+           cart: HydrogenCart;
+           storefront: Storefront;
+           session: HydrogenSession;
+     +      waitUntil: ExecutionContext['waitUntil'];
+         }
+       }
+     ```
+
+  2. Run `npm run dev` and you should see terminal log information about a new virtual route that you can view server-side network requests at http://localhost:3000/debug-network
+
+  3. Open http://localhost:3000/debug-network in a tab and your app another tab. When you navigate around your app, you should see server network requests being logged in the debug-network tab
+
+- Updated dependencies [[`71a07374`](https://github.com/Shopify/hydrogen/commit/71a0737438d51bae79330d3251f47355e814a453)]:
+  - @shopify/remix-oxygen@1.1.4
+
+## 5.2.2
+
+### Patch Changes
+
+- Fix error stack traces in development mode. ([#1297](https://github.com/Shopify/hydrogen/pull/1297)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`345f06a2`](https://github.com/Shopify/hydrogen/commit/345f06a27886eceaf1ea6b75971c1130b059e2db)]:
+  - @shopify/hydrogen-react@2023.7.4
+
+## 5.2.1
+
+### Patch Changes
+
+- Fix the default page shown when the project has no routes. ([#1266](https://github.com/Shopify/hydrogen/pull/1266)) by [@frandiox](https://github.com/frandiox)
+
+- Hydrogen is now compatible with TypeScript v5. ([#1240](https://github.com/Shopify/hydrogen/pull/1240)) by [@frandiox](https://github.com/frandiox)
+
+  If you have `typescript` as a dev dependency in your app, it is recommended to change its version as follows:
+
+  ```diff
+    "devDependencies": {
+      ...
+  -   "typescript": "^4.9.5",
+  +   "typescript": "^5.2.2",
+    },
+  ```
+
+  After installing the new version of TypeScript, you may need to update the version used in your IDE. For example, in VSCode, you can do this by clicking on the `{ }` icon in the bottom-right toolbar next to the language mode (generally, `{ } TypeScript JSX` when editing a `.tsx` file).
+
+- Fix development server port in some situations where it was set to a random number instead of the default 3000 or the `--port` flag value. ([#1267](https://github.com/Shopify/hydrogen/pull/1267)) by [@frandiox](https://github.com/frandiox)
+
+- Fix transpiling TS to JS when scaffolding routes. ([#1273](https://github.com/Shopify/hydrogen/pull/1273)) by [@frandiox](https://github.com/frandiox)
+
+- Catch more errors during init while connecting to Shopify ([#1281](https://github.com/Shopify/hydrogen/pull/1281)) by [@graygilmore](https://github.com/graygilmore)
+
+- Add functionality for creating a Content Security Policy. See the [guide on Content Security Policies](https://shopify.dev/docs/custom-storefronts/hydrogen/content-security-policy) for more details. ([#1235](https://github.com/Shopify/hydrogen/pull/1235)) by [@blittle](https://github.com/blittle)
+
+- Updated dependencies [[`06516ee9`](https://github.com/Shopify/hydrogen/commit/06516ee91f20153902c2b8ef79c0f6690ba385bb), [`423acee2`](https://github.com/Shopify/hydrogen/commit/423acee243c62e49a865ff2cd82735991aca1d8f)]:
+  - @shopify/hydrogen-react@2023.7.3
+
 ## 5.2.0
 
 ### Minor Changes

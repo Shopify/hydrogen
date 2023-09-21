@@ -9,6 +9,7 @@ import {
   assertOxygenChecks,
   getProjectPaths,
   getRemixConfig,
+  handleRemixImportFail,
   type ServerMode,
 } from '../../lib/remix-config.js';
 import {createRemixLogger, enhanceH2Logs, muteDevLogs} from '../../lib/log.js';
@@ -20,7 +21,7 @@ import {
 } from '../../lib/flags.js';
 import Command from '@shopify/cli-kit/node/base-command';
 import {Flags} from '@oclif/core';
-import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen.js';
+import {type MiniOxygen, startMiniOxygen} from '../../lib/mini-oxygen/index.js';
 import {checkHydrogenVersion} from '../../lib/check-version.js';
 import {addVirtualRoutes} from '../../lib/virtual-routes.js';
 import {spawnCodegenProcess} from '../../lib/codegen.js';
@@ -38,6 +39,7 @@ export default class Dev extends Command {
   static flags = {
     path: commonFlags.path,
     port: commonFlags.port,
+    ['worker-unstable']: commonFlags.workerRuntime,
     ['codegen-unstable']: Flags.boolean({
       description:
         'Generate types for the Storefront API queries found in your project. It updates the types on file save.',
@@ -68,6 +70,7 @@ export default class Dev extends Command {
     await runDev({
       ...flagsToCamelObject(flags),
       useCodegen: flags['codegen-unstable'],
+      workerRuntime: flags['worker-unstable'],
       path: directory,
     });
   }
@@ -77,6 +80,7 @@ async function runDev({
   port: portFlag = DEFAULT_PORT,
   path: appPath,
   useCodegen = false,
+  workerRuntime = false,
   codegenConfigPath,
   disableVirtualRoutes,
   envBranch,
@@ -86,6 +90,7 @@ async function runDev({
   port?: number;
   path?: string;
   useCodegen?: boolean;
+  workerRuntime?: boolean;
   codegenConfigPath?: string;
   disableVirtualRoutes?: boolean;
   envBranch?: string;
@@ -142,7 +147,7 @@ async function runDev({
   const [{watch}, {createFileWatchCache}] = await Promise.all([
     import('@remix-run/dev/dist/compiler/watch.js'),
     import('@remix-run/dev/dist/compiler/fileWatchCache.js'),
-  ]);
+  ]).catch(handleRemixImportFail);
 
   let isInitialBuild = true;
   let initialBuildDurationMs = 0;
@@ -156,16 +161,20 @@ async function runDev({
   async function safeStartMiniOxygen() {
     if (miniOxygen) return;
 
-    miniOxygen = await startMiniOxygen({
-      root,
-      port: portFlag,
-      watch: !liveReload,
-      buildPathWorkerFile,
-      buildPathClient,
-      env: await envPromise,
-    });
+    miniOxygen = await startMiniOxygen(
+      {
+        root,
+        port: portFlag,
+        watch: !liveReload,
+        buildPathWorkerFile,
+        buildPathClient,
+        env: await envPromise,
+      },
+      workerRuntime,
+    );
 
     const graphiqlUrl = `${miniOxygen.listeningAt}/graphiql`;
+    const debugNetworkUrl = `${miniOxygen.listeningAt}/debug-network`;
     enhanceH2Logs({graphiqlUrl, ...remixConfig});
 
     miniOxygen.showBanner({
@@ -174,7 +183,14 @@ async function runDev({
         initialBuildDurationMs > 0
           ? `Initial build: ${initialBuildDurationMs}ms\n`
           : '',
-      extraLines: [colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`)],
+      extraLines: [
+        colors.dim(`\nView GraphiQL API browser: ${graphiqlUrl}`),
+        workerRuntime
+          ? ''
+          : colors.dim(
+              `\nView server-side network requests: ${debugNetworkUrl}`,
+            ),
+      ].filter(Boolean),
     });
 
     if (useCodegen) {
@@ -236,7 +252,7 @@ async function runDev({
           if (!miniOxygen) {
             await safeStartMiniOxygen();
           } else if (liveReload) {
-            await miniOxygen.reload({worker: true});
+            await miniOxygen.reload();
           }
 
           liveReload?.onAppReady(context);
