@@ -44,7 +44,7 @@ Network requests debugger (Unstable)
 
 ### Notable
 
-Fix cookie token
+Fixes cookie token
 
 #### Packages
 
