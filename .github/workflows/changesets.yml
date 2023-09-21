@@ -120,7 +120,7 @@ jobs:
           git config user.email "hydrogen@shopify.com"
           git config user.name "Hydrogen Bot"
           git show-ref
-          git commit -m "Update package-lock.json"
+          git commit -m "[ci] Update package-lock.json"
           git push origin HEAD:main
 
       - name: Sync latest to version branch
