@@ -113,15 +113,16 @@ jobs:
       - name: Update package-lock.json
         run: npm install --package-lock-only --ignore-engines
 
-      - name: Push commit to main branch
-        run: |
-          git add .
-          git status
-          git config user.email "hydrogen@shopify.com"
-          git config user.name "Hydrogen Bot"
-          git show-ref
-          git commit -m "[ci] Update package-lock.json"
-          git push origin HEAD:main
+      # TODO: Figure out how to push to protected branch
+      # - name: Push commit to main branch
+      #   run: |
+      #     git add .
+      #     git status
+      #     git config user.email "hydrogen@shopify.com"
+      #     git config user.name "Hydrogen Bot"
+      #     git show-ref
+      #     git commit -m "[ci] Update package-lock.json"
+      #     git push origin HEAD:main
 
       - name: Sync latest to version branch
         run: |
@@ -150,7 +151,7 @@ jobs:
           content="${content//$'\n'/'%0A'}"
           content="${content//$'\r'/'%0D'}"
           # end of handling multi line json
-          echo "packageJson=$content" >> $GITHUB_OUTPUT
+          echo "::set-output name=packageJson::$content"
       - run: |
           echo "HYDROGEN_VERSION=${{fromJSON(steps.read_package_json.outputs.packageJson).version}}" >> $GITHUB_ENV
 
