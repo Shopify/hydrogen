@@ -22,6 +22,7 @@ import {
   getProjectPaths,
   getRemixConfig,
   handleRemixImportFail,
+  RemixConfig,
   type ServerMode,
 } from '../../lib/remix-config.js';
 import {deprecated, commonFlags, flagsToCamelObject} from '../../lib/flags.js';
@@ -32,6 +33,7 @@ import {codegen} from '../../lib/codegen.js';
 import {
   buildBundleAnalysis,
   getBundleAnalysisSummary,
+  hasMetafile,
 } from '../../lib/bundle/analyzer.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
 
@@ -148,43 +150,22 @@ export async function runBuild({
   if (process.env.NODE_ENV !== 'development') {
     console.timeEnd(LOG_WORKER_BUILT);
     const sizeMB = (await fileSize(buildPathWorkerFile)) / (1024 * 1024);
-    const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
 
-    outputInfo(
-      outputContent`   ${colors.dim(
-        relativePath(root, buildPathWorkerFile),
-      )}  ${outputToken.link(
-        colors.yellow(sizeMB.toFixed(2) + ' MB'),
-        bundleAnalysisPath,
-      )}\n`,
-    );
-
-    if (bundleStats && sizeMB < MAX_WORKER_BUNDLE_SIZE) {
-      outputInfo(
-        outputContent`${
-          (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
-        }\n    │\n    └─── ${outputToken.link(
-          'Complete analysis: ' + bundleAnalysisPath,
-          bundleAnalysisPath,
-        )}\n\n`,
+    if (await hasMetafile(buildPath)) {
+      await writeBundleAnalysis(
+        buildPath,
+        root,
+        buildPathWorkerFile,
+        sizeMB,
+        bundleStats,
+        remixConfig,
       );
-    }
-
-    if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
-      throw new AbortError(
-        '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
-        outputContent`See the bundle analysis for a breakdown of what is contributing to the bundle size:\n${outputToken.link(
-          bundleAnalysisPath,
-          bundleAnalysisPath,
-        )}`,
-      );
-    } else if (sizeMB >= 5) {
-      outputWarn(
-        `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
-          remixConfig.serverMinify
-            ? ''
-            : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
-        }\n`,
+    } else {
+      await writeSimpleBuildStatus(
+        root,
+        buildPathWorkerFile,
+        sizeMB,
+        remixConfig,
       );
     }
   }
@@ -210,6 +191,81 @@ export async function runBuild({
   // The actual build has already finished so we can kill the process.
   if (!process.env.SHOPIFY_UNIT_TEST && !assetPath) {
     process.exit(0);
+  }
+}
+
+async function writeBundleAnalysis(
+  buildPath: string,
+  root: string,
+  buildPathWorkerFile: string,
+  sizeMB: number,
+  bundleStats: boolean,
+  remixConfig: RemixConfig,
+) {
+  const bundleAnalysisPath = await buildBundleAnalysis(buildPath);
+  outputInfo(
+    outputContent`   ${colors.dim(
+      relativePath(root, buildPathWorkerFile),
+    )}  ${outputToken.link(
+      colors.yellow(sizeMB.toFixed(2) + ' MB'),
+      bundleAnalysisPath,
+    )}\n`,
+  );
+
+  if (bundleStats && sizeMB < MAX_WORKER_BUNDLE_SIZE) {
+    outputInfo(
+      outputContent`${
+        (await getBundleAnalysisSummary(buildPathWorkerFile)) || '\n'
+      }\n    │\n    └─── ${outputToken.link(
+        'Complete analysis: ' + bundleAnalysisPath,
+        bundleAnalysisPath,
+      )}\n\n`,
+    );
+  }
+
+  if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
+    throw new AbortError(
+      '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
+      outputContent`See the bundle analysis for a breakdown of what is contributing to the bundle size:\n${outputToken.link(
+        bundleAnalysisPath,
+        bundleAnalysisPath,
+      )}`,
+    );
+  } else if (sizeMB >= 5) {
+    outputWarn(
+      `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
+        remixConfig.serverMinify
+          ? ''
+          : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
+      }\n`,
+    );
+  }
+}
+
+async function writeSimpleBuildStatus(
+  root: string,
+  buildPathWorkerFile: string,
+  sizeMB: number,
+  remixConfig: RemixConfig,
+) {
+  outputInfo(
+    outputContent`   ${colors.dim(
+      relativePath(root, buildPathWorkerFile),
+    )}  ${colors.yellow(sizeMB.toFixed(2) + ' MB')}\n`,
+  );
+
+  if (sizeMB >= MAX_WORKER_BUNDLE_SIZE) {
+    throw new AbortError(
+      '🚨 Worker bundle exceeds 10 MB! Oxygen has a maximum worker bundle size of 10 MB.',
+    );
+  } else if (sizeMB >= 5) {
+    outputWarn(
+      `🚨 Worker bundle exceeds 5 MB! This can delay your worker response.${
+        remixConfig.serverMinify
+          ? ''
+          : ' Minify your bundle by adding `serverMinify: true` to remix.config.js.'
+      }\n`,
+    );
   }
 }
 
