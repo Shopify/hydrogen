@@ -1,5 +1,11 @@
 # @shopify/cli-hydrogen
 
+## 5.3.1
+
+### Patch Changes
+
+- Make the CLI bundle analysis compatible with older Remix versions that don't output a metafile ([#1357](https://github.com/Shopify/hydrogen/pull/1357)) by [@blittle](https://github.com/blittle)
+
 ## 5.3.0
 
 ### Minor Changes
