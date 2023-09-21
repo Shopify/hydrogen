@@ -1,4 +1,8 @@
-import {defer, type LinksFunction, type LoaderArgs} from '@remix-run/node';
+import {
+  defer,
+  type LinksFunction,
+  type LoaderFunctionArgs,
+} from '@remix-run/node';
 import {
   Links,
   Meta,
@@ -29,7 +33,7 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   const [customerAccessToken, cartId] = await Promise.all([
     context.session.get('customerAccessToken'),
     context.session.get('cartId'),

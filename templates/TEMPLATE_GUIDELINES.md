@@ -133,7 +133,10 @@ Remix-specific route API functions should be ordered and consistent in style, to
 
 ```tsx
 /* module imports... */
-import type {LoaderArgs, ActionArgs} from '@shopify/remix-oxygen';
+import type {
+  LoaderFunctionArgs,
+  ActionFunctionArgs,
+} from '@shopify/remix-oxygen';
 
 /* local type defintions */
 
@@ -147,9 +150,9 @@ export async function meta() {}
 
 export async function links() {}
 
-export async function loader({}: LoaderArgs) {}
+export async function loader({}: LoaderFunctionArgs) {}
 
-export async function action({}: ActionArgs) {}
+export async function action({}: ActionFunctionArgs) {}
 
 export default function Component() {}
 
