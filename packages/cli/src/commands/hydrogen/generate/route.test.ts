@@ -40,7 +40,10 @@ describe('runGenerate', () => {
 
     await runGenerate(options);
 
-    expect(generateRoutes).toHaveBeenCalledWith(options);
+    expect(generateRoutes).toHaveBeenCalledWith({
+      ...options,
+      v1RouteConvention: false,
+    });
 
     expect(outputMock.info()).toMatch(/2 of 3 routes/i);
   });
