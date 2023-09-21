@@ -1,8 +1,5 @@
 import {describe, it, expect} from 'vitest';
-import {
-  convertRouteToV1,
-  convertTemplateToRemixVersion,
-} from './remix-version-interop.js';
+import {convertRouteToV1} from './remix-version-interop.js';
 
 describe('remix-version-interop', () => {
   describe('v2_routeConvention', () => {
@@ -29,30 +26,6 @@ describe('remix-version-interop', () => {
       return [{title}];
     };
     `.replace(/^\s{4}/gm, '');
-
-    it('transforms meta exports to v2', async () => {
-      const result = convertTemplateToRemixVersion(META_TEMPLATE, {
-        isV2Meta: true,
-      });
-
-      expect(result).toContain('type V2_MetaFunction');
-      expect(result).not.toContain('type MetaFunction');
-      expect(result).not.toContain('@shopify/remix-oxygen');
-      expect(result).toMatch(/return \[\{title\}\];/);
-      expect(result).not.toMatch(/return \{title\};/);
-    });
-
-    it('transforms meta exports to v1', async () => {
-      const result = convertTemplateToRemixVersion(META_TEMPLATE, {
-        isV2Meta: false,
-      });
-
-      expect(result).toContain('type MetaFunction');
-      expect(result).not.toContain('type V2_MetaFunction');
-      expect(result).not.toContain('@remix-run/react');
-      expect(result).toMatch(/return \{title\};/);
-      expect(result).not.toMatch(/return \[\{title\}\];/);
-    });
   });
 
   describe('v2_errorBoundary', () => {
@@ -83,34 +56,5 @@ describe('remix-version-interop', () => {
       }
     }
     `.replace(/^\s{4}/gm, '');
-
-    it('transforms ErrorBoundary exports to v2', async () => {
-      const result = convertTemplateToRemixVersion(ERROR_BOUNDARY_TEMPLATE, {
-        isV2ErrorBoundary: true,
-      });
-
-      expect(result).toContain('export function ErrorBoundary');
-      expect(result).not.toContain('export const ErrorBoundary');
-      expect(result).not.toMatch('export function CatchBoundary');
-      expect(result).not.toContain('type ErrorBoundaryComponent');
-      expect(result).not.toContain('@shopify/remix-oxygen'); // Cleans empty up imports
-      expect(result).toContain('useRouteError');
-      expect(result).toContain('isRouteErrorResponse');
-      expect(result).not.toContain('useCatch');
-    });
-
-    it('transforms ErrorBoundary exports to v1', async () => {
-      const result = convertTemplateToRemixVersion(ERROR_BOUNDARY_TEMPLATE, {
-        isV2ErrorBoundary: false,
-      });
-
-      expect(result).toContain('export const ErrorBoundary');
-      expect(result).not.toContain('export function ErrorBoundary');
-      expect(result).toMatch('export function CatchBoundary');
-      expect(result).toContain('type ErrorBoundaryComponent');
-      expect(result).toContain('useCatch');
-      expect(result).not.toContain('useRouteError');
-      expect(result).not.toContain('isRouteErrorResponse');
-    });
   });
 });

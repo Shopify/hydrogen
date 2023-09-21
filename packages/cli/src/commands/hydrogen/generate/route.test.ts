@@ -20,7 +20,6 @@ describe('runGenerate', () => {
     vi.mocked(generateRoutes).mockResolvedValue({
       isTypescript: true,
       formatOptions: {} as any,
-      v2Flags: {} as any,
       routeGroups: {},
       routes: [
         {sourceRoute: '', destinationRoute: '/cart', operation: 'created'},
