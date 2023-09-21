@@ -1,5 +1,15 @@
 # demo-store
 
+## 2.1.2
+
+### Patch Changes
+
+- Improved types of `HydrogenSession` when accessing `session.get('customerAccessToken')`. ([#1341](https://github.com/Shopify/hydrogen/pull/1341)) by [@frandiox](https://github.com/frandiox)
+
+- Updated dependencies [[`33ae6ab6`](https://github.com/Shopify/hydrogen/commit/33ae6ab6029213ba34e8c7441d99c7eb8d31721b), [`d8dc1acf`](https://github.com/Shopify/hydrogen/commit/d8dc1acf96fae571115908973a47cab3e85f2f2a), [`e62a4db1`](https://github.com/Shopify/hydrogen/commit/e62a4db1f54866868d76b450a285d19360fbf83b), [`305862ff`](https://github.com/Shopify/hydrogen/commit/305862ff20ca1db2cdecebe2fff34452189d04e8), [`33258210`](https://github.com/Shopify/hydrogen/commit/33258210b494b7627c9035c0c54561a3f7a865b2), [`e62a4db1`](https://github.com/Shopify/hydrogen/commit/e62a4db1f54866868d76b450a285d19360fbf83b), [`be4994fe`](https://github.com/Shopify/hydrogen/commit/be4994feaee7834edd6e58c0bfe585fafa5a48a0), [`87918e31`](https://github.com/Shopify/hydrogen/commit/87918e317f15f21cc7e6f3deb39664935e379d79), [`2ce3861e`](https://github.com/Shopify/hydrogen/commit/2ce3861ebe51b2fec53c178a19cc21201c4cc2ac), [`e62a4db1`](https://github.com/Shopify/hydrogen/commit/e62a4db1f54866868d76b450a285d19360fbf83b), [`384a4267`](https://github.com/Shopify/hydrogen/commit/384a4267a56d9386ba4f59b82c0705010ddba590), [`113821e5`](https://github.com/Shopify/hydrogen/commit/113821e57bc46ef5fe926889473399f2dc54bbdb)]:
+  - @shopify/cli-hydrogen@5.3.0
+  - @shopify/hydrogen@2023.7.8
+
 ## 2.1.1
 
 ### Patch Changes
