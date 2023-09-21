@@ -20,10 +20,9 @@ import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
 import {Layout} from '~/components/Layout';
 
-type RootLoaderData = Awaited<ReturnType<typeof loader>>['data'];
 export const useRootLoaderData = () => {
   const [root] = useMatches();
-  return root?.data as RootLoaderData;
+  return root?.data as Awaited<ReturnType<typeof loader>>['data'];
 };
 
 // This is important to avoid re-fetching root queries on sub-navigations
