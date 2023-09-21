@@ -119,7 +119,7 @@ export async function generateRoutes(
       ? await getResolvedRoutes()
       : await getResolvedRoutes([options.routeName as RouteKey]);
 
-  const {rootDirectory, appDirectory, tsconfigPath} =
+  const {rootDirectory, appDirectory} =
     remixConfig || (await getRemixConfig(options.directory));
 
   const routesArray = resolvedRouteFiles.flatMap(
@@ -129,7 +129,8 @@ export async function generateRoutes(
   const formatOptions = await getCodeFormatOptions(rootDirectory);
   const localePrefix = await getLocalePrefix(appDirectory, options);
   const typescript = !!(
-    options.typescript ?? tsconfigPath?.endsWith('tsconfig.json')
+    options.typescript ??
+    (await fileExists(joinPath(rootDirectory, 'tsconfig.json')))
   );
 
   const routes: GenerateRoutesResult[] = [];
