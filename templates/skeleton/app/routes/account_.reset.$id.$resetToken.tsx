@@ -1,4 +1,4 @@
-import {type ActionArgs, json, redirect} from '@shopify/remix-oxygen';
+import {type ActionFunctionArgs, json, redirect} from '@shopify/remix-oxygen';
 import {Form, useActionData, type MetaFunction} from '@remix-run/react';
 
 type ActionResponse = {
@@ -9,7 +9,7 @@ export const meta: MetaFunction = () => {
   return [{title: 'Reset Password'}];
 };
 
-export async function action({request, context, params}: ActionArgs) {
+export async function action({request, context, params}: ActionFunctionArgs) {
   if (request.method !== 'POST') {
     return json({error: 'Method not allowed'}, {status: 405});
   }

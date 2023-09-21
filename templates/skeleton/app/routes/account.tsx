@@ -1,12 +1,12 @@
 import {Form, NavLink, Outlet, useLoaderData} from '@remix-run/react';
-import {json, redirect, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, redirect, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import type {CustomerFragment} from 'storefrontapi.generated';
 
 export function shouldRevalidate() {
   return true;
 }
 
-export async function loader({request, context}: LoaderArgs) {
+export async function loader({request, context}: LoaderFunctionArgs) {
   const {session, storefront} = context;
   const {pathname} = new URL(request.url);
   const customerAccessToken = await session.get('customerAccessToken');

@@ -1,4 +1,4 @@
-import {json, redirect, type ActionArgs} from '@shopify/remix-oxygen';
+import {json, redirect, type ActionFunctionArgs} from '@shopify/remix-oxygen';
 import {type MetaFunction} from '@remix-run/react';
 
 export const meta: MetaFunction = () => {
@@ -9,7 +9,7 @@ export async function loader() {
   return redirect('/account/login');
 }
 
-export async function action({request, context}: ActionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   const {session} = context;
   session.unset('customerAccessToken');
 
