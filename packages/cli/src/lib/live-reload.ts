@@ -1,9 +1,5 @@
-// Support Remix 0.19 HMR and HDR.
-// Requirements:
-// - Enable `future.v2_dev` in `remix.config.js`
-// - Add <LiveReload /> to the root of your app
-// Note:
-// - This is not a public API in Remix and may change at any time.
+// Support Remix HMR and HDR.
+// Note: This is not a public API in Remix and may change at any time.
 
 import http from 'node:http';
 import type {AssetsManifest} from '@remix-run/dev';
