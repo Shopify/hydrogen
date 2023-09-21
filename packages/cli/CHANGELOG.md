@@ -1,5 +1,29 @@
 # @shopify/cli-hydrogen
 
+## 5.3.0
+
+### Minor Changes
+
+- Add `--worker-unstable` flag to `h2 dev` and `h2 preview` commands. This flag enables the use of the new experimental worker runtime for local development, which is closer to Oxygen production than the current Node.js sandbox. Please report any issues you encounter with this flag. ([#1184](https://github.com/Shopify/hydrogen/pull/1184)) by [@frandiox](https://github.com/frandiox)
+
+- Add deploy command (disabled by default) ([#1019](https://github.com/Shopify/hydrogen/pull/1019)) by [@vincentezw](https://github.com/vincentezw)
+
+### Patch Changes
+
+- Add magic cart and discount routes to skeleton template ([#1309](https://github.com/Shopify/hydrogen/pull/1309)) by [@juanpprieto](https://github.com/juanpprieto)
+
+- Updates placeholder page to suggest the `h2 setup` command, instead of `h2 generate route home` ([#1347](https://github.com/Shopify/hydrogen/pull/1347)) by [@benjaminsehl](https://github.com/benjaminsehl)
+
+- Adjust behavior of `h2 preview` command around environment variables to be more consistent with `h2 dev` command. ([#1184](https://github.com/Shopify/hydrogen/pull/1184)) by [@frandiox](https://github.com/frandiox)
+
+- We've added a tool for analyzing bundle sizes. You should try to keep your worker bundle small. The larger it gets effects the cold startup time of your app. We now include `client-bundle-analyzer.html` and `worker-bundle-analyzer.html` files in the build output. Open these in your browser to view an interactive analysis of your bundles. The CLI output also includes links to each file. Hydrogen also fails to build if your bundle size is over 10 MB. This is because Oxygen only supports worker bundles less than 10 MB. ([#1306](https://github.com/Shopify/hydrogen/pull/1306)) by [@blittle](https://github.com/blittle)
+
+- Raise the subrequest limit to 100 for development. ([#1348](https://github.com/Shopify/hydrogen/pull/1348)) by [@frandiox](https://github.com/frandiox)
+
+- Fix `--routes` and `--markets` flag when creating new projects. ([#1342](https://github.com/Shopify/hydrogen/pull/1342)) by [@frandiox](https://github.com/frandiox)
+
+- Make sourcemaps to default be turned on. They were off to prevent sourcemaps leaking server code to the client. Oxygen now makes sure to not serve the sourcemaps, so it's okay to generate them. Also, when sourcemaps are present, we hope to enable sourcemapped stack traces in error logs on Oxygen. ([#1339](https://github.com/Shopify/hydrogen/pull/1339)) by [@blittle](https://github.com/blittle)
+
 ## 5.2.3
 
 ### Patch Changes
