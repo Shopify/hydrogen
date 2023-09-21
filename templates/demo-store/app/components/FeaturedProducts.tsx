@@ -38,7 +38,7 @@ export function FeaturedProducts({
   reverse,
   sortKey = 'BEST_SELLING',
 }: FeaturedProductsProps) {
-  const {load, data} = useFetcher();
+  const {load, data} = useFetcher<{products: Product[]}>();
   const queryString = useMemo(
     () =>
       Object.entries({count, sortKey, query, reverse})
@@ -69,7 +69,7 @@ export function FeaturedProducts({
         <FeatureProductsContent
           count={count}
           onClick={onClose}
-          products={data?.products as Product[]}
+          products={data?.products}
         />
       </div>
     </>

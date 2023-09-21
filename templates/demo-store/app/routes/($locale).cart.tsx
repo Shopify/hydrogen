@@ -1,12 +1,17 @@
-import {Await, useMatches} from '@remix-run/react';
+import {Await} from '@remix-run/react';
 import invariant from 'tiny-invariant';
-import {type LoaderArgs, type ActionArgs, json} from '@shopify/remix-oxygen';
+import {
+  type LoaderFunctionArgs,
+  type ActionFunctionArgs,
+  json,
+} from '@shopify/remix-oxygen';
 import {CartForm, type CartQueryData} from '@shopify/hydrogen';
 
 import {isLocalPath} from '~/lib/utils';
 import {Cart} from '~/components';
+import {useRootLoaderData} from '~/root';
 
-export async function action({request, context}: ActionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   const {session, cart} = context;
 
   const [formData, customerAccessToken] = await Promise.all([
@@ -78,17 +83,17 @@ export async function action({request, context}: ActionArgs) {
   );
 }
 
-export async function loader({context}: LoaderArgs) {
+export async function loader({context}: LoaderFunctionArgs) {
   const {cart} = context;
   return json(await cart.get());
 }
 
 export default function CartRoute() {
-  const [root] = useMatches();
+  const rootData = useRootLoaderData();
   // @todo: finish on a separate PR
   return (
     <div className="grid w-full gap-8 p-6 py-8 md:p-8 lg:p-12 justify-items-start">
-      <Await resolve={root.data?.cart}>
+      <Await resolve={rootData?.cart}>
         {(cart) => <Cart layout="page" cart={cart} />}
       </Await>
     </div>

@@ -1,7 +1,7 @@
 import {
   defer,
   type LinksFunction,
-  type LoaderArgs,
+  type LoaderFunctionArgs,
   type AppLoadContext,
 } from '@shopify/remix-oxygen';
 import {
@@ -30,6 +30,11 @@ import {NotFound} from './components/NotFound';
 import styles from './styles/app.css';
 import {DEFAULT_LOCALE, parseMenu} from './lib/utils';
 import {useAnalytics} from './hooks/useAnalytics';
+
+export const useRootLoaderData = () => {
+  const [root] = useMatches();
+  return root?.data as Awaited<ReturnType<typeof loader>>['data'];
+};
 
 // This is important to avoid re-fetching root queries on sub-navigations
 export const shouldRevalidate: ShouldRevalidateFunction = ({
@@ -65,7 +70,7 @@ export const links: LinksFunction = () => {
   ];
 };
 
-export async function loader({request, context}: LoaderArgs) {
+export async function loader({request, context}: LoaderFunctionArgs) {
   const {session, storefront, cart} = context;
   const [customerAccessToken, layout] = await Promise.all([
     session.get('customerAccessToken'),
@@ -121,9 +126,9 @@ export default function App() {
 
 export function ErrorBoundary({error}: {error: Error}) {
   const nonce = useNonce();
-  const [root] = useMatches();
-  const locale = root?.data?.selectedLocale ?? DEFAULT_LOCALE;
   const routeError = useRouteError();
+  const rootData = useRootLoaderData();
+  const locale = rootData?.selectedLocale ?? DEFAULT_LOCALE;
   const isRouteError = isRouteErrorResponse(routeError);
 
   let title = 'Error';
@@ -145,7 +150,7 @@ export function ErrorBoundary({error}: {error: Error}) {
       </head>
       <body>
         <Layout
-          layout={root?.data?.layout}
+          layout={rootData?.layout}
           key={`${locale.language}-${locale.country}`}
         >
           {isRouteError ? (

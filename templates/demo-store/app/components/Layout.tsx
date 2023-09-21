@@ -1,4 +1,4 @@
-import {useParams, Form, Await, useMatches} from '@remix-run/react';
+import {useParams, Form, Await} from '@remix-run/react';
 import {useWindowScroll} from 'react-use';
 import {Disclosure} from '@headlessui/react';
 import {Suspense, useEffect, useMemo} from 'react';
@@ -30,6 +30,7 @@ import {
 } from '~/lib/utils';
 import {useIsHydrated} from '~/hooks/useIsHydrated';
 import {useCartFetchers} from '~/hooks/useCartFetchers';
+import {useRootLoaderData} from '~/root';
 
 type LayoutProps = {
   children: React.ReactNode;
@@ -105,13 +106,13 @@ function Header({title, menu}: {title: string; menu?: EnhancedMenu}) {
 }
 
 function CartDrawer({isOpen, onClose}: {isOpen: boolean; onClose: () => void}) {
-  const [root] = useMatches();
+  const rootData = useRootLoaderData();
 
   return (
     <Drawer open={isOpen} onClose={onClose} heading="Cart" openFrom="right">
       <div className="grid">
         <Suspense fallback={<CartLoading />}>
-          <Await resolve={root.data?.cart}>
+          <Await resolve={rootData?.cart}>
             {(cart) => <Cart layout="drawer" onClose={onClose} cart={cart} />}
           </Await>
         </Suspense>
@@ -321,8 +322,9 @@ function DesktopHeader({
 }
 
 function AccountLink({className}: {className?: string}) {
-  const [root] = useMatches();
-  const isLoggedIn = root.data?.isLoggedIn;
+  const rootData = useRootLoaderData();
+  const isLoggedIn = rootData?.isLoggedIn;
+
   return isLoggedIn ? (
     <Link to="/account" className={className}>
       <IconAccount />
@@ -341,11 +343,11 @@ function CartCount({
   isHome: boolean;
   openCart: () => void;
 }) {
-  const [root] = useMatches();
+  const rootData = useRootLoaderData();
 
   return (
     <Suspense fallback={<Badge count={0} dark={isHome} openCart={openCart} />}>
-      <Await resolve={root.data?.cart}>
+      <Await resolve={rootData?.cart}>
         {(cart) => (
           <Badge
             dark={isHome}

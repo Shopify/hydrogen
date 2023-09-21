@@ -1,4 +1,8 @@
-import {json, type LinksFunction, type LoaderArgs} from '@shopify/remix-oxygen';
+import {
+  json,
+  type LinksFunction,
+  type LoaderFunctionArgs,
+} from '@shopify/remix-oxygen';
 import {useLoaderData} from '@remix-run/react';
 import {Image} from '@shopify/hydrogen';
 import invariant from 'tiny-invariant';
@@ -17,7 +21,7 @@ export const links: LinksFunction = () => {
   return [{rel: 'stylesheet', href: styles}];
 };
 
-export async function loader({request, params, context}: LoaderArgs) {
+export async function loader({request, params, context}: LoaderFunctionArgs) {
   const {language, country} = context.storefront.i18n;
 
   invariant(params.journalHandle, 'Missing journal handle');
@@ -50,6 +54,7 @@ export async function loader({request, params, context}: LoaderArgs) {
 export default function Article() {
   const {article, formattedDate} = useLoaderData<typeof loader>();
 
+  // @ts-ignore TODO error in JsonifyObject
   const {title, image, contentHtml, author} = article;
 
   return (

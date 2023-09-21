@@ -1,5 +1,5 @@
 import {json, redirect, type ActionFunction} from '@shopify/remix-oxygen';
-import {Form, useActionData, type V2_MetaFunction} from '@remix-run/react';
+import {Form, useActionData, type MetaFunction} from '@remix-run/react';
 import {useRef, useState} from 'react';
 
 import {getInputStyleClasses} from '~/lib/utils';
@@ -89,7 +89,7 @@ export const action: ActionFunction = async ({
   }
 };
 
-export const meta: V2_MetaFunction = () => {
+export const meta: MetaFunction = () => {
   return [{title: 'Reset Password'}];
 };
 
