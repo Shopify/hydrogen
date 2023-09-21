@@ -14,7 +14,6 @@ import {
   type ShouldRevalidateFunction,
 } from '@remix-run/react';
 import type {CustomerAccessToken} from '@shopify/hydrogen/storefront-api-types';
-import type {HydrogenSession} from '../server';
 import favicon from '../public/favicon.svg';
 import resetStyles from './styles/reset.css';
 import appStyles from './styles/app.css';
@@ -182,7 +181,7 @@ export function ErrorBoundary() {
  *  ```
  *  */
 async function validateCustomerAccessToken(
-  session: HydrogenSession,
+  session: LoaderFunctionArgs['context']['session'],
   customerAccessToken?: CustomerAccessToken,
 ) {
   let isLoggedIn = false;
