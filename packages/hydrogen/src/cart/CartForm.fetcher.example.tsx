@@ -1,5 +1,5 @@
 import {useFetcher} from '@remix-run/react';
-import {type ActionArgs, json} from '@remix-run/server-runtime';
+import {type ActionFunctionArgs, json} from '@remix-run/server-runtime';
 import {
   type CartQueryData,
   type HydrogenCart,
@@ -47,7 +47,7 @@ export function ThisIsGift({metafield}: {metafield: Cart['metafield']}) {
   );
 }
 
-export async function action({request, context}: ActionArgs) {
+export async function action({request, context}: ActionFunctionArgs) {
   const cart = context.cart as HydrogenCart;
   // cart is type HydrogenCart or HydrogenCartCustom
   // Declare cart type in remix.env.d.ts for interface AppLoadContext to avoid type casting

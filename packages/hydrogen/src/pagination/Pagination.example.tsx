@@ -1,9 +1,12 @@
-import {json, type LoaderArgs} from '@shopify/remix-oxygen';
+import {json, type LoaderFunctionArgs} from '@shopify/remix-oxygen';
 import {Pagination, getPaginationVariables} from '@shopify/hydrogen';
 import {useLoaderData, Link} from '@remix-run/react';
 import {ProductConnection} from '@shopify/hydrogen/storefront-api-types';
 
-export async function loader({request, context: {storefront}}: LoaderArgs) {
+export async function loader({
+  request,
+  context: {storefront},
+}: LoaderFunctionArgs) {
   const variables = getPaginationVariables(request, {pageBy: 8});
 
   const data = await storefront.query<{products: ProductConnection}>(
