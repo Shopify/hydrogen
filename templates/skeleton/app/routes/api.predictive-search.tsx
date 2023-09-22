@@ -108,8 +108,6 @@ async function fetchPredictiveSearchResults({
 
 /**
  * Normalize results and apply tracking qurery parameters to each result url
- * @param predictiveSearch
- * @param locale
  */
 export function normalizePredictiveSearchResults(
   predictiveSearch: PredictiveSearchQuery['predictiveSearch'],

@@ -1,8 +1,8 @@
 /**
  * A side bar component with Overlay that works without JavaScript.
  * @example
- * ```ts
- * <Aside id="search-aside" heading="SEARCH">`
+ * ```jsx
+ * <Aside id="search-aside" heading="SEARCH">
  *  <input type="search" />
  *  ...
  * </Aside>
