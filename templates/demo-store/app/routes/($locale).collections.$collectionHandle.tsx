@@ -185,11 +185,13 @@ export default function Collection() {
                   hasNextPage={hasNextPage}
                   state={state}
                 />
-                <div
-                  className="flex items-center justify-center mt-6"
-                  ref={ref}
-                >
-                  <Button as={NextLink} variant="secondary" width="full">
+                <div className="flex items-center justify-center mt-6">
+                  <Button
+                    ref={ref}
+                    as={NextLink}
+                    variant="secondary"
+                    width="full"
+                  >
                     {isLoading ? 'Loading...' : 'Load more products'}
                   </Button>
                 </div>
