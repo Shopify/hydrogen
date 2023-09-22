@@ -11,8 +11,9 @@ import {
   copyFile,
   rmdir,
   glob,
-  removeFile,
   fileExists,
+  readFile,
+  writeFile,
 } from '@shopify/cli-kit/node/fs';
 import {resolvePath, relativePath, joinPath} from '@shopify/cli-kit/node/path';
 import {getPackageManager} from '@shopify/cli-kit/node/node-package-manager';
@@ -186,12 +187,28 @@ export async function runBuild({
     }
   }
 
+  await cleanUpClientSourcemaps(buildPathClient);
+
   // The Remix compiler hangs due to a bug in ESBuild:
   // https://github.com/evanw/esbuild/issues/2727
   // The actual build has already finished so we can kill the process.
   if (!process.env.SHOPIFY_UNIT_TEST && !assetPath) {
     process.exit(0);
   }
+}
+
+async function cleanUpClientSourcemaps(buildPathClient: string) {
+  const bundleFiles = await glob(joinPath(buildPathClient, '**/*.js'));
+
+  await Promise.all(
+    bundleFiles.map(async (filePath) => {
+      const file = await readFile(filePath);
+      return await writeFile(
+        filePath,
+        file.replace(/\/\/# sourceMappingURL=.+\.js\.map$/gm, ''),
+      );
+    }),
+  );
 }
 
 async function writeBundleAnalysis(
