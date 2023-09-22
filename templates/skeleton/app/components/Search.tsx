@@ -450,13 +450,11 @@ function usePredictiveSearch(): UseSearchReturn {
 
 /**
  * Converts a plural search type to a singular search type
- * @param type - The plural search type
- * @returns The singular search type
  *
  * @example
- * ```ts
- * pluralToSingularSearchType('articles') // => 'ARTICLE'
- * pluralToSingularSearchType(['articles', 'products']) // => 'ARTICLE,PRODUCT'
+ * ```js
+ * pluralToSingularSearchType('articles'); // => 'ARTICLE'
+ * pluralToSingularSearchType(['articles', 'products']); // => 'ARTICLE,PRODUCT'
  * ```
  */
 function pluralToSingularSearchType(
