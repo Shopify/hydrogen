@@ -57,6 +57,11 @@ export {createContentSecurityPolicy, useNonce} from './csp/csp';
 export {Script} from './csp/Script';
 
 export {
+  useOptimisticDataFromActions,
+  OptimisticInput,
+} from './utils/optimistic-ui';
+
+export {
   AnalyticsEventName,
   AnalyticsPageType,
   ExternalVideo,
