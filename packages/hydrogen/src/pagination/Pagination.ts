@@ -79,7 +79,7 @@ type PaginationProps<NodesType> = {
 
 type PaginationRenderProp<NodesType> = (
   props: PaginationInfo<NodesType>,
-) => JSX.Element | null;
+) => ReactNode;
 
 /**
  *
