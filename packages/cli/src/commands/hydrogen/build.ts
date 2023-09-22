@@ -187,7 +187,7 @@ export async function runBuild({
     }
   }
 
-  await cleanUpClientSourcemaps(buildPathClient);
+  await cleanClientSourcemaps(buildPathClient);
 
   // The Remix compiler hangs due to a bug in ESBuild:
   // https://github.com/evanw/esbuild/issues/2727
@@ -197,7 +197,7 @@ export async function runBuild({
   }
 }
 
-async function cleanUpClientSourcemaps(buildPathClient: string) {
+async function cleanClientSourcemaps(buildPathClient: string) {
   const bundleFiles = await glob(joinPath(buildPathClient, '**/*.js'));
 
   await Promise.all(
