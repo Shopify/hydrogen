@@ -62,7 +62,7 @@ function multipleLockfilesWarning(lockfiles: Lockfile[], shouldExit: boolean) {
   }
 }
 
-function lockfileIgnoredWarning(lockfile: string, shouldExit: boolean) {
+function lockfileIgnoredWarning(lockfile: string) {
   const headline = 'Lockfile ignored by Git';
   const body =
     `Your project’s lockfile isn’t being tracked by Git. If you don’t commit ` +
@@ -73,11 +73,7 @@ function lockfileIgnoredWarning(lockfile: string, shouldExit: boolean) {
     'Commit the change to your repository',
   ];
 
-  if (shouldExit) {
-    throw new AbortError(headline, body, nextSteps);
-  } else {
-    renderWarning({headline, body, nextSteps});
-  }
+  renderWarning({headline, body, nextSteps});
 }
 
 export async function checkLockfileStatus(
@@ -110,6 +106,6 @@ export async function checkLockfileStatus(
   });
 
   if (ignoredLockfile.length > 0) {
-    lockfileIgnoredWarning(lockfile, shouldExit);
+    lockfileIgnoredWarning(lockfile);
   }
 }

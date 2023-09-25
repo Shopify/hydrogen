@@ -49,16 +49,6 @@ describe('checkLockfileStatus()', () => {
           );
         });
       });
-
-      it('throws when shouldExit is true', async () => {
-        await inTemporaryDirectory(async (tmpDir) => {
-          await writeFile(joinPath(tmpDir, 'package-lock.json'), '');
-
-          await expect(checkLockfileStatus(tmpDir, true)).rejects.toThrow(
-            /Lockfile ignored by Git/is,
-          );
-        });
-      });
     });
   });
 
