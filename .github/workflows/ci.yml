@@ -85,7 +85,10 @@ jobs:
       #       turbo-${{ github.job }}-${{ github.ref_name }}-
 
       - name: 📦 Build packages
-        run: npm run build
+        run: npm run build:pkg
+
+      - name: 🗒 Build templates
+        run: npm run build:templates -- --no-lockfile-check
 
       - name: ✅ Typecheck
         run: npm run typecheck
@@ -115,7 +118,10 @@ jobs:
         run: npm ci
 
       - name: 📦 Build packages
-        run: npm run build
+        run: npm run build:pkg
+
+      - name: 🗒 Build templates
+        run: npm run build:templates -- --no-lockfile-check
 
       - name: 🔬 Test
         run: npm run test
