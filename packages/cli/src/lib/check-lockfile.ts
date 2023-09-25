@@ -1,12 +1,13 @@
 import {fileExists} from '@shopify/cli-kit/node/fs';
 import {resolvePath} from '@shopify/cli-kit/node/path';
 import {checkIfIgnoredInGitRepository} from '@shopify/cli-kit/node/git';
-import {renderFatalError, renderWarning} from '@shopify/cli-kit/node/ui';
+import {renderWarning} from '@shopify/cli-kit/node/ui';
 import {AbortError} from '@shopify/cli-kit/node/error';
 import {
   lockfiles,
   type Lockfile,
 } from '@shopify/cli-kit/node/node-package-manager';
+import {isCI} from './is-ci.js';
 
 function missingLockfileWarning(shouldExit: boolean) {
   const headline = 'No lockfile found';
@@ -81,7 +82,7 @@ function lockfileIgnoredWarning(lockfile: string, shouldExit: boolean) {
 
 export async function checkLockfileStatus(
   directory: string,
-  shouldExit = false,
+  shouldExit = isCI(),
 ) {
   if (process.env.LOCAL_DEV) return;
 
