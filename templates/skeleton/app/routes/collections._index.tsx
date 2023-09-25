@@ -66,7 +66,7 @@ function CollectionItem({
       to={`/collections/${collection.handle}`}
       prefetch="intent"
     >
-      {collection.image && (
+      {collection?.image && (
         <Image
           alt={collection.image.altText || collection.title}
           aspectRatio="1/1"
