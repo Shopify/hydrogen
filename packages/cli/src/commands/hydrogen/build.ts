@@ -187,7 +187,9 @@ export async function runBuild({
     }
   }
 
-  await cleanClientSourcemaps(buildPathClient);
+  if (process.env.NODE_ENV !== 'development') {
+    await cleanClientSourcemaps(buildPathClient);
+  }
 
   // The Remix compiler hangs due to a bug in ESBuild:
   // https://github.com/evanw/esbuild/issues/2727
