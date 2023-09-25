@@ -7,7 +7,6 @@ import {
   lockfiles,
   type Lockfile,
 } from '@shopify/cli-kit/node/node-package-manager';
-import {isCI} from './is-ci.js';
 
 function missingLockfileWarning(shouldExit: boolean) {
   const headline = 'No lockfile found';
@@ -78,7 +77,7 @@ function lockfileIgnoredWarning(lockfile: string) {
 
 export async function checkLockfileStatus(
   directory: string,
-  shouldExit = isCI(),
+  shouldExit = false,
 ) {
   if (process.env.LOCAL_DEV) return;
 

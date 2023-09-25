@@ -29,6 +29,7 @@ import {
   hasMetafile,
 } from '../../lib/bundle/analyzer.js';
 import {AbortError} from '@shopify/cli-kit/node/error';
+import {isCI} from '../../lib/is-ci.js';
 
 const LOG_WORKER_BUILT = '📦 Worker built';
 const MAX_WORKER_BUNDLE_SIZE = 10;
@@ -116,7 +117,7 @@ export async function runBuild({
     getProjectPaths(directory);
 
   if (lockfileCheck) {
-    await checkLockfileStatus(root);
+    await checkLockfileStatus(root, isCI());
   }
 
   await muteRemixLogs();
