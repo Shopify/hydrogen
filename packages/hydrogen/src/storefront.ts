@@ -324,9 +324,28 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       }),
     };
 
+    // Remove any headers that are identifiable to the user or request
+    const cacheKey = [
+      url,
+      {
+        method: requestInit.method,
+        headers: {
+          'content-type': defaultHeaders['content-type'],
+          'X-SDK-Variant': defaultHeaders['X-SDK-Variant'],
+          'X-SDK-Variant-Source': defaultHeaders['X-SDK-Variant-Source'],
+          'X-SDK-Version': defaultHeaders['X-SDK-Version'],
+          'X-Shopify-Storefront-Access-Token':
+            defaultHeaders['X-Shopify-Storefront-Access-Token'],
+          'user-agent': defaultHeaders['user-agent'],
+        },
+        body: requestInit.body,
+      },
+    ];
+
     const [body, response] = await fetchWithServerCache(url, requestInit, {
       cacheInstance: mutation ? undefined : cache,
       cache: cacheOptions || CacheShort(),
+      cacheKey,
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
     });
