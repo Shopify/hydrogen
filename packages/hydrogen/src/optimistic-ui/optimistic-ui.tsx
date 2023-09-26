@@ -22,13 +22,20 @@ export function useOptimisticDataFromActions<T>(identifier: string) {
   return data as T;
 }
 
-export function OptimisticInput({
-  id,
-  data,
-}: {
+export type OptimisticInputProps = {
+  /**
+   * A unique identifier for the optimistic input. Use the same identifier in `useOptimisticDataFromActions`
+   * to retrieve the optimistic data from actions.
+   */
   id: string;
+  /**
+   * The data to be stored in the optimistic input. Use for creating an optimistic successful state
+   * of this form action.
+   */
   data: Record<string, unknown>;
-}) {
+};
+
+export function OptimisticInput({id, data}: OptimisticInputProps) {
   return (
     <>
       <input type="hidden" name="optimistic-identifier" value={id} />

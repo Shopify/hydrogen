@@ -59,7 +59,7 @@ export {Script} from './csp/Script';
 export {
   useOptimisticDataFromActions,
   OptimisticInput,
-} from './utils/optimistic-ui';
+} from './optimistic-ui/optimistic-ui';
 
 export {
   AnalyticsEventName,
