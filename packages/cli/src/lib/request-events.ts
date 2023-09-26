@@ -22,6 +22,9 @@ function getRequestInfo(request: Request) {
     endTime: request.headers.get('hydrogen-end-time') || String(Date.now()),
     purpose: request.headers.get('purpose') === 'prefetch' ? '(prefetch)' : '',
     cacheStatus: request.headers.get('hydrogen-cache-status'),
+    stackLine: decodeURIComponent(
+      request.headers.get('hydrogen-stack-line') || '',
+    ),
   };
 }
 
@@ -38,7 +41,7 @@ export async function logRequestEvent(request: Request): Promise<Response> {
     return new Response('ok');
   }
 
-  const {eventType, purpose, ...data} = getRequestInfo(request);
+  const {eventType, purpose, stackLine, ...data} = getRequestInfo(request);
 
   let description = request.url;
 
@@ -47,6 +50,17 @@ export async function logRequestEvent(request: Request): Promise<Response> {
       decodeURIComponent(request.url)
         .match(/(query|mutation)\s+(\w+)/)?.[0]
         ?.replace(/\s+/, ' ') || request.url;
+
+    // This might need to be passed through sourcemaps in Workerd
+    const [, fnName, filePath] =
+      stackLine?.match(
+        // /\/([^\/]+?\/(routes\/|root\.[jt]sx?)[^:\)\n]*)[:\/)]/,
+        /\s+at ([^\s]+) \(.*?\/(app\/[^\)\n]*)\)/,
+      ) || [];
+
+    if (fnName && filePath) {
+      description += ` (${fnName}:${filePath})`;
+    }
   }
 
   const event = {

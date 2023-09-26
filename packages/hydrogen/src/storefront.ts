@@ -10,7 +10,11 @@ import {
   SHOPIFY_STOREFRONT_S_HEADER,
 } from '@shopify/hydrogen-react';
 import type {ExecutionArgs} from 'graphql';
-import {fetchWithServerCache, checkGraphQLErrors} from './cache/fetch';
+import {
+  fetchWithServerCache,
+  checkGraphQLErrors,
+  getCallerStackLine,
+} from './cache/fetch';
 import {STOREFRONT_REQUEST_GROUP_ID_HEADER} from './constants';
 import {
   CacheNone,
@@ -292,7 +296,11 @@ export function createStorefrontClient<TI18n extends I18nBase>(
     cache: cacheOptions,
     headers = [],
     storefrontApiVersion,
-  }: StorefrontQueryOptions | StorefrontMutationOptions): Promise<T> {
+    stackLine,
+  }: {stackLine?: string} & (
+    | StorefrontQueryOptions
+    | StorefrontMutationOptions
+  )): Promise<T> {
     const userHeaders =
       headers instanceof Headers
         ? Object.fromEntries(headers.entries())
@@ -329,6 +337,7 @@ export function createStorefrontClient<TI18n extends I18nBase>(
       cache: cacheOptions || CacheShort(),
       shouldCacheResponse: checkGraphQLErrors,
       waitUntil,
+      stackLine,
     });
 
     const errorOptions: StorefrontErrorOptions<T> = {
@@ -391,10 +400,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           );
         }
 
-        const result = fetchStorefrontApi({...payload, query});
-        // this is a no-op, but we need to catch the promise to avoid unhandled rejections
+        const result = fetchStorefrontApi({
+          ...payload,
+          query,
+          stackLine: getCallerStackLine?.(),
+        });
+
+        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
         // we cannot return the catch no-op, or it would swallow the error
         result.catch(() => {});
+
         return result;
       }),
       /**
@@ -418,10 +433,16 @@ export function createStorefrontClient<TI18n extends I18nBase>(
           );
         }
 
-        const result = fetchStorefrontApi({...payload, mutation});
-        // this is a no-op, but we need to catch the promise to avoid unhandled rejections
+        const result = fetchStorefrontApi({
+          ...payload,
+          mutation,
+          stackLine: getCallerStackLine?.(),
+        });
+
+        // This is a no-op, but we need to catch the promise to avoid unhandled rejections
         // we cannot return the catch no-op, or it would swallow the error
         result.catch(() => {});
+
         return result;
       }),
       cache,
